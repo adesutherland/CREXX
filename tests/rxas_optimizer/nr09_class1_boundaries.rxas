@@ -1,0 +1,69 @@
+* Relevant intervening instructions and mismatched dependencies must not fuse.
+
+swap_boundary() .locals=8
+    swap r0,r1
+    say r0
+    swap r2,r3
+    ret
+
+settp_swap_boundary() .locals=8
+    settp r0,256
+    say r0
+    swap r1,r0
+    ret
+
+load_settp_boundary() .locals=8
+    load r0,1
+    say r0
+    settp r1,256
+    ret
+
+load_settp_swap_boundary() .locals=8
+    load r0,2
+    settp r1,512
+    say r1
+    swap r2,r1
+    ret
+
+swap_settp_boundary() .locals=8
+    swap r0,r1
+    say r0
+    settp r2,256
+    ret
+
+swap_settp_swap_boundary() .locals=8
+    swap r0,r1
+    settp r2,512
+    say r2
+    swap r3,r2
+    ret
+
+settp_pair_mismatch() .locals=8
+    settp r0,256
+    swap r1,r0
+    settp r2,512
+    ret
+
+settp_pair_swap_mismatch() .locals=8
+    settp r0,256
+    swap r1,r0
+    settp r2,512
+    swap r3,r2
+    ret
+
+null_boundary() .locals=8
+    null r0
+    say r0
+    null r1
+    ret
+
+loadcopy_mismatch() .locals=8
+    load r0,10
+    icopy r1,r2
+    ret
+
+loads_boundary() .locals=8
+    load r0,11
+    say r0
+    load r1,12
+    ret

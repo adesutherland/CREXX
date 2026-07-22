@@ -1,0 +1,36 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/12 Test    #1: linked_opt_runtime_artifacts_build ...   Passed   16.50 sec
+      Start  337: nr09_numeric_context_contract
+ 2/12 Test  #337: nr09_numeric_context_contract ........   Passed    2.51 sec
+      Start 1183: rxasdecimaltests
+ 3/12 Test #1183: rxasdecimaltests .....................   Passed    0.00 sec
+      Start 1184: rxasdecimaltests-rxbvm
+ 4/12 Test #1184: rxasdecimaltests-rxbvm ...............   Passed    0.00 sec
+      Start 1185: rxasdecimaltests-mc
+ 5/12 Test #1185: rxasdecimaltests-mc ..................   Passed    0.00 sec
+      Start 1186: rxasdecimaltests-mc-rxbvm
+ 6/12 Test #1186: rxasdecimaltests-mc-rxbvm ............   Passed    0.00 sec
+      Start 1187: rxasdecimaltests-db
+ 7/12 Test #1187: rxasdecimaltests-db ..................   Passed    0.00 sec
+      Start 1188: rxasdecimaltests-db-rxbvm
+ 8/12 Test #1188: rxasdecimaltests-db-rxbvm ............   Passed    0.00 sec
+      Start 1203: rxasinstructiongaptests
+ 9/12 Test #1203: rxasinstructiongaptests ..............   Passed    0.00 sec
+      Start 1204: rxasinstructiongaptests-rxbvm
+10/12 Test #1204: rxasinstructiongaptests-rxbvm ........   Passed    0.00 sec
+      Start 1360: ts_numeric_noopt
+11/12 Test #1360: ts_numeric_noopt .....................   Passed    0.12 sec
+      Start 1361: ts_numeric_opt
+12/12 Test #1361: ts_numeric_opt .......................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+compiler       =   2.51 sec*proc (1 test)
+linked_opt     =   0.05 sec*proc (1 test)
+numeric        =   2.51 sec*proc (1 test)
+performance    =   2.51 sec*proc (1 test)
+smoke          =   0.00 sec*proc (1 test)
+
+Total Test time (real) =  19.24 sec

@@ -1,0 +1,9 @@
+workload,vm,n,paired_median_delta_percent,min_delta_percent,max_delta_percent
+JSON,rxbvm,12,-1.983448,-5.648940,1.727927
+JSON,rxvm,12,-0.904035,-3.921263,2.976021
+List,rxbvm,12,-5.784389,-8.307864,-4.977908
+List,rxvm,12,-6.015255,-7.641301,-1.521855
+Permute,rxbvm,12,-3.223565,-5.571383,0.248371
+Permute,rxvm,12,-3.848622,-4.998724,-2.409165
+Richards,rxbvm,12,-0.332876,-1.530293,0.715655
+Richards,rxvm,12,0.024715,-0.274276,0.773964

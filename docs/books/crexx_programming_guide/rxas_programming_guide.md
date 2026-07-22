@@ -75,9 +75,8 @@ Procedure names are identifiers for routines in the program. Procedure `main()` 
 
 ## Embedded Rexx Assembler
 
-The `assembler` command enables the inclusion of arbitrary assembler instructions within a Rexx program. The compiler validates the instruction mnemonic and arguments, ensuring that variables are converted into the appropriate register number.
+The `assembler` command enables the inclusion of arbitrary assembler instructions within a Rexx program. The compiler validates the instruction mnemonic and the complete variable-length argument list against the opcode signature, ensuring that variables are converted into the appropriate register number. Inline assembly is therefore not limited to three operands.
 
 This example uses the `linkarg` assembler instruction with two variables and an integer constant.
 
 `assembler linkarg e,i,5`
-

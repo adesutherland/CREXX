@@ -1,0 +1,11 @@
+collected_utc=2026-07-19T11:06:45Z
+repo_head=32bf7e76f3fe4b776ee30eb60e85af7ca1e22b46
+repo_status=42 paths changed
+host=Darwin 25.5.0 arm64
+profile_vm=/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm
+profile_vm_sha256=8ad5d60febe2b7fe5755a1e09947b6433521fcf7c5c4935c3690c7eb58816d9b
+rxdas_sha256=1944c24c95c1305bbb590e03ee4a17c25785773ce2145bacdd3c374c01efb773
+library_sha256=d1089745eb42a076e879f6c0a2e68e64865f5a801e9636e12fa27b68ce486846
+profile_boundary=CREXX_VM_PROFILING schema-4 counts; timing fields ignored
+dynamic_vm_boundary=rxvm only; opcode execution counts are semantic and prior canonical rxvm/rxbvm counts matched
+rexxcps_boundary=noncanonical bounded --smoke-count 1 occurrence census

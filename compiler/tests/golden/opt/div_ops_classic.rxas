@@ -6,11 +6,7 @@
 
 main() .locals=0
    .meta "div_ops_classic.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 2
+   numsci 18,1,2
    .srcstep 1 1 17 "div_ops_classic.crexx" 5 1 8 "say res"
    .meta "div_ops_classic.main.gap"="b" ".int" "101"
    .meta "div_ops_classic.main.res"="b" ".float" "50.5"

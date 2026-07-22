@@ -9,11 +9,7 @@
 main() .locals=11
    .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() ""
    .srcstep 26 26 17 "inline_test_call_like_arg_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_call_like_arg_expr.crexx" 4 3 51 "  say \"Starting call-like arg inline expr test...\""
    say "Starting call-like arg inline expr test..."
    .srcstep 22 22 17 "inline_test_call_like_arg_expr.crexx" 5 3 5 "  do i = 1 to 3"
@@ -51,9 +47,7 @@ l94bexprend:
    .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "initialvalue" ""
    .srcstep 11 11 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
    .traceevent "V" 6 "R" "I" "r" 4 11 11 0 "initialvalue" ""
-   linkattr1 r8,r5,1
-   icopy r8,r4
-   unlink r8
+   isetattr1 r5,1,r4
    .srcstep 12 12 33 "inline_test_call_like_arg_expr.crexx" 22 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 5 12 12 0 "§factory" ""
    copy r0,r5
@@ -111,19 +105,13 @@ l8doend:
    .srcstep 32 32 17 "inline_test_call_like_arg_expr.crexx" 19 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_call_like_arg_expr.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 29 29 17 "inline_test_call_like_arg_expr.crexx" 20 9 28 "    arg initialValue = .int"
    .meta "inline_test_call_like_arg_expr.box.§factory.initialvalue"="b" ".int" a1
    .meta "inline_test_call_like_arg_expr.box.§factory.§factory"="b" ".box" r1
    .srcstep 30 30 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
    .traceevent "V" 6 "R" "I" "a" 1 30 30 0 "initialvalue" ""
-   linkattr1 r2,r1,1
-   icopy r2,a1
-   unlink r2
+   isetattr1 r1,1,a1
    .srcstep 31 31 17 "inline_test_call_like_arg_expr.crexx" 22 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 1 31 31 0 "§factory" ""
    ret r1
@@ -134,11 +122,7 @@ l8doend:
    .meta "inline_test_call_like_arg_expr.box.bump"="b" ".int" §inline_test_call_like_arg_expr.box.bump() "amount=.int"
    .srcstep 35 35 17 "inline_test_call_like_arg_expr.crexx" 24 3 22 "  bump: method = .int"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 33 33 17 "inline_test_call_like_arg_expr.crexx" 25 9 22 "    arg amount = .int"
    .meta "inline_test_call_like_arg_expr.box.bump.amount"="b" ".int" a2
    .meta "inline_test_call_like_arg_expr.box.bump.§this"="b" ".box" a1

@@ -20,6 +20,8 @@ timed I/O in their kernels.
 | `awfy_richards.crexx` | Are We Fast Yet? / Richards | scheduler queues, state transitions and a larger call graph |
 | `json_parser.crexx` | deterministic RAP-shaped JSON fixture | parser/text processing through the current `rxjson` surface |
 | `base64_roundtrip.crexx` | deterministic RFC 4648 algorithm | `.binary`, pre-sized buffers, byte access and checksum observation |
+| `parse_frozen.crexx` | NR-14 static/frozen PARSE workload | RexxCPS-shaped immutable three-word and positional templates plus adjacent fallback checks |
+| `parse_frozen_generic.crexx` | NR-14 generic frozen-plan workload | longer odd/even word templates, literal delimiters, absolute positions and compact drops |
 
 `cross-runtime/` contains the NR-02 ooRexx and NetRexx sources. Byte-exact
 RexxCPS 2.2 and bundled NetRexx 2.1n remain unchanged; 2.2n, opaque-input,
@@ -27,6 +29,11 @@ result-observation and trace diagnostics use distinct names. All portfolio
 ports preserve deterministic arguments/results and document every material
 language-required representation or operation substitution in
 `cross-runtime/README.md` and `performance/NR-02-WORKLIST.md`.
+
+For the formal common comparison, NetRexx uses `options nobinary decimal` and
+NetRexx `Rexx` numeric state; generated Java plus the default HotSpot JIT are
+the normal substrate. Binary-typed NetRexx portfolio ports are labelled JVM
+controls and do not enter the common Rexx aggregate.
 
 The Are We Fast Yet? suite was published with the DLS 2016 paper
 “Cross-Language Compiler Benchmarking—Are We Fast Yet?” (DOI

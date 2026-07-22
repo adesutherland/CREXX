@@ -1,0 +1,27 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start    1: linked_opt_runtime_artifacts_build
+1/9 Test    #1: linked_opt_runtime_artifacts_build .......   Passed    0.09 sec
+    Start 1573: testRexxClassicBifC2d_noopt
+2/9 Test #1573: testRexxClassicBifC2d_noopt ..............   Passed    0.63 sec
+    Start 1574: testRexxClassicBifC2d_opt
+3/9 Test #1574: testRexxClassicBifC2d_opt ................   Passed    0.25 sec
+    Start 1665: testRexxClassicBifX2d_noopt
+4/9 Test #1665: testRexxClassicBifX2d_noopt ..............   Passed    0.35 sec
+    Start 1666: testRexxClassicBifX2d_opt
+5/9 Test #1666: testRexxClassicBifX2d_opt ................   Passed    0.26 sec
+    Start 1836: rxpa_native_unwind_funcs_dynamic_noopt
+6/9 Test #1836: rxpa_native_unwind_funcs_dynamic_noopt ...   Passed    0.13 sec
+    Start 1837: rxpa_native_unwind_funcs_dynamic_opt
+7/9 Test #1837: rxpa_native_unwind_funcs_dynamic_opt .....   Passed    0.05 sec
+    Start 1838: rxpa_native_unwind_funcs_static_noopt
+8/9 Test #1838: rxpa_native_unwind_funcs_static_noopt ....   Passed    0.42 sec
+    Start 1839: rxpa_native_unwind_funcs_static_opt
+9/9 Test #1839: rxpa_native_unwind_funcs_static_opt ......   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+linked_opt    =   0.62 sec*proc (4 tests)
+smoke         =   0.13 sec*proc (1 test)
+
+Total Test time (real) =   2.27 sec

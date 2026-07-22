@@ -1,0 +1,695 @@
+*******************************************************************************
+* MODULE - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-noopt.rxas
+* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-noopt.rxas
+
+* CONSTANT POOL - Size 0xb348.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x374
+
+.globals=0
+                .meta "awfy_list.listarena"="b" ".unknown" .class
+                .meta "awfy_list.listarena.element_count"="b" ".int" .attr 1
+                .meta "awfy_list.listarena.elements"="b" ".listelement[*]" .attr 2
+                .meta "awfy_list.listbenchmark"="b" ".unknown" .class
+                .meta "awfy_list.listelement"="b" ".unknown" .class
+                .meta "awfy_list.listelement.next_reference"="b" "reference .listelement" .attr 1
+                .meta "awfy_list.listelement.value"="b" ".int" .attr 2
+
+main()          .locals=11
+                .meta "awfy_list.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 1 1 17 "awfy_list.crexx" 8 5 19 "arg argv = .string[]"
+                .meta "awfy_list.main.argv"="b" ".string[*]" r0
+                brtpandt lb_d,a1 /* aka r12 */,512           * 0x000004:020c if op2 readable status flags & op3 true then goto op1
+                copy r0,a1 /* aka r12 */                     * 0x000008:0008 Copy op2 to op1
+                br lb_10                                     * 0x00000b:0024 Branch to op1
+lb_d:           swap r0,a1 /* aka r12 */                     * 0x00000d:01fe Swap op1 and op2
+                .srcstep 2 2 17 "awfy_list.crexx" 10 1 16 "repetitions = 1"
+                .meta "awfy_list.main.repetitions"="b" ".int" r1
+lb_10:          load r1,1                                    * 0x000010:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+                .srcstep 4 4 17 "awfy_list.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+                getattrs r4,r0,0                             * 0x000013:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+                igte r4,r4,1                                 * 0x000017:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+                brf lb_22,r4                                 * 0x00001b:0026 Branch to op1 if op2 false
+                .srcstep 5 5 17 "awfy_list.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 3 3 17 "awfy_list.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minstoiattr1 r1,r0,1                         * 0x00001e:01a4 Ensure and convert one-based string attribute op3 of op2 directly into integer op1
+                .traceevent "V" 6 "R" "I" "r" 1 3 3 0 "argv" ""
+                .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+                .srcstep 7 7 17 "awfy_list.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "repetitions" ""
+lb_22:          ilt r5,r1,1                                  * 0x000022:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 5 7 7 0 "" ""
+                brf lb_37,r5                                 * 0x000026:0026 Branch to op1 if op2 false
+                .srcstep 8 8 17 "awfy_list.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 6 6 17 "awfy_list.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                load r4,"repetitions must be positive"       * 0x000029:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
+                load r3,1                                    * 0x00002c:0001 Load op1 with op2
+                settpcall r6,fail(),r3,r4,768                * 0x00002f:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 6 6 6 0 "fail" ""
+                ret r6                                       * 0x000035:0031 Return op1
+                .srcstep 9 9 17 "awfy_list.crexx" 14 1 11 "result = 0"
+                .meta "awfy_list.main.result"="b" ".int" r2
+lb_37:          load r2,0                                    * 0x000037:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 9 9 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "result" ""
+                .srcstep 18 18 17 "awfy_list.crexx" 15 1 3 "do iteration = 1 to repetitions"
+                .srcstep 10 10 17 "awfy_list.crexx" 15 4 17 "do iteration = 1 to repetitions"
+                .meta "awfy_list.main.iteration"="b" ".int" r5
+                load r5,1                                    * 0x00003a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 10 10 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 10 10 0 "iteration" ""
+                .srcstep 11 11 17 "awfy_list.crexx" 15 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+                .srcstep 11 11 17 "awfy_list.crexx" 15 18 32 "do iteration = 1 to repetitions"
+lb_3d:          igt r4,r5,r1                                 * 0x00003d:0068 Int Greater than op1=(op2>op3)
+                brt lb_71,r4                                 * 0x000041:0025 Branch to op1 if op2 true
+                .srcstep 13 13 17 "awfy_list.crexx" 16 3 29 "  benchmark = .ListBenchmark()"
+                .meta "awfy_list.main.benchmark"="b" ".listbenchmark" r6
+                load r3,0                                    * 0x000044:0001 Load op1 with op2
+                call r6,§awfy_list.listbenchmark.§factory(),r3 * 0x000047:002e Call procedure (op1=op2(op3...) )
+                .traceevent "F" 4 "R" "O" "r" 6 13 13 0 "§factory" ""
+                .traceevent "A" 6 "R" "O" "r" 6 13 13 0 "benchmark" ""
+                .srcstep 14 14 17 "awfy_list.crexx" 17 3 25 "  result = benchmark.run()"
+                .traceevent "V" 6 "R" "O" "r" 6 14 14 0 "benchmark" ""
+                load r7,1                                    * 0x00004b:0001 Load op1 with op2
+                settpswapcall r2,§awfy_list.listbenchmark.run(),r7,r6,256,r8 * 0x00004e:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r6,r8                                   * 0x000055:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 2 14 14 0 "run" ""
+                .traceevent "A" 6 "R" "I" "r" 2 14 14 0 "result" ""
+                .srcstep 16 16 17 "awfy_list.crexx" 18 3 18 "  if result <> 10 then return fail(\"expected length 10, got \" || result)"
+                .traceevent "V" 6 "R" "I" "r" 2 16 16 0 "result" ""
+                ine r8,r2,10                                 * 0x000058:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 8 16 16 0 "" ""
+                brf lb_6e,r8                                 * 0x00005c:0026 Branch to op1 if op2 false
+                .srcstep 17 17 17 "awfy_list.crexx" 18 19 23 "  if result <> 10 then return fail(\"expected length 10, got \" || result)"
+                .srcstep 15 15 17 "awfy_list.crexx" 18 24 73 "  if result <> 10 then return fail(\"expected length 10, got \" || result)"
+                itosconcat r10,"expected length 10, got ",r2 * 0x00005f:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "result" ""
+                .traceevent "O" 4 "R" "S" "r" 10 15 15 0 "" ""
+                load r9,1                                    * 0x000063:0001 Load op1 with op2
+                settpcall r7,fail(),r9,r10,768               * 0x000066:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 7 15 15 0 "fail" ""
+                ret r7                                       * 0x00006c:0031 Return op1
+                .srcstep 12 12 17 "awfy_list.crexx" 15 4 13 "do iteration = 1 to repetitions"
+                .srcstep 19 19 17 "awfy_list.crexx" 19 1 4 "end"
+lb_6e:          bctp lb_3d,r5                                * 0x00006e:015d inc op2; goto op1
+lb_71:          endlife r6                                   * 0x000071:0202 End storage reference lifetime for op1
+                .meta "awfy_list.main.benchmark"
+                .meta "awfy_list.main.iteration"
+                .srcstep 20 20 17 "awfy_list.crexx" 21 1 66 "say \"benchmark=awfy_list repetitions=\"repetitions \"result=\"result"
+                itosconcat r10,"benchmark=awfy_list repetitions=",r1 * 0x000073:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 1 20 20 0 "repetitions" ""
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                sconcatitos r10,"result=",r2                 * 0x000077:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 2 20 20 0 "result" ""
+                append r10,r2                                * 0x00007b:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                say r10                                      * 0x00007e:01c2 Say op1
+                .srcstep 21 21 17 "awfy_list.crexx" 22 1 22 "say \"PASS: AWFY List\""
+                say "PASS: AWFY List"                        * 0x000080:01c7 Say op1
+                .srcstep 22 22 17 "awfy_list.crexx" 23 1 9 "return 0"
+                ret 0                                        * 0x000082:0032 Return op1
+                .meta "awfy_list.main.argv"
+                .meta "awfy_list.main.repetitions"
+                .meta "awfy_list.main.result"
+
+fail()          .locals=2
+                .meta "awfy_list.fail"="b" ".int" fail() "message=.string"
+                .srcstep 26 26 17 "awfy_list.crexx" 25 1 23 "fail: procedure = .int"
+                numsci 18,1,1                                * 0x000084:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 23 23 17 "awfy_list.crexx" 26 7 24 "  arg message = .string"
+                .meta "awfy_list.fail.message"="b" ".string" a1 /* aka r3 */
+                .srcstep 24 24 17 "awfy_list.crexx" 27 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "a" 1 24 24 0 "message" ""
+                sconcat r1,"FAIL:",a1 /* aka r3 */           * 0x000088:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 1 24 24 0 "" ""
+                say r1                                       * 0x00008c:01c2 Say op1
+                .srcstep 25 25 17 "awfy_list.crexx" 28 3 11 "  return 1"
+                ret 1                                        * 0x00008e:0032 Return op1
+                .meta "awfy_list.fail.message"
+
+§awfy_list.listelement.§factory() .locals=3
+                .meta "awfy_list.listelement.§factory"="b" ".awfy_list..listelement" §awfy_list.listelement.§factory() "initial_value=.int"
+                .srcstep 30 30 17 "awfy_list.crexx" 34 3 13 "  *: factory"
+                setattrs r1,3                                * 0x000090:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r1,"awfy_list.listelement"        * 0x000093:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x000096:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 27 27 17 "awfy_list.crexx" 35 9 29 "    arg initial_value = .int"
+                .meta "awfy_list.listelement.§factory.initial_value"="b" ".int" a1 /* aka r4 */
+                .meta "awfy_list.listelement.§factory.§factory"="b" ".listelement" r1
+                .srcstep 28 28 17 "awfy_list.crexx" 36 5 26 "    value = initial_value"
+                .traceevent "V" 6 "R" "I" "a" 1 28 28 0 "initial_value" ""
+                isetattr1 r1,2,a1 /* aka r4 */               * 0x00009a:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 29 29 17 "awfy_list.crexx" 37 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 1 29 29 0 "§factory" ""
+                ret r1                                       * 0x00009e:0031 Return op1
+                .meta "awfy_list.listelement.§factory.initial_value"
+                .meta "awfy_list.listelement.§factory.§factory"
+
+§awfy_list.listelement.length() .locals=5
+                .meta "awfy_list.listelement.length"="b" ".int" §awfy_list.listelement.length() ""
+                .srcstep 36 36 17 "awfy_list.crexx" 39 3 24 "  length: method = .int"
+                assertinitialized a1 /* aka r6 */            * 0x0000a0:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0000a2:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 32 32 17 "awfy_list.crexx" 40 5 38 "    if <refvalid>(next_reference) = 0 then return 1"
+                linkattr1 r2,a1 /* aka r6 */,1               * 0x0000a6:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "R" "r" 2 32 32 0 "next_reference" ""
+                refvalid r3,r2                               * 0x0000aa:00c6 Set op1 to 1 if reference op2 is valid, else 0
+                unlink r2                                    * 0x0000ad:00d5 Unlink op1
+                btoi r3                                      * 0x0000af:00e1 Set register integer value from its boolean value
+                bne lb_b7,r3,0                               * 0x0000b1:002b if op2!=op3 then goto op1
+                .srcstep 33 33 17 "awfy_list.crexx" 40 39 43 "    if <refvalid>(next_reference) = 0 then return 1"
+                .srcstep 31 31 17 "awfy_list.crexx" 40 44 52 "    if <refvalid>(next_reference) = 0 then return 1"
+                .meta "awfy_list.listelement.length.§this"="b" ".listelement" a1 /* aka r6 */
+                ret 1                                        * 0x0000b5:0032 Return op1
+                .srcstep 34 34 17 "awfy_list.crexx" 41 5 46 "    next_element = dereference next_reference"
+                .meta "awfy_list.listelement.length.next_element"="b" ".listelement" r0
+lb_b7:          linkattr1 r3,a1 /* aka r6 */,1               * 0x0000b7:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "R" "r" 3 34 34 0 "next_reference" ""
+                unlink r0                                    * 0x0000bb:00d5 Unlink op1
+                linkref r0,r3                                * 0x0000bd:00c4 Link op1 to referenced storage op2
+                unlink r3                                    * 0x0000c0:00d5 Unlink op1
+                .traceevent "A" 6 "R" "O" "r" 0 34 34 0 "next_element" ""
+                .srcstep 35 35 17 "awfy_list.crexx" 42 5 35 "    return 1 + next_element.length()"
+                .traceevent "V" 6 "R" "O" "r" 0 35 35 0 "next_element" ""
+                load r2,1                                    * 0x0000c2:0001 Load op1 with op2
+                settpswapcall r4,§awfy_list.listelement.length(),r2,r0,256,r3 * 0x0000c5:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r0,r3                                   * 0x0000cc:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 4 35 35 0 "length" ""
+                iadd r4,r4,1                                 * 0x0000cf:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 4 35 35 0 "" ""
+                ret r4                                       * 0x0000d3:0031 Return op1
+                .meta "awfy_list.listelement.length.next_element"
+                .meta "awfy_list.listelement.length.§this"
+
+§awfy_list.listelement.next() .locals=3
+                .meta "awfy_list.listelement.next"="b" "reference .listelement" §awfy_list.listelement.next() ""
+                .srcstep 38 38 17 "awfy_list.crexx" 44 3 40 "  next: method = reference .ListElement"
+                assertinitialized a1 /* aka r4 */            * 0x0000d5:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0000d7:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 37 37 17 "awfy_list.crexx" 45 5 26 "    return next_reference"
+                .meta "awfy_list.listelement.next.§this"="b" ".listelement" a1 /* aka r4 */
+                linkattr1 r2,a1 /* aka r4 */,1               * 0x0000db:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "R" "r" 2 37 37 0 "next_reference" ""
+                ret r2                                       * 0x0000df:0031 Return op1
+                .meta "awfy_list.listelement.next.§this"
+
+§awfy_list.listelement.setnext() .locals=4
+                .meta "awfy_list.listelement.setnext"="b" ".void" §awfy_list.listelement.setnext() "element=reference .listelement"
+                .srcstep 42 42 17 "awfy_list.crexx" 47 3 26 "  setNext: method = .void"
+                assertinitialized a1 /* aka r5 */            * 0x0000e1:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0000e3:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 39 39 17 "awfy_list.crexx" 48 9 41 "    arg element = reference .ListElement"
+                .meta "awfy_list.listelement.setnext.element"="b" "reference .listelement" a2 /* aka r6 */
+                .meta "awfy_list.listelement.setnext.§this"="b" ".listelement" a1 /* aka r5 */
+                .srcstep 40 40 17 "awfy_list.crexx" 49 5 29 "    next_reference = element"
+                .traceevent "V" 6 "R" "R" "a" 2 40 40 0 "element" ""
+                linkattr1 r3,a1 /* aka r5 */,1               * 0x0000e7:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r3,a2 /* aka r6 */                      * 0x0000eb:0008 Copy op2 to op1
+                unlink r3                                    * 0x0000ee:00d5 Unlink op1
+                .srcstep 41 41 17 "awfy_list.crexx" 50 5 11 "    return"
+                ret                                          * 0x0000f0:0030 Return VOID
+                .meta "awfy_list.listelement.setnext.element"
+                .meta "awfy_list.listelement.setnext.§this"
+
+§awfy_list.listarena.§factory() .locals=3
+                .meta "awfy_list.listarena.§factory"="b" ".awfy_list..listarena" §awfy_list.listarena.§factory() ""
+                .srcstep 45 45 17 "awfy_list.crexx" 56 3 13 "  *: factory"
+                setattrs r0,3                                * 0x0000f1:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r0,"awfy_list.listarena"          * 0x0000f4:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x0000f7:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 43 43 17 "awfy_list.crexx" 57 5 22 "    element_count = 0"
+                .meta "awfy_list.listarena.§factory.§factory"="b" ".listarena" r0
+                load r2,0                                    * 0x0000fb:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 43 43 0 "" ""
+                isetattr1 r0,1,r2                            * 0x0000fe:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 44 44 17 "awfy_list.crexx" 58 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 0 44 44 0 "§factory" ""
+                ret r0                                       * 0x000102:0031 Return op1
+                .meta "awfy_list.listarena.§factory.§factory"
+
+§awfy_list.listarena.allocate() .locals=10
+                .meta "awfy_list.listarena.allocate"="b" "reference .listelement" §awfy_list.listarena.allocate() "value=.int"
+                .srcstep 51 51 17 "awfy_list.crexx" 60 3 44 "  allocate: method = reference .ListElement"
+                assertinitialized a1 /* aka r11 */           * 0x000104:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x000106:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 46 46 17 "awfy_list.crexx" 61 9 21 "    arg value = .int"
+                .meta "awfy_list.listarena.allocate.value"="b" ".int" a2 /* aka r12 */
+                .meta "awfy_list.listarena.allocate.§this"="b" ".listarena" a1 /* aka r11 */
+                .srcstep 47 47 17 "awfy_list.crexx" 62 5 38 "    element_count = element_count + 1"
+                linkattr1 r5,a1 /* aka r11 */,1              * 0x00010a:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 5 47 47 0 "element_count" ""
+                iadd r6,r5,1                                 * 0x00010e:0010 Integer Add (op1=op2+op3)
+                unlink r5                                    * 0x000112:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 6 47 47 0 "" ""
+                isetattr1 a1 /* aka r11 */,1,r6              * 0x000114:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 48 48 17 "awfy_list.crexx" 63 5 50 "    elements[element_count] = .ListElement(value)"
+                linkattr1 r4,a1 /* aka r11 */,2              * 0x000118:00cb Link attribute op3 (1 base) of op2 to op1
+                linkattr1 r6,a1 /* aka r11 */,1              * 0x00011c:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 6 48 48 0 "element_count" ""
+                .traceevent "C" 4 "R" "I" "r" 6 48 48 0 "elements" ""
+                minlinkattr1 r5,r4,r6,0                      * 0x000120:0126 Ensure and link one-based attribute op3 plus op4 of op2 to op1
+                unlink r6                                    * 0x000125:00d5 Unlink op1
+                .traceevent "V" 6 "R" "I" "a" 2 48 48 0 "value" ""
+                load r7,1                                    * 0x000127:0001 Load op1 with op2
+                swapcall r9,§awfy_list.listelement.§factory(),r7,a2 /* aka r12 */,r8 * 0x00012a:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swap a2 /* aka r12 */,r8                     * 0x000130:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "O" "r" 9 48 48 0 "§factory" ""
+                copy r5,r9                                   * 0x000133:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 5 48 48 0 "elements" ""
+                unlinkn r5,r4                                * 0x000136:011b Restore two registers to their frame-owned storage
+                .srcstep 49 49 17 "awfy_list.crexx" 64 5 46 "    result = reference elements[element_count]"
+                .meta "awfy_list.listarena.allocate.result"="b" "reference .listelement" r0
+                linkattr1 r7,a1 /* aka r11 */,2              * 0x000139:00cb Link attribute op3 (1 base) of op2 to op1
+                linkattr1 r9,a1 /* aka r11 */,1              * 0x00013d:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 9 49 49 0 "element_count" ""
+                .traceevent "C" 4 "R" "I" "r" 9 49 49 0 "elements" ""
+                minlinkattr1 r8,r7,r9,0                      * 0x000141:0126 Ensure and link one-based attribute op3 plus op4 of op2 to op1
+                unlink r9                                    * 0x000146:00d5 Unlink op1
+                .traceevent "V" 6 "R" "O" "r" 8 49 49 0 "elements" ""
+                mkref r0,r8                                  * 0x000148:00c2 Create reference value op1 to storage op2
+                unlinkn r8,r7                                * 0x00014b:011b Restore two registers to their frame-owned storage
+                .traceevent "A" 6 "R" "R" "r" 0 49 49 0 "result" ""
+                .srcstep 50 50 17 "awfy_list.crexx" 65 5 18 "    return result"
+                .traceevent "V" 6 "R" "R" "r" 0 50 50 0 "result" ""
+                ret r0                                       * 0x00014e:0031 Return op1
+                .meta "awfy_list.listarena.allocate.result"
+                .meta "awfy_list.listarena.allocate.value"
+                .meta "awfy_list.listarena.allocate.§this"
+
+§awfy_list.listbenchmark.§factory() .locals=1
+                .meta "awfy_list.listbenchmark.§factory"="b" ".awfy_list..listbenchmark" §awfy_list.listbenchmark.§factory() ""
+                .srcstep 53 53 17 "awfy_list.crexx" 68 3 13 "  *: factory"
+                setattrs r0,0                                * 0x000150:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r0,"awfy_list.listbenchmark"      * 0x000153:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x000156:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 52 52 17 "awfy_list.crexx" 69 5 11 "    return"
+                .meta "awfy_list.listbenchmark.§factory.§factory"="b" ".listbenchmark" r0
+                .traceevent "V" 6 "R" "O" "r" 0 52 52 0 "§factory" ""
+                ret r0                                       * 0x00015a:0031 Return op1
+                .meta "awfy_list.listbenchmark.§factory.§factory"
+
+§awfy_list.listbenchmark.run() .locals=16
+                .meta "awfy_list.listbenchmark.run"="b" ".int" §awfy_list.listbenchmark.run() ""
+                .srcstep 65 65 17 "awfy_list.crexx" 71 3 21 "  run: method = .int"
+                assertinitialized a1 /* aka r17 */           * 0x00015c:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x00015e:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .meta "awfy_list.listbenchmark.run.result_reference"="b" "reference .listelement" r2
+                .srcstep 54 54 17 "awfy_list.crexx" 76 5 46 "    result_reference = reference .ListElement"
+                .meta "awfy_list.listbenchmark.run.x"="b" "reference .listelement" r3
+                .srcstep 55 55 17 "awfy_list.crexx" 73 5 31 "    x = reference .ListElement"
+                .meta "awfy_list.listbenchmark.run.y"="b" "reference .listelement" r4
+                .srcstep 56 56 17 "awfy_list.crexx" 74 5 31 "    y = reference .ListElement"
+                .meta "awfy_list.listbenchmark.run.z"="b" "reference .listelement" r5
+                .srcstep 57 57 17 "awfy_list.crexx" 75 5 31 "    z = reference .ListElement"
+                nulln r2,r3,r4,r5                            * 0x000162:0114 Clear four registers
+                .srcstep 58 58 17 "awfy_list.crexx" 72 5 23 "    arena = .ListArena()"
+                .meta "awfy_list.listbenchmark.run.arena"="b" ".listarena" r0
+                .meta "awfy_list.listbenchmark.run.§this"="b" ".listbenchmark" a1 /* aka r17 */
+                load r7,0                                    * 0x000167:0001 Load op1 with op2
+                call r0,§awfy_list.listarena.§factory(),r7 * 0x00016a:002e Call procedure (op1=op2(op3...) )
+                .traceevent "F" 4 "R" "O" "r" 0 58 58 0 "§factory" ""
+                .traceevent "A" 6 "R" "O" "r" 0 58 58 0 "arena" ""
+                .srcstep 59 59 17 "awfy_list.crexx" 77 5 38 "    x = makeList(15, reference arena)"
+                .traceevent "V" 6 "R" "O" "a" 1 59 59 0 "§this" ""
+                load r13,15                                  * 0x00016e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 59 59 0 "" ""
+                .traceevent "V" 6 "R" "O" "r" 0 59 59 0 "arena" ""
+                mkref r14,r0                                 * 0x000171:00c2 Create reference value op1 to storage op2
+                loadsettpswap r11,3,a1 /* aka r17 */,256,r12 * 0x000174:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpcall r3,§awfy_list.listbenchmark.makelist(),r11,r14,768 * 0x00017a:011a Set op4 status then call op2 with count/window op3
+                swap a1 /* aka r17 */,r12                    * 0x000180:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 3 59 59 0 "makelist" ""
+                .traceevent "A" 6 "R" "R" "r" 3 59 59 0 "x" ""
+                .srcstep 60 60 17 "awfy_list.crexx" 78 5 38 "    y = makeList(10, reference arena)"
+                .traceevent "V" 6 "R" "O" "a" 1 60 60 0 "§this" ""
+                load r13,10                                  * 0x000183:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 60 60 0 "" ""
+                .traceevent "V" 6 "R" "O" "r" 0 60 60 0 "arena" ""
+                mkref r14,r0                                 * 0x000186:00c2 Create reference value op1 to storage op2
+                loadsettpswap r11,3,a1 /* aka r17 */,256,r12 * 0x000189:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpcall r4,§awfy_list.listbenchmark.makelist(),r11,r14,768 * 0x00018f:011a Set op4 status then call op2 with count/window op3
+                swap a1 /* aka r17 */,r12                    * 0x000195:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 4 60 60 0 "makelist" ""
+                .traceevent "A" 6 "R" "R" "r" 4 60 60 0 "y" ""
+                .srcstep 61 61 17 "awfy_list.crexx" 79 5 37 "    z = makeList(6, reference arena)"
+                .traceevent "V" 6 "R" "O" "a" 1 61 61 0 "§this" ""
+                load r13,6                                   * 0x000198:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 61 61 0 "" ""
+                .traceevent "V" 6 "R" "O" "r" 0 61 61 0 "arena" ""
+                mkref r14,r0                                 * 0x00019b:00c2 Create reference value op1 to storage op2
+                loadsettpswap r11,3,a1 /* aka r17 */,256,r12 * 0x00019e:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpcall r5,§awfy_list.listbenchmark.makelist(),r11,r14,768 * 0x0001a4:011a Set op4 status then call op2 with count/window op3
+                swap a1 /* aka r17 */,r12                    * 0x0001aa:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 5 61 61 0 "makelist" ""
+                .traceevent "A" 6 "R" "R" "r" 5 61 61 0 "z" ""
+                .srcstep 62 62 17 "awfy_list.crexx" 80 5 37 "    result_reference = tail(x, y, z)"
+                .traceevent "V" 6 "R" "O" "a" 1 62 62 0 "§this" ""
+                .traceevent "V" 6 "R" "R" "r" 3 62 62 0 "x" ""
+                .traceevent "V" 6 "R" "R" "r" 4 62 62 0 "y" ""
+                .traceevent "V" 6 "R" "R" "r" 5 62 62 0 "z" ""
+                loadsettpswap r11,4,a1 /* aka r17 */,256,r12 * 0x0001ad:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapsettpswap r3,256,r13,r4,r14         * 0x0001b3:0111 Set/swap two call-window registers with one status value
+                settpswapcall r2,§awfy_list.listbenchmark.tail(),r11,r5,256,r15 * 0x0001b9:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn a1 /* aka r17 */,r12,r3,r13,r4,r14,r5,r15 * 0x0001c0:010a Swap four register pairs in operand order
+                .traceevent "F" 4 "R" "R" "r" 2 62 62 0 "tail" ""
+                .traceevent "A" 6 "R" "R" "r" 2 62 62 0 "result_reference" ""
+                .srcstep 63 63 17 "awfy_list.crexx" 81 5 42 "    result = dereference result_reference"
+                .meta "awfy_list.listbenchmark.run.result"="b" ".listelement" r1
+                .traceevent "V" 6 "R" "R" "r" 2 63 63 0 "result_reference" ""
+                unlink r1                                    * 0x0001c9:00d5 Unlink op1
+                linkref r1,r2                                * 0x0001cb:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 1 63 63 0 "result" ""
+                .srcstep 64 64 17 "awfy_list.crexx" 82 5 25 "    return result.length()"
+                .traceevent "V" 6 "R" "O" "r" 1 64 64 0 "result" ""
+                load r14,1                                   * 0x0001ce:0001 Load op1 with op2
+                settpswapcall r13,§awfy_list.listelement.length(),r14,r1,256,r15 * 0x0001d1:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r1,r15                                  * 0x0001d8:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 13 64 64 0 "length" ""
+                ret r13                                      * 0x0001db:0031 Return op1
+                .meta "awfy_list.listbenchmark.run.arena"
+                .meta "awfy_list.listbenchmark.run.result"
+                .meta "awfy_list.listbenchmark.run.result_reference"
+                .meta "awfy_list.listbenchmark.run.x"
+                .meta "awfy_list.listbenchmark.run.y"
+                .meta "awfy_list.listbenchmark.run.z"
+                .meta "awfy_list.listbenchmark.run.§this"
+
+§awfy_list.listbenchmark.makelist() .locals=18
+                .meta "awfy_list.listbenchmark.makelist"="b" "reference .listelement" §awfy_list.listbenchmark.makelist() "list_length=.int,arena_reference=reference .listarena"
+                .srcstep 82 82 17 "awfy_list.crexx" 84 3 44 "  makeList: method = reference .ListElement"
+                assertinitialized a1 /* aka r19 */           * 0x0001dd:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0001df:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 66 66 17 "awfy_list.crexx" 85 9 27 "    arg list_length = .int, arena_reference = reference .ListArena"
+                .meta "awfy_list.listbenchmark.makelist.list_length"="b" ".int" a2 /* aka r20 */
+                .meta "awfy_list.listbenchmark.makelist.§this"="b" ".listbenchmark" a1 /* aka r19 */
+                .srcstep 67 67 17 "awfy_list.crexx" 85 29 67 "    arg list_length = .int, arena_reference = reference .ListArena"
+                .meta "awfy_list.listbenchmark.makelist.arena_reference"="b" "reference .listarena" a3 /* aka r21 */
+                .meta "awfy_list.listbenchmark.makelist.element_reference"="b" "reference .listelement" r3
+                .srcstep 68 68 17 "awfy_list.crexx" 87 5 47 "    element_reference = reference .ListElement"
+                .meta "awfy_list.listbenchmark.makelist.next_reference"="b" "reference .listelement" r5
+                .srcstep 69 69 17 "awfy_list.crexx" 86 5 44 "    next_reference = reference .ListElement"
+                nulln r3,r5                                  * 0x0001e3:0112 Clear two registers
+                .srcstep 72 72 17 "awfy_list.crexx" 88 5 23 "    if list_length = 0 then do"
+                .traceevent "V" 6 "R" "I" "a" 2 72 72 0 "list_length" ""
+                ieq r11,a2 /* aka r20 */,0                   * 0x0001e6:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 11 72 72 0 "" ""
+                brf lb_1f3,r11                               * 0x0001ea:0026 Branch to op1 if op2 false
+                .srcstep 73 73 17 "awfy_list.crexx" 88 24 28 "    if list_length = 0 then do"
+                .meta "awfy_list.listbenchmark.makelist.empty_reference"="b" "reference .listelement" r12
+                .srcstep 70 70 17 "awfy_list.crexx" 89 7 47 "      empty_reference = reference .ListElement"
+                null r12                                     * 0x0001ed:000e Null (clear) op1
+                .srcstep 71 71 17 "awfy_list.crexx" 90 7 29 "      return empty_reference"
+                .traceevent "V" 6 "R" "R" "r" 12 71 71 0 "empty_reference" ""
+                ret r12                                      * 0x0001ef:0031 Return op1
+                endlife r12                                  * 0x0001f1:0202 End storage reference lifetime for op1
+                .meta "awfy_list.listbenchmark.makelist.empty_reference"
+                .srcstep 74 74 17 "awfy_list.crexx" 92 5 64 "    next_reference = makeList(list_length - 1, arena_reference)"
+                .traceevent "V" 6 "R" "O" "a" 1 74 74 0 "§this" ""
+                .traceevent "V" 6 "R" "I" "a" 2 74 74 0 "list_length" ""
+lb_1f3:         isub r16,a2 /* aka r20 */,1                  * 0x0001f3:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 16 74 74 0 "" ""
+                .traceevent "V" 6 "R" "R" "a" 3 74 74 0 "arena_reference" ""
+                loadsettpswap r14,3,a1 /* aka r19 */,256,r15 * 0x0001f7:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapcall r5,§awfy_list.listbenchmark.makelist(),r14,a3 /* aka r21 */,256,r17 * 0x0001fd:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn a1 /* aka r19 */,r15,a3 /* aka r21 */,r17 * 0x000204:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "R" "r" 5 74 74 0 "makelist" ""
+                .traceevent "A" 6 "R" "R" "r" 5 74 74 0 "next_reference" ""
+                .srcstep 75 75 17 "awfy_list.crexx" 93 5 40 "    arena = dereference arena_reference"
+                .meta "awfy_list.listbenchmark.makelist.arena"="b" ".listarena" r0
+                .traceevent "V" 6 "R" "R" "a" 3 75 75 0 "arena_reference" ""
+                unlink r0                                    * 0x000209:00d5 Unlink op1
+                linkref r0,a3 /* aka r21 */                  * 0x00020b:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 0 75 75 0 "arena" ""
+                .srcstep 76 76 17 "awfy_list.crexx" 94 5 52 "    element_reference = arena.allocate(list_length)"
+                .traceevent "V" 6 "R" "O" "r" 0 76 76 0 "arena" ""
+                .traceevent "V" 6 "R" "I" "a" 2 76 76 0 "list_length" ""
+                loadsettpswap r15,2,r0,256,r16               * 0x00020e:010d Load op1, set op3 status flags, then swap op3 and op5
+                swapcall r3,§awfy_list.listarena.allocate(),r15,a2 /* aka r20 */,r17 * 0x000214:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swapn r0,r16,a2 /* aka r20 */,r17            * 0x00021a:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "R" "r" 3 76 76 0 "allocate" ""
+                .traceevent "A" 6 "R" "R" "r" 3 76 76 0 "element_reference" ""
+                .srcstep 77 77 17 "awfy_list.crexx" 95 5 44 "    element = dereference element_reference"
+                .meta "awfy_list.listbenchmark.makelist.element"="b" ".listelement" r2
+                .traceevent "V" 6 "R" "R" "r" 3 77 77 0 "element_reference" ""
+                unlink r2                                    * 0x00021f:00d5 Unlink op1
+                linkref r2,r3                                * 0x000221:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 2 77 77 0 "element" ""
+                .srcstep 79 79 17 "awfy_list.crexx" 96 5 34 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+                .traceevent "V" 6 "R" "R" "r" 5 79 79 0 "next_reference" ""
+                refvalid r17,r5                              * 0x000224:00c6 Set op1 to 1 if reference op2 is valid, else 0
+                brf lb_23c,r17                               * 0x000227:0026 Branch to op1 if op2 false
+                .srcstep 80 80 17 "awfy_list.crexx" 96 35 39 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+                .srcstep 78 78 17 "awfy_list.crexx" 96 40 76 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+                .traceevent "V" 6 "R" "O" "r" 2 78 78 0 "element" ""
+                .traceevent "V" 6 "R" "R" "r" 5 78 78 0 "next_reference" ""
+                loadsettpswap r14,2,r2,256,r15               * 0x00022a:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapcall r12,§awfy_list.listelement.setnext(),r14,r5,256,r16 * 0x000230:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn r2,r15,r5,r16                          * 0x000237:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "V" "r" 12 78 78 0 "setnext" ""
+                .srcstep 81 81 17 "awfy_list.crexx" 97 5 29 "    return element_reference"
+                .traceevent "V" 6 "R" "R" "r" 3 81 81 0 "element_reference" ""
+lb_23c:         ret r3                                       * 0x00023c:0031 Return op1
+                .meta "awfy_list.listbenchmark.makelist.arena"
+                .meta "awfy_list.listbenchmark.makelist.arena_reference"
+                .meta "awfy_list.listbenchmark.makelist.element"
+                .meta "awfy_list.listbenchmark.makelist.element_reference"
+                .meta "awfy_list.listbenchmark.makelist.list_length"
+                .meta "awfy_list.listbenchmark.makelist.next_reference"
+                .meta "awfy_list.listbenchmark.makelist.§this"
+
+§awfy_list.listbenchmark.isshorterthan() .locals=14
+                .meta "awfy_list.listbenchmark.isshorterthan"="b" ".boolean" §awfy_list.listbenchmark.isshorterthan() "x=reference .listelement,y=reference .listelement"
+                .srcstep 100 100 17 "awfy_list.crexx" 99 3 35 "  isShorterThan: method = .boolean"
+                assertinitialized a1 /* aka r15 */           * 0x00023e:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x000240:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 83 83 17 "awfy_list.crexx" 100 9 35 "    arg x = reference .ListElement, y = reference .ListElement"
+                .meta "awfy_list.listbenchmark.isshorterthan.x"="b" "reference .listelement" a2 /* aka r16 */
+                .meta "awfy_list.listbenchmark.isshorterthan.§this"="b" ".listbenchmark" a1 /* aka r15 */
+                .srcstep 84 84 17 "awfy_list.crexx" 100 37 63 "    arg x = reference .ListElement, y = reference .ListElement"
+                .meta "awfy_list.listbenchmark.isshorterthan.y"="b" "reference .listelement" a3 /* aka r17 */
+                .meta "awfy_list.listbenchmark.isshorterthan.x_tail_reference"="b" "reference .listelement" r1
+                .srcstep 85 85 17 "awfy_list.crexx" 101 5 46 "    x_tail_reference = reference .ListElement"
+                .meta "awfy_list.listbenchmark.isshorterthan.y_tail_reference"="b" "reference .listelement" r3
+                .srcstep 86 86 17 "awfy_list.crexx" 102 5 46 "    y_tail_reference = reference .ListElement"
+                nulln r1,r3                                  * 0x000244:0112 Clear two registers
+                .srcstep 87 87 17 "awfy_list.crexx" 103 5 25 "    x_tail_reference = x"
+                .traceevent "V" 6 "R" "R" "a" 2 87 87 0 "x" ""
+                copy r1,a2 /* aka r16 */                     * 0x000247:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "R" "r" 1 87 87 0 "x_tail_reference" ""
+                .srcstep 88 88 17 "awfy_list.crexx" 104 5 25 "    y_tail_reference = y"
+                .traceevent "V" 6 "R" "R" "a" 3 88 88 0 "y" ""
+                copy r3,a3 /* aka r17 */                     * 0x00024a:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "R" "r" 3 88 88 0 "y_tail_reference" ""
+                .srcstep 97 97 17 "awfy_list.crexx" 105 5 7 "    do while <refvalid>(y_tail_reference)"
+                .srcstep 89 89 17 "awfy_list.crexx" 105 8 42 "    do while <refvalid>(y_tail_reference)"
+                .traceevent "V" 6 "R" "R" "r" 3 0 0 0 "y_tail_reference" ""
+lb_24d:         refvalid r11,r3                              * 0x00024d:00c6 Set op1 to 1 if reference op2 is valid, else 0
+                brf lb_28a,r11                               * 0x000250:0026 Branch to op1 if op2 false
+                .srcstep 91 91 17 "awfy_list.crexx" 106 7 42 "      if <refvalid>(x_tail_reference) = 0 then return 1"
+                .traceevent "V" 6 "R" "R" "r" 1 91 91 0 "x_tail_reference" ""
+                refvalid r12,r1                              * 0x000253:00c6 Set op1 to 1 if reference op2 is valid, else 0
+                btoi r12                                     * 0x000256:00e1 Set register integer value from its boolean value
+                ieq r12,r12,0                                * 0x000258:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 12 91 91 0 "" ""
+                brf lb_264,r12                               * 0x00025c:0026 Branch to op1 if op2 false
+                .srcstep 92 92 17 "awfy_list.crexx" 106 43 47 "      if <refvalid>(x_tail_reference) = 0 then return 1"
+                .srcstep 90 90 17 "awfy_list.crexx" 106 48 56 "      if <refvalid>(x_tail_reference) = 0 then return 1"
+                load r13,1                                   * 0x00025f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "B" "r" 13 90 90 0 "" ""
+                ret r13                                      * 0x000262:0031 Return op1
+                .srcstep 93 93 17 "awfy_list.crexx" 107 7 44 "      x_tail = dereference x_tail_reference"
+                .meta "awfy_list.listbenchmark.isshorterthan.x_tail"="b" ".listelement" r9
+                .traceevent "V" 6 "R" "R" "r" 1 93 93 0 "x_tail_reference" ""
+lb_264:         unlink r9                                    * 0x000264:00d5 Unlink op1
+                linkref r9,r1                                * 0x000266:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 9 93 93 0 "x_tail" ""
+                .srcstep 94 94 17 "awfy_list.crexx" 108 7 44 "      y_tail = dereference y_tail_reference"
+                .meta "awfy_list.listbenchmark.isshorterthan.y_tail"="b" ".listelement" r10
+                .traceevent "V" 6 "R" "R" "r" 3 94 94 0 "y_tail_reference" ""
+                unlink r10                                   * 0x000269:00d5 Unlink op1
+                linkref r10,r3                               * 0x00026b:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 10 94 94 0 "y_tail" ""
+                .srcstep 95 95 17 "awfy_list.crexx" 109 7 37 "      x_tail_reference = x_tail.next()"
+                .traceevent "V" 6 "R" "O" "r" 9 95 95 0 "x_tail" ""
+                load r12,1                                   * 0x00026e:0001 Load op1 with op2
+                settpswapcall r1,§awfy_list.listelement.next(),r12,r9,256,r13 * 0x000271:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r9,r13                                  * 0x000278:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 1 95 95 0 "next" ""
+                .traceevent "A" 6 "R" "R" "r" 1 95 95 0 "x_tail_reference" ""
+                .srcstep 96 96 17 "awfy_list.crexx" 110 7 37 "      y_tail_reference = y_tail.next()"
+                .traceevent "V" 6 "R" "O" "r" 10 96 96 0 "y_tail" ""
+                load r12,1                                   * 0x00027b:0001 Load op1 with op2
+                settpswapcall r3,§awfy_list.listelement.next(),r12,r10,256,r13 * 0x00027e:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r10,r13                                 * 0x000285:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 3 96 96 0 "next" ""
+                .traceevent "A" 6 "R" "R" "r" 3 96 96 0 "y_tail_reference" ""
+                .srcstep 98 98 17 "awfy_list.crexx" 110 37 38 "      y_tail_reference = y_tail.next()"
+                br lb_24d                                    * 0x000288:0024 Branch to op1
+lb_28a:         unlinkn r10,r9                               * 0x00028a:011b Restore two registers to their frame-owned storage
+                endlife r9                                   * 0x00028d:0202 End storage reference lifetime for op1
+                endlife r10                                  * 0x00028f:0202 End storage reference lifetime for op1
+                .meta "awfy_list.listbenchmark.isshorterthan.x_tail"
+                .meta "awfy_list.listbenchmark.isshorterthan.y_tail"
+                .srcstep 99 99 17 "awfy_list.crexx" 112 5 13 "    return 0"
+                load r13,0                                   * 0x000291:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "B" "r" 13 99 99 0 "" ""
+                ret r13                                      * 0x000294:0031 Return op1
+                .meta "awfy_list.listbenchmark.isshorterthan.x"
+                .meta "awfy_list.listbenchmark.isshorterthan.x_tail_reference"
+                .meta "awfy_list.listbenchmark.isshorterthan.y"
+                .meta "awfy_list.listbenchmark.isshorterthan.y_tail_reference"
+                .meta "awfy_list.listbenchmark.isshorterthan.§this"
+
+§awfy_list.listbenchmark.tail() .locals=30
+                .meta "awfy_list.listbenchmark.tail"="b" "reference .listelement" §awfy_list.listbenchmark.tail() "x=reference .listelement,y=reference .listelement,z=reference .listelement"
+                .srcstep 123 123 17 "awfy_list.crexx" 114 3 40 "  tail: method = reference .ListElement"
+                assertinitialized a1 /* aka r31 */           * 0x000296:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x000298:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 101 101 17 "awfy_list.crexx" 115 9 35 "    arg x = reference .ListElement, y = reference .ListElement, z = reference .ListElement"
+                .meta "awfy_list.listbenchmark.tail.x"="b" "reference .listelement" a2 /* aka r32 */
+                .meta "awfy_list.listbenchmark.tail.§this"="b" ".listbenchmark" a1 /* aka r31 */
+                .srcstep 102 102 17 "awfy_list.crexx" 115 37 63 "    arg x = reference .ListElement, y = reference .ListElement, z = reference .ListElement"
+                .meta "awfy_list.listbenchmark.tail.y"="b" "reference .listelement" a3 /* aka r33 */
+                .srcstep 103 103 17 "awfy_list.crexx" 115 65 91 "    arg x = reference .ListElement, y = reference .ListElement, z = reference .ListElement"
+                .meta "awfy_list.listbenchmark.tail.z"="b" "reference .listelement" a4 /* aka r34 */
+                .meta "awfy_list.listbenchmark.tail.first_tail"="b" "reference .listelement" r0
+                .srcstep 104 104 17 "awfy_list.crexx" 119 5 40 "    first_tail = reference .ListElement"
+                .meta "awfy_list.listbenchmark.tail.second_tail"="b" "reference .listelement" r1
+                .srcstep 105 105 17 "awfy_list.crexx" 120 5 41 "    second_tail = reference .ListElement"
+                .meta "awfy_list.listbenchmark.tail.third_tail"="b" "reference .listelement" r2
+                .srcstep 106 106 17 "awfy_list.crexx" 121 5 40 "    third_tail = reference .ListElement"
+                .meta "awfy_list.listbenchmark.tail.x_next"="b" "reference .listelement" r4
+                .srcstep 107 107 17 "awfy_list.crexx" 116 5 36 "    x_next = reference .ListElement"
+                nulln r0,r1,r2,r4                            * 0x00029c:0114 Clear four registers
+                .meta "awfy_list.listbenchmark.tail.y_next"="b" "reference .listelement" r6
+                .srcstep 108 108 17 "awfy_list.crexx" 117 5 36 "    y_next = reference .ListElement"
+                .meta "awfy_list.listbenchmark.tail.z_next"="b" "reference .listelement" r8
+                .srcstep 109 109 17 "awfy_list.crexx" 118 5 36 "    z_next = reference .ListElement"
+                nulln r6,r8                                  * 0x0002a1:0112 Clear two registers
+                .srcstep 120 120 17 "awfy_list.crexx" 122 5 27 "    if isShorterThan(y, x) then do"
+                .traceevent "V" 6 "R" "O" "a" 1 120 120 0 "§this" ""
+                .traceevent "V" 6 "R" "R" "a" 3 120 120 0 "y" ""
+                .traceevent "V" 6 "R" "R" "a" 2 120 120 0 "x" ""
+                loadsettpswap r20,3,a1 /* aka r31 */,256,r21 * 0x0002a4:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswap a3 /* aka r33 */,256,r22           * 0x0002aa:010b Set op1 status flags then swap op1 and op3
+                settpswapcall r24,§awfy_list.listbenchmark.isshorterthan(),r20,a2 /* aka r32 */,256,r23 * 0x0002ae:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn a1 /* aka r31 */,r21,a3 /* aka r33 */,r22,a2 /* aka r32 */,r23 * 0x0002b5:0109 Swap three register pairs in operand order
+                .traceevent "F" 4 "R" "B" "r" 24 120 120 0 "isshorterthan" ""
+                brf lb_372,r24                               * 0x0002bc:0026 Branch to op1 if op2 false
+                .srcstep 121 121 17 "awfy_list.crexx" 122 28 32 "    if isShorterThan(y, x) then do"
+                .srcstep 110 110 17 "awfy_list.crexx" 123 7 30 "      x_value = dereference x"
+                .meta "awfy_list.listbenchmark.tail.x_value"="b" ".listelement" r23
+                .traceevent "V" 6 "R" "R" "a" 2 110 110 0 "x" ""
+                unlink r23                                   * 0x0002bf:00d5 Unlink op1
+                linkref r23,a2 /* aka r32 */                 * 0x0002c1:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 23 110 110 0 "x_value" ""
+                .srcstep 111 111 17 "awfy_list.crexx" 124 7 30 "      y_value = dereference y"
+                .meta "awfy_list.listbenchmark.tail.y_value"="b" ".listelement" r22
+                .traceevent "V" 6 "R" "R" "a" 3 111 111 0 "y" ""
+                unlink r22                                   * 0x0002c4:00d5 Unlink op1
+                linkref r22,a3 /* aka r33 */                 * 0x0002c6:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 22 111 111 0 "y_value" ""
+                .srcstep 112 112 17 "awfy_list.crexx" 125 7 30 "      z_value = dereference z"
+                .meta "awfy_list.listbenchmark.tail.z_value"="b" ".listelement" r21
+                .traceevent "V" 6 "R" "R" "a" 4 112 112 0 "z" ""
+                unlink r21                                   * 0x0002c9:00d5 Unlink op1
+                linkref r21,a4 /* aka r34 */                 * 0x0002cb:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 21 112 112 0 "z_value" ""
+                .srcstep 113 113 17 "awfy_list.crexx" 126 7 28 "      x_next = x_value.next()"
+                .traceevent "V" 6 "R" "O" "r" 23 113 113 0 "x_value" ""
+                load r25,1                                   * 0x0002ce:0001 Load op1 with op2
+                settpswapcall r4,§awfy_list.listelement.next(),r25,r23,256,r26 * 0x0002d1:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r23,r26                                 * 0x0002d8:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 4 113 113 0 "next" ""
+                .traceevent "A" 6 "R" "R" "r" 4 113 113 0 "x_next" ""
+                .srcstep 114 114 17 "awfy_list.crexx" 127 7 28 "      y_next = y_value.next()"
+                .traceevent "V" 6 "R" "O" "r" 22 114 114 0 "y_value" ""
+                load r25,1                                   * 0x0002db:0001 Load op1 with op2
+                settpswapcall r6,§awfy_list.listelement.next(),r25,r22,256,r26 * 0x0002de:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r22,r26                                 * 0x0002e5:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 6 114 114 0 "next" ""
+                .traceevent "A" 6 "R" "R" "r" 6 114 114 0 "y_next" ""
+                .srcstep 115 115 17 "awfy_list.crexx" 128 7 28 "      z_next = z_value.next()"
+                .traceevent "V" 6 "R" "O" "r" 21 115 115 0 "z_value" ""
+                load r25,1                                   * 0x0002e8:0001 Load op1 with op2
+                settpswapcall r8,§awfy_list.listelement.next(),r25,r21,256,r26 * 0x0002eb:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r21,r26                                 * 0x0002f2:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "R" "r" 8 115 115 0 "next" ""
+                .traceevent "A" 6 "R" "R" "r" 8 115 115 0 "z_next" ""
+                .srcstep 116 116 17 "awfy_list.crexx" 129 7 38 "      first_tail = tail(x_next, y, z)"
+                .traceevent "V" 6 "R" "O" "a" 1 116 116 0 "§this" ""
+                .traceevent "V" 6 "R" "R" "r" 4 116 116 0 "x_next" ""
+                .traceevent "V" 6 "R" "R" "a" 3 116 116 0 "y" ""
+                .traceevent "V" 6 "R" "R" "a" 4 116 116 0 "z" ""
+                loadsettpswap r25,4,a1 /* aka r31 */,256,r26 * 0x0002f5:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapsettpswap r4,256,r27,a3 /* aka r33 */,r28 * 0x0002fb:0111 Set/swap two call-window registers with one status value
+                settpswapcall r0,§awfy_list.listbenchmark.tail(),r25,a4 /* aka r34 */,256,r29 * 0x000301:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn a1 /* aka r31 */,r26,r4,r27,a3 /* aka r33 */,r28,a4 /* aka r34 */,r29 * 0x000308:010a Swap four register pairs in operand order
+                .traceevent "F" 4 "R" "R" "r" 0 116 116 0 "tail" ""
+                .traceevent "A" 6 "R" "R" "r" 0 116 116 0 "first_tail" ""
+                .srcstep 117 117 17 "awfy_list.crexx" 130 7 39 "      second_tail = tail(y_next, z, x)"
+                .traceevent "V" 6 "R" "O" "a" 1 117 117 0 "§this" ""
+                .traceevent "V" 6 "R" "R" "r" 6 117 117 0 "y_next" ""
+                .traceevent "V" 6 "R" "R" "a" 4 117 117 0 "z" ""
+                .traceevent "V" 6 "R" "R" "a" 2 117 117 0 "x" ""
+                loadsettpswap r25,4,a1 /* aka r31 */,256,r26 * 0x000311:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapsettpswap r6,256,r27,a4 /* aka r34 */,r28 * 0x000317:0111 Set/swap two call-window registers with one status value
+                settpswapcall r1,§awfy_list.listbenchmark.tail(),r25,a2 /* aka r32 */,256,r29 * 0x00031d:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn a1 /* aka r31 */,r26,r6,r27,a4 /* aka r34 */,r28,a2 /* aka r32 */,r29 * 0x000324:010a Swap four register pairs in operand order
+                .traceevent "F" 4 "R" "R" "r" 1 117 117 0 "tail" ""
+                .traceevent "A" 6 "R" "R" "r" 1 117 117 0 "second_tail" ""
+                .srcstep 118 118 17 "awfy_list.crexx" 131 7 38 "      third_tail = tail(z_next, x, y)"
+                .traceevent "V" 6 "R" "O" "a" 1 118 118 0 "§this" ""
+                .traceevent "V" 6 "R" "R" "r" 8 118 118 0 "z_next" ""
+                .traceevent "V" 6 "R" "R" "a" 2 118 118 0 "x" ""
+                .traceevent "V" 6 "R" "R" "a" 3 118 118 0 "y" ""
+                loadsettpswap r25,4,a1 /* aka r31 */,256,r26 * 0x00032d:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapsettpswap r8,256,r27,a2 /* aka r32 */,r28 * 0x000333:0111 Set/swap two call-window registers with one status value
+                settpswapcall r2,§awfy_list.listbenchmark.tail(),r25,a3 /* aka r33 */,256,r29 * 0x000339:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn a1 /* aka r31 */,r26,r8,r27,a2 /* aka r32 */,r28,a3 /* aka r33 */,r29 * 0x000340:010a Swap four register pairs in operand order
+                .traceevent "F" 4 "R" "R" "r" 2 118 118 0 "tail" ""
+                .traceevent "A" 6 "R" "R" "r" 2 118 118 0 "third_tail" ""
+                .srcstep 119 119 17 "awfy_list.crexx" 132 7 55 "      return tail(first_tail, second_tail, third_tail)"
+                .traceevent "V" 6 "R" "O" "a" 1 119 119 0 "§this" ""
+                .traceevent "V" 6 "R" "R" "r" 0 119 119 0 "first_tail" ""
+                .traceevent "V" 6 "R" "R" "r" 1 119 119 0 "second_tail" ""
+                .traceevent "V" 6 "R" "R" "r" 2 119 119 0 "third_tail" ""
+                loadsettpswap r25,4,a1 /* aka r31 */,256,r26 * 0x000349:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapsettpswap r0,256,r27,r1,r28         * 0x00034f:0111 Set/swap two call-window registers with one status value
+                settpswapcall r20,§awfy_list.listbenchmark.tail(),r25,r2,256,r29 * 0x000355:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn a1 /* aka r31 */,r26,r0,r27,r1,r28,r2,r29 * 0x00035c:010a Swap four register pairs in operand order
+                .traceevent "F" 4 "R" "R" "r" 20 119 119 0 "tail" ""
+                ret r20                                      * 0x000365:0031 Return op1
+                unlinkn r21,r22                              * 0x000367:011b Restore two registers to their frame-owned storage
+                unlink r23                                   * 0x00036a:00d5 Unlink op1
+                endlife r23                                  * 0x00036c:0202 End storage reference lifetime for op1
+                endlife r22                                  * 0x00036e:0202 End storage reference lifetime for op1
+                endlife r21                                  * 0x000370:0202 End storage reference lifetime for op1
+                .meta "awfy_list.listbenchmark.tail.x_value"
+                .meta "awfy_list.listbenchmark.tail.y_value"
+                .meta "awfy_list.listbenchmark.tail.z_value"
+                .srcstep 122 122 17 "awfy_list.crexx" 134 5 13 "    return z"
+                .traceevent "V" 6 "R" "R" "a" 4 122 122 0 "z" ""
+lb_372:         ret a4 /* aka r34 */                         * 0x000372:0031 Return op1
+                .meta "awfy_list.listbenchmark.tail.first_tail"
+                .meta "awfy_list.listbenchmark.tail.second_tail"
+                .meta "awfy_list.listbenchmark.tail.third_tail"
+                .meta "awfy_list.listbenchmark.tail.x"
+                .meta "awfy_list.listbenchmark.tail.x_next"
+                .meta "awfy_list.listbenchmark.tail.y"
+                .meta "awfy_list.listbenchmark.tail.y_next"
+                .meta "awfy_list.listbenchmark.tail.z"
+                .meta "awfy_list.listbenchmark.tail.z_next"
+                .meta "awfy_list.listbenchmark.tail.§this"
+*******************************************************************************
+

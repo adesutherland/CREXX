@@ -1182,18 +1182,22 @@ main() .locals=1
 
 ## `itof`
 
-Convert an integer payload to floating point in the same register.
+Convert an integer payload to floating point in the same register or directly
+into a separate destination.
 
 ### Forms
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
 | `0x00e7` | `itof rValue` | Assign `(double)rValue.int` to its float payload. |
+| `0x0127` | `itof rResult,rValue` | Copy `rValue.int` and its floating-point conversion into `rResult`. |
 
 ### Operands And Semantics
 
-Only the float payload changes. Large integers can round to the nearest
-representable host `double`; the original integer remains available unchanged.
+The in-place form changes only the destination float payload. The two-register
+form copies the source integer payload into the destination and writes its
+floating-point conversion there; the source register is unchanged. Large
+integers can round to the nearest representable host `double`.
 
 ### Signals
 

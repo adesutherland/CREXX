@@ -1,0 +1,903 @@
+*******************************************************************************
+* MODULE - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/base64_roundtrip-noopt.rxas
+* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/base64_roundtrip-noopt.rxas
+
+* CONSTANT POOL - Size 0xe258.  Dump of EXPOSED entries only (option -p not used):
+
+* 0x00dce0 EXPOSED-PROC rxfnsb.length() <-- as rxfnsb.length
+* 0x00ddb8 EXPOSED-PROC rxfnsb.bincompare() <-- as rxfnsb.bincompare
+* 0x00deb0 EXPOSED-PROC rxfnsb.binresize() <-- as rxfnsb.binresize
+* 0x00dfa8 EXPOSED-PROC rxfnsb.binlength() <-- as rxfnsb.binlength
+* 0x00e060 EXPOSED-PROC rxfnsb.substr() <-- as rxfnsb.substr
+* 0x00e160 EXPOSED-PROC rxfnsb.pos() <-- as rxfnsb.pos
+
+* CODE SEGMENT - Size 0x450
+
+.globals=0
+rxfnsb.length() .expose=rxfnsb.length
+.meta "rxfnsb.length"="b" ".int" rxfnsb.length() "string=.string"
+rxfnsb.bincompare() .expose=rxfnsb.bincompare
+.meta "rxfnsb.bincompare"="b" ".int" rxfnsb.bincompare() "left=.binary,right=.binary"
+rxfnsb.binresize() .expose=rxfnsb.binresize
+.meta "rxfnsb.binresize"="b" ".int" rxfnsb.binresize() "expose data=.binary,length=.int"
+rxfnsb.binlength() .expose=rxfnsb.binlength
+.meta "rxfnsb.binlength"="b" ".int" rxfnsb.binlength() "data=.binary"
+rxfnsb.substr() .expose=rxfnsb.substr
+.meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string=.string,start=.int,\?length=.int,\?pad=.string"
+rxfnsb.pos() .expose=rxfnsb.pos
+.meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,\?start=.int"
+
+main()          .locals=12
+                .meta "base64_roundtrip.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .meta "base64_roundtrip.main.decoded"="b" ".binary" r2
+                .srcstep 1 1 17 "base64_roundtrip.crexx" 19 1 18 "decoded = .binary"
+                null r2                                      * 0x000004:000e Null (clear) op1
+                .srcstep 2 2 17 "base64_roundtrip.crexx" 11 5 19 "arg argv = .string[]"
+                .meta "base64_roundtrip.main.argv"="b" ".string[*]" r0
+                brtpandt lb_f,a1 /* aka r13 */,512           * 0x000006:020c if op2 readable status flags & op3 true then goto op1
+                copy r0,a1 /* aka r13 */                     * 0x00000a:0008 Copy op2 to op1
+                br lb_12                                     * 0x00000d:0024 Branch to op1
+lb_f:           swap r0,a1 /* aka r13 */                     * 0x00000f:01fe Swap op1 and op2
+                .srcstep 3 3 17 "base64_roundtrip.crexx" 13 1 16 "repetitions = 1"
+                .meta "base64_roundtrip.main.repetitions"="b" ".int" r5
+lb_12:          load r5,1                                    * 0x000012:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 3 3 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 3 3 0 "repetitions" ""
+                .srcstep 5 5 17 "base64_roundtrip.crexx" 14 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 6 5 5 0 "argv" ""
+                getattrs r7,r0,0                             * 0x000015:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 7 5 5 0 "argv" ""
+                igte r7,r7,1                                 * 0x000019:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 7 5 5 0 "" ""
+                brf lb_24,r7                                 * 0x00001d:0026 Branch to op1 if op2 false
+                .srcstep 6 6 17 "base64_roundtrip.crexx" 14 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 4 4 17 "base64_roundtrip.crexx" 14 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minstoiattr1 r5,r0,1                         * 0x000020:01a4 Ensure and convert one-based string attribute op3 of op2 directly into integer op1
+                .traceevent "V" 6 "R" "I" "r" 5 4 4 0 "argv" ""
+                .traceevent "A" 6 "R" "I" "r" 5 4 4 0 "repetitions" ""
+                .srcstep 8 8 17 "base64_roundtrip.crexx" 15 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 5 8 8 0 "repetitions" ""
+lb_24:          ilt r8,r5,1                                  * 0x000024:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 8 8 8 0 "" ""
+                brf lb_39,r8                                 * 0x000028:0026 Branch to op1 if op2 false
+                .srcstep 9 9 17 "base64_roundtrip.crexx" 15 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 7 7 17 "base64_roundtrip.crexx" 15 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                load r7,"repetitions must be positive"       * 0x00002b:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 7 7 7 0 "" ""
+                load r6,1                                    * 0x00002e:0001 Load op1 with op2
+                settpcall r9,fail(),r6,r7,768                * 0x000031:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 9 7 7 0 "fail" ""
+                ret r9                                       * 0x000037:0031 Return op1
+                .srcstep 10 10 17 "base64_roundtrip.crexx" 17 1 19 "input = make_input()"
+                .meta "base64_roundtrip.main.input"="b" ".binary" r4
+lb_39:          load r9,0                                    * 0x000039:0001 Load op1 with op2
+                call r4,make_input(),r9                      * 0x00003c:002e Call procedure (op1=op2(op3...) )
+                .traceevent "F" 4 "R" "X" "r" 4 10 10 0 "make_input" ""
+                .traceevent "A" 6 "R" "X" "r" 4 10 10 0 "input" ""
+                .srcstep 11 11 17 "base64_roundtrip.crexx" 18 1 13 "encoded = \"\""
+                .meta "base64_roundtrip.main.encoded"="b" ".string" r3
+                load r3,""                                   * 0x000040:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 3 11 11 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 3 11 11 0 "encoded" ""
+                .srcstep 17 17 17 "base64_roundtrip.crexx" 20 1 3 "do iteration = 1 to repetitions"
+                .srcstep 12 12 17 "base64_roundtrip.crexx" 20 4 17 "do iteration = 1 to repetitions"
+                .meta "base64_roundtrip.main.iteration"="b" ".int" r9
+                load r9,1                                    * 0x000043:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 9 12 12 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 9 12 12 0 "iteration" ""
+                .srcstep 13 13 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "repetitions" ""
+                .srcstep 13 13 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+lb_46:          igt r8,r9,r5                                 * 0x000046:0068 Int Greater than op1=(op2>op3)
+                brt lb_6a,r8                                 * 0x00004a:0025 Branch to op1 if op2 true
+                .srcstep 15 15 17 "base64_roundtrip.crexx" 21 3 33 "  encoded = base64_encode(input)"
+                .traceevent "V" 6 "R" "X" "r" 4 15 15 0 "input" ""
+                load r6,1                                    * 0x00004d:0001 Load op1 with op2
+                settpswapcall r3,base64_encode(),r6,r4,256,r7 * 0x000050:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r4,r7                                   * 0x000057:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "S" "r" 3 15 15 0 "base64_encode" ""
+                .traceevent "A" 6 "R" "S" "r" 3 15 15 0 "encoded" ""
+                .srcstep 16 16 17 "base64_roundtrip.crexx" 22 3 35 "  decoded = base64_decode(encoded)"
+                .traceevent "V" 6 "R" "S" "r" 3 16 16 0 "encoded" ""
+                load r6,1                                    * 0x00005a:0001 Load op1 with op2
+                settpswapcall r2,base64_decode(),r6,r3,256,r7 * 0x00005d:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r3,r7                                   * 0x000064:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "X" "r" 2 16 16 0 "base64_decode" ""
+                .traceevent "A" 6 "R" "X" "r" 2 16 16 0 "decoded" ""
+                .srcstep 14 14 17 "base64_roundtrip.crexx" 20 4 13 "do iteration = 1 to repetitions"
+                .srcstep 18 18 17 "base64_roundtrip.crexx" 23 1 4 "end"
+                bctp lb_46,r9                                * 0x000067:015d inc op2; goto op1
+                .meta "base64_roundtrip.main.iteration"
+                .srcstep 20 20 17 "base64_roundtrip.crexx" 25 1 27 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .traceevent "V" 6 "R" "S" "r" 3 20 20 0 "encoded" ""
+lb_6a:          load r8,1                                    * 0x00006a:0001 Load op1 with op2
+                settpswapcall r7,rxfnsb.length(),r8,r3,256,r9 * 0x00006d:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r3,r9                                   * 0x000074:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 7 20 20 0 "length" ""
+                ine r9,r7,1368                               * 0x000077:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 9 20 20 0 "" ""
+                brf lb_9a,r9                                 * 0x00007b:0026 Branch to op1 if op2 false
+                .srcstep 21 21 17 "base64_roundtrip.crexx" 25 28 32 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .srcstep 19 19 17 "base64_roundtrip.crexx" 25 33 101 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .traceevent "V" 6 "R" "S" "r" 3 19 19 0 "encoded" ""
+                load r10,1                                   * 0x00007e:0001 Load op1 with op2
+                settpswapcall r6,rxfnsb.length(),r10,r3,256,r11 * 0x000081:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r3,r11                                  * 0x000088:01fe Swap op1 and op2
+                itosconcat r8,"expected encoded length 1368, got ",r6 * 0x00008b:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "F" 4 "R" "S" "r" 6 19 19 0 "length" ""
+                .traceevent "O" 4 "R" "S" "r" 8 19 19 0 "" ""
+                load r7,1                                    * 0x00008f:0001 Load op1 with op2
+                settpcall r11,fail(),r7,r8,768               * 0x000092:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 11 19 19 0 "fail" ""
+                ret r11                                      * 0x000098:0031 Return op1
+                .srcstep 23 23 17 "base64_roundtrip.crexx" 26 1 35 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                .traceevent "V" 6 "R" "X" "r" 4 23 23 0 "input" ""
+                .traceevent "V" 6 "R" "X" "r" 2 23 23 0 "decoded" ""
+lb_9a:          loadsettpswap r9,2,r4,256,r10                * 0x00009a:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapcall r8,rxfnsb.bincompare(),r9,r2,256,r11 * 0x0000a0:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn r4,r10,r2,r11                          * 0x0000a7:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "I" "r" 8 23 23 0 "bincompare" ""
+                ine r11,r8,0                                 * 0x0000ac:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 11 23 23 0 "" ""
+                brf lb_c1,r11                                * 0x0000b0:0026 Branch to op1 if op2 false
+                .srcstep 24 24 17 "base64_roundtrip.crexx" 26 36 40 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                .srcstep 22 22 17 "base64_roundtrip.crexx" 26 41 87 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                load r10,"decoded bytes differ from input"   * 0x0000b3:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 10 22 22 0 "" ""
+                load r9,1                                    * 0x0000b6:0001 Load op1 with op2
+                settpcall r8,fail(),r9,r10,768               * 0x0000b9:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 8 22 22 0 "fail" ""
+                ret r8                                       * 0x0000bf:0031 Return op1
+                .srcstep 25 25 17 "base64_roundtrip.crexx" 28 1 34 "checksum = byte_checksum(decoded)"
+                .meta "base64_roundtrip.main.checksum"="b" ".int" r1
+                .traceevent "V" 6 "R" "X" "r" 2 25 25 0 "decoded" ""
+lb_c1:          load r10,1                                   * 0x0000c1:0001 Load op1 with op2
+                settpswapcall r1,byte_checksum(),r10,r2,256,r11 * 0x0000c4:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r2,r11                                  * 0x0000cb:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 1 25 25 0 "byte_checksum" ""
+                .traceevent "A" 6 "R" "I" "r" 1 25 25 0 "checksum" ""
+                .srcstep 27 27 17 "base64_roundtrip.crexx" 29 1 22 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+                .traceevent "V" 6 "R" "I" "r" 1 27 27 0 "checksum" ""
+                ine r11,r1,130560                            * 0x0000ce:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 11 27 27 0 "" ""
+                brf lb_e4,r11                                * 0x0000d2:0026 Branch to op1 if op2 false
+                .srcstep 28 28 17 "base64_roundtrip.crexx" 29 23 27 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+                .srcstep 26 26 17 "base64_roundtrip.crexx" 29 28 85 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+                itosconcat r10,"expected checksum 130560, got ",r1 * 0x0000d5:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 1 26 26 0 "checksum" ""
+                .traceevent "O" 4 "R" "S" "r" 10 26 26 0 "" ""
+                load r9,1                                    * 0x0000d9:0001 Load op1 with op2
+                settpcall r8,fail(),r9,r10,768               * 0x0000dc:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 8 26 26 0 "fail" ""
+                ret r8                                       * 0x0000e2:0031 Return op1
+                .srcstep 29 29 17 "base64_roundtrip.crexx" 31 1 110 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+lb_e4:          itosconcat r11,"benchmark=base64_roundtrip repetitions=",r5 * 0x0000e4:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 5 29 29 0 "repetitions" ""
+                .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+                sconcatitos r11,"encoded_length=",r8         * 0x0000e8:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 3 29 29 0 "encoded" ""
+                load r9,1                                    * 0x0000ec:0001 Load op1 with op2
+                settpswapcall r8,rxfnsb.length(),r9,r3,256,r10 * 0x0000ef:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r3,r10                                  * 0x0000f6:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "S" "r" 8 29 29 0 "length" ""
+                append r11,r8                                * 0x0000f9:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+                sconcatitos r11,"checksum=",r1               * 0x0000fc:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 1 29 29 0 "checksum" ""
+                append r11,r1                                * 0x000100:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+                say r11                                      * 0x000103:01c2 Say op1
+                .srcstep 30 30 17 "base64_roundtrip.crexx" 32 1 29 "say \"PASS: Base64 Roundtrip\""
+                say "PASS: Base64 Roundtrip"                 * 0x000105:01c7 Say op1
+                .srcstep 31 31 17 "base64_roundtrip.crexx" 33 1 9 "return 0"
+                ret 0                                        * 0x000107:0032 Return op1
+                .meta "base64_roundtrip.main.argv"
+                .meta "base64_roundtrip.main.checksum"
+                .meta "base64_roundtrip.main.decoded"
+                .meta "base64_roundtrip.main.encoded"
+                .meta "base64_roundtrip.main.input"
+                .meta "base64_roundtrip.main.repetitions"
+
+make_input()    .locals=6
+                .meta "base64_roundtrip.make_input"="b" ".binary" make_input() ""
+                .srcstep 41 41 17 "base64_roundtrip.crexx" 35 1 32 "make_input: procedure = .binary"
+                numsci 18,1,1                                * 0x000109:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .meta "base64_roundtrip.make_input.data"="b" ".binary" r0
+                .srcstep 32 32 17 "base64_roundtrip.crexx" 36 3 17 "  data = .binary"
+                null r0                                      * 0x00010d:000e Null (clear) op1
+                .srcstep 33 33 17 "base64_roundtrip.crexx" 37 3 28 "  call binresize data, 1024"
+                .traceevent "V" 6 "R" "X" "r" 0 33 33 0 "data" ""
+                load r3,1024                                 * 0x00010f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 33 33 0 "" ""
+                load r1,2                                    * 0x000112:0001 Load op1 with op2
+                swap r2,r0                                   * 0x000115:01fe Swap op1 and op2
+                call r4,rxfnsb.binresize(),r1                * 0x000118:002e Call procedure (op1=op2(op3...) )
+                swap r0,r2                                   * 0x00011c:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 4 33 33 0 "binresize" ""
+                .srcstep 38 38 17 "base64_roundtrip.crexx" 38 3 5 "  do offset = 0 to 1023"
+                .srcstep 34 34 17 "base64_roundtrip.crexx" 38 6 16 "  do offset = 0 to 1023"
+                .meta "base64_roundtrip.make_input.offset"="b" ".int" r3
+                load r3,0                                    * 0x00011f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 34 34 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 34 34 0 "offset" ""
+                .srcstep 35 35 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+                load r2,1023                                 * 0x000122:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+                .srcstep 35 35 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+lb_125:         igt r1,r3,r2                                 * 0x000125:0068 Int Greater than op1=(op2>op3)
+                brt lb_13f,r1                                * 0x000129:0025 Branch to op1 if op2 true
+                .srcstep 37 37 17 "base64_roundtrip.crexx" 39 5 56 "    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256"
+                .traceevent "V" 6 "R" "X" "r" 0 37 37 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 3 37 37 0 "offset" ""
+                .traceevent "V" 6 "R" "I" "r" 3 37 37 0 "offset" ""
+                imult r5,r3,31                               * 0x00012c:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 5 37 37 0 "" ""
+                iadd r5,r5,7                                 * 0x000130:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 5 37 37 0 "" ""
+                imod r5,r5,256                               * 0x000134:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 5 37 37 0 "" ""
+                bsetu8 r0,r3,r5                              * 0x000138:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 36 36 17 "base64_roundtrip.crexx" 38 6 12 "  do offset = 0 to 1023"
+                .srcstep 39 39 17 "base64_roundtrip.crexx" 40 3 6 "  end"
+                bctp lb_125,r3                               * 0x00013c:015d inc op2; goto op1
+                .meta "base64_roundtrip.make_input.offset"
+                .srcstep 40 40 17 "base64_roundtrip.crexx" 41 3 14 "  return data"
+                .traceevent "V" 6 "R" "X" "r" 0 40 40 0 "data" ""
+lb_13f:         ret r0                                       * 0x00013f:0031 Return op1
+                .meta "base64_roundtrip.make_input.data"
+
+base64_encode() .locals=22
+                .meta "base64_roundtrip.base64_encode"="b" ".string" base64_encode() "data=.binary"
+                .srcstep 82 82 17 "base64_roundtrip.crexx" 43 1 35 "base64_encode: procedure = .string"
+                numsci 18,1,1                                * 0x000141:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 42 42 17 "base64_roundtrip.crexx" 44 7 21 "  arg data = .binary"
+                .meta "base64_roundtrip.base64_encode.data"="b" ".binary" a1 /* aka r23 */
+                .meta "base64_roundtrip.base64_encode.result"="b" ".binary" r6
+                .srcstep 43 43 17 "base64_roundtrip.crexx" 48 3 19 "  result = .binary"
+                null r6                                      * 0x000145:000e Null (clear) op1
+                .srcstep 44 44 17 "base64_roundtrip.crexx" 45 3 91 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\" as .binary"
+                .meta "base64_roundtrip.base64_encode.alphabet"="b" ".binary" r0
+                load r7,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" * 0x000147:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 7 44 44 0 "" ""
+                scopy r0,r7                                  * 0x00014a:000b Copy String op2 to op1
+                stobin r0                                    * 0x00014d:00c0 Convert string register bytes to binary bytes
+                .traceevent "A" 6 "R" "X" "r" 0 44 44 0 "alphabet" ""
+                .srcstep 45 45 17 "base64_roundtrip.crexx" 46 3 33 "  input_length = binlength(data)"
+                .meta "base64_roundtrip.base64_encode.input_length"="b" ".int" r3
+                .traceevent "V" 6 "R" "X" "a" 1 45 45 0 "data" ""
+                load r7,1                                    * 0x00014f:0001 Load op1 with op2
+                settpswapcall r3,rxfnsb.binlength(),r7,a1 /* aka r23 */,256,r8 * 0x000152:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap a1 /* aka r23 */,r8                     * 0x000159:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 3 45 45 0 "binlength" ""
+                .traceevent "A" 6 "R" "I" "r" 3 45 45 0 "input_length" ""
+                .srcstep 46 46 17 "base64_roundtrip.crexx" 47 3 53 "  encoded_length = ((input_length + 2) <idiv> 3) * 4"
+                .meta "base64_roundtrip.base64_encode.encoded_length"="b" ".int" r2
+                .traceevent "V" 6 "R" "I" "r" 3 46 46 0 "input_length" ""
+                iadd r8,r3,2                                 * 0x00015c:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 8 46 46 0 "" ""
+                idiv r8,r8,3                                 * 0x000160:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 8 46 46 0 "" ""
+                imult r2,r8,4                                * 0x000164:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 2 46 46 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 46 46 0 "encoded_length" ""
+                .srcstep 47 47 17 "base64_roundtrip.crexx" 49 3 40 "  call binresize result, encoded_length"
+                .traceevent "V" 6 "R" "X" "r" 6 47 47 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 2 47 47 0 "encoded_length" ""
+                load r7,2                                    * 0x000168:0001 Load op1 with op2
+                swap r8,r6                                   * 0x00016b:01fe Swap op1 and op2
+                swapcall r10,rxfnsb.binresize(),r7,r2,r9     * 0x00016e:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swapn r6,r8,r2,r9                            * 0x000174:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "I" "r" 10 47 47 0 "binresize" ""
+                .srcstep 48 48 17 "base64_roundtrip.crexx" 50 3 19 "  input_offset = 0"
+                .meta "base64_roundtrip.base64_encode.input_offset"="b" ".int" r4
+                load r4,0                                    * 0x000179:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 48 48 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 48 48 0 "input_offset" ""
+                .srcstep 49 49 17 "base64_roundtrip.crexx" 51 3 20 "  output_offset = 0"
+                .meta "base64_roundtrip.base64_encode.output_offset"="b" ".int" r5
+                load r5,0                                    * 0x00017c:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 49 49 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 49 49 0 "output_offset" ""
+                .srcstep 79 79 17 "base64_roundtrip.crexx" 52 3 5 "  do while input_offset < input_length"
+                .srcstep 50 50 17 "base64_roundtrip.crexx" 52 6 39 "  do while input_offset < input_length"
+                .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "input_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "input_length" ""
+lb_17f:         ilt r16,r4,r3                                * 0x00017f:006e Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 16 0 0 0 "" ""
+                brf lb_238,r16                               * 0x000183:0026 Branch to op1 if op2 false
+                .srcstep 51 51 17 "base64_roundtrip.crexx" 53 5 44 "    remaining = input_length - input_offset"
+                .meta "base64_roundtrip.base64_encode.remaining"="b" ".int" r15
+                .traceevent "V" 6 "R" "I" "r" 3 51 51 0 "input_length" ""
+                .traceevent "V" 6 "R" "I" "r" 4 51 51 0 "input_offset" ""
+                isub r15,r3,r4                               * 0x000186:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 15 51 51 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 15 51 51 0 "remaining" ""
+                .srcstep 52 52 17 "base64_roundtrip.crexx" 54 5 40 "    byte1 = <at..u8>(input_offset) data"
+                .meta "base64_roundtrip.base64_encode.byte1"="b" ".int" r9
+                .traceevent "V" 6 "R" "X" "a" 1 52 52 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 4 52 52 0 "input_offset" ""
+                bgetu8 r9,a1 /* aka r23 */,r4                * 0x00018a:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                .traceevent "A" 6 "R" "I" "r" 9 52 52 0 "byte1" ""
+                .srcstep 53 53 17 "base64_roundtrip.crexx" 55 5 14 "    byte2 = 0"
+                .meta "base64_roundtrip.base64_encode.byte2"="b" ".int" r8
+                load r8,0                                    * 0x00018e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 53 53 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 53 53 0 "byte2" ""
+                .srcstep 54 54 17 "base64_roundtrip.crexx" 56 5 14 "    byte3 = 0"
+                .meta "base64_roundtrip.base64_encode.byte3"="b" ".int" r7
+                load r7,0                                    * 0x000191:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 54 54 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 54 54 0 "byte3" ""
+                .srcstep 56 56 17 "base64_roundtrip.crexx" 57 5 21 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+                .traceevent "V" 6 "R" "I" "r" 15 56 56 0 "remaining" ""
+                igt r17,r15,1                                * 0x000194:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 17 56 56 0 "" ""
+                brf lb_1a3,r17                               * 0x000198:0026 Branch to op1 if op2 false
+                .srcstep 57 57 17 "base64_roundtrip.crexx" 57 22 26 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+                .srcstep 55 55 17 "base64_roundtrip.crexx" 57 27 66 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+                .traceevent "V" 6 "R" "X" "a" 1 55 55 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 4 55 55 0 "input_offset" ""
+                iadd r18,r4,1                                * 0x00019b:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 18 55 55 0 "" ""
+                bgetu8 r8,a1 /* aka r23 */,r18               * 0x00019f:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                .traceevent "A" 6 "R" "I" "r" 8 55 55 0 "byte2" ""
+                .srcstep 59 59 17 "base64_roundtrip.crexx" 58 5 21 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+                .traceevent "V" 6 "R" "I" "r" 15 59 59 0 "remaining" ""
+lb_1a3:         igt r18,r15,2                                * 0x0001a3:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 18 59 59 0 "" ""
+                brf lb_1b2,r18                               * 0x0001a7:0026 Branch to op1 if op2 false
+                .srcstep 60 60 17 "base64_roundtrip.crexx" 58 22 26 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+                .srcstep 58 58 17 "base64_roundtrip.crexx" 58 27 66 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+                .traceevent "V" 6 "R" "X" "a" 1 58 58 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 4 58 58 0 "input_offset" ""
+                iadd r17,r4,2                                * 0x0001aa:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 17 58 58 0 "" ""
+                bgetu8 r7,a1 /* aka r23 */,r17               * 0x0001ae:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                .traceevent "A" 6 "R" "I" "r" 7 58 58 0 "byte3" ""
+                .srcstep 61 61 17 "base64_roundtrip.crexx" 60 5 28 "    digit1 = byte1 <idiv> 4"
+                .meta "base64_roundtrip.base64_encode.digit1"="b" ".int" r11
+                .traceevent "V" 6 "R" "I" "r" 9 61 61 0 "byte1" ""
+lb_1b2:         idiv r11,r9,4                                * 0x0001b2:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 11 61 61 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 11 61 61 0 "digit1" ""
+                .srcstep 62 62 17 "base64_roundtrip.crexx" 61 5 52 "    digit2 = (byte1 <mod> 4) * 16 + byte2 <idiv> 16"
+                .meta "base64_roundtrip.base64_encode.digit2"="b" ".int" r12
+                .traceevent "V" 6 "R" "I" "r" 9 62 62 0 "byte1" ""
+                imod r18,r9,4                                * 0x0001b6:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 18 62 62 0 "" ""
+                imult r18,r18,16                             * 0x0001ba:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 18 62 62 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 8 62 62 0 "byte2" ""
+                idiv r17,r8,16                               * 0x0001be:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 17 62 62 0 "" ""
+                iadd r12,r18,r17                             * 0x0001c2:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 12 62 62 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 12 62 62 0 "digit2" ""
+                .srcstep 63 63 17 "base64_roundtrip.crexx" 62 5 52 "    digit3 = (byte2 <mod> 16) * 4 + byte3 <idiv> 64"
+                .meta "base64_roundtrip.base64_encode.digit3"="b" ".int" r13
+                .traceevent "V" 6 "R" "I" "r" 8 63 63 0 "byte2" ""
+                imod r18,r8,16                               * 0x0001c6:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 18 63 63 0 "" ""
+                imult r18,r18,4                              * 0x0001ca:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 18 63 63 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 7 63 63 0 "byte3" ""
+                idiv r17,r7,64                               * 0x0001ce:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 17 63 63 0 "" ""
+                iadd r13,r18,r17                             * 0x0001d2:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 13 63 63 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 13 63 63 0 "digit3" ""
+                .srcstep 64 64 17 "base64_roundtrip.crexx" 63 5 28 "    digit4 = byte3 <mod> 64"
+                .meta "base64_roundtrip.base64_encode.digit4"="b" ".int" r14
+                .traceevent "V" 6 "R" "I" "r" 7 64 64 0 "byte3" ""
+                imod r14,r7,64                               * 0x0001d6:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 14 64 64 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 64 64 0 "digit4" ""
+                .srcstep 65 65 17 "base64_roundtrip.crexx" 65 5 63 "    <at..u8>(output_offset) result = <at..u8>(digit1) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 6 65 65 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 65 65 0 "output_offset" ""
+                .traceevent "V" 6 "R" "X" "r" 0 65 65 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 11 65 65 0 "digit1" ""
+                bgetu8 r18,r0,r11                            * 0x0001da:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r6,r5,r18                             * 0x0001de:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 66 66 17 "base64_roundtrip.crexx" 66 5 67 "    <at..u8>(output_offset + 1) result = <at..u8>(digit2) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 6 66 66 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 66 66 0 "output_offset" ""
+                iadd r18,r5,1                                * 0x0001e2:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 18 66 66 0 "" ""
+                .traceevent "V" 6 "R" "X" "r" 0 66 66 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 12 66 66 0 "digit2" ""
+                bgetu8 r17,r0,r12                            * 0x0001e6:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r6,r18,r17                            * 0x0001ea:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 69 69 17 "base64_roundtrip.crexx" 67 5 21 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+                .traceevent "V" 6 "R" "I" "r" 15 69 69 0 "remaining" ""
+                igt r18,r15,1                                * 0x0001ee:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 18 69 69 0 "" ""
+                brf lb_203,r18                               * 0x0001f2:0026 Branch to op1 if op2 false
+                .srcstep 70 70 17 "base64_roundtrip.crexx" 67 22 26 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+                .srcstep 67 67 17 "base64_roundtrip.crexx" 67 27 89 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 6 67 67 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 67 67 0 "output_offset" ""
+                iadd r17,r5,2                                * 0x0001f5:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 17 67 67 0 "" ""
+                .traceevent "V" 6 "R" "X" "r" 0 67 67 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 13 67 67 0 "digit3" ""
+                bgetu8 r19,r0,r13                            * 0x0001f9:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r6,r17,r19                            * 0x0001fd:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                br lb_20e                                    * 0x000201:0024 Branch to op1
+                .srcstep 71 71 17 "base64_roundtrip.crexx" 68 5 9 "    else <at..u8>(output_offset + 2) result = 61"
+                .srcstep 68 68 17 "base64_roundtrip.crexx" 68 10 49 "    else <at..u8>(output_offset + 2) result = 61"
+                .traceevent "V" 6 "R" "X" "r" 6 68 68 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 68 68 0 "output_offset" ""
+lb_203:         iadd r20,r5,2                                * 0x000203:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 20 68 68 0 "" ""
+                load r21,61                                  * 0x000207:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 21 68 68 0 "" ""
+                bsetu8 r6,r20,r21                            * 0x00020a:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 74 74 17 "base64_roundtrip.crexx" 69 5 21 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+                .traceevent "V" 6 "R" "I" "r" 15 74 74 0 "remaining" ""
+lb_20e:         igt r21,r15,2                                * 0x00020e:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 21 74 74 0 "" ""
+                brf lb_223,r21                               * 0x000212:0026 Branch to op1 if op2 false
+                .srcstep 75 75 17 "base64_roundtrip.crexx" 69 22 26 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+                .srcstep 72 72 17 "base64_roundtrip.crexx" 69 27 89 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 6 72 72 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 72 72 0 "output_offset" ""
+                iadd r20,r5,3                                * 0x000215:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 20 72 72 0 "" ""
+                .traceevent "V" 6 "R" "X" "r" 0 72 72 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 14 72 72 0 "digit4" ""
+                bgetu8 r19,r0,r14                            * 0x000219:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r6,r20,r19                            * 0x00021d:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                br lb_22e                                    * 0x000221:0024 Branch to op1
+                .srcstep 76 76 17 "base64_roundtrip.crexx" 70 5 9 "    else <at..u8>(output_offset + 3) result = 61"
+                .srcstep 73 73 17 "base64_roundtrip.crexx" 70 10 49 "    else <at..u8>(output_offset + 3) result = 61"
+                .traceevent "V" 6 "R" "X" "r" 6 73 73 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 73 73 0 "output_offset" ""
+lb_223:         iadd r18,r5,3                                * 0x000223:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 18 73 73 0 "" ""
+                load r17,61                                  * 0x000227:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 17 73 73 0 "" ""
+                bsetu8 r6,r18,r17                            * 0x00022a:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 77 77 17 "base64_roundtrip.crexx" 71 5 36 "    input_offset = input_offset + 3"
+                .traceevent "V" 6 "R" "I" "r" 4 77 77 0 "input_offset" ""
+lb_22e:         iadd r4,r4,3                                 * 0x00022e:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 4 77 77 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 77 77 0 "input_offset" ""
+                .srcstep 78 78 17 "base64_roundtrip.crexx" 72 5 38 "    output_offset = output_offset + 4"
+                .traceevent "V" 6 "R" "I" "r" 5 78 78 0 "output_offset" ""
+                iadd r5,r5,4                                 * 0x000232:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 5 78 78 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 78 78 0 "output_offset" ""
+                .srcstep 80 80 17 "base64_roundtrip.crexx" 73 3 6 "  end"
+                br lb_17f                                    * 0x000236:0024 Branch to op1
+                .meta "base64_roundtrip.base64_encode.byte1"
+                .meta "base64_roundtrip.base64_encode.byte2"
+                .meta "base64_roundtrip.base64_encode.byte3"
+                .meta "base64_roundtrip.base64_encode.digit1"
+                .meta "base64_roundtrip.base64_encode.digit2"
+                .meta "base64_roundtrip.base64_encode.digit3"
+                .meta "base64_roundtrip.base64_encode.digit4"
+                .meta "base64_roundtrip.base64_encode.remaining"
+                .srcstep 81 81 17 "base64_roundtrip.crexx" 74 3 27 "  return result as .string"
+                .traceevent "V" 6 "R" "X" "r" 6 81 81 0 "result" ""
+lb_238:         bcopy r21,r6                                 * 0x000238:0245 Copy Binary op2 to op1
+                bintos r21                                   * 0x00023b:00c1 Convert binary register bytes to string bytes after UTF-8 validation
+                ret r21                                      * 0x00023d:0031 Return op1
+                .meta "base64_roundtrip.base64_encode.alphabet"
+                .meta "base64_roundtrip.base64_encode.data"
+                .meta "base64_roundtrip.base64_encode.encoded_length"
+                .meta "base64_roundtrip.base64_encode.input_length"
+                .meta "base64_roundtrip.base64_encode.input_offset"
+                .meta "base64_roundtrip.base64_encode.output_offset"
+                .meta "base64_roundtrip.base64_encode.result"
+
+base64_decode() .locals=24
+                .meta "base64_roundtrip.base64_decode"="b" ".binary" base64_decode() "encoded=.string"
+                .srcstep 125 125 17 "base64_roundtrip.crexx" 76 1 35 "base64_decode: procedure = .binary"
+                numsci 18,1,1                                * 0x00023f:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 83 83 17 "base64_roundtrip.crexx" 77 7 24 "  arg encoded = .string"
+                .meta "base64_roundtrip.base64_decode.encoded"="b" ".string" a1 /* aka r25 */
+                .meta "base64_roundtrip.base64_decode.result"="b" ".binary" r7
+                .srcstep 84 84 17 "base64_roundtrip.crexx" 84 3 19 "  result = .binary"
+                null r7                                      * 0x000243:000e Null (clear) op1
+                .srcstep 85 85 17 "base64_roundtrip.crexx" 78 3 80 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\""
+                .meta "base64_roundtrip.base64_decode.alphabet"="b" ".string" r0
+                load r0,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" * 0x000245:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 0 85 85 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 0 85 85 0 "alphabet" ""
+                .srcstep 86 86 17 "base64_roundtrip.crexx" 79 3 35 "  encoded_length = length(encoded)"
+                .meta "base64_roundtrip.base64_decode.encoded_length"="b" ".int" r2
+                .traceevent "V" 6 "R" "S" "a" 1 86 86 0 "encoded" ""
+                load r8,1                                    * 0x000248:0001 Load op1 with op2
+                settpswapcall r2,rxfnsb.length(),r8,a1 /* aka r25 */,256,r9 * 0x00024b:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap a1 /* aka r25 */,r9                     * 0x000252:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 2 86 86 0 "length" ""
+                .traceevent "A" 6 "R" "I" "r" 2 86 86 0 "encoded_length" ""
+                .srcstep 87 87 17 "base64_roundtrip.crexx" 80 3 14 "  padding = 0"
+                .meta "base64_roundtrip.base64_decode.padding"="b" ".int" r6
+                load r6,0                                    * 0x000255:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 6 87 87 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 6 87 87 0 "padding" ""
+                .srcstep 89 89 17 "base64_roundtrip.crexx" 81 3 46 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "S" "a" 1 89 89 0 "encoded" ""
+                .traceevent "V" 6 "R" "I" "r" 2 89 89 0 "encoded_length" ""
+                load r11,1                                   * 0x000258:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 11 89 89 0 "" ""
+                loadsettpswap r8,4,a1 /* aka r25 */,256,r9   * 0x00025b:010d Load op1, set op3 status flags, then swap op3 and op5
+                swapsettp r10,r2,r11,256                     * 0x000261:010e Swap op1/op2 then set op3 status flags
+                settpcall r13,rxfnsb.substr(),r8,r12,512     * 0x000266:011a Set op4 status then call op2 with count/window op3
+                swapn a1 /* aka r25 */,r9,r2,r10             * 0x00026c:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "S" "r" 13 89 89 0 "substr" ""
+                req r13,r13,"="                              * 0x000271:0234 Loose REXX Equals op1=(op2=op3)
+                .traceevent "O" 4 "R" "B" "r" 13 89 89 0 "" ""
+                brf lb_27c,r13                               * 0x000275:0026 Branch to op1 if op2 false
+                .srcstep 90 90 17 "base64_roundtrip.crexx" 81 47 51 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .srcstep 88 88 17 "base64_roundtrip.crexx" 81 52 73 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "I" "r" 6 88 88 0 "padding" ""
+                iadd r6,r6,1                                 * 0x000278:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 6 88 88 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 6 88 88 0 "padding" ""
+                .srcstep 92 92 17 "base64_roundtrip.crexx" 82 3 50 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "S" "a" 1 92 92 0 "encoded" ""
+                .traceevent "V" 6 "R" "I" "r" 2 92 92 0 "encoded_length" ""
+lb_27c:         isub r11,r2,1                                * 0x00027c:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 11 92 92 0 "" ""
+                load r12,1                                   * 0x000280:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 92 92 0 "" ""
+                loadsettpswap r9,4,a1 /* aka r25 */,256,r10  * 0x000283:010d Load op1, set op3 status flags, then swap op3 and op5
+                settp r12,256                                * 0x000289:0205 sets externally writable register status flags, preserving VM-private flags
+                settpcall r8,rxfnsb.substr(),r9,r13,512      * 0x00028c:011a Set op4 status then call op2 with count/window op3
+                swap a1 /* aka r25 */,r10                    * 0x000292:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "S" "r" 8 92 92 0 "substr" ""
+                req r13,r8,"="                               * 0x000295:0234 Loose REXX Equals op1=(op2=op3)
+                .traceevent "O" 4 "R" "B" "r" 13 92 92 0 "" ""
+                brf lb_2a0,r13                               * 0x000299:0026 Branch to op1 if op2 false
+                .srcstep 93 93 17 "base64_roundtrip.crexx" 82 51 55 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .srcstep 91 91 17 "base64_roundtrip.crexx" 82 56 77 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "I" "r" 6 91 91 0 "padding" ""
+                iadd r6,r6,1                                 * 0x00029c:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 6 91 91 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 6 91 91 0 "padding" ""
+                .srcstep 94 94 17 "base64_roundtrip.crexx" 83 3 58 "  output_length = (encoded_length <idiv> 4) * 3 - padding"
+                .meta "base64_roundtrip.base64_decode.output_length"="b" ".int" r4
+                .traceevent "V" 6 "R" "I" "r" 2 94 94 0 "encoded_length" ""
+lb_2a0:         idiv r13,r2,4                                * 0x0002a0:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 13 94 94 0 "" ""
+                imult r13,r13,3                              * 0x0002a4:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 13 94 94 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 6 94 94 0 "padding" ""
+                isub r4,r13,r6                               * 0x0002a8:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 4 94 94 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 94 94 0 "output_length" ""
+                .srcstep 95 95 17 "base64_roundtrip.crexx" 85 3 39 "  call binresize result, output_length"
+                .traceevent "V" 6 "R" "X" "r" 7 95 95 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 4 95 95 0 "output_length" ""
+                load r11,2                                   * 0x0002ac:0001 Load op1 with op2
+                swap r12,r7                                  * 0x0002af:01fe Swap op1 and op2
+                swapcall r10,rxfnsb.binresize(),r11,r4,r13   * 0x0002b2:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swapn r7,r12,r4,r13                          * 0x0002b8:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "I" "r" 10 95 95 0 "binresize" ""
+                .srcstep 96 96 17 "base64_roundtrip.crexx" 87 3 19 "  input_offset = 1"
+                .meta "base64_roundtrip.base64_decode.input_offset"="b" ".int" r3
+                load r3,1                                    * 0x0002bd:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 96 96 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 96 96 0 "input_offset" ""
+                .srcstep 97 97 17 "base64_roundtrip.crexx" 88 3 20 "  output_offset = 0"
+                .meta "base64_roundtrip.base64_decode.output_offset"="b" ".int" r5
+                load r5,0                                    * 0x0002c0:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 97 97 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 97 97 0 "output_offset" ""
+                .srcstep 122 122 17 "base64_roundtrip.crexx" 89 3 5 "  do while input_offset <= encoded_length"
+                .srcstep 98 98 17 "base64_roundtrip.crexx" 89 6 42 "  do while input_offset <= encoded_length"
+                .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "input_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "encoded_length" ""
+lb_2c3:         ilte r15,r3,r2                               * 0x0002c3:0071 Int Less than equals op1=(op2<=op3)
+                .traceevent "O" 4 "R" "B" "r" 15 0 0 0 "" ""
+                brf lb_3ee,r15                               * 0x0002c7:0026 Branch to op1 if op2 false
+                .srcstep 99 99 17 "base64_roundtrip.crexx" 90 5 70 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+                .meta "base64_roundtrip.base64_decode.digit1"="b" ".int" r11
+                .traceevent "V" 6 "R" "S" "a" 1 99 99 0 "encoded" ""
+                .traceevent "V" 6 "R" "I" "r" 3 99 99 0 "input_offset" ""
+                load r22,1                                   * 0x0002ca:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 22 99 99 0 "" ""
+                loadsettpswap r19,4,a1 /* aka r25 */,256,r20 * 0x0002cd:010d Load op1, set op3 status flags, then swap op3 and op5
+                swapsettp r21,r3,r22,256                     * 0x0002d3:010e Swap op1/op2 then set op3 status flags
+                settpcall r17,rxfnsb.substr(),r19,r23,512    * 0x0002d8:011a Set op4 status then call op2 with count/window op3
+                swapn a1 /* aka r25 */,r20,r3,r21            * 0x0002de:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "S" "r" 17 99 99 0 "substr" ""
+                .traceevent "V" 6 "R" "S" "r" 0 99 99 0 "alphabet" ""
+                loadsettp2 r16,2,r17,256                     * 0x0002e3:010c Load op1 integer and set op3 status flags
+                settpswapcall r11,base64_digit(),r16,r0,256,r18 * 0x0002e8:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r0,r18                                  * 0x0002ef:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 11 99 99 0 "base64_digit" ""
+                .traceevent "A" 6 "R" "I" "r" 11 99 99 0 "digit1" ""
+                .srcstep 100 100 17 "base64_roundtrip.crexx" 91 5 74 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+                .meta "base64_roundtrip.base64_decode.digit2"="b" ".int" r9
+                .traceevent "V" 6 "R" "S" "a" 1 100 100 0 "encoded" ""
+                .traceevent "V" 6 "R" "I" "r" 3 100 100 0 "input_offset" ""
+                iadd r18,r3,1                                * 0x0002f2:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 18 100 100 0 "" ""
+                load r19,1                                   * 0x0002f6:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 19 100 100 0 "" ""
+                loadsettpswap r16,4,a1 /* aka r25 */,256,r17 * 0x0002f9:010d Load op1, set op3 status flags, then swap op3 and op5
+                settp r19,256                                * 0x0002ff:0205 sets externally writable register status flags, preserving VM-private flags
+                settpcall r22,rxfnsb.substr(),r16,r20,512    * 0x000302:011a Set op4 status then call op2 with count/window op3
+                swap a1 /* aka r25 */,r17                    * 0x000308:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "S" "r" 22 100 100 0 "substr" ""
+                .traceevent "V" 6 "R" "S" "r" 0 100 100 0 "alphabet" ""
+                loadsettp2 r21,2,r22,256                     * 0x00030b:010c Load op1 integer and set op3 status flags
+                settpswapcall r9,base64_digit(),r21,r0,256,r23 * 0x000310:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r0,r23                                  * 0x000317:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 9 100 100 0 "base64_digit" ""
+                .traceevent "A" 6 "R" "I" "r" 9 100 100 0 "digit2" ""
+                .srcstep 101 101 17 "base64_roundtrip.crexx" 92 5 49 "    char3 = substr(encoded, input_offset + 2, 1)"
+                .meta "base64_roundtrip.base64_decode.char3"="b" ".string" r13
+                .traceevent "V" 6 "R" "S" "a" 1 101 101 0 "encoded" ""
+                .traceevent "V" 6 "R" "I" "r" 3 101 101 0 "input_offset" ""
+                iadd r21,r3,2                                * 0x00031a:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 21 101 101 0 "" ""
+                load r22,1                                   * 0x00031e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 22 101 101 0 "" ""
+                loadsettpswap r19,4,a1 /* aka r25 */,256,r20 * 0x000321:010d Load op1, set op3 status flags, then swap op3 and op5
+                settp r22,256                                * 0x000327:0205 sets externally writable register status flags, preserving VM-private flags
+                settpcall r13,rxfnsb.substr(),r19,r23,512    * 0x00032a:011a Set op4 status then call op2 with count/window op3
+                swap a1 /* aka r25 */,r20                    * 0x000330:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "S" "r" 13 101 101 0 "substr" ""
+                .traceevent "A" 6 "R" "S" "r" 13 101 101 0 "char3" ""
+                .srcstep 102 102 17 "base64_roundtrip.crexx" 93 5 49 "    char4 = substr(encoded, input_offset + 3, 1)"
+                .meta "base64_roundtrip.base64_decode.char4"="b" ".string" r12
+                .traceevent "V" 6 "R" "S" "a" 1 102 102 0 "encoded" ""
+                .traceevent "V" 6 "R" "I" "r" 3 102 102 0 "input_offset" ""
+                iadd r21,r3,3                                * 0x000333:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 21 102 102 0 "" ""
+                load r22,1                                   * 0x000337:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 22 102 102 0 "" ""
+                loadsettpswap r19,4,a1 /* aka r25 */,256,r20 * 0x00033a:010d Load op1, set op3 status flags, then swap op3 and op5
+                settp r22,256                                * 0x000340:0205 sets externally writable register status flags, preserving VM-private flags
+                settpcall r12,rxfnsb.substr(),r19,r23,512    * 0x000343:011a Set op4 status then call op2 with count/window op3
+                swap a1 /* aka r25 */,r20                    * 0x000349:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "S" "r" 12 102 102 0 "substr" ""
+                .traceevent "A" 6 "R" "S" "r" 12 102 102 0 "char4" ""
+                .srcstep 103 103 17 "base64_roundtrip.crexx" 94 5 15 "    digit3 = 0"
+                .meta "base64_roundtrip.base64_decode.digit3"="b" ".int" r8
+                load r8,0                                    * 0x00034c:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 103 103 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 103 103 0 "digit3" ""
+                .srcstep 104 104 17 "base64_roundtrip.crexx" 95 5 15 "    digit4 = 0"
+                .meta "base64_roundtrip.base64_decode.digit4"="b" ".int" r14
+                load r14,0                                   * 0x00034f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 14 104 104 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 104 104 0 "digit4" ""
+                .srcstep 106 106 17 "base64_roundtrip.crexx" 96 5 20 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+                .traceevent "V" 6 "R" "S" "r" 13 106 106 0 "char3" ""
+                rne r23,r13,"="                              * 0x000352:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 23 106 106 0 "" ""
+                brf lb_36b,r23                               * 0x000356:0026 Branch to op1 if op2 false
+                .srcstep 107 107 17 "base64_roundtrip.crexx" 96 21 25 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+                .srcstep 105 105 17 "base64_roundtrip.crexx" 96 26 64 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+                .traceevent "V" 6 "R" "S" "r" 13 105 105 0 "char3" ""
+                .traceevent "V" 6 "R" "S" "r" 0 105 105 0 "alphabet" ""
+                loadsettpswap r20,2,r13,256,r21              * 0x000359:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapcall r8,base64_digit(),r20,r0,256,r22 * 0x00035f:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn r13,r21,r0,r22                         * 0x000366:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "I" "r" 8 105 105 0 "base64_digit" ""
+                .traceevent "A" 6 "R" "I" "r" 8 105 105 0 "digit3" ""
+                .srcstep 109 109 17 "base64_roundtrip.crexx" 97 5 20 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+                .traceevent "V" 6 "R" "S" "r" 12 109 109 0 "char4" ""
+lb_36b:         rne r23,r12,"="                              * 0x00036b:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 23 109 109 0 "" ""
+                brf lb_384,r23                               * 0x00036f:0026 Branch to op1 if op2 false
+                .srcstep 110 110 17 "base64_roundtrip.crexx" 97 21 25 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+                .srcstep 108 108 17 "base64_roundtrip.crexx" 97 26 64 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+                .traceevent "V" 6 "R" "S" "r" 12 108 108 0 "char4" ""
+                .traceevent "V" 6 "R" "S" "r" 0 108 108 0 "alphabet" ""
+                loadsettpswap r20,2,r12,256,r21              * 0x000372:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswapcall r14,base64_digit(),r20,r0,256,r22 * 0x000378:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swapn r12,r21,r0,r22                         * 0x00037f:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "I" "r" 14 108 108 0 "base64_digit" ""
+                .traceevent "A" 6 "R" "I" "r" 14 108 108 0 "digit4" ""
+                .srcstep 111 111 17 "base64_roundtrip.crexx" 99 5 67 "    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16"
+                .traceevent "V" 6 "R" "X" "r" 7 111 111 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 111 111 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 11 111 111 0 "digit1" ""
+lb_384:         imult r23,r11,4                              * 0x000384:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 23 111 111 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 9 111 111 0 "digit2" ""
+                idiv r22,r9,16                               * 0x000388:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 22 111 111 0 "" ""
+                iadd r23,r23,r22                             * 0x00038c:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 23 111 111 0 "" ""
+                bsetu8 r7,r5,r23                             * 0x000390:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 112 112 17 "base64_roundtrip.crexx" 100 5 38 "    output_offset = output_offset + 1"
+                .traceevent "V" 6 "R" "I" "r" 5 112 112 0 "output_offset" ""
+                iadd r5,r5,1                                 * 0x000394:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 5 112 112 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 112 112 0 "output_offset" ""
+                .srcstep 115 115 17 "base64_roundtrip.crexx" 101 5 56 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+                .traceevent "V" 6 "R" "I" "r" 5 115 115 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 4 115 115 0 "output_length" ""
+                iadd r23,r4,1                                * 0x000398:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 23 115 115 0 "" ""
+                ilt r23,r5,r23                               * 0x00039c:006e Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 23 115 115 0 "" ""
+                brf lb_3a7,r23                               * 0x0003a0:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "S" "r" 13 115 115 0 "char3" ""
+                rne r23,r13,"="                              * 0x0003a3:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 23 115 115 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 23 115 115 0 "" ""
+lb_3a7:         brf lb_3c2,r23                               * 0x0003a7:0026 Branch to op1 if op2 false
+                .srcstep 116 116 17 "base64_roundtrip.crexx" 101 57 61 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+                .srcstep 113 113 17 "base64_roundtrip.crexx" 102 7 80 "      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4"
+                .traceevent "V" 6 "R" "X" "r" 7 113 113 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 113 113 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 9 113 113 0 "digit2" ""
+                imod r22,r9,16                               * 0x0003aa:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 22 113 113 0 "" ""
+                imult r22,r22,16                             * 0x0003ae:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 22 113 113 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 8 113 113 0 "digit3" ""
+                idiv r21,r8,4                                * 0x0003b2:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 21 113 113 0 "" ""
+                iadd r22,r22,r21                             * 0x0003b6:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 22 113 113 0 "" ""
+                bsetu8 r7,r5,r22                             * 0x0003ba:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 114 114 17 "base64_roundtrip.crexx" 103 7 40 "      output_offset = output_offset + 1"
+                .traceevent "V" 6 "R" "I" "r" 5 114 114 0 "output_offset" ""
+                iadd r5,r5,1                                 * 0x0003be:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 5 114 114 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 114 114 0 "output_offset" ""
+                .srcstep 119 119 17 "base64_roundtrip.crexx" 105 5 56 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+                .traceevent "V" 6 "R" "I" "r" 5 119 119 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 4 119 119 0 "output_length" ""
+lb_3c2:         iadd r23,r4,1                                * 0x0003c2:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 23 119 119 0 "" ""
+                ilt r23,r5,r23                               * 0x0003c6:006e Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 23 119 119 0 "" ""
+                brf lb_3d1,r23                               * 0x0003ca:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "S" "r" 12 119 119 0 "char4" ""
+                rne r23,r12,"="                              * 0x0003cd:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 23 119 119 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 23 119 119 0 "" ""
+lb_3d1:         brf lb_3e8,r23                               * 0x0003d1:0026 Branch to op1 if op2 false
+                .srcstep 120 120 17 "base64_roundtrip.crexx" 105 57 61 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+                .srcstep 117 117 17 "base64_roundtrip.crexx" 106 7 70 "      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4"
+                .traceevent "V" 6 "R" "X" "r" 7 117 117 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 5 117 117 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 8 117 117 0 "digit3" ""
+                imod r22,r8,4                                * 0x0003d4:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 22 117 117 0 "" ""
+                imult r22,r22,64                             * 0x0003d8:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 22 117 117 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 14 117 117 0 "digit4" ""
+                iadd r22,r22,r14                             * 0x0003dc:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 22 117 117 0 "" ""
+                bsetu8 r7,r5,r22                             * 0x0003e0:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 118 118 17 "base64_roundtrip.crexx" 107 7 40 "      output_offset = output_offset + 1"
+                .traceevent "V" 6 "R" "I" "r" 5 118 118 0 "output_offset" ""
+                iadd r5,r5,1                                 * 0x0003e4:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 5 118 118 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 118 118 0 "output_offset" ""
+                .srcstep 121 121 17 "base64_roundtrip.crexx" 109 5 36 "    input_offset = input_offset + 4"
+                .traceevent "V" 6 "R" "I" "r" 3 121 121 0 "input_offset" ""
+lb_3e8:         iadd r3,r3,4                                 * 0x0003e8:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 3 121 121 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 121 121 0 "input_offset" ""
+                .srcstep 123 123 17 "base64_roundtrip.crexx" 110 3 6 "  end"
+                br lb_2c3                                    * 0x0003ec:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.char3"
+                .meta "base64_roundtrip.base64_decode.char4"
+                .meta "base64_roundtrip.base64_decode.digit1"
+                .meta "base64_roundtrip.base64_decode.digit2"
+                .meta "base64_roundtrip.base64_decode.digit3"
+                .meta "base64_roundtrip.base64_decode.digit4"
+                .srcstep 124 124 17 "base64_roundtrip.crexx" 111 3 16 "  return result"
+                .traceevent "V" 6 "R" "X" "r" 7 124 124 0 "result" ""
+lb_3ee:         ret r7                                       * 0x0003ee:0031 Return op1
+                .meta "base64_roundtrip.base64_decode.alphabet"
+                .meta "base64_roundtrip.base64_decode.encoded"
+                .meta "base64_roundtrip.base64_decode.encoded_length"
+                .meta "base64_roundtrip.base64_decode.input_offset"
+                .meta "base64_roundtrip.base64_decode.output_length"
+                .meta "base64_roundtrip.base64_decode.output_offset"
+                .meta "base64_roundtrip.base64_decode.padding"
+                .meta "base64_roundtrip.base64_decode.result"
+
+base64_digit()  .locals=8
+                .meta "base64_roundtrip.base64_digit"="b" ".int" base64_digit() "character=.string,alphabet=.string"
+                .srcstep 133 133 17 "base64_roundtrip.crexx" 113 1 31 "base64_digit: procedure = .int"
+                numsci 18,1,1                                * 0x0003f0:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 126 126 17 "base64_roundtrip.crexx" 114 7 26 "  arg character = .string, alphabet = .string"
+                .meta "base64_roundtrip.base64_digit.character"="b" ".string" a1 /* aka r9 */
+                .srcstep 127 127 17 "base64_roundtrip.crexx" 114 28 46 "  arg character = .string, alphabet = .string"
+                .meta "base64_roundtrip.base64_digit.alphabet"="b" ".string" a2 /* aka r10 */
+                .srcstep 128 128 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+                .meta "base64_roundtrip.base64_digit.digit"="b" ".int" r2
+                .traceevent "V" 6 "R" "S" "a" 1 128 128 0 "character" ""
+                .traceevent "V" 6 "R" "S" "a" 2 128 128 0 "alphabet" ""
+                loadsettpswap r3,3,a1 /* aka r9 */,256,r4    * 0x0003f4:010d Load op1, set op3 status flags, then swap op3 and op5
+                settpswap a2 /* aka r10 */,256,r5            * 0x0003fa:010b Set op1 status flags then swap op1 and op3
+                settpcall r7,rxfnsb.pos(),r3,r6,0            * 0x0003fe:011a Set op4 status then call op2 with count/window op3
+                swapn a1 /* aka r9 */,r4,a2 /* aka r10 */,r5 * 0x000404:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "I" "r" 7 128 128 0 "pos" ""
+                isub r2,r7,1                                 * 0x000409:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 2 128 128 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 128 128 0 "digit" ""
+                .srcstep 130 130 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+                .traceevent "V" 6 "R" "I" "r" 2 130 130 0 "digit" ""
+                bge lb_413,r2,0                              * 0x00040d:0163 if op2>=op3 then goto op1
+                .srcstep 131 131 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+                .srcstep 129 129 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+                ret 0                                        * 0x000411:0032 Return op1
+                .srcstep 132 132 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+                .traceevent "V" 6 "R" "I" "r" 2 132 132 0 "digit" ""
+lb_413:         ret r2                                       * 0x000413:0031 Return op1
+                .meta "base64_roundtrip.base64_digit.alphabet"
+                .meta "base64_roundtrip.base64_digit.character"
+                .meta "base64_roundtrip.base64_digit.digit"
+
+byte_checksum() .locals=6
+                .meta "base64_roundtrip.byte_checksum"="b" ".int" byte_checksum() "data=.binary"
+                .srcstep 143 143 17 "base64_roundtrip.crexx" 119 1 32 "byte_checksum: procedure = .int"
+                numsci 18,1,1                                * 0x000415:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 134 134 17 "base64_roundtrip.crexx" 120 7 21 "  arg data = .binary"
+                .meta "base64_roundtrip.byte_checksum.data"="b" ".binary" a1 /* aka r7 */
+                .srcstep 135 135 17 "base64_roundtrip.crexx" 121 3 15 "  checksum = 0"
+                .meta "base64_roundtrip.byte_checksum.checksum"="b" ".int" r0
+                load r0,0                                    * 0x000419:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 135 135 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 135 135 0 "checksum" ""
+                .srcstep 140 140 17 "base64_roundtrip.crexx" 122 3 5 "  do offset = 0 to binlength(data) - 1"
+                .srcstep 136 136 17 "base64_roundtrip.crexx" 122 6 16 "  do offset = 0 to binlength(data) - 1"
+                .meta "base64_roundtrip.byte_checksum.offset"="b" ".int" r2
+                load r2,0                                    * 0x00041c:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 136 136 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 136 136 0 "offset" ""
+                .srcstep 137 137 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+                .traceevent "V" 6 "R" "X" "a" 1 0 0 0 "data" ""
+                load r3,1                                    * 0x00041f:0001 Load op1 with op2
+                settpswapcall r5,rxfnsb.binlength(),r3,a1 /* aka r7 */,256,r4 * 0x000422:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap a1 /* aka r7 */,r4                      * 0x000429:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 5 0 0 0 "binlength" ""
+                isub r5,r5,1                                 * 0x00042c:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 5 0 0 0 "" ""
+                .srcstep 137 137 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+lb_430:         igt r4,r2,r5                                 * 0x000430:0068 Int Greater than op1=(op2>op3)
+                brt lb_442,r4                                * 0x000434:0025 Branch to op1 if op2 true
+                .srcstep 139 139 17 "base64_roundtrip.crexx" 123 5 48 "    checksum = checksum + <at..u8>(offset) data"
+                .traceevent "V" 6 "R" "I" "r" 0 139 139 0 "checksum" ""
+                .traceevent "V" 6 "R" "X" "a" 1 139 139 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 2 139 139 0 "offset" ""
+                bgetu8 r3,a1 /* aka r7 */,r2                 * 0x000437:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                iadd r0,r0,r3                                * 0x00043b:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 0 139 139 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 139 139 0 "checksum" ""
+                .srcstep 138 138 17 "base64_roundtrip.crexx" 122 6 12 "  do offset = 0 to binlength(data) - 1"
+                inc2                                         * 0x00043f:0022 Increment R2++ Int
+                .srcstep 141 141 17 "base64_roundtrip.crexx" 124 3 6 "  end"
+                br lb_430                                    * 0x000440:0024 Branch to op1
+                .meta "base64_roundtrip.byte_checksum.offset"
+                .srcstep 142 142 17 "base64_roundtrip.crexx" 125 3 18 "  return checksum"
+                .traceevent "V" 6 "R" "I" "r" 0 142 142 0 "checksum" ""
+lb_442:         ret r0                                       * 0x000442:0031 Return op1
+                .meta "base64_roundtrip.byte_checksum.checksum"
+                .meta "base64_roundtrip.byte_checksum.data"
+
+fail()          .locals=2
+                .meta "base64_roundtrip.fail"="b" ".int" fail() "message=.string"
+                .srcstep 147 147 17 "base64_roundtrip.crexx" 127 1 23 "fail: procedure = .int"
+                numsci 18,1,1                                * 0x000444:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 144 144 17 "base64_roundtrip.crexx" 128 7 24 "  arg message = .string"
+                .meta "base64_roundtrip.fail.message"="b" ".string" a1 /* aka r3 */
+                .srcstep 145 145 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "a" 1 145 145 0 "message" ""
+                sconcat r1,"FAIL:",a1 /* aka r3 */           * 0x000448:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 1 145 145 0 "" ""
+                say r1                                       * 0x00044c:01c2 Say op1
+                .srcstep 146 146 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+                ret 1                                        * 0x00044e:0032 Return op1
+                .meta "base64_roundtrip.fail.message"
+*******************************************************************************
+

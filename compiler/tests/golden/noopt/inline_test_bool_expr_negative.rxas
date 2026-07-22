@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_bool_expr_negative.main"="b" ".int" main() ""
    .srcstep 14 14 17 "inline_test_bool_expr_negative.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_bool_expr_negative.crexx" 4 3 46 "  say \"Starting bool inline negative test...\""
    say "Starting bool inline negative test..."
    .srcstep 10 10 17 "inline_test_bool_expr_negative.crexx" 5 3 5 "  do i = 1 to 3"
@@ -29,10 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 7 7 17 "inline_test_bool_expr_negative.crexx" 6 5 20 "    if isTwo(i) | 0 then say \"truthy\" i"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "i" ""
-   load r3,1
-   swap r4,r0
-   call r0,isTwo(),r3
-   swap r0,r4
+   call1 r4,isTwo(),r0
    .traceevent "F" 4 "R" "B" "r" 4 7 7 0 "istwo" ""
    brt l18orend,r4
    load r4,0
@@ -72,11 +65,7 @@ l8doend:
 isTwo() .locals=2
    .meta "inline_test_bool_expr_negative.istwo"="b" ".int" isTwo() "val=.int"
    .srcstep 17 17 17 "inline_test_bool_expr_negative.crexx" 12 1 24 "isTwo: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 15 15 17 "inline_test_bool_expr_negative.crexx" 13 7 17 "  arg val = .int"
    .meta "inline_test_bool_expr_negative.istwo.val"="b" ".int" a1
    .srcstep 16 16 17 "inline_test_bool_expr_negative.crexx" 14 3 17 "  return val = 2"

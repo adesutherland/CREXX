@@ -7,11 +7,7 @@
 main() .locals=10
    .meta "select_dispatch_mixed.main"="b" ".int" main() ""
    .srcstep 24 24 17 "select_dispatch_mixed.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "select_dispatch_mixed.main.counter"="b" ".int" r0
    .srcstep 1 1 17 "select_dispatch_mixed.crexx" 4 3 17 "  counter = .int"
    null r0
@@ -26,65 +22,57 @@ main() .locals=10
    linkattr1 r3,r2,1
    load r4,2
    .traceevent "L" 4 "R" "I" "r" 4 4 4 0 "" ""
-   icopy r3,r4
-   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "values" ""
-   unlink r3
+   isetunlink r3,r4
+   .traceevent "A" 6 "R" "I" "r" 4 4 4 0 "values" ""
    .srcstep 5 5 17 "select_dispatch_mixed.crexx" 9 3 16 "  values[2] = 9"
    setattrs r2,8
    linkattr1 r4,r2,2
    load r3,9
    .traceevent "L" 4 "R" "I" "r" 3 5 5 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "values" ""
    .srcstep 6 6 17 "select_dispatch_mixed.crexx" 10 3 17 "  values[3] = 11"
    setattrs r2,8
    linkattr1 r4,r2,3
    load r3,11
    .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 6 6 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "values" ""
    .srcstep 7 7 17 "select_dispatch_mixed.crexx" 11 3 17 "  values[4] = 25"
    setattrs r2,8
    linkattr1 r4,r2,4
    load r3,25
    .traceevent "L" 4 "R" "I" "r" 3 7 7 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "values" ""
    .srcstep 8 8 17 "select_dispatch_mixed.crexx" 12 3 17 "  values[5] = 21"
    setattrs r2,8
    linkattr1 r4,r2,5
    load r3,21
    .traceevent "L" 4 "R" "I" "r" 3 8 8 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "values" ""
    .srcstep 9 9 17 "select_dispatch_mixed.crexx" 13 3 17 "  values[6] = 30"
    setattrs r2,8
    linkattr1 r4,r2,6
    load r3,30
    .traceevent "L" 4 "R" "I" "r" 3 9 9 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 9 9 0 "values" ""
    .srcstep 10 10 17 "select_dispatch_mixed.crexx" 14 3 17 "  values[7] = 99"
    setattrs r2,8
    linkattr1 r4,r2,7
    load r3,99
    .traceevent "L" 4 "R" "I" "r" 3 10 10 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 10 10 0 "values" ""
    .srcstep 11 11 17 "select_dispatch_mixed.crexx" 15 3 17 "  values[8] = 15"
    setattrs r2,8
    linkattr1 r4,r2,8
    load r3,15
    .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 11 11 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 11 11 0 "values" ""
    .srcstep 18 18 17 "select_dispatch_mixed.crexx" 17 3 5 "  do index = 1 to 8"
    .srcstep 12 12 17 "select_dispatch_mixed.crexx" 17 6 15 "  do index = 1 to 8"
    load r1,1
@@ -104,17 +92,11 @@ l50dostart:
    .srcstep 16 16 17 "select_dispatch_mixed.crexx" 19 5 47 "    say mixed_classify(values[index], counter)"
    .traceevent "V" 6 "R" "I" "r" 1 16 16 0 "index" ""
    .traceevent "C" 4 "R" "I" "r" 1 16 16 0 "values" ""
-   setattrs r2,8
-   linkattr1 r8,r2,r1
+   setlinkattr1 r8,r2,8,r1
    .traceevent "V" 6 "R" "I" "r" 8 16 16 0 "values" ""
    .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "counter" ""
-   load r5,2
-   swap r6,r8
-   swap r7,r0
-   call r9,mixed_classify(),r5
-   swap r8,r6
+   call2 r9,mixed_classify(),r8,r0
    unlink r8
-   swap r0,r7
    itos r9
    .traceevent "F" 4 "R" "S" "r" 9 16 16 0 "mixed_classify" ""
    say r9
@@ -133,8 +115,7 @@ l50doend:
    .traceevent "L" 4 "R" "I" "r" 8 20 20 0 "" ""
    load r9,40
    .traceevent "L" 4 "R" "I" "r" 9 20 20 0 "" ""
-   load r7,2
-   call r6,otherwise_if(),r7
+   call2 r6,otherwise_if(),r8,r9
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 20 20 0 "otherwise_if" ""
    say r6
@@ -143,8 +124,7 @@ l50doend:
    .traceevent "L" 4 "R" "I" "r" 8 21 21 0 "" ""
    load r9,40
    .traceevent "L" 4 "R" "I" "r" 9 21 21 0 "" ""
-   load r7,2
-   call r6,otherwise_if(),r7
+   call2 r6,otherwise_if(),r8,r9
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 21 21 0 "otherwise_if" ""
    say r6
@@ -153,8 +133,7 @@ l50doend:
    .traceevent "L" 4 "R" "I" "r" 8 22 22 0 "" ""
    load r9,0
    .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
-   load r7,2
-   call r6,otherwise_if(),r7
+   call2 r6,otherwise_if(),r8,r9
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 22 22 0 "otherwise_if" ""
    say r6
@@ -167,11 +146,7 @@ l50doend:
 mixed_classify() .locals=17
    .meta "select_dispatch_mixed.mixed_classify"="b" ".int" mixed_classify() "value=.int,expose counter=.int"
    .srcstep 76 76 17 "select_dispatch_mixed.crexx" 27 1 33 "mixed_classify: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 25 25 17 "select_dispatch_mixed.crexx" 28 7 19 "  arg value = .int, expose counter = .int"
    .meta "select_dispatch_mixed.mixed_classify.value"="b" ".int" a1
    .srcstep 26 26 17 "select_dispatch_mixed.crexx" 28 21 42 "  arg value = .int, expose counter = .int"
@@ -224,10 +199,7 @@ l331dispatchdefault:
    .traceevent "V" 6 "R" "I" "a" 2 72 72 0 "counter" ""
    load r5,9
    .traceevent "L" 4 "R" "I" "r" 5 72 72 0 "" ""
-   load r3,2
-   swap r4,a2
-   call r6,dynamic_key(),r3
-   swap a2,r4
+   call2 r6,dynamic_key(),a2,r5
    .traceevent "F" 4 "R" "I" "r" 6 72 72 0 "dynamic_key" ""
    ieq r6,r2,r6
    .traceevent "O" 4 "R" "B" "r" 6 72 72 0 "" ""
@@ -277,10 +249,7 @@ l292iffalse:
    .traceevent "V" 6 "R" "I" "a" 2 62 62 0 "counter" ""
    load r10,25
    .traceevent "L" 4 "R" "I" "r" 10 62 62 0 "" ""
-   load r8,2
-   swap r9,a2
-   call r11,dynamic_key(),r8
-   swap a2,r9
+   call2 r11,dynamic_key(),a2,r10
    .traceevent "F" 4 "R" "I" "r" 11 62 62 0 "dynamic_key" ""
    ieq r11,r2,r11
    .traceevent "O" 4 "R" "B" "r" 11 62 62 0 "" ""
@@ -321,10 +290,7 @@ l304iffalse:
    .traceevent "V" 6 "R" "I" "a" 2 54 54 0 "counter" ""
    load r14,40
    .traceevent "L" 4 "R" "I" "r" 14 54 54 0 "" ""
-   load r12,2
-   swap r13,a2
-   call r15,dynamic_key(),r12
-   swap a2,r13
+   call2 r15,dynamic_key(),a2,r14
    .traceevent "F" 4 "R" "I" "r" 15 54 54 0 "dynamic_key" ""
    ieq r15,r2,r15
    .traceevent "O" 4 "R" "B" "r" 15 54 54 0 "" ""
@@ -383,11 +349,7 @@ l331dispatchend:
 otherwise_if() .locals=9
    .meta "select_dispatch_mixed.otherwise_if"="b" ".int" otherwise_if() "value=.int,probe=.int"
    .srcstep 96 96 17 "select_dispatch_mixed.crexx" 55 1 31 "otherwise_if: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 77 77 17 "select_dispatch_mixed.crexx" 56 7 19 "  arg value = .int, probe = .int"
    .meta "select_dispatch_mixed.otherwise_if.value"="b" ".int" a1
    .srcstep 78 78 17 "select_dispatch_mixed.crexx" 56 21 33 "  arg value = .int, probe = .int"
@@ -459,11 +421,7 @@ l322ifend:
 dynamic_key() .locals=2
    .meta "select_dispatch_mixed.dynamic_key"="b" ".int" dynamic_key() "expose counter=.int,key=.int"
    .srcstep 101 101 17 "select_dispatch_mixed.crexx" 68 1 30 "dynamic_key: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 97 97 17 "select_dispatch_mixed.crexx" 69 7 28 "  arg expose counter = .int, key = .int"
    .meta "select_dispatch_mixed.dynamic_key.counter"="b" ".int" a1
    .srcstep 98 98 17 "select_dispatch_mixed.crexx" 69 30 40 "  arg expose counter = .int, key = .int"

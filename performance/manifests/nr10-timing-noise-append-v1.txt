@@ -1,0 +1,10 @@
+# Initial version-1 timing append retained for binary/JVM audit and non-common
+# diagnostics only. Use version 3 for the canonical baseline.
+crexx-cross-runtime-matrix|1
+permute-oorexx|Permute|oorexx|oorexx|equivalent-port|A|no|no|1500|PASS: AWFY Permute Classic procedural port||/Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx;tests/benchmarks/cross-runtime/classic/awfy_permute.rex;1500
+base64-rxvm|Base64|crexx|rxvm|equivalent-port|A|no|no|7000|PASS: Base64 Roundtrip||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;7000
+base64-rxbvm|Base64|crexx|rxbvm|equivalent-port|A|no|no|7000|PASS: Base64 Roundtrip||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;7000
+towers-oorexx|Towers|oorexx|oorexx|procedural-diagnostic|A|no|no|10|PASS: AWFY Towers Classic procedural adaptation||/Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx;tests/benchmarks/cross-runtime/classic/awfy_towers.rex;10
+towers-netrexx|Towers|netrexx|netrexx|equivalent-object-port|A|no|no|10|PASS: AWFY Towers NetRexx port||/usr/bin/java;-cp;performance/evidence/2026-07-15-nr-02-cross-runtime/towers/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;awfy_towers;10
+storage-oorexx|Storage|oorexx|oorexx|equivalent-object-port|A|no|no|10|PASS: AWFY Storage ooRexx object port||/Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx;tests/benchmarks/cross-runtime/oorexx/awfy_storage.rex;10
+json-netrexx|JSON|netrexx|netrexx|dom-diagnostic|A|no|no|5000|PASS: JSON Parser NetRexx port||/usr/bin/java;-cp;performance/evidence/2026-07-15-nr-02-portfolio-expansion/generated/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;json_parser;5000

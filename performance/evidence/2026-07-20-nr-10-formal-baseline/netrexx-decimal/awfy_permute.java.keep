@@ -1,0 +1,62 @@
+/* Generated from 'awfy_permute.nrx' 20 Jul 2026 14:09:08 [v5.10] *//* Options: Annotations Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_permute{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(1);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx(8660);private static final netrexx.lang.Rexx $03=netrexx.lang.Rexx.toRexx("result=");private static final java.lang.String $0="awfy_permute.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){netrexx.lang.Rexx repetitions;netrexx.lang.Rexx result;netrexx.lang.Rexx iteration=null;PermuteBenchmark benchmark=null;
+repetitions=new netrexx.lang.Rexx((byte)1);
+if (new netrexx.lang.Rexx(args.length).OpGtEq(null,$01)) repetitions=netrexx.lang.Rexx.toRexx(args[0]);
+if (repetitions.OpLt(null,$01)) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+result=new netrexx.lang.Rexx((byte)0);
+{netrexx.lang.Rexx $1=repetitions;iteration=new netrexx.lang.Rexx((byte)1);iteration:for(;iteration.OpLtEq(null,$1);iteration=iteration.OpAdd(null,new netrexx.lang.Rexx(1))){
+benchmark=new PermuteBenchmark();
+result=benchmark.run();
+if (result.OpNotEq(null,$02)) {
+netrexx.lang.RexxIO.Say(netrexx.lang.Rexx.toRexx("FAIL: expected 8660 calls, got").OpCcblank(null,result));
+{System.exit(1);return;}
+}
+}}/*iteration*/
+
+netrexx.lang.RexxIO.Say(((netrexx.lang.Rexx.toRexx("benchmark=awfy_permute repetitions=").OpCc(null,repetitions)).OpCcblank(null,$03)).OpCc(null,result));
+netrexx.lang.RexxIO.Say("PASS: AWFY Permute NetRexx decimal port");return;}
+
+private awfy_permute(){return;}}class PermuteBenchmark{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx((byte)5);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx(1);private static final netrexx.lang.Rexx $03=new netrexx.lang.Rexx(0);private static final netrexx.lang.Rexx $04=new netrexx.lang.Rexx((byte)0);private static final java.lang.String $0="awfy_permute.nrx";
+
+/* properties private */
+private netrexx.lang.Rexx count=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx values[]=new netrexx.lang.Rexx[6];
+
+@SuppressWarnings("unchecked") public PermuteBenchmark(){super();netrexx.lang.Rexx i=null;
+{i=new netrexx.lang.Rexx((byte)0);i:for(;i.OpLtEq(null,$01);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+values[i.toint()]=new netrexx.lang.Rexx((byte)0);
+}}/*i*/return;}
+
+@SuppressWarnings("unchecked") public netrexx.lang.Rexx run(){
+count=new netrexx.lang.Rexx((byte)0);
+permute(new netrexx.lang.Rexx((byte)6));
+return count;}
+
+@SuppressWarnings("unchecked") public void permute(netrexx.lang.Rexx n){netrexx.lang.Rexx n1=null;netrexx.lang.Rexx i=null;
+count=count.OpAdd(null,$02);
+if (n.OpNotEq(null,$03)) {
+n1=n.OpSub(null,$02);
+permute(n1);
+{netrexx.lang.Rexx $1=$02.OpMinus(null);boolean $2=$1.OpGtEq(null,$03);i=n1.OpPlus(null);i:for(;$2?i.OpLtEq(null,$04):i.OpGtEq(null,$04);i=i.OpAdd(null,$1)){
+swap(n1,i);
+permute(n1);
+swap(n1,i);
+}}/*i*/
+}return;}
+
+@SuppressWarnings("unchecked") public void swap(netrexx.lang.Rexx i,netrexx.lang.Rexx j){netrexx.lang.Rexx temporary;
+temporary=values[i.toint()];
+values[i.toint()]=values[j.toint()];
+values[j.toint()]=temporary;return;}}

@@ -1,0 +1,7 @@
+[0/2] Re-checking globbed directories...
+[1/7] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_super.c.o
+[2/7] Building C object compiler/tests/CMakeFiles/test_rxcp_super_combiner.dir/test_rxcp_super_combiner.c.o
+[3/7] Building C object compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o
+[4/7] Linking C static library bin/librxclib.a
+[5/7] Linking C executable bin/rxc
+[6/7] Linking C executable compiler/tests/test_rxcp_super_combiner

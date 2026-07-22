@@ -12,6 +12,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # The test driver itself must be compiled as strict C90
 add_executable(crexx_test_driver src/test_driver.c)
 
+add_executable(mutate_rxbin_feature mutate_rxbin_feature.c)
+
 # Ensure the driver is built when tests are built
 add_dependencies(crexx_test_driver rxc)
 
@@ -109,6 +111,12 @@ endif()
 enable_testing()
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+
+add_executable(test_rxcp_super_combiner test_rxcp_super_combiner.c)
+target_link_libraries(test_rxcp_super_combiner PRIVATE rxclib)
+target_include_directories(test_rxcp_super_combiner PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
+add_test(NAME rxcp_super_combiner COMMAND test_rxcp_super_combiner)
+set_tests_properties(rxcp_super_combiner PROPERTIES LABELS "compiler;performance;nr09")
 
 # Compiler flags for optimization levels
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
@@ -1122,6 +1130,79 @@ add_test(NAME nr06_codegen_contract
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr06_codegen_contract.cmake)
 set_tests_properties(nr06_codegen_contract PROPERTIES
         LABELS "compiler;performance")
+
+add_test(NAME nr21_fixed_call_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DBASIC_RXAS=${CMAKE_SOURCE_DIR}/interpreter/tests/tests_basic.rxas
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr21_fixed_call_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr21_fixed_call_contract.cmake)
+set_tests_properties(nr21_fixed_call_contract PROPERTIES
+        LABELS "compiler;performance;rxbin")
+
+add_test(NAME nr14_frozen_parse_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr14_frozen_parse_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr14_frozen_parse_contract.cmake)
+set_tests_properties(nr14_frozen_parse_contract PROPERTIES
+        LABELS "compiler;performance;rxbin;parse")
+
+add_test(NAME nr09_numeric_context_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_numeric_context_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_numeric_context_contract.cmake)
+set_tests_properties(nr09_numeric_context_contract PROPERTIES
+        LABELS "compiler;performance;numeric")
+
+add_test(NAME nr09_codegen_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DBENCH_DIR=${CMAKE_SOURCE_DIR}/tests/benchmarks
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_codegen_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_codegen_contract.cmake)
+set_tests_properties(nr09_codegen_contract PROPERTIES
+        LABELS "compiler;performance")
+
+add_test(NAME nr26_flow_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr26_flow_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr26_flow_contract.cmake)
+set_tests_properties(nr26_flow_contract PROPERTIES
+        LABELS "compiler;performance;flow")
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -2296,6 +2377,7 @@ add_crexx_run_test(inline_test_short_circuit_expr rexx_src/inline_test_short_cir
 add_crexx_run_test(inline_test_composed_expr_contexts rexx_src/inline_test_composed_expr_contexts.crexx)
 add_crexx_run_test(inline_test_byvalue_arg_reuse rexx_src/inline_test_byvalue_arg_reuse.crexx)
 add_crexx_run_test(inline_test_stateful_assembler rexx_src/inline_test_stateful_assembler.crexx)
+add_crexx_run_test(assembler_wide_operands rexx_src/assembler_wide_operands.crexx)
 add_crexx_run_test(inline_test_condition_contexts rexx_src/inline_test_condition_contexts.crexx)
 add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_expr.crexx)
 add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_receiver_expr.crexx)

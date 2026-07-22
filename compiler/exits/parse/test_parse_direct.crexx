@@ -2,6 +2,7 @@ options levelb
 import rxcptest
 import rxcpexits
 import rxcp
+import rxfnsb
 
 main: procedure
   failures = .int
@@ -12,6 +13,7 @@ main: procedure
   failures = failures + test_parse_incomplete_inputs()
   failures = failures + test_parse_suffix_options()
   failures = failures + test_parse_claimed_keywords()
+  failures = failures + test_nr14_direct_lowering()
   call report_result failures
   return
 
@@ -107,7 +109,7 @@ test_parse_arg_plan: procedure = .int
   plan = parser.pre_process(tokens)
   if check_equal("parse arg pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
   if check_true("parse arg keyword", find_keyword(plan, "ARG") > 0, "keyword claim missing") = 0 then failures = failures + 1
-  if check_equal("parse arg binding count", "2", plan.get_binding_count()) = 0 then failures = failures + 1
+  if check_equal("parse arg binding count", "4", plan.get_binding_count()) = 0 then failures = failures + 1
   if check_true("parse arg execName binding", find_binding(plan, "execName") > 0, "binding missing") = 0 then failures = failures + 1
   if check_true("parse arg extension binding", find_binding(plan, "extension") > 0, "binding missing") = 0 then failures = failures + 1
 
@@ -118,10 +120,11 @@ test_parse_arg_plan: procedure = .int
   if check_contains("parse arg source count", replacement, "__rxcpx_parse_arg_count=arg[]") = 0 then failures = failures + 1
   if check_contains("parse arg source loop", replacement, "__rxcpx_parse_arg_source=__rxcpx_parse_arg_source || arg[__rxcpx_parse_arg_ix]") = 0 then failures = failures + 1
   if check_contains("parse arg block return", replacement, "leave with __rxcpx_parse_arg_source") = 0 then failures = failures + 1
-  if check_contains("parse arg runtime call", replacement, "_parseResult=parseExec(_source,") = 0 then failures = failures + 1
-  if check_contains("parse arg frozen literal plan", replacement, "'3,1:1;1,8:execName;2,1:.;1,9:extension;'") = 0 then failures = failures + 1
-  if check_contains("parse arg first assignment", replacement, "execName=_parseResult[1]") = 0 then failures = failures + 1
-  if check_contains("parse arg second assignment", replacement, "extension=_parseResult[2]") = 0 then failures = failures + 1
+  if check_contains("parse arg prepared opcode", replacement, "assembler parseplan __rxcpx_parse_prepared_2005,") = 0 then failures = failures + 1
+  if check_contains("parse arg descriptor header", replacement, '"5001080004000200') = 0 then failures = failures + 1
+  if check_contains("parse arg first assignment", replacement, "execName=__rxcpx_parse_prepared_2005[1]") = 0 then failures = failures + 1
+  if check_contains("parse arg second assignment", replacement, "extension=__rxcpx_parse_prepared_2005[2]") = 0 then failures = failures + 1
+  if check_true("parse arg no generic call", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures
 
@@ -243,5 +246,186 @@ test_parse_claimed_keywords: procedure = .int
   if check_contains("parse claimed frozen plan", replacement, "'3,1:1;1,4:left;2,1:,;1,5:right;'") = 0 then failures = failures + 1
   if check_contains("parse claimed trim assign", replacement, "left=strip(parsed[1])") = 0 then failures = failures + 1
   if check_contains("parse claimed trim assign 2", replacement, "right=strip(parsed[2])") = 0 then failures = failures + 1
+
+  return failures
+
+test_nr14_direct_lowering: procedure = .int
+  failures = .int
+  parser = .parseexit(2010)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "first", ".string", 0
+  call pushidentifier tokens, "second", ".string", 0
+  call pushidentifier tokens, "third", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_equal("NR-14 words status", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("NR-14 words opcode", replacement, "assembler parsewords3 ") = 0 then failures = failures + 1
+  if check_contains("NR-14 words source copy", replacement, "__rxcpx_parse_source_2010=({3}) as .string") = 0 then failures = failures + 1
+  if check_contains("NR-14 words first assignment", replacement, "first=__rxcpx_parse_direct1") = 0 then failures = failures + 1
+  if check_true("NR-14 words no generic call", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2011)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "first", ".string", 0
+  call pushidentifier tokens, "second", ".string", 0
+  call pushidentifier tokens, "third", ".string", 0
+  dot_index = tokens[0] + 1
+  tokens[dot_index] = .token(0,0,".",1,1,1,"exit_test",0,"","other",0,"")
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 words-drop opcode", replacement, "assembler parsewords3d ") = 0 then failures = failures + 1
+  if check_true("NR-14 words-drop no generic call", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2012)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "WITH"
+  call pushidentifier tokens, "first", ".string", 0
+  call pushoperator tokens, "+"
+  call pushint tokens, "5"
+  call pushidentifier tokens, "second", ".string", 0
+  dot_index = tokens[0] + 1
+  tokens[dot_index] = .token(0,0,".",1,1,1,"exit_test",0,"","other",0,"")
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 position opcode", replacement, "assembler parsepos2 ") = 0 then failures = failures + 1
+  if check_contains("NR-14 position split", replacement, "__rxcpx_parse_source_2012,5") = 0 then failures = failures + 1
+
+  parser = .parseexit(2016)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "WITH"
+  call pushidentifier tokens, "first", ".string", 0
+  call pushoperator tokens, "+"
+  call pushint tokens, "0"
+  call pushidentifier tokens, "second", ".string", 0
+  dot_index = tokens[0] + 1
+  tokens[dot_index] = .token(0,0,".",1,1,1,"exit_test",0,"","other",0,"")
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 zero-position prepared", replacement, "assembler parseplan ") = 0 then failures = failures + 1
+  if check_true("NR-14 zero-position no direct opcode", pos("assembler parsepos2 ", replacement) = 0, replacement) = 0 then failures = failures + 1
+  if check_true("NR-14 zero-position no generic call", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2013)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "same", ".string", 0
+  call pushidentifier tokens, "same", ".string", 0
+  call pushidentifier tokens, "third", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 repeated exact chain", replacement, "assembler parsewords3 ") = 0 then failures = failures + 1
+  if check_contains("NR-14 repeated ordered assignment 1", replacement, "same=__rxcpx_parse_word_2013_1") = 0 then failures = failures + 1
+  if check_contains("NR-14 repeated ordered assignment 2", replacement, "same=__rxcpx_parse_word_2013_2") = 0 then failures = failures + 1
+  if check_true("NR-14 repeated no generic call", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2014)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "UPPER"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "first", ".string", 0
+  call pushidentifier tokens, "second", ".string", 0
+  call pushidentifier tokens, "third", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 modifier source transform", replacement, "=(upper({4})) as .string") = 0 then failures = failures + 1
+  if check_contains("NR-14 modifier exact chain", replacement, "assembler parsewords3 ") = 0 then failures = failures + 1
+  if check_true("NR-14 modifier no generic call", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2015)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushint tokens, "333"
+  call pushidentifier tokens, "first", ".string", 0
+  call pushidentifier tokens, "second", ".string", 0
+  call pushidentifier tokens, "third", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 numeric source conversion", replacement, "__rxcpx_parse_source_2015=({2}) as .string") = 0 then failures = failures + 1
+  if check_contains("NR-14 numeric source opcode", replacement, "assembler parsewords3 ") = 0 then failures = failures + 1
+  if check_true("NR-14 numeric source no generic call", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2017)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "one", ".string", 0
+  call pushidentifier tokens, "two", ".string", 0
+  call pushidentifier tokens, "three", ".string", 0
+  call pushidentifier tokens, "four", ".string", 0
+  call pushidentifier tokens, "five", ".string", 0
+  call pushidentifier tokens, "six", ".string", 0
+  call pushidentifier tokens, "seven", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 long odd first exact pair", replacement, "assembler parsewords3 __rxcpx_parse_word_2017_1,__rxcpx_parse_word_2017_2,__rxcpx_parse_tail_2017_1") = 0 then failures = failures + 1
+  if check_contains("NR-14 long odd final exact pair", replacement, "assembler parsewords3 __rxcpx_parse_word_2017_5,__rxcpx_parse_word_2017_6,__rxcpx_parse_tail_2017_3,__rxcpx_parse_tail_2017_2") = 0 then failures = failures + 1
+  if check_contains("NR-14 long odd tail assignment", replacement, "seven=__rxcpx_parse_tail_2017_3") = 0 then failures = failures + 1
+  if check_true("NR-14 long odd no prepared opcode", pos("assembler parseplan ", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2018)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "one", ".string", 0
+  call pushidentifier tokens, "two", ".string", 0
+  call pushidentifier tokens, "three", ".string", 0
+  call pushidentifier tokens, "four", ".string", 0
+  call pushidentifier tokens, "five", ".string", 0
+  call pushidentifier tokens, "six", ".string", 0
+  call pushidentifier tokens, "seven", ".string", 0
+  call pushidentifier tokens, "eight", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 long even prepared opcode", replacement, "assembler parseplan __rxcpx_parse_prepared_2018,") = 0 then failures = failures + 1
+  if check_contains("NR-14 long even descriptor counts", replacement, '"5001080010000800') = 0 then failures = failures + 1
+  if check_contains("NR-14 long even tail assignment", replacement, "eight=__rxcpx_parse_prepared_2018[8]") = 0 then failures = failures + 1
+  if check_true("NR-14 long even no exact chain", pos("assembler parsewords3 ", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2019)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "LOG"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "first", ".string", 0
+  call pushidentifier tokens, "second", ".string", 0
+  call pushidentifier tokens, "third", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("NR-14 logging generic fallback", replacement, "parseExec(_source,") = 0 then failures = failures + 1
+  if check_contains("NR-14 logging level preserved", replacement, ",1)") = 0 then failures = failures + 1
+  if check_true("NR-14 logging no runtime assist", pos("assembler parsewords3 ", replacement) = 0 & pos("assembler parseplan ", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures

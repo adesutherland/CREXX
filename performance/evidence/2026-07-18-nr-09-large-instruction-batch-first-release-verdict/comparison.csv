@@ -1,0 +1,3 @@
+vm,baseline_cps_median,candidate_cps_median,cps_delta_percent,baseline_cps_min,baseline_cps_max,candidate_cps_min,candidate_cps_max,baseline_real_median_s,candidate_real_median_s,real_delta_percent,baseline_real_min_s,baseline_real_max_s,candidate_real_min_s,candidate_real_max_s
+rxvm,1203145,1176279,-2.233,1194385,1213159,1169351,1187568,8.33,8.52,+2.281,8.26,8.39,8.43,8.57
+rxbvm,1183390,1156303,-2.289,1176634,1189443,1143771,1178327,8.46,8.67,+2.482,8.42,8.51,8.50,8.76

@@ -1,0 +1,14 @@
+2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6  /Users/adrian/CLionProjects/CREXX/tests/benchmarks/rexxcps_levelb.crexx
+868fb7fdac2b387dca9ba227d0ca949431e51ea87ebb06928e874360592ee515  /Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas
+b379535d9b8913da3842b1caa39089471cef276a894130e14338dfac84a26c98  /Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+300cbc91222cd4add83278b517c96b81fe44359bdbbf1b977e6e7dfd1861e027  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+dadfbeb2c28e4178dcab721ec6baf2a5c21f72bffc2609462d64121ecefff29d  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm
+a80cd1acc8dd387c85cde4bf108bf2f3e48b5ae8b6bbe68d65862c348122f8db  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm
+b6d5f87bc0b14601cc1ed92bec26b1cce0dd711c9751e35eb571a68160959834  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-first-release-verdict/candidate-samples.csv
+ec8541d4aceae294271c926bb3d5e6d563aa037e267b65583cfdee59459f2d96  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-first-release-verdict/candidate-summary.csv
+bc82a918b41ae88860b88fcd2ab7a2ce5cdd314175933441585a86e128b61d61  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/candidate-samples.csv
+e198cfd7e983b8b86e1830b1ce1918fe11a4d9039adebe3732d56a6612be2a60  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/candidate-summary.csv
+7ff85b6b2273e5b84442edbab98aa711b82cd302e1d8174b0bd0acfa8fc35d73  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/comparison.csv
+5e7c2eb2c3b68f0fe89b0159b753ac051b635751791887df70745b151687be16  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/static-deltas.csv
+819cf9d0604908330cdf80536fcd8b69d618bcb1251c30f2a7e3890d02cb8ce9  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/size-deltas.csv
+f1ca1b2dae5c99576d344b5c49755b88e2aa2781151488e157f5a3ea3426dee4  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/provenance.txt

@@ -6,11 +6,7 @@
 
 main() .locals=3
    .meta "02_flow.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "02_flow.crexx" 4 15 24 "if a > 3 then say \"Big\""
    .meta "02_flow.main.a"="b" ".int" "5"
    say "Big"

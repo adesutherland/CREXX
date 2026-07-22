@@ -6,11 +6,7 @@
 
 main() .locals=3
    .meta "12_arrays_lvlb.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "12_arrays_lvlb.main.ary"="b" ".int[5]" r0
    .srcstep 1 1 17 "12_arrays_lvlb.crexx" 3 1 13 "ary = .int[5]"
    null r0
@@ -19,9 +15,8 @@ main() .locals=3
    linkattr1 r1,r0,1
    load r2,10
    .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
-   icopy r1,r2
-   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "ary" ""
-   unlink r1
+   isetunlink r1,r2
+   .traceevent "A" 6 "R" "I" "r" 2 2 2 0 "ary" ""
    .srcstep 3 3 17 "12_arrays_lvlb.crexx" 5 1 10 "say ary[1]"
    setattrs r0,5
    linkattr1 r2,r0,1

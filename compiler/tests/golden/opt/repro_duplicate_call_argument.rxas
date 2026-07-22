@@ -7,11 +7,7 @@
 main() .locals=2
    .meta "repro_duplicate_call_argument.main"="b" ".int" main() ""
    .srcstep 10 10 17 "repro_duplicate_call_argument.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 3 3 17 "repro_duplicate_call_argument.crexx" 7 3 38 "  say combine_numbers(number, number)"
    .meta "repro_duplicate_call_argument.main.number"="b" ".int" "7"
    .meta "repro_duplicate_call_argument.main.text"="b" ".string" "same"

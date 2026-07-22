@@ -1,0 +1,9 @@
+sequence,vm,phase,phase_sequence,native_cps,process_real_s,effective_count,pass,stdout,stderr
+1,rxvm,warmup,1,1197540,8.36,100,1,compatibility/raw/01-rxvm-warmup-1.stdout.txt,compatibility/raw/01-rxvm-warmup-1.stderr.txt
+2,rxvm,recorded,1,1207104,8.30,100,1,compatibility/raw/02-rxvm-recorded-1.stdout.txt,compatibility/raw/02-rxvm-recorded-1.stderr.txt
+3,rxvm,recorded,2,1194926,8.38,100,1,compatibility/raw/03-rxvm-recorded-2.stdout.txt,compatibility/raw/03-rxvm-recorded-2.stderr.txt
+4,rxvm,recorded,3,1192401,8.40,100,1,compatibility/raw/04-rxvm-recorded-3.stdout.txt,compatibility/raw/04-rxvm-recorded-3.stderr.txt
+5,rxbvm,warmup,1,1184944,8.45,100,1,compatibility/raw/05-rxbvm-warmup-1.stdout.txt,compatibility/raw/05-rxbvm-warmup-1.stderr.txt
+6,rxbvm,recorded,1,1179673,8.49,100,1,compatibility/raw/06-rxbvm-recorded-1.stdout.txt,compatibility/raw/06-rxbvm-recorded-1.stderr.txt
+7,rxbvm,recorded,2,1173981,8.53,100,1,compatibility/raw/07-rxbvm-recorded-2.stdout.txt,compatibility/raw/07-rxbvm-recorded-2.stderr.txt
+8,rxbvm,recorded,3,1183088,8.47,100,1,compatibility/raw/08-rxbvm-recorded-3.stdout.txt,compatibility/raw/08-rxbvm-recorded-3.stderr.txt

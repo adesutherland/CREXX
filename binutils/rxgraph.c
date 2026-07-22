@@ -10,6 +10,7 @@
 #include "rxsignature.h"
 
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -3710,16 +3711,16 @@ static int rx_graph_crexx_add_instruction_operands(RxGraphBuilder *builder,
         instructions = (const bin_code *)module->instructions;
         code_index = 0u;
         while (code_index < module->header.instruction_size) {
-            OperandType types[3];
             int opcode;
-            int operand_count;
-            int operand_index;
+            size_t operand_count;
+            size_t operand_index;
 
             opcode = instructions[code_index].instruction.opcode;
             if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) goto invalid_instruction;
-            operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
-            if (instructions[code_index].instruction.no_ops != operand_count ||
-                code_index + (size_t)operand_count >= module->header.instruction_size) {
+            operand_count = rxop_format_operand_count(rxbin_opcode_format(opcode));
+            if (operand_count > INT_MAX ||
+                instructions[code_index].instruction.no_ops != operand_count ||
+                code_index + operand_count >= module->header.instruction_size) {
                 goto invalid_instruction;
             }
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
@@ -3749,7 +3750,7 @@ static int rx_graph_crexx_add_instruction_operands(RxGraphBuilder *builder,
                 }
                 free(owned_text);
             }
-            code_index += (size_t)operand_count + 1u;
+            code_index += operand_count + 1u;
         }
     }
     return 1;

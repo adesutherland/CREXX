@@ -1,0 +1,4 @@
+artifact,baseline_bytes,candidate_bytes,delta_bytes
+canonical_opt_rxas,226793,226493,-300
+canonical_opt_rxbin,79853,79861,8
+linked_library,881192,880384,-808

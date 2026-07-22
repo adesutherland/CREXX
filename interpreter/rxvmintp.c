@@ -120,6 +120,86 @@ int rxvm_link(rxvm_context *ctx);
 
 #define RXVM_FFORMAT_MAX_FIELD 1000
 
+typedef struct rxvm_parse_span {
+    size_t start;
+    size_t length;
+} rxvm_parse_span;
+
+static void rxvm_parse_words3_spans(const value *source,
+                                    rxvm_parse_span spans[3]) {
+    const char *text = source->string_value;
+    size_t length = source->string_length;
+    size_t cursor = 0;
+    size_t field;
+
+    for (field = 0; field < 2; field++) {
+        while (cursor < length && text[cursor] == ' ') cursor++;
+        spans[field].start = cursor;
+        while (cursor < length && text[cursor] != ' ') cursor++;
+        spans[field].length = cursor - spans[field].start;
+        if (cursor < length) cursor++;
+    }
+    spans[2].start = cursor;
+    spans[2].length = length - cursor;
+}
+
+static void rxvm_parse_words3_drop_spans(const value *source,
+                                         rxvm_parse_span spans[3]) {
+    const char *text = source->string_value;
+    size_t length = source->string_length;
+    size_t cursor = 0;
+    size_t field;
+
+    for (field = 0; field < 3; field++) {
+        while (cursor < length && text[cursor] == ' ') cursor++;
+        spans[field].start = cursor;
+        while (cursor < length && text[cursor] != ' ') cursor++;
+        spans[field].length = cursor - spans[field].start;
+        if (cursor < length) cursor++;
+    }
+}
+
+static void rxvm_parse_set_span_bytes(value *target,
+                                      const char *source,
+                                      const rxvm_parse_span *span) {
+    set_string(target, (char *)source + span->start, span->length);
+}
+
+static size_t rxvm_parse_byte_offset(const value *source, size_t character_offset) {
+#ifndef NUTF8
+    size_t byte_offset = 0;
+    size_t current_character = 0;
+
+    if (character_offset >= source->string_chars) return source->string_length;
+#if ASCII_FAST_PATH
+    if (source->string_chars == source->string_length) return character_offset;
+#endif
+    while (current_character < character_offset && byte_offset < source->string_length) {
+        byte_offset += utf8codepointcalcsize(source->string_value + byte_offset);
+        current_character++;
+    }
+    return byte_offset;
+#else
+    return character_offset < source->string_length ? character_offset : source->string_length;
+#endif
+}
+
+static void rxvm_parse_position2_spans(const value *source,
+                                       rxinteger split,
+                                       rxvm_parse_span spans[2]) {
+    const char *text = source->string_value;
+    size_t length = source->string_length;
+    size_t character_offset = split > 0 ? (size_t)split : 0;
+    size_t cursor = rxvm_parse_byte_offset(source, character_offset);
+
+    spans[0].start = 0;
+    spans[0].length = cursor;
+    while (cursor < length && text[cursor] == ' ') cursor++;
+    spans[1].start = cursor;
+    while (cursor < length && text[cursor] != ' ') cursor++;
+    spans[1].length = cursor - spans[1].start;
+}
+
 static int rxvm_padded_string_compare(const char *left, size_t left_len, const char *right, size_t right_len) {
     size_t max_len = left_len > right_len ? left_len : right_len;
     size_t i;
@@ -312,6 +392,476 @@ static uint64_t rxvm_binary_read_le_bytes(const unsigned char *bytes, size_t off
         result |= ((uint64_t)source[i]) << (i * 8);
     }
     return result;
+}
+
+#define RXVM_PARSE_PLAN_MAGIC 0x50u
+#define RXVM_PARSE_PLAN_VERSION 1u
+#define RXVM_PARSE_PLAN_HEADER_SIZE 8u
+#define RXVM_PARSE_PLAN_FLAG_STORE 0x01u
+#define RXVM_PARSE_PLAN_FLAG_SKIP 0x01u
+
+typedef struct rxvm_parse_plan_item {
+    unsigned char kind;
+    unsigned char flags;
+    size_t offset;
+    size_t next_offset;
+    const unsigned char *literal;
+    size_t literal_bytes;
+    size_t literal_chars;
+    rxinteger movement;
+} rxvm_parse_plan_item;
+
+static int rxvm_parse_plan_header(const string_constant *plan,
+                                  uint16_t *item_count,
+                                  uint16_t *result_count) {
+    const unsigned char *bytes;
+    uint16_t header_size;
+
+    if (!plan || plan->string_len < RXVM_PARSE_PLAN_HEADER_SIZE) return 0;
+    bytes = (const unsigned char *)plan->string;
+    if (bytes[0] != RXVM_PARSE_PLAN_MAGIC ||
+        bytes[1] != RXVM_PARSE_PLAN_VERSION) return 0;
+    header_size = (uint16_t)rxvm_binary_read_le_bytes(bytes, 2, 2);
+    if (header_size != RXVM_PARSE_PLAN_HEADER_SIZE) return 0;
+    *item_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, 4, 2);
+    *result_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, 6, 2);
+    return *item_count > 0;
+}
+
+static int rxvm_parse_plan_read_item(const string_constant *plan,
+                                     size_t offset,
+                                     rxvm_parse_plan_item *item) {
+    const unsigned char *bytes;
+    uint64_t movement;
+
+    if (!plan || !item || offset > plan->string_len ||
+        plan->string_len - offset < 2u) return 0;
+    bytes = (const unsigned char *)plan->string;
+    memset(item, 0, sizeof(*item));
+    item->kind = bytes[offset];
+    item->flags = bytes[offset + 1u];
+    item->offset = offset;
+    offset += 2u;
+
+    switch (item->kind) {
+        case 1:
+            if ((item->flags & ~RXVM_PARSE_PLAN_FLAG_STORE) != 0u) return 0;
+            break;
+        case 2:
+            if (item->flags != 0u || plan->string_len - offset < 8u) return 0;
+            item->literal_bytes = (size_t)rxvm_binary_read_le_bytes(bytes, offset, 4);
+            item->literal_chars = (size_t)rxvm_binary_read_le_bytes(bytes, offset + 4u, 4);
+            offset += 8u;
+            if (item->literal_bytes > plan->string_len - offset ||
+                item->literal_chars > item->literal_bytes) return 0;
+            item->literal = bytes + offset;
+            offset += item->literal_bytes;
+            break;
+        case 3:
+        case 4:
+        case 5:
+            if ((item->flags & ~RXVM_PARSE_PLAN_FLAG_SKIP) != 0u ||
+                plan->string_len - offset < 8u) return 0;
+            movement = rxvm_binary_read_le_bytes(bytes, offset, 8);
+            if (movement > (uint64_t)INT64_MAX) return 0;
+            item->movement = (rxinteger)movement;
+            offset += 8u;
+            break;
+        case 6:
+            if (item->flags != 0u) return 0;
+            break;
+        default:
+            return 0;
+    }
+    item->next_offset = offset;
+    return 1;
+}
+
+static size_t rxvm_parse_plan_source_chars(const value *source) {
+#ifndef NUTF8
+    return source->string_chars;
+#else
+    return source->string_length;
+#endif
+}
+
+static void rxvm_parse_plan_set_empty(value *target) {
+    set_string(target, "", 0);
+}
+
+static void rxvm_parse_plan_set_span(value *target,
+                                     const value *source,
+                                     size_t start,
+                                     size_t character_length) {
+    size_t byte_start;
+    size_t byte_end;
+
+    if (character_length == 0u) {
+        rxvm_parse_plan_set_empty(target);
+        return;
+    }
+    byte_start = rxvm_parse_byte_offset(source, start - 1u);
+    byte_end = rxvm_parse_byte_offset(source, start - 1u + character_length);
+    set_string(target, source->string_value + byte_start, byte_end - byte_start);
+#ifndef NUTF8
+    target->string_chars = character_length;
+    mark_utf8_valid_count(target);
+#endif
+}
+
+static int rxvm_parse_plan_is_blank(const value *source, size_t position) {
+    size_t byte_offset = rxvm_parse_byte_offset(source, position - 1u);
+    return byte_offset < source->string_length &&
+           source->string_value[byte_offset] == ' ';
+}
+
+static size_t rxvm_parse_plan_find_literal(const value *source,
+                                           size_t start,
+                                           const rxvm_parse_plan_item *literal) {
+    size_t source_chars = rxvm_parse_plan_source_chars(source);
+    size_t start_offset;
+    const char *candidate;
+    const char *last;
+
+    if (literal->literal_bytes == 0u || start == 0u || start > source_chars) return 0u;
+    start_offset = rxvm_parse_byte_offset(source, start - 1u);
+    if (literal->literal_bytes > source->string_length - start_offset) return 0u;
+    candidate = source->string_value + start_offset;
+    last = source->string_value + source->string_length - literal->literal_bytes;
+    while (candidate <= last) {
+        candidate = (const char *)memchr(candidate, literal->literal[0],
+                                        (size_t)(last - candidate + 1));
+        if (!candidate) return 0u;
+        if (memcmp(candidate, literal->literal, literal->literal_bytes) == 0) {
+#ifndef NUTF8
+            size_t character_offset = 0;
+            if (utf8nvalid_count(source->string_value,
+                                 (size_t)(candidate - source->string_value),
+                                 &character_offset) != 0) return 0u;
+            return character_offset + 1u;
+#else
+            return (size_t)(candidate - source->string_value) + 1u;
+#endif
+        }
+        candidate++;
+    }
+    return 0u;
+}
+
+static int rxvm_parse_plan_equals_at(const value *source,
+                                     size_t start,
+                                     const rxvm_parse_plan_item *literal) {
+    size_t source_chars = rxvm_parse_plan_source_chars(source);
+    size_t byte_start;
+
+    if (start == 0u || literal->literal_chars > source_chars - (start - 1u)) return 0;
+    byte_start = rxvm_parse_byte_offset(source, start - 1u);
+    if (literal->literal_bytes > source->string_length - byte_start) return 0;
+    return literal->literal_bytes == 0u ||
+           memcmp(source->string_value + byte_start,
+                  literal->literal,
+                  literal->literal_bytes) == 0;
+}
+
+static size_t rxvm_parse_plan_apply_cursor(const value *source,
+                                           size_t cursor,
+                                           const rxvm_parse_plan_item *item) {
+    size_t source_chars = rxvm_parse_plan_source_chars(source);
+    size_t position;
+    size_t movement = (size_t)item->movement;
+    size_t room;
+
+    if (item->kind == 2) {
+        if (item->literal_bytes == 0u) return cursor;
+        position = rxvm_parse_plan_find_literal(source, cursor, item);
+        return position == 0u ? source_chars + 1u : position;
+    }
+    if (item->kind == 3) {
+        if (movement < 1u) return 1u;
+        if (movement > source_chars + 1u) return source_chars + 1u;
+        return movement;
+    }
+    if (item->kind == 4) {
+        room = source_chars + 1u - cursor;
+        if (movement > room) return source_chars + 1u;
+        return cursor + movement;
+    }
+    if (item->kind == 5) {
+        if (movement >= cursor) return 1u;
+        return cursor - movement;
+    }
+    if (item->kind == 6) {
+        position = cursor;
+        while (position <= source_chars && rxvm_parse_plan_is_blank(source, position)) position++;
+        return position;
+    }
+    return cursor;
+}
+
+static size_t rxvm_parse_plan_store_implicit(value *target,
+                                             int store,
+                                             const value *source,
+                                             size_t capture_start) {
+    size_t source_chars = rxvm_parse_plan_source_chars(source);
+    size_t first = capture_start;
+    size_t after;
+
+    while (first <= source_chars && rxvm_parse_plan_is_blank(source, first)) first++;
+    if (first > source_chars) {
+        if (store) rxvm_parse_plan_set_empty(target);
+        return source_chars + 1u;
+    }
+    after = first;
+    while (after <= source_chars && !rxvm_parse_plan_is_blank(source, after)) after++;
+    if (store) rxvm_parse_plan_set_span(target, source, first, after - first);
+    if (after <= source_chars) after++;
+    return after;
+}
+
+static void rxvm_parse_plan_store_word(value *target,
+                                       int store,
+                                       const value *source,
+                                       size_t field_start,
+                                       int raw) {
+    size_t source_chars = rxvm_parse_plan_source_chars(source);
+    size_t first = field_start;
+    size_t word_start;
+    size_t after;
+
+    if (first > source_chars) {
+        if (store) rxvm_parse_plan_set_empty(target);
+        return;
+    }
+    word_start = first;
+    while (word_start <= source_chars && rxvm_parse_plan_is_blank(source, word_start)) word_start++;
+    if (word_start > source_chars) {
+        if (store) rxvm_parse_plan_set_span(target, source, first, source_chars - first + 1u);
+        return;
+    }
+    after = word_start;
+    while (after <= source_chars && !rxvm_parse_plan_is_blank(source, after)) after++;
+    if (raw) {
+        while (after <= source_chars && rxvm_parse_plan_is_blank(source, after)) after++;
+        if (store) rxvm_parse_plan_set_span(target, source, first, after - first);
+    } else if (store) {
+        rxvm_parse_plan_set_span(target, source, word_start, after - word_start);
+    }
+}
+
+static size_t rxvm_parse_plan_store_literal(value *target,
+                                            int store,
+                                            const value *source,
+                                            size_t capture_start,
+                                            size_t cursor,
+                                            const rxvm_parse_plan_item *literal) {
+    size_t source_chars = rxvm_parse_plan_source_chars(source);
+    size_t position;
+
+    if (literal->literal_bytes == 0u) {
+        if (store) rxvm_parse_plan_set_empty(target);
+        return cursor;
+    }
+    position = rxvm_parse_plan_find_literal(source, cursor, literal);
+    if (position == 0u) {
+        if (store) {
+            if (capture_start > source_chars) rxvm_parse_plan_set_empty(target);
+            else rxvm_parse_plan_set_span(target, source, capture_start,
+                                          source_chars - capture_start + 1u);
+        }
+        return source_chars + 1u;
+    }
+    if (store) rxvm_parse_plan_set_span(target, source, capture_start,
+                                        position - capture_start);
+    return position + literal->literal_chars;
+}
+
+static size_t rxvm_parse_plan_store_numeric(value *target,
+                                            int store,
+                                            const value *source,
+                                            size_t cursor,
+                                            size_t capture_start,
+                                            const rxvm_parse_plan_item *item) {
+    size_t source_chars = rxvm_parse_plan_source_chars(source);
+    size_t movement = (size_t)item->movement;
+    size_t position;
+    size_t room;
+
+    if (item->kind == 3) {
+        position = movement;
+        if (position < 1u) position = 1u;
+        if (position > source_chars + 1u) position = source_chars + 1u;
+    } else if (item->kind == 4) {
+        room = source_chars + 1u - cursor;
+        position = movement > room ? source_chars + 1u : cursor + movement;
+    } else {
+        position = movement >= cursor ? 1u : cursor - movement;
+    }
+
+    if (position <= capture_start) {
+        rxvm_parse_plan_store_word(target, store, source, capture_start,
+                                   item->kind == 5);
+        position = capture_start;
+    } else if (store) {
+        rxvm_parse_plan_set_span(target, source, capture_start,
+                                 position - capture_start);
+    }
+    return position;
+}
+
+static int rxvm_parse_plan_apply_pre(const string_constant *plan,
+                                     const value *source,
+                                     size_t start_offset,
+                                     size_t end_offset,
+                                     unsigned char next_kind,
+                                     const rxvm_parse_plan_item *shared_item,
+                                     unsigned char shared_kind,
+                                     size_t *cursor) {
+    rxvm_parse_plan_item item;
+    rxvm_parse_plan_item next_item;
+    size_t offset = start_offset;
+
+    if (shared_kind == 3u) {
+        *cursor = rxvm_parse_plan_apply_cursor(source, *cursor, shared_item);
+    } else if (shared_kind == 8u) {
+        size_t position;
+        if (shared_item->literal_chars >= *cursor) {
+            *cursor = rxvm_parse_plan_source_chars(source) + 1u;
+        } else {
+            position = *cursor - shared_item->literal_chars;
+            if (rxvm_parse_plan_equals_at(source, position, shared_item)) *cursor = position;
+            else *cursor = rxvm_parse_plan_source_chars(source) + 1u;
+        }
+    }
+
+    while (offset < end_offset) {
+        size_t position;
+        unsigned char following_kind = 0u;
+        int anchor_at_start;
+
+        if (!rxvm_parse_plan_read_item(plan, offset, &item) ||
+            item.next_offset > end_offset) return 0;
+        if (item.flags & RXVM_PARSE_PLAN_FLAG_SKIP) {
+            offset = item.next_offset;
+            continue;
+        }
+        if (item.next_offset < end_offset) {
+            if (!rxvm_parse_plan_read_item(plan, item.next_offset, &next_item) ||
+                next_item.next_offset > end_offset) return 0;
+            following_kind = next_item.kind;
+        }
+        if (item.kind == 2) {
+            position = item.literal_bytes == 0u ? *cursor :
+                       rxvm_parse_plan_find_literal(source, *cursor, &item);
+            if (item.literal_bytes != 0u && position == 0u) {
+                *cursor = rxvm_parse_plan_source_chars(source) + 1u;
+            } else {
+                anchor_at_start = following_kind == 4u || following_kind == 5u;
+                if (!anchor_at_start &&
+                    (item.literal_bytes == 0u || item.literal[0] != ' ') &&
+                    next_kind == 4u) anchor_at_start = 1;
+                *cursor = anchor_at_start ? position : position + item.literal_chars;
+            }
+        } else {
+            *cursor = rxvm_parse_plan_apply_cursor(source, *cursor, &item);
+        }
+        offset = item.next_offset;
+    }
+    if (offset != end_offset) return 0;
+    return 1;
+}
+
+static int rxvm_parse_plan_execute(value *result,
+                                   value *source,
+                                   const string_constant *plan) {
+    uint16_t item_count;
+    uint16_t result_count;
+    rxvm_parse_plan_item current;
+    rxvm_parse_plan_item next;
+    rxvm_parse_plan_item after;
+    rxvm_parse_plan_item shared_item;
+    size_t offset = RXVM_PARSE_PLAN_HEADER_SIZE;
+    size_t pre_offset = RXVM_PARSE_PLAN_HEADER_SIZE;
+    size_t cursor = 1u;
+    size_t capture_start = 0u;
+    size_t output_index = 0u;
+    size_t pending_output = 0u;
+    unsigned int index;
+    int pending = 0;
+    int pending_store = 0;
+    unsigned char shared_kind = 0u;
+
+    if (!rxvm_parse_plan_header(plan, &item_count, &result_count)) return 0;
+    set_num_attributes(result, result_count);
+
+    for (index = 0; index < item_count; index++) {
+        int next_exists;
+        int after_exists;
+
+        if (!rxvm_parse_plan_read_item(plan, offset, &current)) return 0;
+        next_exists = index + 1u < item_count;
+        after_exists = index + 2u < item_count;
+        if (next_exists && !rxvm_parse_plan_read_item(plan, current.next_offset, &next)) return 0;
+        if (after_exists && !rxvm_parse_plan_read_item(plan, next.next_offset, &after)) return 0;
+
+        if (current.kind == 1u) {
+            if (pending) {
+                cursor = rxvm_parse_plan_store_implicit(
+                        pending_store ? result->attributes[pending_output] : 0,
+                        pending_store, source, capture_start);
+                pending = 0;
+            }
+            if (!rxvm_parse_plan_apply_pre(plan, source, pre_offset, current.offset,
+                                           next_exists ? next.kind : 0u,
+                                           &shared_item, shared_kind,
+                                           &cursor)) return 0;
+            shared_kind = 0u;
+            pending_store = (current.flags & RXVM_PARSE_PLAN_FLAG_STORE) != 0u;
+            if (pending_store) {
+                if (output_index >= result_count) return 0;
+                pending_output = output_index++;
+            }
+            capture_start = cursor;
+            pending = 1;
+            pre_offset = current.next_offset;
+        } else if (!pending) {
+            /* Controls before a target are applied together when that target arrives. */
+        } else {
+            value *target = pending_store ? result->attributes[pending_output] : 0;
+            if (current.kind == 2u) {
+                cursor = rxvm_parse_plan_store_literal(target, pending_store, source,
+                                                       capture_start, cursor, &current);
+                if (next_exists && after_exists && next.kind == 1u && after.kind == 4u) {
+                    shared_item = current;
+                    shared_kind = 8u;
+                }
+            } else if (current.kind == 3u || current.kind == 4u || current.kind == 5u) {
+                cursor = rxvm_parse_plan_store_numeric(target, pending_store, source,
+                                                       cursor, capture_start, &current);
+                if (current.kind == 3u && next_exists && next.kind == 1u) {
+                    shared_item = current;
+                    shared_kind = 3u;
+                }
+            } else {
+                cursor = rxvm_parse_plan_store_implicit(target, pending_store,
+                                                        source, capture_start);
+            }
+            pending = 0;
+            capture_start = 0u;
+            pre_offset = current.next_offset;
+        }
+        offset = current.next_offset;
+    }
+
+    if (offset != plan->string_len) return 0;
+    if (pending) {
+        size_t source_chars = rxvm_parse_plan_source_chars(source);
+        if (pending_store) {
+            if (capture_start > source_chars) rxvm_parse_plan_set_empty(result->attributes[pending_output]);
+            else rxvm_parse_plan_set_span(result->attributes[pending_output], source,
+                                          capture_start, source_chars - capture_start + 1u);
+        }
+    }
+    return output_index == result_count;
 }
 
 static uint64_t rxvm_binary_read_le(const value *buffer, size_t offset, size_t width) {
@@ -3708,7 +4258,7 @@ static int rxvm_restore_caller_call_argument_mapping(stack_frame *callee
 
 /* A native call has no child frame to carry caller_arg_base.  If a branch
  * handler remains in the interrupted frame, recover the call window from the
- * canonical CALL/DCALL operand only on that cold signal path. */
+ * canonical CALL/DCALL or fused-call count operand on that cold signal path. */
 static int rxsignal_restore_interrupted_call_argument_mapping(
         stack_frame *frame, rxinteger interrupted_module,
         rxinteger interrupted_address
@@ -3734,7 +4284,11 @@ static int rxsignal_restore_interrupted_call_argument_mapping(
     address = (size_t)interrupted_address;
     if (address >= space->inst_size) return 0;
     opcode = space->binary[address].instruction.opcode;
-    if (opcode != OP_CALL_REG_FUNC_REG && opcode != OP_DCALL_REG_REG_REG) return 1;
+    if (opcode != OP_CALL_REG_FUNC_REG &&
+        opcode != OP_DCALL_REG_REG_REG &&
+        opcode != OP_SWAPCALL_REG_FUNC_REG_REG_REG &&
+        opcode != OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG &&
+        opcode != OP_SETTPCALL_REG_FUNC_REG_REG_INT) return 1;
 #ifdef CREXX_VM_PROFILING
     if (window_observed) *window_observed = 1;
 #endif
@@ -4124,61 +4678,9 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
     /*
      * Instruction database - loaded from a generated header file
      */
-#define FMT_EMPTY_MAP 0, OP_NONE, OP_NONE, OP_NONE
-#define FMT_B_MAP 1, OP_BINARY, OP_NONE, OP_NONE
-#define FMT_C_MAP 1, OP_CHAR, OP_NONE, OP_NONE
-#define FMT_F_MAP 1, OP_FLOAT, OP_NONE, OP_NONE
-#define FMT_I_MAP 1, OP_INT, OP_NONE, OP_NONE
-#define FMT_I_I_MAP 2, OP_INT, OP_INT, OP_NONE
-#define FMT_I_I_I_MAP 3, OP_INT, OP_INT, OP_INT
-#define FMT_I_I_R_MAP 3, OP_INT, OP_INT, OP_REG
-#define FMT_I_R_MAP 2, OP_INT, OP_REG, OP_NONE
-#define FMT_I_R_R_MAP 3, OP_INT, OP_REG, OP_REG
-#define FMT_L_MAP 1, OP_ID, OP_NONE, OP_NONE
-#define FMT_L_L_R_MAP 3, OP_ID, OP_ID, OP_REG
-#define FMT_L_P_S_MAP 3, OP_ID, OP_FUNC, OP_STRING
-#define FMT_L_R_MAP 2, OP_ID, OP_REG, OP_NONE
-#define FMT_L_R_I_MAP 3, OP_ID, OP_REG, OP_INT
-#define FMT_L_R_R_MAP 3, OP_ID, OP_REG, OP_REG
-#define FMT_L_R_S_MAP 3, OP_ID, OP_REG, OP_STRING
-#define FMT_L_S_MAP 2, OP_ID, OP_STRING, OP_NONE
-#define FMT_P_MAP 1, OP_FUNC, OP_NONE, OP_NONE
-#define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
-#define FMT_R_MAP 1, OP_REG, OP_NONE, OP_NONE
-#define FMT_R_B_MAP 2, OP_REG, OP_BINARY, OP_NONE
-#define FMT_R_B_B_MAP 3, OP_REG, OP_BINARY, OP_BINARY
-#define FMT_R_B_R_MAP 3, OP_REG, OP_BINARY, OP_REG
-#define FMT_R_B_S_MAP 3, OP_REG, OP_BINARY, OP_STRING
-#define FMT_R_C_MAP 2, OP_REG, OP_CHAR, OP_NONE
-#define FMT_R_D_MAP 2, OP_REG, OP_DECIMAL, OP_NONE
-#define FMT_R_D_R_MAP 3, OP_REG, OP_DECIMAL, OP_REG
-#define FMT_R_F_MAP 2, OP_REG, OP_FLOAT, OP_NONE
-#define FMT_R_F_I_MAP 3, OP_REG, OP_FLOAT, OP_INT
-#define FMT_R_F_R_MAP 3, OP_REG, OP_FLOAT, OP_REG
-#define FMT_R_I_MAP 2, OP_REG, OP_INT, OP_NONE
-#define FMT_R_I_I_MAP 3, OP_REG, OP_INT, OP_INT
-#define FMT_R_I_R_MAP 3, OP_REG, OP_INT, OP_REG
-#define FMT_R_P_MAP 2, OP_REG, OP_FUNC, OP_NONE
-#define FMT_R_P_R_MAP 3, OP_REG, OP_FUNC, OP_REG
-#define FMT_R_R_MAP 2, OP_REG, OP_REG, OP_NONE
-#define FMT_R_R_B_MAP 3, OP_REG, OP_REG, OP_BINARY
-#define FMT_R_R_D_MAP 3, OP_REG, OP_REG, OP_DECIMAL
-#define FMT_R_R_F_MAP 3, OP_REG, OP_REG, OP_FLOAT
-#define FMT_R_R_I_MAP 3, OP_REG, OP_REG, OP_INT
-#define FMT_R_R_R_MAP 3, OP_REG, OP_REG, OP_REG
-#define FMT_R_R_S_MAP 3, OP_REG, OP_REG, OP_STRING
-#define FMT_R_S_MAP 2, OP_REG, OP_STRING, OP_NONE
-#define FMT_R_S_I_MAP 3, OP_REG, OP_STRING, OP_INT
-#define FMT_R_S_R_MAP 3, OP_REG, OP_STRING, OP_REG
-#define FMT_R_S_S_MAP 3, OP_REG, OP_STRING, OP_STRING
-#define FMT_S_MAP 1, OP_STRING, OP_NONE, OP_NONE
-#define FMT_S_R_MAP 2, OP_STRING, OP_REG, OP_NONE
-#define FMT_S_S_MAP 2, OP_STRING, OP_STRING, OP_NONE
-#define FMT_S_S_R_MAP 3, OP_STRING, OP_STRING, OP_REG
-
 const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
-    { OPCODE, #NAME, DESC, FMT##_MAP },
+    { OPCODE, #NAME, DESC, sizeof(FMT) - 1u, FMT },
 #include "../binutils/include/rxops.h"
 #undef X
 };
@@ -4388,6 +4890,14 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
      */
 
 #define RESERVED_IMPL(name) START_INSTRUCTION(name) SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH;
+#define RXVM_SWAP_PAIR(first_, second_)                                        \
+        do {                                                                   \
+            value *swap_value__ = REG_OP(first_);                              \
+            REG_OP(first_) = REG_OP(second_);                                  \
+            REG_OP(second_) = swap_value__;                                    \
+            RXVM_INSTRUMENTATION_SWAP(current_frame, REG_IDX(first_),          \
+                                      REG_IDX(second_));                        \
+        } while (0)
 
     /* Signal Interrupt Support - this is only used/called when interrupts are pending */
     START_INTERRUPT;
@@ -5094,18 +5604,31 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(METADECODEINST_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METADECODEINST R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
 
-            /* The target register is turned into an object with 7 attributes */
+            /*
+             * Preserve the historical seven-attribute object for callers that
+             * read all three legacy type slots, then extend it for wide forms.
+             */
             value_zero(op1R);
-            set_num_attributes(op1R, 7);
+            set_num_attributes(op1R, (size_t)4 +
+                    (meta_map[op2R->int_value].operands < 3
+                         ? 3
+                         : meta_map[op2R->int_value].operands));
 
             /* Populate the object */
             op1R->attributes[0]->int_value = meta_map[op2R->int_value].opcode;
             set_null_string(op1R->attributes[1], meta_map[op2R->int_value].instruction);
             set_null_string(op1R->attributes[2], meta_map[op2R->int_value].desc);
-            op1R->attributes[3]->int_value = meta_map[op2R->int_value].operands;
-            op1R->attributes[4]->int_value = meta_map[op2R->int_value].op1_type;
-            op1R->attributes[5]->int_value = meta_map[op2R->int_value].op2_type;
-            op1R->attributes[6]->int_value = meta_map[op2R->int_value].op3_type;
+            op1R->attributes[3]->int_value = (rxinteger)meta_map[op2R->int_value].operands;
+            {
+                size_t operand_index;
+                for (operand_index = 0;
+                     operand_index < meta_map[op2R->int_value].operands;
+                     operand_index++) {
+                    op1R->attributes[4 + operand_index]->int_value =
+                            rxop_format_operand_type(meta_map[op2R->int_value].format,
+                                                     operand_index);
+                }
+            }
             DISPATCH;
 
             /* Load Integer/Index Operand (op1 = (int)op2[op3]) */
@@ -6528,6 +7051,76 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 }
             }
             DISPATCH;
+
+#define RXVM_MAPPED_CALL_BODY(RESULT_, FUNCTION_, ARG_COUNT_, ARG_BASE_)         \
+        do {                                                                    \
+            proc_runtime *mapped_called__ = (FUNCTION_);                        \
+            value *mapped_result__ = (RESULT_);                                 \
+            int mapped_arg_count__ = (int)(ARG_COUNT_);                         \
+            size_t mapped_arg_base__ = (size_t)(ARG_BASE_);                     \
+            value **mapped_args__ = current_locals + mapped_arg_base__;         \
+            if (mapped_called__->start == SIZE_MAX) {                           \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        mapped_called__->binarySpace                            \
+                            ? RXVM_PROFILE_CALL_DIRECT_BYTECODE                 \
+                            : RXVM_PROFILE_CALL_DIRECT_NATIVE,                  \
+                        mapped_called__, mapped_arg_count__,                    \
+                        RXVM_PROFILE_FRAME_NONE_FAILED,                         \
+                        RXVM_PROFILE_CALL_UNRESOLVED, current_frame,            \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        mapped_arg_base__, 1);                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, mapped_called__->name); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            if (mapped_called__->binarySpace == 0) {                            \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_NATIVE, mapped_called__,       \
+                        mapped_arg_count__, RXVM_PROFILE_FRAME_NO_CHILD_NATIVE, \
+                        RXVM_PROFILE_CALL_SUCCESS, current_frame,               \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        mapped_arg_base__, 1);                                  \
+                RXVM_INSTRUMENTATION_NATIVE_BEGIN(mapped_called__);             \
+                rxvm_callfunc((void *)mapped_called__->start,                   \
+                              mapped_arg_count__, mapped_args__,                \
+                              mapped_result__, signal_value);                   \
+                RXVM_INSTRUMENTATION_NATIVE_END();                              \
+                INTERRUPT_FROM_RXPA_SIGNAL(signal_value);                       \
+            } else {                                                            \
+                size_t mapped_j__;                                              \
+                size_t mapped_i__;                                              \
+                temp_frame = frame_f(mapped_called__, mapped_arg_count__,       \
+                                     current_frame, next_pc, mapped_result__);   \
+                if (!temp_frame) {                                              \
+                    RXVM_INSTRUMENTATION_CALL(                                  \
+                            RXVM_PROFILE_CALL_DIRECT_BYTECODE, mapped_called__, \
+                            mapped_arg_count__, RXVM_PROFILE_FRAME_NONE_FAILED, \
+                            RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,      \
+                            current_module->module_number,                      \
+                            VM_CANONICAL_INDEX(pc), mapped_arg_base__, 1);       \
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame"); \
+                    DISPATCH;                                                   \
+                }                                                               \
+                assert(mapped_arg_base__ <= UINT32_MAX);                        \
+                temp_frame->caller_arg_base = (uint32_t)mapped_arg_base__;      \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_BYTECODE, mapped_called__,     \
+                        temp_frame->number_args,                                \
+                        RXVM_PROFILE_FRAME_LAST_ACTIVATION,                     \
+                        RXVM_PROFILE_CALL_SUCCESS, current_frame,               \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        mapped_arg_base__, 1);                                  \
+                VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);            \
+                VM_SELECT_INDEX(mapped_called__->start, RXVM_TRANSITION_CALL);  \
+                mapped_j__ = current_frame->procedure->binarySpace->globals +   \
+                             current_frame->procedure->locals + 1;              \
+                for (mapped_i__ = 0; mapped_i__ < (size_t)mapped_arg_count__;   \
+                     mapped_i__++, mapped_j__++) {                              \
+                    current_frame->baselocals[mapped_j__] =                     \
+                            current_frame->parent->locals[mapped_arg_base__ + mapped_i__]; \
+                    current_locals[mapped_j__] = current_frame->baselocals[mapped_j__]; \
+                }                                                               \
+            }                                                                   \
+        } while (0)
 
         START_INSTRUCTION(CALL_REG_FUNC_REG) VM_ADVANCE(3);
             {
@@ -12295,7 +12888,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
             DISPATCH;
 
-        RESERVED_IMPL(RESERVED_087)
+        START_INSTRUCTION(CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG) VM_ADVANCE(9);
+            DEBUG("TRACE - CNOP R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu\n",
+                  REG_IDX(1), REG_IDX(2), REG_IDX(3), REG_IDX(4), REG_IDX(5),
+                  REG_IDX(6), REG_IDX(7), REG_IDX(8), REG_IDX(9));
+            DISPATCH;
         RESERVED_IMPL(RESERVED_088)
         RESERVED_IMPL(RESERVED_089)
         RESERVED_IMPL(RESERVED_090)
@@ -12309,64 +12906,471 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
         RESERVED_IMPL(RESERVED_263)
-        RESERVED_IMPL(RESERVED_264)
-        RESERVED_IMPL(RESERVED_265)
-        RESERVED_IMPL(RESERVED_266)
-        RESERVED_IMPL(RESERVED_267)
-        RESERVED_IMPL(RESERVED_268)
-        RESERVED_IMPL(RESERVED_269)
-        RESERVED_IMPL(RESERVED_270)
-        RESERVED_IMPL(RESERVED_271)
+
+        START_INSTRUCTION(SWAPN_REG_REG_REG_REG) VM_ADVANCE(4);
+            RXVM_SWAP_PAIR(1, 2);
+            RXVM_SWAP_PAIR(3, 4);
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPN_REG_REG_REG_REG_REG_REG) VM_ADVANCE(6);
+            RXVM_SWAP_PAIR(1, 2);
+            RXVM_SWAP_PAIR(3, 4);
+            RXVM_SWAP_PAIR(5, 6);
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPN_REG_REG_REG_REG_REG_REG_REG_REG) VM_ADVANCE(8);
+            RXVM_SWAP_PAIR(1, 2);
+            RXVM_SWAP_PAIR(3, 4);
+            RXVM_SWAP_PAIR(5, 6);
+            RXVM_SWAP_PAIR(7, 8);
+            DISPATCH;
+
+        START_INSTRUCTION(SETTPSWAP_REG_INT_REG) VM_ADVANCE(3);
+            REG_OP(1)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(1)->status.all_type_flags,
+                                         (uint32_t)INT_OP(2));
+            RXVM_SWAP_PAIR(1, 3);
+            DISPATCH;
+
+        START_INSTRUCTION(LOADSETTP2_REG_INT_REG_INT) VM_ADVANCE(4);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            DISPATCH;
+
+        START_INSTRUCTION(LOADSETTPSWAP_REG_INT_REG_INT_REG) VM_ADVANCE(5);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            RXVM_SWAP_PAIR(3, 5);
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPSETTP_REG_REG_REG_INT) VM_ADVANCE(4);
+            RXVM_SWAP_PAIR(1, 2);
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPSETTPSWAP_REG_REG_REG_INT_REG) VM_ADVANCE(5);
+            RXVM_SWAP_PAIR(1, 2);
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            RXVM_SWAP_PAIR(3, 5);
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_272)
-        RESERVED_IMPL(RESERVED_273)
-        RESERVED_IMPL(RESERVED_274)
-        RESERVED_IMPL(RESERVED_275)
-        RESERVED_IMPL(RESERVED_276)
+
+        START_INSTRUCTION(SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG) VM_ADVANCE(5);
+            REG_OP(1)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(1)->status.all_type_flags,
+                                         (uint32_t)INT_OP(2));
+            RXVM_SWAP_PAIR(1, 3);
+            REG_OP(4)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
+                                         (uint32_t)INT_OP(2));
+            RXVM_SWAP_PAIR(4, 5);
+            DISPATCH;
+
+        START_INSTRUCTION(NULLN_REG_REG) VM_ADVANCE(2);
+            value_zero(REG_OP(1));
+            value_zero(REG_OP(2));
+            DISPATCH;
+
+        START_INSTRUCTION(NULLN_REG_REG_REG) VM_ADVANCE(3);
+            value_zero(REG_OP(1));
+            value_zero(REG_OP(2));
+            value_zero(REG_OP(3));
+            DISPATCH;
+
+        START_INSTRUCTION(NULLN_REG_REG_REG_REG) VM_ADVANCE(4);
+            value_zero(REG_OP(1));
+            value_zero(REG_OP(2));
+            value_zero(REG_OP(3));
+            value_zero(REG_OP(4));
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_277)
         RESERVED_IMPL(RESERVED_278)
         RESERVED_IMPL(RESERVED_279)
-        RESERVED_IMPL(RESERVED_280)
-        RESERVED_IMPL(RESERVED_281)
-        RESERVED_IMPL(RESERVED_282)
-        RESERVED_IMPL(RESERVED_283)
-        RESERVED_IMPL(RESERVED_284)
-        RESERVED_IMPL(RESERVED_285)
-        RESERVED_IMPL(RESERVED_286)
-        RESERVED_IMPL(RESERVED_287)
-        RESERVED_IMPL(RESERVED_288)
-        RESERVED_IMPL(RESERVED_289)
+
+        START_INSTRUCTION(SWAPCALL_REG_FUNC_REG_REG_REG) VM_ADVANCE(5);
+            RXVM_SWAP_PAIR(4, 5);
+            RXVM_MAPPED_CALL_BODY(REG_OP(1), PROC_OP(2),
+                                  REG_OP(3)->int_value, REG_IDX(3) + 1);
+            DISPATCH;
+
+        START_INSTRUCTION(SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG) VM_ADVANCE(6);
+            REG_OP(4)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
+                                         (uint32_t)INT_OP(5));
+            RXVM_SWAP_PAIR(4, 6);
+            RXVM_MAPPED_CALL_BODY(REG_OP(1), PROC_OP(2),
+                                  REG_OP(3)->int_value, REG_IDX(3) + 1);
+            DISPATCH;
+
+        START_INSTRUCTION(SETTPCALL_REG_FUNC_REG_REG_INT) VM_ADVANCE(5);
+            REG_OP(4)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
+                                         (uint32_t)INT_OP(5));
+            RXVM_MAPPED_CALL_BODY(REG_OP(1), PROC_OP(2),
+                                  REG_OP(3)->int_value, REG_IDX(3) + 1);
+            DISPATCH;
+
+        START_INSTRUCTION(UNLINKN_REG_REG) VM_ADVANCE(2);
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            REG_OP(2) = current_frame->baselocals[REG_IDX(2)];
+            DISPATCH;
+
+        START_INSTRUCTION(ISETUNLINK_REG_REG) VM_ADVANCE(2);
+            REG_OP(1)->int_value = REG_OP(2)->int_value;
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            DISPATCH;
+
+        START_INSTRUCTION(IGETUNLINK_REG_REG) VM_ADVANCE(2);
+            {
+                rxinteger saved_value = REG_OP(2)->int_value;
+                REG_OP(2) = current_frame->baselocals[REG_IDX(2)];
+                REG_OP(1)->int_value = saved_value;
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(ILOADSETUNLINK_REG_INT) VM_ADVANCE(2);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            DISPATCH;
+
+        START_INSTRUCTION(ISETUNLINKN_REG_REG_REG) VM_ADVANCE(3);
+            REG_OP(1)->int_value = REG_OP(2)->int_value;
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            REG_OP(3) = current_frame->baselocals[REG_IDX(3)];
+            DISPATCH;
+
+        START_INSTRUCTION(UNLINKBR_REG_ID)
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            VM_SELECT_INDEX((pc + 2)->index, RXVM_TRANSITION_BRANCH);
+            DISPATCH;
+
+        START_INSTRUCTION(ILOADSETUNLINKN_REG_INT_REG) VM_ADVANCE(3);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            REG_OP(3) = current_frame->baselocals[REG_IDX(3)];
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_290)
-        RESERVED_IMPL(RESERVED_291)
-        RESERVED_IMPL(RESERVED_292)
-        RESERVED_IMPL(RESERVED_293)
-        RESERVED_IMPL(RESERVED_294)
-        RESERVED_IMPL(RESERVED_295)
-        RESERVED_IMPL(RESERVED_296)
-        RESERVED_IMPL(RESERVED_297)
-        RESERVED_IMPL(RESERVED_298)
+
+        START_INSTRUCTION(SETLINKATTR1_REG_REG_INT_REG) VM_ADVANCE(4);
+            set_num_attributes(REG_OP(2), INT_OP(3));
+            if (REG_OP(4)->int_value < 1 ||
+                REG_OP(4)->int_value > REG_OP(2)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1) = REG_OP(2)->attributes[REG_OP(4)->int_value - 1];
+            DISPATCH;
+
+        START_INSTRUCTION(SETLINKATTR1_REG_REG_INT_REG_INT) VM_ADVANCE(5);
+            {
+                rxinteger index;
+                set_num_attributes(REG_OP(2), INT_OP(3));
+                if (!rxinteger_checked_add(REG_OP(4)->int_value, INT_OP(5), &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                    DISPATCH;
+                }
+                if (index < 1 || index > REG_OP(2)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = REG_OP(2)->attributes[index - 1];
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(MINLINKATTR1_REG_REG_INT) VM_ADVANCE(3);
+            if (INT_OP(3) > REG_OP(2)->num_attributes) {
+                set_num_attributes(REG_OP(2), INT_OP(3));
+            }
+            if (INT_OP(3) < 1 || INT_OP(3) > REG_OP(2)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1) = REG_OP(2)->attributes[INT_OP(3) - 1];
+            DISPATCH;
+
+        START_INSTRUCTION(MINLINKATTR1_REG_REG_REG_INT) VM_ADVANCE(4);
+            {
+                rxinteger index;
+                if (!rxinteger_checked_add(REG_OP(3)->int_value, INT_OP(4), &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                    DISPATCH;
+                }
+                if (index > REG_OP(2)->num_attributes) {
+                    set_num_attributes(REG_OP(2), index);
+                }
+                if (index < 1 || index > REG_OP(2)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = REG_OP(2)->attributes[index - 1];
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(ITOF_REG_REG) VM_ADVANCE(2);
+            REG_OP(1)->int_value = REG_OP(2)->int_value;
+            REG_OP(1)->float_value = (double)REG_OP(2)->int_value;
+            DISPATCH;
+
+        START_INSTRUCTION(STOI_REG_REG) VM_ADVANCE(2);
+            if (string2integer(&REG_OP(1)->int_value,
+                               REG_OP(2)->string_value,
+                               REG_OP(2)->string_length)) {
+                SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(FDIVSUB_REG_REG_REG_FLOAT) VM_ADVANCE(4);
+            REG_OP(3)->float_value = REG_OP(2)->float_value / REG_OP(3)->float_value;
+            REG_OP(1)->float_value = REG_OP(3)->float_value - FLOAT_OP(4);
+            DISPATCH;
+
+        START_INSTRUCTION(FMULTICOPY_REG_FLOAT_REG_REG) VM_ADVANCE(4);
+            REG_OP(1)->float_value *= FLOAT_OP(2);
+            REG_OP(3)->int_value = REG_OP(4)->int_value;
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_299)
-        RESERVED_IMPL(RESERVED_401)
-        RESERVED_IMPL(RESERVED_402)
-        RESERVED_IMPL(RESERVED_403)
-        RESERVED_IMPL(RESERVED_404)
-        RESERVED_IMPL(RESERVED_405)
-        RESERVED_IMPL(RESERVED_406)
+
+#define RXVM_FIXED_CALL_BODY(ARITY_)                                           \
+        do {                                                                    \
+            proc_runtime *explicit_called__ = PROC_OP(2);                      \
+            value *explicit_result__ = REG_OP(1);                              \
+            value *explicit_args__[4];                                         \
+            size_t explicit_i__;                                               \
+            size_t explicit_j__;                                               \
+            if ((ARITY_) > 0) explicit_args__[0] = REG_OP(3);                  \
+            if ((ARITY_) > 1) explicit_args__[1] = REG_OP(4);                  \
+            if ((ARITY_) > 2) explicit_args__[2] = REG_OP(5);                  \
+            if ((ARITY_) > 3) explicit_args__[3] = REG_OP(6);                  \
+            if (explicit_called__->start == SIZE_MAX) {                        \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_BYTECODE, explicit_called__,  \
+                        (ARITY_), RXVM_PROFILE_FRAME_NONE_FAILED,               \
+                        RXVM_PROFILE_CALL_UNRESOLVED, current_frame,            \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        0, 0);                                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, explicit_called__->name); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            if (!explicit_called__->binarySpace) {                             \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_NATIVE, explicit_called__,    \
+                        (ARITY_), RXVM_PROFILE_FRAME_NONE_FAILED,               \
+                        RXVM_PROFILE_CALL_INVALID, current_frame,               \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        0, 0);                                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED,                       \
+                               "fixed direct calls require a bytecode target"); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            temp_frame = frame_f(explicit_called__, (ARITY_), current_frame,   \
+                                 next_pc, explicit_result__);                   \
+            if (!temp_frame) {                                                  \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_BYTECODE, explicit_called__,  \
+                        (ARITY_), RXVM_PROFILE_FRAME_NONE_FAILED,               \
+                        RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,          \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        0, 0);                                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame"); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            RXVM_INSTRUMENTATION_CALL(                                          \
+                    RXVM_PROFILE_CALL_DIRECT_BYTECODE, explicit_called__,      \
+                    temp_frame->number_args,                                   \
+                    RXVM_PROFILE_FRAME_LAST_ACTIVATION,                        \
+                    RXVM_PROFILE_CALL_SUCCESS, current_frame,                  \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    0, 0);                                                      \
+            VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);                \
+            VM_SELECT_INDEX(explicit_called__->start, RXVM_TRANSITION_CALL);    \
+            explicit_j__ = current_frame->procedure->binarySpace->globals +    \
+                           current_frame->procedure->locals + 1;                \
+            for (explicit_i__ = 0; explicit_i__ < (size_t)(ARITY_);            \
+                 explicit_i__++, explicit_j__++) {                             \
+                current_frame->baselocals[explicit_j__] =                      \
+                        explicit_args__[explicit_i__];                         \
+                current_locals[explicit_j__] =                                 \
+                        current_frame->baselocals[explicit_j__];               \
+            }                                                                   \
+        } while (0)
+
+        START_INSTRUCTION(CALL1_REG_FUNC_REG) VM_ADVANCE(3);
+            RXVM_FIXED_CALL_BODY(1);
+            DISPATCH;
+
+        START_INSTRUCTION(CALL2_REG_FUNC_REG_REG) VM_ADVANCE(4);
+            RXVM_FIXED_CALL_BODY(2);
+            DISPATCH;
+
+        START_INSTRUCTION(CALL3_REG_FUNC_REG_REG_REG) VM_ADVANCE(5);
+            RXVM_FIXED_CALL_BODY(3);
+            DISPATCH;
+
+        START_INSTRUCTION(CALL4_REG_FUNC_REG_REG_REG_REG) VM_ADVANCE(6);
+            RXVM_FIXED_CALL_BODY(4);
+            DISPATCH;
+
+#undef RXVM_FIXED_CALL_BODY
+        START_INSTRUCTION(PARSEWORDS3_REG_REG_REG_REG) VM_ADVANCE(4);
+            {
+                rxvm_parse_span parse_spans__[3];
+                value *parse_source__ = REG_OP(4);
+                char *parse_snapshot__ = 0;
+                const char *parse_bytes__ = parse_source__->string_value;
+                rxvm_parse_words3_spans(parse_source__, parse_spans__);
+                if (op1R == parse_source__ || op2R == parse_source__ ||
+                    op3R == parse_source__) {
+                    parse_snapshot__ = malloc(parse_source__->string_length > 0 ?
+                                              parse_source__->string_length : 1);
+                    if (!parse_snapshot__) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                        DISPATCH;
+                    }
+                    if (parse_source__->string_length > 0) {
+                        memcpy(parse_snapshot__, parse_source__->string_value,
+                               parse_source__->string_length);
+                    }
+                    parse_bytes__ = parse_snapshot__;
+                }
+                rxvm_parse_set_span_bytes(op1R, parse_bytes__, &parse_spans__[0]);
+                rxvm_parse_set_span_bytes(op2R, parse_bytes__, &parse_spans__[1]);
+                rxvm_parse_set_span_bytes(op3R, parse_bytes__, &parse_spans__[2]);
+                free(parse_snapshot__);
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(ISETATTR1_REG_INT_REG) VM_ADVANCE(3);
+            if (INT_OP(2) < 1 || INT_OP(2) > REG_OP(1)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1)->attributes[INT_OP(2) - 1]->int_value = REG_OP(3)->int_value;
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_407)
-        RESERVED_IMPL(RESERVED_408)
-        RESERVED_IMPL(RESERVED_409)
-        RESERVED_IMPL(RESERVED_410)
+
+        START_INSTRUCTION(PARSEPOS2_REG_REG_REG_INT) VM_ADVANCE(4);
+            {
+                rxvm_parse_span parse_spans__[2];
+                value *parse_source__ = op3R;
+                char *parse_snapshot__ = 0;
+                const char *parse_bytes__ = parse_source__->string_value;
+                rxvm_parse_position2_spans(parse_source__, INT_OP(4), parse_spans__);
+                if (op1R == parse_source__ || op2R == parse_source__) {
+                    parse_snapshot__ = malloc(parse_source__->string_length > 0 ?
+                                              parse_source__->string_length : 1);
+                    if (!parse_snapshot__) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                        DISPATCH;
+                    }
+                    if (parse_source__->string_length > 0) {
+                        memcpy(parse_snapshot__, parse_source__->string_value,
+                               parse_source__->string_length);
+                    }
+                    parse_bytes__ = parse_snapshot__;
+                }
+                rxvm_parse_set_span_bytes(op1R, parse_bytes__, &parse_spans__[0]);
+                rxvm_parse_set_span_bytes(op2R, parse_bytes__, &parse_spans__[1]);
+                free(parse_snapshot__);
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(PARSEWORDS3D_REG_REG_REG_REG) VM_ADVANCE(4);
+            {
+                rxvm_parse_span parse_spans__[3];
+                value *parse_source__ = REG_OP(4);
+                char *parse_snapshot__ = 0;
+                const char *parse_bytes__ = parse_source__->string_value;
+                rxvm_parse_words3_drop_spans(parse_source__, parse_spans__);
+                if (op1R == parse_source__ || op2R == parse_source__ ||
+                    op3R == parse_source__) {
+                    parse_snapshot__ = malloc(parse_source__->string_length > 0 ?
+                                              parse_source__->string_length : 1);
+                    if (!parse_snapshot__) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                        DISPATCH;
+                    }
+                    if (parse_source__->string_length > 0) {
+                        memcpy(parse_snapshot__, parse_source__->string_value,
+                               parse_source__->string_length);
+                    }
+                    parse_bytes__ = parse_snapshot__;
+                }
+                rxvm_parse_set_span_bytes(op1R, parse_bytes__, &parse_spans__[0]);
+                rxvm_parse_set_span_bytes(op2R, parse_bytes__, &parse_spans__[1]);
+                rxvm_parse_set_span_bytes(op3R, parse_bytes__, &parse_spans__[2]);
+                free(parse_snapshot__);
+            }
+            DISPATCH;
+        START_INSTRUCTION(PARSEPLAN_REG_REG_STRING) VM_ADVANCE(3);
+            if (!rxvm_parse_plan_execute(op1R, op2R, op3S)) {
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                               "Invalid compact frozen PARSE descriptor");
+            }
+            DISPATCH;
         RESERVED_IMPL(RESERVED_411)
-        RESERVED_IMPL(RESERVED_412)
+
+        START_INSTRUCTION(LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT) VM_ADVANCE(7);
+            {
+                rxinteger index;
+                if (INT_OP(3) < 1 || INT_OP(3) > REG_OP(2)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = REG_OP(2)->attributes[INT_OP(3) - 1];
+                set_num_attributes(REG_OP(1), INT_OP(4));
+                if (!rxinteger_checked_add(REG_OP(6)->int_value, INT_OP(7), &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                    DISPATCH;
+                }
+                if (index < 1 || index > REG_OP(1)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(5) = REG_OP(1)->attributes[index - 1];
+            }
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_413)
         RESERVED_IMPL(RESERVED_414)
-        RESERVED_IMPL(RESERVED_415)
+
+        START_INSTRUCTION(SETLINKILOAD_REG_REG_INT_REG_REG_INT) VM_ADVANCE(6);
+            set_num_attributes(REG_OP(2), INT_OP(3));
+            if (REG_OP(4)->int_value < 1 ||
+                REG_OP(4)->int_value > REG_OP(2)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1) = REG_OP(2)->attributes[REG_OP(4)->int_value - 1];
+            set_int(REG_OP(5), INT_OP(6));
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_416)
         RESERVED_IMPL(RESERVED_417)
         RESERVED_IMPL(RESERVED_418)
         RESERVED_IMPL(RESERVED_419)
         RESERVED_IMPL(RESERVED_420)
         RESERVED_IMPL(RESERVED_421)
-        RESERVED_IMPL(RESERVED_422)
+
+        START_INSTRUCTION(ILOADSETUNLINKN_REG_REG_INT_REG) VM_ADVANCE(4);
+            set_int(REG_OP(1), INT_OP(3));
+            REG_OP(2)->int_value = REG_OP(1)->int_value;
+            REG_OP(2) = current_frame->baselocals[REG_IDX(2)];
+            REG_OP(4) = current_frame->baselocals[REG_IDX(4)];
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_423)
         RESERVED_IMPL(RESERVED_424)
         RESERVED_IMPL(RESERVED_425)

@@ -1,0 +1,5 @@
+metric,vm,pairs,q1_percent,median_percent,q3_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total
+benchmark_rate,rxvm,36,-0.260608,0.600728,1.278777,0.508030,-0.293901,1.309961,24,36
+benchmark_rate,rxbvm,36,-0.658090,0.316887,1.267212,0.409678,-0.330942,1.150298,20,36
+elapsed_ns,rxvm,36,-1.258302,-0.595831,0.296388,-0.451947,-1.256014,0.352120,23,36
+elapsed_ns,rxbvm,36,-1.225753,-0.338991,0.587686,-0.370386,-1.085511,0.344740,20,36

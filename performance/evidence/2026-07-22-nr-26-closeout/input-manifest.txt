@@ -1,0 +1,5 @@
+crexx-cross-runtime-matrix|1
+nr26-closeout-preqa-rexxcps-rxvm|RexxCPS-NR26-closeout|crexx|rxvm|pre-qa-accepted-candidate|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxvm;/tmp/nr26-panel-verdict.q5S8pn/candidate-rexxcps.rxbin
+nr26-closeout-corrected-rexxcps-rxvm|RexxCPS-NR26-closeout|crexx|rxvm|corrected-candidate|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxvm;/tmp/nr26-closeout-images.swwXI5/candidate-rexxcps.rxbin
+nr26-closeout-preqa-rexxcps-rxbvm|RexxCPS-NR26-closeout|crexx|rxbvm|pre-qa-accepted-candidate|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxbvm;/tmp/nr26-panel-verdict.q5S8pn/candidate-rexxcps.rxbin
+nr26-closeout-corrected-rexxcps-rxbvm|RexxCPS-NR26-closeout|crexx|rxbvm|corrected-candidate|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxbvm;/tmp/nr26-closeout-images.swwXI5/candidate-rexxcps.rxbin

@@ -1,0 +1,15 @@
+NR-10 corrected decimal-NetRexx lifecycle post-run environment
+captured_utc=2026-07-20T13:39:17Z
+repository_branch=develop
+repository_head=1596d7c8cbbfd360b66d50423ef4ea80320fd885
+power_source=AC Power
+battery=100 percent charged
+low_power_mode=0
+thermal_warning=none recorded
+performance_warning=none recorded
+cpu_power_warning=none recorded
+uptime=6 days 7 hours 47 minutes
+load_averages=2.18 1.63 1.71
+lifecycle_rows=160
+correctness_failures=0
+interpretation=corrected decimal lifecycle observation; no same-session accepted-product comparator

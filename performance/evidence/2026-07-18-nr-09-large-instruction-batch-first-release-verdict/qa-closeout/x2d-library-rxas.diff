@@ -1,0 +1,242 @@
+--- /tmp/crexx-nr09-bootstrap-32bf/build/lib/rxfnsc/RexxClassicBifX2d.rxas	2026-07-19 16:44:16
++++ cmake-build-debug/lib/rxfnsc/RexxClassicBifX2d.rxas	2026-07-19 16:56:10
+@@ -33,8 +33,7 @@
+    .srcstep 7 7 17 "RexxClassicBifX2d.crexx" 44 3 26 "  call context.clearError()"
+    .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "context" ""
+    load r0,1
+-   settp r1,256
+-   call r5,§rexxclassicbifs.rexxbifcallcontext.clearerror(),r0
++   settpcall r5,§rexxclassicbifs.rexxbifcallcontext.clearerror(),r0,r1,256
+    .traceevent "F" 4 "R" "V" "r" 5 7 7 0 "clearerror" ""
+    .srcstep 9 9 17 "RexxClassicBifX2d.crexx" 45 3 66 "  if rexxclassicbif_check_args(context_ref, \"rHEX oWHOLE>=0\") = 0 then return .RexxValue(\"\")"
+    .traceevent "V" 6 "R" "R" "a" 1 9 9 0 "context_ref" ""
+@@ -43,8 +42,7 @@
+    load r18,2
+    settp a1,256
+    swap r19,a1
+-   settp r20,768
+-   call r4,rexxclassicbifs.rexxclassicbif_check_args(),r18
++   settpcall r4,rexxclassicbifs.rexxclassicbif_check_args(),r18,r20,768
+    swap a1,r19
+    .traceevent "F" 4 "R" "I" "r" 4 9 9 0 "rexxclassicbif_check_args" ""
+    ieq r20,r4,0
+@@ -55,8 +53,7 @@
+    load r19,""
+    .traceevent "L" 4 "R" "S" "r" 19 8 8 0 "" ""
+    load r18,1
+-   settp r19,768
+-   call r4,§rexxvalue.rexxvalue.§factory(),r18
++   settpcall r4,§rexxvalue.rexxvalue.§factory(),r18,r19,768
+    .traceevent "F" 4 "R" "O" "r" 4 8 8 0 "§factory" ""
+    ret r4
+ l43iffalse:
+@@ -133,8 +130,7 @@
+    load r19,"0"
+    .traceevent "L" 4 "R" "S" "r" 19 24 24 0 "" ""
+    load r18,1
+-   settp r19,768
+-   call r4,§rexxvalue.rexxvalue.§factory(),r18
++   settpcall r4,§rexxvalue.rexxvalue.§factory(),r18,r19,768
+    .traceevent "F" 4 "R" "O" "r" 4 24 24 0 "§factory" ""
+    ret r4
+ l94iffalse:
+@@ -426,8 +422,7 @@
+    load r32,"0"
+    .traceevent "L" 4 "R" "S" "r" 32 90 90 0 "" ""
+    load r31,1
+-   settp r32,768
+-   call r30,§rexxvalue.rexxvalue.§factory(),r31
++   settpcall r30,§rexxvalue.rexxvalue.§factory(),r31,r32,768
+    .traceevent "F" 4 "R" "O" "r" 30 90 90 0 "§factory" ""
+    ret r30
+ l128iffalse:
+@@ -566,8 +561,7 @@
+    swap r30,r6
+    swap r31,r7
+    swap r32,r8
+-   swap r33,r9
+-   call r11,rexxclassic_hex_to_decimal(),r29
++   swapcall r11,rexxclassic_hex_to_decimal(),r29,r9,r33
+    swap r6,r30
+    swap r7,r31
+    swap r8,r32
+@@ -618,25 +612,21 @@
+    swap r28,a1
+    settp r29,768
+    settp r31,256
+-   settp r32,768
+-   call r26,rexxclassicbifs.rexxclassicbif_set_error(),r27
++   settpcall r26,rexxclassicbifs.rexxclassicbif_set_error(),r27,r32,768
+    swap a1,r28
+    .traceevent "F" 4 "R" "V" "r" 26 131 131 0 "rexxclassicbif_set_error" ""
+    .srcstep 132 132 17 "RexxClassicBifX2d.crexx" 81 5 26 "    return .RexxValue(\"\")"
+    load r32,""
+    .traceevent "L" 4 "R" "S" "r" 32 132 132 0 "" ""
+    load r31,1
+-   settp r32,768
+-   call r30,§rexxvalue.rexxvalue.§factory(),r31
++   settpcall r30,§rexxvalue.rexxvalue.§factory(),r31,r32,768
+    .traceevent "F" 4 "R" "O" "r" 30 132 132 0 "§factory" ""
+    ret r30
+ l194iffalse:
+    .srcstep 135 135 17 "RexxClassicBifX2d.crexx" 83 3 28 "  return .RexxValue(result)"
+    .traceevent "V" 6 "R" "S" "r" 11 135 135 0 "result" ""
+    load r32,1
+-   settp r11,256
+-   swap r33,r11
+-   call r31,§rexxvalue.rexxvalue.§factory(),r32
++   settpswapcall r31,§rexxvalue.rexxvalue.§factory(),r32,r11,256,r33
+    swap r11,r33
+    .traceevent "F" 4 "R" "O" "r" 31 135 135 0 "§factory" ""
+    ret r31
+@@ -1049,13 +1039,11 @@
+    .traceevent "L" 4 "R" "I" "r" 6 229 229 0 "" ""
+    .traceevent "A" 6 "R" "I" "r" 6 229 229 0 "limb_count" ""
+    .srcstep 230 230 17 "RexxClassicBifX2d.crexx" 147 3 15 "  limbs[1] = 0"
+-   minattrs r7,1
+-   linkattr1 r15,r7,1
++   minlinkattr1 r15,r7,1
+    load r16,0
+    .traceevent "L" 4 "R" "I" "r" 16 230 230 0 "" ""
+-   icopy r15,r16
+-   .traceevent "A" 6 "R" "I" "r" 15 230 230 0 "limbs" ""
+-   unlink r15
++   isetunlink r15,r16
++   .traceevent "A" 6 "R" "I" "r" 15 230 230 0 "0" ""
+    .srcstep 231 231 17 "RexxClassicBifX2d.crexx" 154 3 18 "  digit_index = 0"
+    .meta "rexxclassicbifx2d.rexxclassic_hex_to_decimal.digit_index"="b" ".int" r3
+    load r3,0
+@@ -1174,8 +1162,7 @@
+    .srcstep 260 260 17 "RexxClassicBifX2d.crexx" 172 7 48 "      combined = limbs[limb_index] * 16 + carry"
+    .traceevent "V" 6 "R" "I" "r" 19 260 260 0 "limb_index" ""
+    .traceevent "C" 4 "R" "I" "r" 19 260 260 0 "limbs" ""
+-   minattrs r7,r19,0
+-   linkattr1 r20,r7,r19
++   minlinkattr1 r20,r7,r19,0
+    .traceevent "V" 6 "R" "I" "r" 20 260 260 0 "limbs" ""
+    imult r21,r20,16
+    unlink r20
+@@ -1195,12 +1182,10 @@
+    .srcstep 263 263 17 "RexxClassicBifX2d.crexx" 175 7 36 "      limbs[limb_index] = remainder"
+    .traceevent "V" 6 "R" "I" "r" 19 263 263 0 "limb_index" ""
+    .traceevent "C" 4 "R" "I" "r" 19 263 263 0 "limbs" ""
+-   minattrs r7,r19,0
+-   linkattr1 r21,r7,r19
++   minlinkattr1 r21,r7,r19,0
+    .traceevent "V" 6 "R" "I" "r" 11 263 263 0 "remainder" ""
+-   icopy r21,r11
+-   .traceevent "A" 6 "R" "I" "r" 21 263 263 0 "limbs" ""
+-   unlink r21
++   isetunlink r21,r11
++   .traceevent "A" 6 "R" "I" "r" 21 263 263 0 "remainder" ""
+    .srcstep 264 264 17 "RexxClassicBifX2d.crexx" 176 7 23 "      carry = quotient"
+    .traceevent "V" 6 "R" "I" "r" 10 264 264 0 "quotient" ""
+    icopy r0,r10
+@@ -1226,12 +1211,10 @@
+    .srcstep 268 268 17 "RexxClassicBifX2d.crexx" 180 7 32 "      limbs[limb_count] = carry"
+    .traceevent "V" 6 "R" "I" "r" 6 268 268 0 "limb_count" ""
+    .traceevent "C" 4 "R" "I" "r" 6 268 268 0 "limbs" ""
+-   minattrs r7,r6,0
+-   linkattr1 r20,r7,r6
++   minlinkattr1 r20,r7,r6,0
+    .traceevent "V" 6 "R" "I" "r" 0 268 268 0 "carry" ""
+-   icopy r20,r0
+-   .traceevent "A" 6 "R" "I" "r" 20 268 268 0 "limbs" ""
+-   unlink r20
++   isetunlink r20,r0
++   .traceevent "A" 6 "R" "I" "r" 20 268 268 0 "carry" ""
+ l579iffalse:
+    .srcstep 271 271 17 "RexxClassicBifX2d.crexx" 182 5 34 "    digit_index = digit_index + 1"
+    .traceevent "V" 6 "R" "I" "r" 3 271 271 0 "digit_index" ""
+@@ -1275,8 +1258,7 @@
+    .srcstep 277 277 17 "RexxClassicBifX2d.crexx" 189 7 43 "      combined = limbs[limb_index] + carry"
+    .traceevent "V" 6 "R" "I" "r" 21 277 277 0 "limb_index" ""
+    .traceevent "C" 4 "R" "I" "r" 21 277 277 0 "limbs" ""
+-   minattrs r7,r21,0
+-   linkattr1 r19,r7,r21
++   minlinkattr1 r19,r7,r21,0
+    .traceevent "V" 6 "R" "I" "r" 19 277 277 0 "limbs" ""
+    .traceevent "V" 6 "R" "I" "r" 0 277 277 0 "carry" ""
+    iadd r18,r19,r0
+@@ -1293,14 +1275,12 @@
+    .srcstep 278 278 17 "RexxClassicBifX2d.crexx" 191 9 50 "        limbs[limb_index] = combined - 1000000000"
+    .traceevent "V" 6 "R" "I" "r" 21 278 278 0 "limb_index" ""
+    .traceevent "C" 4 "R" "I" "r" 21 278 278 0 "limbs" ""
+-   minattrs r7,r21,0
+-   linkattr1 r18,r7,r21
++   minlinkattr1 r18,r7,r21,0
+    .traceevent "V" 6 "R" "I" "r" 2 278 278 0 "combined" ""
+    isub r17,r2,1000000000
+    .traceevent "O" 4 "R" "I" "r" 17 278 278 0 "" ""
+-   icopy r18,r17
+-   .traceevent "A" 6 "R" "I" "r" 18 278 278 0 "limbs" ""
+-   unlink r18
++   isetunlink r18,r17
++   .traceevent "A" 6 "R" "I" "r" 18 278 278 0 "-" ""
+    .srcstep 279 279 17 "RexxClassicBifX2d.crexx" 192 9 18 "        carry = 1"
+    load r0,1
+    .traceevent "L" 4 "R" "I" "r" 0 279 279 0 "" ""
+@@ -1311,12 +1291,10 @@
+    .srcstep 280 280 17 "RexxClassicBifX2d.crexx" 195 9 37 "        limbs[limb_index] = combined"
+    .traceevent "V" 6 "R" "I" "r" 21 280 280 0 "limb_index" ""
+    .traceevent "C" 4 "R" "I" "r" 21 280 280 0 "limbs" ""
+-   minattrs r7,r21,0
+-   linkattr1 r18,r7,r21
++   minlinkattr1 r18,r7,r21,0
+    .traceevent "V" 6 "R" "I" "r" 2 280 280 0 "combined" ""
+-   icopy r18,r2
+-   .traceevent "A" 6 "R" "I" "r" 18 280 280 0 "limbs" ""
+-   unlink r18
++   isetunlink r18,r2
++   .traceevent "A" 6 "R" "I" "r" 18 280 280 0 "combined" ""
+    .srcstep 281 281 17 "RexxClassicBifX2d.crexx" 196 9 18 "        carry = 0"
+    load r0,0
+    .traceevent "L" 4 "R" "I" "r" 0 281 281 0 "" ""
+@@ -1345,12 +1323,10 @@
+    .srcstep 289 289 17 "RexxClassicBifX2d.crexx" 202 7 32 "      limbs[limb_count] = carry"
+    .traceevent "V" 6 "R" "I" "r" 6 289 289 0 "limb_count" ""
+    .traceevent "C" 4 "R" "I" "r" 6 289 289 0 "limbs" ""
+-   minattrs r7,r6,0
+-   linkattr1 r19,r7,r6
++   minlinkattr1 r19,r7,r6,0
+    .traceevent "V" 6 "R" "I" "r" 0 289 289 0 "carry" ""
+-   icopy r19,r0
+-   .traceevent "A" 6 "R" "I" "r" 19 289 289 0 "limbs" ""
+-   unlink r19
++   isetunlink r19,r0
++   .traceevent "A" 6 "R" "I" "r" 19 289 289 0 "carry" ""
+ l650iffalse:
+    .meta "rexxclassicbifx2d.rexxclassic_hex_to_decimal.limb_index"
+ l651iffalse:
+@@ -1362,13 +1338,11 @@
+    .srcstep 295 295 17 "RexxClassicBifX2d.crexx" 207 3 28 "  result = limbs[limb_count]"
+    .traceevent "V" 6 "R" "I" "r" 6 295 295 0 "limb_count" ""
+    .traceevent "C" 4 "R" "I" "r" 6 295 295 0 "limbs" ""
+-   minattrs r7,r6,0
+-   linkattr1 r21,r7,r6
++   minlinkattr1 r21,r7,r6,0
+    itos r21
+    .traceevent "V" 6 "R" "S" "r" 21 295 295 0 "limbs" ""
+-   scopy r12,r21
++   igetunlink r12,r21
+    .traceevent "A" 6 "R" "S" "r" 12 295 295 0 "result" ""
+-   unlink r21
+    .srcstep 309 309 17 "RexxClassicBifX2d.crexx" 208 3 5 "  do limb_index = limb_count - 1 to 1 by -1"
+    .srcstep 296 296 17 "RexxClassicBifX2d.crexx" 208 6 33 "  do limb_index = limb_count - 1 to 1 by -1"
+    .meta "rexxclassicbifx2d.rexxclassic_hex_to_decimal.limb_index"="b" ".int" r21
+@@ -1400,13 +1374,11 @@
+    .srcstep 302 302 17 "RexxClassicBifX2d.crexx" 210 5 31 "    segment = limbs[limb_index]"
+    .traceevent "V" 6 "R" "I" "r" 21 302 302 0 "limb_index" ""
+    .traceevent "C" 4 "R" "I" "r" 21 302 302 0 "limbs" ""
+-   minattrs r7,r21,0
+-   linkattr1 r22,r7,r21
++   minlinkattr1 r22,r7,r21,0
+    itos r22
+    .traceevent "V" 6 "R" "S" "r" 22 302 302 0 "limbs" ""
+-   scopy r19,r22
++   igetunlink r19,r22
+    .traceevent "A" 6 "R" "S" "r" 19 302 302 0 "segment" ""
+-   unlink r22
+    .srcstep 303 303 17 "RexxClassicBifX2d.crexx" 213 15 44 "    assembler strlen segment_length,segment"
+    .traceevent "V" 6 "R" "I" "r" 18 0 0 0 "segment_length" ""
+    .traceevent "V" 6 "R" "S" "r" 19 0 0 0 "segment" ""

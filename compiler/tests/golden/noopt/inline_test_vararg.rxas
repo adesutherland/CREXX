@@ -7,18 +7,13 @@
 main() .locals=6
    .meta "inline_test_vararg.main"="b" ".int" main() ""
    .srcstep 11 11 17 "inline_test_vararg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_vararg.crexx" 4 3 39 "  say \"Starting vararg inline test...\""
    say "Starting vararg inline test..."
    .srcstep 2 2 17 "inline_test_vararg.crexx" 5 3 20 "  say tailCount(10)"
    load r2,10
    .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
-   load r1,1
-   call r3,tailCount(),r1
+   call1 r3,tailCount(),r2
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 2 2 0 "tailcount" ""
    say r3
@@ -29,8 +24,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 3 3 3 0 "" ""
    load r4,30
    .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
-   load r1,3
-   call r5,tailCount(),r1
+   call3 r5,tailCount(),r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 3 3 0 "tailcount" ""
    say r5
@@ -42,8 +36,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 4 4 0 "" ""
    load r5,11
    .traceevent "L" 4 "R" "I" "r" 5 4 4 0 "" ""
-   load r2,3
-   call r1,secondOnly(),r2
+   call3 r1,secondOnly(),r3,r4,r5
    .traceevent "F" 4 "R" "I" "r" 1 4 4 0 "secondonly" ""
    iadd r0,r1,1
    .traceevent "O" 4 "R" "I" "r" 0 4 4 0 "" ""
@@ -57,8 +50,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 6 6 0 "" ""
    load r5,2
    .traceevent "L" 4 "R" "I" "r" 5 6 6 0 "" ""
-   load r3,2
-   call r2,hasThird(),r3
+   call2 r2,hasThird(),r4,r5
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 6 6 0 "hasthird" ""
    say r2
@@ -69,8 +61,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 7 7 0 "" ""
    load r5,3
    .traceevent "L" 4 "R" "I" "r" 5 7 7 0 "" ""
-   load r2,3
-   call r1,hasThird(),r2
+   call3 r1,hasThird(),r3,r4,r5
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 7 7 0 "hasthird" ""
    say r1
@@ -81,8 +72,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 8 8 0 "" ""
    load r5,12
    .traceevent "L" 4 "R" "I" "r" 5 8 8 0 "" ""
-   load r2,3
-   call r1,logSecond(),r2
+   call3 r1,logSecond(),r3,r4,r5
    .traceevent "F" 4 "R" "I" "r" 1 8 8 0 "logsecond" ""
    .srcstep 9 9 17 "inline_test_vararg.crexx" 12 3 37 "  say \"Vararg inline test finished.\""
    say "Vararg inline test finished."
@@ -93,11 +83,7 @@ main() .locals=6
 tailCount() .locals=2
    .meta "inline_test_vararg.tailcount"="b" ".int" tailCount() "base=.int,...=.int"
    .srcstep 15 15 17 "inline_test_vararg.crexx" 15 1 28 "tailCount: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 12 12 17 "inline_test_vararg.crexx" 16 7 18 "  arg base = .int, ... = .int"
    .meta "inline_test_vararg.tailcount.base"="b" ".int" a1
    .srcstep 13 13 17 "inline_test_vararg.crexx" 16 20 30 "  arg base = .int, ... = .int"
@@ -113,11 +99,7 @@ tailCount() .locals=2
 secondOnly() .locals=3
    .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int"
    .srcstep 19 19 17 "inline_test_vararg.crexx" 19 1 29 "secondOnly: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 16 16 17 "inline_test_vararg.crexx" 20 7 18 "  arg base = .int, ... = .int"
    .meta "inline_test_vararg.secondonly.base"="b" ".int" a1
    .srcstep 17 17 17 "inline_test_vararg.crexx" 20 20 30 "  arg base = .int, ... = .int"
@@ -136,11 +118,7 @@ secondOnly() .locals=3
 hasThird() .locals=1
    .meta "inline_test_vararg.hasthird"="b" ".int" hasThird() "...=.int"
    .srcstep 22 22 17 "inline_test_vararg.crexx" 23 1 27 "hasThird: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 20 20 17 "inline_test_vararg.crexx" 24 7 17 "  arg ... = .int"
    .srcstep 21 21 17 "inline_test_vararg.crexx" 25 3 24 "  return <argexists>(3)"
    icopy r0,a0
@@ -151,11 +129,7 @@ hasThird() .locals=1
 logSecond() .locals=3
    .meta "inline_test_vararg.logsecond"="b" ".int" logSecond() "base=.int,...=.int"
    .srcstep 27 27 17 "inline_test_vararg.crexx" 27 1 28 "logSecond: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 23 23 17 "inline_test_vararg.crexx" 28 7 18 "  arg base = .int, ... = .int"
    .meta "inline_test_vararg.logsecond.base"="b" ".int" a1
    .srcstep 24 24 17 "inline_test_vararg.crexx" 28 20 30 "  arg base = .int, ... = .int"

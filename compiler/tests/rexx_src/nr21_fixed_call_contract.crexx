@@ -1,0 +1,38 @@
+options levelb
+namespace nr21_fixed_call_contract
+
+nr21_fixed_call_contract_constants: procedure expose NR21_NO_INLINE
+  constant NR21_NO_INLINE = 0
+  return
+
+main: procedure = .int
+  say zero()
+  say one(1)
+  say two(1, 2)
+  say three(1, 2, 3)
+  say four(1, 2, 3, 4)
+  say five(1, 2, 3, 4, 5)
+  return 0
+
+zero: procedure = .int expose NR21_NO_INLINE
+  return 0
+
+one: procedure = .int expose NR21_NO_INLINE
+  arg first = .int
+  return first
+
+two: procedure = .int expose NR21_NO_INLINE
+  arg first = .int, second = .int
+  return first + second
+
+three: procedure = .int expose NR21_NO_INLINE
+  arg first = .int, second = .int, third = .int
+  return first + second + third
+
+four: procedure = .int expose NR21_NO_INLINE
+  arg first = .int, second = .int, third = .int, fourth = .int
+  return first + second + third + fourth
+
+five: procedure = .int expose NR21_NO_INLINE
+  arg first = .int, second = .int, third = .int, fourth = .int, fifth = .int
+  return first + second + third + fourth + fifth

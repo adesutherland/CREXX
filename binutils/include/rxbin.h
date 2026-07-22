@@ -64,6 +64,13 @@ enum rxbin007_section_flags {
     RXBIN007_SECTION_LZSS = 1u << 0
 };
 
+enum rxbin007_feature_flags {
+    RXBIN007_FEATURE_FIXED_CALLS = 1u << 0,
+    RXBIN007_FEATURE_FROZEN_PARSE = 1u << 1,
+    RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
+                                   RXBIN007_FEATURE_FROZEN_PARSE
+};
+
 typedef struct bin_space bin_space;
 
 /* cREXX Instruction Coding */
@@ -85,6 +92,10 @@ typedef union bin_code {
     size_t index;
 } bin_code;
 #pragma pack(pop)
+
+/* Preserve the eight-byte VM/RXBIN cell while operand counts become unbounded. */
+typedef char rxbin_code_entry_must_remain_eight_bytes[
+        sizeof(bin_code) == 8 ? 1 : -1];
 
 /* cREXX Binary Program */
 #pragma pack(push,4)
@@ -384,7 +395,6 @@ typedef struct rxbin_var_reader {
 } rxbin_var_reader;
 
 void init_module(module_file *module);
-int rxbin_get_operand_types(OpFormat format, OperandType *types);
 OpFormat rxbin_opcode_format(int opcode);
 void rxbin_byte_buffer_init(rxbin_byte_buffer *buffer);
 void rxbin_byte_buffer_free(rxbin_byte_buffer *buffer);

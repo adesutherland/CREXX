@@ -9,11 +9,7 @@
 main() .locals=30
    .meta "inline_test_class_methods.main"="b" ".int" main() ""
    .srcstep 72 72 17 "inline_test_class_methods.crexx" 4 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 5 5 17 "inline_test_class_methods.crexx" 5 3 22 "  box = .Box(\"alpha\")"
    .srcstep 1 1 6 "inline_test_class_methods.crexx" 28 3 13 "  *: factory"
    setattrs r2,2
@@ -40,8 +36,7 @@ main() .locals=30
    linkattr1 r3,r5,1
    .traceevent "V" 6 "R" "S" "r" 3 9 9 0 "name" ""
    scopy r6,r3
-   unlink r3
-   br l196bexprend
+   unlinkbr r3,l196bexprend
 l196bexprend:
    say r6
    .srcstep 13 13 17 "inline_test_class_methods.crexx" 7 3 28 "  call box.setLabel(\"beta\")"
@@ -68,8 +63,7 @@ l196bexprend:
    linkattr1 r6,r8,1
    .traceevent "V" 6 "R" "S" "r" 6 17 17 0 "name" ""
    scopy r9,r6
-   unlink r6
-   br l225bexprend
+   unlinkbr r6,l225bexprend
 l225bexprend:
    say r9
    .srcstep 26 26 17 "inline_test_class_methods.crexx" 9 3 22 "  say box.prefix(\"p\")"
@@ -90,8 +84,7 @@ l225bexprend:
    linkattr1 r9,r11,1
    .traceevent "V" 6 "R" "S" "r" 9 26 26 0 "name" ""
    scopy r6,r9
-   unlink r9
-   br l251bexprend
+   unlinkbr r9,l251bexprend
 l251bexprend:
    concat r6,"p:",r6
    .traceevent "O" 4 "R" "S" "r" 6 26 26 0 "" ""
@@ -127,8 +120,7 @@ l232bexprend:
    linkattr1 r13,r16,1
    .traceevent "V" 6 "R" "S" "r" 13 35 35 0 "name" ""
    scopy r9,r13
-   unlink r13
-   br l275bexprend
+   unlinkbr r13,l275bexprend
 l275bexprend:
    say r9
    .srcstep 41 41 17 "inline_test_class_methods.crexx" 12 3 36 "  saved = box.setAndReport(\"delta\")"
@@ -169,8 +161,7 @@ l275bexprend:
    linkattr1 r13,r19,1
    .traceevent "V" 6 "R" "S" "r" 13 46 46 0 "name" ""
    scopy r6,r13
-   unlink r13
-   br l303bexprend
+   unlinkbr r13,l303bexprend
 l303bexprend:
    say r6
    .srcstep 53 53 17 "inline_test_class_methods.crexx" 15 3 34 "  say box.setAndReport(\"epsilon\")"
@@ -210,8 +201,7 @@ l310bexprend:
    linkattr1 r13,r22,1
    .traceevent "V" 6 "R" "S" "r" 13 57 57 0 "name" ""
    scopy r23,r13
-   unlink r13
-   br l332bexprend
+   unlinkbr r13,l332bexprend
 l332bexprend:
    say r23
    .srcstep 70 70 17 "inline_test_class_methods.crexx" 17 3 33 "  say .Box(\"direct\").prefix(\"q\")"
@@ -243,8 +233,7 @@ l332bexprend:
    linkattr1 r23,r26,1
    .traceevent "V" 6 "R" "S" "r" 23 70 70 0 "name" ""
    scopy r27,r23
-   unlink r23
-   br l359bexprend
+   unlinkbr r23,l359bexprend
 l359bexprend:
    concat r27,"q:",r27
    .traceevent "O" 4 "R" "S" "r" 27 70 70 0 "" ""
@@ -265,11 +254,7 @@ l339bexprend:
    .srcstep 84 84 17 "inline_test_class_methods.crexx" 28 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_class_methods.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 81 81 17 "inline_test_class_methods.crexx" 29 9 26 "    arg initial = .string"
    .meta "inline_test_class_methods.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_class_methods.box.§factory.§factory"="b" ".box" r1
@@ -288,11 +273,7 @@ l339bexprend:
    .meta "inline_test_class_methods.box.label"="b" ".string" §inline_test_class_methods.box.label() ""
    .srcstep 86 86 17 "inline_test_class_methods.crexx" 33 3 26 "  label: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 85 85 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
    .meta "inline_test_class_methods.box.label.§this"="b" ".box" a1
    linkattr1 r1,a1,1
@@ -304,11 +285,7 @@ l339bexprend:
    .meta "inline_test_class_methods.box.setlabel"="b" ".void" §inline_test_class_methods.box.setlabel() "next=.string"
    .srcstep 90 90 17 "inline_test_class_methods.crexx" 36 3 27 "  setLabel: method = .void"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 87 87 17 "inline_test_class_methods.crexx" 37 9 23 "    arg next = .string"
    .meta "inline_test_class_methods.box.setlabel.next"="b" ".string" a2
    .meta "inline_test_class_methods.box.setlabel.§this"="b" ".box" a1
@@ -326,11 +303,7 @@ l339bexprend:
    .meta "inline_test_class_methods.box.prefix"="b" ".string" §inline_test_class_methods.box.prefix() "tag=.string"
    .srcstep 99 99 17 "inline_test_class_methods.crexx" 41 3 27 "  prefix: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 91 91 17 "inline_test_class_methods.crexx" 42 9 22 "    arg tag = .string"
    .meta "inline_test_class_methods.box.prefix.tag"="b" ".string" a2
    .meta "inline_test_class_methods.box.prefix.§this"="b" ".box" a1
@@ -352,8 +325,7 @@ l339bexprend:
    linkattr1 r4,r3,1
    .traceevent "V" 6 "R" "S" "r" 4 98 98 0 "name" ""
    scopy r5,r4
-   unlink r4
-   br l218bexprend
+   unlinkbr r4,l218bexprend
 l218bexprend:
    concat r5,r2,r5
    .traceevent "O" 4 "R" "S" "r" 5 98 98 0 "" ""
@@ -368,11 +340,7 @@ l184bexprend:
    .meta "inline_test_class_methods.box.setandreport"="b" ".string" §inline_test_class_methods.box.setandreport() "next=.string"
    .srcstep 103 103 17 "inline_test_class_methods.crexx" 45 3 33 "  setAndReport: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 100 100 17 "inline_test_class_methods.crexx" 46 9 23 "    arg next = .string"
    .meta "inline_test_class_methods.box.setandreport.next"="b" ".string" a2
    .meta "inline_test_class_methods.box.setandreport.§this"="b" ".box" a1

@@ -1,0 +1,52 @@
+options levelb
+namespace nr14_frozen_parse_contract
+
+main: procedure = .int
+  first = .string
+  second = .string
+  third = .string
+  source = "alpha beta gamma tail"
+
+  parse var source first second third
+  say first || "|" || second || "|" || third
+
+  source = "alpha beta gamma tail"
+  assembler parsewords3 source,second,third,source
+  say source || "|" || second || "|" || third
+
+  source = "alpha beta gamma tail"
+  parse var source first second third .
+  say first || "|" || second || "|" || third
+
+  source = "ab東京 cd"
+  parse value source with first +4 second .
+  say first || "|" || second
+
+  parse 333 first second third
+  say first || "|" || second || "|" || third
+
+  source = "one two three four five six seven eight nine"
+  parse var source odd1 odd2 odd3 odd4 odd5 odd6 odd7
+  say odd1 || "|" || odd2 || "|" || odd3 || "|" || odd4 || "|" ||,
+      odd5 || "|" || odd6 || "|" || odd7
+
+  source = "one two three four five six seven eight nine"
+  parse var source even1 even2 even3 even4 even5 even6 even7 even8
+  say even1 || "|" || even2 || "|" || even3 || "|" || even4 || "|" ||,
+      even5 || "|" || even6 || "|" || even7 || "|" || even8
+
+  parse value "left東京middle東京right" with unicode1 '東京' unicode2 '東京' unicode3
+  say unicode1 || "|" || unicode2 || "|" || unicode3
+
+  source = "123456789"
+  parse var source 3 numeric1 +3 numeric2 3 numeric3
+  say numeric1 || "|" || numeric2 || "|" || numeric3
+
+  parse value "a,b,c,d" with drop1 ',' . ',' drop3 ',' drop4
+  say drop1 || "|" || drop3 || "|" || drop4
+
+  source = "first second third"
+  parse var source repeated repeated finalword
+  say repeated || "|" || finalword
+
+  return 0

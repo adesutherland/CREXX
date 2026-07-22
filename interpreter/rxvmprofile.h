@@ -122,8 +122,7 @@ typedef enum rxvm_profile_dynamic_outcome {
 
 typedef struct rxvm_profile_trace_record {
     int opcode;
-    size_t registers[3];
-    unsigned char register_mask;
+    const bin_code *pc;
     unsigned char attribution;
 } rxvm_profile_trace_record;
 

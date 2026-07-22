@@ -1,0 +1,16 @@
+/Users/adrian/CLionProjects/CREXX/tests/benchmarks/rexxcps_levelb.crexx: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/rebaseline/images/cell-a.rxbin: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/rebaseline/artifacts/accepted/library.rxbin: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/rebaseline/artifacts/accepted/rxvm: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/rebaseline/artifacts/accepted/rxbvm: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/images/cell-c.rxas: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/images/cell-c.rxbin: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/artifacts/candidate/library.rxbin: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/artifacts/candidate/rxvm: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/artifacts/candidate/rxbvm: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/samples.csv: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/cell-summary.csv: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/paired-deltas.csv: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/paired-summary.csv: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/position-summary.csv: OK
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/provenance.txt: OK

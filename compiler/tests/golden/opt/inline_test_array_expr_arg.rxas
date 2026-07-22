@@ -7,11 +7,7 @@
 main() .locals=5
    .meta "inline_test_array_expr_arg.main"="b" ".int" main() ""
    .srcstep 14 14 17 "inline_test_array_expr_arg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 12 12 17 "inline_test_array_expr_arg.crexx" 4 3 25 "  say bumpFirst(makePair())"
    .srcstep 11 11 17 "inline_test_array_expr_arg.crexx" 4 7 16 "  say bumpFirst(makePair())"
    .meta "inline_test_array_expr_arg.main.__inline_bind_105_0"="b" ".int[2]" r0
@@ -27,17 +23,15 @@ main() .locals=5
    linkattr1 r3,r2,1
    load r4,7
    .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
-   icopy r3,r4
-   .traceevent "A" 6 "R" "I" "r" 3 3 3 0 "pair" ""
-   unlink r3
+   isetunlink r3,r4
+   .traceevent "A" 6 "R" "I" "r" 4 3 3 0 "pair" ""
    .srcstep 4 4 17 "inline_test_array_expr_arg.crexx" 27 3 14 "  pair[2] = 9"
    setattrs r2,2
    linkattr1 r4,r2,2
    load r3,9
    .traceevent "L" 4 "R" "I" "r" 3 4 4 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 4 4 0 "pair" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "pair" ""
    .srcstep 5 5 17 "inline_test_array_expr_arg.crexx" 28 3 14 "  return pair"
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "pair" ""
    copy r4,r2
@@ -59,15 +53,13 @@ l175bexprend:
    iadd r2,r3,5
    unlink r3
    .traceevent "O" 4 "R" "I" "r" 2 9 9 0 "" ""
-   icopy r4,r2
-   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "pair" ""
-   unlink r4
+   isetunlink r4,r2
+   .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "pair" ""
    .srcstep 10 10 17 "inline_test_array_expr_arg.crexx" 10 3 16 "  return pair[1]"
    setattrs r1,2
    linkattr1 r4,r1,1
    .traceevent "V" 6 "R" "I" "r" 4 12 12 0 "pair" ""
-   icopy r3,r4
-   unlink r4
+   igetunlink r3,r4
    br l169bexprend
 l169bexprend:
    endlife r1

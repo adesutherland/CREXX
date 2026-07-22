@@ -68,6 +68,44 @@ Canonical comparison workloads stay unchanged. Optimizer-resistance,
 no-TRACE, opaque-input and similar diagnostics use separately named variants
 and cannot silently replace the canonical score.
 
+## Performance governance
+
+`PERFORMANCE-GOVERNANCE.md` is the normative authority for portfolio
+aggregation, formal sampling, uncertainty, regression budgets and release
+claims. Apply these standing rules to future performance work:
+
+- Keep the 12-item Tier A coverage portfolio distinct from the five-workload
+  common CREXX/ooRexx/NetRexx aggregate: Sieve, Permute, Bounce, Richards and
+  Base64.
+- Keep Regina RexxCPS-only and Java/native C as labelled controls. Exclude
+  missing, failing, `not comparable` and materially adapted cells from common
+  aggregates without imputation.
+- For a canonical NetRexx common cell, require `options nobinary decimal` and
+  NetRexx `Rexx` decimal arithmetic/state in the timed kernel. The generated
+  Java and default HotSpot JIT are part of the normal NetRexx substrate; label
+  `options binary` or primitive-Java numeric ports as controls and exclude them
+  from Rexx aggregates. Disclose any necessary host-Java storage separately.
+- Report `rxvm` and `rxbvm` separately. Keep throughput, lifecycle, peak RSS
+  and artifact size in separate scorecards.
+- Formal absolute baselines require two warmups and ten recorded serial samples
+  per cell. Formal before/after decisions require at least one warmup per cell
+  and 12 paired, balanced/interleaved recorded rounds.
+- Run formal measurements on AC with low-power mode off and capture pre/post
+  host, power, thermal and load state. Do not infer regressions from unmatched
+  sessions without a same-session accepted-product drift control.
+- Remove no outlier without an independently demonstrated fault. Follow the
+  approved noise/rerun rules and retain inconclusive results honestly.
+- Enforce the approved regression guards: 1% per common geometric mean, 3%
+  per comparable Tier A workload, plus the separate lifecycle, RSS and artifact
+  guards in `PERFORMANCE-GOVERNANCE.md`. A guard hit stops for Adrian's explicit
+  trade-off decision.
+- Any new or changed performance tool must be cREXX Level B. Read
+  `docs/ai-context/CREXX_LEVELB_AUTHORING.md` before editing it; do not replace
+  the Level B path with Python.
+- Keep formal evidence compact: one final consolidated bundle, prior forensics
+  referenced rather than copied, and no committed calibration, superseded
+  scratch run or reproducible duplicate build output.
+
 ## Implementation gates
 
 ### Mandatory first Release verdict after a production performance edit

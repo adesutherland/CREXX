@@ -892,16 +892,15 @@ static int load_module_metadata(link_module_info *info) {
 
     code_index = 0;
     while (code_index < module->header.instruction_size) {
-        OperandType types[3];
-        int operand_count;
-        int operand_index;
+        size_t operand_count;
+        size_t operand_index;
         int opcode;
 
         opcode = ((bin_code *)module->instructions)[code_index].instruction.opcode;
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
+        operand_count = rxop_format_operand_count(rxbin_opcode_format(opcode));
         if (opcode == OP_SRCFPROCSEL_REG_STRING_REG) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
-                if (types[operand_index] == OP_STRING) {
+                if (rxop_format_operand_type(rxbin_opcode_format(opcode), operand_index) == OP_STRING) {
                     size_t descriptor_offset;
                     char *descriptor;
                     const char *separator;
@@ -946,7 +945,7 @@ static int load_module_metadata(link_module_info *info) {
             }
         } else if (opcode == OP_SRCMETHODSEL_REG_REG_STRING) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
-                if (types[operand_index] == OP_STRING) {
+                if (rxop_format_operand_type(rxbin_opcode_format(opcode), operand_index) == OP_STRING) {
                     size_t descriptor_offset;
                     char *descriptor;
                     rx_callable_signature signature;
@@ -2029,19 +2028,20 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
     output_code = (bin_code *)output_module->module->instructions;
     index = 0;
     while (index < input->header.instruction_size) {
-        OperandType types[3];
-        int operand_count;
-        int operand_index;
+        OpFormat format;
+        size_t operand_count;
+        size_t operand_index;
         int ok = 1;
 
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format(input_code[index].instruction.opcode), types);
+        format = rxbin_opcode_format(input_code[index].instruction.opcode);
+        operand_count = rxop_format_operand_count(format);
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
             bin_code *operand = &output_code[index + (size_t)operand_index + 1];
             if (rx_graph_operand_kind(input_code[index].instruction.opcode,
                                       (unsigned int)operand_index) != RX_GRAPH_OPERAND_NONE) {
                 continue;
             }
-            switch (types[operand_index]) {
+            switch (rxop_format_operand_type(format, operand_index)) {
                 case OP_FUNC:
                 case OP_FLOAT:
                 case OP_STRING:
@@ -2158,13 +2158,12 @@ static RxGraph *prepare_linked_graph(rxlink_build_context *context,
         output_code = (bin_code *)output->instructions;
         code_index = 0u;
         while (code_index < output->header.instruction_size) {
-            OperandType types[3];
             int opcode;
-            int operand_count;
-            int operand_index;
+            size_t operand_count;
+            size_t operand_index;
 
             opcode = output_code[code_index].instruction.opcode;
-            operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
+            operand_count = rxop_format_operand_count(rxbin_opcode_format(opcode));
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
                 uint32_t graph_id;
                 char *text;
@@ -2179,7 +2178,7 @@ static RxGraph *prepare_linked_graph(rxlink_build_context *context,
                     source_code[code_index + (size_t)operand_index + 1u].index);
                 if (!text) {
                     fprintf(stderr,
-                            "ERROR: reading graph operand %d:%d from module %s\n",
+                            "ERROR: reading graph operand %d:%zu from module %s\n",
                             opcode,
                             operand_index,
                             source->name ? source->name : "<unnamed>");

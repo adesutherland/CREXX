@@ -1,0 +1,14 @@
+kind,variant,name,path,bytes,sha256,note
+tool,corrected,rxc,cmake-build-release/bin/rxc,2634304,18e9cf19b6b18854bcf4b020baccbe1a6fc270e7ee7f02e96f528033c9a85958,final NR-26 compiler
+tool,shared,rxas,cmake-build-release/bin/rxas,529208,f2cc06c11b8c68711d1ab9acaecca72f5e94bf7b5e8fbfd16ddcb890f9371e8d,unchanged from accepted sweep
+tool,shared,rxlink,cmake-build-release/bin/rxlink,145416,0de69718abe82e64160788bebb1c317f83ae8341a38b6b103f4578c11df7562b,unchanged from accepted sweep
+runtime,shared,rxvm,cmake-build-release/bin/rxvm,916168,f68dc1cb731de0bfb24e8cbf5317f01376a294528d446334db0b3d7ad46e761c,unchanged from accepted sweep
+runtime,shared,rxbvm,cmake-build-release/bin/rxbvm,899768,8b3ccb244421e8377230c291ea6295ab3ce5223645b22aa9041967471870fc8f,unchanged from accepted sweep
+library,corrected,library,cmake-build-release/bin/library.rxbin,866448,36b95fe4846ab5fc2e0a44dfc4a99beb23e7229fee83ada7fd5fc1bf3eb6d85f,final corrected library
+image,accepted_pre_qa,rexxcps,/tmp/nr26-panel-verdict.q5S8pn/candidate-rexxcps.rxbin,195471,b2934ad1d185d1e2a334c7dba0d418fcfbeea5d6a657d612229f0d5f79fa7c81,drift-control reference
+image,corrected,rexxcps,/tmp/nr26-closeout-images.swwXI5/candidate-rexxcps.rxbin,195447,96908d57901c3773bea5af7d235a612554270babcc3c9ca4234a4ba94db797f1,final corrected image
+image,corrected,mandelbrot,/tmp/nr26-closeout-images.swwXI5/candidate-mandelbrot.rxbin,1864,bdcd3905b03032fb21f522bd825f889dc2cbdf2576361a065091b20570cf9da0,exact accepted hash
+image,corrected,permute,/tmp/nr26-closeout-images.swwXI5/candidate-permute.rxbin,3717,e4651dd127a020df930bc6e0dc714952ff6202b143b854aa871e18f1ac49d739,exact accepted hash
+image,corrected,richards,/tmp/nr26-closeout-images.swwXI5/candidate-richards.rxbin,16318,e96e3b357bf5973eb2ac5f84dbf503f0d4a5a37b129f44ab88585b8bd7d27c2e,exact accepted hash
+image,corrected,towers,/tmp/nr26-closeout-images.swwXI5/candidate-towers.rxbin,7919,4bfa075547b7cdfcf8cede2761c415611c41411df9c2e9fe5915d397e677c9f1,exact accepted hash
+image,corrected,base64,/tmp/nr26-closeout-images.swwXI5/candidate-base64.rxbin,6393,42509a2574ad38c0be13828507deda943e74c28c8deed8f12d02def33d6b8234,exact accepted hash

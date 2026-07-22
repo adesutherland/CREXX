@@ -1,0 +1,14 @@
+/* Consolidated example for retained NR-09 large instructions. */
+.globals=0
+
+main() .locals=5
+    load r1,20
+    load r2,22
+    load r3,1
+    load r4,2
+    swapn r1,r2,r3,r4
+    iadd r0,r1,r2
+    itos r0
+    say r0
+    nulln r1,r2,r3,r4
+    ret

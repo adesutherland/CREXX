@@ -1,0 +1,111 @@
+--- /tmp/crexx-nr09-bootstrap-32bf/build/lib/rxfnsc/RexxClassicBifC2d.rxas	2026-07-19 16:44:17
++++ cmake-build-debug/lib/rxfnsc/RexxClassicBifC2d.rxas	2026-07-19 16:56:14
+@@ -30,8 +30,7 @@
+    .srcstep 6 6 17 "RexxClassicBifC2d.crexx" 38 3 26 "  call context.clearError()"
+    .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "context" ""
+    load r0,1
+-   settp r1,256
+-   call r7,§rexxclassicbifs.rexxbifcallcontext.clearerror(),r0
++   settpcall r7,§rexxclassicbifs.rexxbifcallcontext.clearerror(),r0,r1,256
+    .traceevent "F" 4 "R" "V" "r" 7 6 6 0 "clearerror" ""
+    .srcstep 8 8 17 "RexxClassicBifC2d.crexx" 39 3 66 "  if rexxclassicbif_check_args(context_ref, \"rANY oWHOLE>=0\") = 0 then return .RexxValue(\"\")"
+    .traceevent "V" 6 "R" "R" "a" 1 8 8 0 "context_ref" ""
+@@ -40,8 +39,7 @@
+    load r19,2
+    settp a1,256
+    swap r20,a1
+-   settp r21,768
+-   call r5,rexxclassicbifs.rexxclassicbif_check_args(),r19
++   settpcall r5,rexxclassicbifs.rexxclassicbif_check_args(),r19,r21,768
+    swap a1,r20
+    .traceevent "F" 4 "R" "I" "r" 5 8 8 0 "rexxclassicbif_check_args" ""
+    ieq r21,r5,0
+@@ -52,8 +50,7 @@
+    load r20,""
+    .traceevent "L" 4 "R" "S" "r" 20 7 7 0 "" ""
+    load r19,1
+-   settp r20,768
+-   call r5,§rexxvalue.rexxvalue.§factory(),r19
++   settpcall r5,§rexxvalue.rexxvalue.§factory(),r19,r20,768
+    .traceevent "F" 4 "R" "O" "r" 5 7 7 0 "§factory" ""
+    ret r5
+ l44iffalse:
+@@ -67,8 +64,7 @@
+    call r21,§rexxclassicbifs.rexxbifcallcontext.argument(),r0
+    .traceevent "F" 4 "R" "O" "r" 21 10 10 0 "argument" ""
+    load r20,1
+-   settp r21,256
+-   call r6,§rexxvalue.rexxvalue.asbinary(),r20
++   settpcall r6,§rexxvalue.rexxvalue.asbinary(),r20,r21,256
+    .traceevent "F" 4 "R" "X" "r" 6 10 10 0 "asbinary" ""
+    .traceevent "A" 6 "R" "X" "r" 6 10 10 0 "bytes" ""
+    .srcstep 11 11 17 "RexxClassicBifC2d.crexx" 43 13 35 "  assembler blen byte_length,bytes"
+@@ -85,8 +81,7 @@
+    load r20,"0"
+    .traceevent "L" 4 "R" "S" "r" 20 12 12 0 "" ""
+    load r19,1
+-   settp r20,768
+-   call r5,§rexxvalue.rexxvalue.§factory(),r19
++   settpcall r5,§rexxvalue.rexxvalue.§factory(),r19,r20,768
+    .traceevent "F" 4 "R" "O" "r" 5 12 12 0 "§factory" ""
+    ret r5
+ l65iffalse:
+@@ -141,8 +136,7 @@
+    load r23,"0"
+    .traceevent "L" 4 "R" "S" "r" 23 19 19 0 "" ""
+    load r22,1
+-   settp r23,768
+-   call r20,§rexxvalue.rexxvalue.§factory(),r22
++   settpcall r20,§rexxvalue.rexxvalue.§factory(),r22,r23,768
+    .traceevent "F" 4 "R" "O" "r" 20 19 19 0 "§factory" ""
+    ret r20
+ l96iffalse:
+@@ -187,8 +181,7 @@
+    .meta "rexxclassicbifc2d.rexxclassicbif_c2d.hexadecimal"="b" ".string" r8
+    .traceevent "V" 6 "R" "X" "r" 6 32 32 0 "bytes" ""
+    load r5,1
+-   settp r6,256
+-   call r8,rexxclassicencoding.rexxclassic_bytes_to_hex(),r5
++   settpcall r8,rexxclassicencoding.rexxclassic_bytes_to_hex(),r5,r6,256
+    .traceevent "F" 4 "R" "S" "r" 8 32 32 0 "rexxclassic_bytes_to_hex" ""
+    .traceevent "A" 6 "R" "S" "r" 8 32 32 0 "hexadecimal" ""
+    .srcstep 33 33 17 "RexxClassicBifC2d.crexx" 62 3 39 "  hexadecimal_length = byte_length * 2"
+@@ -214,8 +207,7 @@
+    swap r21,r8
+    swap r22,r9
+    swap r23,r10
+-   swap r24,r11
+-   call r13,rexxclassicbifx2d.rexxclassic_hex_to_decimal(),r20
++   swapcall r13,rexxclassicbifx2d.rexxclassic_hex_to_decimal(),r20,r11,r24
+    swap r8,r21
+    swap r9,r22
+    swap r10,r23
+@@ -261,25 +253,21 @@
+    swap r26,a1
+    settp r27,768
+    settp r29,768
+-   settp r30,768
+-   call r23,rexxclassicbifs.rexxclassicbif_set_error(),r25
++   settpcall r23,rexxclassicbifs.rexxclassicbif_set_error(),r25,r30,768
+    swap a1,r26
+    .traceevent "F" 4 "R" "V" "r" 23 41 41 0 "rexxclassicbif_set_error" ""
+    .srcstep 42 42 17 "RexxClassicBifC2d.crexx" 73 5 26 "    return .RexxValue(\"\")"
+    load r30,""
+    .traceevent "L" 4 "R" "S" "r" 30 42 42 0 "" ""
+    load r29,1
+-   settp r30,768
+-   call r28,§rexxvalue.rexxvalue.§factory(),r29
++   settpcall r28,§rexxvalue.rexxvalue.§factory(),r29,r30,768
+    .traceevent "F" 4 "R" "O" "r" 28 42 42 0 "§factory" ""
+    ret r28
+ l176iffalse:
+    .srcstep 45 45 17 "RexxClassicBifC2d.crexx" 75 3 28 "  return .RexxValue(result)"
+    .traceevent "V" 6 "R" "S" "r" 13 45 45 0 "result" ""
+    load r29,1
+-   settp r13,256
+-   swap r30,r13
+-   call r28,§rexxvalue.rexxvalue.§factory(),r29
++   settpswapcall r28,§rexxvalue.rexxvalue.§factory(),r29,r13,256,r30
+    swap r13,r30
+    .traceevent "F" 4 "R" "O" "r" 28 45 45 0 "§factory" ""
+    ret r28

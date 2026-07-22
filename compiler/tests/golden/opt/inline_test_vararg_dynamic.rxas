@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_vararg_dynamic.main"="b" ".int" main() ""
    .srcstep 6 6 17 "inline_test_vararg_dynamic.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_vararg_dynamic.crexx" 4 3 26 "  say pick(2, 10, 20, 30)"
    load r1,2
    .traceevent "L" 4 "R" "I" "r" 1 1 1 0 "" ""
@@ -21,8 +17,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 3 1 1 0 "" ""
    load r4,30
    .traceevent "L" 4 "R" "I" "r" 4 1 1 0 "" ""
-   load r0,4
-   call r5,pick(),r0
+   call4 r5,pick(),r1,r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 1 1 0 "pick" ""
    say r5
@@ -33,8 +28,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 2 2 0 "" ""
    load r5,50
    .traceevent "L" 4 "R" "I" "r" 5 2 2 0 "" ""
-   load r2,3
-   call r1,pick(),r2
+   call3 r1,pick(),r3,r4,r5
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 2 2 0 "pick" ""
    say r1
@@ -45,8 +39,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
    load r5,8
    .traceevent "L" 4 "R" "I" "r" 5 3 3 0 "" ""
-   load r2,3
-   call r1,hasArg(),r2
+   call3 r1,hasArg(),r3,r4,r5
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 3 3 0 "hasarg" ""
    say r1
@@ -57,8 +50,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 4 4 0 "" ""
    load r5,8
    .traceevent "L" 4 "R" "I" "r" 5 4 4 0 "" ""
-   load r2,3
-   call r1,hasArg(),r2
+   call3 r1,hasArg(),r3,r4,r5
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 4 4 0 "hasarg" ""
    say r1
@@ -68,11 +60,7 @@ main() .locals=6
 pick() .locals=2
    .meta "inline_test_vararg_dynamic.pick"="b" ".int" pick() "ix=.int,...=.int"
    .srcstep 10 10 17 "inline_test_vararg_dynamic.crexx" 10 1 23 "pick: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 7 7 17 "inline_test_vararg_dynamic.crexx" 11 7 16 "  arg ix = .int, ... = .int"
    .meta "inline_test_vararg_dynamic.pick.ix"="b" ".int" a1
    .srcstep 8 8 17 "inline_test_vararg_dynamic.crexx" 11 18 28 "  arg ix = .int, ... = .int"
@@ -87,11 +75,7 @@ pick() .locals=2
 hasArg() .locals=2
    .meta "inline_test_vararg_dynamic.hasarg"="b" ".int" hasArg() "ix=.int,...=.int"
    .srcstep 14 14 17 "inline_test_vararg_dynamic.crexx" 14 1 25 "hasArg: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_vararg_dynamic.crexx" 15 7 16 "  arg ix = .int, ... = .int"
    .meta "inline_test_vararg_dynamic.hasarg.ix"="b" ".int" a1
    .srcstep 12 12 17 "inline_test_vararg_dynamic.crexx" 15 18 28 "  arg ix = .int, ... = .int"

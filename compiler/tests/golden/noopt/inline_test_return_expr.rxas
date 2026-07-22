@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_return_expr.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_return_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_return_expr.crexx" 4 3 44 "  say \"Starting return inline expr test...\""
    say "Starting return inline expr test..."
    .srcstep 6 6 17 "inline_test_return_expr.crexx" 5 3 5 "  do i = 1 to 3"
@@ -29,10 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_return_expr.crexx" 6 5 16 "    say wrap(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r3,1
-   swap r4,r0
-   call r5,wrap(),r3
-   swap r0,r4
+   call1 r5,wrap(),r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "wrap" ""
    say r5
@@ -51,19 +44,12 @@ l8doend:
 wrap() .locals=4
    .meta "inline_test_return_expr.wrap"="b" ".int" wrap() "val=.int"
    .srcstep 13 13 17 "inline_test_return_expr.crexx" 11 1 23 "wrap: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_return_expr.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_return_expr.wrap.val"="b" ".int" a1
    .srcstep 12 12 17 "inline_test_return_expr.crexx" 13 3 21 "  return addOne(val)"
    .traceevent "V" 6 "R" "I" "a" 1 12 12 0 "val" ""
-   load r1,1
-   swap r2,a1
-   call r3,addOne(),r1
-   swap a1,r2
+   call1 r3,addOne(),a1
    .traceevent "F" 4 "R" "I" "r" 3 12 12 0 "addone" ""
    ret r3
    .meta "inline_test_return_expr.wrap.val"
@@ -71,11 +57,7 @@ wrap() .locals=4
 addOne() .locals=2
    .meta "inline_test_return_expr.addone"="b" ".int" addOne() "val=.int"
    .srcstep 16 16 17 "inline_test_return_expr.crexx" 15 1 25 "addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 14 14 17 "inline_test_return_expr.crexx" 16 7 17 "  arg val = .int"
    .meta "inline_test_return_expr.addone.val"="b" ".int" a1
    .srcstep 15 15 17 "inline_test_return_expr.crexx" 17 3 17 "  return val + 1"

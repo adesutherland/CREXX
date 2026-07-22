@@ -7,11 +7,7 @@
 main() .locals=19
    .meta "select_dispatch_integer.main"="b" ".int" main() ""
    .srcstep 72 72 17 "select_dispatch_integer.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "select_dispatch_integer.main.i"="b" ".int" r0
    .srcstep 1 1 17 "select_dispatch_integer.crexx" 4 3 11 "  i = .int"
    null r0

@@ -1,0 +1,15 @@
+workload,metric,vm,pairs,paired_median_pct,mean_pct,ci_low_pct,ci_high_pct,favorable
+generic,elapsed_seconds,rxvm,12,-90.756783,-90.726012,-90.834405,-90.617618,12/12
+generic,elapsed_seconds,rxbvm,12,-90.744167,-90.737754,-90.820701,-90.654808,12/12
+parse_frozen,elapsed_seconds,rxvm,12,-97.262130,-97.291769,-97.350554,-97.232985,12/12
+parse_frozen,elapsed_seconds,rxbvm,12,-97.423297,-97.426517,-97.462052,-97.390982,12/12
+richards,elapsed_seconds,rxvm,36,-0.192602,0.072924,-0.241963,0.387811,22/36
+richards,elapsed_seconds,rxbvm,36,-0.019931,0.011475,-0.209011,0.231962,18/36
+rexxcps,cps,rxvm,12,45.249084,45.812104,44.439550,47.184657,12/12
+rexxcps,cps,rxbvm,12,45.499261,46.028212,44.953981,47.102442,12/12
+lifecycle_elapsed,elapsed_seconds,rxvm,12,-5.438770,-7.898921,-14.470590,-1.327252,9/12
+lifecycle_elapsed,elapsed_seconds,rxbvm,12,-3.966312,-3.675129,-6.672835,-0.677423,9/12
+max_rss,max_rss_bytes,rxvm,12,-6.511628,-6.506418,-6.610809,-6.402027,12/12
+max_rss,max_rss_bytes,rxbvm,12,-5.200946,-5.162395,-5.284728,-5.040062,12/12
+peak_footprint,peak_footprint_bytes,rxvm,12,-19.228213,-19.177521,-19.493885,-18.861156,12/12
+peak_footprint,peak_footprint_bytes,rxbvm,12,-15.445218,-15.318421,-15.719918,-14.916924,12/12

@@ -6,18 +6,13 @@
 
 main() .locals=3
    .meta "10_procs.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "10_procs.crexx" 3 1 17 "say \"Main Start\""
    say "Main Start"
    .srcstep 2 2 17 "10_procs.crexx" 4 1 15 "call MyProc 10"
    load r1,10
    .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
-   load r0,1
-   call r2,MyProc(),r0
+   call1 r2,MyProc(),r1
    .traceevent "F" 4 "R" "V" "r" 2 2 2 0 "myproc" ""
    .srcstep 3 3 17 "10_procs.crexx" 5 1 15 "say \"Main End\""
    say "Main End"
@@ -27,11 +22,7 @@ main() .locals=3
 MyProc() .locals=2
    .meta "10_procs.myproc"="b" ".void" MyProc() "x=.int"
    .srcstep 8 8 17 "10_procs.crexx" 8 1 18 "MyProc: procedure"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 5 5 17 "10_procs.crexx" 9 7 15 "  arg x = .int"
    .meta "10_procs.myproc.x"="b" ".int" a1
    .srcstep 6 6 17 "10_procs.crexx" 10 3 22 "  say \"Inside Proc\" x"

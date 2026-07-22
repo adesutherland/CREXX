@@ -9,11 +9,7 @@
 main() .locals=9
    .meta "inline_test_object_return_expr.main"="b" ".int" main() ""
    .srcstep 20 20 17 "inline_test_object_return_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_object_return_expr.crexx" 4 3 51 "  say \"Starting object return expr inline test...\""
    say "Starting object return expr inline test..."
    .srcstep 9 9 17 "inline_test_object_return_expr.crexx" 5 3 36 "  say describeBox(buildBox(\"seed\"))"
@@ -39,11 +35,8 @@ main() .locals=9
    br l73bexprend
 l73bexprend:
    endlife r2
-   load r0,1
    settp r4,768
-   swap r1,r4
-   call r2,describeBox(),r0
-   swap r4,r1
+   call1 r2,describeBox(),r4
    .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "describebox" ""
    say r2
    .srcstep 17 17 17 "inline_test_object_return_expr.crexx" 6 3 36 "  say describeBox(buildBox(\"temp\"))"
@@ -69,11 +62,8 @@ l73bexprend:
    br l86bexprend
 l86bexprend:
    endlife r4
-   load r6,1
    settp r2,768
-   swap r7,r2
-   call r4,describeBox(),r6
-   swap r2,r7
+   call1 r4,describeBox(),r2
    .traceevent "F" 4 "R" "S" "r" 4 17 17 0 "describebox" ""
    say r4
    .srcstep 18 18 17 "inline_test_object_return_expr.crexx" 7 3 49 "  say \"Object return expr inline test finished.\""
@@ -84,11 +74,7 @@ l86bexprend:
 describeBox() .locals=4
    .meta "inline_test_object_return_expr.describebox"="b" ".string" describeBox() "value=.box"
    .srcstep 34 34 17 "inline_test_object_return_expr.crexx" 15 1 33 "describeBox: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 29 29 17 "inline_test_object_return_expr.crexx" 16 7 19 "  arg value = .Box"
    .meta "inline_test_object_return_expr.describebox.value"="b" ".box" a1
    .srcstep 33 33 17 "inline_test_object_return_expr.crexx" 17 3 23 "  return value.getName()"
@@ -101,8 +87,7 @@ describeBox() .locals=4
    linkattr1 r2,r1,1
    .traceevent "V" 6 "R" "S" "r" 2 33 33 0 "name" ""
    scopy r3,r2
-   unlink r2
-   br l115bexprend
+   unlinkbr r2,l115bexprend
 l115bexprend:
    ret r3
    .meta "inline_test_object_return_expr.describebox.value"
@@ -112,11 +97,7 @@ l115bexprend:
    .srcstep 38 38 17 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_expr.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 35 35 17 "inline_test_object_return_expr.crexx" 23 9 26 "    arg initial = .string"
    .meta "inline_test_object_return_expr.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_return_expr.box.§factory.§factory"="b" ".box" r1
@@ -135,11 +116,7 @@ l115bexprend:
    .meta "inline_test_object_return_expr.box.getname"="b" ".string" §inline_test_object_return_expr.box.getname() ""
    .srcstep 40 40 17 "inline_test_object_return_expr.crexx" 27 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 39 39 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
    .meta "inline_test_object_return_expr.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1

@@ -1,0 +1,10 @@
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g847e62f0433c 20260719
+       System is: macOS
+REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+        Averaged: 100 x 100 iterations of 1000 clauses (over 8.6 s)
+REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+
+     Performance: 1160429 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port

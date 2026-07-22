@@ -93,6 +93,10 @@ struct ASTNode {
     char skip_exit_dispatch;
     char emit_primary_reporting_anchor;
     char is_inline_pruned;
+    char flow_skip_arg_copy; /* NR-26: private formal is safely overwritten before its first read */
+    char flow_share_arg_input; /* NR-26: all physical writes are elided; incoming slot stays authoritative */
+    char flow_skip_assignment_store; /* NR-26: RHS/TRACE stay live but the scalar destination is dead */
+    Symbol *flow_substitute_symbol; /* NR-26: read is flow-proved equal to this live symbol */
     ASTNode *free_list;
     SourceNode *source_node;
     char source_provenance;

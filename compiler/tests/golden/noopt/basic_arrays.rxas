@@ -6,11 +6,7 @@
 
 main() .locals=7
    .meta "basic_arrays.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "basic_arrays.main.s"="b" ".string[10]" r1
    .srcstep 1 1 17 "basic_arrays.crexx" 2 1 15 "s = .string[10]"
    null r1
@@ -30,8 +26,7 @@ l10dostart:
    .srcstep 5 5 17 "basic_arrays.crexx" 4 3 22 "  s[i] = \"Item \" || i"
    .traceevent "V" 6 "R" "I" "r" 2 5 5 0 "i" ""
    .traceevent "C" 4 "R" "I" "r" 2 5 5 0 "s" ""
-   setattrs r1,10
-   linkattr1 r5,r1,r2
+   setlinkattr1 r5,r1,10,r2
    itos r2
    .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "i" ""
    concat r6,"Item ",r2
@@ -68,8 +63,7 @@ l24dostart:
    .traceevent "O" 4 "R" "S" "r" 3 11 11 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 6 11 11 0 "i" ""
    .traceevent "C" 4 "R" "I" "r" 6 11 11 0 "s" ""
-   setattrs r1,10
-   linkattr1 r2,r1,r6
+   setlinkattr1 r2,r1,10,r6
    .traceevent "V" 6 "R" "S" "r" 2 11 11 0 "s" ""
    concat r3,r3,r2
    unlink r2
@@ -90,8 +84,7 @@ l24doend:
    .srcstep 15 15 17 "basic_arrays.crexx" 13 1 17 "s.idx = \"Item 4\""
    .traceevent "V" 6 "R" "I" "r" 0 15 15 0 "idx" ""
    .traceevent "C" 4 "R" "I" "r" 0 15 15 0 "s" ""
-   setattrs r1,10
-   linkattr1 r6,r1,r0
+   setlinkattr1 r6,r1,10,r0
    load r5,"Item 4"
    .traceevent "L" 4 "R" "S" "r" 5 15 15 0 "" ""
    scopy r6,r5

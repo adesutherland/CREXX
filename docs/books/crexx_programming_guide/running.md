@@ -96,10 +96,10 @@ rxseq hello.rxseq hello.rxbin --output hello-candidates.csv
 
 Pass `rxseq` the same complete RXBIN module set used by `rxvm`; it verifies
 module names and content hashes before decoding. The candidate report groups
-patterns by register/constant reuse and sums loop execution counts. Patterns
-requiring more than three distinct encoded symbols are marked
-`over_3_symbols`. The report is input to later safety and optimizer review,
-not an automatic bytecode transformation.
+patterns by register/constant reuse and sums loop execution counts. Candidate
+patterns may contain any number of distinct encoded symbols; the report is
+input to later safety and optimizer review, not an automatic bytecode
+transformation.
 
 The complete build instructions, report-field definitions, measurement
 boundaries, tested example, CSV schema, sequence semantics, and troubleshooting

@@ -6,11 +6,7 @@
 
 main() .locals=5
    .meta "test_select_classic.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "test_select_classic.main.scope_var"="b" ".int" r2
    .srcstep 1 1 17 "test_select_classic.crexx" 52 5 21 "    scope_var = .int"
    null r2

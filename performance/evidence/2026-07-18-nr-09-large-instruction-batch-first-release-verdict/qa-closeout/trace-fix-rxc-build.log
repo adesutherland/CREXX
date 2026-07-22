@@ -1,0 +1,4 @@
+[0/2] Re-checking globbed directories...
+[1/4] Building C object compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o
+[2/4] Linking C static library bin/librxclib.a
+[3/4] Linking C executable bin/rxc

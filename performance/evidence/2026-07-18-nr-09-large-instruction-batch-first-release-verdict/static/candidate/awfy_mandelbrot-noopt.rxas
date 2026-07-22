@@ -1,0 +1,437 @@
+/*
+ * SOURCE                 : awfy_mandelbrot.crexx
+ */
+
+.globals=0
+
+main() .locals=9
+   .meta "awfy_mandelbrot.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "awfy_mandelbrot.crexx" 8 5 19 "arg argv = .string[]"
+   .meta "awfy_mandelbrot.main.argv"="b" ".string[*]" r0
+   brtpandt l4c,a1,512
+   copy r0,a1
+   br l4d
+l4c:
+   swap r0,a1
+l4d:
+   .srcstep 2 2 17 "awfy_mandelbrot.crexx" 10 1 11 "size = 500"
+   .meta "awfy_mandelbrot.main.size"="b" ".int" r3
+   load r3,500
+   .traceevent "L" 4 "R" "I" "r" 3 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 2 2 0 "size" ""
+   .srcstep 4 4 17 "awfy_mandelbrot.crexx" 11 1 16 "if argv[0] >= 1 then size = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 4 4 4 0 "argv" ""
+   getattrs r5,r0,0
+   .traceevent "V" 6 "R" "I" "r" 5 4 4 0 "argv" ""
+   igte r5,r5,1
+   .traceevent "O" 4 "R" "B" "r" 5 4 4 0 "" ""
+   brf l23iffalse,r5
+   .srcstep 5 5 17 "awfy_mandelbrot.crexx" 11 17 21 "if argv[0] >= 1 then size = argv[1]"
+   .srcstep 3 3 17 "awfy_mandelbrot.crexx" 11 22 35 "if argv[0] >= 1 then size = argv[1]"
+   minstoiattr1 r3,r0,1
+   .traceevent "V" 6 "R" "I" "r" 3 3 3 0 "argv" ""
+   .traceevent "A" 6 "R" "I" "r" 3 3 3 0 "size" ""
+l23iffalse:
+   .srcstep 7 7 17 "awfy_mandelbrot.crexx" 12 1 12 "if size < 1 then return fail(\"size must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "size" ""
+   ilt r6,r3,1
+   .traceevent "O" 4 "R" "B" "r" 6 7 7 0 "" ""
+   brf l30iffalse,r6
+   .srcstep 8 8 17 "awfy_mandelbrot.crexx" 12 13 17 "if size < 1 then return fail(\"size must be positive\")"
+   .srcstep 6 6 17 "awfy_mandelbrot.crexx" 12 18 54 "if size < 1 then return fail(\"size must be positive\")"
+   load r5,"size must be positive"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
+   load r4,1
+   settpcall r7,fail(),r4,r5,768
+   .traceevent "F" 4 "R" "I" "r" 7 6 6 0 "fail" ""
+   ret r7
+l30iffalse:
+   .srcstep 9 9 17 "awfy_mandelbrot.crexx" 14 1 26 "result = mandelbrot(size)"
+   .meta "awfy_mandelbrot.main.result"="b" ".int" r2
+   .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "size" ""
+   load r6,1
+   swapcall r2,mandelbrot(),r6,r3,r7
+   swap r3,r7
+   .traceevent "F" 4 "R" "I" "r" 2 9 9 0 "mandelbrot" ""
+   .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "result" ""
+   .srcstep 10 10 17 "awfy_mandelbrot.crexx" 15 1 14 "expected = -1"
+   .meta "awfy_mandelbrot.main.expected"="b" ".int" r1
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 10 10 0 "" ""
+   isub r1,0,r7
+   .traceevent "P" 4 "R" "I" "r" 1 10 10 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 10 10 0 "expected" ""
+   .srcstep 12 12 17 "awfy_mandelbrot.crexx" 16 1 12 "if size = 1 then expected = 128"
+   .traceevent "V" 6 "R" "I" "r" 3 12 12 0 "size" ""
+   ieq r7,r3,1
+   .traceevent "O" 4 "R" "B" "r" 7 12 12 0 "" ""
+   brf l45iffalse,r7
+   .srcstep 13 13 17 "awfy_mandelbrot.crexx" 16 13 17 "if size = 1 then expected = 128"
+   .srcstep 11 11 17 "awfy_mandelbrot.crexx" 16 18 32 "if size = 1 then expected = 128"
+   load r1,128
+   .traceevent "L" 4 "R" "I" "r" 1 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 11 11 0 "expected" ""
+l45iffalse:
+   .srcstep 15 15 17 "awfy_mandelbrot.crexx" 17 1 14 "if size = 500 then expected = 191"
+   .traceevent "V" 6 "R" "I" "r" 3 15 15 0 "size" ""
+   ieq r7,r3,500
+   .traceevent "O" 4 "R" "B" "r" 7 15 15 0 "" ""
+   brf l52iffalse,r7
+   .srcstep 16 16 17 "awfy_mandelbrot.crexx" 17 15 19 "if size = 500 then expected = 191"
+   .srcstep 14 14 17 "awfy_mandelbrot.crexx" 17 20 34 "if size = 500 then expected = 191"
+   load r1,191
+   .traceevent "L" 4 "R" "I" "r" 1 14 14 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 14 14 0 "expected" ""
+l52iffalse:
+   .srcstep 18 18 17 "awfy_mandelbrot.crexx" 18 1 14 "if size = 750 then expected = 50"
+   .traceevent "V" 6 "R" "I" "r" 3 18 18 0 "size" ""
+   ieq r7,r3,750
+   .traceevent "O" 4 "R" "B" "r" 7 18 18 0 "" ""
+   brf l59iffalse,r7
+   .srcstep 19 19 17 "awfy_mandelbrot.crexx" 18 15 19 "if size = 750 then expected = 50"
+   .srcstep 17 17 17 "awfy_mandelbrot.crexx" 18 20 33 "if size = 750 then expected = 50"
+   load r1,50
+   .traceevent "L" 4 "R" "I" "r" 1 17 17 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 17 17 0 "expected" ""
+l59iffalse:
+   .srcstep 21 21 17 "awfy_mandelbrot.crexx" 19 1 17 "if expected = -1 then return fail(\"no reference checksum for size \" || size)"
+   .traceevent "V" 6 "R" "I" "r" 1 21 21 0 "expected" ""
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 21 21 0 "" ""
+   isub r6,0,r7
+   .traceevent "P" 4 "R" "I" "r" 6 21 21 0 "" ""
+   ieq r6,r1,r6
+   .traceevent "O" 4 "R" "B" "r" 6 21 21 0 "" ""
+   brf l69iffalse,r6
+   .srcstep 22 22 17 "awfy_mandelbrot.crexx" 19 18 22 "if expected = -1 then return fail(\"no reference checksum for size \" || size)"
+   .srcstep 20 20 17 "awfy_mandelbrot.crexx" 19 23 77 "if expected = -1 then return fail(\"no reference checksum for size \" || size)"
+   itosconcat r5,"no reference checksum for size ",r3
+   .traceevent "V" 6 "R" "S" "r" 3 20 20 0 "size" ""
+   .traceevent "O" 4 "R" "S" "r" 5 20 20 0 "" ""
+   load r4,1
+   settpcall r8,fail(),r4,r5,768
+   .traceevent "F" 4 "R" "I" "r" 8 20 20 0 "fail" ""
+   ret r8
+l69iffalse:
+   .srcstep 24 24 17 "awfy_mandelbrot.crexx" 20 1 22 "if result <> expected then return fail(\"expected \" || expected || \", got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 2 24 24 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 1 24 24 0 "expected" ""
+   ine r8,r2,r1
+   .traceevent "O" 4 "R" "B" "r" 8 24 24 0 "" ""
+   brf l82iffalse,r8
+   .srcstep 25 25 17 "awfy_mandelbrot.crexx" 20 23 27 "if result <> expected then return fail(\"expected \" || expected || \", got \" || result)"
+   .srcstep 23 23 17 "awfy_mandelbrot.crexx" 20 28 86 "if result <> expected then return fail(\"expected \" || expected || \", got \" || result)"
+   itosconcat r5,"expected ",r1
+   .traceevent "V" 6 "R" "S" "r" 1 23 23 0 "expected" ""
+   .traceevent "O" 4 "R" "S" "r" 5 23 23 0 "" ""
+   concat r5,r5,", got "
+   .traceevent "O" 4 "R" "S" "r" 5 23 23 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 23 23 0 "result" ""
+   concat r7,r5,r2
+   .traceevent "O" 4 "R" "S" "r" 7 23 23 0 "" ""
+   load r6,1
+   settpcall r5,fail(),r6,r7,768
+   .traceevent "F" 4 "R" "I" "r" 5 23 23 0 "fail" ""
+   ret r5
+l82iffalse:
+   .srcstep 26 26 17 "awfy_mandelbrot.crexx" 22 1 58 "say \"benchmark=awfy_mandelbrot size=\"size \"result=\"result"
+   itosconcat r8,"benchmark=awfy_mandelbrot size=",r3
+   .traceevent "V" 6 "R" "S" "r" 3 26 26 0 "size" ""
+   .traceevent "O" 4 "R" "S" "r" 8 26 26 0 "" ""
+   sconcatitos r8,"result=",r2
+   .traceevent "O" 4 "R" "S" "r" 8 26 26 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 2 26 26 0 "result" ""
+   concat r8,r8,r2
+   .traceevent "O" 4 "R" "S" "r" 8 26 26 0 "" ""
+   say r8
+   .srcstep 27 27 17 "awfy_mandelbrot.crexx" 23 1 28 "say \"PASS: AWFY Mandelbrot\""
+   say "PASS: AWFY Mandelbrot"
+   .srcstep 28 28 17 "awfy_mandelbrot.crexx" 24 1 9 "return 0"
+   ret 0
+   .meta "awfy_mandelbrot.main.argv"
+   .meta "awfy_mandelbrot.main.expected"
+   .meta "awfy_mandelbrot.main.result"
+   .meta "awfy_mandelbrot.main.size"
+
+mandelbrot() .locals=22
+   .meta "awfy_mandelbrot.mandelbrot"="b" ".int" mandelbrot() "size=.int"
+   .srcstep 77 77 17 "awfy_mandelbrot.crexx" 26 1 29 "mandelbrot: procedure = .int"
+   numsci 18,1,1
+   .srcstep 29 29 17 "awfy_mandelbrot.crexx" 27 7 18 "  arg size = .int"
+   .meta "awfy_mandelbrot.mandelbrot.size"="b" ".int" a1
+   .srcstep 30 30 17 "awfy_mandelbrot.crexx" 29 3 15 "  checksum = 0"
+   .meta "awfy_mandelbrot.mandelbrot.checksum"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 30 30 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 30 30 0 "checksum" ""
+   .srcstep 31 31 17 "awfy_mandelbrot.crexx" 30 3 15 "  byte_acc = 0"
+   .meta "awfy_mandelbrot.mandelbrot.byte_acc"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 31 31 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 31 31 0 "byte_acc" ""
+   .srcstep 32 32 17 "awfy_mandelbrot.crexx" 31 3 14 "  bit_num = 0"
+   .meta "awfy_mandelbrot.mandelbrot.bit_num"="b" ".int" r0
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 32 32 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 32 32 0 "bit_num" ""
+   .srcstep 74 74 17 "awfy_mandelbrot.crexx" 33 3 5 "  do y = 0 to size - 1"
+   .srcstep 33 33 17 "awfy_mandelbrot.crexx" 33 6 11 "  do y = 0 to size - 1"
+   .meta "awfy_mandelbrot.mandelbrot.y"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 33 33 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 33 33 0 "y" ""
+   .srcstep 34 34 17 "awfy_mandelbrot.crexx" 33 12 23 "  do y = 0 to size - 1"
+   .traceevent "V" 6 "R" "I" "a" 1 0 0 0 "size" ""
+   isub r6,a1,1
+   .traceevent "O" 4 "R" "I" "r" 6 0 0 0 "" ""
+l110dostart:
+   .srcstep 34 34 17 "awfy_mandelbrot.crexx" 33 12 23 "  do y = 0 to size - 1"
+   igt r7,r5,r6
+   brt l110doend,r7
+   .srcstep 36 36 17 "awfy_mandelbrot.crexx" 34 5 56 "    ci = (2.0 * (y as .float) / (size as .float)) - 1.0"
+   .meta "awfy_mandelbrot.mandelbrot.ci"="b" ".float" r4
+   .traceevent "V" 6 "R" "I" "r" 5 36 36 0 "y" ""
+   itof r8,r5
+   fmult r8,r8,2.0
+   .traceevent "O" 4 "R" "F" "r" 8 36 36 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 1 36 36 0 "size" ""
+   itof r9,a1
+   fdivsub r4,r8,r9,1.0
+   .traceevent "O" 4 "R" "F" "r" 9 36 36 0 "" ""
+   .traceevent "O" 4 "R" "F" "r" 4 36 36 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 4 36 36 0 "ci" ""
+   .srcstep 72 72 17 "awfy_mandelbrot.crexx" 35 5 7 "    do x = 0 to size - 1"
+   .srcstep 37 37 17 "awfy_mandelbrot.crexx" 35 8 13 "    do x = 0 to size - 1"
+   .meta "awfy_mandelbrot.mandelbrot.x"="b" ".int" r10
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 37 37 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 37 37 0 "x" ""
+   .srcstep 38 38 17 "awfy_mandelbrot.crexx" 35 14 25 "    do x = 0 to size - 1"
+   .traceevent "V" 6 "R" "I" "a" 1 0 0 0 "size" ""
+   isub r14,a1,1
+   .traceevent "O" 4 "R" "I" "r" 14 0 0 0 "" ""
+l133dostart:
+   .srcstep 38 38 17 "awfy_mandelbrot.crexx" 35 14 25 "    do x = 0 to size - 1"
+   igt r15,r10,r14
+   brt l133doend,r15
+   .srcstep 40 40 17 "awfy_mandelbrot.crexx" 36 7 27 "      zrzr = 0.0 as .float"
+   .meta "awfy_mandelbrot.mandelbrot.zrzr"="b" ".float" r13
+   load r16,0.0
+   .traceevent "L" 4 "R" "F" "r" 16 40 40 0 "" ""
+   fcopy r13,r16
+   .traceevent "A" 6 "R" "F" "r" 13 40 40 0 "zrzr" ""
+   .srcstep 41 41 17 "awfy_mandelbrot.crexx" 37 7 25 "      zi = 0.0 as .float"
+   .meta "awfy_mandelbrot.mandelbrot.zi"="b" ".float" r11
+   load r16,0.0
+   .traceevent "L" 4 "R" "F" "r" 16 41 41 0 "" ""
+   fcopy r11,r16
+   .traceevent "A" 6 "R" "F" "r" 11 41 41 0 "zi" ""
+   .srcstep 42 42 17 "awfy_mandelbrot.crexx" 38 7 27 "      zizi = 0.0 as .float"
+   .meta "awfy_mandelbrot.mandelbrot.zizi"="b" ".float" r12
+   load r16,0.0
+   .traceevent "L" 4 "R" "F" "r" 16 42 42 0 "" ""
+   fcopy r12,r16
+   .traceevent "A" 6 "R" "F" "r" 12 42 42 0 "zizi" ""
+   .srcstep 43 43 17 "awfy_mandelbrot.crexx" 39 7 58 "      cr = (2.0 * (x as .float) / (size as .float)) - 1.5"
+   .meta "awfy_mandelbrot.mandelbrot.cr"="b" ".float" r9
+   .traceevent "V" 6 "R" "I" "r" 10 43 43 0 "x" ""
+   itof r16,r10
+   fmult r16,r16,2.0
+   .traceevent "O" 4 "R" "F" "r" 16 43 43 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 1 43 43 0 "size" ""
+   itof r17,a1
+   fdivsub r9,r16,r17,1.5
+   .traceevent "O" 4 "R" "F" "r" 17 43 43 0 "" ""
+   .traceevent "O" 4 "R" "F" "r" 9 43 43 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 9 43 43 0 "cr" ""
+   .srcstep 44 44 17 "awfy_mandelbrot.crexx" 40 7 17 "      escape = 0"
+   .meta "awfy_mandelbrot.mandelbrot.escape"="b" ".int" r8
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 44 44 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 44 44 0 "escape" ""
+   .srcstep 56 56 17 "awfy_mandelbrot.crexx" 42 7 9 "      do z = 0 to 49 while escape = 0"
+   .srcstep 45 45 17 "awfy_mandelbrot.crexx" 42 10 15 "      do z = 0 to 49 while escape = 0"
+   .meta "awfy_mandelbrot.mandelbrot.z"="b" ".int" r17
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 45 45 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 45 45 0 "z" ""
+   .srcstep 46 46 17 "awfy_mandelbrot.crexx" 42 16 21 "      do z = 0 to 49 while escape = 0"
+   load r18,49
+   .traceevent "L" 4 "R" "I" "r" 18 0 0 0 "" ""
+l174dostart:
+   .srcstep 46 46 17 "awfy_mandelbrot.crexx" 42 16 21 "      do z = 0 to 49 while escape = 0"
+   igt r19,r17,r18
+   brt l174doend,r19
+   .srcstep 47 47 17 "awfy_mandelbrot.crexx" 42 22 38 "      do z = 0 to 49 while escape = 0"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "escape" ""
+   ieq r20,r8,0
+   .traceevent "O" 4 "R" "B" "r" 20 0 0 0 "" ""
+   brf l174doend,r20
+   .srcstep 49 49 17 "awfy_mandelbrot.crexx" 43 9 30 "        zr = zrzr - zizi + cr"
+   .meta "awfy_mandelbrot.mandelbrot.zr"="b" ".float" r16
+   .traceevent "V" 6 "R" "F" "r" 13 49 49 0 "zrzr" ""
+   .traceevent "V" 6 "R" "F" "r" 12 49 49 0 "zizi" ""
+   fsub r21,r13,r12
+   .traceevent "O" 4 "R" "F" "r" 21 49 49 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 9 49 49 0 "cr" ""
+   fadd r16,r21,r9
+   .traceevent "O" 4 "R" "F" "r" 16 49 49 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 16 49 49 0 "zr" ""
+   .srcstep 50 50 17 "awfy_mandelbrot.crexx" 44 9 32 "        zi = 2.0 * zr * zi + ci"
+   .traceevent "V" 6 "R" "F" "r" 16 50 50 0 "zr" ""
+   fmult r21,r16,2.0
+   .traceevent "O" 4 "R" "F" "r" 21 50 50 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 11 50 50 0 "zi" ""
+   fmult r21,r21,r11
+   .traceevent "O" 4 "R" "F" "r" 21 50 50 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 4 50 50 0 "ci" ""
+   fadd r11,r21,r4
+   .traceevent "O" 4 "R" "F" "r" 11 50 50 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 11 50 50 0 "zi" ""
+   .srcstep 51 51 17 "awfy_mandelbrot.crexx" 45 9 23 "        zrzr = zr * zr"
+   .traceevent "V" 6 "R" "F" "r" 16 51 51 0 "zr" ""
+   .traceevent "V" 6 "R" "F" "r" 16 51 51 0 "zr" ""
+   fmult r13,r16,r16
+   .traceevent "O" 4 "R" "F" "r" 13 51 51 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 13 51 51 0 "zrzr" ""
+   .srcstep 52 52 17 "awfy_mandelbrot.crexx" 46 9 23 "        zizi = zi * zi"
+   .traceevent "V" 6 "R" "F" "r" 11 52 52 0 "zi" ""
+   .traceevent "V" 6 "R" "F" "r" 11 52 52 0 "zi" ""
+   fmult r12,r11,r11
+   .traceevent "O" 4 "R" "F" "r" 12 52 52 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 12 52 52 0 "zizi" ""
+   .srcstep 54 54 17 "awfy_mandelbrot.crexx" 47 9 29 "        if zrzr + zizi > 4.0 then escape = 1"
+   .traceevent "V" 6 "R" "F" "r" 13 54 54 0 "zrzr" ""
+   .traceevent "V" 6 "R" "F" "r" 12 54 54 0 "zizi" ""
+   fadd r21,r13,r12
+   .traceevent "O" 4 "R" "F" "r" 21 54 54 0 "" ""
+   fgt r21,r21,4.0
+   .traceevent "O" 4 "R" "B" "r" 21 54 54 0 "" ""
+   brf l220iffalse,r21
+   .srcstep 55 55 17 "awfy_mandelbrot.crexx" 47 30 34 "        if zrzr + zizi > 4.0 then escape = 1"
+   .srcstep 53 53 17 "awfy_mandelbrot.crexx" 47 35 45 "        if zrzr + zizi > 4.0 then escape = 1"
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 53 53 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 53 53 0 "escape" ""
+l220iffalse:
+l174doinc:
+   .srcstep 48 48 17 "awfy_mandelbrot.crexx" 42 10 11 "      do z = 0 to 49 while escape = 0"
+   inc r17
+   .srcstep 57 57 17 "awfy_mandelbrot.crexx" 48 7 10 "      end"
+   br l174dostart
+l174doend:
+   .meta "awfy_mandelbrot.mandelbrot.z"
+   .meta "awfy_mandelbrot.mandelbrot.zr"
+   .srcstep 58 58 17 "awfy_mandelbrot.crexx" 50 7 45 "      byte_acc = (byte_acc <shl> 1) + escape"
+   .traceevent "V" 6 "R" "I" "r" 1 58 58 0 "byte_acc" ""
+   ishl r21,r1,1
+   .traceevent "O" 4 "R" "I" "r" 21 58 58 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 8 58 58 0 "escape" ""
+   iadd r1,r21,r8
+   .traceevent "O" 4 "R" "I" "r" 1 58 58 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 58 58 0 "byte_acc" ""
+   .srcstep 59 59 17 "awfy_mandelbrot.crexx" 51 7 28 "      bit_num = bit_num + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 59 59 0 "bit_num" ""
+   iadd r0,r0,1
+   .traceevent "O" 4 "R" "I" "r" 0 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 59 59 0 "bit_num" ""
+   .srcstep 69 69 17 "awfy_mandelbrot.crexx" 53 7 21 "      if bit_num = 8 then do"
+   .traceevent "V" 6 "R" "I" "r" 0 69 69 0 "bit_num" ""
+   ieq r21,r0,8
+   .traceevent "O" 4 "R" "B" "r" 21 69 69 0 "" ""
+   brf l273iffalse,r21
+   .srcstep 70 70 17 "awfy_mandelbrot.crexx" 53 22 26 "      if bit_num = 8 then do"
+   .srcstep 60 60 17 "awfy_mandelbrot.crexx" 54 9 43 "        checksum = checksum <xor> byte_acc"
+   .traceevent "V" 6 "R" "I" "r" 2 60 60 0 "checksum" ""
+   .traceevent "V" 6 "R" "I" "r" 1 60 60 0 "byte_acc" ""
+   ixor r2,r2,r1
+   .traceevent "O" 4 "R" "I" "r" 2 60 60 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 60 60 0 "checksum" ""
+   .srcstep 61 61 17 "awfy_mandelbrot.crexx" 55 9 21 "        byte_acc = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 61 61 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 61 61 0 "byte_acc" ""
+   .srcstep 62 62 17 "awfy_mandelbrot.crexx" 56 9 20 "        bit_num = 0"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 62 62 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 62 62 0 "bit_num" ""
+   br l273ifend
+   .srcstep 71 71 17 "awfy_mandelbrot.crexx" 57 7 10 "      end"
+l273iffalse:
+   .srcstep 67 67 17 "awfy_mandelbrot.crexx" 58 12 27 "      else if x = size - 1 then do"
+   .traceevent "V" 6 "R" "I" "r" 10 67 67 0 "x" ""
+   .traceevent "V" 6 "R" "I" "a" 1 67 67 0 "size" ""
+   isub r20,a1,1
+   .traceevent "O" 4 "R" "I" "r" 20 67 67 0 "" ""
+   ieq r20,r10,r20
+   .traceevent "O" 4 "R" "B" "r" 20 67 67 0 "" ""
+   brf l272iffalse,r20
+   .srcstep 68 68 17 "awfy_mandelbrot.crexx" 58 28 32 "      else if x = size - 1 then do"
+   .srcstep 63 63 17 "awfy_mandelbrot.crexx" 59 9 48 "        byte_acc = byte_acc <shl> (8 - bit_num)"
+   .traceevent "V" 6 "R" "I" "r" 1 63 63 0 "byte_acc" ""
+   .traceevent "V" 6 "R" "I" "r" 0 63 63 0 "bit_num" ""
+   isub r19,8,r0
+   .traceevent "O" 4 "R" "I" "r" 19 63 63 0 "" ""
+   ishl r1,r1,r19
+   .traceevent "O" 4 "R" "I" "r" 1 63 63 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 63 63 0 "byte_acc" ""
+   .srcstep 64 64 17 "awfy_mandelbrot.crexx" 60 9 43 "        checksum = checksum <xor> byte_acc"
+   .traceevent "V" 6 "R" "I" "r" 2 64 64 0 "checksum" ""
+   .traceevent "V" 6 "R" "I" "r" 1 64 64 0 "byte_acc" ""
+   ixor r2,r2,r1
+   .traceevent "O" 4 "R" "I" "r" 2 64 64 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 64 64 0 "checksum" ""
+   .srcstep 65 65 17 "awfy_mandelbrot.crexx" 61 9 21 "        byte_acc = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 65 65 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 65 65 0 "byte_acc" ""
+   .srcstep 66 66 17 "awfy_mandelbrot.crexx" 62 9 20 "        bit_num = 0"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 66 66 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 66 66 0 "bit_num" ""
+l272iffalse:
+l273ifend:
+l133doinc:
+   .srcstep 39 39 17 "awfy_mandelbrot.crexx" 35 8 9 "    do x = 0 to size - 1"
+   inc r10
+   .srcstep 73 73 17 "awfy_mandelbrot.crexx" 63 7 10 "      end"
+   br l133dostart
+l133doend:
+   .meta "awfy_mandelbrot.mandelbrot.cr"
+   .meta "awfy_mandelbrot.mandelbrot.escape"
+   .meta "awfy_mandelbrot.mandelbrot.x"
+   .meta "awfy_mandelbrot.mandelbrot.zi"
+   .meta "awfy_mandelbrot.mandelbrot.zizi"
+   .meta "awfy_mandelbrot.mandelbrot.zrzr"
+l110doinc:
+   .srcstep 35 35 17 "awfy_mandelbrot.crexx" 33 6 7 "  do y = 0 to size - 1"
+   inc r5
+   .srcstep 75 75 17 "awfy_mandelbrot.crexx" 63 7 10 "      end"
+   br l110dostart
+l110doend:
+   .meta "awfy_mandelbrot.mandelbrot.ci"
+   .meta "awfy_mandelbrot.mandelbrot.y"
+   .srcstep 76 76 17 "awfy_mandelbrot.crexx" 66 3 18 "  return checksum"
+   .traceevent "V" 6 "R" "I" "r" 2 76 76 0 "checksum" ""
+   ret r2
+   .meta "awfy_mandelbrot.mandelbrot.bit_num"
+   .meta "awfy_mandelbrot.mandelbrot.byte_acc"
+   .meta "awfy_mandelbrot.mandelbrot.checksum"
+   .meta "awfy_mandelbrot.mandelbrot.size"
+
+fail() .locals=2
+   .meta "awfy_mandelbrot.fail"="b" ".int" fail() "message=.string"
+   .srcstep 81 81 17 "awfy_mandelbrot.crexx" 68 1 23 "fail: procedure = .int"
+   numsci 18,1,1
+   .srcstep 78 78 17 "awfy_mandelbrot.crexx" 69 7 24 "  arg message = .string"
+   .meta "awfy_mandelbrot.fail.message"="b" ".string" a1
+   .srcstep 79 79 17 "awfy_mandelbrot.crexx" 70 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "a" 1 79 79 0 "message" ""
+   sconcat r1,"FAIL:",a1
+   .traceevent "O" 4 "R" "S" "r" 1 79 79 0 "" ""
+   say r1
+   .srcstep 80 80 17 "awfy_mandelbrot.crexx" 71 3 11 "  return 1"
+   ret 1
+   .meta "awfy_mandelbrot.fail.message"

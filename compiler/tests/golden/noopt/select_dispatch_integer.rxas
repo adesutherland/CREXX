@@ -7,11 +7,7 @@
 main() .locals=8
    .meta "select_dispatch_integer.main"="b" ".int" main() ""
    .srcstep 14 14 17 "select_dispatch_integer.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "select_dispatch_integer.main.i"="b" ".int" r0
    .srcstep 1 1 17 "select_dispatch_integer.crexx" 4 3 11 "  i = .int"
    null r0
@@ -38,31 +34,20 @@ l12dostart:
    .traceevent "A" 6 "R" "I" "r" 1 6 6 0 "inner" ""
    .srcstep 7 7 17 "select_dispatch_integer.crexx" 9 5 20 "    say classify(i)"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "i" ""
-   load r5,1
-   swap r6,r0
-   call r2,classify(),r5
-   swap r0,r6
+   call1 r2,classify(),r0
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "classify" ""
    say r2
    .srcstep 8 8 17 "select_dispatch_integer.crexx" 10 5 22 "    say no_default(i)"
    .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "i" ""
-   load r5,1
-   swap r6,r0
-   call r2,no_default(),r5
-   swap r0,r6
+   call1 r2,no_default(),r0
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "no_default" ""
    say r2
    .srcstep 9 9 17 "select_dispatch_integer.crexx" 11 5 34 "    say nested_classify(i, inner)"
    .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "i" ""
    .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "inner" ""
-   load r5,2
-   swap r6,r0
-   swap r7,r1
-   call r2,nested_classify(),r5
-   swap r0,r6
-   swap r1,r7
+   call2 r2,nested_classify(),r0,r1
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "nested_classify" ""
    say r2
@@ -75,8 +60,7 @@ l12doend:
    .srcstep 12 12 17 "select_dispatch_integer.crexx" 13 3 27 "  say classify(5000000000)"
    load r7,5000000000
    .traceevent "L" 4 "R" "I" "r" 7 12 12 0 "" ""
-   load r6,1
-   call r5,classify(),r6
+   call1 r5,classify(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 12 12 0 "classify" ""
    say r5
@@ -88,11 +72,7 @@ l12doend:
 classify() .locals=6
    .meta "select_dispatch_integer.classify"="b" ".int" classify() "value=.int"
    .srcstep 29 29 17 "select_dispatch_integer.crexx" 16 1 27 "classify: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 15 15 17 "select_dispatch_integer.crexx" 17 7 19 "  arg value = .int"
    .meta "select_dispatch_integer.classify.value"="b" ".int" a1
    .meta "select_dispatch_integer.classify.select_tmp"="b" ".int" r1
@@ -163,11 +143,7 @@ l251dispatchend:
 no_default() .locals=5
    .meta "select_dispatch_integer.no_default"="b" ".int" no_default() "value=.int"
    .srcstep 42 42 17 "select_dispatch_integer.crexx" 33 1 29 "no_default: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 30 30 17 "select_dispatch_integer.crexx" 34 7 19 "  arg value = .int"
    .meta "select_dispatch_integer.no_default.value"="b" ".int" a1
    .meta "select_dispatch_integer.no_default.select_tmp"="b" ".int" r1
@@ -215,11 +191,7 @@ l212ifend:
 nested_classify() .locals=11
    .meta "select_dispatch_integer.nested_classify"="b" ".int" nested_classify() "outer=.int,inner=.int"
    .srcstep 69 69 17 "select_dispatch_integer.crexx" 43 1 34 "nested_classify: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 43 43 17 "select_dispatch_integer.crexx" 44 7 19 "  arg outer = .int, inner = .int"
    .meta "select_dispatch_integer.nested_classify.outer"="b" ".int" a1
    .srcstep 44 44 17 "select_dispatch_integer.crexx" 44 21 33 "  arg outer = .int, inner = .int"

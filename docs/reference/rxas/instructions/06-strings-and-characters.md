@@ -761,18 +761,21 @@ main() .locals=1
 
 ## `stoi`
 
-Parse a register's complete string payload as a VM integer.
+Parse a register's complete string payload as a VM integer, either in place or
+directly into a separate destination.
 
 ### Forms
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
 | `0x00ed` | `stoi rValue` | Write the integer payload in the same register. |
+| `0x0128` | `stoi rResult,rValue` | Parse `rValue.string` directly into `rResult.int`. |
 
 ### Operands And Semantics
 
-The string payload and cursor remain unchanged. The parser requires a complete
-valid integer representation within the VM integer range.
+The source string payload and cursor remain unchanged. In the two-register form
+the source register receives no integer side effect. The parser requires a
+complete valid integer representation within the VM integer range.
 
 ### Signals
 

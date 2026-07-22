@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g32bf7e76f3fe.dirty 20260719",
+  "source_manifest": "/tmp/nr10-timing-noise-append.manifest",
+  "measurement": "timing",
+  "warmups": 0,
+  "recorded_runs": 10,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-20T10:17:32+0000",
+  "completed_utc": "2026-07-20T10:19:49+0000",
+  "result": "pass"
+}

@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_concat_expr.main"="b" ".int" main() ""
    .srcstep 11 11 17 "inline_test_concat_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_concat_expr.crexx" 4 3 44 "  say \"Starting concat inline expr test...\""
    say "Starting concat inline expr test..."
    .srcstep 7 7 17 "inline_test_concat_expr.crexx" 5 3 5 "  do i = 1 to 3"
@@ -30,10 +26,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_concat_expr.crexx" 6 5 34 "    msg = \"Value=\" || asString(i)"
    .meta "inline_test_concat_expr.main.msg"="b" ".string" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r4,1
-   swap r5,r0
-   call r6,asString(),r4
-   swap r0,r5
+   call1 r6,asString(),r0
    .traceevent "F" 4 "R" "S" "r" 6 5 5 0 "asstring" ""
    concat r1,"Value=",r6
    .traceevent "O" 4 "R" "S" "r" 1 5 5 0 "" ""
@@ -57,11 +50,7 @@ l8doend:
 asString() .locals=1
    .meta "inline_test_concat_expr.asstring"="b" ".string" asString() "val=.int"
    .srcstep 14 14 17 "inline_test_concat_expr.crexx" 12 1 30 "asString: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 12 12 17 "inline_test_concat_expr.crexx" 13 7 17 "  arg val = .int"
    .meta "inline_test_concat_expr.asstring.val"="b" ".int" a1
    .srcstep 13 13 17 "inline_test_concat_expr.crexx" 14 3 13 "  return val"
