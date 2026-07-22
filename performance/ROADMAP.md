@@ -839,13 +839,13 @@ coverage gaps are in
 
 | ID | Activity | Status | Current note / boundary |
 | --- | --- | --- | --- |
-| NR-12 | Extend read-only by-value and return copy coalescing | deferred | RXAS inspection is complete: never-written real formals already alias `aN`; unconditional overwrite exposes DSE, but conditional/loop isolation needs the forthcoming flow analysis. No implementation is selected; see `NR-12-21-WORKLIST.md`. |
+| NR-12 | Extend read-only by-value and return copy coalescing | deferred | Accepted NR-26 F2 already removes the narrow proved-overwritten scalar by-value entry copy and retains conditional, zero-trip and read-before-write cases. Its focused fixture removes three copies, but the retained 19-image portfolio found no F2 footprint; no duplicate compiler edit is selected. Broader conditional/loop isolation and return coalescing remain deferred. See `NR-26-WORKLIST.md` and `NR-18-WORKLIST.md`. |
 | NR-13 | Redundant numeric-context setup elimination | complete | Accepted NR-09 Rule 1 satisfies the NR-13 exit criterion: the compiler uses existing `NUMSCI`/`NUMENG` only for an identical fully constant non-inherited effective context, focused cross-procedure/plugin coverage passes in both modes and VMs, and dynamic setup fell from 542,500 to 108,508 per VM. General full-context and procedure-owned-default experiments remain optional NR-23/NR-24 work, not unfinished NR-13 scope. |
 | NR-14 | Static/frozen `PARSE` lowering fast path | complete | Adrian accepted the frozen hybrid and the +249,179 B/+20.579% compiler-exit artifact trade-off. The three exact opcodes remain preferred, `parsewords3` chains eligible longer odd word templates, compact opcode 410 `parseplan` covers remaining mechanically frozen plans, logging/TRACE/INTO fall back, and regex is untouched. Generic elapsed is -90.757%/-90.744%, exact elapsed -97.262%/-97.423%, and RexxCPS CPS +45.249%/+45.499%; capped byte-identical Richards is neutral. Closeout passed focused Debug/ASan 15/15, full Debug 1,876/1,876, and isolated installed/native-package proof. See `NR-14-WORKLIST.md` and `evidence/2026-07-21-nr-14-hybrid-first-release-verdict/`. |
 | NR-15 | General stem default/reset fast path | queued | Preserve generation/default/drop/tail semantics. |
 | NR-16 | TRACE-off and same-ADDRESS-environment fast paths | queued | Preserve hooks, signals, mode changes and host callbacks. |
 | NR-17 | Link-time direct provider/call resolution | queued | Preserve late-load and plugin fallback. |
-| NR-18 | Safe RXAS rule harvest | queued | Continue beyond the completed NR-09 batch only with opcode effects/liveness proof and generated rule tests, retaining rejected/deferred ledger entries. |
+| NR-18 | Safe RXAS rule harvest | complete | Adrian accepted the J1/H1 panel after the mathematical and instruction gate: 45,476 -> 45,178 in the 19-image set and 55,664 -> 54,829 in the linked library. Five common linked products are byte-identical; one changed self-test executes 19 fewer instructions in both VMs. H1 is focused-proof-only with no retained portfolio footprint. Closeout passes the complete Debug build, affected surface 63/63 and full Debug CTest 1,891/1,891. See `NR-18-WORKLIST.md`. |
 | NR-19 | Optional C LTO/PGO/code-layout experiment | queued | Optional build feature; adopt only with repeatable supported-platform evidence. |
 | NR-20 | Value/frame allocation counters and targeted pooling | queued | Gather counters first; preserve ownership and sanitizer gates. |
 | NR-26 | Typed semantic flow analysis in `rxc` | complete | Adrian accepted the F1/F2/P1 panel on the correctness-plus-instructions gate. Final focused 8/8 and broad Debug 1877/1877 pass; the exact 19-image census remains 50,965 to 50,924 instructions (`copy -11`, `icopy -30`). The corrected RexxCPS artifact passes a narrow same-session drift control with no 3% guard hit. No RXAS annotations, ISA, RXBIN or ABI change. See `NR-26-WORKLIST.md`. |
@@ -920,6 +920,78 @@ These are time-boxed evidence activities, not production commitments.
   build and 1,885/1,885 CTests in 145.65 seconds; evidence checksums and
   `git diff --check` pass. NR-27 is complete without a release-wide speedup
   claim. No push was requested.
+
+### NR-18 post-NR-27 flow-harvest work notes
+
+- 2026-07-22: Adrian selected processing of the separate NR-27 opportunity
+  review. Started from clean local `develop` at accepted NR-27 commit
+  `65ea6b9e2`, one commit ahead of `origin/develop`. The bounded combined panel
+  is producer-destination forwarding plus exact local jump-table CFG edges;
+  correctness and strict instruction reduction precede one formal timing
+  verdict. The NR-12 audit corrected the review premise: accepted NR-26 already
+  implements the narrow proved-overwritten scalar entry-copy rule, and its
+  retained portfolio found no F2 footprint, so no duplicate compiler change is
+  selected. Control record: `NR-18-WORKLIST.md`.
+- 2026-07-22: Froze the NR-18 panel before timing. H1 has exact focused
+  integer/float/compare proofs but no retained 19-image footprint. J1 resolves
+  every complete procedure-local jump-table case plus its miss edge and keeps
+  malformed or off-graph cases fail-closed. The exact census is 45,476 ->
+  45,178 (-298) with no growth: +294 unreachable and +4 typed-copy removals
+  over accepted NR-27. A one-million queue-item/liveness-word bound keeps large
+  newly admitted table procedures reachability-only; on the 95,445-line scale
+  control it retains 2,345/2,367 new removals while reducing debug assembly
+  from the unbatched 91.56 seconds to 3.65 seconds. Focused structural 6/6,
+  jump-table 42/42 and optimized/`-n` two-VM runtime 4/4 pass. The panel is
+  frozen for its ordinary profiling-off Release verdict.
+- 2026-07-22: The frozen ordinary profiling-off Release product reaches the
+  mandatory first decision stop. The linked library is 55,664 -> 54,829
+  instructions (-835, -1.500%) and 1,920 bytes smaller. Sieve, Permute, Bounce,
+  Richards and Base64 link to byte-identical accepted-NR-27/NR-18 products, so
+  a timing campaign cannot expose this change and no synthetic timing claim is
+  made. Five changed diagnostic/product paths pass baseline/candidate in both
+  ordinary and profile VM modes; the cross-runtime-matrix self-test alone has
+  a dynamic delta, 2,208 -> 2,189 (-19) in each VM. The verdict is favorable
+  code size/preparation with an exact bounded dynamic reduction, not a common-
+  portfolio wall-clock speedup. NR-18 remains provisional and uncommitted.
+- 2026-07-22: Adrian accepted the verdict and requested quality closeout plus a
+  local commit. The complete Debug build passes all 1,129 steps, the
+  consolidated optimizer/runtime/jump-table surface passes 63/63, and the full
+  Debug suite passes 1,891/1,891 in 169.38 seconds. `git diff --check` passes.
+  No sanitizer, install/package, cross-platform or repeated timing campaign was
+  added beyond the approved shortest closeout. NR-18 is complete without a
+  common-portfolio wall-clock claim; no push was requested.
+
+### IDEA-RXAS-01 — Backward producer destination forwarding
+
+- Status: accepted by focused NR-18 proof; no retained 19-image footprint
+- Hypothesis: when a classified producer writes a disposable typed temporary
+  immediately consumed by `icopy`/`fcopy` into the final register, liveness and
+  observation facts can retarget the producer destination and remove the copy.
+- Affected surfaces: `assembler/rxas_flow.c`, opcode effects, RXAS optimizer
+  diagnostics and focused assembler/VM tests; no ISA, RXBIN or ABI change.
+- Semantic risks: typed-view mismatch, final-register observation before the
+  copy, temporary observation after it, exceptional partial writes,
+  source/TRACE/register metadata, aliases/references, implicit registers and
+  physical-register overlap.
+- Evidence needed: positive/negative generated and hand-RXAS fixtures, exact
+  before/after static and bounded dynamic counts, post-NR-27 panel census and
+  both-VM runtime equivalence.
+
+### IDEA-RXAS-02 — Exact local jump-table CFG completion
+
+- Status: accepted and complete under NR-18; exact 19-image delta -298
+- Hypothesis: existing procedure-local `.jtable`/`.jcase` records can supply
+  complete case and miss/fallthrough successors for packed indirect jumps,
+  avoiding procedure-wide NR-27 fail-close without annotations or format
+  changes.
+- Affected surfaces: RXAS procedure-stream/CFG construction and focused
+  jump-table optimizer tests; emitted RXBIN and VM handlers remain unchanged.
+- Semantic risks: exact miss edge, label optimization, duplicate/missing or
+  cross-procedure tables, table variants and case ownership. Any inconsistency
+  must keep the procedure fail-closed.
+- Evidence needed: direct table-resolution audit, complete/malformed fixtures,
+  newly analyzable instruction and copy counts, and proof that an admitted
+  rewrite—not CFG construction alone—strictly reduces instructions.
 
 ### NR-12 / bounded NR-21 work notes
 

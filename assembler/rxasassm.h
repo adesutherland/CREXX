@@ -109,6 +109,15 @@ void rxasjcase(Assembler_Context *context, Assembler_Token *labelToken, Assemble
                Assembler_Token *valueToken);
 void rxasjcase_after_label(Assembler_Context *context, Assembler_Token *jcaseToken,
                            Assembler_Token *tableToken, Assembler_Token *valueToken);
+/* Read-only declared jump-table inventory used by whole-procedure control-flow
+ * analysis. A false count result means that no declaration belongs to the
+ * current procedure. Parser/packing errors still prevent module emission. */
+int rxas_jump_table_case_count(Assembler_Context *context,
+                               Assembler_Token *tableToken,
+                               size_t *count_out);
+Assembler_Token *rxas_jump_table_case_label(Assembler_Context *context,
+                                             Assembler_Token *tableToken,
+                                             size_t case_index);
 /* Source Step */
 void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,

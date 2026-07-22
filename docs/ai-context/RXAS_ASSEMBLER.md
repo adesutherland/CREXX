@@ -529,8 +529,12 @@ registers and invalidate the relevant facts. Calls and other modeled barriers
 kill availability rather than excluding an otherwise independent region.
 Registered branch SIGNAL handlers are conservative asynchronous observation
 targets for every executable instruction in the procedure. An unresolved
-label, unknown opcode or jump-table indirect branch makes control flow
-incomplete and disables all NR-27 rewrites for that procedure.
+label or unknown opcode makes control flow incomplete and disables all NR-27
+rewrites for that procedure. A packed jump-table branch is complete only when
+its procedure-local declared table, every `.jcase` label and the mandatory miss
+fallthrough are all present in the same retained procedure stream. The flow
+graph then includes every case edge plus the miss edge. Undeclared, malformed,
+cross-procedure, unsupported or off-graph-miss tables remain fail-closed.
 
 The admitted first transformation panel is deliberately narrower than the
 fact engine:
@@ -554,6 +558,28 @@ Every admitted rewrite removes at least one executable instruction and inserts
 none, so fixed-point iteration terminates by a strictly decreasing instruction
 count. `rxas -d` prints per-candidate accept/reject reasons and a per-procedure
 summary. `-n` bypasses both the local and whole-procedure optimizers.
+
+NR-18 adds one reverse direction for surviving `icopy`/`fcopy` records. For an
+immediately adjacent, classified, nonthrowing, single-kill producer, the pass
+may retarget operand 1 from a disposable local temporary to the copy's final
+local and delete the copy. The written typed view must be exact; the final view
+must be dead at the producer boundary; the temporary view must be dead after
+the copy; the producer must not read the final; and TRACE/source-step, implicit,
+alias/reference/lifetime, opaque, ownership and asynchronous-handler
+observations reject the candidate. These conditions make the original and
+retargeted states equal at every observable edge while reducing the executable
+count by one.
+
+Copy rewrites proved from one graph may be applied in the same iteration only
+when their complete physical source/destination register pairs are disjoint.
+Their substitutions then commute and cannot invalidate one another's liveness
+or availability facts. Procedures newly admitted through exact jump-table
+edges always receive reachability cleanup. Global typed-value analysis is
+additionally bounded to one million `queue-item x liveness-word` cells for
+those procedures; above the bound, `rxas -d` reports `scope=reachability-only`.
+This preserves the linear high-yield cleanup without turning large generated
+dispatch procedures into quadratic assembly work. Procedures without resolved
+indirect tables retain the established NR-27 behavior without that bound.
 
 The older compare/branch rule still reads explicit read/kill and implicit
 register facts through `rxop_effects()` inside the bounded local queue. NR-27

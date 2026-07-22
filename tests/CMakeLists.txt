@@ -118,6 +118,8 @@ crexx_add_rxas_optimizer_check(whole_procedure_flow whole_procedure_flow.rxas wh
 crexx_add_rxas_optimizer_check(whole_procedure_flow_noopt whole_procedure_flow.rxas whole_procedure_flow_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(whole_procedure_panel whole_procedure_panel.rxas whole_procedure_panel)
 crexx_add_rxas_optimizer_check(whole_procedure_panel_noopt whole_procedure_panel.rxas whole_procedure_panel_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(nr18_flow_harvest nr18_flow_harvest.rxas nr18_flow_harvest)
+crexx_add_rxas_optimizer_check(nr18_flow_harvest_noopt nr18_flow_harvest.rxas nr18_flow_harvest_noopt RXAS_FLAGS -n)
 
 add_custom_target(whole_procedure_runtime ALL)
 foreach(_nr27_runner IN ITEMS rxvm rxbvm)
@@ -132,6 +134,24 @@ foreach(_nr27_runner IN ITEMS rxvm rxbvm)
     foreach(_nr27_mode IN ITEMS noopt opt)
         set_tests_properties(whole_procedure_runtime_${_nr27_runner}_${_nr27_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "PASS: NR-27 whole-procedure runtime"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(nr18_flow_runtime ALL)
+foreach(_nr18_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME nr18_flow_runtime_${_nr18_runner}
+            SOURCE ${RXAS_OPTIMIZER_DIR}/nr18_flow_runtime
+            TARGET_GROUP nr18_flow_runtime
+            RUNNER ${_nr18_runner}
+            DEPENDS ${RXAS_OPTIMIZER_DIR}/nr18_flow_runtime.rxas rxas ${_nr18_runner} rxlink
+            TEST_LABELS "rxas;optimizer;runtime"
+    )
+    foreach(_nr18_mode IN ITEMS noopt opt)
+        set_tests_properties(nr18_flow_runtime_${_nr18_runner}_${_nr18_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-18 flow runtime"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

@@ -1,0 +1,13 @@
+path,vm,baseline_instructions,candidate_instructions,delta,result
+nr03_evidence_tool_selftest_opt,rxvm,2410,2410,0,PASS
+nr03_evidence_tool_selftest_opt,rxbvm,2410,2410,0,PASS
+nr10_cross_runtime_matrix_selftest_opt,rxvm,2208,2189,-19,PASS
+nr10_cross_runtime_matrix_selftest_opt,rxbvm,2208,2189,-19,PASS
+nr10_lifecycle_tool_selftest_opt,rxvm,388,388,0,PASS
+nr10_lifecycle_tool_selftest_opt,rxbvm,388,388,0,PASS
+nr10_artifact_inventory_selftest_opt,rxvm,354,354,0,PASS
+nr10_artifact_inventory_selftest_opt,rxbvm,354,354,0,PASS
+benchmark_parse_frozen_generic_opt,rxvm,522,522,0,PASS
+benchmark_parse_frozen_generic_opt,rxbvm,522,522,0,PASS
+benchmark_runner_opt_sieve_dispatch,rxvm,11601,11601,0,PASS
+benchmark_runner_opt_sieve_dispatch,rxbvm,11601,11601,0,PASS

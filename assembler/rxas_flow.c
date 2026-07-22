@@ -32,8 +32,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FLOW_MAX_SUCCESSORS 3
 #define FLOW_WORD_BITS (sizeof(unsigned long) * 8)
+/* Bound global value analysis only for procedures newly admitted by exact
+ * indirect-table edges.  Reachability remains linear and unbounded. */
+#define FLOW_MAX_INDIRECT_VALUE_CELLS 1000000
 
 enum flow_view {
     FLOW_VIEW_INTEGER,
@@ -58,8 +60,9 @@ typedef struct flow_register {
 typedef struct flow_node {
     const OpInfo *op;
     RxOpEffects effects;
-    size_t successors[FLOW_MAX_SUCCESSORS];
+    size_t *successors;
     size_t successor_count;
+    size_t successor_capacity;
     size_t block;
     int unknown_successor;
     int reachable;
@@ -87,6 +90,7 @@ typedef struct flow_graph {
     size_t async_handler_target_capacity;
     unsigned char *tainted_registers;
     size_t block_count;
+    size_t resolved_indirect_branches;
     int complete_control_flow;
 } flow_graph;
 
@@ -101,6 +105,7 @@ typedef struct flow_stats {
     size_t redundant_loads_removed;
     size_t redundant_initializations_removed;
     size_t redundant_conversions_removed;
+    size_t producer_destinations_forwarded;
     size_t operands_redirected;
     size_t rejected_live;
     size_t rejected_trace;
@@ -137,7 +142,8 @@ static int flow_mnemonic_matches(const char *mnemonic, const char *table_name) {
     return table_name[index] == 0 || table_name[index] == '_';
 }
 
-static const OpInfo *flow_find_opcode(const instruction_queue *item) {
+static const OpInfo *flow_find_opcode(Assembler_Context *context,
+                                      const instruction_queue *item) {
     const char *mnemonic;
     size_t operand_index;
     int table_index;
@@ -151,8 +157,18 @@ static const OpInfo *flow_find_opcode(const instruction_queue *item) {
         if (rxop_format_operand_count(op_table[table_index].format) != item->operandCount) continue;
         matches = 1;
         for (operand_index = 0; operand_index < item->operandCount; operand_index++) {
-            if (rxop_format_operand_type(op_table[table_index].format, operand_index) !=
-                flow_operand_type(rxas_queue_operand(item, operand_index))) {
+            OperandType expected;
+            OperandType actual;
+            Assembler_Token *operand;
+            size_t jump_table_cases;
+            expected = rxop_format_operand_type(op_table[table_index].format,
+                                                operand_index);
+            operand = rxas_queue_operand(item, operand_index);
+            actual = flow_operand_type(operand);
+            if (expected != actual &&
+                !(expected == OP_BINARY && actual == OP_ID &&
+                  rxas_jump_table_case_count(context, operand,
+                                             &jump_table_cases))) {
                 matches = 0;
                 break;
             }
@@ -367,7 +383,7 @@ static void flow_collect_registers(flow_graph *graph) {
         if (item->instrType == OP_CODE) {
             for (operand_index = 0; operand_index < item->operandCount; operand_index++)
                 flow_add_register(graph, rxas_queue_operand(item, operand_index));
-            op = flow_find_opcode(item);
+            op = flow_find_opcode(graph->context, item);
             if (!op) continue;
             effects = rxop_effects(op->opcode);
             if ((effects.implicit == RXOP_IMPLICIT_LOCAL_COPY ||
@@ -408,7 +424,7 @@ static void flow_collect_registers(flow_graph *graph) {
 
 static int flow_label_index(const flow_graph *graph, Assembler_Token *token) {
     size_t index;
-    if (!token || token->token_type != ID) return -1;
+    if (!token || (token->token_type != ID && token->token_type != LABEL)) return -1;
     for (index = 0; index < graph->item_count; index++) {
         if (graph->items[index].instrType == ASM_LABEL &&
             graph->items[index].instrToken &&
@@ -420,14 +436,71 @@ static int flow_label_index(const flow_graph *graph, Assembler_Token *token) {
     return -1;
 }
 
-static void flow_add_successor(flow_node *node, size_t successor) {
+static void flow_add_successor(flow_graph *graph, flow_node *node,
+                               size_t successor) {
     size_t index;
+    size_t new_capacity;
+    size_t *new_successors;
     for (index = 0; index < node->successor_count; index++)
         if (node->successors[index] == successor) return;
-    if (node->successor_count < FLOW_MAX_SUCCESSORS)
-        node->successors[node->successor_count++] = successor;
-    else
-        node->unknown_successor = 1;
+    if (node->successor_count == node->successor_capacity) {
+        new_capacity = node->successor_capacity
+                ? node->successor_capacity * 2 : 4;
+        new_successors = realloc(node->successors,
+                                 new_capacity * sizeof(*new_successors));
+        if (!new_successors)
+            RX_PANIC_OOM("realloc RXAS flow successors",
+                         new_capacity * sizeof(*new_successors),
+                         graph->context && graph->context->file_name
+                                 ? graph->context->file_name : 0);
+        node->successors = new_successors;
+        node->successor_capacity = new_capacity;
+    }
+    node->successors[node->successor_count++] = successor;
+}
+
+static Assembler_Token *flow_jump_table_operand(const flow_node *node,
+                                                const instruction_queue *item) {
+    size_t operand_index;
+    if (!node || !node->op || !item) return 0;
+    switch (node->op->opcode) {
+        case OP_JUMPS_REG_BINARY:
+        case OP_JUMPB_REG_BINARY:
+        case OP_JUMPI_REG_BINARY:
+        case OP_JUMPR_REG_BINARY:
+        case OP_JUMPN_REG_BINARY:
+            operand_index = 1;
+            break;
+        case OP_JUMPBS_REG_REG_BINARY:
+            operand_index = 2;
+            break;
+        default:
+            return 0;
+    }
+    return rxas_queue_operand(item, operand_index);
+}
+
+static int flow_add_jump_table_successors(flow_graph *graph, flow_node *node,
+                                          instruction_queue *item,
+                                          unsigned char *leaders) {
+    Assembler_Token *table;
+    Assembler_Token *label;
+    size_t case_count;
+    size_t case_index;
+    int label_index;
+
+    table = flow_jump_table_operand(node, item);
+    if (!table ||
+        !rxas_jump_table_case_count(graph->context, table, &case_count))
+        return 0;
+    for (case_index = 0; case_index < case_count; case_index++) {
+        label = rxas_jump_table_case_label(graph->context, table, case_index);
+        label_index = flow_label_index(graph, label);
+        if (label_index < 0) return 0;
+        flow_add_successor(graph, node, (size_t)label_index);
+        leaders[label_index] = 1;
+    }
+    return 1;
 }
 
 static int flow_build_edges(flow_graph *graph) {
@@ -452,14 +525,16 @@ static int flow_build_edges(flow_graph *graph) {
         node = &graph->nodes[index];
         item = &graph->items[index];
         if (item->instrType != OP_CODE) {
-            if (index + 1 < graph->item_count) flow_add_successor(node, index + 1);
+            if (index + 1 < graph->item_count)
+                flow_add_successor(graph, node, index + 1);
             continue;
         }
-        node->op = flow_find_opcode(item);
+        node->op = flow_find_opcode(graph->context, item);
         if (!node->op) {
             graph->complete_control_flow = 0;
             node->unknown_successor = 1;
-            if (index + 1 < graph->item_count) flow_add_successor(node, index + 1);
+            if (index + 1 < graph->item_count)
+                flow_add_successor(graph, node, index + 1);
             continue;
         }
         node->effects = rxop_effects(node->op->opcode);
@@ -473,18 +548,25 @@ static int flow_build_edges(flow_graph *graph) {
                 node->unknown_successor = 1;
             }
             else {
-                flow_add_successor(node, (size_t)label_index);
+                flow_add_successor(graph, node, (size_t)label_index);
                 leaders[label_index] = 1;
             }
         }
         if (node->effects.semantics & RXOP_SEM_INDIRECT_BRANCH) {
-            node->unknown_successor = 1;
-            graph->complete_control_flow = 0;
+            /* Every packed-table lookup falls through on a miss.  A table at
+             * the end of the retained procedure has an off-graph successor,
+             * so it is not a complete procedure-local CFG. */
+            if (index + 1 >= graph->item_count ||
+                !flow_add_jump_table_successors(graph, node, item, leaders)) {
+                node->unknown_successor = 1;
+                graph->complete_control_flow = 0;
+            }
+            else graph->resolved_indirect_branches++;
         }
         if (node->op->flow == FLOW_NEXT ||
             (node->op->flow == FLOW_COND && target_count < 2)) {
             if (index + 1 < graph->item_count) {
-                flow_add_successor(node, index + 1);
+                flow_add_successor(graph, node, index + 1);
                 if (node->op->flow != FLOW_NEXT) leaders[index + 1] = 1;
             }
         }
@@ -779,6 +861,9 @@ static int flow_build_graph(flow_graph *graph, Assembler_Context *context,
 }
 
 static void flow_free_graph(flow_graph *graph) {
+    size_t index;
+    for (index = 0; index < graph->item_count; index++)
+        free(graph->nodes[index].successors);
     free(graph->nodes);
     free(graph->registers);
     free(graph->bit_storage);
@@ -838,6 +923,18 @@ static int flow_has_trace_after(const flow_graph *graph, size_t item_index) {
          * observation of that instruction and must not drift. */
         if (graph->items[index].instrType == OP_CODE) return 0;
         if (graph->items[index].instrType == TRACE_EVENT) return 1;
+    }
+    return 0;
+}
+
+static int flow_has_address_observation_after(const flow_graph *graph,
+                                              size_t item_index) {
+    size_t index;
+    for (index = item_index + 1; index < graph->item_count; index++) {
+        if (graph->items[index].instrType == OP_CODE) return 0;
+        if (graph->items[index].instrType == TRACE_EVENT ||
+            graph->items[index].instrType == SRC_STEP)
+            return 1;
     }
     return 0;
 }
@@ -1348,15 +1445,189 @@ static size_t flow_propagate_one_copy(flow_graph *graph, size_t copy_index,
 
 static size_t flow_propagate_copies(flow_graph *graph, flow_stats *stats) {
     size_t index;
+    size_t changed;
     size_t removed;
+    int destination_register;
+    int source_register;
+    instruction_queue *item;
+    Assembler_Token *destination;
+    Assembler_Token *source;
+    unsigned char *claimed_registers;
+
     removed = 0;
     flow_compute_liveness(graph);
+    claimed_registers = calloc(graph->register_count ? graph->register_count : 1, 1);
+    if (!claimed_registers)
+        RX_PANIC_OOM("calloc RXAS copy-propagation batch",
+                     graph->register_count, 0);
     for (index = 0; index < graph->item_count; index++) {
         if (!graph->nodes[index].reachable || graph->items[index].instrType != OP_CODE) continue;
-        removed = flow_propagate_one_copy(graph, index, stats);
-        if (removed) return removed;
+        item = &graph->items[index];
+        destination_register = -1;
+        source_register = -1;
+        if (item->operandCount == 2) {
+            destination = rxas_queue_operand(item, 0);
+            source = rxas_queue_operand(item, 1);
+            if (flow_register_type(destination) &&
+                destination->token_value.integer >= 0)
+                destination_register = flow_register_index(graph,
+                        flow_register_type(destination),
+                        (size_t)destination->token_value.integer);
+            if (flow_register_type(source) && source->token_value.integer >= 0)
+                source_register = flow_register_index(graph,
+                        flow_register_type(source),
+                        (size_t)source->token_value.integer);
+        }
+        /* Proofs computed from one graph compose when their complete physical
+         * register pairs are disjoint.  Their substitutions then commute and
+         * cannot change one another's liveness or availability facts. */
+        if ((destination_register >= 0 &&
+             claimed_registers[destination_register]) ||
+            (source_register >= 0 && claimed_registers[source_register]))
+            continue;
+        changed = flow_propagate_one_copy(graph, index, stats);
+        if (!changed) continue;
+        removed += changed;
+        if (destination_register >= 0)
+            claimed_registers[destination_register] = 1;
+        if (source_register >= 0) claimed_registers[source_register] = 1;
     }
-    return 0;
+    free(claimed_registers);
+    return removed;
+}
+
+/* Retarget a single, component-exact, nonthrowing producer into the destination
+ * of its immediately following typed copy.  At the producer boundary the old
+ * destination component must be dead; after the copy the temporary component
+ * must be dead.  Those two liveness facts, including the conservative async
+ * handler edges, prove the two streams observationally equivalent while the
+ * immediate adjacency prevents any intervening observation. */
+static size_t flow_forward_producer_destination(flow_graph *graph,
+                                                flow_stats *stats) {
+    size_t producer_index;
+    size_t operand_index;
+    size_t write_count;
+    instruction_queue *producer;
+    instruction_queue *copy;
+    flow_node *producer_node;
+    flow_node *copy_node;
+    Assembler_Token *temporary;
+    Assembler_Token *destination;
+    Assembler_Token *operand;
+    int temporary_register;
+    int destination_register;
+    unsigned int views;
+    unsigned char *claimed_registers;
+    size_t forwarded;
+
+    flow_compute_liveness(graph);
+    claimed_registers = calloc(graph->register_count ? graph->register_count : 1, 1);
+    if (!claimed_registers)
+        RX_PANIC_OOM("calloc RXAS producer-forward batch",
+                     graph->register_count, 0);
+    forwarded = 0;
+    for (producer_index = 0; producer_index + 1 < graph->item_count;
+         producer_index++) {
+        producer = &graph->items[producer_index];
+        copy = &graph->items[producer_index + 1];
+        producer_node = &graph->nodes[producer_index];
+        copy_node = &graph->nodes[producer_index + 1];
+        if (!producer_node->reachable || !copy_node->reachable ||
+            producer->instrType != OP_CODE || copy->instrType != OP_CODE ||
+            !producer_node->op || !copy_node->op ||
+            producer_node->effects.state != RXOP_EFFECT_CLASSIFIED ||
+            producer_node->op->flow != FLOW_NEXT ||
+            producer_node->effects.optimizer_barrier ||
+            producer_node->effects.implicit != RXOP_IMPLICIT_NONE ||
+            producer_node->effects.semantics != RXOP_SEM_NONE ||
+            producer->operandCount == 0 || copy->operandCount != 2)
+            continue;
+
+        switch (copy_node->op->opcode) {
+            case OP_ICOPY_REG_REG:
+                views = FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
+                break;
+            case OP_FCOPY_REG_REG:
+                views = FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
+                break;
+            default:
+                continue;
+        }
+        if (copy_node->effects.state != RXOP_EFFECT_CLASSIFIED ||
+            copy_node->effects.semantics != RXOP_SEM_NONE)
+            continue;
+
+        temporary = rxas_queue_operand(producer, 0);
+        destination = rxas_queue_operand(copy, 0);
+        if (flow_register_type(temporary) != 'r' ||
+            flow_register_type(rxas_queue_operand(copy, 1)) != 'r' ||
+            flow_register_type(destination) != 'r')
+            continue;
+        temporary_register = flow_register_index(graph, 'r',
+                (size_t)temporary->token_value.integer);
+        destination_register = flow_register_index(graph, 'r',
+                (size_t)destination->token_value.integer);
+        if (temporary_register < 0 || destination_register < 0 ||
+            temporary_register == destination_register ||
+            flow_register_index(graph, 'r',
+                    (size_t)rxas_queue_operand(copy, 1)->token_value.integer) !=
+                    temporary_register)
+            continue;
+        if (claimed_registers[temporary_register] ||
+            claimed_registers[destination_register])
+            continue;
+        if (graph->tainted_registers[temporary_register] ||
+            graph->tainted_registers[destination_register]) {
+            stats->rejected_tainted++;
+            continue;
+        }
+
+        write_count = 0;
+        for (operand_index = 0; operand_index < producer->operandCount;
+             operand_index++) {
+            operand = rxas_queue_operand(producer, operand_index);
+            if (rxop_effect_writes_operand(&producer_node->effects,
+                                           operand_index)) {
+                write_count++;
+                if (operand_index != 0) write_count = producer->operandCount + 1;
+            }
+            if (operand_index > 0 && flow_register_type(operand) == 'r' &&
+                flow_register_index(graph, 'r',
+                        (size_t)operand->token_value.integer) ==
+                        destination_register)
+                write_count = producer->operandCount + 1;
+        }
+        if (write_count != 1 ||
+            rxop_effect_reads_operand(&producer_node->effects, 0) ||
+            !rxop_effect_kills_operand(&producer_node->effects, 0) ||
+            flow_precise_write_views(producer_node->op->opcode, 0) != views) {
+            stats->rejected_effect++;
+            continue;
+        }
+        if (flow_has_address_observation_after(graph, producer_index + 1)) {
+            stats->rejected_trace++;
+            continue;
+        }
+        if (!flow_destination_dead(graph, producer_index,
+                                   destination_register, views) ||
+            !flow_destination_dead(graph, producer_index + 1,
+                                   temporary_register, views)) {
+            stats->rejected_live++;
+            continue;
+        }
+
+        flow_set_operand(producer, 0, destination);
+        copy->instrType = EMPTY;
+        flow_debug_accept(graph, producer_index,
+                          "producer-destination-forwarded", 1);
+        stats->producer_destinations_forwarded++;
+        stats->typed_copies_removed++;
+        claimed_registers[temporary_register] = 1;
+        claimed_registers[destination_register] = 1;
+        forwarded++;
+    }
+    free(claimed_registers);
+    return forwarded;
 }
 
 static int flow_same_literal(const Assembler_Token *left,
@@ -1543,7 +1814,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "NR27 flow procedure=%s blocks=%llu registers=%llu instructions=%llu->%llu "
             "unreachable=%llu dead=%llu typed-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
-            "redundant-conversion=%llu redirects=%llu "
+            "redundant-conversion=%llu producer-forward=%llu redirects=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
             (unsigned long long)graph->block_count,
@@ -1558,6 +1829,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->redundant_loads_removed,
             (unsigned long long)stats->redundant_initializations_removed,
             (unsigned long long)stats->redundant_conversions_removed,
+            (unsigned long long)stats->producer_destinations_forwarded,
             (unsigned long long)stats->operands_redirected,
             (unsigned long long)stats->rejected_live,
             (unsigned long long)stats->rejected_trace,
@@ -1572,6 +1844,13 @@ static size_t flow_instruction_count(instruction_queue *items, size_t item_count
     for (index = 0; index < item_count; index++)
         if (items[index].instrType == OP_CODE) count++;
     return count;
+}
+
+static int flow_value_analysis_within_bound(const flow_graph *graph) {
+    if (!graph->resolved_indirect_branches) return 1;
+    if (!graph->word_count) return 1;
+    return graph->item_count <=
+           FLOW_MAX_INDIRECT_VALUE_CELLS / graph->word_count;
 }
 
 void rxas_flow_optimise(Assembler_Context *context,
@@ -1605,10 +1884,21 @@ void rxas_flow_optimise(Assembler_Context *context,
         }
         else {
             changed = flow_remove_unreachable(&graph, &stats);
-            if (!changed) changed += flow_propagate_copies(&graph, &stats);
-            if (!changed) changed += flow_remove_redundant_loads(&graph, &stats);
-            if (!changed) changed += flow_remove_redundant_initializations(&graph, &stats);
-            if (!changed) changed += flow_remove_redundant_conversions(&graph, &stats);
+            if (!changed && flow_value_analysis_within_bound(&graph)) {
+                changed += flow_propagate_copies(&graph, &stats);
+                if (!changed) changed += flow_forward_producer_destination(&graph, &stats);
+                if (!changed) changed += flow_remove_redundant_loads(&graph, &stats);
+                if (!changed) changed += flow_remove_redundant_initializations(&graph, &stats);
+                if (!changed) changed += flow_remove_redundant_conversions(&graph, &stats);
+            }
+            else if (!changed && context->debug_mode) {
+                fprintf(stderr,
+                        "NR27 bound procedure=%s scope=reachability-only "
+                        "value-cells=%llu limit=%llu\n",
+                        context->current_proc_name,
+                        (unsigned long long)(graph.item_count * graph.word_count),
+                        (unsigned long long)FLOW_MAX_INDIRECT_VALUE_CELLS);
+            }
             /* P3 dead-result deletion is deliberately absent. A nominal
              * integer/float write may release hidden reference or native
              * payload state; numeric liveness alone cannot prove that effect
