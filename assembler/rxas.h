@@ -105,6 +105,9 @@ typedef struct Assembler_Context {
     char *current_proc_name;
     instruction_queue *optimiser_queue;
     size_t optimiser_queue_items;
+    instruction_queue *procedure_queue;
+    size_t procedure_queue_items;
+    size_t procedure_queue_capacity;
     int optimiser_counter;
     FILE *traceFile;
     int debug_mode;

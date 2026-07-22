@@ -60,6 +60,7 @@ null_boundary() .locals=8
 loadcopy_mismatch() .locals=8
     load r0,10
     icopy r1,r2
+    say r1
     ret
 
 loads_boundary() .locals=8

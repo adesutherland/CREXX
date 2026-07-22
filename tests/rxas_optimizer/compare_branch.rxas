@@ -121,6 +121,7 @@ case_live_bool_target() .locals=5
     load r0,0
 preserve_bool:
     load r3,0
+    say r3
     brt done,r0
 done:
     ret
@@ -131,6 +132,7 @@ case_live_bool_target_igt() .locals=5
     load r0,0
 preserve_gt_bool:
     load r3,0
+    say r3
     brt done_gt,r0
 done_gt:
     ret

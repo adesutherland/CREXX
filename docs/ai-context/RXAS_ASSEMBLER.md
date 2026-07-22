@@ -501,8 +501,8 @@ inventory size.
   derived from the canonical `rxops.h` flow/flags. A non-classified state also
   forces the returned barrier bit.
 
-The current inventory has 641 entries: 540 source opcodes (534 classified and
-six explicitly conservative process/redirect operations), 98 reserved slots
+The current inventory has 641 entries: 582 source opcodes (576 classified and
+six explicitly conservative process/redirect operations), 56 reserved slots
 and three internal handlers. Coverage is not inferred from an instruction name
 or format. The audit used the VM handlers between `START_OF_INSTRUCTIONS` and
 `END_OF_INSTRUCTIONS`, the assembler/compiler behavior described here, and
@@ -511,14 +511,58 @@ operand-mask legality, flow/branch/call/implicit consistency, source coverage,
 reserved/internal treatment and fail-closed unknown queries; they do not claim
 to parse arbitrary C handler bodies formally.
 
-The current compare/branch liveness check is intentionally bounded to the
-assembler queue and known labels. It now reads explicit read/kill and implicit
-register facts through `rxop_effects()`, follows declared jump edges, stops at
-terminators, and treats every returned optimizer barrier or non-classified
-opcode as a possible observation of the live register. It is not a general
-control-flow graph or alias analysis, and NR-04 adds no new optimization.
-`test_rxop_metadata` is generated from `op_table` and the complete effects
-sidecar so instructions cannot be added without a mechanically aligned entry.
+NR-27 adds a transient whole-procedure machine-flow layer after the unchanged
+20-item local peephole and before ordinary RXBIN emission. Stable peephole
+output is moved, with its token ownership, into a growable procedure stream.
+The assembler then builds resolved label successors/predecessors, reachability,
+typed-view liveness and transformation-specific must-availability/may-reach
+facts over the original queue records. Surviving records still pass through the
+same assembler emission functions; RXAS syntax, canonical RXBIN and the public
+ABI do not change.
+
+The NR-27 register universe distinguishes local (`r`), argument (`a`) and
+global (`g`) register classes and tracks integer, float, string, decimal,
+binary, attribute and reference views. Explicit and implicit accesses come
+from `rxop_effects()`. Register metadata and register-backed TRACE records are
+observations. Alias/reference/lifetime/indirect/opaque operations taint involved
+registers and invalidate the relevant facts. Calls and other modeled barriers
+kill availability rather than excluding an otherwise independent region.
+Registered branch SIGNAL handlers are conservative asynchronous observation
+targets for every executable instruction in the procedure. An unresolved
+label, unknown opcode or jump-table indirect branch makes control flow
+incomplete and disables all NR-27 rewrites for that procedure.
+
+The admitted first transformation panel is deliberately narrower than the
+fact engine:
+
+- `icopy`, `fcopy` and strict-comparison uses of `scopy` may be redirected only
+  when the typed source view is unchanged on every path and every may-reaching
+  destination observation can be redirected atomically; decimal copy remains
+  excluded because it can allocate and signal;
+- an exact self `copy` is removed because the VM handler is explicitly a
+  no-op, while nonidentity full-value copies remain excluded pending ownership,
+  payload, attribute, flag and cleanup proof;
+- repeated identical integer/bitwise-equal float loads, repeated `null`, and
+  repeated one-register `itof` are removed only under a must-available fact;
+- unreachable instructions, TRACE records and source-step records are removed
+  only when the entire procedure CFG is complete; and
+- dead-result deletion remains disabled because a nominal numeric destination
+  write may release hidden reference or native-payload state even when its
+  numeric result is dead.
+
+Every admitted rewrite removes at least one executable instruction and inserts
+none, so fixed-point iteration terminates by a strictly decreasing instruction
+count. `rxas -d` prints per-candidate accept/reject reasons and a per-procedure
+summary. `-n` bypasses both the local and whole-procedure optimizers.
+
+The older compare/branch rule still reads explicit read/kill and implicit
+register facts through `rxop_effects()` inside the bounded local queue. NR-27
+does not change that rule's selection boundary. `test_rxop_metadata` is
+generated from `op_table` and the complete effects sidecar so instructions
+cannot be added without a mechanically aligned entry. The NR-27 effects audit
+also records that decimal literal load and decimal copy may signal, while
+one- and two-register integer-to-float conversion and float comparison are
+non-signalling in the current VM handlers.
 
 Attribute/register-view cleanup is also a keyhole concern. A full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately

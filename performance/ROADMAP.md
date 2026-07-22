@@ -849,6 +849,7 @@ coverage gaps are in
 | NR-19 | Optional C LTO/PGO/code-layout experiment | queued | Optional build feature; adopt only with repeatable supported-platform evidence. |
 | NR-20 | Value/frame allocation counters and targeted pooling | queued | Gather counters first; preserve ownership and sanitizer gates. |
 | NR-26 | Typed semantic flow analysis in `rxc` | complete | Adrian accepted the F1/F2/P1 panel on the correctness-plus-instructions gate. Final focused 8/8 and broad Debug 1877/1877 pass; the exact 19-image census remains 50,965 to 50,924 instructions (`copy -11`, `icopy -30`). The corrected RexxCPS artifact passes a narrow same-session drift control with no 3% guard hit. No RXAS annotations, ISA, RXBIN or ABI change. See `NR-26-WORKLIST.md`. |
+| NR-27 | Whole-procedure machine flow analysis in RXAS | complete | Adrian accepted the annotation-free RXAS panel on the mathematical-correctness plus instruction gate: 46,469 -> 45,476 instructions (-993) and Richards executes 59,880 fewer instructions per VM. Formal profiling-off Release timing is no-regression but mostly neutral/noisy: five-workload median-throughput geometric mean -0.552%/+0.323% (`rxvm`/`rxbvm`), with only Richards/`rxbvm` clearly favorable at -0.238% paired elapsed. No 1% aggregate or 3% workload guard is hit. Full Debug build and CTest 1,885/1,885 pass; see `NR-27-WORKLIST.md`. |
 
 ## P1 architecture-neutral prototypes
 
@@ -863,6 +864,62 @@ These are time-boxed evidence activities, not production commitments.
 | NR-25 | Value hot/cold split or pool allocator | queued | Do cache/allocation counters justify the ownership and complexity cost? |
 
 ## Idea ledger
+
+### NR-27 work notes
+
+- 2026-07-22: Started from clean synchronized `develop` at `25cbca679`, an
+  accepted one-commit successor to the requested `4ab5f3d8d` baseline. The
+  intervening commit is the completed NR-26 typed semantic-flow panel; NR-27
+  remains independent, consumes only ordinary RXAS plus canonical opcode
+  effects and adds no compiler annotations or private contract.
+- 2026-07-22: Adrian replaced the per-slice first-Release timing stop with an
+  activity-specific panel-first gate. Complete and review the bounded NR-27
+  transformation panel using mathematical semantic correctness and instruction
+  reduction as the production-candidate gates. Only after the panel is complete
+  run the consolidated profiling-off Release baseline under the normal formal
+  sampling and regression policy. Negative/rejected candidates remain in the
+  panel record; instruction reduction is proof of removed machine work, not a
+  wall-clock claim.
+- 2026-07-22: Selected a hybrid procedure-stream design. Keep the existing
+  20-item local peephole semantics unchanged, retire its stable output into a
+  dynamically sized internal per-procedure stream, and construct blocks, CFG
+  edges and bitset dataflow over that stream before ordinary RXBIN emission.
+  This is the smallest representation that preserves old rule boundaries while
+  supporting hand-written and compiler-generated RXAS equally. Sparse def-use
+  chains are derived only where needed; SSA is deferred because it adds rename,
+  metadata and lowering complexity without being required by the initial panel.
+- 2026-07-22: Froze the completed panel on the mathematical-correctness and
+  instruction-reduction gate. Accepted bounded forms are typed `icopy`/`fcopy`
+  and strict-string-use `scopy` propagation, identity full copy, exact repeated
+  int/bitwise-float load, `null`/context-free `itof`, complete-CFG reachability,
+  and the typed-copy compare subset. `dcopy`, nonidentity full copy, broader
+  loads/conversions and conversion-to-compare remain deferred. P3 dead-result
+  deletion was removed and rejected because a nominal numeric write can release
+  hidden reference/native-payload state. Unknown or jump-table indirect control
+  flow now disables all NR-27 rewrites for that procedure.
+- 2026-07-22: Final pre-timing evidence is exact. The 19-image optimized-source
+  census is 46,469 -> 45,476 (-993) across nine changed images with no growth:
+  979 unreachable instructions and 14 typed copies over 154 procedures. The
+  retained pre-NR-27 versus candidate Richards image executes
+  9,179,035 -> 9,119,155 instructions (-59,880, -0.652356%) identically in
+  `rxvm` and `rxbvm`, with matching PASS/queue/hold results. An isolated
+  hand-RXAS panel executes 28 -> 22 instructions in each VM. The panel is now
+  frozen for the consolidated ordinary profiling-off Release verdict.
+- 2026-07-22: The consolidated ordinary profiling-off Release verdict is
+  retained under `evidence/2026-07-22-nr-27-panel-verdict/`. All 708 executions
+  pass. Governed expansion reaches 34 paired rounds for Sieve, Permute, Bounce
+  and Base64 and 36 for Richards. The equal-weight five-workload median-
+  throughput geometric mean is -0.552%/+0.323% (`rxvm`/`rxbvm`), within the 1%
+  guard; no workload paired median hits the 3% guard. Richards/`rxbvm` is the
+  only clear lane (-0.238% median elapsed, mean 95% interval -0.705% to
+  -0.097%); every other interval crosses zero. NR-27 is at the mandatory first-
+  Release decision stop, provisional and uncommitted, without a release-wide
+  speedup claim.
+- 2026-07-22: Adrian accepted the panel and requested local commit followed by
+  a separate opportunity review. The unchanged closeout passes a full Debug
+  build and 1,885/1,885 CTests in 145.65 seconds; evidence checksums and
+  `git diff --check` pass. NR-27 is complete without a release-wide speedup
+  claim. No push was requested.
 
 ### NR-12 / bounded NR-21 work notes
 

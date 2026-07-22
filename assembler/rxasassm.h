@@ -76,6 +76,11 @@ void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 /* Flush the optimiser queue */
 void flushopt(Assembler_Context *context);
 
+/* Run the transient whole-procedure machine-flow pass before emission. */
+void rxas_flow_optimise(Assembler_Context *context,
+                        instruction_queue *items,
+                        size_t item_count);
+
 /* Generate code for an instructions */
 void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,
               Assembler_Token *const *operandTokens, size_t operandCount);

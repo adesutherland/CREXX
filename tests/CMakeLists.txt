@@ -114,6 +114,28 @@ crexx_add_rxas_optimizer_check(barrier_metaloadmodule barrier_metaloadmodule.rxa
 crexx_add_rxas_optimizer_check(nr09_class1 nr09_class1.rxas nr09_class1)
 crexx_add_rxas_optimizer_check(nr09_class1_noopt nr09_class1.rxas nr09_class1_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(nr09_class1_boundaries nr09_class1_boundaries.rxas nr09_class1_boundaries)
+crexx_add_rxas_optimizer_check(whole_procedure_flow whole_procedure_flow.rxas whole_procedure_flow)
+crexx_add_rxas_optimizer_check(whole_procedure_flow_noopt whole_procedure_flow.rxas whole_procedure_flow_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(whole_procedure_panel whole_procedure_panel.rxas whole_procedure_panel)
+crexx_add_rxas_optimizer_check(whole_procedure_panel_noopt whole_procedure_panel.rxas whole_procedure_panel_noopt RXAS_FLAGS -n)
+
+add_custom_target(whole_procedure_runtime ALL)
+foreach(_nr27_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME whole_procedure_runtime_${_nr27_runner}
+            SOURCE ${RXAS_OPTIMIZER_DIR}/whole_procedure_runtime
+            TARGET_GROUP whole_procedure_runtime
+            RUNNER ${_nr27_runner}
+            DEPENDS ${RXAS_OPTIMIZER_DIR}/whole_procedure_runtime.rxas rxas ${_nr27_runner} rxlink
+            TEST_LABELS "rxas;optimizer;runtime"
+    )
+    foreach(_nr27_mode IN ITEMS noopt opt)
+        set_tests_properties(whole_procedure_runtime_${_nr27_runner}_${_nr27_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-27 whole-procedure runtime"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
 
 crexx_label_smoke_tests(rxas_optimizer_copy_acopy_opt)
 
