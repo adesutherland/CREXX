@@ -1,0 +1,6 @@
+7ecda82623e76e6172e8c7d77162b491f9b3ceca242d8205b5185bba861fab81  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-fixed1024/images/library.rxbin
+0a705fea99b6493d75c33dfcce818d0a4ca086c995e9fc0167639b013285b862  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-fixed1024/images/nr15_stem_access_noopt-unlinked.rxbin
+05b7847e08d21c66e0dddeaf3395981db9666660d9c53857ad6da638558662ac  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-fixed1024/images/nr15_stem_access_noopt.rxbin
+baf3f19f825922f048b5bcfd461c33022cea592283249792cab27dcffa11792b  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-fixed1024/images/nr15_stem_access_opt-unlinked.rxbin
+4470b8abdf93dc8c816f80a8dd9e940b9422f3f07a6f145ea107b53f067e9217  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-fixed1024/images/nr15_stem_access_opt.rxbin
+8fd2220e8854e3cd75930d5e97c174a749c63218db713661950935e71dc4844c  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-fixed1024/static/stem.rxas

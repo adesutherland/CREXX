@@ -1066,6 +1066,374 @@ main() .locals=3
 
 `mkref`, `deref`, `linkref`.
 
+## `stemget`
+
+Read one string key from the private native stem representation.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0282` | `stemget rDst,rStem,rKey` | Copy the key's current value or the current default into `rDst`. |
+
+### Operands And Semantics
+
+`rStem` owns a private versioned hash-table representation. A receiver with no
+binary payload is initialized lazily. `rKey` is hashed and compared as exact
+UTF-8 bytes; the key and stem are not modified. A stored entry from an older
+default generation reads as the current default until that key is written
+again. Destination replacement is allocation-failure atomic.
+
+### Signals
+
+Raises `UNICODE_ERROR` for an invalid key, `FAILURE` for allocation failure,
+capacity overflow, or corrupt private metadata.
+
+### Example
+
+<!-- rxas-example name="stem-stemget" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=4
+    steminit r0
+    load r1,"answer"
+    load r2,"42"
+    stemset r0,r1,r2
+    stemget r3,r0,r1
+    ret
+```
+
+### Related
+
+`stemget2`, `stemset`, `stemreset`.
+
+## `stemget2`
+
+Read a two-segment key without materializing the joined key on the lookup path.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0285` | `stemget2 rDst,rStem,rLeft,rRight` | Read `rLeft || "." || rRight`. |
+
+### Operands And Semantics
+
+The VM streams both UTF-8 byte sequences and the single separator through the
+same hash and equality contract as a materialized key. Hit and miss paths do
+not allocate a key string. The logical key is therefore exactly equivalent to
+one passed to `stemget`, including empty left or right segments.
+
+### Signals
+
+Raises `UNICODE_ERROR` for either invalid segment and the same `FAILURE`
+conditions as `stemget`.
+
+### Example
+
+<!-- rxas-example name="stem-stemget2" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=5
+    steminit r0
+    load r1,"left"
+    load r2,"right"
+    load r3,"value"
+    stemset2 r0,r1,r2,r3
+    stemget2 r4,r0,r1,r2
+    ret
+```
+
+### Related
+
+`stemget`, `stemset2`.
+
+## `steminit`
+
+Initialize an empty receiver for native stem operations.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0281` | `steminit rStem` | Create an empty generation-zero native stem. |
+
+### Operands And Semantics
+
+The receiver's ordinary VM-owned binary payload holds the private
+little-endian header, 256 bucket heads, and fixed-width entry metadata. Three
+ordinary VM attribute values own insertion-ordered keys, insertion-ordered
+values, and the current default. These bytes are process-local value state,
+not an RXBIN section or public ABI. Initializing a receiver that already has a
+binary payload is corruption rather than a reset.
+
+### Signals
+
+Raises `FAILURE` if the receiver already has binary state or if initial binary
+or attribute storage cannot be allocated.
+
+### Example
+
+<!-- rxas-example name="stem-steminit" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    steminit r0
+    stemsize r1,r0
+    ret
+```
+
+### Related
+
+`stemget`, `stemset`, `stemreset`, `stemsize`.
+
+## `stemkeyat`
+
+Return a stored key by insertion-order position.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0288` | `stemkeyat rDst,rStem,rIndex` | Copy the one-based key at `rIndex`. |
+
+### Operands And Semantics
+
+Indexes are one-based and stable across default resets and existing-key
+updates. Keys are added only after an absent lookup is proved, so a failed
+insertion does not create an observable position. The destination receives a
+string copy; the stem is unchanged.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` outside `1..stemsize`, or `FAILURE` for allocation
+failure or corrupt private metadata.
+
+### Example
+
+<!-- rxas-example name="stem-stemkeyat" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=5
+    steminit r0
+    load r1,"first"
+    load r2,"value"
+    stemset r0,r1,r2
+    load r3,1
+    stemkeyat r4,r0,r3
+    ret
+```
+
+### Related
+
+`stemsize`, `stemvalueat`.
+
+## `stemreset`
+
+Replace a stem's default value in constant time.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0284` | `stemreset rStem,rDefault` | Copy the default and advance the generation. |
+
+### Operands And Semantics
+
+Reset scans no entries. It copies `rDefault`, then increments the receiver's
+64-bit generation. Existing keys remain in insertion order but read as the new
+default until individually rewritten in the new generation. The default and
+generation are unchanged if allocation fails; generation wrap is rejected.
+
+### Signals
+
+Raises `UNICODE_ERROR` for an invalid default string and `FAILURE` for
+allocation failure, generation overflow, or corrupt private metadata.
+
+### Example
+
+<!-- rxas-example name="stem-stemreset" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    steminit r0
+    load r1,"missing"
+    stemreset r0,r1
+    load r2,"key"
+    stemget r2,r0,r2
+    ret
+```
+
+### Related
+
+`stemget`, `stemset`, `stemvalueat`.
+
+## `stemset`
+
+Insert or update one string key in a native stem.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0283` | `stemset rStem,rKey,rValue` | Set `rStem[rKey]` to `rValue`. |
+
+### Operands And Semantics
+
+An existing key is traversed once, its value is replaced, and its entry is
+stamped with the current generation. An absent key is materialized once and
+appended to insertion order after lookup. Key, value, receiver, and linked
+storage aliases retain ordinary VM value semantics. Allocation failures leave
+the logical entry count, bucket chains, values, and generation unchanged;
+successfully reserved private capacity may remain available for retry.
+
+### Signals
+
+Raises `UNICODE_ERROR` for an invalid key or value and `FAILURE` for allocation
+failure, capacity overflow, or corrupt private metadata.
+
+### Example
+
+<!-- rxas-example name="stem-stemset" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    steminit r0
+    load r1,"key"
+    load r2,"value"
+    stemset r0,r1,r2
+    ret
+```
+
+### Related
+
+`stemget`, `stemset2`, `stemreset`.
+
+## `stemset2`
+
+Insert or update a two-segment key with a streamed lookup.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0286` | `stemset2 rStem,rLeft,rRight,rValue` | Set `rStem[rLeft || "." || rRight]`. |
+
+### Operands And Semantics
+
+Hashing and equality stream the two segments plus one separator. Existing-key
+updates allocate no joined key. A new insertion materializes the canonical
+joined key exactly once after absence is proved and otherwise follows
+`stemset` generation, ordering, alias, and failure-atomicity rules.
+
+### Signals
+
+Raises `UNICODE_ERROR` for either segment or the value and the same `FAILURE`
+conditions as `stemset`.
+
+### Example
+
+<!-- rxas-example name="stem-stemset2" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=4
+    steminit r0
+    load r1,"left"
+    load r2,"right"
+    load r3,"value"
+    stemset2 r0,r1,r2,r3
+    ret
+```
+
+### Related
+
+`stemget2`, `stemset`.
+
+## `stemsize`
+
+Return the number of stored keys in a native stem.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0287` | `stemsize rCount,rStem` | Store the insertion-order entry count. |
+
+### Operands And Semantics
+
+The count includes entries from earlier default generations because their keys
+remain stored and extractable. Default resets and existing-key updates do not
+change it. An empty receiver is initialized lazily and returns zero.
+
+### Signals
+
+Raises `FAILURE` for initial allocation failure or corrupt private metadata.
+
+### Example
+
+<!-- rxas-example name="stem-stemsize" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    steminit r0
+    stemsize r1,r0
+    ret
+```
+
+### Related
+
+`stemkeyat`, `stemvalueat`.
+
+## `stemvalueat`
+
+Return a value by insertion-order position with generation-aware defaulting.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0289` | `stemvalueat rDst,rStem,rIndex` | Copy the one-based entry value. |
+
+### Operands And Semantics
+
+For an entry written in the current generation, the destination receives its
+stored value. An older entry receives the current default, matching `stemget`
+for the corresponding key. Extraction does not update the entry generation or
+otherwise mutate the stem.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` outside `1..stemsize`, or `FAILURE` for allocation
+failure or corrupt private metadata.
+
+### Example
+
+<!-- rxas-example name="stem-stemvalueat" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=5
+    steminit r0
+    load r1,"first"
+    load r2,"value"
+    stemset r0,r1,r2
+    load r3,1
+    stemvalueat r4,r0,r3
+    ret
+```
+
+### Related
+
+`stemget`, `stemkeyat`, `stemreset`, `stemsize`.
+
 ## `str2redir`
 
 Create a process-input redirect whose producer reads bytes from a string.

@@ -40,26 +40,19 @@ namespace rxfnsb expose stem stemIterator
  *
  * ------------------------------------------------------------------ */
 stem: class
-  num_buckets = .int
-  buckets = .int[256]
   keys = .string[]
   vals = .string[]
-  value_generations = .int[]
-  next = .int[]
-  count = .int
   default_value = .string
-  default_generation = .int
 
  /**
   * Constructs an empty stem.
   *
-  * Initialises the hash table with 256 buckets.
+  * The first access initialises the private native D2-hybrid representation.
+  * Bucket heads and fixed-width hash/chain/generation records live in the
+  * receiver's binary payload; keys, values, and the current default remain
+  * VM-owned attributes.
   */
   *: factory
-    num_buckets = 256
-    count = 0
-    default_value = ""
-    default_generation = 0
     return
 
  /**
@@ -80,7 +73,7 @@ stem: class
     assembler strlen key_length,key
     do offset = 0 to key_length - 1
       assembler strchar codepoint,key,offset
-      h = (h * 31 + codepoint) % num_buckets
+      h = (h * 31 + codepoint) % 256
     end
     return h + 1
 
@@ -93,19 +86,9 @@ stem: class
   */
   get: method = .string
     arg key = .string
-    
-    b = hash(key)
-    idx = buckets[b]
-    
-    do while idx > 0
-      if keys[idx] == key then do
-        if value_generations[idx] = default_generation then return vals[idx]
-        return default_value
-      end
-      idx = next[idx]
-    end
-    
-    return default_value
+    result = .string
+    assembler stemget result,self,key
+    return result
 
  /**
   * Adds or updates a key/value pair.
@@ -124,42 +107,10 @@ stem: class
     arg key = "", value = .string
 
     if \?key then do
-      default_value = value
-      default_generation = default_generation + 1
+      assembler stemreset self,value
       return
     end
-    
-    b = hash(key)
-    idx = buckets[b]
-    last_idx = 0
-
-    /* Update existing if found */
-    do while idx > 0
-      if keys[idx] == key then do
-        vals[idx] = value
-        value_generations[idx] = default_generation
-        return
-      end
-      last_idx = idx
-      idx = next[idx]
-    end
-    
-    /* Need to add new entry. */
-    count = count + 1
-    
-    /* Insert at end of chain */
-    keys[count] = key
-    vals[count] = value
-    value_generations[count] = default_generation
-    next[count] = 0
-    
-    if last_idx > 0 then do
-      next[last_idx] = count
-    end
-    else do
-      buckets[b] = count
-    end
-    
+    assembler stemset self,key,value
     return
 
  /**
@@ -168,7 +119,9 @@ stem: class
   * @return entry count
   */
   size: method = .int
-    return count
+    result = .int
+    assembler stemsize result,self
+    return result
 
  /**
   * Returns the key at a given insertion index.
@@ -178,9 +131,12 @@ stem: class
   */
   key: method = .string
     arg ix = .int
+    count = size()
     if ix < 1 | ix > count then
       assembler signal "INVALID_ARGUMENTS", "STEM key index is outside the stored range"
-    return keys[ix]
+    result = .string
+    assembler stemkeyat result,self,ix
+    return result
 
  /**
   * Returns a value using an internal array index.
@@ -191,10 +147,12 @@ stem: class
    */
   value: method = .string
     arg kv = .int
+    count = size()
     if kv < 1 | kv > count then
       assembler signal "INVALID_ARGUMENTS", "STEM value index is outside the stored range"
-    if value_generations[kv] <> default_generation then return default_value
-    return vals[kv]
+    result = .string
+    assembler stemvalueat result,self,kv
+    return result
 
  /**
   * Returns a value at a given insertion index.
@@ -204,10 +162,12 @@ stem: class
   */
   valueAt: method = .string
     arg ix = .int
+    count = size()
     if ix < 1 | ix > count then
       assembler signal "INVALID_ARGUMENTS", "STEM valueAt index is outside the stored range"
-    if value_generations[ix] <> default_generation then return default_value
-    return vals[ix]
+    result = .string
+    assembler stemvalueat result,self,ix
+    return result
 
  /**
   * Returns all keys.
@@ -216,8 +176,11 @@ stem: class
   */
   tails: method = .string[]
     result = .string[]
+    count = size()
     do i = 1 to count
-      result[i] = keys[i]
+      key = .string
+      assembler stemkeyat key,self,i
+      result[i] = key
     end
     return result
 
@@ -228,9 +191,11 @@ stem: class
   */
   values: method = .string[]
     result = .string[]
+    count = size()
     do i = 1 to count
-      if value_generations[i] <> default_generation then result[i] = default_value
-      else result[i] = vals[i]
+      value = .string
+      assembler stemvalueat value,self,i
+      result[i] = value
     end
     return result
 

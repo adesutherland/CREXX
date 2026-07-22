@@ -1,0 +1,4 @@
+crexx-cross-runtime-matrix|1
+# id|workload|runtime|vm|variant|tier|aggregate|lifecycle|work|expectation|metric_prefix|command_argv
+lifecycle-rxvm-accepted|nr15-post-fix-lifecycle|crexx|rxvm|accepted-first-verdict|diagnostic|no|yes|0|PASS: NR-15 stem access compare||/tmp/nr15-accepted-release.4Md5nM/rxvm;cmake-build-release/tests/performance/nr15_stem_access_d2h_opt_linked.rxbin;-a;get-hit;64;1;ascii
+lifecycle-rxvm-final|nr15-post-fix-lifecycle|crexx|rxvm|qa-final|diagnostic|no|yes|0|PASS: NR-15 stem access compare||cmake-build-release/bin/rxvm;cmake-build-release/tests/performance/nr15_stem_access_d2h_opt_linked.rxbin;-a;get-hit;64;1;ascii

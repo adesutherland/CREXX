@@ -837,6 +837,33 @@ and unknown/out-of-range API queries fail closed: they remain barriers and
 offer no kill proof. NR-04 does not change VM execution or serialized RXBIN and
 does not enable a new optimizer transformation.
 
+### Private native stem representation
+
+NR-15's `stem*` handlers share `interpreter/rxvmstem.h` in both dispatch modes.
+The D2-hybrid representation uses the receiver's ordinary binary buffer for a
+versioned little-endian header, 256 bucket heads, and 16-byte
+hash/next/generation entries. Ordinary VM attributes own the keys, values, and
+default string, so normal deep copy, move, reference lifetime, and destruction
+continue to own all string storage. Bucket and next indexes are one-based; zero
+is the chain sentinel. Entries stay in insertion order.
+
+The layout is private process-local state, not public ABI and not serialized
+into RXBIN. `RXBIN007_FEATURE_NATIVE_STEM` gates the nine instruction forms,
+while each runtime receiver is validated for magic, version, exact size,
+capacity/count consistency, attribute coverage, and bounded chain traversal.
+Allocation-reporting paths commit logical insertion, update, reset, or output
+replacement only after their required storage succeeds; reserved private
+capacity may remain reusable after a failed insertion. Generation overflow,
+capacity overflow, invalid extraction indexes, and corrupt metadata are
+translated to VM signals by the shared handler macro.
+
+`stemget2` and `stemset2` hash and compare two string registers with one `.`
+separator without constructing a hit/miss key. `stemset2` constructs the
+canonical joined key once, and only after absence is proved. Compiler direct
+lowering is intentionally limited to proved simple-storage concrete
+`rxfnsb.stem` receivers; complex or reference-sensitive receiver shapes keep
+the normal method path, whose library body invokes the same native operations.
+
 `interpreter/rxvminstrument.h` is the compile-time instrumentation contract for
 both VM modes. A backend can observe VM begin/end, instruction begin plus
 retire or terminal, frame activation, call/return transitions, and interrupt

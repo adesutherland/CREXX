@@ -167,3 +167,38 @@ crexx_add_rexx_opt_matrix(
         DEPENDS library compiler_exit_bin
         TEST_LABELS "performance;inlining"
 )
+
+add_custom_target(performance_nr15_stem_semantics)
+add_custom_target(performance_nr15_stem_access)
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rexx_opt_matrix(
+            NAME nr15_stem_semantics_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr15_stem_semantics.crexx
+            TARGET_GROUP performance_nr15_stem_semantics
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH}
+            TEST_LABELS "performance;stem;nr15;semantics"
+    )
+    crexx_add_rexx_opt_matrix(
+            NAME nr15_stem_access_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr15_stem_access_compare.crexx
+            TARGET_GROUP performance_nr15_stem_access
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH}
+            TEST_LABELS "performance;stem;nr15"
+    )
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        set_tests_properties(nr15_stem_semantics_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-15 stem semantic matrix"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+        set_tests_properties(nr15_stem_access_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-15 stem access compare"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()

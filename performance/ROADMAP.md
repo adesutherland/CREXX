@@ -842,7 +842,7 @@ coverage gaps are in
 | NR-12 | Extend read-only by-value and return copy coalescing | deferred | Accepted NR-26 F2 already removes the narrow proved-overwritten scalar by-value entry copy and retains conditional, zero-trip and read-before-write cases. Its focused fixture removes three copies, but the retained 19-image portfolio found no F2 footprint; no duplicate compiler edit is selected. Broader conditional/loop isolation and return coalescing remain deferred. See `NR-26-WORKLIST.md` and `NR-18-WORKLIST.md`. |
 | NR-13 | Redundant numeric-context setup elimination | complete | Accepted NR-09 Rule 1 satisfies the NR-13 exit criterion: the compiler uses existing `NUMSCI`/`NUMENG` only for an identical fully constant non-inherited effective context, focused cross-procedure/plugin coverage passes in both modes and VMs, and dynamic setup fell from 542,500 to 108,508 per VM. General full-context and procedure-owned-default experiments remain optional NR-23/NR-24 work, not unfinished NR-13 scope. |
 | NR-14 | Static/frozen `PARSE` lowering fast path | complete | Adrian accepted the frozen hybrid and the +249,179 B/+20.579% compiler-exit artifact trade-off. The three exact opcodes remain preferred, `parsewords3` chains eligible longer odd word templates, compact opcode 410 `parseplan` covers remaining mechanically frozen plans, logging/TRACE/INTO fall back, and regex is untouched. Generic elapsed is -90.757%/-90.744%, exact elapsed -97.262%/-97.423%, and RexxCPS CPS +45.249%/+45.499%; capped byte-identical Richards is neutral. Closeout passed focused Debug/ASan 15/15, full Debug 1,876/1,876, and isolated installed/native-package proof. See `NR-14-WORKLIST.md` and `evidence/2026-07-21-nr-14-hybrid-first-release-verdict/`. |
-| NR-15 | General stem default/reset fast path | queued | Preserve generation/default/drop/tail semantics. |
+| NR-15 | General stem default/reset fast path | complete | Adrian accepted D2-hybrid. Formal paired medians remain -76.839%/-75.438% get-hit elapsed, -32.027%/-31.885% histogram elapsed and +10.888%/+10.919% canonical RexxCPS (`rxvm`/`rxbvm`), with every interval favorable. Closeout adds failure-atomic growth and corruption/overflow/copy/move/destruction proof, permanent RXBIN gating, all 384 RXAS mnemonic headings/591 forms, focused Debug/Release/ASan 30/30, full Debug 1,901/1,901, and a 133-file isolated installed/native/old-RXBIN proof. The same-image post-fix drift guard passes. See `NR-15-WORKLIST.md`, `evidence/2026-07-22-nr-15-first-release-verdict/` and IDEA-STEM-01. |
 | NR-16 | TRACE-off and same-ADDRESS-environment fast paths | queued | Preserve hooks, signals, mode changes and host callbacks. |
 | NR-17 | Link-time direct provider/call resolution | queued | Preserve late-load and plugin fallback. |
 | NR-18 | Safe RXAS rule harvest | complete | Adrian accepted the J1/H1 panel after the mathematical and instruction gate: 45,476 -> 45,178 in the 19-image set and 55,664 -> 54,829 in the linked library. Five common linked products are byte-identical; one changed self-test executes 19 fewer instructions in both VMs. H1 is focused-proof-only with no retained portfolio footprint. Closeout passes the complete Debug build, affected surface 63/63 and full Debug CTest 1,891/1,891. See `NR-18-WORKLIST.md`. |
@@ -1087,6 +1087,119 @@ These are time-boxed evidence activities, not production commitments.
   placed 131 files, installed native `hello` packaging executed successfully,
   and installed `rxvm`/`rxbvm` both pass the generic frozen-PARSE workload.
   NR-14 is complete; `qa-closeout/` records the final gate.
+
+### NR-15 work notes
+
+- 2026-07-22: Started the end-to-end stem/string-access activity from clean
+  synchronized `develop` at `240b29f456`. The resumable control plane is
+  `NR-15-WORKLIST.md`. Existing generation-based O(1) default/reset is the
+  baseline and will not be duplicated or claimed as NR-15 work. The bounded
+  panel compares the current Level B structure, compiler/inliner specialization,
+  segmented multi-tail access and RXAS/VM/string assistance. No language,
+  RXBIN, ISA, public ABI or architectural production change is authorized
+  without a comparative decision stop. Formal Release sampling begins only
+  after the semantic matrix, exact post-NR-14/post-NR-18 baseline and complete
+  panel are frozen.
+- 2026-07-22: Completed the exact semantic/baseline and bounded A-D panel.
+  Optimized and `-n` Level B semantics pass in both VMs; the Classic comparison
+  passes Regina and ooRexx and records that Classic compound `DROP` becomes an
+  uninitialized name while Level B exposes no drop method. Candidate A keeps
+  the fixed 256-bucket/generation representation, preserves public `hash()`,
+  and uses existing whole-string `RXHASH` internally. It reduces every measured
+  dynamic cell (representative optimized reductions 35.973-92.541%) while the
+  linked access/library images shrink 8/16 bytes. Fixed 1,024 and load-sensitive
+  buckets lose the whole-product/memory trade-off. Generic array-bearing
+  inlining is rejected: optimized semantics fail and unlinked RXBIN grows
+  58.8%. A prejoined multi-tail control saves 13,323 instructions, proving a
+  segment-aware opportunity that the current ISA cannot express.
+- 2026-07-22: The provisional native `STEMGET`/`STEMSET` ceiling passes focused
+  semantics in both VMs and executes another 16.094-66.031% fewer instructions
+  than Candidate A across matched lookup/update cells. Its profiling-off
+  Release lookup pilots agree, but it crosses the ISA/RXBIN/representation
+  decision boundary. Adrian's suggestion to use register binary storage is
+  recorded as D2; the recommended next comparison is D1 current arrays versus
+  D2 packed binary metadata versus D2-hybrid binary metadata with VM value
+  slots. Provisional opcodes are removed from production source. Stopped for
+  Adrian to choose the architectural candidate before integration, formal
+  paired Release sampling, broad QA, commit or push. Evidence:
+  `evidence/2026-07-22-nr-15-first-release-verdict/ARCHITECTURE-DECISION.md`.
+- 2026-07-22: Adrian approved the bounded D1/D2/D2-hybrid architecture panel.
+  D1 keeps current parallel arrays; D2 packs bucket/entry/string storage into
+  the receiver's ordinary VM-owned binary payload; D2-hybrid packs metadata but
+  retains VM-managed key/default/value slots. The common PoC contract includes
+  get/set/reset and allocation-free two-segment hit/miss with one canonical-key
+  build only after insertion is proved. Compare exact work, construction,
+  growth, repeated updates, lifecycle, memory and both VMs, then remove all
+  provisional ISA/VM edits and stop for production selection before formal
+  Release sampling.
+- 2026-07-22: Completed the approved architecture panel with one common
+  get/set/reset/two-segment/extraction contract. Linked semantics, insertion
+  order, generation-aware values, deep copy and move pass both VMs; all 36
+  common smoke cells and 84 final profiles pass with complete tracking. D1 is
+  best on most steady access but loses new insertion and copy; D2 is the
+  compact/copy ceiling but loses mutable update/reset and long/Unicode access;
+  D2-hybrid is the recommended mutable production representation. The exact
+  decision packet is
+  `evidence/2026-07-22-nr-15-architecture-panel/ARCHITECTURE-DECISION.md`.
+  Provisional opcodes/VM integration are removed and retained only as a patch;
+  stopped for Adrian's production selection before integration, formal
+  sampling, broad QA, commit or push.
+- 2026-07-22: Adrian selected D2-hybrid for production implementation. The
+  selected contract keeps versioned bucket/chain/hash/generation metadata in
+  the receiver binary and ordinary VM ownership for keys, values and the
+  default. Canonical ISA/RXBIN and concrete-stem compiler lowering are now in
+  scope; the implementation must freeze after minimum focused correctness and
+  stop again at the mandatory profiling-off Release verdict before broad QA,
+  cleanup, commit or push.
+- 2026-07-22: The frozen D2-hybrid passed the mandatory first ordinary
+  profiling-off Release verdict and stopped. Focused Debug is 22/22 and
+  focused Release is 10/10 plus complete opcode metadata. One warmup and 12
+  balanced/interleaved pairs per cell give -76.839%/-75.438% get-hit elapsed,
+  -32.027%/-31.885% independent histogram elapsed and +10.888%/+10.919%
+  canonical RexxCPS (`rxvm`/`rxbvm`); all mean 95% intervals are favorable.
+  Integrated instruction counts fall 71.422% for get-hit, 39.651% for the
+  histogram and 21.051% for canonical RexxCPS. Lifecycle is neutral to
+  favorable, canonical peak RSS and every named linked artifact shrink, and no
+  guard is hit. Recommendation: accept D2-hybrid and authorize the shortest
+  post-verdict quality closeout. Evidence:
+  `evidence/2026-07-22-nr-15-first-release-verdict/production-d2h/`.
+- 2026-07-22: Adrian accepted D2-hybrid and requested all QA through a local
+  commit. Closeout added failure-atomic attribute/string growth and direct
+  allocation-failure, corruption, overflow, bounds, alias, copy/move and
+  destructor coverage; a permanent nine-opcode RXBIN feature contract; and
+  complete instruction documentation. Focused Debug, Release and supported
+  Apple ASan each pass 30/30; full Debug passes 1,901/1,901. Apple ASan does
+  not support leak detection, so LSan is not claimed. A fresh 133-file install
+  passes native packaging, installed compiler/assembler/linker execution, both
+  installed VMs and exact retained old-RXBIN execution. The accepted-vs-final
+  same-image drift guard stays inside policy: combined paired get-hit medians
+  are +0.599%/-2.439% elapsed, RexxCPS is +0.789%/+1.086%, and lifecycle is
+  -2.088%/-0.448% (`rxvm`/`rxbvm`). Evidence:
+  `evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/`.
+
+### IDEA-STEM-01 — Binary-backed native stem representation
+
+- Status: accepted and complete; D2-hybrid is the production representation.
+- Related activity: NR-15.
+- Hypothesis: storing bucket heads and fixed-width entry metadata in the
+  receiver's contiguous binary payload removes parallel attribute-pointer
+  walks and improves locality; a full packed string arena may be faster and
+  smaller, while a hybrid with VM value slots may win once update, copy,
+  iterator and ownership costs are included.
+- Affected surfaces: Level B `rxfnsb.stem`, compiler stem lowering/intrinsics,
+  RXAS/RXBIN operation contract, VM `value` binary/attribute storage, iteration
+  and extraction methods, source/TRACE/signal behavior.
+- Semantic risks: byte-exact Unicode equality, omitted versus empty keys,
+  generation reset, insertion order, receiver/key/value aliases, failed growth
+  atomicity, object copy/move/reference lifetime and cross-platform widths.
+- Evidence required: identical D1/D2/D2-hybrid controls in both VMs; exact
+  dynamic/call/allocation/image counts; construction, growth, update, reset,
+  copy/move and teardown; small unprofiled Release tie-break pilots.
+- Disposition: Adrian accepted D2-hybrid after its favorable complete-product
+  first Release verdict. Post-verdict Debug, ASan, Release, install,
+  compatibility, documentation and same-image drift gates all pass. D2 remains
+  the compact copy/snapshot ceiling and D1 the steady-access comparator; they
+  are evidence-backed alternatives, not unfinished NR-15 production work.
 
 ### NR-26 work notes
 

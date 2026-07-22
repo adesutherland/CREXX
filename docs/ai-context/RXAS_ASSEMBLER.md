@@ -652,6 +652,15 @@ reject an image that uses one without that feature bit, and older readers reject
 the unknown feature bit, so a provisional image cannot be silently decoded with
 different semantics. The descriptor adds no RXBIN section or relocation form.
 
+The NR-15 native-stem family is catalogued under arrays, attributes,
+references, and objects. `steminit`, `stemget`, `stemset`, `stemreset`,
+`stemget2`, `stemset2`, `stemsize`, `stemkeyat`, and `stemvalueat` use ordinary
+register operands and set `RXBIN007_FEATURE_NATIVE_STEM`. The feature declares
+the instruction contract only: the receiver's private hash-table bytes remain
+ordinary process-local VM value state and are never serialized as an RXBIN
+section. Two-segment forms stream `left || "." || right` during lookup and
+materialize a canonical key only for a proved new insertion.
+
 `typeof`, `istype`, and `asserttype` are object-contract operations. Compiler
 generated code uses them for object casts/tests/introspection; scalar
 `typeof`/`is` cases are folded earlier by `rxc`.

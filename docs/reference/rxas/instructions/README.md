@@ -48,7 +48,7 @@ explicitly marks it as a fragment.
 | Decimal And Numeric Settings | 46 | [05-decimal-and-numeric-settings.md](05-decimal-and-numeric-settings.md) |
 | Strings And Characters | 34 | [06-strings-and-characters.md](06-strings-and-characters.md) |
 | Binary Memory | 43 | [07-binary-memory.md](07-binary-memory.md) |
-| Arrays, Attributes, References, And Objects | 32 | [08-arrays-attributes-references-and-objects.md](08-arrays-attributes-references-and-objects.md) |
+| Arrays, Attributes, References, And Objects | 41 | [08-arrays-attributes-references-and-objects.md](08-arrays-attributes-references-and-objects.md) |
 | I/O, Sockets, Processes, And Time | 44 | [09-io-sockets-processes-and-time.md](09-io-sockets-processes-and-time.md) |
 | Signals, Breakpoints, And Runtime | 19 | [10-signals-breakpoints-and-runtime.md](10-signals-breakpoints-and-runtime.md) |
 | Metadata And Introspection | 23 | [11-metadata-and-introspection.md](11-metadata-and-introspection.md) |

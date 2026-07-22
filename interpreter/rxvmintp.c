@@ -89,6 +89,7 @@
 
 
 #include "rxvmvars.h"
+#include "rxvmstem.h"
 #include "rxvmplugin_framework.h"
 #include "rxvmsock.h"
 
@@ -8376,6 +8377,129 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                             memcmp(op2R->binary_value, op3S->string,
                                    op2R->binary_length) != 0))
             DISPATCH;
+
+#define RXSTEM_REQUIRE_RESULT(call_, index_message_)                         \
+        do {                                                                 \
+            int rxstem_result__ = (call_);                                   \
+            if (rxstem_result__ == RXSTEM_OUT_OF_MEMORY) {                   \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                             \
+                               "Native stem allocation failed");            \
+                DISPATCH;                                                    \
+            }                                                                \
+            if (rxstem_result__ == RXSTEM_OVERFLOW) {                        \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                             \
+                               "Native stem capacity overflow");            \
+                DISPATCH;                                                    \
+            }                                                                \
+            if (rxstem_result__ == RXSTEM_INVALID_INDEX) {                   \
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, index_message_);  \
+                DISPATCH;                                                    \
+            }                                                                \
+            if (rxstem_result__ != RXSTEM_OK) {                              \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                             \
+                               "Native stem representation is corrupt");    \
+                DISPATCH;                                                    \
+            }                                                                \
+        } while (0)
+
+        START_INSTRUCTION(STEMINIT_REG) VM_ADVANCE(1);
+            DEBUG("TRACE - STEMINIT R%d\n", (int)REG_IDX(1));
+            RXSTEM_REQUIRE_RESULT(rxstem_init(REG_OP(1)),
+                                  "STEM index is outside the stored range");
+            DISPATCH;
+
+        START_INSTRUCTION(STEMGET_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMGET R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            {
+                rxstem_key_parts parts = rxstem_one_part(REG_OP(3));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_get_parts(REG_OP(1), REG_OP(2), &parts),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMSET_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMSET R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(2));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            {
+                rxstem_key_parts parts = rxstem_one_part(REG_OP(2));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_set_parts(REG_OP(1), &parts, REG_OP(3)),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMRESET_REG_REG) VM_ADVANCE(2);
+            DEBUG("TRACE - STEMRESET R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(2));
+            RXSTEM_REQUIRE_RESULT(rxstem_reset(REG_OP(1), REG_OP(2)),
+                                  "STEM index is outside the stored range");
+            DISPATCH;
+
+        START_INSTRUCTION(STEMGET2_REG_REG_REG_REG) VM_ADVANCE(4);
+            DEBUG("TRACE - STEMGET2 R%d,R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2),
+                  (int)REG_IDX(3), (int)REG_IDX(4));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(4));
+            {
+                rxstem_key_parts parts =
+                        rxstem_two_parts(REG_OP(3), REG_OP(4));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_get_parts(REG_OP(1), REG_OP(2), &parts),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMSET2_REG_REG_REG_REG) VM_ADVANCE(4);
+            DEBUG("TRACE - STEMSET2 R%d,R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2),
+                  (int)REG_IDX(3), (int)REG_IDX(4));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(2));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(4));
+            {
+                rxstem_key_parts parts =
+                        rxstem_two_parts(REG_OP(2), REG_OP(3));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_set_parts(REG_OP(1), &parts, REG_OP(4)),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMSIZE_REG_REG) VM_ADVANCE(2);
+            DEBUG("TRACE - STEMSIZE R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2));
+            {
+                rxinteger size;
+                RXSTEM_REQUIRE_RESULT(rxstem_size(&size, REG_OP(2)),
+                                      "STEM index is outside the stored range");
+                REG_RETURN_INT(size)
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMKEYAT_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMKEYAT R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            RXSTEM_REQUIRE_RESULT(
+                    rxstem_key_at(REG_OP(1), REG_OP(2), REG_OP(3)->int_value),
+                    "STEM key index is outside the stored range");
+            DISPATCH;
+
+        START_INSTRUCTION(STEMVALUEAT_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMVALUEAT R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            RXSTEM_REQUIRE_RESULT(
+                    rxstem_value_at(REG_OP(1), REG_OP(2), REG_OP(3)->int_value),
+                    "STEM value index is outside the stored range");
+            DISPATCH;
+
+#undef RXSTEM_REQUIRE_RESULT
 
         START_INSTRUCTION(TIME_REG) VM_ADVANCE(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));

@@ -1,0 +1,19 @@
+306561951d4dcb349103db8f073b82b32d1648260de7cc4d33886b4d1997ffdf  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/nr15_stem_access_opt.rxbin
+00000000: 63 52 65 58 78 30 30 37 40 00 00 00 01 00 00 00  cReXx007@.......
+00000010: ee 42 00 00 00 00 00 00                          .B......
+benchmark=nr15_stem_access_compare
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=289
+checksum=2856
+PASS: NR-15 stem access compare
+benchmark=nr15_stem_access_compare
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=285
+checksum=2856
+PASS: NR-15 stem access compare

@@ -1,0 +1,147 @@
+/* NR-15 D2-hybrid schema-4 profile ledger helper. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 2 then do
+  say "Usage: summarize_profiles PROFILE_DIR OUTPUT_CSV"
+  return 2
+end
+
+profile_dir = argv[1]
+output_path = argv[2]
+names = .string[]
+workloads = .string[]
+vms = .string[]
+variants = .string[]
+workload_names = .string[]
+vm_names = .string[]
+variant_names = .string[]
+workload_names[1] = "get-hit"
+workload_names[2] = "histogram"
+workload_names[3] = "rexxcps-canonical"
+vm_names[1] = "rxvm"
+vm_names[2] = "rxbvm"
+variant_names[1] = "before"
+variant_names[2] = "after"
+index = 0
+
+do workload_index = 1 to workload_names[0]
+  workload = workload_names[workload_index]
+  do vm_index = 1 to vm_names[0]
+    vm = vm_names[vm_index]
+    do variant_index = 1 to variant_names[0]
+      variant = variant_names[variant_index]
+      index = index + 1
+      names[index] = workload || "-" || vm || "-" || variant
+      workloads[index] = workload
+      vms[index] = vm
+      variants[index] = variant
+    end
+  end
+end
+
+remove_out = .string[]
+remove_err = .string[]
+address crexx "rm :output_path" output remove_out error remove_err
+header = "profile,workload,vm,variant,result,total_instructions,native_stem_ops,copy_ops,concat_ops,direct_bytecode_calls,frame_activations,value_slot_count,value_slot_bytes,attribute_value_block_count,attribute_value_block_bytes,attribute_pointer_storage_count,attribute_pointer_storage_bytes,binary_buffer_count,binary_buffer_bytes,string_buffer_count,string_buffer_bytes"
+if lineout(output_path, header) <> 0 then return fail("could not create profile summary")
+
+do profile_index = 1 to names[0]
+  path = profile_dir || "/" || names[profile_index] || ".csv"
+  result = ""
+  total_instructions = 0
+  native_stem_ops = 0
+  copy_ops = 0
+  concat_ops = 0
+  direct_bytecode_calls = 0
+  frame_activations = 0
+  value_slot_count = 0
+  value_slot_bytes = 0
+  attribute_value_block_count = 0
+  attribute_value_block_bytes = 0
+  attribute_pointer_storage_count = 0
+  attribute_pointer_storage_bytes = 0
+  binary_buffer_count = 0
+  binary_buffer_bytes = 0
+  string_buffer_count = 0
+  string_buffer_bytes = 0
+
+  do while lines(path)
+    line = linein(path)
+    fields = split_delimited(line, ",")
+    if fields[0] < 5 then iterate
+    section = fields[1]
+    name = fields[2]
+    if section = "summary" & name = "result" then result = fields[3]
+    else if section = "instruction" then do
+      total_instructions = total_instructions + fields[5]
+      if left(name, 4) = "STEM" then native_stem_ops = native_stem_ops + fields[5]
+      if pos("COPY_", name) > 0 then copy_ops = copy_ops + fields[5]
+      if left(name, 7) = "CONCAT_" then concat_ops = concat_ops + fields[5]
+    end
+    else if section = "census" & pos("call_path", name) > 0 & ,
+        pos("direct_bytecode", fields[3]) > 0 then direct_bytecode_calls = fields[5]
+    else if section = "allocation" then do
+      count = fields[5]
+      bytes = fields[21]
+      if name = "frame_activations" then frame_activations = count
+      else if name = "value_slots" then do
+        value_slot_count = count
+        value_slot_bytes = bytes
+      end
+      else if name = "attribute_value_blocks" then do
+        attribute_value_block_count = count
+        attribute_value_block_bytes = bytes
+      end
+      else if name = "attribute_pointer_storage" then do
+        attribute_pointer_storage_count = count
+        attribute_pointer_storage_bytes = bytes
+      end
+      else if name = "binary_buffers" then do
+        binary_buffer_count = count
+        binary_buffer_bytes = bytes
+      end
+      else if name = "string_buffers" then do
+        string_buffer_count = count
+        string_buffer_bytes = bytes
+      end
+    end
+  end
+  call linein path
+  if result <> "0" then return fail("profile result is not zero: " || path)
+
+  row = names[profile_index] || "," || workloads[profile_index] || "," || ,
+      vms[profile_index] || "," || variants[profile_index] || "," || result || ,
+      "," || total_instructions || "," || native_stem_ops || "," || copy_ops || ,
+      "," || concat_ops || "," || direct_bytecode_calls || "," || frame_activations || ,
+      "," || value_slot_count || "," || value_slot_bytes || "," || ,
+      attribute_value_block_count || "," || attribute_value_block_bytes || "," || ,
+      attribute_pointer_storage_count || "," || attribute_pointer_storage_bytes || ,
+      "," || binary_buffer_count || "," || binary_buffer_bytes || "," || ,
+      string_buffer_count || "," || string_buffer_bytes
+  if lineout(output_path, row) <> 0 then return fail("could not append profile row")
+end
+call lineout output_path
+say "PASS: NR-15 profile summary retained at" output_path
+return 0
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

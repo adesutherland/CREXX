@@ -67,8 +67,10 @@ enum rxbin007_section_flags {
 enum rxbin007_feature_flags {
     RXBIN007_FEATURE_FIXED_CALLS = 1u << 0,
     RXBIN007_FEATURE_FROZEN_PARSE = 1u << 1,
+    RXBIN007_FEATURE_NATIVE_STEM = 1u << 2,
     RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
-                                   RXBIN007_FEATURE_FROZEN_PARSE
+                                   RXBIN007_FEATURE_FROZEN_PARSE |
+                                   RXBIN007_FEATURE_NATIVE_STEM
 };
 
 typedef struct bin_space bin_space;

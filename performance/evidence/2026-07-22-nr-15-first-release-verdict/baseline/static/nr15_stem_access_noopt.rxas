@@ -1,0 +1,1332 @@
+/*
+ * SOURCE                 : nr15_stem_access_compare.crexx
+ */
+
+.globals=0
+
+main() .locals=58
+   .meta "nr15_stem_access_compare.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .meta "nr15_stem_access_compare.main.keys"="b" ".string[*]" r7
+   .srcstep 1 1 17 "nr15_stem_access_compare.crexx" 19 1 15 "keys = .string[]"
+   null r7
+   .srcstep 2 2 17 "nr15_stem_access_compare.crexx" 5 5 19 "arg argv = .string[]"
+   .meta "nr15_stem_access_compare.main.argv"="b" ".string[*]" r0
+   brtpandt l6c,a1,512
+   copy r0,a1
+   br l6d
+l6c:
+   swap r0,a1
+l6d:
+   .srcstep 3 3 17 "nr15_stem_access_compare.crexx" 7 1 17 "mode = \"get-hit\""
+   .meta "nr15_stem_access_compare.main.mode"="b" ".string" r9
+   load r9,"get-hit"
+   .traceevent "L" 4 "R" "S" "r" 9 3 3 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 3 3 0 "mode" ""
+   .srcstep 4 4 17 "nr15_stem_access_compare.crexx" 8 1 10 "size = 64"
+   .meta "nr15_stem_access_compare.main.size"="b" ".int" r10
+   load r10,64
+   .traceevent "L" 4 "R" "I" "r" 10 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 4 4 0 "size" ""
+   .srcstep 5 5 17 "nr15_stem_access_compare.crexx" 9 1 19 "iterations = 20000"
+   .meta "nr15_stem_access_compare.main.iterations"="b" ".int" r6
+   load r6,20000
+   .traceevent "L" 4 "R" "I" "r" 6 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 5 5 0 "iterations" ""
+   .srcstep 6 6 17 "nr15_stem_access_compare.crexx" 10 1 17 "family = \"ascii\""
+   .meta "nr15_stem_access_compare.main.family"="b" ".string" r4
+   load r4,"ascii"
+   .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 6 6 0 "family" ""
+   .srcstep 8 8 17 "nr15_stem_access_compare.crexx" 11 1 16 "if argv[0] >= 1 then mode = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 14 8 8 0 "argv" ""
+   getattrs r15,r0,0
+   .traceevent "V" 6 "R" "I" "r" 15 8 8 0 "argv" ""
+   igte r15,r15,1
+   .traceevent "O" 4 "R" "B" "r" 15 8 8 0 "" ""
+   brf l34iffalse,r15
+   .srcstep 9 9 17 "nr15_stem_access_compare.crexx" 11 17 21 "if argv[0] >= 1 then mode = argv[1]"
+   .srcstep 7 7 17 "nr15_stem_access_compare.crexx" 11 22 35 "if argv[0] >= 1 then mode = argv[1]"
+   minlinkattr1 r16,r0,1
+   .traceevent "V" 6 "R" "S" "r" 16 7 7 0 "argv" ""
+   scopy r9,r16
+   .traceevent "A" 6 "R" "S" "r" 9 7 7 0 "mode" ""
+   unlink r16
+l34iffalse:
+   .srcstep 11 11 17 "nr15_stem_access_compare.crexx" 12 1 16 "if argv[0] >= 2 then size = argv[2]"
+   .traceevent "C" 4 "R" "V" "r" 16 11 11 0 "argv" ""
+   getattrs r15,r0,0
+   .traceevent "V" 6 "R" "I" "r" 15 11 11 0 "argv" ""
+   igte r15,r15,2
+   .traceevent "O" 4 "R" "B" "r" 15 11 11 0 "" ""
+   brf l43iffalse,r15
+   .srcstep 12 12 17 "nr15_stem_access_compare.crexx" 12 17 21 "if argv[0] >= 2 then size = argv[2]"
+   .srcstep 10 10 17 "nr15_stem_access_compare.crexx" 12 22 35 "if argv[0] >= 2 then size = argv[2]"
+   minlinkattr1 r14,r0,2
+   stoi r14
+   .traceevent "V" 6 "R" "I" "r" 14 10 10 0 "argv" ""
+   igetunlink r10,r14
+   .traceevent "A" 6 "R" "I" "r" 10 10 10 0 "size" ""
+l43iffalse:
+   .srcstep 14 14 17 "nr15_stem_access_compare.crexx" 13 1 16 "if argv[0] >= 3 then iterations = argv[3]"
+   .traceevent "C" 4 "R" "V" "r" 16 14 14 0 "argv" ""
+   getattrs r15,r0,0
+   .traceevent "V" 6 "R" "I" "r" 15 14 14 0 "argv" ""
+   igte r15,r15,3
+   .traceevent "O" 4 "R" "B" "r" 15 14 14 0 "" ""
+   brf l52iffalse,r15
+   .srcstep 15 15 17 "nr15_stem_access_compare.crexx" 13 17 21 "if argv[0] >= 3 then iterations = argv[3]"
+   .srcstep 13 13 17 "nr15_stem_access_compare.crexx" 13 22 41 "if argv[0] >= 3 then iterations = argv[3]"
+   minlinkattr1 r14,r0,3
+   stoi r14
+   .traceevent "V" 6 "R" "I" "r" 14 13 13 0 "argv" ""
+   igetunlink r6,r14
+   .traceevent "A" 6 "R" "I" "r" 6 13 13 0 "iterations" ""
+l52iffalse:
+   .srcstep 17 17 17 "nr15_stem_access_compare.crexx" 14 1 16 "if argv[0] >= 4 then family = argv[4]"
+   .traceevent "C" 4 "R" "V" "r" 16 17 17 0 "argv" ""
+   getattrs r15,r0,0
+   .traceevent "V" 6 "R" "I" "r" 15 17 17 0 "argv" ""
+   igte r15,r15,4
+   .traceevent "O" 4 "R" "B" "r" 15 17 17 0 "" ""
+   brf l61iffalse,r15
+   .srcstep 18 18 17 "nr15_stem_access_compare.crexx" 14 17 21 "if argv[0] >= 4 then family = argv[4]"
+   .srcstep 16 16 17 "nr15_stem_access_compare.crexx" 14 22 37 "if argv[0] >= 4 then family = argv[4]"
+   minlinkattr1 r14,r0,4
+   .traceevent "V" 6 "R" "S" "r" 14 16 16 0 "argv" ""
+   scopy r4,r14
+   .traceevent "A" 6 "R" "S" "r" 4 16 16 0 "family" ""
+   unlink r14
+l61iffalse:
+   .srcstep 20 20 17 "nr15_stem_access_compare.crexx" 15 1 12 "if size < 1 then return fail(\"size\")"
+   .traceevent "V" 6 "R" "I" "r" 10 20 20 0 "size" ""
+   ilt r16,r10,1
+   .traceevent "O" 4 "R" "B" "r" 16 20 20 0 "" ""
+   brf l68iffalse,r16
+   .srcstep 21 21 17 "nr15_stem_access_compare.crexx" 15 13 17 "if size < 1 then return fail(\"size\")"
+   .srcstep 19 19 17 "nr15_stem_access_compare.crexx" 15 18 37 "if size < 1 then return fail(\"size\")"
+   load r15,"size"
+   .traceevent "L" 4 "R" "S" "r" 15 19 19 0 "" ""
+   settp r15,768
+   call1 r17,fail(),r15
+   .traceevent "F" 4 "R" "I" "r" 17 19 19 0 "fail" ""
+   ret r17
+l68iffalse:
+   .srcstep 23 23 17 "nr15_stem_access_compare.crexx" 16 1 18 "if iterations < 1 then return fail(\"iterations\")"
+   .traceevent "V" 6 "R" "I" "r" 6 23 23 0 "iterations" ""
+   ilt r17,r6,1
+   .traceevent "O" 4 "R" "B" "r" 17 23 23 0 "" ""
+   brf l75iffalse,r17
+   .srcstep 24 24 17 "nr15_stem_access_compare.crexx" 16 19 23 "if iterations < 1 then return fail(\"iterations\")"
+   .srcstep 22 22 17 "nr15_stem_access_compare.crexx" 16 24 49 "if iterations < 1 then return fail(\"iterations\")"
+   load r16,"iterations"
+   .traceevent "L" 4 "R" "S" "r" 16 22 22 0 "" ""
+   settp r16,768
+   call1 r14,fail(),r16
+   .traceevent "F" 4 "R" "I" "r" 14 22 22 0 "fail" ""
+   ret r14
+l75iffalse:
+   .srcstep 26 26 17 "nr15_stem_access_compare.crexx" 17 1 39 "if family == \"collision\" & size > 1024 then return fail(\"collision size exceeds 1024\")"
+   .traceevent "V" 6 "R" "S" "r" 4 26 26 0 "family" ""
+   seq r17,r4,"collision"
+   .traceevent "O" 4 "R" "B" "r" 17 26 26 0 "" ""
+   brf l82andend,r17
+   .traceevent "V" 6 "R" "I" "r" 10 26 26 0 "size" ""
+   igt r17,r10,1024
+   .traceevent "O" 4 "R" "B" "r" 17 26 26 0 "" ""
+l82andend:
+   .traceevent "O" 4 "R" "B" "r" 17 26 26 0 "" ""
+   brf l86iffalse,r17
+   .srcstep 27 27 17 "nr15_stem_access_compare.crexx" 17 40 44 "if family == \"collision\" & size > 1024 then return fail(\"collision size exceeds 1024\")"
+   .srcstep 25 25 17 "nr15_stem_access_compare.crexx" 17 45 87 "if family == \"collision\" & size > 1024 then return fail(\"collision size exceeds 1024\")"
+   load r16,"collision size exceeds 1024"
+   .traceevent "L" 4 "R" "S" "r" 16 25 25 0 "" ""
+   settp r16,768
+   call1 r14,fail(),r16
+   .traceevent "F" 4 "R" "I" "r" 14 25 25 0 "fail" ""
+   ret r14
+l86iffalse:
+   .srcstep 28 28 17 "nr15_stem_access_compare.crexx" 20 1 15 "target = .stem()"
+   .meta "nr15_stem_access_compare.main.target"="b" ".stem" r12
+   load r17,0
+   call r12,§rxfnsb.stem.§factory(),r17
+   .traceevent "F" 4 "R" "O" "r" 12 28 28 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 12 28 28 0 "target" ""
+   .srcstep 34 34 17 "nr15_stem_access_compare.crexx" 21 1 3 "do i = 1 to size"
+   .srcstep 29 29 17 "nr15_stem_access_compare.crexx" 21 4 9 "do i = 1 to size"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r17
+   load r17,1
+   .traceevent "L" 4 "R" "I" "r" 17 29 29 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 29 29 0 "i" ""
+   .srcstep 30 30 17 "nr15_stem_access_compare.crexx" 21 10 17 "do i = 1 to size"
+   .traceevent "V" 6 "R" "I" "r" 10 0 0 0 "size" ""
+l97dostart:
+   .srcstep 30 30 17 "nr15_stem_access_compare.crexx" 21 10 17 "do i = 1 to size"
+   igt r16,r17,r10
+   brt l97doend,r16
+   .srcstep 32 32 17 "nr15_stem_access_compare.crexx" 22 3 32 "  keys[i] = make_key(i, family)"
+   .traceevent "V" 6 "R" "I" "r" 17 32 32 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 17 32 32 0 "keys" ""
+   minlinkattr1 r15,r7,r17,0
+   .traceevent "V" 6 "R" "I" "r" 17 32 32 0 "i" ""
+   .traceevent "V" 6 "R" "S" "r" 4 32 32 0 "family" ""
+   settp r4,256
+   call2 r14,make_key(),r17,r4
+   .traceevent "F" 4 "R" "S" "r" 14 32 32 0 "make_key" ""
+   scopy r15,r14
+   .traceevent "A" 6 "R" "S" "r" 15 32 32 0 "keys" ""
+   unlink r15
+   .srcstep 33 33 17 "nr15_stem_access_compare.crexx" 23 3 36 "  call target.set(keys[i], \"v\" || i)"
+   .traceevent "V" 6 "R" "O" "r" 12 33 33 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 17 33 33 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 17 33 33 0 "keys" ""
+   minlinkattr1 r15,r7,r17,0
+   .traceevent "V" 6 "R" "S" "r" 15 33 33 0 "keys" ""
+   itos r17
+   .traceevent "V" 6 "R" "S" "r" 17 33 33 0 "i" ""
+   concat r21,"v",r17
+   .traceevent "O" 4 "R" "S" "r" 21 33 33 0 "" ""
+   load r18,3
+   settp r12,256
+   swap r19,r12
+   settp r15,256
+   swap r20,r15
+   settpcall r14,§rxfnsb.stem.set(),r18,r21,768
+   swap r12,r19
+   swap r15,r20
+   unlink r15
+   .traceevent "F" 4 "R" "V" "r" 14 33 33 0 "set" ""
+l97doinc:
+   .srcstep 31 31 17 "nr15_stem_access_compare.crexx" 21 4 5 "do i = 1 to size"
+   inc r17
+   .srcstep 35 35 17 "nr15_stem_access_compare.crexx" 23 36 37 "  call target.set(keys[i], \"v\" || i)"
+   br l97dostart
+l97doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .srcstep 36 36 17 "nr15_stem_access_compare.crexx" 26 1 13 "checksum = 0"
+   .meta "nr15_stem_access_compare.main.checksum"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 36 36 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 36 36 0 "checksum" ""
+   .srcstep 37 37 17 "nr15_stem_access_compare.crexx" 27 1 19 "start = time(\"us\")"
+   .meta "nr15_stem_access_compare.main.start"="b" ".string" r11
+   load r21,"us"
+   .traceevent "L" 4 "R" "S" "r" 21 37 37 0 "" ""
+   load r20,1
+   settpcall r11,rxfnsb.time(),r20,r21,768
+   .traceevent "F" 4 "R" "S" "r" 11 37 37 0 "time" ""
+   .traceevent "A" 6 "R" "S" "r" 11 37 37 0 "start" ""
+   .srcstep 167 167 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 167 167 0 "mode" ""
+   seq r21,r9,"get-hit"
+   .traceevent "O" 4 "R" "B" "r" 21 167 167 0 "" ""
+   brf l735iffalse,r21
+   .srcstep 168 168 17 "nr15_stem_access_compare.crexx" 30 26 30 "  when mode == \"get-hit\" then do"
+   .srcstep 43 43 17 "nr15_stem_access_compare.crexx" 31 5 7 "    do i = 1 to iterations"
+   .srcstep 38 38 17 "nr15_stem_access_compare.crexx" 31 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r20
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 38 38 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 38 38 0 "i" ""
+   .srcstep 39 39 17 "nr15_stem_access_compare.crexx" 31 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l130dostart:
+   .srcstep 39 39 17 "nr15_stem_access_compare.crexx" 31 14 27 "    do i = 1 to iterations"
+   igt r18,r20,r6
+   brt l130doend,r18
+   .srcstep 41 41 17 "nr15_stem_access_compare.crexx" 32 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_access_compare.main.index"="b" ".int" r19
+   .traceevent "V" 6 "R" "I" "r" 20 41 41 0 "i" ""
+   isub r17,r20,1
+   .traceevent "O" 4 "R" "I" "r" 17 41 41 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 41 41 0 "size" ""
+   imod r17,r17,r10
+   .traceevent "O" 4 "R" "I" "r" 17 41 41 0 "" ""
+   iadd r19,r17,1
+   .traceevent "O" 4 "R" "I" "r" 19 41 41 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 41 41 0 "index" ""
+   .srcstep 42 42 17 "nr15_stem_access_compare.crexx" 33 7 57 "      checksum = checksum + length(target.get(keys[index]))"
+   .traceevent "V" 6 "R" "I" "r" 1 42 42 0 "checksum" ""
+   .traceevent "V" 6 "R" "O" "r" 12 42 42 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 19 42 42 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 19 42 42 0 "keys" ""
+   minlinkattr1 r15,r7,r19,0
+   .traceevent "V" 6 "R" "S" "r" 15 42 42 0 "keys" ""
+   load r22,2
+   settp r12,256
+   swap r23,r12
+   settpswapcall r17,§rxfnsb.stem.get(),r22,r15,256,r24
+   swap r12,r23
+   swap r15,r24
+   unlink r15
+   .traceevent "F" 4 "R" "S" "r" 17 42 42 0 "get" ""
+   load r16,1
+   settpcall r24,rxfnsb.length(),r16,r17,256
+   .traceevent "F" 4 "R" "I" "r" 24 42 42 0 "length" ""
+   iadd r1,r1,r24
+   .traceevent "O" 4 "R" "I" "r" 1 42 42 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 42 42 0 "checksum" ""
+l130doinc:
+   .srcstep 40 40 17 "nr15_stem_access_compare.crexx" 31 8 9 "    do i = 1 to iterations"
+   inc r20
+   .srcstep 44 44 17 "nr15_stem_access_compare.crexx" 33 57 58 "      checksum = checksum + length(target.get(keys[index]))"
+   br l130dostart
+l130doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.index"
+   br l735ifend
+   .srcstep 169 169 17 "nr15_stem_access_compare.crexx" 33 57 58 "      checksum = checksum + length(target.get(keys[index]))"
+l735iffalse:
+   .srcstep 164 164 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 164 164 0 "mode" ""
+   seq r24,r9,"get-miss"
+   .traceevent "O" 4 "R" "B" "r" 24 164 164 0 "" ""
+   brf l736iffalse,r24
+   .srcstep 165 165 17 "nr15_stem_access_compare.crexx" 36 27 31 "  when mode == \"get-miss\" then do"
+   .srcstep 45 45 17 "nr15_stem_access_compare.crexx" 37 5 32 "    miss = \"missing-\" || family"
+   .meta "nr15_stem_access_compare.main.miss"="b" ".string" r8
+   .traceevent "V" 6 "R" "S" "r" 4 45 45 0 "family" ""
+   concat r8,"missing-",r4
+   .traceevent "O" 4 "R" "S" "r" 8 45 45 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 8 45 45 0 "miss" ""
+   .srcstep 52 52 17 "nr15_stem_access_compare.crexx" 38 5 7 "    do i = 1 to iterations"
+   .srcstep 46 46 17 "nr15_stem_access_compare.crexx" 38 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r23
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 46 46 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 46 46 0 "i" ""
+   .srcstep 47 47 17 "nr15_stem_access_compare.crexx" 38 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l169dostart:
+   .srcstep 47 47 17 "nr15_stem_access_compare.crexx" 38 14 27 "    do i = 1 to iterations"
+   igt r22,r23,r6
+   brt l169doend,r22
+   .srcstep 50 50 17 "nr15_stem_access_compare.crexx" 39 7 32 "      if target.get(miss) == \"\" then checksum = checksum + 1"
+   .traceevent "V" 6 "R" "O" "r" 12 50 50 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 8 50 50 0 "miss" ""
+   load r18,2
+   settp r12,256
+   swap r19,r12
+   settpswapcall r17,§rxfnsb.stem.get(),r18,r8,256,r20
+   swap r12,r19
+   swap r8,r20
+   .traceevent "F" 4 "R" "S" "r" 17 50 50 0 "get" ""
+   seq r20,r17,""
+   .traceevent "O" 4 "R" "B" "r" 20 50 50 0 "" ""
+   brf l187iffalse,r20
+   .srcstep 51 51 17 "nr15_stem_access_compare.crexx" 39 33 37 "      if target.get(miss) == \"\" then checksum = checksum + 1"
+   .srcstep 49 49 17 "nr15_stem_access_compare.crexx" 39 38 61 "      if target.get(miss) == \"\" then checksum = checksum + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 49 49 0 "checksum" ""
+   iadd r1,r1,1
+   .traceevent "O" 4 "R" "I" "r" 1 49 49 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 49 49 0 "checksum" ""
+l187iffalse:
+l169doinc:
+   .srcstep 48 48 17 "nr15_stem_access_compare.crexx" 38 8 9 "    do i = 1 to iterations"
+   inc r23
+   .srcstep 53 53 17 "nr15_stem_access_compare.crexx" 40 5 8 "    end"
+   br l169dostart
+l169doend:
+   .meta "nr15_stem_access_compare.main.i"
+   br l736ifend
+   .srcstep 166 166 17 "nr15_stem_access_compare.crexx" 40 5 8 "    end"
+l736iffalse:
+   .srcstep 161 161 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 161 161 0 "mode" ""
+   seq r23,r9,"property-hit"
+   .traceevent "O" 4 "R" "B" "r" 23 161 161 0 "" ""
+   brf l737iffalse,r23
+   .srcstep 162 162 17 "nr15_stem_access_compare.crexx" 42 31 35 "  when mode == \"property-hit\" then do"
+   .srcstep 60 60 17 "nr15_stem_access_compare.crexx" 43 5 7 "    do i = 1 to iterations"
+   .srcstep 54 54 17 "nr15_stem_access_compare.crexx" 43 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r22
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 54 54 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 54 54 0 "i" ""
+   .srcstep 55 55 17 "nr15_stem_access_compare.crexx" 43 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l193dostart:
+   .srcstep 55 55 17 "nr15_stem_access_compare.crexx" 43 14 27 "    do i = 1 to iterations"
+   igt r18,r22,r6
+   brt l193doend,r18
+   .srcstep 57 57 17 "nr15_stem_access_compare.crexx" 44 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_access_compare.main.index"="b" ".int" r20
+   .traceevent "V" 6 "R" "I" "r" 22 57 57 0 "i" ""
+   isub r17,r22,1
+   .traceevent "O" 4 "R" "I" "r" 17 57 57 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 57 57 0 "size" ""
+   imod r17,r17,r10
+   .traceevent "O" 4 "R" "I" "r" 17 57 57 0 "" ""
+   iadd r20,r17,1
+   .traceevent "O" 4 "R" "I" "r" 20 57 57 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 57 57 0 "index" ""
+   .srcstep 58 58 17 "nr15_stem_access_compare.crexx" 45 7 23 "      key = keys[index]"
+   .meta "nr15_stem_access_compare.main.key"="b" ".string" r19
+   .traceevent "V" 6 "R" "I" "r" 20 58 58 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 20 58 58 0 "keys" ""
+   minlinkattr1 r17,r7,r20,0
+   .traceevent "V" 6 "R" "S" "r" 17 58 58 0 "keys" ""
+   scopy r19,r17
+   .traceevent "A" 6 "R" "S" "r" 19 58 58 0 "key" ""
+   unlink r17
+   .srcstep 59 59 17 "nr15_stem_access_compare.crexx" 46 7 47 "      checksum = checksum + length(target.key)"
+   .traceevent "V" 6 "R" "I" "r" 1 59 59 0 "checksum" ""
+   .traceevent "V" 6 "R" "S" "r" 19 59 59 0 "key" ""
+   .traceevent "C" 4 "R" "S" "r" 19 59 59 0 "target" ""
+   load r25,2
+   settp r12,256
+   swap r26,r12
+   settpswapcall r17,§rxfnsb.stem.get(),r25,r19,256,r27
+   swap r12,r26
+   swap r19,r27
+   .traceevent "V" 6 "R" "S" "r" 17 59 59 0 "target" ""
+   load r16,1
+   settpcall r27,rxfnsb.length(),r16,r17,256
+   .traceevent "F" 4 "R" "I" "r" 27 59 59 0 "length" ""
+   iadd r1,r1,r27
+   .traceevent "O" 4 "R" "I" "r" 1 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 59 59 0 "checksum" ""
+l193doinc:
+   .srcstep 56 56 17 "nr15_stem_access_compare.crexx" 43 8 9 "    do i = 1 to iterations"
+   inc r22
+   .srcstep 61 61 17 "nr15_stem_access_compare.crexx" 47 5 8 "    end"
+   br l193dostart
+l193doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.index"
+   .meta "nr15_stem_access_compare.main.key"
+   br l737ifend
+   .srcstep 163 163 17 "nr15_stem_access_compare.crexx" 47 5 8 "    end"
+l737iffalse:
+   .srcstep 158 158 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 158 158 0 "mode" ""
+   seq r27,r9,"bracket-hit"
+   .traceevent "O" 4 "R" "B" "r" 27 158 158 0 "" ""
+   brf l738iffalse,r27
+   .srcstep 159 159 17 "nr15_stem_access_compare.crexx" 49 30 34 "  when mode == \"bracket-hit\" then do"
+   .srcstep 67 67 17 "nr15_stem_access_compare.crexx" 50 5 7 "    do i = 1 to iterations"
+   .srcstep 62 62 17 "nr15_stem_access_compare.crexx" 50 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r26
+   load r26,1
+   .traceevent "L" 4 "R" "I" "r" 26 62 62 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 62 62 0 "i" ""
+   .srcstep 63 63 17 "nr15_stem_access_compare.crexx" 50 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l226dostart:
+   .srcstep 63 63 17 "nr15_stem_access_compare.crexx" 50 14 27 "    do i = 1 to iterations"
+   igt r22,r26,r6
+   brt l226doend,r22
+   .srcstep 65 65 17 "nr15_stem_access_compare.crexx" 51 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_access_compare.main.index"="b" ".int" r25
+   .traceevent "V" 6 "R" "I" "r" 26 65 65 0 "i" ""
+   isub r20,r26,1
+   .traceevent "O" 4 "R" "I" "r" 20 65 65 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 65 65 0 "size" ""
+   imod r20,r20,r10
+   .traceevent "O" 4 "R" "I" "r" 20 65 65 0 "" ""
+   iadd r25,r20,1
+   .traceevent "O" 4 "R" "I" "r" 25 65 65 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 65 65 0 "index" ""
+   .srcstep 66 66 17 "nr15_stem_access_compare.crexx" 52 7 53 "      checksum = checksum + length(target[keys[index]])"
+   .traceevent "V" 6 "R" "I" "r" 1 66 66 0 "checksum" ""
+   .traceevent "V" 6 "R" "I" "r" 25 66 66 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 25 66 66 0 "keys" ""
+   minlinkattr1 r15,r7,r25,0
+   .traceevent "V" 6 "R" "S" "r" 15 66 66 0 "keys" ""
+   .traceevent "C" 4 "R" "S" "r" 15 66 66 0 "target" ""
+   load r16,2
+   settp r12,256
+   swap r17,r12
+   settpswapcall r20,§rxfnsb.stem.get(),r16,r15,256,r18
+   swap r12,r17
+   swap r15,r18
+   unlink r15
+   .traceevent "V" 6 "R" "S" "r" 20 66 66 0 "target" ""
+   load r19,1
+   settpcall r18,rxfnsb.length(),r19,r20,256
+   .traceevent "F" 4 "R" "I" "r" 18 66 66 0 "length" ""
+   iadd r1,r1,r18
+   .traceevent "O" 4 "R" "I" "r" 1 66 66 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 66 66 0 "checksum" ""
+l226doinc:
+   .srcstep 64 64 17 "nr15_stem_access_compare.crexx" 50 8 9 "    do i = 1 to iterations"
+   inc r26
+   .srcstep 68 68 17 "nr15_stem_access_compare.crexx" 52 53 54 "      checksum = checksum + length(target[keys[index]])"
+   br l226dostart
+l226doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.index"
+   br l738ifend
+   .srcstep 160 160 17 "nr15_stem_access_compare.crexx" 52 53 54 "      checksum = checksum + length(target[keys[index]])"
+l738iffalse:
+   .srcstep 155 155 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 155 155 0 "mode" ""
+   seq r26,r9,"set-existing"
+   .traceevent "O" 4 "R" "B" "r" 26 155 155 0 "" ""
+   brf l739iffalse,r26
+   .srcstep 156 156 17 "nr15_stem_access_compare.crexx" 55 31 35 "  when mode == \"set-existing\" then do"
+   .srcstep 75 75 17 "nr15_stem_access_compare.crexx" 56 5 7 "    do i = 1 to iterations"
+   .srcstep 69 69 17 "nr15_stem_access_compare.crexx" 56 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r25
+   load r25,1
+   .traceevent "L" 4 "R" "I" "r" 25 69 69 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 69 69 0 "i" ""
+   .srcstep 70 70 17 "nr15_stem_access_compare.crexx" 56 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l256dostart:
+   .srcstep 70 70 17 "nr15_stem_access_compare.crexx" 56 14 27 "    do i = 1 to iterations"
+   igt r20,r25,r6
+   brt l256doend,r20
+   .srcstep 72 72 17 "nr15_stem_access_compare.crexx" 57 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_access_compare.main.index"="b" ".int" r22
+   .traceevent "V" 6 "R" "I" "r" 25 72 72 0 "i" ""
+   isub r19,r25,1
+   .traceevent "O" 4 "R" "I" "r" 19 72 72 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 72 72 0 "size" ""
+   imod r19,r19,r10
+   .traceevent "O" 4 "R" "I" "r" 19 72 72 0 "" ""
+   iadd r22,r19,1
+   .traceevent "O" 4 "R" "I" "r" 22 72 72 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 72 72 0 "index" ""
+   .srcstep 73 73 17 "nr15_stem_access_compare.crexx" 58 7 44 "      call target.set(keys[index], \"u\" || i)"
+   .traceevent "V" 6 "R" "O" "r" 12 73 73 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 22 73 73 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 22 73 73 0 "keys" ""
+   minlinkattr1 r15,r7,r22,0
+   .traceevent "V" 6 "R" "S" "r" 15 73 73 0 "keys" ""
+   itos r25
+   .traceevent "V" 6 "R" "S" "r" 25 73 73 0 "i" ""
+   concat r19,"u",r25
+   .traceevent "O" 4 "R" "S" "r" 19 73 73 0 "" ""
+   load r16,3
+   settp r12,256
+   swap r17,r12
+   settp r15,256
+   swap r18,r15
+   settpcall r28,§rxfnsb.stem.set(),r16,r19,768
+   swap r12,r17
+   swap r15,r18
+   unlink r15
+   .traceevent "F" 4 "R" "V" "r" 28 73 73 0 "set" ""
+   .srcstep 74 74 17 "nr15_stem_access_compare.crexx" 59 7 34 "      checksum = checksum + index"
+   .traceevent "V" 6 "R" "I" "r" 1 74 74 0 "checksum" ""
+   .traceevent "V" 6 "R" "I" "r" 22 74 74 0 "index" ""
+   iadd r1,r1,r22
+   .traceevent "O" 4 "R" "I" "r" 1 74 74 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 74 74 0 "checksum" ""
+l256doinc:
+   .srcstep 71 71 17 "nr15_stem_access_compare.crexx" 56 8 9 "    do i = 1 to iterations"
+   inc r25
+   .srcstep 76 76 17 "nr15_stem_access_compare.crexx" 60 5 8 "    end"
+   br l256dostart
+l256doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.index"
+   br l739ifend
+   .srcstep 157 157 17 "nr15_stem_access_compare.crexx" 60 5 8 "    end"
+l739iffalse:
+   .srcstep 152 152 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 152 152 0 "mode" ""
+   seq r25,r9,"set-new"
+   .traceevent "O" 4 "R" "B" "r" 25 152 152 0 "" ""
+   brf l740iffalse,r25
+   .srcstep 153 153 17 "nr15_stem_access_compare.crexx" 62 26 30 "  when mode == \"set-new\" then do"
+   .srcstep 82 82 17 "nr15_stem_access_compare.crexx" 63 5 7 "    do i = 1 to iterations"
+   .srcstep 77 77 17 "nr15_stem_access_compare.crexx" 63 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r22
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 77 77 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 77 77 0 "i" ""
+   .srcstep 78 78 17 "nr15_stem_access_compare.crexx" 63 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l292dostart:
+   .srcstep 78 78 17 "nr15_stem_access_compare.crexx" 63 14 27 "    do i = 1 to iterations"
+   igt r19,r22,r6
+   brt l292doend,r19
+   .srcstep 80 80 17 "nr15_stem_access_compare.crexx" 64 7 41 "      key = \"new-\" || family || \"-\" || i"
+   .meta "nr15_stem_access_compare.main.key"="b" ".string" r20
+   .traceevent "V" 6 "R" "S" "r" 4 80 80 0 "family" ""
+   concat r18,"new-",r4
+   .traceevent "O" 4 "R" "S" "r" 18 80 80 0 "" ""
+   concat r18,r18,"-"
+   .traceevent "O" 4 "R" "S" "r" 18 80 80 0 "" ""
+   itos r22
+   .traceevent "V" 6 "R" "S" "r" 22 80 80 0 "i" ""
+   concat r20,r18,r22
+   .traceevent "O" 4 "R" "S" "r" 20 80 80 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 20 80 80 0 "key" ""
+   .srcstep 81 81 17 "nr15_stem_access_compare.crexx" 65 7 36 "      call target.set(key, \"n\" || i)"
+   .traceevent "V" 6 "R" "O" "r" 12 81 81 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 20 81 81 0 "key" ""
+   itos r22
+   .traceevent "V" 6 "R" "S" "r" 22 81 81 0 "i" ""
+   concat r18,"n",r22
+   .traceevent "O" 4 "R" "S" "r" 18 81 81 0 "" ""
+   load r15,3
+   settp r12,256
+   swap r16,r12
+   settp r20,256
+   swap r17,r20
+   settpcall r29,§rxfnsb.stem.set(),r15,r18,768
+   swap r12,r16
+   swap r20,r17
+   .traceevent "F" 4 "R" "V" "r" 29 81 81 0 "set" ""
+l292doinc:
+   .srcstep 79 79 17 "nr15_stem_access_compare.crexx" 63 8 9 "    do i = 1 to iterations"
+   inc r22
+   .srcstep 83 83 17 "nr15_stem_access_compare.crexx" 65 36 37 "      call target.set(key, \"n\" || i)"
+   br l292dostart
+l292doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.key"
+   .srcstep 84 84 17 "nr15_stem_access_compare.crexx" 67 5 27 "    checksum = target.size()"
+   .traceevent "V" 6 "R" "O" "r" 12 84 84 0 "target" ""
+   load r30,1
+   settpswapcall r1,§rxfnsb.stem.size(),r30,r12,256,r31
+   swap r12,r31
+   .traceevent "F" 4 "R" "I" "r" 1 84 84 0 "size" ""
+   .traceevent "A" 6 "R" "I" "r" 1 84 84 0 "checksum" ""
+   br l740ifend
+   .srcstep 154 154 17 "nr15_stem_access_compare.crexx" 67 27 28 "    checksum = target.size()"
+l740iffalse:
+   .srcstep 149 149 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 149 149 0 "mode" ""
+   seq r31,r9,"reset-default"
+   .traceevent "O" 4 "R" "B" "r" 31 149 149 0 "" ""
+   brf l741iffalse,r31
+   .srcstep 150 150 17 "nr15_stem_access_compare.crexx" 69 32 36 "  when mode == \"reset-default\" then do"
+   .srcstep 89 89 17 "nr15_stem_access_compare.crexx" 70 5 7 "    do i = 1 to iterations"
+   .srcstep 85 85 17 "nr15_stem_access_compare.crexx" 70 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r30
+   load r30,1
+   .traceevent "L" 4 "R" "I" "r" 30 85 85 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 85 85 0 "i" ""
+   .srcstep 86 86 17 "nr15_stem_access_compare.crexx" 70 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l328dostart:
+   .srcstep 86 86 17 "nr15_stem_access_compare.crexx" 70 14 27 "    do i = 1 to iterations"
+   igt r22,r30,r6
+   brt l328doend,r22
+   .srcstep 88 88 6 "nr15_stem_access_compare.crexx" 71 7 25 "      target. = \"d\" || i"
+   .traceevent "C" 4 "R" "S" "r" 19 88 88 0 "target" ""
+   itos r30
+   .traceevent "V" 6 "R" "S" "r" 30 88 88 0 "i" ""
+   concat r20,"d",r30
+   .traceevent "O" 4 "R" "S" "r" 20 88 88 0 "" ""
+   load r17,3
+   settp r12,256
+   swap r18,r12
+   settp r19,512
+   settpcall r16,§rxfnsb.stem.set(),r17,r20,768
+   swap r12,r18
+   .traceevent "A" 6 "R" "S" "r" 20 88 88 0 "target" ""
+l328doinc:
+   .srcstep 87 87 17 "nr15_stem_access_compare.crexx" 70 8 9 "    do i = 1 to iterations"
+   inc r30
+   .srcstep 90 90 17 "nr15_stem_access_compare.crexx" 72 5 8 "    end"
+   br l328dostart
+l328doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .srcstep 91 91 17 "nr15_stem_access_compare.crexx" 73 5 57 "    checksum = length(target.get(keys[1])) + target.size()"
+   .traceevent "V" 6 "R" "O" "r" 12 91 91 0 "target" ""
+   minlinkattr1 r30,r7,1
+   .traceevent "V" 6 "R" "S" "r" 30 91 91 0 "keys" ""
+   load r34,2
+   settp r12,256
+   swap r35,r12
+   settpswapcall r33,§rxfnsb.stem.get(),r34,r30,256,r36
+   swap r12,r35
+   swap r30,r36
+   unlink r30
+   .traceevent "F" 4 "R" "S" "r" 33 91 91 0 "get" ""
+   load r32,1
+   settpcall r36,rxfnsb.length(),r32,r33,256
+   .traceevent "F" 4 "R" "I" "r" 36 91 91 0 "length" ""
+   .traceevent "V" 6 "R" "O" "r" 12 91 91 0 "target" ""
+   load r34,1
+   settpswapcall r33,§rxfnsb.stem.size(),r34,r12,256,r35
+   swap r12,r35
+   .traceevent "F" 4 "R" "I" "r" 33 91 91 0 "size" ""
+   iadd r1,r36,r33
+   .traceevent "O" 4 "R" "I" "r" 1 91 91 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 91 91 0 "checksum" ""
+   br l741ifend
+   .srcstep 151 151 17 "nr15_stem_access_compare.crexx" 73 57 58 "    checksum = length(target.get(keys[1])) + target.size()"
+l741iffalse:
+   .srcstep 146 146 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 146 146 0 "mode" ""
+   seq r36,r9,"reset-selective"
+   .traceevent "O" 4 "R" "B" "r" 36 146 146 0 "" ""
+   brf l742iffalse,r36
+   .srcstep 147 147 17 "nr15_stem_access_compare.crexx" 75 34 38 "  when mode == \"reset-selective\" then do"
+   .srcstep 99 99 17 "nr15_stem_access_compare.crexx" 76 5 7 "    do i = 1 to iterations"
+   .srcstep 92 92 17 "nr15_stem_access_compare.crexx" 76 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r35
+   load r35,1
+   .traceevent "L" 4 "R" "I" "r" 35 92 92 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 92 92 0 "i" ""
+   .srcstep 93 93 17 "nr15_stem_access_compare.crexx" 76 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l360dostart:
+   .srcstep 93 93 17 "nr15_stem_access_compare.crexx" 76 14 27 "    do i = 1 to iterations"
+   igt r33,r35,r6
+   brt l360doend,r33
+   .srcstep 95 95 17 "nr15_stem_access_compare.crexx" 77 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_access_compare.main.index"="b" ".int" r34
+   .traceevent "V" 6 "R" "I" "r" 35 95 95 0 "i" ""
+   isub r32,r35,1
+   .traceevent "O" 4 "R" "I" "r" 32 95 95 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 95 95 0 "size" ""
+   imod r32,r32,r10
+   .traceevent "O" 4 "R" "I" "r" 32 95 95 0 "" ""
+   iadd r34,r32,1
+   .traceevent "O" 4 "R" "I" "r" 34 95 95 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 95 95 0 "index" ""
+   .srcstep 96 96 6 "nr15_stem_access_compare.crexx" 78 7 25 "      target. = \"d\" || i"
+   .traceevent "C" 4 "R" "S" "r" 39 96 96 0 "target" ""
+   itos r35
+   .traceevent "V" 6 "R" "S" "r" 35 96 96 0 "i" ""
+   concat r40,"d",r35
+   .traceevent "O" 4 "R" "S" "r" 40 96 96 0 "" ""
+   load r37,3
+   settp r12,256
+   swap r38,r12
+   settp r39,512
+   settpcall r32,§rxfnsb.stem.set(),r37,r40,768
+   swap r12,r38
+   .traceevent "A" 6 "R" "S" "r" 40 96 96 0 "target" ""
+   .srcstep 97 97 17 "nr15_stem_access_compare.crexx" 79 7 44 "      call target.set(keys[index], \"s\" || i)"
+   .traceevent "V" 6 "R" "O" "r" 12 97 97 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 34 97 97 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 34 97 97 0 "keys" ""
+   minlinkattr1 r30,r7,r34,0
+   .traceevent "V" 6 "R" "S" "r" 30 97 97 0 "keys" ""
+   itos r35
+   .traceevent "V" 6 "R" "S" "r" 35 97 97 0 "i" ""
+   concat r40,"s",r35
+   .traceevent "O" 4 "R" "S" "r" 40 97 97 0 "" ""
+   load r37,3
+   settp r12,256
+   swap r38,r12
+   settp r30,256
+   swap r39,r30
+   settpcall r22,§rxfnsb.stem.set(),r37,r40,768
+   swap r12,r38
+   swap r30,r39
+   unlink r30
+   .traceevent "F" 4 "R" "V" "r" 22 97 97 0 "set" ""
+   .srcstep 98 98 17 "nr15_stem_access_compare.crexx" 80 7 57 "      checksum = checksum + length(target.get(keys[index]))"
+   .traceevent "V" 6 "R" "I" "r" 1 98 98 0 "checksum" ""
+   .traceevent "V" 6 "R" "O" "r" 12 98 98 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 34 98 98 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 34 98 98 0 "keys" ""
+   minlinkattr1 r38,r7,r34,0
+   .traceevent "V" 6 "R" "S" "r" 38 98 98 0 "keys" ""
+   load r41,2
+   settp r12,256
+   swap r42,r12
+   settpswapcall r40,§rxfnsb.stem.get(),r41,r38,256,r43
+   swap r12,r42
+   swap r38,r43
+   unlink r38
+   .traceevent "F" 4 "R" "S" "r" 40 98 98 0 "get" ""
+   load r39,1
+   settpcall r43,rxfnsb.length(),r39,r40,256
+   .traceevent "F" 4 "R" "I" "r" 43 98 98 0 "length" ""
+   iadd r1,r1,r43
+   .traceevent "O" 4 "R" "I" "r" 1 98 98 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 98 98 0 "checksum" ""
+l360doinc:
+   .srcstep 94 94 17 "nr15_stem_access_compare.crexx" 76 8 9 "    do i = 1 to iterations"
+   inc r35
+   .srcstep 100 100 17 "nr15_stem_access_compare.crexx" 80 57 58 "      checksum = checksum + length(target.get(keys[index]))"
+   br l360dostart
+l360doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.index"
+   br l742ifend
+   .srcstep 148 148 17 "nr15_stem_access_compare.crexx" 80 57 58 "      checksum = checksum + length(target.get(keys[index]))"
+l742iffalse:
+   .srcstep 143 143 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 143 143 0 "mode" ""
+   seq r43,r9,"multi-tail"
+   .traceevent "O" 4 "R" "B" "r" 43 143 143 0 "" ""
+   brf l743iffalse,r43
+   .srcstep 144 144 17 "nr15_stem_access_compare.crexx" 83 29 33 "  when mode == \"multi-tail\" then do"
+   .srcstep 101 101 17 "nr15_stem_access_compare.crexx" 84 5 21 "    compound = .stem()"
+   .meta "nr15_stem_access_compare.main.compound"="b" ".stem" r2
+   load r42,0
+   call r2,§rxfnsb.stem.§factory(),r42
+   .traceevent "F" 4 "R" "O" "r" 2 101 101 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 2 101 101 0 "compound" ""
+   .srcstep 108 108 17 "nr15_stem_access_compare.crexx" 85 5 7 "    do i = 1 to size"
+   .srcstep 102 102 17 "nr15_stem_access_compare.crexx" 85 8 13 "    do i = 1 to size"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r42
+   load r42,1
+   .traceevent "L" 4 "R" "I" "r" 42 102 102 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 42 102 102 0 "i" ""
+   .srcstep 103 103 17 "nr15_stem_access_compare.crexx" 85 14 21 "    do i = 1 to size"
+   .traceevent "V" 6 "R" "I" "r" 10 0 0 0 "size" ""
+l412dostart:
+   .srcstep 103 103 17 "nr15_stem_access_compare.crexx" 85 14 21 "    do i = 1 to size"
+   igt r39,r42,r10
+   brt l412doend,r39
+   .srcstep 105 105 17 "nr15_stem_access_compare.crexx" 86 7 22 "      left = \"L\" || i"
+   .meta "nr15_stem_access_compare.main.left"="b" ".string" r41
+   itos r42
+   .traceevent "V" 6 "R" "S" "r" 42 105 105 0 "i" ""
+   concat r41,"L",r42
+   .traceevent "O" 4 "R" "S" "r" 41 105 105 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 41 105 105 0 "left" ""
+   .srcstep 106 106 17 "nr15_stem_access_compare.crexx" 87 7 23 "      right = \"R\" || i"
+   .meta "nr15_stem_access_compare.main.right"="b" ".string" r40
+   itos r42
+   .traceevent "V" 6 "R" "S" "r" 42 106 106 0 "i" ""
+   concat r40,"R",r42
+   .traceevent "O" 4 "R" "S" "r" 40 106 106 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 40 106 106 0 "right" ""
+   .srcstep 107 107 17 "nr15_stem_access_compare.crexx" 88 7 55 "      call compound.set(left || \".\" || right, \"m\" || i)"
+   .traceevent "V" 6 "R" "O" "r" 2 107 107 0 "compound" ""
+   .traceevent "V" 6 "R" "S" "r" 41 107 107 0 "left" ""
+   concat r38,r41,"."
+   .traceevent "O" 4 "R" "S" "r" 38 107 107 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 40 107 107 0 "right" ""
+   concat r46,r38,r40
+   .traceevent "O" 4 "R" "S" "r" 46 107 107 0 "" ""
+   itos r42
+   .traceevent "V" 6 "R" "S" "r" 42 107 107 0 "i" ""
+   concat r47,"m",r42
+   .traceevent "O" 4 "R" "S" "r" 47 107 107 0 "" ""
+   load r44,3
+   settp r2,256
+   swap r45,r2
+   settp r46,768
+   settpcall r38,§rxfnsb.stem.set(),r44,r47,768
+   swap r2,r45
+   .traceevent "F" 4 "R" "V" "r" 38 107 107 0 "set" ""
+l412doinc:
+   .srcstep 104 104 17 "nr15_stem_access_compare.crexx" 85 8 9 "    do i = 1 to size"
+   inc r42
+   .srcstep 109 109 17 "nr15_stem_access_compare.crexx" 88 55 56 "      call compound.set(left || \".\" || right, \"m\" || i)"
+   br l412dostart
+l412doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.left"
+   .meta "nr15_stem_access_compare.main.right"
+   .srcstep 117 117 17 "nr15_stem_access_compare.crexx" 90 5 7 "    do i = 1 to iterations"
+   .srcstep 110 110 17 "nr15_stem_access_compare.crexx" 90 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r47
+   load r47,1
+   .traceevent "L" 4 "R" "I" "r" 47 110 110 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 47 110 110 0 "i" ""
+   .srcstep 111 111 17 "nr15_stem_access_compare.crexx" 90 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l442dostart:
+   .srcstep 111 111 17 "nr15_stem_access_compare.crexx" 90 14 27 "    do i = 1 to iterations"
+   igt r42,r47,r6
+   brt l442doend,r42
+   .srcstep 113 113 17 "nr15_stem_access_compare.crexx" 91 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_access_compare.main.index"="b" ".int" r46
+   .traceevent "V" 6 "R" "I" "r" 47 113 113 0 "i" ""
+   isub r41,r47,1
+   .traceevent "O" 4 "R" "I" "r" 41 113 113 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 113 113 0 "size" ""
+   imod r41,r41,r10
+   .traceevent "O" 4 "R" "I" "r" 41 113 113 0 "" ""
+   iadd r46,r41,1
+   .traceevent "O" 4 "R" "I" "r" 46 113 113 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 46 113 113 0 "index" ""
+   .srcstep 114 114 17 "nr15_stem_access_compare.crexx" 92 7 26 "      left = \"L\" || index"
+   .meta "nr15_stem_access_compare.main.left"="b" ".string" r45
+   itos r46
+   .traceevent "V" 6 "R" "S" "r" 46 114 114 0 "index" ""
+   concat r45,"L",r46
+   .traceevent "O" 4 "R" "S" "r" 45 114 114 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 45 114 114 0 "left" ""
+   .srcstep 115 115 17 "nr15_stem_access_compare.crexx" 93 7 27 "      right = \"R\" || index"
+   .meta "nr15_stem_access_compare.main.right"="b" ".string" r44
+   itos r46
+   .traceevent "V" 6 "R" "S" "r" 46 115 115 0 "index" ""
+   concat r44,"R",r46
+   .traceevent "O" 4 "R" "S" "r" 44 115 115 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 44 115 115 0 "right" ""
+   .srcstep 116 116 17 "nr15_stem_access_compare.crexx" 94 7 56 "      checksum = checksum + length(compound.left.right)"
+   .traceevent "V" 6 "R" "I" "r" 1 116 116 0 "checksum" ""
+   .traceevent "V" 6 "R" "S" "r" 45 116 116 0 "left" ""
+   concat r39,r45,"."
+   .traceevent "V" 6 "R" "S" "r" 44 116 116 0 "right" ""
+   concat r50,r39,r44
+   .traceevent "C" 4 "R" "S" "r" 50 116 116 0 "compound" ""
+   load r48,2
+   settp r2,256
+   swap r49,r2
+   settpcall r41,§rxfnsb.stem.get(),r48,r50,768
+   swap r2,r49
+   .traceevent "V" 6 "R" "S" "r" 41 116 116 0 "compound" ""
+   load r40,1
+   settpcall r50,rxfnsb.length(),r40,r41,256
+   .traceevent "F" 4 "R" "I" "r" 50 116 116 0 "length" ""
+   iadd r1,r1,r50
+   .traceevent "O" 4 "R" "I" "r" 1 116 116 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 116 116 0 "checksum" ""
+l442doinc:
+   .srcstep 112 112 17 "nr15_stem_access_compare.crexx" 90 8 9 "    do i = 1 to iterations"
+   inc r47
+   .srcstep 118 118 17 "nr15_stem_access_compare.crexx" 95 5 8 "    end"
+   br l442dostart
+l442doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .meta "nr15_stem_access_compare.main.index"
+   .meta "nr15_stem_access_compare.main.left"
+   .meta "nr15_stem_access_compare.main.right"
+   br l743ifend
+   .srcstep 145 145 17 "nr15_stem_access_compare.crexx" 95 5 8 "    end"
+l743iffalse:
+   .srcstep 140 140 6 "nr15_stem_access_compare.crexx" 29 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 9 140 140 0 "mode" ""
+   seq r50,r9,"histogram"
+   .traceevent "O" 4 "R" "B" "r" 50 140 140 0 "" ""
+   brf l744iffalse,r50
+   .srcstep 141 141 17 "nr15_stem_access_compare.crexx" 97 28 32 "  when mode == \"histogram\" then do"
+   .srcstep 119 119 17 "nr15_stem_access_compare.crexx" 98 5 22 "    histogram = .stem()"
+   .meta "nr15_stem_access_compare.main.histogram"="b" ".stem" r5
+   load r49,0
+   call r5,§rxfnsb.stem.§factory(),r49
+   .traceevent "F" 4 "R" "O" "r" 5 119 119 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 119 119 0 "histogram" ""
+   .srcstep 120 120 17 "nr15_stem_access_compare.crexx" 99 5 73 "    text = \"alpha beta gamma alpha delta beta alpha epsilon gamma alpha\""
+   .meta "nr15_stem_access_compare.main.text"="b" ".string" r13
+   load r13,"alpha beta gamma alpha delta beta alpha epsilon gamma alpha"
+   .traceevent "L" 4 "R" "S" "r" 13 120 120 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 13 120 120 0 "text" ""
+   .srcstep 136 136 17 "nr15_stem_access_compare.crexx" 100 5 7 "    do i = 1 to iterations"
+   .srcstep 121 121 17 "nr15_stem_access_compare.crexx" 100 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_access_compare.main.i"="b" ".int" r49
+   load r49,1
+   .traceevent "L" 4 "R" "I" "r" 49 121 121 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 49 121 121 0 "i" ""
+   .srcstep 122 122 17 "nr15_stem_access_compare.crexx" 100 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "iterations" ""
+l489dostart:
+   .srcstep 122 122 17 "nr15_stem_access_compare.crexx" 100 14 27 "    do i = 1 to iterations"
+   igt r48,r49,r6
+   brt l489doend,r48
+   .srcstep 134 134 17 "nr15_stem_access_compare.crexx" 101 7 9 "      do word_index = 1 to words(text)"
+   .srcstep 124 124 17 "nr15_stem_access_compare.crexx" 101 10 24 "      do word_index = 1 to words(text)"
+   .meta "nr15_stem_access_compare.main.word_index"="b" ".int" r44
+   load r44,1
+   .traceevent "L" 4 "R" "I" "r" 44 124 124 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 44 124 124 0 "word_index" ""
+   .srcstep 125 125 17 "nr15_stem_access_compare.crexx" 101 25 39 "      do word_index = 1 to words(text)"
+   .traceevent "V" 6 "R" "S" "r" 13 0 0 0 "text" ""
+   load r41,1
+   settpswapcall r40,rxfnsb.words(),r41,r13,256,r42
+   swap r13,r42
+   .traceevent "F" 4 "R" "I" "r" 40 0 0 0 "words" ""
+l496dostart:
+   .srcstep 125 125 17 "nr15_stem_access_compare.crexx" 101 25 39 "      do word_index = 1 to words(text)"
+   igt r42,r44,r40
+   brt l496doend,r42
+   .meta "nr15_stem_access_compare.main.current_count"="b" ".int" r47
+   .srcstep 127 127 17 "nr15_stem_access_compare.crexx" 104 9 29 "        current_count = .int"
+   null r47
+   .srcstep 128 128 17 "nr15_stem_access_compare.crexx" 102 9 39 "        token = word(text, word_index)"
+   .meta "nr15_stem_access_compare.main.token"="b" ".string" r45
+   .traceevent "V" 6 "R" "S" "r" 13 128 128 0 "text" ""
+   .traceevent "V" 6 "R" "I" "r" 44 128 128 0 "word_index" ""
+   load r51,2
+   settp r13,256
+   swap r52,r13
+   swapcall r45,rxfnsb.word(),r51,r44,r53
+   swap r13,r52
+   swap r44,r53
+   .traceevent "F" 4 "R" "S" "r" 45 128 128 0 "word" ""
+   .traceevent "A" 6 "R" "S" "r" 45 128 128 0 "token" ""
+   .srcstep 129 129 17 "nr15_stem_access_compare.crexx" 103 9 44 "        current_text = histogram.get(token)"
+   .meta "nr15_stem_access_compare.main.current_text"="b" ".string" r46
+   .traceevent "V" 6 "R" "O" "r" 5 129 129 0 "histogram" ""
+   .traceevent "V" 6 "R" "S" "r" 45 129 129 0 "token" ""
+   load r51,2
+   settp r5,256
+   swap r52,r5
+   settpswapcall r46,§rxfnsb.stem.get(),r51,r45,256,r53
+   swap r5,r52
+   swap r45,r53
+   .traceevent "F" 4 "R" "S" "r" 46 129 129 0 "get" ""
+   .traceevent "A" 6 "R" "S" "r" 46 129 129 0 "current_text" ""
+   .srcstep 131 131 17 "nr15_stem_access_compare.crexx" 105 9 30 "        if current_text <> \"\" then current_count = current_text as .int"
+   .traceevent "V" 6 "R" "S" "r" 46 131 131 0 "current_text" ""
+   rne r53,r46,""
+   .traceevent "O" 4 "R" "B" "r" 53 131 131 0 "" ""
+   brf l527iffalse,r53
+   .srcstep 132 132 17 "nr15_stem_access_compare.crexx" 105 31 35 "        if current_text <> \"\" then current_count = current_text as .int"
+   .srcstep 130 130 17 "nr15_stem_access_compare.crexx" 105 36 72 "        if current_text <> \"\" then current_count = current_text as .int"
+   .traceevent "V" 6 "R" "S" "r" 46 130 130 0 "current_text" ""
+   stoi r47,r46
+   .traceevent "A" 6 "R" "I" "r" 47 130 130 0 "current_count" ""
+l527iffalse:
+   .srcstep 133 133 17 "nr15_stem_access_compare.crexx" 106 9 60 "        call histogram.set(token, (current_count + 1) || \"\")"
+   .traceevent "V" 6 "R" "O" "r" 5 133 133 0 "histogram" ""
+   .traceevent "V" 6 "R" "S" "r" 45 133 133 0 "token" ""
+   .traceevent "V" 6 "R" "I" "r" 47 133 133 0 "current_count" ""
+   iadd r41,r47,1
+   itos r41
+   .traceevent "O" 4 "R" "S" "r" 41 133 133 0 "" ""
+   concat r54,r41,""
+   .traceevent "O" 4 "R" "S" "r" 54 133 133 0 "" ""
+   load r51,3
+   settp r5,256
+   swap r52,r5
+   settp r45,256
+   swap r53,r45
+   settpcall r41,§rxfnsb.stem.set(),r51,r54,768
+   swap r5,r52
+   swap r45,r53
+   .traceevent "F" 4 "R" "V" "r" 41 133 133 0 "set" ""
+l496doinc:
+   .srcstep 126 126 17 "nr15_stem_access_compare.crexx" 101 10 20 "      do word_index = 1 to words(text)"
+   inc r44
+   .srcstep 135 135 17 "nr15_stem_access_compare.crexx" 106 60 61 "        call histogram.set(token, (current_count + 1) || \"\")"
+   br l496dostart
+l496doend:
+   .meta "nr15_stem_access_compare.main.current_count"
+   .meta "nr15_stem_access_compare.main.current_text"
+   .meta "nr15_stem_access_compare.main.token"
+   .meta "nr15_stem_access_compare.main.word_index"
+l489doinc:
+   .srcstep 123 123 17 "nr15_stem_access_compare.crexx" 100 8 9 "    do i = 1 to iterations"
+   inc r49
+   .srcstep 137 137 17 "nr15_stem_access_compare.crexx" 106 60 61 "        call histogram.set(token, (current_count + 1) || \"\")"
+   br l489dostart
+l489doend:
+   .meta "nr15_stem_access_compare.main.i"
+   .srcstep 138 138 17 "nr15_stem_access_compare.crexx" 109 5 86 "    checksum = (histogram.get(\"alpha\") as .int) + (histogram.get(\"beta\") as .int) + ,"
+   .traceevent "V" 6 "R" "O" "r" 5 138 138 0 "histogram" ""
+   load r54,"alpha"
+   .traceevent "L" 4 "R" "S" "r" 54 138 138 0 "" ""
+   load r52,2
+   settp r5,256
+   swap r53,r5
+   settpcall r51,§rxfnsb.stem.get(),r52,r54,768
+   swap r5,r53
+   .traceevent "F" 4 "R" "S" "r" 51 138 138 0 "get" ""
+   stoi r54,r51
+   .traceevent "V" 6 "R" "O" "r" 5 138 138 0 "histogram" ""
+   load r57,"beta"
+   .traceevent "L" 4 "R" "S" "r" 57 138 138 0 "" ""
+   load r55,2
+   settp r5,256
+   swap r56,r5
+   settpcall r53,§rxfnsb.stem.get(),r55,r57,768
+   swap r5,r56
+   .traceevent "F" 4 "R" "S" "r" 53 138 138 0 "get" ""
+   stoi r57,r53
+   iadd r57,r54,r57
+   .traceevent "O" 4 "R" "I" "r" 57 138 138 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 5 138 138 0 "histogram" ""
+   load r56,"gamma"
+   .traceevent "L" 4 "R" "S" "r" 56 138 138 0 "" ""
+   load r54,2
+   settp r5,256
+   swap r55,r5
+   settpcall r52,§rxfnsb.stem.get(),r54,r56,768
+   swap r5,r55
+   .traceevent "F" 4 "R" "S" "r" 52 138 138 0 "get" ""
+   stoi r56,r52
+   iadd r1,r57,r56
+   .traceevent "O" 4 "R" "I" "r" 1 138 138 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 138 138 0 "checksum" ""
+   br l744ifend
+   .srcstep 142 142 17 "nr15_stem_access_compare.crexx" 111 3 6 "  end"
+l744iffalse:
+   .srcstep 139 139 17 "nr15_stem_access_compare.crexx" 112 13 32 "  otherwise return fail(\"mode\")"
+   load r57,"mode"
+   .traceevent "L" 4 "R" "S" "r" 57 139 139 0 "" ""
+   settp r57,768
+   call1 r55,fail(),r57
+   .traceevent "F" 4 "R" "I" "r" 55 139 139 0 "fail" ""
+   ret r55
+l744ifend:
+l743ifend:
+l742ifend:
+l741ifend:
+l740ifend:
+l739ifend:
+l738ifend:
+l737ifend:
+l736ifend:
+l735ifend:
+   .srcstep 170 170 17 "nr15_stem_access_compare.crexx" 115 1 29 "elapsed = time(\"us\") - start"
+   .meta "nr15_stem_access_compare.main.elapsed"="b" ".float" r3
+   load r57,"us"
+   .traceevent "L" 4 "R" "S" "r" 57 170 170 0 "" ""
+   load r56,1
+   settpcall r55,rxfnsb.time(),r56,r57,768
+   stof r55
+   .traceevent "F" 4 "R" "F" "r" 55 170 170 0 "time" ""
+   stof r11
+   .traceevent "V" 6 "R" "F" "r" 11 170 170 0 "start" ""
+   fsub r3,r55,r11
+   .traceevent "O" 4 "R" "F" "r" 3 170 170 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 3 170 170 0 "elapsed" ""
+   .srcstep 172 172 17 "nr15_stem_access_compare.crexx" 116 1 15 "if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 3 172 172 0 "elapsed" ""
+   load r57,0
+   itof r57
+   .traceevent "L" 4 "R" "F" "r" 57 172 172 0 "" ""
+   flt r57,r3,r57
+   .traceevent "O" 4 "R" "B" "r" 57 172 172 0 "" ""
+   brf l582iffalse,r57
+   .srcstep 173 173 17 "nr15_stem_access_compare.crexx" 116 16 20 "if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .srcstep 171 171 17 "nr15_stem_access_compare.crexx" 116 21 52 "if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 3 171 171 0 "elapsed" ""
+   load r56,86400000000
+   itof r56
+   .traceevent "L" 4 "R" "F" "r" 56 171 171 0 "" ""
+   fadd r3,r3,r56
+   .traceevent "O" 4 "R" "F" "r" 3 171 171 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 3 171 171 0 "elapsed" ""
+l582iffalse:
+   .srcstep 175 175 17 "nr15_stem_access_compare.crexx" 117 1 17 "if checksum <= 0 then return fail(\"checksum\")"
+   .traceevent "V" 6 "R" "I" "r" 1 175 175 0 "checksum" ""
+   ilte r57,r1,0
+   .traceevent "O" 4 "R" "B" "r" 57 175 175 0 "" ""
+   brf l589iffalse,r57
+   .srcstep 176 176 17 "nr15_stem_access_compare.crexx" 117 18 22 "if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 174 174 17 "nr15_stem_access_compare.crexx" 117 23 46 "if checksum <= 0 then return fail(\"checksum\")"
+   load r56,"checksum"
+   .traceevent "L" 4 "R" "S" "r" 56 174 174 0 "" ""
+   settp r56,768
+   call1 r54,fail(),r56
+   .traceevent "F" 4 "R" "I" "r" 54 174 174 0 "fail" ""
+   ret r54
+l589iffalse:
+   .srcstep 177 177 17 "nr15_stem_access_compare.crexx" 119 1 41 "say \"benchmark=nr15_stem_access_compare\""
+   say "benchmark=nr15_stem_access_compare"
+   .srcstep 178 178 17 "nr15_stem_access_compare.crexx" 120 1 16 "say \"mode=\"mode"
+   .traceevent "V" 6 "R" "S" "r" 9 178 178 0 "mode" ""
+   concat r57,"mode=",r9
+   .traceevent "O" 4 "R" "S" "r" 57 178 178 0 "" ""
+   say r57
+   .srcstep 179 179 17 "nr15_stem_access_compare.crexx" 121 1 20 "say \"family=\"family"
+   .traceevent "V" 6 "R" "S" "r" 4 179 179 0 "family" ""
+   concat r57,"family=",r4
+   .traceevent "O" 4 "R" "S" "r" 57 179 179 0 "" ""
+   say r57
+   .srcstep 180 180 17 "nr15_stem_access_compare.crexx" 122 1 16 "say \"size=\"size"
+   itos r10
+   .traceevent "V" 6 "R" "S" "r" 10 180 180 0 "size" ""
+   concat r57,"size=",r10
+   .traceevent "O" 4 "R" "S" "r" 57 180 180 0 "" ""
+   say r57
+   .srcstep 181 181 17 "nr15_stem_access_compare.crexx" 123 1 28 "say \"iterations=\"iterations"
+   itos r6
+   .traceevent "V" 6 "R" "S" "r" 6 181 181 0 "iterations" ""
+   concat r57,"iterations=",r6
+   .traceevent "O" 4 "R" "S" "r" 57 181 181 0 "" ""
+   say r57
+   .srcstep 182 182 17 "nr15_stem_access_compare.crexx" 124 1 25 "say \"elapsed_us=\"elapsed"
+   ftos r3
+   .traceevent "V" 6 "R" "S" "r" 3 182 182 0 "elapsed" ""
+   concat r57,"elapsed_us=",r3
+   .traceevent "O" 4 "R" "S" "r" 57 182 182 0 "" ""
+   say r57
+   .srcstep 183 183 17 "nr15_stem_access_compare.crexx" 125 1 24 "say \"checksum=\"checksum"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 183 183 0 "checksum" ""
+   concat r57,"checksum=",r1
+   .traceevent "O" 4 "R" "S" "r" 57 183 183 0 "" ""
+   say r57
+   .srcstep 184 184 17 "nr15_stem_access_compare.crexx" 126 1 38 "say \"PASS: NR-15 stem access compare\""
+   say "PASS: NR-15 stem access compare"
+   .srcstep 185 185 17 "nr15_stem_access_compare.crexx" 127 1 9 "return 0"
+   ret 0
+   .meta "nr15_stem_access_compare.main.argv"
+   .meta "nr15_stem_access_compare.main.checksum"
+   .meta "nr15_stem_access_compare.main.compound"
+   .meta "nr15_stem_access_compare.main.elapsed"
+   .meta "nr15_stem_access_compare.main.family"
+   .meta "nr15_stem_access_compare.main.histogram"
+   .meta "nr15_stem_access_compare.main.iterations"
+   .meta "nr15_stem_access_compare.main.keys"
+   .meta "nr15_stem_access_compare.main.miss"
+   .meta "nr15_stem_access_compare.main.mode"
+   .meta "nr15_stem_access_compare.main.size"
+   .meta "nr15_stem_access_compare.main.start"
+   .meta "nr15_stem_access_compare.main.target"
+   .meta "nr15_stem_access_compare.main.text"
+
+make_key() .locals=9
+   .meta "nr15_stem_access_compare.make_key"="b" ".string" make_key() "index=.int,family=.string"
+   .srcstep 214 214 17 "nr15_stem_access_compare.crexx" 129 1 30 "make_key: procedure = .string"
+   numsci 18,1,1
+   .srcstep 186 186 17 "nr15_stem_access_compare.crexx" 130 7 19 "  arg index = .int, family = .string"
+   .meta "nr15_stem_access_compare.make_key.index"="b" ".int" a1
+   .srcstep 187 187 17 "nr15_stem_access_compare.crexx" 130 21 37 "  arg index = .int, family = .string"
+   .meta "nr15_stem_access_compare.make_key.family"="b" ".string" a2
+   .srcstep 189 189 17 "nr15_stem_access_compare.crexx" 131 3 23 "  if family == \"ascii\" then return \"key-\" || index"
+   .traceevent "V" 6 "R" "S" "a" 2 189 189 0 "family" ""
+   seq r2,a2,"ascii"
+   .traceevent "O" 4 "R" "B" "r" 2 189 189 0 "" ""
+   brf l636iffalse,r2
+   .srcstep 190 190 17 "nr15_stem_access_compare.crexx" 131 24 28 "  if family == \"ascii\" then return \"key-\" || index"
+   .srcstep 188 188 17 "nr15_stem_access_compare.crexx" 131 29 51 "  if family == \"ascii\" then return \"key-\" || index"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 188 188 0 "index" ""
+   concat r3,"key-",a1
+   .traceevent "O" 4 "R" "S" "r" 3 188 188 0 "" ""
+   ret r3
+l636iffalse:
+   .srcstep 192 192 17 "nr15_stem_access_compare.crexx" 132 3 25 "  if family == \"unicode\" then return \"κλειδί-🔥-\" || index"
+   .traceevent "V" 6 "R" "S" "a" 2 192 192 0 "family" ""
+   seq r3,a2,"unicode"
+   .traceevent "O" 4 "R" "B" "r" 3 192 192 0 "" ""
+   brf l644iffalse,r3
+   .srcstep 193 193 17 "nr15_stem_access_compare.crexx" 132 26 30 "  if family == \"unicode\" then return \"κλειδί-🔥-\" || index"
+   .srcstep 191 191 17 "nr15_stem_access_compare.crexx" 132 31 67 "  if family == \"unicode\" then return \"κλειδί-🔥-\" || index"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 191 191 0 "index" ""
+   concat r2,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5-",a1
+   .traceevent "O" 4 "R" "S" "r" 2 191 191 0 "" ""
+   ret r2
+l644iffalse:
+   .srcstep 195 195 17 "nr15_stem_access_compare.crexx" 133 3 22 "  if family == \"long\" then return \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-\" || index"
+   .traceevent "V" 6 "R" "S" "a" 2 195 195 0 "family" ""
+   seq r3,a2,"long"
+   .traceevent "O" 4 "R" "B" "r" 3 195 195 0 "" ""
+   brf l652iffalse,r3
+   .srcstep 196 196 17 "nr15_stem_access_compare.crexx" 133 23 27 "  if family == \"long\" then return \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-\" || index"
+   .srcstep 194 194 17 "nr15_stem_access_compare.crexx" 133 28 109 "  if family == \"long\" then return \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-\" || index"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 194 194 0 "index" ""
+   concat r2,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-",a1
+   .traceevent "O" 4 "R" "S" "r" 2 194 194 0 "" ""
+   ret r2
+l652iffalse:
+   .srcstep 211 211 17 "nr15_stem_access_compare.crexx" 134 3 27 "  if family == \"collision\" then do"
+   .traceevent "V" 6 "R" "S" "a" 2 211 211 0 "family" ""
+   seq r3,a2,"collision"
+   .traceevent "O" 4 "R" "B" "r" 3 211 211 0 "" ""
+   brf l696iffalse,r3
+   .srcstep 212 212 17 "nr15_stem_access_compare.crexx" 134 28 32 "  if family == \"collision\" then do"
+   .srcstep 197 197 17 "nr15_stem_access_compare.crexx" 135 5 22 "    value = index - 1"
+   .meta "nr15_stem_access_compare.make_key.value"="b" ".int" r4
+   .traceevent "V" 6 "R" "I" "a" 1 197 197 0 "index" ""
+   isub r4,a1,1
+   .traceevent "O" 4 "R" "I" "r" 4 197 197 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 197 197 0 "value" ""
+   .srcstep 198 198 17 "nr15_stem_access_compare.crexx" 136 5 13 "    key = \"\""
+   .meta "nr15_stem_access_compare.make_key.key"="b" ".string" r2
+   load r2,""
+   .traceevent "L" 4 "R" "S" "r" 2 198 198 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 198 198 0 "key" ""
+   .srcstep 208 208 17 "nr15_stem_access_compare.crexx" 137 5 7 "    do part = 1 to 10"
+   .srcstep 199 199 17 "nr15_stem_access_compare.crexx" 137 8 16 "    do part = 1 to 10"
+   .meta "nr15_stem_access_compare.make_key.part"="b" ".int" r5
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 199 199 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 199 199 0 "part" ""
+   .srcstep 200 200 17 "nr15_stem_access_compare.crexx" 137 17 22 "    do part = 1 to 10"
+   load r6,10
+   .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
+l665dostart:
+   .srcstep 200 200 17 "nr15_stem_access_compare.crexx" 137 17 22 "    do part = 1 to 10"
+   igt r7,r5,r6
+   brt l665doend,r7
+   .srcstep 204 204 17 "nr15_stem_access_compare.crexx" 138 7 23 "      if value % 2 = 0 then key = key || \"Aa\""
+   .traceevent "V" 6 "R" "I" "r" 4 204 204 0 "value" ""
+   imod r8,r4,2
+   .traceevent "O" 4 "R" "I" "r" 8 204 204 0 "" ""
+   ieq r8,r8,0
+   .traceevent "O" 4 "R" "B" "r" 8 204 204 0 "" ""
+   brf l687iffalse,r8
+   .srcstep 205 205 17 "nr15_stem_access_compare.crexx" 138 24 28 "      if value % 2 = 0 then key = key || \"Aa\""
+   .srcstep 202 202 17 "nr15_stem_access_compare.crexx" 138 29 46 "      if value % 2 = 0 then key = key || \"Aa\""
+   .traceevent "V" 6 "R" "S" "r" 2 202 202 0 "key" ""
+   concat r2,r2,"Aa"
+   .traceevent "O" 4 "R" "S" "r" 2 202 202 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 202 202 0 "key" ""
+   br l687ifend
+   .srcstep 206 206 17 "nr15_stem_access_compare.crexx" 139 7 11 "      else key = key || \"BB\""
+l687iffalse:
+   .srcstep 203 203 17 "nr15_stem_access_compare.crexx" 139 12 29 "      else key = key || \"BB\""
+   .traceevent "V" 6 "R" "S" "r" 2 203 203 0 "key" ""
+   concat r2,r2,"BB"
+   .traceevent "O" 4 "R" "S" "r" 2 203 203 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 203 203 0 "key" ""
+l687ifend:
+   .srcstep 207 207 17 "nr15_stem_access_compare.crexx" 140 7 24 "      value = value / 2"
+   .traceevent "V" 6 "R" "I" "r" 4 207 207 0 "value" ""
+   idiv r4,r4,2
+   .traceevent "O" 4 "R" "I" "r" 4 207 207 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 207 207 0 "value" ""
+l665doinc:
+   .srcstep 201 201 17 "nr15_stem_access_compare.crexx" 137 8 12 "    do part = 1 to 10"
+   inc r5
+   .srcstep 209 209 17 "nr15_stem_access_compare.crexx" 141 5 8 "    end"
+   br l665dostart
+l665doend:
+   .meta "nr15_stem_access_compare.make_key.part"
+   .srcstep 210 210 17 "nr15_stem_access_compare.crexx" 142 5 15 "    return key"
+   .traceevent "V" 6 "R" "S" "r" 2 210 210 0 "key" ""
+   ret r2
+   .meta "nr15_stem_access_compare.make_key.key"
+   .meta "nr15_stem_access_compare.make_key.value"
+l696iffalse:
+   .srcstep 213 213 17 "nr15_stem_access_compare.crexx" 144 3 29 "  return \"unknown-\" || index"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 213 213 0 "index" ""
+   concat r8,"unknown-",a1
+   .traceevent "O" 4 "R" "S" "r" 8 213 213 0 "" ""
+   ret r8
+   .meta "nr15_stem_access_compare.make_key.family"
+   .meta "nr15_stem_access_compare.make_key.index"
+
+fail() .locals=2
+   .meta "nr15_stem_access_compare.fail"="b" ".int" fail() "label=.string"
+   .srcstep 218 218 17 "nr15_stem_access_compare.crexx" 146 1 23 "fail: procedure = .int"
+   numsci 18,1,1
+   .srcstep 215 215 17 "nr15_stem_access_compare.crexx" 147 7 22 "  arg label = .string"
+   .meta "nr15_stem_access_compare.fail.label"="b" ".string" a1
+   .srcstep 216 216 17 "nr15_stem_access_compare.crexx" 148 3 26 "  say \"FAIL: NR-15\" label"
+   .traceevent "V" 6 "R" "S" "a" 1 216 216 0 "label" ""
+   sconcat r1,"FAIL: NR-15",a1
+   .traceevent "O" 4 "R" "S" "r" 1 216 216 0 "" ""
+   say r1
+   .srcstep 217 217 17 "nr15_stem_access_compare.crexx" 149 3 11 "  return 1"
+   ret 1
+   .meta "nr15_stem_access_compare.fail.label"
+
+/* Imported Declaration from file: time@library.rxbin */
+
+rxfnsb.time() .expose=rxfnsb.time
+   .meta "rxfnsb.time"="b" ".string" rxfnsb.time() "?option=.string"
+
+/* Imported Declaration from file: length@library.rxbin */
+
+rxfnsb.length() .expose=rxfnsb.length
+   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "string=.string"
+
+/* Imported Declaration from file: words@library.rxbin */
+
+rxfnsb.words() .expose=rxfnsb.words
+   .meta "rxfnsb.words"="b" ".int" rxfnsb.words() "string=.string"
+
+/* Imported Declaration from file: word@library.rxbin */
+
+rxfnsb.word() .expose=rxfnsb.word
+   .meta "rxfnsb.word"="b" ".string" rxfnsb.word() "string=.string,wordnum=.int"
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""
+
+§rxfnsb.stem.get() .expose=rxfnsb.stem.get
+   .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
+
+§rxfnsb.stem.set() .expose=rxfnsb.stem.set
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "?key=.string,value=.string"
+
+§rxfnsb.stem.size() .expose=rxfnsb.stem.size
+   .meta "rxfnsb.stem.size"="b" ".int" §rxfnsb.stem.size() ""

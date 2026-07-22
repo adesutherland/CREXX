@@ -15,8 +15,8 @@ documentation pipeline.
 
 ## Current Inventory
 
-- Source-accepted unique mnemonics: 367
-- Source-accepted opcode/form rows: 574
+- Source-accepted unique mnemonics: 384
+- Source-accepted opcode/form rows: 591
 - Authoritative database: `binutils/include/rxops.h`, filtered by
   `rxop_is_source_mnemonic()` in `binutils/include/rxdefs.h`
 - Human-readable inventory source: `rxas -i`, which applies the same filter
@@ -32,8 +32,8 @@ because they lack prose or examples.
 
 ### Skeleton Comparison
 
-The authoritative filtered database currently has 367 unique mnemonics and 574
-form rows. The section files contain 367 exact single-mnemonic headings, with
+The authoritative filtered database currently has 384 unique mnemonics and 591
+form rows. The section files contain 384 exact single-mnemonic headings, with
 no missing, unknown, or duplicate mnemonic headings.
 
 ## Source Syntax
@@ -42,18 +42,18 @@ no missing, unknown, or duplicate mnemonic headings.
 
 ## Instruction Sections
 
-- [Program Control And Calls](instructions/01-program-control.md): 26 mnemonics
+- [Program Control And Calls](instructions/01-program-control.md): 30 mnemonics
 - [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md): 7 mnemonics
 - [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md): 44 mnemonics
 - [Floating Point](instructions/04-floating-point.md): 24 mnemonics
 - [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md): 46 mnemonics
 - [Strings And Characters](instructions/06-strings-and-characters.md): 34 mnemonics
 - [Binary Memory](instructions/07-binary-memory.md): 43 mnemonics
-- [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md): 32 mnemonics
+- [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md): 41 mnemonics
 - [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md): 44 mnemonics
 - [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md): 19 mnemonics
 - [Metadata And Introspection](instructions/11-metadata-and-introspection.md): 23 mnemonics
-- [Large And Fused Instructions](instructions/12-large-instructions.md): 25 mnemonics
+- [Large And Fused Instructions](instructions/12-large-instructions.md): 29 mnemonics
 - [Uncategorized Review](instructions/99-uncategorized-review.md): 0 mnemonics
 
 ## Review Notes

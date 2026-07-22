@@ -1,0 +1,8 @@
+Command: cmake --build cmake-build-debugasan --target performance_nr15_stem_semantics performance_nr15_stem_access --parallel 10
+ASAN_OPTIONS=detect_leaks=0
+
+[0/2] Re-checking globbed directories...
+[1/5] Generating nr15_stem_access_rxbvm_noopt.rxbin
+[2/5] Generating nr15_stem_semantics_rxbvm_noopt.rxbin
+[3/5] Generating nr15_stem_access_rxvm_noopt.rxbin
+[4/5] Generating nr15_stem_semantics_rxvm_noopt.rxbin

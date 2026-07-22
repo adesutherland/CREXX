@@ -1,0 +1,1430 @@
+/*
+ * SOURCE                 : stem.crexx
+ */
+
+.meta "rxfnsb.stem"="b" ".unknown" .class
+.meta "rxfnsb.stem.buckets"="b" ".int[256]" .attr 1
+.meta "rxfnsb.stem.count"="b" ".int" .attr 2
+.meta "rxfnsb.stem.default_generation"="b" ".int" .attr 3
+.meta "rxfnsb.stem.default_value"="b" ".string" .attr 4
+.meta "rxfnsb.stem.keys"="b" ".string[*]" .attr 5
+.meta "rxfnsb.stem.next"="b" ".int[*]" .attr 6
+.meta "rxfnsb.stem.num_buckets"="b" ".int" .attr 7
+.meta "rxfnsb.stem.vals"="b" ".string[*]" .attr 8
+.meta "rxfnsb.stem.value_generations"="b" ".int[*]" .attr 9
+.meta "rxfnsb.stemiterator"="b" ".unknown" .class
+.meta "rxfnsb.stemiterator.count_copy"="b" ".int" .attr 1
+.meta "rxfnsb.stemiterator.current_tail_"="b" ".string" .attr 2
+.meta "rxfnsb.stemiterator.index_"="b" ".int" .attr 3
+.meta "rxfnsb.stemiterator.keys_copy"="b" ".string[*]" .attr 4
+.meta "rxfnsb.stemiterator.snapshot_"="b" ".int" .attr 5
+.meta "rxfnsb.stemiterator.stem_ref"="b" "reference .stem" .attr 6
+.meta "rxfnsb.stemiterator.values_copy"="b" ".string[*]" .attr 7
+.globals=0
+
+§rxfnsb.stem.§factory() .locals=3 .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""
+   .meta "rxfnsb.stem.§factory"=".inline" "I5;f,0,7374656D2E6372657878;u,0,0,58,5,22,1,202020206E756D5F6275636B657473203D20323536;u,1,0,58,5,16,1,202020206E756D5F6275636B657473203D20323536;u,2,0,58,19,22,1,202020206E756D5F6275636B657473203D20323536;u,3,0,59,5,14,1,20202020636F756E74203D2030;u,4,0,59,5,10,1,20202020636F756E74203D2030;u,5,0,59,13,14,1,20202020636F756E74203D2030;u,6,0,60,5,23,1,2020202064656661756C745F76616C7565203D202222;u,7,0,60,5,18,1,2020202064656661756C745F76616C7565203D202222;u,8,0,60,21,23,1,2020202064656661756C745F76616C7565203D202222;u,9,0,61,5,27,1,2020202064656661756C745F67656E65726174696F6E203D2030;u,10,0,61,5,23,1,2020202064656661756C745F67656E65726174696F6E203D2030;u,11,0,61,26,27,1,2020202064656661756C745F67656E65726174696F6E203D2030;u,12,0,62,5,11,1,2020202072657475726E;q,0,-1,3;q,1,-1,2;s,0,1,6E756D5F6275636B657473,2,3,0,-,-,-,256,r,7;s,1,1,636F756E74,2,3,0,-,-,-,256,r,2;s,2,1,64656661756C745F76616C7565,2,6,0,-,-,-,256,r,4;s,3,1,64656661756C745F67656E65726174696F6E,2,3,0,-,-,-,256,r,3;s,4,0,C2A7666163746F7279,2,8,0,-,-,7374656D,128,r,0;a;>,0,-1,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;<;b;>,0,0,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,1,0,0,0,6E756D5F6275636B657473,-;<;>,0,2,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,256,0,0,323536,-;<;<;>,0,3,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,4,112,3,3,0,0,-,-,-,-,-,-,0,1,-1,0,1,0,0,0,636F756E74,-;<;>,0,5,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,30,-;<;<;>,0,6,6,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,7,112,6,6,0,0,-,-,-,-,-,-,0,2,-1,0,1,0,0,0,64656661756C745F76616C7565,-;<;>,0,8,116,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;<;<;>,0,9,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,10,112,3,3,0,0,-,-,-,-,-,-,0,3,-1,0,1,0,0,0,64656661756C745F67656E65726174696F6E,-;<;>,0,11,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,30,-;<;<;>,0,12,98,8,8,0,0,-,-,-,-,7374656D,7374656D,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,-1,111,8,8,0,0,-,-,-,-,7374656D,7374656D,0,4,-1,1,0,0,0,0,C2A7666163746F7279,-;<;<;<"
+   .srcstep 6 6 17 "stem.crexx" 58 3 13 "  *: factory"
+   setattrs r0,10
+   setobjtype r0,"rxfnsb.stem"
+   numsci 18,1,1
+   .srcstep 1 1 17 "stem.crexx" 59 5 22 "    num_buckets = 256"
+   .meta "rxfnsb.stem.§factory.§factory"="b" ".stem" r0
+   load r2,256
+   .traceevent "L" 4 "R" "I" "r" 2 1 1 0 "" ""
+   isetattr1 r0,7,r2
+   .srcstep 2 2 17 "stem.crexx" 60 5 14 "    count = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   isetattr1 r0,2,r1
+   .srcstep 3 3 17 "stem.crexx" 61 5 23 "    default_value = \"\""
+   load r1,""
+   .traceevent "L" 4 "R" "S" "r" 1 3 3 0 "" ""
+   linkattr1 r2,r0,4
+   scopy r2,r1
+   unlink r2
+   .srcstep 4 4 17 "stem.crexx" 62 5 27 "    default_generation = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
+   isetattr1 r0,3,r1
+   .srcstep 5 5 17 "stem.crexx" 63 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 5 5 0 "§factory" ""
+   ret r0
+   .meta "rxfnsb.stem.§factory.§factory"
+
+§rxfnsb.stem.hash() .locals=10 .expose=rxfnsb.stem.hash
+   .meta "rxfnsb.stem.hash"="b" ".int" §rxfnsb.stem.hash() "key=.string"
+   .meta "rxfnsb.stem.hash"=".inline" "I5;f,0,7374656D2E6372657878;u,0,0,74,9,22,1,20202020617267206B6579203D202E737472696E67;u,1,0,74,9,12,1,20202020617267206B6579203D202E737472696E67;u,2,0,74,15,22,1,20202020617267206B6579203D202E737472696E67;u,3,0,76,5,10,1,2020202068203D2030;u,4,0,76,5,6,1,2020202068203D2030;u,5,0,76,9,10,1,2020202068203D2030;u,6,0,77,5,22,1,202020206B65795F6C656E677468203D202E696E74;u,7,0,77,5,15,1,202020206B65795F6C656E677468203D202E696E74;u,8,0,77,18,22,1,202020206B65795F6C656E677468203D202E696E74;u,9,0,78,5,21,1,20202020636F6465706F696E74203D202E696E74;u,10,0,78,5,14,1,20202020636F6465706F696E74203D202E696E74;u,11,0,78,17,21,1,20202020636F6465706F696E74203D202E696E74;u,12,0,79,15,36,1,20202020617373656D626C6572207374726C656E206B65795F6C656E6774682C6B6579;u,13,0,79,22,32,1,20202020617373656D626C6572207374726C656E206B65795F6C656E6774682C6B6579;u,14,0,79,33,36,1,20202020617373656D626C6572207374726C656E206B65795F6C656E6774682C6B6579;u,15,0,80,5,36,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,16,0,80,8,36,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,17,0,80,8,18,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,18,0,80,8,14,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,19,0,80,17,18,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,20,0,80,19,36,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,21,0,80,22,36,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,22,0,80,22,32,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,23,0,80,35,36,1,20202020646F206F6666736574203D203020746F206B65795F6C656E677468202D2031;u,24,0,81,17,45,1,202020202020617373656D626C6572207374726368617220636F6465706F696E742C6B65792C6F6666736574;u,25,0,81,25,34,1,202020202020617373656D626C6572207374726368617220636F6465706F696E742C6B65792C6F6666736574;u,26,0,81,35,38,1,202020202020617373656D626C6572207374726368617220636F6465706F696E742C6B65792C6F6666736574;u,27,0,81,39,45,1,202020202020617373656D626C6572207374726368617220636F6465706F696E742C6B65792C6F6666736574;u,28,0,82,7,45,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,29,0,82,7,8,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,30,0,82,11,45,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,31,0,82,11,31,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,32,0,82,12,18,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,33,0,82,12,13,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,34,0,82,16,18,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,35,0,82,21,30,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,36,0,82,34,45,1,20202020202068203D202868202A203331202B20636F6465706F696E74292025206E756D5F6275636B657473;u,37,0,84,5,17,1,2020202072657475726E2068202B2031;u,38,0,84,12,17,1,2020202072657475726E2068202B2031;u,39,0,84,12,13,1,2020202072657475726E2068202B2031;u,40,0,84,16,17,1,2020202072657475726E2068202B2031;q,0,-1,3;q,1,0,4;q,2,-1,2;s,0,0,6B6579,2,6,0,-,-,-,1,r,2;s,1,0,68,2,3,0,-,-,-,0,r,1;s,2,0,6B65795F6C656E677468,2,3,0,-,-,-,256,r,3;s,3,0,636F6465706F696E74,2,3,0,-,-,-,256,r,0;s,4,1,6F6666736574,2,3,0,-,-,-,0,r,5;s,5,2,6E756D5F6275636B657473,2,3,0,-,-,-,256,r,7;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,6B6579,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,4,112,3,3,0,0,-,-,-,-,-,-,0,1,-1,0,1,0,0,0,68,-;<;>,0,5,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,30,-;<;<;>,0,6,22,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,7,112,3,3,0,0,-,-,-,-,-,-,0,2,-1,0,0,0,0,0,6B65795F6C656E677468,-;<;>,0,8,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;>,0,9,22,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,10,112,3,3,0,0,-,-,-,-,-,-,0,3,-1,0,0,0,0,0,636F6465706F696E74,-;<;>,0,11,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;>,0,12,5,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,7374726C656E,-;>,0,13,111,3,3,0,0,-,-,-,-,-,-,0,2,-1,1,1,0,0,0,6B65795F6C656E677468,-;<;>,0,14,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,1,0,0,0,6B6579,-;<;<;>,1,15,24,1,1,0,0,-,-,-,-,-,-,4096,-1,-1,0,0,0,0,0,646F,-;>,1,16,97,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,1,17,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,1,18,112,3,3,0,0,-,-,-,-,-,-,0,4,-1,0,1,0,0,0,6F6666736574,-;<;>,1,19,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,30,-;<;<;>,1,20,107,3,3,0,0,-,-,-,-,-,-,0,4,-1,1,0,0,0,0,746F,-;>,1,21,47,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,1,22,111,3,3,0,0,-,-,-,-,-,-,0,2,-1,1,0,0,0,0,6B65795F6C656E677468,-;<;>,1,23,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1,0,0,31,-;<;<;<;>,1,-1,12,3,3,0,0,-,-,-,-,-,-,0,4,-1,1,1,0,0,0,-,-;<;<;>,1,24,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,1,24,5,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,73747263686172,-;>,1,25,111,3,3,0,0,-,-,-,-,-,-,0,3,-1,1,1,0,0,0,636F6465706F696E74,-;<;>,1,26,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,1,0,0,0,6B6579,-;<;>,1,27,111,3,3,0,0,-,-,-,-,-,-,0,4,-1,1,1,0,0,0,6F6666736574,-;<;<;>,1,28,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,1,29,112,3,3,0,0,-,-,-,-,-,-,0,1,-1,0,1,0,0,0,68,-;<;>,1,30,57,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,25,-;>,1,31,46,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2B,-;>,1,32,54,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2A,-;>,1,33,111,3,3,0,0,-,-,-,-,-,-,0,1,-1,1,0,0,0,0,68,-;<;>,1,34,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,31,0,0,3331,-;<;<;>,1,35,111,3,3,0,0,-,-,-,-,-,-,0,3,-1,1,0,0,0,0,636F6465706F696E74,-;<;<;>,1,36,111,3,3,0,0,-,-,-,-,-,-,0,5,-1,1,0,0,0,0,6E756D5F6275636B657473,-;<;<;<;<;<;>,0,37,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,38,46,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2B,-;>,0,39,111,3,3,0,0,-,-,-,-,-,-,0,1,-1,1,0,0,0,0,68,-;<;>,0,40,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1,0,0,31,-;<;<;<;<"
+   .srcstep 20 20 17 "stem.crexx" 74 3 22 "  hash: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 7 7 17 "stem.crexx" 75 9 22 "    arg key = .string"
+   .meta "rxfnsb.stem.hash.key"="b" ".string" r2
+   .meta "rxfnsb.stem.hash.§this"="b" ".stem" a1
+   brtpandt l70c,a2,512
+   scopy r2,a2
+   br l70d
+l70c:
+   swap r2,a2
+l70d:
+   .meta "rxfnsb.stem.hash.codepoint"="b" ".int" r0
+   .srcstep 8 8 17 "stem.crexx" 79 5 21 "    codepoint = .int"
+   null r0
+   .meta "rxfnsb.stem.hash.key_length"="b" ".int" r3
+   .srcstep 9 9 17 "stem.crexx" 78 5 22 "    key_length = .int"
+   null r3
+   .srcstep 10 10 17 "stem.crexx" 77 5 10 "    h = 0"
+   .meta "rxfnsb.stem.hash.h"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 10 10 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 10 10 0 "h" ""
+   .srcstep 11 11 17 "stem.crexx" 80 15 36 "    assembler strlen key_length,key"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "key_length" ""
+   .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "key" ""
+   strlen r3,r2
+   .srcstep 17 17 17 "stem.crexx" 81 5 7 "    do offset = 0 to key_length - 1"
+   .srcstep 12 12 17 "stem.crexx" 81 8 18 "    do offset = 0 to key_length - 1"
+   .meta "rxfnsb.stem.hash.offset"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 12 12 0 "offset" ""
+   .srcstep 13 13 17 "stem.crexx" 81 19 36 "    do offset = 0 to key_length - 1"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "key_length" ""
+   isub r6,r3,1
+   .traceevent "O" 4 "R" "I" "r" 6 0 0 0 "" ""
+l86dostart:
+   .srcstep 13 13 17 "stem.crexx" 81 19 36 "    do offset = 0 to key_length - 1"
+   igt r7,r5,r6
+   brt l86doend,r7
+   .srcstep 15 15 17 "stem.crexx" 82 17 45 "      assembler strchar codepoint,key,offset"
+   .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "codepoint" ""
+   .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "offset" ""
+   strchar r0,r2,r5
+   .srcstep 16 16 17 "stem.crexx" 83 7 45 "      h = (h * 31 + codepoint) % num_buckets"
+   .traceevent "V" 6 "R" "I" "r" 1 16 16 0 "h" ""
+   imult r8,r1,31
+   .traceevent "O" 4 "R" "I" "r" 8 16 16 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "codepoint" ""
+   iadd r8,r8,r0
+   .traceevent "O" 4 "R" "I" "r" 8 16 16 0 "" ""
+   linkattr1 r9,a1,7
+   .traceevent "V" 6 "R" "I" "r" 9 16 16 0 "num_buckets" ""
+   imod r8,r8,r9
+   unlink r9
+   .traceevent "O" 4 "R" "I" "r" 8 16 16 0 "" ""
+   icopy r1,r8
+   .traceevent "A" 6 "R" "I" "r" 1 16 16 0 "h" ""
+l86doinc:
+   .srcstep 14 14 17 "stem.crexx" 81 8 14 "    do offset = 0 to key_length - 1"
+   inc r5
+   .srcstep 18 18 17 "stem.crexx" 84 5 8 "    end"
+   br l86dostart
+l86doend:
+   .meta "rxfnsb.stem.hash.offset"
+   .srcstep 19 19 17 "stem.crexx" 85 5 17 "    return h + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 19 19 0 "h" ""
+   iadd r9,r1,1
+   .traceevent "O" 4 "R" "I" "r" 9 19 19 0 "" ""
+   ret r9
+   .meta "rxfnsb.stem.hash.codepoint"
+   .meta "rxfnsb.stem.hash.h"
+   .meta "rxfnsb.stem.hash.key"
+   .meta "rxfnsb.stem.hash.key_length"
+   .meta "rxfnsb.stem.hash.§this"
+
+§rxfnsb.stem.get() .locals=16 .expose=rxfnsb.stem.get
+   .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
+   .srcstep 39 39 17 "stem.crexx" 94 3 24 "  get: method = .string"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 21 21 17 "stem.crexx" 95 9 22 "    arg key = .string"
+   .meta "rxfnsb.stem.get.key"="b" ".string" r4
+   .meta "rxfnsb.stem.get.§this"="b" ".stem" a1
+   brtpandt l115c,a2,512
+   scopy r4,a2
+   br l115d
+l115c:
+   swap r4,a2
+l115d:
+   .meta "rxfnsb.stem.get.hash_value"="b" ".int" r2
+   .srcstep 22 22 17 "stem.crexx" 102 5 22 "    hash_value = .int"
+   null r2
+   .srcstep 23 23 17 "stem.crexx" 101 5 38 "    hash_length = 9223372036854775807"
+   .meta "rxfnsb.stem.get.hash_length"="b" ".int" r1
+   load r1,9223372036854775807
+   .traceevent "L" 4 "R" "I" "r" 1 23 23 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 23 23 0 "hash_length" ""
+   .srcstep 24 24 17 "stem.crexx" 103 15 48 "    assembler rxhash hash_value,key,hash_length"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "hash_value" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "hash_length" ""
+   rxhash r2,r4,r1
+   .srcstep 25 25 17 "stem.crexx" 104 15 45 "    assembler iand hash_value,hash_value,255"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "hash_value" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "hash_value" ""
+   iand r2,r2,255
+   .srcstep 26 26 17 "stem.crexx" 105 5 23 "    b = hash_value + 1"
+   .meta "rxfnsb.stem.get.b"="b" ".int" r0
+   .traceevent "V" 6 "R" "I" "r" 2 26 26 0 "hash_value" ""
+   iadd r0,r2,1
+   .traceevent "O" 4 "R" "I" "r" 0 26 26 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 26 26 0 "b" ""
+   .srcstep 27 27 17 "stem.crexx" 106 5 20 "    idx = buckets[b]"
+   .meta "rxfnsb.stem.get.idx"="b" ".int" r3
+   linkattr1 r7,a1,1
+   .traceevent "V" 6 "R" "I" "r" 0 27 27 0 "b" ""
+   .traceevent "C" 4 "R" "I" "r" 0 27 27 0 "buckets" ""
+   setlinkattr1 r6,r7,256,r0
+   .traceevent "V" 6 "R" "I" "r" 6 27 27 0 "buckets" ""
+   igetunlink r3,r6
+   .traceevent "A" 6 "R" "I" "r" 3 27 27 0 "idx" ""
+   unlink r7
+   .srcstep 36 36 17 "stem.crexx" 108 5 7 "    do while idx > 0"
+l142dostart:
+   .srcstep 28 28 17 "stem.crexx" 108 8 21 "    do while idx > 0"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "idx" ""
+   igt r7,r3,0
+   .traceevent "O" 4 "R" "B" "r" 7 0 0 0 "" ""
+   brf l142doend,r7
+   .srcstep 33 33 17 "stem.crexx" 109 7 26 "      if keys[idx] == key then do"
+   linkattr1 r8,a1,5
+   .traceevent "V" 6 "R" "I" "r" 3 33 33 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 33 33 0 "keys" ""
+   minlinkattr1 r6,r8,r3,0
+   .traceevent "V" 6 "R" "S" "r" 6 33 33 0 "keys" ""
+   .traceevent "V" 6 "R" "S" "r" 4 33 33 0 "key" ""
+   seq r9,r6,r4
+   unlinkn r6,r8
+   .traceevent "O" 4 "R" "B" "r" 9 33 33 0 "" ""
+   brf l162iffalse,r9
+   .srcstep 34 34 17 "stem.crexx" 109 27 31 "      if keys[idx] == key then do"
+   .srcstep 30 30 17 "stem.crexx" 110 9 55 "        if value_generations[idx] = default_generation then return vals[idx]"
+   linkattr1 r11,a1,9
+   .traceevent "V" 6 "R" "I" "r" 3 30 30 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 30 30 0 "value_generations" ""
+   minlinkattr1 r10,r11,r3,0
+   .traceevent "V" 6 "R" "I" "r" 10 30 30 0 "value_generations" ""
+   linkattr1 r12,a1,3
+   .traceevent "V" 6 "R" "I" "r" 12 30 30 0 "default_generation" ""
+   ieq r13,r10,r12
+   unlinkn r12,r10
+   unlink r11
+   .traceevent "O" 4 "R" "B" "r" 13 30 30 0 "" ""
+   brf l158iffalse,r13
+   .srcstep 31 31 17 "stem.crexx" 110 56 60 "        if value_generations[idx] = default_generation then return vals[idx]"
+   .srcstep 29 29 17 "stem.crexx" 110 61 76 "        if value_generations[idx] = default_generation then return vals[idx]"
+   linkattr1 r15,a1,8
+   .traceevent "V" 6 "R" "I" "r" 3 29 29 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 29 29 0 "vals" ""
+   minlinkattr1 r14,r15,r3,0
+   .traceevent "V" 6 "R" "S" "r" 14 29 29 0 "vals" ""
+   ret r14
+l158iffalse:
+   .srcstep 32 32 17 "stem.crexx" 111 9 29 "        return default_value"
+   linkattr1 r15,a1,4
+   .traceevent "V" 6 "R" "S" "r" 15 32 32 0 "default_value" ""
+   ret r15
+l162iffalse:
+   .srcstep 35 35 17 "stem.crexx" 113 7 21 "      idx = next[idx]"
+   linkattr1 r14,a1,6
+   .traceevent "V" 6 "R" "I" "r" 3 35 35 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 35 35 0 "next" ""
+   minlinkattr1 r15,r14,r3,0
+   .traceevent "V" 6 "R" "I" "r" 15 35 35 0 "next" ""
+   igetunlink r3,r15
+   .traceevent "A" 6 "R" "I" "r" 3 35 35 0 "idx" ""
+   unlink r14
+l142doinc:
+   .srcstep 37 37 17 "stem.crexx" 113 21 22 "      idx = next[idx]"
+   br l142dostart
+l142doend:
+   .srcstep 38 38 17 "stem.crexx" 116 5 25 "    return default_value"
+   linkattr1 r15,a1,4
+   .traceevent "V" 6 "R" "S" "r" 15 38 38 0 "default_value" ""
+   ret r15
+   .meta "rxfnsb.stem.get.b"
+   .meta "rxfnsb.stem.get.hash_length"
+   .meta "rxfnsb.stem.get.hash_value"
+   .meta "rxfnsb.stem.get.idx"
+   .meta "rxfnsb.stem.get.key"
+   .meta "rxfnsb.stem.get.§this"
+
+§rxfnsb.stem.set() .locals=14 .expose=rxfnsb.stem.set
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "?key=.string,value=.string"
+   .srcstep 75 75 17 "stem.crexx" 131 3 22 "  set: method = .void"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 40 40 17 "stem.crexx" 132 9 17 "    arg key = \"\", value = .string"
+   .meta "rxfnsb.stem.set.key"="b" ".string" r4
+   .meta "rxfnsb.stem.set.§this"="b" ".stem" a1
+   brtpandt l173a,a2,256
+   load r4,""
+   .traceevent "L" 4 "R" "S" "r" 4 0 0 0 "" ""
+   settp r4,0
+   br l173d
+l173a:
+   brtpandt l173c,a2,512
+   scopy r4,a2
+   settp r4,256
+   br l173d
+l173c:
+   swap r4,a2
+l173d:
+   .srcstep 41 41 17 "stem.crexx" 132 19 34 "    arg key = \"\", value = .string"
+   .meta "rxfnsb.stem.set.value"="b" ".string" a3
+   .meta "rxfnsb.stem.set.hash_value"="b" ".int" r2
+   .srcstep 42 42 17 "stem.crexx" 141 5 22 "    hash_value = .int"
+   null r2
+   .srcstep 46 46 17 "stem.crexx" 134 5 13 "    if \\?key then do"
+   getandtp r8,r4,256
+   not r9,r8
+   .traceevent "P" 4 "R" "B" "r" 9 46 46 0 "" ""
+   brf l192iffalse,r9
+   .srcstep 47 47 17 "stem.crexx" 134 14 18 "    if \\?key then do"
+   .srcstep 43 43 17 "stem.crexx" 135 7 28 "      default_value = value"
+   .traceevent "V" 6 "R" "S" "a" 3 43 43 0 "value" ""
+   linkattr1 r10,a1,4
+   scopy r10,a3
+   unlink r10
+   .srcstep 44 44 17 "stem.crexx" 136 7 50 "      default_generation = default_generation + 1"
+   linkattr1 r8,a1,3
+   .traceevent "V" 6 "R" "I" "r" 8 44 44 0 "default_generation" ""
+   iadd r11,r8,1
+   unlink r8
+   .traceevent "O" 4 "R" "I" "r" 11 44 44 0 "" ""
+   isetattr1 a1,3,r11
+   .srcstep 45 45 17 "stem.crexx" 137 7 13 "      return"
+   ret
+l192iffalse:
+   .srcstep 48 48 17 "stem.crexx" 140 5 38 "    hash_length = 9223372036854775807"
+   .meta "rxfnsb.stem.set.hash_length"="b" ".int" r1
+   load r1,9223372036854775807
+   .traceevent "L" 4 "R" "I" "r" 1 48 48 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 48 48 0 "hash_length" ""
+   .srcstep 49 49 17 "stem.crexx" 142 15 48 "    assembler rxhash hash_value,key,hash_length"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "hash_value" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "hash_length" ""
+   rxhash r2,r4,r1
+   .srcstep 50 50 17 "stem.crexx" 143 15 45 "    assembler iand hash_value,hash_value,255"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "hash_value" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "hash_value" ""
+   iand r2,r2,255
+   .srcstep 51 51 17 "stem.crexx" 144 5 23 "    b = hash_value + 1"
+   .meta "rxfnsb.stem.set.b"="b" ".int" r0
+   .traceevent "V" 6 "R" "I" "r" 2 51 51 0 "hash_value" ""
+   iadd r0,r2,1
+   .traceevent "O" 4 "R" "I" "r" 0 51 51 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 51 51 0 "b" ""
+   .srcstep 52 52 17 "stem.crexx" 145 5 20 "    idx = buckets[b]"
+   .meta "rxfnsb.stem.set.idx"="b" ".int" r3
+   linkattr1 r10,a1,1
+   .traceevent "V" 6 "R" "I" "r" 0 52 52 0 "b" ""
+   .traceevent "C" 4 "R" "I" "r" 0 52 52 0 "buckets" ""
+   setlinkattr1 r11,r10,256,r0
+   .traceevent "V" 6 "R" "I" "r" 11 52 52 0 "buckets" ""
+   igetunlink r3,r11
+   .traceevent "A" 6 "R" "I" "r" 3 52 52 0 "idx" ""
+   unlink r10
+   .srcstep 53 53 17 "stem.crexx" 146 5 17 "    last_idx = 0"
+   .meta "rxfnsb.stem.set.last_idx"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 53 53 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 53 53 0 "last_idx" ""
+   .srcstep 62 62 17 "stem.crexx" 149 5 7 "    do while idx > 0"
+l219dostart:
+   .srcstep 54 54 17 "stem.crexx" 149 8 21 "    do while idx > 0"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "idx" ""
+   igt r11,r3,0
+   .traceevent "O" 4 "R" "B" "r" 11 0 0 0 "" ""
+   brf l219doend,r11
+   .srcstep 58 58 17 "stem.crexx" 150 7 26 "      if keys[idx] == key then do"
+   linkattr1 r9,a1,5
+   .traceevent "V" 6 "R" "I" "r" 3 58 58 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 58 58 0 "keys" ""
+   minlinkattr1 r10,r9,r3,0
+   .traceevent "V" 6 "R" "S" "r" 10 58 58 0 "keys" ""
+   .traceevent "V" 6 "R" "S" "r" 4 58 58 0 "key" ""
+   seq r8,r10,r4
+   unlinkn r10,r9
+   .traceevent "O" 4 "R" "B" "r" 8 58 58 0 "" ""
+   brf l238iffalse,r8
+   .srcstep 59 59 17 "stem.crexx" 150 27 31 "      if keys[idx] == key then do"
+   .srcstep 55 55 17 "stem.crexx" 151 9 26 "        vals[idx] = value"
+   linkattr1 r13,a1,8
+   .traceevent "V" 6 "R" "I" "r" 3 55 55 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 55 55 0 "vals" ""
+   minlinkattr1 r12,r13,r3,0
+   .traceevent "V" 6 "R" "S" "a" 3 55 55 0 "value" ""
+   scopy r12,a3
+   .traceevent "A" 6 "R" "S" "r" 12 55 55 0 "vals" ""
+   unlinkn r12,r13
+   .srcstep 56 56 17 "stem.crexx" 152 9 52 "        value_generations[idx] = default_generation"
+   linkattr1 r12,a1,9
+   .traceevent "V" 6 "R" "I" "r" 3 56 56 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 56 56 0 "value_generations" ""
+   minlinkattr1 r13,r12,r3,0
+   linkattr1 r10,a1,3
+   .traceevent "V" 6 "R" "I" "r" 10 56 56 0 "default_generation" ""
+   igetunlink r13,r10
+   .traceevent "A" 6 "R" "I" "r" 13 56 56 0 "value_generations" ""
+   unlinkn r13,r12
+   .srcstep 57 57 17 "stem.crexx" 153 9 15 "        return"
+   ret
+l238iffalse:
+   .srcstep 60 60 17 "stem.crexx" 155 7 21 "      last_idx = idx"
+   .traceevent "V" 6 "R" "I" "r" 3 60 60 0 "idx" ""
+   icopy r5,r3
+   .traceevent "A" 6 "R" "I" "r" 5 60 60 0 "last_idx" ""
+   .srcstep 61 61 17 "stem.crexx" 156 7 21 "      idx = next[idx]"
+   linkattr1 r12,a1,6
+   .traceevent "V" 6 "R" "I" "r" 3 61 61 0 "idx" ""
+   .traceevent "C" 4 "R" "I" "r" 3 61 61 0 "next" ""
+   minlinkattr1 r13,r12,r3,0
+   .traceevent "V" 6 "R" "I" "r" 13 61 61 0 "next" ""
+   igetunlink r3,r13
+   .traceevent "A" 6 "R" "I" "r" 3 61 61 0 "idx" ""
+   unlink r12
+l219doinc:
+   .srcstep 63 63 17 "stem.crexx" 156 21 22 "      idx = next[idx]"
+   br l219dostart
+l219doend:
+   .srcstep 64 64 17 "stem.crexx" 160 5 22 "    count = count + 1"
+   linkattr1 r12,a1,2
+   .traceevent "V" 6 "R" "I" "r" 12 64 64 0 "count" ""
+   iadd r11,r12,1
+   unlink r12
+   .traceevent "O" 4 "R" "I" "r" 11 64 64 0 "" ""
+   isetattr1 a1,2,r11
+   .srcstep 65 65 17 "stem.crexx" 163 5 22 "    keys[count] = key"
+   linkattr1 r11,a1,5
+   linkattr1 r13,a1,2
+   .traceevent "V" 6 "R" "I" "r" 13 65 65 0 "count" ""
+   .traceevent "C" 4 "R" "I" "r" 13 65 65 0 "keys" ""
+   minlinkattr1 r12,r11,r13,0
+   unlink r13
+   .traceevent "V" 6 "R" "S" "r" 4 65 65 0 "key" ""
+   scopy r12,r4
+   .traceevent "A" 6 "R" "S" "r" 12 65 65 0 "keys" ""
+   unlinkn r12,r11
+   .srcstep 66 66 17 "stem.crexx" 164 5 24 "    vals[count] = value"
+   linkattr1 r11,a1,8
+   linkattr1 r13,a1,2
+   .traceevent "V" 6 "R" "I" "r" 13 66 66 0 "count" ""
+   .traceevent "C" 4 "R" "I" "r" 13 66 66 0 "vals" ""
+   minlinkattr1 r12,r11,r13,0
+   unlink r13
+   .traceevent "V" 6 "R" "S" "a" 3 66 66 0 "value" ""
+   scopy r12,a3
+   .traceevent "A" 6 "R" "S" "r" 12 66 66 0 "vals" ""
+   unlinkn r12,r11
+   .srcstep 67 67 17 "stem.crexx" 165 5 50 "    value_generations[count] = default_generation"
+   linkattr1 r11,a1,9
+   linkattr1 r13,a1,2
+   .traceevent "V" 6 "R" "I" "r" 13 67 67 0 "count" ""
+   .traceevent "C" 4 "R" "I" "r" 13 67 67 0 "value_generations" ""
+   minlinkattr1 r12,r11,r13,0
+   unlink r13
+   linkattr1 r10,a1,3
+   .traceevent "V" 6 "R" "I" "r" 10 67 67 0 "default_generation" ""
+   igetunlink r12,r10
+   .traceevent "A" 6 "R" "I" "r" 12 67 67 0 "value_generations" ""
+   unlinkn r12,r11
+   .srcstep 68 68 17 "stem.crexx" 166 5 20 "    next[count] = 0"
+   linkattr1 r11,a1,6
+   linkattr1 r13,a1,2
+   .traceevent "V" 6 "R" "I" "r" 13 68 68 0 "count" ""
+   .traceevent "C" 4 "R" "I" "r" 13 68 68 0 "next" ""
+   minlinkattr1 r12,r11,r13,0
+   unlink r13
+   iloadsetunlinkn r10,r12,0,r11
+   .traceevent "L" 4 "R" "I" "r" 10 68 68 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 68 68 0 "next" ""
+   .srcstep 71 71 17 "stem.crexx" 168 5 20 "    if last_idx > 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 5 71 71 0 "last_idx" ""
+   igt r13,r5,0
+   .traceevent "O" 4 "R" "B" "r" 13 71 71 0 "" ""
+   brf l282iffalse,r13
+   .srcstep 72 72 17 "stem.crexx" 168 21 25 "    if last_idx > 0 then do"
+   .srcstep 69 69 17 "stem.crexx" 169 7 29 "      next[last_idx] = count"
+   linkattr1 r11,a1,6
+   .traceevent "V" 6 "R" "I" "r" 5 69 69 0 "last_idx" ""
+   .traceevent "C" 4 "R" "I" "r" 5 69 69 0 "next" ""
+   minlinkattr1 r12,r11,r5,0
+   linkattr1 r10,a1,2
+   .traceevent "V" 6 "R" "I" "r" 10 69 69 0 "count" ""
+   igetunlink r12,r10
+   .traceevent "A" 6 "R" "I" "r" 12 69 69 0 "next" ""
+   unlinkn r12,r11
+   br l282ifend
+   .srcstep 73 73 17 "stem.crexx" 170 5 8 "    end"
+l282iffalse:
+   .srcstep 70 70 17 "stem.crexx" 172 7 25 "      buckets[b] = count"
+   linkattr1 r11,a1,1
+   .traceevent "V" 6 "R" "I" "r" 0 70 70 0 "b" ""
+   .traceevent "C" 4 "R" "I" "r" 0 70 70 0 "buckets" ""
+   setlinkattr1 r12,r11,256,r0
+   linkattr1 r10,a1,2
+   .traceevent "V" 6 "R" "I" "r" 10 70 70 0 "count" ""
+   igetunlink r12,r10
+   .traceevent "A" 6 "R" "I" "r" 12 70 70 0 "buckets" ""
+   unlinkn r12,r11
+l282ifend:
+   .srcstep 74 74 17 "stem.crexx" 175 5 11 "    return"
+   ret
+   .meta "rxfnsb.stem.set.b"
+   .meta "rxfnsb.stem.set.hash_length"
+   .meta "rxfnsb.stem.set.hash_value"
+   .meta "rxfnsb.stem.set.idx"
+   .meta "rxfnsb.stem.set.key"
+   .meta "rxfnsb.stem.set.last_idx"
+   .meta "rxfnsb.stem.set.value"
+   .meta "rxfnsb.stem.set.§this"
+
+§rxfnsb.stem.size() .locals=2 .expose=rxfnsb.stem.size
+   .meta "rxfnsb.stem.size"="b" ".int" §rxfnsb.stem.size() ""
+   .meta "rxfnsb.stem.size"=".inline" "I5;f,0,7374656D2E6372657878;u,0,0,182,5,17,1,2020202072657475726E20636F756E74;u,1,0,182,12,17,1,2020202072657475726E20636F756E74;q,0,-1,3;q,1,-1,2;s,0,1,636F756E74,2,3,0,-,-,-,256,r,2;a;>,0,-1,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;<;b;>,0,0,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,1,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,636F756E74,-;<;<;<"
+   .srcstep 77 77 17 "stem.crexx" 182 3 22 "  size: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 76 76 17 "stem.crexx" 183 5 17 "    return count"
+   .meta "rxfnsb.stem.size.§this"="b" ".stem" a1
+   linkattr1 r1,a1,2
+   .traceevent "V" 6 "R" "I" "r" 1 76 76 0 "count" ""
+   ret r1
+   .meta "rxfnsb.stem.size.§this"
+
+§rxfnsb.stem.key() .locals=5 .expose=rxfnsb.stem.key
+   .meta "rxfnsb.stem.key"="b" ".string" §rxfnsb.stem.key() "ix=.int"
+   .srcstep 83 83 17 "stem.crexx" 191 3 24 "  key: method = .string"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 78 78 17 "stem.crexx" 192 9 18 "    arg ix = .int"
+   .meta "rxfnsb.stem.key.ix"="b" ".int" a2
+   .meta "rxfnsb.stem.key.§this"="b" ".stem" a1
+   .srcstep 80 80 17 "stem.crexx" 193 5 27 "    if ix < 1 | ix > count then"
+   .traceevent "V" 6 "R" "I" "a" 2 80 80 0 "ix" ""
+   ilt r4,a2,1
+   .traceevent "O" 4 "R" "B" "r" 4 80 80 0 "" ""
+   brt l300orend,r4
+   .traceevent "V" 6 "R" "I" "a" 2 80 80 0 "ix" ""
+   linkattr1 r2,a1,2
+   .traceevent "V" 6 "R" "I" "r" 2 80 80 0 "count" ""
+   igt r3,a2,r2
+   unlink r2
+   .traceevent "O" 4 "R" "B" "r" 3 80 80 0 "" ""
+   icopy r4,r3
+l300orend:
+   .traceevent "O" 4 "R" "B" "r" 4 80 80 0 "" ""
+   brf l304iffalse,r4
+   .srcstep 81 81 17 "stem.crexx" 193 28 32 "    if ix < 1 | ix > count then"
+   .srcstep 79 79 17 "stem.crexx" 194 17 89 "      assembler signal \"INVALID_ARGUMENTS\", \"STEM key index is outside the stored range\""
+   signal "INVALID_ARGUMENTS","STEM key index is outside the stored range"
+l304iffalse:
+   .srcstep 82 82 17 "stem.crexx" 195 5 19 "    return keys[ix]"
+   linkattr1 r2,a1,5
+   .traceevent "V" 6 "R" "I" "a" 2 82 82 0 "ix" ""
+   .traceevent "C" 4 "R" "I" "a" 2 82 82 0 "keys" ""
+   minlinkattr1 r4,r2,a2,0
+   .traceevent "V" 6 "R" "S" "r" 4 82 82 0 "keys" ""
+   ret r4
+   .meta "rxfnsb.stem.key.ix"
+   .meta "rxfnsb.stem.key.§this"
+
+§rxfnsb.stem.value() .locals=8 .expose=rxfnsb.stem.value
+   .meta "rxfnsb.stem.value"="b" ".string" §rxfnsb.stem.value() "kv=.int"
+   .srcstep 92 92 17 "stem.crexx" 204 3 26 "  value: method = .string"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 84 84 17 "stem.crexx" 205 9 18 "    arg kv = .int"
+   .meta "rxfnsb.stem.value.kv"="b" ".int" a2
+   .meta "rxfnsb.stem.value.§this"="b" ".stem" a1
+   .srcstep 86 86 17 "stem.crexx" 206 5 27 "    if kv < 1 | kv > count then"
+   .traceevent "V" 6 "R" "I" "a" 2 86 86 0 "kv" ""
+   ilt r4,a2,1
+   .traceevent "O" 4 "R" "B" "r" 4 86 86 0 "" ""
+   brt l320orend,r4
+   .traceevent "V" 6 "R" "I" "a" 2 86 86 0 "kv" ""
+   linkattr1 r2,a1,2
+   .traceevent "V" 6 "R" "I" "r" 2 86 86 0 "count" ""
+   igt r3,a2,r2
+   unlink r2
+   .traceevent "O" 4 "R" "B" "r" 3 86 86 0 "" ""
+   icopy r4,r3
+l320orend:
+   .traceevent "O" 4 "R" "B" "r" 4 86 86 0 "" ""
+   brf l324iffalse,r4
+   .srcstep 87 87 17 "stem.crexx" 206 28 32 "    if kv < 1 | kv > count then"
+   .srcstep 85 85 17 "stem.crexx" 207 17 91 "      assembler signal \"INVALID_ARGUMENTS\", \"STEM value index is outside the stored range\""
+   signal "INVALID_ARGUMENTS","STEM value index is outside the stored range"
+l324iffalse:
+   .srcstep 89 89 17 "stem.crexx" 208 5 51 "    if value_generations[kv] <> default_generation then return default_value"
+   linkattr1 r2,a1,9
+   .traceevent "V" 6 "R" "I" "a" 2 89 89 0 "kv" ""
+   .traceevent "C" 4 "R" "I" "a" 2 89 89 0 "value_generations" ""
+   minlinkattr1 r4,r2,a2,0
+   .traceevent "V" 6 "R" "I" "r" 4 89 89 0 "value_generations" ""
+   linkattr1 r5,a1,3
+   .traceevent "V" 6 "R" "I" "r" 5 89 89 0 "default_generation" ""
+   ine r6,r4,r5
+   unlinkn r5,r4
+   unlink r2
+   .traceevent "O" 4 "R" "B" "r" 6 89 89 0 "" ""
+   brf l331iffalse,r6
+   .srcstep 90 90 17 "stem.crexx" 208 52 56 "    if value_generations[kv] <> default_generation then return default_value"
+   .srcstep 88 88 17 "stem.crexx" 208 57 77 "    if value_generations[kv] <> default_generation then return default_value"
+   linkattr1 r7,a1,4
+   .traceevent "V" 6 "R" "S" "r" 7 88 88 0 "default_value" ""
+   ret r7
+l331iffalse:
+   .srcstep 91 91 17 "stem.crexx" 209 5 19 "    return vals[kv]"
+   linkattr1 r6,a1,8
+   .traceevent "V" 6 "R" "I" "a" 2 91 91 0 "kv" ""
+   .traceevent "C" 4 "R" "I" "a" 2 91 91 0 "vals" ""
+   minlinkattr1 r7,r6,a2,0
+   .traceevent "V" 6 "R" "S" "r" 7 91 91 0 "vals" ""
+   ret r7
+   .meta "rxfnsb.stem.value.kv"
+   .meta "rxfnsb.stem.value.§this"
+
+§rxfnsb.stem.valueat() .locals=8 .expose=rxfnsb.stem.valueat
+   .meta "rxfnsb.stem.valueat"="b" ".string" §rxfnsb.stem.valueat() "ix=.int"
+   .srcstep 101 101 17 "stem.crexx" 217 3 28 "  valueAt: method = .string"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 93 93 17 "stem.crexx" 218 9 18 "    arg ix = .int"
+   .meta "rxfnsb.stem.valueat.ix"="b" ".int" a2
+   .meta "rxfnsb.stem.valueat.§this"="b" ".stem" a1
+   .srcstep 95 95 17 "stem.crexx" 219 5 27 "    if ix < 1 | ix > count then"
+   .traceevent "V" 6 "R" "I" "a" 2 95 95 0 "ix" ""
+   ilt r4,a2,1
+   .traceevent "O" 4 "R" "B" "r" 4 95 95 0 "" ""
+   brt l347orend,r4
+   .traceevent "V" 6 "R" "I" "a" 2 95 95 0 "ix" ""
+   linkattr1 r2,a1,2
+   .traceevent "V" 6 "R" "I" "r" 2 95 95 0 "count" ""
+   igt r3,a2,r2
+   unlink r2
+   .traceevent "O" 4 "R" "B" "r" 3 95 95 0 "" ""
+   icopy r4,r3
+l347orend:
+   .traceevent "O" 4 "R" "B" "r" 4 95 95 0 "" ""
+   brf l351iffalse,r4
+   .srcstep 96 96 17 "stem.crexx" 219 28 32 "    if ix < 1 | ix > count then"
+   .srcstep 94 94 17 "stem.crexx" 220 17 93 "      assembler signal \"INVALID_ARGUMENTS\", \"STEM valueAt index is outside the stored range\""
+   signal "INVALID_ARGUMENTS","STEM valueAt index is outside the stored range"
+l351iffalse:
+   .srcstep 98 98 17 "stem.crexx" 221 5 51 "    if value_generations[ix] <> default_generation then return default_value"
+   linkattr1 r2,a1,9
+   .traceevent "V" 6 "R" "I" "a" 2 98 98 0 "ix" ""
+   .traceevent "C" 4 "R" "I" "a" 2 98 98 0 "value_generations" ""
+   minlinkattr1 r4,r2,a2,0
+   .traceevent "V" 6 "R" "I" "r" 4 98 98 0 "value_generations" ""
+   linkattr1 r5,a1,3
+   .traceevent "V" 6 "R" "I" "r" 5 98 98 0 "default_generation" ""
+   ine r6,r4,r5
+   unlinkn r5,r4
+   unlink r2
+   .traceevent "O" 4 "R" "B" "r" 6 98 98 0 "" ""
+   brf l358iffalse,r6
+   .srcstep 99 99 17 "stem.crexx" 221 52 56 "    if value_generations[ix] <> default_generation then return default_value"
+   .srcstep 97 97 17 "stem.crexx" 221 57 77 "    if value_generations[ix] <> default_generation then return default_value"
+   linkattr1 r7,a1,4
+   .traceevent "V" 6 "R" "S" "r" 7 97 97 0 "default_value" ""
+   ret r7
+l358iffalse:
+   .srcstep 100 100 17 "stem.crexx" 222 5 19 "    return vals[ix]"
+   linkattr1 r6,a1,8
+   .traceevent "V" 6 "R" "I" "a" 2 100 100 0 "ix" ""
+   .traceevent "C" 4 "R" "I" "a" 2 100 100 0 "vals" ""
+   minlinkattr1 r7,r6,a2,0
+   .traceevent "V" 6 "R" "S" "r" 7 100 100 0 "vals" ""
+   ret r7
+   .meta "rxfnsb.stem.valueat.ix"
+   .meta "rxfnsb.stem.valueat.§this"
+
+§rxfnsb.stem.tails() .locals=8 .expose=rxfnsb.stem.tails
+   .meta "rxfnsb.stem.tails"="b" ".string[*]" §rxfnsb.stem.tails() ""
+   .srcstep 110 110 17 "stem.crexx" 229 3 28 "  tails: method = .string[]"
+   assertinitialized a1
+   numsci 18,1,1
+   .meta "rxfnsb.stem.tails.result"="b" ".string[*]" r0
+   .srcstep 102 102 17 "stem.crexx" 230 5 21 "    result = .string[]"
+   null r0
+   .srcstep 107 107 17 "stem.crexx" 231 5 7 "    do i = 1 to count"
+   .srcstep 103 103 17 "stem.crexx" 231 8 13 "    do i = 1 to count"
+   .meta "rxfnsb.stem.tails.i"="b" ".int" r2
+   .meta "rxfnsb.stem.tails.§this"="b" ".stem" a1
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 103 103 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 103 103 0 "i" ""
+   .srcstep 104 104 17 "stem.crexx" 231 14 22 "    do i = 1 to count"
+   linkattr1 r3,a1,2
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "count" ""
+l373dostart:
+   .srcstep 104 104 17 "stem.crexx" 231 14 22 "    do i = 1 to count"
+   igt r4,r2,r3
+   brt l373doend,r4
+   .srcstep 106 106 17 "stem.crexx" 232 7 25 "      result[i] = keys[i]"
+   .traceevent "V" 6 "R" "I" "r" 2 106 106 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 2 106 106 0 "result" ""
+   minlinkattr1 r5,r0,r2,0
+   linkattr1 r7,a1,5
+   .traceevent "V" 6 "R" "I" "r" 2 106 106 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 2 106 106 0 "keys" ""
+   minlinkattr1 r6,r7,r2,0
+   .traceevent "V" 6 "R" "S" "r" 6 106 106 0 "keys" ""
+   scopy r5,r6
+   .traceevent "A" 6 "R" "S" "r" 5 106 106 0 "result" ""
+   unlinkn r6,r7
+   unlink r5
+l373doinc:
+   .srcstep 105 105 17 "stem.crexx" 231 8 9 "    do i = 1 to count"
+   inc r2
+   .srcstep 108 108 17 "stem.crexx" 232 25 26 "      result[i] = keys[i]"
+   br l373dostart
+l373doend:
+   unlink r3
+   .meta "rxfnsb.stem.tails.i"
+   .srcstep 109 109 17 "stem.crexx" 234 5 18 "    return result"
+   .traceevent "V" 6 "R" "S" "r" 0 109 109 0 "result" ""
+   ret r0
+   .meta "rxfnsb.stem.tails.result"
+   .meta "rxfnsb.stem.tails.§this"
+
+§rxfnsb.stem.values() .locals=14 .expose=rxfnsb.stem.values
+   .meta "rxfnsb.stem.values"="b" ".string[*]" §rxfnsb.stem.values() ""
+   .srcstep 123 123 17 "stem.crexx" 241 3 29 "  values: method = .string[]"
+   assertinitialized a1
+   numsci 18,1,1
+   .meta "rxfnsb.stem.values.result"="b" ".string[*]" r0
+   .srcstep 111 111 17 "stem.crexx" 242 5 21 "    result = .string[]"
+   null r0
+   .srcstep 120 120 17 "stem.crexx" 243 5 7 "    do i = 1 to count"
+   .srcstep 112 112 17 "stem.crexx" 243 8 13 "    do i = 1 to count"
+   .meta "rxfnsb.stem.values.i"="b" ".int" r2
+   .meta "rxfnsb.stem.values.§this"="b" ".stem" a1
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 112 112 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 112 112 0 "i" ""
+   .srcstep 113 113 17 "stem.crexx" 243 14 22 "    do i = 1 to count"
+   linkattr1 r3,a1,2
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "count" ""
+l399dostart:
+   .srcstep 113 113 17 "stem.crexx" 243 14 22 "    do i = 1 to count"
+   igt r4,r2,r3
+   brt l399doend,r4
+   .srcstep 117 117 17 "stem.crexx" 244 7 52 "      if value_generations[i] <> default_generation then result[i] = default_value"
+   linkattr1 r6,a1,9
+   .traceevent "V" 6 "R" "I" "r" 2 117 117 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 2 117 117 0 "value_generations" ""
+   minlinkattr1 r5,r6,r2,0
+   .traceevent "V" 6 "R" "I" "r" 5 117 117 0 "value_generations" ""
+   linkattr1 r7,a1,3
+   .traceevent "V" 6 "R" "I" "r" 7 117 117 0 "default_generation" ""
+   ine r8,r5,r7
+   unlinkn r7,r5
+   unlink r6
+   .traceevent "O" 4 "R" "B" "r" 8 117 117 0 "" ""
+   brf l419iffalse,r8
+   .srcstep 118 118 17 "stem.crexx" 244 53 57 "      if value_generations[i] <> default_generation then result[i] = default_value"
+   .srcstep 115 115 17 "stem.crexx" 244 58 83 "      if value_generations[i] <> default_generation then result[i] = default_value"
+   .traceevent "V" 6 "R" "I" "r" 2 115 115 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 2 115 115 0 "result" ""
+   minlinkattr1 r9,r0,r2,0
+   linkattr1 r10,a1,4
+   .traceevent "V" 6 "R" "S" "r" 10 115 115 0 "default_value" ""
+   scopy r9,r10
+   .traceevent "A" 6 "R" "S" "r" 9 115 115 0 "result" ""
+   unlinkn r10,r9
+   br l419ifend
+   .srcstep 119 119 17 "stem.crexx" 245 7 11 "      else result[i] = vals[i]"
+l419iffalse:
+   .srcstep 116 116 17 "stem.crexx" 245 12 30 "      else result[i] = vals[i]"
+   .traceevent "V" 6 "R" "I" "r" 2 116 116 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 2 116 116 0 "result" ""
+   minlinkattr1 r11,r0,r2,0
+   linkattr1 r13,a1,8
+   .traceevent "V" 6 "R" "I" "r" 2 116 116 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 2 116 116 0 "vals" ""
+   minlinkattr1 r12,r13,r2,0
+   .traceevent "V" 6 "R" "S" "r" 12 116 116 0 "vals" ""
+   scopy r11,r12
+   .traceevent "A" 6 "R" "S" "r" 11 116 116 0 "result" ""
+   unlinkn r12,r13
+   unlink r11
+l419ifend:
+l399doinc:
+   .srcstep 114 114 17 "stem.crexx" 243 8 9 "    do i = 1 to count"
+   inc r2
+   .srcstep 121 121 17 "stem.crexx" 245 30 31 "      else result[i] = vals[i]"
+   br l399dostart
+l399doend:
+   unlink r3
+   .meta "rxfnsb.stem.values.i"
+   .srcstep 122 122 17 "stem.crexx" 247 5 18 "    return result"
+   .traceevent "V" 6 "R" "S" "r" 0 122 122 0 "result" ""
+   ret r0
+   .meta "rxfnsb.stem.values.result"
+   .meta "rxfnsb.stem.values.§this"
+
+§rxfnsb.stem.iterator() .locals=5 .expose=rxfnsb.stem.iterator
+   .meta "rxfnsb.stem.iterator"="b" ".rxfnsb..stemiterator" §rxfnsb.stem.iterator() ""
+   .srcstep 125 125 17 "stem.crexx" 256 3 35 "  iterator: method = .stemIterator"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 124 124 17 "stem.crexx" 257 5 43 "    return .stemIterator(reference self, 0)"
+   .meta "rxfnsb.stem.iterator.§this"="b" ".stem" a1
+   .traceevent "V" 6 "R" "O" "a" 1 124 124 0 "§this" ""
+   mkref r2,a1
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 124 124 0 "" ""
+   settp r2,768
+   settp r3,256
+   call2 r4,§rxfnsb.stemiterator.§factory(),r2,r3
+   .traceevent "F" 4 "R" "O" "r" 4 124 124 0 "§factory" ""
+   ret r4
+   .meta "rxfnsb.stem.iterator.§this"
+
+§rxfnsb.stem.snapshotiterator() .locals=5 .expose=rxfnsb.stem.snapshotiterator
+   .meta "rxfnsb.stem.snapshotiterator"="b" ".rxfnsb..stemiterator" §rxfnsb.stem.snapshotiterator() ""
+   .srcstep 127 127 17 "stem.crexx" 267 3 43 "  snapshotIterator: method = .stemIterator"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 126 126 17 "stem.crexx" 268 5 43 "    return .stemIterator(reference self, 1)"
+   .meta "rxfnsb.stem.snapshotiterator.§this"="b" ".stem" a1
+   .traceevent "V" 6 "R" "O" "a" 1 126 126 0 "§this" ""
+   mkref r2,a1
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 126 126 0 "" ""
+   settp r2,768
+   settp r3,256
+   call2 r4,§rxfnsb.stemiterator.§factory(),r2,r3
+   .traceevent "F" 4 "R" "O" "r" 4 126 126 0 "§factory" ""
+   ret r4
+   .meta "rxfnsb.stem.snapshotiterator.§this"
+
+§rxfnsb.stemiterator.§factory() .locals=23 .expose=rxfnsb.stemiterator.§factory
+   .meta "rxfnsb.stemiterator.§factory"="b" ".rxfnsb..stemiterator" §rxfnsb.stemiterator.§factory() "source=reference .stem,?snapshot_flag=.int"
+   .srcstep 171 171 17 "stem.crexx" 302 3 13 "  *: factory"
+   setattrs r2,8
+   setobjtype r2,"rxfnsb.stemiterator"
+   numsci 18,1,1
+   .srcstep 128 128 17 "stem.crexx" 303 9 33 "    arg source = reference .stem, snapshot_flag = 0"
+   .meta "rxfnsb.stemiterator.§factory.source"="b" "reference .stem" a1
+   .meta "rxfnsb.stemiterator.§factory.§factory"="b" ".stemiterator" r2
+   .srcstep 129 129 17 "stem.crexx" 303 35 52 "    arg source = reference .stem, snapshot_flag = 0"
+   .meta "rxfnsb.stemiterator.§factory.snapshot_flag"="b" ".int" a2
+   brtpandt l473a,a2,256
+   load a2,0
+   .traceevent "L" 4 "R" "I" "a" 2 0 0 0 "" ""
+   settp a2,0
+l473a:
+   .srcstep 131 131 17 "stem.crexx" 304 5 47 "    if snapshot_flag <> 0 & snapshot_flag <> 1 then"
+   .traceevent "V" 6 "R" "I" "a" 2 131 131 0 "snapshot_flag" ""
+   ine r4,a2,0
+   .traceevent "O" 4 "R" "B" "r" 4 131 131 0 "" ""
+   brf l482andend,r4
+   .traceevent "V" 6 "R" "I" "a" 2 131 131 0 "snapshot_flag" ""
+   ine r4,a2,1
+   .traceevent "O" 4 "R" "B" "r" 4 131 131 0 "" ""
+l482andend:
+   .traceevent "O" 4 "R" "B" "r" 4 131 131 0 "" ""
+   brf l486iffalse,r4
+   .srcstep 132 132 17 "stem.crexx" 304 48 52 "    if snapshot_flag <> 0 & snapshot_flag <> 1 then"
+   .srcstep 130 130 17 "stem.crexx" 305 17 94 "      assembler signal \"INVALID_ARGUMENTS\", \"STEM iterator snapshot flag must be zero or one\""
+   signal "INVALID_ARGUMENTS","STEM iterator snapshot flag must be zero or one"
+l486iffalse:
+   .srcstep 133 133 17 "stem.crexx" 306 5 30 "    snapshot_ = snapshot_flag"
+   .traceevent "V" 6 "R" "I" "a" 2 133 133 0 "snapshot_flag" ""
+   isetattr1 r2,5,a2
+   .srcstep 134 134 17 "stem.crexx" 307 5 15 "    index_ = 0"
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 134 134 0 "" ""
+   isetattr1 r2,3,r5
+   .srcstep 135 135 17 "stem.crexx" 308 5 23 "    current_tail_ = \"\""
+   load r4,""
+   .traceevent "L" 4 "R" "S" "r" 4 135 135 0 "" ""
+   linkattr1 r5,r2,2
+   scopy r5,r4
+   unlink r5
+   .srcstep 167 167 17 "stem.crexx" 310 5 21 "    if snapshot_ = 1 then do"
+   linkattr1 r5,r2,5
+   .traceevent "V" 6 "R" "I" "r" 5 167 167 0 "snapshot_" ""
+   ieq r4,r5,1
+   unlink r5
+   .traceevent "O" 4 "R" "B" "r" 4 167 167 0 "" ""
+   brf l526iffalse,r4
+   .srcstep 168 168 17 "stem.crexx" 310 22 26 "    if snapshot_ = 1 then do"
+   .srcstep 136 136 17 "stem.crexx" 311 7 32 "      stem = dereference source"
+   .meta "rxfnsb.stemiterator.§factory.stem"="b" ".stem" r6
+   .traceevent "V" 6 "R" "R" "a" 1 136 136 0 "source" ""
+   unlink r6
+   linkref r6,a1
+   .traceevent "A" 6 "R" "O" "r" 6 136 136 0 "stem" ""
+   .srcstep 147 147 17 "stem.crexx" 312 7 29 "      keys_copy = stem.tails()"
+   .srcstep 146 146 17 "stem.crexx" 312 19 23 "      keys_copy = stem.tails()"
+   .meta "rxfnsb.stemiterator.§factory.result"="b" ".string[*]" r7
+   .srcstep 137 137 17 "stem.crexx" 230 5 21 "    result = .string[]"
+   null r7
+   .srcstep 138 138 33 "stem.crexx" 312 19 23 "      keys_copy = stem.tails()"
+   .traceevent "V" 6 "R" "O" "r" 6 138 138 0 "stem" ""
+   copy r8,r6
+   .traceevent "A" 6 "R" "O" "r" 8 138 138 0 "§this" ""
+   .srcstep 143 143 17 "stem.crexx" 231 5 7 "    do i = 1 to count"
+   .srcstep 139 139 17 "stem.crexx" 231 8 13 "    do i = 1 to count"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 139 139 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 139 139 0 "i" ""
+   .srcstep 140 140 17 "stem.crexx" 231 14 22 "    do i = 1 to count"
+   linkattr1 r10,r8,2
+   .traceevent "V" 6 "R" "I" "r" 10 147 147 0 "count" ""
+l743dostart:
+   .srcstep 140 140 17 "stem.crexx" 231 14 22 "    do i = 1 to count"
+   igt r11,r9,r10
+   brt l743doend,r11
+   .srcstep 142 142 17 "stem.crexx" 232 7 25 "      result[i] = keys[i]"
+   .traceevent "V" 6 "R" "I" "r" 9 142 142 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 9 142 142 0 "result" ""
+   minlinkattr1 r12,r7,r9,0
+   linkattr1 r14,r8,5
+   .traceevent "V" 6 "R" "I" "r" 9 142 142 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 9 142 142 0 "keys" ""
+   minlinkattr1 r13,r14,r9,0
+   .traceevent "V" 6 "R" "S" "r" 13 142 142 0 "keys" ""
+   scopy r12,r13
+   .traceevent "A" 6 "R" "S" "r" 12 142 142 0 "result" ""
+   unlinkn r13,r14
+   unlink r12
+l743doinc:
+   .srcstep 141 141 17 "stem.crexx" 231 8 9 "    do i = 1 to count"
+   inc r9
+   .srcstep 144 144 17 "stem.crexx" 232 25 26 "      result[i] = keys[i]"
+   br l743dostart
+l743doend:
+   unlink r10
+   .srcstep 145 145 17 "stem.crexx" 234 5 18 "    return result"
+   .traceevent "V" 6 "R" "S" "r" 7 147 147 0 "result" ""
+   copy r14,r7
+   br l732bexprend
+l732bexprend:
+   endlife r7
+   .meta "rxfnsb.stemiterator.§factory.result"
+   linkattr1 r5,r2,4
+   copy r5,r14
+   unlink r5
+   .srcstep 162 162 17 "stem.crexx" 313 7 32 "      values_copy = stem.values()"
+   .srcstep 161 161 17 "stem.crexx" 313 21 25 "      values_copy = stem.values()"
+   .meta "rxfnsb.stemiterator.§factory.result"="b" ".string[*]" r13
+   .srcstep 148 148 17 "stem.crexx" 242 5 21 "    result = .string[]"
+   null r13
+   .srcstep 149 149 33 "stem.crexx" 313 21 25 "      values_copy = stem.values()"
+   .traceevent "V" 6 "R" "O" "r" 6 149 149 0 "stem" ""
+   copy r15,r6
+   .traceevent "A" 6 "R" "O" "r" 15 149 149 0 "§this" ""
+   .srcstep 158 158 17 "stem.crexx" 243 5 7 "    do i = 1 to count"
+   .srcstep 150 150 17 "stem.crexx" 243 8 13 "    do i = 1 to count"
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 150 150 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 150 150 0 "i" ""
+   .srcstep 151 151 17 "stem.crexx" 243 14 22 "    do i = 1 to count"
+   linkattr1 r11,r15,2
+   .traceevent "V" 6 "R" "I" "r" 11 162 162 0 "count" ""
+l770dostart:
+   .srcstep 151 151 17 "stem.crexx" 243 14 22 "    do i = 1 to count"
+   igt r10,r12,r11
+   brt l770doend,r10
+   .srcstep 155 155 17 "stem.crexx" 244 7 52 "      if value_generations[i] <> default_generation then result[i] = default_value"
+   linkattr1 r7,r15,9
+   .traceevent "V" 6 "R" "I" "r" 12 155 155 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 12 155 155 0 "value_generations" ""
+   minlinkattr1 r9,r7,r12,0
+   .traceevent "V" 6 "R" "I" "r" 9 155 155 0 "value_generations" ""
+   linkattr1 r5,r15,3
+   .traceevent "V" 6 "R" "I" "r" 5 155 155 0 "default_generation" ""
+   ine r16,r9,r5
+   unlinkn r5,r9
+   unlink r7
+   .traceevent "O" 4 "R" "B" "r" 16 155 155 0 "" ""
+   brf l779iffalse,r16
+   .srcstep 156 156 17 "stem.crexx" 244 53 57 "      if value_generations[i] <> default_generation then result[i] = default_value"
+   .srcstep 153 153 17 "stem.crexx" 244 58 83 "      if value_generations[i] <> default_generation then result[i] = default_value"
+   .traceevent "V" 6 "R" "I" "r" 12 153 153 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 12 153 153 0 "result" ""
+   minlinkattr1 r17,r13,r12,0
+   linkattr1 r18,r15,4
+   .traceevent "V" 6 "R" "S" "r" 18 153 153 0 "default_value" ""
+   scopy r17,r18
+   .traceevent "A" 6 "R" "S" "r" 17 153 153 0 "result" ""
+   unlinkn r18,r17
+   br l779ifend
+   .srcstep 157 157 17 "stem.crexx" 245 7 11 "      else result[i] = vals[i]"
+l779iffalse:
+   .srcstep 154 154 17 "stem.crexx" 245 12 30 "      else result[i] = vals[i]"
+   .traceevent "V" 6 "R" "I" "r" 12 154 154 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 12 154 154 0 "result" ""
+   minlinkattr1 r19,r13,r12,0
+   linkattr1 r21,r15,8
+   .traceevent "V" 6 "R" "I" "r" 12 154 154 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 12 154 154 0 "vals" ""
+   minlinkattr1 r20,r21,r12,0
+   .traceevent "V" 6 "R" "S" "r" 20 154 154 0 "vals" ""
+   scopy r19,r20
+   .traceevent "A" 6 "R" "S" "r" 19 154 154 0 "result" ""
+   unlinkn r20,r21
+   unlink r19
+l779ifend:
+l770doinc:
+   .srcstep 152 152 17 "stem.crexx" 243 8 9 "    do i = 1 to count"
+   inc r12
+   .srcstep 159 159 17 "stem.crexx" 245 30 31 "      else result[i] = vals[i]"
+   br l770dostart
+l770doend:
+   unlink r11
+   .srcstep 160 160 17 "stem.crexx" 247 5 18 "    return result"
+   .traceevent "V" 6 "R" "S" "r" 13 162 162 0 "result" ""
+   copy r21,r13
+   br l759bexprend
+l759bexprend:
+   endlife r13
+   .meta "rxfnsb.stemiterator.§factory.result"
+   linkattr1 r14,r2,7
+   copy r14,r21
+   unlink r14
+   .srcstep 165 165 17 "stem.crexx" 314 7 29 "      count_copy = stem.size()"
+   .srcstep 163 163 33 "stem.crexx" 314 20 24 "      count_copy = stem.size()"
+   .traceevent "V" 6 "R" "O" "r" 6 163 163 0 "stem" ""
+   copy r22,r6
+   .traceevent "A" 6 "R" "O" "r" 22 163 163 0 "§this" ""
+   .srcstep 164 164 33 "stem.crexx" 183 5 11 "    return count"
+   linkattr1 r20,r22,2
+   .traceevent "V" 6 "R" "I" "r" 20 164 164 0 "count" ""
+   linkattr1 r21,r2,1
+   copy r21,r20
+   unlinkn r21,r20
+   unlink r6
+   endlife r6
+   .meta "rxfnsb.stemiterator.§factory.stem"
+   br l526ifend
+   .srcstep 169 169 17 "stem.crexx" 314 29 30 "      count_copy = stem.size()"
+l526iffalse:
+   .srcstep 166 166 17 "stem.crexx" 317 7 24 "      stem_ref = source"
+   .traceevent "V" 6 "R" "R" "a" 1 166 166 0 "source" ""
+   linkattr1 r21,r2,6
+   copy r21,a1
+   unlink r21
+l526ifend:
+   .srcstep 170 170 17 "stem.crexx" 319 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 2 170 170 0 "§factory" ""
+   ret r2
+   .meta "rxfnsb.stemiterator.§factory.snapshot_flag"
+   .meta "rxfnsb.stemiterator.§factory.source"
+   .meta "rxfnsb.stemiterator.§factory.§factory"
+
+§rxfnsb.stemiterator.hasnext() .locals=9 .expose=rxfnsb.stemiterator.hasnext
+   .meta "rxfnsb.stemiterator.hasnext"="b" ".int" §rxfnsb.stemiterator.hasnext() ""
+   .srcstep 183 183 17 "stem.crexx" 326 3 25 "  hasNext: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 173 173 17 "stem.crexx" 327 5 21 "    if snapshot_ = 1 then"
+   linkattr1 r2,a1,5
+   .traceevent "V" 6 "R" "I" "r" 2 173 173 0 "snapshot_" ""
+   ieq r3,r2,1
+   unlink r2
+   .traceevent "O" 4 "R" "B" "r" 3 173 173 0 "" ""
+   brf l537iffalse,r3
+   .srcstep 174 174 17 "stem.crexx" 327 22 26 "    if snapshot_ = 1 then"
+   .srcstep 172 172 17 "stem.crexx" 328 7 33 "      return index_ < count_copy"
+   .meta "rxfnsb.stemiterator.hasnext.§this"="b" ".stemiterator" a1
+   linkattr1 r4,a1,3
+   .traceevent "V" 6 "R" "I" "r" 4 172 172 0 "index_" ""
+   linkattr1 r5,a1,1
+   .traceevent "V" 6 "R" "I" "r" 5 172 172 0 "count_copy" ""
+   ilt r6,r4,r5
+   unlinkn r5,r4
+   btoi r6
+   .traceevent "O" 4 "R" "I" "r" 6 172 172 0 "" ""
+   ret r6
+l537iffalse:
+   .srcstep 175 175 17 "stem.crexx" 330 5 32 "    stem = dereference stem_ref"
+   .meta "rxfnsb.stemiterator.hasnext.stem"="b" ".stem" r0
+   linkattr1 r6,a1,6
+   .traceevent "V" 6 "R" "R" "r" 6 175 175 0 "stem_ref" ""
+   unlink r0
+   linkref r0,r6
+   unlink r6
+   .traceevent "A" 6 "R" "O" "r" 0 175 175 0 "stem" ""
+   .srcstep 182 182 17 "stem.crexx" 331 5 30 "    return index_ < stem.size()"
+   .srcstep 181 181 17 "stem.crexx" 331 12 18 "    return index_ < stem.size()"
+   .srcstep 176 176 33 "stem.crexx" 331 12 18 "    return index_ < stem.size()"
+   linkattr1 r6,a1,3
+   .traceevent "V" 6 "R" "I" "r" 6 176 176 0 "index_" ""
+   igetunlink r7,r6
+   .traceevent "A" 6 "R" "I" "r" 7 176 176 0 "__inline_lhs_542_547" ""
+   .srcstep 180 180 33 "stem.crexx" 331 19 20 "    return index_ < stem.size()"
+   .traceevent "V" 6 "R" "I" "r" 7 182 182 0 "__inline_lhs_542_547" ""
+   .srcstep 179 179 17 "stem.crexx" 331 21 25 "    return index_ < stem.size()"
+   .srcstep 177 177 33 "stem.crexx" 331 21 25 "    return index_ < stem.size()"
+   .traceevent "V" 6 "R" "O" "r" 0 177 177 0 "stem" ""
+   copy r8,r0
+   .traceevent "A" 6 "R" "O" "r" 8 177 177 0 "§this" ""
+   .srcstep 178 178 17 "stem.crexx" 183 5 17 "    return count"
+   linkattr1 r6,r8,2
+   .traceevent "V" 6 "R" "I" "r" 6 182 182 0 "count" ""
+   igetunlink r5,r6
+   br l885bexprend
+l885bexprend:
+   ilt r5,r7,r5
+   btoi r5
+   .traceevent "O" 4 "R" "I" "r" 5 182 182 0 "" ""
+   icopy r4,r5
+   br l802bexprend
+l802bexprend:
+   btoi r4
+   ret r4
+   .meta "rxfnsb.stemiterator.hasnext.stem"
+   .meta "rxfnsb.stemiterator.hasnext.§this"
+
+§rxfnsb.stemiterator.next() .locals=13 .expose=rxfnsb.stemiterator.next
+   .meta "rxfnsb.stemiterator.next"="b" ".string" §rxfnsb.stemiterator.next() ""
+   .srcstep 213 213 17 "stem.crexx" 338 3 25 "  next: method = .string"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 190 190 17 "stem.crexx" 339 5 21 "    if snapshot_ = 1 then do"
+   linkattr1 r4,a1,5
+   .traceevent "V" 6 "R" "I" "r" 4 190 190 0 "snapshot_" ""
+   ieq r5,r4,1
+   unlink r4
+   .traceevent "O" 4 "R" "B" "r" 5 190 190 0 "" ""
+   brf l572iffalse,r5
+   .srcstep 191 191 17 "stem.crexx" 339 22 26 "    if snapshot_ = 1 then do"
+   .srcstep 185 185 17 "stem.crexx" 340 7 30 "      if index_ >= count_copy then return \"\""
+   linkattr1 r6,a1,3
+   .traceevent "V" 6 "R" "I" "r" 6 185 185 0 "index_" ""
+   linkattr1 r7,a1,1
+   .traceevent "V" 6 "R" "I" "r" 7 185 185 0 "count_copy" ""
+   igte r8,r6,r7
+   unlinkn r7,r6
+   .traceevent "O" 4 "R" "B" "r" 8 185 185 0 "" ""
+   brf l559iffalse,r8
+   .srcstep 186 186 17 "stem.crexx" 340 31 35 "      if index_ >= count_copy then return \"\""
+   .srcstep 184 184 17 "stem.crexx" 340 36 45 "      if index_ >= count_copy then return \"\""
+   .meta "rxfnsb.stemiterator.next.§this"="b" ".stemiterator" a1
+   ret ""
+l559iffalse:
+   .srcstep 187 187 17 "stem.crexx" 341 7 26 "      index_ = index_ + 1"
+   linkattr1 r7,a1,3
+   .traceevent "V" 6 "R" "I" "r" 7 187 187 0 "index_" ""
+   iadd r6,r7,1
+   unlink r7
+   .traceevent "O" 4 "R" "I" "r" 6 187 187 0 "" ""
+   isetattr1 a1,3,r6
+   .srcstep 188 188 17 "stem.crexx" 342 7 39 "      current_tail_ = keys_copy[index_]"
+   linkattr1 r4,a1,4
+   linkattr1 r7,a1,3
+   .traceevent "V" 6 "R" "I" "r" 7 188 188 0 "index_" ""
+   .traceevent "C" 4 "R" "I" "r" 7 188 188 0 "keys_copy" ""
+   minlinkattr1 r6,r4,r7,0
+   unlink r7
+   .traceevent "V" 6 "R" "S" "r" 6 188 188 0 "keys_copy" ""
+   linkattr1 r8,a1,2
+   scopy r8,r6
+   unlinkn r8,r6
+   unlink r4
+   .srcstep 189 189 17 "stem.crexx" 343 7 27 "      return current_tail_"
+   linkattr1 r8,a1,2
+   .traceevent "V" 6 "R" "S" "r" 8 189 189 0 "current_tail_" ""
+   ret r8
+l572iffalse:
+   .srcstep 192 192 17 "stem.crexx" 346 5 32 "    stem = dereference stem_ref"
+   .meta "rxfnsb.stemiterator.next.stem"="b" ".stem" r2
+   linkattr1 r8,a1,6
+   .traceevent "V" 6 "R" "R" "r" 8 192 192 0 "stem_ref" ""
+   unlink r2
+   linkref r2,r8
+   unlink r8
+   .traceevent "A" 6 "R" "O" "r" 2 192 192 0 "stem" ""
+   .srcstep 200 200 17 "stem.crexx" 347 5 27 "    if index_ >= stem.size() then return \"\""
+   .srcstep 198 198 17 "stem.crexx" 347 8 14 "    if index_ >= stem.size() then return \"\""
+   .srcstep 193 193 33 "stem.crexx" 347 8 14 "    if index_ >= stem.size() then return \"\""
+   linkattr1 r8,a1,3
+   .traceevent "V" 6 "R" "I" "r" 8 193 193 0 "index_" ""
+   igetunlink r9,r8
+   .traceevent "A" 6 "R" "I" "r" 9 193 193 0 "__inline_lhs_577_582" ""
+   .srcstep 197 197 33 "stem.crexx" 347 15 17 "    if index_ >= stem.size() then return \"\""
+   .traceevent "V" 6 "R" "I" "r" 9 200 200 0 "__inline_lhs_577_582" ""
+   .srcstep 196 196 17 "stem.crexx" 347 18 22 "    if index_ >= stem.size() then return \"\""
+   .srcstep 194 194 33 "stem.crexx" 347 18 22 "    if index_ >= stem.size() then return \"\""
+   .traceevent "V" 6 "R" "O" "r" 2 194 194 0 "stem" ""
+   copy r10,r2
+   .traceevent "A" 6 "R" "O" "r" 10 194 194 0 "§this" ""
+   .srcstep 195 195 17 "stem.crexx" 183 5 17 "    return count"
+   linkattr1 r8,r10,2
+   .traceevent "V" 6 "R" "I" "r" 8 200 200 0 "count" ""
+   igetunlink r7,r8
+   br l892bexprend
+l892bexprend:
+   igte r7,r9,r7
+   .traceevent "O" 4 "R" "B" "r" 7 200 200 0 "" ""
+   icopy r6,r7
+   br l812bexprend
+l812bexprend:
+   brf l585iffalse,r6
+   .srcstep 201 201 17 "stem.crexx" 347 27 28 "    if index_ >= stem.size() then return \"\""
+   .srcstep 199 199 17 "stem.crexx" 347 35 44 "    if index_ >= stem.size() then return \"\""
+   ret ""
+l585iffalse:
+   .srcstep 202 202 17 "stem.crexx" 348 5 24 "    index_ = index_ + 1"
+   linkattr1 r7,a1,3
+   .traceevent "V" 6 "R" "I" "r" 7 202 202 0 "index_" ""
+   iadd r6,r7,1
+   unlink r7
+   .traceevent "O" 4 "R" "I" "r" 6 202 202 0 "" ""
+   isetattr1 a1,3,r6
+   .srcstep 211 211 17 "stem.crexx" 349 5 37 "    current_tail_ = stem.key(index_)"
+   .srcstep 203 203 33 "stem.crexx" 349 21 25 "    current_tail_ = stem.key(index_)"
+   .traceevent "V" 6 "R" "O" "r" 2 203 203 0 "stem" ""
+   copy r0,r2
+   .traceevent "A" 6 "R" "O" "r" 0 203 203 0 "__inline_method_receiver_595_0" ""
+   .srcstep 204 204 33 "stem.crexx" 349 30 36 "    current_tail_ = stem.key(index_)"
+   linkattr1 r8,a1,3
+   .traceevent "V" 6 "R" "I" "r" 8 204 204 0 "index_" ""
+   igetunlink r1,r8
+   .traceevent "A" 6 "R" "I" "r" 1 204 204 0 "__inline_scoped_arg_593_0" ""
+   .srcstep 205 205 33 "stem.crexx" 349 21 25 "    current_tail_ = stem.key(index_)"
+   .traceevent "V" 6 "R" "O" "r" 0 205 205 0 "__inline_method_receiver_595_0" ""
+   copy r12,r0
+   .traceevent "A" 6 "R" "O" "r" 12 205 205 0 "§this" ""
+   .srcstep 206 206 33 "stem.crexx" 192 9 11 "    arg ix = .int"
+   .traceevent "V" 6 "R" "I" "r" 1 206 206 0 "__inline_scoped_arg_593_0" ""
+   .traceevent "A" 6 "R" "I" "r" 1 206 206 0 "ix" ""
+   .srcstep 208 208 17 "stem.crexx" 193 5 27 "    if ix < 1 | ix > count then"
+   .traceevent "V" 6 "R" "I" "r" 1 208 208 0 "ix" ""
+   ilt r6,r1,1
+   .traceevent "O" 4 "R" "B" "r" 6 208 208 0 "" ""
+   brt l836orend,r6
+   .traceevent "V" 6 "R" "I" "r" 1 208 208 0 "ix" ""
+   linkattr1 r8,r12,2
+   .traceevent "V" 6 "R" "I" "r" 8 208 208 0 "count" ""
+   igt r7,r1,r8
+   unlink r8
+   .traceevent "O" 4 "R" "B" "r" 7 208 208 0 "" ""
+   icopy r6,r7
+l836orend:
+   .traceevent "O" 4 "R" "B" "r" 6 208 208 0 "" ""
+   brf l835iffalse,r6
+   .srcstep 209 209 17 "stem.crexx" 193 28 32 "    if ix < 1 | ix > count then"
+   .srcstep 207 207 17 "stem.crexx" 194 17 89 "      assembler signal \"INVALID_ARGUMENTS\", \"STEM key index is outside the stored range\""
+   signal "INVALID_ARGUMENTS","STEM key index is outside the stored range"
+l835iffalse:
+   .srcstep 210 210 33 "stem.crexx" 195 5 11 "    return keys[ix]"
+   linkattr1 r5,r12,5
+   .traceevent "V" 6 "R" "I" "r" 1 210 210 0 "ix" ""
+   .traceevent "C" 4 "R" "I" "r" 1 210 210 0 "keys" ""
+   minlinkattr1 r6,r5,r1,0
+   .traceevent "V" 6 "R" "S" "r" 6 210 210 0 "keys" ""
+   linkattr1 r8,a1,2
+   copy r8,r6
+   unlinkn r8,r6
+   unlink r5
+   .srcstep 212 212 17 "stem.crexx" 350 5 25 "    return current_tail_"
+   linkattr1 r8,a1,2
+   .traceevent "V" 6 "R" "S" "r" 8 212 212 0 "current_tail_" ""
+   ret r8
+   .meta "rxfnsb.stemiterator.next.stem"
+   .meta "rxfnsb.stemiterator.next.§this"
+
+§rxfnsb.stemiterator.value() .locals=12 .expose=rxfnsb.stemiterator.value
+   .meta "rxfnsb.stemiterator.value"="b" ".string" §rxfnsb.stemiterator.value() ""
+   .srcstep 237 237 17 "stem.crexx" 359 3 26 "  value: method = .string"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 215 215 17 "stem.crexx" 360 5 18 "    if index_ < 1 then return \"\""
+   linkattr1 r4,a1,3
+   .traceevent "V" 6 "R" "I" "r" 4 215 215 0 "index_" ""
+   ilt r5,r4,1
+   unlink r4
+   .traceevent "O" 4 "R" "B" "r" 5 215 215 0 "" ""
+   brf l606iffalse,r5
+   .srcstep 216 216 17 "stem.crexx" 360 19 23 "    if index_ < 1 then return \"\""
+   .srcstep 214 214 17 "stem.crexx" 360 24 33 "    if index_ < 1 then return \"\""
+   .meta "rxfnsb.stemiterator.value.§this"="b" ".stemiterator" a1
+   ret ""
+l606iffalse:
+   .srcstep 221 221 17 "stem.crexx" 362 5 21 "    if snapshot_ = 1 then do"
+   linkattr1 r5,a1,5
+   .traceevent "V" 6 "R" "I" "r" 5 221 221 0 "snapshot_" ""
+   ieq r4,r5,1
+   unlink r5
+   .traceevent "O" 4 "R" "B" "r" 4 221 221 0 "" ""
+   brf l620iffalse,r4
+   .srcstep 222 222 17 "stem.crexx" 362 22 26 "    if snapshot_ = 1 then do"
+   .srcstep 218 218 17 "stem.crexx" 363 7 29 "      if index_ > count_copy then return \"\""
+   linkattr1 r6,a1,3
+   .traceevent "V" 6 "R" "I" "r" 6 218 218 0 "index_" ""
+   linkattr1 r7,a1,1
+   .traceevent "V" 6 "R" "I" "r" 7 218 218 0 "count_copy" ""
+   igt r8,r6,r7
+   unlinkn r7,r6
+   .traceevent "O" 4 "R" "B" "r" 8 218 218 0 "" ""
+   brf l615iffalse,r8
+   .srcstep 219 219 17 "stem.crexx" 363 30 34 "      if index_ > count_copy then return \"\""
+   .srcstep 217 217 17 "stem.crexx" 363 35 44 "      if index_ > count_copy then return \"\""
+   ret ""
+l615iffalse:
+   .srcstep 220 220 17 "stem.crexx" 364 7 32 "      return values_copy[index_]"
+   linkattr1 r6,a1,7
+   linkattr1 r8,a1,3
+   .traceevent "V" 6 "R" "I" "r" 8 220 220 0 "index_" ""
+   .traceevent "C" 4 "R" "I" "r" 8 220 220 0 "values_copy" ""
+   minlinkattr1 r7,r6,r8,0
+   unlink r8
+   .traceevent "V" 6 "R" "S" "r" 7 220 220 0 "values_copy" ""
+   ret r7
+l620iffalse:
+   .srcstep 223 223 17 "stem.crexx" 367 5 32 "    stem = dereference stem_ref"
+   .meta "rxfnsb.stemiterator.value.stem"="b" ".stem" r2
+   linkattr1 r8,a1,6
+   .traceevent "V" 6 "R" "R" "r" 8 223 223 0 "stem_ref" ""
+   unlink r2
+   linkref r2,r8
+   unlink r8
+   .traceevent "A" 6 "R" "O" "r" 2 223 223 0 "stem" ""
+   .srcstep 236 236 17 "stem.crexx" 368 5 30 "    return stem.value(index_)"
+   .srcstep 235 235 17 "stem.crexx" 368 12 16 "    return stem.value(index_)"
+   .srcstep 224 224 33 "stem.crexx" 368 12 16 "    return stem.value(index_)"
+   .traceevent "V" 6 "R" "O" "r" 2 224 224 0 "stem" ""
+   copy r0,r2
+   .traceevent "A" 6 "R" "O" "r" 0 224 224 0 "__inline_method_receiver_628_0" ""
+   .srcstep 225 225 33 "stem.crexx" 368 23 29 "    return stem.value(index_)"
+   linkattr1 r7,a1,3
+   .traceevent "V" 6 "R" "I" "r" 7 225 225 0 "index_" ""
+   igetunlink r1,r7
+   .traceevent "A" 6 "R" "I" "r" 1 225 225 0 "__inline_scoped_arg_626_0" ""
+   .srcstep 226 226 33 "stem.crexx" 368 12 16 "    return stem.value(index_)"
+   .traceevent "V" 6 "R" "O" "r" 0 226 226 0 "__inline_method_receiver_628_0" ""
+   copy r9,r0
+   .traceevent "A" 6 "R" "O" "r" 9 226 226 0 "§this" ""
+   .srcstep 227 227 33 "stem.crexx" 205 9 11 "    arg kv = .int"
+   .traceevent "V" 6 "R" "I" "r" 1 227 227 0 "__inline_scoped_arg_626_0" ""
+   icopy r8,r1
+   .traceevent "A" 6 "R" "I" "r" 8 227 227 0 "kv" ""
+   .srcstep 229 229 17 "stem.crexx" 206 5 27 "    if kv < 1 | kv > count then"
+   .traceevent "V" 6 "R" "I" "r" 8 229 229 0 "kv" ""
+   ilt r5,r8,1
+   .traceevent "O" 4 "R" "B" "r" 5 229 229 0 "" ""
+   brt l865orend,r5
+   .traceevent "V" 6 "R" "I" "r" 8 229 229 0 "kv" ""
+   linkattr1 r7,r9,2
+   .traceevent "V" 6 "R" "I" "r" 7 229 229 0 "count" ""
+   igt r6,r8,r7
+   unlink r7
+   .traceevent "O" 4 "R" "B" "r" 6 229 229 0 "" ""
+   icopy r5,r6
+l865orend:
+   .traceevent "O" 4 "R" "B" "r" 5 229 229 0 "" ""
+   brf l864iffalse,r5
+   .srcstep 230 230 17 "stem.crexx" 206 28 32 "    if kv < 1 | kv > count then"
+   .srcstep 228 228 17 "stem.crexx" 207 17 91 "      assembler signal \"INVALID_ARGUMENTS\", \"STEM value index is outside the stored range\""
+   signal "INVALID_ARGUMENTS","STEM value index is outside the stored range"
+l864iffalse:
+   .srcstep 232 232 17 "stem.crexx" 208 5 51 "    if value_generations[kv] <> default_generation then return default_value"
+   linkattr1 r5,r9,9
+   .traceevent "V" 6 "R" "I" "r" 8 232 232 0 "kv" ""
+   .traceevent "C" 4 "R" "I" "r" 8 232 232 0 "value_generations" ""
+   minlinkattr1 r7,r5,r8,0
+   .traceevent "V" 6 "R" "I" "r" 7 232 232 0 "value_generations" ""
+   linkattr1 r4,r9,3
+   .traceevent "V" 6 "R" "I" "r" 4 232 232 0 "default_generation" ""
+   ine r10,r7,r4
+   unlinkn r4,r7
+   unlink r5
+   .traceevent "O" 4 "R" "B" "r" 10 232 232 0 "" ""
+   brf l875iffalse,r10
+   .srcstep 233 233 17 "stem.crexx" 208 52 56 "    if value_generations[kv] <> default_generation then return default_value"
+   .srcstep 231 231 17 "stem.crexx" 208 57 77 "    if value_generations[kv] <> default_generation then return default_value"
+   linkattr1 r11,r9,4
+   .traceevent "V" 6 "R" "S" "r" 11 236 236 0 "default_value" ""
+   scopy r7,r11
+   unlinkbr r11,l850bexprend
+l875iffalse:
+   .srcstep 234 234 17 "stem.crexx" 209 5 19 "    return vals[kv]"
+   linkattr1 r10,r9,8
+   .traceevent "V" 6 "R" "I" "r" 8 236 236 0 "kv" ""
+   .traceevent "C" 4 "R" "I" "r" 8 236 236 0 "vals" ""
+   minlinkattr1 r11,r10,r8,0
+   .traceevent "V" 6 "R" "S" "r" 11 236 236 0 "vals" ""
+   scopy r7,r11
+   unlinkn r11,r10
+   br l850bexprend
+l850bexprend:
+   ret r7
+   .meta "rxfnsb.stemiterator.value.stem"
+   .meta "rxfnsb.stemiterator.value.§this"
+
+§rxfnsb.stemiterator.index() .locals=2 .expose=rxfnsb.stemiterator.index
+   .meta "rxfnsb.stemiterator.index"="b" ".int" §rxfnsb.stemiterator.index() ""
+   .meta "rxfnsb.stemiterator.index"=".inline" "I5;f,0,7374656D2E6372657878;u,0,0,375,5,18,1,2020202072657475726E20696E6465785F;u,1,0,375,12,18,1,2020202072657475726E20696E6465785F;q,0,-1,3;q,1,-1,2;s,0,1,696E6465785F,2,3,0,-,-,-,256,r,3;a;>,0,-1,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;<;b;>,0,0,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,1,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,696E6465785F,-;<;<;<"
+   .srcstep 239 239 17 "stem.crexx" 375 3 23 "  index: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 238 238 17 "stem.crexx" 376 5 18 "    return index_"
+   .meta "rxfnsb.stemiterator.index.§this"="b" ".stemiterator" a1
+   linkattr1 r1,a1,3
+   .traceevent "V" 6 "R" "I" "r" 1 238 238 0 "index_" ""
+   ret r1
+   .meta "rxfnsb.stemiterator.index.§this"
+
+§rxfnsb.stemiterator.reset() .locals=3 .expose=rxfnsb.stemiterator.reset
+   .meta "rxfnsb.stemiterator.reset"="b" ".void" §rxfnsb.stemiterator.reset() ""
+   .meta "rxfnsb.stemiterator.reset"=".inline" "I5;f,0,7374656D2E6372657878;u,0,0,381,5,15,1,20202020696E6465785F203D2030;u,1,0,381,5,11,1,20202020696E6465785F203D2030;u,2,0,381,14,15,1,20202020696E6465785F203D2030;u,3,0,382,5,23,1,2020202063757272656E745F7461696C5F203D202222;u,4,0,382,5,18,1,2020202063757272656E745F7461696C5F203D202222;u,5,0,382,21,23,1,2020202063757272656E745F7461696C5F203D202222;u,6,0,383,5,11,1,2020202072657475726E;q,0,-1,3;q,1,-1,2;s,0,1,696E6465785F,2,3,0,-,-,-,256,r,3;s,1,1,63757272656E745F7461696C5F,2,6,0,-,-,-,256,r,2;a;>,0,-1,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;<;b;>,0,0,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,1,0,0,0,696E6465785F,-;<;>,0,2,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,30,-;<;<;>,0,3,6,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,4,112,6,6,0,0,-,-,-,-,-,-,0,1,-1,0,1,0,0,0,63757272656E745F7461696C5F,-;<;>,0,5,116,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;<;<;>,0,6,98,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;<;<"
+   .srcstep 243 243 17 "stem.crexx" 381 3 24 "  reset: method = .void"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 240 240 17 "stem.crexx" 382 5 15 "    index_ = 0"
+   .meta "rxfnsb.stemiterator.reset.§this"="b" ".stemiterator" a1
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 240 240 0 "" ""
+   isetattr1 a1,3,r2
+   .srcstep 241 241 17 "stem.crexx" 383 5 23 "    current_tail_ = \"\""
+   load r1,""
+   .traceevent "L" 4 "R" "S" "r" 1 241 241 0 "" ""
+   linkattr1 r2,a1,2
+   scopy r2,r1
+   unlink r2
+   .srcstep 242 242 17 "stem.crexx" 384 5 11 "    return"
+   ret
+   .meta "rxfnsb.stemiterator.reset.§this"
+
+§rxfnsb.stemiterator.islive() .locals=3 .expose=rxfnsb.stemiterator.islive
+   .meta "rxfnsb.stemiterator.islive"="b" ".int" §rxfnsb.stemiterator.islive() ""
+   .srcstep 251 251 17 "stem.crexx" 392 3 24 "  isLive: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 245 245 17 "stem.crexx" 393 5 21 "    if snapshot_ = 1 then return 0"
+   linkattr1 r1,a1,5
+   .traceevent "V" 6 "R" "I" "r" 1 245 245 0 "snapshot_" ""
+   ieq r2,r1,1
+   unlink r1
+   .traceevent "O" 4 "R" "B" "r" 2 245 245 0 "" ""
+   brf l650iffalse,r2
+   .srcstep 246 246 17 "stem.crexx" 393 22 26 "    if snapshot_ = 1 then return 0"
+   .srcstep 244 244 17 "stem.crexx" 393 27 35 "    if snapshot_ = 1 then return 0"
+   .meta "rxfnsb.stemiterator.islive.§this"="b" ".stemiterator" a1
+   ret 0
+l650iffalse:
+   .srcstep 248 248 17 "stem.crexx" 394 5 28 "    if <refvalid>(stem_ref) then return 1"
+   linkattr1 r2,a1,6
+   .traceevent "V" 6 "R" "R" "r" 2 248 248 0 "stem_ref" ""
+   refvalid r1,r2
+   unlink r2
+   brf l659iffalse,r1
+   .srcstep 249 249 17 "stem.crexx" 394 29 33 "    if <refvalid>(stem_ref) then return 1"
+   .srcstep 247 247 17 "stem.crexx" 394 34 42 "    if <refvalid>(stem_ref) then return 1"
+   ret 1
+l659iffalse:
+   .srcstep 250 250 17 "stem.crexx" 395 5 13 "    return 0"
+   ret 0
+   .meta "rxfnsb.stemiterator.islive.§this"

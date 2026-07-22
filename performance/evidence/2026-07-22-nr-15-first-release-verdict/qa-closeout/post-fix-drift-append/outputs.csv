@@ -1,0 +1,161 @@
+sample_id,stream,line_number,text
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,6,elapsed_us=1162870
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,6,elapsed_us=1186132
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,6,elapsed_us=1162612
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,6,elapsed_us=1155612
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,6,elapsed_us=1229057
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,6,elapsed_us=1219793
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,6,elapsed_us=1159947
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,6,elapsed_us=1158025
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,6,elapsed_us=1193603
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,6,elapsed_us=1156879
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,6,elapsed_us=1162071
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,6,elapsed_us=1172070
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,6,elapsed_us=1166196
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,6,elapsed_us=1182585
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,6,elapsed_us=1168425
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-8,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,6,elapsed_us=1183607
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-8,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,6,elapsed_us=1162312
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-9,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,6,elapsed_us=1172025
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-9,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,6,elapsed_us=1170093
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-10,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,6,elapsed_us=1134457
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-10,stdout,8,PASS: NR-15 stem access compare

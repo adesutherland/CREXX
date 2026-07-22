@@ -1,0 +1,8 @@
+benchmark=nr15_stem_access_compare
+mode=get-hit
+family=ascii
+size=256
+iterations=1000
+elapsed_us=12394
+checksum=3568
+PASS: NR-15 stem access compare

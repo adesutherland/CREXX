@@ -1,0 +1,10 @@
+cell,candidate_a_instructions,native_ceiling_instructions,delta,reduction_percent
+get-hit-ascii-16,48470,16465,-32005,66.031
+get-hit-ascii-256,72188,36703,-35485,49.156
+get-hit-ascii-1024,137625,115476,-22149,16.094
+get-hit-collision-256,71814,57448,-14366,20.004
+get-hit-unicode-64,29818,13045,-16773,56.251
+get-hit-long-64,29556,13131,-16425,55.572
+get-miss-ascii-64,32423,12418,-20005,61.700
+set-existing-ascii-64,32254,11917,-20337,63.053
+set-new-ascii-64,12806,6421,-6385,49.859

@@ -339,6 +339,18 @@ Container naming is intentionally split by shape:
   class-shaped APIs. The current pure-Rexx classlib set iterators are also
   snapshot iterators.
 
+`lib/rxfnsb/rexx/stem.crexx` is the Level B keyed-container implementation.
+Its public hash method retains the conventional Rexx-facing polynomial hash,
+but factory/get/set/default-reset/size/key/value methods use the NR-15 native
+stem instructions. The private D2-hybrid runtime layout keeps hash metadata in
+the receiver binary and strings in ordinary VM values; callers must not inspect
+or persist those bytes. The compiler may lower exact calls on a proved simple
+concrete `rxfnsb.stem` receiver directly. Class attributes, computed receivers,
+and other shapes keep normal call/copyback behavior unless their storage proof
+is equally strong. Multi-tail source expressions retain canonical construction
+where conversion, evaluation order, or TRACE observation has not proved the
+two-segment form equivalent.
+
 Level B classlib collection names carry their value contract because the
 language does not yet have generics. Current public classlib containers and
 iterator interfaces are therefore explicitly tagged:

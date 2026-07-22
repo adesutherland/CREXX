@@ -1,0 +1,96 @@
+/* NR-15 provisional machine-ceiling control. Requires experimental opcodes
+ * 641 STEMGET and 642 STEMSET; it is evidence, not a production test. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+mode = "get-hit"
+size = 64
+iterations = 20000
+family = "ascii"
+if argv[0] >= 1 then mode = argv[1]
+if argv[0] >= 2 then size = argv[2]
+if argv[0] >= 3 then iterations = argv[3]
+if argv[0] >= 4 then family = argv[4]
+
+keys = .string[]
+target = .stem()
+do i = 1 to size
+  keys[i] = make_key(i, family)
+  call target.set(keys[i], "v" || i)
+end
+
+checksum = 0
+start = time("us")
+select
+  when mode == "get-hit" then do
+    result = .string
+    do i = 1 to iterations
+      index = ((i - 1) % size) + 1
+      key = keys[index]
+      assembler stemget result,target,key
+      checksum = checksum + length(result)
+    end
+  end
+  when mode == "get-miss" then do
+    result = .string
+    key = "missing-" || family
+    do i = 1 to iterations
+      assembler stemget result,target,key
+      if result == "" then checksum = checksum + 1
+    end
+  end
+  when mode == "set-existing" then do
+    do i = 1 to iterations
+      index = ((i - 1) % size) + 1
+      key = keys[index]
+      value = "u" || i
+      assembler stemset target,key,value
+      checksum = checksum + index
+    end
+  end
+  when mode == "set-new" then do
+    do i = 1 to iterations
+      key = "new-" || family || "-" || i
+      value = "n" || i
+      assembler stemset target,key,value
+    end
+    checksum = target.size()
+  end
+  otherwise return fail("mode")
+end
+
+elapsed = time("us") - start
+if elapsed < 0 then elapsed = elapsed + 86400000000
+if checksum <= 0 then return fail("checksum")
+say "benchmark=nr15_stem_primitive_control"
+say "mode="mode
+say "family="family
+say "size="size
+say "iterations="iterations
+say "elapsed_us="elapsed
+say "checksum="checksum
+say "PASS: NR-15 primitive control"
+return 0
+
+make_key: procedure = .string
+  arg index = .int, family = .string
+  if family == "ascii" then return "key-" || index
+  if family == "unicode" then return "κλειδί-🔥-" || index
+  if family == "long" then return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" || index
+  if family == "collision" then do
+    value = index - 1
+    key = ""
+    do part = 1 to 10
+      if value % 2 = 0 then key = key || "Aa"
+      else key = key || "BB"
+      value = value / 2
+    end
+    return key
+  end
+  return "unknown-" || index
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL: NR-15 primitive" label
+  return 1

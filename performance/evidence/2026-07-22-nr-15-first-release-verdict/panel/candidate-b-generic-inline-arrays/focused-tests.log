@@ -1,0 +1,134 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start  427: 13_stems_run_noopt
+ 1/16 Test  #427: 13_stems_run_noopt .................   Passed    0.21 sec
+      Start  428: 13_stems_run_opt
+ 2/16 Test  #428: 13_stems_run_opt ...................***Failed    0.17 sec
+CMake Error at run_13_stems_opt.cmake:15 (message):
+  linked rxvm failed: Stem dotted lookup mismatch: one
+
+  CMake Error at
+  /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215
+  (message):
+
+    runner failed for 13_stems_run_opt with exit code 1
+
+  Call Stack (most recent call first):
+
+    run_13_stems_opt_linked.cmake:4 (crexx_link_and_run)
+
+
+
+
+
+
+
+
+      Start  429: repro_multi_tail_stems_run_noopt
+ 3/16 Test  #429: repro_multi_tail_stems_run_noopt ...   Passed    0.17 sec
+      Start  430: repro_multi_tail_stems_run_opt
+ 4/16 Test  #430: repro_multi_tail_stems_run_opt .....***Failed    0.18 sec
+CMake Error at run_repro_multi_tail_stems_opt.cmake:15 (message):
+  linked rxvm failed: Literal multi-tail lookup mismatch: Jenny
+
+  CMake Error at
+  /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215
+  (message):
+
+    runner failed for repro_multi_tail_stems_run_opt with exit code 1
+
+  Call Stack (most recent call first):
+
+    run_repro_multi_tail_stems_opt_linked.cmake:4 (crexx_link_and_run)
+
+
+
+
+
+
+
+
+      Start 1466: ts_stem_noopt
+ 5/16 Test #1466: ts_stem_noopt ......................   Passed    0.01 sec
+      Start 1467: ts_stem_opt
+ 6/16 Test #1467: ts_stem_opt ........................   Passed    0.02 sec
+      Start 1478: ts_stem_errors_noopt
+ 7/16 Test #1478: ts_stem_errors_noopt ...............   Passed    0.01 sec
+      Start 1479: ts_stem_errors_opt
+ 8/16 Test #1479: ts_stem_errors_opt .................   Passed    0.02 sec
+      Start 1815: nr15_stem_semantics_rxvm_noopt
+ 9/16 Test #1815: nr15_stem_semantics_rxvm_noopt .....   Passed    0.01 sec
+      Start 1816: nr15_stem_semantics_rxvm_opt
+10/16 Test #1816: nr15_stem_semantics_rxvm_opt .......***Failed  Error regular expression found in output. Regex=[FAIL:|PANIC:]  0.02 sec
+FAIL: NR-15 default replaces existing
+FAIL: NR-15 selective current generation
+FAIL: NR-15 stale selective write
+FAIL: NR-15 empty key family
+FAIL: NR-15 reference mutation
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215 (message):
+  runner failed for nr15_stem_semantics_rxvm_opt with exit code 1
+Call Stack (most recent call first):
+  nr15_stem_semantics_rxvm_opt_linked_runtime.cmake:4 (crexx_link_and_run)
+
+
+
+      Start 1817: nr15_stem_access_rxvm_noopt
+11/16 Test #1817: nr15_stem_access_rxvm_noopt ........   Passed    0.02 sec
+      Start 1818: nr15_stem_access_rxvm_opt
+12/16 Test #1818: nr15_stem_access_rxvm_opt ..........***Failed  Error regular expression found in output. Regex=[FAIL:|PANIC:]  0.09 sec
+FAIL: NR-15 checksum
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215 (message):
+  runner failed for nr15_stem_access_rxvm_opt with exit code 1
+Call Stack (most recent call first):
+  nr15_stem_access_rxvm_opt_linked_runtime.cmake:4 (crexx_link_and_run)
+
+
+
+      Start 1819: nr15_stem_semantics_rxbvm_noopt
+13/16 Test #1819: nr15_stem_semantics_rxbvm_noopt ....   Passed    0.02 sec
+      Start 1820: nr15_stem_semantics_rxbvm_opt
+14/16 Test #1820: nr15_stem_semantics_rxbvm_opt ......***Failed  Error regular expression found in output. Regex=[FAIL:|PANIC:]  0.02 sec
+FAIL: NR-15 default replaces existing
+FAIL: NR-15 selective current generation
+FAIL: NR-15 stale selective write
+FAIL: NR-15 empty key family
+FAIL: NR-15 reference mutation
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215 (message):
+  runner failed for nr15_stem_semantics_rxbvm_opt with exit code 1
+Call Stack (most recent call first):
+  nr15_stem_semantics_rxbvm_opt_linked_runtime.cmake:4 (crexx_link_and_run)
+
+
+
+      Start 1821: nr15_stem_access_rxbvm_noopt
+15/16 Test #1821: nr15_stem_access_rxbvm_noopt .......   Passed    0.02 sec
+      Start 1822: nr15_stem_access_rxbvm_opt
+16/16 Test #1822: nr15_stem_access_rxbvm_opt .........***Failed  Error regular expression found in output. Regex=[FAIL:|PANIC:]  0.08 sec
+FAIL: NR-15 checksum
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215 (message):
+  runner failed for nr15_stem_access_rxbvm_opt with exit code 1
+Call Stack (most recent call first):
+  nr15_stem_access_rxbvm_opt_linked_runtime.cmake:4 (crexx_link_and_run)
+
+
+
+
+63% tests passed, 6 tests failed out of 16
+
+Label Time Summary:
+linked_opt     =   0.60 sec*proc (8 tests)
+nr15           =   0.27 sec*proc (8 tests)
+performance    =   0.27 sec*proc (8 tests)
+semantics      =   0.07 sec*proc (4 tests)
+smoke          =   0.22 sec*proc (2 tests)
+stem           =   0.27 sec*proc (8 tests)
+
+Total Test time (real) =   1.11 sec
+
+The following tests FAILED:
+	428 - 13_stems_run_opt (Failed)                         linked_opt
+	430 - repro_multi_tail_stems_run_opt (Failed)           linked_opt
+	1816 - nr15_stem_semantics_rxvm_opt (Failed)             linked_opt nr15 performance semantics stem
+	1818 - nr15_stem_access_rxvm_opt (Failed)                linked_opt nr15 performance stem
+	1820 - nr15_stem_semantics_rxbvm_opt (Failed)            linked_opt nr15 performance semantics stem
+	1822 - nr15_stem_access_rxbvm_opt (Failed)               linked_opt nr15 performance stem
+Errors while running CTest
