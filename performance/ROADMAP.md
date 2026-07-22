@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-20
+Last updated: 2026-07-22
 
 This is the live performance-programme register. The definitions, evidence and
 exit criteria come from the dated
@@ -848,6 +848,7 @@ coverage gaps are in
 | NR-18 | Safe RXAS rule harvest | queued | Continue beyond the completed NR-09 batch only with opcode effects/liveness proof and generated rule tests, retaining rejected/deferred ledger entries. |
 | NR-19 | Optional C LTO/PGO/code-layout experiment | queued | Optional build feature; adopt only with repeatable supported-platform evidence. |
 | NR-20 | Value/frame allocation counters and targeted pooling | queued | Gather counters first; preserve ownership and sanitizer gates. |
+| NR-26 | Typed semantic flow analysis in `rxc` | complete | Adrian accepted the F1/F2/P1 panel on the correctness-plus-instructions gate. Final focused 8/8 and broad Debug 1877/1877 pass; the exact 19-image census remains 50,965 to 50,924 instructions (`copy -11`, `icopy -30`). The corrected RexxCPS artifact passes a narrow same-session drift control with no 3% guard hit. No RXAS annotations, ISA, RXBIN or ABI change. See `NR-26-WORKLIST.md`. |
 
 ## P1 architecture-neutral prototypes
 
@@ -957,6 +958,67 @@ These are time-boxed evidence activities, not production commitments.
   placed 131 files, installed native `hello` packaging executed successfully,
   and installed `rxvm`/`rxbvm` both pass the generic frozen-PARSE workload.
   NR-14 is complete; `qa-closeout/` records the final gate.
+
+### NR-26 work notes
+
+- 2026-07-21: Started NR-26 from clean `develop` commit `4ab5f3d8d`, exactly
+  equal to `origin/develop`. The design comparison selected a procedure-local
+  CFG overlay over the final typed AST: direct AST annotations do not provide
+  a reusable join model, while a new lowering IR or SSA would add machinery
+  not justified by the first transformations. The initial bounded production
+  batch will share one must-write-before-read proof between scalar default
+  initialization removal and NR-12 scalar by-value entry-copy removal. The
+  layer will retain separate source-symbol, compiler-symbol/temporary and
+  eventual physical-register identities, reject uncertainty only for the
+  affected value/site, and emit ordinary self-contained RXAS. The resumable
+  design, proof and mandatory first-Release stop are in `NR-26-WORKLIST.md`.
+- 2026-07-21: The first F1/F2 Release result was directionally favorable but
+  noisy/inconclusive at the governed 36-pair cap. Adrian selected REVISE and
+  directed NR-26 to build a stronger transformation panel under correctness
+  plus exact instruction-avoidance gates, deferring the next formal performance
+  sweep until the panel is complete. Discovery now prioritizes the retained
+  compact `ILOADSETUNLINKN` opportunity, compiler-owned dead/copy scaffolding
+  and flow-sensitive constant/copy propagation; result-only `FDIVSUB` remains
+  a separate ISA/RXBIN semantic decision.
+- 2026-07-21: Stronger panel slice P1 now passes the construction gate. Exact
+  small-scalar must-copy propagation, dead-copy fixed point and guarded
+  incoming-slot sharing avoid 41 instructions across the bounded 19 optimized
+  images: 35 in five benchmark workloads and six in three tool selftests, with
+  the complete mnemonic delta limited to `copy -11` and `icopy -30`. Focused
+  optimized/no-opt and both-VM correctness pass, as do the 11 changed or
+  retargeted Release images in both VMs. Compact `ILOADSETUNLINKN` is deferred
+  because its loaded operand is presently required by register-backed literal
+  TRACE after alias unlink; immediate constants have the same observation
+  boundary, and `FDIVSUB` still needs an ISA decision. Counted-loop count-copy
+  reuse exposes only four static setup copies and is not selected for this
+  panel because it adds a new destructive loop-state proof surface. F1, F2 and
+  P1/F3 are now the frozen three-transformation no-architecture panel; the one
+  combined formal performance sweep is next. Exact construction evidence is under
+  `evidence/2026-07-21-nr-26-panel-construction/`.
+- 2026-07-21: The frozen three-transformation panel's combined ordinary
+  profiling-off Release sweep completed at the governed 36-pair cap over the
+  five instruction-changing benchmarks plus canonical RexxCPS, under both
+  current VMs. All 888 executions pass. Permute/rxbvm is clearly favorable
+  (paired median -0.662%, mean 95% interval -2.438% to -0.375%); all other
+  intervals are noisy/inconclusive, none is wholly unfavorable, no 3%
+  per-workload guard is hit, and every candidate linked image is smaller.
+  ACCEPT is recommended on Adrian's selected correctness-plus-instructions
+  gate without making a release-wide speedup claim. NR-26 remains frozen,
+  provisional and uncommitted at the mandatory decision stop. Evidence:
+  `evidence/2026-07-21-nr-26-panel-first-release-verdict/`.
+- 2026-07-22: Adrian accepted the panel and authorized the shortest local
+  gate-to-commit closeout. Broad validation exposed and corrected two
+  fail-closed boundaries before landing: counted-loop traversal is now kept
+  within exact CFG block ownership, and generated semantic `VAR_REFERENCE`
+  selector nodes are always treated as real reads. Focused regressions cover a
+  backedge kill and opaque jump dispatch; the final focused set passes 8/8 and
+  full Debug CTest passes 1877/1877. All 19 optimized source-RXAS images retain
+  the exact 41-instruction reduction. A 24-byte RexxCPS linked-image change
+  from the corrected standard library was controlled in a same-session
+  old/corrected run under both VMs: all 52 executions pass, both paired
+  intervals cross zero and no 3% guard is hit. Final evidence is under
+  `evidence/2026-07-22-nr-26-closeout/`; NR-26 is complete with no new
+  release-wide speed claim.
 
 Ideas remain here until assessed, even when rejected. An idea can inform more
 than one `NR-*` activity and does not alter their priority by itself.

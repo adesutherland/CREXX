@@ -720,12 +720,11 @@ walker_result register_walker(walker_direction direction,
                     if (c->child->node_type == VAR_TARGET || c->child->node_type == VAR_REFERENCE) {
                         c->register_num = a;
                         c->register_type = 'a';
-                        if (c->is_ref_arg || c->is_const_arg) {
-                            /* `.ref` formals and read-only by-value formals keep
-                             * the incoming argument register. Writable by-value
-                             * formals must fall through so the emitter can
-                             * assign a distinct local register and preserve
-                             * caller-visible pass-by-value semantics. */
+                        if (c->is_ref_arg || c->is_const_arg || c->flow_share_arg_input) {
+                            /* `.ref`, read-only by-value, and NR-26 formals whose
+                             * every physical write was elided keep the incoming
+                             * argument register. Other writable by-value formals
+                             * need an isolated local register. */
                             c->child->symbolNode->symbol->register_num = a;
                             c->child->symbolNode->symbol->register_type = 'a';
                         }
@@ -811,7 +810,8 @@ walker_result register_walker(walker_direction direction,
                      * 1. If it is a symbol with call by reference or constant it may be possible to
                      *    assign the symbol to the right register
                      * In this case we try to set the symbol register */
-                    if (c->symbolNode && (c->is_ref_arg || c->is_const_arg)) {
+                    if (c->symbolNode &&
+                        (c->is_ref_arg || c->is_const_arg || c->flow_share_arg_input)) {
                         /* If the register has not been assigned a register set it
                          * to the arguments register - later the node will therefore be giving
                          * this register too */
@@ -1208,8 +1208,11 @@ walker_result register_walker(walker_direction direction,
                             ret_reg(node->scope, node->additional_registers);
                         }
                     } else if (node->symbolNode && node->symbolNode->symbol) {
-                        node->register_num = node->symbolNode->symbol->register_num;
-                        node->register_type = node->symbolNode->symbol->register_type;
+                        Symbol *register_symbol = node->flow_substitute_symbol ?
+                                                  node->flow_substitute_symbol :
+                                                  node->symbolNode->symbol;
+                        node->register_num = register_symbol->register_num;
+                        node->register_type = register_symbol->register_type;
                     }
                 }
                 break;

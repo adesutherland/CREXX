@@ -1,0 +1,314 @@
+options levelb
+namespace nr26_flow_analysis
+
+nr26_flow_analysis_constants: procedure expose NR26_NO_INLINE
+  constant NR26_NO_INLINE = 0
+  return
+
+main: procedure = .int expose NR26_COUNTER
+  errors = 0
+  NR26_COUNTER = 0
+
+  if localStraight(7) <> 7 then errors = errors + 1
+  if localBranchBoth(0, 11, 12) <> 12 then errors = errors + 1
+  if localBranchOne(0, 13) <> 0 then errors = errors + 1
+  if localLoopZero(0, 14) <> 0 then errors = errors + 1
+  if localLoopZero(2, 14) <> 14 then errors = errors + 1
+  if localNestedLoop(15) <> 15 then errors = errors + 1
+  if localEarly(1, 15) <> 9 then errors = errors + 1
+  if localReferencePositive(16) <> 21 then errors = errors + 1
+  if localReferenceTarget(17) <> 17 then errors = errors + 1
+  if localTracePositive(18) <> 18 then errors = errors + 1
+  if localSignalNegative(0, 19) <> 19 then errors = errors + 1
+  if localSignalNegative(1, 19) <> 0 then errors = errors + 1
+  if localSignalPositive(0, 20) <> 20 then errors = errors + 1
+  if localSignalPositive(1, 20) <> 20 then errors = errors + 1
+
+  if argStraight(20, 21) <> 21 then errors = errors + 1
+  if argBranchBoth(22, 0, 23, 24) <> 24 then errors = errors + 1
+  if argConditional(25, 0, 26) <> 25 then errors = errors + 1
+  if argLoopZero(27, 0, 28) <> 27 then errors = errors + 1
+  if argLoopZero(27, 2, 28) <> 28 then errors = errors + 1
+  if argEarly(29, 1, 30) <> 9 then errors = errors + 1
+  if argReadThenWrite(31, 32) <> 63 then errors = errors + 1
+  if argReadThenCompute(31, 32) <> 64 then errors = errors + 1
+
+  if copyStraight(40) <> 41 then errors = errors + 1
+  if copyBranchSame(0, 41) <> 42 then errors = errors + 1
+  if copyBranchSame(1, 41) <> 42 then errors = errors + 1
+  if copySourceOverwrite(42, 43) <> 42 then errors = errors + 1
+  if copySourceOverwriteUsed(49, 50) <> 99 then errors = errors + 1
+  if copySourceComputeUsed(49, 50) <> 100 then errors = errors + 1
+  if copyJoinDifferent(0, 44, 45) <> 45 then errors = errors + 1
+  if copyJoinDifferent(1, 44, 45) <> 44 then errors = errors + 1
+  if copyLoopStable(2, 46) <> 47 then errors = errors + 1
+  if copyLoopBackedgeKill(5) <> 6 then errors = errors + 1
+  if copyDispatchSelector(5) <> 105 then errors = errors + 1
+  if copyFloat(1.5) <> 2.5 then errors = errors + 1
+  if copyBoolean(1) <> 1 then errors = errors + 1
+  if copyPromotionSourceLive(47) <> 47 then errors = errors + 1
+  if copyPromotionSourceDead(48) <> "value=48" then errors = errors + 1
+  if deadCopy(46) <> 1 then errors = errors + 1
+  if deadEffect() <> 1 then errors = errors + 1
+  if NR26_COUNTER <> 1 then errors = errors + 1
+
+  if errors = 0 then say "ok"
+  return errors
+
+localStraight: procedure = .int expose NR26_NO_INLINE
+  arg replacement = .int
+  value = .int
+  value = replacement
+  return value
+
+localBranchBoth: procedure = .int expose NR26_NO_INLINE
+  arg chooseLeft = .boolean, left = .int, right = .int
+  value = .int
+  if chooseLeft then value = left
+  else value = right
+  return value
+
+localBranchOne: procedure = .int expose NR26_NO_INLINE
+  arg chooseWrite = .boolean, replacement = .int
+  value = .int
+  if chooseWrite then value = replacement
+  return value
+
+localLoopZero: procedure = .int expose NR26_NO_INLINE
+  arg count = .int, replacement = .int
+  value = .int
+  do i = 1 for count
+    value = replacement
+  end
+  return value
+
+localNestedLoop: procedure = .int expose NR26_NO_INLINE
+  arg replacement = .int
+  value = .int
+  value = replacement
+  do outer = 1 to 2
+    do inner = 1 to 2
+      if inner = 2 then value = replacement
+    end
+  end
+  return value
+
+localEarly: procedure = .int expose NR26_NO_INLINE
+  arg leaveEarly = .boolean, replacement = .int
+  value = .int
+  if leaveEarly then return 9
+  value = replacement
+  return value
+
+localReferencePositive: procedure = .int expose NR26_NO_INLINE
+  arg replacement = .int
+  value = .int
+  other = .int
+  otherRef = reference .int
+  other = 5
+  otherRef = reference other
+  value = replacement
+  return value + snapshot otherRef
+
+localReferenceTarget: procedure = .int expose NR26_NO_INLINE
+  arg replacement = .int
+  value = .int
+  valueRef = reference .int
+  valueRef = reference value
+  value = replacement
+  return snapshot valueRef
+
+localTracePositive: procedure = .int expose NR26_NO_INLINE
+  arg replacement = .int
+  value = .int
+  trace off
+  value = replacement
+  return value
+
+localSignalNegative: procedure = .int expose NR26_NO_INLINE
+  arg raise = .boolean, replacement = .int
+  value = .int
+  do
+    call maybeSignal(raise)
+    value = replacement
+  on signal out_of_range
+    return value
+  end
+  return value
+
+localSignalPositive: procedure = .int expose NR26_NO_INLINE
+  arg raise = .boolean, replacement = .int
+  value = .int
+  value = replacement
+  do
+    call maybeSignal(raise)
+    return value
+  on signal out_of_range
+    return value
+  end
+  return value
+
+maybeSignal: procedure = .void expose NR26_NO_INLINE
+  arg raise = .boolean
+  if raise then do
+    data = '01'x as .binary
+    ignored = <at..binary>(2, 1) data
+  end
+  return
+
+argStraight: procedure = .int expose NR26_NO_INLINE
+  arg value = .int, replacement = .int
+  value = replacement
+  return value
+
+argBranchBoth: procedure = .int expose NR26_NO_INLINE
+  arg value = .int, chooseLeft = .boolean, left = .int, right = .int
+  if chooseLeft then value = left
+  else value = right
+  return value
+
+argConditional: procedure = .int expose NR26_NO_INLINE
+  arg value = .int, chooseWrite = .boolean, replacement = .int
+  if chooseWrite then value = replacement
+  return value
+
+argLoopZero: procedure = .int expose NR26_NO_INLINE
+  arg value = .int, count = .int, replacement = .int
+  do i = 1 for count
+    value = replacement
+  end
+  return value
+
+argEarly: procedure = .int expose NR26_NO_INLINE
+  arg value = .int, leaveEarly = .boolean, replacement = .int
+  if leaveEarly then return 9
+  value = replacement
+  return value
+
+argReadThenWrite: procedure = .int expose NR26_NO_INLINE
+  arg value = .int, replacement = .int
+  before = value
+  value = replacement
+  return before + value
+
+argReadThenCompute: procedure = .int expose NR26_NO_INLINE
+  arg value = .int, replacement = .int
+  before = value
+  value = replacement + 1
+  return before + value
+
+copyStraight: procedure = .int expose NR26_NO_INLINE
+  arg source = .int
+  value = .int
+  value = source
+  return value + 1
+
+copyBranchSame: procedure = .int expose NR26_NO_INLINE
+  arg chooseLeft = .boolean, source = .int
+  value = .int
+  if chooseLeft then value = source
+  else value = source
+  return value + 1
+
+copySourceOverwrite: procedure = .int expose NR26_NO_INLINE
+  arg source = .int, replacement = .int
+  value = .int
+  value = source
+  source = replacement
+  return value
+
+copySourceOverwriteUsed: procedure = .int expose NR26_NO_INLINE
+  arg source = .int, replacement = .int
+  value = .int
+  value = source
+  source = replacement
+  return value + source
+
+copySourceComputeUsed: procedure = .int expose NR26_NO_INLINE
+  arg source = .int, replacement = .int
+  value = .int
+  value = source
+  source = replacement + 1
+  return value + source
+
+copyJoinDifferent: procedure = .int expose NR26_NO_INLINE
+  arg chooseLeft = .boolean, left = .int, right = .int
+  value = .int
+  if chooseLeft then value = left
+  else value = right
+  return value
+
+copyLoopStable: procedure = .int expose NR26_NO_INLINE
+  arg count = .int, source = .int
+  value = .int
+  value = source
+  do i = 1 for count
+    if i < 0 then return value
+  end
+  return value + 1
+
+copyLoopBackedgeKill: procedure = .int expose NR26_NO_INLINE
+  arg limit = .int
+  delimiter = .int
+  position = .int
+  do position = 0 while position <= limit
+    delimiter = position + 1
+    position = delimiter
+  end
+  return position
+
+copyDispatchSelector: procedure = .int expose NR26_NO_INLINE
+  arg source = .int
+  select source
+    when 0 then return 100
+    when 1 then return 101
+    when 2 then return 102
+    when 3 then return 103
+    when 4 then return 104
+    when 5 then return 105
+    when 6 then return 106
+    when 7 then return 107
+    otherwise return -1
+  end
+  return -1
+
+copyFloat: procedure = .float expose NR26_NO_INLINE
+  arg source = .float
+  value = .float
+  value = source
+  return value + 1.0
+
+copyBoolean: procedure = .boolean expose NR26_NO_INLINE
+  arg source = .boolean
+  value = .boolean
+  value = source
+  return value
+
+copyPromotionSourceLive: procedure = .int expose NR26_NO_INLINE
+  arg source = .int
+  value = .int
+  value = source
+  text = "value=" || value
+  if text = "" then return 0
+  return source
+
+copyPromotionSourceDead: procedure = .string expose NR26_NO_INLINE
+  arg source = .int
+  value = .int
+  value = source
+  return "value=" || value
+
+deadCopy: procedure = .int expose NR26_NO_INLINE
+  arg source = .int
+  value = .int
+  value = source
+  return 1
+
+deadEffect: procedure = .int expose NR26_NO_INLINE NR26_COUNTER
+  value = .int
+  value = incrementCounter()
+  return NR26_COUNTER
+
+incrementCounter: procedure = .int expose NR26_NO_INLINE NR26_COUNTER
+  NR26_COUNTER = NR26_COUNTER + 1
+  return 99

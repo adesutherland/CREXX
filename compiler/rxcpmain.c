@@ -37,6 +37,7 @@
 #include "rxcp_srcmap.h"
 #include "rxcp_levelc_lower.h"
 #include "rxcp_dispatch.h"
+#include "rxcp_flow.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
@@ -251,6 +252,9 @@ void fre_cntx(Context *context)  {
     }
 
     source_tree_free(context);
+
+    /* The flow overlay points at AST/symbol objects but does not own them. */
+    rxcp_flow_free(context);
 
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
@@ -854,6 +858,15 @@ int rxcmain(int argc, char *argv[]) {
     /* Explicit C-style SELECT is a dispatch construct in both no-opt and
      * optimized builds. General IF-ladder discovery remains an optimization. */
     rxcp_lower_select_dispatch(context);
+
+    /* Build NR-26 facts after typed AST rewriting and before register
+     * assignment. No-opt compilation constructs the same overlay for parity,
+     * but only optimized compilation applies production transformations. */
+    if (!rxcp_flow_analyze(context, context->optimise)) {
+        fprintf(stderr, "INTERNAL ERROR: Failed to build typed flow analysis\n");
+        errors = 1;
+        goto finish;
+    }
 
     errors = prnterrs(context);
     if (errors) {

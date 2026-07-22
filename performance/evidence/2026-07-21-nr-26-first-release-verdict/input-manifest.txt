@@ -1,0 +1,5 @@
+crexx-cross-runtime-matrix|1
+nr26-baseline-rxvm|RexxCPS-NR26|crexx|rxvm|baseline-accepted-nr14|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxvm;/tmp/nr26-release-verdict.FZfZRZ/baseline-rexxcps-linked.rxbin
+nr26-candidate-rxvm|RexxCPS-NR26|crexx|rxvm|candidate-nr26|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxvm;/tmp/nr26-release-verdict.FZfZRZ/candidate-rexxcps-linked.rxbin
+nr26-baseline-rxbvm|RexxCPS-NR26|crexx|rxbvm|baseline-accepted-nr14|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxbvm;/tmp/nr26-release-verdict.FZfZRZ/baseline-rexxcps-linked.rxbin
+nr26-candidate-rxbvm|RexxCPS-NR26|crexx|rxbvm|candidate-nr26|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxbvm;/tmp/nr26-release-verdict.FZfZRZ/candidate-rexxcps-linked.rxbin

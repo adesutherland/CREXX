@@ -35,16 +35,16 @@ l8dostart:
    .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
    sconcat r5,r5,"is"
    .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
-   .traceevent "V" 6 "R" "I" "r" 4 6 6 0 "val" ""
-   imult r6,r4,2
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "val" ""
+   imult r6,r0,2
    itos r6
    .traceevent "O" 4 "R" "S" "r" 6 6 6 0 "" ""
    sconcat r6,r5,r6
    .traceevent "O" 4 "R" "S" "r" 6 6 6 0 "" ""
    say r6
    .srcstep 7 7 33 "inline_test_call.crexx" 14 3 9 "  return val * 2"
-   .traceevent "V" 6 "R" "I" "r" 4 7 7 0 "val" ""
-   imult r3,r4,2
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "val" ""
+   imult r3,r0,2
    .traceevent "O" 4 "R" "I" "r" 3 7 7 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "__inline_unused_42" ""
 l8doinc:

@@ -610,7 +610,8 @@ static walker_result emit_walker(walker_direction direction,
                                 free(temp1);
                             }
                         }
-                    } else if (!(node->is_ref_arg || node->is_const_arg)) {
+                    } else if (!(node->is_ref_arg || node->is_const_arg ||
+                                 node->flow_skip_arg_copy || node->flow_share_arg_input)) {
                         /* Writable by-value formals may need a defensive copy;
                          * read-only by-value formals were already marked
                          * `is_const_arg` by semantic analysis. */
@@ -1545,8 +1546,9 @@ static walker_result emit_walker(walker_direction direction,
                     output_append_text(node->output, temp1);
                     free(temp1);
                     trace_assignment_event = 0;
-	                } else if (child1->register_num != child2->register_num ||
-                    child1->register_type != child2->register_type) {
+	                } else if (!node->flow_skip_assignment_store &&
+                    (child1->register_num != child2->register_num ||
+                     child1->register_type != child2->register_type)) {
                     int aggregate_assign =
                             !child1->child &&
                             (child1->value_dims > 0 || child1->target_dims > 0 ||
@@ -1576,7 +1578,7 @@ static walker_result emit_walker(walker_direction direction,
 	                                              RXBIN_TRACE_KIND_ASSIGNMENT,
 	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
 	                                              child1,
-	                                              child1,
+	                                              node->flow_skip_assignment_store ? child2 : child1,
 	                                              trace_step_id,
 	                                              trace_clause_id);
 	                }

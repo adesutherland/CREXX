@@ -1191,6 +1191,19 @@ add_test(NAME nr09_codegen_contract
 set_tests_properties(nr09_codegen_contract PROPERTIES
         LABELS "compiler;performance")
 
+add_test(NAME nr26_flow_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr26_flow_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr26_flow_contract.cmake)
+set_tests_properties(nr26_flow_contract PROPERTIES
+        LABELS "compiler;performance;flow")
+
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
     set(RUNTIME_MODULES ${ARGN})

@@ -148,6 +148,10 @@ struct Context {
 
     /* Generated source to original source map for preprocessed input. */
     RxcpSrcMap *srcmap;
+
+    /* Rebuildable typed control/data-flow overlay. It owns no AST, Symbol or
+     * Scope object and is released before those objects. */
+    RxcpFlowProgram *flow_program;
 };
 
 #include "rxcp_emit.h"
