@@ -43,7 +43,8 @@ endforeach()
 # generate the four noopt images instead of depending on a warm build tree.
 add_dependencies(linked_opt_runtime_artifacts
         performance_nr15_stem_semantics
-        performance_nr15_stem_access)
+        performance_nr15_stem_access
+        performance_nr16_17_stable_state)
 
 add_custom_target(performance_classlib_iterator ALL)
 foreach(_crexx_runner IN ITEMS rxvm rxbvm)
@@ -206,6 +207,26 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
         )
         set_tests_properties(nr15_stem_access_${_crexx_runner}_${_crexx_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "PASS: NR-15 stem access compare"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(performance_nr16_17_stable_state)
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rexx_opt_matrix(
+            NAME nr16_17_stable_state_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr16_17_stable_state_compare.crexx
+            TARGET_GROUP performance_nr16_17_stable_state
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH} -a control 10
+            TEST_LABELS "performance;trace;address;calls;nr16;nr17"
+    )
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        set_tests_properties(nr16_17_stable_state_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-16/17 stable-state compare"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

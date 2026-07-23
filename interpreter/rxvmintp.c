@@ -4689,7 +4689,7 @@ const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
 typedef Opcode instructions;
 
 #ifdef NTHREADED
-/* already typedefed */
+#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_) ((void)0)
 #else
 const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
@@ -4697,6 +4697,15 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #include "../binutils/include/rxops.h"
 #undef X
 };
+
+#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_)             \
+    do {                                                                        \
+        (image_)[instruction_].handler =                                        \
+                (opcode_) < OP_MAX_INSTRUCTIONS                                 \
+                    ? (void *)address_map[opcode_]                              \
+                    : (void *)&&IUNKNOWN;                                       \
+    } while (0)
+#endif
 
 #define VM_PREPARE_EXECUTION_IMAGE(module_)                                     \
     do {                                                                        \
@@ -4726,19 +4735,32 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     vm_module__->segment.binary[vm_instruction__].instruction.no_ops; \
             unsigned int vm_opcode__ =                                         \
                     vm_module__->segment.binary[vm_instruction__].instruction.opcode; \
+            size_t vm_operand__;                                               \
             vm_i__ += vm_operand_count__ + 1;                                  \
             if (!vm_new_image__ && vm_operand_count__) {                       \
                 memcpy(vm_module__->execution_image + vm_instruction__ + 1,     \
                        vm_module__->segment.binary + vm_instruction__ + 1,      \
                        sizeof(bin_code) * vm_operand_count__);                  \
             }                                                                   \
-            vm_module__->execution_image[vm_instruction__].handler =           \
-                    vm_opcode__ < OP_MAX_INSTRUCTIONS                           \
-                        ? (void *)address_map[vm_opcode__]                      \
-                        : (void *)&&IUNKNOWN;                                   \
+            if (vm_opcode__ < OP_MAX_INSTRUCTIONS) {                           \
+                for (vm_operand__ = 0; vm_operand__ < vm_operand_count__;       \
+                     vm_operand__++) {                                          \
+                    if (rxop_format_operand_type(meta_map[vm_opcode__].format,  \
+                                                 vm_operand__) == OP_FUNC) {     \
+                        size_t vm_offset__ =                                    \
+                                vm_module__->segment.binary[                    \
+                                        vm_instruction__ + vm_operand__ + 1].index; \
+                        vm_module__->execution_image[                           \
+                                vm_instruction__ + vm_operand__ + 1].handler =  \
+                                (void *)rxvm_get_module_runtime_procedure(       \
+                                        vm_module__, vm_offset__);              \
+                    }                                                           \
+                }                                                               \
+            }                                                                   \
+            VM_BIND_INSTRUCTION_HANDLER(vm_module__->execution_image,           \
+                                        vm_instruction__, vm_opcode__);         \
         }                                                                       \
     } while (0)
-#endif
 
     /* Allocate Interrupt Arg */
     interrupt_arg = value_f();
@@ -4750,9 +4772,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
         /* Idempotent check */
         if (context->modules[mod_index]->state >= RXVM_MOD_THREADED) continue;
 
-#ifndef NTHREADED
         VM_PREPARE_EXECUTION_IMAGE(context->modules[mod_index]);
-#endif
         context->modules[mod_index]->state = RXVM_MOD_THREADED;
     }
 
@@ -5456,14 +5476,12 @@ START_OF_INSTRUCTIONS
                     /* Resolve canonical operands before copying the execution image. */
                     rxvm_link(context);
                     /* If successfully loaded, prepare execution state inside run(). */
-#ifndef NTHREADED
                     int mod;
-                    DEBUG("Threading\n");
+                    DEBUG("Preparing execution images\n");
                     for (mod = 0; mod < op1R->int_value; mod++) {
                         module *loaded_module = context->modules[mod];
                         VM_PREPARE_EXECUTION_IMAGE(loaded_module);
                     }
-#endif
                     RXVM_INSTRUMENTATION_MODULES_CHANGED(context);
                 }
             }

@@ -23,9 +23,9 @@ main() .locals=13
    .traceevent "L" 4 "R" "S" "r" 2 12 12 0 "" ""
    .srcstep 5 5 33 "exit_fragment" 2 1 9 "_noredir"
    .meta "address_expose.main.handle"="b" ".binary" r9
-   .srcstep 3 3 25 "_address.crexx" 1663 5 21 "    handle = .binary"
+   .srcstep 3 3 25 "_address.crexx" 1682 5 21 "    handle = .binary"
    null r9
-   .srcstep 4 4 25 "_address.crexx" 1664 5 18 "    return handle"
+   .srcstep 4 4 25 "_address.crexx" 1683 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
    bcopy r10,r9
    br l83bexprend
@@ -34,9 +34,9 @@ l83bexprend:
    .meta "address_expose.main.handle"
    .srcstep 8 8 33 "exit_fragment" 2 1 9 "_noredir"
    .meta "address_expose.main.handle"="b" ".binary" r9
-   .srcstep 6 6 25 "_address.crexx" 1663 5 21 "    handle = .binary"
+   .srcstep 6 6 25 "_address.crexx" 1682 5 21 "    handle = .binary"
    null r9
-   .srcstep 7 7 25 "_address.crexx" 1664 5 18 "    return handle"
+   .srcstep 7 7 25 "_address.crexx" 1683 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
    bcopy r11,r9
    br l90bexprend
@@ -45,9 +45,9 @@ l90bexprend:
    .meta "address_expose.main.handle"
    .srcstep 11 11 33 "exit_fragment" 2 1 9 "_noredir"
    .meta "address_expose.main.handle"="b" ".binary" r9
-   .srcstep 9 9 25 "_address.crexx" 1663 5 21 "    handle = .binary"
+   .srcstep 9 9 25 "_address.crexx" 1682 5 21 "    handle = .binary"
    null r9
-   .srcstep 10 10 25 "_address.crexx" 1664 5 18 "    return handle"
+   .srcstep 10 10 25 "_address.crexx" 1683 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
    bcopy r12,r9
    br l97bexprend

@@ -126,7 +126,7 @@ struct module {
     size_t procedure_count;    /* Number of runtime procedures */
     proc_runtime_lookup_entry *proc_runtime_lookup; /* Sorted constant pool offsets -> runtime procedures */
     size_t proc_runtime_lookup_size;
-    bin_code *execution_image; /* Owned computed-goto image; canonical segment.binary stays immutable */
+    bin_code *execution_image; /* Owned process-local operand/dispatch image; canonical segment.binary stays immutable */
     rxvm_graph_binding *graph_binding; /* Shared process-local callable bindings for file->semantic_graph */
     uint32_t *dynamic_site_cache_slots; /* Instruction-word index -> cache slot, or UINT32_MAX */
     rxvm_dynamic_site_cache *dynamic_site_caches;
@@ -269,11 +269,7 @@ struct stack_frame {
 #define VM_CANONICAL_POINTER(index_) (current_canonical_base + (size_t)(index_))
 #define VM_EXECUTION_POINTER(index_) (current_execution_base + (size_t)(index_))
 
-#ifdef NTHREADED
-#define VM_MODULE_EXECUTION_BASE(module_) ((module_)->segment.binary)
-#else
 #define VM_MODULE_EXECUTION_BASE(module_) ((module_)->execution_image)
-#endif
 
 #ifndef NDEBUG
 #define VM_ASSERT_ACTIVE_FRAME()                                                \
@@ -412,7 +408,7 @@ struct stack_frame {
 #define FLOAT_OP(n)                  FLOAT_CONST_VALUE(current_const_pool, (pc+(n))->index)
 
 #define CONSTSTRING_OP(n)            ((string_constant *)(current_const_pool + (pc+(n))->index))
-#define PROC_OP(n)                   rxvm_get_module_runtime_procedure(current_module, (pc+(n))->index)
+#define PROC_OP(n)                   ((proc_runtime *)((pc+(n))->handler))
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 

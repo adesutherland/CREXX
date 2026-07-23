@@ -1146,7 +1146,7 @@ _address_apply_response_request_stem: procedure = .void
   end
   return
 
-_address_environment: procedure = .addressenvironment expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+_address_environment: procedure = .addressenvironment expose _address_runtime_ready _address_current_name _address_current_index _address_environment_names _address_environment_objects
   arg env_name = ""
 
   name = .string
@@ -1157,15 +1157,25 @@ _address_environment: procedure = .addressenvironment expose _address_runtime_re
 
   name = normalize_environment_name(env_name)
   if name = "" then name = _current_address_environment()
+  if name = _address_current_name then do
+    if _address_current_index > 0 & _address_current_index <= _address_environment_names.0 & _address_environment_names[_address_current_index] = name then return _address_environment_objects[_address_current_index] as .addressenvironment
+
+    idx = find_address_environment_index(_address_environment_names, name)
+    if idx \= 0 then do
+      _address_current_index = idx
+      return _address_environment_objects[idx] as .addressenvironment
+    end
+  end
 
   ensure_rc = _ensure_address_environment(name)
   if ensure_rc \= 0 then return .unknownaddressenvironment(name)
 
   idx = find_address_environment_index(_address_environment_names, name)
   if idx = 0 then return .unknownaddressenvironment(name)
+  if name = _address_current_name then _address_current_index = idx
   return _address_environment_objects[idx] as .addressenvironment
 
-_address_function: procedure = .addressfunctionresponse expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+_address_function: procedure = .addressfunctionresponse expose _address_runtime_ready _address_environment_names _address_environment_objects
   arg env_name = "", function_name = "", arguments = .string[]
 
   env_obj = .addressenvironment
@@ -1254,7 +1264,7 @@ bind_address_environment_object: procedure = .void
   end
   return
 
-_ensure_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+_ensure_address_environment: procedure = .int expose _address_runtime_ready _address_environment_names _address_environment_objects
   arg env_name = .string
 
   name = .string
@@ -1275,7 +1285,7 @@ _ensure_address_environment: procedure = .int expose _address_runtime_ready _add
   _address_environment_objects.idx = env_obj
   return 0
 
-_register_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+_register_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_current_index _address_environment_names _address_environment_objects
   arg env_name = .string, env_obj = .addressenvironment
 
   name = .string
@@ -1291,6 +1301,7 @@ _register_address_environment: procedure = .int expose _address_runtime_ready _a
   call bind_address_environment_object(name, env_obj, "")
   _address_environment_names.idx = name
   _address_environment_objects.idx = env_obj
+  if name = _address_current_name then _address_current_index = idx
   return 0
 
 _set_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
@@ -1299,16 +1310,19 @@ _set_address_environment: procedure = .int expose _address_runtime_ready _addres
   name = .string
   idx = .int
   ensure_rc = .int
-
   call ensure_address_runtime
 
   name = require_address_environment_name(env_name, "_set_address_environment")
 
-  ensure_rc = _ensure_address_environment(name)
-  if ensure_rc \= 0 then return ensure_rc
+  if name = _address_current_name then return 0
 
   idx = find_address_environment_index(_address_environment_names, name)
-  if idx = 0 then return -3
+  if idx = 0 then do
+    ensure_rc = _ensure_address_environment(name)
+    if ensure_rc \= 0 then return ensure_rc
+    idx = find_address_environment_index(_address_environment_names, name)
+    if idx = 0 then return -3
+  end
 
   _address_current_name = name
   return 0
@@ -1318,15 +1332,16 @@ _current_address_environment: procedure = .string expose _address_runtime_ready 
   if _address_current_name = "" then _address_current_name = "CREXX"
   return _address_current_name
 
-_reset_address_environments: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+_reset_address_environments: procedure = .int expose _address_runtime_ready _address_current_name _address_current_index _address_environment_names _address_environment_objects
   _address_runtime_ready = 0
   _address_current_name = ""
+  _address_current_index = 0
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
   call ensure_address_runtime
   return 0
 
-_enable_native_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+_enable_native_address_environment: procedure = .int expose _address_runtime_ready _address_environment_names _address_environment_objects
   idx = .int
 
   call ensure_address_runtime
@@ -1339,17 +1354,18 @@ _enable_native_address_environment: procedure = .int expose _address_runtime_rea
 
   return 0
 
-native_address_runtime_enabled: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+native_address_runtime_enabled: procedure = .int expose _address_runtime_ready _address_environment_names _address_environment_objects
   call ensure_address_runtime
   if find_address_environment_index(_address_environment_names, "__NATIVE_ADDRESS_PROVIDER__") \= 0 then return 1
   return 0
 
-ensure_address_runtime: procedure expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+ensure_address_runtime: procedure expose _address_runtime_ready _address_current_name _address_current_index _address_environment_names _address_environment_objects
   if _address_runtime_ready = 1 then return
 
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
   _address_current_name = "CREXX"
+  _address_current_index = 0
   _address_runtime_ready = 1
 
   call _ensure_address_environment("CREXX")
@@ -1359,9 +1375,11 @@ ensure_address_runtime: procedure expose _address_runtime_ready _address_current
   call _ensure_address_environment("SHELL")
   call _ensure_address_environment("PATH")
 
+  _address_current_index = find_address_environment_index(_address_environment_names, "CREXX")
+
   return
 
-alias_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+alias_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_current_index _address_environment_names _address_environment_objects
   arg alias_name = .string, target_name = .string
 
   alias = .string
@@ -1384,6 +1402,7 @@ alias_address_environment: procedure = .int expose _address_runtime_ready _addre
 
   _address_environment_names.alias_idx = alias
   _address_environment_objects.alias_idx = _address_environment_objects[target_idx] as .addressenvironment
+  if alias = _address_current_name then _address_current_index = alias_idx
   return 0
 
 find_address_environment_index: procedure = .int
@@ -1439,7 +1458,7 @@ address_invalid_arguments: procedure = .void
   assembler signal "INVALID_ARGUMENTS",message
   return
 
-dispatch_address_request: procedure = .addressresponse expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+dispatch_address_request: procedure = .addressresponse expose _address_runtime_ready _address_environment_names _address_environment_objects
   arg request = .addressrequest
 
   env_name = .string
@@ -1466,7 +1485,7 @@ dispatch_address_request: procedure = .addressresponse expose _address_runtime_r
   _address_environment_objects[idx] = env_obj
   return response
 
-execute_system_command: procedure = .addressresponse expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+execute_system_command: procedure = .addressresponse expose _address_runtime_ready _address_environment_names _address_environment_objects
   arg source_request = .addressrequest, command = .string
 
   request = .addressrequest

@@ -9,6 +9,7 @@ main: procedure
 
   failures = failures + test_descriptor()
   failures = failures + test_set_environment()
+  failures = failures + test_value_environment()
   failures = failures + test_explicit_address()
   failures = failures + test_explicit_quoted_command()
   failures = failures + test_explicit_quoted_command_clauses()
@@ -54,6 +55,58 @@ test_set_environment: procedure = .int
   result = addr.process(tokens)
   if check_equal("address set env process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   if check_contains("address set env replacement", join_result_lines(result), "_set_address_environment('cms')") = 0 then failures = failures + 1
+
+  return failures
+
+test_value_environment: procedure = .int
+  failures = .int
+  addr = .addressexit(1010)
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "env_name", ".string", 0
+  result = addr.process(tokens)
+  if check_equal("address value process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_equal("address value expression", "rc=_set_address_environment(env_name)", join_result_lines(result)) = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "addressenv"
+  call pushbracket tokens, "("
+  call pushbracket tokens, ")"
+  call pushidentifier tokens, ".environment_name"
+  call pushbracket tokens, "("
+  call pushbracket tokens, ")"
+  result = addr.process(tokens)
+  if check_equal("address current identity process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_equal("address current identity replacement", "assembler cnop /* rxcp-opt-elide-exact-identity */", join_result_lines(result)) = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "addressenv"
+  call pushbracket tokens, "("
+  call pushstring tokens, "'CREXX'"
+  call pushbracket tokens, ")"
+  call pushidentifier tokens, ".environment_name"
+  call pushbracket tokens, "("
+  call pushbracket tokens, ")"
+  result = addr.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("address non-current query preserved", replacement, "_set_address_environment(addressenv('CREXX')") = 0 then failures = failures + 1
+  if check_contains("address non-current method preserved", replacement, ".environment_name())") = 0 then failures = failures + 1
+  if check_true("address non-current query is not nop", replacement \= "assembler cnop", replacement) = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "VALUE"
+  result = addr.process(tokens)
+  if check_equal("address value missing expression", "ERROR", result.get_status()) = 0 then failures = failures + 1
 
   return failures
 
