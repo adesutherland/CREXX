@@ -467,3 +467,20 @@ and added a separate `qa-closeout/` evidence directory.
 
 No push is authorized. The requested delivery artifact is one local NR-15
 commit on `develop`.
+
+## Post-commit fixture correction - 2026-07-23
+
+An isolated Release CTest selection exposed that the four unoptimized NR-15
+runtime images were not owned by the shared generated-runtime fixture. The
+closeout's focused 30/30 result was semantically valid, but its warm build tree
+masked this missing dependency. The existing serialized fixture now owns both
+NR-15 target groups, so isolated CTest generates optimized and unoptimized
+images without making the performance targets part of the ordinary `ALL`
+build.
+
+- [x] Remove the four unoptimized images and pass the reported Release
+      selection 5/5, including fixture setup.
+- [x] Remove the four unoptimized images and pass the same Debug selection
+      5/5, including fixture setup.
+- [x] Pass the complete optimized/unoptimized, `rxvm`/`rxbvm`, semantics/access
+      matrix 9/9 in both Release and Debug, including fixture setup.

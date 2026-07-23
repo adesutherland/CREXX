@@ -1176,6 +1176,14 @@ These are time-boxed evidence activities, not production commitments.
   are +0.599%/-2.439% elapsed, RexxCPS is +0.789%/+1.086%, and lifecycle is
   -2.088%/-0.448% (`rxvm`/`rxbvm`). Evidence:
   `evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/`.
+- 2026-07-23: An isolated Release CTest selection found that the four NR-15
+  unoptimized runtime images depended on a warm build tree: the shared runtime
+  fixture generated optimized images but did not own the two non-`ALL` NR-15
+  target groups. The same serialized fixture now owns both groups. With the
+  four images removed first, the reported Release selection and its Debug
+  counterpart pass 5/5; the complete optimized/unoptimized matrix passes 9/9
+  in each build mode. The accepted D2-hybrid implementation and performance
+  evidence are unchanged.
 
 ### IDEA-STEM-01 — Binary-backed native stem representation
 
