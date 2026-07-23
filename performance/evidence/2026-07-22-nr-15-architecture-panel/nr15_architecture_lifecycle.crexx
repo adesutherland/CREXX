@@ -1,0 +1,103 @@
+/* Copy/lifecycle control for the approved NR-15 representation panel. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+candidate = "d1"
+size = 64
+iterations = 1000
+if argv[0] >= 1 then candidate = argv[1]
+if argv[0] >= 2 then size = argv[2]
+if argv[0] >= 3 then iterations = argv[3]
+
+select
+  when candidate == "d1" then rc = copy_d1(size, iterations)
+  when candidate == "d2" then rc = copy_d2(size, iterations)
+  when candidate == "d2h" then rc = copy_d2h(size, iterations)
+  otherwise rc = fail("candidate")
+end
+return rc
+
+copy_d1: procedure = .int
+  arg size = .int, iterations = .int
+  target = .stem()
+  do i = 1 to size
+    key = "key-" || i
+    value = "value-" || i
+    assembler nr15d1set target,key,value
+  end
+  key = "key-" || size
+  result = .string
+  checksum = 0
+  start = time("us")
+  do i = 1 to iterations
+    copy = target
+    assembler nr15d1get result,copy,key
+    checksum = checksum + length(result)
+  end
+  return report("d1", size, iterations, elapsed_us(start), checksum)
+
+copy_d2: procedure = .int
+  arg size = .int, iterations = .int
+  target = .Nr15PanelStem()
+  do i = 1 to size
+    key = "key-" || i
+    value = "value-" || i
+    assembler nr15d2set target,key,value
+  end
+  key = "key-" || size
+  result = .string
+  checksum = 0
+  start = time("us")
+  do i = 1 to iterations
+    copy = target
+    assembler nr15d2get result,copy,key
+    checksum = checksum + length(result)
+  end
+  return report("d2", size, iterations, elapsed_us(start), checksum)
+
+copy_d2h: procedure = .int
+  arg size = .int, iterations = .int
+  target = .Nr15PanelStem()
+  do i = 1 to size
+    key = "key-" || i
+    value = "value-" || i
+    assembler nr15d2hset target,key,value
+  end
+  key = "key-" || size
+  result = .string
+  checksum = 0
+  start = time("us")
+  do i = 1 to iterations
+    copy = target
+    assembler nr15d2hget result,copy,key
+    checksum = checksum + length(result)
+  end
+  return report("d2h", size, iterations, elapsed_us(start), checksum)
+
+elapsed_us: procedure = .int
+  arg start = .int
+  elapsed = time("us") - start
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+report: procedure = .int
+  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int
+  if checksum <= 0 then return fail("checksum")
+  say "benchmark=nr15_architecture_lifecycle"
+  say "candidate="candidate
+  say "size="size
+  say "iterations="iterations
+  say "elapsed_us="elapsed
+  say "checksum="checksum
+  say "PASS: NR-15 architecture lifecycle"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL: NR-15 architecture lifecycle" label
+  return 1
+
+Nr15PanelStem: class
+  *: factory
+    return

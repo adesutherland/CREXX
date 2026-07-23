@@ -1,0 +1,399 @@
+/*
+ * SOURCE                 : nr15_stem_primitive_semantics.crexx
+ */
+
+.globals=0
+
+main() .locals=27
+   .meta "nr15_stem_primitive_semantics.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .meta "nr15_stem_primitive_semantics.main.result"="b" ".string" r5
+   .srcstep 1 1 17 "nr15_stem_primitive_semantics.crexx" 6 1 17 "result = .string"
+   null r5
+   .srcstep 2 2 17 "nr15_stem_primitive_semantics.crexx" 5 1 15 "target = .stem()"
+   .meta "nr15_stem_primitive_semantics.main.target"="b" ".stem" r1
+   load r3,0
+   call r1,§rxfnsb.stem.§factory(),r3
+   .traceevent "F" 4 "R" "O" "r" 1 2 2 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 2 2 0 "target" ""
+   .srcstep 3 3 17 "nr15_stem_primitive_semantics.crexx" 8 1 9 "key = \"\""
+   .meta "nr15_stem_primitive_semantics.main.key"="b" ".string" r4
+   load r4,""
+   .traceevent "L" 4 "R" "S" "r" 4 3 3 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 3 3 0 "key" ""
+   .srcstep 4 4 17 "nr15_stem_primitive_semantics.crexx" 9 1 20 "value = \"empty-key\""
+   .meta "nr15_stem_primitive_semantics.main.value"="b" ".string" r6
+   load r6,"empty-key"
+   .traceevent "L" 4 "R" "S" "r" 6 4 4 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 4 4 0 "value" ""
+   .srcstep 5 5 17 "nr15_stem_primitive_semantics.crexx" 10 11 35 "assembler stemset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "value" ""
+   stemset r1,r4,r6
+   .srcstep 6 6 17 "nr15_stem_primitive_semantics.crexx" 11 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 14 14 17 "nr15_stem_primitive_semantics.crexx" 12 1 48 "call expect(result == \"empty-key\", \"empty key\")"
+   .srcstep 7 7 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 7 7 0 "result" ""
+   seq r7,r5,"empty-key"
+   .traceevent "O" 4 "R" "B" "r" 7 7 7 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 7 7 7 0 "condition" ""
+   .srcstep 12 12 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 7 12 12 0 "condition" ""
+   not r3,r7
+   .traceevent "P" 4 "R" "B" "r" 3 12 12 0 "" ""
+   brf l456iffalse,r3
+   .srcstep 13 13 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 8 8 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics empty key"
+   .srcstep 11 11 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 9 9 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 9 9 0 "return_value" ""
+   .srcstep 10 10 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "return_value" ""
+   exit r8
+l456iffalse:
+   .srcstep 15 15 17 "nr15_stem_primitive_semantics.crexx" 14 1 26 "key = \"κλειδί-🔥\""
+   load r4,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 4 15 15 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 15 15 0 "key" ""
+   .srcstep 16 16 17 "nr15_stem_primitive_semantics.crexx" 15 1 24 "value = \"unicode-value\""
+   load r6,"unicode-value"
+   .traceevent "L" 4 "R" "S" "r" 6 16 16 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 16 16 0 "value" ""
+   .srcstep 17 17 17 "nr15_stem_primitive_semantics.crexx" 16 11 35 "assembler stemset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "value" ""
+   stemset r1,r4,r6
+   .srcstep 18 18 17 "nr15_stem_primitive_semantics.crexx" 17 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 26 26 17 "nr15_stem_primitive_semantics.crexx" 18 1 54 "call expect(result == \"unicode-value\", \"unicode key\")"
+   .srcstep 19 19 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 19 19 0 "result" ""
+   seq r9,r5,"unicode-value"
+   .traceevent "O" 4 "R" "B" "r" 9 19 19 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 9 19 19 0 "condition" ""
+   .srcstep 24 24 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 9 24 24 0 "condition" ""
+   not r3,r9
+   .traceevent "P" 4 "R" "B" "r" 3 24 24 0 "" ""
+   brf l488iffalse,r3
+   .srcstep 25 25 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 20 20 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics unicode key"
+   .srcstep 23 23 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 21 21 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r10,1
+   .traceevent "L" 4 "R" "I" "r" 10 21 21 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 21 21 0 "return_value" ""
+   .srcstep 22 22 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 10 0 0 0 "return_value" ""
+   exit r10
+l488iffalse:
+   .srcstep 27 27 17 "nr15_stem_primitive_semantics.crexx" 20 1 16 "key = \"missing\""
+   load r4,"missing"
+   .traceevent "L" 4 "R" "S" "r" 4 27 27 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 27 27 0 "key" ""
+   .srcstep 28 28 17 "nr15_stem_primitive_semantics.crexx" 21 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 36 36 17 "nr15_stem_primitive_semantics.crexx" 22 1 51 "call expect(result == \"\", \"missing empty default\")"
+   .srcstep 29 29 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 29 29 0 "result" ""
+   seq r11,r5,""
+   .traceevent "O" 4 "R" "B" "r" 11 29 29 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 11 29 29 0 "condition" ""
+   .srcstep 34 34 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 11 34 34 0 "condition" ""
+   not r3,r11
+   .traceevent "P" 4 "R" "B" "r" 3 34 34 0 "" ""
+   brf l511iffalse,r3
+   .srcstep 35 35 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 30 30 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics missing empty default"
+   .srcstep 33 33 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 31 31 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 31 31 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 31 31 0 "return_value" ""
+   .srcstep 32 32 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "return_value" ""
+   exit r12
+l511iffalse:
+   .srcstep 37 37 6 "nr15_stem_primitive_semantics.crexx" 24 1 24 "target. = \"new-default\""
+   .traceevent "C" 4 "R" "S" "r" 2 37 37 0 "target" ""
+   load r3,"new-default"
+   .traceevent "L" 4 "R" "S" "r" 3 37 37 0 "" ""
+   load r0,3
+   settp r1,256
+   settp r2,512
+   settpcall r13,§rxfnsb.stem.set(),r0,r3,768
+   .traceevent "A" 6 "R" "S" "r" 3 37 37 0 "target" ""
+   .srcstep 38 38 17 "nr15_stem_primitive_semantics.crexx" 25 1 26 "key = \"κλειδί-🔥\""
+   load r4,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 4 38 38 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 38 38 0 "key" ""
+   .srcstep 39 39 17 "nr15_stem_primitive_semantics.crexx" 26 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 47 47 17 "nr15_stem_primitive_semantics.crexx" 27 1 57 "call expect(result == \"new-default\", \"generation reset\")"
+   .srcstep 40 40 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 40 40 0 "result" ""
+   seq r14,r5,"new-default"
+   .traceevent "O" 4 "R" "B" "r" 14 40 40 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 14 40 40 0 "condition" ""
+   .srcstep 45 45 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 14 45 45 0 "condition" ""
+   not r3,r14
+   .traceevent "P" 4 "R" "B" "r" 3 45 45 0 "" ""
+   brf l534iffalse,r3
+   .srcstep 46 46 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 41 41 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics generation reset"
+   .srcstep 44 44 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 42 42 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 42 42 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 42 42 0 "return_value" ""
+   .srcstep 43 43 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 15 0 0 0 "return_value" ""
+   exit r15
+l534iffalse:
+   .srcstep 48 48 17 "nr15_stem_primitive_semantics.crexx" 28 1 16 "key = \"missing\""
+   load r4,"missing"
+   .traceevent "L" 4 "R" "S" "r" 4 48 48 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 48 48 0 "key" ""
+   .srcstep 49 49 17 "nr15_stem_primitive_semantics.crexx" 29 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 57 57 17 "nr15_stem_primitive_semantics.crexx" 30 1 65 "call expect(result == \"new-default\", \"missing assigned default\")"
+   .srcstep 50 50 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 50 50 0 "result" ""
+   seq r16,r5,"new-default"
+   .traceevent "O" 4 "R" "B" "r" 16 50 50 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 16 50 50 0 "condition" ""
+   .srcstep 55 55 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 16 55 55 0 "condition" ""
+   not r3,r16
+   .traceevent "P" 4 "R" "B" "r" 3 55 55 0 "" ""
+   brf l557iffalse,r3
+   .srcstep 56 56 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 51 51 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics missing assigned default"
+   .srcstep 54 54 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 52 52 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r17,1
+   .traceevent "L" 4 "R" "I" "r" 17 52 52 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 52 52 0 "return_value" ""
+   .srcstep 53 53 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "return_value" ""
+   exit r17
+l557iffalse:
+   .srcstep 58 58 17 "nr15_stem_primitive_semantics.crexx" 32 1 26 "key = \"κλειδί-🔥\""
+   load r4,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 4 58 58 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 58 58 0 "key" ""
+   .srcstep 59 59 17 "nr15_stem_primitive_semantics.crexx" 33 1 18 "value = \"updated\""
+   load r6,"updated"
+   .traceevent "L" 4 "R" "S" "r" 6 59 59 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 59 59 0 "value" ""
+   .srcstep 60 60 17 "nr15_stem_primitive_semantics.crexx" 34 11 35 "assembler stemset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "value" ""
+   stemset r1,r4,r6
+   .srcstep 61 61 17 "nr15_stem_primitive_semantics.crexx" 35 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 69 69 17 "nr15_stem_primitive_semantics.crexx" 36 1 64 "call expect(result == \"updated\", \"existing update after reset\")"
+   .srcstep 62 62 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 62 62 0 "result" ""
+   seq r18,r5,"updated"
+   .traceevent "O" 4 "R" "B" "r" 18 62 62 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 18 62 62 0 "condition" ""
+   .srcstep 67 67 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 18 67 67 0 "condition" ""
+   not r3,r18
+   .traceevent "P" 4 "R" "B" "r" 3 67 67 0 "" ""
+   brf l580iffalse,r3
+   .srcstep 68 68 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 63 63 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics existing update after reset"
+   .srcstep 66 66 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 64 64 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 64 64 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 64 64 0 "return_value" ""
+   .srcstep 65 65 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "return_value" ""
+   exit r19
+l580iffalse:
+   .srcstep 70 70 17 "nr15_stem_primitive_semantics.crexx" 38 1 29 "key = \"AaAaAaAaAaAaAaAaAaAa\""
+   load r4,"AaAaAaAaAaAaAaAaAaAa"
+   .traceevent "L" 4 "R" "S" "r" 4 70 70 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 70 70 0 "key" ""
+   .srcstep 71 71 17 "nr15_stem_primitive_semantics.crexx" 39 1 22 "value = \"collision-a\""
+   load r6,"collision-a"
+   .traceevent "L" 4 "R" "S" "r" 6 71 71 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 71 71 0 "value" ""
+   .srcstep 72 72 17 "nr15_stem_primitive_semantics.crexx" 40 11 35 "assembler stemset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "value" ""
+   stemset r1,r4,r6
+   .srcstep 73 73 17 "nr15_stem_primitive_semantics.crexx" 41 1 29 "key = \"BBBBBBBBBBBBBBBBBBBB\""
+   load r4,"BBBBBBBBBBBBBBBBBBBB"
+   .traceevent "L" 4 "R" "S" "r" 4 73 73 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 73 73 0 "key" ""
+   .srcstep 74 74 17 "nr15_stem_primitive_semantics.crexx" 42 1 22 "value = \"collision-b\""
+   load r6,"collision-b"
+   .traceevent "L" 4 "R" "S" "r" 6 74 74 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 74 74 0 "value" ""
+   .srcstep 75 75 17 "nr15_stem_primitive_semantics.crexx" 43 11 35 "assembler stemset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "value" ""
+   stemset r1,r4,r6
+   .srcstep 76 76 17 "nr15_stem_primitive_semantics.crexx" 44 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 84 84 17 "nr15_stem_primitive_semantics.crexx" 45 1 61 "call expect(result == \"collision-b\", \"collision chain tail\")"
+   .srcstep 77 77 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 77 77 0 "result" ""
+   seq r20,r5,"collision-b"
+   .traceevent "O" 4 "R" "B" "r" 20 77 77 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 20 77 77 0 "condition" ""
+   .srcstep 82 82 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 20 82 82 0 "condition" ""
+   not r3,r20
+   .traceevent "P" 4 "R" "B" "r" 3 82 82 0 "" ""
+   brf l603iffalse,r3
+   .srcstep 83 83 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 78 78 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics collision chain tail"
+   .srcstep 81 81 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 79 79 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 79 79 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 79 79 0 "return_value" ""
+   .srcstep 80 80 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "return_value" ""
+   exit r21
+l603iffalse:
+   .srcstep 85 85 17 "nr15_stem_primitive_semantics.crexx" 46 1 29 "key = \"AaAaAaAaAaAaAaAaAaAa\""
+   load r4,"AaAaAaAaAaAaAaAaAaAa"
+   .traceevent "L" 4 "R" "S" "r" 4 85 85 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 85 85 0 "key" ""
+   .srcstep 86 86 17 "nr15_stem_primitive_semantics.crexx" 47 11 36 "assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "key" ""
+   stemget r5,r1,r4
+   .srcstep 94 94 17 "nr15_stem_primitive_semantics.crexx" 48 1 61 "call expect(result == \"collision-a\", \"collision chain head\")"
+   .srcstep 87 87 33 "nr15_stem_primitive_semantics.crexx" 55 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 5 87 87 0 "result" ""
+   seq r22,r5,"collision-a"
+   .traceevent "O" 4 "R" "B" "r" 22 87 87 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 22 87 87 0 "condition" ""
+   .srcstep 92 92 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 22 92 92 0 "condition" ""
+   not r3,r22
+   .traceevent "P" 4 "R" "B" "r" 3 92 92 0 "" ""
+   brf l626iffalse,r3
+   .srcstep 93 93 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 88 88 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   say "FAIL: NR-15 primitive semantics collision chain head"
+   .srcstep 91 91 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 89 89 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 89 89 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 89 89 0 "return_value" ""
+   .srcstep 90 90 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "return_value" ""
+   exit r23
+l626iffalse:
+   .srcstep 95 95 17 "nr15_stem_primitive_semantics.crexx" 50 1 40 "call expect(target.size() == 4, \"size\")"
+   .traceevent "V" 6 "R" "O" "r" 1 95 95 0 "target" ""
+   load r0,1
+   settpcall r3,§rxfnsb.stem.size(),r0,r1,256
+   itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 95 95 0 "size" ""
+   seq r25,r3,"4"
+   .traceevent "O" 4 "R" "B" "r" 25 95 95 0 "" ""
+   load r26,"size"
+   .traceevent "L" 4 "R" "S" "r" 26 95 95 0 "" ""
+   settp r26,768
+   call2 r3,expect(),r25,r26
+   .traceevent "F" 4 "R" "V" "r" 3 95 95 0 "expect" ""
+   .srcstep 96 96 17 "nr15_stem_primitive_semantics.crexx" 51 1 38 "say \"PASS: NR-15 primitive semantics\""
+   say "PASS: NR-15 primitive semantics"
+   .srcstep 97 97 17 "nr15_stem_primitive_semantics.crexx" 52 1 9 "return 0"
+   ret 0
+   .meta "nr15_stem_primitive_semantics.main.key"
+   .meta "nr15_stem_primitive_semantics.main.result"
+   .meta "nr15_stem_primitive_semantics.main.target"
+   .meta "nr15_stem_primitive_semantics.main.value"
+
+expect() .locals=5
+   .meta "nr15_stem_primitive_semantics.expect"="b" ".void" expect() "condition=.boolean,label=.string"
+   .srcstep 107 107 17 "nr15_stem_primitive_semantics.crexx" 54 1 18 "expect: procedure"
+   numsci 18,1,1
+   .srcstep 98 98 17 "nr15_stem_primitive_semantics.crexx" 55 7 27 "  arg condition = .boolean, label = .string"
+   .meta "nr15_stem_primitive_semantics.expect.condition"="b" ".boolean" a1
+   .srcstep 99 99 17 "nr15_stem_primitive_semantics.crexx" 55 29 44 "  arg condition = .boolean, label = .string"
+   .meta "nr15_stem_primitive_semantics.expect.label"="b" ".string" a2
+   .srcstep 104 104 17 "nr15_stem_primitive_semantics.crexx" 56 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "a" 1 104 104 0 "condition" ""
+   not r2,a1
+   .traceevent "P" 4 "R" "B" "r" 2 104 104 0 "" ""
+   brf l191iffalse,r2
+   .srcstep 105 105 17 "nr15_stem_primitive_semantics.crexx" 56 17 21 "  if \\condition then do"
+   .srcstep 100 100 17 "nr15_stem_primitive_semantics.crexx" 57 5 48 "    say \"FAIL: NR-15 primitive semantics\" label"
+   .traceevent "V" 6 "R" "S" "a" 2 100 100 0 "label" ""
+   sconcat r3,"FAIL: NR-15 primitive semantics",a2
+   .traceevent "O" 4 "R" "S" "r" 3 100 100 0 "" ""
+   say r3
+   .srcstep 103 103 17 "nr15_stem_primitive_semantics.crexx" 58 5 11 "    exit 1"
+   .srcstep 101 101 33 "nr15_stem_primitive_semantics.crexx" 58 11 11 "    exit 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 101 101 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 101 101 0 "return_value" ""
+   .srcstep 102 102 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "return_value" ""
+   exit r4
+l191iffalse:
+   .srcstep 106 106 17 "nr15_stem_primitive_semantics.crexx" 60 3 9 "  return"
+   ret
+   .meta "nr15_stem_primitive_semantics.expect.condition"
+   .meta "nr15_stem_primitive_semantics.expect.label"
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""
+
+§rxfnsb.stem.set() .expose=rxfnsb.stem.set
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "?key=.string,value=.string"
+
+§rxfnsb.stem.size() .expose=rxfnsb.stem.size
+   .meta "rxfnsb.stem.size"="b" ".int" §rxfnsb.stem.size() ""

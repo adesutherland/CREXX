@@ -252,7 +252,7 @@ RX_INLINE size_t power_of_two_size(size_t value) {
     return new_size;
 }
 
-/* Sets up the required number of attributes */
+/* Sets up the required number of attributes. */
 RX_INLINE void set_num_attributes(value* v, size_t num) {
     size_t i;
     value *a;
@@ -307,7 +307,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     v->num_attribute_buffers++;
     size_t new_capacity = power_of_two_size(v->num_attribute_buffers);
 
-    // Reallocate only when the required capacity has changed
+    /* Reallocate only when the required capacity has changed. */
     if (new_capacity > old_capacity) {
         if (v->attribute_buffers) {
             v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * new_capacity);
@@ -338,6 +338,138 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     /* Set the new number of attributes */
     v->num_attributes = num;
     v->max_num_attributes = new_max;
+}
+
+/*
+ * Allocation-reporting variant for callers that require failure atomicity.
+ * Growth is prepared off to the side so a failed allocation leaves the value
+ * and all existing attribute bindings unchanged.
+ */
+RX_INLINE int try_set_num_attributes(value* v, size_t num) {
+    size_t i;
+    value *a;
+
+    if (num <= v->num_attributes) {
+        /* Reducing invalidates removed child storage but keeps it reusable. */
+        for (i = num; i < v->num_attributes; i++) {
+            v->attributes[i] = v->unlinked_attributes[i];
+            reset_value_storage_for_reuse(v->attributes[i]);
+        }
+        v->num_attributes = num;
+        maybe_trim_attribute_storage(v);
+        return 0;
+    }
+
+    if (num <= v->max_num_attributes) {
+        /* Just need to reset the recycled attributes */
+        for (i = v->num_attributes; i < num; i++) {
+            v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
+            clear_value_contents(v->attributes[i]);
+        }
+        v->num_attributes = num;
+        return 0;
+    }
+
+    /* Increasing the number of attributes, we need to allocate more space */
+
+    /* Calculate the new maximum number of attributes using bit-twiddling */
+    size_t new_max = power_of_two_size(num);
+    size_t new_value_count;
+    size_t old_buffer_capacity;
+    size_t new_buffer_count;
+    size_t new_buffer_capacity;
+    value **new_attributes;
+    value **new_unlinked_attributes;
+    value **new_attribute_buffers;
+    value *new_storage;
+
+    if (new_max < num || new_max > SIZE_MAX / sizeof(value *)) return -1;
+    new_value_count = new_max - v->max_num_attributes;
+    if (new_value_count > SIZE_MAX / sizeof(value)) return -1;
+    if (v->num_attribute_buffers == SIZE_MAX) return -1;
+
+    old_buffer_capacity = power_of_two_size(v->num_attribute_buffers);
+    new_buffer_count = v->num_attribute_buffers + 1;
+    new_buffer_capacity = power_of_two_size(new_buffer_count);
+    if (new_buffer_capacity < new_buffer_count ||
+        new_buffer_capacity > SIZE_MAX / sizeof(value *)) return -1;
+
+    new_attributes = malloc(sizeof(value *) * new_max);
+    if (!new_attributes) return -1;
+    new_unlinked_attributes = malloc(sizeof(value *) * new_max);
+    if (!new_unlinked_attributes) {
+        free(new_attributes);
+        return -1;
+    }
+    new_storage = malloc(sizeof(value) * new_value_count);
+    if (!new_storage) {
+        free(new_unlinked_attributes);
+        free(new_attributes);
+        return -1;
+    }
+
+    new_attribute_buffers = v->attribute_buffers;
+    if (new_buffer_capacity > old_buffer_capacity) {
+        new_attribute_buffers = malloc(sizeof(value *) * new_buffer_capacity);
+        if (!new_attribute_buffers) {
+            free(new_storage);
+            free(new_unlinked_attributes);
+            free(new_attributes);
+            return -1;
+        }
+        if (v->num_attribute_buffers) {
+            memcpy(new_attribute_buffers, v->attribute_buffers,
+                   sizeof(value *) * v->num_attribute_buffers);
+        }
+    }
+
+    if (v->max_num_attributes) {
+        memcpy(new_attributes, v->attributes,
+               sizeof(value *) * v->max_num_attributes);
+        memcpy(new_unlinked_attributes, v->unlinked_attributes,
+               sizeof(value *) * v->max_num_attributes);
+    }
+
+    /* Recycle unused existing attributes only after every allocation passed. */
+    for (i = v->num_attributes; i < v->max_num_attributes; i++) {
+        new_attributes[i] = new_unlinked_attributes[i];
+        clear_value_contents(new_attributes[i]);
+    }
+
+    a = new_storage;
+    for (i = v->max_num_attributes; i < new_max; i++, a++) {
+        value_init(a);
+        new_attributes[i] = new_unlinked_attributes[i] = a;
+    }
+    new_attribute_buffers[new_buffer_count - 1] = new_storage;
+
+    RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+            sizeof(value*) * new_max, 0);
+    RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+            sizeof(value*) * new_max, 0);
+    if (new_buffer_capacity > old_buffer_capacity) {
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+                sizeof(value*) * new_buffer_capacity, 0);
+    }
+    RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_ATTRIBUTE_VALUES,
+                sizeof(value) * new_value_count, new_value_count);
+
+    free(v->attributes);
+    free(v->unlinked_attributes);
+    if (new_attribute_buffers != v->attribute_buffers)
+        free(v->attribute_buffers);
+
+    v->attributes = new_attributes;
+    v->unlinked_attributes = new_unlinked_attributes;
+    v->attribute_buffers = new_attribute_buffers;
+    v->num_attribute_buffers = new_buffer_count;
+    v->num_attributes = num;
+    v->max_num_attributes = new_max;
+    return 0;
 }
 
 /*

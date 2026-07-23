@@ -1,0 +1,7 @@
+rxas_form_rows=591
+rxas_unique_mnemonics=384
+doc_headings=384
+doc_unique_headings=384
+duplicate_headings=0
+missing_headings=0
+extra_headings=0

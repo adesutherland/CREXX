@@ -225,6 +225,31 @@ static int inline_callable_writes_class_attribute(Symbol *start,
                                                   Symbol ***visited,
                                                   size_t *visited_count);
 
+static int inline_native_stem_call_mutates_class_attribute(ASTNode *node) {
+    ASTNode *receiver;
+    Symbol *method_symbol;
+    char *scope_name;
+    int matches;
+
+    if (!node || node->node_type != MEMBER_CALL ||
+        !node->node_string || node->node_string_length != 3 ||
+        strncasecmp(node->node_string, "set", 3) != 0 ||
+        !node->symbolNode || !node->symbolNode->symbol)
+        return 0;
+    receiver = node->child;
+    if (!receiver || !receiver->symbolNode ||
+        !inline_symbol_is_class_attribute(receiver->symbolNode->symbol))
+        return 0;
+
+    method_symbol = node->symbolNode->symbol;
+    if (!method_symbol->scope) return 0;
+    scope_name = scp_frnm(method_symbol->scope);
+    if (!scope_name) return 0;
+    matches = strcmp(scope_name, "rxfnsb.stem") == 0;
+    free(scope_name);
+    return matches;
+}
+
 static int inline_subtree_writes_class_attribute(ASTNode *node,
                                                  Symbol ***visited,
                                                  size_t *visited_count) {
@@ -238,6 +263,8 @@ static int inline_subtree_writes_class_attribute(ASTNode *node,
         inline_symbol_is_class_attribute(node->symbolNode->symbol)) {
         return 1;
     }
+
+    if (inline_native_stem_call_mutates_class_attribute(node)) return 1;
 
     if ((node->node_type == FUNCTION ||
          node->node_type == MEMBER_CALL ||

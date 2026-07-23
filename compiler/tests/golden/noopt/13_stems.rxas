@@ -22,11 +22,7 @@ main() .locals=15
    .meta "13_stems.main.missing"="b" ".string" "missing"
    load r4,"missing"
    .traceevent "C" 4 "R" "S" "r" 4 5 5 0 "s" ""
-   load r2,2
-   settp r1,256
-   swap r3,r1
-   settpcall r5,§rxfnsb.stem.get(),r2,r4,768
-   swap r1,r3
+   stemget r5,r1,r4
    .traceevent "V" 6 "R" "S" "r" 5 5 5 0 "s" ""
    rne r5,r5,""
    .traceevent "O" 4 "R" "B" "r" 5 5 5 0 "" ""
@@ -40,11 +36,7 @@ main() .locals=15
    .srcstep 4 4 17 "13_stems.crexx" 9 3 41 "  say \"Stem default mismatch:\" s.missing"
    load r4,"missing"
    .traceevent "C" 4 "R" "S" "r" 4 4 4 0 "s" ""
-   load r2,2
-   settp r1,256
-   swap r3,r1
-   settpcall r6,§rxfnsb.stem.get(),r2,r4,768
-   swap r1,r3
+   stemget r6,r1,r4
    .traceevent "V" 6 "R" "S" "r" 6 4 4 0 "s" ""
    sconcat r6,"Stem default mismatch:",r6
    .traceevent "O" 4 "R" "S" "r" 6 4 4 0 "" ""
@@ -56,12 +48,7 @@ l28iffalse:
    .traceevent "C" 4 "R" "S" "r" 5 7 7 0 "s" ""
    load r6,"one"
    .traceevent "L" 4 "R" "S" "r" 6 7 7 0 "" ""
-   load r3,3
-   settp r1,256
-   swap r4,r1
-   settp r5,768
-   settpcall r2,§rxfnsb.stem.set(),r3,r6,768
-   swap r1,r4
+   stemset r1,r5,r6
    .traceevent "A" 6 "R" "S" "r" 6 7 7 0 "s" ""
    .srcstep 8 8 6 "13_stems.crexx" 13 1 18 "s[\"beta\"] = \"two\""
    .meta "13_stems.main.gamma"="b" ".string" "gamma"
@@ -69,33 +56,19 @@ l28iffalse:
    .traceevent "C" 4 "R" "S" "r" 5 8 8 0 "s" ""
    load r6,"two"
    .traceevent "L" 4 "R" "S" "r" 6 8 8 0 "" ""
-   load r3,3
-   settp r1,256
-   swap r4,r1
-   settp r5,768
-   settpcall r7,§rxfnsb.stem.set(),r3,r6,768
-   swap r1,r4
+   stemset r1,r5,r6
    .traceevent "A" 6 "R" "S" "r" 6 8 8 0 "s" ""
    .srcstep 9 9 6 "13_stems.crexx" 14 1 18 "s.gamma = \"three\""
    load r5,"gamma"
    .traceevent "C" 4 "R" "S" "r" 5 9 9 0 "s" ""
    load r6,"three"
    .traceevent "L" 4 "R" "S" "r" 6 9 9 0 "" ""
-   load r3,3
-   settp r1,256
-   swap r4,r1
-   settp r5,768
-   settpcall r8,§rxfnsb.stem.set(),r3,r6,768
-   swap r1,r4
+   stemset r1,r5,r6
    .traceevent "A" 6 "R" "S" "r" 6 9 9 0 "s" ""
    .srcstep 12 12 17 "13_stems.crexx" 16 1 20 "if s.alpha \\= \"one\" then do"
    load r6,"alpha"
    .traceevent "C" 4 "R" "S" "r" 6 12 12 0 "s" ""
-   load r4,2
-   settp r1,256
-   swap r5,r1
-   settpcall r3,§rxfnsb.stem.get(),r4,r6,768
-   swap r1,r5
+   stemget r3,r1,r6
    .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "s" ""
    rne r6,r3,"one"
    .traceevent "O" 4 "R" "B" "r" 6 12 12 0 "" ""
@@ -109,11 +82,7 @@ l28iffalse:
    .srcstep 11 11 17 "13_stems.crexx" 18 3 45 "  say \"Stem dotted lookup mismatch:\" s.alpha"
    load r5,"alpha"
    .traceevent "C" 4 "R" "S" "r" 5 11 11 0 "s" ""
-   load r3,2
-   settp r1,256
-   swap r4,r1
-   settpcall r9,§rxfnsb.stem.get(),r3,r5,768
-   swap r1,r4
+   stemget r9,r1,r5
    .traceevent "V" 6 "R" "S" "r" 9 11 11 0 "s" ""
    sconcat r9,"Stem dotted lookup mismatch:",r9
    .traceevent "O" 4 "R" "S" "r" 9 11 11 0 "" ""
@@ -122,11 +91,7 @@ l56iffalse:
    .srcstep 16 16 17 "13_stems.crexx" 21 1 22 "if s[\"beta\"] \\= \"two\" then do"
    load r11,"beta"
    .traceevent "C" 4 "R" "S" "r" 11 16 16 0 "s" ""
-   load r9,2
-   settp r1,256
-   swap r10,r1
-   settpcall r6,§rxfnsb.stem.get(),r9,r11,768
-   swap r1,r10
+   stemget r6,r1,r11
    .traceevent "V" 6 "R" "S" "r" 6 16 16 0 "s" ""
    rne r11,r6,"two"
    .traceevent "O" 4 "R" "B" "r" 11 16 16 0 "" ""
@@ -140,11 +105,7 @@ l56iffalse:
    .srcstep 15 15 17 "13_stems.crexx" 23 3 47 "  say \"Stem bracket lookup mismatch:\" s[\"beta\"]"
    load r14,"beta"
    .traceevent "C" 4 "R" "S" "r" 14 15 15 0 "s" ""
-   load r12,2
-   settp r1,256
-   swap r13,r1
-   settpcall r10,§rxfnsb.stem.get(),r12,r14,768
-   swap r1,r13
+   stemget r10,r1,r14
    .traceevent "V" 6 "R" "S" "r" 10 15 15 0 "s" ""
    sconcat r14,"Stem bracket lookup mismatch:",r10
    .traceevent "O" 4 "R" "S" "r" 14 15 15 0 "" ""
@@ -155,21 +116,12 @@ l72iffalse:
    .traceevent "C" 4 "R" "S" "r" 13 18 18 0 "s" ""
    load r14,"updated"
    .traceevent "L" 4 "R" "S" "r" 14 18 18 0 "" ""
-   load r11,3
-   settp r1,256
-   swap r12,r1
-   settp r13,768
-   settpcall r10,§rxfnsb.stem.set(),r11,r14,768
-   swap r1,r12
+   stemset r1,r13,r14
    .traceevent "A" 6 "R" "S" "r" 14 18 18 0 "s" ""
    .srcstep 21 21 17 "13_stems.crexx" 27 1 24 "if s.alpha \\= \"updated\" then do"
    load r14,"alpha"
    .traceevent "C" 4 "R" "S" "r" 14 21 21 0 "s" ""
-   load r12,2
-   settp r1,256
-   swap r13,r1
-   settpcall r11,§rxfnsb.stem.get(),r12,r14,768
-   swap r1,r13
+   stemget r11,r1,r14
    .traceevent "V" 6 "R" "S" "r" 11 21 21 0 "s" ""
    rne r14,r11,"updated"
    .traceevent "O" 4 "R" "B" "r" 14 21 21 0 "" ""
@@ -183,11 +135,7 @@ l72iffalse:
    .srcstep 20 20 17 "13_stems.crexx" 29 3 38 "  say \"Stem update mismatch:\" s.alpha"
    load r13,"alpha"
    .traceevent "C" 4 "R" "S" "r" 13 20 20 0 "s" ""
-   load r11,2
-   settp r1,256
-   swap r12,r1
-   settpcall r9,§rxfnsb.stem.get(),r11,r13,768
-   swap r1,r12
+   stemget r9,r1,r13
    .traceevent "V" 6 "R" "S" "r" 9 20 20 0 "s" ""
    sconcat r13,"Stem update mismatch:",r9
    .traceevent "O" 4 "R" "S" "r" 13 20 20 0 "" ""

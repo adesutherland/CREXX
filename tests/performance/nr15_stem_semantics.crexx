@@ -1,0 +1,182 @@
+/* Focused NR-15 semantic gate for the Level B .stem access surface. */
+options levelb comments_dash
+import rxfnsb
+
+errors = 0
+
+/* Missing, default assignment, omitted key, and explicit empty key. */
+item = .stem()
+errors = errors + check(item.get("missing") == "", "missing before default")
+item.alpha = "alpha-one"
+item. = "default-one"
+errors = errors + check(item.alpha == "default-one", "default replaces existing")
+errors = errors + check(item.missing == "default-one", "missing after default")
+item[""] = "empty-tail"
+errors = errors + check(item[""] == "empty-tail", "explicit empty tail")
+errors = errors + check(item.missing == "default-one", "empty tail is not default")
+
+/* Existing/new entries and exact direct/property/bracket equivalence. */
+call item.set("direct", "method-one")
+errors = errors + check(item.direct == "method-one", "method to property")
+item["direct"] = "bracket-two"
+errors = errors + check(item.get("direct") == "bracket-two", "bracket to method")
+item.direct = "property-three"
+errors = errors + check(item["direct"] == "property-three", "property to bracket")
+item["new-tail"] = "new-value"
+errors = errors + check(item.get("new-tail") == "new-value", "new insertion")
+
+/* Repeated O(1) generations followed by selective writes. */
+generations = .stem()
+generations.a = "a0"
+generations.b = "b0"
+generations. = "d1"
+generations.a = "a1"
+generations. = "d2"
+generations.b = "b2"
+generations. = "d3"
+generations.a = "a3"
+errors = errors + check(generations.a == "a3", "selective current generation")
+errors = errors + check(generations.b == "d3", "stale selective write")
+errors = errors + check(generations.c == "d3", "missing repeated generation")
+errors = errors + check(generations.size() = 2, "generation reset preserves tails")
+
+/* Single/multiple tails, separator placement, and dynamic/integer conversion. */
+compound = .stem()
+left = "customer"
+middle = "2026.07"
+right = "total"
+compound.left.middle.right = "149.95"
+errors = errors + check(compound.get("customer.2026.07.total") == "149.95", "dynamic multi-tail")
+errors = errors + check(compound.get("customer2026.07total") == "", "separator preservation")
+number = 42
+compound.number = "integer-tail"
+errors = errors + check(compound.get("42") == "integer-tail", "integer tail conversion")
+compound.12.345 = "numeric-multi"
+errors = errors + check(compound.get("12.345") == "numeric-multi", "numeric separator")
+
+/* Empty, ASCII, Unicode, long, and collision-heavy keys. */
+families = .stem()
+long_key = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" || ,
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+call families.set("", "empty")
+call families.set("ASCII-key", "ascii")
+call families.set("你好🔥", "unicode")
+call families.set(long_key, "long")
+errors = errors + check(families.get("") == "empty", "empty key family")
+errors = errors + check(families.get("ASCII-key") == "ascii", "ASCII key family")
+errors = errors + check(families.get("你好🔥") == "unicode", "Unicode key family")
+errors = errors + check(families.get(long_key) == "long", "long key family")
+
+collision_keys = .string[]
+collision_keys[1] = "AaAaAaAa"
+collision_keys[2] = "AaAaAaBB"
+collision_keys[3] = "AaAaBBAa"
+collision_keys[4] = "AaAaBBBB"
+collision_keys[5] = "AaBBAaAa"
+collision_keys[6] = "AaBBAaBB"
+collision_keys[7] = "AaBBBBAa"
+collision_keys[8] = "AaBBBBBB"
+collision_keys[9] = "BBAaAaAa"
+collision_keys[10] = "BBAaAaBB"
+collision_keys[11] = "BBAaBBAa"
+collision_keys[12] = "BBAaBBBB"
+collision_keys[13] = "BBBBAaAa"
+collision_keys[14] = "BBBBAaBB"
+collision_keys[15] = "BBBBBBAa"
+collision_keys[16] = "BBBBBBBB"
+collision = .stem()
+collision_bucket = collision.hash(collision_keys[1])
+do i = 1 to 16
+  errors = errors + check(collision.hash(collision_keys[i]) = collision_bucket, "collision bucket")
+  call collision.set(collision_keys[i], "value-" || i)
+end
+do i = 1 to 16
+  errors = errors + check(collision.get(collision_keys[i]) == "value-" || i, "collision traversal")
+end
+
+/* Extraction, indexed access, and live/snapshot behavior across reset/write. */
+iter_stem = .stem()
+iter_stem.alpha = "one"
+iter_stem.beta = "two"
+snapshot_it = iter_stem.snapshotIterator()
+live_it = iter_stem.iterator()
+iter_stem. = "reset"
+iter_stem.beta = "TWO"
+iter_stem.gamma = "three"
+errors = errors + check(iter_stem.key(1) == "alpha", "indexed key")
+errors = errors + check(iter_stem.value(1) == "reset", "indexed stale value")
+errors = errors + check(iter_stem.valueAt(2) == "TWO", "indexed selective value")
+tails = iter_stem.tails()
+values = iter_stem.values()
+errors = errors + check(tails[0] = 3 & values[0] = 3, "extraction sizes")
+errors = errors + check(values[1] == "reset" & values[2] == "TWO" & values[3] == "three", "extraction generations")
+snapshot_tail = snapshot_it.next()
+errors = errors + check(snapshot_tail == "alpha" & snapshot_it.value() == "one", "snapshot preserves pre-reset value")
+live_tail = live_it.next()
+errors = errors + check(live_tail == "alpha" & live_it.value() == "reset", "live sees reset value")
+
+/* Object/reference mutation must reach the original receiver. */
+aliased = .stem()
+aliased.base = "before"
+call mutate_stem reference aliased
+errors = errors + check(aliased.base == "after" & aliased.extra == "added", "reference mutation")
+
+/* Native segmented operations must agree with the canonical key surface. */
+segmented = .stem()
+segment_left = "account"
+segment_right = "κλειδί-🔥"
+segment_value = "segmented-value"
+segment_combined = segment_left || "." || segment_right
+segment_result = .string
+assembler stemset2 segmented,segment_left,segment_right,segment_value
+assembler stemget segment_result,segmented,segment_combined
+errors = errors + check(segment_result == segment_value, "segmented set/plain get")
+assembler stemget2 segment_result,segmented,segment_left,segment_right
+errors = errors + check(segment_result == segment_value, "segmented get")
+
+/* Generic value copy/move must carry and isolate binary metadata and attrs. */
+original = .stem()
+original.shared = "original"
+copied = original
+copied.shared = "copy-only"
+errors = errors + check(original.shared == "original", "deep-copy isolation")
+moved = .stem()
+assembler move moved,copied
+errors = errors + check(moved.shared == "copy-only", "move transfer")
+
+/* A class-attribute receiver deliberately retains ordinary method dispatch. */
+holder = .StemHolder()
+call holder.write("inside", "class-value")
+errors = errors + check(holder.read("inside") == "class-value", "class receiver fallback")
+
+if errors = 0 then say "PASS: NR-15 stem semantic matrix"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: NR-15" label
+  return 1
+
+mutate_stem: procedure = .void
+  arg item_ref = reference .stem
+  referenced = dereference item_ref
+  referenced.base = "after"
+  referenced.extra = "added"
+  return
+
+StemHolder: class
+  contents = .stem
+
+  *: factory
+    contents = .stem()
+    return
+
+  write: method = .void
+    arg key = .string, value = .string
+    call contents.set(key, value)
+    return
+
+  read: method = .string
+    arg key = .string
+    return contents.get(key)

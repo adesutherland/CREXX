@@ -2,8 +2,8 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 375
-- Opcode/form rows: 582
+- Unique mnemonics: 384
+- Opcode/form rows: 591
 
 ## Section Counts
 
@@ -16,7 +16,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md) | 46 |
 | [Strings And Characters](instructions/06-strings-and-characters.md) | 34 |
 | [Binary Memory](instructions/07-binary-memory.md) | 43 |
-| [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 32 |
+| [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 41 |
 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 44 |
 | [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md) | 19 |
 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md) | 23 |
@@ -375,6 +375,15 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `stod` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#stod) |
 | `stof` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#stof) |
 | `stoi` | 2 | [Strings And Characters](instructions/06-strings-and-characters.md#stoi) |
+| `stemget` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemget) |
+| `stemget2` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemget2) |
+| `steminit` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#steminit) |
+| `stemkeyat` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemkeyat) |
+| `stemreset` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemreset) |
+| `stemset` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemset) |
+| `stemset2` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemset2) |
+| `stemsize` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemsize) |
+| `stemvalueat` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemvalueat) |
 | `str2redir` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#str2redir) |
 | `strchar` | 2 | [Strings And Characters](instructions/06-strings-and-characters.md#strchar) |
 | `strlen` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strlen) |

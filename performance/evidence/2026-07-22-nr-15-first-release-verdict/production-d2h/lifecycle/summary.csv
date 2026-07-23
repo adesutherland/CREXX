@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+lifecycle-rxvm-before,nr15-load-first-access,crexx,rxvm,before-candidate-a,diagnostic,no,yes,0,elapsed_ns,12,2775000.000000,2811000.000000,2833500.000000,2876250.000000,3100000.000000,34000.000000,1.199929,11.469914,yes
+lifecycle-rxvm-after,nr15-load-first-access,crexx,rxvm,after-d2-hybrid,diagnostic,no,yes,0,elapsed_ns,12,2701000.000000,2770500.000000,2788500.000000,2832750.000000,3036000.000000,34500.000000,1.237224,12.013627,yes
+lifecycle-rxbvm-before,nr15-load-first-access,crexx,rxbvm,before-candidate-a,diagnostic,no,yes,0,elapsed_ns,12,2771000.000000,2810500.000000,2826500.000000,2861250.000000,2961000.000000,33000.000000,1.167522,6.722094,no
+lifecycle-rxbvm-after,nr15-load-first-access,crexx,rxbvm,after-d2-hybrid,diagnostic,no,yes,0,elapsed_ns,12,2712000.000000,2747500.000000,2756000.000000,2803250.000000,2838000.000000,25500.000000,0.925254,4.571843,no

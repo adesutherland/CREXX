@@ -1,0 +1,360 @@
+vm=rxvm candidate=d1 mode=get-hit
+benchmark=nr15_architecture_control
+candidate=d1
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=250
+checksum=2856
+PASS: NR-15 architecture control
+vm=rxvm candidate=d1 mode=get-miss
+benchmark=nr15_architecture_control
+candidate=d1
+mode=get-miss
+family=ascii
+size=64
+iterations=1000
+elapsed_us=218
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d1 mode=set-existing
+benchmark=nr15_architecture_control
+candidate=d1
+mode=set-existing
+family=ascii
+size=64
+iterations=1000
+elapsed_us=245
+checksum=32020
+PASS: NR-15 architecture control
+vm=rxvm candidate=d1 mode=set-new
+benchmark=nr15_architecture_control
+candidate=d1
+mode=set-new
+family=ascii
+size=64
+iterations=1000
+elapsed_us=443
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d1 mode=reset-default
+benchmark=nr15_architecture_control
+candidate=d1
+mode=reset-default
+family=ascii
+size=64
+iterations=1000
+elapsed_us=232
+checksum=2000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d1 mode=multi-tail
+benchmark=nr15_architecture_control
+candidate=d1
+mode=multi-tail
+family=ascii
+size=64
+iterations=1000
+elapsed_us=230
+checksum=9000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2 mode=get-hit
+benchmark=nr15_architecture_control
+candidate=d2
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=219
+checksum=2856
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2 mode=get-miss
+benchmark=nr15_architecture_control
+candidate=d2
+mode=get-miss
+family=ascii
+size=64
+iterations=1000
+elapsed_us=198
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2 mode=set-existing
+benchmark=nr15_architecture_control
+candidate=d2
+mode=set-existing
+family=ascii
+size=64
+iterations=1000
+elapsed_us=237
+checksum=32020
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2 mode=set-new
+benchmark=nr15_architecture_control
+candidate=d2
+mode=set-new
+family=ascii
+size=64
+iterations=1000
+elapsed_us=452
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2 mode=reset-default
+benchmark=nr15_architecture_control
+candidate=d2
+mode=reset-default
+family=ascii
+size=64
+iterations=1000
+elapsed_us=280
+checksum=2000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2 mode=multi-tail
+benchmark=nr15_architecture_control
+candidate=d2
+mode=multi-tail
+family=ascii
+size=64
+iterations=1000
+elapsed_us=206
+checksum=9000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2h mode=get-hit
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=241
+checksum=2856
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2h mode=get-miss
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=get-miss
+family=ascii
+size=64
+iterations=1000
+elapsed_us=213
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2h mode=set-existing
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=set-existing
+family=ascii
+size=64
+iterations=1000
+elapsed_us=234
+checksum=32020
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2h mode=set-new
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=set-new
+family=ascii
+size=64
+iterations=1000
+elapsed_us=385
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2h mode=reset-default
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=reset-default
+family=ascii
+size=64
+iterations=1000
+elapsed_us=245
+checksum=2000
+PASS: NR-15 architecture control
+vm=rxvm candidate=d2h mode=multi-tail
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=multi-tail
+family=ascii
+size=64
+iterations=1000
+elapsed_us=205
+checksum=9000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d1 mode=get-hit
+benchmark=nr15_architecture_control
+candidate=d1
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=218
+checksum=2856
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d1 mode=get-miss
+benchmark=nr15_architecture_control
+candidate=d1
+mode=get-miss
+family=ascii
+size=64
+iterations=1000
+elapsed_us=196
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d1 mode=set-existing
+benchmark=nr15_architecture_control
+candidate=d1
+mode=set-existing
+family=ascii
+size=64
+iterations=1000
+elapsed_us=240
+checksum=32020
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d1 mode=set-new
+benchmark=nr15_architecture_control
+candidate=d1
+mode=set-new
+family=ascii
+size=64
+iterations=1000
+elapsed_us=488
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d1 mode=reset-default
+benchmark=nr15_architecture_control
+candidate=d1
+mode=reset-default
+family=ascii
+size=64
+iterations=1000
+elapsed_us=237
+checksum=2000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d1 mode=multi-tail
+benchmark=nr15_architecture_control
+candidate=d1
+mode=multi-tail
+family=ascii
+size=64
+iterations=1000
+elapsed_us=195
+checksum=9000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2 mode=get-hit
+benchmark=nr15_architecture_control
+candidate=d2
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=215
+checksum=2856
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2 mode=get-miss
+benchmark=nr15_architecture_control
+candidate=d2
+mode=get-miss
+family=ascii
+size=64
+iterations=1000
+elapsed_us=195
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2 mode=set-existing
+benchmark=nr15_architecture_control
+candidate=d2
+mode=set-existing
+family=ascii
+size=64
+iterations=1000
+elapsed_us=259
+checksum=32020
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2 mode=set-new
+benchmark=nr15_architecture_control
+candidate=d2
+mode=set-new
+family=ascii
+size=64
+iterations=1000
+elapsed_us=321
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2 mode=reset-default
+benchmark=nr15_architecture_control
+candidate=d2
+mode=reset-default
+family=ascii
+size=64
+iterations=1000
+elapsed_us=246
+checksum=2000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2 mode=multi-tail
+benchmark=nr15_architecture_control
+candidate=d2
+mode=multi-tail
+family=ascii
+size=64
+iterations=1000
+elapsed_us=244
+checksum=9000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2h mode=get-hit
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=get-hit
+family=ascii
+size=64
+iterations=1000
+elapsed_us=214
+checksum=2856
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2h mode=get-miss
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=get-miss
+family=ascii
+size=64
+iterations=1000
+elapsed_us=192
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2h mode=set-existing
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=set-existing
+family=ascii
+size=64
+iterations=1000
+elapsed_us=256
+checksum=32020
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2h mode=set-new
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=set-new
+family=ascii
+size=64
+iterations=1000
+elapsed_us=386
+checksum=1000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2h mode=reset-default
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=reset-default
+family=ascii
+size=64
+iterations=1000
+elapsed_us=229
+checksum=2000
+PASS: NR-15 architecture control
+vm=rxbvm candidate=d2h mode=multi-tail
+benchmark=nr15_architecture_control
+candidate=d2h
+mode=multi-tail
+family=ascii
+size=64
+iterations=1000
+elapsed_us=208
+checksum=9000
+PASS: NR-15 architecture control

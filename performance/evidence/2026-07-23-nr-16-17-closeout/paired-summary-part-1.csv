@@ -1,0 +1,12 @@
+workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit
+Sieve,rxvm,normalized_work_per_second,24,5120.406873,5134.677971,-0.608131,0.051151,0.503523,0.751083,2.166054,0.504681,0.219629,0.789732,19,24,clear_favorable,no
+Sieve,rxbvm,normalized_work_per_second,12,4014.104838,3904.613354,-4.086959,-3.932225,-2.743273,-2.144954,-1.924117,-2.903619,-3.448462,-2.358776,0,12,clear_adverse,no
+Permute,rxvm,normalized_work_per_second,36,677.484162,678.857754,-2.458187,-0.915489,0.274058,0.843826,1.756749,-0.012013,-0.382001,0.357975,20,36,noisy_inconclusive,no
+Permute,rxbvm,normalized_work_per_second,12,623.428295,633.311899,-1.447952,0.535030,1.412321,2.447599,3.682203,1.414001,0.491119,2.336882,11,12,clear_favorable,no
+Bounce,rxvm,normalized_work_per_second,24,339.589317,329.723319,-4.331095,-3.700724,-2.641212,-2.112807,-0.182347,-2.695388,-3.210854,-2.179923,0,24,clear_adverse,no
+Bounce,rxbvm,normalized_work_per_second,24,312.943423,314.320351,-0.671928,-0.073384,0.354229,1.044999,2.706706,0.498323,0.151147,0.845499,15,24,clear_favorable,no
+Richards,rxvm,normalized_work_per_second,24,1.727164,1.736606,-0.792792,0.202196,0.418403,0.997686,1.682960,0.556703,0.308514,0.804893,21,24,clear_favorable,no
+Richards,rxbvm,normalized_work_per_second,24,1.708517,1.712945,-0.564570,-0.143778,0.154297,0.602802,1.424884,0.259896,0.039481,0.480312,16,24,clear_favorable,no
+Base64,rxvm,normalized_work_per_second,36,1564.192786,1497.012362,-18.300339,-7.092614,-3.463501,1.499805,34.798075,-2.235412,-5.609039,1.138214,11,36,noisy_inconclusive,yes
+Base64,rxbvm,normalized_work_per_second,24,1274.986337,1642.691190,5.483822,21.516489,29.432260,34.849511,51.479886,29.360023,24.715193,34.004853,24,24,clear_favorable,no
+Mandelbrot,rxvm,normalized_work_per_second,24,3305.927291,3353.558805,-3.605702,-1.462672,2.155100,4.552102,8.794746,1.994749,0.371236,3.618263,15,24,clear_favorable,no

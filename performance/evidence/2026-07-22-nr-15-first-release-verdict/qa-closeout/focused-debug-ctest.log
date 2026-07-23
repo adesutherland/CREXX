@@ -1,0 +1,78 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start   90: 13_stems_noopt
+ 1/30 Test   #90: 13_stems_noopt .....................   Passed    0.49 sec
+      Start   91: 13_stems_opt
+ 2/30 Test   #91: 13_stems_opt .......................   Passed    0.45 sec
+      Start   92: repro_multi_tail_stems_noopt
+ 3/30 Test   #92: repro_multi_tail_stems_noopt .......   Passed    0.50 sec
+      Start   93: repro_multi_tail_stems_opt
+ 4/30 Test   #93: repro_multi_tail_stems_opt .........   Passed    0.47 sec
+      Start  338: nr21_fixed_call_contract
+ 5/30 Test  #338: nr21_fixed_call_contract ...........   Passed    1.04 sec
+      Start  339: nr14_frozen_parse_contract
+ 6/30 Test  #339: nr14_frozen_parse_contract .........   Passed    2.53 sec
+      Start  340: nr15_native_stem_contract
+ 7/30 Test  #340: nr15_native_stem_contract ..........   Passed    0.03 sec
+      Start  428: 13_stems_run_noopt
+ 8/30 Test  #428: 13_stems_run_noopt .................   Passed    0.60 sec
+      Start  429: 13_stems_run_opt
+ 9/30 Test  #429: 13_stems_run_opt ...................   Passed    0.53 sec
+      Start  430: repro_multi_tail_stems_run_noopt
+10/30 Test  #430: repro_multi_tail_stems_run_noopt ...   Passed    0.60 sec
+      Start  431: repro_multi_tail_stems_run_opt
+11/30 Test  #431: repro_multi_tail_stems_run_opt .....   Passed    0.53 sec
+      Start  885: trace_stem_sugar
+12/30 Test  #885: trace_stem_sugar ...................   Passed    1.40 sec
+      Start 1030: rxvmstem_storage
+13/30 Test #1030: rxvmstem_storage ...................   Passed    0.00 sec
+      Start 1034: ts_regvalue_tester
+14/30 Test #1034: ts_regvalue_tester .................   Passed    0.00 sec
+      Start 1059: rxasreferencetests
+15/30 Test #1059: rxasreferencetests .................   Passed    0.00 sec
+      Start 1060: rxasreferencetests-rxbvm
+16/30 Test #1060: rxasreferencetests-rxbvm ...........   Passed    0.00 sec
+      Start 1061: rxasreferencecatchtests
+17/30 Test #1061: rxasreferencecatchtests ............   Passed    0.00 sec
+      Start 1062: rxasreferencecatchtests-rxbvm
+18/30 Test #1062: rxasreferencecatchtests-rxbvm ......   Passed    0.00 sec
+      Start 1468: ts_stem_noopt
+19/30 Test #1468: ts_stem_noopt ......................   Passed    0.12 sec
+      Start 1469: ts_stem_opt
+20/30 Test #1469: ts_stem_opt ........................   Passed    0.05 sec
+      Start 1480: ts_stem_errors_noopt
+21/30 Test #1480: ts_stem_errors_noopt ...............   Passed    0.12 sec
+      Start 1481: ts_stem_errors_opt
+22/30 Test #1481: ts_stem_errors_opt .................   Passed    0.05 sec
+      Start 1817: nr15_stem_semantics_rxvm_noopt
+23/30 Test #1817: nr15_stem_semantics_rxvm_noopt .....   Passed    0.12 sec
+      Start 1818: nr15_stem_semantics_rxvm_opt
+24/30 Test #1818: nr15_stem_semantics_rxvm_opt .......   Passed    0.05 sec
+      Start 1819: nr15_stem_access_rxvm_noopt
+25/30 Test #1819: nr15_stem_access_rxvm_noopt ........   Passed    0.12 sec
+      Start 1820: nr15_stem_access_rxvm_opt
+26/30 Test #1820: nr15_stem_access_rxvm_opt ..........   Passed    0.05 sec
+      Start 1821: nr15_stem_semantics_rxbvm_noopt
+27/30 Test #1821: nr15_stem_semantics_rxbvm_noopt ....   Passed    0.12 sec
+      Start 1822: nr15_stem_semantics_rxbvm_opt
+28/30 Test #1822: nr15_stem_semantics_rxbvm_opt ......   Passed    0.05 sec
+      Start 1823: nr15_stem_access_rxbvm_noopt
+29/30 Test #1823: nr15_stem_access_rxbvm_noopt .......   Passed    0.12 sec
+      Start 1824: nr15_stem_access_rxbvm_opt
+30/30 Test #1824: nr15_stem_access_rxbvm_opt .........   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 30
+
+Label Time Summary:
+compiler       =   5.00 sec*proc (4 tests)
+interpreter    =   0.00 sec*proc (1 test)
+linked_opt     =   1.36 sec*proc (8 tests)
+nr15           =   0.72 sec*proc (10 tests)
+parse          =   2.53 sec*proc (1 test)
+performance    =   4.28 sec*proc (11 tests)
+rxbin          =   3.60 sec*proc (3 tests)
+semantics      =   0.34 sec*proc (4 tests)
+smoke          =   2.12 sec*proc (5 tests)
+stage4         =   1.40 sec*proc (1 test)
+stem           =   0.72 sec*proc (10 tests)
+
+Total Test time (real) =  10.24 sec

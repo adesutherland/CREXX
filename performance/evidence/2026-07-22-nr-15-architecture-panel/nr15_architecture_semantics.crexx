@@ -1,0 +1,234 @@
+/* Focused common semantics for the approved NR-15 D1/D2/D2-hybrid panel. */
+options levelb comments_dash
+import rxfnsb
+
+say "CHECK: D1"
+call test_d1()
+say "CHECK: D2"
+call test_d2()
+say "CHECK: D2-hybrid"
+call test_d2h()
+say "PASS: NR-15 architecture panel semantics"
+return 0
+
+test_d1: procedure
+  target = .stem()
+  result = .string
+  say "D1: empty"
+  key = ""
+  value = "empty-key"
+  assembler nr15d1set target,key,value
+  assembler nr15d1get result,target,key
+  call expect(result == value, "D1 empty key")
+
+  key = "κλειδί-🔥"
+  say "D1: Unicode"
+  value = "unicode-value"
+  assembler nr15d1set target,key,value
+  assembler nr15d1get result,target,key
+  call expect(result == value, "D1 Unicode")
+
+  key = "missing"
+  say "D1: reset"
+  assembler nr15d1get result,target,key
+  call expect(result == "", "D1 initial miss")
+  value = "assigned-default"
+  assembler nr15d1reset target,value
+  assembler nr15d1get result,target,key
+  call expect(result == value, "D1 missing default")
+  key = "κλειδί-🔥"
+  assembler nr15d1get result,target,key
+  call expect(result == value, "D1 generation reset")
+  value = "updated"
+  assembler nr15d1set target,key,value
+  assembler nr15d1get result,target,key
+  call expect(result == value, "D1 update after reset")
+
+  key = "collision-15"
+  say "D1: collision"
+  value = "chain-head"
+  assembler nr15d1set target,key,value
+  key = "collision-60"
+  value = "chain-tail"
+  assembler nr15d1set target,key,value
+  assembler nr15d1get result,target,key
+  call expect(result == value, "D1 collision tail")
+  key = "collision-15"
+  assembler nr15d1get result,target,key
+  call expect(result == "chain-head", "D1 collision head")
+
+  left = "account"
+  say "D1: segments"
+  right = "κλειδί-🔥"
+  value = "segmented"
+  assembler nr15d1set2 target,left,right,value
+  combined = left || "." || right
+  assembler nr15d1get result,target,combined
+  call expect(result == value, "D1 segmented set/plain get")
+  assembler nr15d1get2 result,target,left,right
+  call expect(result == value, "D1 segmented get")
+  index = 1
+  assembler nr15d1keyat result,target,index
+  call expect(result == "", "D1 insertion-order key")
+  assembler nr15d1valueat result,target,index
+  call expect(result == "assigned-default", "D1 generation-aware valueAt")
+
+  copy = target
+  say "D1: copy"
+  value = "copy-only"
+  assembler nr15d1set copy,key,value
+  assembler nr15d1get result,target,key
+  call expect(result == "chain-head", "D1 deep-copy isolation")
+  moved = .stem()
+  assembler move moved,copy
+  assembler nr15d1get result,moved,key
+  call expect(result == "copy-only", "D1 move transfer")
+  return
+
+test_d2: procedure
+  target = .Nr15PanelStem()
+  result = .string
+  key = ""
+  value = "empty-key"
+  assembler nr15d2set target,key,value
+  assembler nr15d2get result,target,key
+  call expect(result == value, "D2 empty key")
+
+  key = "κλειδί-🔥"
+  value = "unicode-value"
+  assembler nr15d2set target,key,value
+  assembler nr15d2get result,target,key
+  call expect(result == value, "D2 Unicode")
+
+  key = "missing"
+  assembler nr15d2get result,target,key
+  call expect(result == "", "D2 initial miss")
+  value = "assigned-default"
+  assembler nr15d2reset target,value
+  assembler nr15d2get result,target,key
+  call expect(result == value, "D2 missing default")
+  key = "κλειδί-🔥"
+  assembler nr15d2get result,target,key
+  call expect(result == value, "D2 generation reset")
+  value = "updated"
+  assembler nr15d2set target,key,value
+  assembler nr15d2get result,target,key
+  call expect(result == value, "D2 update after reset")
+
+  key = "collision-15"
+  value = "chain-head"
+  assembler nr15d2set target,key,value
+  key = "collision-60"
+  value = "chain-tail"
+  assembler nr15d2set target,key,value
+  assembler nr15d2get result,target,key
+  call expect(result == value, "D2 collision tail")
+  key = "collision-15"
+  assembler nr15d2get result,target,key
+  call expect(result == "chain-head", "D2 collision head")
+
+  left = "account"
+  right = "κλειδί-🔥"
+  value = "segmented"
+  assembler nr15d2set2 target,left,right,value
+  combined = left || "." || right
+  assembler nr15d2get result,target,combined
+  call expect(result == value, "D2 segmented set/plain get")
+  assembler nr15d2get2 result,target,left,right
+  call expect(result == value, "D2 segmented get")
+  index = 1
+  assembler nr15d2keyat result,target,index
+  call expect(result == "", "D2 insertion-order key")
+  assembler nr15d2valueat result,target,index
+  call expect(result == "assigned-default", "D2 generation-aware valueAt")
+
+  copy = target
+  value = "copy-only"
+  assembler nr15d2set copy,key,value
+  assembler nr15d2get result,target,key
+  call expect(result == "chain-head", "D2 deep-copy isolation")
+  moved = .Nr15PanelStem()
+  assembler move moved,copy
+  assembler nr15d2get result,moved,key
+  call expect(result == "copy-only", "D2 move transfer")
+  return
+
+test_d2h: procedure
+  target = .Nr15PanelStem()
+  result = .string
+  key = ""
+  value = "empty-key"
+  assembler nr15d2hset target,key,value
+  assembler nr15d2hget result,target,key
+  call expect(result == value, "D2-hybrid empty key")
+
+  key = "κλειδί-🔥"
+  value = "unicode-value"
+  assembler nr15d2hset target,key,value
+  assembler nr15d2hget result,target,key
+  call expect(result == value, "D2-hybrid Unicode")
+
+  key = "missing"
+  assembler nr15d2hget result,target,key
+  call expect(result == "", "D2-hybrid initial miss")
+  value = "assigned-default"
+  assembler nr15d2hreset target,value
+  assembler nr15d2hget result,target,key
+  call expect(result == value, "D2-hybrid missing default")
+  key = "κλειδί-🔥"
+  assembler nr15d2hget result,target,key
+  call expect(result == value, "D2-hybrid generation reset")
+  value = "updated"
+  assembler nr15d2hset target,key,value
+  assembler nr15d2hget result,target,key
+  call expect(result == value, "D2-hybrid update after reset")
+
+  key = "collision-15"
+  value = "chain-head"
+  assembler nr15d2hset target,key,value
+  key = "collision-60"
+  value = "chain-tail"
+  assembler nr15d2hset target,key,value
+  assembler nr15d2hget result,target,key
+  call expect(result == value, "D2-hybrid collision tail")
+  key = "collision-15"
+  assembler nr15d2hget result,target,key
+  call expect(result == "chain-head", "D2-hybrid collision head")
+
+  left = "account"
+  right = "κλειδί-🔥"
+  value = "segmented"
+  assembler nr15d2hset2 target,left,right,value
+  combined = left || "." || right
+  assembler nr15d2hget result,target,combined
+  call expect(result == value, "D2-hybrid segmented set/plain get")
+  assembler nr15d2hget2 result,target,left,right
+  call expect(result == value, "D2-hybrid segmented get")
+  index = 1
+  assembler nr15d2hkeyat result,target,index
+  call expect(result == "", "D2-hybrid insertion-order key")
+  assembler nr15d2hvalueat result,target,index
+  call expect(result == "assigned-default", "D2-hybrid generation-aware valueAt")
+
+  copy = target
+  value = "copy-only"
+  assembler nr15d2hset copy,key,value
+  assembler nr15d2hget result,target,key
+  call expect(result == "chain-head", "D2-hybrid deep-copy isolation")
+  moved = .Nr15PanelStem()
+  assembler move moved,copy
+  assembler nr15d2hget result,moved,key
+  call expect(result == "copy-only", "D2-hybrid move transfer")
+  return
+
+expect: procedure
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: NR-15 architecture panel" label
+    exit 1
+  end
+  return
+
+Nr15PanelStem: class
+  *: factory
+    return

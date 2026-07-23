@@ -1,0 +1,105 @@
+* NR-18 post-NR-27 producer-destination and jump-table flow proofs.
+
+forward_integer_result() .locals=3
+    load r0,7
+    icopy r1,r0
+    ret r1
+
+forward_float_result() .locals=4
+    load r2,2.5
+    fcopy r3,r2
+    ret r3
+
+temporary_still_live() .locals=7
+    load r4,9
+    icopy r5,r4
+    iadd r6,r4,1
+    ret r5
+
+throwing_producer_deferred() .locals=10
+    iadd r7,r8,1
+    icopy r9,r7
+    ret r9
+
+string_ownership_deferred() .locals=13
+    load r10,"value"
+    scopy r11,r10
+    ret r11
+
+trace_between_producer_and_copy() .locals=15
+    load r12,13
+    .traceevent "L" 4 "R" "I" "r" 12 0 0 0 "producer" ""
+    icopy r13,r12
+    ret r13
+
+async_final_observation() .locals=18
+    sigbr async_final_observation_caught,"FAILURE"
+    load r14,15
+    icopy r15,r14
+    ret r15
+async_final_observation_caught:
+    ieq r16,r15,15
+    ret r16
+
+compare_producer_result() .locals=25
+    load r22,31
+    ieq r23,r22,31
+    icopy r24,r23
+    ret r24
+
+typed_view_mismatch() .locals=27
+    load r25,2
+    fcopy r26,r25
+    ret r26
+
+source_step_after_copy() .locals=29
+    load r27,3
+    icopy r28,r27
+    .srcstep 1 1 17 "nr18-flow.rxas" 1 1 23 "source-step-after-copy"
+    ret r28
+
+metadata_between_producer_and_copy() .locals=32
+    load r29,4
+    .meta "nr18.producer"="b" ".int" r29
+    icopy r30,r29
+    ret r30
+    .meta "nr18.producer"
+
+destination_read_by_producer() .locals=34
+    ieq r31,r32,1
+    icopy r32,r31
+    ret r32
+
+jump_table_enables_local_flow() .locals=42
+    .jtable nr18_words linear
+    load r17,"miss"
+    jumpr r17,nr18_words
+    load r18,19
+    icopy r19,r18
+    ret r19
+nr18_hit: .jcase nr18_words "hit"
+    load r20,21
+    icopy r21,r20
+    ret r21
+nr18_second: .jcase nr18_words "second"
+    load r34,35
+    icopy r35,r34
+    ret r35
+nr18_third: .jcase nr18_words "third"
+    load r36,37
+    icopy r37,r36
+    ret r37
+nr18_fourth: .jcase nr18_words "fourth"
+    load r38,39
+    icopy r39,r38
+    ret r39
+
+jump_table_without_local_miss_edge() .locals=43
+    .jtable nr18_no_miss linear
+    br nr18_no_miss_jump
+nr18_no_miss_hit: .jcase nr18_no_miss "hit"
+    ret 1
+nr18_no_miss_jump:
+    load r40,41
+    icopy r41,r40
+    jumpr r42,nr18_no_miss

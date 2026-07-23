@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <ctype.h>
 #include "rxcpmain.h"
@@ -378,6 +379,174 @@ static void append_semantic_operation_trace_event(OutputFragment *output,
                                        "");
 }
 
+enum native_stem_call_kind {
+    NATIVE_STEM_CALL_NONE = 0,
+    NATIVE_STEM_CALL_GET,
+    NATIVE_STEM_CALL_SET,
+    NATIVE_STEM_CALL_SIZE,
+    NATIVE_STEM_CALL_KEY,
+    NATIVE_STEM_CALL_VALUE
+};
+
+/*
+ * Bypass method selection/call scaffolding only for a concrete rxfnsb.stem
+ * held in simple storage. Complex receiver expressions and class attributes
+ * retain the ordinary method path because their mutation/copyback contract is
+ * not represented by one register operand.
+ */
+static enum native_stem_call_kind native_stem_call_kind(ASTNode *node) {
+    ASTNode *receiver;
+    Symbol *method_symbol;
+    Symbol *receiver_symbol;
+    char *scope_name;
+    enum native_stem_call_kind kind = NATIVE_STEM_CALL_NONE;
+
+    if (!node || node->node_type != MEMBER_CALL ||
+        !node->symbolNode || !node->symbolNode->symbol ||
+        !node->node_string) return NATIVE_STEM_CALL_NONE;
+
+    receiver = node->child;
+    if (!receiver || receiver->node_type != VAR_SYMBOL || receiver->child ||
+        !receiver->symbolNode || !receiver->symbolNode->symbol)
+        return NATIVE_STEM_CALL_NONE;
+    receiver_symbol = receiver->symbolNode->symbol;
+    if (receiver_symbol->scope &&
+        (receiver_symbol->scope->type == SCOPE_CLASS ||
+         (receiver_symbol->scope->defining_node &&
+          receiver_symbol->scope->defining_node->node_type == CLASS_DEF)))
+        return NATIVE_STEM_CALL_NONE;
+
+    method_symbol = node->symbolNode->symbol;
+    if (!method_symbol->scope) return NATIVE_STEM_CALL_NONE;
+    scope_name = scp_frnm(method_symbol->scope);
+    if (!scope_name) return NATIVE_STEM_CALL_NONE;
+    if (strcmp(scope_name, "rxfnsb.stem") != 0) {
+        free(scope_name);
+        return NATIVE_STEM_CALL_NONE;
+    }
+    free(scope_name);
+
+    if (node->node_string_length == 3 &&
+        strncasecmp(node->node_string, "get", 3) == 0)
+        kind = NATIVE_STEM_CALL_GET;
+    else if (node->node_string_length == 3 &&
+             strncasecmp(node->node_string, "set", 3) == 0)
+        kind = NATIVE_STEM_CALL_SET;
+    else if (node->node_string_length == 4 &&
+             strncasecmp(node->node_string, "size", 4) == 0)
+        kind = NATIVE_STEM_CALL_SIZE;
+    else if (node->node_string_length == 3 &&
+             strncasecmp(node->node_string, "key", 3) == 0)
+        kind = NATIVE_STEM_CALL_KEY;
+    else if ((node->node_string_length == 5 &&
+              strncasecmp(node->node_string, "value", 5) == 0) ||
+             (node->node_string_length == 7 &&
+              strncasecmp(node->node_string, "valueat", 7) == 0))
+        kind = NATIVE_STEM_CALL_VALUE;
+    return kind;
+}
+
+static int emit_native_stem_call(ASTNode *node) {
+    enum native_stem_call_kind kind = native_stem_call_kind(node);
+    ASTSemanticContextKind semantic_kind;
+    ASTNode *receiver;
+    ASTNode *arg1;
+    ASTNode *arg2;
+    ASTNode *operand;
+    char *instruction = 0;
+
+    if (kind == NATIVE_STEM_CALL_NONE) return 0;
+    receiver = node->child;
+    arg1 = receiver ? receiver->sibling : 0;
+    arg2 = arg1 ? arg1->sibling : 0;
+
+    if (kind == NATIVE_STEM_CALL_GET &&
+        (!arg1 || arg1->node_type == NOVAL || arg2)) return 0;
+    if (kind == NATIVE_STEM_CALL_SET &&
+        (!arg1 || !arg2 || arg2->sibling)) return 0;
+    if (kind == NATIVE_STEM_CALL_SIZE &&
+        ((arg1 && arg1->node_type != NOVAL) || arg2)) return 0;
+    if ((kind == NATIVE_STEM_CALL_KEY || kind == NATIVE_STEM_CALL_VALUE) &&
+        (!arg1 || arg1->node_type == NOVAL || arg2)) return 0;
+
+    if (!node->output) node->output = output_f();
+    add_variable_metadata(node);
+    semantic_kind = ast_semantic_context_kind(node);
+    for (operand = receiver; operand; operand = operand->sibling) {
+        if (operand->output) output_concat(node->output, operand->output);
+        if (operand == arg1 && arg1->node_type != NOVAL &&
+            semantic_context_is_sugar_access(semantic_kind))
+            append_semantic_compound_trace_event(node->output, receiver, arg1);
+    }
+
+    switch (kind) {
+        case NATIVE_STEM_CALL_GET:
+            instruction = mprintf("   stemget %c%d,%c%d,%c%d\n",
+                                  node->register_type, node->register_num,
+                                  receiver->register_type, receiver->register_num,
+                                  arg1->register_type, arg1->register_num);
+            break;
+        case NATIVE_STEM_CALL_SET:
+            if (arg1->node_type == NOVAL) {
+                instruction = mprintf("   stemreset %c%d,%c%d\n",
+                                      receiver->register_type, receiver->register_num,
+                                      arg2->register_type, arg2->register_num);
+            } else {
+                instruction = mprintf("   stemset %c%d,%c%d,%c%d\n",
+                                      receiver->register_type, receiver->register_num,
+                                      arg1->register_type, arg1->register_num,
+                                      arg2->register_type, arg2->register_num);
+            }
+            break;
+        case NATIVE_STEM_CALL_SIZE:
+            instruction = mprintf("   stemsize %c%d,%c%d\n",
+                                  node->register_type, node->register_num,
+                                  receiver->register_type, receiver->register_num);
+            break;
+        case NATIVE_STEM_CALL_KEY:
+            instruction = mprintf("   stemkeyat %c%d,%c%d,%c%d\n",
+                                  node->register_type, node->register_num,
+                                  receiver->register_type, receiver->register_num,
+                                  arg1->register_type, arg1->register_num);
+            break;
+        case NATIVE_STEM_CALL_VALUE:
+            instruction = mprintf("   stemvalueat %c%d,%c%d,%c%d\n",
+                                  node->register_type, node->register_num,
+                                  receiver->register_type, receiver->register_num,
+                                  arg1->register_type, arg1->register_num);
+            break;
+        default:
+            return 0;
+    }
+    output_append_text(node->output, instruction);
+    free(instruction);
+
+    for (operand = receiver; operand; operand = operand->sibling) {
+        if (operand->cleanup) output_concat(node->output, operand->cleanup);
+    }
+
+    type_promotion(node);
+    if (semantic_context_is_sugar_access(semantic_kind)) {
+        append_semantic_access_value_trace_event(node->output,
+                                                 semantic_kind,
+                                                 receiver,
+                                                 node,
+                                                 arg2);
+    } else {
+        char *symbol_name = trace_symbol_name_malloc(node);
+        output_append_trace_event_register(node->output,
+                                           RXBIN_TRACE_KIND_FUNCTION,
+                                           RXBIN_TRACE_MODE_I,
+                                           node,
+                                           0,
+                                           0,
+                                           symbol_name,
+                                           "");
+        if (symbol_name) free(symbol_name);
+    }
+    return 1;
+}
+
 static ValueType operand_type_from_prefix(char *tp_prefix, ASTNode *node) {
     if (tp_prefix) {
         switch (*tp_prefix) {
@@ -641,6 +810,8 @@ void emit_expression(ASTNode *node, void *payload) {
         case MEMBER_CALL:
         case FUNCTION:
             {
+            if (node->node_type == MEMBER_CALL && emit_native_stem_call(node))
+                break;
             int can_fuse_direct_call =
                     !is_interface_member_call(node) &&
                     !is_interface_factory_call(node);

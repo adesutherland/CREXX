@@ -2357,6 +2357,47 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
     }
 }
 
+static void reserve_procedure_queue(Assembler_Context *context, size_t required) {
+    size_t new_capacity;
+    instruction_queue *new_queue;
+
+    if (required <= context->procedure_queue_capacity) return;
+    new_capacity = context->procedure_queue_capacity
+            ? context->procedure_queue_capacity : 64;
+    while (new_capacity < required) new_capacity *= 2;
+    new_queue = realloc(context->procedure_queue,
+                        new_capacity * sizeof(*new_queue));
+    if (!new_queue) {
+        RX_PANIC_OOM("realloc rxas procedure optimiser stream",
+                     new_capacity * sizeof(*new_queue),
+                     context && context->file_name ? context->file_name : 0);
+    }
+    memset(new_queue + context->procedure_queue_capacity, 0,
+           (new_capacity - context->procedure_queue_capacity) * sizeof(*new_queue));
+    context->procedure_queue = new_queue;
+    context->procedure_queue_capacity = new_capacity;
+}
+
+/* Move the stable head of the bounded local peephole into the transient
+ * procedure stream. The variable operand vector moves with the record. */
+static void retire_oldest_queue_item(Assembler_Context *context) {
+    instruction_queue *destination;
+
+    if (!context->optimiser_queue_items) return;
+    reserve_procedure_queue(context, context->procedure_queue_items + 1);
+    destination = &context->procedure_queue[context->procedure_queue_items++];
+    *destination = context->optimiser_queue[0];
+
+    if (context->optimiser_queue_items > 1) {
+        memmove(&context->optimiser_queue[0],
+                &context->optimiser_queue[1],
+                sizeof(instruction_queue) * (context->optimiser_queue_items - 1));
+    }
+    context->optimiser_queue_items--;
+    memset(&context->optimiser_queue[context->optimiser_queue_items], 0,
+           sizeof(instruction_queue));
+}
+
 static void queue_instruction_ext_full(Assembler_Context *context, enum queue_item_type type,
                                        Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
                                        Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token,
@@ -2367,18 +2408,7 @@ static void queue_instruction_ext_full(Assembler_Context *context, enum queue_it
     /* Remove old instructions to get queue down to the target length */
     /* Note that instruction rules can add instructions to the queue  */
     while (context->optimiser_queue_items >= OPTIMISER_TARGET_MAX_QUEUE_SIZE) {
-        executeQueuedItem(context, context->optimiser_queue);
-        rxas_free_queue_item(context->optimiser_queue);
-
-        /* Move the queue */
-        memmove(&context->optimiser_queue[0],
-                &context->optimiser_queue[1],
-                sizeof(instruction_queue) * (context->optimiser_queue_items - 1));
-
-        /* One less instruction in the queue */
-        context->optimiser_queue_items--;
-        memset(&context->optimiser_queue[context->optimiser_queue_items], 0,
-               sizeof(instruction_queue));
+        retire_oldest_queue_item(context);
     }
 
     /* Add to the end of the queue */
@@ -2409,14 +2439,7 @@ static void queue_opcode(Assembler_Context *context,
     instruction_queue *item;
 
     while (context->optimiser_queue_items >= OPTIMISER_TARGET_MAX_QUEUE_SIZE) {
-        executeQueuedItem(context, context->optimiser_queue);
-        rxas_free_queue_item(context->optimiser_queue);
-        memmove(&context->optimiser_queue[0],
-                &context->optimiser_queue[1],
-                sizeof(instruction_queue) * (context->optimiser_queue_items - 1));
-        context->optimiser_queue_items--;
-        memset(&context->optimiser_queue[context->optimiser_queue_items], 0,
-               sizeof(instruction_queue));
+        retire_oldest_queue_item(context);
     }
 
     item = &context->optimiser_queue[context->optimiser_queue_items++];
@@ -2634,11 +2657,21 @@ void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol) {
 void flushopt(Assembler_Context *context) {
     size_t i;
     if (context->optimise) {
-        /* Output the queue */
-        for (i=0; i<context->optimiser_queue_items; i++) {
-            executeQueuedItem(context, context->optimiser_queue +  i);
-            rxas_free_queue_item(context->optimiser_queue + i);
+        while (context->optimiser_queue_items) {
+            retire_oldest_queue_item(context);
         }
-        context->optimiser_queue_items = 0;
+
+        rxas_flow_optimise(context,
+                           context->procedure_queue,
+                           context->procedure_queue_items);
+
+        /* Emit the analysed stream through the unchanged assembler path.
+         * EMPTY records are deliberate whole-procedure removals. */
+        for (i = 0; i < context->procedure_queue_items; i++) {
+            executeQueuedItem(context, context->procedure_queue + i);
+            rxas_free_queue_item(context->procedure_queue + i);
+            memset(context->procedure_queue + i, 0, sizeof(instruction_queue));
+        }
+        context->procedure_queue_items = 0;
     }
 }

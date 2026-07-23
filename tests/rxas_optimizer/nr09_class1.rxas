@@ -79,14 +79,19 @@ null4() .locals=8
 loadcopy() .locals=8
     load r0,10
     icopy r1,r0
+    say r1
     ret
 
 loaddifferent() .locals=8
     load r0,11
     load r1,12
+    say r0
+    say r1
     ret
 
 loadsame() .locals=8
     load r0,13
     load r1,13
+    say r0
+    say r1
     ret

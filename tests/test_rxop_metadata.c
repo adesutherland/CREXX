@@ -289,6 +289,26 @@ int main(void) {
     effects = rxop_effects(OP_NULL_REG);
     check(effects.reads == RXOP_OP_NONE && effects.kills == RXOP_OP_1,
           "NULL kill effects regression", &op_table[OP_NULL_REG]);
+    effects = rxop_effects(OP_LOAD_REG_DECIMAL);
+    check((effects.semantics & RXOP_SEM_MAY_THROW) != 0,
+          "decimal literal load must expose plugin failure",
+          &op_table[OP_LOAD_REG_DECIMAL]);
+    effects = rxop_effects(OP_DCOPY_REG_REG);
+    check((effects.semantics & RXOP_SEM_MAY_THROW) != 0,
+          "decimal copy must expose missing-source failure",
+          &op_table[OP_DCOPY_REG_REG]);
+    effects = rxop_effects(OP_ITOF_REG);
+    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
+          "integer-to-float conversion must remain non-throwing",
+          &op_table[OP_ITOF_REG]);
+    effects = rxop_effects(OP_ITOF_REG_REG);
+    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
+          "two-register integer-to-float conversion must remain non-throwing",
+          &op_table[OP_ITOF_REG_REG]);
+    effects = rxop_effects(OP_FEQ_REG_REG_FLOAT);
+    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
+          "float comparison must remain non-throwing",
+          &op_table[OP_FEQ_REG_REG_FLOAT]);
     effects = rxop_effects(OP_ENDLIFE_REG);
     check(effects.reads == RXOP_OP_1 && effects.writes == RXOP_OP_1 &&
               effects.kills == RXOP_OP_NONE &&

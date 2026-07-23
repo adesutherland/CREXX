@@ -1,0 +1,56 @@
+* NR-18 optimized/no-opt semantic equivalence in both VM modes.
+
+main() .locals=8
+    call r0,nr18_integer()
+    ieq r1,r0,7
+    brf failed,r1
+
+    call r2,nr18_float()
+    feq r3,r2,2.5
+    brf failed,r3
+
+    call r4,nr18_jump_hit()
+    ieq r5,r4,4
+    brf failed,r5
+
+    call r6,nr18_jump_miss()
+    ieq r7,r6,0
+    brf failed,r7
+
+    say "PASS: NR-18 flow runtime"
+    ret 0
+failed:
+    say "FAIL: NR-18 flow runtime"
+    ret 1
+
+nr18_integer() .locals=2
+    load r0,7
+    icopy r1,r0
+    ret r1
+
+nr18_float() .locals=2
+    load r0,2.5
+    fcopy r1,r0
+    ret r1
+
+nr18_jump_hit() .locals=2
+    .jtable nr18_hit_words linear
+    load r0,"fourth"
+    jumpr r0,nr18_hit_words
+    ret 0
+nr18_hit_one: .jcase nr18_hit_words "one"
+    ret 1
+nr18_hit_two: .jcase nr18_hit_words "two"
+    ret 2
+nr18_hit_three: .jcase nr18_hit_words "three"
+    ret 3
+nr18_hit_four: .jcase nr18_hit_words "fourth"
+    ret 4
+
+nr18_jump_miss() .locals=1
+    .jtable nr18_miss_words linear
+    load r0,"missing"
+    jumpr r0,nr18_miss_words
+    ret 0
+nr18_miss_one: .jcase nr18_miss_words "one"
+    ret 1

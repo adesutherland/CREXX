@@ -37,6 +37,15 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
     endforeach()
 endforeach()
 
+# crexx_add_rexx_opt_matrix registers optimized images with the shared runtime
+# fixture, while these NR-15 target groups are deliberately not part of ALL.
+# Make the same serialized fixture own both groups so an isolated CTest run can
+# generate the four noopt images instead of depending on a warm build tree.
+add_dependencies(linked_opt_runtime_artifacts
+        performance_nr15_stem_semantics
+        performance_nr15_stem_access
+        performance_nr16_17_stable_state)
+
 add_custom_target(performance_classlib_iterator ALL)
 foreach(_crexx_runner IN ITEMS rxvm rxbvm)
     crexx_add_rexx_opt_matrix(
@@ -167,3 +176,58 @@ crexx_add_rexx_opt_matrix(
         DEPENDS library compiler_exit_bin
         TEST_LABELS "performance;inlining"
 )
+
+add_custom_target(performance_nr15_stem_semantics)
+add_custom_target(performance_nr15_stem_access)
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rexx_opt_matrix(
+            NAME nr15_stem_semantics_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr15_stem_semantics.crexx
+            TARGET_GROUP performance_nr15_stem_semantics
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH}
+            TEST_LABELS "performance;stem;nr15;semantics"
+    )
+    crexx_add_rexx_opt_matrix(
+            NAME nr15_stem_access_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr15_stem_access_compare.crexx
+            TARGET_GROUP performance_nr15_stem_access
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH}
+            TEST_LABELS "performance;stem;nr15"
+    )
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        set_tests_properties(nr15_stem_semantics_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-15 stem semantic matrix"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+        set_tests_properties(nr15_stem_access_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-15 stem access compare"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(performance_nr16_17_stable_state)
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rexx_opt_matrix(
+            NAME nr16_17_stable_state_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr16_17_stable_state_compare.crexx
+            TARGET_GROUP performance_nr16_17_stable_state
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH} -a control 10
+            TEST_LABELS "performance;trace;address;calls;nr16;nr17"
+    )
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        set_tests_properties(nr16_17_stable_state_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: NR-16/17 stable-state compare"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()

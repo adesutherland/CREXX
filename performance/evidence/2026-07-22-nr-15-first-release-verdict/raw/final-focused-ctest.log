@@ -1,0 +1,49 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start  428: 13_stems_run_opt
+      Start  430: repro_multi_tail_stems_run_opt
+      Start 1816: nr15_stem_semantics_rxvm_opt
+      Start 1818: nr15_stem_access_rxvm_opt
+      Start 1820: nr15_stem_semantics_rxbvm_opt
+      Start 1822: nr15_stem_access_rxbvm_opt
+      Start  884: trace_stem_sugar
+      Start   92: repro_multi_tail_stems_noopt
+      Start   91: 13_stems_opt
+      Start   90: 13_stems_noopt
+ 1/17 Test   #91: 13_stems_opt .......................   Passed    0.19 sec
+      Start   93: repro_multi_tail_stems_opt
+ 2/17 Test   #90: 13_stems_noopt .....................   Passed    0.19 sec
+      Start  427: 13_stems_run_noopt
+ 3/17 Test   #92: repro_multi_tail_stems_noopt .......   Passed    0.19 sec
+      Start  429: repro_multi_tail_stems_run_noopt
+ 4/17 Test #1816: nr15_stem_semantics_rxvm_opt .......   Passed    0.25 sec
+      Start 1821: nr15_stem_access_rxbvm_noopt
+ 5/17 Test #1818: nr15_stem_access_rxvm_opt ..........   Passed    0.25 sec
+      Start 1817: nr15_stem_access_rxvm_noopt
+ 6/17 Test #1817: nr15_stem_access_rxvm_noopt ........   Passed    0.03 sec
+      Start 1819: nr15_stem_semantics_rxbvm_noopt
+ 7/17 Test  #430: repro_multi_tail_stems_run_opt .....   Passed    0.30 sec
+      Start 1815: nr15_stem_semantics_rxvm_noopt
+ 8/17 Test  #428: 13_stems_run_opt ...................   Passed    0.30 sec
+ 9/17 Test #1815: nr15_stem_semantics_rxvm_noopt .....   Passed    0.02 sec
+10/17 Test   #93: repro_multi_tail_stems_opt .........   Passed    0.17 sec
+11/17 Test  #427: 13_stems_run_noopt .................   Passed    0.22 sec
+12/17 Test  #429: repro_multi_tail_stems_run_noopt ...   Passed    0.23 sec
+13/17 Test #1820: nr15_stem_semantics_rxbvm_opt ......   Passed    0.45 sec
+14/17 Test #1822: nr15_stem_access_rxbvm_opt .........   Passed    0.46 sec
+15/17 Test  #884: trace_stem_sugar ...................   Passed    0.46 sec
+16/17 Test #1819: nr15_stem_semantics_rxbvm_noopt ....   Passed    0.18 sec
+17/17 Test #1821: nr15_stem_access_rxbvm_noopt .......   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Label Time Summary:
+compiler       =   0.46 sec*proc (1 test)
+linked_opt     =   2.01 sec*proc (6 tests)
+nr15           =   1.85 sec*proc (8 tests)
+performance    =   1.85 sec*proc (8 tests)
+semantics      =   0.90 sec*proc (4 tests)
+smoke          =   0.67 sec*proc (2 tests)
+stage4         =   0.46 sec*proc (1 test)
+stem           =   1.85 sec*proc (8 tests)
+
+Total Test time (real) =   0.50 sec

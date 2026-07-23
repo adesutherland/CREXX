@@ -1,0 +1,9 @@
+benchmark=nr15_architecture_control
+candidate=d2
+mode=get-hit
+family=ascii
+size=1024
+iterations=10000
+elapsed_us=3926
+checksum=39145
+PASS: NR-15 architecture control

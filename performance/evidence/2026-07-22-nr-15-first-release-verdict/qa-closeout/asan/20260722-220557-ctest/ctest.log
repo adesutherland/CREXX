@@ -1,0 +1,81 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(13_stems_\(noopt\|opt\)\|repro_multi_tail_stems_\(noopt\|opt\)\|13_stems_run_\(noopt\|opt\)\|repro_multi_tail_stems_run_\(noopt\|opt\)\|trace_stem_sugar\|rxvmstem_storage\|ts_regvalue_tester\|rxasreference\(catch\)\?tests\(-rxbvm\)\?\|nr21_fixed_call_contract\|nr14_frozen_parse_contract\|nr15_native_stem_contract\|ts_stem\(_errors\)\?_\(noopt\|opt\)\|nr15_stem_\(semantics\|access\)_\(rxvm\|rxbvm\)_\(noopt\|opt\)\)\$ --fixture-exclude-setup linked_opt_runtime_artifacts --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start   90: 13_stems_noopt
+ 1/30 Test   #90: 13_stems_noopt .....................   Passed    1.06 sec
+      Start   91: 13_stems_opt
+ 2/30 Test   #91: 13_stems_opt .......................   Passed    1.09 sec
+      Start   92: repro_multi_tail_stems_noopt
+ 3/30 Test   #92: repro_multi_tail_stems_noopt .......   Passed    1.04 sec
+      Start   93: repro_multi_tail_stems_opt
+ 4/30 Test   #93: repro_multi_tail_stems_opt .........   Passed    1.04 sec
+      Start  338: nr21_fixed_call_contract
+ 5/30 Test  #338: nr21_fixed_call_contract ...........   Passed    3.06 sec
+      Start  339: nr14_frozen_parse_contract
+ 6/30 Test  #339: nr14_frozen_parse_contract .........   Passed    5.52 sec
+      Start  340: nr15_native_stem_contract
+ 7/30 Test  #340: nr15_native_stem_contract ..........   Passed    0.75 sec
+      Start  428: 13_stems_run_noopt
+ 8/30 Test  #428: 13_stems_run_noopt .................   Passed    1.35 sec
+      Start  429: 13_stems_run_opt
+ 9/30 Test  #429: 13_stems_run_opt ...................   Passed    1.33 sec
+      Start  430: repro_multi_tail_stems_run_noopt
+10/30 Test  #430: repro_multi_tail_stems_run_noopt ...   Passed    1.27 sec
+      Start  431: repro_multi_tail_stems_run_opt
+11/30 Test  #431: repro_multi_tail_stems_run_opt .....   Passed    1.22 sec
+      Start  885: trace_stem_sugar
+12/30 Test  #885: trace_stem_sugar ...................   Passed    2.81 sec
+      Start 1030: rxvmstem_storage
+13/30 Test #1030: rxvmstem_storage ...................   Passed    0.06 sec
+      Start 1034: ts_regvalue_tester
+14/30 Test #1034: ts_regvalue_tester .................   Passed    0.05 sec
+      Start 1059: rxasreferencetests
+15/30 Test #1059: rxasreferencetests .................   Passed    0.05 sec
+      Start 1060: rxasreferencetests-rxbvm
+16/30 Test #1060: rxasreferencetests-rxbvm ...........   Passed    0.05 sec
+      Start 1061: rxasreferencecatchtests
+17/30 Test #1061: rxasreferencecatchtests ............   Passed    0.05 sec
+      Start 1062: rxasreferencecatchtests-rxbvm
+18/30 Test #1062: rxasreferencecatchtests-rxbvm ......   Passed    0.05 sec
+      Start 1468: ts_stem_noopt
+19/30 Test #1468: ts_stem_noopt ......................   Passed    0.25 sec
+      Start 1469: ts_stem_opt
+20/30 Test #1469: ts_stem_opt ........................   Passed    0.20 sec
+      Start 1480: ts_stem_errors_noopt
+21/30 Test #1480: ts_stem_errors_noopt ...............   Passed    0.24 sec
+      Start 1481: ts_stem_errors_opt
+22/30 Test #1481: ts_stem_errors_opt .................   Passed    0.20 sec
+      Start 1817: nr15_stem_semantics_rxvm_noopt
+23/30 Test #1817: nr15_stem_semantics_rxvm_noopt .....   Passed    0.24 sec
+      Start 1818: nr15_stem_semantics_rxvm_opt
+24/30 Test #1818: nr15_stem_semantics_rxvm_opt .......   Passed    0.20 sec
+      Start 1819: nr15_stem_access_rxvm_noopt
+25/30 Test #1819: nr15_stem_access_rxvm_noopt ........   Passed    0.27 sec
+      Start 1820: nr15_stem_access_rxvm_opt
+26/30 Test #1820: nr15_stem_access_rxvm_opt ..........   Passed    0.21 sec
+      Start 1821: nr15_stem_semantics_rxbvm_noopt
+27/30 Test #1821: nr15_stem_semantics_rxbvm_noopt ....   Passed    0.24 sec
+      Start 1822: nr15_stem_semantics_rxbvm_opt
+28/30 Test #1822: nr15_stem_semantics_rxbvm_opt ......   Passed    0.20 sec
+      Start 1823: nr15_stem_access_rxbvm_noopt
+29/30 Test #1823: nr15_stem_access_rxbvm_noopt .......   Passed    0.27 sec
+      Start 1824: nr15_stem_access_rxbvm_opt
+30/30 Test #1824: nr15_stem_access_rxbvm_opt .........   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 30
+
+Label Time Summary:
+compiler       =  12.14 sec*proc (4 tests)
+interpreter    =   0.06 sec*proc (1 test)
+linked_opt     =   3.78 sec*proc (8 tests)
+nr15           =   2.66 sec*proc (10 tests)
+parse          =   5.52 sec*proc (1 test)
+performance    =  11.18 sec*proc (11 tests)
+rxbin          =   9.33 sec*proc (3 tests)
+semantics      =   0.89 sec*proc (4 tests)
+smoke          =   4.52 sec*proc (5 tests)
+stage4         =   2.81 sec*proc (1 test)
+stem           =   2.66 sec*proc (10 tests)
+
+Total Test time (real) =  24.65 sec

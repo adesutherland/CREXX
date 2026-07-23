@@ -1,0 +1,285 @@
+/* One control surface for the approved NR-15 D1/D2/D2-hybrid panel. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+candidate = "d1"
+mode = "get-hit"
+size = 64
+iterations = 20000
+family = "ascii"
+if argv[0] >= 1 then candidate = argv[1]
+if argv[0] >= 2 then mode = argv[2]
+if argv[0] >= 3 then size = argv[3]
+if argv[0] >= 4 then iterations = argv[4]
+if argv[0] >= 5 then family = argv[5]
+
+select
+  when candidate == "d1" then rc = run_d1(mode, size, iterations, family)
+  when candidate == "d2" then rc = run_d2(mode, size, iterations, family)
+  when candidate == "d2h" then rc = run_d2h(mode, size, iterations, family)
+  otherwise rc = fail("candidate")
+end
+return rc
+
+run_d1: procedure = .int
+  arg mode = .string, size = .int, iterations = .int, family = .string
+  keys = make_keys(size, family)
+  target = .stem()
+  do i = 1 to size
+    key = keys[i]
+    value = "v" || i
+    assembler nr15d1set target,key,value
+  end
+  checksum = 0
+  result = .string
+  start = time("us")
+  select
+    when mode == "get-hit" then do
+      do i = 1 to iterations
+        index = ((i - 1) % size) + 1
+        key = keys[index]
+        assembler nr15d1get result,target,key
+        checksum = checksum + length(result)
+      end
+    end
+    when mode == "get-miss" then do
+      key = "missing-" || family
+      do i = 1 to iterations
+        assembler nr15d1get result,target,key
+        if result == "" then checksum = checksum + 1
+      end
+    end
+    when mode == "set-existing" then do
+      do i = 1 to iterations
+        index = ((i - 1) % size) + 1
+        key = keys[index]
+        value = "u" || i
+        assembler nr15d1set target,key,value
+        checksum = checksum + index
+      end
+    end
+    when mode == "set-new" then do
+      do i = 1 to iterations
+        key = "new-" || family || "-" || i
+        value = "n" || i
+        assembler nr15d1set target,key,value
+        checksum = checksum + 1
+      end
+    end
+    when mode == "reset-default" then do
+      key = keys[1]
+      do i = 1 to iterations
+        value = "d" || (i % 10)
+        assembler nr15d1reset target,value
+        assembler nr15d1get result,target,key
+        checksum = checksum + length(result)
+      end
+    end
+    when mode == "multi-tail" then do
+      left = "row"
+      right = "1"
+      value = "segmented"
+      assembler nr15d1set2 target,left,right,value
+      do i = 1 to iterations
+        assembler nr15d1get2 result,target,left,right
+        checksum = checksum + length(result)
+      end
+    end
+    otherwise return fail("mode")
+  end
+  elapsed = elapsed_us(start)
+  return report("d1", mode, family, size, iterations, elapsed, checksum)
+
+run_d2: procedure = .int
+  arg mode = .string, size = .int, iterations = .int, family = .string
+  keys = make_keys(size, family)
+  target = .Nr15PanelStem()
+  do i = 1 to size
+    key = keys[i]
+    value = "v" || i
+    assembler nr15d2set target,key,value
+  end
+  checksum = 0
+  result = .string
+  start = time("us")
+  select
+    when mode == "get-hit" then do
+      do i = 1 to iterations
+        index = ((i - 1) % size) + 1
+        key = keys[index]
+        assembler nr15d2get result,target,key
+        checksum = checksum + length(result)
+      end
+    end
+    when mode == "get-miss" then do
+      key = "missing-" || family
+      do i = 1 to iterations
+        assembler nr15d2get result,target,key
+        if result == "" then checksum = checksum + 1
+      end
+    end
+    when mode == "set-existing" then do
+      do i = 1 to iterations
+        index = ((i - 1) % size) + 1
+        key = keys[index]
+        value = "u" || i
+        assembler nr15d2set target,key,value
+        checksum = checksum + index
+      end
+    end
+    when mode == "set-new" then do
+      do i = 1 to iterations
+        key = "new-" || family || "-" || i
+        value = "n" || i
+        assembler nr15d2set target,key,value
+        checksum = checksum + 1
+      end
+    end
+    when mode == "reset-default" then do
+      key = keys[1]
+      do i = 1 to iterations
+        value = "d" || (i % 10)
+        assembler nr15d2reset target,value
+        assembler nr15d2get result,target,key
+        checksum = checksum + length(result)
+      end
+    end
+    when mode == "multi-tail" then do
+      left = "row"
+      right = "1"
+      value = "segmented"
+      assembler nr15d2set2 target,left,right,value
+      do i = 1 to iterations
+        assembler nr15d2get2 result,target,left,right
+        checksum = checksum + length(result)
+      end
+    end
+    otherwise return fail("mode")
+  end
+  elapsed = elapsed_us(start)
+  return report("d2", mode, family, size, iterations, elapsed, checksum)
+
+run_d2h: procedure = .int
+  arg mode = .string, size = .int, iterations = .int, family = .string
+  keys = make_keys(size, family)
+  target = .Nr15PanelStem()
+  do i = 1 to size
+    key = keys[i]
+    value = "v" || i
+    assembler nr15d2hset target,key,value
+  end
+  checksum = 0
+  result = .string
+  start = time("us")
+  select
+    when mode == "get-hit" then do
+      do i = 1 to iterations
+        index = ((i - 1) % size) + 1
+        key = keys[index]
+        assembler nr15d2hget result,target,key
+        checksum = checksum + length(result)
+      end
+    end
+    when mode == "get-miss" then do
+      key = "missing-" || family
+      do i = 1 to iterations
+        assembler nr15d2hget result,target,key
+        if result == "" then checksum = checksum + 1
+      end
+    end
+    when mode == "set-existing" then do
+      do i = 1 to iterations
+        index = ((i - 1) % size) + 1
+        key = keys[index]
+        value = "u" || i
+        assembler nr15d2hset target,key,value
+        checksum = checksum + index
+      end
+    end
+    when mode == "set-new" then do
+      do i = 1 to iterations
+        key = "new-" || family || "-" || i
+        value = "n" || i
+        assembler nr15d2hset target,key,value
+        checksum = checksum + 1
+      end
+    end
+    when mode == "reset-default" then do
+      key = keys[1]
+      do i = 1 to iterations
+        value = "d" || (i % 10)
+        assembler nr15d2hreset target,value
+        assembler nr15d2hget result,target,key
+        checksum = checksum + length(result)
+      end
+    end
+    when mode == "multi-tail" then do
+      left = "row"
+      right = "1"
+      value = "segmented"
+      assembler nr15d2hset2 target,left,right,value
+      do i = 1 to iterations
+        assembler nr15d2hget2 result,target,left,right
+        checksum = checksum + length(result)
+      end
+    end
+    otherwise return fail("mode")
+  end
+  elapsed = elapsed_us(start)
+  return report("d2h", mode, family, size, iterations, elapsed, checksum)
+
+make_keys: procedure = .string[]
+  arg size = .int, family = .string
+  keys = .string[]
+  do i = 1 to size
+    keys[i] = make_key(i, family)
+  end
+  return keys
+
+make_key: procedure = .string
+  arg index = .int, family = .string
+  if family == "ascii" then return "key-" || index
+  if family == "unicode" then return "κλειδί-🔥-" || index
+  if family == "long" then
+    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" || index
+  if family == "collision" then do
+    value = index - 1
+    key = ""
+    do part = 1 to 10
+      if value % 2 = 0 then key = key || "Aa"
+      else key = key || "BB"
+      value = value / 2
+    end
+    return key
+  end
+  return "unknown-" || index
+
+elapsed_us: procedure = .int
+  arg start = .int
+  elapsed = time("us") - start
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+report: procedure = .int
+  arg candidate = .string, mode = .string, family = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int
+  if checksum <= 0 then return fail("checksum")
+  say "benchmark=nr15_architecture_control"
+  say "candidate="candidate
+  say "mode="mode
+  say "family="family
+  say "size="size
+  say "iterations="iterations
+  say "elapsed_us="elapsed
+  say "checksum="checksum
+  say "PASS: NR-15 architecture control"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL: NR-15 architecture control" label
+  return 1
+
+Nr15PanelStem: class
+  *: factory
+    return

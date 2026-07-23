@@ -1,0 +1,12 @@
+workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit
+Sieve,rxvm,normalized_work_per_second,12,5124.626904,5139.852631,-0.399439,0.035650,0.213557,0.727559,1.876656,0.409540,0.013757,0.805322,9,12,clear_favorable,no
+Sieve,rxbvm,normalized_work_per_second,12,4014.104838,3904.613354,-4.086959,-3.932225,-2.743273,-2.144954,-1.924117,-2.903619,-3.448462,-2.358776,0,12,clear_adverse,no
+Permute,rxvm,normalized_work_per_second,12,676.625629,678.857754,-1.588992,-0.948509,-0.072153,0.854979,1.589748,-0.066708,-0.723229,0.589812,6,12,noisy_inconclusive,no
+Permute,rxbvm,normalized_work_per_second,12,623.428295,633.311899,-1.447952,0.535030,1.412321,2.447599,3.682203,1.414001,0.491119,2.336882,11,12,clear_favorable,no
+Bounce,rxvm,normalized_work_per_second,12,339.015253,328.940687,-4.331095,-3.643628,-2.622298,-2.257299,-1.610829,-2.909957,-3.478011,-2.341904,0,12,clear_adverse,no
+Bounce,rxbvm,normalized_work_per_second,12,313.236186,314.114254,-0.665518,-0.098939,0.240441,0.765036,1.446042,0.321107,-0.083727,0.725940,7,12,noisy_inconclusive,no
+Richards,rxvm,normalized_work_per_second,12,1.728675,1.735696,-0.792792,0.172747,0.353988,0.729131,1.438611,0.398341,0.019858,0.776824,10,12,clear_favorable,no
+Richards,rxbvm,normalized_work_per_second,12,1.708555,1.712309,-0.564570,-0.173777,0.329560,0.536756,1.011606,0.238711,-0.082239,0.559661,8,12,noisy_inconclusive,no
+Base64,rxvm,normalized_work_per_second,12,1543.423965,1497.012362,-18.300339,-6.813758,0.512401,6.196547,21.454456,-0.276611,-7.156687,6.603465,6,12,noisy_inconclusive,no
+Base64,rxbvm,normalized_work_per_second,12,1281.902389,1582.928401,5.483822,18.965086,29.581414,33.070727,45.837485,26.331601,19.084193,33.579010,12,12,clear_favorable,no
+Mandelbrot,rxvm,normalized_work_per_second,12,3301.325694,3364.742164,-3.605702,-1.785681,1.450237,5.041805,8.794746,1.802990,-0.885079,4.491059,7,12,noisy_inconclusive,no

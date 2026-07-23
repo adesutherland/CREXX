@@ -1,0 +1,8 @@
+crexx-cross-runtime-matrix|1
+# Final 12-pair Richards decision block, taking this stable hot-path cell to
+# the 36-pair governance cap after its 24-pair interval continued to cross zero.
+# Fields: id|workload|runtime|vm|variant|tier|aggregate|lifecycle|work|expectation|metric_prefix|command_argv
+nr27-richards-rxvm-baseline|Richards|crexx|rxvm|baseline|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-baseline.rxbin;-a;1
+nr27-richards-rxvm-candidate|Richards|crexx|rxvm|candidate|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-candidate.rxbin;-a;1
+nr27-richards-rxbvm-baseline|Richards|crexx|rxbvm|baseline|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-baseline.rxbin;-a;1
+nr27-richards-rxbvm-candidate|Richards|crexx|rxbvm|candidate|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-candidate.rxbin;-a;1

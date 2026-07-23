@@ -1,0 +1,3 @@
+vm,workloads,baseline_throughput_geomean_normalized,candidate_throughput_geomean_normalized,candidate_vs_baseline_percent,one_percent_guard_hit
+rxvm,5,1.000000000,0.994477156,-0.552284,no
+rxbvm,5,1.000000000,1.003234135,0.323413,no

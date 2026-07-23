@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rss-rxvm-before,rexxcps-canonical,crexx,rxvm,before-candidate-a,adapted,no,no,0,max_rss_bytes,3,10158080.000000,10174464.000000,10190848.000000,10199040.000000,10207232.000000,16384.000000,0.160772,0.482315,no
+rss-rxvm-after,rexxcps-canonical,crexx,rxvm,after-d2-hybrid,adapted,no,no,0,max_rss_bytes,3,10108928.000000,10108928.000000,10108928.000000,10133504.000000,10158080.000000,0.000000,0.000000,0.486224,no
+rss-rxbvm-before,rexxcps-canonical,crexx,rxbvm,before-candidate-a,adapted,no,no,0,max_rss_bytes,3,10125312.000000,10174464.000000,10223616.000000,10248192.000000,10272768.000000,49152.000000,0.480769,1.442308,no
+rss-rxbvm-after,rexxcps-canonical,crexx,rxbvm,after-d2-hybrid,adapted,no,no,0,max_rss_bytes,3,10108928.000000,10117120.000000,10125312.000000,10166272.000000,10207232.000000,16384.000000,0.161812,0.970874,no

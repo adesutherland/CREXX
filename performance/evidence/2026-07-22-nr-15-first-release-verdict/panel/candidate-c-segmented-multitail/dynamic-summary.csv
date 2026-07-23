@@ -1,0 +1,5 @@
+vm,control,total_instructions,concat_instructions,string_buffer_allocations
+rxvm,prejoined-get-hit,53874,134,0
+rxvm,materialized-multi-tail,67197,4454,0
+rxbvm,prejoined-get-hit,53874,134,0
+rxbvm,materialized-multi-tail,67197,4454,0

@@ -89,6 +89,7 @@
 
 
 #include "rxvmvars.h"
+#include "rxvmstem.h"
 #include "rxvmplugin_framework.h"
 #include "rxvmsock.h"
 
@@ -4688,7 +4689,7 @@ const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
 typedef Opcode instructions;
 
 #ifdef NTHREADED
-/* already typedefed */
+#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_) ((void)0)
 #else
 const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
@@ -4696,6 +4697,15 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #include "../binutils/include/rxops.h"
 #undef X
 };
+
+#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_)             \
+    do {                                                                        \
+        (image_)[instruction_].handler =                                        \
+                (opcode_) < OP_MAX_INSTRUCTIONS                                 \
+                    ? (void *)address_map[opcode_]                              \
+                    : (void *)&&IUNKNOWN;                                       \
+    } while (0)
+#endif
 
 #define VM_PREPARE_EXECUTION_IMAGE(module_)                                     \
     do {                                                                        \
@@ -4725,19 +4735,32 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     vm_module__->segment.binary[vm_instruction__].instruction.no_ops; \
             unsigned int vm_opcode__ =                                         \
                     vm_module__->segment.binary[vm_instruction__].instruction.opcode; \
+            size_t vm_operand__;                                               \
             vm_i__ += vm_operand_count__ + 1;                                  \
             if (!vm_new_image__ && vm_operand_count__) {                       \
                 memcpy(vm_module__->execution_image + vm_instruction__ + 1,     \
                        vm_module__->segment.binary + vm_instruction__ + 1,      \
                        sizeof(bin_code) * vm_operand_count__);                  \
             }                                                                   \
-            vm_module__->execution_image[vm_instruction__].handler =           \
-                    vm_opcode__ < OP_MAX_INSTRUCTIONS                           \
-                        ? (void *)address_map[vm_opcode__]                      \
-                        : (void *)&&IUNKNOWN;                                   \
+            if (vm_opcode__ < OP_MAX_INSTRUCTIONS) {                           \
+                for (vm_operand__ = 0; vm_operand__ < vm_operand_count__;       \
+                     vm_operand__++) {                                          \
+                    if (rxop_format_operand_type(meta_map[vm_opcode__].format,  \
+                                                 vm_operand__) == OP_FUNC) {     \
+                        size_t vm_offset__ =                                    \
+                                vm_module__->segment.binary[                    \
+                                        vm_instruction__ + vm_operand__ + 1].index; \
+                        vm_module__->execution_image[                           \
+                                vm_instruction__ + vm_operand__ + 1].handler =  \
+                                (void *)rxvm_get_module_runtime_procedure(       \
+                                        vm_module__, vm_offset__);              \
+                    }                                                           \
+                }                                                               \
+            }                                                                   \
+            VM_BIND_INSTRUCTION_HANDLER(vm_module__->execution_image,           \
+                                        vm_instruction__, vm_opcode__);         \
         }                                                                       \
     } while (0)
-#endif
 
     /* Allocate Interrupt Arg */
     interrupt_arg = value_f();
@@ -4749,9 +4772,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
         /* Idempotent check */
         if (context->modules[mod_index]->state >= RXVM_MOD_THREADED) continue;
 
-#ifndef NTHREADED
         VM_PREPARE_EXECUTION_IMAGE(context->modules[mod_index]);
-#endif
         context->modules[mod_index]->state = RXVM_MOD_THREADED;
     }
 
@@ -5455,14 +5476,12 @@ START_OF_INSTRUCTIONS
                     /* Resolve canonical operands before copying the execution image. */
                     rxvm_link(context);
                     /* If successfully loaded, prepare execution state inside run(). */
-#ifndef NTHREADED
                     int mod;
-                    DEBUG("Threading\n");
+                    DEBUG("Preparing execution images\n");
                     for (mod = 0; mod < op1R->int_value; mod++) {
                         module *loaded_module = context->modules[mod];
                         VM_PREPARE_EXECUTION_IMAGE(loaded_module);
                     }
-#endif
                     RXVM_INSTRUMENTATION_MODULES_CHANGED(context);
                 }
             }
@@ -8376,6 +8395,129 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                             memcmp(op2R->binary_value, op3S->string,
                                    op2R->binary_length) != 0))
             DISPATCH;
+
+#define RXSTEM_REQUIRE_RESULT(call_, index_message_)                         \
+        do {                                                                 \
+            int rxstem_result__ = (call_);                                   \
+            if (rxstem_result__ == RXSTEM_OUT_OF_MEMORY) {                   \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                             \
+                               "Native stem allocation failed");            \
+                DISPATCH;                                                    \
+            }                                                                \
+            if (rxstem_result__ == RXSTEM_OVERFLOW) {                        \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                             \
+                               "Native stem capacity overflow");            \
+                DISPATCH;                                                    \
+            }                                                                \
+            if (rxstem_result__ == RXSTEM_INVALID_INDEX) {                   \
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, index_message_);  \
+                DISPATCH;                                                    \
+            }                                                                \
+            if (rxstem_result__ != RXSTEM_OK) {                              \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                             \
+                               "Native stem representation is corrupt");    \
+                DISPATCH;                                                    \
+            }                                                                \
+        } while (0)
+
+        START_INSTRUCTION(STEMINIT_REG) VM_ADVANCE(1);
+            DEBUG("TRACE - STEMINIT R%d\n", (int)REG_IDX(1));
+            RXSTEM_REQUIRE_RESULT(rxstem_init(REG_OP(1)),
+                                  "STEM index is outside the stored range");
+            DISPATCH;
+
+        START_INSTRUCTION(STEMGET_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMGET R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            {
+                rxstem_key_parts parts = rxstem_one_part(REG_OP(3));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_get_parts(REG_OP(1), REG_OP(2), &parts),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMSET_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMSET R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(2));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            {
+                rxstem_key_parts parts = rxstem_one_part(REG_OP(2));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_set_parts(REG_OP(1), &parts, REG_OP(3)),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMRESET_REG_REG) VM_ADVANCE(2);
+            DEBUG("TRACE - STEMRESET R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(2));
+            RXSTEM_REQUIRE_RESULT(rxstem_reset(REG_OP(1), REG_OP(2)),
+                                  "STEM index is outside the stored range");
+            DISPATCH;
+
+        START_INSTRUCTION(STEMGET2_REG_REG_REG_REG) VM_ADVANCE(4);
+            DEBUG("TRACE - STEMGET2 R%d,R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2),
+                  (int)REG_IDX(3), (int)REG_IDX(4));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(4));
+            {
+                rxstem_key_parts parts =
+                        rxstem_two_parts(REG_OP(3), REG_OP(4));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_get_parts(REG_OP(1), REG_OP(2), &parts),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMSET2_REG_REG_REG_REG) VM_ADVANCE(4);
+            DEBUG("TRACE - STEMSET2 R%d,R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2),
+                  (int)REG_IDX(3), (int)REG_IDX(4));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(2));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(3));
+            REQUIRE_VALID_UTF8_REGISTER(REG_OP(4));
+            {
+                rxstem_key_parts parts =
+                        rxstem_two_parts(REG_OP(2), REG_OP(3));
+                RXSTEM_REQUIRE_RESULT(
+                        rxstem_set_parts(REG_OP(1), &parts, REG_OP(4)),
+                        "STEM index is outside the stored range");
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMSIZE_REG_REG) VM_ADVANCE(2);
+            DEBUG("TRACE - STEMSIZE R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2));
+            {
+                rxinteger size;
+                RXSTEM_REQUIRE_RESULT(rxstem_size(&size, REG_OP(2)),
+                                      "STEM index is outside the stored range");
+                REG_RETURN_INT(size)
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(STEMKEYAT_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMKEYAT R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            RXSTEM_REQUIRE_RESULT(
+                    rxstem_key_at(REG_OP(1), REG_OP(2), REG_OP(3)->int_value),
+                    "STEM key index is outside the stored range");
+            DISPATCH;
+
+        START_INSTRUCTION(STEMVALUEAT_REG_REG_REG) VM_ADVANCE(3);
+            DEBUG("TRACE - STEMVALUEAT R%d,R%d,R%d\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            RXSTEM_REQUIRE_RESULT(
+                    rxstem_value_at(REG_OP(1), REG_OP(2), REG_OP(3)->int_value),
+                    "STEM value index is outside the stored range");
+            DISPATCH;
+
+#undef RXSTEM_REQUIRE_RESULT
 
         START_INSTRUCTION(TIME_REG) VM_ADVANCE(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));

@@ -1,0 +1,10 @@
+5bf20b9646589b76cff91bda0026cf65e8ef5d3a40523ff917dfc704f40f4005  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/library.rxbin
+0a705fea99b6493d75c33dfcce818d0a4ca086c995e9fc0167639b013285b862  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/nr15_stem_access_noopt-unlinked.rxbin
+6b6fe55209f03c7e73de74df1f60422fe9d709a37a064dbe9efbd7062b7f4710  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/nr15_stem_access_noopt.rxbin
+baf3f19f825922f048b5bcfd461c33022cea592283249792cab27dcffa11792b  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/nr15_stem_access_opt-unlinked.rxbin
+306561951d4dcb349103db8f073b82b32d1648260de7cc4d33886b4d1997ffdf  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/nr15_stem_access_opt.rxbin
+4d2a0b0fdacc2cfa6d2ab75f0d6d0805c4a9a3fb6b7f493454aec4b6a890dad0  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/rexxcps_levelb_noopt-unlinked.rxbin
+9612c2509812598d32ed63ebd81a24caa8a7bdc6cd022f5e9dcf53f043d007b3  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/rexxcps_levelb_noopt.rxbin
+b1d7d30106c0e6204805e933c6b003e9bef9ed24c9eee7c1bc6d751a5e54ba8e  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/rexxcps_levelb_opt-unlinked.rxbin
+bf5ff18ef9c57eaf41d54fa837b9c41c22016b1b124a461a683788d0b6691c5c  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/rexxcps_levelb_opt.rxbin
+74c32a4ddf9d939b6eb481083edc2ae40339e2da71114a4a1307a990198be27c  performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/static/stem.rxas

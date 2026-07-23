@@ -1,0 +1,2818 @@
+/*
+ * SOURCE                 : rexxcps_levelb.crexx
+ */
+
+.globals=3
+g0 .expose=rexxcps_levelb.__rxtrace_first_source_file
+g1 .expose=rexxcps_levelb.__rxtrace_in_handler
+g2 .expose=rexxcps_levelb.__rxtrace_last_source_file
+
+main() .locals=116
+   .meta "rexxcps_levelb.main"="b" ".int" main() ""
+   numsci 9,1,2
+   .meta "rexxcps_levelb.main.j"="b" ".decimal" r17
+   .srcstep 1 1 17 "rexxcps_levelb.crexx" 129 1 13 "j = .decimal"
+   null r17
+   .meta "rexxcps_levelb.main.rc"="b" ".int" r18
+   .srcstep 2 2 6 "rexxcps_levelb.crexx" 190 9 54 "        address value addressenv().environment_name()"
+   null r18
+   .srcstep 3 3 17 "rexxcps_levelb.crexx" 76 5 19 "arg argv = .string[]"
+   .meta "rexxcps_levelb.main.argv"="b" ".string[*]" r1
+   brtpandt l10c,a1,512
+   copy r1,a1
+   br l10d
+l10c:
+   swap r1,a1
+l10d:
+   .srcstep 4 4 17 "rexxcps_levelb.crexx" 78 1 17 "rexxcps = \"2.2d\" /* REXXCPS cREXX port version */"
+   .meta "rexxcps_levelb.main.rexxcps"="b" ".string" r19
+   load r19,"2.2d"
+   .traceevent "L" 4 "R" "S" "r" 19 4 4 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 19 4 4 0 "rexxcps" ""
+   .srcstep 5 5 17 "rexxcps_levelb.crexx" 81 1 12 "count = 100       /* Repetition count */"
+   .meta "rexxcps_levelb.main.count"="b" ".int" r12
+   load r12,100
+   .traceevent "L" 4 "R" "I" "r" 12 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 5 5 0 "count" ""
+   .srcstep 6 6 17 "rexxcps_levelb.crexx" 82 1 16 "averaging = 100   /* Averaging-over count */"
+   .meta "rexxcps_levelb.main.averaging"="b" ".int" r3
+   load r3,100
+   .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "averaging" ""
+   .srcstep 7 7 17 "rexxcps_levelb.crexx" 89 1 31 "contract = \"canonical-default\""
+   .meta "rexxcps_levelb.main.contract"="b" ".string" r11
+   load r11,"canonical-default"
+   .traceevent "L" 4 "R" "S" "r" 11 7 7 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 7 7 0 "contract" ""
+   .srcstep 19 19 17 "rexxcps_levelb.crexx" 90 1 16 "if argv[0] <> 0 then do"
+   .traceevent "C" 4 "R" "V" "r" 26 19 19 0 "argv" ""
+   getattrs r27,r1,0
+   .traceevent "V" 6 "R" "I" "r" 27 19 19 0 "argv" ""
+   ine r27,r27,0
+   .traceevent "O" 4 "R" "B" "r" 27 19 19 0 "" ""
+   brf l67iffalse,r27
+   .srcstep 20 20 17 "rexxcps_levelb.crexx" 90 17 21 "if argv[0] <> 0 then do"
+   .srcstep 9 9 17 "rexxcps_levelb.crexx" 91 3 18 "  if argv[0] <> 2 then"
+   .traceevent "C" 4 "R" "V" "r" 28 9 9 0 "argv" ""
+   getattrs r29,r1,0
+   .traceevent "V" 6 "R" "I" "r" 29 9 9 0 "argv" ""
+   ine r29,r29,2
+   .traceevent "O" 4 "R" "B" "r" 29 9 9 0 "" ""
+   brf l40iffalse,r29
+   .srcstep 10 10 17 "rexxcps_levelb.crexx" 91 19 23 "  if argv[0] <> 2 then"
+   .srcstep 8 8 17 "rexxcps_levelb.crexx" 92 5 81 "    return fail(\"use no arguments for the canonical run or --smoke-count COUNT\")"
+   load r31,"use no arguments for the canonical run or --smoke-count COUNT"
+   .traceevent "L" 4 "R" "S" "r" 31 8 8 0 "" ""
+   settp r31,768
+   call1 r32,fail(),r31
+   .traceevent "F" 4 "R" "I" "r" 32 8 8 0 "fail" ""
+   ret r32
+l40iffalse:
+   .srcstep 12 12 17 "rexxcps_levelb.crexx" 93 3 32 "  if argv[1] <> \"--smoke-count\" then"
+   minlinkattr1 r32,r1,1
+   .traceevent "V" 6 "R" "S" "r" 32 12 12 0 "argv" ""
+   rne r31,r32,"--smoke-count"
+   unlink r32
+   .traceevent "O" 4 "R" "B" "r" 31 12 12 0 "" ""
+   brf l49iffalse,r31
+   .srcstep 13 13 17 "rexxcps_levelb.crexx" 93 33 37 "  if argv[1] <> \"--smoke-count\" then"
+   .srcstep 11 11 17 "rexxcps_levelb.crexx" 94 5 82 "    return fail(\"unknown argument; use --smoke-count COUNT only for smoke tests\")"
+   load r30,"unknown argument; use --smoke-count COUNT only for smoke tests"
+   .traceevent "L" 4 "R" "S" "r" 30 11 11 0 "" ""
+   settp r30,768
+   call1 r28,fail(),r30
+   .traceevent "F" 4 "R" "I" "r" 28 11 11 0 "fail" ""
+   ret r28
+l49iffalse:
+   .srcstep 15 15 17 "rexxcps_levelb.crexx" 95 3 40 "  if verify(argv[2], \"0123456789\") <> 0 then"
+   minlinkattr1 r26,r1,2
+   .traceevent "V" 6 "R" "S" "r" 26 15 15 0 "argv" ""
+   load r30,"0123456789"
+   .traceevent "L" 4 "R" "S" "r" 30 15 15 0 "" ""
+   load r28,4
+   swap r29,r26
+   settp r31,512
+   settpcall r33,rxfnsb.verify(),r28,r32,0
+   swap r26,r29
+   unlink r26
+   .traceevent "F" 4 "R" "I" "r" 33 15 15 0 "verify" ""
+   ine r33,r33,0
+   .traceevent "O" 4 "R" "B" "r" 33 15 15 0 "" ""
+   brf l59iffalse,r33
+   .srcstep 16 16 17 "rexxcps_levelb.crexx" 95 41 45 "  if verify(argv[2], \"0123456789\") <> 0 then"
+   .srcstep 14 14 17 "rexxcps_levelb.crexx" 96 5 60 "    return fail(\"--smoke-count must be a positive integer\")"
+   load r32,"--smoke-count must be a positive integer"
+   .traceevent "L" 4 "R" "S" "r" 32 14 14 0 "" ""
+   settp r32,768
+   call1 r30,fail(),r32
+   .traceevent "F" 4 "R" "I" "r" 30 14 14 0 "fail" ""
+   ret r30
+l59iffalse:
+   .srcstep 17 17 17 "rexxcps_levelb.crexx" 97 3 17 "  count = argv[2]"
+   minlinkattr1 r33,r1,2
+   stoi r33
+   .traceevent "V" 6 "R" "I" "r" 33 17 17 0 "argv" ""
+   igetunlink r12,r33
+   .traceevent "A" 6 "R" "I" "r" 12 17 17 0 "count" ""
+   .srcstep 18 18 17 "rexxcps_levelb.crexx" 98 3 34 "  contract = \"noncanonical-smoke\""
+   load r11,"noncanonical-smoke"
+   .traceevent "L" 4 "R" "S" "r" 11 18 18 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 18 18 0 "contract" ""
+l67iffalse:
+   .srcstep 22 22 17 "rexxcps_levelb.crexx" 100 1 13 "if count < 1 then return fail(\"count must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 12 22 22 0 "count" ""
+   ilt r33,r12,1
+   .traceevent "O" 4 "R" "B" "r" 33 22 22 0 "" ""
+   brf l74iffalse,r33
+   .srcstep 23 23 17 "rexxcps_levelb.crexx" 100 14 18 "if count < 1 then return fail(\"count must be positive\")"
+   .srcstep 21 21 17 "rexxcps_levelb.crexx" 100 19 56 "if count < 1 then return fail(\"count must be positive\")"
+   load r32,"count must be positive"
+   .traceevent "L" 4 "R" "S" "r" 32 21 21 0 "" ""
+   settp r32,768
+   call1 r30,fail(),r32
+   .traceevent "F" 4 "R" "I" "r" 30 21 21 0 "fail" ""
+   ret r30
+l74iffalse:
+   .srcstep 24 24 17 "rexxcps_levelb.crexx" 101 1 22 "initial_count = count"
+   .meta "rexxcps_levelb.main.initial_count"="b" ".int" r15
+   .traceevent "V" 6 "R" "I" "r" 12 24 24 0 "count" ""
+   icopy r15,r12
+   .traceevent "A" 6 "R" "I" "r" 15 24 24 0 "initial_count" ""
+   .srcstep 25 25 17 "rexxcps_levelb.crexx" 102 1 15 "calibrated = 0"
+   .meta "rexxcps_levelb.main.calibrated"="b" ".int" r4
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 25 25 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 25 25 0 "calibrated" ""
+   .srcstep 26 26 17 "rexxcps_levelb.crexx" 104 1 17 "tracevar = \"Off\" /* Trace setting (for development and clause auditing). */"
+   .meta "rexxcps_levelb.main.tracevar"="b" ".string" r23
+   load r23,"Off"
+   .traceevent "L" 4 "R" "S" "r" 23 26 26 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 23 26 26 0 "tracevar" ""
+   .srcstep 27 27 17 "rexxcps_levelb.crexx" 106 1 23 "version_info = version()"
+   .meta "rexxcps_levelb.main.version_info"="b" ".string" r24
+   load r33,0
+   call r24,rxfnsb.version(),r33
+   .traceevent "F" 4 "R" "S" "r" 24 27 27 0 "version" ""
+   .traceevent "A" 6 "R" "S" "r" 24 27 27 0 "version_info" ""
+   .srcstep 28 28 17 "rexxcps_levelb.crexx" 107 1 31 "system = word(version_info, 1)"
+   .meta "rexxcps_levelb.main.system"="b" ".string" r20
+   .traceevent "V" 6 "R" "S" "r" 24 28 28 0 "version_info" ""
+   load r33,1
+   .traceevent "L" 4 "R" "I" "r" 33 28 28 0 "" ""
+   load r31,2
+   settp r24,256
+   swap r32,r24
+   call r20,rxfnsb.word(),r31
+   swap r24,r32
+   .traceevent "F" 4 "R" "S" "r" 20 28 28 0 "word" ""
+   .traceevent "A" 6 "R" "S" "r" 20 28 28 0 "system" ""
+   .srcstep 29 29 17 "rexxcps_levelb.crexx" 109 1 70 "say \"----- REXXCPS\" rexxcps \"-- Measuring cREXX clauses/second -----\""
+   .traceevent "V" 6 "R" "S" "r" 19 29 29 0 "rexxcps" ""
+   sconcat r33,"----- REXXCPS",r19
+   .traceevent "O" 4 "R" "S" "r" 33 29 29 0 "" ""
+   sconcat r33,r33,"-- Measuring cREXX clauses/second -----"
+   .traceevent "O" 4 "R" "S" "r" 33 29 29 0 "" ""
+   say r33
+   .srcstep 30 30 17 "rexxcps_levelb.crexx" 110 1 38 "say \" cREXX version is:\" version_info"
+   .traceevent "V" 6 "R" "S" "r" 24 30 30 0 "version_info" ""
+   sconcat r33," cREXX version is:",r24
+   .traceevent "O" 4 "R" "S" "r" 33 30 30 0 "" ""
+   say r33
+   .srcstep 31 31 17 "rexxcps_levelb.crexx" 111 1 31 "say \"       System is:\" system"
+   .traceevent "V" 6 "R" "S" "r" 20 31 31 0 "system" ""
+   sconcat r33,"       System is:",r20
+   .traceevent "O" 4 "R" "S" "r" 33 31 31 0 "" ""
+   say r33
+   .srcstep 32 32 17 "rexxcps_levelb.crexx" 112 1 49 "say \"REXXCPS-PROVENANCE contract=\" || contract ,"
+   .traceevent "V" 6 "R" "S" "r" 11 32 32 0 "contract" ""
+   concat r33,"REXXCPS-PROVENANCE contract=",r11
+   .traceevent "O" 4 "R" "S" "r" 33 32 32 0 "" ""
+   sconcat r33,r33,"argv_count="
+   .traceevent "O" 4 "R" "S" "r" 33 32 32 0 "" ""
+   .traceevent "C" 4 "R" "V" "r" 32 32 32 0 "argv" ""
+   getattrs r31,r1,0
+   itos r31
+   .traceevent "V" 6 "R" "S" "r" 31 32 32 0 "argv" ""
+   concat r33,r33,r31
+   .traceevent "O" 4 "R" "S" "r" 33 32 32 0 "" ""
+   sconcat r33,r33,"initial_count="
+   .traceevent "O" 4 "R" "S" "r" 33 32 32 0 "" ""
+   itos r15
+   .traceevent "V" 6 "R" "S" "r" 15 32 32 0 "initial_count" ""
+   concat r33,r33,r15
+   .traceevent "O" 4 "R" "S" "r" 33 32 32 0 "" ""
+   sconcat r33,r33,"averaging="
+   .traceevent "O" 4 "R" "S" "r" 33 32 32 0 "" ""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 32 32 0 "averaging" ""
+   concat r33,r33,r3
+   .traceevent "O" 4 "R" "S" "r" 33 32 32 0 "" ""
+   say r33
+   .srcstep 34 34 17 "rexxcps_levelb.crexx" 116 1 15 "if count < 100 then"
+   .traceevent "V" 6 "R" "I" "r" 12 34 34 0 "count" ""
+   ilt r33,r12,100
+   .traceevent "O" 4 "R" "B" "r" 33 34 34 0 "" ""
+   brf l129iffalse,r33
+   .srcstep 35 35 17 "rexxcps_levelb.crexx" 116 16 20 "if count < 100 then"
+   .srcstep 33 33 17 "rexxcps_levelb.crexx" 117 3 80 "  say \"NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100\""
+   say "NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100"
+l129iffalse:
+   .srcstep 36 36 17 "rexxcps_levelb.crexx" 120 1 18 "acompound = .stem()"
+   .meta "rexxcps_levelb.main.acompound"="b" ".stem" r0
+   load r33,0
+   call r0,§rxfnsb.stem.§factory(),r33
+   .traceevent "F" 4 "R" "O" "r" 0 36 36 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 0 36 36 0 "acompound" ""
+   .srcstep 37 37 17 "rexxcps_levelb.crexx" 121 1 13 "avar = .stem()"
+   .meta "rexxcps_levelb.main.avar"="b" ".stem" r2
+   load r33,0
+   call r2,§rxfnsb.stem.§factory(),r33
+   .traceevent "F" 4 "R" "O" "r" 2 37 37 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 2 37 37 0 "avar" ""
+   .srcstep 38 38 17 "rexxcps_levelb.crexx" 124 1 12 "empty = 0.0"
+   .meta "rexxcps_levelb.main.empty"="b" ".float" r13
+   load r13,0.0
+   .traceevent "L" 4 "R" "F" "r" 13 38 38 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 13 38 38 0 "empty" ""
+   .srcstep 39 39 17 "rexxcps_levelb.crexx" 125 1 11 "full = 0.0"
+   .meta "rexxcps_levelb.main.full"="b" ".float" r14
+   load r14,0.0
+   .traceevent "L" 4 "R" "F" "r" 14 39 39 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 14 39 39 0 "full" ""
+   .srcstep 40 40 17 "rexxcps_levelb.crexx" 126 1 12 "total = 0.0"
+   .meta "rexxcps_levelb.main.total"="b" ".float" r22
+   load r22,0.0
+   .traceevent "L" 4 "R" "F" "r" 22 40 40 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 22 40 40 0 "total" ""
+   .srcstep 41 41 17 "rexxcps_levelb.crexx" 127 1 16 "innertime = 0.0"
+   .meta "rexxcps_levelb.main.innertime"="b" ".float" r16
+   load r16,0.0
+   .traceevent "L" 4 "R" "F" "r" 16 41 41 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 16 41 41 0 "innertime" ""
+   .srcstep 42 42 17 "rexxcps_levelb.crexx" 128 1 15 "thousand = 0.0"
+   .meta "rexxcps_levelb.main.thousand"="b" ".float" r21
+   load r21,0.0
+   .traceevent "L" 4 "R" "F" "r" 21 42 42 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 21 42 42 0 "thousand" ""
+   .srcstep 43 43 17 "rexxcps_levelb.crexx" 130 1 30 "classic_one = \"1\" as .decimal"
+   .meta "rexxcps_levelb.main.classic_one"="b" ".decimal" r7
+   load r33,"1"
+   .traceevent "L" 4 "R" "S" "r" 33 43 43 0 "" ""
+   scopy r7,r33
+   stod r7
+   .traceevent "A" 6 "R" "D" "r" 7 43 43 0 "classic_one" ""
+   .srcstep 44 44 17 "rexxcps_levelb.crexx" 131 1 30 "classic_two = \"2\" as .decimal"
+   .meta "rexxcps_levelb.main.classic_two"="b" ".decimal" r9
+   load r33,"2"
+   .traceevent "L" 4 "R" "S" "r" 33 44 44 0 "" ""
+   scopy r9,r33
+   stod r9
+   .traceevent "A" 6 "R" "D" "r" 9 44 44 0 "classic_two" ""
+   .srcstep 45 45 17 "rexxcps_levelb.crexx" 132 1 42 "classic_one_point_one = \"1.1\" as .decimal"
+   .meta "rexxcps_levelb.main.classic_one_point_one"="b" ".decimal" r8
+   load r33,"1.1"
+   .traceevent "L" 4 "R" "S" "r" 33 45 45 0 "" ""
+   scopy r8,r33
+   stod r8
+   .traceevent "A" 6 "R" "D" "r" 8 45 45 0 "classic_one_point_one" ""
+   .srcstep 46 46 17 "rexxcps_levelb.crexx" 133 1 42 "classic_two_point_two = \"2.2\" as .decimal"
+   .meta "rexxcps_levelb.main.classic_two_point_two"="b" ".decimal" r10
+   load r33,"2.2"
+   .traceevent "L" 4 "R" "S" "r" 33 46 46 0 "" ""
+   scopy r10,r33
+   stod r10
+   .traceevent "A" 6 "R" "D" "r" 10 46 46 0 "classic_two_point_two" ""
+   .srcstep 47 47 17 "rexxcps_levelb.crexx" 134 1 31 "classic_five = \"5\" as .decimal"
+   .meta "rexxcps_levelb.main.classic_five"="b" ".decimal" r5
+   load r33,"5"
+   .traceevent "L" 4 "R" "S" "r" 33 47 47 0 "" ""
+   scopy r5,r33
+   stod r5
+   .traceevent "A" 6 "R" "D" "r" 5 47 47 0 "classic_five" ""
+   .srcstep 48 48 17 "rexxcps_levelb.crexx" 135 1 53 "classic_ninety_nine_point_seven = \"99.7\" as .decimal"
+   .meta "rexxcps_levelb.main.classic_ninety_nine_point_seven"="b" ".decimal" r6
+   load r33,"99.7"
+   .traceevent "L" 4 "R" "S" "r" 33 48 48 0 "" ""
+   scopy r6,r33
+   stod r6
+   .traceevent "A" 6 "R" "D" "r" 6 48 48 0 "classic_ninety_nine_point_seven" ""
+   .srcstep 56 56 17 "rexxcps_levelb.crexx" 138 1 3 "do i = 1 to averaging"
+   .srcstep 49 49 17 "rexxcps_levelb.crexx" 138 4 9 "do i = 1 to averaging"
+   .meta "rexxcps_levelb.main.i"="b" ".int" r33
+   load r33,1
+   .traceevent "L" 4 "R" "I" "r" 33 49 49 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 49 49 0 "i" ""
+   .srcstep 50 50 17 "rexxcps_levelb.crexx" 138 10 22 "do i = 1 to averaging"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "averaging" ""
+l186dostart:
+   .srcstep 50 50 17 "rexxcps_levelb.crexx" 138 10 22 "do i = 1 to averaging"
+   igt r32,r33,r3
+   brt l186doend,r32
+   .srcstep 52 52 17 "rexxcps_levelb.crexx" 139 3 17 "  call time(\"R\")"
+   load r31,"R"
+   .traceevent "L" 4 "R" "S" "r" 31 52 52 0 "" ""
+   load r30,1
+   settpcall r29,rxfnsb.time(),r30,r31,768
+   .traceevent "F" 4 "R" "S" "r" 29 52 52 0 "time" ""
+   .srcstep 54 54 17 "rexxcps_levelb.crexx" 140 3 5 "  do count; end"
+   .srcstep 53 53 17 "rexxcps_levelb.crexx" 140 6 11 "  do count; end"
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "count" ""
+   icopy r31,r12
+l197dostart:
+   .srcstep 53 53 17 "rexxcps_levelb.crexx" 140 6 11 "  do count; end"
+   bcf l197doend,r31
+l197doinc:
+   br l197dostart
+l197doend:
+   .srcstep 55 55 17 "rexxcps_levelb.crexx" 141 3 40 "  empty = (time(\"R\") as .float) + empty"
+   load r31,"R"
+   .traceevent "L" 4 "R" "S" "r" 31 55 55 0 "" ""
+   load r30,1
+   settpcall r28,rxfnsb.time(),r30,r31,768
+   .traceevent "F" 4 "R" "S" "r" 28 55 55 0 "time" ""
+   scopy r31,r28
+   stof r31
+   .traceevent "V" 6 "R" "F" "r" 13 55 55 0 "empty" ""
+   fadd r13,r31,r13
+   .traceevent "O" 4 "R" "F" "r" 13 55 55 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 13 55 55 0 "empty" ""
+l186doinc:
+   .srcstep 51 51 17 "rexxcps_levelb.crexx" 138 4 5 "do i = 1 to averaging"
+   inc r33
+   .srcstep 57 57 17 "rexxcps_levelb.crexx" 142 1 4 "end"
+   br l186dostart
+l186doend:
+   .meta "rexxcps_levelb.main.i"
+   .srcstep 58 58 17 "rexxcps_levelb.crexx" 143 1 38 "empty = empty / (averaging as .float)"
+   .traceevent "V" 6 "R" "F" "r" 13 58 58 0 "empty" ""
+   .traceevent "V" 6 "R" "I" "r" 3 58 58 0 "averaging" ""
+   itof r33,r3
+   fdiv r13,r13,r33
+   .traceevent "O" 4 "R" "F" "r" 13 58 58 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 13 58 58 0 "empty" ""
+   .srcstep 257 257 17 "rexxcps_levelb.crexx" 146 1 3 "do trial = 1 to 2"
+   .srcstep 59 59 17 "rexxcps_levelb.crexx" 146 4 13 "do trial = 1 to 2"
+   .meta "rexxcps_levelb.main.trial"="b" ".int" r33
+   load r33,1
+   .traceevent "L" 4 "R" "I" "r" 33 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 59 59 0 "trial" ""
+   .srcstep 60 60 17 "rexxcps_levelb.crexx" 146 14 18 "do trial = 1 to 2"
+   load r32,2
+   .traceevent "L" 4 "R" "I" "r" 32 0 0 0 "" ""
+l217dostart:
+   .srcstep 60 60 17 "rexxcps_levelb.crexx" 146 14 18 "do trial = 1 to 2"
+   igt r31,r33,r32
+   brt l217doend,r31
+   .srcstep 62 62 17 "rexxcps_levelb.crexx" 149 3 13 "  full = 0.0"
+   load r14,0.0
+   .traceevent "L" 4 "R" "F" "r" 14 62 62 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 14 62 62 0 "full" ""
+   .srcstep 245 245 17 "rexxcps_levelb.crexx" 150 3 5 "  do i = 1 to averaging"
+   .srcstep 63 63 17 "rexxcps_levelb.crexx" 150 6 11 "  do i = 1 to averaging"
+   .meta "rexxcps_levelb.main.i"="b" ".int" r30
+   load r30,1
+   .traceevent "L" 4 "R" "I" "r" 30 63 63 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 63 63 0 "i" ""
+   .srcstep 64 64 17 "rexxcps_levelb.crexx" 150 12 24 "  do i = 1 to averaging"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "averaging" ""
+l228dostart:
+   .srcstep 64 64 17 "rexxcps_levelb.crexx" 150 12 24 "  do i = 1 to averaging"
+   igt r28,r30,r3
+   brt l228doend,r28
+   .srcstep 66 66 33 "exit_fragment" 2 1 51 "call _trace_set(_trace_mode_from_option(tracevar))"
+   .traceevent "V" 6 "R" "S" "r" 23 66 66 0 "tracevar" ""
+   load r35,1
+   settpswapcall r27,rxfnsb._trace_mode_from_option(),r35,r23,256,r36
+   swap r23,r36
+   .traceevent "F" 4 "R" "S" "r" 27 66 66 0 "_trace_mode_from_option" ""
+   load r26,1
+   settpcall r36,rxfnsb._trace_set(),r26,r27,256
+   .traceevent "F" 4 "R" "V" "r" 36 66 66 0 "_trace_set" ""
+   .srcstep 67 67 33 "exit_fragment" 3 1 35 "__rxtrace_mode=_trace_current_mode"
+   .meta "rexxcps_levelb.main.__rxtrace_mode"="b" ".string" r34
+   load r35,0
+   call r34,rxfnsb._trace_current_mode(),r35
+   .traceevent "F" 4 "R" "S" "r" 34 67 67 0 "_trace_current_mode" ""
+   .traceevent "A" 6 "R" "S" "r" 34 67 67 0 "__rxtrace_mode" ""
+   .srcstep 68 68 33 "exit_fragment" 4 1 35 "call __rxtrace_reset_display_state"
+   call r27,__rxtrace_reset_display_state()
+   .traceevent "F" 4 "R" "V" "r" 27 68 68 0 "__rxtrace_reset_display_state" ""
+   .srcstep 76 76 33 "exit_fragment" 5 1 26 "if __rxtrace_mode = \"OFF\""
+   .traceevent "V" 6 "R" "S" "r" 34 76 76 0 "__rxtrace_mode" ""
+   req r35,r34,"OFF"
+   .traceevent "O" 4 "R" "B" "r" 35 76 76 0 "" ""
+   brf l1433iffalse,r35
+   .srcstep 77 77 33 "exit_fragment" 5 1 5 "then"
+   .srcstep 69 69 33 "exit_fragment" 5 1 6 "bpoff"
+   bpoff
+   br l1433ifend
+   .srcstep 78 78 33 "exit_fragment" 6 1 5 "else"
+l1433iffalse:
+   .srcstep 73 73 33 "exit_fragment" 6 1 48 "if _trace_needs_breakpoints(__rxtrace_mode) = 0"
+   .traceevent "V" 6 "R" "S" "r" 34 73 73 0 "__rxtrace_mode" ""
+   load r37,1
+   settpswapcall r26,rxfnsb._trace_needs_breakpoints(),r37,r34,256,r38
+   swap r34,r38
+   .traceevent "F" 4 "R" "I" "r" 26 73 73 0 "_trace_needs_breakpoints" ""
+   ieq r38,r26,0
+   .traceevent "O" 4 "R" "B" "r" 38 73 73 0 "" ""
+   brf l1438iffalse,r38
+   .srcstep 74 74 33 "exit_fragment" 6 1 5 "then"
+   .srcstep 70 70 33 "exit_fragment" 6 1 6 "bpoff"
+   bpoff
+   br l1438ifend
+   .srcstep 75 75 33 "exit_fragment" 7 1 5 "else"
+l1438iffalse:
+   .srcstep 71 71 33 "exit_fragment" 8 1 41 "sigcall __rxtrace_handler(),\"BREAKPOINT\""
+   sigcall __rxtrace_handler(),"BREAKPOINT"
+   .srcstep 72 72 33 "exit_fragment" 9 1 5 "bpon"
+   bpon
+l1438ifend:
+l1433ifend:
+   .srcstep 79 79 17 "rexxcps_levelb.crexx" 152 5 19 "    call time(\"R\")"
+   load r38,"R"
+   .traceevent "L" 4 "R" "S" "r" 38 79 79 0 "" ""
+   load r37,1
+   settpcall r35,rxfnsb.time(),r37,r38,768
+   .traceevent "F" 4 "R" "S" "r" 35 79 79 0 "time" ""
+   .srcstep 228 228 17 "rexxcps_levelb.crexx" 153 5 7 "    do count"
+   .srcstep 80 80 17 "rexxcps_levelb.crexx" 153 8 13 "    do count"
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "count" ""
+   icopy r26,r12
+l242dostart:
+   .srcstep 80 80 17 "rexxcps_levelb.crexx" 153 8 13 "    do count"
+   bcf l242doend,r26
+   .srcstep 81 81 17 "rexxcps_levelb.crexx" 155 7 17 "      flag = \"0\"; p0 = \"b\""
+   .meta "rexxcps_levelb.main.flag"="b" ".string" r38
+   load r38,"0"
+   .traceevent "L" 4 "R" "S" "r" 38 81 81 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 81 81 0 "flag" ""
+   .srcstep 82 82 17 "rexxcps_levelb.crexx" 155 19 27 "      flag = \"0\"; p0 = \"b\""
+   .meta "rexxcps_levelb.main.p0"="b" ".string" r37
+   load r37,"b"
+   .traceevent "L" 4 "R" "S" "r" 37 82 82 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 82 82 0 "p0" ""
+   .srcstep 226 226 17 "rexxcps_levelb.crexx" 156 7 9 "      do lvar = 1 to 14"
+   .srcstep 83 83 17 "rexxcps_levelb.crexx" 156 10 18 "      do lvar = 1 to 14"
+   .meta "rexxcps_levelb.main.lvar"="b" ".int" r60
+   load r60,1
+   .traceevent "L" 4 "R" "I" "r" 60 83 83 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 60 83 83 0 "lvar" ""
+   .srcstep 84 84 17 "rexxcps_levelb.crexx" 156 19 24 "      do lvar = 1 to 14"
+   load r72,14
+   .traceevent "L" 4 "R" "I" "r" 72 0 0 0 "" ""
+l253dostart:
+   .srcstep 84 84 17 "rexxcps_levelb.crexx" 156 19 24 "      do lvar = 1 to 14"
+   igt r73,r60,r72
+   brt l253doend,r73
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_471"="b" ".string" r40
+   .srcstep 86 86 6 "rexxcps_levelb.crexx" 188 9 46 "        parse value \"Foo Bar\" with v1 +5 v2 ."
+   null r40
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_511"="b" ".string" r41
+   .srcstep 87 87 6 "rexxcps_levelb.crexx" 192 53 78 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   null r41
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_522"="b" ".string" r42
+   .srcstep 88 88 6 "rexxcps_levelb.crexx" 193 53 78 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   null r42
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_533"="b" ".string" r43
+   .srcstep 89 89 6 "rexxcps_levelb.crexx" 194 53 78 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   null r43
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_544"="b" ".string" r44
+   .srcstep 90 90 6 "rexxcps_levelb.crexx" 195 53 78 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   null r44
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_471"="b" ".string" r45
+   .srcstep 91 91 6 "rexxcps_levelb.crexx" 188 9 46 "        parse value \"Foo Bar\" with v1 +5 v2 ."
+   null r45
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_511"="b" ".string" r46
+   .srcstep 92 92 6 "rexxcps_levelb.crexx" 192 53 78 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   null r46
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_522"="b" ".string" r47
+   .srcstep 93 93 6 "rexxcps_levelb.crexx" 193 53 78 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   null r47
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_533"="b" ".string" r48
+   .srcstep 94 94 6 "rexxcps_levelb.crexx" 194 53 78 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   null r48
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_544"="b" ".string" r49
+   .srcstep 95 95 6 "rexxcps_levelb.crexx" 195 53 78 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   null r49
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_511"="b" ".string" r50
+   .srcstep 96 96 6 "rexxcps_levelb.crexx" 192 53 78 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   null r50
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_522"="b" ".string" r51
+   .srcstep 97 97 6 "rexxcps_levelb.crexx" 193 53 78 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   null r51
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_533"="b" ".string" r52
+   .srcstep 98 98 6 "rexxcps_levelb.crexx" 194 53 78 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   null r52
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_544"="b" ".string" r53
+   .srcstep 99 99 6 "rexxcps_levelb.crexx" 195 53 78 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   null r53
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_471"="b" ".string" r54
+   .srcstep 100 100 6 "rexxcps_levelb.crexx" 188 9 46 "        parse value \"Foo Bar\" with v1 +5 v2 ."
+   null r54
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_511"="b" ".string" r55
+   .srcstep 101 101 6 "rexxcps_levelb.crexx" 192 53 78 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   null r55
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_522"="b" ".string" r56
+   .srcstep 102 102 6 "rexxcps_levelb.crexx" 193 53 78 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   null r56
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_533"="b" ".string" r57
+   .srcstep 103 103 6 "rexxcps_levelb.crexx" 194 53 78 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   null r57
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_544"="b" ".string" r58
+   .srcstep 104 104 6 "rexxcps_levelb.crexx" 195 53 78 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   null r58
+   .meta "rexxcps_levelb.main.p1"="b" ".string" r61
+   .srcstep 105 105 6 "rexxcps_levelb.crexx" 192 53 78 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   null r61
+   .meta "rexxcps_levelb.main.p2"="b" ".string" r62
+   .srcstep 106 106 6 "rexxcps_levelb.crexx" 193 53 78 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   null r62
+   .meta "rexxcps_levelb.main.p3"="b" ".string" r63
+   .srcstep 107 107 6 "rexxcps_levelb.crexx" 194 53 78 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   null r63
+   .meta "rexxcps_levelb.main.p4"="b" ".string" r64
+   .srcstep 108 108 6 "rexxcps_levelb.crexx" 195 53 78 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   null r64
+   .meta "rexxcps_levelb.main.p5"="b" ".string" r65
+   .srcstep 109 109 6 "rexxcps_levelb.crexx" 192 53 78 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   null r65
+   .meta "rexxcps_levelb.main.p6"="b" ".string" r66
+   .srcstep 110 110 6 "rexxcps_levelb.crexx" 193 53 78 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   null r66
+   .meta "rexxcps_levelb.main.p7"="b" ".string" r67
+   .srcstep 111 111 6 "rexxcps_levelb.crexx" 194 53 78 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   null r67
+   .meta "rexxcps_levelb.main.p8"="b" ".string" r68
+   .srcstep 112 112 6 "rexxcps_levelb.crexx" 195 53 78 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   null r68
+   .meta "rexxcps_levelb.main.v1"="b" ".string" r70
+   .srcstep 113 113 6 "rexxcps_levelb.crexx" 188 9 46 "        parse value \"Foo Bar\" with v1 +5 v2 ."
+   null r70
+   .meta "rexxcps_levelb.main.v2"="b" ".string" r71
+   .srcstep 114 114 6 "rexxcps_levelb.crexx" 188 9 46 "        parse value \"Foo Bar\" with v1 +5 v2 ."
+   null r71
+   .srcstep 115 115 17 "rexxcps_levelb.crexx" 158 9 25 "        key1 = \"Key Bee\""
+   .meta "rexxcps_levelb.main.key1"="b" ".string" r59
+   load r59,"Key Bee"
+   .traceevent "L" 4 "R" "S" "r" 59 115 115 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 59 115 115 0 "key1" ""
+   .srcstep 116 116 6 "rexxcps_levelb.crexx" 159 9 56 "        acompound.key1.lvar = substr(1234 \"5678\", 6, 2)"
+   .traceevent "V" 6 "R" "S" "r" 59 116 116 0 "key1" ""
+   concat r78,r59,"."
+   itos r60
+   .traceevent "V" 6 "R" "S" "r" 60 116 116 0 "lvar" ""
+   concat r76,r78,r60
+   .traceevent "C" 4 "R" "S" "r" 76 116 116 0 "acompound" ""
+   load r83,1234
+   itos r83
+   .traceevent "L" 4 "R" "S" "r" 83 116 116 0 "" ""
+   sconcat r79,r83,"5678"
+   .traceevent "O" 4 "R" "S" "r" 79 116 116 0 "" ""
+   load r80,6
+   .traceevent "L" 4 "R" "I" "r" 80 116 116 0 "" ""
+   load r81,2
+   .traceevent "L" 4 "R" "I" "r" 81 116 116 0 "" ""
+   load r78,4
+   settp r79,768
+   settp r81,256
+   settpcall r77,rxfnsb.substr(),r78,r82,512
+   .traceevent "F" 4 "R" "S" "r" 77 116 116 0 "substr" ""
+   load r74,3
+   settp r0,256
+   swap r75,r0
+   settp r76,768
+   settpcall r83,§rxfnsb.stem.set(),r74,r77,256
+   swap r0,r75
+   .traceevent "A" 6 "R" "S" "r" 77 116 116 0 "acompound" ""
+   .srcstep 118 118 17 "rexxcps_levelb.crexx" 160 9 38 "        if flag = acompound.key1.lvar then say \"Failed1\""
+   .traceevent "V" 6 "R" "S" "r" 38 118 118 0 "flag" ""
+   .traceevent "V" 6 "R" "S" "r" 59 118 118 0 "key1" ""
+   concat r79,r59,"."
+   itos r60
+   .traceevent "V" 6 "R" "S" "r" 60 118 118 0 "lvar" ""
+   concat r82,r79,r60
+   .traceevent "C" 4 "R" "S" "r" 82 118 118 0 "acompound" ""
+   load r80,2
+   settp r0,256
+   swap r81,r0
+   settpcall r79,§rxfnsb.stem.get(),r80,r82,768
+   swap r0,r81
+   .traceevent "V" 6 "R" "S" "r" 79 118 118 0 "acompound" ""
+   req r82,r38,r79
+   .traceevent "O" 4 "R" "B" "r" 82 118 118 0 "" ""
+   brf l281iffalse,r82
+   .srcstep 119 119 17 "rexxcps_levelb.crexx" 160 39 43 "        if flag = acompound.key1.lvar then say \"Failed1\""
+   .srcstep 117 117 17 "rexxcps_levelb.crexx" 160 44 57 "        if flag = acompound.key1.lvar then say \"Failed1\""
+   say "Failed1"
+l281iffalse:
+   .srcstep 145 145 17 "rexxcps_levelb.crexx" 161 9 11 "        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */"
+   .srcstep 120 120 17 "rexxcps_levelb.crexx" 161 12 37 "        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */"
+   .traceevent "V" 6 "R" "D" "r" 8 120 120 0 "classic_one_point_one" ""
+   dcopy r17,r8
+   .traceevent "A" 6 "R" "D" "r" 17 120 120 0 "j" ""
+   .srcstep 121 121 17 "rexxcps_levelb.crexx" 161 38 62 "        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */"
+   .traceevent "V" 6 "R" "D" "r" 10 0 0 0 "classic_two_point_two" ""
+   .srcstep 122 122 17 "rexxcps_levelb.crexx" 161 63 87 "        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */"
+   .traceevent "V" 6 "R" "D" "r" 8 0 0 0 "classic_one_point_one" ""
+l282dostart:
+   .srcstep 121 121 17 "rexxcps_levelb.crexx" 161 38 62 "        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */"
+   dlt r82,r8,0.0
+   brt l282doneg1,r82
+   dgt r82,r17,r10
+   brtf l282doend,l282doneg2,r82
+l282doneg1:
+   dlt r82,r17,r10
+   brt l282doend,r82
+l282doneg2:
+   .srcstep 124 124 17 "rexxcps_levelb.crexx" 162 11 51 "          if j > (acompound.key1.lvar as .decimal) then say \"Failed2\""
+   .traceevent "V" 6 "R" "D" "r" 17 124 124 0 "j" ""
+   .traceevent "V" 6 "R" "S" "r" 59 124 124 0 "key1" ""
+   concat r78,r59,"."
+   itos r60
+   .traceevent "V" 6 "R" "S" "r" 60 124 124 0 "lvar" ""
+   concat r81,r78,r60
+   .traceevent "C" 4 "R" "S" "r" 81 124 124 0 "acompound" ""
+   load r79,2
+   settp r0,256
+   swap r80,r0
+   settpcall r78,§rxfnsb.stem.get(),r79,r81,768
+   swap r0,r80
+   .traceevent "V" 6 "R" "S" "r" 78 124 124 0 "acompound" ""
+   scopy r81,r78
+   stod r81
+   dgt r81,r17,r81
+   .traceevent "O" 4 "R" "B" "r" 81 124 124 0 "" ""
+   brf l300iffalse,r81
+   .srcstep 125 125 17 "rexxcps_levelb.crexx" 162 52 56 "          if j > (acompound.key1.lvar as .decimal) then say \"Failed2\""
+   .srcstep 123 123 17 "rexxcps_levelb.crexx" 162 57 70 "          if j > (acompound.key1.lvar as .decimal) then say \"Failed2\""
+   say "Failed2"
+l300iffalse:
+   .srcstep 127 127 17 "rexxcps_levelb.crexx" 163 11 43 "          if 17 < length(j as .string) - 1 then say \"Failed3\""
+   .traceevent "V" 6 "R" "D" "r" 17 127 127 0 "j" ""
+   dcopy r81,r17
+   dtos r81
+   load r80,1
+   settpcall r79,rxfnsb.length(),r80,r81,768
+   .traceevent "F" 4 "R" "I" "r" 79 127 127 0 "length" ""
+   isub r81,r79,1
+   .traceevent "O" 4 "R" "I" "r" 81 127 127 0 "" ""
+   ilt r81,17,r81
+   .traceevent "O" 4 "R" "B" "r" 81 127 127 0 "" ""
+   brf l312iffalse,r81
+   .srcstep 128 128 17 "rexxcps_levelb.crexx" 163 44 48 "          if 17 < length(j as .string) - 1 then say \"Failed3\""
+   .srcstep 126 126 17 "rexxcps_levelb.crexx" 163 49 62 "          if 17 < length(j as .string) - 1 then say \"Failed3\""
+   say "Failed3"
+l312iffalse:
+   .srcstep 130 130 17 "rexxcps_levelb.crexx" 164 11 39 "          if (j as .string) = \"foobar\" then say \"Failed4\""
+   .traceevent "V" 6 "R" "D" "r" 17 130 130 0 "j" ""
+   dcopy r81,r17
+   dtos r81
+   req r81,r81,"foobar"
+   .traceevent "O" 4 "R" "B" "r" 81 130 130 0 "" ""
+   brf l320iffalse,r81
+   .srcstep 131 131 17 "rexxcps_levelb.crexx" 164 40 44 "          if (j as .string) = \"foobar\" then say \"Failed4\""
+   .srcstep 129 129 17 "rexxcps_levelb.crexx" 164 45 58 "          if (j as .string) = \"foobar\" then say \"Failed4\""
+   say "Failed4"
+l320iffalse:
+   .srcstep 133 133 17 "rexxcps_levelb.crexx" 165 11 38 "          if substr(1234, 1, 1) = \"9\" then say \"Failed5\""
+   load r78,1234
+   itos r78
+   .traceevent "L" 4 "R" "S" "r" 78 133 133 0 "" ""
+   load r79,1
+   .traceevent "L" 4 "R" "I" "r" 79 133 133 0 "" ""
+   load r80,1
+   .traceevent "L" 4 "R" "I" "r" 80 133 133 0 "" ""
+   load r77,4
+   settp r78,768
+   settp r80,256
+   settpcall r76,rxfnsb.substr(),r77,r81,512
+   .traceevent "F" 4 "R" "S" "r" 76 133 133 0 "substr" ""
+   req r81,r76,"9"
+   .traceevent "O" 4 "R" "B" "r" 81 133 133 0 "" ""
+   brf l329iffalse,r81
+   .srcstep 134 134 17 "rexxcps_levelb.crexx" 165 39 43 "          if substr(1234, 1, 1) = \"9\" then say \"Failed5\""
+   .srcstep 132 132 17 "rexxcps_levelb.crexx" 165 44 57 "          if substr(1234, 1, 1) = \"9\" then say \"Failed5\""
+   say "Failed5"
+l329iffalse:
+   .srcstep 136 136 17 "rexxcps_levelb.crexx" 166 11 33 "          if word(key1, 1) = \"?\" then say \"Failed6\""
+   .traceevent "V" 6 "R" "S" "r" 59 136 136 0 "key1" ""
+   load r81,1
+   .traceevent "L" 4 "R" "I" "r" 81 136 136 0 "" ""
+   load r79,2
+   settp r59,256
+   swap r80,r59
+   call r78,rxfnsb.word(),r79
+   swap r59,r80
+   .traceevent "F" 4 "R" "S" "r" 78 136 136 0 "word" ""
+   req r81,r78,"\?"
+   .traceevent "O" 4 "R" "B" "r" 81 136 136 0 "" ""
+   brf l337iffalse,r81
+   .srcstep 137 137 17 "rexxcps_levelb.crexx" 166 34 38 "          if word(key1, 1) = \"?\" then say \"Failed6\""
+   .srcstep 135 135 17 "rexxcps_levelb.crexx" 166 39 52 "          if word(key1, 1) = \"?\" then say \"Failed6\""
+   say "Failed6"
+l337iffalse:
+   .srcstep 142 142 17 "rexxcps_levelb.crexx" 167 11 30 "          if j < classic_five then do /* This path is taken. */"
+   .traceevent "V" 6 "R" "D" "r" 17 142 142 0 "j" ""
+   .traceevent "V" 6 "R" "D" "r" 5 142 142 0 "classic_five" ""
+   dlt r81,r17,r5
+   .traceevent "O" 4 "R" "B" "r" 81 142 142 0 "" ""
+   brf l360iffalse,r81
+   .srcstep 143 143 17 "rexxcps_levelb.crexx" 167 31 35 "          if j < classic_five then do /* This path is taken. */"
+   .srcstep 138 138 6 "rexxcps_levelb.crexx" 168 13 95 "            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string"
+   .traceevent "V" 6 "R" "S" "r" 59 138 138 0 "key1" ""
+   concat r76,r59,"."
+   itos r60
+   .traceevent "V" 6 "R" "S" "r" 60 138 138 0 "lvar" ""
+   concat r79,r76,r60
+   .traceevent "C" 4 "R" "S" "r" 79 138 138 0 "acompound" ""
+   .traceevent "V" 6 "R" "S" "r" 59 138 138 0 "key1" ""
+   concat r84,r59,"."
+   itos r60
+   .traceevent "V" 6 "R" "S" "r" 60 138 138 0 "lvar" ""
+   concat r76,r84,r60
+   .traceevent "C" 4 "R" "S" "r" 76 138 138 0 "acompound" ""
+   load r74,2
+   settp r0,256
+   swap r75,r0
+   settpcall r84,§rxfnsb.stem.get(),r74,r76,768
+   swap r0,r75
+   .traceevent "V" 6 "R" "S" "r" 84 138 138 0 "acompound" ""
+   scopy r76,r84
+   stod r76
+   .traceevent "V" 6 "R" "D" "r" 7 138 138 0 "classic_one" ""
+   dadd r76,r76,r7
+   .traceevent "O" 4 "R" "D" "r" 76 138 138 0 "" ""
+   dcopy r80,r76
+   dtos r80
+   load r77,3
+   settp r0,256
+   swap r78,r0
+   settp r79,768
+   settpcall r75,§rxfnsb.stem.set(),r77,r80,768
+   swap r0,r78
+   .traceevent "A" 6 "R" "S" "r" 80 138 138 0 "acompound" ""
+   .srcstep 140 140 17 "rexxcps_levelb.crexx" 169 13 31 "            if j = classic_two then leave"
+   .traceevent "V" 6 "R" "D" "r" 17 140 140 0 "j" ""
+   .traceevent "V" 6 "R" "D" "r" 9 140 140 0 "classic_two" ""
+   deq r84,r17,r9
+   .traceevent "O" 4 "R" "B" "r" 84 140 140 0 "" ""
+   brf l359iffalse,r84
+   .srcstep 141 141 17 "rexxcps_levelb.crexx" 169 32 36 "            if j = classic_two then leave"
+   .srcstep 139 139 17 "rexxcps_levelb.crexx" 169 37 42 "            if j = classic_two then leave"
+   br l282doend
+l359iffalse:
+l360iffalse:
+   .srcstep 144 144 17 "rexxcps_levelb.crexx" 171 11 18 "          iterate"
+   br l282doinc
+l282doinc:
+   .srcstep 122 122 17 "rexxcps_levelb.crexx" 161 63 87 "        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */"
+ dadd r17,r8,r17
+   .srcstep 146 146 17 "rexxcps_levelb.crexx" 172 9 12 "        end /* j */"
+   br l282dostart
+l282doend:
+   .srcstep 147 147 6 "rexxcps_levelb.crexx" 173 9 30 "        avar. = \"1.0\" || lvar"
+   .traceevent "C" 4 "R" "S" "r" 86 147 147 0 "avar" ""
+   itos r60
+   .traceevent "V" 6 "R" "S" "r" 60 147 147 0 "lvar" ""
+   concat r87,"1.0",r60
+   .traceevent "O" 4 "R" "S" "r" 87 147 147 0 "" ""
+   load r84,3
+   settp r2,256
+   swap r85,r2
+   settp r86,512
+   settpcall r82,§rxfnsb.stem.set(),r84,r87,768
+   swap r2,r85
+   .traceevent "A" 6 "R" "S" "r" 87 147 147 0 "avar" ""
+   .srcstep 163 163 6 "rexxcps_levelb.crexx" 174 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 163 163 0 "flag" ""
+   req r87,r38,"string"
+   .traceevent "O" 4 "R" "B" "r" 87 163 163 0 "" ""
+   brf l1658iffalse,r87
+   .srcstep 164 164 17 "rexxcps_levelb.crexx" 175 32 36 "          when flag = \"string\" then say \"FailedS1\""
+   .srcstep 148 148 17 "rexxcps_levelb.crexx" 175 37 51 "          when flag = \"string\" then say \"FailedS1\""
+   say "FailedS1"
+   br l1658ifend
+   .srcstep 165 165 17 "rexxcps_levelb.crexx" 176 11 15 "          when avar.flag.2 = \"0\" then say \"FailedS2\""
+l1658iffalse:
+   .srcstep 160 160 6 "rexxcps_levelb.crexx" 174 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 160 160 0 "flag" ""
+   concat r81,r38,"."
+   load r80,2
+   itos r80
+   concat r86,r81,r80
+   .traceevent "C" 4 "R" "S" "r" 86 160 160 0 "avar" ""
+   load r84,2
+   settp r2,256
+   swap r85,r2
+   settpcall r81,§rxfnsb.stem.get(),r84,r86,768
+   swap r2,r85
+   .traceevent "V" 6 "R" "S" "r" 81 160 160 0 "avar" ""
+   req r86,r81,"0"
+   .traceevent "O" 4 "R" "B" "r" 86 160 160 0 "" ""
+   brf l1659iffalse,r86
+   .srcstep 161 161 17 "rexxcps_levelb.crexx" 176 34 38 "          when avar.flag.2 = \"0\" then say \"FailedS2\""
+   .srcstep 149 149 17 "rexxcps_levelb.crexx" 176 39 53 "          when avar.flag.2 = \"0\" then say \"FailedS2\""
+   say "FailedS2"
+   br l1659ifend
+   .srcstep 162 162 17 "rexxcps_levelb.crexx" 177 11 15 "          when flag = ((classic_five + classic_ninety_nine_point_seven) as .string) then say \"FailedS3\""
+l1659iffalse:
+   .srcstep 157 157 6 "rexxcps_levelb.crexx" 174 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 157 157 0 "flag" ""
+   .traceevent "V" 6 "R" "D" "r" 5 157 157 0 "classic_five" ""
+   .traceevent "V" 6 "R" "D" "r" 6 157 157 0 "classic_ninety_nine_point_seven" ""
+   dadd r85,r5,r6
+   .traceevent "O" 4 "R" "D" "r" 85 157 157 0 "" ""
+   dcopy r84,r85
+   dtos r84
+   req r84,r38,r84
+   .traceevent "O" 4 "R" "B" "r" 84 157 157 0 "" ""
+   brf l1660iffalse,r84
+   .srcstep 158 158 17 "rexxcps_levelb.crexx" 177 85 89 "          when flag = ((classic_five + classic_ninety_nine_point_seven) as .string) then say \"FailedS3\""
+   .srcstep 150 150 17 "rexxcps_levelb.crexx" 177 90 104 "          when flag = ((classic_five + classic_ninety_nine_point_seven) as .string) then say \"FailedS3\""
+   say "FailedS3"
+   br l1660ifend
+   .srcstep 159 159 17 "rexxcps_levelb.crexx" 178 11 15 "          when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string"
+l1660iffalse:
+   .srcstep 155 155 6 "rexxcps_levelb.crexx" 174 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 155 155 0 "flag" ""
+   rne r81,r38,"0"
+   .traceevent "O" 4 "R" "B" "r" 81 155 155 0 "" ""
+   brf l1661iffalse,r81
+   .srcstep 156 156 17 "rexxcps_levelb.crexx" 178 28 32 "          when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string"
+   .srcstep 151 151 6 "rexxcps_levelb.crexx" 178 33 103 "          when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string"
+   load r76,1
+   itos r76
+   concat r76,r76,"."
+   load r74,2
+   itos r74
+   concat r79,r76,r74
+   .traceevent "C" 4 "R" "S" "r" 79 151 151 0 "avar" ""
+   load r76,1
+   itos r76
+   concat r76,r76,"."
+   load r74,2
+   itos r74
+   concat r90,r76,r74
+   .traceevent "C" 4 "R" "S" "r" 90 151 151 0 "avar" ""
+   load r88,2
+   settp r2,256
+   swap r89,r2
+   settpcall r76,§rxfnsb.stem.get(),r88,r90,768
+   swap r2,r89
+   .traceevent "V" 6 "R" "S" "r" 76 151 151 0 "avar" ""
+   scopy r90,r76
+   stod r90
+   .traceevent "V" 6 "R" "D" "r" 8 151 151 0 "classic_one_point_one" ""
+   dmult r90,r90,r8
+   .traceevent "O" 4 "R" "D" "r" 90 151 151 0 "" ""
+   dcopy r80,r90
+   dtos r80
+   load r77,3
+   settp r2,256
+   swap r78,r2
+   settp r79,768
+   settpcall r89,§rxfnsb.stem.set(),r77,r80,768
+   swap r2,r78
+   .traceevent "A" 6 "R" "S" "r" 80 151 151 0 "avar" ""
+   br l1661ifend
+l1661iffalse:
+   .srcstep 153 153 6 "rexxcps_levelb.crexx" 174 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 153 153 0 "flag" ""
+   seq r88,r38,"0"
+   .traceevent "O" 4 "R" "B" "r" 88 153 153 0 "" ""
+   brf l1662iffalse,r88
+   .srcstep 154 154 17 "rexxcps_levelb.crexx" 179 28 32 "          when flag == \"0\" then flag = \"0\""
+   .srcstep 152 152 17 "rexxcps_levelb.crexx" 179 33 43 "          when flag == \"0\" then flag = \"0\""
+   load r38,"0"
+   .traceevent "L" 4 "R" "S" "r" 38 152 152 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 152 152 0 "flag" ""
+l1662iffalse:
+l1661ifend:
+l1660ifend:
+l1659ifend:
+l1658ifend:
+   .srcstep 167 167 17 "rexxcps_levelb.crexx" 181 9 13 "        if 1 then flag = \"1\""
+   load r90,1
+   .traceevent "L" 4 "R" "B" "r" 90 167 167 0 "" ""
+   brf l422iffalse,r90
+   .srcstep 168 168 17 "rexxcps_levelb.crexx" 181 14 18 "        if 1 then flag = \"1\""
+   .srcstep 166 166 17 "rexxcps_levelb.crexx" 181 19 29 "        if 1 then flag = \"1\""
+   load r38,"1"
+   .traceevent "L" 4 "R" "S" "r" 38 166 166 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 166 166 0 "flag" ""
+l422iffalse:
+   .srcstep 180 180 6 "rexxcps_levelb.crexx" 182 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 180 180 0 "flag" ""
+   seq r90,r38,"ring"
+   .traceevent "O" 4 "R" "B" "r" 90 180 180 0 "" ""
+   brf l1663iffalse,r90
+   .srcstep 181 181 17 "rexxcps_levelb.crexx" 183 31 35 "          when flag == \"ring\" then say \"FailedT1\""
+   .srcstep 169 169 17 "rexxcps_levelb.crexx" 183 36 50 "          when flag == \"ring\" then say \"FailedT1\""
+   say "FailedT1"
+   br l1663ifend
+   .srcstep 182 182 17 "rexxcps_levelb.crexx" 184 11 15 "          when avar.flag.3 = \"0\" then say \"FailedT2\""
+l1663iffalse:
+   .srcstep 177 177 6 "rexxcps_levelb.crexx" 182 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 177 177 0 "flag" ""
+   concat r85,r38,"."
+   load r84,3
+   itos r84
+   concat r88,r85,r84
+   .traceevent "C" 4 "R" "S" "r" 88 177 177 0 "avar" ""
+   load r86,2
+   settp r2,256
+   swap r87,r2
+   settpcall r85,§rxfnsb.stem.get(),r86,r88,768
+   swap r2,r87
+   .traceevent "V" 6 "R" "S" "r" 85 177 177 0 "avar" ""
+   req r88,r85,"0"
+   .traceevent "O" 4 "R" "B" "r" 88 177 177 0 "" ""
+   brf l1664iffalse,r88
+   .srcstep 178 178 17 "rexxcps_levelb.crexx" 184 34 38 "          when avar.flag.3 = \"0\" then say \"FailedT2\""
+   .srcstep 170 170 17 "rexxcps_levelb.crexx" 184 39 53 "          when avar.flag.3 = \"0\" then say \"FailedT2\""
+   say "FailedT2"
+   br l1664ifend
+   .srcstep 179 179 17 "rexxcps_levelb.crexx" 185 11 15 "          when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string"
+l1664iffalse:
+   .srcstep 175 175 6 "rexxcps_levelb.crexx" 182 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 175 175 0 "flag" ""
+   rne r87,r38,"0"
+   .traceevent "O" 4 "R" "B" "r" 87 175 175 0 "" ""
+   brf l1665iffalse,r87
+   .srcstep 176 176 17 "rexxcps_levelb.crexx" 185 28 32 "          when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string"
+   .srcstep 171 171 6 "rexxcps_levelb.crexx" 185 33 103 "          when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string"
+   load r86,1
+   itos r86
+   concat r86,r86,"."
+   load r85,2
+   itos r85
+   concat r93,r86,r85
+   .traceevent "C" 4 "R" "S" "r" 93 171 171 0 "avar" ""
+   load r81,1
+   itos r81
+   concat r81,r81,"."
+   load r80,2
+   itos r80
+   concat r86,r81,r80
+   .traceevent "C" 4 "R" "S" "r" 86 171 171 0 "avar" ""
+   load r84,2
+   settp r2,256
+   swap r85,r2
+   settpcall r81,§rxfnsb.stem.get(),r84,r86,768
+   swap r2,r85
+   .traceevent "V" 6 "R" "S" "r" 81 171 171 0 "avar" ""
+   scopy r86,r81
+   stod r86
+   .traceevent "V" 6 "R" "D" "r" 8 171 171 0 "classic_one_point_one" ""
+   dmult r86,r86,r8
+   .traceevent "O" 4 "R" "D" "r" 86 171 171 0 "" ""
+   dcopy r94,r86
+   dtos r94
+   load r91,3
+   settp r2,256
+   swap r92,r2
+   settp r93,768
+   settpcall r85,§rxfnsb.stem.set(),r91,r94,768
+   swap r2,r92
+   .traceevent "A" 6 "R" "S" "r" 94 171 171 0 "avar" ""
+   br l1665ifend
+l1665iffalse:
+   .srcstep 173 173 6 "rexxcps_levelb.crexx" 182 9 15 "        select"
+   .traceevent "V" 6 "R" "S" "r" 38 173 173 0 "flag" ""
+   seq r94,r38,"0"
+   .traceevent "O" 4 "R" "B" "r" 94 173 173 0 "" ""
+   brf l1666iffalse,r94
+   .srcstep 174 174 17 "rexxcps_levelb.crexx" 186 28 32 "          when flag == \"0\" then flag = \"1\""
+   .srcstep 172 172 17 "rexxcps_levelb.crexx" 186 33 43 "          when flag == \"0\" then flag = \"1\""
+   load r38,"1"
+   .traceevent "L" 4 "R" "S" "r" 38 172 172 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 172 172 0 "flag" ""
+l1666iffalse:
+l1665ifend:
+l1664ifend:
+l1663ifend:
+   .srcstep 183 183 33 "exit_fragment" 2 1 48 "__rxcpx_parse_source_471=(\"Foo Bar\") as .string"
+   .meta "rexxcps_levelb.main."="b" ".unknown" r39
+   load r94,"Foo Bar"
+   .traceevent "L" 4 "R" "S" "r" 94 183 183 0 "" ""
+   scopy r54,r94
+   .traceevent "A" 6 "R" "S" "r" 54 183 183 0 "__rxcpx_parse_source_471" ""
+   .srcstep 184 184 33 "exit_fragment" 2 1 89 "parsepos2 __rxcpx_parse_direct1_471,__rxcpx_parse_direct2_471,__rxcpx_parse_source_471,5"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "__rxcpx_parse_direct1_471" ""
+   .traceevent "V" 6 "R" "S" "r" 45 0 0 0 "__rxcpx_parse_direct2_471" ""
+   .traceevent "V" 6 "R" "S" "r" 54 0 0 0 "__rxcpx_parse_source_471" ""
+   parsepos2 r40,r45,r54,5
+   .srcstep 185 185 33 "exit_fragment" 2 1 29 "v1=__rxcpx_parse_direct1_471"
+   .traceevent "V" 6 "R" "S" "r" 40 185 185 0 "__rxcpx_parse_direct1_471" ""
+   scopy r70,r40
+   .traceevent "A" 6 "R" "S" "r" 70 185 185 0 "v1" ""
+   .srcstep 186 186 33 "exit_fragment" 2 1 29 "v2=__rxcpx_parse_direct2_471"
+   .traceevent "V" 6 "R" "S" "r" 45 186 186 0 "__rxcpx_parse_direct2_471" ""
+   scopy r71,r45
+   .traceevent "A" 6 "R" "S" "r" 71 186 186 0 "v2" ""
+   .srcstep 187 187 33 "exit_fragment" 2 1 60 "call _trace_set(_trace_mode_from_option(_trace_current_mode"
+   load r90,0
+   call r92,rxfnsb._trace_current_mode(),r90
+   .traceevent "F" 4 "R" "S" "r" 92 187 187 0 "_trace_current_mode" ""
+   load r91,1
+   settpcall r94,rxfnsb._trace_mode_from_option(),r91,r92,256
+   .traceevent "F" 4 "R" "S" "r" 94 187 187 0 "_trace_mode_from_option" ""
+   load r93,1
+   settpcall r92,rxfnsb._trace_set(),r93,r94,256
+   .traceevent "F" 4 "R" "V" "r" 92 187 187 0 "_trace_set" ""
+   .srcstep 188 188 33 "exit_fragment" 3 1 35 "__rxtrace_mode=_trace_current_mode"
+   .meta "rexxcps_levelb.main.__rxtrace_mode"="b" ".string" r95
+   load r94,0
+   call r95,rxfnsb._trace_current_mode(),r94
+   .traceevent "F" 4 "R" "S" "r" 95 188 188 0 "_trace_current_mode" ""
+   .traceevent "A" 6 "R" "S" "r" 95 188 188 0 "__rxtrace_mode" ""
+   .srcstep 189 189 33 "exit_fragment" 4 1 35 "call __rxtrace_reset_display_state"
+   call r93,__rxtrace_reset_display_state()
+   .traceevent "F" 4 "R" "V" "r" 93 189 189 0 "__rxtrace_reset_display_state" ""
+   .srcstep 197 197 33 "exit_fragment" 5 1 26 "if __rxtrace_mode = \"OFF\""
+   .traceevent "V" 6 "R" "S" "r" 95 197 197 0 "__rxtrace_mode" ""
+   req r94,r95,"OFF"
+   .traceevent "O" 4 "R" "B" "r" 94 197 197 0 "" ""
+   brf l1479iffalse,r94
+   .srcstep 198 198 33 "exit_fragment" 5 1 5 "then"
+   .srcstep 190 190 33 "exit_fragment" 5 1 6 "bpoff"
+   bpoff
+   br l1479ifend
+   .srcstep 199 199 33 "exit_fragment" 6 1 5 "else"
+l1479iffalse:
+   .srcstep 194 194 33 "exit_fragment" 6 1 48 "if _trace_needs_breakpoints(__rxtrace_mode) = 0"
+   .traceevent "V" 6 "R" "S" "r" 95 194 194 0 "__rxtrace_mode" ""
+   load r90,1
+   settpswapcall r88,rxfnsb._trace_needs_breakpoints(),r90,r95,256,r91
+   swap r95,r91
+   .traceevent "F" 4 "R" "I" "r" 88 194 194 0 "_trace_needs_breakpoints" ""
+   ieq r91,r88,0
+   .traceevent "O" 4 "R" "B" "r" 91 194 194 0 "" ""
+   brf l1484iffalse,r91
+   .srcstep 195 195 33 "exit_fragment" 6 1 5 "then"
+   .srcstep 191 191 33 "exit_fragment" 6 1 6 "bpoff"
+   bpoff
+   br l1484ifend
+   .srcstep 196 196 33 "exit_fragment" 7 1 5 "else"
+l1484iffalse:
+   .srcstep 192 192 33 "exit_fragment" 8 1 41 "sigcall __rxtrace_handler(),\"BREAKPOINT\""
+   sigcall __rxtrace_handler(),"BREAKPOINT"
+   .srcstep 193 193 33 "exit_fragment" 9 1 5 "bpon"
+   bpon
+l1484ifend:
+l1479ifend:
+   .srcstep 200 200 33 "exit_fragment" 2 1 84 "rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir"
+   load r97,"value"
+   .traceevent "L" 4 "R" "S" "r" 97 200 200 0 "" ""
+   load r104,1
+   settpcall r103,_rxsysb.addressenv(),r104,r105,512
+   .traceevent "F" 4 "R" "O" "r" 103 200 200 0 "addressenv" ""
+   load r102,1
+   settp r103,256
+   srcmethodsel r98,r103,"rxsig1|environment_name|.string|"
+   dcall r98,r98,r102
+   .traceevent "F" 4 "R" "S" "r" 98 200 200 0 "environment_name" ""
+   load r105,0
+   call r99,_rxsysb._noredir(),r105
+   .traceevent "F" 4 "R" "X" "r" 99 200 200 0 "_noredir" ""
+   load r105,0
+   call r100,_rxsysb._noredir(),r105
+   .traceevent "F" 4 "R" "X" "r" 100 200 200 0 "_noredir" ""
+   load r105,0
+   call r101,_rxsysb._noredir(),r105
+   .traceevent "F" 4 "R" "X" "r" 101 200 200 0 "_noredir" ""
+   load r96,5
+   settp r97,768
+   settp r98,256
+   settp r99,256
+   settp r100,256
+   settpcall r18,_rxsysb._address(),r96,r101,256
+   .traceevent "F" 4 "R" "I" "r" 18 200 200 0 "_address" ""
+   .traceevent "A" 6 "R" "I" "r" 18 200 200 0 "rc" ""
+   .srcstep 201 201 17 "rexxcps_levelb.crexx" 191 9 117 "        call cps_subroutine(upper(\"with\"), upper(\"2\"), upper(\"args\"), upper(\"(This is the second)\" || 1 || \"\" || 1))"
+   load r100,"with"
+   .traceevent "L" 4 "R" "S" "r" 100 201 201 0 "" ""
+   load r99,1
+   call r102,rxfnsb.upper(),r99
+   .traceevent "F" 4 "R" "S" "r" 102 201 201 0 "upper" ""
+   load r100,"2"
+   .traceevent "L" 4 "R" "S" "r" 100 201 201 0 "" ""
+   load r99,1
+   call r103,rxfnsb.upper(),r99
+   .traceevent "F" 4 "R" "S" "r" 103 201 201 0 "upper" ""
+   load r100,"args"
+   .traceevent "L" 4 "R" "S" "r" 100 201 201 0 "" ""
+   load r99,1
+   call r104,rxfnsb.upper(),r99
+   .traceevent "F" 4 "R" "S" "r" 104 201 201 0 "upper" ""
+   load r98,1
+   itos r98
+   .traceevent "L" 4 "R" "S" "r" 98 201 201 0 "" ""
+   concat r98,"(This is the second)",r98
+   .traceevent "O" 4 "R" "S" "r" 98 201 201 0 "" ""
+   concat r98,r98,""
+   .traceevent "O" 4 "R" "S" "r" 98 201 201 0 "" ""
+   load r97,1
+   itos r97
+   .traceevent "L" 4 "R" "S" "r" 97 201 201 0 "" ""
+   concat r100,r98,r97
+   .traceevent "O" 4 "R" "S" "r" 100 201 201 0 "" ""
+   load r99,1
+   call r105,rxfnsb.upper(),r99
+   .traceevent "F" 4 "R" "S" "r" 105 201 201 0 "upper" ""
+   settp r102,256
+   settp r103,256
+   settp r104,256
+   settp r105,256
+   call4 r100,cps_subroutine(),r102,r103,r104,r105
+   .traceevent "F" 4 "R" "V" "r" 100 201 201 0 "cps_subroutine" ""
+   .srcstep 202 202 17 "rexxcps_levelb.crexx" 192 9 51 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   .meta "rexxcps_levelb.main.text"="b" ".string" r69
+   load r69,"This is an awfully boring program"
+   .traceevent "L" 4 "R" "S" "r" 69 202 202 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 69 202 202 0 "text" ""
+   .srcstep 203 203 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_511=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 69 203 203 0 "text" ""
+   scopy r55,r69
+   .traceevent "A" 6 "R" "S" "r" 55 203 203 0 "__rxcpx_parse_source_511" ""
+   .srcstep 204 204 33 "exit_fragment" 2 1 115 "parsewords3 __rxcpx_parse_direct1_511,__rxcpx_parse_direct2_511,__rxcpx_parse_direct3_511,__rxcpx_parse_source_511"
+   .traceevent "V" 6 "R" "S" "r" 41 0 0 0 "__rxcpx_parse_direct1_511" ""
+   .traceevent "V" 6 "R" "S" "r" 46 0 0 0 "__rxcpx_parse_direct2_511" ""
+   .traceevent "V" 6 "R" "S" "r" 50 0 0 0 "__rxcpx_parse_direct3_511" ""
+   .traceevent "V" 6 "R" "S" "r" 55 0 0 0 "__rxcpx_parse_source_511" ""
+   parsewords3 r41,r46,r50,r55
+   .srcstep 205 205 33 "exit_fragment" 2 1 29 "p1=__rxcpx_parse_direct1_511"
+   .traceevent "V" 6 "R" "S" "r" 41 205 205 0 "__rxcpx_parse_direct1_511" ""
+   scopy r61,r41
+   .traceevent "A" 6 "R" "S" "r" 61 205 205 0 "p1" ""
+   .srcstep 206 206 33 "exit_fragment" 2 1 29 "p0=__rxcpx_parse_direct2_511"
+   .traceevent "V" 6 "R" "S" "r" 46 206 206 0 "__rxcpx_parse_direct2_511" ""
+   scopy r37,r46
+   .traceevent "A" 6 "R" "S" "r" 37 206 206 0 "p0" ""
+   .srcstep 207 207 33 "exit_fragment" 2 1 29 "p5=__rxcpx_parse_direct3_511"
+   .traceevent "V" 6 "R" "S" "r" 50 207 207 0 "__rxcpx_parse_direct3_511" ""
+   scopy r65,r50
+   .traceevent "A" 6 "R" "S" "r" 65 207 207 0 "p5" ""
+   .srcstep 208 208 17 "rexxcps_levelb.crexx" 193 9 51 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   load r69,"is an awfully boring program This"
+   .traceevent "L" 4 "R" "S" "r" 69 208 208 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 69 208 208 0 "text" ""
+   .srcstep 209 209 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_522=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 69 209 209 0 "text" ""
+   scopy r56,r69
+   .traceevent "A" 6 "R" "S" "r" 56 209 209 0 "__rxcpx_parse_source_522" ""
+   .srcstep 210 210 33 "exit_fragment" 2 1 115 "parsewords3 __rxcpx_parse_direct1_522,__rxcpx_parse_direct2_522,__rxcpx_parse_direct3_522,__rxcpx_parse_source_522"
+   .traceevent "V" 6 "R" "S" "r" 42 0 0 0 "__rxcpx_parse_direct1_522" ""
+   .traceevent "V" 6 "R" "S" "r" 47 0 0 0 "__rxcpx_parse_direct2_522" ""
+   .traceevent "V" 6 "R" "S" "r" 51 0 0 0 "__rxcpx_parse_direct3_522" ""
+   .traceevent "V" 6 "R" "S" "r" 56 0 0 0 "__rxcpx_parse_source_522" ""
+   parsewords3 r42,r47,r51,r56
+   .srcstep 211 211 33 "exit_fragment" 2 1 29 "p2=__rxcpx_parse_direct1_522"
+   .traceevent "V" 6 "R" "S" "r" 42 211 211 0 "__rxcpx_parse_direct1_522" ""
+   scopy r62,r42
+   .traceevent "A" 6 "R" "S" "r" 62 211 211 0 "p2" ""
+   .srcstep 212 212 33 "exit_fragment" 2 1 29 "p0=__rxcpx_parse_direct2_522"
+   .traceevent "V" 6 "R" "S" "r" 47 212 212 0 "__rxcpx_parse_direct2_522" ""
+   scopy r37,r47
+   .traceevent "A" 6 "R" "S" "r" 37 212 212 0 "p0" ""
+   .srcstep 213 213 33 "exit_fragment" 2 1 29 "p6=__rxcpx_parse_direct3_522"
+   .traceevent "V" 6 "R" "S" "r" 51 213 213 0 "__rxcpx_parse_direct3_522" ""
+   scopy r66,r51
+   .traceevent "A" 6 "R" "S" "r" 66 213 213 0 "p6" ""
+   .srcstep 214 214 17 "rexxcps_levelb.crexx" 194 9 51 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   load r69,"an awfully boring program This is"
+   .traceevent "L" 4 "R" "S" "r" 69 214 214 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 69 214 214 0 "text" ""
+   .srcstep 215 215 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_533=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 69 215 215 0 "text" ""
+   scopy r57,r69
+   .traceevent "A" 6 "R" "S" "r" 57 215 215 0 "__rxcpx_parse_source_533" ""
+   .srcstep 216 216 33 "exit_fragment" 2 1 115 "parsewords3 __rxcpx_parse_direct1_533,__rxcpx_parse_direct2_533,__rxcpx_parse_direct3_533,__rxcpx_parse_source_533"
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "__rxcpx_parse_direct1_533" ""
+   .traceevent "V" 6 "R" "S" "r" 48 0 0 0 "__rxcpx_parse_direct2_533" ""
+   .traceevent "V" 6 "R" "S" "r" 52 0 0 0 "__rxcpx_parse_direct3_533" ""
+   .traceevent "V" 6 "R" "S" "r" 57 0 0 0 "__rxcpx_parse_source_533" ""
+   parsewords3 r43,r48,r52,r57
+   .srcstep 217 217 33 "exit_fragment" 2 1 29 "p3=__rxcpx_parse_direct1_533"
+   .traceevent "V" 6 "R" "S" "r" 43 217 217 0 "__rxcpx_parse_direct1_533" ""
+   scopy r63,r43
+   .traceevent "A" 6 "R" "S" "r" 63 217 217 0 "p3" ""
+   .srcstep 218 218 33 "exit_fragment" 2 1 29 "p0=__rxcpx_parse_direct2_533"
+   .traceevent "V" 6 "R" "S" "r" 48 218 218 0 "__rxcpx_parse_direct2_533" ""
+   scopy r37,r48
+   .traceevent "A" 6 "R" "S" "r" 37 218 218 0 "p0" ""
+   .srcstep 219 219 33 "exit_fragment" 2 1 29 "p7=__rxcpx_parse_direct3_533"
+   .traceevent "V" 6 "R" "S" "r" 52 219 219 0 "__rxcpx_parse_direct3_533" ""
+   scopy r67,r52
+   .traceevent "A" 6 "R" "S" "r" 67 219 219 0 "p7" ""
+   .srcstep 220 220 17 "rexxcps_levelb.crexx" 195 9 51 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   load r69,"awfully boring program This is an"
+   .traceevent "L" 4 "R" "S" "r" 69 220 220 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 69 220 220 0 "text" ""
+   .srcstep 221 221 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_544=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 69 221 221 0 "text" ""
+   scopy r58,r69
+   .traceevent "A" 6 "R" "S" "r" 58 221 221 0 "__rxcpx_parse_source_544" ""
+   .srcstep 222 222 33 "exit_fragment" 2 1 115 "parsewords3 __rxcpx_parse_direct1_544,__rxcpx_parse_direct2_544,__rxcpx_parse_direct3_544,__rxcpx_parse_source_544"
+   .traceevent "V" 6 "R" "S" "r" 44 0 0 0 "__rxcpx_parse_direct1_544" ""
+   .traceevent "V" 6 "R" "S" "r" 49 0 0 0 "__rxcpx_parse_direct2_544" ""
+   .traceevent "V" 6 "R" "S" "r" 53 0 0 0 "__rxcpx_parse_direct3_544" ""
+   .traceevent "V" 6 "R" "S" "r" 58 0 0 0 "__rxcpx_parse_source_544" ""
+   parsewords3 r44,r49,r53,r58
+   .srcstep 223 223 33 "exit_fragment" 2 1 29 "p4=__rxcpx_parse_direct1_544"
+   .traceevent "V" 6 "R" "S" "r" 44 223 223 0 "__rxcpx_parse_direct1_544" ""
+   scopy r64,r44
+   .traceevent "A" 6 "R" "S" "r" 64 223 223 0 "p4" ""
+   .srcstep 224 224 33 "exit_fragment" 2 1 29 "p0=__rxcpx_parse_direct2_544"
+   .traceevent "V" 6 "R" "S" "r" 49 224 224 0 "__rxcpx_parse_direct2_544" ""
+   scopy r37,r49
+   .traceevent "A" 6 "R" "S" "r" 37 224 224 0 "p0" ""
+   .srcstep 225 225 33 "exit_fragment" 2 1 29 "p8=__rxcpx_parse_direct3_544"
+   .traceevent "V" 6 "R" "S" "r" 53 225 225 0 "__rxcpx_parse_direct3_544" ""
+   scopy r68,r53
+   .traceevent "A" 6 "R" "S" "r" 68 225 225 0 "p8" ""
+l253doinc:
+   .srcstep 85 85 17 "rexxcps_levelb.crexx" 156 10 14 "      do lvar = 1 to 14"
+   inc r60
+   .srcstep 227 227 17 "rexxcps_levelb.crexx" 196 7 10 "      end"
+   br l253dostart
+l253doend:
+   endlife r39
+   .meta "rexxcps_levelb.main."
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_471"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_511"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_522"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_533"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct1_544"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_471"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_511"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_522"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_533"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct2_544"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_511"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_522"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_533"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_direct3_544"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_471"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_511"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_522"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_533"
+   .meta "rexxcps_levelb.main.__rxcpx_parse_source_544"
+   .meta "rexxcps_levelb.main.key1"
+   .meta "rexxcps_levelb.main.lvar"
+   .meta "rexxcps_levelb.main.p1"
+   .meta "rexxcps_levelb.main.p2"
+   .meta "rexxcps_levelb.main.p3"
+   .meta "rexxcps_levelb.main.p4"
+   .meta "rexxcps_levelb.main.p5"
+   .meta "rexxcps_levelb.main.p6"
+   .meta "rexxcps_levelb.main.p7"
+   .meta "rexxcps_levelb.main.p8"
+   .meta "rexxcps_levelb.main.text"
+   .meta "rexxcps_levelb.main.v1"
+   .meta "rexxcps_levelb.main.v2"
+l242doinc:
+   .srcstep 229 229 17 "rexxcps_levelb.crexx" 196 7 10 "      end"
+   br l242dostart
+l242doend:
+   .meta "rexxcps_levelb.main.flag"
+   .meta "rexxcps_levelb.main.p0"
+   .srcstep 230 230 17 "rexxcps_levelb.crexx" 199 5 40 "    full = (time(\"R\") as .float) + full"
+   load r105,"R"
+   .traceevent "L" 4 "R" "S" "r" 105 230 230 0 "" ""
+   load r104,1
+   settpcall r103,rxfnsb.time(),r104,r105,768
+   .traceevent "F" 4 "R" "S" "r" 103 230 230 0 "time" ""
+   scopy r105,r103
+   stof r105
+   .traceevent "V" 6 "R" "F" "r" 14 230 230 0 "full" ""
+   fadd r14,r105,r14
+   .traceevent "O" 4 "R" "F" "r" 14 230 230 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 14 230 230 0 "full" ""
+   .srcstep 231 231 33 "exit_fragment" 2 1 6 "bpoff"
+   bpoff
+   .srcstep 232 232 33 "exit_fragment" 3 1 23 "call _trace_set(\"OFF\")"
+   load r105,"OFF"
+   .traceevent "L" 4 "R" "S" "r" 105 232 232 0 "" ""
+   load r104,1
+   settpcall r103,rxfnsb._trace_set(),r104,r105,768
+   .traceevent "F" 4 "R" "V" "r" 103 232 232 0 "_trace_set" ""
+   .srcstep 233 233 33 "exit_fragment" 4 1 35 "__rxtrace_mode=_trace_current_mode"
+   .meta "rexxcps_levelb.main.__rxtrace_mode"="b" ".string" r106
+   load r105,0
+   call r106,rxfnsb._trace_current_mode(),r105
+   .traceevent "F" 4 "R" "S" "r" 106 233 233 0 "_trace_current_mode" ""
+   .traceevent "A" 6 "R" "S" "r" 106 233 233 0 "__rxtrace_mode" ""
+   .srcstep 234 234 33 "exit_fragment" 5 1 35 "call __rxtrace_reset_display_state"
+   call r104,__rxtrace_reset_display_state()
+   .traceevent "F" 4 "R" "V" "r" 104 234 234 0 "__rxtrace_reset_display_state" ""
+   .srcstep 242 242 33 "exit_fragment" 6 1 26 "if __rxtrace_mode = \"OFF\""
+   .traceevent "V" 6 "R" "S" "r" 106 242 242 0 "__rxtrace_mode" ""
+   req r105,r106,"OFF"
+   .traceevent "O" 4 "R" "B" "r" 105 242 242 0 "" ""
+   brf l1602iffalse,r105
+   .srcstep 243 243 33 "exit_fragment" 6 1 5 "then"
+   .srcstep 235 235 33 "exit_fragment" 6 1 6 "bpoff"
+   bpoff
+   br l1602ifend
+   .srcstep 244 244 33 "exit_fragment" 7 1 5 "else"
+l1602iffalse:
+   .srcstep 239 239 33 "exit_fragment" 7 1 48 "if _trace_needs_breakpoints(__rxtrace_mode) = 0"
+   .traceevent "V" 6 "R" "S" "r" 106 239 239 0 "__rxtrace_mode" ""
+   load r101,1
+   settpswapcall r99,rxfnsb._trace_needs_breakpoints(),r101,r106,256,r102
+   swap r106,r102
+   .traceevent "F" 4 "R" "I" "r" 99 239 239 0 "_trace_needs_breakpoints" ""
+   ieq r102,r99,0
+   .traceevent "O" 4 "R" "B" "r" 102 239 239 0 "" ""
+   brf l1607iffalse,r102
+   .srcstep 240 240 33 "exit_fragment" 7 1 5 "then"
+   .srcstep 236 236 33 "exit_fragment" 7 1 6 "bpoff"
+   bpoff
+   br l1607ifend
+   .srcstep 241 241 33 "exit_fragment" 8 1 5 "else"
+l1607iffalse:
+   .srcstep 237 237 33 "exit_fragment" 9 1 41 "sigcall __rxtrace_handler(),\"BREAKPOINT\""
+   sigcall __rxtrace_handler(),"BREAKPOINT"
+   .srcstep 238 238 33 "exit_fragment" 10 1 5 "bpon"
+   bpon
+l1607ifend:
+l1602ifend:
+l228doinc:
+   .srcstep 65 65 17 "rexxcps_levelb.crexx" 150 6 7 "  do i = 1 to averaging"
+   inc r30
+   .srcstep 246 246 17 "rexxcps_levelb.crexx" 201 3 6 "  end"
+   br l228dostart
+l228doend:
+   .meta "rexxcps_levelb.main.i"
+   .srcstep 247 247 17 "rexxcps_levelb.crexx" 202 3 15 "  total = full /* total time */"
+   .traceevent "V" 6 "R" "F" "r" 14 247 247 0 "full" ""
+   fcopy r22,r14
+   .traceevent "A" 6 "R" "F" "r" 22 247 247 0 "total" ""
+   .srcstep 249 249 17 "rexxcps_levelb.crexx" 205 3 29 "  if total > 1.0 | trial = 2 then leave"
+   .traceevent "V" 6 "R" "F" "r" 22 249 249 0 "total" ""
+   fgt r105,r22,1.0
+   .traceevent "O" 4 "R" "B" "r" 105 249 249 0 "" ""
+   brt l564orend,r105
+   .traceevent "V" 6 "R" "I" "r" 33 249 249 0 "trial" ""
+   ieq r105,r33,2
+   .traceevent "O" 4 "R" "B" "r" 105 249 249 0 "" ""
+l564orend:
+   .traceevent "O" 4 "R" "B" "r" 105 249 249 0 "" ""
+   brf l566iffalse,r105
+   .srcstep 250 250 17 "rexxcps_levelb.crexx" 205 30 34 "  if total > 1.0 | trial = 2 then leave"
+   .srcstep 248 248 17 "rexxcps_levelb.crexx" 205 35 40 "  if total > 1.0 | trial = 2 then leave"
+   br l217doend
+l566iffalse:
+   .srcstep 253 253 17 "rexxcps_levelb.crexx" 208 3 17 "  if total = 0.0 then count = count * 100"
+   .traceevent "V" 6 "R" "F" "r" 22 253 253 0 "total" ""
+   feq r105,r22,0.0
+   .traceevent "O" 4 "R" "B" "r" 105 253 253 0 "" ""
+   brf l587iffalse,r105
+   .srcstep 254 254 17 "rexxcps_levelb.crexx" 208 18 22 "  if total = 0.0 then count = count * 100"
+   .srcstep 251 251 17 "rexxcps_levelb.crexx" 208 23 42 "  if total = 0.0 then count = count * 100"
+   .traceevent "V" 6 "R" "I" "r" 12 251 251 0 "count" ""
+   imult r12,r12,100
+   .traceevent "O" 4 "R" "I" "r" 12 251 251 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 251 251 0 "count" ""
+   br l587ifend
+   .srcstep 255 255 17 "rexxcps_levelb.crexx" 209 3 7 "  else count = ((floattrunc(1.0 / total) as .int) + 1) * count"
+l587iffalse:
+   .srcstep 252 252 17 "rexxcps_levelb.crexx" 209 8 63 "  else count = ((floattrunc(1.0 / total) as .int) + 1) * count"
+   .traceevent "V" 6 "R" "F" "r" 22 252 252 0 "total" ""
+   fdiv r108,1.0,r22
+   .traceevent "O" 4 "R" "F" "r" 108 252 252 0 "" ""
+   load r107,2
+   settpcall r102,rxfnsb.floattrunc(),r107,r109,0
+   .traceevent "F" 4 "R" "S" "r" 102 252 252 0 "floattrunc" ""
+   stoi r109,r102
+   iadd r109,r109,1
+   .traceevent "O" 4 "R" "I" "r" 109 252 252 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 12 252 252 0 "count" ""
+   imult r12,r109,r12
+   .traceevent "O" 4 "R" "I" "r" 12 252 252 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 252 252 0 "count" ""
+l587ifend:
+   .srcstep 256 256 17 "rexxcps_levelb.crexx" 210 3 17 "  calibrated = 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 256 256 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 256 256 0 "calibrated" ""
+l217doinc:
+   .srcstep 61 61 17 "rexxcps_levelb.crexx" 146 4 9 "do trial = 1 to 2"
+   inc r33
+   .srcstep 258 258 17 "rexxcps_levelb.crexx" 211 1 4 "end"
+   br l217dostart
+l217doend:
+   .meta "rexxcps_levelb.main.trial"
+   .srcstep 259 259 17 "rexxcps_levelb.crexx" 214 1 108 "say \"        Averaged:\" count \"x\" averaging \"iterations of 1000 clauses (over\" floatformat(total, , 1) \"s)\""
+   itos r12
+   .traceevent "V" 6 "R" "S" "r" 12 259 259 0 "count" ""
+   sconcat r109,"        Averaged:",r12
+   .traceevent "O" 4 "R" "S" "r" 109 259 259 0 "" ""
+   sconcat r109,r109,"x"
+   .traceevent "O" 4 "R" "S" "r" 109 259 259 0 "" ""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 259 259 0 "averaging" ""
+   sconcat r109,r109,r3
+   .traceevent "O" 4 "R" "S" "r" 109 259 259 0 "" ""
+   sconcat r109,r109,"iterations of 1000 clauses (over"
+   .traceevent "O" 4 "R" "S" "r" 109 259 259 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 22 259 259 0 "total" ""
+   load r113,1
+   .traceevent "L" 4 "R" "I" "r" 113 259 259 0 "" ""
+   load r110,5
+   swap r111,r22
+   settp r112,0
+   settp r113,256
+   settp r114,0
+   settpcall r108,rxfnsb.floatformat(),r110,r115,0
+   swap r22,r111
+   .traceevent "F" 4 "R" "S" "r" 108 259 259 0 "floatformat" ""
+   sconcat r115,r109,r108
+   .traceevent "O" 4 "R" "S" "r" 115 259 259 0 "" ""
+   sconcat r115,r115,"s)"
+   .traceevent "O" 4 "R" "S" "r" 115 259 259 0 "" ""
+   say r115
+   .srcstep 260 260 17 "rexxcps_levelb.crexx" 215 1 48 "say \"REXXCPS-EFFECTIVE contract=\" || contract ,"
+   .traceevent "V" 6 "R" "S" "r" 11 260 260 0 "contract" ""
+   concat r115,"REXXCPS-EFFECTIVE contract=",r11
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   sconcat r115,r115,"initial_count="
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   itos r15
+   .traceevent "V" 6 "R" "S" "r" 15 260 260 0 "initial_count" ""
+   concat r115,r115,r15
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   sconcat r115,r115,"effective_count="
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   itos r12
+   .traceevent "V" 6 "R" "S" "r" 12 260 260 0 "count" ""
+   concat r115,r115,r12
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   sconcat r115,r115,"averaging="
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 260 260 0 "averaging" ""
+   concat r115,r115,r3
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   sconcat r115,r115,"calibrated="
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 260 260 0 "calibrated" ""
+   concat r115,r115,r4
+   .traceevent "O" 4 "R" "S" "r" 115 260 260 0 "" ""
+   say r115
+   .srcstep 261 261 17 "rexxcps_levelb.crexx" 222 1 50 "innertime = total / (averaging as .float) - empty"
+   .traceevent "V" 6 "R" "F" "r" 22 261 261 0 "total" ""
+   .traceevent "V" 6 "R" "I" "r" 3 261 261 0 "averaging" ""
+   itof r115,r3
+   fdiv r115,r22,r115
+   .traceevent "O" 4 "R" "F" "r" 115 261 261 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 13 261 261 0 "empty" ""
+   fsub r16,r115,r13
+   .traceevent "O" 4 "R" "F" "r" 16 261 261 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 16 261 261 0 "innertime" ""
+   .srcstep 262 262 17 "rexxcps_levelb.crexx" 223 1 41 "thousand = innertime / (count as .float)"
+   .traceevent "V" 6 "R" "F" "r" 16 262 262 0 "innertime" ""
+   .traceevent "V" 6 "R" "I" "r" 12 262 262 0 "count" ""
+   itof r115,r12
+   fdiv r21,r16,r115
+   .traceevent "O" 4 "R" "F" "r" 21 262 262 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 21 262 262 0 "thousand" ""
+   .srcstep 266 266 17 "rexxcps_levelb.crexx" 226 1 27 "if left(tracevar, 1) = \"O\" then nop"
+   .traceevent "V" 6 "R" "S" "r" 23 266 266 0 "tracevar" ""
+   load r114,1
+   .traceevent "L" 4 "R" "I" "r" 114 266 266 0 "" ""
+   load r112,3
+   settp r23,256
+   swap r113,r23
+   settpcall r111,rxfnsb.left(),r112,r115,512
+   swap r23,r113
+   .traceevent "F" 4 "R" "S" "r" 111 266 266 0 "left" ""
+   req r115,r111,"O"
+   .traceevent "O" 4 "R" "B" "r" 115 266 266 0 "" ""
+   brf l673iffalse,r115
+   .srcstep 267 267 17 "rexxcps_levelb.crexx" 226 28 32 "if left(tracevar, 1) = \"O\" then nop"
+   br l673ifend
+   .srcstep 268 268 17 "rexxcps_levelb.crexx" 227 1 5 "else do"
+l673iffalse:
+   .srcstep 263 263 17 "rexxcps_levelb.crexx" 228 3 6 "  say"
+   say ""
+   .srcstep 264 264 17 "rexxcps_levelb.crexx" 229 3 95 "  say \"Total (full DOs):\" total \"secs (average of\" averaging \"measures of\" count \"iterations)\""
+   ftos r22
+   .traceevent "V" 6 "R" "S" "r" 22 264 264 0 "total" ""
+   sconcat r114,"Total (full DOs):",r22
+   .traceevent "O" 4 "R" "S" "r" 114 264 264 0 "" ""
+   sconcat r114,r114,"secs (average of"
+   .traceevent "O" 4 "R" "S" "r" 114 264 264 0 "" ""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 264 264 0 "averaging" ""
+   sconcat r114,r114,r3
+   .traceevent "O" 4 "R" "S" "r" 114 264 264 0 "" ""
+   sconcat r114,r114,"measures of"
+   .traceevent "O" 4 "R" "S" "r" 114 264 264 0 "" ""
+   itos r12
+   .traceevent "V" 6 "R" "S" "r" 12 264 264 0 "count" ""
+   sconcat r114,r114,r12
+   .traceevent "O" 4 "R" "S" "r" 114 264 264 0 "" ""
+   sconcat r114,r114,"iterations)"
+   .traceevent "O" 4 "R" "S" "r" 114 264 264 0 "" ""
+   say r114
+   .srcstep 265 265 17 "rexxcps_levelb.crexx" 230 3 70 "  say \"Time for one iteration (1000 clauses) was:\" thousand \"seconds\""
+   ftos r21
+   .traceevent "V" 6 "R" "S" "r" 21 265 265 0 "thousand" ""
+   sconcat r114,"Time for one iteration (1000 clauses) was:",r21
+   .traceevent "O" 4 "R" "S" "r" 114 265 265 0 "" ""
+   sconcat r114,r114,"seconds"
+   .traceevent "O" 4 "R" "S" "r" 114 265 265 0 "" ""
+   say r114
+l673ifend:
+   .srcstep 269 269 17 "rexxcps_levelb.crexx" 234 1 4 "say"
+   say ""
+   .srcstep 270 270 17 "rexxcps_levelb.crexx" 235 1 87 "say \"     Performance:\" floatformat(1000.0 / thousand, , 0) \"cREXX clauses per second\""
+   .traceevent "V" 6 "R" "F" "r" 21 270 270 0 "thousand" ""
+   fdiv r111,1000.0,r21
+   .traceevent "O" 4 "R" "F" "r" 111 270 270 0 "" ""
+   load r113,0
+   .traceevent "L" 4 "R" "I" "r" 113 270 270 0 "" ""
+   load r110,5
+   settp r112,0
+   settp r113,256
+   settp r114,0
+   settpcall r109,rxfnsb.floatformat(),r110,r115,0
+   .traceevent "F" 4 "R" "S" "r" 109 270 270 0 "floatformat" ""
+   sconcat r115,"     Performance:",r109
+   .traceevent "O" 4 "R" "S" "r" 115 270 270 0 "" ""
+   sconcat r115,r115,"cREXX clauses per second"
+   .traceevent "O" 4 "R" "S" "r" 115 270 270 0 "" ""
+   say r115
+   .srcstep 271 271 17 "rexxcps_levelb.crexx" 236 1 4 "say"
+   say ""
+   .srcstep 272 272 17 "rexxcps_levelb.crexx" 237 1 36 "say \"PASS: RexxCPS 2.2d cREXX port\""
+   say "PASS: RexxCPS 2.2d cREXX port"
+   .srcstep 273 273 17 "rexxcps_levelb.crexx" 238 1 9 "return 0"
+   ret 0
+   .meta "rexxcps_levelb.main.acompound"
+   .meta "rexxcps_levelb.main.argv"
+   .meta "rexxcps_levelb.main.avar"
+   .meta "rexxcps_levelb.main.averaging"
+   .meta "rexxcps_levelb.main.calibrated"
+   .meta "rexxcps_levelb.main.classic_five"
+   .meta "rexxcps_levelb.main.classic_ninety_nine_point_seven"
+   .meta "rexxcps_levelb.main.classic_one"
+   .meta "rexxcps_levelb.main.classic_one_point_one"
+   .meta "rexxcps_levelb.main.classic_two"
+   .meta "rexxcps_levelb.main.classic_two_point_two"
+   .meta "rexxcps_levelb.main.contract"
+   .meta "rexxcps_levelb.main.count"
+   .meta "rexxcps_levelb.main.empty"
+   .meta "rexxcps_levelb.main.full"
+   .meta "rexxcps_levelb.main.initial_count"
+   .meta "rexxcps_levelb.main.innertime"
+   .meta "rexxcps_levelb.main.j"
+   .meta "rexxcps_levelb.main.rc"
+   .meta "rexxcps_levelb.main.rexxcps"
+   .meta "rexxcps_levelb.main.system"
+   .meta "rexxcps_levelb.main.thousand"
+   .meta "rexxcps_levelb.main.total"
+   .meta "rexxcps_levelb.main.tracevar"
+   .meta "rexxcps_levelb.main.version_info"
+
+cps_subroutine() .locals=23
+   .meta "rexxcps_levelb.cps_subroutine"="b" ".void" cps_subroutine() "a1=.string,a2=.string,a3=.string,a4=.string"
+   .srcstep 307 307 17 "rexxcps_levelb.crexx" 242 1 34 "cps_subroutine: procedure = .void"
+   numsci 9,1,2
+   .srcstep 274 274 17 "rexxcps_levelb.crexx" 244 7 19 "  arg a1 = .string, a2 = .string, a3 = .string, a4 = .string"
+   .meta "rexxcps_levelb.cps_subroutine.a1"="b" ".string" a1
+   .srcstep 275 275 17 "rexxcps_levelb.crexx" 244 21 33 "  arg a1 = .string, a2 = .string, a3 = .string, a4 = .string"
+   .meta "rexxcps_levelb.cps_subroutine.a2"="b" ".string" a2
+   .srcstep 276 276 17 "rexxcps_levelb.crexx" 244 35 47 "  arg a1 = .string, a2 = .string, a3 = .string, a4 = .string"
+   .meta "rexxcps_levelb.cps_subroutine.a3"="b" ".string" a3
+   .srcstep 277 277 17 "rexxcps_levelb.crexx" 244 49 61 "  arg a1 = .string, a2 = .string, a3 = .string, a4 = .string"
+   .meta "rexxcps_levelb.cps_subroutine.a4"="b" ".string" a4
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct1_716"="b" ".string" r1
+   .srcstep 278 278 6 "rexxcps_levelb.crexx" 245 3 26 "  parse var a3 b1 b2 b3 ."
+   null r1
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct2_716"="b" ".string" r2
+   .srcstep 279 279 6 "rexxcps_levelb.crexx" 245 3 26 "  parse var a3 b1 b2 b3 ."
+   null r2
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct3_716"="b" ".string" r3
+   .srcstep 280 280 6 "rexxcps_levelb.crexx" 245 3 26 "  parse var a3 b1 b2 b3 ."
+   null r3
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_source_716"="b" ".string" r4
+   .srcstep 281 281 6 "rexxcps_levelb.crexx" 245 3 26 "  parse var a3 b1 b2 b3 ."
+   null r4
+   .meta "rexxcps_levelb.cps_subroutine.b1"="b" ".string" r9
+   .srcstep 282 282 6 "rexxcps_levelb.crexx" 245 3 26 "  parse var a3 b1 b2 b3 ."
+   null r9
+   .meta "rexxcps_levelb.cps_subroutine.b2"="b" ".string" r10
+   .srcstep 283 283 6 "rexxcps_levelb.crexx" 245 3 26 "  parse var a3 b1 b2 b3 ."
+   null r10
+   .meta "rexxcps_levelb.cps_subroutine.b3"="b" ".string" r11
+   .srcstep 284 284 6 "rexxcps_levelb.crexx" 245 3 26 "  parse var a3 b1 b2 b3 ."
+   null r11
+   .srcstep 285 285 33 "exit_fragment" 2 1 41 "__rxcpx_parse_source_716=(a3) as .string"
+   .meta "rexxcps_levelb.cps_subroutine."="b" ".unknown" r0
+   .traceevent "V" 6 "R" "S" "a" 3 285 285 0 "a3" ""
+   scopy r4,a3
+   .traceevent "A" 6 "R" "S" "r" 4 285 285 0 "__rxcpx_parse_source_716" ""
+   .srcstep 286 286 33 "exit_fragment" 2 1 116 "parsewords3d __rxcpx_parse_direct1_716,__rxcpx_parse_direct2_716,__rxcpx_parse_direct3_716,__rxcpx_parse_source_716"
+   .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "__rxcpx_parse_direct1_716" ""
+   .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "__rxcpx_parse_direct2_716" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "__rxcpx_parse_direct3_716" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "__rxcpx_parse_source_716" ""
+   parsewords3d r1,r2,r3,r4
+   .srcstep 287 287 33 "exit_fragment" 2 1 29 "b1=__rxcpx_parse_direct1_716"
+   .traceevent "V" 6 "R" "S" "r" 1 287 287 0 "__rxcpx_parse_direct1_716" ""
+   scopy r9,r1
+   .traceevent "A" 6 "R" "S" "r" 9 287 287 0 "b1" ""
+   .srcstep 288 288 33 "exit_fragment" 2 1 29 "b2=__rxcpx_parse_direct2_716"
+   .traceevent "V" 6 "R" "S" "r" 2 288 288 0 "__rxcpx_parse_direct2_716" ""
+   scopy r10,r2
+   .traceevent "A" 6 "R" "S" "r" 10 288 288 0 "b2" ""
+   .srcstep 289 289 33 "exit_fragment" 2 1 29 "b3=__rxcpx_parse_direct3_716"
+   .traceevent "V" 6 "R" "S" "r" 3 289 289 0 "__rxcpx_parse_direct3_716" ""
+   scopy r11,r3
+   .traceevent "A" 6 "R" "S" "r" 11 289 289 0 "b3" ""
+   .srcstep 304 304 17 "rexxcps_levelb.crexx" 246 3 5 "  do 1"
+   .srcstep 290 290 17 "rexxcps_levelb.crexx" 246 6 7 "  do 1"
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 0 0 0 "" ""
+l717dostart:
+   .srcstep 290 290 17 "rexxcps_levelb.crexx" 246 6 7 "  do 1"
+   bcf l717doend,r21
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct1_738"="b" ".string" r13
+   .srcstep 291 291 6 "rexxcps_levelb.crexx" 248 5 28 "    parse var text c1 c2 c3"
+   null r13
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct2_738"="b" ".string" r14
+   .srcstep 292 292 6 "rexxcps_levelb.crexx" 248 5 28 "    parse var text c1 c2 c3"
+   null r14
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct3_738"="b" ".string" r15
+   .srcstep 293 293 6 "rexxcps_levelb.crexx" 248 5 28 "    parse var text c1 c2 c3"
+   null r15
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_source_738"="b" ".string" r16
+   .srcstep 294 294 6 "rexxcps_levelb.crexx" 248 5 28 "    parse var text c1 c2 c3"
+   null r16
+   .meta "rexxcps_levelb.cps_subroutine.c1"="b" ".string" r17
+   .srcstep 295 295 6 "rexxcps_levelb.crexx" 248 5 28 "    parse var text c1 c2 c3"
+   null r17
+   .meta "rexxcps_levelb.cps_subroutine.c2"="b" ".string" r18
+   .srcstep 296 296 6 "rexxcps_levelb.crexx" 248 5 28 "    parse var text c1 c2 c3"
+   null r18
+   .meta "rexxcps_levelb.cps_subroutine.c3"="b" ".string" r19
+   .srcstep 297 297 6 "rexxcps_levelb.crexx" 248 5 28 "    parse var text c1 c2 c3"
+   null r19
+   .srcstep 298 298 17 "rexxcps_levelb.crexx" 247 5 40 "    text = a1 || \" \" || a2 || \" \" || a3"
+   .meta "rexxcps_levelb.cps_subroutine.text"="b" ".string" r20
+   .traceevent "V" 6 "R" "S" "a" 1 298 298 0 "a1" ""
+   concat r22,a1," "
+   .traceevent "O" 4 "R" "S" "r" 22 298 298 0 "" ""
+   .traceevent "V" 6 "R" "S" "a" 2 298 298 0 "a2" ""
+   concat r22,r22,a2
+   .traceevent "O" 4 "R" "S" "r" 22 298 298 0 "" ""
+   concat r22,r22," "
+   .traceevent "O" 4 "R" "S" "r" 22 298 298 0 "" ""
+   .traceevent "V" 6 "R" "S" "a" 3 298 298 0 "a3" ""
+   concat r20,r22,a3
+   .traceevent "O" 4 "R" "S" "r" 20 298 298 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 20 298 298 0 "text" ""
+   .srcstep 299 299 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_738=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 20 299 299 0 "text" ""
+   scopy r16,r20
+   .traceevent "A" 6 "R" "S" "r" 16 299 299 0 "__rxcpx_parse_source_738" ""
+   .srcstep 300 300 33 "exit_fragment" 2 1 115 "parsewords3 __rxcpx_parse_direct1_738,__rxcpx_parse_direct2_738,__rxcpx_parse_direct3_738,__rxcpx_parse_source_738"
+   .traceevent "V" 6 "R" "S" "r" 13 0 0 0 "__rxcpx_parse_direct1_738" ""
+   .traceevent "V" 6 "R" "S" "r" 14 0 0 0 "__rxcpx_parse_direct2_738" ""
+   .traceevent "V" 6 "R" "S" "r" 15 0 0 0 "__rxcpx_parse_direct3_738" ""
+   .traceevent "V" 6 "R" "S" "r" 16 0 0 0 "__rxcpx_parse_source_738" ""
+   parsewords3 r13,r14,r15,r16
+   .srcstep 301 301 33 "exit_fragment" 2 1 29 "c1=__rxcpx_parse_direct1_738"
+   .traceevent "V" 6 "R" "S" "r" 13 301 301 0 "__rxcpx_parse_direct1_738" ""
+   scopy r17,r13
+   .traceevent "A" 6 "R" "S" "r" 17 301 301 0 "c1" ""
+   .srcstep 302 302 33 "exit_fragment" 2 1 29 "c2=__rxcpx_parse_direct2_738"
+   .traceevent "V" 6 "R" "S" "r" 14 302 302 0 "__rxcpx_parse_direct2_738" ""
+   scopy r18,r14
+   .traceevent "A" 6 "R" "S" "r" 18 302 302 0 "c2" ""
+   .srcstep 303 303 33 "exit_fragment" 2 1 29 "c3=__rxcpx_parse_direct3_738"
+   .traceevent "V" 6 "R" "S" "r" 15 303 303 0 "__rxcpx_parse_direct3_738" ""
+   scopy r19,r15
+   .traceevent "A" 6 "R" "S" "r" 19 303 303 0 "c3" ""
+l717doinc:
+   .srcstep 305 305 17 "rexxcps_levelb.crexx" 249 3 6 "  end"
+   br l717dostart
+l717doend:
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct1_738"
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct2_738"
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct3_738"
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_source_738"
+   .meta "rexxcps_levelb.cps_subroutine.c1"
+   .meta "rexxcps_levelb.cps_subroutine.c2"
+   .meta "rexxcps_levelb.cps_subroutine.c3"
+   .meta "rexxcps_levelb.cps_subroutine.text"
+   .srcstep 306 306 17 "rexxcps_levelb.crexx" 250 3 9 "  return"
+   ret
+   .meta "rexxcps_levelb.cps_subroutine."
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct1_716"
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct2_716"
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_direct3_716"
+   .meta "rexxcps_levelb.cps_subroutine.__rxcpx_parse_source_716"
+   .meta "rexxcps_levelb.cps_subroutine.a1"
+   .meta "rexxcps_levelb.cps_subroutine.a2"
+   .meta "rexxcps_levelb.cps_subroutine.a3"
+   .meta "rexxcps_levelb.cps_subroutine.a4"
+   .meta "rexxcps_levelb.cps_subroutine.b1"
+   .meta "rexxcps_levelb.cps_subroutine.b2"
+   .meta "rexxcps_levelb.cps_subroutine.b3"
+
+fail() .locals=3
+   .meta "rexxcps_levelb.fail"="b" ".int" fail() "message=.string"
+   .srcstep 311 311 17 "rexxcps_levelb.crexx" 253 1 23 "fail: procedure = .int"
+   numsci 9,1,2
+   .srcstep 308 308 17 "rexxcps_levelb.crexx" 255 7 24 "  arg message = .string"
+   .meta "rexxcps_levelb.fail.message"="b" ".string" a1
+   .srcstep 309 309 17 "rexxcps_levelb.crexx" 256 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "a" 1 309 309 0 "message" ""
+   sconcat r2,"FAIL:",a1
+   .traceevent "O" 4 "R" "S" "r" 2 309 309 0 "" ""
+   say r2
+   .srcstep 310 310 17 "rexxcps_levelb.crexx" 257 3 11 "  return 1"
+   ret 1
+   .meta "rexxcps_levelb.fail.message"
+
+__rxtrace_handler() .locals=54
+   .meta "rexxcps_levelb.__rxtrace_handler"="b" ".int" __rxtrace_handler() "expose __rxtrace_raw=.trace_interrupt_raw"
+   .srcstep 441 441 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   numsci 18,1,2
+   .srcstep 312 312 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_raw"="b" ".trace_interrupt_raw" a1
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_event"="b" ".tracecontext" r1
+   .srcstep 313 313 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   null r1
+   .srcstep 315 315 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "g" 1 315 315 0 "__rxtrace_in_handler" ""
+   ine r8,g1,0
+   .traceevent "O" 4 "R" "B" "r" 8 315 315 0 "" ""
+   brf l784iffalse,r8
+   .srcstep 316 316 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 314 314 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ret 0
+l784iffalse:
+   .srcstep 317 317 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g1,1
+   .traceevent "L" 4 "R" "I" "g" 1 317 317 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 1 317 317 0 "__rxtrace_in_handler" ""
+   .srcstep 320 320 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r8,0
+   call r9,rxfnsb._trace_current_mode(),r8
+   .traceevent "F" 4 "R" "S" "r" 9 320 320 0 "_trace_current_mode" ""
+   req r9,r9,"OFF"
+   .traceevent "O" 4 "R" "B" "r" 9 320 320 0 "" ""
+   brf l793iffalse,r9
+   .srcstep 321 321 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 318 318 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g1,0
+   .traceevent "L" 4 "R" "I" "g" 1 318 318 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 1 318 318 0 "__rxtrace_in_handler" ""
+   .srcstep 319 319 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ret 0
+l793iffalse:
+   .srcstep 324 324 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "a" 1 324 324 0 "__rxtrace_raw" ""
+   load r10,1
+   settpswapcall r9,§rxfnsb.trace_interrupt_raw.module(),r10,a1,256,r11
+   swap a1,r11
+   .traceevent "F" 4 "R" "I" "r" 9 324 324 0 "module" ""
+   load r8,1
+   call r11,rxfnsb._trace_should_trace_module(),r8
+   .traceevent "F" 4 "R" "I" "r" 11 324 324 0 "_trace_should_trace_module" ""
+   ieq r11,r11,0
+   .traceevent "O" 4 "R" "B" "r" 11 324 324 0 "" ""
+   brf l804iffalse,r11
+   .srcstep 325 325 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 322 322 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g1,0
+   .traceevent "L" 4 "R" "I" "g" 1 322 322 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 1 322 322 0 "__rxtrace_in_handler" ""
+   .srcstep 323 323 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ret 0
+l804iffalse:
+   setobjuninit r1,"tracecontext"
+   .srcstep 326 326 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "a" 1 326 326 0 "__rxtrace_raw" ""
+   load r10,1
+   swapcall r1,rxfnsb._trace_context_from_raw(),r10,a1,r11
+   swap a1,r11
+   .traceevent "F" 4 "R" "O" "r" 1 326 326 0 "_trace_context_from_raw" ""
+   .traceevent "A" 6 "R" "O" "r" 1 326 326 0 "__rxtrace_event" ""
+   .srcstep 329 329 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 329 329 0 "__rxtrace_event" ""
+   load r10,1
+   settpswapcall r9,rxfnsb._trace_should_trace_context(),r10,r1,256,r11
+   swap r1,r11
+   .traceevent "F" 4 "R" "I" "r" 9 329 329 0 "_trace_should_trace_context" ""
+   ieq r11,r9,0
+   .traceevent "O" 4 "R" "B" "r" 11 329 329 0 "" ""
+   brf l824iffalse,r11
+   .srcstep 330 330 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 327 327 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g1,0
+   .traceevent "L" 4 "R" "I" "g" 1 327 327 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 1 327 327 0 "__rxtrace_in_handler" ""
+   .srcstep 328 328 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ret 0
+l824iffalse:
+   .srcstep 331 331 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_mode"="b" ".string" r5
+   load r11,0
+   call r5,rxfnsb._trace_current_mode(),r11
+   .traceevent "F" 4 "R" "S" "r" 5 331 331 0 "_trace_current_mode" ""
+   .traceevent "A" 6 "R" "S" "r" 5 331 331 0 "__rxtrace_mode" ""
+   .srcstep 334 334 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 5 334 334 0 "__rxtrace_mode" ""
+   load r10,1
+   settpswapcall r9,rxfnsb._trace_needs_breakpoints(),r10,r5,256,r11
+   swap r5,r11
+   .traceevent "F" 4 "R" "I" "r" 9 334 334 0 "_trace_needs_breakpoints" ""
+   ieq r11,r9,0
+   .traceevent "O" 4 "R" "B" "r" 11 334 334 0 "" ""
+   brf l839iffalse,r11
+   .srcstep 335 335 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 332 332 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g1,0
+   .traceevent "L" 4 "R" "I" "g" 1 332 332 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 1 332 332 0 "__rxtrace_in_handler" ""
+   .srcstep 333 333 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ret 0
+l839iffalse:
+   .srcstep 336 336 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_format"="b" ".string" r2
+   load r11,0
+   call r2,rxfnsb._trace_current_format(),r11
+   .traceevent "F" 4 "R" "S" "r" 2 336 336 0 "_trace_current_format" ""
+   .traceevent "A" 6 "R" "S" "r" 2 336 336 0 "__rxtrace_format" ""
+   .srcstep 337 337 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_line"="b" ".string" r4
+   load r4,""
+   .traceevent "L" 4 "R" "S" "r" 4 337 337 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 337 337 0 "__rxtrace_line" ""
+   .srcstep 338 338 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_key"="b" ".string" r3
+   load r3,""
+   .traceevent "L" 4 "R" "S" "r" 3 338 338 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 338 338 0 "__rxtrace_key" ""
+   .srcstep 339 339 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_emit_source"="b" ".int" r0
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 339 339 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 339 339 0 "__rxtrace_emit_source" ""
+   .srcstep 340 340 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_values_mode"="b" ".int" r7
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 340 340 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 340 340 0 "__rxtrace_values_mode" ""
+   .srcstep 345 345 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 5 345 345 0 "__rxtrace_mode" ""
+   req r11,r5,"R"
+   .traceevent "O" 4 "R" "B" "r" 11 345 345 0 "" ""
+   brf l866iffalse,r11
+   .srcstep 346 346 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 341 341 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 341 341 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 341 341 0 "__rxtrace_values_mode" ""
+   br l866ifend
+   .srcstep 347 347 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l866iffalse:
+   .srcstep 343 343 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 5 343 343 0 "__rxtrace_mode" ""
+   req r10,r5,"I"
+   .traceevent "O" 4 "R" "B" "r" 10 343 343 0 "" ""
+   brf l873iffalse,r10
+   .srcstep 344 344 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 342 342 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 342 342 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 342 342 0 "__rxtrace_values_mode" ""
+l873iffalse:
+l866ifend:
+   .srcstep 363 363 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 5 363 363 0 "__rxtrace_mode" ""
+   req r11,r5,"ASM"
+   .traceevent "O" 4 "R" "B" "r" 11 363 363 0 "" ""
+   brf l880iffalse,r11
+   .srcstep 364 364 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 351 351 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 351 351 0 "__rxtrace_event" ""
+   load r9,1
+   settpswapcall r8,§rxfnsb.tracecontext.asm_line(),r9,r1,256,r10
+   swap r1,r10
+   .traceevent "F" 4 "R" "S" "r" 8 351 351 0 "asm_line" ""
+   rne r10,r8,""
+   .traceevent "O" 4 "R" "B" "r" 10 351 351 0 "" ""
+   brf l885iffalse,r10
+   .srcstep 352 352 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 348 348 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 348 348 0 "__rxtrace_event" ""
+   load r8,1
+   settpswapcall r12,§rxfnsb.tracecontext.module(),r8,r1,256,r9
+   swap r1,r9
+   itos r12
+   .traceevent "F" 4 "R" "S" "r" 12 348 348 0 "module" ""
+   concat r12,"ASM|",r12
+   .traceevent "O" 4 "R" "S" "r" 12 348 348 0 "" ""
+   concat r12,r12,"|"
+   .traceevent "O" 4 "R" "S" "r" 12 348 348 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 348 348 0 "__rxtrace_event" ""
+   load r8,1
+   settpswapcall r13,§rxfnsb.tracecontext.address(),r8,r1,256,r9
+   swap r1,r9
+   itos r13
+   .traceevent "F" 4 "R" "S" "r" 13 348 348 0 "address" ""
+   concat r13,r12,r13
+   .traceevent "O" 4 "R" "S" "r" 13 348 348 0 "" ""
+   concat r13,r13,"|"
+   .traceevent "O" 4 "R" "S" "r" 13 348 348 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 348 348 0 "__rxtrace_event" ""
+   load r14,1
+   settpswapcall r12,§rxfnsb.tracecontext.asm_line(),r14,r1,256,r15
+   swap r1,r15
+   .traceevent "F" 4 "R" "S" "r" 12 348 348 0 "asm_line" ""
+   concat r3,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 3 348 348 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 348 348 0 "__rxtrace_key" ""
+   .srcstep 349 349 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 349 349 0 "__rxtrace_event" ""
+   load r14,1
+   settpswapcall r4,§rxfnsb.tracecontext.asm_line(),r14,r1,256,r15
+   swap r1,r15
+   .traceevent "F" 4 "R" "S" "r" 4 349 349 0 "asm_line" ""
+   .traceevent "A" 6 "R" "S" "r" 4 349 349 0 "__rxtrace_line" ""
+   .srcstep 350 350 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 350 350 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 350 350 0 "__rxtrace_emit_source" ""
+l885iffalse:
+   br l880ifend
+   .srcstep 365 365 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l880iffalse:
+   .srcstep 361 361 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 361 361 0 "__rxtrace_event" ""
+   load r14,1
+   settpswapcall r13,§rxfnsb.tracecontext.has_source(),r14,r1,256,r15
+   swap r1,r15
+   .traceevent "F" 4 "R" "I" "r" 13 361 361 0 "has_source" ""
+   ine r15,r13,0
+   .traceevent "O" 4 "R" "B" "r" 15 361 361 0 "" ""
+   brf l920iffalse,r15
+   .srcstep 362 362 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 353 353 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 353 353 0 "__rxtrace_event" ""
+   load r13,1
+   settpswapcall r12,§rxfnsb.tracecontext.module(),r13,r1,256,r14
+   swap r1,r14
+   itos r12
+   .traceevent "F" 4 "R" "S" "r" 12 353 353 0 "module" ""
+   concat r14,"SRC|",r12
+   .traceevent "O" 4 "R" "S" "r" 14 353 353 0 "" ""
+   concat r14,r14,"|"
+   .traceevent "O" 4 "R" "S" "r" 14 353 353 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 353 353 0 "__rxtrace_event" ""
+   load r12,1
+   settpswapcall r10,§rxfnsb.tracecontext.line(),r12,r1,256,r13
+   swap r1,r13
+   itos r10
+   .traceevent "F" 4 "R" "S" "r" 10 353 353 0 "line" ""
+   concat r14,r14,r10
+   .traceevent "O" 4 "R" "S" "r" 14 353 353 0 "" ""
+   concat r14,r14,"|"
+   .traceevent "O" 4 "R" "S" "r" 14 353 353 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 353 353 0 "__rxtrace_event" ""
+   load r12,1
+   settpswapcall r10,§rxfnsb.tracecontext.column(),r12,r1,256,r13
+   swap r1,r13
+   itos r10
+   .traceevent "F" 4 "R" "S" "r" 10 353 353 0 "column" ""
+   concat r14,r14,r10
+   .traceevent "O" 4 "R" "S" "r" 14 353 353 0 "" ""
+   concat r14,r14,"|"
+   .traceevent "O" 4 "R" "S" "r" 14 353 353 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 353 353 0 "__rxtrace_event" ""
+   load r12,1
+   settpswapcall r10,§rxfnsb.tracecontext.source(),r12,r1,256,r13
+   swap r1,r13
+   .traceevent "F" 4 "R" "S" "r" 10 353 353 0 "source" ""
+   concat r3,r14,r10
+   .traceevent "O" 4 "R" "S" "r" 3 353 353 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 353 353 0 "__rxtrace_key" ""
+   .srcstep 356 356 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 356 356 0 "__rxtrace_event" ""
+   load r13,1
+   settpswapcall r12,§rxfnsb.tracecontext.line(),r13,r1,256,r14
+   swap r1,r14
+   .traceevent "F" 4 "R" "I" "r" 12 356 356 0 "line" ""
+   igt r14,r12,99999
+   .traceevent "O" 4 "R" "B" "r" 14 356 356 0 "" ""
+   brf l952iffalse,r14
+   .srcstep 357 357 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 354 354 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_prefix"="b" ".string" r16
+   .traceevent "V" 6 "R" "O" "r" 1 354 354 0 "__rxtrace_event" ""
+   load r12,1
+   settpswapcall r18,§rxfnsb.tracecontext.line(),r12,r1,256,r13
+   swap r1,r13
+   itos r18
+   .traceevent "F" 4 "R" "S" "r" 18 354 354 0 "line" ""
+   load r19,5
+   .traceevent "L" 4 "R" "I" "r" 19 354 354 0 "" ""
+   load r20,"0"
+   .traceevent "L" 4 "R" "S" "r" 20 354 354 0 "" ""
+   load r17,3
+   settp r18,256
+   settpcall r13,rxfnsb.right(),r17,r20,768
+   .traceevent "F" 4 "R" "S" "r" 13 354 354 0 "right" ""
+   concat r16,"\?",r13
+   .traceevent "O" 4 "R" "S" "r" 16 354 354 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 16 354 354 0 "__rxtrace_prefix" ""
+   br l952ifend
+   .srcstep 358 358 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l952iffalse:
+   .srcstep 355 355 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 355 355 0 "__rxtrace_event" ""
+   load r12,1
+   settpswapcall r18,§rxfnsb.tracecontext.line(),r12,r1,256,r13
+   swap r1,r13
+   itos r18
+   .traceevent "F" 4 "R" "S" "r" 18 355 355 0 "line" ""
+   load r19,6
+   .traceevent "L" 4 "R" "I" "r" 19 355 355 0 "" ""
+   load r20," "
+   .traceevent "L" 4 "R" "S" "r" 20 355 355 0 "" ""
+   load r17,3
+   settp r18,256
+   settpcall r16,rxfnsb.right(),r17,r20,768
+   .traceevent "F" 4 "R" "S" "r" 16 355 355 0 "right" ""
+   .traceevent "A" 6 "R" "S" "r" 16 355 355 0 "__rxtrace_prefix" ""
+l952ifend:
+   .srcstep 359 359 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 16 359 359 0 "__rxtrace_prefix" ""
+   concat r20,r16," *-* "
+   .traceevent "O" 4 "R" "S" "r" 20 359 359 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 359 359 0 "__rxtrace_event" ""
+   load r21,1
+   settpswapcall r19,§rxfnsb.tracecontext.source(),r21,r1,256,r22
+   swap r1,r22
+   .traceevent "F" 4 "R" "S" "r" 19 359 359 0 "source" ""
+   load r18,1
+   settpcall r22,rxfnsb._trace_escape_text(),r18,r19,256
+   .traceevent "F" 4 "R" "S" "r" 22 359 359 0 "_trace_escape_text" ""
+   concat r4,r20,r22
+   .traceevent "O" 4 "R" "S" "r" 4 359 359 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 359 359 0 "__rxtrace_line" ""
+   .srcstep 360 360 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 360 360 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 360 360 0 "__rxtrace_emit_source" ""
+   endlife r16
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_prefix"
+l920iffalse:
+l880ifend:
+   .srcstep 367 367 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 2 367 367 0 "__rxtrace_format" ""
+   req r22,r2,"LLM"
+   .traceevent "O" 4 "R" "B" "r" 22 367 367 0 "" ""
+   brf l990andend,r22
+   .traceevent "V" 6 "R" "I" "r" 0 367 367 0 "__rxtrace_emit_source" ""
+   ine r22,r0,0
+   .traceevent "O" 4 "R" "B" "r" 22 367 367 0 "" ""
+l990andend:
+   .traceevent "O" 4 "R" "B" "r" 22 367 367 0 "" ""
+   brf l989iffalse,r22
+   .srcstep 368 368 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 366 366 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 5 366 366 0 "__rxtrace_mode" ""
+   load r20,1
+   settpswapcall r19,rxfnsb._trace_escape_text(),r20,r5,256,r21
+   swap r5,r21
+   .traceevent "F" 4 "R" "S" "r" 19 366 366 0 "_trace_escape_text" ""
+   concat r21,"{\"event\":\"trace\",\"format\":\"llm\",\"mode\":\"",r19
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"module\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r19,1
+   settpswapcall r18,§rxfnsb.tracecontext.module(),r19,r1,256,r20
+   swap r1,r20
+   itos r18
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "module" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"address\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r19,1
+   settpswapcall r18,§rxfnsb.tracecontext.address(),r19,r1,256,r20
+   swap r1,r20
+   itos r18
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "address" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"procedure\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r17,1
+   settpswapcall r20,§rxfnsb.tracecontext.procedure(),r17,r1,256,r18
+   swap r1,r18
+   .traceevent "F" 4 "R" "S" "r" 20 366 366 0 "procedure" ""
+   load r19,1
+   settpcall r18,rxfnsb._trace_escape_text(),r19,r20,256
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "_trace_escape_text" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"file\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r17,1
+   settpswapcall r20,§rxfnsb.tracecontext.source_file(),r17,r1,256,r18
+   swap r1,r18
+   .traceevent "F" 4 "R" "S" "r" 20 366 366 0 "source_file" ""
+   load r19,1
+   settpcall r18,rxfnsb._trace_escape_text(),r19,r20,256
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "_trace_escape_text" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"line\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r19,1
+   settpswapcall r18,§rxfnsb.tracecontext.line(),r19,r1,256,r20
+   swap r1,r20
+   itos r18
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "line" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"column\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r19,1
+   settpswapcall r18,§rxfnsb.tracecontext.column(),r19,r1,256,r20
+   swap r1,r20
+   itos r18
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "column" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"source\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r17,1
+   settpswapcall r20,§rxfnsb.tracecontext.source(),r17,r1,256,r18
+   swap r1,r18
+   .traceevent "F" 4 "R" "S" "r" 20 366 366 0 "source" ""
+   load r19,1
+   settpcall r18,rxfnsb._trace_escape_text(),r19,r20,256
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "_trace_escape_text" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r21,r21,"\",\"asm\":\""
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 366 366 0 "__rxtrace_event" ""
+   load r17,1
+   settpswapcall r20,§rxfnsb.tracecontext.asm_line(),r17,r1,256,r18
+   swap r1,r18
+   .traceevent "F" 4 "R" "S" "r" 20 366 366 0 "asm_line" ""
+   load r19,1
+   settpcall r18,rxfnsb._trace_escape_text(),r19,r20,256
+   .traceevent "F" 4 "R" "S" "r" 18 366 366 0 "_trace_escape_text" ""
+   concat r21,r21,r18
+   .traceevent "O" 4 "R" "S" "r" 21 366 366 0 "" ""
+   concat r4,r21,"\"}"
+   .traceevent "O" 4 "R" "S" "r" 4 366 366 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 366 366 0 "__rxtrace_line" ""
+l989iffalse:
+   .srcstep 418 418 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 2 418 418 0 "__rxtrace_format" ""
+   rne r22,r2,"LLM"
+   .traceevent "O" 4 "R" "B" "r" 22 418 418 0 "" ""
+   brf l1058iffalse,r22
+   .srcstep 419 419 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 416 416 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "r" 7 416 416 0 "__rxtrace_values_mode" ""
+   ine r21,r7,0
+   .traceevent "O" 4 "R" "B" "r" 21 416 416 0 "" ""
+   brf l1063iffalse,r21
+   .srcstep 417 417 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 369 369 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 369 369 0 "__rxtrace_event" ""
+   load r26,1
+   settpswapcall r19,§rxfnsb.tracecontext.module(),r26,r1,256,r27
+   swap r1,r27
+   .traceevent "F" 4 "R" "I" "r" 19 369 369 0 "module" ""
+   .traceevent "V" 6 "R" "O" "r" 1 369 369 0 "__rxtrace_event" ""
+   load r26,1
+   settpswapcall r20,§rxfnsb.tracecontext.address(),r26,r1,256,r27
+   swap r1,r27
+   .traceevent "F" 4 "R" "I" "r" 20 369 369 0 "address" ""
+   load r18,2
+   call r27,rxfnsb._trace_capture_result_target(),r18
+   .traceevent "F" 4 "R" "V" "r" 27 369 369 0 "_trace_capture_result_target" ""
+   .srcstep 370 370 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_parent_type"="b" ".string" r24
+   load r24,""
+   .traceevent "L" 4 "R" "S" "r" 24 370 370 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 24 370 370 0 "__rxtrace_parent_type" ""
+   .srcstep 371 371 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_parent_value"="b" ".string" r25
+   load r25,""
+   .traceevent "L" 4 "R" "S" "r" 25 371 371 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 25 371 371 0 "__rxtrace_parent_value" ""
+   .srcstep 372 372 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_parent_register"="b" ".int" r23
+   .traceevent "V" 6 "R" "O" "r" 1 372 372 0 "__rxtrace_event" ""
+   load r32,1
+   settpswapcall r29,§rxfnsb.tracecontext.module(),r32,r1,256,r33
+   swap r1,r33
+   .traceevent "F" 4 "R" "I" "r" 29 372 372 0 "module" ""
+   .traceevent "V" 6 "R" "S" "r" 24 372 372 0 "__rxtrace_parent_type" ""
+   .traceevent "V" 6 "R" "S" "r" 25 372 372 0 "__rxtrace_parent_value" ""
+   load r28,3
+   swap r30,r24
+   swapcall r23,rxfnsb._trace_pending_parent_register(),r28,r25,r31
+   swap r24,r30
+   swap r25,r31
+   .traceevent "F" 4 "R" "I" "r" 23 372 372 0 "_trace_pending_parent_register" ""
+   .traceevent "A" 6 "R" "I" "r" 23 372 372 0 "__rxtrace_parent_register" ""
+   .srcstep 394 394 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "r" 23 394 394 0 "__rxtrace_parent_register" ""
+   load r33,2
+   .traceevent "L" 4 "R" "I" "r" 33 394 394 0 "" ""
+   isub r32,0,r33
+   .traceevent "P" 4 "R" "I" "r" 32 394 394 0 "" ""
+   ieq r32,r23,r32
+   .traceevent "O" 4 "R" "B" "r" 32 394 394 0 "" ""
+   brf l1090iffalse,r32
+   .srcstep 395 395 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 373 373 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 25 373 373 0 "__rxtrace_parent_value" ""
+   load r30,1
+   settpswapcall r29,rxfnsb._trace_supply_parent_value(),r30,r25,256,r31
+   swap r25,r31
+   .traceevent "F" 4 "R" "V" "r" 29 373 373 0 "_trace_supply_parent_value" ""
+   br l1090ifend
+   .srcstep 396 396 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l1090iffalse:
+   .srcstep 392 392 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "r" 23 392 392 0 "__rxtrace_parent_register" ""
+   igte r31,r23,0
+   .traceevent "O" 4 "R" "B" "r" 31 392 392 0 "" ""
+   brf l1098iffalse,r31
+   .srcstep 393 393 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 389 389 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 24 389 389 0 "__rxtrace_parent_type" ""
+   req r30,r24,".int"
+   .traceevent "O" 4 "R" "B" "r" 30 389 389 0 "" ""
+   brf l1103iffalse,r30
+   .srcstep 390 390 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 374 374 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_i_value"="b" ".int" r34
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 374 374 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 374 374 0 "__rxtrace_i_value" ""
+   .srcstep 375 375 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "r" 34 0 0 0 "__rxtrace_i_value" ""
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "__rxtrace_parent_register" ""
+   metalinkpreg r34,r23
+   .srcstep 376 376 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   itos r34
+   .traceevent "V" 6 "R" "S" "r" 34 376 376 0 "__rxtrace_i_value" ""
+   load r35,1
+   settpswapcall r33,rxfnsb._trace_supply_parent_value(),r35,r34,256,r36
+   swap r34,r36
+   .traceevent "F" 4 "R" "V" "r" 33 376 376 0 "_trace_supply_parent_value" ""
+   .srcstep 377 377 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "r" 34 0 0 0 "__rxtrace_i_value" ""
+   unlink r34
+   endlife r34
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_i_value"
+   br l1103ifend
+   .srcstep 391 391 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l1103iffalse:
+   .srcstep 386 386 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 24 386 386 0 "__rxtrace_parent_type" ""
+   req r36,r24,".float"
+   .traceevent "O" 4 "R" "B" "r" 36 386 386 0 "" ""
+   brf l1119iffalse,r36
+   .srcstep 387 387 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 378 378 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_f_value"="b" ".float" r37
+   load r37,0.0
+   .traceevent "L" 4 "R" "F" "r" 37 378 378 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 37 378 378 0 "__rxtrace_f_value" ""
+   .srcstep 379 379 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "F" "r" 37 0 0 0 "__rxtrace_f_value" ""
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "__rxtrace_parent_register" ""
+   metalinkpreg r37,r23
+   .srcstep 380 380 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ftos r37
+   .traceevent "V" 6 "R" "S" "r" 37 380 380 0 "__rxtrace_f_value" ""
+   load r38,1
+   settpswapcall r35,rxfnsb._trace_supply_parent_value(),r38,r37,256,r39
+   swap r37,r39
+   .traceevent "F" 4 "R" "V" "r" 35 380 380 0 "_trace_supply_parent_value" ""
+   .srcstep 381 381 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "F" "r" 37 0 0 0 "__rxtrace_f_value" ""
+   unlink r37
+   endlife r37
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_f_value"
+   br l1119ifend
+   .srcstep 388 388 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l1119iffalse:
+   .srcstep 382 382 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_s_value"="b" ".string" r40
+   load r40,""
+   .traceevent "L" 4 "R" "S" "r" 40 382 382 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 40 382 382 0 "__rxtrace_s_value" ""
+   .srcstep 383 383 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "__rxtrace_s_value" ""
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "__rxtrace_parent_register" ""
+   metalinkpreg r40,r23
+   .srcstep 384 384 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 40 384 384 0 "__rxtrace_s_value" ""
+   load r38,1
+   settpswapcall r28,rxfnsb._trace_supply_parent_value(),r38,r40,256,r39
+   swap r40,r39
+   .traceevent "F" 4 "R" "V" "r" 28 384 384 0 "_trace_supply_parent_value" ""
+   .srcstep 385 385 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "__rxtrace_s_value" ""
+   unlink r40
+   endlife r40
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_s_value"
+l1119ifend:
+l1103ifend:
+l1098iffalse:
+l1090ifend:
+   .srcstep 414 414 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r39,0
+   call r38,rxfnsb._trace_pending_result(),r39
+   .traceevent "F" 4 "R" "I" "r" 38 414 414 0 "_trace_pending_result" ""
+   ine r39,r38,0
+   .traceevent "O" 4 "R" "B" "r" 39 414 414 0 "" ""
+   brf l1147iffalse,r39
+   .srcstep 415 415 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 412 412 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "O" "r" 1 412 412 0 "__rxtrace_event" ""
+   load r41,1
+   settpswapcall r38,§rxfnsb.tracecontext.module(),r41,r1,256,r42
+   swap r1,r42
+   .traceevent "F" 4 "R" "I" "r" 38 412 412 0 "module" ""
+   load r42,0
+   call r41,rxfnsb._trace_pending_module(),r42
+   .traceevent "F" 4 "R" "I" "r" 41 412 412 0 "_trace_pending_module" ""
+   ieq r42,r38,r41
+   .traceevent "O" 4 "R" "B" "r" 42 412 412 0 "" ""
+   brf l1153iffalse,r42
+   .srcstep 413 413 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 397 397 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_pending_value"="b" ".string" r44
+   load r44,""
+   .traceevent "L" 4 "R" "S" "r" 44 397 397 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 44 397 397 0 "__rxtrace_pending_value" ""
+   .srcstep 398 398 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_pending_ready"="b" ".int" r43
+   load r43,0
+   .traceevent "L" 4 "R" "I" "r" 43 398 398 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 43 398 398 0 "__rxtrace_pending_ready" ""
+   .srcstep 405 405 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r41,0
+   call r38,rxfnsb._trace_pending_has_const(),r41
+   .traceevent "F" 4 "R" "I" "r" 38 405 405 0 "_trace_pending_has_const" ""
+   ine r41,r38,0
+   .traceevent "O" 4 "R" "B" "r" 41 405 405 0 "" ""
+   brf l1167iffalse,r41
+   .srcstep 406 406 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 399 399 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r38,0
+   call r44,rxfnsb._trace_pending_const(),r38
+   .traceevent "F" 4 "R" "S" "r" 44 399 399 0 "_trace_pending_const" ""
+   .traceevent "A" 6 "R" "S" "r" 44 399 399 0 "__rxtrace_pending_value" ""
+   .srcstep 400 400 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r43,1
+   .traceevent "L" 4 "R" "I" "r" 43 400 400 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 43 400 400 0 "__rxtrace_pending_ready" ""
+   br l1167ifend
+   .srcstep 407 407 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l1167iffalse:
+   .srcstep 403 403 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r38,0
+   call r36,rxfnsb._trace_supplied_result(),r38
+   .traceevent "F" 4 "R" "I" "r" 36 403 403 0 "_trace_supplied_result" ""
+   ine r38,r36,0
+   .traceevent "O" 4 "R" "B" "r" 38 403 403 0 "" ""
+   brf l1180iffalse,r38
+   .srcstep 404 404 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 401 401 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r36,0
+   call r44,rxfnsb._trace_supplied_value(),r36
+   .traceevent "F" 4 "R" "S" "r" 44 401 401 0 "_trace_supplied_value" ""
+   .traceevent "A" 6 "R" "S" "r" 44 401 401 0 "__rxtrace_pending_value" ""
+   .srcstep 402 402 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r43,1
+   .traceevent "L" 4 "R" "I" "r" 43 402 402 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 43 402 402 0 "__rxtrace_pending_ready" ""
+l1180iffalse:
+l1167ifend:
+   .srcstep 409 409 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "r" 43 409 409 0 "__rxtrace_pending_ready" ""
+   ine r41,r43,0
+   .traceevent "O" 4 "R" "B" "r" 41 409 409 0 "" ""
+   brf l1193iffalse,r41
+   .srcstep 410 410 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 408 408 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r38,0
+   call r36,rxfnsb._trace_pending_prefix(),r38
+   .traceevent "F" 4 "R" "S" "r" 36 408 408 0 "_trace_pending_prefix" ""
+   concat r38,"       ",r36
+   .traceevent "O" 4 "R" "S" "r" 38 408 408 0 "" ""
+   concat r38,r38,"   \""
+   .traceevent "O" 4 "R" "S" "r" 38 408 408 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 44 408 408 0 "__rxtrace_pending_value" ""
+   load r47,1
+   settpswapcall r36,rxfnsb._trace_escape_text(),r47,r44,256,r48
+   swap r44,r48
+   .traceevent "F" 4 "R" "S" "r" 36 408 408 0 "_trace_escape_text" ""
+   concat r48,r38,r36
+   .traceevent "O" 4 "R" "S" "r" 48 408 408 0 "" ""
+   concat r46,r48,"\""
+   .traceevent "O" 4 "R" "S" "r" 46 408 408 0 "" ""
+   load r45,1
+   settpcall r48,rxfnsb._trace_write_line(),r45,r46,768
+   .traceevent "F" 4 "R" "V" "r" 48 408 408 0 "_trace_write_line" ""
+l1193iffalse:
+   .srcstep 411 411 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load r47,0
+   call r46,rxfnsb._trace_clear_pending_result(),r47
+   .traceevent "F" 4 "R" "V" "r" 46 411 411 0 "_trace_clear_pending_result" ""
+   endlife r43
+   endlife r44
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_pending_ready"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_pending_value"
+l1153iffalse:
+l1147iffalse:
+   endlife r23
+   endlife r24
+   endlife r25
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_parent_register"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_parent_type"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_parent_value"
+l1063iffalse:
+l1058iffalse:
+   .srcstep 437 437 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "I" "r" 0 437 437 0 "__rxtrace_emit_source" ""
+   ine r47,r0,0
+   .traceevent "O" 4 "R" "B" "r" 47 437 437 0 "" ""
+   brf l1213iffalse,r47
+   .srcstep 438 438 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 435 435 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 3 435 435 0 "__rxtrace_key" ""
+   load r49,1
+   settpswapcall r45,rxfnsb._trace_should_emit_key(),r49,r3,256,r50
+   swap r3,r50
+   .traceevent "F" 4 "R" "I" "r" 45 435 435 0 "_trace_should_emit_key" ""
+   ine r50,r45,0
+   .traceevent "O" 4 "R" "B" "r" 50 435 435 0 "" ""
+   brf l1218iffalse,r50
+   .srcstep 436 436 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 432 432 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 2 432 432 0 "__rxtrace_format" ""
+   rne r49,r2,"LLM"
+   .traceevent "O" 4 "R" "B" "r" 49 432 432 0 "" ""
+   brf l1224iffalse,r49
+   .srcstep 433 433 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 420 420 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_source_file"="b" ".string" r51
+   .traceevent "V" 6 "R" "O" "r" 1 420 420 0 "__rxtrace_event" ""
+   load r52,1
+   settpswapcall r51,§rxfnsb.tracecontext.source_file(),r52,r1,256,r53
+   swap r1,r53
+   .traceevent "F" 4 "R" "S" "r" 51 420 420 0 "source_file" ""
+   .traceevent "A" 6 "R" "S" "r" 51 420 420 0 "__rxtrace_source_file" ""
+   .srcstep 430 430 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 51 430 430 0 "__rxtrace_source_file" ""
+   rne r53,r51,""
+   .traceevent "O" 4 "R" "B" "r" 53 430 430 0 "" ""
+   brf l1234iffalse,r53
+   .srcstep 431 431 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 427 427 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "g" 0 427 427 0 "__rxtrace_first_source_file" ""
+   req r52,g0,""
+   .traceevent "O" 4 "R" "B" "r" 52 427 427 0 "" ""
+   brf l1239iffalse,r52
+   .srcstep 428 428 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 421 421 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 51 421 421 0 "__rxtrace_source_file" ""
+   scopy g0,r51
+   .traceevent "A" 6 "R" "S" "g" 0 421 421 0 "__rxtrace_first_source_file" ""
+   .srcstep 422 422 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 51 422 422 0 "__rxtrace_source_file" ""
+   scopy g2,r51
+   .traceevent "A" 6 "R" "S" "g" 2 422 422 0 "__rxtrace_last_source_file" ""
+   br l1239ifend
+   .srcstep 429 429 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+l1239iffalse:
+   .srcstep 425 425 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 51 425 425 0 "__rxtrace_source_file" ""
+   .traceevent "V" 6 "R" "S" "g" 2 425 425 0 "__rxtrace_last_source_file" ""
+   rne r45,r51,g2
+   .traceevent "O" 4 "R" "B" "r" 45 425 425 0 "" ""
+   brf l1250iffalse,r45
+   .srcstep 426 426 6 "rexxcps_levelb.crexx" 152 5 9 "    call time(\"R\")"
+   .srcstep 423 423 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 51 423 423 0 "__rxtrace_source_file" ""
+   load r38,1
+   settpswapcall r36,rxfnsb._trace_escape_text(),r38,r51,256,r39
+   swap r51,r39
+   .traceevent "F" 4 "R" "S" "r" 36 423 423 0 "_trace_escape_text" ""
+   concat r42,"       >  >   ",r36
+   .traceevent "O" 4 "R" "S" "r" 42 423 423 0 "" ""
+   load r41,1
+   settpcall r39,rxfnsb._trace_write_line(),r41,r42,768
+   .traceevent "F" 4 "R" "V" "r" 39 423 423 0 "_trace_write_line" ""
+   .srcstep 424 424 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 51 424 424 0 "__rxtrace_source_file" ""
+   scopy g2,r51
+   .traceevent "A" 6 "R" "S" "g" 2 424 424 0 "__rxtrace_last_source_file" ""
+l1250iffalse:
+l1239ifend:
+l1234iffalse:
+   endlife r51
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_source_file"
+l1224iffalse:
+   .srcstep 434 434 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   .traceevent "V" 6 "R" "S" "r" 4 434 434 0 "__rxtrace_line" ""
+   load r52,1
+   settpswapcall r49,rxfnsb._trace_write_line(),r52,r4,256,r53
+   swap r4,r53
+   .traceevent "F" 4 "R" "V" "r" 49 434 434 0 "_trace_write_line" ""
+l1218iffalse:
+l1213iffalse:
+   .srcstep 439 439 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g1,0
+   .traceevent "L" 4 "R" "I" "g" 1 439 439 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 1 439 439 0 "__rxtrace_in_handler" ""
+   .srcstep 440 440 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ret 0
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_emit_source"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_event"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_format"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_key"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_line"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_mode"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_raw"
+   .meta "rexxcps_levelb.__rxtrace_handler.__rxtrace_values_mode"
+   .meta "rexxcps_levelb.__rxtrace_last_source_file"
+
+__rxtrace_reset_display_state() .locals=0
+   .meta "rexxcps_levelb.__rxtrace_reset_display_state"="b" ".void" __rxtrace_reset_display_state() ""
+   .srcstep 445 445 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   numsci 18,1,2
+   .srcstep 442 442 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g0,""
+   .traceevent "L" 4 "R" "S" "g" 0 442 442 0 "" ""
+   .traceevent "A" 6 "R" "S" "g" 0 442 442 0 "__rxtrace_first_source_file" ""
+   .srcstep 443 443 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   load g2,""
+   .traceevent "L" 4 "R" "S" "g" 2 443 443 0 "" ""
+   .traceevent "A" 6 "R" "S" "g" 2 443 443 0 "__rxtrace_last_source_file" ""
+   .srcstep 444 444 6 "rexxcps_levelb.crexx" 151 5 25 "    trace value tracevar"
+   ret
+   .meta "rexxcps_levelb.__rxtrace_last_source_file"
+
+/* Imported Declaration from file: verify@library.rxbin */
+
+rxfnsb.verify() .expose=rxfnsb.verify
+   .meta "rxfnsb.verify"="b" ".int" rxfnsb.verify() "expose string=.string,expose refchars=.string,?option=.string,?start=.int"
+
+/* Imported Declaration from file: version@library.rxbin */
+
+rxfnsb.version() .expose=rxfnsb.version
+   .meta "rxfnsb.version"="b" ".string" rxfnsb.version() ""
+
+/* Imported Declaration from file: word@library.rxbin */
+
+rxfnsb.word() .expose=rxfnsb.word
+   .meta "rxfnsb.word"="b" ".string" rxfnsb.word() "string=.string,wordnum=.int"
+
+/* Imported Declaration from file: time@library.rxbin */
+
+rxfnsb.time() .expose=rxfnsb.time
+   .meta "rxfnsb.time"="b" ".string" rxfnsb.time() "?option=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_mode_from_option() .expose=rxfnsb._trace_mode_from_option
+   .meta "rxfnsb._trace_mode_from_option"="b" ".string" rxfnsb._trace_mode_from_option() "option=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_set() .expose=rxfnsb._trace_set
+   .meta "rxfnsb._trace_set"="b" ".void" rxfnsb._trace_set() "mode=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_current_mode() .expose=rxfnsb._trace_current_mode
+   .meta "rxfnsb._trace_current_mode"="b" ".string" rxfnsb._trace_current_mode() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_needs_breakpoints() .expose=rxfnsb._trace_needs_breakpoints
+   .meta "rxfnsb._trace_needs_breakpoints"="b" ".int" rxfnsb._trace_needs_breakpoints() "mode=.string"
+
+/* Imported Declaration from file: substr@library.rxbin */
+
+rxfnsb.substr() .expose=rxfnsb.substr
+   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string=.string,start=.int,?length=.int,?pad=.string"
+
+/* Imported Declaration from file: length@library.rxbin */
+
+rxfnsb.length() .expose=rxfnsb.length
+   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "string=.string"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb.addressenv() .expose=_rxsysb.addressenv
+   .meta "_rxsysb.addressenv"="b" "._rxsysb..addressenvironment" _rxsysb.addressenv() "?env_name=.string"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_environment() .expose=_rxsysb._address_environment
+   .meta "_rxsysb._address_environment"="b" "._rxsysb..addressenvironment" _rxsysb._address_environment() "?env_name=.string"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._noredir() .expose=_rxsysb._noredir
+   .meta "_rxsysb._noredir"="b" ".binary" _rxsysb._noredir() ""
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address() .expose=_rxsysb._address
+   .meta "_rxsysb._address"="b" ".int" _rxsysb._address() "?env=.string,?command=.string,in=.binary,out=.binary,err=.binary,expose ...=.string"
+
+/* Imported Declaration from file: upper@library.rxbin */
+
+rxfnsb.upper() .expose=rxfnsb.upper
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"
+
+/* Imported Declaration from file: floattrunc@library.rxbin */
+
+rxfnsb.floattrunc() .expose=rxfnsb.floattrunc
+   .meta "rxfnsb.floattrunc"="b" ".string" rxfnsb.floattrunc() "number=.float,?fraction=.int"
+
+/* Imported Declaration from file: floatformat@library.rxbin */
+
+rxfnsb.floatformat() .expose=rxfnsb.floatformat
+   .meta "rxfnsb.floatformat"="b" ".string" rxfnsb.floatformat() "number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int"
+
+/* Imported Declaration from file: left@library.rxbin */
+
+rxfnsb.left() .expose=rxfnsb.left
+   .meta "rxfnsb.left"="b" ".string" rxfnsb.left() "string=.string,width=.int,?pad=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_should_trace_module() .expose=rxfnsb._trace_should_trace_module
+   .meta "rxfnsb._trace_should_trace_module"="b" ".int" rxfnsb._trace_should_trace_module() "module=.int"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_context_from_raw() .expose=rxfnsb._trace_context_from_raw
+   .meta "rxfnsb._trace_context_from_raw"="b" ".rxfnsb..tracecontext" rxfnsb._trace_context_from_raw() "expose raw=.trace_interrupt_raw"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_should_trace_context() .expose=rxfnsb._trace_should_trace_context
+   .meta "rxfnsb._trace_should_trace_context"="b" ".int" rxfnsb._trace_should_trace_context() "event=.tracecontext"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_current_format() .expose=rxfnsb._trace_current_format
+   .meta "rxfnsb._trace_current_format"="b" ".string" rxfnsb._trace_current_format() ""
+
+/* Imported Declaration from file: right@library.rxbin */
+
+rxfnsb.right() .expose=rxfnsb.right
+   .meta "rxfnsb.right"="b" ".string" rxfnsb.right() "string=.string,width=.int,?pad=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_escape_text() .expose=rxfnsb._trace_escape_text
+   .meta "rxfnsb._trace_escape_text"="b" ".string" rxfnsb._trace_escape_text() "text=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_capture_result_target() .expose=rxfnsb._trace_capture_result_target
+   .meta "rxfnsb._trace_capture_result_target"="b" ".void" rxfnsb._trace_capture_result_target() "module=.int,addr=.int"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_pending_parent_register() .expose=rxfnsb._trace_pending_parent_register
+   .meta "rxfnsb._trace_pending_parent_register"="b" ".int" rxfnsb._trace_pending_parent_register() "module=.int,expose type=.string,expose value=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_supply_parent_value() .expose=rxfnsb._trace_supply_parent_value
+   .meta "rxfnsb._trace_supply_parent_value"="b" ".void" rxfnsb._trace_supply_parent_value() "value=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_pending_result() .expose=rxfnsb._trace_pending_result
+   .meta "rxfnsb._trace_pending_result"="b" ".int" rxfnsb._trace_pending_result() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_pending_module() .expose=rxfnsb._trace_pending_module
+   .meta "rxfnsb._trace_pending_module"="b" ".int" rxfnsb._trace_pending_module() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_pending_has_const() .expose=rxfnsb._trace_pending_has_const
+   .meta "rxfnsb._trace_pending_has_const"="b" ".int" rxfnsb._trace_pending_has_const() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_pending_const() .expose=rxfnsb._trace_pending_const
+   .meta "rxfnsb._trace_pending_const"="b" ".string" rxfnsb._trace_pending_const() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_supplied_result() .expose=rxfnsb._trace_supplied_result
+   .meta "rxfnsb._trace_supplied_result"="b" ".int" rxfnsb._trace_supplied_result() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_supplied_value() .expose=rxfnsb._trace_supplied_value
+   .meta "rxfnsb._trace_supplied_value"="b" ".string" rxfnsb._trace_supplied_value() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_pending_prefix() .expose=rxfnsb._trace_pending_prefix
+   .meta "rxfnsb._trace_pending_prefix"="b" ".string" rxfnsb._trace_pending_prefix() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_write_line() .expose=rxfnsb._trace_write_line
+   .meta "rxfnsb._trace_write_line"="b" ".void" rxfnsb._trace_write_line() "line=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_clear_pending_result() .expose=rxfnsb._trace_clear_pending_result
+   .meta "rxfnsb._trace_clear_pending_result"="b" ".void" rxfnsb._trace_clear_pending_result() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+rxfnsb._trace_should_emit_key() .expose=rxfnsb._trace_should_emit_key
+   .meta "rxfnsb._trace_should_emit_key"="b" ".int" rxfnsb._trace_should_emit_key() "key=.string"
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+§rxfnsb.tracecontext.module() .expose=rxfnsb.tracecontext.module
+   .meta "rxfnsb.tracecontext.module"="b" ".int" §rxfnsb.tracecontext.module() ""
+
+§rxfnsb.tracecontext.address() .expose=rxfnsb.tracecontext.address
+   .meta "rxfnsb.tracecontext.address"="b" ".int" §rxfnsb.tracecontext.address() ""
+
+§rxfnsb.tracecontext.source_file() .expose=rxfnsb.tracecontext.source_file
+   .meta "rxfnsb.tracecontext.source_file"="b" ".string" §rxfnsb.tracecontext.source_file() ""
+
+§rxfnsb.tracecontext.line() .expose=rxfnsb.tracecontext.line
+   .meta "rxfnsb.tracecontext.line"="b" ".int" §rxfnsb.tracecontext.line() ""
+
+§rxfnsb.tracecontext.column() .expose=rxfnsb.tracecontext.column
+   .meta "rxfnsb.tracecontext.column"="b" ".int" §rxfnsb.tracecontext.column() ""
+
+§rxfnsb.tracecontext.source() .expose=rxfnsb.tracecontext.source
+   .meta "rxfnsb.tracecontext.source"="b" ".string" §rxfnsb.tracecontext.source() ""
+
+§rxfnsb.tracecontext.has_source() .expose=rxfnsb.tracecontext.has_source
+   .meta "rxfnsb.tracecontext.has_source"="b" ".int" §rxfnsb.tracecontext.has_source() ""
+
+§rxfnsb.tracecontext.asm_line() .expose=rxfnsb.tracecontext.asm_line
+   .meta "rxfnsb.tracecontext.asm_line"="b" ".string" §rxfnsb.tracecontext.asm_line() ""
+
+§rxfnsb.tracecontext.procedure() .expose=rxfnsb.tracecontext.procedure
+   .meta "rxfnsb.tracecontext.procedure"="b" ".string" §rxfnsb.tracecontext.procedure() ""
+
+/* Imported Declaration from file: trace@library.rxbin */
+
+§rxfnsb.trace_interrupt_raw.module() .expose=rxfnsb.trace_interrupt_raw.module
+   .meta "rxfnsb.trace_interrupt_raw.module"="b" ".int" §rxfnsb.trace_interrupt_raw.module() ""
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""
+
+§rxfnsb.stem.get() .expose=rxfnsb.stem.get
+   .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
+
+§rxfnsb.stem.set() .expose=rxfnsb.stem.set
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "?key=.string,value=.string"

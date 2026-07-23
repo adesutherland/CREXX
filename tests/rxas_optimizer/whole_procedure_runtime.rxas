@@ -1,0 +1,47 @@
+* NR-27 optimized/no-opt semantic equivalence in both VM modes.
+
+main() .locals=12
+    load r0,7
+    copy r0,r0
+    icopy r1,r0
+    ieq r2,r1,7
+    brf failed,r2
+
+    load r3,7.5
+    fcopy r4,r3
+    feq r5,r4,7.5
+    brf failed,r5
+
+    load r6,"alpha"
+    scopy r7,r6
+    seq r8,r7,"alpha"
+    brf failed,r8
+
+    null r9
+    null r9
+    load r10,3
+    itof r10
+    itof r10
+    feq r11,r10,3.0
+    brf failed,r11
+
+    load r0,5
+    brt join_left,r2
+    br join_ready
+join_left:
+    load r1,1
+join_ready:
+    load r0,5
+    ieq r2,r0,5
+    brf failed,r2
+
+    br runtime_reachable
+    load r9,998
+runtime_reachable:
+    load r9,999
+    say "PASS: NR-27 whole-procedure runtime"
+    ret 0
+
+failed:
+    say "FAIL: NR-27 whole-procedure runtime"
+    ret 1

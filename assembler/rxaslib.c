@@ -116,6 +116,9 @@ int rxasinbf(Assembler_Context *scanner) {
         RX_PANIC_OOM("calloc rxas optimiser queue", optimiser_queue_bytes, detail);
     }
     scanner->optimiser_queue_items = 0;
+    scanner->procedure_queue = 0;
+    scanner->procedure_queue_items = 0;
+    scanner->procedure_queue_capacity = 0;
     scanner->optimiser_counter = 0;
 
     scanner->binary.globals = 0;
@@ -337,6 +340,12 @@ void rxasclrc(Assembler_Context *scanner) {
             rxas_free_queue_item(&scanner->optimiser_queue[i]);
         }
         free(scanner->optimiser_queue);
+    }
+    if (scanner->procedure_queue) {
+        for (i = 0; i < scanner->procedure_queue_items; i++) {
+            rxas_free_queue_item(&scanner->procedure_queue[i]);
+        }
+        free(scanner->procedure_queue);
     }
 
     /* Free Assembler Work Data */

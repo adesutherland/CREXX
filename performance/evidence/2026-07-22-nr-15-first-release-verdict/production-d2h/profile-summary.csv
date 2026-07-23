@@ -1,0 +1,13 @@
+profile,workload,vm,variant,result,total_instructions,native_stem_ops,copy_ops,concat_ops,direct_bytecode_calls,frame_activations,value_slot_count,value_slot_bytes,attribute_value_block_count,attribute_value_block_bytes,attribute_pointer_storage_count,attribute_pointer_storage_bytes,binary_buffer_count,binary_buffer_bytes,string_buffer_count,string_buffer_bytes
+get-hit-rxvm-before,get-hit,rxvm,before,0,53874,0,2460,134,1067,1068,754,186992,24,150784,57,14784,0,0,0,0
+get-hit-rxvm-after,get-hit,rxvm,after,0,15396,1064,1259,134,3,4,325,80600,15,53568,36,6528,2,6144,0,0
+get-hit-rxbvm-before,get-hit,rxbvm,before,0,53874,0,2460,134,1067,1068,754,186992,24,150784,57,14784,0,0,0,0
+get-hit-rxbvm-after,get-hit,rxbvm,after,0,15396,1064,1259,134,3,4,325,80600,15,53568,36,6528,2,6144,0,0
+histogram-rxvm-before,histogram,rxvm,before,0,1851581,0,107466,10134,21071,21072,1065,264120,30,226176,75,20032,0,0,3,192
+histogram-rxvm-after,histogram,rxvm,after,0,1117409,20067,77259,10134,1004,1005,356,88288,18,59520,45,7104,3,8192,3,192
+histogram-rxbvm-before,histogram,rxbvm,before,0,1851581,0,107466,10134,21071,21072,1065,264120,30,226176,75,20032,0,0,3,192
+histogram-rxbvm-after,histogram,rxbvm,after,0,1117409,20067,77259,10134,1004,1005,356,88288,18,59520,45,7104,3,8192,3,192
+rexxcps-canonical-rxvm-before,rexxcps-canonical,rxvm,before,0,317993134,0,25742969,2380006,8663479,8943501,5033038,1248193424,560085,1111414976,1680246,107550208,0,0,560028,31362304
+rexxcps-canonical-rxvm-after,rexxcps-canonical,rxvm,after,0,251052811,2080000,24912952,2380006,6583479,6863501,5032396,1248034208,560077,1111272128,1680224,107540352,2,4096,560028,31362304
+rexxcps-canonical-rxbvm-before,rexxcps-canonical,rxbvm,before,0,317993146,0,25742969,2380006,8663479,8943501,5033038,1248193424,560085,1111414976,1680246,107550208,0,0,560028,31362368
+rexxcps-canonical-rxbvm-after,rexxcps-canonical,rxbvm,after,0,251052844,2080000,24912955,2380006,6583479,6863501,5032396,1248034208,560077,1111272128,1680224,107540352,2,4096,560028,31362304

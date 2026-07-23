@@ -908,6 +908,49 @@ static struct rxas_jump_table *find_jump_table(Assembler_Context *context, const
     return 0;
 }
 
+int rxas_jump_table_case_count(Assembler_Context *context,
+                               Assembler_Token *tableToken,
+                               size_t *count_out) {
+    struct rxas_jump_table *table;
+    struct rxas_jtable_case *entry;
+    size_t count;
+
+    if (count_out) *count_out = 0;
+    if (!context || !context->current_proc_name || !tableToken ||
+        tableToken->token_type != ID || !count_out)
+        return 0;
+    table = find_jump_table(context,
+                            (const char *)tableToken->token_value.string,
+                            context->current_proc_name);
+    if (!table || !table->declared) return 0;
+    count = 0;
+    for (entry = table->cases; entry; entry = entry->next) count++;
+    *count_out = count;
+    return 1;
+}
+
+Assembler_Token *rxas_jump_table_case_label(Assembler_Context *context,
+                                             Assembler_Token *tableToken,
+                                             size_t case_index) {
+    struct rxas_jump_table *table;
+    struct rxas_jtable_case *entry;
+    size_t index;
+
+    if (!context || !context->current_proc_name || !tableToken ||
+        tableToken->token_type != ID)
+        return 0;
+    table = find_jump_table(context,
+                            (const char *)tableToken->token_value.string,
+                            context->current_proc_name);
+    if (!table || !table->declared) return 0;
+    index = 0;
+    for (entry = table->cases; entry; entry = entry->next) {
+        if (index == case_index) return entry->label_token;
+        index++;
+    }
+    return 0;
+}
+
 static struct rxas_jump_table *get_or_create_jump_table(Assembler_Context *context, Assembler_Token *nameToken) {
     struct rxas_jump_table *table;
 

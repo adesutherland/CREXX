@@ -1,0 +1,29 @@
+kind,variant,name,path,sha256,bytes,notes
+module,baseline,bounce,/tmp/nr27-formal-inputs.hCtZ3M/baseline/benchmark_awfy_bounce_opt.rxbin,a8383505a8e83d8459eff7f5e4ec15f6bc203d5860bfdbf31e9489483f9fbedb,17839,retained pre-NR-27 optimized module
+module,candidate,bounce,/tmp/nr27-formal-inputs.hCtZ3M/candidate/benchmark_awfy_bounce_opt.rxbin,b1cc4416c538f3bf4cf9b73f85735712d88ead7091f931aa20e77b4216defb2b,17839,ordinary profiling-off Release module
+module,baseline,permute,/tmp/nr27-formal-inputs.hCtZ3M/baseline/benchmark_awfy_permute_opt.rxbin,b948116f19edf8bc4b208a17f1f7380050b0df5fa537b0a6aa6bb4ce15dc064f,11933,retained pre-NR-27 optimized module
+module,candidate,permute,/tmp/nr27-formal-inputs.hCtZ3M/candidate/benchmark_awfy_permute_opt.rxbin,b948116f19edf8bc4b208a17f1f7380050b0df5fa537b0a6aa6bb4ce15dc064f,11933,byte-identical control module
+module,baseline,richards,/tmp/nr27-formal-inputs.hCtZ3M/baseline/benchmark_awfy_richards_opt.rxbin,9edb76637d443490c7c3d582d84af5d15bf1d9a6e458c6a0056d00a9b95f30e2,80382,retained pre-NR-27 optimized module
+module,candidate,richards,/tmp/nr27-formal-inputs.hCtZ3M/candidate/benchmark_awfy_richards_opt.rxbin,16660150fcf3fc461a4e1bc0e3920e67899f1edb5819c67e1363789850ee8157,79606,ordinary profiling-off Release module
+module,baseline,sieve,/tmp/nr27-formal-inputs.hCtZ3M/baseline/benchmark_awfy_sieve_opt.rxbin,75d264a9acb4f17aab6c85e1a2991904580950ec6cd4da1c235d1010319e4f7f,4864,retained pre-NR-27 optimized module
+module,candidate,sieve,/tmp/nr27-formal-inputs.hCtZ3M/candidate/benchmark_awfy_sieve_opt.rxbin,75d264a9acb4f17aab6c85e1a2991904580950ec6cd4da1c235d1010319e4f7f,4864,byte-identical control module
+module,baseline,base64,/tmp/nr27-formal-inputs.hCtZ3M/baseline/benchmark_base64_roundtrip_opt.rxbin,022e156ef80b954c52969c55ffcefcd0836dab43a8bcb05263e29e35b5f8aa22,38265,retained pre-NR-27 optimized module
+module,candidate,base64,/tmp/nr27-formal-inputs.hCtZ3M/candidate/benchmark_base64_roundtrip_opt.rxbin,84a4285d13df647b9124093597b3258ae2307e0cc222f8a7d7a0669fb5448008,38241,ordinary profiling-off Release module
+module,baseline,library,/tmp/nr27-formal-inputs.hCtZ3M/baseline/library.rxbin,36b95fe4846ab5fc2e0a44dfc4a99beb23e7229fee83ada7fd5fc1bf3eb6d85f,866448,retained pre-NR-27 library
+module,candidate,library,/tmp/nr27-formal-inputs.hCtZ3M/candidate/library.rxbin,5cf045b7275a9261443219765456c6e9aadad41cfd0b6df47f15ec218f31aaa9,860816,ordinary profiling-off Release library
+linked,baseline,sieve,/tmp/nr27-formal-inputs.hCtZ3M/linked/sieve-baseline.rxbin,e4a931f92d0b7274a02187c3dfde8a114af0ddd2f069d6c760b20933ff78668b,4840,source and TRACE retained
+linked,candidate,sieve,/tmp/nr27-formal-inputs.hCtZ3M/linked/sieve-candidate.rxbin,e4a931f92d0b7274a02187c3dfde8a114af0ddd2f069d6c760b20933ff78668b,4840,byte-identical control image
+linked,baseline,permute,/tmp/nr27-formal-inputs.hCtZ3M/linked/permute-baseline.rxbin,8a12b4062368ab823f308a147cfd007328d5386008162cccbcd2f09a4e63367a,11933,source and TRACE retained
+linked,candidate,permute,/tmp/nr27-formal-inputs.hCtZ3M/linked/permute-candidate.rxbin,8a12b4062368ab823f308a147cfd007328d5386008162cccbcd2f09a4e63367a,11933,byte-identical control image
+linked,baseline,bounce,/tmp/nr27-formal-inputs.hCtZ3M/linked/bounce-baseline.rxbin,7ec7c66b2eec5abb3f8f03836b8dfb7889dd987b0a7f4d59bf1520b14210df0b,17887,source and TRACE retained
+linked,candidate,bounce,/tmp/nr27-formal-inputs.hCtZ3M/linked/bounce-candidate.rxbin,7368b4f774263342e7331f97bb16f2fecc3da1db62bc5a587f1625480e38861a,17887,source and TRACE retained
+linked,baseline,richards,/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-baseline.rxbin,e23b3bbb90a390c766047622247922141dd52f4198efd3a57a616a9a9df7f4b2,80366,source and TRACE retained
+linked,candidate,richards,/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-candidate.rxbin,45d2f0e9fd6598d4d1a97c96021c35b57f691f74c0c47010a5e297dc4b26cd35,79606,source and TRACE retained
+linked,baseline,base64,/tmp/nr27-formal-inputs.hCtZ3M/linked/base64-baseline.rxbin,eeb35b21e9c9776b1df8047edbb45968b5e7eb119280287fc3e578c5f1665d11,38457,source and TRACE retained
+linked,candidate,base64,/tmp/nr27-formal-inputs.hCtZ3M/linked/base64-candidate.rxbin,1e598d1c40848a277a3d921257f356eef60a17319d06763c084bd6d1f04ca928,38417,source and TRACE retained
+tool,candidate,rxas,cmake-build-release/bin/rxas,359bde374ed7c534f6597d9ecc4d3aa18b8979d40f70760c6b81becb6ca69a4d,562824,profiling-off Release
+tool,candidate,rxlink,cmake-build-release/bin/rxlink,0de69718abe82e64160788bebb1c317f83ae8341a38b6b103f4578c11df7562b,145416,used for every linked image
+tool,candidate,rxvm,cmake-build-release/bin/rxvm,20ab1a49e903f20b2f6b694018b9020ce87bf2abfeec7e65aae8f21095aea6a8,916168,same executable used for both variants
+tool,candidate,rxbvm,cmake-build-release/bin/rxbvm,154bc38d6e2731c88da2f56dabb320c683801b1c41f484c3b29fba2ee083fa4c,899768,same executable used for both variants
+tool,candidate,crexx,cmake-build-release/bin/crexx,0527c4e53518dc2a4d67d0c33d17671738dc7047e1973572c56e511787f3d0db,1183064,compiled and launched Level B capture tool
+source,candidate,run_cross_runtime_matrix,performance/tools/run_cross_runtime_matrix.crexx,77cfd1d1b4532b545d19f8313ac74567211834ca4fd7e2537a493c8f40bbceab,30844,unchanged Level B formal driver

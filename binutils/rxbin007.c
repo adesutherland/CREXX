@@ -737,6 +737,16 @@ static uint32_t rxbin007_opcode_features(int opcode) {
         case OP_PARSEWORDS3D_REG_REG_REG_REG:
         case OP_PARSEPLAN_REG_REG_STRING:
             return RXBIN007_FEATURE_FROZEN_PARSE;
+        case OP_STEMINIT_REG:
+        case OP_STEMGET_REG_REG_REG:
+        case OP_STEMSET_REG_REG_REG:
+        case OP_STEMRESET_REG_REG:
+        case OP_STEMGET2_REG_REG_REG_REG:
+        case OP_STEMSET2_REG_REG_REG_REG:
+        case OP_STEMSIZE_REG_REG:
+        case OP_STEMKEYAT_REG_REG_REG:
+        case OP_STEMVALUEAT_REG_REG_REG:
+            return RXBIN007_FEATURE_NATIVE_STEM;
         default:
             return 0u;
     }

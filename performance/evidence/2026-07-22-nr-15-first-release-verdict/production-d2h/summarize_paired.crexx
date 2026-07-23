@@ -1,0 +1,205 @@
+/* NR-15 D2-hybrid formal paired-summary helper. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 2 then do
+  say "Usage: summarize_paired INPUT_SAMPLES OUTPUT_SUMMARY"
+  return 2
+end
+
+input_path = argv[1]
+output_path = argv[2]
+workloads = .string[]
+vms = .string[]
+before_elapsed = .float[]
+after_elapsed = .float[]
+before_rate = .float[]
+after_rate = .float[]
+group_count = 0
+line_number = 0
+
+do while lines(input_path)
+  line = linein(input_path)
+  line_number = line_number + 1
+  if line_number = 1 then iterate
+  fields = split_delimited(line, ",")
+  if fields[0] <> 20 then return fail("unexpected sample row width")
+  if fields[11] <> "recorded" then iterate
+  if fields[18] <> "pass" then return fail("non-passing recorded sample")
+
+  workload = fields[3]
+  vm = fields[6]
+  group = 0
+  do candidate_group = 1 to group_count
+    if workloads[candidate_group] = workload & vms[candidate_group] = vm then do
+      group = candidate_group
+      leave
+    end
+  end
+  if group = 0 then do
+    group_count = group_count + 1
+    group = group_count
+    workloads[group] = workload
+    vms[group] = vm
+  end
+
+  round = fields[12]
+  if round < 1 | round > 12 then return fail("recorded round is outside 1..12")
+  slot = group * 100 + round
+  if fields[7] = "before-candidate-a" then do
+    before_elapsed[slot] = fields[15]
+    if fields[19] <> "" then before_rate[slot] = fields[19]
+  end
+  else if fields[7] = "after-d2-hybrid" then do
+    after_elapsed[slot] = fields[15]
+    if fields[19] <> "" then after_rate[slot] = fields[19]
+  end
+  else return fail("unexpected variant")
+end
+call linein input_path
+
+remove_out = .string[]
+remove_err = .string[]
+address crexx "rm :output_path" output remove_out error remove_err
+if lineout(output_path, "workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit") <> 0 then
+  return fail("could not create paired summary")
+
+do group = 1 to group_count
+  if write_group(output_path, workloads[group], vms[group], "elapsed_ns", "lower", ,
+      before_elapsed, after_elapsed, group) <> 0 then return 1
+  if workloads[group] = "rexxcps-canonical" then do
+    if write_group(output_path, workloads[group], vms[group], "benchmark_rate", "higher", ,
+        before_rate, after_rate, group) <> 0 then return 1
+  end
+end
+call lineout output_path
+say "PASS: NR-15 paired summary retained at" output_path
+return 0
+
+write_group: procedure = .int
+  arg output_path = .string, workload = .string, vm = .string, metric = .string, ,
+      orientation = .string, before_all = .float[], after_all = .float[], group = .int
+  before_values = .float[]
+  after_values = .float[]
+  deltas = .float[]
+  favorable = 0
+  sum = 0.0
+
+  do round = 1 to 12
+    slot = group * 100 + round
+    before = before_all[slot]
+    after = after_all[slot]
+    if before <= 0.0 | after <= 0.0 then return fail("incomplete before/after pair")
+    before_values[round] = before
+    after_values[round] = after
+    delta = ((after - before) * 100.0) / before
+    deltas[round] = delta
+    sum = sum + delta
+    if orientation = "lower" & delta < 0.0 then favorable = favorable + 1
+    if orientation = "higher" & delta > 0.0 then favorable = favorable + 1
+  end
+
+  call sort_floats before_values
+  call sort_floats after_values
+  call sort_floats deltas
+  before_median = sample_quantile(before_values, 1, 2)
+  after_median = sample_quantile(after_values, 1, 2)
+  minimum = deltas[1]
+  q1 = sample_quantile(deltas, 1, 4)
+  median = sample_quantile(deltas, 1, 2)
+  q3 = sample_quantile(deltas, 3, 4)
+  maximum = deltas[deltas[0]]
+  mean = sum / 12.0
+  sum_squares = 0.0
+  do i = 1 to deltas[0]
+    difference = deltas[i] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  sample_deviation = square_root(sum_squares / 11.0)
+  margin = 2.200985 * sample_deviation / square_root(12.0)
+  interval_low = mean - margin
+  interval_high = mean + margin
+
+  interval_result = "noisy_inconclusive"
+  if orientation = "lower" then do
+    if interval_high < 0.0 then interval_result = "clear_favorable"
+    else if interval_low > 0.0 then interval_result = "clear_adverse"
+  end
+  else do
+    if interval_low > 0.0 then interval_result = "clear_favorable"
+    else if interval_high < 0.0 then interval_result = "clear_adverse"
+  end
+  guard_hit = "no"
+  if orientation = "lower" & median > 3.0 then guard_hit = "yes"
+  if orientation = "higher" & median < -3.0 then guard_hit = "yes"
+
+  row = workload || "," || vm || "," || metric || ",12," || ,
+      float_text(before_median) || "," || float_text(after_median) || "," || ,
+      float_text(minimum) || "," || float_text(q1) || "," || float_text(median) || ,
+      "," || float_text(q3) || "," || float_text(maximum) || "," || ,
+      float_text(mean) || "," || float_text(interval_low) || "," || ,
+      float_text(interval_high) || "," || favorable || ",12," || ,
+      interval_result || "," || guard_hit
+  if lineout(output_path, row) <> 0 then return fail("could not append paired row")
+  return 0
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  upper_value = values[lower_zero_index + 2]
+  return lower_value + (upper_value - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

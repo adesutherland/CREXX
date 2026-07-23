@@ -1,0 +1,87 @@
+* NR-27 whole-procedure flow proving and negative cases.
+
+typed_copy_compare() .locals=4
+    load r0,7
+    icopy r1,r0
+    ieq r2,r1,7
+    ret r2
+
+typed_copy_join() .locals=5
+    load r0,7
+    icopy r1,r0
+    brt join_left,a0
+    load r3,1
+    br join_use
+join_left:
+    load r3,2
+join_use:
+    ieq r2,r1,7
+    brt join_nonzero,r3
+    ret r2
+join_nonzero:
+    ret r2
+
+typed_copy_source_changed() .locals=4
+    load r0,7
+    icopy r1,r0
+    load r0,8
+    ieq r2,r1,7
+    brt source_changed_nonzero,r0
+    ret r2
+source_changed_nonzero:
+    ret r2
+
+typed_copy_other_view_live() .locals=4
+    icopy r1,r0
+    scopy r2,r1
+    ret r2
+
+typed_copy_trace_live() .locals=4
+    icopy r1,r0
+    .traceevent "V" 4 "R" "I" "r" 1 0 0 0 "copy" "copy"
+    ieq r2,r1,7
+    ret r2
+
+complex_independent_region() .locals=4
+    call helper()
+    load r0,9
+    icopy r1,r0
+    ieq r2,r1,9
+    ret r2
+
+typed_copy_live_across_call() .locals=7
+    load r4,17
+    icopy r5,r4
+    call helper()
+    ieq r6,r5,17
+    ret r6
+
+dead_results() .locals=4
+    load r0,5
+    ieq r1,r0,5
+    load r2,4.5
+    ret
+
+redundant_load_join() .locals=4
+    load r0,3
+    ieq r2,r0,3
+    brt redundant_left,a0
+    load r1,1
+    br redundant_join
+redundant_left:
+    load r1,2
+redundant_join:
+    iadd r2,r2,r1
+    load r0,3
+    iadd r2,r2,r0
+    ret r2
+
+unreachable_cleanup() .locals=4
+    br reachable
+    load r0,99
+    ieq r1,r0,99
+reachable:
+    ret
+
+helper() .locals=0
+    ret

@@ -1,0 +1,17 @@
+vm,mode,family,size,iterations,elapsed_us,checksum
+rxvm,get-hit,ascii,64,10000,547,28587
+rxvm,get-miss,ascii,64,10000,426,10000
+rxvm,set-existing,ascii,64,5000,517,162276
+rxvm,set-new,ascii,64,1000,637,1064
+rxvm,get-hit,ascii,1024,5000,525,19560
+rxvm,get-hit,collision,256,2000,338,7136
+rxvm,get-hit,unicode,64,5000,420,14290
+rxvm,get-hit,long,64,5000,561,14290
+rxbvm,get-hit,ascii,64,10000,667,28587
+rxbvm,get-miss,ascii,64,10000,401,10000
+rxbvm,set-existing,ascii,64,5000,551,162276
+rxbvm,set-new,ascii,64,1000,754,1064
+rxbvm,get-hit,ascii,1024,5000,507,19560
+rxbvm,get-hit,collision,256,2000,339,7136
+rxbvm,get-hit,unicode,64,5000,412,14290
+rxbvm,get-hit,long,64,5000,548,14290

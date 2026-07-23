@@ -25,7 +25,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_from_env _trace_set_format _trace_set_output _trace_suppress_namespace _trace_unsuppress_namespace _trace_reset_namespace_filters _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_module _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_off _trace_set_from_env _trace_set_format _trace_set_output _trace_suppress_namespace _trace_unsuppress_namespace _trace_reset_namespace_filters _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_module _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
 
 /**
  * VM register view delivered to breakpoint signal handlers.
@@ -644,6 +644,15 @@ _trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _tra
   call _trace_controller.set_mode(normalized)
   if _trace_needs_breakpoints(normalized) = 0 then call _trace_controller.disable_breakpoints()
   return
+
+_trace_set_off: procedure = .int expose _trace_runtime_ready _trace_controller _trace_last_line _trace_active
+  if _trace_runtime_ready \= 1 then return 0
+  if _trace_active = 0 then return 0
+  _trace_last_line = ""
+  call _trace_controller.clear_pending_result()
+  _trace_active = 0
+  call _trace_controller.disable_breakpoints()
+  return 1
 
 _trace_set_from_env: procedure = .void expose _trace_runtime_ready _trace_output_target
   arg allow_output = .int

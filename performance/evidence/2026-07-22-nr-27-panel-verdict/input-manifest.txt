@@ -1,0 +1,24 @@
+crexx-cross-runtime-matrix|1
+# NR-27 formal before/after panel verdict. All cells use the same profiling-off
+# Release VM binaries; only the exact linked baseline/candidate RXBIN differs.
+# Fields: id|workload|runtime|vm|variant|tier|aggregate|lifecycle|work|expectation|metric_prefix|command_argv
+nr27-sieve-rxvm-baseline|Sieve|crexx|rxvm|baseline|A|no|no|50|PASS: AWFY Sieve||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/sieve-baseline.rxbin;-a;50
+nr27-sieve-rxvm-candidate|Sieve|crexx|rxvm|candidate|A|no|no|50|PASS: AWFY Sieve||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/sieve-candidate.rxbin;-a;50
+nr27-sieve-rxbvm-baseline|Sieve|crexx|rxbvm|baseline|A|no|no|50|PASS: AWFY Sieve||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/sieve-baseline.rxbin;-a;50
+nr27-sieve-rxbvm-candidate|Sieve|crexx|rxbvm|candidate|A|no|no|50|PASS: AWFY Sieve||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/sieve-candidate.rxbin;-a;50
+nr27-permute-rxvm-baseline|Permute|crexx|rxvm|baseline|A|no|no|50|PASS: AWFY Permute||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/permute-baseline.rxbin;-a;50
+nr27-permute-rxvm-candidate|Permute|crexx|rxvm|candidate|A|no|no|50|PASS: AWFY Permute||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/permute-candidate.rxbin;-a;50
+nr27-permute-rxbvm-baseline|Permute|crexx|rxbvm|baseline|A|no|no|50|PASS: AWFY Permute||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/permute-baseline.rxbin;-a;50
+nr27-permute-rxbvm-candidate|Permute|crexx|rxbvm|candidate|A|no|no|50|PASS: AWFY Permute||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/permute-candidate.rxbin;-a;50
+nr27-bounce-rxvm-baseline|Bounce|crexx|rxvm|baseline|A|no|no|100|PASS: AWFY Bounce||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/bounce-baseline.rxbin;-a;100
+nr27-bounce-rxvm-candidate|Bounce|crexx|rxvm|candidate|A|no|no|100|PASS: AWFY Bounce||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/bounce-candidate.rxbin;-a;100
+nr27-bounce-rxbvm-baseline|Bounce|crexx|rxbvm|baseline|A|no|no|100|PASS: AWFY Bounce||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/bounce-baseline.rxbin;-a;100
+nr27-bounce-rxbvm-candidate|Bounce|crexx|rxbvm|candidate|A|no|no|100|PASS: AWFY Bounce||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/bounce-candidate.rxbin;-a;100
+nr27-richards-rxvm-baseline|Richards|crexx|rxvm|baseline|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-baseline.rxbin;-a;1
+nr27-richards-rxvm-candidate|Richards|crexx|rxvm|candidate|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-candidate.rxbin;-a;1
+nr27-richards-rxbvm-baseline|Richards|crexx|rxbvm|baseline|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-baseline.rxbin;-a;1
+nr27-richards-rxbvm-candidate|Richards|crexx|rxbvm|candidate|A|no|no|1|PASS: AWFY Richards||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/richards-candidate.rxbin;-a;1
+nr27-base64-rxvm-baseline|Base64|crexx|rxvm|baseline|A|no|no|500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/base64-baseline.rxbin;-a;500
+nr27-base64-rxvm-candidate|Base64|crexx|rxvm|candidate|A|no|no|500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/base64-candidate.rxbin;-a;500
+nr27-base64-rxbvm-baseline|Base64|crexx|rxbvm|baseline|A|no|no|500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/base64-baseline.rxbin;-a;500
+nr27-base64-rxbvm-candidate|Base64|crexx|rxbvm|candidate|A|no|no|500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxbvm;/tmp/nr27-formal-inputs.hCtZ3M/linked/base64-candidate.rxbin;-a;500

@@ -1,0 +1,9 @@
+profile,total_instructions,attribute_value_blocks,attribute_value_bytes,value_slots,value_slot_bytes
+access-opt-rxbvm-get-hit-ascii-1024.csv,115251,44,1531648,6322,1567856
+access-opt-rxbvm-get-hit-ascii-16.csv,48470,14,281728,1282,317936
+access-opt-rxbvm-get-hit-ascii-256.csv,68452,34,579328,2482,615536
+access-opt-rxbvm-get-hit-ascii-64.csv,52310,24,341248,1522,377456
+access-opt-rxvm-get-hit-ascii-1024.csv,115251,44,1531648,6322,1567856
+access-opt-rxvm-get-hit-ascii-16.csv,48470,14,281728,1282,317936
+access-opt-rxvm-get-hit-ascii-256.csv,68452,34,579328,2482,615536
+access-opt-rxvm-get-hit-ascii-64.csv,52310,24,341248,1522,377456

@@ -1,0 +1,321 @@
+sample_id,stream,line_number,text
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,6,elapsed_us=184
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,6,elapsed_us=165
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,6,elapsed_us=169
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,6,elapsed_us=170
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,6,elapsed_us=160
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,6,elapsed_us=176
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,6,elapsed_us=161
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,6,elapsed_us=164
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,6,elapsed_us=160
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,6,elapsed_us=157
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,6,elapsed_us=176
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,6,elapsed_us=162
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,6,elapsed_us=171
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,6,elapsed_us=168
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,6,elapsed_us=156
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,6,elapsed_us=163
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,6,elapsed_us=154
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,6,elapsed_us=161
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,6,elapsed_us=153
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,6,elapsed_us=151
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,6,elapsed_us=162
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,6,elapsed_us=162
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,6,elapsed_us=158
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,6,elapsed_us=167
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,6,elapsed_us=160
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,6,elapsed_us=166
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,6,elapsed_us=154
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,6,elapsed_us=152
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,6,elapsed_us=154
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-8,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,6,elapsed_us=166
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-8,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,6,elapsed_us=151
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-8,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,6,elapsed_us=166
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-8,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,6,elapsed_us=164
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-9,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,6,elapsed_us=155
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-9,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,6,elapsed_us=150
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-9,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,6,elapsed_us=156
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-9,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,6,elapsed_us=154
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-after-recorded-10,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,6,elapsed_us=155
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-before-recorded-10,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,6,elapsed_us=151
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxbvm-after-recorded-10,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,2,mode=get-hit
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,3,family=ascii
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,4,size=64
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,5,iterations=1
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,6,elapsed_us=156
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,7,checksum=2
+timing-nr15-load-first-access-lifecycle-rxvm-before-recorded-10,stdout,8,PASS: NR-15 stem access compare

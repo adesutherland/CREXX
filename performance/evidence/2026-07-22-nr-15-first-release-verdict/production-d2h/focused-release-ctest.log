@@ -1,0 +1,37 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start 1777: benchmark_rexxcps_levelb_noopt
+ 1/10 Test #1777: benchmark_rexxcps_levelb_noopt ....   Passed    1.56 sec
+      Start 1778: benchmark_rexxcps_levelb_opt
+ 2/10 Test #1778: benchmark_rexxcps_levelb_opt ......   Passed    1.31 sec
+      Start 1815: nr15_stem_semantics_rxvm_noopt
+ 3/10 Test #1815: nr15_stem_semantics_rxvm_noopt ....   Passed    0.01 sec
+      Start 1816: nr15_stem_semantics_rxvm_opt
+ 4/10 Test #1816: nr15_stem_semantics_rxvm_opt ......   Passed    0.02 sec
+      Start 1817: nr15_stem_access_rxvm_noopt
+ 5/10 Test #1817: nr15_stem_access_rxvm_noopt .......   Passed    0.01 sec
+      Start 1818: nr15_stem_access_rxvm_opt
+ 6/10 Test #1818: nr15_stem_access_rxvm_opt .........   Passed    0.02 sec
+      Start 1819: nr15_stem_semantics_rxbvm_noopt
+ 7/10 Test #1819: nr15_stem_semantics_rxbvm_noopt ...   Passed    0.29 sec
+      Start 1820: nr15_stem_semantics_rxbvm_opt
+ 8/10 Test #1820: nr15_stem_semantics_rxbvm_opt .....   Passed    0.02 sec
+      Start 1821: nr15_stem_access_rxbvm_noopt
+ 9/10 Test #1821: nr15_stem_access_rxbvm_noopt ......   Passed    0.02 sec
+      Start 1822: nr15_stem_access_rxbvm_opt
+10/10 Test #1822: nr15_stem_access_rxbvm_opt ........   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Label Time Summary:
+benchmark        =   2.88 sec*proc (2 tests)
+language         =   2.88 sec*proc (2 tests)
+linked_opt       =   1.40 sec*proc (5 tests)
+noncanonical     =   2.88 sec*proc (2 tests)
+nr15             =   0.41 sec*proc (8 tests)
+performance      =   0.41 sec*proc (8 tests)
+rexxcps-smoke    =   2.88 sec*proc (2 tests)
+semantics        =   0.34 sec*proc (4 tests)
+smoke            =   1.31 sec*proc (1 test)
+stem             =   0.41 sec*proc (8 tests)
+
+Total Test time (real) =   3.32 sec

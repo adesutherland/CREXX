@@ -35,6 +35,8 @@
 #include "rxcp_exit.h"
 #include "rxcp_val.h"
 
+#define RXCP_OPT_ELIDABLE_IDENTITY_CNOP "assembler cnop /* rxcp-opt-elide-exact-identity */"
+
 static const char* rexx_builtins[] = {
     "ADDRESS", "AS", "ASSEMBLER", "ARG", "CALL", "CLASS", "DO", "LOOP", "METHOD", "ELSE", "ERROR", "END", "EXIT",
     "FACTORY", "IF", "IMPLEMENTS", "IMPORT", "INPUT", "INTERFACE", "ITERATE", "LEAVE", "MATCH", "NAMESPACE", "OF", "NOP", "NUMERIC", "OPTIONS",
@@ -2589,6 +2591,19 @@ static int rxcp_exit_handle_response(Context* ctx,
         }
 
         if (diag_rc < 0) {
+            free(replacement_code);
+            free(status);
+            return -1;
+        }
+
+        /* Certified exits use this private fragment only for mechanically
+         * exact state identities. Optimized compilation can remove the source
+         * site completely; -n still grafts an ordinary CNOP so retained
+         * source metadata remains stoppable. Do not generalize this to CNOP:
+         * authored and other exit-generated CNOPs are semantically retained. */
+        if (ctx->optimise && strcmp(replacement_code, RXCP_OPT_ELIDABLE_IDENTITY_CNOP) == 0) {
+            ast_del(node);
+            ctx->changed_flags |= FLAG_EXIT;
             free(replacement_code);
             free(status);
             return -1;

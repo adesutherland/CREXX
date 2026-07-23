@@ -1,0 +1,25 @@
+.globals=0
+
+main() .locals=8
+    steminit r0
+    load r1,"left"
+    load r2,"right"
+    load r3,"joined"
+    stemset2 r0,r1,r2,r3
+    stemget2 r4,r0,r1,r2
+    say r4
+    load r5,"default"
+    stemreset r0,r5
+    load r6,"left.right"
+    stemget r4,r0,r6
+    say r4
+    stemset r0,r6,r3
+    stemsize r7,r0
+    itos r7
+    say r7
+    load r5,1
+    stemkeyat r4,r0,r5
+    say r4
+    stemvalueat r4,r0,r5
+    say r4
+    ret

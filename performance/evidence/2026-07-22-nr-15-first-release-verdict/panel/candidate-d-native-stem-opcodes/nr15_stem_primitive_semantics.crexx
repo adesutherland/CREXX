@@ -1,0 +1,60 @@
+/* Focused semantics for the provisional NR-15 STEMGET/STEMSET ceiling. */
+options levelb comments_dash
+import rxfnsb
+
+target = .stem()
+result = .string
+
+key = ""
+value = "empty-key"
+assembler stemset target,key,value
+assembler stemget result,target,key
+call expect(result == "empty-key", "empty key")
+
+key = "κλειδί-🔥"
+value = "unicode-value"
+assembler stemset target,key,value
+assembler stemget result,target,key
+call expect(result == "unicode-value", "unicode key")
+
+key = "missing"
+assembler stemget result,target,key
+call expect(result == "", "missing empty default")
+
+target. = "new-default"
+key = "κλειδί-🔥"
+assembler stemget result,target,key
+call expect(result == "new-default", "generation reset")
+key = "missing"
+assembler stemget result,target,key
+call expect(result == "new-default", "missing assigned default")
+
+key = "κλειδί-🔥"
+value = "updated"
+assembler stemset target,key,value
+assembler stemget result,target,key
+call expect(result == "updated", "existing update after reset")
+
+key = "AaAaAaAaAaAaAaAaAaAa"
+value = "collision-a"
+assembler stemset target,key,value
+key = "BBBBBBBBBBBBBBBBBBBB"
+value = "collision-b"
+assembler stemset target,key,value
+assembler stemget result,target,key
+call expect(result == "collision-b", "collision chain tail")
+key = "AaAaAaAaAaAaAaAaAaAa"
+assembler stemget result,target,key
+call expect(result == "collision-a", "collision chain head")
+
+call expect(target.size() == 4, "size")
+say "PASS: NR-15 primitive semantics"
+return 0
+
+expect: procedure
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: NR-15 primitive semantics" label
+    exit 1
+  end
+  return

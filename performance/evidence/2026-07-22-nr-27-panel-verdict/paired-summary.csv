@@ -1,0 +1,11 @@
+workload,vm,metric,pairs,q1_percent,median_percent,q3_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit
+Base64,rxbvm,elapsed_ns,34,-5.573644,-0.147124,10.138736,1.891460,-2.585578,6.368497,18,34,noisy_inconclusive,no
+Base64,rxvm,elapsed_ns,34,-1.681426,2.434931,7.245314,3.285194,-0.275870,6.846258,12,34,noisy_inconclusive,no
+Bounce,rxbvm,elapsed_ns,34,-2.587867,-0.905663,1.907628,-0.208098,-1.468426,1.052229,20,34,noisy_inconclusive,no
+Bounce,rxvm,elapsed_ns,34,-0.594789,0.086149,1.383112,0.540504,-0.216580,1.297588,15,34,noisy_inconclusive,no
+Permute,rxbvm,elapsed_ns,34,-1.323024,-0.540637,0.345276,-0.826889,-1.802557,0.148778,24,34,noisy_inconclusive,no
+Permute,rxvm,elapsed_ns,34,-0.546114,0.349837,1.810002,1.590014,-0.468621,3.648649,14,34,noisy_inconclusive,no
+Richards,rxbvm,elapsed_ns,36,-0.843350,-0.237652,0.081837,-0.400905,-0.704914,-0.096895,24,36,clear_favorable,no
+Richards,rxvm,elapsed_ns,36,-0.242885,0.066176,0.347735,-0.015823,-0.426871,0.395225,17,36,noisy_inconclusive,no
+Sieve,rxbvm,elapsed_ns,34,-1.845381,0.172227,1.692207,3.137014,-5.391535,11.665563,16,34,noisy_inconclusive,no
+Sieve,rxvm,elapsed_ns,34,-3.623453,-0.146817,2.015076,1.525822,-2.314497,5.366141,17,34,noisy_inconclusive,no

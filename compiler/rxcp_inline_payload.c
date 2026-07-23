@@ -41,8 +41,45 @@ static int inline_assembler_has_unsupported_aliasing(ASTNode *node) {
 
 static int inline_assembler_has_unsupported_effect(ASTNode *node) {
     ASTNode *child;
+    size_t op_index;
 
     if (!node || node->node_type != ASSEMBLER) return 0;
+
+    /*
+     * Native stem operations mutate or inspect the receiver's private binary
+     * and attribute payload as one value. The generic method inliner binds a
+     * by-value receiver into temporary storage, so cloning these instructions
+     * would either lose mutation or read an obsolete copy. Keep the member
+     * call intact; the dedicated stem lowering can then use the caller's real
+     * receiver register, while unsupported receiver shapes retain the normal
+     * method-call copyback contract.
+     */
+    for (op_index = OP_STEMINIT_REG;
+         op_index <= OP_STEMVALUEAT_REG_REG_REG;
+         op_index++) {
+        const char *mnemonic = op_table[op_index].mnemonic;
+        size_t base_length = 0;
+        size_t character;
+        int matches = 1;
+
+        while (mnemonic[base_length] && mnemonic[base_length] != '_')
+            base_length++;
+        if (node->node_string_length != base_length) continue;
+        for (character = 0; character < base_length; character++) {
+            char source = node->node_string[character];
+            char canonical = mnemonic[character];
+            if (source >= 'A' && source <= 'Z')
+                source = (char)(source - 'A' + 'a');
+            if (canonical >= 'A' && canonical <= 'Z')
+                canonical = (char)(canonical - 'A' + 'a');
+            if (source != canonical) {
+                matches = 0;
+                break;
+            }
+        }
+        if (matches)
+            return 1;
+    }
 
     /*
      * Array operands cannot be safely represented by the current inline

@@ -1,0 +1,7 @@
+benchmark=nr15_architecture_lifecycle
+candidate=d2h
+size=64
+iterations=1000
+elapsed_us=933
+checksum=8000
+PASS: NR-15 architecture lifecycle

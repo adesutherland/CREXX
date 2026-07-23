@@ -43,6 +43,10 @@ main: procedure = .int expose errors handled
 
   call _trace_set("results")
   errors = errors + check(_trace_current_mode() = "R", "current mode")
+  errors = errors + check(_trace_set_off() = 1, "active-to-off transition")
+  errors = errors + check(_trace_current_mode() = "OFF", "fast off current mode")
+  errors = errors + check(_trace_set_off() = 0, "already-off identity")
+  call _trace_set("results")
   call _trace_set_format("json")
   errors = errors + check(_trace_current_format() = "LLM", "JSON format alias")
   call _trace_set_format("text")
