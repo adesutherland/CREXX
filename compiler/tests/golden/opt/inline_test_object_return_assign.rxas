@@ -6,7 +6,7 @@
 .meta "inline_test_object_return_assign.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=17
+main() .locals=16
    .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
    .srcstep 40 40 17 "inline_test_object_return_assign.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -112,10 +112,9 @@ l198bexprend:
    .srcstep 36 36 17 "inline_test_object_return_assign.crexx" 10 7 10 "  say box.getName()"
    .srcstep 34 34 33 "inline_test_object_return_assign.crexx" 10 7 10 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 34 34 0 "box" ""
-   copy r16,r0
-   .traceevent "A" 6 "R" "O" "r" 16 34 34 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 0 34 34 0 "§this" ""
    .srcstep 35 35 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
-   linkattr1 r13,r16,1
+   linkattr1 r13,r0,1
    .traceevent "V" 6 "R" "S" "r" 13 37 37 0 "name" ""
    scopy r7,r13
    unlinkbr r13,l225bexprend

@@ -642,7 +642,14 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
         return TP_VOID;
     }
 
-    if (node->value_type != TP_UNKNOWN) {
+    /* A source-imported TYPE_REFERENCE can arrive after the outer TP_REFERENCE
+     * has been established but before its referent fields converge.  Do not
+     * treat that partial state as a completed type: reconstruct both reference
+     * shapes from the validated child on the next fixed-point pass. */
+    if (node->value_type != TP_UNKNOWN &&
+        !(node->node_type == TYPE_REFERENCE &&
+          (node->value_reference_type == TP_UNKNOWN ||
+           node->target_reference_type == TP_UNKNOWN))) {
         /* The Node Type has already been determined */
         local_dims = node->value_dims;
 

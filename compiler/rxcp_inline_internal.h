@@ -65,7 +65,7 @@ typedef struct {
     Symbol *method_receiver_source_symbol;
     Symbol *method_receiver_local_symbol;
     RxcpRemapCapturedLocator method_receiver_copyback_locator;
-    size_t cleanup_coalesced_formal_bindings;
+    size_t cleanup_coalesced_bindings;
     int method_receiver_needs_copyback;
     int method_receiver_uses_locator_copyback;
 } InlineCloneState;
@@ -134,6 +134,12 @@ typedef struct {
 } InlineReturnShape;
 
 typedef enum {
+    INLINE_REFERENCE_ACCESSOR_NONE = 0,
+    INLINE_REFERENCE_ACCESSOR_GETTER,
+    INLINE_REFERENCE_ACCESSOR_SETTER
+} InlineReferenceAccessorKind;
+
+typedef enum {
     INLINE_ELIGIBILITY_OK = 0,
     INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS,
     INLINE_ELIGIBILITY_MISSING_INSTRS,
@@ -156,6 +162,7 @@ typedef struct {
     ASTNode *instrs;
     InlineReturnShape return_shape;
     InlinableCheck check;
+    InlineReferenceAccessorKind reference_accessor_kind;
     InlineEligibilityReject reject;
 } InlineEligibility;
 

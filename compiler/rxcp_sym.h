@@ -53,6 +53,11 @@
 #define RXCP_INLINE_CONTEXT_TRACE_IDENTITY  2u
 #define RXCP_INLINE_CONTEXT_NUMERIC         4u
 
+/* Body-reconstructed method-receiver facts.  Absence means that receiver
+ * placement has no proof, so older I6 summaries retain the materialized path. */
+#define RXCP_INLINE_CONTROL_METHOD_RECEIVER          1u
+#define RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE  8u
+
 typedef struct {
     ValueType type;
     size_t dims;

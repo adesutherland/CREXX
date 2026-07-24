@@ -1,0 +1,14 @@
+options levelb
+import inline_reference_accessors_dep
+
+main: procedure = .int
+  first = .int
+  second = .int
+  first = 1
+  second = 2
+  sample = .inline_reference_accessors_dep..holder(reference first)
+  call sample.setReferenceValue(reference second)
+  value_reference = sample.referenceValue()
+  value = dereference value_reference
+  say value
+  return 0

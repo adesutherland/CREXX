@@ -1969,6 +1969,9 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "string(REPLACE \"\\n\" \"|\" flat_main_
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(REGEX MATCH [=[\\.traceevent \"V\"[^|]*\"r\" ([0-9]+)[^|]*\"shared\"[^|]*\\|[ \\t]*\\.traceevent \"A\"[^|]*\"r\" ([0-9]+)[^|]*\"value\"]=] shared_binding \"\${flat_main_rxas}\")\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "set(shared_source_reg \"\${CMAKE_MATCH_1}\")\nset(shared_formal_reg \"\${CMAKE_MATCH_2}\")\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(shared_binding STREQUAL \"\" OR NOT shared_source_reg STREQUAL shared_formal_reg)\n  message(FATAL_ERROR \"Binary-import callable summary did not preserve direct scalar binding equivalence:\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(REGEX MATCH [=[\\.traceevent \"V\"[^|]*\"r\" ([0-9]+)[^|]*\"same\"[^|]*\\|[ \\t]*\\.traceevent \"A\"[^|]*\"r\" ([0-9]+)[^|]*\"§this\"]=] receiver_binding \"\${flat_main_rxas}\")\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "set(receiver_source_reg \"\${CMAKE_MATCH_1}\")\nset(receiver_this_reg \"\${CMAKE_MATCH_2}\")\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "if(receiver_binding STREQUAL \"\" OR NOT receiver_source_reg STREQUAL receiver_this_reg)\n  message(FATAL_ERROR \"Binary-import method summary did not preserve direct receiver equivalence:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.vargpick\\(\\)]=])\n  message(FATAL_ERROR \"Optimized binary import unexpectedly inlined dynamic vargPick():\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.residualcalltarget\\(\\)]=])\n  message(FATAL_ERROR \"Optimized binary import did not preserve residual call dependency:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_main.rxbin\" \"inline_cross_file_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -2092,6 +2095,40 @@ add_test(NAME inline_summary_formal_fallback_binary_opt
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_summary_formal_fallback_binary_opt PROPERTIES LABELS "linked_opt")
 
+# Review regression: receiver effects are trusted only when the imported I6
+# control facts exactly match an independent reconstruction of the method body.
+# Forging setName as a non-mutating receiver must retain the ordinary call.
+set(INLINE_RECEIVER_SUMMARY_FALLBACK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_receiver_summary_fallback_binary_opt.cmake")
+set(INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_summary_fallback_binary_opt_ws\")\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_cross_file_dep.crexx\" \"\${work}/inline_cross_file_dep.crexx\" RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_summary_main.crexx\" \"\${work}/inline_receiver_summary_main.crexx\" RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o inline_cross_file_dep \"\${work}/inline_cross_file_dep.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on receiver-summary dependency: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "file(READ \"\${work}/inline_cross_file_dep.rxas\" dep_rxas)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "string(REPLACE \".meta \\\"inline_cross_file_dep.box.setname\\\"=\\\".inline\\\" \\\"I6;c,1,1,1,0,4,9,7,5,1,0,0,0,6,0,400;\" \".meta \\\"inline_cross_file_dep.box.setname\\\"=\\\".inline\\\" \\\"I6;c,1,1,1,0,4,1,7,5,1,0,0,0,6,0,400;\" malformed_rxas \"\${dep_rxas}\")\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(malformed_rxas STREQUAL dep_rxas)\n  message(FATAL_ERROR \"Failed to construct contradictory receiver-effect summary\")\nendif()\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "file(WRITE \"\${work}/inline_cross_file_dep.rxas\" \"\${malformed_rxas}\")\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o inline_cross_file_dep.rxbin inline_cross_file_dep WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on contradictory receiver summary: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "file(REMOVE \"\${work}/inline_cross_file_dep.crexx\" \"\${work}/inline_cross_file_dep.rxas\")\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}\" -i \"${CMAKE_BINARY_DIR}/bin\" -o inline_receiver_summary_main \"\${work}/inline_receiver_summary_main.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on contradictory receiver-summary consumer: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "file(READ \"\${work}/inline_receiver_summary_main.rxas\" main_rxas)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.box\\.setname\\(\\)]=])\n  message(FATAL_ERROR \"Contradictory receiver summary did not retain setName() call:\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o inline_receiver_summary_main.rxbin inline_receiver_summary_main WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on receiver-summary consumer: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_receiver_summary_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT res EQUAL 0 OR NOT run_out STREQUAL \"after\\n\")\n  message(FATAL_ERROR \"Receiver-summary fallback runtime mismatch: \${run_out}\${err}\")\nendif()\n")
+file(GENERATE OUTPUT "${INLINE_RECEIVER_SUMMARY_FALLBACK_SCRIPT}" CONTENT "${INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT}")
+
+add_test(NAME inline_receiver_summary_fallback_binary_opt
+         COMMAND ${CMAKE_COMMAND} -P "${INLINE_RECEIVER_SUMMARY_FALLBACK_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(inline_receiver_summary_fallback_binary_opt PROPERTIES LABELS "linked_opt")
+
 set(INLINE_REF_ARRAY_COUNT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_ref_array_count_binary_opt.cmake")
 set(INLINE_REF_ARRAY_COUNT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_ref_array_count_binary_opt_ws\")\n")
 string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -2183,6 +2220,9 @@ string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "string(REPLACE \"\\n\" \"|\" fla
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "string(REGEX MATCH [=[\\.traceevent \"V\"[^|]*\"r\" ([0-9]+)[^|]*\"shared\"[^|]*\\|[ \\t]*\\.traceevent \"A\"[^|]*\"r\" ([0-9]+)[^|]*\"value\"]=] shared_binding \"\${flat_main_rxas}\")\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "set(shared_source_reg \"\${CMAKE_MATCH_1}\")\nset(shared_formal_reg \"\${CMAKE_MATCH_2}\")\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "if(shared_binding STREQUAL \"\" OR NOT shared_source_reg STREQUAL shared_formal_reg)\n  message(FATAL_ERROR \"Source-import callable summary did not preserve direct scalar binding equivalence:\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "string(REGEX MATCH [=[\\.traceevent \"V\"[^|]*\"r\" ([0-9]+)[^|]*\"same\"[^|]*\\|[ \\t]*\\.traceevent \"A\"[^|]*\"r\" ([0-9]+)[^|]*\"§this\"]=] receiver_binding \"\${flat_main_rxas}\")\n")
+string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "set(receiver_source_reg \"\${CMAKE_MATCH_1}\")\nset(receiver_this_reg \"\${CMAKE_MATCH_2}\")\n")
+string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "if(receiver_binding STREQUAL \"\" OR NOT receiver_source_reg STREQUAL receiver_this_reg)\n  message(FATAL_ERROR \"Source-import method summary did not preserve direct receiver equivalence:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.vargpick\\(\\)]=])\n  message(FATAL_ERROR \"Optimized source import unexpectedly inlined dynamic vargPick():\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.residualcalltarget\\(\\)]=])\n  message(FATAL_ERROR \"Optimized source import did not preserve residual call dependency:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_main.rxbin\" \"inline_cross_file_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -2385,6 +2425,11 @@ string(APPEND INLINE_LOCAL_MEMBER_CONTENT "execute_process(COMMAND \"$<TARGET_FI
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on local member inline test: \${out}\")\nendif()\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "file(READ \"\${work}/inline_local_member_scalar.rxas\" main_rxas)\n")
+string(APPEND INLINE_LOCAL_MEMBER_CONTENT "string(REGEX MATCH [=[main\\(\\) \\.locals=([0-9]+)]=] main_header \"\${main_rxas}\")\n")
+string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(main_header STREQUAL \"\" OR CMAKE_MATCH_1 GREATER 9)\n  message(FATAL_ERROR \"Direct getter/setter receiver placement used more than 9 main locals:\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_LOCAL_MEMBER_CONTENT "string(REGEX MATCHALL [=[\\n[ \\t]*copy [^\\n]+]=] main_copies \"\${main_rxas}\")\n")
+string(APPEND INLINE_LOCAL_MEMBER_CONTENT "list(LENGTH main_copies main_copy_count)\n")
+string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(main_copy_count GREATER 2)\n  message(FATAL_ERROR \"Direct getter/setter receiver placement retained object copies (count=\${main_copy_count}):\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*inline_local_member_scalar\\.box\\.§factory\\(\\)]=])\n  message(FATAL_ERROR \"Optimized local member test still calls Box factory:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*inline_local_member_scalar\\.box\\.get\\(\\)]=])\n  message(FATAL_ERROR \"Optimized local member test still calls get():\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*inline_local_member_scalar\\.box\\.set\\(\\)]=])\n  message(FATAL_ERROR \"Optimized local member test still calls set():\\n\${main_rxas}\")\nendif()\n")
@@ -2402,6 +2447,67 @@ add_test(NAME inline_local_member_scalar_opt
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_LOCAL_MEMBER_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_local_member_scalar_opt PROPERTIES LABELS "linked_opt")
+
+add_test(NAME inline_receiver_nested_this_materialization_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_nested_this_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_nested_this_opt.cmake)
+set_tests_properties(inline_receiver_nested_this_materialization_opt PROPERTIES
+        LABELS "linked_opt;receiver"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_receiver_reference_alias_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_reference_alias.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_reference_alias_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_reference_alias_opt.cmake)
+set_tests_properties(inline_receiver_reference_alias_opt PROPERTIES
+        LABELS "linked_opt;reference"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_reference_member_accessors_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_reference_member_accessors.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_reference_member_accessors_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_reference_member_accessors_opt.cmake)
+set_tests_properties(inline_reference_member_accessors_opt PROPERTIES
+        LABELS "linked_opt;reference;receiver"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_reference_accessors_import_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_reference_accessors_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_reference_accessors_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_reference_accessors_import_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_reference_accessors_import_opt.cmake)
+set_tests_properties(inline_reference_accessors_import_opt PROPERTIES
+        LABELS "linked_opt;reference;receiver;imports"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
 set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")
 set(INLINE_COMPUTED_RECEIVER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_computed_receiver_copyback_opt_ws\")\n")

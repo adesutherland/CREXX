@@ -64,6 +64,8 @@ static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
 static int inline_numeric_context_compatible(const numeric_context *caller, const numeric_context *callee);
 static int inline_analyse_return_shape(ASTNode *proc_def, InlineReturnShape *shape_out);
 static int inline_method_writes_class_attribute(ASTNode *proc_def);
+static Symbol *inline_find_instance_source_symbol(ASTNode *proc_def);
+static int inline_callable_is_method(ASTNode *proc_def);
 static int inline_symbol_writes_class_attribute(Symbol *symbol);
 static int inline_subtree_reads_class_attribute(ASTNode *node);
 static int inline_sibling_list_reads_class_attribute(ASTNode *node);

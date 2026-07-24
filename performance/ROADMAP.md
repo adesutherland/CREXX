@@ -493,17 +493,23 @@ static ceiling so it cannot pre-empt the inlining-first policy.
 
 ## PERF2-03 — flow-aware inlining 2.0
 
-Status: **production paused after slice 4** — Adrian approved H and production
-slices 1-4 with QA and an independent commit after each. Slice 1's receiver
+Status: **production slice 5 complete** —
+Adrian approved H and production slices 1-4 with QA and an independent commit
+after each, then authorized slice 5 on 2026-07-24. Slice 1's receiver
 transaction and slice 3's gated scalar/result cleanup are favorable; slice 2's
 gate infrastructure is byte-identical parity. Slice 4 adds body-reconstructed
 I6 callable summaries and opens the proved imported read-only scalar binding
 case while retaining missing/old/contradictory evidence on the normal call
 path. Its Richards program image is exactly slice-3-identical and its timing
 verdict is neutral, so the accepted slice-3 gain remains cumulative without an
-additive slice-4 claim. Final slice-4 QA is 1,910/1,910. Execution is paused
-before unauthorized slice 5 reference/object work. See
-`PERF2-03-WORKLIST.md`.
+additive slice-4 claim. Slice 5 adds mathematically proved same-register
+receiver placement and exact reference-attribute accessors while every
+unproved alias, lifetime or cleanup case retains the existing materialized
+path. Removing the 3,820,600 dynamic List `next()` calls reduces profiling-off
+Release median elapsed by 52.818%/53.212% on `rxvm`/`rxbvm`; all other guarded
+workloads and the linked library are byte-identical to the immediate baseline.
+Final slice-5 Debug QA is 1,915/1,915. See `PERF2-03-WORKLIST.md` and the
+retained `production/slice-5.md` evidence.
 
 ### Current evidence
 
@@ -514,8 +520,10 @@ I6 readers reconstruct formal read/write/escape, result/context and cost facts
 from the transported body, compare the result with the independently parsed
 declaration, and fail closed on missing, old, malformed or contradictory
 evidence. Candidate-local cleanup can coalesce the currently proved scalar and
-result cases. Reference/object alias, ownership/last-use and broader
-block-expression equivalence remain the explicit slice-5 proof boundary.
+result cases. Slice 5 also admits only fully proved direct local receiver
+placement and exact reference-attribute getters/setters. Broader
+reference/object ownership/last-use and block-expression equivalence remain
+explicit fail-closed proof boundaries.
 
 The retained NR-12/21 comparison found a small helper at 16 instructions after
 inlining versus 13 in the hand-equivalent lowering, with two extra copies, one

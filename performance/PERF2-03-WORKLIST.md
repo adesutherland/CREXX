@@ -1,6 +1,6 @@
 # PERF2-03 flow-aware inlining 2.0 worklist
 
-Status: production paused after completed slice 4; slice 5 not authorized
+Status: production slice 5 complete; decisive Release verdict accepted and QA green
 
 Started: 2026-07-24
 
@@ -276,8 +276,11 @@ Final pre-decision checklist:
 - [x] Paste-ready Adrian report names the next stop explicitly.
 
 Stop point 1 was released by Adrian's 2026-07-24 approval of H and production
-slices 1-4. Each slice requires focused correctness, its ordinary profiling-off
-Release verdict, requested QA and an independent commit. Stop before slice 5.
+slices 1-4. Adrian authorized slice 5 on 2026-07-24 after confirming the merged
+tree rebuild and CTest were green and that the machine was on stable AC power.
+Slice 5 first proved its ordinary profiling-off Release verdict and stopped.
+Adrian accepted the decisive result on 2026-07-24 and authorized broad QA and
+the independent closeout commit.
 
 ## Approved production ladder
 
@@ -286,8 +289,8 @@ Release verdict, requested QA and an independent commit. Stop before slice 5.
 | 1 | `InlineExpansionPlan` detached transaction plus direct receiver equivalence | complete; favorable verdict; 1,907/1,907 QA; `d51bdf30d` |
 | 2 | conservative multi-metric candidate profitability/fallback gate | complete; byte-identical parity verdict; 1,907/1,907 QA; `6687d64d5` |
 | 3 | gated boundary-aware local scalar/formal/result/control cleanup | complete; favorable verdict; 1,907/1,907 QA; `6b97c2ffd` |
-| 4 | versioned local/imported callable summaries and binding parity | complete; runtime-neutral proof/metadata verdict; 1,910/1,910 QA; this commit |
-| 5 | reference/object alias, lifetime and cleanup ownership | not authorized; mandatory pause |
+| 4 | versioned local/imported callable summaries and binding parity | complete; runtime-neutral proof/metadata verdict; 1,910/1,910 QA; `26f4aeb6f` |
+| 5 | reference/object alias, lifetime and cleanup ownership | complete; decisive List verdict; 1,915/1,915 QA; this commit |
 
 Slice 4 retains the slice-3 Richards image exactly at 1,867 instructions, 62
 peak locals, 79,094 bytes and SHA-256 `6aad1ca91ddb53089fe0b5040f47e1267cabf6bf13c1cc8527b8940d77b50f9a`.
@@ -314,5 +317,97 @@ until it is opened or explicitly rejected on semantic/profitability grounds.
 | I6 result shape that disagrees with the independently parsed callable declaration | contradictory evidence | remain fail closed; review-derived CTest requires the ordinary call and correct runtime output |
 | I6 body-derived facts or costs that disagree with the payload summary | contradictory evidence | remain fail closed through exact summary comparison; review-derived CTest for the newly trusted formal effects forges a writable reference as read-only and requires the ordinary call/runtime result; add another focused CTest whenever a new field begins opening a transformation |
 | Imported payload offered to an implicit `main` or generic class-factory procedure | declaration and body describe different callable semantics | fixed in slice 4: select the explicit procedure and defer factories to their real contract node; `address_inline_then_parse` guards the debug/attachment path |
-| Reference/object alias, lifetime and cleanup ownership | slice 4 summary records escape/shape but does not prove ownership transfer or last use | deferred to unauthorized slice 5; do not open before the mandatory pause/approval |
+| Reference/object alias, lifetime and cleanup ownership | slice 5 proves direct local receiver placement and the exact reference-attribute accessor family; broader ownership/last-use cases still lack proof | opened only for the proved slice-5 cases; all other reference/object cases remain fail closed |
 | Dynamic vararg indexing, assembler alias effects and generated association transport | current summary cannot prove locator/liveness, per-operand alias effects or association reconstruction | remain fail closed and listed for later evidence-specific slices; do not treat as permanent blanket exclusions |
+
+### Slice 5 proof and acceptance contract
+
+The first slice-5 mechanism is efficient direct placement of ordinary method
+receivers, including basic getters and setters. It is not a blanket object
+exemption. A receiver binding may share the caller's object register only when
+all of these facts are proved at the individual call site:
+
+- the callable's versioned summary is present and exactly reconstructed from
+  the validated body;
+- the receiver is a direct object variable at the statically resolved method
+  call site, with no computed evaluation, exposed/formal/generated storage,
+  enclosing `§this`, prior inline alias or flow-substituted identity;
+- the producer's validated declaration and body reconstruction prove that the
+  callee instance is the method receiver; and
+- any actual expression that reads receiver-owned state is captured before the
+  body, while overlapping object/reference actuals retain isolation.
+
+When one of those facts is missing, only receiver placement remains closed;
+the existing materialized receiver/copyback inline path remains available.
+Once a further case gains a complete mathematical proof, open it narrowly and
+add a distinguishing CTest rather than leaving the conservative fence in
+place. A real method call binds the receiver value pointer directly as `a1`, so
+sharing a proved direct local uses the same storage even when a pre-existing
+weak reference targets that object; the reference-alias regression proves that
+the alias observes the post-call mutation. Positive local, source-import and
+binary-import getter/setter tests must prove same-register receiver lowering
+and correct output. Negative tests cover computed receiver expressions, nested
+enclosing `§this`, unproved imported method identity and contradictory imported
+summary facts.
+
+Because receiver placement can affect the whole class-library surface, the
+mandatory first Release verdict must retain broad five-workload artifact and
+output guards even if the smallest decisive timing cell is narrower. Peak
+locals, executable instructions, general/typed copies, RXAS/RXBIN/linked-image
+bytes and both VM outputs are mandatory regression dimensions. After that
+verdict, stop for Adrian before broad CTest, sanitizer, documentation closeout
+or commit.
+
+#### Hot reference-accessor extension
+
+The first provisional verdict showed that direct receiver placement alone did
+not reach the highest-frequency basic accessor: `ListElement.next()` remains a
+3,820,600-call reference-attribute getter. Adrian therefore directed slice 5
+to continue within its approved reference/object scope rather than accepting
+the narrow receiver-only result.
+
+| Approach | Proof and cost | Disposition |
+| --- | --- | --- |
+| Retain the whole-callable reference ban | Safe fallback, but ignores the validated body and leaves the hot basic getter/setter family unavailable | rejected as over-broad |
+| Admit only exact reference-attribute accessors to the existing detached clone/bind/cleanup transaction | Reuses I6 body reconstruction, normal reference-formal capture, receiver evaluation/copyback, source/TRACE identity and the final profitability gate | selected |
+| Replace calls with a new direct attribute-access rewrite | Could reduce clone scaffolding further, but would duplicate attribute lowering and require a new transported attribute-identity contract before the existing transaction has been measured | defer unless the selected form remains unprofitable |
+
+An exact reference getter is a method with no formals and one final `RETURN`
+whose expression is one receiver-owned reference attribute. An exact reference
+setter is a void method with one required by-value reference formal, followed
+only by assignment of that formal to one receiver-owned reference attribute
+and a final bare `RETURN`. The target and formal reference shapes must match
+exactly. Calls, `reference self`, dereference/snapshot/refvalid operations,
+optional/by-reference/vararg formals, computed expressions and any extra read,
+write or control effect remain closed.
+
+This is mathematically narrower than general reference inlining. A reference
+value is a weak alias descriptor: copying it neither changes its target nor
+extends target lifetime. The exact getter copies that descriptor from the
+attribute to the existing return path. The exact setter uses the established
+reference-formal binding copy before the body and then stores that captured
+descriptor through the established receiver/copyback path. The normal emitter
+continues to own attribute link/copy/unlink operations, and the detached
+candidate still has to win the existing profitability gate.
+
+#### Slice 5 accepted result
+
+The exact accessor extension removes all five static `ListElement.next()` call
+sites and the one `setNext()` site. The measured 3,820,600 dynamic `next()`
+calls disappear. List grows from 233 to 239 static instructions and from
+16,186 to 16,650 RXBIN bytes while peak locals remain 34; general copies grow
+7 to 14, typed copies remain 2 and call opcodes fall 21 to 15.
+
+The ordinary profiling-off Release comparison at work=100 reduces median List
+elapsed from 182.367 ms to 86.044 ms on `rxvm` and from 201.974 ms to 94.499 ms
+on `rxbvm`: 52.818% and 53.212% respectively. Every recorded pair is
+favorable. Permute, Richards, JSON, RexxCPS and the linked library remain
+byte-identical to the immediate pre-slice-5 baseline, so the earlier Richards
+and other gains are retained rather than replaced.
+
+Closeout includes the complete Debug build, review and refresh of four
+optimized goldens whose only changes are proved receiver-copy removal/register
+renumbering, and final full Debug CTest 1,915/1,915. Local, source-import and
+binary-import reference accessors run correctly on both VMs; unproved and
+side-effecting cases remain calls. Retained evidence is in
+`production/slice-5.md` and its adjacent `slice-5-*` files.

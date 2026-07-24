@@ -302,7 +302,7 @@ static int inline_callable_writes_class_attribute(Symbol *start,
 static int inline_method_writes_class_attribute(ASTNode *proc_def) {
     Symbol *proc_symbol;
 
-    if (!proc_def || proc_def->node_type != METHOD) return 0;
+    if (!proc_def || !inline_callable_is_method(proc_def)) return 0;
 
     proc_symbol = inline_symbol_from_proc_def(proc_def);
     if (!proc_symbol) return 0;
@@ -609,8 +609,8 @@ static int inline_candidate_cleanup_fixed_point(Context *context,
     }
 
     initial_cost = plan->reference_candidate_cost;
-    if (clone_state->cleanup_coalesced_formal_bindings) {
-        size_t count = clone_state->cleanup_coalesced_formal_bindings;
+    if (clone_state->cleanup_coalesced_bindings) {
+        size_t count = clone_state->cleanup_coalesced_bindings;
         /* The binding remains as a source/TRACE event, but same-register
          * lowering makes its physical assignment free. Model only that
          * emitted operation in the candidate-local profitability delta. */
@@ -618,7 +618,7 @@ static int inline_candidate_cleanup_fixed_point(Context *context,
     }
 
     bound = initial_cost.structural_nodes + 1;
-    rewrites = clone_state->cleanup_coalesced_formal_bindings;
+    rewrites = clone_state->cleanup_coalesced_bindings;
     for (iteration = 0; iteration < bound; iteration++) {
         ASTNode *sequence;
         size_t changed;
@@ -1315,7 +1315,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         return 0;
     }
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
-    if (proc_def->node_type == METHOD &&
+    if (inline_callable_is_method(proc_def) &&
         inline_symbol_uses_imported_template(proc_sym) &&
         !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
@@ -1323,7 +1323,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         return 0;
     }
     if (method_needs_receiver_copyback &&
-        proc_def->node_type == METHOD &&
+        inline_callable_is_method(proc_def) &&
         !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method assignment inline requires a supported receiver copyback target");
@@ -1406,7 +1406,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
     }
 
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
-    if (proc_def->node_type == METHOD &&
+    if (inline_callable_is_method(proc_def) &&
         inline_symbol_uses_imported_template(proc_sym) &&
         !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
@@ -1414,7 +1414,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
         return 0;
     }
     if (method_needs_receiver_copyback &&
-        proc_def->node_type == METHOD &&
+        inline_callable_is_method(proc_def) &&
         !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method call inline requires a supported receiver copyback target");
@@ -1511,13 +1511,13 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
         return 0;
     }
     if (inline_method_writes_class_attribute(proc_sym->ast_template) &&
-        proc_sym->ast_template->node_type == METHOD &&
+        inline_callable_is_method(proc_sym->ast_template) &&
         !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method expression inline requires a direct receiver copyback target");
         return 0;
     }
-    if (proc_sym->ast_template->node_type == METHOD &&
+    if (inline_callable_is_method(proc_sym->ast_template) &&
         inline_symbol_uses_imported_template(proc_sym) &&
         !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
@@ -1756,6 +1756,94 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
     return result_normal;
 }
 
+/* Reference values are weak alias descriptors.  The general reference AST
+ * surface still needs full lifetime/alias proof, but these two method bodies
+ * have no such ambiguity: the getter copies one receiver-owned descriptor to
+ * the return path, while the setter copies one required by-value descriptor
+ * into one receiver-owned attribute.  The existing inline transaction keeps
+ * receiver evaluation, formal capture, copyback and source/TRACE ordering.
+ */
+static InlineReferenceAccessorKind inline_exact_reference_accessor_kind(ASTNode *callable,
+                                                                        ASTNode *args,
+                                                                        ASTNode *instrs) {
+    ASTNode *first;
+
+    if (!callable || !args || !instrs || !inline_callable_is_method(callable)) {
+        return INLINE_REFERENCE_ACCESSOR_NONE;
+    }
+
+    first = instrs->child;
+    if (!first) return INLINE_REFERENCE_ACCESSOR_NONE;
+
+    if (!args->child && callable->value_type == TP_REFERENCE && callable->value_dims == 0) {
+        ASTNode *result;
+        Symbol *attribute;
+
+        if (first->node_type != RETURN || first->sibling) return INLINE_REFERENCE_ACCESSOR_NONE;
+        result = first->child;
+        if (!result || result->sibling || result->child ||
+            result->node_type != VAR_SYMBOL || result->value_type != TP_REFERENCE ||
+            result->value_dims != 0 || !result->symbolNode) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+        attribute = result->symbolNode->symbol;
+        if (!attribute || attribute->type != TP_REFERENCE || attribute->value_dims != 0 ||
+            !inline_symbol_is_class_attribute(attribute)) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+        return INLINE_REFERENCE_ACCESSOR_GETTER;
+    }
+
+    if (callable->value_type == TP_VOID && callable->value_dims == 0 &&
+        args->child && !args->child->sibling) {
+        ASTNode *arg;
+        ASTNode *formal_target;
+        ASTNode *assignment;
+        ASTNode *final_return;
+        ASTNode *lhs;
+        ASTNode *rhs;
+        Symbol *formal_symbol;
+        Symbol *attribute;
+
+        arg = args->child;
+        formal_target = inline_formal_target(arg);
+        if (arg->is_ref_arg || arg->is_opt_arg || arg->is_varg ||
+            !formal_target || formal_target->value_type != TP_REFERENCE ||
+            formal_target->value_dims != 0 || !formal_target->symbolNode) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+
+        assignment = first;
+        final_return = assignment->sibling;
+        if (assignment->node_type != ASSIGN || !final_return || final_return->sibling ||
+            final_return->node_type != RETURN || final_return->child) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+
+        lhs = assignment->child;
+        rhs = lhs ? lhs->sibling : NULL;
+        if (!lhs || !rhs || rhs->sibling || lhs->child || rhs->child ||
+            lhs->node_type != VAR_TARGET || rhs->node_type != VAR_SYMBOL ||
+            lhs->value_type != TP_REFERENCE || rhs->value_type != TP_REFERENCE ||
+            lhs->value_dims != 0 || rhs->value_dims != 0 ||
+            !lhs->symbolNode || !rhs->symbolNode) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+
+        formal_symbol = formal_target->symbolNode->symbol;
+        attribute = lhs->symbolNode->symbol;
+        if (!formal_symbol || !attribute || rhs->symbolNode->symbol != formal_symbol ||
+            formal_symbol->type != TP_REFERENCE || formal_symbol->value_dims != 0 ||
+            attribute->type != TP_REFERENCE || attribute->value_dims != 0 ||
+            !inline_symbol_is_class_attribute(attribute)) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+        return INLINE_REFERENCE_ACCESSOR_SETTER;
+    }
+
+    return INLINE_REFERENCE_ACCESSOR_NONE;
+}
+
 static InlineEligibilityReject inline_analyse_callable_eligibility(Context *context,
                                                                    ASTNode *callable,
                                                                    Symbol *symbol,
@@ -1824,6 +1912,9 @@ static InlineEligibilityReject inline_analyse_callable_eligibility(Context *cont
     varg_arg = inline_find_varg_arg(callable);
     eligibility->check.ref_varg_mode = eligibility->args && varg_arg && varg_arg->is_ref_arg;
     ast_wlkr(callable, inlinable_check_walker, &eligibility->check);
+    eligibility->reference_accessor_kind = inline_exact_reference_accessor_kind(callable,
+                                                                                eligibility->args,
+                                                                                eligibility->instrs);
 
     if (eligibility->check.node_count > INLINE_MAX_NODES) {
         eligibility->reject = INLINE_ELIGIBILITY_NODE_CUTOFF;
@@ -1833,13 +1924,15 @@ static InlineEligibilityReject inline_analyse_callable_eligibility(Context *cont
         eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_ALIAS;
     } else if (eligibility->check.has_unsupported_assembler_effect) {
         eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_EFFECT;
-    } else if (eligibility->check.has_unsupported_reference) {
+    } else if (eligibility->check.has_unsupported_reference &&
+               eligibility->reference_accessor_kind == INLINE_REFERENCE_ACCESSOR_NONE) {
         eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE;
     } else if (eligibility->check.has_unsupported_varg_access) {
         eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS;
     } else if (reject_unportable_class_attribute_shape &&
-               (callable->node_type == METHOD || callable->node_type == FACTORY) &&
-               eligibility->check.has_unportable_class_attribute_shape) {
+               (inline_callable_is_method(callable) || callable->node_type == FACTORY) &&
+               eligibility->check.has_unportable_class_attribute_shape &&
+               eligibility->reference_accessor_kind == INLINE_REFERENCE_ACCESSOR_NONE) {
         eligibility->reject = INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE;
     }
 

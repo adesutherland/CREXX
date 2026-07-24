@@ -254,6 +254,13 @@ static int inline_build_callable_summary(ASTNode *callable,
                             RXCP_INLINE_CONTEXT_TRACE_IDENTITY |
                             RXCP_INLINE_CONTEXT_NUMERIC;
 
+    if (inline_callable_is_method(callable)) {
+        summary.control_flags |= RXCP_INLINE_CONTROL_METHOD_RECEIVER;
+        if (eligibility->check.has_class_attribute_write) {
+            summary.control_flags |= RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE;
+        }
+    }
+
     if (!inline_expansion_cost_collect(eligibility->instrs, &cost)) {
         free(summary.formals);
         return 0;
@@ -337,7 +344,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
 
         if (!sym || sym->is_main || !sym->scope ||
             (node->node_type == PROCEDURE && sym->scope->type == SCOPE_CLASS) ||
-            ((node->node_type == METHOD || node->node_type == FACTORY) &&
+            ((inline_callable_is_method(node) || node->node_type == FACTORY) &&
              (!node->parent || node->parent->node_type != CLASS_DEF))) {
             if (sym) {
                 sym->is_inlinable = 0;

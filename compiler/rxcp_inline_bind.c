@@ -708,7 +708,7 @@ static Scope *inline_find_callsite_instance_scope(ASTNode *call_node) {
 
         association = node->association;
         if (association &&
-            (association->node_type == METHOD || association->node_type == FACTORY) &&
+            (inline_callable_is_method(association) || association->node_type == FACTORY) &&
             node->scope) {
             ASTNode lookup_node;
             const char *name;
@@ -750,7 +750,7 @@ static int inline_scoped_call_needs_actual_capture(ASTNode *proc_def, ASTNode *c
     ASTNode *varg_arg;
 
     if (!proc_def || !call_node) return 0;
-    if (proc_def->node_type != FACTORY && proc_def->node_type != METHOD) return 0;
+    if (proc_def->node_type != FACTORY && !inline_callable_is_method(proc_def)) return 0;
 
     param_list = ast_chld(proc_def, ARGS, 0);
     param_arg = param_list ? param_list->child : NULL;
@@ -791,7 +791,7 @@ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
 
     if (!context || !instr_list || !caller_scope || !inline_scope ||
         !proc_def || !call_node || !clone_state) return NULL;
-    if (proc_def->node_type != METHOD) return NULL;
+    if (!inline_callable_is_method(proc_def)) return NULL;
 
     receiver = inline_call_receiver(call_node);
     if (!receiver) return NULL;
@@ -867,7 +867,7 @@ static int inline_capture_scoped_call_actuals(Context *context,
         !captured_receiver_out || !captured_symbols_out || !captured_count_out) {
         return 0;
     }
-    if (proc_def->node_type != FACTORY && proc_def->node_type != METHOD) return 1;
+    if (proc_def->node_type != FACTORY && !inline_callable_is_method(proc_def)) return 1;
     if (!inline_scoped_call_needs_actual_capture(proc_def, call_node)) return 1;
 
     actual_arg = inline_call_first_user_actual(call_node);
@@ -878,7 +878,7 @@ static int inline_capture_scoped_call_actuals(Context *context,
     if (!caller_scope) caller_scope = call_node->scope ? call_node->scope : inline_scope->parent;
     if (!caller_scope) return 0;
 
-    if (proc_def->node_type == METHOD) {
+    if (inline_callable_is_method(proc_def)) {
         *captured_receiver_out = inline_capture_method_receiver_for_scoped_args(context,
                                                                                instr_list,
                                                                                caller_scope,
@@ -1299,7 +1299,7 @@ static int inline_prepare_method_receiver_copyback(Context *context,
     ASTNode *receiver;
 
     if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !clone_state) return 0;
-    if (proc_def->node_type != METHOD) return 1;
+    if (!inline_callable_is_method(proc_def)) return 1;
     if (!inline_method_writes_class_attribute(proc_def)) return 1;
 
     receiver = inline_call_receiver(call_node);
@@ -1608,36 +1608,132 @@ static int inline_initialise_varg_array(Context *context,
     return 1;
 }
 
-static Symbol *inline_find_instance_symbol(ASTNode *proc_def,
-                                           InlineCloneState *state) {
+static Symbol *inline_find_instance_source_symbol(ASTNode *proc_def) {
     ASTNode lookup_node;
-    const char *name;
-    size_t name_len;
-    Symbol *old_symbol;
-    Symbol *new_symbol;
+    Symbol *symbol;
+    const char *names[2];
+    size_t name_count;
+    size_t i;
 
-    if (!proc_def || !proc_def->scope || !state) return NULL;
+    if (!proc_def || !proc_def->scope) return NULL;
 
     if (proc_def->node_type == METHOD) {
-        name = "\xc2\xa7" "this";
+        names[0] = "\xc2\xa7" "this";
+        name_count = 1;
     } else if (proc_def->node_type == FACTORY) {
-        name = "\xc2\xa7" "factory";
+        names[0] = "\xc2\xa7" "factory";
+        name_count = 1;
+    } else if (proc_def->node_type == PROCEDURE) {
+        /* Binary procedure records do not encode METHOD/FACTORY as a node
+         * kind.  Their direct reserved instance symbol is the independently
+         * reconstructed declaration evidence. */
+        names[0] = "\xc2\xa7" "this";
+        names[1] = "\xc2\xa7" "factory";
+        name_count = 2;
     } else {
         return NULL;
     }
 
-    name_len = strlen(name);
-    memset(&lookup_node, 0, sizeof(lookup_node));
-    lookup_node.node_string = (char *)name;
-    lookup_node.node_string_length = name_len;
+    for (i = 0; i < name_count; i++) {
+        memset(&lookup_node, 0, sizeof(lookup_node));
+        lookup_node.node_string = (char *)names[i];
+        lookup_node.node_string_length = strlen(names[i]);
+        symbol = sym_lrsv(proc_def->scope, &lookup_node);
+        if (symbol && symbol->scope == proc_def->scope) return symbol;
+    }
 
-    old_symbol = sym_lrsv(proc_def->scope, &lookup_node);
+    return NULL;
+}
+
+static int inline_callable_is_method(ASTNode *proc_def) {
+    Symbol *instance;
+    Symbol *callable_symbol;
+
+    if (!proc_def) return 0;
+    if (proc_def->node_type == METHOD) return 1;
+    if (proc_def->node_type != PROCEDURE) return 0;
+
+    instance = inline_find_instance_source_symbol(proc_def);
+    if (instance && instance->name &&
+        strcmp(instance->name, "\xc2\xa7" "this") == 0) return 1;
+
+    /* A binary callable record is reconstructed as PROCEDURE even when its
+     * independently parsed declaration scope is a class member.  Factories
+     * retain their reserved callable name; every other callable directly
+     * owned by that class scope is a method. */
+    callable_symbol = proc_def->symbolNode ? proc_def->symbolNode->symbol : NULL;
+    return proc_def->scope && proc_def->scope->parent &&
+           proc_def->scope->parent->type == SCOPE_CLASS &&
+           (!callable_symbol || !callable_symbol->name ||
+            strcmp(callable_symbol->name, "\xc2\xa7" "factory") != 0);
+}
+
+static Symbol *inline_find_instance_symbol(ASTNode *proc_def,
+                                           InlineCloneState *state) {
+    Symbol *old_symbol;
+    Symbol *new_symbol;
+
+    if (!state) return NULL;
+
+    old_symbol = inline_find_instance_source_symbol(proc_def);
     if (!old_symbol) return NULL;
 
     new_symbol = inline_find_mapped_symbol(state, old_symbol);
     if (!new_symbol) return NULL;
 
     return new_symbol;
+}
+
+static int inline_symbol_has_generated_storage_scope(Symbol *symbol) {
+    Scope *scope;
+
+    if (!symbol) return 1;
+    for (scope = symbol->scope; scope; scope = scope->parent) {
+        if (scope->type != SCOPE_PROCEDURE) continue;
+        if (!scope->name) return 1;
+        if (strncmp(scope->name, "__inline", 8) == 0 ||
+            strncmp(scope->name, "__rxtrace", 9) == 0) return 1;
+    }
+    return 0;
+}
+
+/* A real Rexx method call binds the caller's receiver value pointer directly
+ * as a1.  Once an I6 summary reconstructed from the validated method body
+ * proves that this is the method receiver, a direct object symbol can use the
+ * identical storage in the inline instance.  Computed and class-attribute
+ * receivers still need their existing evaluate-once locator/copyback path. */
+static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
+                                                   ASTNode *receiver,
+                                                   Symbol **storage_out) {
+    Symbol *proc_symbol;
+    Symbol *receiver_symbol;
+    const InlineCallableSummary *summary;
+
+    if (storage_out) *storage_out = NULL;
+
+    if (!proc_def || !inline_callable_is_method(proc_def) ||
+        !inline_is_direct_receiver_copyback_target(receiver) ||
+        receiver->node_type != VAR_SYMBOL || inline_node_has_array_shape(receiver) ||
+        receiver->value_type != TP_OBJECT || !receiver->symbolNode) {
+        return 0;
+    }
+
+    proc_symbol = proc_def->symbolNode ? proc_def->symbolNode->symbol : NULL;
+    receiver_symbol = receiver->symbolNode->symbol;
+    summary = proc_symbol ? proc_symbol->inline_summary : NULL;
+    if (!receiver_symbol || receiver_symbol->symbol_type != VARIABLE_SYMBOL ||
+        receiver_symbol->type != TP_OBJECT || receiver_symbol->value_dims != 0 ||
+        receiver_symbol->is_this ||
+        receiver_symbol->is_arg || receiver_symbol->is_ref_arg ||
+        inline_symbol_has_generated_storage_scope(receiver_symbol) ||
+        receiver_symbol->inline_value_alias || receiver->flow_substitute_symbol ||
+        !summary || summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+        !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER)) {
+        return 0;
+    }
+
+    if (storage_out) *storage_out = receiver_symbol;
+    return 1;
 }
 
 static int inline_count_factory_attributes(ASTNode *factory_def) {
@@ -1725,9 +1821,11 @@ static int inline_bind_method_receiver(Context *context,
     ASTNode *assign_lhs;
     ASTNode *assign_rhs;
     int method_needs_receiver_copyback;
+    int receiver_shares_actual;
+    Symbol *receiver_storage;
 
     if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !clone_state) return 0;
-    if (proc_def->node_type != METHOD) return 1;
+    if (!inline_callable_is_method(proc_def)) return 1;
 
     receiver = inline_call_receiver(call_node);
     if (!receiver) return 0;
@@ -1735,6 +1833,14 @@ static int inline_bind_method_receiver(Context *context,
     this_symbol = inline_find_instance_symbol(proc_def, clone_state);
     if (!this_symbol) return 0;
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
+    receiver_storage = NULL;
+    receiver_shares_actual = inline_method_receiver_can_share_actual(proc_def,
+                                                                     receiver,
+                                                                     &receiver_storage);
+    if (receiver_shares_actual) {
+        this_symbol->inline_value_alias = receiver_storage;
+        clone_state->cleanup_coalesced_bindings++;
+    }
 
     assign_node = rxcp_remap_create_assignment_node(context, inline_scope, receiver, receiver);
     if (!assign_node) return 0;
@@ -2258,7 +2364,7 @@ static int inline_bind_call_arguments_impl(Context *context,
                                                        formal_target->symbolNode->symbol);
             if (!cloned_formal) INLINE_BIND_RETURN(0);
             cloned_formal->inline_value_alias = actual_arg->symbolNode->symbol;
-            clone_state->cleanup_coalesced_formal_bindings++;
+            clone_state->cleanup_coalesced_bindings++;
         }
 
         bind_assign = rxcp_remap_create_assignment_node(context, inline_scope, formal_target, formal_target);
@@ -2321,7 +2427,7 @@ static int inline_bind_call_arguments_impl(Context *context,
             if (!inline_capture_ref_varg_actuals(context, instr_list, inline_scope, actual_arg, clone_state)) {
                 INLINE_BIND_RETURN(0);
             }
-        } else if ((proc_def->node_type == FACTORY || proc_def->node_type == METHOD) &&
+        } else if ((proc_def->node_type == FACTORY || inline_callable_is_method(proc_def)) &&
                    inline_varg_actuals_are_captured(captured_scoped_actuals,
                                                     captured_scoped_actual_count,
                                                     actual_index,

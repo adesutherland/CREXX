@@ -6,7 +6,7 @@
 .meta "inline_test_object_writable_arg.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=10
+main() .locals=9
    .meta "inline_test_object_writable_arg.main"="b" ".int" main() ""
    .srcstep 22 22 17 "inline_test_object_writable_arg.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -62,10 +62,9 @@ l100bexprend:
    .srcstep 18 18 17 "inline_test_object_writable_arg.crexx" 7 7 10 "  say box.getName()"
    .srcstep 16 16 33 "inline_test_object_writable_arg.crexx" 7 7 10 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 16 16 0 "box" ""
-   copy r9,r0
-   .traceevent "A" 6 "R" "O" "r" 9 16 16 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 0 16 16 0 "§this" ""
    .srcstep 17 17 17 "inline_test_object_writable_arg.crexx" 25 5 16 "    return name"
-   linkattr1 r8,r9,1
+   linkattr1 r8,r0,1
    .traceevent "V" 6 "R" "S" "r" 8 19 19 0 "name" ""
    scopy r7,r8
    unlinkbr r8,l127bexprend

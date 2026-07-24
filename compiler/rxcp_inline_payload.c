@@ -671,6 +671,11 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case WHILE:
         case UNTIL:
         case CLASS:
+        /* Exact reference accessors admitted by the eligibility proof may
+         * carry a reference descriptor in their formal signature.  I6
+         * serialises both this node and its referent child, then reconstructs
+         * and compares the callable summary before attaching the body. */
+        case TYPE_REFERENCE:
         case VAR_TARGET:
         case VAR_SYMBOL:
         case VAR_REFERENCE:
@@ -1032,7 +1037,7 @@ static int inline_meta_scope_is_exportable(InlineMetaExport *meta, Scope *scope)
     if (scope == meta->root_scope) return 1;
     if (meta->root_scope &&
         meta->root_scope->defining_node &&
-        (meta->root_scope->defining_node->node_type == METHOD ||
+        (inline_callable_is_method(meta->root_scope->defining_node) ||
          meta->root_scope->defining_node->node_type == FACTORY) &&
         scope == meta->root_scope->parent &&
         scope->type == SCOPE_CLASS) {
@@ -1063,7 +1068,7 @@ static int inline_meta_collect_scope(InlineMetaExport *meta, Scope *scope) {
     if (scope != meta->root_scope) {
         if (meta->root_scope &&
             meta->root_scope->defining_node &&
-            (meta->root_scope->defining_node->node_type == METHOD ||
+            (inline_callable_is_method(meta->root_scope->defining_node) ||
              meta->root_scope->defining_node->node_type == FACTORY) &&
             scope == meta->root_scope->parent &&
             scope->type == SCOPE_CLASS) {
@@ -1789,7 +1794,10 @@ static int inline_meta_import_callable_summary(InlineMetaImport *meta, char *rec
                                  RXCP_INLINE_RESULT_EXACT_SCALAR |
                                  RXCP_INLINE_RESULT_AGGREGATE |
                                  RXCP_INLINE_RESULT_REFERENCE)) return 0;
-    if (summary.control_flags != 0) return 0;
+    if (summary.control_flags & ~(RXCP_INLINE_CONTROL_METHOD_RECEIVER |
+                                  RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE)) return 0;
+    if (!(summary.control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER) &&
+        (summary.control_flags & RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE)) return 0;
     if (summary.context_flags & ~(RXCP_INLINE_CONTEXT_SOURCE_IDENTITY |
                                   RXCP_INLINE_CONTEXT_TRACE_IDENTITY |
                                   RXCP_INLINE_CONTEXT_NUMERIC)) return 0;
@@ -2713,7 +2721,7 @@ static ASTNode *inline_meta_create_template_proc(Context *context,
     if (!template_proc) return NULL;
 
     template_scope = rxcp_remap_create_scope(context,
-                                             (proc->node_type == METHOD || proc->node_type == FACTORY) ?
+                                             (inline_callable_is_method(proc) || proc->node_type == FACTORY) ?
                                              proc->scope->parent : NULL,
                                              template_proc,
                                              SCOPE_PROCEDURE,
@@ -2721,7 +2729,7 @@ static ASTNode *inline_meta_create_template_proc(Context *context,
                                              proc->scope->name);
     if (!template_scope) return NULL;
     if (!template_scope->parent && !scp_track_detached(context, template_scope)) return NULL;
-    if (proc->node_type == METHOD || proc->node_type == FACTORY) template_proc->parent = proc->parent;
+    if (inline_callable_is_method(proc) || proc->node_type == FACTORY) template_proc->parent = proc->parent;
 
     template_proc->scope = template_scope;
     if (!inline_meta_clone_missing_scope_symbols(proc->scope, template_scope)) return NULL;
@@ -2771,6 +2779,28 @@ static int inline_callable_summaries_equal(const InlineCallableSummary *left,
     return 1;
 }
 
+/* Slice-4 I6 method summaries used zero for the then-reserved control field.
+ * They remain valid inline bodies, but absence of slice-5 receiver facts must
+ * retain receiver materialisation.  All non-zero receiver evidence is still
+ * compared exactly, so contradictory evidence rejects the imported body. */
+static int inline_callable_summary_has_legacy_receiver_unknown(
+        const InlineCallableSummary *imported,
+        const InlineCallableSummary *computed) {
+    InlineCallableSummary imported_without_control;
+    InlineCallableSummary computed_without_control;
+
+    if (!imported || !computed || imported->control_flags != 0 ||
+        !(computed->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER)) {
+        return 0;
+    }
+
+    imported_without_control = *imported;
+    computed_without_control = *computed;
+    computed_without_control.control_flags = 0;
+    return inline_callable_summaries_equal(&imported_without_control,
+                                           &computed_without_control);
+}
+
 static int inline_meta_finish_template(Context *context,
                                        ASTNode *proc,
                                        ASTNode *template_proc,
@@ -2793,6 +2823,18 @@ static int inline_meta_finish_template(Context *context,
     add_ast(template_proc, body_root);
 
     symbol = proc->symbolNode->symbol;
+    /* Binary registries also synthesize a flat PROCEDURE declaration for a
+     * class method's fully-qualified name.  The method payload is valid for
+     * the separately reconstructed class contract, not for this declaration:
+     * producer receiver evidence cannot manufacture a receiver that the
+     * consumer declaration does not independently contain. */
+    if ((imported_summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER) &&
+        !inline_callable_is_method(proc)) {
+        sym_clear_inline_summary(symbol);
+        symbol->is_inlinable = 0;
+        symbol->ast_template = NULL;
+        return 0;
+    }
     /* The imported symbol is not type-resolved yet when metadata is attached,
      * but its independently parsed declaration already contains the return
      * type node. Use that source rather than allowing the summary to validate
@@ -2829,16 +2871,19 @@ static int inline_meta_finish_template(Context *context,
         symbol->ast_template = NULL;
         return 0;
     }
-    if (!inline_callable_summaries_equal(symbol->inline_summary, imported_summary)) {
+    if (!inline_callable_summaries_equal(symbol->inline_summary, imported_summary) &&
+        !inline_callable_summary_has_legacy_receiver_unknown(imported_summary,
+                                                             symbol->inline_summary)) {
         const InlineCallableSummary *computed;
 
         computed = symbol->inline_summary;
         inline_debug_log(context, template_proc, symbol, "DEBUG_INLINE",
-                         "reject imported body: callable summary mismatch imported=%zu/%d/%zu/%u/%zu/%zu/%zu/%zu/%zu computed=%zu/%d/%zu/%u/%zu/%zu/%zu/%zu/%zu",
+                         "reject imported body: callable summary mismatch imported=%zu/%d/%zu/%u/%u/%zu/%zu/%zu/%zu/%zu computed=%zu/%d/%zu/%u/%u/%zu/%zu/%zu/%zu/%zu",
                          imported_summary->formal_count,
                          (int)imported_summary->result_type,
                          imported_summary->result_dims,
                          imported_summary->result_flags,
+                         imported_summary->control_flags,
                          imported_summary->structural_nodes,
                          imported_summary->assignments,
                          imported_summary->branches,
@@ -2848,12 +2893,25 @@ static int inline_meta_finish_template(Context *context,
                          computed ? (int)computed->result_type : 0,
                          computed ? computed->result_dims : 0,
                          computed ? computed->result_flags : 0,
+                         computed ? computed->control_flags : 0,
                          computed ? computed->structural_nodes : 0,
                          computed ? computed->assignments : 0,
                          computed ? computed->branches : 0,
                          computed ? computed->calls : 0,
                          computed ? computed->inline_temp_definitions : 0);
         sym_clear_inline_summary(symbol);
+        symbol->is_inlinable = 0;
+        symbol->ast_template = NULL;
+        return 0;
+    }
+
+    /* Preserve absence as absence.  Reconstructed facts validate the body but
+     * cannot retroactively turn an older payload into receiver-placement
+     * evidence that its writer never supplied. */
+    if (imported_summary->control_flags == 0 &&
+        symbol->inline_summary &&
+        (symbol->inline_summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER) &&
+        !sym_copy_inline_summary(symbol, imported_summary)) {
         symbol->is_inlinable = 0;
         symbol->ast_template = NULL;
         return 0;
