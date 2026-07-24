@@ -89,6 +89,29 @@ typedef struct {
     Symbol *return_sink_symbol;
 } InlineReturnPlan;
 
+typedef enum {
+    INLINE_EXPANSION_STATEMENT = 0,
+    INLINE_EXPANSION_ASSIGNMENT_EXPRESSION,
+    INLINE_EXPANSION_CALL_EXPRESSION,
+    INLINE_EXPANSION_VALUE_EXPRESSION,
+    INLINE_EXPANSION_EAGER_OPERATOR
+} InlineExpansionKind;
+
+/*
+ * Per-site speculative ownership boundary.  The original call and replacement
+ * target remain attached to the caller while candidate_root is built and
+ * checked off-tree.  Only inline_expansion_plan_commit() may install it.
+ */
+typedef struct {
+    ASTNode *original_call;
+    ASTNode *replacement_target;
+    ASTNode *candidate_root;
+    Scope *parent_scope;
+    Symbol *callee_symbol;
+    InlineExpansionKind kind;
+    int committed;
+} InlineExpansionPlan;
+
 typedef struct {
     int return_count;
     int top_level_return_count;

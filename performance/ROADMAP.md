@@ -192,7 +192,7 @@ Source:
 | PERF2-00 | P0 | Close and archive the initial sweep | complete | Historical register retained; successor mappings recorded here. |
 | PERF2-01 | P0 | Clean same-session baseline and complete current attribution refresh | complete | Gate A accepted 2026-07-23; refreshed selection baseline frozen. No production change authorized. |
 | PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
-| PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | queued | PERF2-01 inline/call census plus PERF2-02 Q1 evidence: compiler receiver capture fold is the Richards copy owner. |
+| PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | production in progress | H and slices 1-4 approved with QA and a commit after each; mandatory pause before slice 5. Slice 1 verdict is favorable. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | queued | PERF2-01 + PERF2-03 cleanup ceiling; profile ranks BIFs. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | queued | PERF2-01 RXSEQ plus PERF2-03/04 machine ceilings. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
@@ -492,6 +492,11 @@ accepts it. BIF/helper quickening additionally waits for the PERF2-03/04 cleaned
 static ceiling so it cannot pre-empt the inlining-first policy.
 
 ## PERF2-03 — flow-aware inlining 2.0
+
+Status: **production in progress** — Adrian approved H and production slices
+1-4 with QA and an independent commit after each. Slice 1's receiver
+transaction is favorable; execution must pause before slice 5 reference/object
+work. See `PERF2-03-WORKLIST.md`.
 
 ### Current evidence
 

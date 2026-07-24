@@ -409,6 +409,40 @@ static int inline_count_return_nodes(ASTNode *node) {
     return count;
 }
 
+static void inline_expansion_plan_init(InlineExpansionPlan *plan,
+                                       ASTNode *original_call,
+                                       ASTNode *replacement_target,
+                                       Scope *parent_scope,
+                                       Symbol *callee_symbol,
+                                       InlineExpansionKind kind) {
+    if (!plan) return;
+
+    memset(plan, 0, sizeof(*plan));
+    plan->original_call = original_call;
+    plan->replacement_target = replacement_target;
+    plan->parent_scope = parent_scope;
+    plan->callee_symbol = callee_symbol;
+    plan->kind = kind;
+}
+
+static int inline_expansion_plan_commit(Context *context,
+                                        InlineExpansionPlan *plan,
+                                        ASTNode *candidate_root) {
+    if (!plan || !plan->original_call || !plan->replacement_target ||
+        !candidate_root || plan->committed) {
+        inline_debug_fail_closed(context,
+                                 plan ? plan->original_call : NULL,
+                                 plan ? plan->callee_symbol : NULL,
+                                 "invalid inline expansion transaction commit");
+        return 0;
+    }
+
+    plan->candidate_root = candidate_root;
+    rxcp_remap_replace_node(plan->replacement_target, candidate_root);
+    plan->committed = 1;
+    return 1;
+}
+
 static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
                                                               ASTNode *leave_node,
                                                               ASTNode *block_expr,
@@ -735,9 +769,17 @@ static int ast_inline_statement(Context *context,
     ASTNode *proc_instr;
     Scope *inline_scope;
     InlineCloneState clone_state;
+    InlineExpansionPlan expansion_plan;
     int receiver_copyback_appended;
 
     if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               statement_node,
+                               statement_node->scope,
+                               proc_sym,
+                               INLINE_EXPANSION_STATEMENT);
 
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) {
@@ -928,7 +970,10 @@ static int ast_inline_statement(Context *context,
         }
     }
 
-    rxcp_remap_replace_node(statement_node, block);
+    if (!inline_expansion_plan_commit(context, &expansion_plan, block)) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
     inline_free_symbol_map(&clone_state);
 
     return 1;
@@ -940,9 +985,17 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
     ASTNode *proc_def;
     InlineReturnShape return_shape;
     InlineReturnPlan return_plan;
+    InlineExpansionPlan expansion_plan;
     int method_needs_receiver_copyback;
 
     if (!assign_node || !call_node) return 0;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               call_node,
+                               assign_node->scope,
+                               proc_sym,
+                               INLINE_EXPANSION_ASSIGNMENT_EXPRESSION);
 
     lhs = assign_node->child;
     if (!lhs || lhs->node_type != VAR_TARGET) {
@@ -987,8 +1040,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         }
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
-        rxcp_remap_replace_node(call_node, block_expr);
-        return 1;
+        return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
     }
     if (return_shape.return_count != 1) {
         if (method_needs_receiver_copyback) {
@@ -998,8 +1050,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         }
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
-        rxcp_remap_replace_node(call_node, block_expr);
-        return 1;
+        return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
     }
 
     return ast_inline_statement(context, assign_node, call_node, proc_sym, &return_plan);
@@ -1014,7 +1065,15 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
     ASTNode *sink_lhs;
     InlineReturnShape return_shape;
     InlineReturnPlan return_plan;
+    InlineExpansionPlan expansion_plan;
     int method_needs_receiver_copyback;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               call_stmt,
+                               call_stmt ? call_stmt->scope : NULL,
+                               proc_sym,
+                               INLINE_EXPANSION_CALL_EXPRESSION);
 
     proc_def = proc_sym ? proc_sym->ast_template : NULL;
     if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) {
@@ -1091,8 +1150,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
 
         rxcp_remap_append_assignment_node(block, sink_assign, sink_lhs, block_expr);
 
-        rxcp_remap_replace_node(call_stmt, block);
-        return 1;
+        return inline_expansion_plan_commit(context, &expansion_plan, block);
     }
 
     memset(&return_plan, 0, sizeof(return_plan));
@@ -1103,10 +1161,18 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
 
 int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym) {
     ASTNode *block_expr;
+    InlineExpansionPlan expansion_plan;
     InlineExprContext expr_context;
     InlineReturnShape return_shape;
 
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               call_node,
+                               call_node->scope,
+                               proc_sym,
+                               INLINE_EXPANSION_VALUE_EXPRESSION);
 
     expr_context = inline_classify_expr_context(call_node);
     if (expr_context == INLINE_EXPR_CONTEXT_NONE) {
@@ -1148,9 +1214,7 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
     block_expr = inline_build_block_expr(context, call_node, proc_sym, call_node->scope, 0);
     if (!block_expr) return 0;
 
-    rxcp_remap_replace_node(call_node, block_expr);
-
-    return 1;
+    return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
 }
 
 int ast_inline_rhs_eager_operator(Context *context,
@@ -1171,6 +1235,7 @@ int ast_inline_rhs_eager_operator(Context *context,
     Scope *inline_scope;
     Symbol *left_symbol;
     InlineCloneState clone_state;
+    InlineExpansionPlan expansion_plan;
 
     if (!context || !op_node || !rhs_call) return 0;
     if (!inline_parent_is_eager_operator(op_node)) return 0;
@@ -1185,6 +1250,13 @@ int ast_inline_rhs_eager_operator(Context *context,
                                  "RHS eager-operator inline requires a parent scope");
         return 0;
     }
+
+    inline_expansion_plan_init(&expansion_plan,
+                               rhs_call,
+                               op_node,
+                               parent_scope,
+                               proc_sym,
+                               INLINE_EXPANSION_EAGER_OPERATOR);
 
     block_expr = rxcp_remap_create_block_expr(context,
                                               parent_scope,
@@ -1284,10 +1356,8 @@ int ast_inline_rhs_eager_operator(Context *context,
         return 0;
     }
 
-    rxcp_remap_replace_node(op_node, block_expr);
     inline_free_symbol_map(&clone_state);
-
-    return 1;
+    return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
 }
 
 static walker_result inlinable_check_walker(walker_direction direction, ASTNode *node, void *payload) {

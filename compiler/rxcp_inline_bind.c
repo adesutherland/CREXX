@@ -708,29 +708,42 @@ static int inline_scoped_call_needs_actual_capture(ASTNode *proc_def, ASTNode *c
     return 0;
 }
 
+static Symbol *inline_find_instance_symbol(ASTNode *proc_def,
+                                           InlineCloneState *state);
+
 static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
                                                               ASTNode *instr_list,
                                                               Scope *caller_scope,
+                                                              Scope *inline_scope,
                                                               ASTNode *proc_def,
                                                               ASTNode *call_node,
                                                               InlineCloneState *clone_state) {
     ASTNode *receiver;
     Symbol *temp_symbol;
+    Scope *capture_lhs_scope;
     ASTNode *capture_assign;
     ASTNode *capture_lhs;
     ASTNode *capture_rhs;
 
-    if (!context || !instr_list || !caller_scope || !proc_def || !call_node || !clone_state) return NULL;
+    if (!context || !instr_list || !caller_scope || !inline_scope ||
+        !proc_def || !call_node || !clone_state) return NULL;
     if (proc_def->node_type != METHOD) return NULL;
 
     receiver = inline_call_receiver(call_node);
     if (!receiver) return NULL;
 
-    temp_symbol = rxcp_remap_create_temp_symbol(context,
-                                            caller_scope,
-                                            receiver,
-                                            "__inline_method_receiver",
-                                            0);
+    capture_lhs_scope = caller_scope;
+    if (!clone_state->method_receiver_uses_locator_copyback &&
+        inline_is_direct_receiver_copyback_target(receiver)) {
+        temp_symbol = inline_find_instance_symbol(proc_def, clone_state);
+        capture_lhs_scope = inline_scope;
+    } else {
+        temp_symbol = rxcp_remap_create_temp_symbol(context,
+                                                caller_scope,
+                                                receiver,
+                                                "__inline_method_receiver",
+                                                0);
+    }
     if (!temp_symbol) return NULL;
 
     capture_assign = rxcp_remap_create_assignment_node(context, caller_scope, receiver, receiver);
@@ -739,7 +752,7 @@ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
     capture_assign->inherit_parent_scope = 1;
 
     capture_lhs = rxcp_remap_create_symbol_node(context,
-                                            caller_scope,
+                                            capture_lhs_scope,
                                             receiver,
                                             temp_symbol,
                                             VAR_TARGET,
@@ -805,6 +818,7 @@ static int inline_capture_scoped_call_actuals(Context *context,
         *captured_receiver_out = inline_capture_method_receiver_for_scoped_args(context,
                                                                                instr_list,
                                                                                caller_scope,
+                                                                               inline_scope,
                                                                                proc_def,
                                                                                call_node,
                                                                                clone_state);

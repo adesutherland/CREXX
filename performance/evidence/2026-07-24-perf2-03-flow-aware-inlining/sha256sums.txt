@@ -1,0 +1,15 @@
+0c98e4eac3fa0aebf169a69d57893b379b31965e3d45ccf058c2b286124e84de  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/.gitattributes
+e7f4b8c6745238a3b517dc0da106a88cf9a53d7b09fe2f30bd33a341294ca0f8  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/P0-CENSUS.md
+ba56378626a4093ab2eb0085d2655ae93c306ccfbb97a300e2b59611e1032792  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/PROTOTYPE-RESULTS.md
+40efdb50b54b79659fb397b6ae62b7b60c601640b3c04acb591a997e30f6e59e  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/PROVENANCE.md
+55463261c7e9553897bafe27853d1a4a2c513b7c8ea0b26e62bd4c2e43e26e63  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/README.md
+431e216740d32c461ef8d063a42ad85abcbcb06cf4fc6a6409ced9ccdfa5b3fa  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/p2-timing-capture-manifest.json
+e982dec3dde2b5f84c9bda4d598c761a8b667bbc713d85973b671ac316772557  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/p2-timing-samples.csv
+2a92b1788ac1c9bb2a1ff8bd3b2dbdee5e009177a8b4b7fd76a57ab045a42c51  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/p2-timing-summary.csv
+fa19e07da3c1f8d5ca7286aaa5a99780b6e20978598d7c02fc8c4d5b84c0d119  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-1-timing-capture.json
+3dbdd793e47113aba3e3e6d038bced91e5de92da53576ab7acde598a2247eb1d  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-1-timing-summary.csv
+ee9d4a7eb5dc58d139434e244e2906a1d13a50e383b1a2962e0e99f470a5ce82  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-1.md
+5522ded06f2cca8d564fe0f674e187fed39753a2358b484dadcc5ab72ecd8bd6  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/prototypes/p1-q1-replay.patch
+049e44c968ad28b79042261f252756ee43a75948ff821238d1d22e7761d835e8  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/prototypes/p2-readonly-scalar-formal.patch
+4e25f9dfea70b3d4379d8dd69fc56a93e713bbc75d98ef6c9314872e54b95d93  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/prototypes/p3-inline-result-placement.patch
+067f9f47bbccc571cd5eaaab2fe38d188d845e7c43ef60842abc4f9cac740c48  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/prototypes/p4-combined-static-fallback.patch
