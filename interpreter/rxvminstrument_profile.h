@@ -30,7 +30,8 @@
         (void)(module_); (void)(index_);                                        \
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_begin_at(                                 \
-                    &vm_profile, (int)(opcode_), rxvm_profile_now_ns());         \
+                    &vm_profile, (size_t)(module_), (size_t)(index_),           \
+                    (int)(opcode_), rxvm_profile_timestamp(&vm_profile));       \
         if (vm_profile.enabled)                                                 \
             rxvm_profile_trace_instruction_at(                                 \
                     &vm_profile, current_frame, pc, meta_map,                   \
@@ -45,7 +46,9 @@
         (void)(target_module_); (void)(target_index_);                          \
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_retire_at(                                \
-                    &vm_profile, (reason_), rxvm_profile_now_ns());              \
+                    &vm_profile, (size_t)(target_module_),                      \
+                    (size_t)(target_index_), (reason_),                         \
+                    rxvm_profile_timestamp(&vm_profile));                       \
         if (vm_sequence.enabled)                                                \
             rxvm_sequence_instruction_retire(&vm_sequence, (reason_));          \
     } while (0)
@@ -55,7 +58,7 @@
         (void)(module_); (void)(index_); (void)(reason_);                       \
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_terminal_at(                              \
-                    &vm_profile, rxvm_profile_now_ns());                        \
+                    &vm_profile, rxvm_profile_timestamp(&vm_profile));          \
         if (vm_sequence.enabled) rxvm_sequence_break(&vm_sequence);             \
     } while (0)
 
@@ -69,7 +72,8 @@
                      vm_profile_reason__ == RXVM_TRANSITION_INTERRUPT_ENTRY ||  \
                      (vm_profile_reason__ == RXVM_TRANSITION_RETURN &&          \
                       !vm_profile.instruction_active))                         \
-                    ? rxvm_profile_now_ns() : vm_profile.instruction_start_ns;  \
+                    ? rxvm_profile_timestamp(&vm_profile)                       \
+                    : vm_profile.instruction_start_ns;                          \
             rxvm_profile_frame_activate_at(                                    \
                     &vm_profile, (const void *)(frame_),                        \
                     (frame_)->procedure->profile_id, vm_profile_reason__,       \
@@ -85,13 +89,14 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_native_begin_at(                                      \
                     &vm_profile, (procedure_)->profile_id,                      \
-                    rxvm_profile_now_ns());                                     \
+                    rxvm_profile_timestamp(&vm_profile));                       \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_NATIVE_END()                                      \
     do {                                                                        \
         if (vm_profile.enabled)                                                 \
-            rxvm_profile_native_end_at(&vm_profile, rxvm_profile_now_ns());     \
+            rxvm_profile_native_end_at(                                        \
+                    &vm_profile, rxvm_profile_timestamp(&vm_profile));          \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_MODULES_CHANGED(context_)                         \
@@ -112,7 +117,7 @@
         (void)(module_); (void)(index_);                                        \
         if (vm_profile.enabled)                                                 \
             rxvm_profile_interrupt_scan_begin_at(                              \
-                    &vm_profile, rxvm_profile_now_ns());                        \
+                    &vm_profile, rxvm_profile_timestamp(&vm_profile));          \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_INTERRUPT_SELECT(signal_, module_, index_)        \
@@ -121,7 +126,7 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_interrupt_select_at(                                  \
                     &vm_profile, (unsigned char)(signal_),                      \
-                    rxvm_profile_now_ns());                                     \
+                    rxvm_profile_timestamp(&vm_profile));                       \
         if (vm_sequence.enabled) rxvm_sequence_break(&vm_sequence);             \
     } while (0)
 
@@ -137,7 +142,7 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_interrupt_resume_at(                                  \
                     &vm_profile, (unsigned char)(signal_),                      \
-                    rxvm_profile_now_ns());                                     \
+                    rxvm_profile_timestamp(&vm_profile));                       \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(signal_, module_, index_)      \
@@ -146,7 +151,7 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_interrupt_terminal_at(                                \
                     &vm_profile, (unsigned char)(signal_),                      \
-                    rxvm_profile_now_ns());                                     \
+                    rxvm_profile_timestamp(&vm_profile));                       \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_CALL(path_, procedure_, arity_, disposition_, outcome_, caller_, module_, index_, argument_base_, has_window_) \
@@ -194,6 +199,12 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_record_signal_native_restore_at(                      \
                     &vm_profile, (observed_), (uint64_t)(slots_), (failed_));   \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_VALUE_TYPED(operation_, shape_, bytes_)           \
+    do {                                                                        \
+        rxvm_profile_record_value_typed((operation_), (shape_),                \
+                                        (size_t)(bytes_));                      \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_VM_END(context_, result_)                         \

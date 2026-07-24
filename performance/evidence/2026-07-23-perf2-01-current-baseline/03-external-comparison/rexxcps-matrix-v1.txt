@@ -1,0 +1,8 @@
+# PERF2-01 same-session RexxCPS family. ooRexx and Regina execute Classic 2.2;
+# cREXX 2.2d and NetRexx 2.2n remain separately disclosed adaptations.
+crexx-cross-runtime-matrix|1
+rexxcps-rxvm|RexxCPS|crexx|rxvm|disclosed-2.2d|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxvm;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin;-a
+rexxcps-rxbvm|RexxCPS|crexx|rxbvm|disclosed-2.2d|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxbvm;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin;-a
+rexxcps-oorexx|RexxCPS|oorexx|oorexx|canonical-2.2|A|no|no|1000-clauses|Performance:|Performance:|/Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx;tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_2.rex
+rexxcps-regina|RexxCPS|regina|regina|canonical-2.2|A|no|no|1000-clauses|Performance:|Performance:|/opt/homebrew/bin/regina;tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_2.rex
+rexxcps-netrexx|RexxCPS|netrexx|netrexx|disclosed-2.2n|A|no|no|1000-clauses|PASS: RexxCPS 2.2n NetRexx disclosed adaptation|Performance:|/usr/bin/java;-cp;performance/evidence/2026-07-23-perf2-01-current-baseline/03-external-comparison/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;rexxcps_2_2n

@@ -1,0 +1,34 @@
+[native accepted stdout]
+PASS base64-rxbvm-1.stdout.txt
+PASS base64-rxvm-1.stdout.txt
+PASS base64-rxvm-2.stdout.txt
+PASS bounce-rxbvm-1.stdout.txt
+PASS bounce-rxvm-1.stdout.txt
+PASS bounce-rxvm-2.stdout.txt
+PASS json-rxvm-1.stdout.txt
+PASS list-rxvm-1.stdout.txt
+PASS mandelbrot-rxvm-valid.stdout.txt
+PASS permute-rxvm-1.stdout.txt
+PASS rexxcps-rxvm-1.stdout.txt
+PASS richards-rxbvm-1.stdout.txt
+PASS richards-rxvm-1.stdout.txt
+PASS richards-rxvm-2.stdout.txt
+PASS sieve-rxvm-1.stdout.txt
+PASS storage-rxvm-1.stdout.txt
+PASS towers-rxvm-1.stdout.txt
+accepted_native_stdout=17
+REJECTED mandelbrot-rxvm-1: no governed checksum reference; replacement mandelbrot-rxvm-valid passed
+
+[heap accepted stdout]
+PASS bounce-full.stdout.txt
+PASS richards.stdout.txt
+PASS storage.stdout.txt
+PASS towers.stdout.txt
+REJECTED bounce lite high-water command exit 249; bounce-full is accepted replacement
+
+[profile domain audit]
+rxvm-counts entries=22 overflow_rows=0 unavailable_rows=0
+rxbvm-counts entries=22 overflow_rows=0 unavailable_rows=0
+rxvm-selected-timing entries=10 overflow_rows=0 unavailable_rows=0
+rxbvm-selected-timing entries=10 overflow_rows=0 unavailable_rows=0
+optimized_domain_degraded_or_overflowed=0

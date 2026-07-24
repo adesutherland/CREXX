@@ -262,7 +262,7 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
             ${CMAKE_SOURCE_DIR}/rxpa)
     target_compile_definitions(test_rxvmprofile PRIVATE CREXX_VM_PROFILING=1)
     target_link_libraries(test_rxvmprofile PRIVATE
-            rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim rxvmref
+            rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim rxvmref rxbin
             ${CREXX_SOCKET_TARGET_LIBS})
     add_test(NAME rxvmprofileaccounting COMMAND test_rxvmprofile)
     set_tests_properties(rxvmprofileaccounting PROPERTIES
@@ -827,6 +827,10 @@ crexx_add_vm_dual_test(NAME rxasattributebulktests RXVM_ARGS tests_attributes PA
 crexx_add_rxas_vm_binary(tests_references "reference value instructions")
 crexx_add_vm_dual_test(NAME rxasreferencetests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
 crexx_add_vm_dual_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid.*PASS: Reference RXAS Ops")
+
+# PERF2-02 exact direct MKREF guards and mandatory fallback paths
+crexx_add_rxas_vm_binary(tests_perf2_reference_guards "PERF2-02 direct reference guards")
+crexx_add_vm_dual_test(NAME rxasperf2referenceguardtests RXVM_ARGS tests_perf2_reference_guards PASS_REGULAR_EXPRESSION "PASS: PERF2-02 Reference Guards")
 
 # Instruction Sanity Tests - object initialization lifecycle
 crexx_add_rxas_vm_binary(tests_object_initialization "object initialization lifecycle instructions")

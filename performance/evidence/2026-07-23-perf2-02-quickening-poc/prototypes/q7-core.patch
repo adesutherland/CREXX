@@ -1,0 +1,437 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 54b48d083..0f1e2370e 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -1598,6 +1598,112 @@ static rxvm_reference_cell *rxvm_reference_payload_cell(value *reference_value)
+     return reference_value->reference_payload;
+ }
+ 
++/* PERF2-02 Q7 PoC: build a fail-soft, module-owned quick-site plan from the
++ * immutable canonical image.  Records are stable for the module lifetime. */
++static void rxvm_perf2_build_quick_sites(module *mod) {
++    size_t instruction_index;
++    size_t previous_index;
++    size_t count;
++    size_t slot;
++    unsigned int previous_opcode;
++    rxvm_perf2_quick_site *sites;
++
++    if (!mod || mod->perf2_quick_sites_built) return;
++    mod->perf2_quick_sites_built = 1;
++    if (!mod->segment.binary || !mod->segment.inst_size) return;
++
++    count = 0;
++    previous_index = SIZE_MAX;
++    previous_opcode = OP_MAX_INSTRUCTIONS;
++    instruction_index = 0;
++    while (instruction_index < mod->segment.inst_size) {
++        unsigned int opcode =
++                (unsigned int)mod->segment.binary[instruction_index].instruction.opcode;
++        size_t operands =
++                (size_t)mod->segment.binary[instruction_index].instruction.no_ops;
++        if (operands >= mod->segment.inst_size - instruction_index) return;
++        if (opcode == OP_COPY_REG_REG || opcode == OP_MKREF_REG_REG) count++;
++        previous_index = instruction_index;
++        previous_opcode = opcode;
++        instruction_index += operands + 1u;
++    }
++
++    if (!count || count > SIZE_MAX / sizeof(*sites)) return;
++    sites = (rxvm_perf2_quick_site *)calloc(count, sizeof(*sites));
++    if (!sites) return;
++
++    slot = 0;
++    previous_index = SIZE_MAX;
++    previous_opcode = OP_MAX_INSTRUCTIONS;
++    instruction_index = 0;
++    while (instruction_index < mod->segment.inst_size && slot < count) {
++        unsigned int opcode =
++                (unsigned int)mod->segment.binary[instruction_index].instruction.opcode;
++        size_t operands =
++                (size_t)mod->segment.binary[instruction_index].instruction.no_ops;
++        rxvm_perf2_quick_site *site = 0;
++
++        if (opcode == OP_COPY_REG_REG) {
++            site = &sites[slot++];
++            site->family = RXVM_PERF2_QUICK_COPY;
++            site->state = RXVM_PERF2_QUICK_CANDIDATE;
++            site->canonical_index = instruction_index;
++            site->operand1 = mod->segment.binary[instruction_index + 1u].index;
++            site->operand2 = mod->segment.binary[instruction_index + 2u].index;
++        } else if (opcode == OP_MKREF_REG_REG && operands == 2u) {
++            site = &sites[slot++];
++            site->family = RXVM_PERF2_QUICK_REFERENCE;
++            site->state = RXVM_PERF2_QUICK_SPECIALIZED;
++            site->canonical_index = instruction_index;
++            site->operand1 = mod->segment.binary[instruction_index + 1u].index;
++            site->operand2 = mod->segment.binary[instruction_index + 2u].index;
++            if (previous_opcode == OP_MINLINKATTR1_REG_REG_REG_INT &&
++                previous_index != SIZE_MAX &&
++                previous_index + 5u == instruction_index &&
++                mod->segment.binary[previous_index + 1u].index ==
++                        mod->segment.binary[instruction_index + 2u].index) {
++                site->flags = 1u;
++                site->root_operand = mod->segment.binary[previous_index + 2u].index;
++                site->index_operand = mod->segment.binary[previous_index + 3u].index;
++                site->index_offset = mod->segment.binary[previous_index + 4u].iconst;
++            }
++        }
++
++        previous_index = instruction_index;
++        previous_opcode = opcode;
++        instruction_index += operands + 1u;
++    }
++
++    mod->perf2_quick_sites = sites;
++    mod->perf2_quick_site_count = slot;
++}
++
++static int rxvm_perf2_plain_copy_value(const value *v) {
++    return v && !v->reference_payload && !v->native_payload_ops &&
++           !v->decimal_value_length && !v->string_length && !v->binary_length &&
++           !v->num_attributes && !v->object_type;
++}
++
++static void rxvm_perf2_copy_plain_value(value *dest, const value *source) {
++    if (!dest || !source || dest == source) return;
++    dest->status.all_type_flags = source->status.all_type_flags;
++    dest->int_value = source->int_value;
++    dest->float_value = source->float_value;
++    dest->object_type = 0;
++    dest->decimal_value_length = 0;
++    dest->string_length = 0;
++    dest->string_pos = 0;
++#ifndef NUTF8
++    dest->string_chars = 0;
++    dest->string_char_pos = 0;
++#endif
++    dest->binary_length = 0;
++    dest->binary_pos = 0;
++    dest->native_payload_ops = 0;
++    dest->native_payload_flags = 0;
++    dest->num_attributes = 0;
++}
++
+ static void rxvm_release_frame_reference_lifetimes(stack_frame *frame) {
+     size_t i;
+     size_t globals;
+@@ -4688,8 +4794,23 @@ const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
+ 
+ typedef Opcode instructions;
+ 
++#define RXVM_PERF2_PRIVATE_REFERENCE (OP_MAX_INSTRUCTIONS)
++#define RXVM_PERF2_PRIVATE_COPY_CANDIDATE (OP_MAX_INSTRUCTIONS + 1)
++#define RXVM_PERF2_PRIVATE_COPY_SPECIALIZED (OP_MAX_INSTRUCTIONS + 2)
++
+ #ifdef NTHREADED
+-#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_) ((void)0)
++#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_)             \
++    do {                                                                        \
++        (image_)[instruction_].instruction.opcode = (opcode_);                  \
++    } while (0)
++#define VM_BIND_PERF2_HANDLER(image_, instruction_, private_opcode_, label_)    \
++    do {                                                                        \
++        (image_)[instruction_].instruction.opcode = (private_opcode_);          \
++    } while (0)
++#define VM_PATCH_PERF2_HANDLER(instruction_, private_opcode_, label_)           \
++    do {                                                                        \
++        (instruction_)->instruction.opcode = (private_opcode_);                 \
++    } while (0)
+ #else
+ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+ #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
+@@ -4705,15 +4826,37 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+                     ? (void *)address_map[opcode_]                              \
+                     : (void *)&&IUNKNOWN;                                       \
+     } while (0)
++#define VM_BIND_PERF2_HANDLER(image_, instruction_, private_opcode_, label_)    \
++    do {                                                                        \
++        (void)(private_opcode_);                                                \
++        (image_)[instruction_].handler = (void *)&&label_;                      \
++    } while (0)
++#define VM_PATCH_PERF2_HANDLER(instruction_, private_opcode_, label_)           \
++    do {                                                                        \
++        (void)(private_opcode_);                                                \
++        (instruction_)->handler = (void *)&&label_;                             \
++    } while (0)
+ #endif
+ 
++#define VM_PERF2_INSTRUCTION_BEGIN(opcode_)                                    \
++    do {                                                                        \
++        size_t vm_perf2_index__ = VM_CANONICAL_INDEX(pc);                       \
++        bin_code *vm_perf2_execution_pc__ = pc;                                 \
++        pc = VM_CANONICAL_POINTER(vm_perf2_index__);                            \
++        RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                                 \
++                current_module->module_number, vm_perf2_index__, (opcode_));    \
++        pc = vm_perf2_execution_pc__;                                           \
++    } while (0)
++
+ #define VM_PREPARE_EXECUTION_IMAGE(module_)                                     \
+     do {                                                                        \
+         module *vm_module__ = (module_);                                        \
+         size_t vm_bytes__;                                                      \
+         size_t vm_i__ = 0;                                                      \
++        size_t vm_quick_slot__ = 0;                                             \
+         int vm_new_image__ = vm_module__->execution_image == 0;                 \
+         if (!vm_module__->segment.inst_size) break;                             \
++        rxvm_perf2_build_quick_sites(vm_module__);                              \
+         if (vm_new_image__) {                                                   \
+             if (!rxvm_checked_size_mul(sizeof(bin_code),                        \
+                                        vm_module__->segment.inst_size,          \
+@@ -4759,6 +4902,35 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+             }                                                                   \
+             VM_BIND_INSTRUCTION_HANDLER(vm_module__->execution_image,           \
+                                         vm_instruction__, vm_opcode__);         \
++            while (vm_quick_slot__ < vm_module__->perf2_quick_site_count &&     \
++                   vm_module__->perf2_quick_sites[vm_quick_slot__].canonical_index < \
++                           vm_instruction__) vm_quick_slot__++;                 \
++            if (vm_quick_slot__ < vm_module__->perf2_quick_site_count &&        \
++                vm_module__->perf2_quick_sites[vm_quick_slot__].canonical_index == \
++                        vm_instruction__) {                                     \
++                rxvm_perf2_quick_site *vm_site__ =                              \
++                        &vm_module__->perf2_quick_sites[vm_quick_slot__++];      \
++                if (vm_site__->family == RXVM_PERF2_QUICK_REFERENCE ||         \
++                    vm_site__->state != RXVM_PERF2_QUICK_DISABLED) {            \
++                    vm_module__->execution_image[vm_instruction__ + 1u].handler = \
++                            (void *)vm_site__;                                  \
++                    if (vm_site__->family == RXVM_PERF2_QUICK_REFERENCE) {      \
++                        VM_BIND_PERF2_HANDLER(                                  \
++                                vm_module__->execution_image, vm_instruction__, \
++                                RXVM_PERF2_PRIVATE_REFERENCE, PERF2_QREF);       \
++                    } else if (vm_site__->state == RXVM_PERF2_QUICK_SPECIALIZED) { \
++                        VM_BIND_PERF2_HANDLER(                                  \
++                                vm_module__->execution_image, vm_instruction__, \
++                                RXVM_PERF2_PRIVATE_COPY_SPECIALIZED,            \
++                                PERF2_QCOPY_SPECIALIZED);                       \
++                    } else {                                                    \
++                        VM_BIND_PERF2_HANDLER(                                  \
++                                vm_module__->execution_image, vm_instruction__, \
++                                RXVM_PERF2_PRIVATE_COPY_CANDIDATE,              \
++                                PERF2_QCOPY_CANDIDATE);                         \
++                    }                                                           \
++                }                                                               \
++            }                                                                   \
+         }                                                                       \
+     } while (0)
+ 
+@@ -7674,6 +7846,81 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+             }
+             DISPATCH;
+ 
++#ifdef NTHREADED
++        case RXVM_PERF2_PRIVATE_REFERENCE:
++#else
++        PERF2_QREF:
++#endif
++            VM_PERF2_INSTRUCTION_BEGIN(OP_MKREF_REG_REG);
++            VM_ADVANCE(2);
++            {
++                rxvm_perf2_quick_site *site =
++                        (rxvm_perf2_quick_site *)(pc + 1)->handler;
++                value *dest = current_locals[site->operand1];
++                value *source = current_locals[site->operand2];
++                value *root = 0;
++                rxinteger index;
++                void *owner = 0;
++                rxvm_ref_owner_kind owner_kind;
++                rxvm_reference_cell *cell;
++                int current_frame_owner = 0;
++                int diagnostic_mode = 0;
++
++#ifdef CREXX_VM_PROFILING
++                diagnostic_mode = context->profile_mode || context->sequence_count;
++#endif
++                DEBUG("TRACE - MKREF R%lu,R%lu\n", site->operand1, site->operand2);
++                if (!diagnostic_mode &&
++                    site->operand2 < (size_t)current_frame->procedure->locals &&
++                    site->operand2 < current_frame->number_locals &&
++                    current_locals[site->operand2] ==
++                            current_frame->baselocals[site->operand2] &&
++                    source == current_frame->baselocals[site->operand2]) {
++                    owner_kind = RXVM_REF_LOCAL;
++                    owner = current_frame;
++                    current_frame_owner = 1;
++                } else if (!diagnostic_mode && (site->flags & 1u) &&
++                    site->root_operand < (size_t)current_frame->procedure->locals &&
++                    site->root_operand < current_frame->number_locals &&
++                    site->index_operand < current_frame->number_locals &&
++                    rxinteger_checked_add(current_locals[site->index_operand]->int_value,
++                                          site->index_offset,
++                                          &index)) {
++                    root = current_locals[site->root_operand];
++                    if (root == current_frame->baselocals[site->root_operand] &&
++                        index >= 1 && (size_t)index <= root->num_attributes &&
++                        root->attributes && root->unlinked_attributes &&
++                        root->attributes[(size_t)index - 1u] == source &&
++                        root->unlinked_attributes[(size_t)index - 1u] == source) {
++                        owner_kind = RXVM_REF_ATTRIBUTE;
++                        current_frame_owner = 1;
++                    }
++                }
++
++                if (!current_frame_owner) {
++                    owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
++                                                                       site->operand2,
++                                                                       source,
++                                                                       &owner);
++                }
++                cell = rxvm_reference_identity_for_context(&context->references,
++                                                           source,
++                                                           owner_kind,
++                                                           owner,
++                                                           site->operand2,
++                                                           0);
++                if (!cell) {
++                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
++                    DISPATCH;
++                }
++
++                if (current_frame_owner) current_frame->has_reference_lifetimes = 1;
++                else rxvm_mark_reference_lifetime_owner(current_frame, source);
++                clear_value_contents(dest);
++                rxvm_reference_value_set_payload(dest, cell);
++            }
++            DISPATCH;
++
+         START_INSTRUCTION(DEREF_REG_REG) VM_ADVANCE(2);
+             DEBUG("TRACE - DEREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+             {
+@@ -9294,6 +9541,71 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+             copy_value(op1R, op2R);
+             DISPATCH;
+ 
++#ifdef NTHREADED
++        case RXVM_PERF2_PRIVATE_COPY_CANDIDATE:
++#else
++        PERF2_QCOPY_CANDIDATE:
++#endif
++            VM_PERF2_INSTRUCTION_BEGIN(OP_COPY_REG_REG);
++            VM_ADVANCE(2);
++            {
++                rxvm_perf2_quick_site *site =
++                        (rxvm_perf2_quick_site *)(pc + 1)->handler;
++                value *dest = current_locals[site->operand1];
++                value *source = current_locals[site->operand2];
++
++                DEBUG("TRACE - COPY R%lu,R%lu\n", site->operand1, site->operand2);
++                copy_value(dest, source);
++                site->counter = 1u;
++                if (rxvm_perf2_plain_copy_value(dest) &&
++                    rxvm_perf2_plain_copy_value(source)) {
++                    site->state = RXVM_PERF2_QUICK_SPECIALIZED;
++                    VM_PATCH_PERF2_HANDLER(pc,
++                                           RXVM_PERF2_PRIVATE_COPY_SPECIALIZED,
++                                           PERF2_QCOPY_SPECIALIZED);
++                } else {
++                    site->state = RXVM_PERF2_QUICK_DISABLED;
++                    pc[1] = current_canonical_base[site->canonical_index + 1u];
++                    pc[2] = current_canonical_base[site->canonical_index + 2u];
++                    VM_BIND_INSTRUCTION_HANDLER(pc, 0, OP_COPY_REG_REG);
++                }
++            }
++            DISPATCH;
++
++#ifdef NTHREADED
++        case RXVM_PERF2_PRIVATE_COPY_SPECIALIZED:
++#else
++        PERF2_QCOPY_SPECIALIZED:
++#endif
++            VM_PERF2_INSTRUCTION_BEGIN(OP_COPY_REG_REG);
++            VM_ADVANCE(2);
++            {
++                rxvm_perf2_quick_site *site =
++                        (rxvm_perf2_quick_site *)(pc + 1)->handler;
++                value *dest = current_locals[site->operand1];
++                value *source = current_locals[site->operand2];
++                int diagnostic_mode = 0;
++
++#ifdef CREXX_VM_PROFILING
++                diagnostic_mode = context->profile_mode || context->sequence_count;
++#endif
++                DEBUG("TRACE - COPY R%lu,R%lu\n", site->operand1, site->operand2);
++                if (!diagnostic_mode &&
++                    rxvm_perf2_plain_copy_value(dest) &&
++                    rxvm_perf2_plain_copy_value(source)) {
++                    rxvm_perf2_copy_plain_value(dest, source);
++                } else {
++                    copy_value(dest, source);
++                    if (!diagnostic_mode) {
++                        site->state = RXVM_PERF2_QUICK_DISABLED;
++                        pc[1] = current_canonical_base[site->canonical_index + 1u];
++                        pc[2] = current_canonical_base[site->canonical_index + 2u];
++                        VM_BIND_INSTRUCTION_HANDLER(pc, 0, OP_COPY_REG_REG);
++                    }
++                }
++            }
++            DISPATCH;
++
+ /* ------------------------------------------------------------------------------------
+  *  SCOPY_REG_REG  Copy String op2 to op1
+  *  -----------------------------------------------------------------------------------
+diff --git a/interpreter/rxvmintp.h b/interpreter/rxvmintp.h
+index f7ecd3281..ba1ea110d 100644
+--- a/interpreter/rxvmintp.h
++++ b/interpreter/rxvmintp.h
+@@ -95,6 +95,30 @@ typedef struct rxvm_dynamic_site_cache {
+     } value;
+ } rxvm_dynamic_site_cache;
+ 
++typedef enum rxvm_perf2_quick_family {
++    RXVM_PERF2_QUICK_REFERENCE = 1,
++    RXVM_PERF2_QUICK_COPY = 2
++} rxvm_perf2_quick_family;
++
++typedef enum rxvm_perf2_quick_state {
++    RXVM_PERF2_QUICK_CANDIDATE = 1,
++    RXVM_PERF2_QUICK_SPECIALIZED = 2,
++    RXVM_PERF2_QUICK_DISABLED = 3
++} rxvm_perf2_quick_state;
++
++typedef struct rxvm_perf2_quick_site {
++    unsigned char family;
++    unsigned char state;
++    unsigned short flags;
++    uint32_t counter;
++    size_t canonical_index;
++    size_t operand1;
++    size_t operand2;
++    size_t root_operand;
++    size_t index_operand;
++    rxinteger index_offset;
++} rxvm_perf2_quick_site;
++
+ enum rxvm_factory_cache_state {
+     RXVM_FACTORY_CACHE_UNKNOWN = 0,
+     RXVM_FACTORY_CACHE_DIRECT = 1,
+@@ -131,6 +155,9 @@ struct module {
+     uint32_t *dynamic_site_cache_slots; /* Instruction-word index -> cache slot, or UINT32_MAX */
+     rxvm_dynamic_site_cache *dynamic_site_caches;
+     size_t dynamic_site_cache_count;
++    rxvm_perf2_quick_site *perf2_quick_sites;
++    size_t perf2_quick_site_count;
++    unsigned char perf2_quick_sites_built;
+ };
+ 
+ static inline proc_runtime *rxvm_bound_graph_callable(
+diff --git a/interpreter/rxvmload.c b/interpreter/rxvmload.c
+index 715a9d423..1822a2678 100644
+--- a/interpreter/rxvmload.c
++++ b/interpreter/rxvmload.c
+@@ -197,6 +197,7 @@ void rxfremod(rxvm_context *context) {
+             if (temp_dont_free) free(temp_dont_free);
+         }
+         if (context->modules[j]->execution_image) free(context->modules[j]->execution_image);
++        free(context->modules[j]->perf2_quick_sites);
+         free(context->modules[j]->dynamic_site_cache_slots);
+         free(context->modules[j]->dynamic_site_caches);
+         if (context->modules[j]->proc_runtime_lookup) free(context->modules[j]->proc_runtime_lookup);
+@@ -622,6 +623,9 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
+     context->modules[n]->dynamic_site_cache_slots = 0;
+     context->modules[n]->dynamic_site_caches = 0;
+     context->modules[n]->dynamic_site_cache_count = 0u;
++    context->modules[n]->perf2_quick_sites = 0;
++    context->modules[n]->perf2_quick_site_count = 0u;
++    context->modules[n]->perf2_quick_sites_built = 0u;
+     build_module_runtime_procedures(context->modules[n]);
+     build_module_dynamic_site_caches(context->modules[n]);
+     context->link_dirty = 1;

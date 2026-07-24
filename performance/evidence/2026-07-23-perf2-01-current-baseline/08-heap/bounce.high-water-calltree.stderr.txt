@@ -1,0 +1,1 @@
+Can't show high water mark when target process is run in lite mode of malloc stack logging.

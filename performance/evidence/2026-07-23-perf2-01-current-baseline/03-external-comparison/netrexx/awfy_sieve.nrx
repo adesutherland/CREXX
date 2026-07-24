@@ -1,0 +1,45 @@
+/*
+ * Decimal-semantics NetRexx port of the Are We Fast Yet? Sieve benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * ../../LICENSE-SOM-MIT.txt and ../../README.md.
+ */
+options nobinary decimal
+
+class awfy_sieve
+
+  method main(args=String[]) static
+    repetitions=1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+
+    result=0
+    loop iteration=1 to repetitions
+      result=sieveOnce()
+      if result\=669 then do
+        say 'FAIL: expected 669 primes, got' result
+        exit 1
+      end
+    end
+
+    say 'benchmark=awfy_sieve repetitions='repetitions 'result='result
+    say 'PASS: AWFY Sieve NetRexx decimal port'
+
+  method sieveOnce() static returns Rexx
+    flags=Rexx[5001]
+    loop i=1 to 5000
+      flags[i]=1
+    end
+
+    primeCount=0
+    loop i=2 to 5000
+      if flags[i]\=0 then do
+        primeCount=primeCount+1
+        loop k=i+i to 5000 by i
+          flags[k]=0
+        end
+      end
+    end
+    return primeCount

@@ -1,0 +1,83 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 54b48d083..605d1f555 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -1555,6 +1555,47 @@ static void rxvm_mark_reference_lifetime_owner(stack_frame *current_frame,
+     if (owner_frame) owner_frame->has_reference_lifetimes = 1;
+ }
+ 
++/* PERF2-02 Q3 PoC: prove current-frame ownership directly, without retaining
++ * any site, frame, value, or reference-cell state.  This deliberately covers
++ * only an own local and a physical immediate child of an own local. */
++static int rxvm_reference_try_current_frame_owner(stack_frame *frame,
++                                                  size_t source_register,
++                                                  value *storage,
++                                                  rxvm_ref_owner_kind *owner_kind,
++                                                  void **owner) {
++    size_t i;
++    size_t j;
++    size_t locals;
++
++    if (!frame || !frame->procedure || !storage || !owner_kind || !owner) return 0;
++    locals = (size_t)frame->procedure->locals;
++    if (locals > frame->number_locals) locals = frame->number_locals;
++
++    if (source_register < locals &&
++        frame->locals[source_register] == frame->baselocals[source_register] &&
++        storage == frame->baselocals[source_register]) {
++        *owner_kind = RXVM_REF_LOCAL;
++        *owner = frame;
++        return 1;
++    }
++
++    for (i = 0; i < locals; i++) {
++        value *root = frame->baselocals[i];
++        if (!root || frame->locals[i] != root ||
++            !root->attributes || !root->unlinked_attributes) continue;
++        for (j = 0; j < root->num_attributes; j++) {
++            if (root->attributes[j] == storage &&
++                root->unlinked_attributes[j] == storage) {
++                *owner_kind = RXVM_REF_ATTRIBUTE;
++                *owner = 0;
++                return 1;
++            }
++        }
++    }
++
++    return 0;
++}
++
+ static rxvm_ref_owner_kind rxvm_reference_owner_kind_for_storage(stack_frame *frame,
+                                                                  size_t register_index,
+                                                                  value *storage,
+@@ -7652,11 +7693,16 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                 void *owner = 0;
+                 rxvm_ref_owner_kind owner_kind;
+                 rxvm_reference_cell *cell;
++                int current_frame_owner;
+ 
+-                owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
+-                                                                   REG_IDX(2),
+-                                                                   op2R,
+-                                                                   &owner);
++                current_frame_owner = rxvm_reference_try_current_frame_owner(
++                        current_frame, REG_IDX(2), op2R, &owner_kind, &owner);
++                if (!current_frame_owner) {
++                    owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
++                                                                       REG_IDX(2),
++                                                                       op2R,
++                                                                       &owner);
++                }
+                 cell = rxvm_reference_identity_for_context(&context->references,
+                                                            op2R,
+                                                            owner_kind,
+@@ -7668,7 +7714,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                     DISPATCH;
+                 }
+ 
+-                rxvm_mark_reference_lifetime_owner(current_frame, op2R);
++                if (current_frame_owner) current_frame->has_reference_lifetimes = 1;
++                else rxvm_mark_reference_lifetime_owner(current_frame, op2R);
+                 clear_value_contents(op1R);
+                 rxvm_reference_value_set_payload(op1R, cell);
+             }

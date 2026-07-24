@@ -1,0 +1,2 @@
+PASS: PERF2-02 reference guards
+PASS: PERF2-02 reference guards

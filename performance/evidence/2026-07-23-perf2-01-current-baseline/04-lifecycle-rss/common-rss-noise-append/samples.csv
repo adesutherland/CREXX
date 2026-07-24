@@ -1,0 +1,4 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+rss-Base64-base64-netrexx-recorded-1,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,1,1,2500,1416718000,278790144,0,pass,,
+rss-Base64-base64-netrexx-recorded-2,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,2,1,2500,1360889000,181288960,0,pass,,
+rss-Base64-base64-netrexx-recorded-3,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,3,1,2500,1345746000,215367680,0,pass,,

@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gd5b25a78fd6c 20260723",
+  "source_manifest": "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-23-perf2-02-quickening-poc/manifests/bounce-q0-q3b-q4.txt",
+  "measurement": "timing",
+  "warmups": 2,
+  "recorded_runs": 12,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-23T21:55:24+0000",
+  "completed_utc": "2026-07-23T21:59:56+0000",
+  "result": "pass"
+}

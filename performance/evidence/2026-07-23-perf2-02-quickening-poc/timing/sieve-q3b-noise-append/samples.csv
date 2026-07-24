@@ -1,0 +1,11 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-rxvm-q3b-rxvm-recorded-1,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,1,1,5500,1071267000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-2,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,2,1,5500,1080931000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-3,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,3,1,5500,1094139000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-4,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,4,1,5500,1077289000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-5,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,5,1,5500,1089333000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-6,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,6,1,5500,1096032000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-7,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,7,1,5500,1091574000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-8,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,8,1,5500,1097979000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-9,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,9,1,5500,1089373000,,0,pass,,
+timing-Sieve-rxvm-q3b-rxvm-recorded-10,timing,Sieve-rxvm,q3b-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,recorded,10,1,5500,1083155000,,0,pass,,

@@ -1,0 +1,4 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+base64-rxvm,Base64,crexx,rxvm,equivalent-port,A,no,no,2500,elapsed_ns,10,1409742000.000000,1520349000.000000,1590057500.000000,1644480750.000000,1778229000.000000,67174000.000000,4.224627,23.174445,yes
+base64-rxbvm,Base64,crexx,rxbvm,equivalent-port,A,no,no,2500,elapsed_ns,10,1436278000.000000,1497482000.000000,1544381500.000000,1601910250.000000,1637938000.000000,59176500.000000,3.831728,13.057654,yes
+rexxcps-rxbvm,RexxCPS,crexx,rxbvm,disclosed-2.2d,A,no,no,1000-clauses,benchmark_rate,10,24392445.000000,26484897.750000,26707970.000000,26884170.500000,27370565.000000,205016.500000,0.767623,11.150679,yes

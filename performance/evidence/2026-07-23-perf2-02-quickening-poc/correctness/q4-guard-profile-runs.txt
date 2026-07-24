@@ -1,0 +1,20 @@
+sieve rxvm exit=0 output=benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve
+permute rxvm exit=0 output=benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute
+storage rxvm exit=0 output=benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+towers rxvm exit=0 output=benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+base64 rxvm exit=0 output=benchmark=base64_roundtrip repetitions=1 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+sieve rxbvm exit=0 output=benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve
+permute rxbvm exit=0 output=benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute
+storage rxbvm exit=0 output=benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+towers rxbvm exit=0 output=benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+base64 rxbvm exit=0 output=benchmark=base64_roundtrip repetitions=1 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip

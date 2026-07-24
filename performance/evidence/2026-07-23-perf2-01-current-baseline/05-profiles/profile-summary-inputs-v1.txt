@@ -1,0 +1,24 @@
+crexx-perf2-profile-inputs|1
+# workload|vm|entry|schema-5 counts profile
+Sieve|rxvm|sieve-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/sieve-opt/profile/profile.csv
+Sieve|rxbvm|sieve-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/sieve-opt/profile/profile.csv
+Permute|rxvm|permute-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/permute-opt/profile/profile.csv
+Permute|rxbvm|permute-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/permute-opt/profile/profile.csv
+Mandelbrot|rxvm|mandelbrot-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/mandelbrot-opt/profile/profile.csv
+Mandelbrot|rxbvm|mandelbrot-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/mandelbrot-opt/profile/profile.csv
+Towers|rxvm|towers-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/towers-opt/profile/profile.csv
+Towers|rxbvm|towers-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/towers-opt/profile/profile.csv
+Bounce|rxvm|bounce-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/bounce-opt/profile/profile.csv
+Bounce|rxbvm|bounce-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/bounce-opt/profile/profile.csv
+Storage|rxvm|storage-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/storage-opt/profile/profile.csv
+Storage|rxbvm|storage-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/storage-opt/profile/profile.csv
+List|rxvm|list-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/list-opt/profile/profile.csv
+List|rxbvm|list-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/list-opt/profile/profile.csv
+Richards|rxvm|richards-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/richards-opt/profile/profile.csv
+Richards|rxbvm|richards-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/richards-opt/profile/profile.csv
+JSON|rxvm|json-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/json-opt/profile/profile.csv
+JSON|rxbvm|json-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/json-opt/profile/profile.csv
+Base64|rxvm|base64-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/base64-opt/profile/profile.csv
+Base64|rxbvm|base64-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/base64-opt/profile/profile.csv
+RexxCPS|rxvm|rexxcps-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxvm-counts/entries/rexxcps-opt/profile/profile.csv
+RexxCPS|rxbvm|rexxcps-opt|performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-counts/entries/rexxcps-opt/profile/profile.csv

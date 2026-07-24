@@ -121,6 +121,16 @@ example:
 rxvme --profile-output application.csv application.rxbin -a first second
 ```
 
+For a deterministic diagnostic census with all timing fields set to zero, use
+`--profile=counts`. Put it before `--profile-output` when both are present:
+
+```sh
+rxvm --profile=counts --profile-output application-counts.csv application.rxbin
+```
+
+Counts-only output is intended for exact operation comparisons. It is still a
+profile-build diagnostic and is not product timing evidence.
+
 ### Reading the Table Report
 
 The heading identifies the VM mode and the program result. A result of `0`
@@ -138,6 +148,9 @@ The report then contains complementary views of the run:
 | **Procedures and methods** | Runtime calls and inclusive elapsed/body/self time for bytecode callables; call count and total observed time for native callables. |
 | **Call mechanics** | The measured VM work entering and leaving each bytecode callable. |
 | **Runtime allocation and value/frame storage** | Successful profiling-scope allocation requests, requested bytes, maximum request size, frame reuse, and active-frame high water. |
+| **Value operations** | Common whole-value, typed-copy, move, clear, reset and destroy helper entries by structural payload shape, with logical payload bytes. Nested helper calls are intentionally separate rows. |
+| **Frame-entry phases** | Fresh/reused counts and diagnostic time for local/global pointer relinking, argument-count reset, inherited/root context setup and final frame fields. |
+| **Branch sites** | Canonical module/index executions, taken/fall-through direction, same-module backward targets and cross-module targets for RXAS branch-flow opcodes. |
 | **Call-path census** | Dynamic call attempts by direct/dynamic/native/root/signal path, exact arity, callable kind, frame disposition, outcome, target, and site. |
 | **Return placement** | The actual runtime `RET_REG` local-move/non-local-copy decision plus void, ignored, immediate, and terminal returns. |
 | **Dynamic selection** | Method/factory selector attempts and their success/failure outcomes, kept separate from subsequent `DCALL` activity. |
@@ -234,8 +247,8 @@ with parser loss.
 ### CSV Format
 
 CSV is the best input for spreadsheets, scripts, and comparisons between runs.
-The current format identifies itself as schema version 4 and preserves the
-schema-3 24-column header:
+The current format identifies itself as schema version 5 and preserves the
+schema-4 24-column header:
 
 ```text
 section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
@@ -247,11 +260,15 @@ Columns that do not apply to a row are empty or zero. Interpret rows by their
 | `section` | Row use |
 |---|---|
 | `summary` | Schema, VM mode, result, timer calibration, poll/error state, and overflow/tracking status. |
+| `status` | Explicit completeness/degradation status for instructions, procedures, allocations, call census, frame entry, value operations and branch sites. |
 | `instruction` | One row per executed opcode. |
 | `transition` | One row per observed transition kind. |
 | `interrupt` | Scan totals and per-signal selection/entry/resume/terminal data. |
 | `procedure` | One or more metric rows per called procedure, method, factory, or native routine. |
 | `allocation` | One row per allocation/value/frame counter, including byte and high-water fields where they apply. |
+| `value_operation` | `name` is the helper/typed operation, `value` is the structural payload shape, and `count`, `bytes`, and `max_bytes` are the observed calls and logical payload bytes. |
+| `frame_entry` | `name` is the entry phase, `value` is `fresh` or `reused`, `id` carries phase units, and the normal count/timing fields carry invocations and diagnostic time. |
+| `branch` | `name` is the opcode, `id` is the canonical instruction index, `count` is executions, `selected`/`entries`/`resumes`/`terminals` are taken/fall-through/backward/cross-module counts, and `module` names the exact module. |
 | `census` | Aggregate call path, exact arity, callable kind, frame disposition, and outcome rows; zero path/kind/disposition/outcome categories are retained. |
 | `call` | One dynamic target/site/path/arity/kind/frame/outcome row. `bytes`, `max_bytes`, and `high_water` carry setup swaps, normal restoration swaps, and defensive argument copies for this section only. |
 | `return` | Dynamic return-placement decisions. |
@@ -264,6 +281,10 @@ For a bytecode `procedure` row, `value` is one of `elapsed`,
 `exit_overhead`. A native row uses `native_total`. Callable rows also carry
 `module`, `kind`, `completed`, `unwound`, `return_type`, and `args` metadata.
 Do not assume that one CSV row represents all metrics for a callable.
+
+Schema-5 readers should accept schema 4 by treating the four new sections as
+unavailable, not as zero. Schema-4 readers may continue to consume the original
+sections because the header and existing row meanings did not change.
 
 ### Allocation and Frame Counter Definitions
 

@@ -1,0 +1,64 @@
+===== q3b-rxvm-bounce.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxvm /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin -a 1
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+PERF2_COUNTER form=Q3b vm=rxvm scope=process site_executions=5100 exact_fast_path_hits=5100 guard_misses_fallbacks=0 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=2 site_overflow=0
+PERF2_COUNTER_SITE form=Q3b vm=rxvm module=1 word=791 kind=local_form site_executions=100 exact_fast_path_hits=100 guard_misses_fallbacks=0 invalidations=0
+PERF2_COUNTER_SITE form=Q3b vm=rxvm module=1 word=844 kind=attr_pair site_executions=5000 exact_fast_path_hits=5000 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0
+===== q3b-rxbvm-bounce.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxbvm /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin -a 1
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+PERF2_COUNTER form=Q3b vm=rxbvm scope=process site_executions=5100 exact_fast_path_hits=5100 guard_misses_fallbacks=0 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=2 site_overflow=0
+PERF2_COUNTER_SITE form=Q3b vm=rxbvm module=1 word=791 kind=local_form site_executions=100 exact_fast_path_hits=100 guard_misses_fallbacks=0 invalidations=0
+PERF2_COUNTER_SITE form=Q3b vm=rxbvm module=1 word=844 kind=attr_pair site_executions=5000 exact_fast_path_hits=5000 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0
+===== q3b-rxvm-qref-guard.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxvm /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/perf2_qref_guard.rxbin
+PASS: PERF2-02 reference guards
+PERF2_COUNTER form=Q3b vm=rxvm scope=process site_executions=3 exact_fast_path_hits=1 guard_misses_fallbacks=2 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=3 site_overflow=0
+PERF2_COUNTER_SITE form=Q3b vm=rxvm module=1 word=14 kind=local_form site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q3b vm=rxvm module=1 word=46 kind=attr_pair site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q3b vm=rxvm module=1 word=91 kind=local_form site_executions=1 exact_fast_path_hits=1 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0
+===== q3b-rxbvm-qref-guard.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxbvm /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/perf2_qref_guard.rxbin
+PASS: PERF2-02 reference guards
+PERF2_COUNTER form=Q3b vm=rxbvm scope=process site_executions=3 exact_fast_path_hits=1 guard_misses_fallbacks=2 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=3 site_overflow=0
+PERF2_COUNTER_SITE form=Q3b vm=rxbvm module=1 word=14 kind=local_form site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q3b vm=rxbvm module=1 word=46 kind=attr_pair site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q3b vm=rxbvm module=1 word=91 kind=local_form site_executions=1 exact_fast_path_hits=1 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0
+===== q4-rxvm-bounce.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q4-eager/cmake-build-perf2-release/bin/rxvm /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin -a 1
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+PERF2_COUNTER form=Q4 vm=rxvm scope=process site_executions=5100 exact_fast_path_hits=5100 guard_misses_fallbacks=0 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=2 site_overflow=0
+PERF2_COUNTER_SITE form=Q4 vm=rxvm module=1 word=791 kind=local_form site_executions=100 exact_fast_path_hits=100 guard_misses_fallbacks=0 invalidations=0
+PERF2_COUNTER_SITE form=Q4 vm=rxvm module=1 word=844 kind=attr_pair site_executions=5000 exact_fast_path_hits=5000 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0
+===== q4-rxbvm-bounce.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q4-eager/cmake-build-perf2-release/bin/rxbvm /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin -a 1
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+PERF2_COUNTER form=Q4 vm=rxbvm scope=process site_executions=5100 exact_fast_path_hits=5100 guard_misses_fallbacks=0 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=2 site_overflow=0
+PERF2_COUNTER_SITE form=Q4 vm=rxbvm module=1 word=791 kind=local_form site_executions=100 exact_fast_path_hits=100 guard_misses_fallbacks=0 invalidations=0
+PERF2_COUNTER_SITE form=Q4 vm=rxbvm module=1 word=844 kind=attr_pair site_executions=5000 exact_fast_path_hits=5000 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0
+===== q4-rxvm-qref-guard.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q4-eager/cmake-build-perf2-release/bin/rxvm /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/perf2_qref_guard.rxbin
+PASS: PERF2-02 reference guards
+PERF2_COUNTER form=Q4 vm=rxvm scope=process site_executions=3 exact_fast_path_hits=1 guard_misses_fallbacks=2 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=3 site_overflow=0
+PERF2_COUNTER_SITE form=Q4 vm=rxvm module=1 word=14 kind=local_form site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q4 vm=rxvm module=1 word=46 kind=attr_pair site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q4 vm=rxvm module=1 word=91 kind=local_form site_executions=1 exact_fast_path_hits=1 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0
+===== q4-rxbvm-qref-guard.log =====
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q4-eager/cmake-build-perf2-release/bin/rxbvm /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/perf2_qref_guard.rxbin
+PASS: PERF2-02 reference guards
+PERF2_COUNTER form=Q4 vm=rxbvm scope=process site_executions=3 exact_fast_path_hits=1 guard_misses_fallbacks=2 invalidations=0 invalidations_status=N/A_zero_state tracked_sites=3 site_overflow=0
+PERF2_COUNTER_SITE form=Q4 vm=rxbvm module=1 word=14 kind=local_form site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q4 vm=rxbvm module=1 word=46 kind=attr_pair site_executions=1 exact_fast_path_hits=0 guard_misses_fallbacks=1 invalidations=0
+PERF2_COUNTER_SITE form=Q4 vm=rxbvm module=1 word=91 kind=local_form site_executions=1 exact_fast_path_hits=1 guard_misses_fallbacks=0 invalidations=0
+EXIT: 0

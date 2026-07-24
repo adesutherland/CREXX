@@ -1,0 +1,6 @@
+# One-time governed append selected by the common-matrix MAD/span rule.
+# No original correctness-passing sample is removed.
+crexx-cross-runtime-matrix|1
+richards-netrexx|Richards|netrexx|netrexx|decimal-rexx-port|A|no|no|20|PASS: AWFY Richards NetRexx decimal port||/usr/bin/java;-cp;performance/evidence/2026-07-23-perf2-01-current-baseline/03-external-comparison/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;awfy_richards;20
+base64-rxvm|Base64|crexx|rxvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxvm;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin;-a;2500
+base64-rxbvm|Base64|crexx|rxbvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxbvm;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin;-a;2500

@@ -1,0 +1,6 @@
+pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent
+sieve,sieve-noopt,sieve-opt,noopt,opt,24367000,23685000,-682000,-2.799
+bounce,bounce-noopt,bounce-opt,noopt,opt,308033000,330681000,22648000,7.352
+richards,richards-noopt,richards-opt,noopt,opt,43158000,594409000,551251000,1277.286
+base64,base64-noopt,base64-opt,noopt,opt,410649000,360214000,-50435000,-12.282
+rexxcps,rexxcps-noopt,rexxcps-opt,noopt,opt,984241000,1004676000,20435000,2.076

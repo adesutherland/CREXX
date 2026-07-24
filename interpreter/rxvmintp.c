@@ -3965,6 +3965,10 @@ RX_INLINE stack_frame *frame_f(
     int i, j;
     size_t frame_size;
     value *value_buffer;
+#ifdef CREXX_VM_PROFILING
+    uint64_t profile_phase_start;
+    int profile_reused_frame = 0;
+#endif
 
     if (!procedure || procedure->locals < 0 || no_args < 0) return 0;
     if (procedure->binarySpace && procedure->binarySpace->globals < 0) return 0;
@@ -3996,25 +4000,50 @@ RX_INLINE stack_frame *frame_f(
         this->prev_free = 0;
 #ifdef CREXX_VM_PROFILING
         rxvm_profile_record_frame_activation(1, 0, 0);
+        profile_reused_frame = 1;
 #endif
 
         /* Reset Local Registers */
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         for (i = 0; i < procedure->locals; i++) {
             this->locals[i] = this->baselocals[i];
 #ifdef SAFE_RECYCLED_STACKFRAMES
             value_zero(this->locals[i]);
 #endif
         }
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_LOCAL_RELINK, 1, profile_phase_start,
+                local_count);
+#endif
         /* Make sure global registers are linked correctly */
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         if (procedure->binarySpace) {
             for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
                 this->locals[i] = this->baselocals[i];
             }
         }
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_GLOBAL_RELINK, 1, profile_phase_start,
+                global_count);
+#endif
         /* Reset register a0 - number of arguments */
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         this->locals[i] = this->baselocals[i];
         value_zero(this->locals[i]);
         this->locals[i]->int_value = no_args;
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_ARGUMENT_COUNT_RESET, 1,
+                profile_phase_start, 1);
+#endif
     }
     else {
         /* Need a new stack frame - allocate all the memory in one go */
@@ -4039,30 +4068,57 @@ RX_INLINE stack_frame *frame_f(
         value_buffer = (value*)(this->locals + nominal_num_locals);
 
         /* Link Locals */
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         for (i = 0; i < procedure->locals; i++, value_buffer++) {
             value_init(value_buffer);
             this->locals[i] = value_buffer;
             this->baselocals[i] = value_buffer;
         }
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_LOCAL_RELINK, 0, profile_phase_start,
+                local_count);
+#endif
 
         /* Link Globals */
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         if (procedure->binarySpace) {
             for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
                 this->baselocals[i] =  procedure->binarySpace->module->globals[j];
                 this->locals[i] = procedure->binarySpace->module->globals[j];
             }
         }
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_GLOBAL_RELINK, 0, profile_phase_start,
+                global_count);
+#endif
 
         /* Link a0 */
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         value_init(value_buffer);
         this->locals[i] = value_buffer;
         this->baselocals[i] = value_buffer;
         this->locals[i]->int_value = no_args;
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_ARGUMENT_COUNT_RESET, 0,
+                profile_phase_start, 1);
+#endif
 
         this->nominal_number_locals = nominal_num_locals;
     }
     this->parent = parent;
     if (parent) {
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         /* Set the interrupt mask based on parent settings */
         memcpy(this->interrupt_table, parent->interrupt_table, sizeof(interrupt_entry) * (RXSIGNAL_MAX));
         this->is_interrupt = parent->is_interrupt;
@@ -4079,8 +4135,17 @@ RX_INLINE stack_frame *frame_f(
             this->decimal->num_context = &this->num_context;
             this->decimal->syncNumericContext(this->decimal);
         }
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_INHERITED_CONTEXT,
+                profile_reused_frame,
+                profile_phase_start, 1);
+#endif
     }
     else {
+#ifdef CREXX_VM_PROFILING
+        profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
         for (i = 0; i < RXSIGNAL_MAX; i++) {
             this->interrupt_table[i].function = 0;
             this->interrupt_table[i].jump = 0;
@@ -4126,7 +4191,16 @@ RX_INLINE stack_frame *frame_f(
         this->num_context.form = NUMERIC_FORM_SCIENTIFIC;
         this->num_context.casetype = CASE_LOWER;
         this->num_context.standard = NUMERIC_STANDARD_COMMON;
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_phase(
+                RXVM_PROFILE_FRAME_ROOT_CONTEXT,
+                profile_reused_frame,
+                profile_phase_start, 1);
+#endif
     }
+#ifdef CREXX_VM_PROFILING
+    profile_phase_start = rxvm_profile_frame_phase_begin();
+#endif
     this->interrupt_stack = 0;
     this->decimal_loaded_here = 0;
     this->unicode_loaded_here = 0;
@@ -4138,6 +4212,12 @@ RX_INLINE stack_frame *frame_f(
     this->has_reference_lifetimes = 0;
     this->is_interrupt_action = 0;
     this->caller_arg_base = UINT32_MAX;
+#ifdef CREXX_VM_PROFILING
+    rxvm_profile_record_frame_phase(
+            RXVM_PROFILE_FRAME_FINALIZE,
+            profile_reused_frame,
+            profile_phase_start, 1);
+#endif
 
     return this;
 }
@@ -6865,6 +6945,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         // NOP
         DISPATCH;
     }
+    RXVM_INSTRUMENTATION_VALUE_TYPED(
+            RXVM_PROFILE_VALUE_DECIMAL_COPY,
+            RXVM_PROFILE_VALUE_DECIMAL,
+            op2R->decimal_value_length);
     if (op1R->decimal_value == NULL) {
         // Allocate storage for the decimal
         op1R->decimal_value = malloc(op2R->decimal_value_length);
@@ -7649,14 +7733,61 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(MKREF_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - MKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
+                size_t site_index = VM_CANONICAL_INDEX(pc);
+                const bin_code *pair = 0;
+                int minlinkattr1_pair = 0;
                 void *owner = 0;
                 rxvm_ref_owner_kind owner_kind;
                 rxvm_reference_cell *cell;
+                int current_frame_owner = 0;
 
-                owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
-                                                                   REG_IDX(2),
-                                                                   op2R,
-                                                                   &owner);
+                if (site_index >= 5u) {
+                    pair = current_canonical_base + site_index - 5u;
+                    minlinkattr1_pair =
+                            pair[0].instruction.opcode ==
+                                    OP_MINLINKATTR1_REG_REG_REG_INT &&
+                            pair[0].instruction.no_ops == 4 &&
+                            pair[1].index == REG_IDX(2);
+                }
+
+                if (minlinkattr1_pair) {
+                    size_t root_register = pair[2].index;
+                    size_t index_register = pair[3].index;
+                    rxinteger index;
+                    value *root = 0;
+
+                    if (root_register < (size_t)current_frame->procedure->locals &&
+                        root_register < current_frame->number_locals &&
+                        index_register < current_frame->number_locals &&
+                        rxinteger_checked_add(current_locals[index_register]->int_value,
+                                              pair[4].iconst,
+                                              &index)) {
+                        root = current_locals[root_register];
+                        if (root == current_frame->baselocals[root_register] &&
+                            index >= 1 && (size_t)index <= root->num_attributes &&
+                            root->attributes && root->unlinked_attributes &&
+                            root->attributes[(size_t)index - 1u] == op2R &&
+                            root->unlinked_attributes[(size_t)index - 1u] == op2R) {
+                            owner_kind = RXVM_REF_ATTRIBUTE;
+                            current_frame_owner = 1;
+                        }
+                    }
+                } else if (REG_IDX(2) < (size_t)current_frame->procedure->locals &&
+                           REG_IDX(2) < current_frame->number_locals &&
+                           current_locals[REG_IDX(2)] ==
+                                   current_frame->baselocals[REG_IDX(2)] &&
+                           op2R == current_frame->baselocals[REG_IDX(2)]) {
+                    owner_kind = RXVM_REF_LOCAL;
+                    owner = current_frame;
+                    current_frame_owner = 1;
+                }
+
+                if (!current_frame_owner) {
+                    owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
+                                                                       REG_IDX(2),
+                                                                       op2R,
+                                                                       &owner);
+                }
                 cell = rxvm_reference_identity_for_context(&context->references,
                                                            op2R,
                                                            owner_kind,
@@ -7668,7 +7799,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     DISPATCH;
                 }
 
-                rxvm_mark_reference_lifetime_owner(current_frame, op2R);
+                if (current_frame_owner) current_frame->has_reference_lifetimes = 1;
+                else rxvm_mark_reference_lifetime_owner(current_frame, op2R);
                 clear_value_contents(op1R);
                 rxvm_reference_value_set_payload(op1R, cell);
             }
@@ -9318,6 +9450,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(ICOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - ICOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            RXVM_INSTRUMENTATION_VALUE_TYPED(
+                    RXVM_PROFILE_VALUE_INTEGER_COPY,
+                    RXVM_PROFILE_VALUE_SCALAR, sizeof(op2R->int_value));
             op1R->int_value = op2R->int_value;
             DISPATCH;
 
@@ -9327,6 +9462,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(FCOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - FCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            RXVM_INSTRUMENTATION_VALUE_TYPED(
+                    RXVM_PROFILE_VALUE_FLOAT_COPY,
+                    RXVM_PROFILE_VALUE_SCALAR, sizeof(op2R->float_value));
             op1R->float_value = op2R->float_value;
             DISPATCH;
 
@@ -9336,6 +9474,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(ACOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - ACOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            RXVM_INSTRUMENTATION_VALUE_TYPED(
+                    RXVM_PROFILE_VALUE_STATUS_COPY,
+                    RXVM_PROFILE_VALUE_SCALAR,
+                    sizeof(op2R->status.all_type_flags));
             op1R->status.all_type_flags = op2R->status.all_type_flags;
             DISPATCH;
 

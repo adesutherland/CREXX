@@ -21,8 +21,11 @@ file(READ "${OUTPUT}" profile_csv)
 if(NOT profile_csv MATCHES "^section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status")
     message(FATAL_ERROR "profile output is not CSV based on its .CSV extension")
 endif()
-if(NOT profile_csv MATCHES "summary,schema_version,4")
-    message(FATAL_ERROR "profile CSV does not identify schema version 4")
+if(NOT profile_csv MATCHES "summary,schema_version,5")
+    message(FATAL_ERROR "profile CSV does not identify schema version 5")
+endif()
+if(NOT profile_csv MATCHES "summary,profile_mode,timing")
+    message(FATAL_ERROR "profile CSV does not identify timing mode")
 endif()
 if(NOT profile_csv MATCHES "instruction,CALL_FUNC")
     message(FATAL_ERROR "profile CSV does not contain instruction rows")
@@ -47,6 +50,15 @@ if(NOT profile_csv MATCHES "allocation,value_slots,,,[1-9][0-9]*,0,0,0,0,0.*comp
 endif()
 if(NOT profile_csv MATCHES "allocation,frame_activations,,,[1-9][0-9]*,0,0,0,0,0.*,[1-9][0-9]*,complete")
     message(FATAL_ERROR "profile CSV does not contain a complete frame high-water row")
+endif()
+if(NOT profile_csv MATCHES "value_operation,\"clear\"")
+    message(FATAL_ERROR "profile CSV does not contain value-operation rows")
+endif()
+if(NOT profile_csv MATCHES "frame_entry,\"local_relink\"")
+    message(FATAL_ERROR "profile CSV does not contain frame-entry phase rows")
+endif()
+if(NOT profile_csv MATCHES "status,\"branch_sites\",\"complete\"")
+    message(FATAL_ERROR "profile CSV does not contain complete branch-site status")
 endif()
 if(NOT profile_csv MATCHES "census,\"call_path\",\"direct_bytecode\",,2,")
     message(FATAL_ERROR "profile CSV does not contain the expected direct-call census")
@@ -73,6 +85,37 @@ if(profile_error MATCHES "VM PROFILE")
     message(FATAL_ERROR "profile table leaked to stderr despite file output")
 endif()
 
+set(counts_output "${OUTPUT}.counts.csv")
+set(counts_repeat "${OUTPUT}.counts-repeat.csv")
+file(REMOVE "${counts_output}" "${counts_repeat}")
+execute_process(
+        COMMAND "${VM}" --profile=counts --profile-output "${counts_output}" "${INPUT}"
+        RESULT_VARIABLE counts_result
+        OUTPUT_VARIABLE counts_program_output
+        ERROR_VARIABLE counts_error)
+execute_process(
+        COMMAND "${VM}" --profile=counts --profile-output "${counts_repeat}" "${INPUT}"
+        RESULT_VARIABLE counts_repeat_result
+        OUTPUT_VARIABLE counts_repeat_program_output
+        ERROR_VARIABLE counts_repeat_error)
+if(NOT counts_result EQUAL 0 OR NOT counts_repeat_result EQUAL 0)
+    message(FATAL_ERROR
+            "counts profile failed (${counts_result}/${counts_repeat_result})\n${counts_error}\n${counts_repeat_error}")
+endif()
+execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E compare_files "${counts_output}" "${counts_repeat}"
+        RESULT_VARIABLE counts_compare)
+if(NOT counts_compare EQUAL 0)
+    message(FATAL_ERROR "counts-only profiles are not deterministic")
+endif()
+file(READ "${counts_output}" counts_csv)
+if(NOT counts_csv MATCHES "summary,profile_mode,counts")
+    message(FATAL_ERROR "counts CSV does not identify counts mode")
+endif()
+if(NOT counts_csv MATCHES "instruction,CALL_FUNC,,[0-9]+,[1-9][0-9]*,0,0,0,0,0")
+    message(FATAL_ERROR "counts CSV did not zero instruction timing fields")
+endif()
+
 set(table_output "${OUTPUT}.txt")
 file(REMOVE "${table_output}")
 execute_process(
@@ -86,6 +129,6 @@ if(NOT table_result EQUAL 0)
 endif()
 file(READ "${table_output}" profile_table)
 if(NOT profile_table MATCHES
-        "VM PROFILE.*Instructions.*Procedures and methods.*procedure_profile.worker.*Call-path census.*Observed exact call rows.*Return placement.*Dynamic selection.*Call-window attribution.*Signal-unwind call-window restoration")
+        "VM PROFILE.*Instructions.*Procedures and methods.*procedure_profile.worker.*Value operations.*Frame-entry phases.*Branch sites.*Call-path census.*Observed exact call rows.*Return placement.*Dynamic selection.*Call-window attribution.*Signal-unwind call-window restoration")
     message(FATAL_ERROR "non-CSV filename did not select table output")
 endif()

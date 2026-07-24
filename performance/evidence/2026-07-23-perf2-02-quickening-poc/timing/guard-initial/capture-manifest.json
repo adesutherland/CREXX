@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gd5b25a78fd6c 20260723",
+  "source_manifest": "perf2-02-q4-guard-matrix.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 3,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-23T21:33:32+0000",
+  "completed_utc": "2026-07-23T21:37:03+0000",
+  "result": "pass"
+}

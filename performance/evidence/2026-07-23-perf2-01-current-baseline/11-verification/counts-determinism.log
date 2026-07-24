@@ -1,0 +1,6 @@
+command=/private/tmp/crexx-perf2-01-profile-build/bin/rxvm --profile-output OUTPUT --profile=counts /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin -a 50
+first_sha256=95a2c3dc70b4b95098afa384892b8e723ef96682ca9a326dfb2c1fa5c7916374
+second_sha256=95a2c3dc70b4b95098afa384892b8e723ef96682ca9a326dfb2c1fa5c7916374
+PASS: counts profiles are byte-identical
+PASS: profile_mode counts
+stdout=benchmark=awfy_sieve repetitions=50 result=669 PASS: AWFY Sieve 

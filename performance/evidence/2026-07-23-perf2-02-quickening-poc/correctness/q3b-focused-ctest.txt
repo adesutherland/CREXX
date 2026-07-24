@@ -1,0 +1,26 @@
+Test project /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release
+    Start  876: dynamic_load
+1/8 Test  #876: dynamic_load ......................   Passed    0.33 sec
+    Start 1059: rxasreferencetests
+2/8 Test #1059: rxasreferencetests ................   Passed    0.00 sec
+    Start 1060: rxasreferencetests-rxbvm
+3/8 Test #1060: rxasreferencetests-rxbvm ..........   Passed    0.00 sec
+    Start 1061: rxasreferencecatchtests
+4/8 Test #1061: rxasreferencecatchtests ...........   Passed    0.00 sec
+    Start 1062: rxasreferencecatchtests-rxbvm
+5/8 Test #1062: rxasreferencecatchtests-rxbvm .....   Passed    0.00 sec
+    Start 1083: rxassignalcallunwindtests
+6/8 Test #1083: rxassignalcallunwindtests .........   Passed    0.00 sec
+    Start 1084: rxassignalcallunwindtests-rxbvm
+7/8 Test #1084: rxassignalcallunwindtests-rxbvm ...   Passed    0.00 sec
+    Start 1219: reentrancy_check
+8/8 Test #1219: reentrancy_check ..................   Passed    0.24 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+compiler    =   0.33 sec*proc (1 test)
+smoke       =   0.57 sec*proc (3 tests)
+stage3      =   0.33 sec*proc (1 test)
+
+Total Test time (real) =   0.61 sec

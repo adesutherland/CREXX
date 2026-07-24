@@ -1,0 +1,142 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index f8f99537b..dd29aad6e 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -4619,6 +4619,105 @@ RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteg
+ }
+ #endif
+ 
++/*
++ * PERF2-02 build-private diagnostic counters.  These deliberately live only
++ * in the detached Q3b scratch tree and are never part of a timed product.
++ * Q3b has no learned site state, so invalidation is not applicable.
++ */
++#define PERF2_DIAG_SITE_CAPACITY 128u
++
++typedef struct perf2_diag_site {
++    size_t module_number;
++    size_t canonical_index;
++    unsigned int kind;
++    unsigned long long executions;
++    unsigned long long hits;
++    unsigned long long misses;
++} perf2_diag_site;
++
++static perf2_diag_site perf2_diag_sites[PERF2_DIAG_SITE_CAPACITY];
++static size_t perf2_diag_site_count;
++static unsigned long long perf2_diag_executions;
++static unsigned long long perf2_diag_hits;
++static unsigned long long perf2_diag_misses;
++static unsigned long long perf2_diag_site_overflow;
++static int perf2_diag_registered;
++
++static const char *perf2_diag_vm_name(void) {
++#ifdef NTHREADED
++    return "rxbvm";
++#else
++    return "rxvm";
++#endif
++}
++
++static const char *perf2_diag_kind_name(unsigned int kind) {
++    return kind == 1u ? "attr_pair" : "local_form";
++}
++
++static void perf2_diag_report(void) {
++    size_t i;
++
++    fprintf(stderr,
++            "PERF2_COUNTER form=Q3b vm=%s scope=process "
++            "site_executions=%llu exact_fast_path_hits=%llu "
++            "guard_misses_fallbacks=%llu invalidations=0 "
++            "invalidations_status=N/A_zero_state tracked_sites=%zu "
++            "site_overflow=%llu\n",
++            perf2_diag_vm_name(), perf2_diag_executions, perf2_diag_hits,
++            perf2_diag_misses, perf2_diag_site_count,
++            perf2_diag_site_overflow);
++    for (i = 0; i < perf2_diag_site_count; ++i) {
++        const perf2_diag_site *site = &perf2_diag_sites[i];
++        fprintf(stderr,
++                "PERF2_COUNTER_SITE form=Q3b vm=%s module=%zu word=%zu "
++                "kind=%s site_executions=%llu exact_fast_path_hits=%llu "
++                "guard_misses_fallbacks=%llu invalidations=0\n",
++                perf2_diag_vm_name(), site->module_number,
++                site->canonical_index, perf2_diag_kind_name(site->kind),
++                site->executions, site->hits, site->misses);
++    }
++}
++
++static perf2_diag_site *perf2_diag_begin(size_t module_number,
++                                         size_t canonical_index,
++                                         unsigned int kind) {
++    size_t i;
++
++    if (!perf2_diag_registered) {
++        perf2_diag_registered = 1;
++        (void)atexit(perf2_diag_report);
++    }
++    ++perf2_diag_executions;
++    for (i = 0; i < perf2_diag_site_count; ++i) {
++        perf2_diag_site *site = &perf2_diag_sites[i];
++        if (site->module_number == module_number &&
++            site->canonical_index == canonical_index && site->kind == kind) {
++            ++site->executions;
++            return site;
++        }
++    }
++    if (perf2_diag_site_count == PERF2_DIAG_SITE_CAPACITY) {
++        ++perf2_diag_site_overflow;
++        return 0;
++    }
++    perf2_diag_sites[perf2_diag_site_count].module_number = module_number;
++    perf2_diag_sites[perf2_diag_site_count].canonical_index = canonical_index;
++    perf2_diag_sites[perf2_diag_site_count].kind = kind;
++    perf2_diag_sites[perf2_diag_site_count].executions = 1;
++    return &perf2_diag_sites[perf2_diag_site_count++];
++}
++
++static void perf2_diag_hit(perf2_diag_site *site) {
++    ++perf2_diag_hits;
++    if (site) ++site->hits;
++}
++
++static void perf2_diag_miss(perf2_diag_site *site) {
++    ++perf2_diag_misses;
++    if (site) ++site->misses;
++}
++
+ /* Interpreter */
+ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
+     proc_runtime *procedure;
+@@ -7652,6 +7751,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                 size_t site_index = VM_CANONICAL_INDEX(pc);
+                 const bin_code *pair = 0;
+                 int minlinkattr1_pair = 0;
++                perf2_diag_site *diag_site;
+                 void *owner = 0;
+                 rxvm_ref_owner_kind owner_kind;
+                 rxvm_reference_cell *cell;
+@@ -7665,6 +7765,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                             pair[0].instruction.no_ops == 4 &&
+                             pair[1].index == REG_IDX(2);
+                 }
++                diag_site = perf2_diag_begin(current_module->module_number,
++                                              site_index,
++                                              minlinkattr1_pair ? 1u : 0u);
+ 
+                 if (minlinkattr1_pair) {
+                     size_t root_register = pair[2].index;
+@@ -7699,11 +7802,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                 }
+ 
+                 if (!current_frame_owner) {
++                    perf2_diag_miss(diag_site);
+                     owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
+                                                                        REG_IDX(2),
+                                                                        op2R,
+                                                                        &owner);
+-                }
++                } else perf2_diag_hit(diag_site);
+                 cell = rxvm_reference_identity_for_context(&context->references,
+                                                            op2R,
+                                                            owner_kind,

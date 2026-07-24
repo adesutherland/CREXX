@@ -1,0 +1,11 @@
+Test project /private/tmp/crexx-perf2-01-profile-debug
+    Start 1029: rxvmprofileaccounting
+1/1 Test #1029: rxvmprofileaccounting ............   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+interpreter    =   0.01 sec*proc (1 test)
+profiling      =   0.01 sec*proc (1 test)
+
+Total Test time (real) =   0.03 sec

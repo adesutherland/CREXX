@@ -1,0 +1,187 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 54b48d083..36502fcda 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -4689,7 +4689,18 @@ const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
+ typedef Opcode instructions;
+ 
+ #ifdef NTHREADED
+-#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_) ((void)0)
++#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_)             \
++    do {                                                                        \
++        (image_)[instruction_].instruction.opcode = (opcode_);                  \
++    } while (0)
++#define VM_BIND_PERF2_MKREF_MINLINKATTR1(image_, instruction_)                 \
++    do {                                                                        \
++        (image_)[instruction_].instruction.opcode = OP_MAX_INSTRUCTIONS;        \
++    } while (0)
++#define VM_BIND_PERF2_MKREF_LOCAL(image_, instruction_)                        \
++    do {                                                                        \
++        (image_)[instruction_].instruction.opcode = OP_MAX_INSTRUCTIONS + 1;    \
++    } while (0)
+ #else
+ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+ #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
+@@ -4705,6 +4716,14 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+                     ? (void *)address_map[opcode_]                              \
+                     : (void *)&&IUNKNOWN;                                       \
+     } while (0)
++#define VM_BIND_PERF2_MKREF_MINLINKATTR1(image_, instruction_)                 \
++    do {                                                                        \
++        (image_)[instruction_].handler = (void *)&&PERF2_MKREF_MINLINKATTR1;    \
++    } while (0)
++#define VM_BIND_PERF2_MKREF_LOCAL(image_, instruction_)                        \
++    do {                                                                        \
++        (image_)[instruction_].handler = (void *)&&PERF2_MKREF_LOCAL;           \
++    } while (0)
+ #endif
+ 
+ #define VM_PREPARE_EXECUTION_IMAGE(module_)                                     \
+@@ -4712,6 +4731,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+         module *vm_module__ = (module_);                                        \
+         size_t vm_bytes__;                                                      \
+         size_t vm_i__ = 0;                                                      \
++        size_t vm_previous_instruction__ = SIZE_MAX;                            \
++        unsigned int vm_previous_opcode__ = OP_MAX_INSTRUCTIONS;               \
+         int vm_new_image__ = vm_module__->execution_image == 0;                 \
+         if (!vm_module__->segment.inst_size) break;                             \
+         if (vm_new_image__) {                                                   \
+@@ -4759,6 +4780,21 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+             }                                                                   \
+             VM_BIND_INSTRUCTION_HANDLER(vm_module__->execution_image,           \
+                                         vm_instruction__, vm_opcode__);         \
++            if (vm_opcode__ == OP_MKREF_REG_REG) {                              \
++                if (vm_previous_opcode__ == OP_MINLINKATTR1_REG_REG_REG_INT &&  \
++                    vm_previous_instruction__ != SIZE_MAX &&                    \
++                    vm_previous_instruction__ + 5u == vm_instruction__ &&       \
++                    vm_module__->segment.binary[vm_previous_instruction__ + 1u].index == \
++                        vm_module__->segment.binary[vm_instruction__ + 2u].index) { \
++                    VM_BIND_PERF2_MKREF_MINLINKATTR1(                           \
++                            vm_module__->execution_image, vm_instruction__);    \
++                } else {                                                        \
++                    VM_BIND_PERF2_MKREF_LOCAL(                                  \
++                            vm_module__->execution_image, vm_instruction__);    \
++                }                                                               \
++            }                                                                   \
++            vm_previous_instruction__ = vm_instruction__;                       \
++            vm_previous_opcode__ = vm_opcode__;                                 \
+         }                                                                       \
+     } while (0)
+ 
+@@ -7674,6 +7710,116 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+             }
+             DISPATCH;
+ 
++#ifdef NTHREADED
++        case OP_MAX_INSTRUCTIONS:
++#else
++        PERF2_MKREF_MINLINKATTR1:
++#endif
++            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number,
++                                                   VM_CANONICAL_INDEX(pc),
++                                                   OP_MKREF_REG_REG);
++            VM_ADVANCE(2);
++            DEBUG("TRACE - MKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
++            {
++                size_t site_index = VM_CANONICAL_INDEX(pc);
++                const bin_code *pair = current_canonical_base + site_index - 5u;
++                size_t root_register = pair[2].index;
++                size_t index_register = pair[3].index;
++                rxinteger index;
++                value *root = 0;
++                void *owner = 0;
++                rxvm_ref_owner_kind owner_kind;
++                rxvm_reference_cell *cell;
++                int current_frame_owner = 0;
++
++                if (root_register < (size_t)current_frame->procedure->locals &&
++                    root_register < current_frame->number_locals &&
++                    index_register < current_frame->number_locals &&
++                    rxinteger_checked_add(current_locals[index_register]->int_value,
++                                          pair[4].iconst,
++                                          &index)) {
++                    root = current_locals[root_register];
++                    if (root == current_frame->baselocals[root_register] &&
++                        index >= 1 && (size_t)index <= root->num_attributes &&
++                        root->attributes && root->unlinked_attributes &&
++                        root->attributes[(size_t)index - 1u] == op2R &&
++                        root->unlinked_attributes[(size_t)index - 1u] == op2R) {
++                        owner_kind = RXVM_REF_ATTRIBUTE;
++                        current_frame_owner = 1;
++                    }
++                }
++
++                if (!current_frame_owner) {
++                    owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
++                                                                       REG_IDX(2),
++                                                                       op2R,
++                                                                       &owner);
++                }
++                cell = rxvm_reference_identity_for_context(&context->references,
++                                                           op2R,
++                                                           owner_kind,
++                                                           owner,
++                                                           REG_IDX(2),
++                                                           0);
++                if (!cell) {
++                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
++                    DISPATCH;
++                }
++
++                if (current_frame_owner) current_frame->has_reference_lifetimes = 1;
++                else rxvm_mark_reference_lifetime_owner(current_frame, op2R);
++                clear_value_contents(op1R);
++                rxvm_reference_value_set_payload(op1R, cell);
++            }
++            DISPATCH;
++
++#ifdef NTHREADED
++        case OP_MAX_INSTRUCTIONS + 1:
++#else
++        PERF2_MKREF_LOCAL:
++#endif
++            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number,
++                                                   VM_CANONICAL_INDEX(pc),
++                                                   OP_MKREF_REG_REG);
++            VM_ADVANCE(2);
++            DEBUG("TRACE - MKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
++            {
++                void *owner = 0;
++                rxvm_ref_owner_kind owner_kind;
++                rxvm_reference_cell *cell;
++                int current_frame_owner = 0;
++
++                if (REG_IDX(2) < (size_t)current_frame->procedure->locals &&
++                    REG_IDX(2) < current_frame->number_locals &&
++                    current_locals[REG_IDX(2)] == current_frame->baselocals[REG_IDX(2)] &&
++                    op2R == current_frame->baselocals[REG_IDX(2)]) {
++                    owner_kind = RXVM_REF_LOCAL;
++                    owner = current_frame;
++                    current_frame_owner = 1;
++                } else {
++                    owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
++                                                                       REG_IDX(2),
++                                                                       op2R,
++                                                                       &owner);
++                }
++                cell = rxvm_reference_identity_for_context(&context->references,
++                                                           op2R,
++                                                           owner_kind,
++                                                           owner,
++                                                           REG_IDX(2),
++                                                           0);
++                if (!cell) {
++                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
++                    DISPATCH;
++                }
++
++                if (current_frame_owner) current_frame->has_reference_lifetimes = 1;
++                else rxvm_mark_reference_lifetime_owner(current_frame, op2R);
++                clear_value_contents(op1R);
++                rxvm_reference_value_set_payload(op1R, cell);
++            }
++            DISPATCH;
++
+         START_INSTRUCTION(DEREF_REG_REG) VM_ADVANCE(2);
+             DEBUG("TRACE - DEREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+             {

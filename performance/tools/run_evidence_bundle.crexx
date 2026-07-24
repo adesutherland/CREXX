@@ -37,7 +37,10 @@ main: procedure = .int
   release_build = "cmake-build-release"
   profile_build = "cmake-build-profile"
   output_dir = ""
+  vm_name = "rxvm"
+  profile_mode = "timing"
   force = 0
+  resume = 0
   self_test_requested = 0
 
   i = 1
@@ -49,6 +52,17 @@ main: procedure = .int
     end
     else if option = "--self-test" then self_test_requested = 1
     else if option = "--force" then force = 1
+    else if option = "--resume" then resume = 1
+    else if option = "--vm" then do
+      if i = args[0] then return argument_error("missing value after --vm")
+      i = i + 1
+      vm_name = lower(args[i])
+    end
+    else if option = "--profile-mode" then do
+      if i = args[0] then return argument_error("missing value after --profile-mode")
+      i = i + 1
+      profile_mode = lower(args[i])
+    end
     else if option = "--manifest" then do
       if i = args[0] then return argument_error("missing value after --manifest")
       i = i + 1
@@ -76,6 +90,11 @@ main: procedure = .int
   if self_test_requested then return self_test()
   if manifest_path = "" then return argument_error("--manifest is required")
   if output_dir = "" then return argument_error("--output-dir is required")
+  if vm_name <> "rxvm" & vm_name <> "rxbvm" then
+    return argument_error("--vm must be rxvm or rxbvm")
+  if profile_mode <> "timing" & profile_mode <> "counts" then
+    return argument_error("--profile-mode must be timing or counts")
+  if force & resume then return argument_error("--force and --resume are mutually exclusive")
 
   repo_root = current_directory()
   manifest_path = absolute_path(repo_root, manifest_path)
@@ -94,9 +113,19 @@ main: procedure = .int
 
   manifest_rows = read_input_manifest(manifest_path)
   if manifest_rows[0] = 0 then return execution_error("manifest has no valid entries")
-  if prepare_output_directory(output_dir, force) <> 0 then return 1
+  if resume then do
+    if \file_exists(output_dir) then
+      return execution_error("resume output directory does not exist: " || output_dir)
+  end
+  else if prepare_output_directory(output_dir, force) <> 0 then return 1
 
   input_copy = output_dir || "/input-manifest.txt"
+  if resume & file_exists(input_copy) & sha256_file(input_copy) <> sha256_file(manifest_path) then do
+    prior_copy = output_dir || "/input-manifest.pre-resume.txt"
+    if \file_exists(prior_copy) then do
+      if copy_file(input_copy, prior_copy) <> 0 then return 1
+    end
+  end
   if copy_file(manifest_path, input_copy) <> 0 then return 1
 
   summary_dir = output_dir || "/summary"
@@ -127,17 +156,33 @@ main: procedure = .int
   started_utc = timestamp_utc()
   bundle_manifest = output_dir || "/bundle-manifest.json"
   if write_bundle_manifest(bundle_manifest, manifest_path, release_build, ,
-      profile_build, output_dir, args, started_utc, "", "running") <> 0 then return 1
+      profile_build, vm_name, profile_mode, output_dir, args, started_utc, "", ,
+      "running") <> 0 then return 1
 
   do entry_index = 1 to manifest_rows[0]
-    result = process_entry(manifest_rows[entry_index], repo_root, release_build, ,
-        profile_build, entries_dir, samples, instructions, procedures, allocations, ,
-        sequences, profile_status, call_census, timing_ids, timing_pairs, timing_variants, ,
-        timing_modes, timing_medians)
+    if resume & entry_is_complete(manifest_rows[entry_index], entries_dir, vm_name, profile_mode) then
+      result = restore_entry(manifest_rows[entry_index], entries_dir, samples, ,
+          instructions, procedures, allocations, sequences, profile_status, ,
+          call_census, timing_ids, timing_pairs, timing_variants, timing_modes, ,
+          timing_medians)
+    else do
+      if resume then do
+        resume_fields = split_delimited(manifest_rows[entry_index], "|")
+        incomplete_dir = entries_dir || "/" || resume_fields[1]
+        if file_exists(incomplete_dir) then do
+          if remove_directory(incomplete_dir) <> 0 then return 1
+        end
+      end
+      result = process_entry(manifest_rows[entry_index], repo_root, release_build, ,
+          profile_build, vm_name, profile_mode, entries_dir, samples, instructions, procedures, allocations, ,
+          sequences, profile_status, call_census, timing_ids, timing_pairs, timing_variants, ,
+          timing_modes, timing_medians)
+    end
     if result <> 0 then do
       completed_utc = timestamp_utc()
       call write_bundle_manifest bundle_manifest, manifest_path, release_build, ,
-          profile_build, output_dir, args, started_utc, completed_utc, "fail"
+          profile_build, vm_name, profile_mode, output_dir, args, started_utc, ,
+          completed_utc, "fail"
       return result
     end
   end
@@ -165,14 +210,15 @@ main: procedure = .int
   verification[1] = "PASS: ordinary build is Release with CREXX_VM_PROFILING=OFF; profiling build is Release with CREXX_VM_PROFILING=ON"
   verification[2] = "PASS: every input image/module checksum matched the explicit manifest"
   verification[3] = "PASS: all warmups and recorded samples ran serially and retained stdout/stderr"
-  verification[4] = "PASS: every schema-4 profile reported result=0, no counter overflow, and complete procedure/allocation/census tracking"
+  verification[4] = "PASS: every schema-4/schema-5 profile reported result=0, no counter overflow, and complete tracked domains"
   verification[5] = "PASS: RXSEQ N=2, N=3, and N=4 binary captures and decoded candidate CSVs were retained"
   verification[6] = "PASS: generated summaries preserve procedure metrics, the dynamic call census, and paired unprofiled timing deltas"
   if write_lines(output_dir || "/verification.txt", verification) <> 0 then return 1
 
   completed_utc = timestamp_utc()
   if write_bundle_manifest(bundle_manifest, manifest_path, release_build, ,
-      profile_build, output_dir, args, started_utc, completed_utc, "pass") <> 0 then return 1
+      profile_build, vm_name, profile_mode, output_dir, args, started_utc, ,
+      completed_utc, "pass") <> 0 then return 1
   if write_and_verify_checksums(output_dir) <> 0 then return 1
 
   say "PASS: exact-image evidence bundle retained under" output_dir
@@ -184,7 +230,8 @@ main: procedure = .int
  */
 process_entry: procedure = .int
   arg row = .string, repo_root = .string, release_build = .string, ,
-      profile_build = .string, entries_dir = .string, ,
+      profile_build = .string, vm_name = .string, profile_mode = .string, ,
+      entries_dir = .string, ,
       expose samples = .string[], expose instructions = .string[], ,
       expose procedures = .string[], expose allocations = .string[], ,
       expose sequences = .string[], expose profile_status = .string[], ,
@@ -242,8 +289,8 @@ process_entry: procedure = .int
       return execution_error("module checksum mismatch for " || entry_id)
   end
 
-  release_vm = release_build || "/bin/rxvm"
-  profile_vm = profile_build || "/bin/rxvm"
+  release_vm = release_build || "/bin/" || vm_name
+  profile_vm = profile_build || "/bin/" || vm_name
   rxseq_tool = profile_build || "/bin/rxseq"
   timing_command = vm_command(release_vm, image, modules, argument_values)
 
@@ -285,6 +332,8 @@ process_entry: procedure = .int
 
   profile_path = profile_dir || "/profile.csv"
   profile_command = vm_command(profile_vm, image, modules, argument_values)
+  if profile_mode = "counts" then
+    call arrayinsert profile_command, 2, 1, "--profile=counts"
   call arrayinsert profile_command, 2, 1, "--profile-output"
   call arrayinsert profile_command, 3, 1, profile_path
   if capture_checked_command(profile_command, expectation, profile_dir || "/stdout.txt", ,
@@ -325,7 +374,7 @@ process_entry: procedure = .int
   end
 
   if write_entry_manifest(entry_dir || "/manifest.json", entry_id, pair_name, ,
-      workload, variant, mode, image, image_hash, modules, module_hashes, ,
+      workload, variant, mode, vm_name, profile_mode, image, image_hash, modules, module_hashes, ,
       argument_values, expectation, source_trace, warmups, runs, timing_command, ,
       profile_command, sequence_commands, median_ns) <> 0 then return 1
 
@@ -339,7 +388,10 @@ usage: procedure = .void
   say "  --manifest PATH       Version-1 exact-image input manifest"
   say "  --release-build PATH  Ordinary Release build (default: cmake-build-release)"
   say "  --profile-build PATH  Release profiling build (default: cmake-build-profile)"
+  say "  --vm NAME             Select rxvm or rxbvm (default: rxvm)"
+  say "  --profile-mode MODE   Select timing or deterministic counts (default: timing)"
   say "  --output-dir PATH     New retained evidence-bundle directory"
+  say "  --resume              Retain complete entries and continue an interrupted bundle"
   say "  --force               Replace an existing output directory"
   say "  --self-test           Exercise parsers and paired-summary helpers"
   say "  -h, --help            Show this help"
@@ -402,6 +454,107 @@ make_directory: procedure = .int
   if rc = 0 then return 0
   say "ERROR: could not create directory:" path
   return 1
+
+file_exists: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "stat :path" output out error err
+  return rc = 0
+
+file_contains_text: procedure = .int
+  arg path = .string, needle = .string
+  out = .string[]
+  err = .string[]
+  address crexx "cat :path" output out error err
+  if rc <> 0 then return 0
+  return has_text(out, needle)
+
+remove_directory: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "rm -r :path" output out error err
+  if rc = 0 then return 0
+  return execution_error("could not remove incomplete entry directory: " || path)
+
+json_integer_field: procedure = .int
+  arg path = .string, field_name = .string
+  prefix = '"' || field_name || '":'
+  out = .string[]
+  err = .string[]
+  address crexx "cat :path" output out error err
+  if rc <> 0 then return -1
+  do i = 1 to out[0]
+    line = strip(out[i])
+    if left(line, length(prefix)) = prefix then do
+      value = strip(substr(line, length(prefix) + 1))
+      if right(value, 1) = "," then value = left(value, length(value) - 1)
+      if is_digits(value) then return value as .int
+      return -1
+    end
+  end
+  return -1
+
+entry_is_complete: procedure = .int
+  arg row = .string, entries_dir = .string, vm_name = .string, profile_mode = .string
+  fields = split_delimited(row, "|")
+  if fields[0] <> 14 then return 0
+  entry_id = fields[1]
+  entry_dir = entries_dir || "/" || entry_id
+  manifest = entry_dir || "/manifest.json"
+  if \file_exists(manifest) | ,
+      \file_exists(entry_dir || "/profile/profile.csv") | ,
+      \file_exists(entry_dir || "/rxseq/n2.rxseq") | ,
+      \file_exists(entry_dir || "/rxseq/n2-candidates.csv") | ,
+      \file_exists(entry_dir || "/rxseq/n3.rxseq") | ,
+      \file_exists(entry_dir || "/rxseq/n3-candidates.csv") | ,
+      \file_exists(entry_dir || "/rxseq/n4.rxseq") | ,
+      \file_exists(entry_dir || "/rxseq/n4-candidates.csv") then return 0
+  if \file_contains_text(manifest, '"entry": ' || jsonquote(entry_id)) | ,
+      \file_contains_text(manifest, '"vm": ' || jsonquote(vm_name)) | ,
+      \file_contains_text(manifest, '"profile_mode": ' || jsonquote(profile_mode)) | ,
+      \file_contains_text(manifest, '"sha256":' || jsonquote(lower(fields[13]))) then return 0
+  return json_integer_field(manifest, "median_elapsed_ns") >= 0
+
+restore_entry: procedure = .int
+  arg row = .string, entries_dir = .string, ,
+      expose samples = .string[], expose instructions = .string[], ,
+      expose procedures = .string[], expose allocations = .string[], ,
+      expose sequences = .string[], expose profile_status = .string[], ,
+      expose call_census = .string[], ,
+      expose timing_ids = .string[], expose timing_pairs = .string[], ,
+      expose timing_variants = .string[], expose timing_modes = .string[], ,
+      expose timing_medians = .int[]
+
+  fields = split_delimited(row, "|")
+  entry_id = fields[1]
+  pair_name = fields[2]
+  workload = fields[3]
+  variant = fields[4]
+  mode = fields[5]
+  runs = fields[12] as .int
+  entry_dir = entries_dir || "/" || entry_id
+  median_ns = json_integer_field(entry_dir || "/manifest.json", "median_elapsed_ns")
+  if median_ns < 0 then return execution_error("could not restore median for " || entry_id)
+
+  samples[samples[0] + 1] = timing_sample_row(entry_id, pair_name, workload, ,
+      variant, mode, "recorded", 1, median_ns, 0, "pass")
+  timing_ids[timing_ids[0] + 1] = entry_id
+  timing_pairs[timing_pairs[0] + 1] = pair_name
+  timing_variants[timing_variants[0] + 1] = variant
+  timing_modes[timing_modes[0] + 1] = mode
+  timing_medians[timing_medians[0] + 1] = median_ns
+
+  if collect_profile_summary(entry_id, entry_dir || "/profile/profile.csv", ,
+      instructions, procedures, allocations, profile_status, call_census) <> 0 then return 1
+  do window = 2 to 4
+    if collect_sequence_summary(entry_id, window, entry_dir || "/rxseq/n" || ,
+        window || "-candidates.csv", sequences) <> 0 then return 1
+  end
+  say "PASS:" entry_id "resumed from checksum-validated complete retained entry (" || ,
+      runs || " recorded run(s))"
+  return 0
 
 prepare_output_directory: procedure = .int
   arg path = .string, force = .int
@@ -681,11 +834,14 @@ collect_profile_summary: procedure = .int
   instruction_maxes = .int[]
   instruction_percents = .string[]
   schema_ok = 0
+  schema_version = ""
   result_ok = 0
   overflow_ok = 0
   procedure_ok = 0
   allocation_ok = 0
   census_ok = 0
+  branch_ok = 0
+  domain_status_rows = 0
   census_rows = 0
   allocation_rows = 0
   activation_high_water = 0
@@ -712,12 +868,16 @@ collect_profile_summary: procedure = .int
     if section = "summary" then do
       profile_status[profile_status[0] + 1] = csv_field(entry_id) || "," || ,
           csv_field(fields[2]) || "," || csv_field(fields[3])
-      if fields[2] = "schema_version" & fields[3] = "4" then schema_ok = 1
+      if fields[2] = "schema_version" & (fields[3] = "4" | fields[3] = "5") then do
+        schema_ok = 1
+        schema_version = fields[3]
+      end
       if fields[2] = "result" & fields[3] = "0" then result_ok = 1
       if fields[2] = "counter_overflow" & fields[3] = "0" then overflow_ok = 1
       if fields[2] = "procedure_tracking_unavailable" & fields[3] = "0" then procedure_ok = 1
       if fields[2] = "allocation_tracking_unavailable" & fields[3] = "0" then allocation_ok = 1
       if fields[2] = "census_tracking_unavailable" & fields[3] = "0" then census_ok = 1
+      if fields[2] = "branch_tracking_unavailable" & fields[3] = "0" then branch_ok = 1
     end
     else if section = "instruction" then do
       index = instruction_names[0] + 1
@@ -748,7 +908,9 @@ collect_profile_summary: procedure = .int
       if fields[2] = "frame_activations" then activation_high_water = fields[23]
     end
     else if section = "census" | section = "call" | section = "return" | ,
-        section = "dynamic" | section = "mechanics" | section = "unwind" then do
+        section = "dynamic" | section = "mechanics" | section = "unwind" | ,
+        section = "status" | section = "value_operation" | ,
+        section = "frame_entry" | section = "branch" then do
       census_row = csv_field(entry_id)
       do column = 1 to 24
         census_row = census_row || "," || csv_field(fields[column])
@@ -756,6 +918,7 @@ collect_profile_summary: procedure = .int
       call_census[call_census[0] + 1] = census_row
       census_rows = census_rows + 1
       if fields[24] <> "complete" then census_ok = 0
+      if section = "status" then domain_status_rows = domain_status_rows + 1
     end
   end
   call linein path
@@ -811,7 +974,8 @@ collect_profile_summary: procedure = .int
 
   if \header_seen | \schema_ok | \result_ok | \overflow_ok | \procedure_ok | ,
       \allocation_ok | \census_ok | allocation_rows = 0 | census_rows = 0 | ,
-      activation_high_water < 1 then
+      activation_high_water < 1 | ,
+      (schema_version = "5" & (\branch_ok | domain_status_rows < 7)) then
     return execution_error("profile completeness gate failed for " || entry_id)
   return 0
 
@@ -850,7 +1014,8 @@ collect_sequence_summary: procedure = .int
 
 write_entry_manifest: procedure = .int
   arg path = .string, entry_id = .string, pair_name = .string, workload = .string, ,
-      variant = .string, mode = .string, image = .string, image_hash = .string, ,
+      variant = .string, mode = .string, vm_name = .string, ,
+      profile_mode = .string, image = .string, image_hash = .string, ,
       modules = .string[], module_hashes = .string[], arguments = .string[], ,
       expectation = .string, source_trace = .string, warmups = .int, runs = .int, ,
       timing_command = .string[], profile_command = .string[], ,
@@ -885,22 +1050,24 @@ write_entry_manifest: procedure = .int
   output[5] = '  "workload": ' || jsonquote(workload) || ","
   output[6] = '  "variant": ' || jsonquote(variant) || ","
   output[7] = '  "optimization_mode": ' || jsonquote(mode) || ","
-  output[8] = '  "image": {"path":' || jsonquote(image) || ',"sha256":' || ,
+  output[8] = '  "vm": ' || jsonquote(vm_name) || ","
+  output[9] = '  "profile_mode": ' || jsonquote(profile_mode) || ","
+  output[10] = '  "image": {"path":' || jsonquote(image) || ',"sha256":' || ,
       jsonquote(image_hash) || "},"
-  output[9] = '  "modules": ' || jsonarray(module_values) || ","
-  output[10] = '  "arguments": ' || jsonarray(argument_json) || ","
-  output[11] = '  "correctness_expectation": ' || jsonquote(expectation) || ","
-  output[12] = '  "source_trace_retention": ' || jsonquote(source_trace) || ","
-  output[13] = '  "warmups": ' || warmups || ","
-  output[14] = '  "recorded_runs": ' || runs || ","
-  output[15] = '  "sampling": "serial",'
-  output[16] = '  "timing_source": "ordinary Release rxvm only",'
-  output[17] = '  "profile_timing_interpretation": "diagnostic only; never throughput",'
-  output[18] = '  "timing_command": ' || jsonarray(timing_json) || ","
-  output[19] = '  "profile_command": ' || jsonarray(profile_json) || ","
-  output[20] = '  "sequence_commands": ' || jsonarray(sequence_json) || ","
-  output[21] = '  "median_elapsed_ns": ' || median_ns
-  output[22] = "}"
+  output[11] = '  "modules": ' || jsonarray(module_values) || ","
+  output[12] = '  "arguments": ' || jsonarray(argument_json) || ","
+  output[13] = '  "correctness_expectation": ' || jsonquote(expectation) || ","
+  output[14] = '  "source_trace_retention": ' || jsonquote(source_trace) || ","
+  output[15] = '  "warmups": ' || warmups || ","
+  output[16] = '  "recorded_runs": ' || runs || ","
+  output[17] = '  "sampling": "serial",'
+  output[18] = '  "timing_source": "ordinary Release ' || vm_name || ' only",'
+  output[19] = '  "profile_timing_interpretation": "diagnostic only; never throughput",'
+  output[20] = '  "timing_command": ' || jsonarray(timing_json) || ","
+  output[21] = '  "profile_command": ' || jsonarray(profile_json) || ","
+  output[22] = '  "sequence_commands": ' || jsonarray(sequence_json) || ","
+  output[23] = '  "median_elapsed_ns": ' || median_ns
+  output[24] = "}"
   return write_lines(path, output)
 
 build_pair_deltas: procedure = .string[]
@@ -1171,7 +1338,8 @@ json_string_array: procedure = .string
 
 write_bundle_manifest: procedure = .int
   arg path = .string, input_manifest = .string, release_build = .string, ,
-      profile_build = .string, output_dir = .string, arguments = .string[], ,
+      profile_build = .string, vm_name = .string, profile_mode = .string, ,
+      output_dir = .string, arguments = .string[], ,
       started_utc = .string, completed_utc = .string, result = .string
 
   git_branch_command = .string[]
@@ -1197,10 +1365,10 @@ write_bundle_manifest: procedure = .int
   cmake_command[1] = "cmake"
   cmake_command[2] = "--version"
   release_vm_command = .string[]
-  release_vm_command[1] = release_build || "/bin/rxvm"
+  release_vm_command[1] = release_build || "/bin/" || vm_name
   release_vm_command[2] = "-v"
   profile_vm_command = .string[]
-  profile_vm_command[1] = profile_build || "/bin/rxvm"
+  profile_vm_command[1] = profile_build || "/bin/" || vm_name
   profile_vm_command[2] = "-v"
 
   release_cache = release_build || "/CMakeCache.txt"
@@ -1243,20 +1411,22 @@ write_bundle_manifest: procedure = .int
       ',"build_type":' || jsonquote(cache_value(release_cache, "CMAKE_BUILD_TYPE")) || ,
       ',"c_flags_release":' || jsonquote(cache_value(release_cache, "CMAKE_C_FLAGS_RELEASE")) || ,
       ',"profiling":' || jsonquote(cache_value(release_cache, "CREXX_VM_PROFILING")) || ,
-      ',"rxvm_version":' || jsonquote(run_first_line(release_vm_command)) || ,
-      ',"rxvm_sha256":' || jsonquote(sha256_file(release_build || "/bin/rxvm")) || "},"
+      ',"vm":' || jsonquote(vm_name) || ,
+      ',"vm_version":' || jsonquote(run_first_line(release_vm_command)) || ,
+      ',"vm_sha256":' || jsonquote(sha256_file(release_build || "/bin/" || vm_name)) || "},"
   output[14] = '  "profile_release": {"build":' || jsonquote(profile_build) || ,
       ',"generator":' || jsonquote(cache_value(profile_cache, "CMAKE_GENERATOR")) || ,
       ',"build_type":' || jsonquote(cache_value(profile_cache, "CMAKE_BUILD_TYPE")) || ,
       ',"c_flags_release":' || jsonquote(cache_value(profile_cache, "CMAKE_C_FLAGS_RELEASE")) || ,
       ',"profiling":' || jsonquote(cache_value(profile_cache, "CREXX_VM_PROFILING")) || ,
-      ',"rxvm_version":' || jsonquote(run_first_line(profile_vm_command)) || ,
-      ',"rxvm_sha256":' || jsonquote(sha256_file(profile_build || "/bin/rxvm")) || ,
+      ',"vm":' || jsonquote(vm_name) || ',"profile_mode":' || jsonquote(profile_mode) || ,
+      ',"vm_version":' || jsonquote(run_first_line(profile_vm_command)) || ,
+      ',"vm_sha256":' || jsonquote(sha256_file(profile_build || "/bin/" || vm_name)) || ,
       ',"rxseq_sha256":' || jsonquote(sha256_file(profile_build || "/bin/rxseq")) || "},"
   output[15] = '  "toolchain": {"cmake":' || jsonquote(run_first_line(cmake_command)) || ,
       ',"compiler_path":' || jsonquote(compiler) || ',"compiler":' || ,
       jsonquote(run_first_line(compiler_command)) || "},"
-  output[16] = '  "policies": {"sampling":"serial","product_timing":"ordinary Release rxvm only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},'
+  output[16] = '  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},'
   output[17] = '  "output_directory": ' || jsonquote(output_dir)
   output[18] = "}"
   return write_lines(path, output)

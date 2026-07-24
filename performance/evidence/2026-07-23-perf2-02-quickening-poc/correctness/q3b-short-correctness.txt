@@ -1,0 +1,14 @@
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxvm /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin -a 1
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+EXIT: 0
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxvm /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/perf2_qref_guard.rxbin
+PASS: PERF2-02 reference guards
+EXIT: 0
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxbvm /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin -a 1
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+EXIT: 0
+COMMAND: /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxbvm /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/perf2_qref_guard.rxbin
+PASS: PERF2-02 reference guards
+EXIT: 0

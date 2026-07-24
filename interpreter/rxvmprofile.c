@@ -70,6 +70,28 @@ static const char *const rxvm_profile_dynamic_outcome_names[
         "attempt", "success", "failure"
 };
 
+static const char *const rxvm_profile_value_operation_names[
+        RXVM_PROFILE_VALUE_OPERATION_COUNT] = {
+        "copy", "string_copy", "binary_copy", "decimal_copy",
+        "integer_copy", "float_copy", "status_copy", "move",
+        "clear_contents", "reset_reuse", "destroy", "clear"
+};
+
+static const char *const rxvm_profile_value_shape_names[
+        RXVM_PROFILE_VALUE_SHAPE_COUNT] = {
+        "empty", "scalar", "string", "binary", "decimal", "reference",
+        "object", "native", "compound"
+};
+
+static const char *const rxvm_profile_frame_phase_names[
+        RXVM_PROFILE_FRAME_PHASE_COUNT] = {
+        "local_relink", "global_relink", "argument_count_reset",
+        "inherited_context", "root_context", "finalize"
+};
+
+static const char *const rxvm_profile_frame_source_names[
+        RXVM_PROFILE_FRAME_SOURCE_COUNT] = { "fresh", "reused" };
+
 #if defined(_MSC_VER)
 #define RXVM_PROFILE_THREAD_LOCAL __declspec(thread)
 #else
@@ -114,9 +136,254 @@ void rxvm_profile_record_frame_release(void) {
     rxvm_profile_frame_release_at(rxvm_active_allocation_profile);
 }
 
-#define RXVM_PROFILE_ATTR_SETUP_SWAP 1u
-#define RXVM_PROFILE_ATTR_RESTORE_SWAP 2u
-#define RXVM_PROFILE_ATTR_ARGUMENT_COPY 4u
+static rxvm_profile_value_shape rxvm_profile_value_payload_shape(
+        const value *payload) {
+    int shapes = 0;
+    rxvm_profile_value_shape shape = RXVM_PROFILE_VALUE_EMPTY;
+    if (!payload) return RXVM_PROFILE_VALUE_EMPTY;
+    if (payload->string_length) {
+        shape = RXVM_PROFILE_VALUE_STRING;
+        shapes++;
+    }
+    if (payload->binary_length) {
+        shape = payload->native_payload_ops
+                ? RXVM_PROFILE_VALUE_NATIVE : RXVM_PROFILE_VALUE_BINARY;
+        shapes++;
+    }
+    if (payload->decimal_value_length) {
+        shape = RXVM_PROFILE_VALUE_DECIMAL;
+        shapes++;
+    }
+    if (payload->reference_payload || payload->reference_identity) {
+        shape = RXVM_PROFILE_VALUE_REFERENCE;
+        shapes++;
+    }
+    if (payload->num_attributes || payload->object_type) {
+        shape = RXVM_PROFILE_VALUE_OBJECT;
+        shapes++;
+    }
+    if (shapes > 1) return RXVM_PROFILE_VALUE_COMPOUND;
+    if (shapes == 1) return shape;
+    if (payload->status.all_type_flags || payload->int_value ||
+            payload->float_value)
+        return RXVM_PROFILE_VALUE_SCALAR;
+    return RXVM_PROFILE_VALUE_EMPTY;
+}
+
+static uint64_t rxvm_profile_value_payload_bytes(const value *payload) {
+    uint64_t bytes = 0;
+    uint64_t attribute_bytes;
+    if (!payload) return 0;
+    bytes = (uint64_t)payload->string_length;
+    if (UINT64_MAX - bytes < (uint64_t)payload->binary_length)
+        return UINT64_MAX;
+    bytes += (uint64_t)payload->binary_length;
+    if (UINT64_MAX - bytes < (uint64_t)payload->decimal_value_length)
+        return UINT64_MAX;
+    bytes += (uint64_t)payload->decimal_value_length;
+    if (payload->num_attributes > UINT64_MAX / sizeof(value *))
+        return UINT64_MAX;
+    attribute_bytes = (uint64_t)payload->num_attributes * sizeof(value *);
+    if (UINT64_MAX - bytes < attribute_bytes) return UINT64_MAX;
+    return bytes + attribute_bytes;
+}
+
+void rxvm_profile_record_value_typed(rxvm_profile_value_operation operation,
+                                     rxvm_profile_value_shape shape,
+                                     size_t bytes) {
+    rxvm_profile_state *state = rxvm_active_allocation_profile;
+    if (!state || !state->enabled) return;
+    if (operation < 0 || operation >= RXVM_PROFILE_VALUE_OPERATION_COUNT ||
+            shape < 0 || shape >= RXVM_PROFILE_VALUE_SHAPE_COUNT) {
+        rxvm_profile_increment(state, &state->invalid_events);
+        return;
+    }
+    rxvm_profile_increment(
+            state, &state->value_operations[operation][shape].count);
+    rxvm_profile_add_total(
+            state, &state->value_operations[operation][shape].bytes,
+            (uint64_t)bytes);
+    if ((uint64_t)bytes >
+            state->value_operations[operation][shape].max_bytes)
+        state->value_operations[operation][shape].max_bytes = (uint64_t)bytes;
+}
+
+void rxvm_profile_record_value_operation(rxvm_profile_value_operation operation,
+                                         const value *payload) {
+    uint64_t bytes = rxvm_profile_value_payload_bytes(payload);
+    rxvm_profile_record_value_typed(
+            operation, rxvm_profile_value_payload_shape(payload),
+            (size_t)bytes);
+}
+
+uint64_t rxvm_profile_frame_phase_begin(void) {
+    rxvm_profile_state *state = rxvm_active_allocation_profile;
+    return state && state->enabled && state->timing_enabled
+            ? rxvm_profile_now_ns() : 0;
+}
+
+void rxvm_profile_record_frame_phase(rxvm_profile_frame_phase phase,
+                                     int reused, uint64_t start_ns,
+                                     size_t units) {
+    rxvm_profile_state *state = rxvm_active_allocation_profile;
+    rxvm_profile_frame_source source = reused
+            ? RXVM_PROFILE_FRAME_SOURCE_REUSED
+            : RXVM_PROFILE_FRAME_SOURCE_FRESH;
+    uint64_t end_ns;
+    if (!state || !state->enabled) return;
+    if (phase < 0 || phase >= RXVM_PROFILE_FRAME_PHASE_COUNT) {
+        rxvm_profile_increment(state, &state->invalid_events);
+        return;
+    }
+    end_ns = state->timing_enabled ? rxvm_profile_now_ns() : 0;
+    rxvm_profile_add_counter(state, &state->frame_phases[phase][source],
+                             rxvm_profile_elapsed(start_ns, end_ns));
+    rxvm_profile_add_total(state, &state->frame_phase_units[phase][source],
+                           (uint64_t)units);
+}
+
+static int rxvm_profile_is_branch_opcode(int opcode) {
+    RxOpEffects effects;
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return 0;
+    effects = rxop_effects(opcode);
+    return effects.flow == FLOW_JUMP || effects.flow == FLOW_COND;
+}
+
+static rxvm_profile_branch_row *rxvm_profile_branch_row_for_active(
+        rxvm_profile_state *state) {
+    size_t i;
+    rxvm_profile_branch_row *rows;
+    size_t capacity;
+    for (i = 0; i < state->branch_row_count; i++) {
+        rxvm_profile_branch_row *row = &state->branch_rows[i];
+        if (row->module_id == state->active_module_id &&
+                row->instruction_index == state->active_instruction_index &&
+                row->opcode == state->active_opcode)
+            return row;
+    }
+    if (state->branch_row_count == state->branch_row_capacity) {
+        capacity = state->branch_row_capacity
+                ? state->branch_row_capacity * 2 : 64;
+        if (capacity < state->branch_row_capacity ||
+                capacity > SIZE_MAX / sizeof(*rows)) {
+            state->branch_tracking_unavailable = 1;
+            return 0;
+        }
+        rows = (rxvm_profile_branch_row *)realloc(
+                state->branch_rows, capacity * sizeof(*rows));
+        if (!rows) {
+            state->branch_tracking_unavailable = 1;
+            return 0;
+        }
+        state->branch_rows = rows;
+        state->branch_row_capacity = capacity;
+    }
+    rows = state->branch_rows;
+    memset(&rows[state->branch_row_count], 0, sizeof(*rows));
+    rows[state->branch_row_count].module_id = state->active_module_id;
+    rows[state->branch_row_count].instruction_index =
+            state->active_instruction_index;
+    rows[state->branch_row_count].opcode = state->active_opcode;
+    return &rows[state->branch_row_count++];
+}
+
+void rxvm_profile_record_branch_at(rxvm_profile_state *state,
+                                   size_t target_module_id,
+                                   size_t target_instruction_index,
+                                   rxvm_transition_reason reason) {
+    rxvm_profile_branch_row *row;
+    int taken;
+    if (!state || !state->enabled ||
+            !rxvm_profile_is_branch_opcode(state->active_opcode))
+        return;
+    row = rxvm_profile_branch_row_for_active(state);
+    if (!row) return;
+    rxvm_profile_increment(state, &row->executions);
+    taken = reason == RXVM_TRANSITION_BRANCH;
+    if (taken) {
+        rxvm_profile_increment(state, &row->taken);
+        if (target_module_id != state->active_module_id)
+            rxvm_profile_increment(state, &row->cross_module);
+        else if (target_instruction_index <= state->active_instruction_index)
+            rxvm_profile_increment(state, &row->backward);
+    } else {
+        rxvm_profile_increment(state, &row->fallthrough);
+    }
+}
+
+static size_t rxvm_profile_trace_swap_pairs(
+        const rxvm_profile_trace_record *record, size_t pairs[][2],
+        size_t capacity) {
+    static const unsigned char swapn2[][2] = {{1, 2}, {3, 4}};
+    static const unsigned char swapn3[][2] = {{1, 2}, {3, 4}, {5, 6}};
+    static const unsigned char swapn4[][2] = {
+        {1, 2}, {3, 4}, {5, 6}, {7, 8}};
+    static const unsigned char settpswap[][2] = {{1, 3}};
+    static const unsigned char loadsettpswap[][2] = {{3, 5}};
+    static const unsigned char swapsettp[][2] = {{1, 2}};
+    static const unsigned char swapsettpswap[][2] = {{1, 2}, {3, 5}};
+    static const unsigned char settpswap2[][2] = {{1, 3}, {4, 5}};
+    static const unsigned char swapcall[][2] = {{4, 5}};
+    static const unsigned char settpswapcall[][2] = {{4, 6}};
+    const unsigned char (*operands)[2] = 0;
+    size_t count = 0;
+    size_t i;
+    if (!record || !record->pc || !pairs || !capacity) return 0;
+    switch (record->opcode) {
+        case OP_SWAP_REG_REG:
+            operands = swapn2;
+            count = 1;
+            break;
+        case OP_SWAPN_REG_REG_REG_REG:
+            operands = swapn2;
+            count = 2;
+            break;
+        case OP_SWAPN_REG_REG_REG_REG_REG_REG:
+            operands = swapn3;
+            count = 3;
+            break;
+        case OP_SWAPN_REG_REG_REG_REG_REG_REG_REG_REG:
+            operands = swapn4;
+            count = 4;
+            break;
+        case OP_SETTPSWAP_REG_INT_REG:
+            operands = settpswap;
+            count = 1;
+            break;
+        case OP_LOADSETTPSWAP_REG_INT_REG_INT_REG:
+            operands = loadsettpswap;
+            count = 1;
+            break;
+        case OP_SWAPSETTP_REG_REG_REG_INT:
+            operands = swapsettp;
+            count = 1;
+            break;
+        case OP_SWAPSETTPSWAP_REG_REG_REG_INT_REG:
+            operands = swapsettpswap;
+            count = 2;
+            break;
+        case OP_SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG:
+            operands = settpswap2;
+            count = 2;
+            break;
+        case OP_SWAPCALL_REG_FUNC_REG_REG_REG:
+            operands = swapcall;
+            count = 1;
+            break;
+        case OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG:
+            operands = settpswapcall;
+            count = 1;
+            break;
+        default:
+            return 0;
+    }
+    if (count > capacity) count = capacity;
+    for (i = 0; i < count; i++) {
+        pairs[i][0] = (record->pc + operands[i][0])->index;
+        pairs[i][1] = (record->pc + operands[i][1])->index;
+    }
+    return count;
+}
 
 static rxvm_profile_activation *rxvm_profile_find_activation(
         rxvm_profile_state *state, const void *frame) {
@@ -329,7 +596,7 @@ static void rxvm_profile_attribute_call_window(
         return;
     }
     needed = (unsigned char *)calloc(frame->number_locals, 1);
-    if (activation->trace_count > SIZE_MAX / (2 * sizeof(*restoration_swaps))) {
+    if (activation->trace_count > SIZE_MAX / (8 * sizeof(*restoration_swaps))) {
         free(needed);
         state->census_tracking_unavailable = 1;
         rxvm_profile_increment(state, &state->attribution_degraded);
@@ -337,7 +604,7 @@ static void rxvm_profile_attribute_call_window(
     }
     restoration_swaps = activation->trace_count
             ? (size_t *)malloc(
-                    activation->trace_count * 2 * sizeof(*restoration_swaps))
+                    activation->trace_count * 8 * sizeof(*restoration_swaps))
             : 0;
     if (!needed || (activation->trace_count && !restoration_swaps)) {
         free(needed);
@@ -350,29 +617,41 @@ static void rxvm_profile_attribute_call_window(
     for (i = activation->trace_count; i > 0; i--) {
         rxvm_profile_trace_record *record = &activation->trace[i - 1];
         RxOpEffects effects = rxop_effects(record->opcode);
+        size_t swap_pairs[4][2];
+        size_t swap_pair_count;
+        size_t swap_pair;
+        int setup_swap_attributed = 0;
         size_t operand;
         size_t operand_count;
+        swap_pair_count = rxvm_profile_trace_swap_pairs(
+                record, swap_pairs, sizeof(swap_pairs) / sizeof(swap_pairs[0]));
+        if (!(record->attribution &
+              (RXVM_PROFILE_ATTR_SETUP_SWAP |
+               RXVM_PROFILE_ATTR_RESTORE_SWAP))) {
+            for (swap_pair = swap_pair_count; swap_pair > 0; swap_pair--) {
+                size_t first = swap_pairs[swap_pair - 1][0];
+                size_t second = swap_pairs[swap_pair - 1][1];
+                if (first >= frame->number_locals ||
+                        second >= frame->number_locals ||
+                        (!needed[first] && !needed[second]))
+                    continue;
+                unsigned char temporary = needed[first];
+                setup_swaps++;
+                restoration_swaps[(size_t)(setup_swaps - 1) * 2] = first;
+                restoration_swaps[
+                        (size_t)(setup_swaps - 1) * 2 + 1] = second;
+                needed[first] = needed[second];
+                needed[second] = temporary;
+                setup_swap_attributed = 1;
+            }
+            if (setup_swap_attributed)
+                record->attribution |= RXVM_PROFILE_ATTR_SETUP_SWAP;
+        }
         if (i == activation->trace_count &&
                 (effects.semantics & RXOP_SEM_CALL) != 0)
             continue;
-        if (record->opcode == OP_SWAP_REG_REG && record->pc) {
-            size_t first = (record->pc + 1)->index;
-            size_t second = (record->pc + 2)->index;
-            if (first < frame->number_locals && second < frame->number_locals &&
-                    (needed[first] || needed[second])) {
-                unsigned char temporary = needed[first];
-                if (!(record->attribution &
-                      (RXVM_PROFILE_ATTR_SETUP_SWAP |
-                       RXVM_PROFILE_ATTR_RESTORE_SWAP))) {
-                    record->attribution |= RXVM_PROFILE_ATTR_SETUP_SWAP;
-                    setup_swaps++;
-                    restoration_swaps[(size_t)(setup_swaps - 1) * 2] = first;
-                    restoration_swaps[
-                            (size_t)(setup_swaps - 1) * 2 + 1] = second;
-                }
-                needed[first] = needed[second];
-                needed[second] = temporary;
-            }
+        if (swap_pair_count) {
+            /* The swap effects above replace the generic kill handling. */
         } else if (record->opcode == OP_COPY_REG_REG && record->pc &&
                    (record->pc + 1)->index < frame->number_locals &&
                    needed[(record->pc + 1)->index]) {
@@ -505,6 +784,7 @@ void rxvm_profile_record_swap_at(rxvm_profile_state *state,
     size_t i;
     int restored = 1;
     if (!state || !state->enabled) return;
+    rxvm_profile_increment(state, &state->swap_operations);
     activation = rxvm_profile_find_activation(state, frame);
     if (!activation || !activation->restoration_pending ||
             !activation->restoration_ready)
@@ -571,8 +851,7 @@ void rxvm_profile_record_swap_at(rxvm_profile_state *state,
         size_t trace_index = activation->restoration_trace_indices[i];
         if (trace_index < activation->trace_count) {
             record = &activation->trace[trace_index];
-            if (record->opcode == OP_SWAP_REG_REG)
-                record->attribution |= RXVM_PROFILE_ATTR_RESTORE_SWAP;
+            record->attribution |= RXVM_PROFILE_ATTR_RESTORE_SWAP;
         }
     }
     rxvm_profile_abandon_restoration(activation);
@@ -829,6 +1108,7 @@ void rxvm_profile_begin(rxvm_profile_state *state, int enabled,
 
     memset(state, 0, sizeof(*state));
     state->enabled = enabled != 0;
+    state->timing_enabled = context && context->profile_mode == 1;
     state->current_transition = RXVM_TRANSITION_SEQUENTIAL;
     state->instruction_activation_index = SIZE_MAX;
     state->native_procedure_id = SIZE_MAX;
@@ -841,14 +1121,16 @@ void rxvm_profile_begin(rxvm_profile_state *state, int enabled,
     else state->procedure_tracking_unavailable = 1;
     rxvm_profile_refresh_catalog(state, context);
 
-    for (i = 0; i < 1000; i++) {
-        uint64_t start = rxvm_profile_now_ns();
-        uint64_t end = rxvm_profile_now_ns();
-        uint64_t elapsed = rxvm_profile_elapsed(start, end);
-        if (!elapsed) {
-            state->timer_zero_deltas++;
-        } else if (elapsed < minimum) {
-            minimum = elapsed;
+    if (state->timing_enabled) {
+        for (i = 0; i < 1000; i++) {
+            uint64_t start = rxvm_profile_now_ns();
+            uint64_t end = rxvm_profile_now_ns();
+            uint64_t elapsed = rxvm_profile_elapsed(start, end);
+            if (!elapsed) {
+                state->timer_zero_deltas++;
+            } else if (elapsed < minimum) {
+                minimum = elapsed;
+            }
         }
     }
     state->timer_read_min_ns = minimum == UINT64_MAX ? 0 : minimum;
@@ -873,15 +1155,19 @@ void rxvm_profile_destroy(rxvm_profile_state *state) {
     }
     free(state->activations);
     free(state->call_rows);
+    free(state->branch_rows);
     state->procedures = 0;
     state->activations = 0;
     state->call_rows = 0;
+    state->branch_rows = 0;
     state->procedure_count = 0;
     state->procedure_capacity = 0;
     state->activation_count = 0;
     state->activation_capacity = 0;
     state->call_row_count = 0;
     state->call_row_capacity = 0;
+    state->branch_row_count = 0;
+    state->branch_row_capacity = 0;
     if (rxvm_active_allocation_profile == state)
         rxvm_active_allocation_profile = state->previous_allocation_profile;
     state->previous_allocation_profile = 0;
@@ -1083,6 +1369,78 @@ static void rxvm_profile_write_named_count_csv_row(
     fputc('\n', out);
 }
 
+static const char *rxvm_profile_module_name(
+        const rxvm_profile_state *state, size_t module_id) {
+    if (state->context && module_id > 0 &&
+            module_id <= state->context->num_modules &&
+            state->context->modules[module_id - 1] &&
+            state->context->modules[module_id - 1]->name)
+        return state->context->modules[module_id - 1]->name;
+    return "";
+}
+
+static void rxvm_profile_write_status_csv_row(
+        FILE *out, const char *domain, const char *status,
+        uint64_t degraded_events) {
+    fprintf(out, "status,");
+    rxvm_profile_csv_string(out, domain);
+    fputc(',', out);
+    rxvm_profile_csv_string(out, status);
+    fprintf(out, ",,%" PRIu64 ",0,0,0,0,0,,,,,,,,,,,,,,", degraded_events);
+    rxvm_profile_csv_string(out, status);
+    fputc('\n', out);
+}
+
+static void rxvm_profile_write_value_csv_row(
+        FILE *out, const char *operation, const char *shape,
+        const rxvm_profile_allocation_counter *counter,
+        const char *status) {
+    int i;
+    fprintf(out, "value_operation,");
+    rxvm_profile_csv_string(out, operation);
+    fputc(',', out);
+    rxvm_profile_csv_string(out, shape);
+    fprintf(out, ",,%" PRIu64 ",0,0,0,0,0", counter->count);
+    for (i = 0; i < 10; i++) fputc(',', out);
+    fprintf(out, ",%" PRIu64 ",%" PRIu64 ",,",
+            counter->bytes, counter->max_bytes);
+    rxvm_profile_csv_string(out, status);
+    fputc('\n', out);
+}
+
+static void rxvm_profile_write_frame_phase_csv_row(
+        FILE *out, const char *phase, const char *source,
+        const rxvm_profile_counter *counter, uint64_t units,
+        const char *status) {
+    fprintf(out, "frame_entry,");
+    rxvm_profile_csv_string(out, phase);
+    fputc(',', out);
+    rxvm_profile_csv_string(out, source);
+    fprintf(out, ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64
+                 ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,,,,,",
+            units, counter->count, counter->total_ns,
+            rxvm_profile_average(counter), counter->min_ns,
+            counter->max_ns);
+    rxvm_profile_csv_string(out, status);
+    fputc('\n', out);
+}
+
+static void rxvm_profile_write_branch_csv_row(
+        FILE *out, const rxvm_profile_state *state,
+        const rxvm_profile_branch_row *row,
+        const Instruction *instruction_map, const char *status) {
+    fprintf(out, "branch,");
+    rxvm_profile_csv_string(out, instruction_map[row->opcode].instruction);
+    fprintf(out, ",,%zu,%" PRIu64 ",0,0,0,0,0,%" PRIu64
+                 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",",
+            row->instruction_index, row->executions, row->taken,
+            row->fallthrough, row->backward, row->cross_module);
+    rxvm_profile_csv_string(out, rxvm_profile_module_name(state, row->module_id));
+    fprintf(out, ",branch_site,,,,,,,,");
+    rxvm_profile_csv_string(out, status);
+    fputc('\n', out);
+}
+
 static const char *rxvm_profile_call_target(
         const rxvm_profile_state *state,
         const rxvm_profile_call_row *row) {
@@ -1144,8 +1502,10 @@ static void rxvm_profile_write_csv(FILE *out,
     int i;
 
     fprintf(out, "section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status\n");
-    fprintf(out, "summary,schema_version,4,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
+    fprintf(out, "summary,schema_version,5,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
     fprintf(out, "summary,vm_mode,%s,,0,0,0,0,0,0,,,,,,,,,,,,,,\n", vm_mode);
+    fprintf(out, "summary,profile_mode,%s,,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
+            state->timing_enabled ? "timing" : "counts");
     fprintf(out, "summary,result,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n", result);
     fprintf(out, "summary,timer_read_min_ns,%" PRIu64 ",,1,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,,,,,\n",
             state->timer_read_min_ns,
@@ -1164,6 +1524,39 @@ static void rxvm_profile_write_csv(FILE *out,
     fprintf(out, "summary,allocation_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
     fprintf(out, "summary,census_tracking_unavailable,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->census_tracking_unavailable);
+    fprintf(out, "summary,branch_tracking_unavailable,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
+            state->branch_tracking_unavailable);
+
+    rxvm_profile_write_status_csv_row(
+            out, "instructions", rxvm_profile_counter_status(state),
+            state->overflowed ? 1 : 0);
+    rxvm_profile_write_status_csv_row(
+            out, "procedures",
+            state->overflowed || state->procedure_tracking_unavailable
+                    ? "degraded" : "complete",
+            (uint64_t)(state->overflowed != 0) +
+                    (uint64_t)(state->procedure_tracking_unavailable != 0));
+    rxvm_profile_write_status_csv_row(
+            out, "allocations",
+            state->overflowed || state->active_frames
+                    ? "degraded" : "complete",
+            (uint64_t)(state->overflowed != 0) + state->active_frames);
+    rxvm_profile_write_status_csv_row(
+            out, "call_census", rxvm_profile_census_status(state),
+            (uint64_t)(state->overflowed != 0) +
+                    (uint64_t)(state->census_tracking_unavailable != 0));
+    rxvm_profile_write_status_csv_row(
+            out, "frame_entry", rxvm_profile_counter_status(state),
+            state->overflowed ? 1 : 0);
+    rxvm_profile_write_status_csv_row(
+            out, "value_operations", rxvm_profile_counter_status(state),
+            state->overflowed ? 1 : 0);
+    rxvm_profile_write_status_csv_row(
+            out, "branch_sites",
+            state->overflowed || state->branch_tracking_unavailable
+                    ? "degraded" : "complete",
+            (uint64_t)(state->overflowed != 0) +
+                    (uint64_t)(state->branch_tracking_unavailable != 0));
 
     rxvm_profile_sort_instruction_indices(state, indices, &used);
     for (position = 0; position < used; position++) {
@@ -1279,6 +1672,43 @@ static void rxvm_profile_write_csv(FILE *out,
             out, "frame_reuses", state->frame_reuses, 0, 0, 0,
             rxvm_profile_counter_status(state));
 
+    for (i = 0; i < RXVM_PROFILE_VALUE_OPERATION_COUNT; i++) {
+        int shape;
+        for (shape = 0; shape < RXVM_PROFILE_VALUE_SHAPE_COUNT; shape++) {
+            const rxvm_profile_allocation_counter *counter =
+                    &state->value_operations[i][shape];
+            if (!counter->count) continue;
+            rxvm_profile_write_value_csv_row(
+                    out, rxvm_profile_value_operation_names[i],
+                    rxvm_profile_value_shape_names[shape], counter,
+                    rxvm_profile_counter_status(state));
+        }
+    }
+    for (i = 0; i < RXVM_PROFILE_FRAME_PHASE_COUNT; i++) {
+        int source;
+        for (source = 0; source < RXVM_PROFILE_FRAME_SOURCE_COUNT; source++) {
+            const rxvm_profile_counter *counter =
+                    &state->frame_phases[i][source];
+            if (!counter->count) continue;
+            rxvm_profile_write_frame_phase_csv_row(
+                    out, rxvm_profile_frame_phase_names[i],
+                    rxvm_profile_frame_source_names[source], counter,
+                    state->frame_phase_units[i][source],
+                    rxvm_profile_counter_status(state));
+        }
+    }
+    {
+        size_t branch_index;
+        const char *branch_status =
+                state->overflowed || state->branch_tracking_unavailable
+                        ? "degraded" : "complete";
+        for (branch_index = 0; branch_index < state->branch_row_count;
+             branch_index++)
+            rxvm_profile_write_branch_csv_row(
+                    out, state, &state->branch_rows[branch_index],
+                    instruction_map, branch_status);
+    }
+
     for (i = 0; i < RXVM_PROFILE_CALL_PATH_COUNT; i++)
         rxvm_profile_write_named_count_csv_row(
                 out, "census", "call_path",
@@ -1363,8 +1793,7 @@ static void rxvm_profile_write_csv(FILE *out,
                     rxvm_profile_census_status(state));
     }
     {
-        uint64_t swap_total =
-                state->instructions[OP_SWAP_REG_REG].count;
+        uint64_t swap_total = state->swap_operations;
         uint64_t copy_total =
                 state->instructions[OP_COPY_REG_REG].count;
         uint64_t classified_swaps = state->setup_swaps;
@@ -1451,8 +1880,9 @@ static void rxvm_profile_write_table(FILE *out,
 
     fprintf(out, "\nVM PROFILE (%s) result=%d\n", vm_mode, result);
     fprintf(out,
-            "Clock: monotonic wall time; raw instrumented timings; minimum positive adjacent timer read=%" PRIu64
+            "Mode: %s; clock: monotonic wall time; raw instrumented timings; minimum positive adjacent timer read=%" PRIu64
             " ns; zero calibration deltas=%" PRIu64 "/1000\n",
+            state->timing_enabled ? "timing" : "counts (timing fields zero)",
             state->timer_read_min_ns, state->timer_zero_deltas);
     fprintf(out,
             "Hot-loop interrupt polls=%" PRIu64 "; invalid events=%" PRIu64
@@ -1586,6 +2016,60 @@ static void rxvm_profile_write_table(FILE *out,
     fprintf(out, "%-30s %12" PRIu64 " %16s %16s %16s\n",
             "frame_reuses", state->frame_reuses, "-", "-", "-");
 
+    fprintf(out, "\nValue operations (payload bytes; nested helper calls are separate rows)\n");
+    fprintf(out, "%-22s %-12s %12s %16s %16s\n",
+            "operation", "shape", "count", "payload bytes", "max payload");
+    for (i = 0; i < RXVM_PROFILE_VALUE_OPERATION_COUNT; i++) {
+        int shape;
+        for (shape = 0; shape < RXVM_PROFILE_VALUE_SHAPE_COUNT; shape++) {
+            const rxvm_profile_allocation_counter *counter =
+                    &state->value_operations[i][shape];
+            if (!counter->count) continue;
+            fprintf(out, "%-22s %-12s %12" PRIu64 " %16" PRIu64
+                         " %16" PRIu64 "\n",
+                    rxvm_profile_value_operation_names[i],
+                    rxvm_profile_value_shape_names[shape], counter->count,
+                    counter->bytes, counter->max_bytes);
+        }
+    }
+
+    fprintf(out, "\nFrame-entry phases (units are registers or phase events)\n");
+    fprintf(out, "%-24s %-8s %10s %12s %16s %14s\n",
+            "phase", "source", "entries", "units", "total ns", "average ns");
+    for (i = 0; i < RXVM_PROFILE_FRAME_PHASE_COUNT; i++) {
+        int source;
+        for (source = 0; source < RXVM_PROFILE_FRAME_SOURCE_COUNT; source++) {
+            const rxvm_profile_counter *counter =
+                    &state->frame_phases[i][source];
+            if (!counter->count) continue;
+            fprintf(out, "%-24s %-8s %10" PRIu64 " %12" PRIu64
+                         " %16" PRIu64 " %14" PRIu64 "\n",
+                    rxvm_profile_frame_phase_names[i],
+                    rxvm_profile_frame_source_names[source], counter->count,
+                    state->frame_phase_units[i][source], counter->total_ns,
+                    rxvm_profile_average(counter));
+        }
+    }
+
+    fprintf(out, "\nBranch sites (backward means taken to same-module index <= site)\n");
+    fprintf(out, "%-26s %10s %10s %10s %10s %10s %s\n",
+            "opcode", "site", "exec", "taken", "fallthru", "backward",
+            "module");
+    {
+        size_t branch_index;
+        for (branch_index = 0; branch_index < state->branch_row_count;
+             branch_index++) {
+            const rxvm_profile_branch_row *row =
+                    &state->branch_rows[branch_index];
+            fprintf(out, "%-26s %10zu %10" PRIu64 " %10" PRIu64
+                         " %10" PRIu64 " %10" PRIu64 " %s\n",
+                    instruction_map[row->opcode].instruction,
+                    row->instruction_index, row->executions, row->taken,
+                    row->fallthrough, row->backward,
+                    rxvm_profile_module_name(state, row->module_id));
+        }
+    }
+
     fprintf(out, "\nCall-path census (dynamic observations; zero categories retained in CSV)\n");
     fprintf(out, "%-30s %12s\n", "call path", "attempts");
     for (i = 0; i < RXVM_PROFILE_CALL_PATH_COUNT; i++)
@@ -1655,7 +2139,7 @@ static void rxvm_profile_write_table(FILE *out,
                 state->dynamic_resolution[i][RXVM_PROFILE_DYNAMIC_FAILURE]);
 
     {
-        uint64_t swap_total = state->instructions[OP_SWAP_REG_REG].count;
+        uint64_t swap_total = state->swap_operations;
         uint64_t copy_total = state->instructions[OP_COPY_REG_REG].count;
         uint64_t classified_swaps = state->setup_swaps;
         uint64_t unclassified_swaps;

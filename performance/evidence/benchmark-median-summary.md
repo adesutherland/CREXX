@@ -1,7 +1,8 @@
 # Benchmark median summary
 
-Status: live comparison index; qualification pilots, historical evidence and
-the 2026-07-20 NR-10 formal absolute baseline
+Status: live comparison index; qualification pilots, historical evidence,
+the 2026-07-20 NR-10 formal absolute baseline and the accepted 2026-07-23
+PERF2-01 Gate A same-session selection baseline
 
 This master table gives one row per dated evidence bundle and benchmark/run.
 Platform cells are `median (recorded sample count)`. Process-time rows are in
@@ -20,6 +21,12 @@ bundle's scope or no valid observation exists.
 
 | Date / evidence run | Benchmark / run | Metric | CREXX | ooRexx | Regina | NetRexx |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
+| 2026-07-23 / PERF2-01 same-session | Sieve | work/s | 5,100 / 3,860 (10) | 713 (10) | — | 2,730 (10) |
+| 2026-07-23 / PERF2-01 same-session | Permute | work/s | 675 / 633 (10) | 315 (10) | — | 4,420 (10) |
+| 2026-07-23 / PERF2-01 same-session | Bounce | work/s | 330 / 316 (10) | 994 (10) | — | 1,990 (10) |
+| 2026-07-23 / PERF2-01 same-session | Richards | work/s | 1.74 / 1.71 (10) | 11.4 (10) | — | 18.0 (20) |
+| 2026-07-23 / PERF2-01 same-session | Base64 | work/s | 1,540 / 1,640 (20) | 2,120 (10) | — | 1,830 (10) |
+| 2026-07-23 / PERF2-01 same-session | RexxCPS 2.2d / disclosed versus canonical | native MCPS | 29.4 / 27.1 (10) | 40.1 (10) | 33.3 (10) | 49.3 (10)††† |
 | 2026-07-15 / seed portfolio | Sieve / 50 repetitions | process ms | 24.3 (10) | — | — | — |
 | 2026-07-15 / seed portfolio | Permute / 50 repetitions | process ms | 99.8 (10) | — | — | — |
 | 2026-07-15 / seed portfolio | Mandelbrot / size 500 | process ms | 186 (10) | — | — | — |
@@ -84,6 +91,16 @@ N=5 geometric means and all separate lifecycle, RSS, artifact and control
 results are in
 `2026-07-20-nr-10-formal-baseline/scorecard.md`.
 
+The PERF2-01 CREXX cells also show `rxvm / rxbvm`. Its current same-session
+five-workload geometric means versus ooRexx are 0.892218 and 0.833885. Sieve
+and Permute exceed 1.50x in both VMs; Base64 remains the closest deficit and
+Bounce/Richards the largest. The separately disclosed cREXX RexxCPS 2.2d
+ratios to canonical ooRexx Classic 2.2 are 0.732569 and 0.677217. Base64 remains
+labelled noisy after its one governed append, and NetRexx Richards remains
+labelled noisy after its append; all correctness-passing samples remain. Full
+comparability labels and attribution are in
+`2026-07-23-perf2-01-current-baseline/10-dossiers/workload-dossiers.md`.
+
 † NetRexx Mandelbrot has a disclosed timed arithmetic-XOR/padding adaptation;
 its aggregate equivalence review remains open.
 
@@ -105,6 +122,10 @@ own their targets. It remains a disclosed adaptation pending aggregate review.
 †† JSON timings are native-surface diagnostics, not a common score. cREXX uses
 the string/path `rxjson` API, ooRexx builds its supplied DOM and NetRexx builds
 Java collections.
+
+††† The cREXX row is the disclosed 2.2d Level B adaptation, ooRexx and Regina
+use canonical Classic 2.2, and NetRexx uses its disclosed 2.2n adaptation.
+These rates are visible together but are not a common-portfolio aggregate.
 
 ## Inclusion and outlier policy
 
@@ -156,6 +177,9 @@ later established, add its sample id and reason here before changing the table.
   complete-product comparisons
 - `2026-07-20-nr-10-formal-baseline/` for the formal normalized-throughput,
   RexxCPS, lifecycle, peak-RSS, artifact and labelled native-C control evidence
+- `2026-07-23-perf2-01-current-baseline/` for the current same-session common
+  matrix, separately disclosed RexxCPS results, schema-5 attribution, native
+  samples, allocation profiles and workload dossiers
 
 Do not combine rows from different dates/bundles into one median. Add a new row
 for each future benchmark/run so environment drift remains visible.

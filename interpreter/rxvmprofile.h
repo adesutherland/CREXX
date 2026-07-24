@@ -120,6 +120,12 @@ typedef enum rxvm_profile_dynamic_outcome {
     RXVM_PROFILE_DYNAMIC_OUTCOME_COUNT
 } rxvm_profile_dynamic_outcome;
 
+typedef enum rxvm_profile_trace_attribution {
+    RXVM_PROFILE_ATTR_SETUP_SWAP = 1u,
+    RXVM_PROFILE_ATTR_RESTORE_SWAP = 2u,
+    RXVM_PROFILE_ATTR_ARGUMENT_COPY = 4u
+} rxvm_profile_trace_attribution;
+
 typedef struct rxvm_profile_trace_record {
     int opcode;
     const bin_code *pc;
@@ -187,17 +193,77 @@ typedef struct rxvm_profile_allocation_counter {
     uint64_t max_bytes;
 } rxvm_profile_allocation_counter;
 
+typedef enum rxvm_profile_value_operation {
+    RXVM_PROFILE_VALUE_COPY = 0,
+    RXVM_PROFILE_VALUE_STRING_COPY,
+    RXVM_PROFILE_VALUE_BINARY_COPY,
+    RXVM_PROFILE_VALUE_DECIMAL_COPY,
+    RXVM_PROFILE_VALUE_INTEGER_COPY,
+    RXVM_PROFILE_VALUE_FLOAT_COPY,
+    RXVM_PROFILE_VALUE_STATUS_COPY,
+    RXVM_PROFILE_VALUE_MOVE,
+    RXVM_PROFILE_VALUE_CLEAR_CONTENTS,
+    RXVM_PROFILE_VALUE_RESET_REUSE,
+    RXVM_PROFILE_VALUE_DESTROY,
+    RXVM_PROFILE_VALUE_CLEAR,
+    RXVM_PROFILE_VALUE_OPERATION_COUNT
+} rxvm_profile_value_operation;
+
+typedef enum rxvm_profile_value_shape {
+    RXVM_PROFILE_VALUE_EMPTY = 0,
+    RXVM_PROFILE_VALUE_SCALAR,
+    RXVM_PROFILE_VALUE_STRING,
+    RXVM_PROFILE_VALUE_BINARY,
+    RXVM_PROFILE_VALUE_DECIMAL,
+    RXVM_PROFILE_VALUE_REFERENCE,
+    RXVM_PROFILE_VALUE_OBJECT,
+    RXVM_PROFILE_VALUE_NATIVE,
+    RXVM_PROFILE_VALUE_COMPOUND,
+    RXVM_PROFILE_VALUE_SHAPE_COUNT
+} rxvm_profile_value_shape;
+
+typedef enum rxvm_profile_frame_phase {
+    RXVM_PROFILE_FRAME_LOCAL_RELINK = 0,
+    RXVM_PROFILE_FRAME_GLOBAL_RELINK,
+    RXVM_PROFILE_FRAME_ARGUMENT_COUNT_RESET,
+    RXVM_PROFILE_FRAME_INHERITED_CONTEXT,
+    RXVM_PROFILE_FRAME_ROOT_CONTEXT,
+    RXVM_PROFILE_FRAME_FINALIZE,
+    RXVM_PROFILE_FRAME_PHASE_COUNT
+} rxvm_profile_frame_phase;
+
+typedef enum rxvm_profile_frame_source {
+    RXVM_PROFILE_FRAME_SOURCE_FRESH = 0,
+    RXVM_PROFILE_FRAME_SOURCE_REUSED,
+    RXVM_PROFILE_FRAME_SOURCE_COUNT
+} rxvm_profile_frame_source;
+
+typedef struct rxvm_profile_branch_row {
+    size_t module_id;
+    size_t instruction_index;
+    int opcode;
+    uint64_t executions;
+    uint64_t taken;
+    uint64_t fallthrough;
+    uint64_t backward;
+    uint64_t cross_module;
+} rxvm_profile_branch_row;
+
 typedef struct rxvm_profile_state {
     int enabled;
+    int timing_enabled;
     int overflowed;
     int procedure_tracking_unavailable;
     int census_tracking_unavailable;
+    int branch_tracking_unavailable;
     uint64_t invalid_events;
     uint64_t timer_read_min_ns;
     uint64_t timer_zero_deltas;
 
     int instruction_active;
     int active_opcode;
+    size_t active_module_id;
+    size_t active_instruction_index;
     uint64_t instruction_start_ns;
     size_t instruction_activation_index;
     uint64_t native_elapsed_in_instruction;
@@ -240,6 +306,18 @@ typedef struct rxvm_profile_state {
     int last_frame_disposition_valid;
     rxvm_profile_frame_disposition last_frame_disposition;
 
+    rxvm_profile_allocation_counter
+            value_operations[RXVM_PROFILE_VALUE_OPERATION_COUNT]
+                            [RXVM_PROFILE_VALUE_SHAPE_COUNT];
+    rxvm_profile_counter
+            frame_phases[RXVM_PROFILE_FRAME_PHASE_COUNT]
+                        [RXVM_PROFILE_FRAME_SOURCE_COUNT];
+    uint64_t frame_phase_units[RXVM_PROFILE_FRAME_PHASE_COUNT]
+                              [RXVM_PROFILE_FRAME_SOURCE_COUNT];
+    rxvm_profile_branch_row *branch_rows;
+    size_t branch_row_count;
+    size_t branch_row_capacity;
+
     struct rxvm_context *context;
     rxvm_profile_call_row *call_rows;
     size_t call_row_count;
@@ -253,6 +331,7 @@ typedef struct rxvm_profile_state {
                                [RXVM_PROFILE_DYNAMIC_OUTCOME_COUNT];
     uint64_t setup_swaps;
     uint64_t normal_restoration_swaps;
+    uint64_t swap_operations;
     uint64_t defensive_argument_copies;
     uint64_t attribution_degraded;
     uint64_t signal_unwind_events;
@@ -289,6 +368,19 @@ void rxvm_profile_record_allocation(rxvm_profile_allocation_kind kind,
 void rxvm_profile_record_frame_activation(int reused, size_t frame_bytes,
                                           size_t value_slots);
 void rxvm_profile_record_frame_release(void);
+void rxvm_profile_record_value_operation(rxvm_profile_value_operation operation,
+                                         const value *payload);
+void rxvm_profile_record_value_typed(rxvm_profile_value_operation operation,
+                                    rxvm_profile_value_shape shape,
+                                    size_t bytes);
+uint64_t rxvm_profile_frame_phase_begin(void);
+void rxvm_profile_record_frame_phase(rxvm_profile_frame_phase phase,
+                                     int reused, uint64_t start_ns,
+                                     size_t units);
+void rxvm_profile_record_branch_at(rxvm_profile_state *state,
+                                   size_t target_module_id,
+                                   size_t target_instruction_index,
+                                   rxvm_transition_reason reason);
 void rxvm_profile_trace_instruction_at(rxvm_profile_state *state,
                                        const void *frame,
                                        const bin_code *pc,
@@ -329,6 +421,11 @@ void rxvm_profile_record_signal_native_restore_at(rxvm_profile_state *state,
 RXVM_PROFILE_INLINE uint64_t rxvm_profile_elapsed(uint64_t start_ns,
                                                   uint64_t end_ns) {
     return end_ns >= start_ns ? end_ns - start_ns : 0;
+}
+
+RXVM_PROFILE_INLINE uint64_t rxvm_profile_timestamp(
+        const rxvm_profile_state *state) {
+    return state && state->timing_enabled ? rxvm_profile_now_ns() : 0;
 }
 
 RXVM_PROFILE_INLINE void rxvm_profile_increment(rxvm_profile_state *state,
@@ -599,9 +696,9 @@ RXVM_PROFILE_INLINE void rxvm_profile_close_top_at(
     }
 }
 
-RXVM_PROFILE_INLINE void rxvm_profile_instruction_begin_at(rxvm_profile_state *state,
-                                                           int opcode,
-                                                           uint64_t now_ns) {
+RXVM_PROFILE_INLINE void rxvm_profile_instruction_begin_at(
+        rxvm_profile_state *state, size_t module_id, size_t instruction_index,
+        int opcode, uint64_t now_ns) {
     rxvm_profile_activation *activation;
     if (!state->enabled) return;
     rxvm_profile_finish_mechanics_at(state, now_ns);
@@ -615,6 +712,8 @@ RXVM_PROFILE_INLINE void rxvm_profile_instruction_begin_at(rxvm_profile_state *s
     }
     state->instruction_active = 1;
     state->active_opcode = opcode;
+    state->active_module_id = module_id;
+    state->active_instruction_index = instruction_index;
     state->instruction_start_ns = now_ns;
     state->native_elapsed_in_instruction = 0;
     state->instruction_activation_index = SIZE_MAX;
@@ -634,10 +733,13 @@ RXVM_PROFILE_INLINE void rxvm_profile_instruction_begin_at(rxvm_profile_state *s
 }
 
 RXVM_PROFILE_INLINE void rxvm_profile_instruction_retire_at(
-        rxvm_profile_state *state, rxvm_transition_reason reason,
+        rxvm_profile_state *state, size_t target_module_id,
+        size_t target_instruction_index, rxvm_transition_reason reason,
         uint64_t now_ns) {
     uint64_t elapsed_ns;
     if (!state->enabled || !state->instruction_active) return;
+    rxvm_profile_record_branch_at(state, target_module_id,
+                                  target_instruction_index, reason);
     elapsed_ns = rxvm_profile_elapsed(state->instruction_start_ns, now_ns);
     rxvm_profile_add_counter(state, &state->instructions[state->active_opcode],
                              elapsed_ns);

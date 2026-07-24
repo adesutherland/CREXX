@@ -1,0 +1,45 @@
+Test project /private/tmp/crexx-perf2-01-profile-build
+      Start 1028: rxseqfileformat
+ 1/17 Test #1028: rxseqfileformat ..................   Passed    0.00 sec
+      Start 1029: rxvmprofileaccounting
+ 2/17 Test #1029: rxvmprofileaccounting ............   Passed    0.00 sec
+      Start 1118: rxvmprofiletable
+ 3/17 Test #1118: rxvmprofiletable .................   Passed    0.00 sec
+      Start 1119: rxbvmprofiletable
+ 4/17 Test #1119: rxbvmprofiletable ................   Passed    0.00 sec
+      Start 1120: rxvmprofilecsv
+ 5/17 Test #1120: rxvmprofilecsv ...................   Passed    0.02 sec
+      Start 1121: rxbvmprofilecsv
+ 6/17 Test #1121: rxbvmprofilecsv ..................   Passed    0.02 sec
+      Start 1122: rxvmcallcensus
+ 7/17 Test #1122: rxvmcallcensus ...................   Passed    0.01 sec
+      Start 1123: rxbvmcallcensus
+ 8/17 Test #1123: rxbvmcallcensus ..................   Passed    0.01 sec
+      Start 1124: rxvmcallcensusselectors
+ 9/17 Test #1124: rxvmcallcensusselectors ..........   Passed    0.01 sec
+      Start 1125: rxbvmcallcensusselectors
+10/17 Test #1125: rxbvmcallcensusselectors .........   Passed    0.01 sec
+      Start 1126: rxvmcallcensussignalunwind
+11/17 Test #1126: rxvmcallcensussignalunwind .......   Passed    0.01 sec
+      Start 1127: rxbvmcallcensussignalunwind
+12/17 Test #1127: rxbvmcallcensussignalunwind ......   Passed    0.01 sec
+      Start 1128: rxvmsequence2
+13/17 Test #1128: rxvmsequence2 ....................   Passed    0.01 sec
+      Start 1129: rxbvmsequence3
+14/17 Test #1129: rxbvmsequence3 ...................   Passed    0.01 sec
+      Start 1130: rxvmsequence4
+15/17 Test #1130: rxvmsequence4 ....................   Passed    0.01 sec
+      Start 1131: rxseqmodulemismatch
+16/17 Test #1131: rxseqmodulemismatch ..............   Passed    0.01 sec
+      Start 1132: vmprofilingdocumentation
+17/17 Test #1132: vmprofilingdocumentation .........   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Label Time Summary:
+call-census    =   0.04 sec*proc (6 tests)
+interpreter    =   0.12 sec*proc (17 tests)
+profiling      =   0.12 sec*proc (17 tests)
+sequence       =   0.04 sec*proc (6 tests)
+
+Total Test time (real) =   0.14 sec

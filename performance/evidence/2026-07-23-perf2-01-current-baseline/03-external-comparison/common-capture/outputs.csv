@@ -1,0 +1,481 @@
+sample_id,stream,line_number,text
+timing-Sieve-sieve-rxvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-warmup-1,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-warmup-1,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxbvm-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-warmup-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-warmup-2,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-warmup-2,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-warmup-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-1,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-1,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxbvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-2,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-2,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-3,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-3,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-netrexx-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-4,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-4,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxvm-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-5,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-5,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxbvm-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-6,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-6,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-7,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-7,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-netrexx-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-8,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-8,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxvm-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-9,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-9,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxbvm-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-10,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-10,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Permute-permute-rxvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-warmup-1,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-warmup-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxbvm-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-warmup-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-warmup-2,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-warmup-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-warmup-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-1,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxbvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-2,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-3,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-3,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-netrexx-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-4,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-4,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxvm-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-5,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-5,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-5,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-5,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxbvm-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-6,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-6,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-6,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-6,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-7,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-7,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-7,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-7,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-netrexx-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-8,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-8,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-8,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-8,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxvm-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-9,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-9,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-9,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-9,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxbvm-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-recorded-10,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-10,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-10,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-10,stdout,2,PASS: AWFY Permute
+timing-Bounce-bounce-rxvm-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-warmup-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-warmup-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-warmup-1,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-warmup-1,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxbvm-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-warmup-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-warmup-2,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-warmup-2,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-warmup-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-1,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-1,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxbvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-2,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-2,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-3,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-3,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-3,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-3,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-netrexx-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-4,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-4,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-4,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-4,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxvm-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-5,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-5,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-5,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-5,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxbvm-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-6,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-6,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-6,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-6,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-7,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-7,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-7,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-7,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-netrexx-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-8,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-8,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-8,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-8,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxvm-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-9,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-9,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-9,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-9,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxbvm-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxbvm-recorded-10,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-oorexx-recorded-10,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-netrexx-recorded-10,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+timing-Bounce-bounce-rxvm-recorded-10,stdout,2,PASS: AWFY Bounce
+timing-Richards-richards-rxvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-warmup-1,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-warmup-1,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxbvm-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-warmup-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-warmup-2,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-warmup-2,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-warmup-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-1,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-1,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-2,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-2,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-3,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-3,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-netrexx-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-4,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-4,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-4,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-4,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxvm-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-5,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-5,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-5,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-5,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxbvm-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-6,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-6,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-6,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-6,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-7,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-7,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-7,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-7,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-netrexx-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-8,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-8,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-8,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-8,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxvm-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-9,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-9,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-9,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-9,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxbvm-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-recorded-10,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-10,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-10,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-10,stdout,2,PASS: AWFY Richards
+timing-Base64-base64-rxvm-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-warmup-1,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-warmup-1,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxbvm-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-warmup-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-warmup-2,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-warmup-2,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-warmup-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-1,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-1,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxbvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-2,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-2,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-3,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-3,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-netrexx-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-4,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-4,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-rxvm-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-5,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-5,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxbvm-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-6,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-6,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-7,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-7,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-netrexx-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-8,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-8,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-rxvm-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-9,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-9,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxbvm-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-oorexx-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-oorexx-recorded-10,stdout,2,PASS: Base64 Roundtrip ooRexx port
+timing-Base64-base64-netrexx-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-netrexx-recorded-10,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+timing-Base64-base64-rxvm-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-10,stdout,2,PASS: Base64 Roundtrip

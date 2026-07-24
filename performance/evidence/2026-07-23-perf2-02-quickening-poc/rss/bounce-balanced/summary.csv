@@ -1,0 +1,9 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+q0-rxvm,Bounce-rss-rxvm,crexx-q0,rxvm,canonical,A,no,process-peak-rss,2200,max_rss_bytes,4,17711104.000000,17760256.000000,17784832.000000,17797120.000000,17809408.000000,16384.000000,0.092123,0.552741,no
+q3b-rxvm,Bounce-rss-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,process-peak-rss,2200,max_rss_bytes,4,17842176.000000,17879040.000000,17899520.000000,17907712.000000,17907712.000000,8192.000000,0.045767,0.366133,no
+q4-rxvm,Bounce-rss-rxvm,crexx-q4,rxvm,eager-private-handler,A,no,process-peak-rss,2200,max_rss_bytes,4,17809408.000000,17821696.000000,17833984.000000,17858560.000000,17907712.000000,16384.000000,0.091870,0.551217,no
+q7-rxvm,Bounce-rss-rxvm,crexx-q7,rxvm,shared-record-core,A,no,process-peak-rss,2200,max_rss_bytes,4,17891328.000000,17903616.000000,17940480.000000,17985536.000000,18022400.000000,40960.000000,0.228311,0.730594,no
+q0-rxbvm,Bounce-rss-rxbvm,crexx-q0,rxbvm,canonical,A,no,process-peak-rss,2200,max_rss_bytes,4,17842176.000000,17842176.000000,17850368.000000,17887232.000000,17973248.000000,8192.000000,0.045893,0.734282,no
+q3b-rxbvm,Bounce-rss-rxbvm,crexx-q3b,rxbvm,same-guard-canonical-handler,A,no,process-peak-rss,2200,max_rss_bytes,4,17874944.000000,17874944.000000,17899520.000000,17936384.000000,17973248.000000,24576.000000,0.137300,0.549199,no
+q4-rxbvm,Bounce-rss-rxbvm,crexx-q4,rxbvm,eager-private-handler,A,no,process-peak-rss,2200,max_rss_bytes,4,17891328.000000,17903616.000000,17907712.000000,17920000.000000,17956864.000000,8192.000000,0.045746,0.365965,no
+q7-rxbvm,Bounce-rss-rxbvm,crexx-q7,rxbvm,shared-record-core,A,no,process-peak-rss,2200,max_rss_bytes,4,17793024.000000,17879040.000000,17924096.000000,17944576.000000,17956864.000000,24576.000000,0.137112,0.914077,no

@@ -891,6 +891,8 @@ cmake --build cmake-build-profile --config Release \
 The command-line surface is compiled into `rxvm`, `rxbvm`, and their embedded
 standard-library variants `rxvme` and `rxbvme`. Timing profiling remains off at
 runtime until `--profile`, `--profile=timing`, or `--profile-output` is passed.
+`--profile=counts` selects the same diagnostic census with clock reads disabled
+and all timing fields zero, so repeated counts-only reports are deterministic.
 By default the report is written as a human-readable table to standard error.
 Use `--profile-output file` or `--profile-output=file` to write it to a file.
 An output filename ending in `.csv`, case-insensitively, selects CSV; every
@@ -903,6 +905,7 @@ arguments continue to follow `-a`.
 rxvm --profile program.rxbin
 rxvm --profile-output profile.txt program.rxbin
 rxbvm --profile-output profile.csv program.rxbin
+rxvm --profile=counts --profile-output counts.csv program.rxbin
 ```
 
 The instruction table measures monotonic wall time from instruction entry to
@@ -980,7 +983,7 @@ profiler intentionally does not add another pair of timer reads around that
 check.
 
 CSV output retains the original columns in their original order and identifies
-the format as schema version 4. Schema 4 preserves the same 24-column header:
+the format as schema version 5. Schema 5 preserves the same 24-column header:
 
 ```text
 section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
@@ -991,7 +994,16 @@ Procedure rows use `value` to distinguish `elapsed`, `inclusive_body`, `self`,
 There are multiple metric rows per bytecode callable rather than one
 denormalized row.
 
-Schema 4 retains the schema-3 `allocation` rows and adds
+Schema 5 retains all schema-4 rows and adds explicit per-domain `status` rows,
+`value_operation` rows for whole-value/typed transfer and teardown helpers,
+`frame_entry` rows split by fresh/reused frame source, and canonical `branch`
+site rows. For a branch row, `selected`, `entries`, `resumes`, and `terminals`
+carry taken, fall-through, same-module backward-target, and cross-module-target
+counts. For a frame-entry row, `id` carries phase units. Schema-5-aware readers
+must continue to accept schema 4 and treat these new domains as unavailable
+rather than fabricating zeroes.
+
+Schema 4 retained the schema-3 `allocation` rows and added
 `census` aggregates, exact `call` rows,
 `return` placement, `dynamic` selection,
 `mechanics` attribution, and `unwind` restoration rows.

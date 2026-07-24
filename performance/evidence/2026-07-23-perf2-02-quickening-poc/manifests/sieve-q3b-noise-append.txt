@@ -1,0 +1,2 @@
+crexx-cross-runtime-matrix|1
+q3b-rxvm|Sieve-rxvm|crexx-q3b|rxvm|same-guard-canonical-handler|A|no|zero-hit-guard-append|5500|PASS: AWFY Sieve||/private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact/cmake-build-perf2-release/bin/rxvm;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/library.rxbin;-a;5500

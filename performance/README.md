@@ -1,21 +1,28 @@
 # cREXX performance workspace
 
 This is the operational home for the cREXX performance programme. It keeps the
-live roadmap, idea backlog, portfolio contract and retained evidence together
-without turning test directories into a planning system.
+live roadmap, closed initial-sweep/idea ledger, portfolio contract and retained
+evidence together without turning test directories into a planning system.
 
-The programme charter and 2026-07-15 evidence review remain in
+The original programme charter and 2026-07-15 evidence review remain in
 [`docs/planning/release-1/performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
-That dated report defines the `NR-*` activities and their exit criteria.
-[`ROADMAP.md`](ROADMAP.md) is the live status overlay and the one place to
-capture ideas that otherwise risk being lost.
+The initial `NR-*` sweep and its evidence ledger are closed in
+[`ROADMAP-INITIAL-SWEEP-2026-07-23.md`](ROADMAP-INITIAL-SWEEP-2026-07-23.md).
+[`ROADMAP.md`](ROADMAP.md) is the live successor programme: current profiling,
+semantic quickening, flow-aware inlining, core Level B BIFs, RXAS/VM work,
+capability decisions and per-benchmark ooRexx closure.
 
 ## Directory map
 
 | Location | Purpose |
 | --- | --- |
-| `performance/ROADMAP.md` | P0/P1 status, work notes, decisions and idea ledger |
+| `performance/ROADMAP.md` | Live second-programme priorities, dependencies, gates and per-benchmark outcome plan |
+| `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
+| `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
+| `performance/PERF2-01-HANDOVER-PROMPT.md` | Paste-ready new-session prompt for the first successor-roadmap activity |
+| `performance/PERF2-02-HANDOVER-PROMPT.md` | Paste-ready Ultra-session prompt for quickening architecture and the bounded reference/value placement PoC |
 | `performance/PERFORMANCE-GOVERNANCE.md` | Normative portfolio, sampling, aggregation, regression and claim policy |
+| `performance/rexxcps-runtime-source-review-2026-07-22.md` | Dated Regina/ooRexx/NetRexx mechanism review, with current-status addendum |
 | `performance/templates/performance-scorecard.md` | Standard publication structure |
 | `performance/manifests/` | Versioned exact-image manifests, including the NR-03 proof set and NR-05 22-image call census |
 | `performance/portfolio/manifest.md` | Versioned seed workload and measurement contract |
@@ -174,18 +181,18 @@ cmake-build-release/bin/crexx performance/tools/run_cross_runtime.crexx \
 5. Repeat the same correctness and unprofiled measurements, then update the
    roadmap with the result, including a neutral or negative result.
 
-`NR-01` began with the five-workload seed bundle under
+The closed initial sweep began with the five-workload seed bundle under
 `performance/evidence/2026-07-15-seed-portfolio/` and is now complete. The
 approved portfolio, serial correctness-gated raw capture, machine/build
 provenance and separate steady-state/lifecycle reports are proved by the NR-10
 formal bundle; the NR-11 governance and scorecard define future publication.
 
-Cross-runtime work is deliberately staged rather than deferred to one final
-comparison: NR-01 fills the workload coverage matrix; NR-02 ports, qualifies
-and runs the selected portfolio on CREXX, ooRexx and NetRexx (starting with
-RexxCPS), with Regina limited to RexxCPS; and NR-10 records formal same-host
-results as each workload becomes comparison-ready. See
-`portfolio/cross-runtime-plan.md`.
+The successor roadmap starts with a clean current-HEAD profiling and
+same-session comparison refresh. Cross-runtime work remains staged: qualify
+equal work first, keep Regina limited to RexxCPS, preserve non-comparable cells
+as diagnostics, and add each repaired capability/equivalence cell to the
+governed score only when it passes the portfolio contract. See
+`portfolio/cross-runtime-plan.md` and `ROADMAP.md`.
 
 ## Technical pointers
 
