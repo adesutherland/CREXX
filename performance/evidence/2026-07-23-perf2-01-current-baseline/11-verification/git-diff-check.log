@@ -1,0 +1,2 @@
+PASS: tracked git diff --check
+PASS: new maintained text files have no whitespace errors

@@ -37,8 +37,8 @@ if(NOT csv_content MATCHES
         "^section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args")
     message(FATAL_ERROR "documented timing CSV header changed")
 endif()
-if(NOT csv_content MATCHES "summary,schema_version,4")
-    message(FATAL_ERROR "documented timing CSV is not schema version 4")
+if(NOT csv_content MATCHES "summary,schema_version,5")
+    message(FATAL_ERROR "documented timing CSV is not schema version 5")
 endif()
 if(NOT csv_content MATCHES
         "procedure,\"profiling_demo.worker\",\"elapsed\",,2,.*procedure,\"profiling_demo.worker\",\"entry_overhead\"")

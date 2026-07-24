@@ -24,7 +24,7 @@ function(require_row pattern description)
     endif()
 endfunction()
 
-require_row("summary,schema_version,4" "schema version 4")
+require_row("summary,schema_version,5" "schema version 5")
 require_row("summary,census_tracking_unavailable,0" "complete census tracking")
 if(csv MATCHES ",degraded(\r?\n|$)")
     message(FATAL_ERROR "${CASE}: degraded census row was emitted")

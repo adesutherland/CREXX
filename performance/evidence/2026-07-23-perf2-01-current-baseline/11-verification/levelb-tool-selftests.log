@@ -1,0 +1,12 @@
+[run_cross_runtime_matrix]
+PASS: compact cross-runtime matrix tool self-test
+[run_evidence_bundle]
+PASS: NR-03 evidence tool self-test
+[summarize_perf2_profiles]
+PASS: PERF2 profile summarizer self-test
+[summarize_perf2_artifacts]
+PASS: PERF2 artifact summarizer self-test
+[build_perf2_gap_ledger]
+PASS: PERF2 gap-ledger self-test
+[inventory_performance_artifacts]
+PASS: performance artifact inventory self-test

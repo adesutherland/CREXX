@@ -1,0 +1,2 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+q3b-rxvm,Sieve-rxvm,crexx-q3b,rxvm,same-guard-canonical-handler,A,no,zero-hit-guard-append,5500,elapsed_ns,10,1071267000.000000,1081487000.000000,1089353000.000000,1093497750.000000,1097979000.000000,6438500.000000,0.591039,2.452098,no

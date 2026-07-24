@@ -61,6 +61,8 @@ static void help() {
 #endif
 #ifdef CREXX_VM_PROFILING
             "  --profile       Print VM instruction/transition timing profile\n"
+            "  --profile=counts\n"
+            "                  Print deterministic counts with timing fields zero\n"
             "  --profile-output file\n"
             "                  Write profile to file (.csv selects CSV format)\n"
             "  --sequence-count N\n"
@@ -174,12 +176,16 @@ int main(int argc, char *argv[]) {
             context.profile_mode = 1;
             continue;
         }
+        if (strcmp(argv[i], "--profile=counts") == 0) {
+            context.profile_mode = 2;
+            continue;
+        }
         if (strcmp(argv[i], "--profile-output") == 0) {
             i++;
             if (i >= argc || !argv[i][0]) {
                 error_and_exit("Missing filename after --profile-output");
             }
-            context.profile_mode = 1;
+            if (!context.profile_mode) context.profile_mode = 1;
             context.profile_output = argv[i];
             continue;
         }
@@ -187,12 +193,12 @@ int main(int argc, char *argv[]) {
             if (!argv[i][17]) {
                 error_and_exit("Missing filename after --profile-output=");
             }
-            context.profile_mode = 1;
+            if (!context.profile_mode) context.profile_mode = 1;
             context.profile_output = argv[i] + 17;
             continue;
         }
         if (strncmp(argv[i], "--profile=", 10) == 0) {
-            error_and_exit("Invalid profile mode (expected timing)");
+            error_and_exit("Invalid profile mode (expected timing or counts)");
         }
 #endif
         if (strlen(argv[i]) > 2) {

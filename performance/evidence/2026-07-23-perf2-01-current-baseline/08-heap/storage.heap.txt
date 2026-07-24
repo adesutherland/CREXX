@@ -1,0 +1,326 @@
+Process:         rxvm [41420]
+Path:            /private/tmp/*/rxvm
+Load Address:    0x100744000
+Identifier:      rxvm
+Version:         0
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  zsh [41132]
+Target Type:     live task
+
+Date/Time:       2026-07-23 19:44:18.599 +0100
+Launch Time:     2026-07-23 19:44:18.594 +0100
+OS Version:      macOS 26.5.2 (25F84)
+Report Version:  7
+Analysis Tool:   /usr/bin/heap
+
+Physical footprint:         44.8M
+Physical footprint (peak):  44.8M
+Idle exit:                  untracked
+----
+
+Process 41420: 1 zone
+
+All zones: 61052 nodes malloced - Sizes: 2480KB[1] 240KB[2] 160KB[2] 144KB[6] 80KB[4] 64KB[6] 48KB[3] 32KB[2] 28KB[3] 24KB[4] 20KB[2] 16KB[10] 12KB[6] 10KB[5] 8KB[8] 7KB[4] 6KB[12] 5KB[11] 4KB[316] 3.5KB[9] 3KB[18] 2.5KB[13] 2KB[14190] 1.75KB[19] 1.5KB[11] 1.25KB[25] 1KB[18] 896[14] 768[24] 640[27] 512[11] 448[14] 384[22] 320[19] 256[75] 224[148] 192[36] 160[208] 128[956] 112[69] 96[23] 80[70] 64[42704] 48[707] 32[594] 16[621] 
+
+Found:  163 ObjC classes  49 Swift classes  66 CFTypes
+Derived 53 type names for non-objects from allocation backtraces
+
+-----------------------------------------------------------------------
+All zones: 61052 nodes (39594384 bytes)
+
+   COUNT      BYTES       AVG   CLASS_NAME                                        TYPE    BINARY
+   =====      =====       ===   ==========                                        ====    ======
+   42495    2719680      64.0   malloc in copy_value                              C       rxvm
+     616      78848     128.0   malloc in copy_value                              C       rxvm
+   14158   28995584    2048.0   malloc in copy_value                              C       rxvm
+     308    1261568    4096.0   malloc in copy_value                              C       rxvm
+     589      28272      48.0   malloc in rxvm_link_module                        C       rxvm
+      28       7168     256.0   malloc in rxvm_link_module                        C       rxvm
+     283       4528      16.0   calloc in prep_and_link_module                    C       rxvm
+       3         96      32.0   calloc in prep_and_link_module                    C       rxvm
+       1         48      48.0   calloc in prep_and_link_module                    C       rxvm
+      97       6208      64.0   calloc in prep_and_link_module                    C       rxvm
+       1         80      80.0   calloc in prep_and_link_module                    C       rxvm
+      18       2016     112.0   calloc in prep_and_link_module                    C       rxvm
+       8       1536     192.0   calloc in prep_and_link_module                    C       rxvm
+       1        224     224.0   calloc in prep_and_link_module                    C       rxvm
+       2        640     320.0   calloc in prep_and_link_module                    C       rxvm
+       4       1536     384.0   calloc in prep_and_link_module                    C       rxvm
+       3       1344     448.0   calloc in prep_and_link_module                    C       rxvm
+       1        640     640.0   calloc in prep_and_link_module                    C       rxvm
+       1        768     768.0   calloc in prep_and_link_module                    C       rxvm
+       1       1024    1024.0   calloc in prep_and_link_module                    C       rxvm
+       4       5120    1280.0   calloc in prep_and_link_module                    C       rxvm
+       1       1536    1536.0   calloc in prep_and_link_module                    C       rxvm
+       2       4096    2048.0   calloc in prep_and_link_module                    C       rxvm
+       1       7168    7168.0   calloc in prep_and_link_module                    C       rxvm
+       1      10240   10240.0   calloc in prep_and_link_module                    C       rxvm
+     412      13184      32.0   Class.data (class_rw_t)                           C       libobjc.A.dylib
+     276       4416      16.0   malloc in rxbin007_section_text                   C       rxvm
+      10        320      32.0   malloc in rxbin007_section_text                   C       rxvm
+       2        160      80.0   malloc in rxbin007_section_text                   C       rxvm
+       1         48      48.0   malloc in run                                     C       rxvm
+      30       1920      64.0   malloc in run                                     C       rxvm
+       3        240      80.0   malloc in run                                     C       rxvm
+       1         96      96.0   malloc in run                                     C       rxvm
+       2        320     160.0   malloc in run                                     C       rxvm
+       5        960     192.0   malloc in run                                     C       rxvm
+       1        224     224.0   malloc in run                                     C       rxvm
+      40      10240     256.0   malloc in run                                     C       rxvm
+       6       1920     320.0   malloc in run                                     C       rxvm
+       4       1536     384.0   malloc in run                                     C       rxvm
+       4       1792     448.0   malloc in run                                     C       rxvm
+       1        512     512.0   malloc in run                                     C       rxvm
+      11       7040     640.0   malloc in run                                     C       rxvm
+      11       8448     768.0   malloc in run                                     C       rxvm
+       6       5376     896.0   malloc in run                                     C       rxvm
+       6       6144    1024.0   malloc in run                                     C       rxvm
+       9      11520    1280.0   malloc in run                                     C       rxvm
+       4       6144    1536.0   malloc in run                                     C       rxvm
+       8      14336    1792.0   malloc in run                                     C       rxvm
+      16      32768    2048.0   malloc in run                                     C       rxvm
+       6      15360    2560.0   malloc in run                                     C       rxvm
+       8      24576    3072.0   malloc in run                                     C       rxvm
+       4      14336    3584.0   malloc in run                                     C       rxvm
+       2       8192    4096.0   malloc in run                                     C       rxvm
+       6      30720    5120.0   malloc in run                                     C       rxvm
+       6      36864    6144.0   malloc in run                                     C       rxvm
+       1       7168    7168.0   malloc in run                                     C       rxvm
+       7      57344    8192.0   malloc in run                                     C       rxvm
+       2      20480   10240.0   malloc in run                                     C       rxvm
+       3      36864   12288.0   malloc in run                                     C       rxvm
+       5      81920   16384.0   malloc in run                                     C       rxvm
+       1      20480   20480.0   malloc in run                                     C       rxvm
+       2      49152   24576.0   malloc in run                                     C       rxvm
+       1      28672   28672.0   malloc in run                                     C       rxvm
+       1      32768   32768.0   malloc in run                                     C       rxvm
+       1      49152   49152.0   malloc in run                                     C       rxvm
+       2     131072   65536.0   malloc in run                                     C       rxvm
+       1      81920   81920.0   malloc in run                                     C       rxvm
+       3     442368  147456.0   malloc in run                                     C       rxvm
+       1     163840  163840.0   malloc in run                                     C       rxvm
+       1     245760  245760.0   malloc in run                                     C       rxvm
+       4        192      48.0   xpc_dictionary_t (Storage)                        C       libxpc.dylib
+       2        128      64.0   xpc_dictionary_t (Storage)                        C       libxpc.dylib
+       1         96      96.0   xpc_dictionary_t (Storage)                        C       libxpc.dylib
+      39       4368     112.0   xpc_dictionary_t (Storage)                        C       libxpc.dylib
+      76       9728     128.0   xpc_dictionary_t (Storage)                        C       libxpc.dylib
+      56       8960     160.0   xpc_dictionary_t (Storage)                        C       libxpc.dylib
+      12       2304     192.0   xpc_dictionary_t (Storage)                        C       libxpc.dylib
+      13        208      16.0   malloc in rxvm_rebuild_interface_method_registry  C       rxvm
+      86       2752      32.0   malloc in rxvm_rebuild_interface_method_registry  C       rxvm
+      25       1200      48.0   malloc in rxvm_rebuild_interface_method_registry  C       rxvm
+      19       1520      80.0   malloc in rxvm_rebuild_interface_method_registry  C       rxvm
+       2        192      96.0   malloc in rxvm_rebuild_interface_method_registry  C       rxvm
+       2        224     112.0   malloc in rxvm_rebuild_interface_method_registry  C       rxvm
+       1        128     128.0   malloc in rxvm_rebuild_interface_method_registry  C       rxvm
+     144      32256     224.0   malloc in prep_and_link_module                    C       rxvm
+       1      81920   81920.0   malloc in prep_and_link_module                    C       rxvm
+       1         48      48.0   calloc in rxbin007_decode_instructions            C       rxvm
+       3        240      80.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1         96      96.0   calloc in rxbin007_decode_instructions            C       rxvm
+       2        320     160.0   calloc in rxbin007_decode_instructions            C       rxvm
+       5        960     192.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1        224     224.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1        256     256.0   calloc in rxbin007_decode_instructions            C       rxvm
+       6       1920     320.0   calloc in rxbin007_decode_instructions            C       rxvm
+       4       1536     384.0   calloc in rxbin007_decode_instructions            C       rxvm
+       4       1792     448.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1        512     512.0   calloc in rxbin007_decode_instructions            C       rxvm
+      11       7040     640.0   calloc in rxbin007_decode_instructions            C       rxvm
+      11       8448     768.0   calloc in rxbin007_decode_instructions            C       rxvm
+       6       5376     896.0   calloc in rxbin007_decode_instructions            C       rxvm
+       6       6144    1024.0   calloc in rxbin007_decode_instructions            C       rxvm
+       9      11520    1280.0   calloc in rxbin007_decode_instructions            C       rxvm
+       4       6144    1536.0   calloc in rxbin007_decode_instructions            C       rxvm
+       8      14336    1792.0   calloc in rxbin007_decode_instructions            C       rxvm
+       6      12288    2048.0   calloc in rxbin007_decode_instructions            C       rxvm
+       6      15360    2560.0   calloc in rxbin007_decode_instructions            C       rxvm
+       8      24576    3072.0   calloc in rxbin007_decode_instructions            C       rxvm
+       4      14336    3584.0   calloc in rxbin007_decode_instructions            C       rxvm
+       2       8192    4096.0   calloc in rxbin007_decode_instructions            C       rxvm
+       3      15360    5120.0   calloc in rxbin007_decode_instructions            C       rxvm
+       6      36864    6144.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1       7168    7168.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1       8192    8192.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1      10240   10240.0   calloc in rxbin007_decode_instructions            C       rxvm
+       3      36864   12288.0   calloc in rxbin007_decode_instructions            C       rxvm
+       5      81920   16384.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1      20480   20480.0   calloc in rxbin007_decode_instructions            C       rxvm
+       2      49152   24576.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1      28672   28672.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1      32768   32768.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1      49152   49152.0   calloc in rxbin007_decode_instructions            C       rxvm
+       2     131072   65536.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1      81920   81920.0   calloc in rxbin007_decode_instructions            C       rxvm
+       3     442368  147456.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1     163840  163840.0   calloc in rxbin007_decode_instructions            C       rxvm
+       1     245760  245760.0   calloc in rxbin007_decode_instructions            C       rxvm
+     144      23040     160.0   calloc in rxbin007_parse_modules                  C       rxvm
+     133      17024     128.0   malloc in add_module_runtime_procedure_offset     C       rxvm
+     116      14848     128.0   _realloc in copy_value                            C       rxvm
+      15        240      16.0   malloc in rxvm_rebuild_interface_factory_registry  C       rxvm
+      18        576      32.0   malloc in rxvm_rebuild_interface_factory_registry  C       rxvm
+       3        144      48.0   malloc in rxvm_rebuild_interface_factory_registry  C       rxvm
+       3        192      64.0   malloc in rxvm_rebuild_interface_factory_registry  C       rxvm
+       8        640      80.0   malloc in rxvm_rebuild_interface_factory_registry  C       rxvm
+       1         96      96.0   malloc in rxvm_rebuild_interface_factory_registry  C       rxvm
+       1       1792    1792.0   malloc in rxvm_rebuild_interface_factory_registry  C       rxvm
+      36       2304      64.0   memalign in id2data(objc_object*, SyncKind, usage)  C       libobjc.A.dylib
+       1         48      48.0   calloc in rx_graph_deserialize                    C       rxvm
+       3        240      80.0   calloc in rx_graph_deserialize                    C       rxvm
+       2        192      96.0   calloc in rx_graph_deserialize                    C       rxvm
+       1        160     160.0   calloc in rx_graph_deserialize                    C       rxvm
+       2        384     192.0   calloc in rx_graph_deserialize                    C       rxvm
+       1        224     224.0   calloc in rx_graph_deserialize                    C       rxvm
+       2        640     320.0   calloc in rx_graph_deserialize                    C       rxvm
+       4       1536     384.0   calloc in rx_graph_deserialize                    C       rxvm
+       1        448     448.0   calloc in rx_graph_deserialize                    C       rxvm
+       1        512     512.0   calloc in rx_graph_deserialize                    C       rxvm
+       1        640     640.0   calloc in rx_graph_deserialize                    C       rxvm
+       1       1024    1024.0   calloc in rx_graph_deserialize                    C       rxvm
+       1       1280    1280.0   calloc in rx_graph_deserialize                    C       rxvm
+       1       1536    1536.0   calloc in rx_graph_deserialize                    C       rxvm
+       2       3584    1792.0   calloc in rx_graph_deserialize                    C       rxvm
+       2       6144    3072.0   calloc in rx_graph_deserialize                    C       rxvm
+       1       3584    3584.0   calloc in rx_graph_deserialize                    C       rxvm
+       1       7168    7168.0   calloc in rx_graph_deserialize                    C       rxvm
+       1      10240   10240.0   calloc in rx_graph_deserialize                    C       rxvm
+       1      28672   28672.0   calloc in rx_graph_deserialize                    C       rxvm
+       1      81920   81920.0   calloc in rx_graph_deserialize                    C       rxvm
+      24       1152      48.0   CFData                                            ObjC    CoreFoundation
+       2        384     192.0   CFData                                            ObjC    CoreFoundation
+      18       1152      64.0   malloc in rxvm_insert_attributes_checked          C       rxvm
+       6      12288    2048.0   malloc in rxvm_insert_attributes_checked          C       rxvm
+       4         64      16.0   malloc in rxsig_strdup_trimmed                    C       rxvm
+      20        640      32.0   malloc in rxsig_strdup_trimmed                    C       rxvm
+      23       1104      48.0   Class.data.extended (class_rw_ext_t)              C       libobjc.A.dylib
+       1         16      16.0   non-object with no stack backtrace                C       <unknown>
+       8        256      32.0   non-object with no stack backtrace                C       <unknown>
+       3        144      48.0   non-object with no stack backtrace                C       <unknown>
+       5        320      64.0   non-object with no stack backtrace                C       <unknown>
+       1         80      80.0   non-object with no stack backtrace                C       <unknown>
+       1        640     640.0   non-object with no stack backtrace                C       <unknown>
+       1       1024    1024.0   non-object with no stack backtrace                C       <unknown>
+       1       1536    1536.0   non-object with no stack backtrace                C       <unknown>
+      21       1680      80.0   Class.data.readonly (class_ro_t)                  C       libobjc.A.dylib
+      17        544      32.0   Class.methodCache._buckets (bucket_t)             C       libobjc.A.dylib
+       2        256     128.0   Class.methodCache._buckets (bucket_t)             C       libobjc.A.dylib
+       1        256     256.0   Class.methodCache._buckets (bucket_t)             C       libobjc.A.dylib
+       1         32      32.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+       4        192      48.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+       2        128      64.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+       4        320      80.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+       1         96      96.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+       1        112     112.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+       3        384     128.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+       1        448     448.0   Class.data.methods (method_array_t)               C       libobjc.A.dylib
+      14        672      48.0   Swift._ContiguousArrayStorage<Swift.UInt8>        Swift   libswiftCore.dylib
+       1         64      64.0   Swift._ContiguousArrayStorage<Swift.UInt8>        Swift   libswiftCore.dylib
+      14        224      16.0   malloc in rx_sig_init_from_parts                  C       rxvm
+       1        256     256.0   _realloc in add_module_runtime_procedure_offset   C       rxvm
+       6       3072     512.0   _realloc in add_module_runtime_procedure_offset   C       rxvm
+       2       2048    1024.0   _realloc in add_module_runtime_procedure_offset   C       rxvm
+       1       2048    2048.0   _realloc in add_module_runtime_procedure_offset   C       rxvm
+       1       4096    4096.0   _realloc in add_module_runtime_procedure_offset   C       rxvm
+       6         96      16.0   calloc in rx_sig_init_from_parts                  C       rxvm
+       2         64      32.0   calloc in rx_sig_init_from_parts                  C       rxvm
+       1         64      64.0   calloc in rx_sig_init_from_parts                  C       rxvm
+       3         96      32.0   malloc_with_options_outlined in cache_t::insert(objc_selector*, void (*)(), objc_object*)  C++     libobjc.A.dylib
+       3        192      64.0   malloc_with_options_outlined in cache_t::insert(objc_selector*, void (*)(), objc_object*)  C++     libobjc.A.dylib
+       1        128     128.0   malloc_with_options_outlined in cache_t::insert(objc_selector*, void (*)(), objc_object*)  C++     libobjc.A.dylib
+       2        128      64.0   calloc in rxvm_rebuild_graph_bindings             C       rxvm
+       1         96      96.0   calloc in rxvm_rebuild_graph_bindings             C       rxvm
+       1        256     256.0   calloc in rxvm_rebuild_graph_bindings             C       rxvm
+       1        384     384.0   calloc in rxvm_rebuild_graph_bindings             C       rxvm
+       1       5120    5120.0   calloc in rxvm_rebuild_graph_bindings             C       rxvm
+       3         48      16.0   xpc_string_t (Storage)                            C       libxpc.dylib
+       1         48      48.0   xpc_string_t (Storage)                            C       libxpc.dylib
+       1         64      64.0   xpc_string_t (Storage)                            C       libxpc.dylib
+       1        768     768.0   xpc_string_t (Storage)                            C       libxpc.dylib
+       6        288      48.0   xpc_string_t                                      ObjC    libxpc.dylib
+       1         32      32.0   malloc in rx_graph_build_runtime_views            C       rxvm
+       2        768     384.0   malloc in rx_graph_build_runtime_views            C       rxvm
+       2     131072   65536.0   malloc in rx_graph_build_runtime_views            C       rxvm
+       1         32      32.0   calloc in rx_graph_build_runtime_views            C       rxvm
+       1        112     112.0   calloc in rx_graph_build_runtime_views            C       rxvm
+       1        896     896.0   calloc in rx_graph_build_runtime_views            C       rxvm
+       1       1280    1280.0   calloc in rx_graph_build_runtime_views            C       rxvm
+       1       4096    4096.0   calloc in rx_graph_build_runtime_views            C       rxvm
+       2         96      48.0   calloc in rxbin007_materialize_pool               C       rxvm
+       1      49152   49152.0   calloc in rxbin007_materialize_pool               C       rxvm
+       1    2539520  2539520.0   calloc in rxbin007_materialize_pool               C       rxvm
+       2        256     128.0   calloc in color_space_state_create_icc_with_profile  C       CoreGraphics
+       2        320     160.0   calloc in color_space_state_create_icc_with_profile  C       CoreGraphics
+       1        112     112.0   Swift.StringStorage                               Swift   libswiftCore.dylib
+       2        256     128.0   Swift.StringStorage                               Swift   libswiftCore.dylib
+       1        160     160.0   Swift.StringStorage                               Swift   libswiftCore.dylib
+       2        192      96.0   CGColor                                           CFType  CoreGraphics
+       2        224     112.0   CGColor                                           CFType  CoreGraphics
+       4        384      96.0   CGColorSpace                                      CFType  CoreGraphics
+       4        128      32.0   NSMutableDictionary                               ObjC    CoreFoundation
+       2        640     320.0   ColorSyncProfile                                  CFType  ColorSync
+       1        512     512.0   ColorSyncProfile                                  CFType  ColorSync
+       2        224     112.0   NSMutableDictionary (Storage)                     C       CoreFoundation
+       1        384     384.0   NSMutableDictionary (Storage)                     C       CoreFoundation
+       1        112     112.0   malloc in cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<swift::InProcess> const*, long*)::$_0::__invoke(void*)  C++     libswiftCore.dylib
+       1        192     192.0   malloc in cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<swift::InProcess> const*, long*)::$_0::__invoke(void*)  C++     libswiftCore.dylib
+       1        256     256.0   malloc in cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<swift::InProcess> const*, long*)::$_0::__invoke(void*)  C++     libswiftCore.dylib
+       2         64      32.0   calloc in swift::ConcurrentReadableHashMap<swift::HashMapElementWrapper<swift::GenericCacheEntry>, swift::Mutex>::resize(swift::ConcurrentReadableHashMap<swift::HashMapElementWrapper<swift::GenericCacheEntry>, swift::Mutex>::IndexStorage, unsigned char, swift::HashMapElementWrapper<swift::GenericCacheEntry>*)  C++     libswiftCore.dylib
+       1         64      64.0   calloc in swift::ConcurrentReadableHashMap<swift::HashMapElementWrapper<swift::GenericCacheEntry>, swift::Mutex>::resize(swift::ConcurrentReadableHashMap<swift::HashMapElementWrapper<swift::GenericCacheEntry>, swift::Mutex>::IndexStorage, unsigned char, swift::HashMapElementWrapper<swift::GenericCacheEntry>*)  C++     libswiftCore.dylib
+       1         16      16.0   calloc in nw::object::class_def::register_method_def(nw::object::class_def::method_def const&, void (nw::object::*)())  C++     Network
+       1       4096    4096.0   calloc in nw::object::class_def::register_method_def(nw::object::class_def::method_def const&, void (nw::object::*)())  C++     Network
+       1         16      16.0   calloc in nw::object::class_def::setup(std::deque<void (nw::object::*)(), nw::c_allocator<void (nw::object::*)()>>&)  C++     Network
+       1       4096    4096.0   calloc in nw::object::class_def::setup(std::deque<void (nw::object::*)(), nw::c_allocator<void (nw::object::*)()>>&)  C++     Network
+       1        384     384.0   CFDictionary (Key Storage)                        C       CoreFoundation
+       1        640     640.0   CFDictionary (Key Storage)                        C       CoreFoundation
+       1        384     384.0   CFDictionary (Value Storage)                      C       CoreFoundation
+       1        640     640.0   CFDictionary (Value Storage)                      C       CoreFoundation
+       1         32      32.0   malloc in new_decplugin                           C       rxvm
+       1        320     320.0   malloc in new_decplugin                           C       rxvm
+       2        224     112.0   Swift._ContiguousArrayStorage<Swift.String>       Swift   libswiftCore.dylib
+       2        192      96.0   NSURL                                             ObjC    CoreFoundation
+       1         64      64.0   Swift._ContiguousArrayStorage<Swift.Array<Swift.UInt8>>  Swift   libswiftCore.dylib
+       1        128     128.0   Swift._ContiguousArrayStorage<Swift.Array<Swift.UInt8>>  Swift   libswiftCore.dylib
+       2        192      96.0   malloc in __CGTypeRegisterInternal                C       CoreGraphics
+       2        192      96.0   xpc_dictionary_t                                  ObjC    libxpc.dylib
+       1         80      80.0   CFString                                          ObjC    CoreFoundation
+       1         96      96.0   CFString                                          ObjC    CoreFoundation
+       2        128      64.0   CFDictionary                                      ObjC    CoreFoundation
+       1         16      16.0   malloc in color_space_state_create_icc_with_profile  C       CoreGraphics
+       1         48      48.0   malloc in color_space_state_create_icc_with_profile  C       CoreGraphics
+       2         64      32.0   malloc in swift::ConcurrentReadableHashMap<swift::HashMapElementWrapper<swift::GenericCacheEntry>, swift::Mutex>::getOrInsertExternallyLocked<swift::MetadataCacheKey, std::pair<swift::GenericCacheEntry*, bool> swift::StableAddressConcurrentReadableHashMap<swift::GenericCacheEntry, swift::TaggedMetadataAllocator<(unsigned short)14>, swift::Mutex>::getOrInsert<swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetTypeContextDescriptor<swift::InProcess> const*&, void const* const*&>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetTypeContextDescriptor<swift::InProcess> const*&, void const* const*&)::'lambda'(swift::HashMapElementWrapper<swift::GenericCacheEntry>*, bool)>(swift::MetadataCacheKey, std::pair<swift::GenericCacheEntry*, bool> swift::StableAddressConcurrentReadableHashMap<swift::GenericCacheEntry, swift::TaggedMetadataAllocator<(unsigned short)14>, swift::Mutex>::getOrInsert<swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetTypeContextDescriptor<swift::InProcess> const*&, void const* const*&>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetTypeContextDescriptor<swift::InProcess> const*&, void const* const*&)::'lambda'(swift::HashMapElementWrapper<swift::GenericCacheEntry>*, bool) const&)  C++     libswiftCore.dylib
+       1       5120    5120.0   _realloc in rxvm_rebuild_interface_method_registry  C       rxvm
+       1       2560    2560.0   calloc in weak_resize(weak_table_t*, unsigned long)  C       libobjc.A.dylib
+       1       2048    2048.0   _realloc in prep_and_link_module                  C       rxvm
+       1       1280    1280.0   calloc in __CFTSDGetTable                         C       CoreFoundation
+       1       1024    1024.0   malloc in cache_t::collect_free(bucket_t*, unsigned int)  C++     libobjc.A.dylib
+       1        896     896.0   malloc in __CGColorSpaceCreateWithName_block_invoke  C       CoreGraphics
+       1        512     512.0   malloc in _CFRuntimeRegisterClass                 C       CoreFoundation
+       1        448     448.0   malloc in __ColorSyncProfileCreateWithName_block_invoke  C       ColorSync
+       1        256     256.0   malloc in __CFBasicHashGetPtrIndex_block_invoke   C       CoreFoundation
+       1        256     256.0   malloc in rxvm_call                               C       rxvm
+       1        192     192.0   _NSThreadData                                     ObjC    Foundation
+       1        128     128.0   calloc in color_space_state_create_device_gray    C       CoreGraphics
+       1        128     128.0   calloc in color_space_state_create_device_rgb     C       CoreGraphics
+       1        128     128.0   dispatch_queue_t (serial)                         ObjC    libdispatch.dylib
+       1         80      80.0   Foundation.LockedState<Foundation._NSSwiftProcessInfo.State>.(_Buffer in $184eabd44)<>  Swift   Foundation
+       1         80      80.0   calloc in fetch_cache(bool)                       C       libobjc.A.dylib
+       1         80      80.0   malloc in _CFProcessPath                          C       CoreFoundation
+       1         80      80.0   malloc in main                                    C       rxvm
+       1         64      64.0   _NSMainThread                                     ObjC    Foundation
+       1         64      64.0   _NSSwiftProcessInfo                               Swift   Foundation
+       1         64      64.0   xpc_array_t (Storage)                             C       libxpc.dylib
+       1         64      64.0   xpc_pipe_t                                        ObjC    libxpc.dylib
+       1         48      48.0   Foundation.LockedState<Foundation._ProcessInfo.State>.(_Buffer in $184eabd44)<>  Swift   Foundation
+       1         48      48.0   Foundation.LockedState<Swift.Optional<Swift.String>>.(_Buffer in $184eabd44)<>  Swift   Foundation
+       1         48      48.0   malloc in register_rxvmplugin                     C       rxvm
+       1         48      48.0   xpc_array_t                                       ObjC    libxpc.dylib
+       1         32      32.0   NSFileManager                                     ObjC    Foundation
+       1         32      32.0   _ProcessInfo                                      Swift   Foundation
+       1         32      32.0   malloc in rxvm_rebuild_graph_bindings             C       rxvm
+       1         16      16.0   _NSFileManagerBridge                              Swift   Foundation
+       1         16      16.0   malloc in CGPropertiesCreate                      C       CoreGraphics
+       1         16      16.0   malloc in swift_getForeignTypeMetadata            C       libswiftCore.dylib
+

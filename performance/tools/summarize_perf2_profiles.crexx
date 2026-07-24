@@ -1,0 +1,540 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+/*
+ * PERF2-01 deterministic profile census. This consumes schema-4/schema-5 CSV;
+ * it never runs a benchmark and never treats profile elapsed time as product
+ * timing evidence.
+ */
+main: procedure = .int
+  arg args = .string[]
+  manifest = ""
+  output_dir = ""
+  self_test_requested = 0
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "--self-test" then self_test_requested = 1
+    else if option = "--manifest" then do
+      if i = args[0] then return argument_error("missing value after --manifest")
+      i = i + 1
+      manifest = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing value after --output-dir")
+      i = i + 1
+      output_dir = args[i]
+    end
+    else if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+  if self_test_requested then return self_test()
+  if manifest = "" | output_dir = "" then
+    return argument_error("--manifest and --output-dir are required")
+
+  root = current_directory()
+  manifest = absolute_path(root, manifest)
+  output_dir = absolute_path(root, output_dir)
+  if make_directory(output_dir) <> 0 then return 1
+  rows = read_manifest(manifest)
+  if rows[0] = 0 then return execution_error("profile manifest has no rows")
+
+  mechanisms = .string[]
+  mechanisms[1] = "workload,vm,entry,schema,dynamic_instructions,calls,fresh_frames,reused_frames,frame_entry_work,copy_ops,copy_bytes,move_ops,move_bytes,clear_reset_destroy_ops,clear_reset_destroy_bytes,conversion_ops,allocation_requests,allocation_bytes,max_request_bytes,frame_high_water,branch_executions,branch_taken,branch_fallthrough,backedges,selector_attempts,frame_entry_ns,copy_ns,move_ns,clear_reset_destroy_ns,conversion_ns,status"
+  opcodes = .string[]
+  opcodes[1] = "workload,vm,entry,rank,opcode,count,total_ns,average_ns"
+  transitions = .string[]
+  transitions[1] = "workload,vm,entry,rank,transition,count,total_ns"
+  procedures = .string[]
+  procedures[1] = "workload,vm,entry,rank,procedure,module,kind,calls,total_ns,average_ns"
+  domains = .string[]
+  domains[1] = "workload,vm,entry,domain,status"
+
+  do row_index = 1 to rows[0]
+    fields = split_delimited(rows[row_index], "|")
+    workload = fields[1]
+    vm = fields[2]
+    entry = fields[3]
+    profile = absolute_path(root, fields[4])
+    if summarize_profile(workload, vm, entry, profile, mechanisms, opcodes, ,
+        transitions, procedures, domains) <> 0 then return 1
+  end
+
+  if write_lines(output_dir || "/mechanism-summary.csv", mechanisms) <> 0 then return 1
+  if write_lines(output_dir || "/top-opcodes.csv", opcodes) <> 0 then return 1
+  if write_lines(output_dir || "/top-transitions.csv", transitions) <> 0 then return 1
+  if write_lines(output_dir || "/top-procedures.csv", procedures) <> 0 then return 1
+  if write_lines(output_dir || "/profile-domain-audit.csv", domains) <> 0 then return 1
+  say "PASS: summarized" rows[0] "PERF2 profile cells under" output_dir
+  return 0
+
+summarize_profile: procedure = .int
+  arg workload = .string, vm = .string, entry = .string, path = .string, ,
+      expose mechanisms = .string[], expose opcode_rows = .string[], ,
+      expose transition_rows = .string[], expose procedure_rows = .string[], ,
+      expose domain_rows = .string[]
+
+  schema = ""
+  result_ok = 0
+  overflow_ok = 0
+  header_seen = 0
+  dynamic_instructions = 0
+  calls = 0
+  fresh_frames = 0
+  reused_frames = 0
+  frame_entry_work = 0
+  copy_ops = 0
+  copy_bytes = 0
+  move_ops = 0
+  move_bytes = 0
+  teardown_ops = 0
+  teardown_bytes = 0
+  conversion_ops = 0
+  allocation_requests = 0
+  allocation_bytes = 0
+  max_request_bytes = 0
+  frame_high_water = 0
+  branch_executions = 0
+  branch_taken = 0
+  branch_fallthrough = 0
+  backedges = 0
+  selector_attempts = 0
+  frame_entry_ns = 0
+  copy_ns = 0
+  move_ns = 0
+  teardown_ns = 0
+  conversion_ns = 0
+  domain_count = 0
+  degraded_count = 0
+  opcode_names = .string[]
+  opcode_counts = .int[]
+  opcode_totals = .int[]
+  opcode_averages = .int[]
+  transition_names = .string[]
+  transition_counts = .int[]
+  transition_totals = .int[]
+  procedure_names = .string[]
+  procedure_modules = .string[]
+  procedure_kinds = .string[]
+  procedure_counts = .int[]
+  procedure_totals = .int[]
+  procedure_averages = .int[]
+
+  do while lines(path)
+    line = linein(path)
+    if line = "" then iterate
+    fields = parse_csv_line(line)
+    if \header_seen then do
+      header_seen = 1
+      if fields[0] <> 24 | fields[1] <> "section" | fields[24] <> "status" then do
+        call linein path
+        return execution_error("unexpected profile header: " || path)
+      end
+      iterate
+    end
+    if fields[0] <> 24 then do
+      call linein path
+      return execution_error("profile row width is not 24: " || path)
+    end
+    section = fields[1]
+    name = fields[2]
+    value = fields[3]
+    count = numeric_or_zero(fields[5])
+    total_ns = numeric_or_zero(fields[6])
+    bytes = numeric_or_zero(fields[21])
+
+    if section = "summary" then do
+      if name = "schema_version" then schema = value
+      else if name = "result" & value = "0" then result_ok = 1
+      else if name = "counter_overflow" & value = "0" then overflow_ok = 1
+    end
+    else if section = "status" then do
+      domain_count = domain_count + 1
+      domain_rows[domain_rows[0] + 1] = csv_field(workload) || "," || ,
+          csv_field(vm) || "," || csv_field(entry) || "," || csv_field(name) || ,
+          "," || csv_field(value)
+      if value <> "complete" | fields[24] <> "complete" then degraded_count = degraded_count + 1
+    end
+    else if section = "instruction" then do
+      dynamic_instructions = dynamic_instructions + count
+      index = opcode_names[0] + 1
+      opcode_names[index] = name
+      opcode_counts[index] = count
+      opcode_totals[index] = total_ns
+      opcode_averages[index] = numeric_or_zero(fields[7])
+      if is_conversion_opcode(name) then do
+        conversion_ops = conversion_ops + count
+        conversion_ns = conversion_ns + total_ns
+      end
+    end
+    else if section = "transition" then do
+      index = transition_names[0] + 1
+      transition_names[index] = name
+      transition_counts[index] = count
+      transition_totals[index] = total_ns
+    end
+    else if section = "procedure" & value = "elapsed" then do
+      index = procedure_names[0] + 1
+      procedure_names[index] = name
+      procedure_modules[index] = fields[15]
+      procedure_kinds[index] = fields[16]
+      procedure_counts[index] = count
+      procedure_totals[index] = total_ns
+      procedure_averages[index] = numeric_or_zero(fields[7])
+    end
+    else if section = "census" & name = "call_path" then do
+      if value = "direct_bytecode" | value = "direct_native" | ,
+          value = "dynamic_bytecode" | value = "dynamic_native" then
+        calls = calls + count
+    end
+    else if section = "census" & name = "frame_disposition" then do
+      if value = "fresh" then fresh_frames = count
+      else if value = "reused" then reused_frames = count
+    end
+    else if section = "frame_entry" then do
+      frame_entry_work = frame_entry_work + numeric_or_zero(fields[4])
+      frame_entry_ns = frame_entry_ns + total_ns
+    end
+    else if section = "value_operation" then do
+      if is_copy_operation(name) then do
+        copy_ops = copy_ops + count
+        copy_bytes = copy_bytes + bytes
+        copy_ns = copy_ns + total_ns
+      end
+      else if name = "move" then do
+        move_ops = move_ops + count
+        move_bytes = move_bytes + bytes
+        move_ns = move_ns + total_ns
+      end
+      else if name = "clear" | name = "clear_contents" | ,
+          name = "reset_reuse" | name = "destroy" then do
+        teardown_ops = teardown_ops + count
+        teardown_bytes = teardown_bytes + bytes
+        teardown_ns = teardown_ns + total_ns
+      end
+    end
+    else if section = "allocation" then do
+      allocation_requests = allocation_requests + count
+      allocation_bytes = allocation_bytes + bytes
+      if numeric_or_zero(fields[22]) > max_request_bytes then
+        max_request_bytes = numeric_or_zero(fields[22])
+      if name = "frame_activations" then frame_high_water = numeric_or_zero(fields[23])
+    end
+    else if section = "branch" then do
+      branch_executions = branch_executions + count
+      branch_taken = branch_taken + numeric_or_zero(fields[11])
+      branch_fallthrough = branch_fallthrough + numeric_or_zero(fields[12])
+      backedges = backedges + numeric_or_zero(fields[13])
+    end
+    else if section = "dynamic" & value = "attempt" then
+      selector_attempts = selector_attempts + count
+    if fields[24] <> "" & fields[24] <> "complete" then degraded_count = degraded_count + 1
+  end
+  call linein path
+
+  if \header_seen | (schema <> "4" & schema <> "5") | \result_ok | ,
+      \overflow_ok then return execution_error("profile completeness failed: " || path)
+  if schema = "5" & domain_count < 7 then
+    return execution_error("schema-5 domain status is incomplete: " || path)
+  status = "complete"
+  if degraded_count > 0 then status = "degraded"
+
+  mechanisms[mechanisms[0] + 1] = csv_field(workload) || "," || csv_field(vm) || ,
+      "," || csv_field(entry) || "," || schema || "," || dynamic_instructions || ,
+      "," || calls || "," || fresh_frames || "," || reused_frames || "," || ,
+      frame_entry_work || "," || copy_ops || "," || copy_bytes || "," || ,
+      move_ops || "," || move_bytes || "," || teardown_ops || "," || ,
+      teardown_bytes || "," || conversion_ops || "," || allocation_requests || ,
+      "," || allocation_bytes || "," || max_request_bytes || "," || ,
+      frame_high_water || "," || branch_executions || "," || branch_taken || ,
+      "," || branch_fallthrough || "," || backedges || "," || selector_attempts || ,
+      "," || frame_entry_ns || "," || copy_ns || "," || move_ns || "," || ,
+      teardown_ns || "," || conversion_ns || "," || status
+
+  call sort_ranked opcode_names, opcode_counts, opcode_totals, opcode_averages
+  do rank = 1 to min_int(5, opcode_names[0])
+    opcode_rows[opcode_rows[0] + 1] = csv_field(workload) || "," || csv_field(vm) || ,
+        "," || csv_field(entry) || "," || rank || "," || ,
+        csv_field(opcode_names[rank]) || "," || opcode_counts[rank] || "," || ,
+        opcode_totals[rank] || "," || opcode_averages[rank]
+  end
+  transition_averages = .int[]
+  do i = 1 to transition_names[0]
+    transition_averages[i] = 0
+  end
+  call sort_ranked transition_names, transition_counts, transition_totals, transition_averages
+  do rank = 1 to min_int(5, transition_names[0])
+    transition_rows[transition_rows[0] + 1] = csv_field(workload) || "," || ,
+        csv_field(vm) || "," || csv_field(entry) || "," || rank || "," || ,
+        csv_field(transition_names[rank]) || "," || transition_counts[rank] || ,
+        "," || transition_totals[rank]
+  end
+  call sort_procedures procedure_names, procedure_modules, procedure_kinds, ,
+      procedure_counts, procedure_totals, procedure_averages
+  do rank = 1 to min_int(5, procedure_names[0])
+    procedure_rows[procedure_rows[0] + 1] = csv_field(workload) || "," || ,
+        csv_field(vm) || "," || csv_field(entry) || "," || rank || "," || ,
+        csv_field(procedure_names[rank]) || "," || ,
+        csv_field(procedure_modules[rank]) || "," || ,
+        csv_field(procedure_kinds[rank]) || "," || procedure_counts[rank] || ,
+        "," || procedure_totals[rank] || "," || procedure_averages[rank]
+  end
+  return 0
+
+is_copy_operation: procedure = .int
+  arg name = .string
+  return name = "copy" | name = "integer_copy" | name = "float_copy" | ,
+      name = "decimal_copy" | name = "status_copy"
+
+is_conversion_opcode: procedure = .int
+  arg name = .string
+  return pos("ITOS", name) > 0 | pos("STOI", name) > 0 | ,
+      pos("FTOS", name) > 0 | pos("STOF", name) > 0 | ,
+      pos("DTOS", name) > 0 | pos("STOD", name) > 0 | ,
+      pos("ITOD", name) > 0 | pos("DTOI", name) > 0 | ,
+      pos("FTOI", name) > 0 | pos("ITOF", name) > 0 | ,
+      pos("FTOD", name) > 0 | pos("DTOF", name) > 0 | ,
+      pos("TOSTRING", name) > 0 | pos("TODECIMAL", name) > 0
+
+numeric_or_zero: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return value as .int
+
+min_int: procedure = .int
+  arg left_value = .int, right_value = .int
+  if left_value < right_value then return left_value
+  return right_value
+
+sort_ranked: procedure = .void
+  arg expose names = .string[], expose counts = .int[], expose totals = .int[], ,
+      expose averages = .int[]
+  timing_rank = 0
+  do i = 1 to totals[0]
+    if totals[i] > 0 then timing_rank = 1
+  end
+  do i = 2 to names[0]
+    saved_name = names[i]
+    saved_count = counts[i]
+    saved_total = totals[i]
+    saved_average = averages[i]
+    j = i - 1
+    do while j >= 1 & ((timing_rank & totals[j] < saved_total) | ,
+        (timing_rank & totals[j] = saved_total & counts[j] < saved_count) | ,
+        (\timing_rank & counts[j] < saved_count) | ,
+        (totals[j] = saved_total & counts[j] = saved_count & names[j] > saved_name))
+      names[j + 1] = names[j]
+      counts[j + 1] = counts[j]
+      totals[j + 1] = totals[j]
+      averages[j + 1] = averages[j]
+      j = j - 1
+    end
+    names[j + 1] = saved_name
+    counts[j + 1] = saved_count
+    totals[j + 1] = saved_total
+    averages[j + 1] = saved_average
+  end
+  return
+
+sort_procedures: procedure = .void
+  arg expose names = .string[], expose modules = .string[], expose kinds = .string[], ,
+      expose counts = .int[], expose totals = .int[], expose averages = .int[]
+  timing_rank = 0
+  do i = 1 to totals[0]
+    if totals[i] > 0 then timing_rank = 1
+  end
+  do i = 2 to names[0]
+    saved_name = names[i]
+    saved_module = modules[i]
+    saved_kind = kinds[i]
+    saved_count = counts[i]
+    saved_total = totals[i]
+    saved_average = averages[i]
+    j = i - 1
+    do while j >= 1 & ((timing_rank & totals[j] < saved_total) | ,
+        (timing_rank & totals[j] = saved_total & counts[j] < saved_count) | ,
+        (\timing_rank & counts[j] < saved_count) | ,
+        (totals[j] = saved_total & counts[j] = saved_count & names[j] > saved_name))
+      names[j + 1] = names[j]
+      modules[j + 1] = modules[j]
+      kinds[j + 1] = kinds[j]
+      counts[j + 1] = counts[j]
+      totals[j + 1] = totals[j]
+      averages[j + 1] = averages[j]
+      j = j - 1
+    end
+    names[j + 1] = saved_name
+    modules[j + 1] = saved_module
+    kinds[j + 1] = saved_kind
+    counts[j + 1] = saved_count
+    totals[j + 1] = saved_total
+    averages[j + 1] = saved_average
+  end
+  return
+
+read_manifest: procedure = .string[]
+  arg path = .string
+  rows = .string[]
+  header_seen = 0
+  do while lines(path)
+    line = linein(path)
+    if line = "" | left(strip(line), 1) = "#" then iterate
+    if \header_seen then do
+      if line <> "crexx-perf2-profile-inputs|1" then do
+        call linein path
+        empty = .string[]
+        return empty
+      end
+      header_seen = 1
+      iterate
+    end
+    fields = split_delimited(line, "|")
+    if fields[0] <> 4 then do
+      call linein path
+      empty = .string[]
+      return empty
+    end
+    rows[rows[0] + 1] = line
+  end
+  call linein path
+  return rows
+
+parse_csv_line: procedure = .string[]
+  arg line = .string
+  fields = .string[]
+  field = ""
+  quoted = 0
+  i = 1
+  do while i <= length(line)
+    character = substr(line, i, 1)
+    if quoted then do
+      if character = '"' then do
+        if i < length(line) & substr(line, i + 1, 1) = '"' then do
+          field = field || '"'
+          i = i + 1
+        end
+        else quoted = 0
+      end
+      else field = field || character
+    end
+    else do
+      if character = '"' & field = "" then quoted = 1
+      else if character = "," then do
+        fields[fields[0] + 1] = field
+        field = ""
+      end
+      else field = field || character
+    end
+    i = i + 1
+  end
+  fields[fields[0] + 1] = field
+  return fields
+
+split_delimited: procedure = .string[]
+  arg value = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, value, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(value, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(value, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+current_directory: procedure = .string
+  out = .string[]
+  err = .string[]
+  address crexx "pwd" output out error err
+  if rc = 0 & out[0] > 0 then return out[1]
+  return "unknown"
+
+absolute_path: procedure = .string
+  arg root = .string, path = .string
+  if left(path, 1) = "/" then return path
+  return root || "/" || path
+
+make_directory: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "mkdir -p :path" output out error err
+  if rc = 0 then return 0
+  return execution_error("could not create output directory: " || path)
+
+write_lines: procedure = .int
+  arg path = .string, text = .string[]
+  out = .string[]
+  err = .string[]
+  address crexx "rm :path" output out error err
+  do i = 1 to text[0]
+    if lineout(path, text[i]) <> 0 then do
+      call lineout path
+      return execution_error("could not write: " || path)
+    end
+  end
+  call lineout path
+  return 0
+
+self_test: procedure = .int
+  fields = parse_csv_line('alpha,"b,c","d""e"')
+  if fields[0] <> 3 | fields[2] <> "b,c" | fields[3] <> 'd"e' then
+    return execution_error("CSV parser self-test failed")
+  if \is_conversion_opcode("STOI_REG") | is_conversion_opcode("IADD_REG_REG_REG") then
+    return execution_error("conversion classifier self-test failed")
+  if \is_copy_operation("decimal_copy") | is_copy_operation("move") then
+    return execution_error("copy classifier self-test failed")
+  say "PASS: PERF2 profile summarizer self-test"
+  return 0
+
+usage: procedure = .void
+  say "Usage: summarize_perf2_profiles --manifest PATH --output-dir PATH"
+  say "       summarize_perf2_profiles --self-test"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  call usage
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

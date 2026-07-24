@@ -1,0 +1,2 @@
+benchmark=awfy_list repetitions=2000 result=10
+PASS: AWFY List

@@ -1,0 +1,3 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+q0-rxbvm,Bounce-rxbvm,crexx-q0,rxbvm,canonical,A,no,steady,2200,elapsed_ns,10,7027112000.000000,7068389250.000000,7074752000.000000,7110598000.000000,7173255000.000000,26649000.000000,0.376678,2.065698,no
+production-rxbvm,Bounce-rxbvm,crexx-production,rxbvm,direct-canonical-mkref-guards,A,no,steady,2200,elapsed_ns,10,1514469000.000000,1518744750.000000,1522388000.000000,1523767000.000000,1528324000.000000,2656000.000000,0.174463,0.910083,no

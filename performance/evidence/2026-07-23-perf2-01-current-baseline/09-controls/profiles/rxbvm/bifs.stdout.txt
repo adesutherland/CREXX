@@ -1,0 +1,2 @@
+REXXCPS-FAMILY-CONTROL family=bifs iterations=10000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=310000
+PASS: RexxCPS family control

@@ -1,0 +1,13 @@
+workload,vm,comparability,crexx_cell,reference_cell,crexx_throughput,reference_throughput,ratio_higher_is_better,gain_to_parity,gain_to_1_50x,status
+Sieve,rxvm,qualified-common,sieve-rxvm,sieve-oorexx,5103.790223,713.415856,7.154018,1.000000,1.000000,meets-1.50x
+Sieve,rxbvm,qualified-common,sieve-rxbvm,sieve-oorexx,3858.241297,713.415856,5.408124,1.000000,1.000000,meets-1.50x
+Permute,rxvm,qualified-common,permute-rxvm,permute-oorexx,675.150312,314.832511,2.144475,1.000000,1.000000,meets-1.50x
+Permute,rxbvm,qualified-common,permute-rxbvm,permute-oorexx,632.699481,314.832511,2.009638,1.000000,1.000000,meets-1.50x
+Bounce,rxvm,qualified-common,bounce-rxvm,bounce-oorexx,329.907282,994.462557,0.331744,3.014373,4.521559,below-parity
+Bounce,rxbvm,qualified-common,bounce-rxbvm,bounce-oorexx,315.985915,994.462557,0.317745,3.147178,4.720767,below-parity
+Richards,rxvm,qualified-common,richards-rxvm,richards-oorexx,1.739086,11.350265,0.153220,6.526563,9.789845,below-parity
+Richards,rxbvm,qualified-common,richards-rxbvm,richards-oorexx,1.711259,11.350265,0.150768,6.632707,9.949061,below-parity
+Base64,rxvm,qualified-common,base64-rxvm,base64-oorexx,1536.603764,2119.321217,0.725045,1.379225,2.068837,below-parity
+Base64,rxbvm,qualified-common,base64-rxbvm,base64-oorexx,1641.247529,2119.321217,0.774421,1.291287,1.936931,below-parity
+RexxCPS,rxvm,disclosed-cREXX-2.2d-vs-canonical-Classic-2.2,rexxcps-rxvm,rexxcps-oorexx,29350346.500000,40064944.500000,0.732569,1.365059,2.047588,below-parity
+RexxCPS,rxbvm,disclosed-cREXX-2.2d-vs-canonical-Classic-2.2,rexxcps-rxbvm,rexxcps-oorexx,27132649.500000,40064944.500000,0.677217,1.476632,2.214948,below-parity

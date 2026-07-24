@@ -1,0 +1,3 @@
+vm|runs|cold_n|cold_ticks|cold_gross_ns_per_event|cold_specialize_n|cold_specialize_ticks|cold_specialize_gross_ns_per_event|cold_disable_n|cold_disable_ticks|cold_disable_gross_ns_per_event|specialized_n|specialized_ticks|specialized_gross_ns_per_event|fast_n|fallback_n|timer_pairs|timer_pair_ticks|timer_pair_mean_ns
+rxvm|12|840|44783|2221.378968|96|268|116.319444|744|44515|2492.999552|390468|66003|7.043151|390468|0|120000|11574|4.018750
+rxbvm|12|840|43363|2150.942460|96|43|18.663194|744|43320|2426.075269|390468|59210|6.318273|390468|0|120000|11002|3.820139

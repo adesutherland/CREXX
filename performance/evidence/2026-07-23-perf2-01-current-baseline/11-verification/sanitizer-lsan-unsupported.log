@@ -1,0 +1,20 @@
+Command: ctest --test-dir /private/tmp/crexx-perf2-01-profile-asan --output-on-failure --stop-on-failure -R \^rxvmprofileaccounting\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=1
+
+Test project /private/tmp/crexx-perf2-01-profile-asan
+    Start 1029: rxvmprofileaccounting
+1/1 Test #1029: rxvmprofileaccounting ............Subprocess aborted***Exception:   0.37 sec
+==74439==AddressSanitizer: detect_leaks is not supported on this platform.
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+interpreter    =   0.37 sec*proc (1 test)
+profiling      =   0.37 sec*proc (1 test)
+
+Total Test time (real) =   0.40 sec
+
+The following tests FAILED:
+	1029 - rxvmprofileaccounting (Subprocess aborted)        interpreter profiling
+Errors while running CTest

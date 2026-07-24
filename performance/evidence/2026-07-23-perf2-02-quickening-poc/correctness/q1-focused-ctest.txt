@@ -1,0 +1,74 @@
+Test project /private/tmp/crexx-perf2-02.kJ5sZT/q1-richards/cmake-build-perf2-release
+      Start 229: inline_test_nested_call_expr_noopt
+ 1/33 Test #229: inline_test_nested_call_expr_noopt .........................   Passed    0.46 sec
+      Start 230: inline_test_nested_call_expr_opt
+ 2/33 Test #230: inline_test_nested_call_expr_opt ...........................   Passed    0.08 sec
+      Start 259: inline_test_member_receiver_expr_noopt
+ 3/33 Test #259: inline_test_member_receiver_expr_noopt .....................   Passed    0.08 sec
+      Start 260: inline_test_member_receiver_expr_opt
+ 4/33 Test #260: inline_test_member_receiver_expr_opt .......................   Passed    0.08 sec
+      Start 263: inline_test_ref_opt_noopt
+ 5/33 Test #263: inline_test_ref_opt_noopt ..................................   Passed    0.08 sec
+      Start 264: inline_test_ref_opt_opt
+ 6/33 Test #264: inline_test_ref_opt_opt ....................................   Passed    0.08 sec
+      Start 269: inline_test_ref_computed_noopt
+ 7/33 Test #269: inline_test_ref_computed_noopt .............................   Passed    0.08 sec
+      Start 270: inline_test_ref_computed_opt
+ 8/33 Test #270: inline_test_ref_computed_opt ...............................   Passed    0.08 sec
+      Start 271: inline_test_ref_vararg_noopt
+ 9/33 Test #271: inline_test_ref_vararg_noopt ...............................   Passed    0.08 sec
+      Start 272: inline_test_ref_vararg_opt
+10/33 Test #272: inline_test_ref_vararg_opt .................................   Passed    0.11 sec
+      Start 321: inline_test_object_writable_arg_noopt
+11/33 Test #321: inline_test_object_writable_arg_noopt ......................   Passed    0.09 sec
+      Start 322: inline_test_object_writable_arg_opt
+12/33 Test #322: inline_test_object_writable_arg_opt ........................   Passed    0.09 sec
+      Start 335: inline_test_class_methods_noopt
+13/33 Test #335: inline_test_class_methods_noopt ............................   Passed    0.08 sec
+      Start 336: inline_test_class_methods_opt
+14/33 Test #336: inline_test_class_methods_opt ..............................   Passed    0.08 sec
+      Start 558: inline_test_computed_receiver_copyback_opt_rewrites
+15/33 Test #558: inline_test_computed_receiver_copyback_opt_rewrites ........   Passed    0.08 sec
+      Start 607: inline_test_nested_call_expr_run_noopt
+16/33 Test #607: inline_test_nested_call_expr_run_noopt .....................   Passed    0.11 sec
+      Start 608: inline_test_nested_call_expr_run_opt
+17/33 Test #608: inline_test_nested_call_expr_run_opt .......................   Passed    0.11 sec
+      Start 639: inline_test_member_receiver_expr_run_noopt
+18/33 Test #639: inline_test_member_receiver_expr_run_noopt .................   Passed    0.11 sec
+      Start 640: inline_test_member_receiver_expr_run_opt
+19/33 Test #640: inline_test_member_receiver_expr_run_opt ...................   Passed    0.11 sec
+      Start 645: inline_test_computed_receiver_copyback_run_noopt
+20/33 Test #645: inline_test_computed_receiver_copyback_run_noopt ...........   Passed    0.11 sec
+      Start 646: inline_test_computed_receiver_copyback_run_opt
+21/33 Test #646: inline_test_computed_receiver_copyback_run_opt .............   Passed    0.11 sec
+      Start 647: inline_test_mutating_method_scalar_attr_return_run_noopt
+22/33 Test #647: inline_test_mutating_method_scalar_attr_return_run_noopt ...   Passed    0.11 sec
+      Start 648: inline_test_mutating_method_scalar_attr_return_run_opt
+23/33 Test #648: inline_test_mutating_method_scalar_attr_return_run_opt .....   Passed    0.11 sec
+      Start 649: inline_test_ref_opt_run_noopt
+24/33 Test #649: inline_test_ref_opt_run_noopt ..............................   Passed    0.11 sec
+      Start 650: inline_test_ref_opt_run_opt
+25/33 Test #650: inline_test_ref_opt_run_opt ................................   Passed    0.11 sec
+      Start 655: inline_test_ref_computed_run_noopt
+26/33 Test #655: inline_test_ref_computed_run_noopt .........................   Passed    0.10 sec
+      Start 656: inline_test_ref_computed_run_opt
+27/33 Test #656: inline_test_ref_computed_run_opt ...........................   Passed    0.11 sec
+      Start 657: inline_test_ref_vararg_run_noopt
+28/33 Test #657: inline_test_ref_vararg_run_noopt ...........................   Passed    0.11 sec
+      Start 658: inline_test_ref_vararg_run_opt
+29/33 Test #658: inline_test_ref_vararg_run_opt .............................   Passed    0.11 sec
+      Start 703: inline_test_object_writable_arg_run_noopt
+30/33 Test #703: inline_test_object_writable_arg_run_noopt ..................   Passed    0.10 sec
+      Start 704: inline_test_object_writable_arg_run_opt
+31/33 Test #704: inline_test_object_writable_arg_run_opt ....................   Passed    0.11 sec
+      Start 721: inline_test_class_methods_run_noopt
+32/33 Test #721: inline_test_class_methods_run_noopt ........................   Passed    0.11 sec
+      Start 722: inline_test_class_methods_run_opt
+33/33 Test #722: inline_test_class_methods_run_opt ..........................   Passed    0.11 sec
+
+100% tests passed, 0 tests failed out of 33
+
+Label Time Summary:
+linked_opt    =   1.06 sec*proc (10 tests)
+
+Total Test time (real) =   3.59 sec

@@ -1,0 +1,6 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+trace-address-rxvm,TRACE-ADDRESS,crexx,rxvm,attribution-only,control,no,no,100000,elapsed_ns,5,81744000.000000,82793000.000000,83033000.000000,85071000.000000,85286000.000000,1289000.000000,1.552395,4.265774,no
+stems-rxvm,Stems,crexx,rxvm,attribution-only,control,no,no,100000,elapsed_ns,5,99011000.000000,99292000.000000,99544000.000000,99598000.000000,101288000.000000,252000.000000,0.253154,2.287431,no
+decimal-string-rxbvm,Decimal-String,crexx,rxbvm,attribution-only,control,no,no,100000,elapsed_ns,5,31662000.000000,33007000.000000,33331000.000000,34149000.000000,41771000.000000,818000.000000,2.454172,30.329123,yes
+parse-rxvm,PARSE,crexx,rxvm,attribution-only,control,no,no,100000,elapsed_ns,5,45793000.000000,47727000.000000,47931000.000000,48397000.000000,50514000.000000,466000.000000,0.972231,9.849575,no
+parse-rxbvm,PARSE,crexx,rxbvm,attribution-only,control,no,no,100000,elapsed_ns,5,52590000.000000,52645000.000000,53866000.000000,54382000.000000,67141000.000000,1221000.000000,2.266736,27.013329,yes

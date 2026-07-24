@@ -1,0 +1,1572 @@
+*******************************************************************************
+* MODULE - benchmark_awfy_towers_opt
+* DESCRIPTION - benchmark_awfy_towers_opt
+
+* CONSTANT POOL - Size 0x14818.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x773
+
+.globals=0
+                .meta "awfy_towers.towersbenchmark"="b" ".unknown" .class
+                .meta "awfy_towers.towersbenchmark.moves_done"="b" ".int" .attr 1
+                .meta "awfy_towers.towersbenchmark.pile0"="b" ".towersdisk" .attr 2
+                .meta "awfy_towers.towersbenchmark.pile0_present"="b" ".int" .attr 3
+                .meta "awfy_towers.towersbenchmark.pile1"="b" ".towersdisk" .attr 4
+                .meta "awfy_towers.towersbenchmark.pile1_present"="b" ".int" .attr 5
+                .meta "awfy_towers.towersbenchmark.pile2"="b" ".towersdisk" .attr 6
+                .meta "awfy_towers.towersbenchmark.pile2_present"="b" ".int" .attr 7
+                .meta "awfy_towers.towersdisk"="b" ".unknown" .class
+                .meta "awfy_towers.towersdisk.disk_size"="b" ".int" .attr 1
+                .meta "awfy_towers.towersdisk.has_next"="b" ".int" .attr 2
+                .meta "awfy_towers.towersdisk.next_disk"="b" ".object" .attr 3
+
+main()          .locals=40
+                .meta "awfy_towers.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 1 1 17 "awfy_towers.crexx" 8 5 19 "arg argv = .string[]"
+                .meta "awfy_towers.main.argv"="b" ".string[*]" r0
+                brtpandt lb_d,a1 /* aka r41 */,512           * 0x000004:020c if op2 readable status flags & op3 true then goto op1
+                copy r0,a1 /* aka r41 */                     * 0x000008:0008 Copy op2 to op1
+                br lb_10                                     * 0x00000b:0024 Branch to op1
+lb_d:           swap r0,a1 /* aka r41 */                     * 0x00000d:01fe Swap op1 and op2
+                .srcstep 2 2 17 "awfy_towers.crexx" 10 1 16 "repetitions = 1"
+                .meta "awfy_towers.main.repetitions"="b" ".int" r1
+lb_10:          load r1,1                                    * 0x000010:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+                .srcstep 4 4 17 "awfy_towers.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+                getattrs r4,r0,0                             * 0x000013:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+                igte r4,r4,1                                 * 0x000017:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+                brf lb_27,r4                                 * 0x00001b:0026 Branch to op1 if op2 false
+                .srcstep 5 5 17 "awfy_towers.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 3 3 17 "awfy_towers.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minlinkattr1 r5,r0,1                         * 0x00001e:0125 Ensure op2 has op3 attributes then link one-based attribute op3 to op1
+                stoi r5                                      * 0x000022:00ed Set register int value from its string value
+                .traceevent "V" 6 "R" "I" "r" 5 3 3 0 "argv" ""
+                igetunlink r1,r5                             * 0x000024:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+                .srcstep 10 10 17 "awfy_towers.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+lb_27:          ilt r5,r1,1                                  * 0x000027:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+                brf lb_3a,r5                                 * 0x00002b:0026 Branch to op1 if op2 false
+                .srcstep 11 11 17 "awfy_towers.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 9 9 17 "awfy_towers.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 8 8 17 "awfy_towers.crexx" 12 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 6 6 17 "awfy_towers.crexx" 27 3 22 "  say \"FAIL:\" message"
+                say "FAIL: repetitions must be positive"     * 0x00002e:01c7 Say op1
+                .srcstep 7 7 17 "awfy_towers.crexx" 28 3 11 "  return 1"
+                load r4,1                                    * 0x000030:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+                icopy r3,r4                                  * 0x000033:0009 Copy Integer op2 to op1
+                br lb_38                                     * 0x000036:0024 Branch to op1
+lb_38:          ret r3                                       * 0x000038:0031 Return op1
+                .srcstep 12 12 17 "awfy_towers.crexx" 14 1 11 "result = 0"
+                .meta "awfy_towers.main.result"="b" ".int" r2
+lb_3a:          load r2,0                                    * 0x00003a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+                .srcstep 81 81 17 "awfy_towers.crexx" 15 1 3 "do iteration = 1 to repetitions"
+                .srcstep 13 13 17 "awfy_towers.crexx" 15 4 17 "do iteration = 1 to repetitions"
+                .meta "awfy_towers.main.iteration"="b" ".int" r4
+                load r4,1                                    * 0x00003d:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 13 13 0 "iteration" ""
+                .srcstep 14 14 17 "awfy_towers.crexx" 15 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+                .srcstep 14 14 17 "awfy_towers.crexx" 15 18 32 "do iteration = 1 to repetitions"
+lb_40:          igt r3,r4,r1                                 * 0x000040:0068 Int Greater than op1=(op2>op3)
+                brt lb_17e,r3                                * 0x000044:0025 Branch to op1 if op2 true
+                .srcstep 23 23 17 "awfy_towers.crexx" 16 3 31 "  benchmark = .TowersBenchmark()"
+                .srcstep 16 16 6 "awfy_towers.crexx" 65 3 13 "  *: factory"
+                setattrs r6,8                                * 0x000047:00d9 set number attributes op1.num_attributes = op2
+                .srcstep 17 17 6 "awfy_towers.crexx" 65 3 13 "  *: factory"
+                setobjtype r6,"awfy_towers.towersbenchmark"  * 0x00004a:0038 Set runtime concrete object type metadata on op1
+                .srcstep 18 18 17 "awfy_towers.crexx" 66 5 22 "    pile0_present = 0"
+                load r8,0                                    * 0x00004d:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 18 18 0 "" ""
+                isetattr1 r6,3,r8                            * 0x000050:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 19 19 17 "awfy_towers.crexx" 67 5 22 "    pile1_present = 0"
+                load r7,0                                    * 0x000054:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 19 19 0 "" ""
+                isetattr1 r6,5,r7                            * 0x000057:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 20 20 17 "awfy_towers.crexx" 68 5 22 "    pile2_present = 0"
+                load r7,0                                    * 0x00005b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
+                isetattr1 r6,7,r7                            * 0x00005e:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 21 21 17 "awfy_towers.crexx" 69 5 19 "    moves_done = 0"
+                load r7,0                                    * 0x000062:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 21 21 0 "" ""
+                isetattr1 r6,1,r7                            * 0x000065:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 22 22 33 "awfy_towers.crexx" 70 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 6 22 22 0 "§factory" ""
+                copy r5,r6                                   * 0x000069:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 5 22 22 0 "benchmark" ""
+                .srcstep 73 73 17 "awfy_towers.crexx" 17 3 25 "  result = benchmark.run()"
+                .srcstep 24 24 33 "awfy_towers.crexx" 17 12 21 "  result = benchmark.run()"
+                .traceevent "V" 6 "R" "O" "r" 5 24 24 0 "benchmark" ""
+                copy r10,r5                                  * 0x00006c:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 10 24 24 0 "§this" ""
+                .srcstep 40 40 17 "awfy_towers.crexx" 73 5 29 "    call buildTowerAt(0, 13)"
+                .srcstep 25 25 33 "awfy_towers.crexx" 73 10 22 "    call buildTowerAt(0, 13)"
+                .traceevent "V" 6 "R" "O" "r" 10 25 25 0 "§this" ""
+                copy r11,r10                                 * 0x00006f:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 11 25 25 0 "§this" ""
+                .srcstep 37 37 17 "awfy_towers.crexx" 140 5 7 "    do i = disks to 0 by -1"
+                .srcstep 26 26 17 "awfy_towers.crexx" 140 8 17 "    do i = disks to 0 by -1"
+                load r7,13                                   * 0x000072:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 26 26 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 26 26 0 "i" ""
+                .srcstep 27 27 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+                load r12,0                                   * 0x000075:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 0 0 0 "" ""
+                .srcstep 28 28 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+                load r14,-1                                  * 0x000078:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 14 0 0 0 "" ""
+                .srcstep 27 27 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+lb_7b:          ilt r13,r7,r12                               * 0x00007b:006e Int Less than op1=(op2<op3)
+                brt lb_ab,r13                                * 0x00007f:0025 Branch to op1 if op2 true
+                .srcstep 35 35 17 "awfy_towers.crexx" 141 7 28 "      disk = .TowersDisk(i)"
+                .srcstep 29 29 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+                setattrs r16,4                               * 0x000082:00d9 set number attributes op1.num_attributes = op2
+                .srcstep 30 30 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+                setobjtype r16,"awfy_towers.towersdisk"      * 0x000085:0038 Set runtime concrete object type metadata on op1
+                .srcstep 31 31 33 "awfy_towers.crexx" 36 9 13 "    arg size = .int"
+                .traceevent "V" 6 "R" "I" "r" 7 31 31 0 "i" ""
+                .traceevent "A" 6 "R" "I" "r" 7 31 31 0 "size" ""
+                .srcstep 32 32 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+                .traceevent "V" 6 "R" "I" "r" 7 32 32 0 "size" ""
+                isetattr1 r16,1,r7                           * 0x000088:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 33 33 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+                load r18,0                                   * 0x00008c:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 18 33 33 0 "" ""
+                isetattr1 r16,2,r18                          * 0x00008f:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 34 34 33 "awfy_towers.crexx" 39 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 16 34 34 0 "§factory" ""
+                copy r8,r16                                  * 0x000093:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 8 34 34 0 "disk" ""
+                .srcstep 36 36 17 "awfy_towers.crexx" 142 7 32 "      call pushDisk(disk, pile)"
+                .traceevent "V" 6 "R" "O" "r" 11 36 36 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 8 36 36 0 "disk" ""
+                load r20,0                                   * 0x000096:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 20 36 36 0 "" ""
+                settp r11,256                                * 0x000099:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r8,256                                 * 0x00009c:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r21,§awfy_towers.towersbenchmark.pushdisk(),r11,r8,r20 * 0x00009f:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 21 36 36 0 "pushdisk" ""
+                .srcstep 28 28 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+                iadd r7,r14,r7                               * 0x0000a5:000f Integer Add (op1=op2+op3)
+                .srcstep 38 38 17 "awfy_towers.crexx" 143 5 8 "    end"
+                br lb_7b                                     * 0x0000a9:0024 Branch to op1
+lb_ab:          endlife r8                                   * 0x0000ab:0202 End storage reference lifetime for op1
+                .srcstep 39 39 6 "awfy_towers.crexx" 73 10 29 "    call buildTowerAt(0, 13)"
+                .traceevent "V" 6 "R" "O" "r" 11 0 0 0 "§this" ""
+                copy r10,r11                                 * 0x0000ad:0008 Copy op2 to op1
+                .srcstep 41 41 17 "awfy_towers.crexx" 74 5 19 "    moves_done = 0"
+                load r19,0                                   * 0x0000b0:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 19 41 41 0 "" ""
+                isetattr1 r10,1,r19                          * 0x0000b3:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 69 69 17 "awfy_towers.crexx" 75 5 29 "    call moveDisks(13, 0, 1)"
+                .srcstep 42 42 33 "awfy_towers.crexx" 75 10 19 "    call moveDisks(13, 0, 1)"
+                .traceevent "V" 6 "R" "O" "r" 10 42 42 0 "§this" ""
+                copy r22,r10                                 * 0x0000b7:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 22 42 42 0 "§this" ""
+                .srcstep 43 43 17 "awfy_towers.crexx" 151 7 55 "      call moveDisks(disks - 1, from_pile, other_pile)"
+                .traceevent "V" 6 "R" "O" "r" 22 43 43 0 "§this" ""
+                load r25,12                                  * 0x0000ba:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 25 43 43 0 "" ""
+                load r26,0                                   * 0x0000bd:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 26 43 43 0 "" ""
+                load r27,2                                   * 0x0000c0:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 27 43 43 0 "" ""
+                settp r22,256                                * 0x0000c3:0205 sets externally writable register status flags, preserving VM-private flags
+                call4 r20,§awfy_towers.towersbenchmark.movedisks(),r22,r25,r26,r27 * 0x0000c6:0194 Direct bytecode call with four explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 20 43 43 0 "movedisks" ""
+                .srcstep 66 66 17 "awfy_towers.crexx" 152 7 43 "      call moveTopDisk(from_pile, to_pile)"
+                .srcstep 44 44 33 "awfy_towers.crexx" 152 12 23 "      call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 22 44 44 0 "§this" ""
+                copy r29,r22                                 * 0x0000cd:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 29 44 44 0 "§this" ""
+                .srcstep 62 62 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+                .meta "awfy_towers.main.top"="b" ".towersdisk" r31
+                .srcstep 45 45 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+                null r31                                     * 0x0000d0:000e Null (clear) op1
+                .srcstep 46 46 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 29 46 46 0 "§this" ""
+                copy r32,r29                                 * 0x0000d2:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 32 46 46 0 "§this" ""
+                setobjuninit r31,"towersdisk"                * 0x0000d5:0054 Set runtime object type metadata on op1 and mark it uninitialized
+                .srcstep 47 47 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+                linkattr1 r27,r32,2                          * 0x0000d8:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 27 47 47 0 "pile0" ""
+                copy r31,r27                                 * 0x0000dc:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 31 47 47 0 "top" ""
+                unlink r27                                   * 0x0000df:00d5 Unlink op1
+                .srcstep 56 56 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+                .srcstep 50 50 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .srcstep 48 48 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .traceevent "V" 6 "R" "O" "r" 31 48 48 0 "top" ""
+                copy r33,r31                                 * 0x0000e1:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 33 48 48 0 "§this" ""
+                .srcstep 49 49 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+                linkattr1 r27,r33,2                          * 0x0000e4:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 27 56 56 0 "has_next" ""
+                igetunlink r26,r27                           * 0x0000e8:011d Copy integer from alias op2 to op1 then unlink op2
+                brtf lb_ef,lb_10b,r26                        * 0x0000eb:0027 Branch to op1 if op3 true, otherwise branch to op2
+                .srcstep 57 57 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+                .srcstep 53 53 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+                .srcstep 51 51 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+                .traceevent "V" 6 "R" "O" "r" 31 51 51 0 "top" ""
+lb_ef:          copy r34,r31                                 * 0x0000ef:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 34 51 51 0 "§this" ""
+                .srcstep 52 52 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+                linkattr1 r27,r34,3                          * 0x0000f2:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 27 52 52 0 "next_disk" ""
+                copy r25,r27                                 * 0x0000f6:0008 Copy op2 to op1
+                asserttype r25,"awfy_towers.towersdisk"      * 0x0000f9:003d Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+                unlink r27                                   * 0x0000fc:00d5 Unlink op1
+                .traceevent "A" 6 "R" "O" "r" 25 52 52 0 "next_disk" ""
+                .srcstep 54 54 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 25 54 54 0 "next_disk" ""
+                linkattr1 r27,r32,2                          * 0x0000fe:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r27,r25                                 * 0x000102:0008 Copy op2 to op1
+                unlink r27                                   * 0x000105:00d5 Unlink op1
+                endlife r25                                  * 0x000107:0202 End storage reference lifetime for op1
+                br lb_112                                    * 0x000109:0024 Branch to op1
+                .srcstep 55 55 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+lb_10b:         load r25,0                                   * 0x00010b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 25 55 55 0 "" ""
+                isetattr1 r32,3,r25                          * 0x00010e:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 59 59 33 "awfy_towers.crexx" 129 12 15 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 31 59 59 0 "top" ""
+lb_112:         copy r30,r31                                 * 0x000112:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 30 59 59 0 "__inline_ret_362_363" ""
+                .srcstep 60 60 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 32 0 0 0 "§this" ""
+                copy r29,r32                                 * 0x000115:0008 Copy op2 to op1
+                .srcstep 61 61 33 "awfy_towers.crexx" 129 5 11 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 30 61 61 0 "__inline_ret_362_363" ""
+                copy r28,r30                                 * 0x000118:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 28 61 61 0 "disk" ""
+                .srcstep 63 63 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 29 63 63 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 28 63 63 0 "disk" ""
+                load r27,1                                   * 0x00011b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 27 63 63 0 "" ""
+                settp r29,256                                * 0x00011e:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r28,256                                * 0x000121:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r23,§awfy_towers.towersbenchmark.pushdisk(),r29,r28,r27 * 0x000124:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 23 63 63 0 "pushdisk" ""
+                .srcstep 64 64 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+                linkattr1 r26,r29,1                          * 0x00012a:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 26 64 64 0 "moves_done" ""
+                iadd r25,r26,1                               * 0x00012e:0010 Integer Add (op1=op2+op3)
+                unlink r26                                   * 0x000132:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 25 64 64 0 "" ""
+                isetattr1 r29,1,r25                          * 0x000134:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 65 65 6 "awfy_towers.crexx" 152 12 43 "      call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 29 0 0 0 "§this" ""
+                copy r22,r29                                 * 0x000138:0008 Copy op2 to op1
+                .srcstep 67 67 17 "awfy_towers.crexx" 153 7 53 "      call moveDisks(disks - 1, other_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 22 67 67 0 "§this" ""
+                load r37,12                                  * 0x00013b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 37 67 67 0 "" ""
+                load r38,2                                   * 0x00013e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 38 67 67 0 "" ""
+                load r39,1                                   * 0x000141:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 67 67 0 "" ""
+                settp r22,256                                * 0x000144:0205 sets externally writable register status flags, preserving VM-private flags
+                call4 r27,§awfy_towers.towersbenchmark.movedisks(),r22,r37,r38,r39 * 0x000147:0194 Direct bytecode call with four explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 27 67 67 0 "movedisks" ""
+                .srcstep 68 68 6 "awfy_towers.crexx" 75 10 29 "    call moveDisks(13, 0, 1)"
+                .traceevent "V" 6 "R" "O" "r" 22 0 0 0 "§this" ""
+                copy r10,r22                                 * 0x00014e:0008 Copy op2 to op1
+                .srcstep 70 70 33 "awfy_towers.crexx" 76 12 22 "    return moves_done"
+                linkattr1 r39,r10,1                          * 0x000151:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 39 70 70 0 "moves_done" ""
+                igetunlink r9,r39                            * 0x000155:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 9 70 70 0 "__inline_ret_188_189" ""
+                .srcstep 71 71 6 "awfy_towers.crexx" 17 12 25 "  result = benchmark.run()"
+                .traceevent "V" 6 "R" "O" "r" 10 0 0 0 "§this" ""
+                copy r5,r10                                  * 0x000158:0008 Copy op2 to op1
+                .srcstep 72 72 33 "awfy_towers.crexx" 76 5 11 "    return moves_done"
+                .traceevent "V" 6 "R" "I" "r" 9 72 72 0 "__inline_ret_188_189" ""
+                copy r2,r9                                   * 0x00015b:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 2 72 72 0 "result" ""
+                .srcstep 79 79 17 "awfy_towers.crexx" 18 3 20 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+                .traceevent "V" 6 "R" "I" "r" 9 79 79 0 "result" ""
+                ine r39,r9,8191                              * 0x00015e:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 39 79 79 0 "" ""
+                brf lb_17b,r39                               * 0x000162:0026 Branch to op1 if op2 false
+                .srcstep 80 80 17 "awfy_towers.crexx" 18 21 25 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+                .srcstep 78 78 17 "awfy_towers.crexx" 18 26 76 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+                .meta "awfy_towers.main.benchmark"="b" ".towersbenchmark" r5
+                .srcstep 77 77 17 "awfy_towers.crexx" 18 33 37 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+                .srcstep 74 74 33 "awfy_towers.crexx" 26 7 14 "  arg message = .string"
+                itos r2                                      * 0x000165:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 2 74 74 0 "result" ""
+                concat r38,"expected 8191 moves, got ",r2    * 0x000167:0088 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 38 74 74 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 38 74 74 0 "message" ""
+                .srcstep 75 75 17 "awfy_towers.crexx" 27 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "r" 38 75 75 0 "message" ""
+                sconcat r37,"FAIL:",r38                      * 0x00016b:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 37 75 75 0 "" ""
+                say r37                                      * 0x00016f:01c2 Say op1
+                .srcstep 76 76 17 "awfy_towers.crexx" 28 3 11 "  return 1"
+                load r37,1                                   * 0x000171:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 37 78 78 0 "" ""
+                icopy r36,r37                                * 0x000174:0009 Copy Integer op2 to op1
+                br lb_179                                    * 0x000177:0024 Branch to op1
+lb_179:         ret r36                                      * 0x000179:0031 Return op1
+                .srcstep 15 15 17 "awfy_towers.crexx" 15 4 13 "do iteration = 1 to repetitions"
+                .srcstep 82 82 17 "awfy_towers.crexx" 19 1 4 "end"
+lb_17b:         bctp lb_40,r4                                * 0x00017b:015d inc op2; goto op1
+lb_17e:         endlife r5                                   * 0x00017e:0202 End storage reference lifetime for op1
+                .meta "awfy_towers.main.benchmark"
+                .meta "awfy_towers.main.iteration"
+                .srcstep 83 83 17 "awfy_towers.crexx" 21 1 68 "say \"benchmark=awfy_towers repetitions=\"repetitions \"result=\"result"
+                itos r1                                      * 0x000180:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 1 83 83 0 "repetitions" ""
+                concat r39,"benchmark=awfy_towers repetitions=",r1 * 0x000182:0088 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 39 83 83 0 "" ""
+                sconcat r39,r39,"result="                    * 0x000186:008a String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 39 83 83 0 "" ""
+                itos r2                                      * 0x00018a:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 2 83 83 0 "result" ""
+                append r39,r2                                * 0x00018c:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 39 83 83 0 "" ""
+                say r39                                      * 0x00018f:01c2 Say op1
+                .srcstep 84 84 17 "awfy_towers.crexx" 22 1 24 "say \"PASS: AWFY Towers\""
+                say "PASS: AWFY Towers"                      * 0x000191:01c7 Say op1
+                .srcstep 85 85 17 "awfy_towers.crexx" 23 1 9 "return 0"
+                ret 0                                        * 0x000193:0032 Return op1
+                .meta "awfy_towers.main.argv"
+                .meta "awfy_towers.main.repetitions"
+                .meta "awfy_towers.main.result"
+
+§awfy_towers.towersdisk.§factory() .locals=4
+                .meta "awfy_towers.towersdisk.§factory"="b" ".awfy_towers..towersdisk" §awfy_towers.towersdisk.§factory() "size=.int"
+                .srcstep 93 93 17 "awfy_towers.crexx" 35 3 13 "  *: factory"
+                setattrs r1,4                                * 0x000195:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r1,"awfy_towers.towersdisk"       * 0x000198:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x00019b:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 89 89 17 "awfy_towers.crexx" 36 9 20 "    arg size = .int"
+                .meta "awfy_towers.towersdisk.§factory.size"="b" ".int" a1 /* aka r5 */
+                .meta "awfy_towers.towersdisk.§factory.§factory"="b" ".towersdisk" r1
+                .srcstep 90 90 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+                .traceevent "V" 6 "R" "I" "a" 1 90 90 0 "size" ""
+                isetattr1 r1,1,a1 /* aka r5 */               * 0x00019f:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 91 91 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+                load r3,0                                    * 0x0001a3:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 91 91 0 "" ""
+                isetattr1 r1,2,r3                            * 0x0001a6:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 92 92 17 "awfy_towers.crexx" 39 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 1 92 92 0 "§factory" ""
+                ret r1                                       * 0x0001aa:0031 Return op1
+                .meta "awfy_towers.towersdisk.§factory.size"
+                .meta "awfy_towers.towersdisk.§factory.§factory"
+
+§awfy_towers.towersdisk.size() .locals=2
+                .meta "awfy_towers.towersdisk.size"="b" ".int" §awfy_towers.towersdisk.size() ""
+                .srcstep 95 95 17 "awfy_towers.crexx" 41 3 22 "  size: method = .int"
+                assertinitialized a1 /* aka r3 */            * 0x0001ac:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0001ae:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 94 94 17 "awfy_towers.crexx" 42 5 21 "    return disk_size"
+                .meta "awfy_towers.towersdisk.size.§this"="b" ".towersdisk" a1 /* aka r3 */
+                linkattr1 r1,a1 /* aka r3 */,1               * 0x0001b2:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 1 94 94 0 "disk_size" ""
+                ret r1                                       * 0x0001b6:0031 Return op1
+                .meta "awfy_towers.towersdisk.size.§this"
+
+§awfy_towers.towersdisk.next() .locals=3
+                .meta "awfy_towers.towersdisk.next"="b" ".awfy_towers..towersdisk" §awfy_towers.towersdisk.next() ""
+                .srcstep 97 97 17 "awfy_towers.crexx" 44 3 29 "  next: method = .TowersDisk"
+                assertinitialized a1 /* aka r4 */            * 0x0001b8:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0001ba:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 96 96 17 "awfy_towers.crexx" 45 5 36 "    return next_disk as .TowersDisk"
+                .meta "awfy_towers.towersdisk.next.§this"="b" ".towersdisk" a1 /* aka r4 */
+                linkattr1 r1,a1 /* aka r4 */,3               * 0x0001be:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 1 96 96 0 "next_disk" ""
+                copy r2,r1                                   * 0x0001c2:0008 Copy op2 to op1
+                asserttype r2,"awfy_towers.towersdisk"       * 0x0001c5:003d Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+                unlink r1                                    * 0x0001c8:00d5 Unlink op1
+                ret r2                                       * 0x0001ca:0031 Return op1
+                .meta "awfy_towers.towersdisk.next.§this"
+
+§awfy_towers.towersdisk.hasnext() .locals=2
+                .meta "awfy_towers.towersdisk.hasnext"="b" ".int" §awfy_towers.towersdisk.hasnext() ""
+                .srcstep 99 99 17 "awfy_towers.crexx" 47 3 25 "  hasNext: method = .int"
+                assertinitialized a1 /* aka r3 */            * 0x0001cc:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0001ce:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 98 98 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+                .meta "awfy_towers.towersdisk.hasnext.§this"="b" ".towersdisk" a1 /* aka r3 */
+                linkattr1 r1,a1 /* aka r3 */,2               * 0x0001d2:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 1 98 98 0 "has_next" ""
+                ret r1                                       * 0x0001d6:0031 Return op1
+                .meta "awfy_towers.towersdisk.hasnext.§this"
+
+§awfy_towers.towersdisk.setnext() .locals=4
+                .meta "awfy_towers.towersdisk.setnext"="b" ".void" §awfy_towers.towersdisk.setnext() "value=.towersdisk"
+                .srcstep 104 104 17 "awfy_towers.crexx" 50 3 26 "  setNext: method = .void"
+                assertinitialized a1 /* aka r5 */            * 0x0001d8:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0001da:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 100 100 17 "awfy_towers.crexx" 51 9 28 "    arg value = .TowersDisk"
+                .meta "awfy_towers.towersdisk.setnext.value"="b" ".towersdisk" a2 /* aka r6 */
+                .meta "awfy_towers.towersdisk.setnext.§this"="b" ".towersdisk" a1 /* aka r5 */
+                .srcstep 101 101 17 "awfy_towers.crexx" 52 5 33 "    next_disk = value as .object"
+                .traceevent "V" 6 "R" "O" "a" 2 101 101 0 "value" ""
+                copy r3,a2 /* aka r6 */                      * 0x0001de:0008 Copy op2 to op1
+                linkattr1 r2,a1 /* aka r5 */,3               * 0x0001e1:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r2,r3                                   * 0x0001e5:0008 Copy op2 to op1
+                unlink r2                                    * 0x0001e8:00d5 Unlink op1
+                .srcstep 102 102 17 "awfy_towers.crexx" 53 5 17 "    has_next = 1"
+                load r2,1                                    * 0x0001ea:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 102 102 0 "" ""
+                isetattr1 a1 /* aka r5 */,2,r2               * 0x0001ed:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 103 103 17 "awfy_towers.crexx" 54 5 11 "    return"
+                ret                                          * 0x0001f1:0030 Return VOID
+                .meta "awfy_towers.towersdisk.setnext.value"
+                .meta "awfy_towers.towersdisk.setnext.§this"
+
+§awfy_towers.towersbenchmark.§factory() .locals=3
+                .meta "awfy_towers.towersbenchmark.§factory"="b" ".awfy_towers..towersbenchmark" §awfy_towers.towersbenchmark.§factory() ""
+                .srcstep 110 110 17 "awfy_towers.crexx" 65 3 13 "  *: factory"
+                setattrs r0,8                                * 0x0001f2:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r0,"awfy_towers.towersbenchmark"  * 0x0001f5:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x0001f8:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 105 105 17 "awfy_towers.crexx" 66 5 22 "    pile0_present = 0"
+                .meta "awfy_towers.towersbenchmark.§factory.§factory"="b" ".towersbenchmark" r0
+                load r2,0                                    * 0x0001fc:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 105 105 0 "" ""
+                isetattr1 r0,3,r2                            * 0x0001ff:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 106 106 17 "awfy_towers.crexx" 67 5 22 "    pile1_present = 0"
+                load r1,0                                    * 0x000203:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 106 106 0 "" ""
+                isetattr1 r0,5,r1                            * 0x000206:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 107 107 17 "awfy_towers.crexx" 68 5 22 "    pile2_present = 0"
+                load r1,0                                    * 0x00020a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 107 107 0 "" ""
+                isetattr1 r0,7,r1                            * 0x00020d:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 108 108 17 "awfy_towers.crexx" 69 5 19 "    moves_done = 0"
+                load r1,0                                    * 0x000211:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 108 108 0 "" ""
+                isetattr1 r0,1,r1                            * 0x000214:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 109 109 17 "awfy_towers.crexx" 70 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 0 109 109 0 "§factory" ""
+                ret r0                                       * 0x000218:0031 Return op1
+                .meta "awfy_towers.towersbenchmark.§factory.§factory"
+
+§awfy_towers.towersbenchmark.run() .locals=32
+                .meta "awfy_towers.towersbenchmark.run"="b" ".int" §awfy_towers.towersbenchmark.run() ""
+                .srcstep 157 157 17 "awfy_towers.crexx" 72 3 21 "  run: method = .int"
+                assertinitialized a1 /* aka r33 */           * 0x00021a:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x00021c:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 126 126 17 "awfy_towers.crexx" 73 5 29 "    call buildTowerAt(0, 13)"
+                .srcstep 111 111 33 "awfy_towers.crexx" 73 10 22 "    call buildTowerAt(0, 13)"
+                .traceevent "V" 6 "R" "O" "a" 1 111 111 0 "§this" ""
+                copy r1,a1 /* aka r33 */                     * 0x000220:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 1 111 111 0 "§this" ""
+                .srcstep 123 123 17 "awfy_towers.crexx" 140 5 7 "    do i = disks to 0 by -1"
+                .srcstep 112 112 17 "awfy_towers.crexx" 140 8 17 "    do i = disks to 0 by -1"
+                load r3,13                                   * 0x000223:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 112 112 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 112 112 0 "i" ""
+                .srcstep 113 113 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+                load r4,0                                    * 0x000226:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
+                .srcstep 114 114 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+                load r6,-1                                   * 0x000229:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
+                .srcstep 113 113 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+lb_22c:         ilt r5,r3,r4                                 * 0x00022c:006e Int Less than op1=(op2<op3)
+                brt lb_25c,r5                                * 0x000230:0025 Branch to op1 if op2 true
+                .srcstep 121 121 17 "awfy_towers.crexx" 141 7 28 "      disk = .TowersDisk(i)"
+                .srcstep 115 115 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+                setattrs r8,4                                * 0x000233:00d9 set number attributes op1.num_attributes = op2
+                .srcstep 116 116 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+                setobjtype r8,"awfy_towers.towersdisk"       * 0x000236:0038 Set runtime concrete object type metadata on op1
+                .srcstep 117 117 33 "awfy_towers.crexx" 36 9 13 "    arg size = .int"
+                .traceevent "V" 6 "R" "I" "r" 3 117 117 0 "i" ""
+                .traceevent "A" 6 "R" "I" "r" 3 117 117 0 "size" ""
+                .srcstep 118 118 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+                .traceevent "V" 6 "R" "I" "r" 3 118 118 0 "size" ""
+                isetattr1 r8,1,r3                            * 0x000239:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 119 119 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+                load r10,0                                   * 0x00023d:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 10 119 119 0 "" ""
+                isetattr1 r8,2,r10                           * 0x000240:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 120 120 33 "awfy_towers.crexx" 39 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 8 120 120 0 "§factory" ""
+                copy r2,r8                                   * 0x000244:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 2 120 120 0 "disk" ""
+                .srcstep 122 122 17 "awfy_towers.crexx" 142 7 32 "      call pushDisk(disk, pile)"
+                .traceevent "V" 6 "R" "O" "r" 1 122 122 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 2 122 122 0 "disk" ""
+                load r12,0                                   * 0x000247:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 122 122 0 "" ""
+                settp r1,256                                 * 0x00024a:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r2,256                                 * 0x00024d:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r13,§awfy_towers.towersbenchmark.pushdisk(),r1,r2,r12 * 0x000250:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 13 122 122 0 "pushdisk" ""
+                .srcstep 114 114 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+                iadd r3,r6,r3                                * 0x000256:000f Integer Add (op1=op2+op3)
+                .srcstep 124 124 17 "awfy_towers.crexx" 143 5 8 "    end"
+                br lb_22c                                    * 0x00025a:0024 Branch to op1
+lb_25c:         endlife r2                                   * 0x00025c:0202 End storage reference lifetime for op1
+                .srcstep 125 125 6 "awfy_towers.crexx" 73 10 29 "    call buildTowerAt(0, 13)"
+                .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "§this" ""
+                copy a1 /* aka r33 */,r1                     * 0x00025e:0008 Copy op2 to op1
+                .srcstep 127 127 17 "awfy_towers.crexx" 74 5 19 "    moves_done = 0"
+                .meta "awfy_towers.towersbenchmark.run.§this"="b" ".towersbenchmark" a1 /* aka r33 */
+                load r11,0                                   * 0x000261:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 11 127 127 0 "" ""
+                isetattr1 a1 /* aka r33 */,1,r11             * 0x000264:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 155 155 17 "awfy_towers.crexx" 75 5 29 "    call moveDisks(13, 0, 1)"
+                .srcstep 128 128 33 "awfy_towers.crexx" 75 10 19 "    call moveDisks(13, 0, 1)"
+                .traceevent "V" 6 "R" "O" "a" 1 128 128 0 "§this" ""
+                copy r14,a1 /* aka r33 */                    * 0x000268:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 14 128 128 0 "§this" ""
+                .srcstep 129 129 17 "awfy_towers.crexx" 151 7 55 "      call moveDisks(disks - 1, from_pile, other_pile)"
+                .traceevent "V" 6 "R" "O" "r" 14 129 129 0 "§this" ""
+                load r17,12                                  * 0x00026b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 17 129 129 0 "" ""
+                load r18,0                                   * 0x00026e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 18 129 129 0 "" ""
+                load r19,2                                   * 0x000271:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 19 129 129 0 "" ""
+                settp r14,256                                * 0x000274:0205 sets externally writable register status flags, preserving VM-private flags
+                call4 r12,§awfy_towers.towersbenchmark.movedisks(),r14,r17,r18,r19 * 0x000277:0194 Direct bytecode call with four explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 12 129 129 0 "movedisks" ""
+                .srcstep 152 152 17 "awfy_towers.crexx" 152 7 43 "      call moveTopDisk(from_pile, to_pile)"
+                .srcstep 130 130 33 "awfy_towers.crexx" 152 12 23 "      call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 14 130 130 0 "§this" ""
+                copy r21,r14                                 * 0x00027e:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 21 130 130 0 "§this" ""
+                .srcstep 148 148 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+                .meta "awfy_towers.towersbenchmark.run.top"="b" ".towersdisk" r23
+                .srcstep 131 131 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+                null r23                                     * 0x000281:000e Null (clear) op1
+                .srcstep 132 132 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 21 132 132 0 "§this" ""
+                copy r24,r21                                 * 0x000283:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 24 132 132 0 "§this" ""
+                setobjuninit r23,"towersdisk"                * 0x000286:0054 Set runtime object type metadata on op1 and mark it uninitialized
+                .srcstep 133 133 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+                linkattr1 r19,r24,2                          * 0x000289:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 19 133 133 0 "pile0" ""
+                copy r23,r19                                 * 0x00028d:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 23 133 133 0 "top" ""
+                unlink r19                                   * 0x000290:00d5 Unlink op1
+                .srcstep 142 142 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+                .srcstep 136 136 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .srcstep 134 134 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .traceevent "V" 6 "R" "O" "r" 23 134 134 0 "top" ""
+                copy r25,r23                                 * 0x000292:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 25 134 134 0 "§this" ""
+                .srcstep 135 135 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+                linkattr1 r19,r25,2                          * 0x000295:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 19 142 142 0 "has_next" ""
+                igetunlink r18,r19                           * 0x000299:011d Copy integer from alias op2 to op1 then unlink op2
+                brtf lb_2a0,lb_2bc,r18                       * 0x00029c:0027 Branch to op1 if op3 true, otherwise branch to op2
+                .srcstep 143 143 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+                .srcstep 139 139 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+                .srcstep 137 137 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+                .traceevent "V" 6 "R" "O" "r" 23 137 137 0 "top" ""
+lb_2a0:         copy r26,r23                                 * 0x0002a0:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 26 137 137 0 "§this" ""
+                .srcstep 138 138 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+                linkattr1 r19,r26,3                          * 0x0002a3:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 19 138 138 0 "next_disk" ""
+                copy r17,r19                                 * 0x0002a7:0008 Copy op2 to op1
+                asserttype r17,"awfy_towers.towersdisk"      * 0x0002aa:003d Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+                unlink r19                                   * 0x0002ad:00d5 Unlink op1
+                .traceevent "A" 6 "R" "O" "r" 17 138 138 0 "next_disk" ""
+                .srcstep 140 140 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 17 140 140 0 "next_disk" ""
+                linkattr1 r19,r24,2                          * 0x0002af:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r19,r17                                 * 0x0002b3:0008 Copy op2 to op1
+                unlink r19                                   * 0x0002b6:00d5 Unlink op1
+                endlife r17                                  * 0x0002b8:0202 End storage reference lifetime for op1
+                br lb_2c3                                    * 0x0002ba:0024 Branch to op1
+                .srcstep 141 141 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+lb_2bc:         load r17,0                                   * 0x0002bc:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 17 141 141 0 "" ""
+                isetattr1 r24,3,r17                          * 0x0002bf:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 145 145 33 "awfy_towers.crexx" 129 12 15 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 23 145 145 0 "top" ""
+lb_2c3:         copy r22,r23                                 * 0x0002c3:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 22 145 145 0 "__inline_ret_362_363" ""
+                .srcstep 146 146 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 24 0 0 0 "§this" ""
+                copy r21,r24                                 * 0x0002c6:0008 Copy op2 to op1
+                .srcstep 147 147 33 "awfy_towers.crexx" 129 5 11 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 22 147 147 0 "__inline_ret_362_363" ""
+                copy r20,r22                                 * 0x0002c9:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 20 147 147 0 "disk" ""
+                .srcstep 149 149 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 21 149 149 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 20 149 149 0 "disk" ""
+                load r19,1                                   * 0x0002cc:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 19 149 149 0 "" ""
+                settp r21,256                                * 0x0002cf:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r20,256                                * 0x0002d2:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r15,§awfy_towers.towersbenchmark.pushdisk(),r21,r20,r19 * 0x0002d5:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 15 149 149 0 "pushdisk" ""
+                .srcstep 150 150 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+                linkattr1 r18,r21,1                          * 0x0002db:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 18 150 150 0 "moves_done" ""
+                iadd r17,r18,1                               * 0x0002df:0010 Integer Add (op1=op2+op3)
+                unlink r18                                   * 0x0002e3:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 17 150 150 0 "" ""
+                isetattr1 r21,1,r17                          * 0x0002e5:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 151 151 6 "awfy_towers.crexx" 152 12 43 "      call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 21 0 0 0 "§this" ""
+                copy r14,r21                                 * 0x0002e9:0008 Copy op2 to op1
+                .srcstep 153 153 17 "awfy_towers.crexx" 153 7 53 "      call moveDisks(disks - 1, other_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 14 153 153 0 "§this" ""
+                load r29,12                                  * 0x0002ec:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 29 153 153 0 "" ""
+                load r30,2                                   * 0x0002ef:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 30 153 153 0 "" ""
+                load r31,1                                   * 0x0002f2:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 31 153 153 0 "" ""
+                settp r14,256                                * 0x0002f5:0205 sets externally writable register status flags, preserving VM-private flags
+                call4 r19,§awfy_towers.towersbenchmark.movedisks(),r14,r29,r30,r31 * 0x0002f8:0194 Direct bytecode call with four explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 19 153 153 0 "movedisks" ""
+                .srcstep 154 154 6 "awfy_towers.crexx" 75 10 29 "    call moveDisks(13, 0, 1)"
+                .traceevent "V" 6 "R" "O" "r" 14 0 0 0 "§this" ""
+                copy a1 /* aka r33 */,r14                    * 0x0002ff:0008 Copy op2 to op1
+                .srcstep 156 156 17 "awfy_towers.crexx" 76 5 22 "    return moves_done"
+                linkattr1 r31,a1 /* aka r33 */,1             * 0x000302:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 31 156 156 0 "moves_done" ""
+                ret r31                                      * 0x000306:0031 Return op1
+                .meta "awfy_towers.towersbenchmark.run.§this"
+
+§awfy_towers.towersbenchmark.pushdisk() .locals=14
+                .meta "awfy_towers.towersbenchmark.pushdisk"="b" ".void" §awfy_towers.towersbenchmark.pushdisk() "disk=.towersdisk,pile=.int"
+                .srcstep 212 212 17 "awfy_towers.crexx" 78 3 27 "  pushDisk: method = .void"
+                assertinitialized a1 /* aka r15 */           * 0x000308:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x00030a:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 158 158 17 "awfy_towers.crexx" 79 9 27 "    arg disk = .TowersDisk, pile = .int"
+                .meta "awfy_towers.towersbenchmark.pushdisk.disk"="b" ".towersdisk" a2 /* aka r16 */
+                .meta "awfy_towers.towersbenchmark.pushdisk.§this"="b" ".towersbenchmark" a1 /* aka r15 */
+                .srcstep 159 159 17 "awfy_towers.crexx" 79 29 40 "    arg disk = .TowersDisk, pile = .int"
+                .meta "awfy_towers.towersbenchmark.pushdisk.pile"="b" ".int" a3 /* aka r17 */
+                .meta "awfy_towers.towersbenchmark.pushdisk.top"="b" ".towersdisk" r3
+                .srcstep 160 160 17 "awfy_towers.crexx" 80 5 22 "    top = .TowersDisk"
+                null r3                                      * 0x00030e:000e Null (clear) op1
+                setobjuninit r3,"towersdisk"                 * 0x000310:0054 Set runtime object type metadata on op1 and mark it uninitialized
+                .srcstep 161 161 17 "awfy_towers.crexx" 81 5 16 "    has_top = 0"
+                .meta "awfy_towers.towersbenchmark.pushdisk.has_top"="b" ".int" r1
+                load r1,0                                    * 0x000313:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 161 161 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 161 161 0 "has_top" ""
+                .srcstep 177 177 17 "awfy_towers.crexx" 82 5 16 "    if pile = 0 then do"
+                .traceevent "V" 6 "R" "I" "a" 3 177 177 0 "pile" ""
+                ieq r5,a3 /* aka r17 */,0                    * 0x000316:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 5 177 177 0 "" ""
+                brf lb_332,r5                                * 0x00031a:0026 Branch to op1 if op2 false
+                .srcstep 178 178 17 "awfy_towers.crexx" 82 17 21 "    if pile = 0 then do"
+                .srcstep 162 162 17 "awfy_towers.crexx" 83 7 30 "      has_top = pile0_present"
+                linkattr1 r6,a1 /* aka r15 */,3              * 0x00031d:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 6 162 162 0 "pile0_present" ""
+                igetunlink r1,r6                             * 0x000321:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 1 162 162 0 "has_top" ""
+                .srcstep 164 164 17 "awfy_towers.crexx" 84 7 17 "      if has_top then top = pile0"
+                .traceevent "V" 6 "R" "B" "r" 1 164 164 0 "has_top" ""
+                brf lb_361,r1                                * 0x000324:0026 Branch to op1 if op2 false
+                .srcstep 165 165 17 "awfy_towers.crexx" 84 18 22 "      if has_top then top = pile0"
+                .srcstep 163 163 17 "awfy_towers.crexx" 84 23 34 "      if has_top then top = pile0"
+                linkattr1 r6,a1 /* aka r15 */,2              * 0x000327:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 6 163 163 0 "pile0" ""
+                copy r3,r6                                   * 0x00032b:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 3 163 163 0 "top" ""
+                unlink r6                                    * 0x00032e:00d5 Unlink op1
+                br lb_361                                    * 0x000330:0024 Branch to op1
+                .srcstep 174 174 17 "awfy_towers.crexx" 86 10 21 "    else if pile = 1 then do"
+                .traceevent "V" 6 "R" "I" "a" 3 174 174 0 "pile" ""
+lb_332:         ieq r6,a3 /* aka r17 */,1                    * 0x000332:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 6 174 174 0 "" ""
+                brf lb_34e,r6                                * 0x000336:0026 Branch to op1 if op2 false
+                .srcstep 175 175 17 "awfy_towers.crexx" 86 22 26 "    else if pile = 1 then do"
+                .srcstep 166 166 17 "awfy_towers.crexx" 87 7 30 "      has_top = pile1_present"
+                linkattr1 r7,a1 /* aka r15 */,5              * 0x000339:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 166 166 0 "pile1_present" ""
+                igetunlink r1,r7                             * 0x00033d:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 1 166 166 0 "has_top" ""
+                .srcstep 168 168 17 "awfy_towers.crexx" 88 7 17 "      if has_top then top = pile1"
+                .traceevent "V" 6 "R" "B" "r" 1 168 168 0 "has_top" ""
+                brf lb_361,r1                                * 0x000340:0026 Branch to op1 if op2 false
+                .srcstep 169 169 17 "awfy_towers.crexx" 88 18 22 "      if has_top then top = pile1"
+                .srcstep 167 167 17 "awfy_towers.crexx" 88 23 34 "      if has_top then top = pile1"
+                linkattr1 r7,a1 /* aka r15 */,4              * 0x000343:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 7 167 167 0 "pile1" ""
+                copy r3,r7                                   * 0x000347:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 3 167 167 0 "top" ""
+                unlink r7                                    * 0x00034a:00d5 Unlink op1
+                br lb_361                                    * 0x00034c:0024 Branch to op1
+                .srcstep 170 170 17 "awfy_towers.crexx" 91 7 30 "      has_top = pile2_present"
+lb_34e:         linkattr1 r7,a1 /* aka r15 */,7              * 0x00034e:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 170 170 0 "pile2_present" ""
+                igetunlink r1,r7                             * 0x000352:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 1 170 170 0 "has_top" ""
+                .srcstep 172 172 17 "awfy_towers.crexx" 92 7 17 "      if has_top then top = pile2"
+                .traceevent "V" 6 "R" "B" "r" 1 172 172 0 "has_top" ""
+                brf lb_361,r1                                * 0x000355:0026 Branch to op1 if op2 false
+                .srcstep 173 173 17 "awfy_towers.crexx" 92 18 22 "      if has_top then top = pile2"
+                .srcstep 171 171 17 "awfy_towers.crexx" 92 23 34 "      if has_top then top = pile2"
+                linkattr1 r7,a1 /* aka r15 */,6              * 0x000358:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 7 171 171 0 "pile2" ""
+                copy r3,r7                                   * 0x00035c:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 3 171 171 0 "top" ""
+                unlink r7                                    * 0x00035f:00d5 Unlink op1
+                .srcstep 197 197 17 "awfy_towers.crexx" 94 5 15 "    if has_top then do"
+                .traceevent "V" 6 "R" "B" "r" 1 197 197 0 "has_top" ""
+lb_361:         brf lb_3a4,r1                                * 0x000361:0026 Branch to op1 if op2 false
+                .srcstep 198 198 17 "awfy_towers.crexx" 94 16 20 "    if has_top then do"
+                .srcstep 190 190 17 "awfy_towers.crexx" 95 7 33 "      if disk.size() >= top.size() then return"
+                .srcstep 188 188 17 "awfy_towers.crexx" 95 10 14 "      if disk.size() >= top.size() then return"
+                .srcstep 183 183 33 "awfy_towers.crexx" 95 15 19 "      if disk.size() >= top.size() then return"
+                .srcstep 182 182 17 "awfy_towers.crexx" 95 10 14 "      if disk.size() >= top.size() then return"
+                .srcstep 180 180 33 "awfy_towers.crexx" 95 10 14 "      if disk.size() >= top.size() then return"
+                .traceevent "V" 6 "R" "O" "a" 2 180 180 0 "disk" ""
+                copy r9,a2 /* aka r16 */                     * 0x000364:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 9 180 180 0 "§this" ""
+                .srcstep 181 181 17 "awfy_towers.crexx" 42 5 21 "    return disk_size"
+                linkattr1 r7,r9,1                            * 0x000367:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 183 183 0 "disk_size" ""
+                igetunlink r6,r7                             * 0x00036b:011d Copy integer from alias op2 to op1 then unlink op2
+                br lb_370                                    * 0x00036e:0024 Branch to op1
+lb_370:         icopy r8,r6                                  * 0x000370:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 8 183 183 0 "__inline_lhs_587_249" ""
+                .srcstep 187 187 33 "awfy_towers.crexx" 95 22 24 "      if disk.size() >= top.size() then return"
+                .traceevent "V" 6 "R" "I" "r" 8 190 190 0 "__inline_lhs_587_249" ""
+                .srcstep 186 186 17 "awfy_towers.crexx" 95 25 28 "      if disk.size() >= top.size() then return"
+                .srcstep 184 184 33 "awfy_towers.crexx" 95 25 28 "      if disk.size() >= top.size() then return"
+                .traceevent "V" 6 "R" "O" "r" 3 184 184 0 "top" ""
+                copy r10,r3                                  * 0x000373:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 10 184 184 0 "§this" ""
+                .srcstep 185 185 17 "awfy_towers.crexx" 42 5 21 "    return disk_size"
+                linkattr1 r7,r10,1                           * 0x000376:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 190 190 0 "disk_size" ""
+                igetunlink r6,r7                             * 0x00037a:011d Copy integer from alias op2 to op1 then unlink op2
+                br lb_37f                                    * 0x00037d:0024 Branch to op1
+lb_37f:         igte r6,r8,r6                                * 0x00037f:006b Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 6 190 190 0 "" ""
+                icopy r5,r6                                  * 0x000383:0009 Copy Integer op2 to op1
+                brtf lb_38a,lb_38b,r5                        * 0x000386:0027 Branch to op1 if op3 true, otherwise branch to op2
+                .srcstep 191 191 17 "awfy_towers.crexx" 95 33 34 "      if disk.size() >= top.size() then return"
+                .srcstep 189 189 17 "awfy_towers.crexx" 95 41 47 "      if disk.size() >= top.size() then return"
+lb_38a:         ret                                          * 0x00038a:0030 Return VOID
+                .srcstep 196 196 17 "awfy_towers.crexx" 96 7 29 "      call disk.setNext(top)"
+                .srcstep 192 192 33 "awfy_towers.crexx" 96 12 16 "      call disk.setNext(top)"
+                .traceevent "V" 6 "R" "O" "a" 2 192 192 0 "disk" ""
+lb_38b:         copy r12,a2 /* aka r16 */                    * 0x00038b:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 12 192 192 0 "§this" ""
+                .srcstep 193 193 17 "awfy_towers.crexx" 52 5 33 "    next_disk = value as .object"
+                .traceevent "V" 6 "R" "O" "r" 3 193 193 0 "top" ""
+                copy r6,r3                                   * 0x00038e:0008 Copy op2 to op1
+                linkattr1 r7,r12,3                           * 0x000391:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r7,r6                                   * 0x000395:0008 Copy op2 to op1
+                unlink r7                                    * 0x000398:00d5 Unlink op1
+                .srcstep 194 194 17 "awfy_towers.crexx" 53 5 17 "    has_next = 1"
+                load r6,1                                    * 0x00039a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 6 194 194 0 "" ""
+                isetattr1 r12,2,r6                           * 0x00039d:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 195 195 6 "awfy_towers.crexx" 96 12 29 "      call disk.setNext(top)"
+                .traceevent "V" 6 "R" "O" "r" 12 0 0 0 "§this" ""
+                copy a2 /* aka r16 */,r12                    * 0x0003a1:0008 Copy op2 to op1
+                .srcstep 208 208 17 "awfy_towers.crexx" 98 5 16 "    if pile = 0 then do"
+                .traceevent "V" 6 "R" "I" "a" 3 208 208 0 "pile" ""
+lb_3a4:         ieq r7,a3 /* aka r17 */,0                    * 0x0003a4:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 7 208 208 0 "" ""
+                brf lb_3bd,r7                                * 0x0003a8:0026 Branch to op1 if op2 false
+                .srcstep 209 209 17 "awfy_towers.crexx" 98 17 21 "    if pile = 0 then do"
+                .srcstep 199 199 17 "awfy_towers.crexx" 99 7 19 "      pile0 = disk"
+                .traceevent "V" 6 "R" "O" "a" 2 199 199 0 "disk" ""
+                linkattr1 r6,a1 /* aka r15 */,2              * 0x0003ab:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r6,a2 /* aka r16 */                     * 0x0003af:0008 Copy op2 to op1
+                unlink r6                                    * 0x0003b2:00d5 Unlink op1
+                .srcstep 200 200 17 "awfy_towers.crexx" 100 7 24 "      pile0_present = 1"
+                load r5,1                                    * 0x0003b4:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 200 200 0 "" ""
+                isetattr1 a1 /* aka r15 */,3,r5              * 0x0003b7:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_3e6                                    * 0x0003bb:0024 Branch to op1
+                .srcstep 205 205 17 "awfy_towers.crexx" 102 10 21 "    else if pile = 1 then do"
+                .traceevent "V" 6 "R" "I" "a" 3 205 205 0 "pile" ""
+lb_3bd:         ieq r6,a3 /* aka r17 */,1                    * 0x0003bd:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 6 205 205 0 "" ""
+                brf lb_3d6,r6                                * 0x0003c1:0026 Branch to op1 if op2 false
+                .srcstep 206 206 17 "awfy_towers.crexx" 102 22 26 "    else if pile = 1 then do"
+                .srcstep 201 201 17 "awfy_towers.crexx" 103 7 19 "      pile1 = disk"
+                .traceevent "V" 6 "R" "O" "a" 2 201 201 0 "disk" ""
+                linkattr1 r5,a1 /* aka r15 */,4              * 0x0003c4:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r5,a2 /* aka r16 */                     * 0x0003c8:0008 Copy op2 to op1
+                unlink r5                                    * 0x0003cb:00d5 Unlink op1
+                .srcstep 202 202 17 "awfy_towers.crexx" 104 7 24 "      pile1_present = 1"
+                load r13,1                                   * 0x0003cd:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 202 202 0 "" ""
+                isetattr1 a1 /* aka r15 */,5,r13             * 0x0003d0:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_3e6                                    * 0x0003d4:0024 Branch to op1
+                .srcstep 203 203 17 "awfy_towers.crexx" 107 7 19 "      pile2 = disk"
+                .traceevent "V" 6 "R" "O" "a" 2 203 203 0 "disk" ""
+lb_3d6:         linkattr1 r13,a1 /* aka r15 */,6             * 0x0003d6:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r13,a2 /* aka r16 */                    * 0x0003da:0008 Copy op2 to op1
+                unlink r13                                   * 0x0003dd:00d5 Unlink op1
+                .srcstep 204 204 17 "awfy_towers.crexx" 108 7 24 "      pile2_present = 1"
+                load r5,1                                    * 0x0003df:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 204 204 0 "" ""
+                isetattr1 a1 /* aka r15 */,7,r5              * 0x0003e2:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 211 211 17 "awfy_towers.crexx" 110 5 11 "    return"
+lb_3e6:         ret                                          * 0x0003e6:0030 Return VOID
+                .meta "awfy_towers.towersbenchmark.pushdisk.disk"
+                .meta "awfy_towers.towersbenchmark.pushdisk.has_top"
+                .meta "awfy_towers.towersbenchmark.pushdisk.pile"
+                .meta "awfy_towers.towersbenchmark.pushdisk.top"
+                .meta "awfy_towers.towersbenchmark.pushdisk.§this"
+
+§awfy_towers.towersbenchmark.popdiskfrom() .locals=14
+                .meta "awfy_towers.towersbenchmark.popdiskfrom"="b" ".awfy_towers..towersdisk" §awfy_towers.towersbenchmark.popdiskfrom() "pile=.int"
+                .srcstep 252 252 17 "awfy_towers.crexx" 112 3 36 "  popDiskFrom: method = .TowersDisk"
+                assertinitialized a1 /* aka r15 */           * 0x0003e7:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0003e9:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 213 213 17 "awfy_towers.crexx" 113 9 20 "    arg pile = .int"
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.pile"="b" ".int" a2 /* aka r16 */
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.§this"="b" ".towersbenchmark" a1 /* aka r15 */
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.top"="b" ".towersdisk" r1
+                .srcstep 214 214 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+                null r1                                      * 0x0003ed:000e Null (clear) op1
+                setobjuninit r1,"towersdisk"                 * 0x0003ef:0054 Set runtime object type metadata on op1 and mark it uninitialized
+                .srcstep 221 221 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+                .traceevent "V" 6 "R" "I" "a" 2 221 221 0 "pile" ""
+                ieq r3,a2 /* aka r16 */,0                    * 0x0003f2:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 3 221 221 0 "" ""
+                brf lb_403,r3                                * 0x0003f6:0026 Branch to op1 if op2 false
+                .srcstep 222 222 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+                .srcstep 215 215 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+                linkattr1 r4,a1 /* aka r15 */,2              * 0x0003f9:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 4 215 215 0 "pile0" ""
+                copy r1,r4                                   * 0x0003fd:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 1 215 215 0 "top" ""
+                unlinkbr r4,lb_41d                           * 0x000400:0120 Unlink op1 then branch to op2
+                .srcstep 218 218 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+                .traceevent "V" 6 "R" "I" "a" 2 218 218 0 "pile" ""
+lb_403:         ieq r5,a2 /* aka r16 */,1                    * 0x000403:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 5 218 218 0 "" ""
+                brf lb_414,r5                                * 0x000407:0026 Branch to op1 if op2 false
+                .srcstep 219 219 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+                .srcstep 216 216 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+                linkattr1 r6,a1 /* aka r15 */,4              * 0x00040a:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 6 216 216 0 "pile1" ""
+                copy r1,r6                                   * 0x00040e:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 1 216 216 0 "top" ""
+                unlinkbr r6,lb_41d                           * 0x000411:0120 Unlink op1 then branch to op2
+                .srcstep 217 217 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+lb_414:         linkattr1 r7,a1 /* aka r15 */,6              * 0x000414:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 7 217 217 0 "pile2" ""
+                copy r1,r7                                   * 0x000418:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 1 217 217 0 "top" ""
+                unlink r7                                    * 0x00041b:00d5 Unlink op1
+                .srcstep 248 248 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+                .srcstep 226 226 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .srcstep 224 224 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .traceevent "V" 6 "R" "O" "r" 1 224 224 0 "top" ""
+lb_41d:         copy r8,r1                                   * 0x00041d:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 8 224 224 0 "§this" ""
+                .srcstep 225 225 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+                linkattr1 r7,r8,2                            * 0x000420:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 248 248 0 "has_next" ""
+                igetunlink r6,r7                             * 0x000424:011d Copy integer from alias op2 to op1 then unlink op2
+                brtf lb_42b,lb_469,r6                        * 0x000427:0027 Branch to op1 if op3 true, otherwise branch to op2
+                .srcstep 249 249 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+                .srcstep 229 229 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+                .srcstep 227 227 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+                .traceevent "V" 6 "R" "O" "r" 1 227 227 0 "top" ""
+lb_42b:         copy r9,r1                                   * 0x00042b:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 9 227 227 0 "§this" ""
+                .srcstep 228 228 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+                linkattr1 r7,r9,3                            * 0x00042e:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 7 228 228 0 "next_disk" ""
+                copy r5,r7                                   * 0x000432:0008 Copy op2 to op1
+                asserttype r5,"awfy_towers.towersdisk"       * 0x000435:003d Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+                unlink r7                                    * 0x000438:00d5 Unlink op1
+                .traceevent "A" 6 "R" "O" "r" 5 228 228 0 "next_disk" ""
+                .srcstep 236 236 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 2 236 236 0 "pile" ""
+                ieq r7,a2 /* aka r16 */,0                    * 0x00043a:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 7 236 236 0 "" ""
+                brf lb_44b,r7                                * 0x00043e:0026 Branch to op1 if op2 false
+                .srcstep 237 237 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+                .srcstep 230 230 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.next_disk"="b" ".towersdisk" r5
+                .traceevent "V" 6 "R" "O" "r" 5 230 230 0 "next_disk" ""
+                linkattr1 r4,a1 /* aka r15 */,2              * 0x000441:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r4,r5                                   * 0x000445:0008 Copy op2 to op1
+                unlinkbr r4,lb_465                           * 0x000448:0120 Unlink op1 then branch to op2
+                .srcstep 233 233 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 2 233 233 0 "pile" ""
+lb_44b:         ieq r3,a2 /* aka r16 */,1                    * 0x00044b:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 3 233 233 0 "" ""
+                brf lb_45c,r3                                * 0x00044f:0026 Branch to op1 if op2 false
+                .srcstep 234 234 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+                .srcstep 231 231 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 5 231 231 0 "next_disk" ""
+                linkattr1 r10,a1 /* aka r15 */,4             * 0x000452:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r10,r5                                  * 0x000456:0008 Copy op2 to op1
+                unlinkbr r10,lb_465                          * 0x000459:0120 Unlink op1 then branch to op2
+                .srcstep 232 232 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 5 232 232 0 "next_disk" ""
+lb_45c:         linkattr1 r11,a1 /* aka r15 */,6             * 0x00045c:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r11,r5                                  * 0x000460:0008 Copy op2 to op1
+                unlink r11                                   * 0x000463:00d5 Unlink op1
+lb_465:         endlife r5                                   * 0x000465:0202 End storage reference lifetime for op1
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.next_disk"
+                br lb_490                                    * 0x000467:0024 Branch to op1
+                .srcstep 245 245 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 2 245 245 0 "pile" ""
+lb_469:         ieq r11,a2 /* aka r16 */,0                   * 0x000469:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 11 245 245 0 "" ""
+                brf lb_479,r11                               * 0x00046d:0026 Branch to op1 if op2 false
+                .srcstep 246 246 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+                .srcstep 239 239 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+                load r7,0                                    * 0x000470:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 239 239 0 "" ""
+                isetattr1 a1 /* aka r15 */,3,r7              * 0x000473:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_490                                    * 0x000477:0024 Branch to op1
+                .srcstep 242 242 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 2 242 242 0 "pile" ""
+lb_479:         ieq r5,a2 /* aka r16 */,1                    * 0x000479:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 5 242 242 0 "" ""
+                brf lb_489,r5                                * 0x00047d:0026 Branch to op1 if op2 false
+                .srcstep 243 243 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+                .srcstep 240 240 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+                load r3,0                                    * 0x000480:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 240 240 0 "" ""
+                isetattr1 a1 /* aka r15 */,5,r3              * 0x000483:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_490                                    * 0x000487:0024 Branch to op1
+                .srcstep 241 241 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+lb_489:         load r13,0                                   * 0x000489:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 241 241 0 "" ""
+                isetattr1 a1 /* aka r15 */,7,r13             * 0x00048c:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 251 251 17 "awfy_towers.crexx" 129 5 15 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 1 251 251 0 "top" ""
+lb_490:         ret r1                                       * 0x000490:0031 Return op1
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.pile"
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.top"
+                .meta "awfy_towers.towersbenchmark.popdiskfrom.§this"
+
+§awfy_towers.towersbenchmark.movetopdisk() .locals=19
+                .meta "awfy_towers.towersbenchmark.movetopdisk"="b" ".void" §awfy_towers.towersbenchmark.movetopdisk() "from_pile=.int,to_pile=.int"
+                .srcstep 301 301 17 "awfy_towers.crexx" 131 3 30 "  moveTopDisk: method = .void"
+                assertinitialized a1 /* aka r20 */           * 0x000492:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x000494:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 253 253 17 "awfy_towers.crexx" 132 9 25 "    arg from_pile = .int, to_pile = .int"
+                .meta "awfy_towers.towersbenchmark.movetopdisk.from_pile"="b" ".int" a2 /* aka r21 */
+                .meta "awfy_towers.towersbenchmark.movetopdisk.§this"="b" ".towersbenchmark" a1 /* aka r20 */
+                .srcstep 254 254 17 "awfy_towers.crexx" 132 27 41 "    arg from_pile = .int, to_pile = .int"
+                .meta "awfy_towers.towersbenchmark.movetopdisk.to_pile"="b" ".int" a3 /* aka r22 */
+                .srcstep 297 297 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+                .meta "awfy_towers.towersbenchmark.movetopdisk.top"="b" ".towersdisk" r8
+                .srcstep 255 255 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+                null r8                                      * 0x000498:000e Null (clear) op1
+                .srcstep 256 256 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "a" 1 256 256 0 "§this" ""
+                copy r9,a1 /* aka r20 */                     * 0x00049a:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 9 256 256 0 "§this" ""
+                .srcstep 257 257 33 "awfy_towers.crexx" 113 9 13 "    arg pile = .int"
+                .traceevent "V" 6 "R" "I" "a" 2 257 257 0 "from_pile" ""
+                .traceevent "A" 6 "R" "I" "a" 2 257 257 0 "pile" ""
+                setobjuninit r8,"towersdisk"                 * 0x00049d:0054 Set runtime object type metadata on op1 and mark it uninitialized
+                .srcstep 264 264 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+                .traceevent "V" 6 "R" "I" "a" 2 264 264 0 "pile" ""
+                ieq r1,a2 /* aka r21 */,0                    * 0x0004a0:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 1 264 264 0 "" ""
+                brf lb_4b1,r1                                * 0x0004a4:0026 Branch to op1 if op2 false
+                .srcstep 265 265 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+                .srcstep 258 258 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+                linkattr1 r0,r9,2                            * 0x0004a7:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 0 258 258 0 "pile0" ""
+                copy r8,r0                                   * 0x0004ab:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 8 258 258 0 "top" ""
+                unlinkbr r0,lb_4cb                           * 0x0004ae:0120 Unlink op1 then branch to op2
+                .srcstep 261 261 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+                .traceevent "V" 6 "R" "I" "a" 2 261 261 0 "pile" ""
+lb_4b1:         ieq r10,a2 /* aka r21 */,1                   * 0x0004b1:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 10 261 261 0 "" ""
+                brf lb_4c2,r10                               * 0x0004b5:0026 Branch to op1 if op2 false
+                .srcstep 262 262 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+                .srcstep 259 259 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+                linkattr1 r11,r9,4                           * 0x0004b8:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 11 259 259 0 "pile1" ""
+                copy r8,r11                                  * 0x0004bc:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 8 259 259 0 "top" ""
+                unlinkbr r11,lb_4cb                          * 0x0004bf:0120 Unlink op1 then branch to op2
+                .srcstep 260 260 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+lb_4c2:         linkattr1 r12,r9,6                           * 0x0004c2:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 12 260 260 0 "pile2" ""
+                copy r8,r12                                  * 0x0004c6:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 8 260 260 0 "top" ""
+                unlink r12                                   * 0x0004c9:00d5 Unlink op1
+                .srcstep 291 291 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+                .srcstep 269 269 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .srcstep 267 267 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .traceevent "V" 6 "R" "O" "r" 8 267 267 0 "top" ""
+lb_4cb:         copy r13,r8                                  * 0x0004cb:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 13 267 267 0 "§this" ""
+                .srcstep 268 268 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+                linkattr1 r12,r13,2                          * 0x0004ce:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 12 291 291 0 "has_next" ""
+                igetunlink r11,r12                           * 0x0004d2:011d Copy integer from alias op2 to op1 then unlink op2
+                brtf lb_4d9,lb_517,r11                       * 0x0004d5:0027 Branch to op1 if op3 true, otherwise branch to op2
+                .srcstep 292 292 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+                .srcstep 272 272 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+                .srcstep 270 270 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+                .traceevent "V" 6 "R" "O" "r" 8 270 270 0 "top" ""
+lb_4d9:         copy r14,r8                                  * 0x0004d9:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 14 270 270 0 "§this" ""
+                .srcstep 271 271 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+                linkattr1 r12,r14,3                          * 0x0004dc:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 12 271 271 0 "next_disk" ""
+                copy r10,r12                                 * 0x0004e0:0008 Copy op2 to op1
+                asserttype r10,"awfy_towers.towersdisk"      * 0x0004e3:003d Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+                unlink r12                                   * 0x0004e6:00d5 Unlink op1
+                .traceevent "A" 6 "R" "O" "r" 10 271 271 0 "next_disk" ""
+                .srcstep 279 279 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 2 279 279 0 "pile" ""
+                ieq r12,a2 /* aka r21 */,0                   * 0x0004e8:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 12 279 279 0 "" ""
+                brf lb_4f9,r12                               * 0x0004ec:0026 Branch to op1 if op2 false
+                .srcstep 280 280 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+                .srcstep 273 273 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 10 273 273 0 "next_disk" ""
+                linkattr1 r1,r9,2                            * 0x0004ef:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r1,r10                                  * 0x0004f3:0008 Copy op2 to op1
+                unlinkbr r1,lb_513                           * 0x0004f6:0120 Unlink op1 then branch to op2
+                .srcstep 276 276 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 2 276 276 0 "pile" ""
+lb_4f9:         ieq r0,a2 /* aka r21 */,1                    * 0x0004f9:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 0 276 276 0 "" ""
+                brf lb_50a,r0                                * 0x0004fd:0026 Branch to op1 if op2 false
+                .srcstep 277 277 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+                .srcstep 274 274 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 10 274 274 0 "next_disk" ""
+                linkattr1 r15,r9,4                           * 0x000500:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r15,r10                                 * 0x000504:0008 Copy op2 to op1
+                unlinkbr r15,lb_513                          * 0x000507:0120 Unlink op1 then branch to op2
+                .srcstep 275 275 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 10 275 275 0 "next_disk" ""
+lb_50a:         linkattr1 r16,r9,6                           * 0x00050a:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r16,r10                                 * 0x00050e:0008 Copy op2 to op1
+                unlink r16                                   * 0x000511:00d5 Unlink op1
+lb_513:         endlife r10                                  * 0x000513:0202 End storage reference lifetime for op1
+                br lb_53e                                    * 0x000515:0024 Branch to op1
+                .srcstep 288 288 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 2 288 288 0 "pile" ""
+lb_517:         ieq r16,a2 /* aka r21 */,0                   * 0x000517:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 16 288 288 0 "" ""
+                brf lb_527,r16                               * 0x00051b:0026 Branch to op1 if op2 false
+                .srcstep 289 289 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+                .srcstep 282 282 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+                load r12,0                                   * 0x00051e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 282 282 0 "" ""
+                isetattr1 r9,3,r12                           * 0x000521:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_53e                                    * 0x000525:0024 Branch to op1
+                .srcstep 285 285 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 2 285 285 0 "pile" ""
+lb_527:         ieq r10,a2 /* aka r21 */,1                   * 0x000527:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 10 285 285 0 "" ""
+                brf lb_537,r10                               * 0x00052b:0026 Branch to op1 if op2 false
+                .srcstep 286 286 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+                .srcstep 283 283 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+                load r0,0                                    * 0x00052e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 283 283 0 "" ""
+                isetattr1 r9,5,r0                            * 0x000531:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_53e                                    * 0x000535:0024 Branch to op1
+                .srcstep 284 284 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+lb_537:         load r18,0                                   * 0x000537:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 18 284 284 0 "" ""
+                isetattr1 r9,7,r18                           * 0x00053a:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 294 294 33 "awfy_towers.crexx" 129 12 15 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 8 294 294 0 "top" ""
+lb_53e:         copy r6,r8                                   * 0x00053e:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 6 294 294 0 "__inline_ret_362_363" ""
+                .srcstep 295 295 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 9 0 0 0 "§this" ""
+                copy a1 /* aka r20 */,r9                     * 0x000541:0008 Copy op2 to op1
+                .srcstep 296 296 33 "awfy_towers.crexx" 129 5 11 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 6 296 296 0 "__inline_ret_362_363" ""
+                copy r2,r6                                   * 0x000544:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 2 296 296 0 "disk" ""
+                .srcstep 298 298 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+                .meta "awfy_towers.towersbenchmark.movetopdisk.disk"="b" ".towersdisk" r2
+                .traceevent "V" 6 "R" "O" "a" 1 298 298 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 2 298 298 0 "disk" ""
+                .traceevent "V" 6 "R" "I" "a" 3 298 298 0 "to_pile" ""
+                settp a1 /* aka r20 */,256                   * 0x000547:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r2,256                                 * 0x00054a:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r12,§awfy_towers.towersbenchmark.pushdisk(),a1 /* aka r20 */,r2,a3 /* aka r22 */ * 0x00054d:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 12 298 298 0 "pushdisk" ""
+                .srcstep 299 299 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+                linkattr1 r17,a1 /* aka r20 */,1             * 0x000553:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 17 299 299 0 "moves_done" ""
+                iadd r16,r17,1                               * 0x000557:0010 Integer Add (op1=op2+op3)
+                unlink r17                                   * 0x00055b:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 16 299 299 0 "" ""
+                isetattr1 a1 /* aka r20 */,1,r16             * 0x00055d:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 300 300 17 "awfy_towers.crexx" 136 5 11 "    return"
+                ret                                          * 0x000561:0030 Return VOID
+                .meta "awfy_towers.towersbenchmark.movetopdisk.disk"
+                .meta "awfy_towers.towersbenchmark.movetopdisk.from_pile"
+                .meta "awfy_towers.towersbenchmark.movetopdisk.to_pile"
+                .meta "awfy_towers.towersbenchmark.movetopdisk.§this"
+
+§awfy_towers.towersbenchmark.buildtowerat() .locals=15
+                .meta "awfy_towers.towersbenchmark.buildtowerat"="b" ".void" §awfy_towers.towersbenchmark.buildtowerat() "pile=.int,disks=.int"
+                .srcstep 318 318 17 "awfy_towers.crexx" 138 3 31 "  buildTowerAt: method = .void"
+                assertinitialized a1 /* aka r16 */           * 0x000562:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x000564:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 302 302 17 "awfy_towers.crexx" 139 9 20 "    arg pile = .int, disks = .int"
+                .meta "awfy_towers.towersbenchmark.buildtowerat.pile"="b" ".int" a2 /* aka r17 */
+                .meta "awfy_towers.towersbenchmark.buildtowerat.§this"="b" ".towersbenchmark" a1 /* aka r16 */
+                .srcstep 303 303 17 "awfy_towers.crexx" 139 22 34 "    arg pile = .int, disks = .int"
+                .meta "awfy_towers.towersbenchmark.buildtowerat.disks"="b" ".int" a3 /* aka r18 */
+                .srcstep 315 315 17 "awfy_towers.crexx" 140 5 7 "    do i = disks to 0 by -1"
+                .srcstep 304 304 17 "awfy_towers.crexx" 140 8 17 "    do i = disks to 0 by -1"
+                .meta "awfy_towers.towersbenchmark.buildtowerat.i"="b" ".int" r1
+                .traceevent "V" 6 "R" "I" "a" 3 304 304 0 "disks" ""
+                icopy r1,a3 /* aka r18 */                    * 0x000568:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 1 304 304 0 "i" ""
+                .srcstep 305 305 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+                load r0,0                                    * 0x00056b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 0 0 0 "" ""
+                .srcstep 306 306 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+                load r7,-1                                   * 0x00056e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+                .srcstep 305 305 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+lb_571:         ilt r6,r1,r0                                 * 0x000571:006e Int Less than op1=(op2<op3)
+                brt lb_59e,r6                                * 0x000575:0025 Branch to op1 if op2 true
+                .srcstep 313 313 17 "awfy_towers.crexx" 141 7 28 "      disk = .TowersDisk(i)"
+                .srcstep 307 307 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+                setattrs r9,4                                * 0x000578:00d9 set number attributes op1.num_attributes = op2
+                .srcstep 308 308 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+                setobjtype r9,"awfy_towers.towersdisk"       * 0x00057b:0038 Set runtime concrete object type metadata on op1
+                .srcstep 309 309 33 "awfy_towers.crexx" 36 9 13 "    arg size = .int"
+                .traceevent "V" 6 "R" "I" "r" 1 309 309 0 "i" ""
+                .traceevent "A" 6 "R" "I" "r" 1 309 309 0 "size" ""
+                .srcstep 310 310 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+                .traceevent "V" 6 "R" "I" "r" 1 310 310 0 "size" ""
+                isetattr1 r9,1,r1                            * 0x00057e:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 311 311 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+                load r11,0                                   * 0x000582:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 11 311 311 0 "" ""
+                isetattr1 r9,2,r11                           * 0x000585:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 312 312 33 "awfy_towers.crexx" 39 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 9 312 312 0 "§factory" ""
+                copy r2,r9                                   * 0x000589:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 2 312 312 0 "disk" ""
+                .srcstep 314 314 17 "awfy_towers.crexx" 142 7 32 "      call pushDisk(disk, pile)"
+                .meta "awfy_towers.towersbenchmark.buildtowerat.disk"="b" ".towersdisk" r2
+                .traceevent "V" 6 "R" "O" "a" 1 314 314 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 2 314 314 0 "disk" ""
+                .traceevent "V" 6 "R" "I" "a" 2 314 314 0 "pile" ""
+                settp a1 /* aka r16 */,256                   * 0x00058c:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r2,256                                 * 0x00058f:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r14,§awfy_towers.towersbenchmark.pushdisk(),a1 /* aka r16 */,r2,a2 /* aka r17 */ * 0x000592:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 14 314 314 0 "pushdisk" ""
+                .srcstep 306 306 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+                iadd r1,r7,r1                                * 0x000598:000f Integer Add (op1=op2+op3)
+                .srcstep 316 316 17 "awfy_towers.crexx" 143 5 8 "    end"
+                br lb_571                                    * 0x00059c:0024 Branch to op1
+lb_59e:         endlife r2                                   * 0x00059e:0202 End storage reference lifetime for op1
+                .meta "awfy_towers.towersbenchmark.buildtowerat.disk"
+                .meta "awfy_towers.towersbenchmark.buildtowerat.i"
+                .srcstep 317 317 17 "awfy_towers.crexx" 144 5 11 "    return"
+                ret                                          * 0x0005a0:0030 Return VOID
+                .meta "awfy_towers.towersbenchmark.buildtowerat.disks"
+                .meta "awfy_towers.towersbenchmark.buildtowerat.pile"
+                .meta "awfy_towers.towersbenchmark.buildtowerat.§this"
+
+§awfy_towers.towersbenchmark.movedisks() .locals=46
+                .meta "awfy_towers.towersbenchmark.movedisks"="b" ".void" §awfy_towers.towersbenchmark.movedisks() "disks=.int,from_pile=.int,to_pile=.int"
+                .srcstep 429 429 17 "awfy_towers.crexx" 146 3 28 "  moveDisks: method = .void"
+                assertinitialized a1 /* aka r47 */           * 0x0005a1:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0005a3:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 319 319 17 "awfy_towers.crexx" 147 9 21 "    arg disks = .int, from_pile = .int, to_pile = .int"
+                .meta "awfy_towers.towersbenchmark.movedisks.disks"="b" ".int" a2 /* aka r48 */
+                .meta "awfy_towers.towersbenchmark.movedisks.§this"="b" ".towersbenchmark" a1 /* aka r47 */
+                .srcstep 320 320 17 "awfy_towers.crexx" 147 23 39 "    arg disks = .int, from_pile = .int, to_pile = .int"
+                .meta "awfy_towers.towersbenchmark.movedisks.from_pile"="b" ".int" a3 /* aka r49 */
+                .srcstep 321 321 17 "awfy_towers.crexx" 147 41 55 "    arg disks = .int, from_pile = .int, to_pile = .int"
+                .meta "awfy_towers.towersbenchmark.movedisks.to_pile"="b" ".int" a4 /* aka r50 */
+                .srcstep 425 425 17 "awfy_towers.crexx" 148 5 17 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "I" "a" 2 425 425 0 "disks" ""
+                ieq r8,a2 /* aka r48 */,1                    * 0x0005a7:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 8 425 425 0 "" ""
+                brf lb_67f,r8                                * 0x0005ab:0026 Branch to op1 if op2 false
+                .srcstep 426 426 17 "awfy_towers.crexx" 148 18 22 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+                .srcstep 371 371 17 "awfy_towers.crexx" 148 23 59 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+                .srcstep 322 322 33 "awfy_towers.crexx" 148 28 39 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "a" 1 322 322 0 "§this" ""
+                copy r15,a1 /* aka r47 */                    * 0x0005ae:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 15 322 322 0 "§this" ""
+                .srcstep 323 323 33 "awfy_towers.crexx" 132 9 18 "    arg from_pile = .int, to_pile = .int"
+                .traceevent "V" 6 "R" "I" "a" 3 323 323 0 "from_pile" ""
+                .traceevent "A" 6 "R" "I" "a" 3 323 323 0 "from_pile" ""
+                .srcstep 324 324 33 "awfy_towers.crexx" 132 27 34 "    arg from_pile = .int, to_pile = .int"
+                .traceevent "V" 6 "R" "I" "a" 4 324 324 0 "to_pile" ""
+                .traceevent "A" 6 "R" "I" "a" 4 324 324 0 "to_pile" ""
+                .srcstep 367 367 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+                .meta "awfy_towers.towersbenchmark.movedisks.top"="b" ".towersdisk" r18
+                .srcstep 325 325 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+                null r18                                     * 0x0005b1:000e Null (clear) op1
+                .srcstep 326 326 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 15 326 326 0 "§this" ""
+                copy r19,r15                                 * 0x0005b3:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 19 326 326 0 "§this" ""
+                .srcstep 327 327 33 "awfy_towers.crexx" 113 9 13 "    arg pile = .int"
+                .traceevent "V" 6 "R" "I" "a" 3 327 327 0 "from_pile" ""
+                .traceevent "A" 6 "R" "I" "a" 3 327 327 0 "pile" ""
+                setobjuninit r18,"towersdisk"                * 0x0005b6:0054 Set runtime object type metadata on op1 and mark it uninitialized
+                .srcstep 334 334 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+                .traceevent "V" 6 "R" "I" "a" 3 334 334 0 "pile" ""
+                ieq r7,a3 /* aka r49 */,0                    * 0x0005b9:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 7 334 334 0 "" ""
+                brf lb_5ca,r7                                * 0x0005bd:0026 Branch to op1 if op2 false
+                .srcstep 335 335 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+                .srcstep 328 328 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+                linkattr1 r6,r19,2                           * 0x0005c0:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 6 328 328 0 "pile0" ""
+                copy r18,r6                                  * 0x0005c4:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 18 328 328 0 "top" ""
+                unlinkbr r6,lb_5e4                           * 0x0005c7:0120 Unlink op1 then branch to op2
+                .srcstep 331 331 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+                .traceevent "V" 6 "R" "I" "a" 3 331 331 0 "pile" ""
+lb_5ca:         ieq r5,a3 /* aka r49 */,1                    * 0x0005ca:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 5 331 331 0 "" ""
+                brf lb_5db,r5                                * 0x0005ce:0026 Branch to op1 if op2 false
+                .srcstep 332 332 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+                .srcstep 329 329 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+                linkattr1 r4,r19,4                           * 0x0005d1:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 4 329 329 0 "pile1" ""
+                copy r18,r4                                  * 0x0005d5:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 18 329 329 0 "top" ""
+                unlinkbr r4,lb_5e4                           * 0x0005d8:0120 Unlink op1 then branch to op2
+                .srcstep 330 330 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+lb_5db:         linkattr1 r2,r19,6                           * 0x0005db:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 2 330 330 0 "pile2" ""
+                copy r18,r2                                  * 0x0005df:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 18 330 330 0 "top" ""
+                unlink r2                                    * 0x0005e2:00d5 Unlink op1
+                .srcstep 361 361 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+                .srcstep 339 339 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .srcstep 337 337 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .traceevent "V" 6 "R" "O" "r" 18 337 337 0 "top" ""
+lb_5e4:         copy r20,r18                                 * 0x0005e4:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 20 337 337 0 "§this" ""
+                .srcstep 338 338 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+                linkattr1 r7,r20,2                           * 0x0005e7:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 361 361 0 "has_next" ""
+                igetunlink r6,r7                             * 0x0005eb:011d Copy integer from alias op2 to op1 then unlink op2
+                brtf lb_5f2,lb_630,r6                        * 0x0005ee:0027 Branch to op1 if op3 true, otherwise branch to op2
+                .srcstep 362 362 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+                .srcstep 342 342 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+                .srcstep 340 340 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+                .traceevent "V" 6 "R" "O" "r" 18 340 340 0 "top" ""
+lb_5f2:         copy r21,r18                                 * 0x0005f2:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 21 340 340 0 "§this" ""
+                .srcstep 341 341 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+                linkattr1 r7,r21,3                           * 0x0005f5:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 7 341 341 0 "next_disk" ""
+                copy r5,r7                                   * 0x0005f9:0008 Copy op2 to op1
+                asserttype r5,"awfy_towers.towersdisk"       * 0x0005fc:003d Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+                unlink r7                                    * 0x0005ff:00d5 Unlink op1
+                .traceevent "A" 6 "R" "O" "r" 5 341 341 0 "next_disk" ""
+                .srcstep 349 349 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 3 349 349 0 "pile" ""
+                ieq r7,a3 /* aka r49 */,0                    * 0x000601:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 7 349 349 0 "" ""
+                brf lb_612,r7                                * 0x000605:0026 Branch to op1 if op2 false
+                .srcstep 350 350 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+                .srcstep 343 343 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 5 343 343 0 "next_disk" ""
+                linkattr1 r4,r19,2                           * 0x000608:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r4,r5                                   * 0x00060c:0008 Copy op2 to op1
+                unlinkbr r4,lb_62c                           * 0x00060f:0120 Unlink op1 then branch to op2
+                .srcstep 346 346 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 3 346 346 0 "pile" ""
+lb_612:         ieq r2,a3 /* aka r49 */,1                    * 0x000612:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 2 346 346 0 "" ""
+                brf lb_623,r2                                * 0x000616:0026 Branch to op1 if op2 false
+                .srcstep 347 347 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+                .srcstep 344 344 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 5 344 344 0 "next_disk" ""
+                linkattr1 r1,r19,4                           * 0x000619:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r1,r5                                   * 0x00061d:0008 Copy op2 to op1
+                unlinkbr r1,lb_62c                           * 0x000620:0120 Unlink op1 then branch to op2
+                .srcstep 345 345 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 5 345 345 0 "next_disk" ""
+lb_623:         linkattr1 r0,r19,6                           * 0x000623:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r0,r5                                   * 0x000627:0008 Copy op2 to op1
+                unlink r0                                    * 0x00062a:00d5 Unlink op1
+lb_62c:         endlife r5                                   * 0x00062c:0202 End storage reference lifetime for op1
+                br lb_657                                    * 0x00062e:0024 Branch to op1
+                .srcstep 358 358 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 3 358 358 0 "pile" ""
+lb_630:         ieq r7,a3 /* aka r49 */,0                    * 0x000630:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 7 358 358 0 "" ""
+                brf lb_640,r7                                * 0x000634:0026 Branch to op1 if op2 false
+                .srcstep 359 359 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+                .srcstep 352 352 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+                load r4,0                                    * 0x000637:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 352 352 0 "" ""
+                isetattr1 r19,3,r4                           * 0x00063a:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_657                                    * 0x00063e:0024 Branch to op1
+                .srcstep 355 355 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 3 355 355 0 "pile" ""
+lb_640:         ieq r2,a3 /* aka r49 */,1                    * 0x000640:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 2 355 355 0 "" ""
+                brf lb_650,r2                                * 0x000644:0026 Branch to op1 if op2 false
+                .srcstep 356 356 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+                .srcstep 353 353 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+                load r0,0                                    * 0x000647:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 353 353 0 "" ""
+                isetattr1 r19,5,r0                           * 0x00064a:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_657                                    * 0x00064e:0024 Branch to op1
+                .srcstep 354 354 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+lb_650:         load r23,0                                   * 0x000650:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 23 354 354 0 "" ""
+                isetattr1 r19,7,r23                          * 0x000653:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 364 364 33 "awfy_towers.crexx" 129 12 15 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 18 364 364 0 "top" ""
+lb_657:         copy r16,r18                                 * 0x000657:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 16 364 364 0 "__inline_ret_362_363" ""
+                .srcstep 365 365 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 19 0 0 0 "§this" ""
+                copy r15,r19                                 * 0x00065a:0008 Copy op2 to op1
+                .srcstep 366 366 33 "awfy_towers.crexx" 129 5 11 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 16 366 366 0 "__inline_ret_362_363" ""
+                copy r12,r16                                 * 0x00065d:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 12 366 366 0 "disk" ""
+                .srcstep 368 368 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 15 368 368 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 12 368 368 0 "disk" ""
+                .traceevent "V" 6 "R" "I" "a" 4 368 368 0 "to_pile" ""
+                settp r15,256                                * 0x000660:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r12,256                                * 0x000663:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r7,§awfy_towers.towersbenchmark.pushdisk(),r15,r12,a4 /* aka r50 */ * 0x000666:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 7 368 368 0 "pushdisk" ""
+                .srcstep 369 369 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+                linkattr1 r24,r15,1                          * 0x00066c:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 24 369 369 0 "moves_done" ""
+                iadd r23,r24,1                               * 0x000670:0010 Integer Add (op1=op2+op3)
+                unlink r24                                   * 0x000674:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 23 369 369 0 "" ""
+                isetattr1 r15,1,r23                          * 0x000676:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 370 370 6 "awfy_towers.crexx" 148 28 59 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 15 0 0 0 "§this" ""
+                copy a1 /* aka r47 */,r15                    * 0x00067a:0008 Copy op2 to op1
+                br lb_772                                    * 0x00067d:0024 Branch to op1
+                .srcstep 372 372 17 "awfy_towers.crexx" 150 7 45 "      other_pile = (3 - from_pile) - to_pile"
+                .meta "awfy_towers.towersbenchmark.movedisks.other_pile"="b" ".int" r25
+                .traceevent "V" 6 "R" "I" "a" 3 372 372 0 "from_pile" ""
+lb_67f:         isub r24,3,a3 /* aka r49 */                  * 0x00067f:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 24 372 372 0 "" ""
+                .traceevent "V" 6 "R" "I" "a" 4 372 372 0 "to_pile" ""
+                isub r25,r24,a4 /* aka r50 */                * 0x000683:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 25 372 372 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 25 372 372 0 "other_pile" ""
+                .srcstep 373 373 17 "awfy_towers.crexx" 151 7 55 "      call moveDisks(disks - 1, from_pile, other_pile)"
+                .traceevent "V" 6 "R" "O" "a" 1 373 373 0 "§this" ""
+                .traceevent "V" 6 "R" "I" "a" 2 373 373 0 "disks" ""
+                isub r28,a2 /* aka r48 */,1                  * 0x000687:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 28 373 373 0 "" ""
+                .traceevent "V" 6 "R" "I" "a" 3 373 373 0 "from_pile" ""
+                .traceevent "V" 6 "R" "I" "r" 25 373 373 0 "other_pile" ""
+                settp a1 /* aka r47 */,256                   * 0x00068b:0205 sets externally writable register status flags, preserving VM-private flags
+                call4 r24,§awfy_towers.towersbenchmark.movedisks(),a1 /* aka r47 */,r28,a3 /* aka r49 */,r25 * 0x00068e:0194 Direct bytecode call with four explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 24 373 373 0 "movedisks" ""
+                .srcstep 423 423 17 "awfy_towers.crexx" 152 7 43 "      call moveTopDisk(from_pile, to_pile)"
+                .srcstep 374 374 33 "awfy_towers.crexx" 152 12 23 "      call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "a" 1 374 374 0 "§this" ""
+                copy r34,a1 /* aka r47 */                    * 0x000695:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 34 374 374 0 "§this" ""
+                .srcstep 375 375 33 "awfy_towers.crexx" 132 9 18 "    arg from_pile = .int, to_pile = .int"
+                .traceevent "V" 6 "R" "I" "a" 3 375 375 0 "from_pile" ""
+                .traceevent "A" 6 "R" "I" "a" 3 375 375 0 "from_pile" ""
+                .srcstep 376 376 33 "awfy_towers.crexx" 132 27 34 "    arg from_pile = .int, to_pile = .int"
+                .traceevent "V" 6 "R" "I" "a" 4 376 376 0 "to_pile" ""
+                .traceevent "A" 6 "R" "I" "a" 4 376 376 0 "to_pile" ""
+                .srcstep 419 419 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+                .meta "awfy_towers.towersbenchmark.movedisks.top"="b" ".towersdisk" r37
+                .srcstep 377 377 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+                null r37                                     * 0x000698:000e Null (clear) op1
+                .srcstep 378 378 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 34 378 378 0 "§this" ""
+                copy r38,r34                                 * 0x00069a:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 38 378 378 0 "§this" ""
+                .srcstep 379 379 33 "awfy_towers.crexx" 113 9 13 "    arg pile = .int"
+                .traceevent "V" 6 "R" "I" "a" 3 379 379 0 "from_pile" ""
+                .traceevent "A" 6 "R" "I" "a" 3 379 379 0 "pile" ""
+                setobjuninit r37,"towersdisk"                * 0x00069d:0054 Set runtime object type metadata on op1 and mark it uninitialized
+                .srcstep 386 386 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+                .traceevent "V" 6 "R" "I" "a" 3 386 386 0 "pile" ""
+                ieq r30,a3 /* aka r49 */,0                   * 0x0006a0:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 30 386 386 0 "" ""
+                brf lb_6b1,r30                               * 0x0006a4:0026 Branch to op1 if op2 false
+                .srcstep 387 387 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+                .srcstep 380 380 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+                linkattr1 r29,r38,2                          * 0x0006a7:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 29 380 380 0 "pile0" ""
+                copy r37,r29                                 * 0x0006ab:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 37 380 380 0 "top" ""
+                unlinkbr r29,lb_6cb                          * 0x0006ae:0120 Unlink op1 then branch to op2
+                .srcstep 383 383 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+                .traceevent "V" 6 "R" "I" "a" 3 383 383 0 "pile" ""
+lb_6b1:         ieq r28,a3 /* aka r49 */,1                   * 0x0006b1:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 28 383 383 0 "" ""
+                brf lb_6c2,r28                               * 0x0006b5:0026 Branch to op1 if op2 false
+                .srcstep 384 384 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+                .srcstep 381 381 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+                linkattr1 r27,r38,4                          * 0x0006b8:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 27 381 381 0 "pile1" ""
+                copy r37,r27                                 * 0x0006bc:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 37 381 381 0 "top" ""
+                unlinkbr r27,lb_6cb                          * 0x0006bf:0120 Unlink op1 then branch to op2
+                .srcstep 382 382 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+lb_6c2:         linkattr1 r26,r38,6                          * 0x0006c2:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 26 382 382 0 "pile2" ""
+                copy r37,r26                                 * 0x0006c6:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 37 382 382 0 "top" ""
+                unlink r26                                   * 0x0006c9:00d5 Unlink op1
+                .srcstep 413 413 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+                .srcstep 391 391 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .srcstep 389 389 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+                .traceevent "V" 6 "R" "O" "r" 37 389 389 0 "top" ""
+lb_6cb:         copy r39,r37                                 * 0x0006cb:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 39 389 389 0 "§this" ""
+                .srcstep 390 390 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+                linkattr1 r30,r39,2                          * 0x0006ce:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 30 413 413 0 "has_next" ""
+                igetunlink r29,r30                           * 0x0006d2:011d Copy integer from alias op2 to op1 then unlink op2
+                brtf lb_6d9,lb_717,r29                       * 0x0006d5:0027 Branch to op1 if op3 true, otherwise branch to op2
+                .srcstep 414 414 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+                .srcstep 394 394 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+                .srcstep 392 392 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+                .traceevent "V" 6 "R" "O" "r" 37 392 392 0 "top" ""
+lb_6d9:         copy r40,r37                                 * 0x0006d9:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 40 392 392 0 "§this" ""
+                .srcstep 393 393 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+                linkattr1 r30,r40,3                          * 0x0006dc:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 30 393 393 0 "next_disk" ""
+                copy r28,r30                                 * 0x0006e0:0008 Copy op2 to op1
+                asserttype r28,"awfy_towers.towersdisk"      * 0x0006e3:003d Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+                unlink r30                                   * 0x0006e6:00d5 Unlink op1
+                .traceevent "A" 6 "R" "O" "r" 28 393 393 0 "next_disk" ""
+                .srcstep 401 401 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 3 401 401 0 "pile" ""
+                ieq r30,a3 /* aka r49 */,0                   * 0x0006e8:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 30 401 401 0 "" ""
+                brf lb_6f9,r30                               * 0x0006ec:0026 Branch to op1 if op2 false
+                .srcstep 402 402 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+                .srcstep 395 395 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 28 395 395 0 "next_disk" ""
+                linkattr1 r27,r38,2                          * 0x0006ef:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r27,r28                                 * 0x0006f3:0008 Copy op2 to op1
+                unlinkbr r27,lb_713                          * 0x0006f6:0120 Unlink op1 then branch to op2
+                .srcstep 398 398 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "I" "a" 3 398 398 0 "pile" ""
+lb_6f9:         ieq r26,a3 /* aka r49 */,1                   * 0x0006f9:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 26 398 398 0 "" ""
+                brf lb_70a,r26                               * 0x0006fd:0026 Branch to op1 if op2 false
+                .srcstep 399 399 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+                .srcstep 396 396 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 28 396 396 0 "next_disk" ""
+                linkattr1 r23,r38,4                          * 0x000700:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r23,r28                                 * 0x000704:0008 Copy op2 to op1
+                unlinkbr r23,lb_713                          * 0x000707:0120 Unlink op1 then branch to op2
+                .srcstep 397 397 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+                .traceevent "V" 6 "R" "O" "r" 28 397 397 0 "next_disk" ""
+lb_70a:         linkattr1 r22,r38,6                          * 0x00070a:00cb Link attribute op3 (1 base) of op2 to op1
+                copy r22,r28                                 * 0x00070e:0008 Copy op2 to op1
+                unlink r22                                   * 0x000711:00d5 Unlink op1
+lb_713:         endlife r28                                  * 0x000713:0202 End storage reference lifetime for op1
+                br lb_73e                                    * 0x000715:0024 Branch to op1
+                .srcstep 410 410 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 3 410 410 0 "pile" ""
+lb_717:         ieq r30,a3 /* aka r49 */,0                   * 0x000717:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 30 410 410 0 "" ""
+                brf lb_727,r30                               * 0x00071b:0026 Branch to op1 if op2 false
+                .srcstep 411 411 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+                .srcstep 404 404 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+                load r27,0                                   * 0x00071e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 27 404 404 0 "" ""
+                isetattr1 r38,3,r27                          * 0x000721:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_73e                                    * 0x000725:0024 Branch to op1
+                .srcstep 407 407 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+                .traceevent "V" 6 "R" "I" "a" 3 407 407 0 "pile" ""
+lb_727:         ieq r26,a3 /* aka r49 */,1                   * 0x000727:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 26 407 407 0 "" ""
+                brf lb_737,r26                               * 0x00072b:0026 Branch to op1 if op2 false
+                .srcstep 408 408 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+                .srcstep 405 405 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+                load r22,0                                   * 0x00072e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 22 405 405 0 "" ""
+                isetattr1 r38,5,r22                          * 0x000731:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                br lb_73e                                    * 0x000735:0024 Branch to op1
+                .srcstep 406 406 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+lb_737:         load r5,0                                    * 0x000737:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 406 406 0 "" ""
+                isetattr1 r38,7,r5                           * 0x00073a:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 416 416 33 "awfy_towers.crexx" 129 12 15 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 37 416 416 0 "top" ""
+lb_73e:         copy r35,r37                                 * 0x00073e:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 35 416 416 0 "__inline_ret_362_363" ""
+                .srcstep 417 417 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+                .traceevent "V" 6 "R" "O" "r" 38 0 0 0 "§this" ""
+                copy r34,r38                                 * 0x000741:0008 Copy op2 to op1
+                .srcstep 418 418 33 "awfy_towers.crexx" 129 5 11 "    return top"
+                .traceevent "V" 6 "R" "O" "r" 35 418 418 0 "__inline_ret_362_363" ""
+                copy r31,r35                                 * 0x000744:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 31 418 418 0 "disk" ""
+                .srcstep 420 420 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 34 420 420 0 "§this" ""
+                .traceevent "V" 6 "R" "O" "r" 31 420 420 0 "disk" ""
+                .traceevent "V" 6 "R" "I" "a" 4 420 420 0 "to_pile" ""
+                settp r34,256                                * 0x000747:0205 sets externally writable register status flags, preserving VM-private flags
+                settp r31,256                                * 0x00074a:0205 sets externally writable register status flags, preserving VM-private flags
+                call3 r26,§awfy_towers.towersbenchmark.pushdisk(),r34,r31,a4 /* aka r50 */ * 0x00074d:0193 Direct bytecode call with three explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 26 420 420 0 "pushdisk" ""
+                .srcstep 421 421 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+                linkattr1 r29,r34,1                          * 0x000753:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 29 421 421 0 "moves_done" ""
+                iadd r28,r29,1                               * 0x000757:0010 Integer Add (op1=op2+op3)
+                unlink r29                                   * 0x00075b:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 28 421 421 0 "" ""
+                isetattr1 r34,1,r28                          * 0x00075d:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 422 422 6 "awfy_towers.crexx" 152 12 43 "      call moveTopDisk(from_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "r" 34 0 0 0 "§this" ""
+                copy a1 /* aka r47 */,r34                    * 0x000761:0008 Copy op2 to op1
+                .srcstep 424 424 17 "awfy_towers.crexx" 153 7 53 "      call moveDisks(disks - 1, other_pile, to_pile)"
+                .traceevent "V" 6 "R" "O" "a" 1 424 424 0 "§this" ""
+                .traceevent "V" 6 "R" "I" "a" 2 424 424 0 "disks" ""
+                isub r43,a2 /* aka r48 */,1                  * 0x000764:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 43 424 424 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 25 424 424 0 "other_pile" ""
+                .traceevent "V" 6 "R" "I" "a" 4 424 424 0 "to_pile" ""
+                settp a1 /* aka r47 */,256                   * 0x000768:0205 sets externally writable register status flags, preserving VM-private flags
+                call4 r30,§awfy_towers.towersbenchmark.movedisks(),a1 /* aka r47 */,r43,r25,a4 /* aka r50 */ * 0x00076b:0194 Direct bytecode call with four explicit argument registers
+                .traceevent "F" 4 "R" "V" "r" 30 424 424 0 "movedisks" ""
+                .meta "awfy_towers.towersbenchmark.movedisks.other_pile"
+                .srcstep 428 428 17 "awfy_towers.crexx" 155 5 11 "    return"
+lb_772:         ret                                          * 0x000772:0030 Return VOID
+                .meta "awfy_towers.towersbenchmark.movedisks.disks"
+                .meta "awfy_towers.towersbenchmark.movedisks.from_pile"
+                .meta "awfy_towers.towersbenchmark.movedisks.to_pile"
+                .meta "awfy_towers.towersbenchmark.movedisks.§this"
+*******************************************************************************
+

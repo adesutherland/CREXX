@@ -1,0 +1,169 @@
+sample_id,stream,line_number,text
+timing-BIFs-bifs-rxvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxbvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxbvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxbvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxbvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxbvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxbvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxbvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxbvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxbvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxbvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxbvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxbvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-BIFs-bifs-rxbvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=bifs iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=3100000
+timing-BIFs-bifs-rxbvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxbvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxbvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxbvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxbvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxbvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxbvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxbvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxbvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxbvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxbvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxbvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxbvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-Call-ARG-call-arg-rxbvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=call-arg iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=4400000
+timing-Call-ARG-call-arg-rxbvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxbvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxbvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxbvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxbvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=trace-address iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=800000
+timing-TRACE-ADDRESS-trace-address-rxbvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxbvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxbvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxbvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxbvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxbvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxbvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxbvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxbvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxbvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxbvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxbvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxbvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-Stems-stems-rxbvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=stems iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=500000
+timing-Stems-stems-rxbvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxbvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxbvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxbvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxbvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxbvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxbvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxbvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxbvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxbvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxbvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxbvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxbvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-Decimal-String-decimal-string-rxbvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=decimal-string iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=1000000
+timing-Decimal-String-decimal-string-rxbvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxbvm-warmup-1,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxbvm-warmup-1,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxbvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxbvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxvm-warmup-2,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxvm-warmup-2,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxbvm-recorded-1,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxbvm-recorded-1,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxbvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxbvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxvm-recorded-2,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxvm-recorded-2,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxbvm-recorded-3,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxbvm-recorded-3,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxbvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxbvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxvm-recorded-4,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxvm-recorded-4,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxvm-recorded-5,stdout,2,PASS: RexxCPS family control
+timing-PARSE-parse-rxbvm-recorded-5,stdout,1,REXXCPS-FAMILY-CONTROL family=parse iterations=100000 nominal_mix=RexxCPS-2.2d-1000-clauses publication=attribution-only checksum=11400000
+timing-PARSE-parse-rxbvm-recorded-5,stdout,2,PASS: RexxCPS family control

@@ -1,0 +1,85 @@
+/*
+ * PERF2-02 production regression for the exact zero-state MKREF guards.
+ *
+ * The first MINLINKATTR1/MKREF pair is an owned physical-child fast route.
+ * The second has the same canonical pair but links to external storage and
+ * must use the generic owner/lifetime fallback. The last MKREF is a direct
+ * current-frame local fast route.
+ */
+
+.globals=0
+
+main() .locals=16
+    load r2,1
+
+    /* Adjacent pair over an owned physical child. */
+    setattrs r1,1
+    linkattr r3,r1,0
+    load r3,"owned"
+    unlink r3
+    minlinkattr1 r3,r1,r2,0
+    mkref r4,r3
+    unlink r3
+    deref r7,r4
+    seq r0,r7,"owned"
+    brf fail_owned_value,r0
+    endlife r1
+    refvalid r6,r4
+    ieq r0,r6,0
+    brf fail_owned_lifetime,r0
+
+    /* Adjacent pair over caller-independent external storage: fallback. */
+    setattrs r1,1
+    load r5,"external"
+    linktoattr1 1,r1,r5
+    minlinkattr1 r3,r1,r2,0
+    mkref r4,r3
+    unlink r3
+    endlife r1
+    refvalid r6,r4
+    ieq r0,r6,1
+    brf fail_external_survives_root,r0
+    load r5,"external-updated"
+    deref r7,r4
+    seq r0,r7,"external-updated"
+    brf fail_external_value,r0
+    endlife r5
+    refvalid r6,r4
+    ieq r0,r6,0
+    brf fail_external_lifetime,r0
+
+    /* Direct own local. */
+    load r8,"local"
+    mkref r9,r8
+    deref r7,r9
+    seq r0,r7,"local"
+    brf fail_local_value,r0
+    endlife r8
+    refvalid r6,r9
+    ieq r0,r6,0
+    brf fail_local_lifetime,r0
+
+    say "PASS: PERF2-02 Reference Guards"
+    ret 0
+
+fail_owned_value:
+    say "FAIL: owned child value"
+    ret 1
+fail_owned_lifetime:
+    say "FAIL: owned child lifetime"
+    ret 1
+fail_external_survives_root:
+    say "FAIL: linked external died with root"
+    ret 1
+fail_external_value:
+    say "FAIL: linked external value"
+    ret 1
+fail_external_lifetime:
+    say "FAIL: linked external lifetime"
+    ret 1
+fail_local_value:
+    say "FAIL: direct local value"
+    ret 1
+fail_local_lifetime:
+    say "FAIL: direct local lifetime"
+    ret 1

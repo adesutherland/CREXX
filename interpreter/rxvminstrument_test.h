@@ -142,5 +142,6 @@ typedef struct rxvm_test_instrumentation_state {
 #define RXVM_INSTRUMENTATION_SWAP(frame_, register_1_, register_2_) ((void)0)
 #define RXVM_INSTRUMENTATION_SIGNAL_UNWIND(frames_, windows_, slots_, failed_) ((void)0)
 #define RXVM_INSTRUMENTATION_SIGNAL_NATIVE_RESTORE(observed_, slots_, failed_) ((void)0)
+#define RXVM_INSTRUMENTATION_VALUE_TYPED(operation_, shape_, bytes_) ((void)0)
 
 #endif

@@ -1,0 +1,16 @@
+CREXX_VM_PROFILING cache:
+CREXX_VM_PROFILING:BOOL=OFF
+
+profile symbols:
+PASS: no profile symbols
+
+profile strings:
+PASS: no schema-5/profile CLI strings
+
+compile definitions:
+PASS: no profiling-on compile definition
+
+CLI rejection rxvm:
+exit=2
+ERROR: Invalid argument - try "rxvm -h"
+PASS: profiling CLI rejected

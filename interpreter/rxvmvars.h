@@ -48,8 +48,11 @@
 #include "rxvmprofile.h"
 #define RXVM_PROFILE_RECORD_ALLOCATION(kind_, bytes_, value_slots_) \
     rxvm_profile_record_allocation((kind_), (bytes_), (value_slots_))
+#define RXVM_PROFILE_RECORD_VALUE(operation_, payload_) \
+    rxvm_profile_record_value_operation((operation_), (payload_))
 #else
 #define RXVM_PROFILE_RECORD_ALLOCATION(kind_, bytes_, value_slots_) ((void)0)
+#define RXVM_PROFILE_RECORD_VALUE(operation_, payload_) ((void)0)
 #endif
 
 /* Forward declarations */
@@ -668,6 +671,8 @@ RX_MOSTLYINLINE void release_value_reference_lifetime(value* v) {
 RX_MOSTLYINLINE void clear_value_contents(value* v) {
     int i;
 
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_CLEAR_CONTENTS, v);
+
     /* Clear attribute values */
     if (v->unlinked_attributes) {
         for (i = 0; i < v->max_num_attributes; i++) {
@@ -725,18 +730,21 @@ RX_MOSTLYINLINE void clear_value_contents(value* v) {
 /* Resets a storage location for later reuse without freeing reusable buffers. */
 RX_MOSTLYINLINE void reset_value_storage_for_reuse(value* v) {
     if (!v) return;
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_RESET_REUSE, v);
     if (v->reference_identity) rxvm_reference_identity_release(v);
     value_zero(v);
 }
 
 /* Destroys a storage location, invalidating references to that location. */
 RX_MOSTLYINLINE void destroy_value_storage(value* v) {
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_DESTROY, v);
     if (v && v->reference_identity) rxvm_reference_identity_release(v);
     clear_value_contents(v);
 }
 
 /* Backward-compatible storage teardown helper. */
 RX_MOSTLYINLINE void clear_value(value* v) {
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_CLEAR, v);
     destroy_value_storage(v);
 }
 
@@ -1039,6 +1047,8 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
 
     if (dest == source) return;
 
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_COPY, source);
+
     if (dest->reference_payload || source->reference_payload) {
         rxvm_reference_value_copy_payload(dest, source);
     }
@@ -1112,6 +1122,8 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
 /* Move a value */
 RX_INLINE void move_value(value *dest, value *source) {
     if (dest == source) return;
+
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_MOVE, source);
 
     /* Clear out destination - including string / attributes */
     destroy_value_storage(dest);
@@ -1327,6 +1339,7 @@ RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
 /* Copy string value */
 RX_INLINE void copy_string_value(value *dest, value *source) {
     if (dest == source) return;
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_STRING_COPY, source);
     if (source->string_length) {
         /* Copy String Data */
         prep_string_buffer(dest, source->string_length);
@@ -1351,6 +1364,8 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
 /* Copy binary payload only. Public/compiler/library status flags are not copied. */
 RX_INLINE void copy_binary_value(value *dest, value *source) {
     if (dest == source) return;
+
+    RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_BINARY_COPY, source);
 
     if (dest->reference_payload) rxvm_reference_value_release_payload(dest);
     if (dest->native_payload_ops) clear_binary_payload(dest);

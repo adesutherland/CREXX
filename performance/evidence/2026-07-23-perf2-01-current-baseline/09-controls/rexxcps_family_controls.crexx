@@ -1,0 +1,129 @@
+/* PERF2-01 cREXX-only RexxCPS family attribution controls.
+ *
+ * Each mode repeats one semantic family represented inside the disclosed
+ * cREXX RexxCPS 2.2d timed 1,000-clause mix. The controls are deliberately
+ * separate from that published score: they preserve the nominal clause-mix
+ * provenance label, but their rates are never RexxCPS clauses/second.
+ */
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+numeric digits 9
+arg argv = .string[]
+if argv[0] <> 2 then return fail("use FAMILY ITERATIONS")
+family = lower(argv[1])
+if verify(argv[2], "0123456789") <> 0 then return fail("ITERATIONS must be positive")
+iterations = argv[2] as .int
+if iterations < 1 then return fail("ITERATIONS must be positive")
+
+checksum = .int
+select
+  when family = "bifs" then checksum = control_bifs(iterations)
+  when family = "call-arg" then checksum = control_call_arg(iterations)
+  when family = "trace-address" then checksum = control_trace_address(iterations)
+  when family = "stems" then checksum = control_stems(iterations)
+  when family = "decimal-string" then checksum = control_decimal_string(iterations)
+  when family = "parse" then checksum = control_parse(iterations)
+  otherwise return fail("unknown FAMILY")
+end
+if checksum <= 0 then return fail("non-positive checksum")
+say "REXXCPS-FAMILY-CONTROL family=" || family ,
+    "iterations=" || iterations ,
+    "nominal_mix=RexxCPS-2.2d-1000-clauses" ,
+    "publication=attribution-only" ,
+    "checksum=" || checksum
+say "PASS: RexxCPS family control"
+return 0
+
+control_bifs: procedure = .int
+  arg iterations = .int
+  checksum = 0
+  source = "1234 5678 with 2 args"
+  do i = 1 to iterations
+    checksum = checksum + length(source)
+    checksum = checksum + length(substr(source, 6, 2))
+    checksum = checksum + length(word(source, 2))
+    checksum = checksum + length(upper("with"))
+  end
+  return checksum
+
+control_call_arg: procedure = .int
+  arg iterations = .int
+  checksum = 0
+  do i = 1 to iterations
+    checksum = checksum + family_subroutine("with", "2", "args", "(This is the second)11")
+  end
+  return checksum
+
+family_subroutine: procedure = .int
+  arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+  parse var a3 b1 b2 b3 .
+  text = a1 || " " || a2 || " " || a3
+  parse var text c1 c2 c3
+  return length(a1) + length(a2) + length(a3) + length(a4) + ,
+      length(b1) + length(c1) + length(c2) + length(c3)
+
+control_trace_address: procedure = .int
+  arg iterations = .int
+  trace off
+  address crexx
+  checksum = 0
+  do i = 1 to iterations
+    trace value _trace_current_mode()
+    address value addressenv().environment_name()
+    checksum = checksum + length(_trace_current_mode()) + ,
+        length(addressenv().environment_name())
+  end
+  trace off
+  return checksum
+
+control_stems: procedure = .int
+  arg iterations = .int
+  acompound = .stem()
+  avar = .stem()
+  checksum = 0
+  key1 = "Key Bee"
+  do i = 1 to iterations
+    acompound.key1.i = "78"
+    avar. = "1.0" || i
+    avar.1.2 = "1.1"
+    checksum = checksum + length(acompound.key1.i) + length(avar.1.2)
+  end
+  return checksum
+
+control_decimal_string: procedure = .int
+  numeric digits 9
+  arg iterations = .int
+  one = "1" as .decimal
+  step = "1.1" as .decimal
+  limit = "2.2" as .decimal
+  checksum = 0
+  do i = 1 to iterations
+    value = step
+    do while value <= limit
+      text = (value + one) as .string
+      value = (text as .decimal) + step
+      checksum = checksum + length(text)
+    end
+  end
+  return checksum
+
+control_parse: procedure = .int
+  arg iterations = .int
+  checksum = 0
+  p0 = "b"
+  do i = 1 to iterations
+    parse value "Foo Bar" with v1 +5 v2 .
+    text = "This is an awfully boring program"; parse var text p1 (p0) p5
+    text = "is an awfully boring program This"; parse var text p2 (p0) p6
+    text = "an awfully boring program This is"; parse var text p3 (p0) p7
+    text = "awfully boring program This is an"; parse var text p4 (p0) p8
+    checksum = checksum + length(v1) + length(v2) + length(p1) + length(p2) + ,
+        length(p3) + length(p4) + length(p5) + length(p6) + length(p7) + length(p8)
+  end
+  return checksum
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

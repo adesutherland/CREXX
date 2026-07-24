@@ -1,0 +1,1201 @@
+sample_id,stream,line_number,text
+rss-Sieve-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-1,stderr,1,        1.08 real         1.08 user         0.00 sys
+rss-Sieve-sieve-rxvm-recorded-1,stderr,2,            17432576  maximum resident set size
+rss-Sieve-sieve-rxvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-rxvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-rxvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-rxvm-recorded-1,stderr,6,                1239  page reclaims
+rss-Sieve-sieve-rxvm-recorded-1,stderr,7,                   3  page faults
+rss-Sieve-sieve-rxvm-recorded-1,stderr,8,                   0  swaps
+rss-Sieve-sieve-rxvm-recorded-1,stderr,9,                   0  block input operations
+rss-Sieve-sieve-rxvm-recorded-1,stderr,10,                   0  block output operations
+rss-Sieve-sieve-rxvm-recorded-1,stderr,11,                   0  messages sent
+rss-Sieve-sieve-rxvm-recorded-1,stderr,12,                   0  messages received
+rss-Sieve-sieve-rxvm-recorded-1,stderr,13,                   0  signals received
+rss-Sieve-sieve-rxvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-rxvm-recorded-1,stderr,15,                 153  involuntary context switches
+rss-Sieve-sieve-rxvm-recorded-1,stderr,16,         23264271936  instructions retired
+rss-Sieve-sieve-rxvm-recorded-1,stderr,17,          4665936074  cycles elapsed
+rss-Sieve-sieve-rxvm-recorded-1,stderr,18,            12583344  peak memory footprint
+rss-Sieve-sieve-rxbvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxbvm-recorded-1,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,1,        1.42 real         1.41 user         0.00 sys
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,2,            17399808  maximum resident set size
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,6,                1237  page reclaims
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,7,                   3  page faults
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,8,                   0  swaps
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,9,                   0  block input operations
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,10,                   0  block output operations
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,11,                   0  messages sent
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,12,                   0  messages received
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,13,                   0  signals received
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,15,                  97  involuntary context switches
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,16,         28703052502  instructions retired
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,17,          6150019075  cycles elapsed
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,18,            12517808  peak memory footprint
+rss-Sieve-sieve-oorexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-oorexx-recorded-1,stdout,2,PASS: AWFY Sieve Classic port
+rss-Sieve-sieve-oorexx-recorded-1,stderr,1,        7.65 real         7.63 user         0.01 sys
+rss-Sieve-sieve-oorexx-recorded-1,stderr,2,            17874944  maximum resident set size
+rss-Sieve-sieve-oorexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-oorexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-oorexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-oorexx-recorded-1,stderr,6,                1286  page reclaims
+rss-Sieve-sieve-oorexx-recorded-1,stderr,7,                   0  page faults
+rss-Sieve-sieve-oorexx-recorded-1,stderr,8,                   0  swaps
+rss-Sieve-sieve-oorexx-recorded-1,stderr,9,                   0  block input operations
+rss-Sieve-sieve-oorexx-recorded-1,stderr,10,                   0  block output operations
+rss-Sieve-sieve-oorexx-recorded-1,stderr,11,                   3  messages sent
+rss-Sieve-sieve-oorexx-recorded-1,stderr,12,                   2  messages received
+rss-Sieve-sieve-oorexx-recorded-1,stderr,13,                   0  signals received
+rss-Sieve-sieve-oorexx-recorded-1,stderr,14,                   2  voluntary context switches
+rss-Sieve-sieve-oorexx-recorded-1,stderr,15,                 562  involuntary context switches
+rss-Sieve-sieve-oorexx-recorded-1,stderr,16,        138153433128  instructions retired
+rss-Sieve-sieve-oorexx-recorded-1,stderr,17,         33105208555  cycles elapsed
+rss-Sieve-sieve-oorexx-recorded-1,stderr,18,            16253264  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-netrexx-recorded-1,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+rss-Sieve-sieve-netrexx-recorded-1,stderr,1,        2.00 real         2.03 user         0.06 sys
+rss-Sieve-sieve-netrexx-recorded-1,stderr,2,           428720128  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,6,               27841  page reclaims
+rss-Sieve-sieve-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-1,stderr,13,                   1  signals received
+rss-Sieve-sieve-netrexx-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-1,stderr,15,                6544  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-1,stderr,16,         62667726256  instructions retired
+rss-Sieve-sieve-netrexx-recorded-1,stderr,17,          9024189619  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-1,stderr,18,           404817096  peak memory footprint
+rss-Sieve-sieve-rxbvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxbvm-recorded-2,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,1,        1.43 real         1.42 user         0.00 sys
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,2,            17399808  maximum resident set size
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,6,                1237  page reclaims
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,7,                   3  page faults
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,8,                   0  swaps
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,9,                   0  block input operations
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,10,                   0  block output operations
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,11,                   0  messages sent
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,12,                   0  messages received
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,13,                   0  signals received
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,15,                  93  involuntary context switches
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,16,         28702591552  instructions retired
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,17,          6199626219  cycles elapsed
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,18,            12517808  peak memory footprint
+rss-Sieve-sieve-oorexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-oorexx-recorded-2,stdout,2,PASS: AWFY Sieve Classic port
+rss-Sieve-sieve-oorexx-recorded-2,stderr,1,        7.66 real         7.65 user         0.00 sys
+rss-Sieve-sieve-oorexx-recorded-2,stderr,2,            17858560  maximum resident set size
+rss-Sieve-sieve-oorexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-oorexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-oorexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-oorexx-recorded-2,stderr,6,                1285  page reclaims
+rss-Sieve-sieve-oorexx-recorded-2,stderr,7,                   0  page faults
+rss-Sieve-sieve-oorexx-recorded-2,stderr,8,                   0  swaps
+rss-Sieve-sieve-oorexx-recorded-2,stderr,9,                   0  block input operations
+rss-Sieve-sieve-oorexx-recorded-2,stderr,10,                   0  block output operations
+rss-Sieve-sieve-oorexx-recorded-2,stderr,11,                   3  messages sent
+rss-Sieve-sieve-oorexx-recorded-2,stderr,12,                   2  messages received
+rss-Sieve-sieve-oorexx-recorded-2,stderr,13,                   0  signals received
+rss-Sieve-sieve-oorexx-recorded-2,stderr,14,                   2  voluntary context switches
+rss-Sieve-sieve-oorexx-recorded-2,stderr,15,                 552  involuntary context switches
+rss-Sieve-sieve-oorexx-recorded-2,stderr,16,        138151109896  instructions retired
+rss-Sieve-sieve-oorexx-recorded-2,stderr,17,         33170003582  cycles elapsed
+rss-Sieve-sieve-oorexx-recorded-2,stderr,18,            16236880  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-netrexx-recorded-2,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+rss-Sieve-sieve-netrexx-recorded-2,stderr,1,        2.01 real         2.03 user         0.06 sys
+rss-Sieve-sieve-netrexx-recorded-2,stderr,2,           428703744  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,6,               27808  page reclaims
+rss-Sieve-sieve-netrexx-recorded-2,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-2,stderr,13,                   0  signals received
+rss-Sieve-sieve-netrexx-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-2,stderr,15,                6451  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-2,stderr,16,         62567971877  instructions retired
+rss-Sieve-sieve-netrexx-recorded-2,stderr,17,          9016129957  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-2,stderr,18,           404800712  peak memory footprint
+rss-Sieve-sieve-rxvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-2,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-2,stderr,1,        1.07 real         1.07 user         0.00 sys
+rss-Sieve-sieve-rxvm-recorded-2,stderr,2,            17350656  maximum resident set size
+rss-Sieve-sieve-rxvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-rxvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-rxvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-rxvm-recorded-2,stderr,6,                1234  page reclaims
+rss-Sieve-sieve-rxvm-recorded-2,stderr,7,                   3  page faults
+rss-Sieve-sieve-rxvm-recorded-2,stderr,8,                   0  swaps
+rss-Sieve-sieve-rxvm-recorded-2,stderr,9,                   0  block input operations
+rss-Sieve-sieve-rxvm-recorded-2,stderr,10,                   0  block output operations
+rss-Sieve-sieve-rxvm-recorded-2,stderr,11,                   0  messages sent
+rss-Sieve-sieve-rxvm-recorded-2,stderr,12,                   0  messages received
+rss-Sieve-sieve-rxvm-recorded-2,stderr,13,                   0  signals received
+rss-Sieve-sieve-rxvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-rxvm-recorded-2,stderr,15,                  61  involuntary context switches
+rss-Sieve-sieve-rxvm-recorded-2,stderr,16,         23262720538  instructions retired
+rss-Sieve-sieve-rxvm-recorded-2,stderr,17,          4662799475  cycles elapsed
+rss-Sieve-sieve-rxvm-recorded-2,stderr,18,            12501424  peak memory footprint
+rss-Sieve-sieve-oorexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-oorexx-recorded-3,stdout,2,PASS: AWFY Sieve Classic port
+rss-Sieve-sieve-oorexx-recorded-3,stderr,1,        7.67 real         7.65 user         0.00 sys
+rss-Sieve-sieve-oorexx-recorded-3,stderr,2,            17874944  maximum resident set size
+rss-Sieve-sieve-oorexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-oorexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-oorexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-oorexx-recorded-3,stderr,6,                1286  page reclaims
+rss-Sieve-sieve-oorexx-recorded-3,stderr,7,                   0  page faults
+rss-Sieve-sieve-oorexx-recorded-3,stderr,8,                   0  swaps
+rss-Sieve-sieve-oorexx-recorded-3,stderr,9,                   0  block input operations
+rss-Sieve-sieve-oorexx-recorded-3,stderr,10,                   0  block output operations
+rss-Sieve-sieve-oorexx-recorded-3,stderr,11,                   3  messages sent
+rss-Sieve-sieve-oorexx-recorded-3,stderr,12,                   2  messages received
+rss-Sieve-sieve-oorexx-recorded-3,stderr,13,                   0  signals received
+rss-Sieve-sieve-oorexx-recorded-3,stderr,14,                   2  voluntary context switches
+rss-Sieve-sieve-oorexx-recorded-3,stderr,15,                 485  involuntary context switches
+rss-Sieve-sieve-oorexx-recorded-3,stderr,16,        138151171087  instructions retired
+rss-Sieve-sieve-oorexx-recorded-3,stderr,17,         33198976530  cycles elapsed
+rss-Sieve-sieve-oorexx-recorded-3,stderr,18,            16253264  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-netrexx-recorded-3,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+rss-Sieve-sieve-netrexx-recorded-3,stderr,1,        2.01 real         2.05 user         0.06 sys
+rss-Sieve-sieve-netrexx-recorded-3,stderr,2,           428834816  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,6,               27819  page reclaims
+rss-Sieve-sieve-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-3,stderr,13,                   0  signals received
+rss-Sieve-sieve-netrexx-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-3,stderr,15,                6478  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-3,stderr,16,         63318041231  instructions retired
+rss-Sieve-sieve-netrexx-recorded-3,stderr,17,          9109757943  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-3,stderr,18,           404931784  peak memory footprint
+rss-Sieve-sieve-rxvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-3,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-3,stderr,1,        1.08 real         1.08 user         0.00 sys
+rss-Sieve-sieve-rxvm-recorded-3,stderr,2,            17334272  maximum resident set size
+rss-Sieve-sieve-rxvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-rxvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-rxvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-rxvm-recorded-3,stderr,6,                1233  page reclaims
+rss-Sieve-sieve-rxvm-recorded-3,stderr,7,                   3  page faults
+rss-Sieve-sieve-rxvm-recorded-3,stderr,8,                   0  swaps
+rss-Sieve-sieve-rxvm-recorded-3,stderr,9,                   0  block input operations
+rss-Sieve-sieve-rxvm-recorded-3,stderr,10,                   0  block output operations
+rss-Sieve-sieve-rxvm-recorded-3,stderr,11,                   0  messages sent
+rss-Sieve-sieve-rxvm-recorded-3,stderr,12,                   0  messages received
+rss-Sieve-sieve-rxvm-recorded-3,stderr,13,                   0  signals received
+rss-Sieve-sieve-rxvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-rxvm-recorded-3,stderr,15,                  59  involuntary context switches
+rss-Sieve-sieve-rxvm-recorded-3,stderr,16,         23263159680  instructions retired
+rss-Sieve-sieve-rxvm-recorded-3,stderr,17,          4699455875  cycles elapsed
+rss-Sieve-sieve-rxvm-recorded-3,stderr,18,            12485040  peak memory footprint
+rss-Sieve-sieve-rxbvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxbvm-recorded-3,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,1,        1.43 real         1.42 user         0.00 sys
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,2,            17465344  maximum resident set size
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,6,                1241  page reclaims
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,7,                   3  page faults
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,8,                   0  swaps
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,9,                   0  block input operations
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,10,                   0  block output operations
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,11,                   0  messages sent
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,12,                   0  messages received
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,13,                   0  signals received
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,15,                  92  involuntary context switches
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,16,         28703929336  instructions retired
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,17,          6178074144  cycles elapsed
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,18,            12583344  peak memory footprint
+rss-Permute-permute-rxvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxvm-recorded-1,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxvm-recorded-1,stderr,1,        7.46 real         7.44 user         0.01 sys
+rss-Permute-permute-rxvm-recorded-1,stderr,2,            17514496  maximum resident set size
+rss-Permute-permute-rxvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Permute-permute-rxvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Permute-permute-rxvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-rxvm-recorded-1,stderr,6,                1244  page reclaims
+rss-Permute-permute-rxvm-recorded-1,stderr,7,                   3  page faults
+rss-Permute-permute-rxvm-recorded-1,stderr,8,                   0  swaps
+rss-Permute-permute-rxvm-recorded-1,stderr,9,                   0  block input operations
+rss-Permute-permute-rxvm-recorded-1,stderr,10,                   0  block output operations
+rss-Permute-permute-rxvm-recorded-1,stderr,11,                   0  messages sent
+rss-Permute-permute-rxvm-recorded-1,stderr,12,                   0  messages received
+rss-Permute-permute-rxvm-recorded-1,stderr,13,                   0  signals received
+rss-Permute-permute-rxvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-rxvm-recorded-1,stderr,15,                 538  involuntary context switches
+rss-Permute-permute-rxvm-recorded-1,stderr,16,        148835579436  instructions retired
+rss-Permute-permute-rxvm-recorded-1,stderr,17,         32233425312  cycles elapsed
+rss-Permute-permute-rxvm-recorded-1,stderr,18,            12599728  peak memory footprint
+rss-Permute-permute-rxbvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxbvm-recorded-1,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxbvm-recorded-1,stderr,1,        7.85 real         7.84 user         0.00 sys
+rss-Permute-permute-rxbvm-recorded-1,stderr,2,            17694720  maximum resident set size
+rss-Permute-permute-rxbvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Permute-permute-rxbvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Permute-permute-rxbvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-rxbvm-recorded-1,stderr,6,                1255  page reclaims
+rss-Permute-permute-rxbvm-recorded-1,stderr,7,                   3  page faults
+rss-Permute-permute-rxbvm-recorded-1,stderr,8,                   0  swaps
+rss-Permute-permute-rxbvm-recorded-1,stderr,9,                   0  block input operations
+rss-Permute-permute-rxbvm-recorded-1,stderr,10,                   0  block output operations
+rss-Permute-permute-rxbvm-recorded-1,stderr,11,                   0  messages sent
+rss-Permute-permute-rxbvm-recorded-1,stderr,12,                   0  messages received
+rss-Permute-permute-rxbvm-recorded-1,stderr,13,                   0  signals received
+rss-Permute-permute-rxbvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-rxbvm-recorded-1,stderr,15,                 490  involuntary context switches
+rss-Permute-permute-rxbvm-recorded-1,stderr,16,        158388799777  instructions retired
+rss-Permute-permute-rxbvm-recorded-1,stderr,17,         33995190299  cycles elapsed
+rss-Permute-permute-rxbvm-recorded-1,stderr,18,            12714416  peak memory footprint
+rss-Permute-permute-oorexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-oorexx-recorded-1,stdout,2,PASS: AWFY Permute Classic procedural port
+rss-Permute-permute-oorexx-recorded-1,stderr,1,       15.79 real        15.76 user         0.01 sys
+rss-Permute-permute-oorexx-recorded-1,stderr,2,            17874944  maximum resident set size
+rss-Permute-permute-oorexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Permute-permute-oorexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Permute-permute-oorexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-oorexx-recorded-1,stderr,6,                1286  page reclaims
+rss-Permute-permute-oorexx-recorded-1,stderr,7,                   0  page faults
+rss-Permute-permute-oorexx-recorded-1,stderr,8,                   0  swaps
+rss-Permute-permute-oorexx-recorded-1,stderr,9,                   0  block input operations
+rss-Permute-permute-oorexx-recorded-1,stderr,10,                   0  block output operations
+rss-Permute-permute-oorexx-recorded-1,stderr,11,                   3  messages sent
+rss-Permute-permute-oorexx-recorded-1,stderr,12,                   2  messages received
+rss-Permute-permute-oorexx-recorded-1,stderr,13,                   0  signals received
+rss-Permute-permute-oorexx-recorded-1,stderr,14,                   2  voluntary context switches
+rss-Permute-permute-oorexx-recorded-1,stderr,15,                1091  involuntary context switches
+rss-Permute-permute-oorexx-recorded-1,stderr,16,        349112546276  instructions retired
+rss-Permute-permute-oorexx-recorded-1,stderr,17,         68354891906  cycles elapsed
+rss-Permute-permute-oorexx-recorded-1,stderr,18,            16253264  peak memory footprint
+rss-Permute-permute-netrexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-1,stderr,1,        1.12 real         1.18 user         0.02 sys
+rss-Permute-permute-netrexx-recorded-1,stderr,2,           179634176  maximum resident set size
+rss-Permute-permute-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Permute-permute-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Permute-permute-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-netrexx-recorded-1,stderr,6,               12564  page reclaims
+rss-Permute-permute-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-Permute-permute-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-Permute-permute-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-Permute-permute-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-Permute-permute-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-Permute-permute-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-Permute-permute-netrexx-recorded-1,stderr,13,                   1  signals received
+rss-Permute-permute-netrexx-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-netrexx-recorded-1,stderr,15,                3666  involuntary context switches
+rss-Permute-permute-netrexx-recorded-1,stderr,16,         35435832878  instructions retired
+rss-Permute-permute-netrexx-recorded-1,stderr,17,          5166758417  cycles elapsed
+rss-Permute-permute-netrexx-recorded-1,stderr,18,           155501432  peak memory footprint
+rss-Permute-permute-rxbvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxbvm-recorded-2,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxbvm-recorded-2,stderr,1,        7.89 real         7.88 user         0.01 sys
+rss-Permute-permute-rxbvm-recorded-2,stderr,2,            17678336  maximum resident set size
+rss-Permute-permute-rxbvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Permute-permute-rxbvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Permute-permute-rxbvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-rxbvm-recorded-2,stderr,6,                1254  page reclaims
+rss-Permute-permute-rxbvm-recorded-2,stderr,7,                   3  page faults
+rss-Permute-permute-rxbvm-recorded-2,stderr,8,                   0  swaps
+rss-Permute-permute-rxbvm-recorded-2,stderr,9,                   0  block input operations
+rss-Permute-permute-rxbvm-recorded-2,stderr,10,                   0  block output operations
+rss-Permute-permute-rxbvm-recorded-2,stderr,11,                   0  messages sent
+rss-Permute-permute-rxbvm-recorded-2,stderr,12,                   0  messages received
+rss-Permute-permute-rxbvm-recorded-2,stderr,13,                   0  signals received
+rss-Permute-permute-rxbvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-rxbvm-recorded-2,stderr,15,                 527  involuntary context switches
+rss-Permute-permute-rxbvm-recorded-2,stderr,16,        158390071905  instructions retired
+rss-Permute-permute-rxbvm-recorded-2,stderr,17,         34153608134  cycles elapsed
+rss-Permute-permute-rxbvm-recorded-2,stderr,18,            12698032  peak memory footprint
+rss-Permute-permute-oorexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-oorexx-recorded-2,stdout,2,PASS: AWFY Permute Classic procedural port
+rss-Permute-permute-oorexx-recorded-2,stderr,1,       15.68 real        15.66 user         0.01 sys
+rss-Permute-permute-oorexx-recorded-2,stderr,2,            17874944  maximum resident set size
+rss-Permute-permute-oorexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Permute-permute-oorexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Permute-permute-oorexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-oorexx-recorded-2,stderr,6,                1286  page reclaims
+rss-Permute-permute-oorexx-recorded-2,stderr,7,                   0  page faults
+rss-Permute-permute-oorexx-recorded-2,stderr,8,                   0  swaps
+rss-Permute-permute-oorexx-recorded-2,stderr,9,                   0  block input operations
+rss-Permute-permute-oorexx-recorded-2,stderr,10,                   0  block output operations
+rss-Permute-permute-oorexx-recorded-2,stderr,11,                   3  messages sent
+rss-Permute-permute-oorexx-recorded-2,stderr,12,                   2  messages received
+rss-Permute-permute-oorexx-recorded-2,stderr,13,                   0  signals received
+rss-Permute-permute-oorexx-recorded-2,stderr,14,                   2  voluntary context switches
+rss-Permute-permute-oorexx-recorded-2,stderr,15,                1073  involuntary context switches
+rss-Permute-permute-oorexx-recorded-2,stderr,16,        349112307528  instructions retired
+rss-Permute-permute-oorexx-recorded-2,stderr,17,         67885412801  cycles elapsed
+rss-Permute-permute-oorexx-recorded-2,stderr,18,            16253264  peak memory footprint
+rss-Permute-permute-netrexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-2,stderr,1,        1.13 real         1.19 user         0.02 sys
+rss-Permute-permute-netrexx-recorded-2,stderr,2,           179568640  maximum resident set size
+rss-Permute-permute-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Permute-permute-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Permute-permute-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-netrexx-recorded-2,stderr,6,               12562  page reclaims
+rss-Permute-permute-netrexx-recorded-2,stderr,7,                   1  page faults
+rss-Permute-permute-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-Permute-permute-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-Permute-permute-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-Permute-permute-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-Permute-permute-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-Permute-permute-netrexx-recorded-2,stderr,13,                   1  signals received
+rss-Permute-permute-netrexx-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-netrexx-recorded-2,stderr,15,                3643  involuntary context switches
+rss-Permute-permute-netrexx-recorded-2,stderr,16,         35425924768  instructions retired
+rss-Permute-permute-netrexx-recorded-2,stderr,17,          5226049070  cycles elapsed
+rss-Permute-permute-netrexx-recorded-2,stderr,18,           155517936  peak memory footprint
+rss-Permute-permute-rxvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxvm-recorded-2,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxvm-recorded-2,stderr,1,        7.44 real         7.43 user         0.00 sys
+rss-Permute-permute-rxvm-recorded-2,stderr,2,            17547264  maximum resident set size
+rss-Permute-permute-rxvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Permute-permute-rxvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Permute-permute-rxvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-rxvm-recorded-2,stderr,6,                1246  page reclaims
+rss-Permute-permute-rxvm-recorded-2,stderr,7,                   3  page faults
+rss-Permute-permute-rxvm-recorded-2,stderr,8,                   0  swaps
+rss-Permute-permute-rxvm-recorded-2,stderr,9,                   0  block input operations
+rss-Permute-permute-rxvm-recorded-2,stderr,10,                   0  block output operations
+rss-Permute-permute-rxvm-recorded-2,stderr,11,                   0  messages sent
+rss-Permute-permute-rxvm-recorded-2,stderr,12,                   0  messages received
+rss-Permute-permute-rxvm-recorded-2,stderr,13,                   0  signals received
+rss-Permute-permute-rxvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-rxvm-recorded-2,stderr,15,                 451  involuntary context switches
+rss-Permute-permute-rxvm-recorded-2,stderr,16,        148829928470  instructions retired
+rss-Permute-permute-rxvm-recorded-2,stderr,17,         32242978978  cycles elapsed
+rss-Permute-permute-rxvm-recorded-2,stderr,18,            12632496  peak memory footprint
+rss-Permute-permute-oorexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-oorexx-recorded-3,stdout,2,PASS: AWFY Permute Classic procedural port
+rss-Permute-permute-oorexx-recorded-3,stderr,1,       15.65 real        15.62 user         0.01 sys
+rss-Permute-permute-oorexx-recorded-3,stderr,2,            17874944  maximum resident set size
+rss-Permute-permute-oorexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Permute-permute-oorexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Permute-permute-oorexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-oorexx-recorded-3,stderr,6,                1286  page reclaims
+rss-Permute-permute-oorexx-recorded-3,stderr,7,                   0  page faults
+rss-Permute-permute-oorexx-recorded-3,stderr,8,                   0  swaps
+rss-Permute-permute-oorexx-recorded-3,stderr,9,                   0  block input operations
+rss-Permute-permute-oorexx-recorded-3,stderr,10,                   0  block output operations
+rss-Permute-permute-oorexx-recorded-3,stderr,11,                   3  messages sent
+rss-Permute-permute-oorexx-recorded-3,stderr,12,                   2  messages received
+rss-Permute-permute-oorexx-recorded-3,stderr,13,                   0  signals received
+rss-Permute-permute-oorexx-recorded-3,stderr,14,                   2  voluntary context switches
+rss-Permute-permute-oorexx-recorded-3,stderr,15,                 987  involuntary context switches
+rss-Permute-permute-oorexx-recorded-3,stderr,16,        349112170948  instructions retired
+rss-Permute-permute-oorexx-recorded-3,stderr,17,         67746701051  cycles elapsed
+rss-Permute-permute-oorexx-recorded-3,stderr,18,            16253264  peak memory footprint
+rss-Permute-permute-netrexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-3,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-3,stderr,1,        1.13 real         1.19 user         0.02 sys
+rss-Permute-permute-netrexx-recorded-3,stderr,2,           179765248  maximum resident set size
+rss-Permute-permute-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Permute-permute-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Permute-permute-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-netrexx-recorded-3,stderr,6,               12565  page reclaims
+rss-Permute-permute-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-Permute-permute-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-Permute-permute-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-Permute-permute-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-Permute-permute-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-Permute-permute-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-Permute-permute-netrexx-recorded-3,stderr,13,                   1  signals received
+rss-Permute-permute-netrexx-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-netrexx-recorded-3,stderr,15,                3591  involuntary context switches
+rss-Permute-permute-netrexx-recorded-3,stderr,16,         35438118224  instructions retired
+rss-Permute-permute-netrexx-recorded-3,stderr,17,          5238870851  cycles elapsed
+rss-Permute-permute-netrexx-recorded-3,stderr,18,           155747360  peak memory footprint
+rss-Permute-permute-rxvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxvm-recorded-3,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxvm-recorded-3,stderr,1,        7.42 real         7.41 user         0.00 sys
+rss-Permute-permute-rxvm-recorded-3,stderr,2,            17547264  maximum resident set size
+rss-Permute-permute-rxvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Permute-permute-rxvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Permute-permute-rxvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-rxvm-recorded-3,stderr,6,                1246  page reclaims
+rss-Permute-permute-rxvm-recorded-3,stderr,7,                   3  page faults
+rss-Permute-permute-rxvm-recorded-3,stderr,8,                   0  swaps
+rss-Permute-permute-rxvm-recorded-3,stderr,9,                   0  block input operations
+rss-Permute-permute-rxvm-recorded-3,stderr,10,                   0  block output operations
+rss-Permute-permute-rxvm-recorded-3,stderr,11,                   0  messages sent
+rss-Permute-permute-rxvm-recorded-3,stderr,12,                   0  messages received
+rss-Permute-permute-rxvm-recorded-3,stderr,13,                   0  signals received
+rss-Permute-permute-rxvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-rxvm-recorded-3,stderr,15,                 425  involuntary context switches
+rss-Permute-permute-rxvm-recorded-3,stderr,16,        148829656600  instructions retired
+rss-Permute-permute-rxvm-recorded-3,stderr,17,         32136825938  cycles elapsed
+rss-Permute-permute-rxvm-recorded-3,stderr,18,            12632496  peak memory footprint
+rss-Permute-permute-rxbvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxbvm-recorded-3,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxbvm-recorded-3,stderr,1,        7.80 real         7.79 user         0.00 sys
+rss-Permute-permute-rxbvm-recorded-3,stderr,2,            17547264  maximum resident set size
+rss-Permute-permute-rxbvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Permute-permute-rxbvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Permute-permute-rxbvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Permute-permute-rxbvm-recorded-3,stderr,6,                1246  page reclaims
+rss-Permute-permute-rxbvm-recorded-3,stderr,7,                   3  page faults
+rss-Permute-permute-rxbvm-recorded-3,stderr,8,                   0  swaps
+rss-Permute-permute-rxbvm-recorded-3,stderr,9,                   0  block input operations
+rss-Permute-permute-rxbvm-recorded-3,stderr,10,                   0  block output operations
+rss-Permute-permute-rxbvm-recorded-3,stderr,11,                   0  messages sent
+rss-Permute-permute-rxbvm-recorded-3,stderr,12,                   0  messages received
+rss-Permute-permute-rxbvm-recorded-3,stderr,13,                   0  signals received
+rss-Permute-permute-rxbvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Permute-permute-rxbvm-recorded-3,stderr,15,                 443  involuntary context switches
+rss-Permute-permute-rxbvm-recorded-3,stderr,16,        158387603287  instructions retired
+rss-Permute-permute-rxbvm-recorded-3,stderr,17,         33783244140  cycles elapsed
+rss-Permute-permute-rxbvm-recorded-3,stderr,18,            12566960  peak memory footprint
+rss-Bounce-bounce-rxvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-rxvm-recorded-1,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxvm-recorded-1,stderr,1,        6.78 real         6.76 user         0.00 sys
+rss-Bounce-bounce-rxvm-recorded-1,stderr,2,            17760256  maximum resident set size
+rss-Bounce-bounce-rxvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-rxvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-rxvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-rxvm-recorded-1,stderr,6,                1259  page reclaims
+rss-Bounce-bounce-rxvm-recorded-1,stderr,7,                   3  page faults
+rss-Bounce-bounce-rxvm-recorded-1,stderr,8,                   0  swaps
+rss-Bounce-bounce-rxvm-recorded-1,stderr,9,                   0  block input operations
+rss-Bounce-bounce-rxvm-recorded-1,stderr,10,                   0  block output operations
+rss-Bounce-bounce-rxvm-recorded-1,stderr,11,                   0  messages sent
+rss-Bounce-bounce-rxvm-recorded-1,stderr,12,                   0  messages received
+rss-Bounce-bounce-rxvm-recorded-1,stderr,13,                   0  signals received
+rss-Bounce-bounce-rxvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-rxvm-recorded-1,stderr,15,                 513  involuntary context switches
+rss-Bounce-bounce-rxvm-recorded-1,stderr,16,        156482830091  instructions retired
+rss-Bounce-bounce-rxvm-recorded-1,stderr,17,         29293520500  cycles elapsed
+rss-Bounce-bounce-rxvm-recorded-1,stderr,18,            12829104  peak memory footprint
+rss-Bounce-bounce-rxbvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-rxbvm-recorded-1,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,1,        6.98 real         6.97 user         0.00 sys
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,2,            17793024  maximum resident set size
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,6,                1261  page reclaims
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,7,                   3  page faults
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,8,                   0  swaps
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,9,                   0  block input operations
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,10,                   0  block output operations
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,11,                   0  messages sent
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,12,                   0  messages received
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,13,                   0  signals received
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,15,                 453  involuntary context switches
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,16,        160390836427  instructions retired
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,17,         30217516351  cycles elapsed
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,18,            12812720  peak memory footprint
+rss-Bounce-bounce-oorexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-oorexx-recorded-1,stdout,2,PASS: AWFY Bounce ooRexx object port
+rss-Bounce-bounce-oorexx-recorded-1,stderr,1,        2.21 real         2.20 user         0.00 sys
+rss-Bounce-bounce-oorexx-recorded-1,stderr,2,            17891328  maximum resident set size
+rss-Bounce-bounce-oorexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-oorexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-oorexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-oorexx-recorded-1,stderr,6,                1287  page reclaims
+rss-Bounce-bounce-oorexx-recorded-1,stderr,7,                   0  page faults
+rss-Bounce-bounce-oorexx-recorded-1,stderr,8,                   0  swaps
+rss-Bounce-bounce-oorexx-recorded-1,stderr,9,                   0  block input operations
+rss-Bounce-bounce-oorexx-recorded-1,stderr,10,                   0  block output operations
+rss-Bounce-bounce-oorexx-recorded-1,stderr,11,                   3  messages sent
+rss-Bounce-bounce-oorexx-recorded-1,stderr,12,                   2  messages received
+rss-Bounce-bounce-oorexx-recorded-1,stderr,13,                   0  signals received
+rss-Bounce-bounce-oorexx-recorded-1,stderr,14,                   2  voluntary context switches
+rss-Bounce-bounce-oorexx-recorded-1,stderr,15,                 160  involuntary context switches
+rss-Bounce-bounce-oorexx-recorded-1,stderr,16,         53898199296  instructions retired
+rss-Bounce-bounce-oorexx-recorded-1,stderr,17,          9577124158  cycles elapsed
+rss-Bounce-bounce-oorexx-recorded-1,stderr,18,            16253264  peak memory footprint
+rss-Bounce-bounce-netrexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-netrexx-recorded-1,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-1,stderr,1,        1.06 real         1.15 user         0.02 sys
+rss-Bounce-bounce-netrexx-recorded-1,stderr,2,           173850624  maximum resident set size
+rss-Bounce-bounce-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-netrexx-recorded-1,stderr,6,               12206  page reclaims
+rss-Bounce-bounce-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-Bounce-bounce-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-Bounce-bounce-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-Bounce-bounce-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-Bounce-bounce-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-Bounce-bounce-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-Bounce-bounce-netrexx-recorded-1,stderr,13,                   1  signals received
+rss-Bounce-bounce-netrexx-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-netrexx-recorded-1,stderr,15,                3203  involuntary context switches
+rss-Bounce-bounce-netrexx-recorded-1,stderr,16,         27401077256  instructions retired
+rss-Bounce-bounce-netrexx-recorded-1,stderr,17,          5030856938  cycles elapsed
+rss-Bounce-bounce-netrexx-recorded-1,stderr,18,           149750768  peak memory footprint
+rss-Bounce-bounce-rxbvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-rxbvm-recorded-2,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,1,        6.97 real         6.96 user         0.00 sys
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,2,            17825792  maximum resident set size
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,6,                1263  page reclaims
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,7,                   3  page faults
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,8,                   0  swaps
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,9,                   0  block input operations
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,10,                   0  block output operations
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,11,                   0  messages sent
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,12,                   0  messages received
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,13,                   0  signals received
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,15,                 511  involuntary context switches
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,16,        160389906889  instructions retired
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,17,         30170579180  cycles elapsed
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,18,            12845488  peak memory footprint
+rss-Bounce-bounce-oorexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-oorexx-recorded-2,stdout,2,PASS: AWFY Bounce ooRexx object port
+rss-Bounce-bounce-oorexx-recorded-2,stderr,1,        2.20 real         2.20 user         0.00 sys
+rss-Bounce-bounce-oorexx-recorded-2,stderr,2,            17891328  maximum resident set size
+rss-Bounce-bounce-oorexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-oorexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-oorexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-oorexx-recorded-2,stderr,6,                1287  page reclaims
+rss-Bounce-bounce-oorexx-recorded-2,stderr,7,                   0  page faults
+rss-Bounce-bounce-oorexx-recorded-2,stderr,8,                   0  swaps
+rss-Bounce-bounce-oorexx-recorded-2,stderr,9,                   0  block input operations
+rss-Bounce-bounce-oorexx-recorded-2,stderr,10,                   0  block output operations
+rss-Bounce-bounce-oorexx-recorded-2,stderr,11,                   3  messages sent
+rss-Bounce-bounce-oorexx-recorded-2,stderr,12,                   2  messages received
+rss-Bounce-bounce-oorexx-recorded-2,stderr,13,                   0  signals received
+rss-Bounce-bounce-oorexx-recorded-2,stderr,14,                   2  voluntary context switches
+rss-Bounce-bounce-oorexx-recorded-2,stderr,15,                 173  involuntary context switches
+rss-Bounce-bounce-oorexx-recorded-2,stderr,16,         53895926854  instructions retired
+rss-Bounce-bounce-oorexx-recorded-2,stderr,17,          9554021187  cycles elapsed
+rss-Bounce-bounce-oorexx-recorded-2,stderr,18,            16253264  peak memory footprint
+rss-Bounce-bounce-netrexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-netrexx-recorded-2,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-2,stderr,1,        1.09 real         1.17 user         0.02 sys
+rss-Bounce-bounce-netrexx-recorded-2,stderr,2,           174374912  maximum resident set size
+rss-Bounce-bounce-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-netrexx-recorded-2,stderr,6,               12241  page reclaims
+rss-Bounce-bounce-netrexx-recorded-2,stderr,7,                   1  page faults
+rss-Bounce-bounce-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-Bounce-bounce-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-Bounce-bounce-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-Bounce-bounce-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-Bounce-bounce-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-Bounce-bounce-netrexx-recorded-2,stderr,13,                   1  signals received
+rss-Bounce-bounce-netrexx-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-netrexx-recorded-2,stderr,15,                3188  involuntary context switches
+rss-Bounce-bounce-netrexx-recorded-2,stderr,16,         26527304019  instructions retired
+rss-Bounce-bounce-netrexx-recorded-2,stderr,17,          5154070859  cycles elapsed
+rss-Bounce-bounce-netrexx-recorded-2,stderr,18,           150275056  peak memory footprint
+rss-Bounce-bounce-rxvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-rxvm-recorded-2,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxvm-recorded-2,stderr,1,        6.69 real         6.68 user         0.01 sys
+rss-Bounce-bounce-rxvm-recorded-2,stderr,2,            17809408  maximum resident set size
+rss-Bounce-bounce-rxvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-rxvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-rxvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-rxvm-recorded-2,stderr,6,                1262  page reclaims
+rss-Bounce-bounce-rxvm-recorded-2,stderr,7,                   3  page faults
+rss-Bounce-bounce-rxvm-recorded-2,stderr,8,                   0  swaps
+rss-Bounce-bounce-rxvm-recorded-2,stderr,9,                   0  block input operations
+rss-Bounce-bounce-rxvm-recorded-2,stderr,10,                   0  block output operations
+rss-Bounce-bounce-rxvm-recorded-2,stderr,11,                   0  messages sent
+rss-Bounce-bounce-rxvm-recorded-2,stderr,12,                   0  messages received
+rss-Bounce-bounce-rxvm-recorded-2,stderr,13,                   0  signals received
+rss-Bounce-bounce-rxvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-rxvm-recorded-2,stderr,15,                 407  involuntary context switches
+rss-Bounce-bounce-rxvm-recorded-2,stderr,16,        156483307568  instructions retired
+rss-Bounce-bounce-rxvm-recorded-2,stderr,17,         28982554425  cycles elapsed
+rss-Bounce-bounce-rxvm-recorded-2,stderr,18,            12878256  peak memory footprint
+rss-Bounce-bounce-oorexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-oorexx-recorded-3,stdout,2,PASS: AWFY Bounce ooRexx object port
+rss-Bounce-bounce-oorexx-recorded-3,stderr,1,        2.22 real         2.21 user         0.00 sys
+rss-Bounce-bounce-oorexx-recorded-3,stderr,2,            17891328  maximum resident set size
+rss-Bounce-bounce-oorexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-oorexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-oorexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-oorexx-recorded-3,stderr,6,                1287  page reclaims
+rss-Bounce-bounce-oorexx-recorded-3,stderr,7,                   0  page faults
+rss-Bounce-bounce-oorexx-recorded-3,stderr,8,                   0  swaps
+rss-Bounce-bounce-oorexx-recorded-3,stderr,9,                   0  block input operations
+rss-Bounce-bounce-oorexx-recorded-3,stderr,10,                   0  block output operations
+rss-Bounce-bounce-oorexx-recorded-3,stderr,11,                   3  messages sent
+rss-Bounce-bounce-oorexx-recorded-3,stderr,12,                   2  messages received
+rss-Bounce-bounce-oorexx-recorded-3,stderr,13,                   0  signals received
+rss-Bounce-bounce-oorexx-recorded-3,stderr,14,                   2  voluntary context switches
+rss-Bounce-bounce-oorexx-recorded-3,stderr,15,                 145  involuntary context switches
+rss-Bounce-bounce-oorexx-recorded-3,stderr,16,         53896761105  instructions retired
+rss-Bounce-bounce-oorexx-recorded-3,stderr,17,          9629387943  cycles elapsed
+rss-Bounce-bounce-oorexx-recorded-3,stderr,18,            16253264  peak memory footprint
+rss-Bounce-bounce-netrexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-netrexx-recorded-3,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-3,stderr,1,        1.10 real         1.18 user         0.02 sys
+rss-Bounce-bounce-netrexx-recorded-3,stderr,2,           174243840  maximum resident set size
+rss-Bounce-bounce-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-netrexx-recorded-3,stderr,6,               12232  page reclaims
+rss-Bounce-bounce-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-Bounce-bounce-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-Bounce-bounce-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-Bounce-bounce-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-Bounce-bounce-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-Bounce-bounce-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-Bounce-bounce-netrexx-recorded-3,stderr,13,                   1  signals received
+rss-Bounce-bounce-netrexx-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-netrexx-recorded-3,stderr,15,                3173  involuntary context switches
+rss-Bounce-bounce-netrexx-recorded-3,stderr,16,         26536753874  instructions retired
+rss-Bounce-bounce-netrexx-recorded-3,stderr,17,          5190686816  cycles elapsed
+rss-Bounce-bounce-netrexx-recorded-3,stderr,18,           150094760  peak memory footprint
+rss-Bounce-bounce-rxvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-rxvm-recorded-3,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxvm-recorded-3,stderr,1,        6.59 real         6.58 user         0.00 sys
+rss-Bounce-bounce-rxvm-recorded-3,stderr,2,            17776640  maximum resident set size
+rss-Bounce-bounce-rxvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-rxvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-rxvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-rxvm-recorded-3,stderr,6,                1260  page reclaims
+rss-Bounce-bounce-rxvm-recorded-3,stderr,7,                   3  page faults
+rss-Bounce-bounce-rxvm-recorded-3,stderr,8,                   0  swaps
+rss-Bounce-bounce-rxvm-recorded-3,stderr,9,                   0  block input operations
+rss-Bounce-bounce-rxvm-recorded-3,stderr,10,                   0  block output operations
+rss-Bounce-bounce-rxvm-recorded-3,stderr,11,                   0  messages sent
+rss-Bounce-bounce-rxvm-recorded-3,stderr,12,                   0  messages received
+rss-Bounce-bounce-rxvm-recorded-3,stderr,13,                   0  signals received
+rss-Bounce-bounce-rxvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-rxvm-recorded-3,stderr,15,                 436  involuntary context switches
+rss-Bounce-bounce-rxvm-recorded-3,stderr,16,        156482402013  instructions retired
+rss-Bounce-bounce-rxvm-recorded-3,stderr,17,         28552371819  cycles elapsed
+rss-Bounce-bounce-rxvm-recorded-3,stderr,18,            12845488  peak memory footprint
+rss-Bounce-bounce-rxbvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=2200 result=1331
+rss-Bounce-bounce-rxbvm-recorded-3,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,1,        6.95 real         6.94 user         0.00 sys
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,2,            17907712  maximum resident set size
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,6,                1268  page reclaims
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,7,                   3  page faults
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,8,                   0  swaps
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,9,                   0  block input operations
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,10,                   0  block output operations
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,11,                   0  messages sent
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,12,                   0  messages received
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,13,                   0  signals received
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,15,                 449  involuntary context switches
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,16,        160388322464  instructions retired
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,17,         30091211005  cycles elapsed
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,18,            12927408  peak memory footprint
+rss-Richards-richards-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxvm-recorded-1,stderr,1,       11.47 real        11.45 user         0.01 sys
+rss-Richards-richards-rxvm-recorded-1,stderr,2,            20086784  maximum resident set size
+rss-Richards-richards-rxvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Richards-richards-rxvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Richards-richards-rxvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-rxvm-recorded-1,stderr,6,                1401  page reclaims
+rss-Richards-richards-rxvm-recorded-1,stderr,7,                   3  page faults
+rss-Richards-richards-rxvm-recorded-1,stderr,8,                   0  swaps
+rss-Richards-richards-rxvm-recorded-1,stderr,9,                   0  block input operations
+rss-Richards-richards-rxvm-recorded-1,stderr,10,                   0  block output operations
+rss-Richards-richards-rxvm-recorded-1,stderr,11,                   0  messages sent
+rss-Richards-richards-rxvm-recorded-1,stderr,12,                   0  messages received
+rss-Richards-richards-rxvm-recorded-1,stderr,13,                   0  signals received
+rss-Richards-richards-rxvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-rxvm-recorded-1,stderr,15,                 821  involuntary context switches
+rss-Richards-richards-rxvm-recorded-1,stderr,16,        181585078660  instructions retired
+rss-Richards-richards-rxvm-recorded-1,stderr,17,         49564274817  cycles elapsed
+rss-Richards-richards-rxvm-recorded-1,stderr,18,            15106480  peak memory footprint
+rss-Richards-richards-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxbvm-recorded-1,stderr,1,       11.54 real        11.52 user         0.02 sys
+rss-Richards-richards-rxbvm-recorded-1,stderr,2,            20054016  maximum resident set size
+rss-Richards-richards-rxbvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Richards-richards-rxbvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Richards-richards-rxbvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-rxbvm-recorded-1,stderr,6,                1399  page reclaims
+rss-Richards-richards-rxbvm-recorded-1,stderr,7,                   3  page faults
+rss-Richards-richards-rxbvm-recorded-1,stderr,8,                   0  swaps
+rss-Richards-richards-rxbvm-recorded-1,stderr,9,                   0  block input operations
+rss-Richards-richards-rxbvm-recorded-1,stderr,10,                   0  block output operations
+rss-Richards-richards-rxbvm-recorded-1,stderr,11,                   0  messages sent
+rss-Richards-richards-rxbvm-recorded-1,stderr,12,                   0  messages received
+rss-Richards-richards-rxbvm-recorded-1,stderr,13,                   0  signals received
+rss-Richards-richards-rxbvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-rxbvm-recorded-1,stderr,15,                 732  involuntary context switches
+rss-Richards-richards-rxbvm-recorded-1,stderr,16,        182977141591  instructions retired
+rss-Richards-richards-rxbvm-recorded-1,stderr,17,         49992688957  cycles elapsed
+rss-Richards-richards-rxbvm-recorded-1,stderr,18,            15040944  peak memory footprint
+rss-Richards-richards-oorexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-oorexx-recorded-1,stdout,2,PASS: AWFY Richards ooRexx port
+rss-Richards-richards-oorexx-recorded-1,stderr,1,        1.77 real         1.76 user         0.00 sys
+rss-Richards-richards-oorexx-recorded-1,stderr,2,            17924096  maximum resident set size
+rss-Richards-richards-oorexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Richards-richards-oorexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Richards-richards-oorexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-oorexx-recorded-1,stderr,6,                1289  page reclaims
+rss-Richards-richards-oorexx-recorded-1,stderr,7,                   0  page faults
+rss-Richards-richards-oorexx-recorded-1,stderr,8,                   0  swaps
+rss-Richards-richards-oorexx-recorded-1,stderr,9,                   0  block input operations
+rss-Richards-richards-oorexx-recorded-1,stderr,10,                   0  block output operations
+rss-Richards-richards-oorexx-recorded-1,stderr,11,                   3  messages sent
+rss-Richards-richards-oorexx-recorded-1,stderr,12,                   2  messages received
+rss-Richards-richards-oorexx-recorded-1,stderr,13,                   0  signals received
+rss-Richards-richards-oorexx-recorded-1,stderr,14,                   2  voluntary context switches
+rss-Richards-richards-oorexx-recorded-1,stderr,15,                 119  involuntary context switches
+rss-Richards-richards-oorexx-recorded-1,stderr,16,         36974182895  instructions retired
+rss-Richards-richards-oorexx-recorded-1,stderr,17,          7666563961  cycles elapsed
+rss-Richards-richards-oorexx-recorded-1,stderr,18,            16286032  peak memory footprint
+rss-Richards-richards-netrexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-netrexx-recorded-1,stdout,2,PASS: AWFY Richards NetRexx decimal port
+rss-Richards-richards-netrexx-recorded-1,stderr,1,        1.11 real         1.44 user         0.02 sys
+rss-Richards-richards-netrexx-recorded-1,stderr,2,           205979648  maximum resident set size
+rss-Richards-richards-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Richards-richards-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Richards-richards-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-netrexx-recorded-1,stderr,6,               14164  page reclaims
+rss-Richards-richards-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-Richards-richards-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-Richards-richards-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-Richards-richards-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-Richards-richards-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-Richards-richards-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-Richards-richards-netrexx-recorded-1,stderr,13,                   1  signals received
+rss-Richards-richards-netrexx-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-netrexx-recorded-1,stderr,15,                2848  involuntary context switches
+rss-Richards-richards-netrexx-recorded-1,stderr,16,         35117076383  instructions retired
+rss-Richards-richards-netrexx-recorded-1,stderr,17,          6181573186  cycles elapsed
+rss-Richards-richards-netrexx-recorded-1,stderr,18,           181863456  peak memory footprint
+rss-Richards-richards-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxbvm-recorded-2,stderr,1,       11.65 real        11.63 user         0.01 sys
+rss-Richards-richards-rxbvm-recorded-2,stderr,2,            20168704  maximum resident set size
+rss-Richards-richards-rxbvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Richards-richards-rxbvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Richards-richards-rxbvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-rxbvm-recorded-2,stderr,6,                1406  page reclaims
+rss-Richards-richards-rxbvm-recorded-2,stderr,7,                   3  page faults
+rss-Richards-richards-rxbvm-recorded-2,stderr,8,                   0  swaps
+rss-Richards-richards-rxbvm-recorded-2,stderr,9,                   0  block input operations
+rss-Richards-richards-rxbvm-recorded-2,stderr,10,                   0  block output operations
+rss-Richards-richards-rxbvm-recorded-2,stderr,11,                   0  messages sent
+rss-Richards-richards-rxbvm-recorded-2,stderr,12,                   0  messages received
+rss-Richards-richards-rxbvm-recorded-2,stderr,13,                   0  signals received
+rss-Richards-richards-rxbvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-rxbvm-recorded-2,stderr,15,                 779  involuntary context switches
+rss-Richards-richards-rxbvm-recorded-2,stderr,16,        182980037979  instructions retired
+rss-Richards-richards-rxbvm-recorded-2,stderr,17,         50422416987  cycles elapsed
+rss-Richards-richards-rxbvm-recorded-2,stderr,18,            15155632  peak memory footprint
+rss-Richards-richards-oorexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-oorexx-recorded-2,stdout,2,PASS: AWFY Richards ooRexx port
+rss-Richards-richards-oorexx-recorded-2,stderr,1,        1.75 real         1.74 user         0.00 sys
+rss-Richards-richards-oorexx-recorded-2,stderr,2,            17924096  maximum resident set size
+rss-Richards-richards-oorexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Richards-richards-oorexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Richards-richards-oorexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-oorexx-recorded-2,stderr,6,                1289  page reclaims
+rss-Richards-richards-oorexx-recorded-2,stderr,7,                   0  page faults
+rss-Richards-richards-oorexx-recorded-2,stderr,8,                   0  swaps
+rss-Richards-richards-oorexx-recorded-2,stderr,9,                   0  block input operations
+rss-Richards-richards-oorexx-recorded-2,stderr,10,                   0  block output operations
+rss-Richards-richards-oorexx-recorded-2,stderr,11,                   3  messages sent
+rss-Richards-richards-oorexx-recorded-2,stderr,12,                   2  messages received
+rss-Richards-richards-oorexx-recorded-2,stderr,13,                   0  signals received
+rss-Richards-richards-oorexx-recorded-2,stderr,14,                   2  voluntary context switches
+rss-Richards-richards-oorexx-recorded-2,stderr,15,                 137  involuntary context switches
+rss-Richards-richards-oorexx-recorded-2,stderr,16,         36976169284  instructions retired
+rss-Richards-richards-oorexx-recorded-2,stderr,17,          7590325394  cycles elapsed
+rss-Richards-richards-oorexx-recorded-2,stderr,18,            16286032  peak memory footprint
+rss-Richards-richards-netrexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-netrexx-recorded-2,stdout,2,PASS: AWFY Richards NetRexx decimal port
+rss-Richards-richards-netrexx-recorded-2,stderr,1,        1.14 real         1.48 user         0.02 sys
+rss-Richards-richards-netrexx-recorded-2,stderr,2,           209616896  maximum resident set size
+rss-Richards-richards-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Richards-richards-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Richards-richards-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-netrexx-recorded-2,stderr,6,               14384  page reclaims
+rss-Richards-richards-netrexx-recorded-2,stderr,7,                   1  page faults
+rss-Richards-richards-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-Richards-richards-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-Richards-richards-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-Richards-richards-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-Richards-richards-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-Richards-richards-netrexx-recorded-2,stderr,13,                   1  signals received
+rss-Richards-richards-netrexx-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-netrexx-recorded-2,stderr,15,                2832  involuntary context switches
+rss-Richards-richards-netrexx-recorded-2,stderr,16,         34905885843  instructions retired
+rss-Richards-richards-netrexx-recorded-2,stderr,17,          6145909395  cycles elapsed
+rss-Richards-richards-netrexx-recorded-2,stderr,18,           185484296  peak memory footprint
+rss-Richards-richards-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxvm-recorded-2,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxvm-recorded-2,stderr,1,       11.50 real        11.48 user         0.01 sys
+rss-Richards-richards-rxvm-recorded-2,stderr,2,            19955712  maximum resident set size
+rss-Richards-richards-rxvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Richards-richards-rxvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Richards-richards-rxvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-rxvm-recorded-2,stderr,6,                1393  page reclaims
+rss-Richards-richards-rxvm-recorded-2,stderr,7,                   3  page faults
+rss-Richards-richards-rxvm-recorded-2,stderr,8,                   0  swaps
+rss-Richards-richards-rxvm-recorded-2,stderr,9,                   0  block input operations
+rss-Richards-richards-rxvm-recorded-2,stderr,10,                   0  block output operations
+rss-Richards-richards-rxvm-recorded-2,stderr,11,                   0  messages sent
+rss-Richards-richards-rxvm-recorded-2,stderr,12,                   0  messages received
+rss-Richards-richards-rxvm-recorded-2,stderr,13,                   0  signals received
+rss-Richards-richards-rxvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-rxvm-recorded-2,stderr,15,                 842  involuntary context switches
+rss-Richards-richards-rxvm-recorded-2,stderr,16,        181587850379  instructions retired
+rss-Richards-richards-rxvm-recorded-2,stderr,17,         49805386215  cycles elapsed
+rss-Richards-richards-rxvm-recorded-2,stderr,18,            14975408  peak memory footprint
+rss-Richards-richards-oorexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-oorexx-recorded-3,stdout,2,PASS: AWFY Richards ooRexx port
+rss-Richards-richards-oorexx-recorded-3,stderr,1,        1.75 real         1.74 user         0.00 sys
+rss-Richards-richards-oorexx-recorded-3,stderr,2,            17924096  maximum resident set size
+rss-Richards-richards-oorexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Richards-richards-oorexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Richards-richards-oorexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-oorexx-recorded-3,stderr,6,                1289  page reclaims
+rss-Richards-richards-oorexx-recorded-3,stderr,7,                   0  page faults
+rss-Richards-richards-oorexx-recorded-3,stderr,8,                   0  swaps
+rss-Richards-richards-oorexx-recorded-3,stderr,9,                   0  block input operations
+rss-Richards-richards-oorexx-recorded-3,stderr,10,                   0  block output operations
+rss-Richards-richards-oorexx-recorded-3,stderr,11,                   3  messages sent
+rss-Richards-richards-oorexx-recorded-3,stderr,12,                   2  messages received
+rss-Richards-richards-oorexx-recorded-3,stderr,13,                   0  signals received
+rss-Richards-richards-oorexx-recorded-3,stderr,14,                   2  voluntary context switches
+rss-Richards-richards-oorexx-recorded-3,stderr,15,                 109  involuntary context switches
+rss-Richards-richards-oorexx-recorded-3,stderr,16,         36973569872  instructions retired
+rss-Richards-richards-oorexx-recorded-3,stderr,17,          7588936049  cycles elapsed
+rss-Richards-richards-oorexx-recorded-3,stderr,18,            16286032  peak memory footprint
+rss-Richards-richards-netrexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-netrexx-recorded-3,stdout,2,PASS: AWFY Richards NetRexx decimal port
+rss-Richards-richards-netrexx-recorded-3,stderr,1,        1.15 real         1.49 user         0.03 sys
+rss-Richards-richards-netrexx-recorded-3,stderr,2,           207175680  maximum resident set size
+rss-Richards-richards-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Richards-richards-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Richards-richards-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-netrexx-recorded-3,stderr,6,               14238  page reclaims
+rss-Richards-richards-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-Richards-richards-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-Richards-richards-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-Richards-richards-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-Richards-richards-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-Richards-richards-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-Richards-richards-netrexx-recorded-3,stderr,13,                   2  signals received
+rss-Richards-richards-netrexx-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-netrexx-recorded-3,stderr,15,                2834  involuntary context switches
+rss-Richards-richards-netrexx-recorded-3,stderr,16,         34929398198  instructions retired
+rss-Richards-richards-netrexx-recorded-3,stderr,17,          6378840778  cycles elapsed
+rss-Richards-richards-netrexx-recorded-3,stderr,18,           183026672  peak memory footprint
+rss-Richards-richards-rxvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxvm-recorded-3,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxvm-recorded-3,stderr,1,       11.54 real        11.53 user         0.01 sys
+rss-Richards-richards-rxvm-recorded-3,stderr,2,            20054016  maximum resident set size
+rss-Richards-richards-rxvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Richards-richards-rxvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Richards-richards-rxvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-rxvm-recorded-3,stderr,6,                1399  page reclaims
+rss-Richards-richards-rxvm-recorded-3,stderr,7,                   3  page faults
+rss-Richards-richards-rxvm-recorded-3,stderr,8,                   0  swaps
+rss-Richards-richards-rxvm-recorded-3,stderr,9,                   0  block input operations
+rss-Richards-richards-rxvm-recorded-3,stderr,10,                   0  block output operations
+rss-Richards-richards-rxvm-recorded-3,stderr,11,                   0  messages sent
+rss-Richards-richards-rxvm-recorded-3,stderr,12,                   0  messages received
+rss-Richards-richards-rxvm-recorded-3,stderr,13,                   0  signals received
+rss-Richards-richards-rxvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-rxvm-recorded-3,stderr,15,                 776  involuntary context switches
+rss-Richards-richards-rxvm-recorded-3,stderr,16,        181583052648  instructions retired
+rss-Richards-richards-rxvm-recorded-3,stderr,17,         49985411161  cycles elapsed
+rss-Richards-richards-rxvm-recorded-3,stderr,18,            15073712  peak memory footprint
+rss-Richards-richards-rxbvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxbvm-recorded-3,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxbvm-recorded-3,stderr,1,       11.64 real        11.62 user         0.01 sys
+rss-Richards-richards-rxbvm-recorded-3,stderr,2,            20103168  maximum resident set size
+rss-Richards-richards-rxbvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Richards-richards-rxbvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Richards-richards-rxbvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Richards-richards-rxbvm-recorded-3,stderr,6,                1402  page reclaims
+rss-Richards-richards-rxbvm-recorded-3,stderr,7,                   3  page faults
+rss-Richards-richards-rxbvm-recorded-3,stderr,8,                   0  swaps
+rss-Richards-richards-rxbvm-recorded-3,stderr,9,                   0  block input operations
+rss-Richards-richards-rxbvm-recorded-3,stderr,10,                   0  block output operations
+rss-Richards-richards-rxbvm-recorded-3,stderr,11,                   0  messages sent
+rss-Richards-richards-rxbvm-recorded-3,stderr,12,                   0  messages received
+rss-Richards-richards-rxbvm-recorded-3,stderr,13,                   0  signals received
+rss-Richards-richards-rxbvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Richards-richards-rxbvm-recorded-3,stderr,15,                 712  involuntary context switches
+rss-Richards-richards-rxbvm-recorded-3,stderr,16,        182973184352  instructions retired
+rss-Richards-richards-rxbvm-recorded-3,stderr,17,         50409311291  cycles elapsed
+rss-Richards-richards-rxbvm-recorded-3,stderr,18,            15090096  peak memory footprint
+rss-Base64-base64-rxvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxvm-recorded-1,stderr,1,        1.62 real         1.62 user         0.00 sys
+rss-Base64-base64-rxvm-recorded-1,stderr,2,            17580032  maximum resident set size
+rss-Base64-base64-rxvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Base64-base64-rxvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Base64-base64-rxvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-rxvm-recorded-1,stderr,6,                1248  page reclaims
+rss-Base64-base64-rxvm-recorded-1,stderr,7,                   3  page faults
+rss-Base64-base64-rxvm-recorded-1,stderr,8,                   0  swaps
+rss-Base64-base64-rxvm-recorded-1,stderr,9,                   0  block input operations
+rss-Base64-base64-rxvm-recorded-1,stderr,10,                   0  block output operations
+rss-Base64-base64-rxvm-recorded-1,stderr,11,                   0  messages sent
+rss-Base64-base64-rxvm-recorded-1,stderr,12,                   0  messages received
+rss-Base64-base64-rxvm-recorded-1,stderr,13,                   0  signals received
+rss-Base64-base64-rxvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-rxvm-recorded-1,stderr,15,                 104  involuntary context switches
+rss-Base64-base64-rxvm-recorded-1,stderr,16,         36305207098  instructions retired
+rss-Base64-base64-rxvm-recorded-1,stderr,17,          7042876953  cycles elapsed
+rss-Base64-base64-rxvm-recorded-1,stderr,18,            12648880  peak memory footprint
+rss-Base64-base64-rxbvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxbvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxbvm-recorded-1,stderr,1,        1.41 real         1.40 user         0.00 sys
+rss-Base64-base64-rxbvm-recorded-1,stderr,2,            17612800  maximum resident set size
+rss-Base64-base64-rxbvm-recorded-1,stderr,3,                   0  average shared memory size
+rss-Base64-base64-rxbvm-recorded-1,stderr,4,                   0  average unshared data size
+rss-Base64-base64-rxbvm-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-rxbvm-recorded-1,stderr,6,                1250  page reclaims
+rss-Base64-base64-rxbvm-recorded-1,stderr,7,                   3  page faults
+rss-Base64-base64-rxbvm-recorded-1,stderr,8,                   0  swaps
+rss-Base64-base64-rxbvm-recorded-1,stderr,9,                   0  block input operations
+rss-Base64-base64-rxbvm-recorded-1,stderr,10,                   0  block output operations
+rss-Base64-base64-rxbvm-recorded-1,stderr,11,                   0  messages sent
+rss-Base64-base64-rxbvm-recorded-1,stderr,12,                   0  messages received
+rss-Base64-base64-rxbvm-recorded-1,stderr,13,                   0  signals received
+rss-Base64-base64-rxbvm-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-rxbvm-recorded-1,stderr,15,                 204  involuntary context switches
+rss-Base64-base64-rxbvm-recorded-1,stderr,16,         38224674326  instructions retired
+rss-Base64-base64-rxbvm-recorded-1,stderr,17,          6075489917  cycles elapsed
+rss-Base64-base64-rxbvm-recorded-1,stderr,18,            12616112  peak memory footprint
+rss-Base64-base64-oorexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-oorexx-recorded-1,stdout,2,PASS: Base64 Roundtrip ooRexx port
+rss-Base64-base64-oorexx-recorded-1,stderr,1,        1.16 real         1.16 user         0.00 sys
+rss-Base64-base64-oorexx-recorded-1,stderr,2,            17874944  maximum resident set size
+rss-Base64-base64-oorexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Base64-base64-oorexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Base64-base64-oorexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-oorexx-recorded-1,stderr,6,                1286  page reclaims
+rss-Base64-base64-oorexx-recorded-1,stderr,7,                   0  page faults
+rss-Base64-base64-oorexx-recorded-1,stderr,8,                   0  swaps
+rss-Base64-base64-oorexx-recorded-1,stderr,9,                   0  block input operations
+rss-Base64-base64-oorexx-recorded-1,stderr,10,                   0  block output operations
+rss-Base64-base64-oorexx-recorded-1,stderr,11,                   3  messages sent
+rss-Base64-base64-oorexx-recorded-1,stderr,12,                   2  messages received
+rss-Base64-base64-oorexx-recorded-1,stderr,13,                   0  signals received
+rss-Base64-base64-oorexx-recorded-1,stderr,14,                   2  voluntary context switches
+rss-Base64-base64-oorexx-recorded-1,stderr,15,                  94  involuntary context switches
+rss-Base64-base64-oorexx-recorded-1,stderr,16,         25659883977  instructions retired
+rss-Base64-base64-oorexx-recorded-1,stderr,17,          5051487576  cycles elapsed
+rss-Base64-base64-oorexx-recorded-1,stderr,18,            16253264  peak memory footprint
+rss-Base64-base64-netrexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-1,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-1,stderr,1,        1.40 real         1.64 user         0.03 sys
+rss-Base64-base64-netrexx-recorded-1,stderr,2,           215236608  maximum resident set size
+rss-Base64-base64-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-1,stderr,6,               15043  page reclaims
+rss-Base64-base64-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-1,stderr,13,                   1  signals received
+rss-Base64-base64-netrexx-recorded-1,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-1,stderr,15,                3511  involuntary context switches
+rss-Base64-base64-netrexx-recorded-1,stderr,16,         33627922003  instructions retired
+rss-Base64-base64-netrexx-recorded-1,stderr,17,          7191854852  cycles elapsed
+rss-Base64-base64-netrexx-recorded-1,stderr,18,           191611888  peak memory footprint
+rss-Base64-base64-rxbvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxbvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxbvm-recorded-2,stderr,1,        1.48 real         1.47 user         0.00 sys
+rss-Base64-base64-rxbvm-recorded-2,stderr,2,            17743872  maximum resident set size
+rss-Base64-base64-rxbvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Base64-base64-rxbvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Base64-base64-rxbvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-rxbvm-recorded-2,stderr,6,                1258  page reclaims
+rss-Base64-base64-rxbvm-recorded-2,stderr,7,                   3  page faults
+rss-Base64-base64-rxbvm-recorded-2,stderr,8,                   0  swaps
+rss-Base64-base64-rxbvm-recorded-2,stderr,9,                   0  block input operations
+rss-Base64-base64-rxbvm-recorded-2,stderr,10,                   0  block output operations
+rss-Base64-base64-rxbvm-recorded-2,stderr,11,                   0  messages sent
+rss-Base64-base64-rxbvm-recorded-2,stderr,12,                   0  messages received
+rss-Base64-base64-rxbvm-recorded-2,stderr,13,                   0  signals received
+rss-Base64-base64-rxbvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-rxbvm-recorded-2,stderr,15,                 108  involuntary context switches
+rss-Base64-base64-rxbvm-recorded-2,stderr,16,         38224493072  instructions retired
+rss-Base64-base64-rxbvm-recorded-2,stderr,17,          6416813121  cycles elapsed
+rss-Base64-base64-rxbvm-recorded-2,stderr,18,            12747184  peak memory footprint
+rss-Base64-base64-oorexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-oorexx-recorded-2,stdout,2,PASS: Base64 Roundtrip ooRexx port
+rss-Base64-base64-oorexx-recorded-2,stderr,1,        1.18 real         1.18 user         0.00 sys
+rss-Base64-base64-oorexx-recorded-2,stderr,2,            17874944  maximum resident set size
+rss-Base64-base64-oorexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Base64-base64-oorexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Base64-base64-oorexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-oorexx-recorded-2,stderr,6,                1286  page reclaims
+rss-Base64-base64-oorexx-recorded-2,stderr,7,                   0  page faults
+rss-Base64-base64-oorexx-recorded-2,stderr,8,                   0  swaps
+rss-Base64-base64-oorexx-recorded-2,stderr,9,                   0  block input operations
+rss-Base64-base64-oorexx-recorded-2,stderr,10,                   0  block output operations
+rss-Base64-base64-oorexx-recorded-2,stderr,11,                   3  messages sent
+rss-Base64-base64-oorexx-recorded-2,stderr,12,                   2  messages received
+rss-Base64-base64-oorexx-recorded-2,stderr,13,                   0  signals received
+rss-Base64-base64-oorexx-recorded-2,stderr,14,                   2  voluntary context switches
+rss-Base64-base64-oorexx-recorded-2,stderr,15,                  90  involuntary context switches
+rss-Base64-base64-oorexx-recorded-2,stderr,16,         25659241597  instructions retired
+rss-Base64-base64-oorexx-recorded-2,stderr,17,          5134444044  cycles elapsed
+rss-Base64-base64-oorexx-recorded-2,stderr,18,            16253264  peak memory footprint
+rss-Base64-base64-netrexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-2,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-2,stderr,1,        1.36 real         1.61 user         0.02 sys
+rss-Base64-base64-netrexx-recorded-2,stderr,2,           181321728  maximum resident set size
+rss-Base64-base64-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-2,stderr,6,               12665  page reclaims
+rss-Base64-base64-netrexx-recorded-2,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-2,stderr,13,                   2  signals received
+rss-Base64-base64-netrexx-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-2,stderr,15,                3634  involuntary context switches
+rss-Base64-base64-netrexx-recorded-2,stderr,16,         33616888411  instructions retired
+rss-Base64-base64-netrexx-recorded-2,stderr,17,          7021161787  cycles elapsed
+rss-Base64-base64-netrexx-recorded-2,stderr,18,           157107160  peak memory footprint
+rss-Base64-base64-rxvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxvm-recorded-2,stderr,1,        1.63 real         1.63 user         0.00 sys
+rss-Base64-base64-rxvm-recorded-2,stderr,2,            17547264  maximum resident set size
+rss-Base64-base64-rxvm-recorded-2,stderr,3,                   0  average shared memory size
+rss-Base64-base64-rxvm-recorded-2,stderr,4,                   0  average unshared data size
+rss-Base64-base64-rxvm-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-rxvm-recorded-2,stderr,6,                1246  page reclaims
+rss-Base64-base64-rxvm-recorded-2,stderr,7,                   3  page faults
+rss-Base64-base64-rxvm-recorded-2,stderr,8,                   0  swaps
+rss-Base64-base64-rxvm-recorded-2,stderr,9,                   0  block input operations
+rss-Base64-base64-rxvm-recorded-2,stderr,10,                   0  block output operations
+rss-Base64-base64-rxvm-recorded-2,stderr,11,                   0  messages sent
+rss-Base64-base64-rxvm-recorded-2,stderr,12,                   0  messages received
+rss-Base64-base64-rxvm-recorded-2,stderr,13,                   0  signals received
+rss-Base64-base64-rxvm-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-rxvm-recorded-2,stderr,15,                  99  involuntary context switches
+rss-Base64-base64-rxvm-recorded-2,stderr,16,         36305296654  instructions retired
+rss-Base64-base64-rxvm-recorded-2,stderr,17,          7080366763  cycles elapsed
+rss-Base64-base64-rxvm-recorded-2,stderr,18,            12616112  peak memory footprint
+rss-Base64-base64-oorexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-oorexx-recorded-3,stdout,2,PASS: Base64 Roundtrip ooRexx port
+rss-Base64-base64-oorexx-recorded-3,stderr,1,        1.17 real         1.16 user         0.00 sys
+rss-Base64-base64-oorexx-recorded-3,stderr,2,            17874944  maximum resident set size
+rss-Base64-base64-oorexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Base64-base64-oorexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Base64-base64-oorexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-oorexx-recorded-3,stderr,6,                1286  page reclaims
+rss-Base64-base64-oorexx-recorded-3,stderr,7,                   0  page faults
+rss-Base64-base64-oorexx-recorded-3,stderr,8,                   0  swaps
+rss-Base64-base64-oorexx-recorded-3,stderr,9,                   0  block input operations
+rss-Base64-base64-oorexx-recorded-3,stderr,10,                   0  block output operations
+rss-Base64-base64-oorexx-recorded-3,stderr,11,                   3  messages sent
+rss-Base64-base64-oorexx-recorded-3,stderr,12,                   2  messages received
+rss-Base64-base64-oorexx-recorded-3,stderr,13,                   0  signals received
+rss-Base64-base64-oorexx-recorded-3,stderr,14,                   2  voluntary context switches
+rss-Base64-base64-oorexx-recorded-3,stderr,15,                  84  involuntary context switches
+rss-Base64-base64-oorexx-recorded-3,stderr,16,         25659211168  instructions retired
+rss-Base64-base64-oorexx-recorded-3,stderr,17,          5065133939  cycles elapsed
+rss-Base64-base64-oorexx-recorded-3,stderr,18,            16253264  peak memory footprint
+rss-Base64-base64-netrexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-3,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-3,stderr,1,        1.36 real         1.61 user         0.03 sys
+rss-Base64-base64-netrexx-recorded-3,stderr,2,           215105536  maximum resident set size
+rss-Base64-base64-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-3,stderr,6,               15295  page reclaims
+rss-Base64-base64-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-3,stderr,13,                   2  signals received
+rss-Base64-base64-netrexx-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-3,stderr,15,                3541  involuntary context switches
+rss-Base64-base64-netrexx-recorded-3,stderr,16,         33616356145  instructions retired
+rss-Base64-base64-netrexx-recorded-3,stderr,17,          7024642427  cycles elapsed
+rss-Base64-base64-netrexx-recorded-3,stderr,18,           191464408  peak memory footprint
+rss-Base64-base64-rxvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxvm-recorded-3,stderr,1,        1.46 real         1.46 user         0.00 sys
+rss-Base64-base64-rxvm-recorded-3,stderr,2,            17596416  maximum resident set size
+rss-Base64-base64-rxvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Base64-base64-rxvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Base64-base64-rxvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-rxvm-recorded-3,stderr,6,                1249  page reclaims
+rss-Base64-base64-rxvm-recorded-3,stderr,7,                   3  page faults
+rss-Base64-base64-rxvm-recorded-3,stderr,8,                   0  swaps
+rss-Base64-base64-rxvm-recorded-3,stderr,9,                   0  block input operations
+rss-Base64-base64-rxvm-recorded-3,stderr,10,                   0  block output operations
+rss-Base64-base64-rxvm-recorded-3,stderr,11,                   0  messages sent
+rss-Base64-base64-rxvm-recorded-3,stderr,12,                   0  messages received
+rss-Base64-base64-rxvm-recorded-3,stderr,13,                   0  signals received
+rss-Base64-base64-rxvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-rxvm-recorded-3,stderr,15,                  99  involuntary context switches
+rss-Base64-base64-rxvm-recorded-3,stderr,16,         36304923653  instructions retired
+rss-Base64-base64-rxvm-recorded-3,stderr,17,          6338777721  cycles elapsed
+rss-Base64-base64-rxvm-recorded-3,stderr,18,            12665264  peak memory footprint
+rss-Base64-base64-rxbvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxbvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxbvm-recorded-3,stderr,1,        1.60 real         1.60 user         0.00 sys
+rss-Base64-base64-rxbvm-recorded-3,stderr,2,            17678336  maximum resident set size
+rss-Base64-base64-rxbvm-recorded-3,stderr,3,                   0  average shared memory size
+rss-Base64-base64-rxbvm-recorded-3,stderr,4,                   0  average unshared data size
+rss-Base64-base64-rxbvm-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-rxbvm-recorded-3,stderr,6,                1254  page reclaims
+rss-Base64-base64-rxbvm-recorded-3,stderr,7,                   3  page faults
+rss-Base64-base64-rxbvm-recorded-3,stderr,8,                   0  swaps
+rss-Base64-base64-rxbvm-recorded-3,stderr,9,                   0  block input operations
+rss-Base64-base64-rxbvm-recorded-3,stderr,10,                   0  block output operations
+rss-Base64-base64-rxbvm-recorded-3,stderr,11,                   0  messages sent
+rss-Base64-base64-rxbvm-recorded-3,stderr,12,                   0  messages received
+rss-Base64-base64-rxbvm-recorded-3,stderr,13,                   0  signals received
+rss-Base64-base64-rxbvm-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-rxbvm-recorded-3,stderr,15,                  98  involuntary context switches
+rss-Base64-base64-rxbvm-recorded-3,stderr,16,         38223754733  instructions retired
+rss-Base64-base64-rxbvm-recorded-3,stderr,17,          6956613609  cycles elapsed
+rss-Base64-base64-rxbvm-recorded-3,stderr,18,            12681648  peak memory footprint

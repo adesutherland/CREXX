@@ -1,0 +1,3 @@
+# One-time RSS append selected by the governed MAD/span rule.
+crexx-cross-runtime-matrix|1
+base64-netrexx|Base64|netrexx|netrexx|decimal-rexx-port|A|no|no|2500|PASS: Base64 Roundtrip NetRexx decimal port||/usr/bin/java;-cp;performance/evidence/2026-07-23-perf2-01-current-baseline/03-external-comparison/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;base64_roundtrip;2500

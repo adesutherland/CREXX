@@ -1,0 +1,410 @@
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -71,6 +71,7 @@
+ #endif
+ #ifdef __APPLE__
+ #include <mach/thread_policy.h>
++#include <mach/mach_time.h>
+ #include <dlfcn.h>
+ #endif
+ #include <sys/time.h>
+@@ -1598,6 +1599,162 @@
+     return reference_value->reference_payload;
+ }
+ 
++#ifdef PERF2_Q7_DIAGNOSTICS
++typedef struct rxvm_perf2_diag_counters {
++    uint64_t modules_planned;
++    uint64_t modules_with_sites;
++    uint64_t empty_modules;
++    uint64_t malformed_modules;
++    uint64_t allocation_failures;
++    uint64_t site_records;
++    uint64_t reference_records;
++    uint64_t copy_records;
++    uint64_t reference_executions;
++    uint64_t reference_local_hits;
++    uint64_t reference_attribute_hits;
++    uint64_t reference_fallbacks;
++    uint64_t reference_diagnostic_fallbacks;
++    uint64_t copy_cold_executions;
++    uint64_t copy_cold_specialized;
++    uint64_t copy_cold_disabled;
++    uint64_t copy_specialized_executions;
++    uint64_t copy_fast_hits;
++    uint64_t copy_specialized_fallbacks;
++    uint64_t copy_diagnostic_fallbacks;
++    uint64_t copy_dequickens;
++    uint64_t copy_disabled_executions;
++    uint64_t copy_cold_ticks;
++    uint64_t copy_cold_specialized_ticks;
++    uint64_t copy_cold_disabled_ticks;
++    uint64_t copy_specialized_ticks;
++    uint64_t copy_fast_ticks;
++    uint64_t copy_specialized_fallback_ticks;
++    uint64_t timer_pair_ticks;
++    uint64_t timer_pair_min_ticks;
++    uint64_t timer_calibration_samples;
++    uint32_t timer_numer;
++    uint32_t timer_denom;
++} rxvm_perf2_diag_counters;
++
++static rxvm_perf2_diag_counters rxvm_perf2_diag;
++static int rxvm_perf2_diag_registered;
++
++static void rxvm_perf2_diag_dump(void) {
++    fprintf(stderr,
++            "PERF2_Q7_DIAG version=1 module_size=%zu record_size=%zu "
++            "modules_planned=%llu modules_with_sites=%llu empty_modules=%llu "
++            "malformed_modules=%llu allocation_failures=%llu "
++            "site_records=%llu reference_records=%llu copy_records=%llu "
++            "reference_executions=%llu reference_local_hits=%llu "
++            "reference_attribute_hits=%llu reference_fallbacks=%llu "
++            "reference_diagnostic_fallbacks=%llu "
++            "copy_cold_executions=%llu copy_cold_specialized=%llu "
++            "copy_cold_disabled=%llu copy_specialized_executions=%llu "
++            "copy_fast_hits=%llu copy_specialized_fallbacks=%llu "
++            "copy_diagnostic_fallbacks=%llu copy_dequickens=%llu "
++            "copy_disabled_executions=%llu copy_cold_ticks=%llu "
++            "copy_cold_specialized_ticks=%llu copy_cold_disabled_ticks=%llu "
++            "copy_specialized_ticks=%llu copy_fast_ticks=%llu "
++            "copy_specialized_fallback_ticks=%llu timer_pair_ticks=%llu "
++            "timer_pair_min_ticks=%llu timer_calibration_samples=%llu "
++            "timer_numer=%u timer_denom=%u invalidations=NA "
++            "reference_dequickening=NA\n",
++            sizeof(module), sizeof(rxvm_perf2_quick_site),
++            (unsigned long long)rxvm_perf2_diag.modules_planned,
++            (unsigned long long)rxvm_perf2_diag.modules_with_sites,
++            (unsigned long long)rxvm_perf2_diag.empty_modules,
++            (unsigned long long)rxvm_perf2_diag.malformed_modules,
++            (unsigned long long)rxvm_perf2_diag.allocation_failures,
++            (unsigned long long)rxvm_perf2_diag.site_records,
++            (unsigned long long)rxvm_perf2_diag.reference_records,
++            (unsigned long long)rxvm_perf2_diag.copy_records,
++            (unsigned long long)rxvm_perf2_diag.reference_executions,
++            (unsigned long long)rxvm_perf2_diag.reference_local_hits,
++            (unsigned long long)rxvm_perf2_diag.reference_attribute_hits,
++            (unsigned long long)rxvm_perf2_diag.reference_fallbacks,
++            (unsigned long long)rxvm_perf2_diag.reference_diagnostic_fallbacks,
++            (unsigned long long)rxvm_perf2_diag.copy_cold_executions,
++            (unsigned long long)rxvm_perf2_diag.copy_cold_specialized,
++            (unsigned long long)rxvm_perf2_diag.copy_cold_disabled,
++            (unsigned long long)rxvm_perf2_diag.copy_specialized_executions,
++            (unsigned long long)rxvm_perf2_diag.copy_fast_hits,
++            (unsigned long long)rxvm_perf2_diag.copy_specialized_fallbacks,
++            (unsigned long long)rxvm_perf2_diag.copy_diagnostic_fallbacks,
++            (unsigned long long)rxvm_perf2_diag.copy_dequickens,
++            (unsigned long long)rxvm_perf2_diag.copy_disabled_executions,
++            (unsigned long long)rxvm_perf2_diag.copy_cold_ticks,
++            (unsigned long long)rxvm_perf2_diag.copy_cold_specialized_ticks,
++            (unsigned long long)rxvm_perf2_diag.copy_cold_disabled_ticks,
++            (unsigned long long)rxvm_perf2_diag.copy_specialized_ticks,
++            (unsigned long long)rxvm_perf2_diag.copy_fast_ticks,
++            (unsigned long long)rxvm_perf2_diag.copy_specialized_fallback_ticks,
++            (unsigned long long)rxvm_perf2_diag.timer_pair_ticks,
++            (unsigned long long)rxvm_perf2_diag.timer_pair_min_ticks,
++            (unsigned long long)rxvm_perf2_diag.timer_calibration_samples,
++            rxvm_perf2_diag.timer_numer,
++            rxvm_perf2_diag.timer_denom);
++}
++
++static uint64_t rxvm_perf2_diag_now(void) {
++#ifdef __APPLE__
++    return mach_absolute_time();
++#else
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    return (uint64_t)ts.tv_sec * UINT64_C(1000000000) + (uint64_t)ts.tv_nsec;
++#endif
++}
++
++static void rxvm_perf2_diag_calibrate_timer(void) {
++    uint64_t i;
++    uint64_t minimum = UINT64_MAX;
++
++#ifdef __APPLE__
++    mach_timebase_info_data_t timebase;
++    mach_timebase_info(&timebase);
++    rxvm_perf2_diag.timer_numer = timebase.numer;
++    rxvm_perf2_diag.timer_denom = timebase.denom;
++#else
++    rxvm_perf2_diag.timer_numer = 1u;
++    rxvm_perf2_diag.timer_denom = 1u;
++#endif
++    rxvm_perf2_diag.timer_calibration_samples = UINT64_C(10000);
++    for (i = 0; i < rxvm_perf2_diag.timer_calibration_samples; i++) {
++        uint64_t start = rxvm_perf2_diag_now();
++        uint64_t elapsed = rxvm_perf2_diag_now() - start;
++        rxvm_perf2_diag.timer_pair_ticks += elapsed;
++        if (elapsed < minimum) minimum = elapsed;
++    }
++    rxvm_perf2_diag.timer_pair_min_ticks = minimum;
++}
++
++static void rxvm_perf2_diag_register(void) {
++    if (!rxvm_perf2_diag_registered) {
++        rxvm_perf2_diag_registered = 1;
++        rxvm_perf2_diag_calibrate_timer();
++        atexit(rxvm_perf2_diag_dump);
++    }
++}
++
++static rxvm_perf2_quick_site *rxvm_perf2_diag_site_at(module *mod,
++                                                       size_t canonical_index) {
++    size_t left;
++    size_t right;
++
++    if (!mod || !mod->perf2_quick_sites) return 0;
++    left = 0;
++    right = mod->perf2_quick_site_count;
++    while (left < right) {
++        size_t mid = left + ((right - left) >> 1);
++        size_t site_index = mod->perf2_quick_sites[mid].canonical_index;
++        if (site_index == canonical_index) return &mod->perf2_quick_sites[mid];
++        if (site_index < canonical_index) left = mid + 1u;
++        else right = mid;
++    }
++    return 0;
++}
++#endif
++
+ /* PERF2-02 Q7 PoC: build a fail-soft, module-owned quick-site plan from the
+  * immutable canonical image.  Records are stable for the module lifetime. */
+ static void rxvm_perf2_build_quick_sites(module *mod) {
+@@ -1609,8 +1766,17 @@
+     rxvm_perf2_quick_site *sites;
+ 
+     if (!mod || mod->perf2_quick_sites_built) return;
++#ifdef PERF2_Q7_DIAGNOSTICS
++    rxvm_perf2_diag_register();
++    rxvm_perf2_diag.modules_planned++;
++#endif
+     mod->perf2_quick_sites_built = 1;
+-    if (!mod->segment.binary || !mod->segment.inst_size) return;
++    if (!mod->segment.binary || !mod->segment.inst_size) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++        rxvm_perf2_diag.empty_modules++;
++#endif
++        return;
++    }
+ 
+     count = 0;
+     previous_index = SIZE_MAX;
+@@ -1621,16 +1787,37 @@
+                 (unsigned int)mod->segment.binary[instruction_index].instruction.opcode;
+         size_t operands =
+                 (size_t)mod->segment.binary[instruction_index].instruction.no_ops;
+-        if (operands >= mod->segment.inst_size - instruction_index) return;
++        if (operands >= mod->segment.inst_size - instruction_index) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++            rxvm_perf2_diag.malformed_modules++;
++#endif
++            return;
++        }
+         if (opcode == OP_COPY_REG_REG || opcode == OP_MKREF_REG_REG) count++;
+         previous_index = instruction_index;
+         previous_opcode = opcode;
+         instruction_index += operands + 1u;
+     }
+ 
+-    if (!count || count > SIZE_MAX / sizeof(*sites)) return;
++    if (!count) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++        rxvm_perf2_diag.empty_modules++;
++#endif
++        return;
++    }
++    if (count > SIZE_MAX / sizeof(*sites)) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++        rxvm_perf2_diag.allocation_failures++;
++#endif
++        return;
++    }
+     sites = (rxvm_perf2_quick_site *)calloc(count, sizeof(*sites));
+-    if (!sites) return;
++    if (!sites) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++        rxvm_perf2_diag.allocation_failures++;
++#endif
++        return;
++    }
+ 
+     slot = 0;
+     previous_index = SIZE_MAX;
+@@ -1676,6 +1863,16 @@
+ 
+     mod->perf2_quick_sites = sites;
+     mod->perf2_quick_site_count = slot;
++#ifdef PERF2_Q7_DIAGNOSTICS
++    rxvm_perf2_diag.modules_with_sites++;
++    rxvm_perf2_diag.site_records += slot;
++    for (instruction_index = 0; instruction_index < slot; instruction_index++) {
++        if (sites[instruction_index].family == RXVM_PERF2_QUICK_REFERENCE)
++            rxvm_perf2_diag.reference_records++;
++        else if (sites[instruction_index].family == RXVM_PERF2_QUICK_COPY)
++            rxvm_perf2_diag.copy_records++;
++    }
++#endif
+ }
+ 
+ static int rxvm_perf2_plain_copy_value(const value *v) {
+@@ -7866,6 +8063,9 @@
+                 int current_frame_owner = 0;
+                 int diagnostic_mode = 0;
+ 
++#ifdef PERF2_Q7_DIAGNOSTICS
++                rxvm_perf2_diag.reference_executions++;
++#endif
+ #ifdef CREXX_VM_PROFILING
+                 diagnostic_mode = context->profile_mode || context->sequence_count;
+ #endif
+@@ -7879,6 +8079,9 @@
+                     owner_kind = RXVM_REF_LOCAL;
+                     owner = current_frame;
+                     current_frame_owner = 1;
++#ifdef PERF2_Q7_DIAGNOSTICS
++                    rxvm_perf2_diag.reference_local_hits++;
++#endif
+                 } else if (!diagnostic_mode && (site->flags & 1u) &&
+                     site->root_operand < (size_t)current_frame->procedure->locals &&
+                     site->root_operand < current_frame->number_locals &&
+@@ -7894,10 +8097,18 @@
+                         root->unlinked_attributes[(size_t)index - 1u] == source) {
+                         owner_kind = RXVM_REF_ATTRIBUTE;
+                         current_frame_owner = 1;
++#ifdef PERF2_Q7_DIAGNOSTICS
++                        rxvm_perf2_diag.reference_attribute_hits++;
++#endif
+                     }
+                 }
+ 
+                 if (!current_frame_owner) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++                    rxvm_perf2_diag.reference_fallbacks++;
++                    if (diagnostic_mode)
++                        rxvm_perf2_diag.reference_diagnostic_fallbacks++;
++#endif
+                     owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
+                                                                        site->operand2,
+                                                                        source,
+@@ -9536,7 +9747,19 @@
+  *  COPY_REG_REG  Copy op2 to op1
+  *  -----------------------------------------------------------------------------------
+  */
+-        START_INSTRUCTION(COPY_REG_REG) VM_ADVANCE(2);
++        START_INSTRUCTION(COPY_REG_REG)
++#ifdef PERF2_Q7_DIAGNOSTICS
++            {
++                rxvm_perf2_quick_site *diag_site =
++                        rxvm_perf2_diag_site_at(current_module,
++                                                VM_CANONICAL_INDEX(pc));
++                if (diag_site &&
++                    diag_site->family == RXVM_PERF2_QUICK_COPY &&
++                    diag_site->state == RXVM_PERF2_QUICK_DISABLED)
++                    rxvm_perf2_diag.copy_disabled_executions++;
++            }
++#endif
++            VM_ADVANCE(2);
+             DEBUG("TRACE - COPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+             copy_value(op1R, op2R);
+             DISPATCH;
+@@ -9553,22 +9776,44 @@
+                         (rxvm_perf2_quick_site *)(pc + 1)->handler;
+                 value *dest = current_locals[site->operand1];
+                 value *source = current_locals[site->operand2];
++#ifdef PERF2_Q7_DIAGNOSTICS
++                uint64_t diag_start = rxvm_perf2_diag_now();
++#endif
+ 
++#ifdef PERF2_Q7_DIAGNOSTICS
++                rxvm_perf2_diag.copy_cold_executions++;
++#endif
+                 DEBUG("TRACE - COPY R%lu,R%lu\n", site->operand1, site->operand2);
+                 copy_value(dest, source);
+                 site->counter = 1u;
+                 if (rxvm_perf2_plain_copy_value(dest) &&
+                     rxvm_perf2_plain_copy_value(source)) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++                    rxvm_perf2_diag.copy_cold_specialized++;
++#endif
+                     site->state = RXVM_PERF2_QUICK_SPECIALIZED;
+                     VM_PATCH_PERF2_HANDLER(pc,
+                                            RXVM_PERF2_PRIVATE_COPY_SPECIALIZED,
+                                            PERF2_QCOPY_SPECIALIZED);
+                 } else {
++#ifdef PERF2_Q7_DIAGNOSTICS
++                    rxvm_perf2_diag.copy_cold_disabled++;
++#endif
+                     site->state = RXVM_PERF2_QUICK_DISABLED;
+                     pc[1] = current_canonical_base[site->canonical_index + 1u];
+                     pc[2] = current_canonical_base[site->canonical_index + 2u];
+                     VM_BIND_INSTRUCTION_HANDLER(pc, 0, OP_COPY_REG_REG);
++                }
++#ifdef PERF2_Q7_DIAGNOSTICS
++                {
++                    uint64_t diag_elapsed = rxvm_perf2_diag_now() - diag_start;
++                    rxvm_perf2_diag.copy_cold_ticks += diag_elapsed;
++                    if (site->state == RXVM_PERF2_QUICK_SPECIALIZED)
++                        rxvm_perf2_diag.copy_cold_specialized_ticks += diag_elapsed;
++                    else
++                        rxvm_perf2_diag.copy_cold_disabled_ticks += diag_elapsed;
+                 }
++#endif
+             }
+             DISPATCH;
+ 
+@@ -9585,7 +9830,14 @@
+                 value *dest = current_locals[site->operand1];
+                 value *source = current_locals[site->operand2];
+                 int diagnostic_mode = 0;
++#ifdef PERF2_Q7_DIAGNOSTICS
++                uint64_t diag_start = rxvm_perf2_diag_now();
++                int diag_fast = 0;
++#endif
+ 
++#ifdef PERF2_Q7_DIAGNOSTICS
++                rxvm_perf2_diag.copy_specialized_executions++;
++#endif
+ #ifdef CREXX_VM_PROFILING
+                 diagnostic_mode = context->profile_mode || context->sequence_count;
+ #endif
+@@ -9593,16 +9845,39 @@
+                 if (!diagnostic_mode &&
+                     rxvm_perf2_plain_copy_value(dest) &&
+                     rxvm_perf2_plain_copy_value(source)) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++                    rxvm_perf2_diag.copy_fast_hits++;
++                    diag_fast = 1;
++#endif
+                     rxvm_perf2_copy_plain_value(dest, source);
+                 } else {
++#ifdef PERF2_Q7_DIAGNOSTICS
++                    rxvm_perf2_diag.copy_specialized_fallbacks++;
++                    if (diagnostic_mode)
++                        rxvm_perf2_diag.copy_diagnostic_fallbacks++;
++#endif
+                     copy_value(dest, source);
+                     if (!diagnostic_mode) {
++#ifdef PERF2_Q7_DIAGNOSTICS
++                        rxvm_perf2_diag.copy_dequickens++;
++#endif
+                         site->state = RXVM_PERF2_QUICK_DISABLED;
+                         pc[1] = current_canonical_base[site->canonical_index + 1u];
+                         pc[2] = current_canonical_base[site->canonical_index + 2u];
+                         VM_BIND_INSTRUCTION_HANDLER(pc, 0, OP_COPY_REG_REG);
+                     }
++                }
++#ifdef PERF2_Q7_DIAGNOSTICS
++                {
++                    uint64_t diag_elapsed = rxvm_perf2_diag_now() - diag_start;
++                    rxvm_perf2_diag.copy_specialized_ticks += diag_elapsed;
++                    if (diag_fast)
++                        rxvm_perf2_diag.copy_fast_ticks += diag_elapsed;
++                    else
++                        rxvm_perf2_diag.copy_specialized_fallback_ticks +=
++                                diag_elapsed;
+                 }
++#endif
+             }
+             DISPATCH;
+ 

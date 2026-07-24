@@ -1,0 +1,14 @@
+Command: ctest --test-dir /private/tmp/crexx-perf2-01-profile-asan --output-on-failure -R \^rxvmprofileaccounting\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /private/tmp/crexx-perf2-01-profile-asan
+    Start 1029: rxvmprofileaccounting
+1/1 Test #1029: rxvmprofileaccounting ............   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+interpreter    =   0.05 sec*proc (1 test)
+profiling      =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.07 sec

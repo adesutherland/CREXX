@@ -1,0 +1,2 @@
+benchmark=awfy_storage repetitions=20 result=5461
+PASS: AWFY Storage
