@@ -1,4 +1,4 @@
-# Level B `center`
+## Level B `center`
 
 `center` pads or centrally truncates text to an exact character width:
 

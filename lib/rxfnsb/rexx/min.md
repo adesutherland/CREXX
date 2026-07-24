@@ -1,4 +1,4 @@
-# Level B `min`
+## Level B `min`
 
 The native Level B `min` function returns the least of one or more decimal
 values:

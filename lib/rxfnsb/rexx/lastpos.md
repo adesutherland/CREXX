@@ -1,4 +1,4 @@
-# Level B `lastpos`
+## Level B `lastpos`
 
 `lastpos` finds the last match ending at or before a character position:
 

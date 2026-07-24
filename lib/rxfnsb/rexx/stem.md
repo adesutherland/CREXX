@@ -1,4 +1,4 @@
-# cREXX Level B `stem` class
+## cREXX Level B `stem` class
 
 This document defines the stable Level B `.stem` and `.stemIterator` contract.
 

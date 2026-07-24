@@ -1,4 +1,4 @@
-# Level B signal objects
+## Level B signal objects
 
 `signal.crexx` defines the typed Level B condition objects used by signal
 handlers and the action values returned by action-aware handlers. It is runtime

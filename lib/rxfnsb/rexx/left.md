@@ -1,4 +1,4 @@
-# Level B `left`
+## Level B `left`
 
 `left` returns an exact-width left-aligned string:
 

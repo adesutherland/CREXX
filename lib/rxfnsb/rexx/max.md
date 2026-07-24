@@ -1,4 +1,4 @@
-# Level B `max`
+## Level B `max`
 
 The native Level B `max` function returns the greatest of one or more decimal
 values:

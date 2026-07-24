@@ -1,4 +1,4 @@
-# Level B `arraypop`
+## Level B `arraypop`
 
 `arraypop` removes the final element of a one-based Level B string array:
 

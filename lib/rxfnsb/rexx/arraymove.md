@@ -1,4 +1,4 @@
-# `arraymove` (Level B)
+## `arraymove` (Level B)
 
 ```rexx
 arraymove(array = .string[] expose,

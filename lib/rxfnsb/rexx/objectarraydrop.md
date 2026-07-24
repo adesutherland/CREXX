@@ -1,4 +1,4 @@
-# `objectarraydrop` (Level B)
+## `objectarraydrop` (Level B)
 
 ```rexx
 objectarraydrop(array = .object[] expose) = .int

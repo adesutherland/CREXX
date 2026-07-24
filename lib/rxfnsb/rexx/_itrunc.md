@@ -1,4 +1,4 @@
-# Level B `_itrunc`
+## Level B `_itrunc`
 
 `_itrunc` is a private `_rxsysb` helper used by Level B `format`:
 

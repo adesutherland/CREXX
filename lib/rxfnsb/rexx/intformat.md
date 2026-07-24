@@ -1,4 +1,4 @@
-# Level B `intformat`
+## Level B `intformat`
 
 ```rexx
 intformat(number = .int,

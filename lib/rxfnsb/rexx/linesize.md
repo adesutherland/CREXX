@@ -1,4 +1,4 @@
-# Level B `linesize`
+## Level B `linesize`
 
 `linesize` returns the implementation's maximum supported line size:
 

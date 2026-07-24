@@ -1,4 +1,4 @@
-# `arrayset` (Level B)
+## `arrayset` (Level B)
 
 ```rexx
 arrayset(array = .string[] expose, index = .int, value = .string

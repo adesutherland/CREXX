@@ -1,4 +1,4 @@
-# `word` (Level B)
+## `word` (Level B)
 
 ```rexx
 word(string = .string, wordnum = .int) = .string

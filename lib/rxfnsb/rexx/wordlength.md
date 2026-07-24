@@ -1,4 +1,4 @@
-# `wordlength` (Level B)
+## `wordlength` (Level B)
 
 ```rexx
 wordlength(string = .string, wordnum = .int) = .int

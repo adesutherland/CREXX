@@ -1,4 +1,4 @@
-# Level B `reverse`
+## Level B `reverse`
 
 `reverse` returns the Unicode codepoints of a string in reverse order:
 

@@ -1,4 +1,4 @@
-# Level B `fnv`
+## Level B `fnv`
 
 The typed Level B function returns the conventional 32-bit FNV-1a hash of a
 text value:

@@ -1,4 +1,4 @@
-# Level B `verify`
+## Level B `verify`
 
 `verify` locates the first character that either is or is not in a reference
 table:

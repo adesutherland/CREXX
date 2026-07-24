@@ -1,4 +1,4 @@
-# Level B `parsecompile`
+## Level B `parsecompile`
 
 `parsecompile` validates and compiles the legacy dynamic-template format used by
 `parse` and `parsestring`:

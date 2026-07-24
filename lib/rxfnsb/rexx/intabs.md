@@ -1,4 +1,4 @@
-# Level B `intabs`
+## Level B `intabs`
 
 ```rexx
 intabs(number = .int) = .int

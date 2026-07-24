@@ -1,4 +1,4 @@
-# `arraycontains` (Level B)
+## `arraycontains` (Level B)
 
 ```rexx
 arraycontains(array = .string[], value = .string [, case = .int]) = .int

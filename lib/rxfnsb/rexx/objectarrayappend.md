@@ -1,4 +1,4 @@
-# `objectarrayappend` (Level B)
+## `objectarrayappend` (Level B)
 
 ```rexx
 objectarrayappend(array = .object[] expose,

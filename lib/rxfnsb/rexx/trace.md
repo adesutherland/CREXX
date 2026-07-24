@@ -1,4 +1,4 @@
-# Level B trace runtime
+## Level B trace runtime
 
 `trace.crexx` is the shared Level B runtime used by the certified TRACE exit,
 RXDB, and ADDRESS command tracing. It is not the Classic `TRACE()` built-in

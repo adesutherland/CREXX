@@ -1,6 +1,16 @@
 # Built-in functions
 
-These are built-in functions for cRexx strings and binary values. The `.string` type is central to the Rexx language and all its variants. This is true for cRexx and this implementation also contains the expected *built-in-functions*.[^bif] Level B also provides byte-oriented helpers for the `.binary` type.
+These built-in functions work with cREXX strings and binary values. The
+`.string` type lies at the heart of Rexx and its related languages, and cREXX
+provides the built-in functions traditionally associated with it.[^bif]
+Language level B adds byte-oriented functions for values of type `.binary`.
+
+The built-in functions are described here because they have traditionally
+formed an important part of the Rexx language reference. This reflects the
+language's origins as a string-oriented programming language.
+
+The *Library Reference* provides more detailed documentation of the standard
+library, including the forms available at each cREXX language level.
 
 Use of these functions needs import of the `rxfnsb` package:
 ```rexx

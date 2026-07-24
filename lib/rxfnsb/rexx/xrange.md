@@ -1,4 +1,4 @@
-# `xrange` (Level B)
+## `xrange` (Level B)
 
 ```rexx
 xrange(from = .string, tos = .string) = .string

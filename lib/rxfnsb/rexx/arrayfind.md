@@ -1,4 +1,4 @@
-# `arrayfind` (Level B)
+## `arrayfind` (Level B)
 
 ```rexx
 arrayfind(needle = .string,

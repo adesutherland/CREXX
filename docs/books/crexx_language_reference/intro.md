@@ -1,6 +1,6 @@
 # Introduction
 
-cRexx is a Rexx-family language and toolchain that compiles source
+cRexx is a Rexx[^1]-family language and toolchain that compiles source
 programs to an open bytecode format, then executes that bytecode on the
 cRexx virtual machine or packages it into a native executable.
 
@@ -13,6 +13,8 @@ The public documentation should describe what the current toolchain can do.
 Ideas for future levels remain part of the project direction, but they are not
 release facts. In this book, unless a section says otherwise, syntax and
 behaviour refer to the current Level B implementation.
+
+[^1]:<!--cite-->[cowlishaw1985rexx]
 
 ## What The Release 1 Beta Line Contains
 

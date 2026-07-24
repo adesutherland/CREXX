@@ -1,4 +1,4 @@
-# Level B `trunc`
+## Level B `trunc`
 
 The native Level B function truncates a decimal value to fixed text:
 
