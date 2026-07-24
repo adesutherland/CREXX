@@ -243,12 +243,26 @@ the#1\endcsname\quad}}
 %% \renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
 %% \renewcommand{\cftsecfont}{\sffamily} % Matches section font
 
-\renewcommand{\cftpartfont}{\headingfont}
-\renewcommand{\cftchapfont}{\headingfont} % Matches section font
-\renewcommand{\cftchappagefont}{\headingfont} % Matches section font
-\renewcommand{\cftsubsecfont}{\headingfont} % Example for subsections
-\renewcommand{\cftsubsubsecfont}{\headingfont} % Example for subsections
-\renewcommand{\cftsecfont}{\headingfont} % Matches section font
+%% \renewcommand{\cftpartfont}{\headingfont}
+%% \renewcommand{\cftchapfont}{\headingfont} % Matches section font
+%% \renewcommand{\cftchappagefont}{\headingfont} % Matches section font
+%% \renewcommand{\cftsubsecfont}{\headingfont} % Example for subsections
+%% \renewcommand{\cftsubsubsecfont}{\headingfont} % Example for subsections
+%% \renewcommand{\cftsecfont}{\headingfont} % Matches section font
+
+%% Use the main text font in the TOC
+\renewcommand{\cftpartfont}{\rmfamily}
+\renewcommand{\cftpartpagefont}{\rmfamily}
+\renewcommand{\cftchapfont}{\rmfamily}
+\renewcommand{\cftchappagefont}{\rmfamily}
+\renewcommand{\cftsecfont}{\rmfamily}
+\renewcommand{\cftsecpagefont}{\rmfamily}
+\renewcommand{\cftsubsecfont}{\rmfamily}
+\renewcommand{\cftsubsecpagefont}{\rmfamily}
+\renewcommand{\cftsubsubsecfont}{\rmfamily}
+\renewcommand{\cftsubsubsecpagefont}{\rmfamily}
+
+
 
 \renewcommand{\cfttoctitlefont}{%
   \headingfont

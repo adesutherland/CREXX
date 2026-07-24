@@ -1,4 +1,4 @@
-# `arrayprepend` (Level B)
+## `arrayprepend` (Level B)
 
 ```rexx
 arrayprepend(array = .string[] expose,

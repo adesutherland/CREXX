@@ -1,4 +1,4 @@
-# Level B `date`
+## Level B `date`
 
 The typed Level B calendar extension is:
 

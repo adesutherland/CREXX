@@ -2,10 +2,10 @@
 
 ## ADDRESS
 
-The ADDRESS instruction is used to effect a temporary or permanent change to the
+The `ADDRESS` instruction is used to effect a temporary or permanent change to the
 destination of commands. Commands are strings sent to an external environment,
 and may be sent by clauses consisting of just an expression as well as
-by the ADDRESS instruction.
+by the `ADDRESS` instruction.
 
 To send a single command to a specified environment, an environment name fol-
 lowed by an expression is given. The expression is evaluated, and the resulting

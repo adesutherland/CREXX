@@ -1,4 +1,4 @@
-# Level B `pos`
+## Level B `pos`
 
 `pos` finds the first occurrence of text at or after a character position:
 

@@ -1,4 +1,4 @@
-# Level B quote-aware text contract
+## Level B quote-aware text contract
 
 The `q*` string functions share one positional Unicode scanner. They are Level B
 library functions, not classic Level C BIFs.

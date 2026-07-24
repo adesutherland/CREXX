@@ -1,4 +1,4 @@
-# Level B `lower`
+## Level B `lower`
 
 `lower` returns a lowercased copy of a string:
 

@@ -1,4 +1,4 @@
-# `x2b` (Level B)
+## `x2b` (Level B)
 
 ```rexx
 x2b(hexadecimal = .string) = .string

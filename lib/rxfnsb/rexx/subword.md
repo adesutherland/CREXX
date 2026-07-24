@@ -1,4 +1,4 @@
-# `subword` (Level B)
+## `subword` (Level B)
 
 ```rexx
 subword(string = .string, start = .int [, count = .int]) = .string

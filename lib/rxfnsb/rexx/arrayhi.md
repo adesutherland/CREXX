@@ -1,4 +1,4 @@
-# `arrayhi` (Level B)
+## `arrayhi` (Level B)
 
 ```rexx
 arrayhi(array = .string[] expose

@@ -1,4 +1,4 @@
-# DATATYPE — Level B
+## DATATYPE — Level B
 
 ```text
 datatype(value = .string [, type = .string]) = .string

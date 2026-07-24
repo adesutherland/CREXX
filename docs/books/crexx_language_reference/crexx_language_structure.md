@@ -8,7 +8,7 @@ keywords. Conceptually, each clause is scanned from left to right before
 execution and the tokens composing it are resolved.
 
 Identifiers (known as symbols) and numbers are recognized at this stage,
-comments (see next chapter on page \pageref{comments}) are removed, and multiple blanks (except
+comments (see *Comments* on page \pageref{comments}) are removed, and multiple blanks (except
 within literal strings) are reduced to single blanks. Blanks adjacent to
 operator characters and special characters are also removed.
 

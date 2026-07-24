@@ -14,7 +14,7 @@ Integer literals may also use a `0x` prefix for hexadecimal notation, for
 example `0x10000`. Hexadecimal integer literals are `.int` values and are
 intended for masks, flags, and low-level numeric constants.
 
-Release 1 `.int` literals use the signed 64-bit range
+Release 1 `.int` literals use the signed 64-bit range  
 `-9223372036854775808..9223372036854775807`. The leading sign is an operator in
 the source grammar, but the compiler recognizes `-9223372036854775808` as the
 single legal minimum-value edge. Decimal literals beyond either bound are

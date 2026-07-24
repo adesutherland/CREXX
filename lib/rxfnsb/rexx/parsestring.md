@@ -1,4 +1,4 @@
-# Level B `parsestring`
+## Level B `parsestring`
 
 `parsestring` executes the legacy parallel-array plan produced by
 [`parsecompile`](parsecompile.md):

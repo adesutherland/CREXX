@@ -1,4 +1,4 @@
-# Level B `find`
+## Level B `find`
 
 `find` is the VM/TSO-compatible argument-order alias of Level B `wordpos`:
 

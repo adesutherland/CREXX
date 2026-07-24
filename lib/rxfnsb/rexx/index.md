@@ -1,4 +1,4 @@
-# Level B `index`
+## Level B `index`
 
 `index` is the VM/TSO-compatible haystack-first spelling of substring search:
 

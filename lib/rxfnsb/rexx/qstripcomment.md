@@ -1,4 +1,4 @@
-# Level B `qstripcomment`
+## Level B `qstripcomment`
 
 `qstripcomment(open=.string [,close=.string], text=.string) = .string` removes
 comments outside quotes. Omitted or empty `close` selects line comments and

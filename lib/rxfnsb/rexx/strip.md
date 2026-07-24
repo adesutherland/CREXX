@@ -1,4 +1,4 @@
-# Level B `strip`
+## Level B `strip`
 
 `strip` removes leading, trailing, or both runs of unwanted codepoints:
 
