@@ -1,4 +1,4 @@
-# Level B `random`
+## Level B `random`
 
 The typed Level B function returns a pseudo-random `.int`:
 

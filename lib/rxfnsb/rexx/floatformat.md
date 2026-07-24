@@ -1,4 +1,4 @@
-# Level B `floatformat`
+## Level B `floatformat`
 
 ```rexx
 floatformat(number = .float,

@@ -1,4 +1,4 @@
-# Level B `parse`
+## Level B `parse`
 
 `parse` is the convenience wrapper around [`parsecompile`](parsecompile.md) and
 [`parsestring`](parsestring.md):

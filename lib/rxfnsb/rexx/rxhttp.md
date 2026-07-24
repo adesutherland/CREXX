@@ -1,4 +1,4 @@
-# cREXX Level B HTTP Library
+## cREXX Level B HTTP Library
 
 `rxhttp.rexx` provides a reusable HTTP/1.1 client built on the core `rxsocket`
 library. It handles HTTP framing so higher layers do not need to parse socket

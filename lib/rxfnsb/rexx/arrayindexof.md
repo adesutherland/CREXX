@@ -1,4 +1,4 @@
-# `arrayindexof` (Level B)
+## `arrayindexof` (Level B)
 
 ```rexx
 arrayindexof(array = .string[], value = .string

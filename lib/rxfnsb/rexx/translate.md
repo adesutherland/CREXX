@@ -1,4 +1,4 @@
-# `translate` (Level B)
+## `translate` (Level B)
 
 ```rexx
 translate(source = .string [, output_table = .string

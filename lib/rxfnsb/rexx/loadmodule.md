@@ -1,4 +1,4 @@
-# Level B `loadmodule`
+## Level B `loadmodule`
 
 `loadmodule` is the explicit Level B runtime loader for one RXBIN or RXPLUGIN
 artifact.

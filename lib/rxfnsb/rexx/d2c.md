@@ -1,4 +1,4 @@
-# `d2c` (Level B)
+## `d2c` (Level B)
 
 ```rexx
 d2c(codepoint = .int [, output_length = .int]) = .string

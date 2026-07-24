@@ -1,4 +1,4 @@
-# `arraydelete` (Level B)
+## `arraydelete` (Level B)
 
 ```rexx
 arraydelete(array = .string[] expose,

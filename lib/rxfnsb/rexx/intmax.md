@@ -1,4 +1,4 @@
-# Level B `intmax`
+## Level B `intmax`
 
 ```rexx
 intmax(first = .int, ... = .int) = .int

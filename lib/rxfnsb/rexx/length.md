@@ -1,4 +1,4 @@
-# Level B `length`
+## Level B `length`
 
 `length` returns the number of Unicode codepoints in a string:
 

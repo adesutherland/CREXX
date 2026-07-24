@@ -1,4 +1,4 @@
-# Level B DATE calendar core
+## Level B DATE calendar core
 
 `_rxsysb` exposes the typed proleptic-Gregorian primitives used by the Level B
 DATE cluster and the standalone Classic DATE adapter:

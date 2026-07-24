@@ -11,14 +11,14 @@ that a compiler feature is implemented and tested.
 
 ## Summary
 
-- use Level B for current cRexx programs
-- treat Level C as Classic Rexx compatibility work with real DSLSH
+- Level B will be used for current cRexx programs
+- Level C represents Classic Rexx compatibility work with real DSLSH
   syntax highlighting / parser-mode progress, but not yet a release compiler
   language
-- treat Levels E and N as planned DSLSH syntax-highlighting targets for
+- Levels E and N are planned DSLSH syntax-highlighting targets for
   Object Rexx and NetRexx source, not as languages that cRexx intends to compile
   or run
-- treat Levels D, G, and L as cRexx direction for future language work
+- Levels D, G, and L are the cRexx direction for future language work
 
 ## Level B: Current cRexx
 
@@ -118,3 +118,9 @@ changes.
 The compatibility goals for future levels are important project direction, but
 this Release 1 beta documentation should not describe future compatibility as
 current behaviour.
+
+## Extensibility
+
+A small language is easy to learn and easy to use. When the language is too small, and there is no large, well organised runtime library, a lot of function needs to be provided by the user. Classic Rexx provides extensibility through addressing environments and function packages. These environments need to be addressed each in their own way, the function packages need to be registered and checked; the searching and linkage conventions differ per platform and operating system.
+
+cRexx adds an easily extensible module system which integrates extended runtime functionality which behaves in the same manner over library extensions written in Rexx or native functions written in C and in other languages. These work in tandem with the compiler exit facility.

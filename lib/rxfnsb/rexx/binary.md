@@ -1,4 +1,4 @@
-# Level B binary helpers
+## Level B binary helpers
 
 `binary.crexx` is the typed Level B binary library. It has two deliberately
 different position conventions:
