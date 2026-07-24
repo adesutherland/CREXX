@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=8
+main() .locals=6
    .meta "inline_test_exposed_nested_call.main"="b" ".int" main() ""
    .srcstep 16 16 17 "inline_test_exposed_nested_call.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -26,31 +26,29 @@ l8dostart:
    .srcstep 10 10 17 "inline_test_exposed_nested_call.crexx" 6 5 24 "    result = compute(i)"
    .srcstep 5 5 33 "inline_test_exposed_nested_call.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r4,r0
-   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "val" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
    .srcstep 9 9 33 "inline_test_exposed_nested_call.crexx" 14 3 9 "  return 10 + addOne(val)"
    .srcstep 8 8 17 "inline_test_exposed_nested_call.crexx" 14 15 21 "  return 10 + addOne(val)"
    .srcstep 6 6 33 "inline_test_exposed_nested_call.crexx" 17 7 10 "  arg val = .int"
-   .traceevent "V" 6 "R" "I" "r" 4 6 6 0 "val" ""
-   icopy r5,r4
-   .traceevent "A" 6 "R" "I" "r" 5 6 6 0 "val" ""
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "val" ""
+   .traceevent "A" 6 "R" "I" "r" 0 6 6 0 "val" ""
    .srcstep 7 7 17 "inline_test_exposed_nested_call.crexx" 18 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 5 9 9 0 "val" ""
-   iadd r6,r5,1
-   .traceevent "O" 4 "R" "I" "r" 6 9 9 0 "" ""
-   icopy r7,r6
+   .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "val" ""
+   iadd r4,r0,1
+   .traceevent "O" 4 "R" "I" "r" 4 9 9 0 "" ""
+   icopy r5,r4
    br l75bexprend
 l75bexprend:
-   iadd r1,r7,10
+   iadd r1,r5,10
    .traceevent "O" 4 "R" "I" "r" 1 9 9 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 9 9 0 "result" ""
    .srcstep 11 11 17 "inline_test_exposed_nested_call.crexx" 7 5 26 "    say \"Computed\" result"
    .meta "inline_test_exposed_nested_call.main.result"="b" ".int" r1
    itos r1
    .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "result" ""
-   sconcat r7,"Computed",r1
-   .traceevent "O" 4 "R" "S" "r" 7 11 11 0 "" ""
-   say r7
+   sconcat r5,"Computed",r1
+   .traceevent "O" 4 "R" "S" "r" 5 11 11 0 "" ""
+   say r5
 l8doinc:
    .srcstep 4 4 17 "inline_test_exposed_nested_call.crexx" 5 6 7 "  do i = 1 to 4"
    inc r0

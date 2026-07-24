@@ -27,25 +27,24 @@ l8dostart:
    .srcstep 7 7 17 "inline_test_compare_expr.crexx" 6 8 14 "    if addOne(i) = 3 then say \"matched\" i"
    .srcstep 5 5 33 "inline_test_compare_expr.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r3,r0
-   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
    .srcstep 6 6 17 "inline_test_compare_expr.crexx" 14 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 3 10 10 0 "val" ""
-   iadd r4,r3,1
-   .traceevent "O" 4 "R" "I" "r" 4 10 10 0 "" ""
-   icopy r5,r4
+   .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "val" ""
+   iadd r3,r0,1
+   .traceevent "O" 4 "R" "I" "r" 3 10 10 0 "" ""
+   icopy r4,r3
    br l49bexprend
 l49bexprend:
-   ieq r5,r5,3
-   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
-   brf l27iffalse,r5
+   ieq r4,r4,3
+   .traceevent "O" 4 "R" "B" "r" 4 10 10 0 "" ""
+   brf l27iffalse,r4
    .srcstep 11 11 17 "inline_test_compare_expr.crexx" 6 22 26 "    if addOne(i) = 3 then say \"matched\" i"
    .srcstep 8 8 17 "inline_test_compare_expr.crexx" 6 27 42 "    if addOne(i) = 3 then say \"matched\" i"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "i" ""
-   sconcat r3,"matched",r0
-   .traceevent "O" 4 "R" "S" "r" 3 8 8 0 "" ""
-   say r3
+   sconcat r5,"matched",r0
+   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
+   say r5
    br l27ifend
    .srcstep 12 12 17 "inline_test_compare_expr.crexx" 7 5 9 "    else say \"missed\" i"
 l27iffalse:

@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=5
+main() .locals=4
    .meta "inline_test_say_expr.main"="b" ".int" main() ""
    .srcstep 13 13 17 "inline_test_say_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -27,15 +27,14 @@ l8dostart:
    .srcstep 7 7 17 "inline_test_say_expr.crexx" 6 9 17 "    say asString(i)"
    .srcstep 5 5 33 "inline_test_say_expr.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r3,r0
-   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
    .srcstep 6 6 17 "inline_test_say_expr.crexx" 13 3 13 "  return val"
-   itos r3
-   .traceevent "V" 6 "R" "S" "r" 3 8 8 0 "val" ""
-   scopy r4,r3
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "val" ""
+   scopy r3,r0
    br l37bexprend
 l37bexprend:
-   say r4
+   say r3
 l8doinc:
    .srcstep 4 4 17 "inline_test_say_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

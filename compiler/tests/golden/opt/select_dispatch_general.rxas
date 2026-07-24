@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=22
+main() .locals=21
    .meta "select_dispatch_general.main"="b" ".int" main() ""
    .srcstep 125 125 17 "select_dispatch_general.crexx" 4 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -28,93 +28,91 @@ l20dostart:
    .srcstep 17 17 17 "select_dispatch_general.crexx" 9 9 20 "    say if_classify(index)"
    .srcstep 5 5 33 "select_dispatch_general.crexx" 27 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "index" ""
-   icopy r3,r0
-   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "value" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "value" ""
    .srcstep 15 15 6 "select_dispatch_general.crexx" 29 3 32 "  if value = -1 then return -10"
-   .traceevent "V" 6 "R" "I" "r" 3 18 18 0 "value" ""
+   .traceevent "V" 6 "R" "I" "r" 0 18 18 0 "value" ""
    .jtable jtable937 auto
-   jumpi r3,jtable937
+   jumpi r0,jtable937
    br l937dispatchdefault
 l937dispatchcase0: .jcase jtable937 -1
    .srcstep 6 6 17 "select_dispatch_general.crexx" 29 22 32 "  if value = -1 then return -10"
-   load r4,-10
-   .traceevent "L" 4 "R" "I" "r" 4 18 18 0 "" ""
-   icopy r11,r4
+   load r3,-10
+   .traceevent "L" 4 "R" "I" "r" 3 18 18 0 "" ""
+   icopy r10,r3
    br l522bexprend
    br l937dispatchend
 l937dispatchcase1: .jcase jtable937 0
    .srcstep 7 7 17 "select_dispatch_general.crexx" 30 26 35 "  else if value = 0 then return 10"
-   load r5,10
-   .traceevent "L" 4 "R" "I" "r" 5 18 18 0 "" ""
-   icopy r11,r5
+   load r4,10
+   .traceevent "L" 4 "R" "I" "r" 4 18 18 0 "" ""
+   icopy r10,r4
    br l522bexprend
    br l937dispatchend
 l937dispatchcase2: .jcase jtable937 1
    .srcstep 8 8 17 "select_dispatch_general.crexx" 31 26 35 "  else if value = 1 then return 20"
-   load r6,20
-   .traceevent "L" 4 "R" "I" "r" 6 18 18 0 "" ""
-   icopy r11,r6
+   load r5,20
+   .traceevent "L" 4 "R" "I" "r" 5 18 18 0 "" ""
+   icopy r10,r5
    br l522bexprend
    br l937dispatchend
 l937dispatchcase3: .jcase jtable937 2
    .srcstep 9 9 17 "select_dispatch_general.crexx" 32 26 35 "  else if value = 2 then return 30"
-   load r7,30
-   .traceevent "L" 4 "R" "I" "r" 7 18 18 0 "" ""
-   icopy r11,r7
+   load r6,30
+   .traceevent "L" 4 "R" "I" "r" 6 18 18 0 "" ""
+   icopy r10,r6
    br l522bexprend
    br l937dispatchend
 l937dispatchcase4: .jcase jtable937 3
    .srcstep 10 10 17 "select_dispatch_general.crexx" 33 26 35 "  else if value = 3 then return 40"
-   load r8,40
-   .traceevent "L" 4 "R" "I" "r" 8 18 18 0 "" ""
-   icopy r11,r8
+   load r7,40
+   .traceevent "L" 4 "R" "I" "r" 7 18 18 0 "" ""
+   icopy r10,r7
    br l522bexprend
    br l937dispatchend
 l937dispatchcase5: .jcase jtable937 4
    .srcstep 11 11 17 "select_dispatch_general.crexx" 34 26 35 "  else if value = 4 then return 50"
-   load r9,50
-   .traceevent "L" 4 "R" "I" "r" 9 18 18 0 "" ""
-   icopy r11,r9
+   load r8,50
+   .traceevent "L" 4 "R" "I" "r" 8 18 18 0 "" ""
+   icopy r10,r8
    br l522bexprend
    br l937dispatchend
 l937dispatchcase6: .jcase jtable937 5
    .srcstep 12 12 17 "select_dispatch_general.crexx" 35 26 35 "  else if value = 5 then return 60"
-   load r10,60
-   .traceevent "L" 4 "R" "I" "r" 10 18 18 0 "" ""
-   icopy r11,r10
+   load r9,60
+   .traceevent "L" 4 "R" "I" "r" 9 18 18 0 "" ""
+   icopy r10,r9
    br l522bexprend
    br l937dispatchend
 l937dispatchcase7: .jcase jtable937 6
    .srcstep 13 13 17 "select_dispatch_general.crexx" 36 26 35 "  else if value = 6 then return 70"
-   load r11,70
-   .traceevent "L" 4 "R" "I" "r" 11 18 18 0 "" ""
+   load r10,70
+   .traceevent "L" 4 "R" "I" "r" 10 18 18 0 "" ""
    br l522bexprend
    br l937dispatchend
 l937dispatchdefault:
    .srcstep 14 14 17 "select_dispatch_general.crexx" 37 8 17 "  else return -1"
-   load r12,-1
-   .traceevent "L" 4 "R" "I" "r" 12 18 18 0 "" ""
-   icopy r11,r12
+   load r11,-1
+   .traceevent "L" 4 "R" "I" "r" 11 18 18 0 "" ""
+   icopy r10,r11
    br l522bexprend
 l937dispatchend:
    .srcstep 16 16 17 "select_dispatch_general.crexx" 38 3 12 "  return -2"
-   load r12,-2
-   .traceevent "L" 4 "R" "I" "r" 12 18 18 0 "" ""
-   icopy r11,r12
+   load r11,-2
+   .traceevent "L" 4 "R" "I" "r" 11 18 18 0 "" ""
+   icopy r10,r11
    br l522bexprend
 l522bexprend:
-   itos r11
-   say r11
+   itos r10
+   say r10
    .srcstep 32 32 17 "select_dispatch_general.crexx" 10 5 32 "    say classic_classify(index)"
    .srcstep 31 31 17 "select_dispatch_general.crexx" 10 9 25 "    say classic_classify(index)"
    .srcstep 19 19 33 "select_dispatch_general.crexx" 41 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 19 19 0 "index" ""
-   icopy r12,r0
-   .traceevent "A" 6 "R" "I" "r" 12 19 19 0 "value" ""
+   .traceevent "A" 6 "R" "I" "r" 0 19 19 0 "value" ""
    .srcstep 29 29 6 "select_dispatch_general.crexx" 43 3 9 "  select"
-   .traceevent "V" 6 "R" "I" "r" 12 32 32 0 "value" ""
+   .traceevent "V" 6 "R" "I" "r" 0 32 32 0 "value" ""
    .jtable jtable955 auto
-   jumpi r12,jtable955
+   jumpi r0,jtable955
    br l955dispatchdefault
 l955dispatchcase0: .jcase jtable955 -1
    .srcstep 20 20 17 "select_dispatch_general.crexx" 44 26 37 "    when value = -1 then return -110"
@@ -190,131 +188,130 @@ l583bexprend:
    .srcstep 68 68 17 "select_dispatch_general.crexx" 11 9 24 "    say strict_classify(index)"
    .srcstep 33 33 33 "select_dispatch_general.crexx" 57 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 33 33 0 "index" ""
-   icopy r12,r0
-   .traceevent "A" 6 "R" "I" "r" 12 33 33 0 "value" ""
+   .traceevent "A" 6 "R" "I" "r" 0 33 33 0 "value" ""
    .srcstep 64 64 17 "select_dispatch_general.crexx" 59 3 17 "  if value == -1 then return -410"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 64 64 0 "value" ""
-   seq r11,r12,"-1"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 64 64 0 "value" ""
+   seq r11,r0,"-1"
    .traceevent "O" 4 "R" "B" "r" 11 64 64 0 "" ""
    brf l649iffalse,r11
    .srcstep 65 65 17 "select_dispatch_general.crexx" 59 18 22 "  if value == -1 then return -410"
    .srcstep 34 34 17 "select_dispatch_general.crexx" 59 23 34 "  if value == -1 then return -410"
    load r10,-410
    .traceevent "L" 4 "R" "I" "r" 10 69 69 0 "" ""
-   icopy r19,r10
+   icopy r18,r10
    br l644bexprend
    br l649ifend
    .srcstep 66 66 17 "select_dispatch_general.crexx" 60 3 7 "  else if value == 0 then return 410"
 l649iffalse:
    .srcstep 61 61 17 "select_dispatch_general.crexx" 60 8 21 "  else if value == 0 then return 410"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 61 61 0 "value" ""
-   seq r9,r12,"0"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 61 61 0 "value" ""
+   seq r9,r0,"0"
    .traceevent "O" 4 "R" "B" "r" 9 61 61 0 "" ""
    brf l657iffalse,r9
    .srcstep 62 62 17 "select_dispatch_general.crexx" 60 22 26 "  else if value == 0 then return 410"
    .srcstep 35 35 17 "select_dispatch_general.crexx" 60 27 37 "  else if value == 0 then return 410"
    load r8,410
    .traceevent "L" 4 "R" "I" "r" 8 69 69 0 "" ""
-   icopy r19,r8
+   icopy r18,r8
    br l644bexprend
    br l657ifend
    .srcstep 63 63 17 "select_dispatch_general.crexx" 61 3 7 "  else if value == 1 then return 420"
 l657iffalse:
    .srcstep 58 58 17 "select_dispatch_general.crexx" 61 8 21 "  else if value == 1 then return 420"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 58 58 0 "value" ""
-   seq r7,r12,"1"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 58 58 0 "value" ""
+   seq r7,r0,"1"
    .traceevent "O" 4 "R" "B" "r" 7 58 58 0 "" ""
    brf l663iffalse,r7
    .srcstep 59 59 17 "select_dispatch_general.crexx" 61 22 26 "  else if value == 1 then return 420"
    .srcstep 36 36 17 "select_dispatch_general.crexx" 61 27 37 "  else if value == 1 then return 420"
    load r6,420
    .traceevent "L" 4 "R" "I" "r" 6 69 69 0 "" ""
-   icopy r19,r6
+   icopy r18,r6
    br l644bexprend
    br l663ifend
    .srcstep 60 60 17 "select_dispatch_general.crexx" 62 3 7 "  else if value == 2 then return 430"
 l663iffalse:
    .srcstep 55 55 17 "select_dispatch_general.crexx" 62 8 21 "  else if value == 2 then return 430"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 55 55 0 "value" ""
-   seq r5,r12,"2"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 55 55 0 "value" ""
+   seq r5,r0,"2"
    .traceevent "O" 4 "R" "B" "r" 5 55 55 0 "" ""
    brf l669iffalse,r5
    .srcstep 56 56 17 "select_dispatch_general.crexx" 62 22 26 "  else if value == 2 then return 430"
    .srcstep 37 37 17 "select_dispatch_general.crexx" 62 27 37 "  else if value == 2 then return 430"
    load r4,430
    .traceevent "L" 4 "R" "I" "r" 4 69 69 0 "" ""
-   icopy r19,r4
+   icopy r18,r4
    br l644bexprend
    br l669ifend
    .srcstep 57 57 17 "select_dispatch_general.crexx" 63 3 7 "  else if value == 3 then return 440"
 l669iffalse:
    .srcstep 52 52 17 "select_dispatch_general.crexx" 63 8 21 "  else if value == 3 then return 440"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 52 52 0 "value" ""
-   seq r3,r12,"3"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 52 52 0 "value" ""
+   seq r3,r0,"3"
    .traceevent "O" 4 "R" "B" "r" 3 52 52 0 "" ""
    brf l675iffalse,r3
    .srcstep 53 53 17 "select_dispatch_general.crexx" 63 22 26 "  else if value == 3 then return 440"
    .srcstep 38 38 17 "select_dispatch_general.crexx" 63 27 37 "  else if value == 3 then return 440"
-   load r13,440
-   .traceevent "L" 4 "R" "I" "r" 13 69 69 0 "" ""
-   icopy r19,r13
+   load r12,440
+   .traceevent "L" 4 "R" "I" "r" 12 69 69 0 "" ""
+   icopy r18,r12
    br l644bexprend
    br l675ifend
    .srcstep 54 54 17 "select_dispatch_general.crexx" 64 3 7 "  else if value == 4 then return 450"
 l675iffalse:
    .srcstep 49 49 17 "select_dispatch_general.crexx" 64 8 21 "  else if value == 4 then return 450"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 49 49 0 "value" ""
-   seq r14,r12,"4"
-   .traceevent "O" 4 "R" "B" "r" 14 49 49 0 "" ""
-   brf l681iffalse,r14
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 49 49 0 "value" ""
+   seq r13,r0,"4"
+   .traceevent "O" 4 "R" "B" "r" 13 49 49 0 "" ""
+   brf l681iffalse,r13
    .srcstep 50 50 17 "select_dispatch_general.crexx" 64 22 26 "  else if value == 4 then return 450"
    .srcstep 39 39 17 "select_dispatch_general.crexx" 64 27 37 "  else if value == 4 then return 450"
-   load r15,450
-   .traceevent "L" 4 "R" "I" "r" 15 69 69 0 "" ""
-   icopy r19,r15
+   load r14,450
+   .traceevent "L" 4 "R" "I" "r" 14 69 69 0 "" ""
+   icopy r18,r14
    br l644bexprend
    br l681ifend
    .srcstep 51 51 17 "select_dispatch_general.crexx" 65 3 7 "  else if value == 5 then return 460"
 l681iffalse:
    .srcstep 46 46 17 "select_dispatch_general.crexx" 65 8 21 "  else if value == 5 then return 460"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 46 46 0 "value" ""
-   seq r16,r12,"5"
-   .traceevent "O" 4 "R" "B" "r" 16 46 46 0 "" ""
-   brf l687iffalse,r16
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 46 46 0 "value" ""
+   seq r15,r0,"5"
+   .traceevent "O" 4 "R" "B" "r" 15 46 46 0 "" ""
+   brf l687iffalse,r15
    .srcstep 47 47 17 "select_dispatch_general.crexx" 65 22 26 "  else if value == 5 then return 460"
    .srcstep 40 40 17 "select_dispatch_general.crexx" 65 27 37 "  else if value == 5 then return 460"
-   load r17,460
-   .traceevent "L" 4 "R" "I" "r" 17 69 69 0 "" ""
-   icopy r19,r17
+   load r16,460
+   .traceevent "L" 4 "R" "I" "r" 16 69 69 0 "" ""
+   icopy r18,r16
    br l644bexprend
    br l687ifend
    .srcstep 48 48 17 "select_dispatch_general.crexx" 66 3 7 "  else if value == 6 then return 470"
 l687iffalse:
    .srcstep 43 43 17 "select_dispatch_general.crexx" 66 8 21 "  else if value == 6 then return 470"
-   itos r12
-   .traceevent "V" 6 "R" "S" "r" 12 43 43 0 "value" ""
-   seq r18,r12,"6"
-   .traceevent "O" 4 "R" "B" "r" 18 43 43 0 "" ""
-   brf l693iffalse,r18
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 43 43 0 "value" ""
+   seq r17,r0,"6"
+   .traceevent "O" 4 "R" "B" "r" 17 43 43 0 "" ""
+   brf l693iffalse,r17
    .srcstep 44 44 17 "select_dispatch_general.crexx" 66 22 26 "  else if value == 6 then return 470"
    .srcstep 41 41 17 "select_dispatch_general.crexx" 66 27 37 "  else if value == 6 then return 470"
-   load r19,470
-   .traceevent "L" 4 "R" "I" "r" 19 69 69 0 "" ""
+   load r18,470
+   .traceevent "L" 4 "R" "I" "r" 18 69 69 0 "" ""
    br l644bexprend
    br l693ifend
    .srcstep 45 45 17 "select_dispatch_general.crexx" 67 3 7 "  else return -401"
 l693iffalse:
    .srcstep 42 42 17 "select_dispatch_general.crexx" 67 8 19 "  else return -401"
-   load r20,-401
-   .traceevent "L" 4 "R" "I" "r" 20 69 69 0 "" ""
-   icopy r19,r20
+   load r19,-401
+   .traceevent "L" 4 "R" "I" "r" 19 69 69 0 "" ""
+   icopy r18,r19
    br l644bexprend
 l693ifend:
 l687ifend:
@@ -325,13 +322,13 @@ l663ifend:
 l657ifend:
 l649ifend:
    .srcstep 67 67 17 "select_dispatch_general.crexx" 68 3 14 "  return -402"
-   load r20,-402
-   .traceevent "L" 4 "R" "I" "r" 20 69 69 0 "" ""
-   icopy r19,r20
+   load r19,-402
+   .traceevent "L" 4 "R" "I" "r" 19 69 69 0 "" ""
+   icopy r18,r19
    br l644bexprend
 l644bexprend:
-   itos r19
-   say r19
+   itos r18
+   say r18
    .srcstep 95 95 17 "select_dispatch_general.crexx" 12 5 36 "    say mixed_if(index + 11, index)"
    .srcstep 94 94 17 "select_dispatch_general.crexx" 12 9 17 "    say mixed_if(index + 11, index)"
    .srcstep 70 70 33 "select_dispatch_general.crexx" 71 7 12 "  arg value = .int, guard = .int"
@@ -341,8 +338,7 @@ l644bexprend:
    .traceevent "A" 6 "R" "I" "r" 19 70 70 0 "value" ""
    .srcstep 71 71 33 "select_dispatch_general.crexx" 71 21 26 "  arg value = .int, guard = .int"
    .traceevent "V" 6 "R" "I" "r" 0 71 71 0 "index" ""
-   icopy r20,r0
-   .traceevent "A" 6 "R" "I" "r" 20 71 71 0 "guard" ""
+   .traceevent "A" 6 "R" "I" "r" 0 71 71 0 "guard" ""
    .srcstep 90 90 17 "select_dispatch_general.crexx" 73 3 15 "  if value = 1 then return 201"
    .traceevent "V" 6 "R" "I" "r" 19 90 90 0 "value" ""
    ieq r18,r19,1
@@ -357,8 +353,8 @@ l644bexprend:
    .srcstep 92 92 17 "select_dispatch_general.crexx" 74 3 7 "  else if guard = 99 then return 299"
 l715iffalse:
    .srcstep 87 87 17 "select_dispatch_general.crexx" 74 8 21 "  else if guard = 99 then return 299"
-   .traceevent "V" 6 "R" "I" "r" 20 87 87 0 "guard" ""
-   ieq r16,r20,99
+   .traceevent "V" 6 "R" "I" "r" 0 87 87 0 "guard" ""
+   ieq r16,r0,99
    .traceevent "O" 4 "R" "B" "r" 16 87 87 0 "" ""
    brf l721iffalse,r16
    .srcstep 88 88 17 "select_dispatch_general.crexx" 74 22 26 "  else if guard = 99 then return 299"
@@ -439,102 +435,102 @@ l20doend:
    .srcstep 101 101 17 "select_dispatch_general.crexx" 15 3 23 "  say mixed_if(10, 99)"
    .srcstep 100 100 17 "select_dispatch_general.crexx" 15 7 15 "  say mixed_if(10, 99)"
    .srcstep 98 98 17 "select_dispatch_general.crexx" 74 27 37 "  else if guard = 99 then return 299"
-   load r20,299
-   .traceevent "L" 4 "R" "I" "r" 20 101 101 0 "" ""
-   icopy r18,r20
+   load r19,299
+   .traceevent "L" 4 "R" "I" "r" 19 101 101 0 "" ""
+   icopy r17,r19
    br l751bexprend
    .srcstep 99 99 17 "select_dispatch_general.crexx" 79 3 14 "  return -201"
-   load r19,-201
-   .traceevent "L" 4 "R" "I" "r" 19 101 101 0 "" ""
-   icopy r18,r19
+   load r18,-201
+   .traceevent "L" 4 "R" "I" "r" 18 101 101 0 "" ""
+   icopy r17,r18
    br l751bexprend
 l751bexprend:
-   itos r18
-   say r18
+   itos r17
+   say r17
    .srcstep 102 102 17 "select_dispatch_general.crexx" 16 3 23 "  say referenced_if(2)"
-   load r20,2
-   .traceevent "L" 4 "R" "I" "r" 20 102 102 0 "" ""
-   call1 r18,referenced_if(),r20
-   itos r18
-   .traceevent "F" 4 "R" "S" "r" 18 102 102 0 "referenced_if" ""
-   say r18
+   load r19,2
+   .traceevent "L" 4 "R" "I" "r" 19 102 102 0 "" ""
+   call1 r17,referenced_if(),r19
+   itos r17
+   .traceevent "F" 4 "R" "S" "r" 17 102 102 0 "referenced_if" ""
+   say r17
    .srcstep 106 106 17 "select_dispatch_general.crexx" 18 3 32 "  say exposed_if(exposed_value)"
    .srcstep 105 105 17 "select_dispatch_general.crexx" 18 7 17 "  say exposed_if(exposed_value)"
    .srcstep 103 103 17 "select_dispatch_general.crexx" 98 26 36 "  else if value = 3 then return 703"
-   load r20,703
-   .traceevent "L" 4 "R" "I" "r" 20 106 106 0 "" ""
-   icopy r18,r20
+   load r19,703
+   .traceevent "L" 4 "R" "I" "r" 19 106 106 0 "" ""
+   icopy r17,r19
    br l795bexprend
    .srcstep 104 104 17 "select_dispatch_general.crexx" 100 3 14 "  return -701"
-   load r19,-701
-   .traceevent "L" 4 "R" "I" "r" 19 106 106 0 "" ""
-   icopy r18,r19
+   load r18,-701
+   .traceevent "L" 4 "R" "I" "r" 18 106 106 0 "" ""
+   icopy r17,r18
    br l795bexprend
 l795bexprend:
-   itos r18
-   say r18
+   itos r17
+   say r17
    .srcstep 107 107 17 "select_dispatch_general.crexx" 19 3 20 "  say exposed_value"
    say "3"
    .srcstep 111 111 17 "select_dispatch_general.crexx" 20 3 21 "  say string_if(\"b\")"
    .srcstep 110 110 17 "select_dispatch_general.crexx" 20 7 16 "  say string_if(\"b\")"
    .srcstep 108 108 17 "select_dispatch_general.crexx" 106 29 39 "  else if value == \"b\" then return 802"
-   load r20,802
-   .traceevent "L" 4 "R" "I" "r" 20 111 111 0 "" ""
-   icopy r18,r20
+   load r19,802
+   .traceevent "L" 4 "R" "I" "r" 19 111 111 0 "" ""
+   icopy r17,r19
    br l821bexprend
    .srcstep 109 109 17 "select_dispatch_general.crexx" 109 3 14 "  return -801"
-   load r19,-801
-   .traceevent "L" 4 "R" "I" "r" 19 111 111 0 "" ""
-   icopy r18,r19
+   load r18,-801
+   .traceevent "L" 4 "R" "I" "r" 18 111 111 0 "" ""
+   icopy r17,r18
    br l821bexprend
 l821bexprend:
-   itos r18
-   say r18
+   itos r17
+   say r17
    .srcstep 115 115 17 "select_dispatch_general.crexx" 21 3 18 "  say short_if(2)"
    .srcstep 114 114 17 "select_dispatch_general.crexx" 21 7 15 "  say short_if(2)"
    .srcstep 112 112 17 "select_dispatch_general.crexx" 115 26 36 "  else if value = 2 then return 902"
-   load r20,902
-   .traceevent "L" 4 "R" "I" "r" 20 115 115 0 "" ""
-   icopy r18,r20
+   load r19,902
+   .traceevent "L" 4 "R" "I" "r" 19 115 115 0 "" ""
+   icopy r17,r19
    br l850bexprend
    .srcstep 113 113 17 "select_dispatch_general.crexx" 117 3 14 "  return -901"
-   load r19,-901
-   .traceevent "L" 4 "R" "I" "r" 19 115 115 0 "" ""
-   icopy r18,r19
+   load r18,-901
+   .traceevent "L" 4 "R" "I" "r" 18 115 115 0 "" ""
+   icopy r17,r18
    br l850bexprend
 l850bexprend:
-   itos r18
-   say r18
+   itos r17
+   say r17
    .srcstep 119 119 17 "select_dispatch_general.crexx" 22 3 19 "  say public_if(2)"
    .srcstep 118 118 17 "select_dispatch_general.crexx" 22 7 16 "  say public_if(2)"
    .srcstep 116 116 17 "select_dispatch_general.crexx" 123 26 37 "  else if value = 2 then return 1002"
-   load r20,1002
-   .traceevent "L" 4 "R" "I" "r" 20 119 119 0 "" ""
-   icopy r18,r20
+   load r19,1002
+   .traceevent "L" 4 "R" "I" "r" 19 119 119 0 "" ""
+   icopy r17,r19
    br l873bexprend
    .srcstep 117 117 17 "select_dispatch_general.crexx" 126 3 15 "  return -1001"
-   load r19,-1001
-   .traceevent "L" 4 "R" "I" "r" 19 119 119 0 "" ""
-   icopy r18,r19
+   load r18,-1001
+   .traceevent "L" 4 "R" "I" "r" 18 119 119 0 "" ""
+   icopy r17,r18
    br l873bexprend
 l873bexprend:
-   itos r18
-   say r18
+   itos r17
+   say r17
    .srcstep 123 123 17 "select_dispatch_general.crexx" 23 3 22 "  say duplicate_if(1)"
    .srcstep 122 122 17 "select_dispatch_general.crexx" 23 7 19 "  say duplicate_if(1)"
    .srcstep 120 120 17 "select_dispatch_general.crexx" 131 21 32 "  if value = 1 then return 1101"
-   load r20,1101
-   .traceevent "L" 4 "R" "I" "r" 20 123 123 0 "" ""
-   icopy r18,r20
+   load r19,1101
+   .traceevent "L" 4 "R" "I" "r" 19 123 123 0 "" ""
+   icopy r17,r19
    br l902bexprend
    .srcstep 121 121 17 "select_dispatch_general.crexx" 136 3 15 "  return -1101"
-   load r19,-1101
-   .traceevent "L" 4 "R" "I" "r" 19 123 123 0 "" ""
-   icopy r18,r19
+   load r18,-1101
+   .traceevent "L" 4 "R" "I" "r" 18 123 123 0 "" ""
+   icopy r17,r18
    br l902bexprend
 l902bexprend:
-   itos r18
-   say r18
+   itos r17
+   say r17
    .srcstep 124 124 17 "select_dispatch_general.crexx" 24 3 11 "  return 0"
    ret 0
    .meta "select_dispatch_general.main.exposed_value"

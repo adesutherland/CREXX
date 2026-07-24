@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=14
+main() .locals=13
    .meta "select_dispatch_fallback.main"="b" ".int" main() ""
    .srcstep 41 41 17 "select_dispatch_fallback.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -27,86 +27,84 @@ l9dostart:
    .srcstep 19 19 17 "select_dispatch_fallback.crexx" 7 9 23 "    say duplicate_case(i)"
    .srcstep 5 5 33 "select_dispatch_fallback.crexx" 13 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r3,r0
-   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "value" ""
-   .meta "select_dispatch_fallback.main.select_tmp"="b" ".int" r4
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "value" ""
+   .meta "select_dispatch_fallback.main.select_tmp"="b" ".int" r3
    .srcstep 6 6 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
-   null r4
+   null r3
    .srcstep 7 7 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "value" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "select_tmp" ""
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "value" ""
+   icopy r3,r0
+   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "select_tmp" ""
    .srcstep 16 16 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
-   ieq r5,r4,1
-   .traceevent "O" 4 "R" "B" "r" 5 16 16 0 "" ""
-   brf l138iffalse,r5
+   ieq r4,r3,1
+   .traceevent "O" 4 "R" "B" "r" 4 16 16 0 "" ""
+   brf l138iffalse,r4
    .srcstep 8 8 17 "select_dispatch_fallback.crexx" 16 17 26 "    when 1 then return 10"
-   load r6,10
-   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
-   icopy r10,r6
+   load r5,10
+   .traceevent "L" 4 "R" "I" "r" 5 20 20 0 "" ""
+   icopy r9,r5
    br l126bexprend
    br l138ifend
    .srcstep 17 17 17 "select_dispatch_fallback.crexx" 17 5 9 "    when 1 then return 11"
 l138iffalse:
    .srcstep 14 14 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
-   ieq r7,r4,1
-   .traceevent "O" 4 "R" "B" "r" 7 14 14 0 "" ""
-   brf l144iffalse,r7
+   ieq r6,r3,1
+   .traceevent "O" 4 "R" "B" "r" 6 14 14 0 "" ""
+   brf l144iffalse,r6
    .srcstep 9 9 17 "select_dispatch_fallback.crexx" 17 17 26 "    when 1 then return 11"
-   load r8,11
-   .traceevent "L" 4 "R" "I" "r" 8 20 20 0 "" ""
-   icopy r10,r8
+   load r7,11
+   .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
+   icopy r9,r7
    br l126bexprend
    br l144ifend
    .srcstep 15 15 17 "select_dispatch_fallback.crexx" 18 5 9 "    when 2 then return 20"
 l144iffalse:
    .srcstep 12 12 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
-   ieq r9,r4,2
-   .traceevent "O" 4 "R" "B" "r" 9 12 12 0 "" ""
-   brf l150iffalse,r9
+   ieq r8,r3,2
+   .traceevent "O" 4 "R" "B" "r" 8 12 12 0 "" ""
+   brf l150iffalse,r8
    .srcstep 10 10 17 "select_dispatch_fallback.crexx" 18 17 26 "    when 2 then return 20"
-   load r10,20
-   .traceevent "L" 4 "R" "I" "r" 10 20 20 0 "" ""
+   load r9,20
+   .traceevent "L" 4 "R" "I" "r" 9 20 20 0 "" ""
    br l126bexprend
    br l150ifend
    .srcstep 13 13 17 "select_dispatch_fallback.crexx" 19 5 14 "    otherwise return -1"
 l150iffalse:
    .srcstep 11 11 17 "select_dispatch_fallback.crexx" 19 15 24 "    otherwise return -1"
-   load r11,-1
-   .traceevent "L" 4 "R" "I" "r" 11 20 20 0 "" ""
-   icopy r10,r11
+   load r10,-1
+   .traceevent "L" 4 "R" "I" "r" 10 20 20 0 "" ""
+   icopy r9,r10
    br l126bexprend
 l150ifend:
 l144ifend:
 l138ifend:
    .srcstep 18 18 17 "select_dispatch_fallback.crexx" 21 3 12 "  return -2"
-   load r11,-2
-   .traceevent "L" 4 "R" "I" "r" 11 20 20 0 "" ""
-   icopy r10,r11
+   load r10,-2
+   .traceevent "L" 4 "R" "I" "r" 10 20 20 0 "" ""
+   icopy r9,r10
    br l126bexprend
 l126bexprend:
-   itos r10
-   say r10
+   itos r9
+   say r9
    .srcstep 37 37 17 "select_dispatch_fallback.crexx" 8 5 32 "    say dynamic_case(i, i + 10)"
    .srcstep 36 36 17 "select_dispatch_fallback.crexx" 8 9 21 "    say dynamic_case(i, i + 10)"
    .srcstep 21 21 33 "select_dispatch_fallback.crexx" 24 7 12 "  arg value = .int, dynamic = .int"
    .traceevent "V" 6 "R" "I" "r" 0 21 21 0 "i" ""
-   icopy r10,r0
-   .traceevent "A" 6 "R" "I" "r" 10 21 21 0 "value" ""
+   .traceevent "A" 6 "R" "I" "r" 0 21 21 0 "value" ""
    .srcstep 22 22 33 "select_dispatch_fallback.crexx" 24 21 28 "  arg value = .int, dynamic = .int"
    .traceevent "V" 6 "R" "I" "r" 0 22 22 0 "i" ""
-   iadd r11,r0,10
-   .traceevent "O" 4 "R" "I" "r" 11 22 22 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 11 22 22 0 "dynamic" ""
-   .meta "select_dispatch_fallback.main.select_tmp"="b" ".int" r12
+   iadd r10,r0,10
+   .traceevent "O" 4 "R" "I" "r" 10 22 22 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 22 22 0 "dynamic" ""
+   .meta "select_dispatch_fallback.main.select_tmp"="b" ".int" r11
    .srcstep 23 23 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
-   null r12
+   null r11
    .srcstep 24 24 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 10 24 24 0 "value" ""
-   icopy r12,r10
-   .traceevent "A" 6 "R" "I" "r" 12 24 24 0 "select_tmp" ""
+   .traceevent "V" 6 "R" "I" "r" 0 24 24 0 "value" ""
+   icopy r11,r0
+   .traceevent "A" 6 "R" "I" "r" 11 24 24 0 "select_tmp" ""
    .srcstep 33 33 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
-   ieq r9,r12,1
+   ieq r9,r11,1
    .traceevent "O" 4 "R" "B" "r" 9 33 33 0 "" ""
    brf l179iffalse,r9
    .srcstep 25 25 17 "select_dispatch_fallback.crexx" 27 17 26 "    when 1 then return 10"
@@ -118,8 +116,8 @@ l126bexprend:
    .srcstep 34 34 17 "select_dispatch_fallback.crexx" 28 5 9 "    when dynamic then return 20"
 l179iffalse:
    .srcstep 31 31 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 11 31 31 0 "dynamic" ""
-   ieq r7,r12,r11
+   .traceevent "V" 6 "R" "I" "r" 10 31 31 0 "dynamic" ""
+   ieq r7,r11,r10
    .traceevent "O" 4 "R" "B" "r" 7 31 31 0 "" ""
    brf l185iffalse,r7
    .srcstep 26 26 17 "select_dispatch_fallback.crexx" 28 23 32 "    when dynamic then return 20"
@@ -131,29 +129,29 @@ l179iffalse:
    .srcstep 32 32 17 "select_dispatch_fallback.crexx" 29 5 9 "    when 3 then return 30"
 l185iffalse:
    .srcstep 29 29 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
-   ieq r5,r12,3
+   ieq r5,r11,3
    .traceevent "O" 4 "R" "B" "r" 5 29 29 0 "" ""
    brf l191iffalse,r5
    .srcstep 27 27 17 "select_dispatch_fallback.crexx" 29 17 26 "    when 3 then return 30"
-   load r3,30
-   .traceevent "L" 4 "R" "I" "r" 3 37 37 0 "" ""
-   icopy r9,r3
+   load r4,30
+   .traceevent "L" 4 "R" "I" "r" 4 37 37 0 "" ""
+   icopy r9,r4
    br l162bexprend
    br l191ifend
    .srcstep 30 30 17 "select_dispatch_fallback.crexx" 30 5 14 "    otherwise return -1"
 l191iffalse:
    .srcstep 28 28 17 "select_dispatch_fallback.crexx" 30 15 24 "    otherwise return -1"
-   load r13,-1
-   .traceevent "L" 4 "R" "I" "r" 13 37 37 0 "" ""
-   icopy r9,r13
+   load r12,-1
+   .traceevent "L" 4 "R" "I" "r" 12 37 37 0 "" ""
+   icopy r9,r12
    br l162bexprend
 l191ifend:
 l185ifend:
 l179ifend:
    .srcstep 35 35 17 "select_dispatch_fallback.crexx" 32 3 12 "  return -2"
-   load r13,-2
-   .traceevent "L" 4 "R" "I" "r" 13 37 37 0 "" ""
-   icopy r9,r13
+   load r12,-2
+   .traceevent "L" 4 "R" "I" "r" 12 37 37 0 "" ""
+   icopy r9,r12
    br l162bexprend
 l162bexprend:
    itos r9

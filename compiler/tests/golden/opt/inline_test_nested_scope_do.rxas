@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "inline_test_nested_scope_do.main"="b" ".int" main() ""
    .srcstep 16 16 17 "inline_test_nested_scope_do.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -27,29 +27,28 @@ l8dostart:
    .srcstep 10 10 17 "inline_test_nested_scope_do.crexx" 6 9 18 "    say scopedAdd(i)"
    .srcstep 5 5 33 "inline_test_nested_scope_do.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r3,r0
-   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
-   .meta "inline_test_nested_scope_do.main.step"="b" ".int" r4
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
+   .meta "inline_test_nested_scope_do.main.step"="b" ".int" r3
    .srcstep 6 6 17 "inline_test_nested_scope_do.crexx" 14 5 16 "    step = .int"
-   null r4
+   null r3
    .srcstep 7 7 17 "inline_test_nested_scope_do.crexx" 15 5 19 "    step = val + 2"
-   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "val" ""
-   iadd r4,r3,2
-   .traceevent "O" 4 "R" "I" "r" 4 7 7 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "step" ""
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "val" ""
+   iadd r3,r0,2
+   .traceevent "O" 4 "R" "I" "r" 3 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "step" ""
    .srcstep 8 8 17 "inline_test_nested_scope_do.crexx" 16 5 16 "    return step"
-   .traceevent "V" 6 "R" "I" "r" 4 11 11 0 "step" ""
-   icopy r5,r4
+   .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "step" ""
+   icopy r4,r3
    br l48bexprend
    .meta "inline_test_nested_scope_do.main.step"
    .srcstep 9 9 17 "inline_test_nested_scope_do.crexx" 18 3 11 "  return 0"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 11 11 0 "" ""
-   icopy r5,r4
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
+   icopy r4,r3
    br l48bexprend
 l48bexprend:
-   itos r5
-   say r5
+   itos r4
+   say r4
 l8doinc:
    .srcstep 4 4 17 "inline_test_nested_scope_do.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

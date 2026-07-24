@@ -65,6 +65,7 @@ typedef struct {
     Symbol *method_receiver_source_symbol;
     Symbol *method_receiver_local_symbol;
     RxcpRemapCapturedLocator method_receiver_copyback_locator;
+    size_t cleanup_coalesced_formal_bindings;
     int method_receiver_needs_copyback;
     int method_receiver_uses_locator_copyback;
 } InlineCloneState;
@@ -121,6 +122,7 @@ typedef struct {
     InlineExpansionCost original_call_cost;
     InlineExpansionCost reference_candidate_cost;
     InlineExpansionCost final_candidate_cost;
+    InlineExpansionCost cleanup_delta;
     int profitability_required;
     int committed;
 } InlineExpansionPlan;

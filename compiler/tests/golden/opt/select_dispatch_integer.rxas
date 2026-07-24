@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=19
+main() .locals=17
    .meta "select_dispatch_integer.main"="b" ".int" main() ""
    .srcstep 72 72 17 "select_dispatch_integer.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -34,104 +34,102 @@ l12dostart:
    .srcstep 21 21 17 "select_dispatch_integer.crexx" 9 9 17 "    say classify(i)"
    .srcstep 7 7 33 "select_dispatch_integer.crexx" 17 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "i" ""
-   icopy r4,r0
-   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "value" ""
-   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r5
+   .traceevent "A" 6 "R" "I" "r" 0 7 7 0 "value" ""
+   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r4
    .srcstep 8 8 6 "select_dispatch_integer.crexx" 20 3 15 "  select value"
-   null r5
+   null r4
    .srcstep 9 9 6 "select_dispatch_integer.crexx" 20 3 15 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 4 9 9 0 "value" ""
-   icopy r5,r4
-   .traceevent "A" 6 "R" "I" "r" 5 9 9 0 "select_tmp" ""
+   .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "value" ""
+   icopy r4,r0
+   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "select_tmp" ""
    .srcstep 19 19 6 "select_dispatch_integer.crexx" 20 3 15 "  select value"
    .jtable jtable486 auto
-   jumpi r5,jtable486
+   jumpi r4,jtable486
    br l486dispatchdefault
 l486dispatchcase0: .jcase jtable486 -1
    .srcstep 10 10 17 "select_dispatch_integer.crexx" 21 18 28 "    when -1 then return -10"
-   load r6,-10
-   .traceevent "L" 4 "R" "I" "r" 6 22 22 0 "" ""
-   icopy r13,r6
+   load r5,-10
+   .traceevent "L" 4 "R" "I" "r" 5 22 22 0 "" ""
+   icopy r12,r5
    br l251bexprend
    br l486dispatchend
 l486dispatchcase1: .jcase jtable486 0
    .srcstep 11 11 17 "select_dispatch_integer.crexx" 22 17 26 "    when 0 then return 10"
-   load r7,10
-   .traceevent "L" 4 "R" "I" "r" 7 22 22 0 "" ""
-   icopy r13,r7
+   load r6,10
+   .traceevent "L" 4 "R" "I" "r" 6 22 22 0 "" ""
+   icopy r12,r6
    br l251bexprend
    br l486dispatchend
 l486dispatchcase2: .jcase jtable486 1
    .srcstep 12 12 17 "select_dispatch_integer.crexx" 23 17 26 "    when 1 then return 20"
-   load r8,20
-   .traceevent "L" 4 "R" "I" "r" 8 22 22 0 "" ""
-   icopy r13,r8
+   load r7,20
+   .traceevent "L" 4 "R" "I" "r" 7 22 22 0 "" ""
+   icopy r12,r7
    br l251bexprend
    br l486dispatchend
 l486dispatchcase3: .jcase jtable486 2
    .srcstep 13 13 17 "select_dispatch_integer.crexx" 24 17 26 "    when 2 then return 30"
-   load r9,30
-   .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
-   icopy r13,r9
+   load r8,30
+   .traceevent "L" 4 "R" "I" "r" 8 22 22 0 "" ""
+   icopy r12,r8
    br l251bexprend
    br l486dispatchend
 l486dispatchcase4: .jcase jtable486 3
    .srcstep 14 14 17 "select_dispatch_integer.crexx" 25 26 35 "    when CASE_THREE then return 40"
-   load r10,40
-   .traceevent "L" 4 "R" "I" "r" 10 22 22 0 "" ""
-   icopy r13,r10
+   load r9,40
+   .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
+   icopy r12,r9
    br l251bexprend
    br l486dispatchend
 l486dispatchcase5: .jcase jtable486 4
    .srcstep 15 15 17 "select_dispatch_integer.crexx" 26 17 26 "    when 4 then return 50"
-   load r11,50
-   .traceevent "L" 4 "R" "I" "r" 11 22 22 0 "" ""
-   icopy r13,r11
+   load r10,50
+   .traceevent "L" 4 "R" "I" "r" 10 22 22 0 "" ""
+   icopy r12,r10
    br l251bexprend
    br l486dispatchend
 l486dispatchcase6: .jcase jtable486 5
    .srcstep 16 16 17 "select_dispatch_integer.crexx" 27 17 26 "    when 5 then return 60"
-   load r12,60
-   .traceevent "L" 4 "R" "I" "r" 12 22 22 0 "" ""
-   icopy r13,r12
+   load r11,60
+   .traceevent "L" 4 "R" "I" "r" 11 22 22 0 "" ""
+   icopy r12,r11
    br l251bexprend
    br l486dispatchend
 l486dispatchcase7: .jcase jtable486 5000000000
    .srcstep 17 17 17 "select_dispatch_integer.crexx" 28 26 37 "    when 5000000000 then return 5000"
-   load r13,5000
-   .traceevent "L" 4 "R" "I" "r" 13 22 22 0 "" ""
+   load r12,5000
+   .traceevent "L" 4 "R" "I" "r" 12 22 22 0 "" ""
    br l251bexprend
    br l486dispatchend
 l486dispatchdefault:
    .srcstep 18 18 17 "select_dispatch_integer.crexx" 29 15 24 "    otherwise return -1"
-   load r14,-1
-   .traceevent "L" 4 "R" "I" "r" 14 22 22 0 "" ""
-   icopy r13,r14
+   load r13,-1
+   .traceevent "L" 4 "R" "I" "r" 13 22 22 0 "" ""
+   icopy r12,r13
    br l251bexprend
 l486dispatchend:
    .srcstep 20 20 17 "select_dispatch_integer.crexx" 31 3 12 "  return -2"
-   load r14,-2
-   .traceevent "L" 4 "R" "I" "r" 14 22 22 0 "" ""
-   icopy r13,r14
+   load r13,-2
+   .traceevent "L" 4 "R" "I" "r" 13 22 22 0 "" ""
+   icopy r12,r13
    br l251bexprend
 l251bexprend:
-   itos r13
-   say r13
+   itos r12
+   say r12
    .srcstep 36 36 17 "select_dispatch_integer.crexx" 10 5 22 "    say no_default(i)"
    .srcstep 35 35 17 "select_dispatch_integer.crexx" 10 9 19 "    say no_default(i)"
    .srcstep 23 23 33 "select_dispatch_integer.crexx" 34 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 23 23 0 "i" ""
-   icopy r14,r0
-   .traceevent "A" 6 "R" "I" "r" 14 23 23 0 "value" ""
-   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r15
+   .traceevent "A" 6 "R" "I" "r" 0 23 23 0 "value" ""
+   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r14
    .srcstep 24 24 6 "select_dispatch_integer.crexx" 36 3 15 "  select value"
-   null r15
+   null r14
    .srcstep 25 25 6 "select_dispatch_integer.crexx" 36 3 15 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 14 25 25 0 "value" ""
-   icopy r15,r14
-   .traceevent "A" 6 "R" "I" "r" 15 25 25 0 "select_tmp" ""
+   .traceevent "V" 6 "R" "I" "r" 0 25 25 0 "value" ""
+   icopy r14,r0
+   .traceevent "A" 6 "R" "I" "r" 14 25 25 0 "select_tmp" ""
    .srcstep 32 32 6 "select_dispatch_integer.crexx" 36 3 15 "  select value"
-   ieq r13,r15,0
+   ieq r13,r14,0
    .traceevent "O" 4 "R" "B" "r" 13 32 32 0 "" ""
    brf l331iffalse,r13
    .srcstep 26 26 17 "select_dispatch_integer.crexx" 37 17 28 "    when 0 then return 1000"
@@ -142,7 +140,7 @@ l251bexprend:
    .srcstep 33 33 17 "select_dispatch_integer.crexx" 38 5 9 "    when 1 then return 1001"
 l331iffalse:
    .srcstep 30 30 6 "select_dispatch_integer.crexx" 36 3 15 "  select value"
-   ieq r11,r15,1
+   ieq r11,r14,1
    .traceevent "O" 4 "R" "B" "r" 11 30 30 0 "" ""
    brf l337iffalse,r11
    .srcstep 27 27 17 "select_dispatch_integer.crexx" 38 17 28 "    when 1 then return 1001"
@@ -154,7 +152,7 @@ l331iffalse:
    .srcstep 31 31 17 "select_dispatch_integer.crexx" 39 5 9 "    when 2 then return 1002"
 l337iffalse:
    .srcstep 29 29 6 "select_dispatch_integer.crexx" 36 3 15 "  select value"
-   ieq r9,r15,2
+   ieq r9,r14,2
    .traceevent "O" 4 "R" "B" "r" 9 29 29 0 "" ""
    brf l343iffalse,r9
    .srcstep 28 28 17 "select_dispatch_integer.crexx" 39 17 28 "    when 2 then return 1002"
@@ -177,82 +175,79 @@ l319bexprend:
    .srcstep 63 63 17 "select_dispatch_integer.crexx" 11 9 24 "    say nested_classify(i, inner)"
    .srcstep 37 37 33 "select_dispatch_integer.crexx" 44 7 12 "  arg outer = .int, inner = .int"
    .traceevent "V" 6 "R" "I" "r" 0 37 37 0 "i" ""
-   icopy r13,r0
-   .traceevent "A" 6 "R" "I" "r" 13 37 37 0 "outer" ""
+   .traceevent "A" 6 "R" "I" "r" 0 37 37 0 "outer" ""
    .srcstep 38 38 33 "select_dispatch_integer.crexx" 44 21 26 "  arg outer = .int, inner = .int"
    .traceevent "V" 6 "R" "I" "r" 1 38 38 0 "inner" ""
-   icopy r14,r1
-   .traceevent "A" 6 "R" "I" "r" 14 38 38 0 "inner" ""
-   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r16
+   .traceevent "A" 6 "R" "I" "r" 1 38 38 0 "inner" ""
+   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r15
    .srcstep 39 39 6 "select_dispatch_integer.crexx" 46 3 15 "  select outer"
-   null r16
+   null r15
    .srcstep 40 40 6 "select_dispatch_integer.crexx" 46 3 15 "  select outer"
-   .traceevent "V" 6 "R" "I" "r" 13 40 40 0 "outer" ""
-   icopy r16,r13
-   .traceevent "A" 6 "R" "I" "r" 16 40 40 0 "select_tmp" ""
+   .traceevent "V" 6 "R" "I" "r" 0 40 40 0 "outer" ""
+   icopy r15,r0
+   .traceevent "A" 6 "R" "I" "r" 15 40 40 0 "select_tmp" ""
    .srcstep 60 60 6 "select_dispatch_integer.crexx" 46 3 15 "  select outer"
-   ieq r12,r16,0
-   .traceevent "O" 4 "R" "B" "r" 12 60 60 0 "" ""
-   brf l367iffalse,r12
+   ieq r13,r15,0
+   .traceevent "O" 4 "R" "B" "r" 13 60 60 0 "" ""
+   brf l367iffalse,r13
    .srcstep 41 41 17 "select_dispatch_integer.crexx" 47 17 27 "    when 0 then return 100"
-   load r11,100
-   .traceevent "L" 4 "R" "I" "r" 11 64 64 0 "" ""
-   icopy r12,r11
+   load r12,100
+   .traceevent "L" 4 "R" "I" "r" 12 64 64 0 "" ""
    br l352bexprend
    br l367ifend
    .srcstep 61 61 17 "select_dispatch_integer.crexx" 48 5 9 "    when 1 then do"
 l367iffalse:
    .srcstep 58 58 6 "select_dispatch_integer.crexx" 46 3 15 "  select outer"
-   ieq r10,r16,1
-   .traceevent "O" 4 "R" "B" "r" 10 58 58 0 "" ""
-   brf l373iffalse,r10
-   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r17
+   ieq r11,r15,1
+   .traceevent "O" 4 "R" "B" "r" 11 58 58 0 "" ""
+   brf l373iffalse,r11
+   .meta "select_dispatch_integer.main.select_tmp"="b" ".int" r16
    .srcstep 42 42 6 "select_dispatch_integer.crexx" 49 7 19 "      select inner"
-   null r17
+   null r16
    .srcstep 43 43 6 "select_dispatch_integer.crexx" 49 7 19 "      select inner"
-   .traceevent "V" 6 "R" "I" "r" 14 43 43 0 "inner" ""
-   icopy r17,r14
-   .traceevent "A" 6 "R" "I" "r" 17 43 43 0 "select_tmp" ""
+   .traceevent "V" 6 "R" "I" "r" 1 43 43 0 "inner" ""
+   icopy r16,r1
+   .traceevent "A" 6 "R" "I" "r" 16 43 43 0 "select_tmp" ""
    .srcstep 52 52 6 "select_dispatch_integer.crexx" 49 7 19 "      select inner"
-   ieq r11,r17,1
-   .traceevent "O" 4 "R" "B" "r" 11 52 52 0 "" ""
-   brf l385iffalse,r11
+   ieq r12,r16,1
+   .traceevent "O" 4 "R" "B" "r" 12 52 52 0 "" ""
+   brf l385iffalse,r12
    .srcstep 44 44 17 "select_dispatch_integer.crexx" 50 21 31 "        when 1 then return 201"
-   load r9,201
-   .traceevent "L" 4 "R" "I" "r" 9 64 64 0 "" ""
-   icopy r12,r9
+   load r10,201
+   .traceevent "L" 4 "R" "I" "r" 10 64 64 0 "" ""
+   icopy r12,r10
    br l352bexprend
    br l385ifend
    .srcstep 53 53 17 "select_dispatch_integer.crexx" 51 9 13 "        when 2 then return 202"
 l385iffalse:
    .srcstep 50 50 6 "select_dispatch_integer.crexx" 49 7 19 "      select inner"
-   ieq r8,r17,2
-   .traceevent "O" 4 "R" "B" "r" 8 50 50 0 "" ""
-   brf l391iffalse,r8
+   ieq r9,r16,2
+   .traceevent "O" 4 "R" "B" "r" 9 50 50 0 "" ""
+   brf l391iffalse,r9
    .srcstep 45 45 17 "select_dispatch_integer.crexx" 51 21 31 "        when 2 then return 202"
-   load r7,202
-   .traceevent "L" 4 "R" "I" "r" 7 64 64 0 "" ""
-   icopy r12,r7
+   load r8,202
+   .traceevent "L" 4 "R" "I" "r" 8 64 64 0 "" ""
+   icopy r12,r8
    br l352bexprend
    br l391ifend
    .srcstep 51 51 17 "select_dispatch_integer.crexx" 52 9 13 "        when 3 then return 203"
 l391iffalse:
    .srcstep 48 48 6 "select_dispatch_integer.crexx" 49 7 19 "      select inner"
-   ieq r6,r17,3
-   .traceevent "O" 4 "R" "B" "r" 6 48 48 0 "" ""
-   brf l397iffalse,r6
+   ieq r7,r16,3
+   .traceevent "O" 4 "R" "B" "r" 7 48 48 0 "" ""
+   brf l397iffalse,r7
    .srcstep 46 46 17 "select_dispatch_integer.crexx" 52 21 31 "        when 3 then return 203"
-   load r4,203
-   .traceevent "L" 4 "R" "I" "r" 4 64 64 0 "" ""
-   icopy r12,r4
+   load r6,203
+   .traceevent "L" 4 "R" "I" "r" 6 64 64 0 "" ""
+   icopy r12,r6
    br l352bexprend
    br l397ifend
    .srcstep 49 49 17 "select_dispatch_integer.crexx" 53 9 18 "        otherwise return -201"
 l397iffalse:
    .srcstep 47 47 17 "select_dispatch_integer.crexx" 53 19 30 "        otherwise return -201"
-   load r18,-201
-   .traceevent "L" 4 "R" "I" "r" 18 64 64 0 "" ""
-   icopy r12,r18
+   load r5,-201
+   .traceevent "L" 4 "R" "I" "r" 5 64 64 0 "" ""
+   icopy r12,r5
    br l352bexprend
 l397ifend:
 l391ifend:
@@ -261,13 +256,13 @@ l385ifend:
    .srcstep 59 59 17 "select_dispatch_integer.crexx" 54 7 10 "      end"
 l373iffalse:
    .srcstep 56 56 6 "select_dispatch_integer.crexx" 46 3 15 "  select outer"
-   ieq r18,r16,2
-   .traceevent "O" 4 "R" "B" "r" 18 56 56 0 "" ""
-   brf l406iffalse,r18
+   ieq r12,r15,2
+   .traceevent "O" 4 "R" "B" "r" 12 56 56 0 "" ""
+   brf l406iffalse,r12
    .srcstep 54 54 17 "select_dispatch_integer.crexx" 56 17 27 "    when 2 then return 300"
-   load r11,300
-   .traceevent "L" 4 "R" "I" "r" 11 64 64 0 "" ""
-   icopy r12,r11
+   load r10,300
+   .traceevent "L" 4 "R" "I" "r" 10 64 64 0 "" ""
+   icopy r12,r10
    br l352bexprend
    br l406ifend
    .srcstep 57 57 17 "select_dispatch_integer.crexx" 57 5 14 "    otherwise return -100"
@@ -281,9 +276,9 @@ l406ifend:
 l373ifend:
 l367ifend:
    .srcstep 62 62 17 "select_dispatch_integer.crexx" 59 3 12 "  return -2"
-   load r18,-2
-   .traceevent "L" 4 "R" "I" "r" 18 64 64 0 "" ""
-   icopy r12,r18
+   load r13,-2
+   .traceevent "L" 4 "R" "I" "r" 13 64 64 0 "" ""
+   icopy r12,r13
    br l352bexprend
 l352bexprend:
    itos r12
@@ -297,18 +292,18 @@ l12doend:
    .srcstep 70 70 17 "select_dispatch_integer.crexx" 13 3 27 "  say classify(5000000000)"
    .srcstep 69 69 17 "select_dispatch_integer.crexx" 13 7 15 "  say classify(5000000000)"
    .srcstep 67 67 17 "select_dispatch_integer.crexx" 28 26 37 "    when 5000000000 then return 5000"
-   load r18,5000
-   .traceevent "L" 4 "R" "I" "r" 18 70 70 0 "" ""
-   icopy r14,r18
+   load r13,5000
+   .traceevent "L" 4 "R" "I" "r" 13 70 70 0 "" ""
+   icopy r12,r13
    br l418bexprend
    .srcstep 68 68 17 "select_dispatch_integer.crexx" 31 3 12 "  return -2"
-   load r18,-2
-   .traceevent "L" 4 "R" "I" "r" 18 70 70 0 "" ""
-   icopy r14,r18
+   load r13,-2
+   .traceevent "L" 4 "R" "I" "r" 13 70 70 0 "" ""
+   icopy r12,r13
    br l418bexprend
 l418bexprend:
-   itos r14
-   say r14
+   itos r12
+   say r12
    .srcstep 71 71 17 "select_dispatch_integer.crexx" 14 3 11 "  return 0"
    ret 0
    .meta "select_dispatch_integer.main.i"

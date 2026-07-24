@@ -10,6 +10,12 @@ fa19e07da3c1f8d5ca7286aaa5a99780b6e20978598d7c02fc8c4d5b84c0d119  performance/ev
 3dbdd793e47113aba3e3e6d038bced91e5de92da53576ab7acde598a2247eb1d  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-1-timing-summary.csv
 ee9d4a7eb5dc58d139434e244e2906a1d13a50e383b1a2962e0e99f470a5ce82  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-1.md
 45309b21f79ce124571660733138effc3f61f1c88ae37e1b35c257361a675bb0  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-2.md
+f90d305b895ad0a0e27b40038f1af08c5d758ec71a792d4dca2f36b695c2bda0  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-3-artifact-summary.csv
+ab5518efc2ad3485f04ca22daf93626befd507875ad680fae32d4e098ea9c3e9  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-3-timing-capture.json
+85f139b8564f8d25b19108c4aadb79cdcf05ab1abba69198b8a8e92351adcc4a  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-3-timing-samples.csv
+2a427ef1704a7100ad48d8491a7067d5d7b3ceba6b81e334a80dacf9bf9801b3  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-3-timing-source-manifest.txt
+e56729ad5b221e5a2b3d6e91856686039d12dffa4dea3b7cb1309c237497e765  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-3-timing-summary.csv
+4cad6e6fa61372e40c37c6f3eb9df7b17dc73978658d5cbb3818d5077a7d1fca  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/production/slice-3.md
 5522ded06f2cca8d564fe0f674e187fed39753a2358b484dadcc5ab72ecd8bd6  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/prototypes/p1-q1-replay.patch
 049e44c968ad28b79042261f252756ee43a75948ff821238d1d22e7761d835e8  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/prototypes/p2-readonly-scalar-formal.patch
 4e25f9dfea70b3d4379d8dd69fc56a93e713bbc75d98ef6c9314872e54b95d93  performance/evidence/2026-07-24-perf2-03-flow-aware-inlining/prototypes/p3-inline-result-placement.patch

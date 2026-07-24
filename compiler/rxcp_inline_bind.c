@@ -559,6 +559,50 @@ static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *pa
     return inline_node_is_plain_object(formal_target) && !(param_arg && param_arg->is_const_arg);
 }
 
+/*
+ * The normal call path permits a proved read-only numeric formal to share its
+ * incoming value. Preserve that fact at an inline site only for a direct
+ * caller-local scalar with no optional/default, reference, aggregate, binary,
+ * object, class-attribute or captured-expression obligation.
+ */
+static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
+                                                          ASTNode *formal_target,
+                                                          ASTNode *actual_arg,
+                                                          Symbol *captured_actual_symbol) {
+    Symbol *actual_symbol;
+    int type;
+
+    if (!param_arg || !formal_target || !actual_arg || captured_actual_symbol) return 0;
+    if (param_arg->is_ref_arg || param_arg->is_opt_arg || !param_arg->is_const_arg) return 0;
+    if (inline_is_missing_actual(actual_arg) || !inline_is_direct_symbol_actual(actual_arg)) return 0;
+    if (inline_subtree_reads_class_attribute(actual_arg) || inline_node_has_array_shape(formal_target)) return 0;
+
+    actual_symbol = actual_arg->symbolNode->symbol;
+    type = formal_target->value_type;
+    if (type != TP_BOOLEAN && type != TP_INTEGER &&
+        type != TP_FLOAT && type != TP_DECIMAL) {
+        return 0;
+    }
+
+    /* A promoted value needs its own conversion result. Reference-backed or
+     * externally visible storage can change during the inline body and would
+     * violate the by-value snapshot even though this formal is read-only. */
+    if (actual_arg->node_type != VAR_SYMBOL ||
+        actual_arg->value_type != type ||
+        actual_arg->value_dims != 0 ||
+        actual_symbol->symbol_type != VARIABLE_SYMBOL ||
+        actual_symbol->type != type ||
+        actual_symbol->value_dims != 0 ||
+        actual_symbol->exposed ||
+        actual_symbol->is_global_var ||
+        actual_symbol->is_ref_arg ||
+        actual_symbol->has_reference_target) {
+        return 0;
+    }
+
+    return 1;
+}
+
 static ASTNode *inline_materialize_capture_clone(Context *context,
                                                  ASTNode *source_node,
                                                  Scope *scope,
@@ -999,6 +1043,76 @@ static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_
     }
 
     return 1;
+}
+
+static ASTNode *inline_formal_for_actual_index(ASTNode *proc_def, size_t actual_index) {
+    ASTNode *args;
+    ASTNode *arg;
+    size_t formal_index;
+
+    if (!proc_def) return NULL;
+
+    args = ast_chld(proc_def, ARGS, 0);
+    arg = args ? args->child : NULL;
+    formal_index = 0;
+    while (arg) {
+        if (arg->is_varg || formal_index == actual_index) return arg;
+        arg = arg->sibling;
+        formal_index++;
+    }
+    return NULL;
+}
+
+/* The established call path has observable entry-order semantics when one
+ * caller variable is supplied to both a by-value and an `arg expose` formal.
+ * Until the inline binder models those semantics explicitly, retain the call
+ * rather than choosing a different snapshot point. */
+static int inline_call_has_mixed_value_ref_actual_alias(ASTNode *proc_def,
+                                                        ASTNode *call_node) {
+    ASTNode *outer_actual;
+    size_t outer_index;
+
+    if (!proc_def || !call_node) return 1;
+
+    outer_actual = inline_call_first_user_actual(call_node);
+    outer_index = 0;
+    while (outer_actual) {
+        ASTNode *outer_formal;
+        ASTNode *inner_actual;
+        Symbol *outer_symbol;
+        size_t inner_index;
+
+        outer_formal = inline_formal_for_actual_index(proc_def, outer_index);
+        if (!outer_formal) return 1;
+        if (inline_is_missing_actual(outer_actual) ||
+            !inline_is_supported_ref_actual(outer_actual)) {
+            outer_actual = outer_actual->sibling;
+            outer_index++;
+            continue;
+        }
+
+        outer_symbol = outer_actual->symbolNode->symbol;
+        inner_actual = outer_actual->sibling;
+        inner_index = outer_index + 1;
+        while (inner_actual) {
+            ASTNode *inner_formal;
+
+            inner_formal = inline_formal_for_actual_index(proc_def, inner_index);
+            if (!inner_formal) return 1;
+            if (!inline_is_missing_actual(inner_actual) &&
+                inline_is_supported_ref_actual(inner_actual) &&
+                inner_actual->symbolNode->symbol == outer_symbol &&
+                outer_formal->is_ref_arg != inner_formal->is_ref_arg) {
+                return 1;
+            }
+            inner_actual = inner_actual->sibling;
+            inner_index++;
+        }
+
+        outer_actual = outer_actual->sibling;
+        outer_index++;
+    }
+    return 0;
 }
 
 static int inline_varg_index_from_node(ASTNode *node, size_t *index_out) {
@@ -2026,6 +2140,7 @@ static int inline_bind_call_arguments_impl(Context *context,
     actual_index = 0;
 
     if (!inline_call_arity_matches(call_node, proc_sym, NULL)) INLINE_BIND_RETURN(0);
+    if (inline_call_has_mixed_value_ref_actual_alias(proc_def, call_node)) INLINE_BIND_RETURN(0);
     if (!inline_prepare_method_receiver_copyback(context,
                                                  instr_list,
                                                  inline_scope,
@@ -2109,6 +2224,19 @@ static int inline_bind_call_arguments_impl(Context *context,
             actual_arg = actual_arg->sibling;
             actual_index++;
             continue;
+        }
+
+        if (inline_readonly_scalar_formal_can_share_actual(param_arg,
+                                                           formal_target,
+                                                           actual_arg,
+                                                           captured_actual_symbol)) {
+            Symbol *cloned_formal;
+
+            cloned_formal = inline_find_mapped_symbol(clone_state,
+                                                       formal_target->symbolNode->symbol);
+            if (!cloned_formal) INLINE_BIND_RETURN(0);
+            cloned_formal->inline_value_alias = actual_arg->symbolNode->symbol;
+            clone_state->cleanup_coalesced_formal_bindings++;
         }
 
         bind_assign = rxcp_remap_create_assignment_node(context, inline_scope, formal_target, formal_target);

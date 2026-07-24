@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "inline_test_expr_negative.main"="b" ".int" main() ""
    .srcstep 20 20 17 "inline_test_expr_negative.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -35,33 +35,32 @@ l8dostart:
    .traceevent "V" 6 "R" "I" "r" 4 8 8 0 "val" ""
    iadd r5,r4,1
    .traceevent "O" 4 "R" "I" "r" 5 8 8 0 "" ""
-   icopy r6,r5
+   icopy r3,r5
    br l72bexprend
 l72bexprend:
-   icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 9 9 17 "inline_test_expr_negative.crexx" 14 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 3 13 13 0 "val" ""
-   icopy r6,r3
+   icopy r5,r3
    br l68bexprend
 l68bexprend:
-   brf l28iffalse,r6
+   brf l28iffalse,r5
    .srcstep 14 14 17 "inline_test_expr_negative.crexx" 6 28 29 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
    .srcstep 11 11 17 "inline_test_expr_negative.crexx" 6 37 51 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 11 11 0 "i" ""
-   sconcat r5,"truthy",r0
-   .traceevent "O" 4 "R" "S" "r" 5 11 11 0 "" ""
-   say r5
+   sconcat r4,"truthy",r0
+   .traceevent "O" 4 "R" "S" "r" 4 11 11 0 "" ""
+   say r4
    br l28ifend
    .srcstep 15 15 17 "inline_test_expr_negative.crexx" 7 5 9 "    else say \"falsey\" i"
 l28iffalse:
    .srcstep 12 12 17 "inline_test_expr_negative.crexx" 7 10 24 "    else say \"falsey\" i"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 12 12 0 "i" ""
-   sconcat r4,"falsey",r0
-   .traceevent "O" 4 "R" "S" "r" 4 12 12 0 "" ""
-   say r4
+   sconcat r3,"falsey",r0
+   .traceevent "O" 4 "R" "S" "r" 3 12 12 0 "" ""
+   say r3
 l28ifend:
 l8doinc:
    .srcstep 4 4 17 "inline_test_expr_negative.crexx" 5 6 7 "  do i = 1 to 3"
