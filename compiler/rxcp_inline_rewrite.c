@@ -409,6 +409,88 @@ static int inline_count_return_nodes(ASTNode *node) {
     return count;
 }
 
+static int inline_cost_is_branch(NodeType node_type) {
+    switch (node_type) {
+        case IF:
+        case DO:
+        case REPEAT:
+        case SELECT:
+        case SWITCH:
+        case WHEN:
+        case OPT_DISPATCH:
+        case SIGNAL_BLOCK:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int inline_cost_is_call(NodeType node_type) {
+    switch (node_type) {
+        case FUNCTION:
+        case MEMBER_CALL:
+        case FACTORY_CALL:
+        case INTRINSIC:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void inline_expansion_cost_walk(ASTNode *node, InlineExpansionCost *cost) {
+    ASTNode *child;
+
+    if (!node || !cost) return;
+
+    cost->structural_nodes++;
+    if (node->node_type == ASSIGN || node->node_type == DEFINE) cost->assignments++;
+    if (inline_cost_is_branch(node->node_type)) cost->branches++;
+    if (inline_cost_is_call(node->node_type)) cost->calls++;
+    if (node->node_type == VAR_TARGET && node->symbolNode &&
+        node->symbolNode->symbol && node->symbolNode->symbol->name &&
+        strncmp(node->symbolNode->symbol->name, "__inline_", 9) == 0) {
+        cost->inline_temp_definitions++;
+    }
+
+    if (node->node_type == PROCEDURE || node->node_type == METHOD ||
+        node->node_type == FACTORY || node->node_type == MATCH) {
+        return;
+    }
+    for (child = node->child; child; child = child->sibling) {
+        inline_expansion_cost_walk(child, cost);
+    }
+}
+
+static int inline_expansion_cost_collect(ASTNode *root, InlineExpansionCost *cost) {
+    if (!root || !cost) return 0;
+
+    memset(cost, 0, sizeof(*cost));
+    inline_expansion_cost_walk(root, cost);
+    cost->valid = cost->structural_nodes > 0;
+    return cost->valid;
+}
+
+static int inline_expansion_cost_is_strict_improvement(const InlineExpansionCost *reference,
+                                                       const InlineExpansionCost *candidate) {
+    int strict;
+
+    if (!reference || !candidate || !reference->valid || !candidate->valid) return 0;
+    if (candidate->inline_temp_definitions > reference->inline_temp_definitions ||
+        candidate->calls > reference->calls ||
+        candidate->branches > reference->branches ||
+        candidate->assignments > reference->assignments ||
+        candidate->structural_nodes > reference->structural_nodes) {
+        return 0;
+    }
+
+    strict = candidate->inline_temp_definitions < reference->inline_temp_definitions ||
+             candidate->calls < reference->calls ||
+             candidate->branches < reference->branches ||
+             candidate->assignments < reference->assignments ||
+             candidate->structural_nodes < reference->structural_nodes;
+    return strict;
+}
+
 static void inline_expansion_plan_init(InlineExpansionPlan *plan,
                                        ASTNode *original_call,
                                        ASTNode *replacement_target,
@@ -423,6 +505,24 @@ static void inline_expansion_plan_init(InlineExpansionPlan *plan,
     plan->parent_scope = parent_scope;
     plan->callee_symbol = callee_symbol;
     plan->kind = kind;
+    (void)inline_expansion_cost_collect(original_call, &plan->original_call_cost);
+}
+
+static int inline_expansion_plan_record_reference(Context *context,
+                                                  InlineExpansionPlan *plan,
+                                                  ASTNode *candidate_root,
+                                                  int require_strict_improvement) {
+    if (!plan || !candidate_root || plan->committed ||
+        !inline_expansion_cost_collect(candidate_root, &plan->reference_candidate_cost)) {
+        inline_debug_fail_closed(context,
+                                 plan ? plan->original_call : NULL,
+                                 plan ? plan->callee_symbol : NULL,
+                                 "failed to record inline candidate profitability reference");
+        return 0;
+    }
+
+    plan->profitability_required = require_strict_improvement;
+    return 1;
 }
 
 static int inline_expansion_plan_commit(Context *context,
@@ -434,6 +534,39 @@ static int inline_expansion_plan_commit(Context *context,
                                  plan ? plan->original_call : NULL,
                                  plan ? plan->callee_symbol : NULL,
                                  "invalid inline expansion transaction commit");
+        return 0;
+    }
+
+    if (!plan->reference_candidate_cost.valid &&
+        !inline_expansion_plan_record_reference(context, plan, candidate_root, 0)) {
+        return 0;
+    }
+    if (!inline_expansion_cost_collect(candidate_root, &plan->final_candidate_cost)) {
+        inline_debug_fail_closed(context,
+                                 plan->original_call,
+                                 plan->callee_symbol,
+                                 "failed to cost final inline candidate");
+        return 0;
+    }
+    if (plan->profitability_required &&
+        !inline_expansion_cost_is_strict_improvement(&plan->reference_candidate_cost,
+                                                     &plan->final_candidate_cost)) {
+        inline_debug_fail_closed(context,
+                                 plan->original_call,
+                                 plan->callee_symbol,
+                                 "inline candidate is not a strict multi-metric improvement "
+                                 "(nodes %zu/%zu, assignments %zu/%zu, branches %zu/%zu, "
+                                 "calls %zu/%zu, inline temps %zu/%zu)",
+                                 plan->final_candidate_cost.structural_nodes,
+                                 plan->reference_candidate_cost.structural_nodes,
+                                 plan->final_candidate_cost.assignments,
+                                 plan->reference_candidate_cost.assignments,
+                                 plan->final_candidate_cost.branches,
+                                 plan->reference_candidate_cost.branches,
+                                 plan->final_candidate_cost.calls,
+                                 plan->reference_candidate_cost.calls,
+                                 plan->final_candidate_cost.inline_temp_definitions,
+                                 plan->reference_candidate_cost.inline_temp_definitions);
         return 0;
     }
 

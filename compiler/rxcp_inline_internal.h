@@ -97,6 +97,15 @@ typedef enum {
     INLINE_EXPANSION_EAGER_OPERATOR
 } InlineExpansionKind;
 
+typedef struct {
+    size_t structural_nodes;
+    size_t assignments;
+    size_t branches;
+    size_t calls;
+    size_t inline_temp_definitions;
+    int valid;
+} InlineExpansionCost;
+
 /*
  * Per-site speculative ownership boundary.  The original call and replacement
  * target remain attached to the caller while candidate_root is built and
@@ -109,6 +118,10 @@ typedef struct {
     Scope *parent_scope;
     Symbol *callee_symbol;
     InlineExpansionKind kind;
+    InlineExpansionCost original_call_cost;
+    InlineExpansionCost reference_candidate_cost;
+    InlineExpansionCost final_candidate_cost;
+    int profitability_required;
     int committed;
 } InlineExpansionPlan;
 

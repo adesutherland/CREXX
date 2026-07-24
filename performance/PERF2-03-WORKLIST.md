@@ -281,8 +281,8 @@ Release verdict, requested QA and an independent commit. Stop before slice 5.
 
 | Slice | Scope | Status |
 | --- | --- | --- |
-| 1 | `InlineExpansionPlan` detached transaction plus direct receiver equivalence | complete; favorable verdict, QA passed, commit pending in this slice |
-| 2 | conservative multi-metric candidate profitability/fallback gate | approved; pending |
+| 1 | `InlineExpansionPlan` detached transaction plus direct receiver equivalence | complete; favorable verdict; 1,907/1,907 QA; `d51bdf30d` |
+| 2 | conservative multi-metric candidate profitability/fallback gate | complete; byte-identical parity verdict; 1,907/1,907 QA; commit pending in this slice |
 | 3 | gated boundary-aware local scalar/formal/result/control cleanup | approved; pending |
 | 4 | versioned local/imported callable summaries and binding parity | approved; pending |
 | 5 | reference/object alias, lifetime and cleanup ownership | not authorized; mandatory pause |
