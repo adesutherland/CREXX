@@ -568,12 +568,31 @@ static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *pa
 static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
                                                           ASTNode *formal_target,
                                                           ASTNode *actual_arg,
+                                                          Symbol *proc_sym,
+                                                          size_t formal_index,
                                                           Symbol *captured_actual_symbol) {
+    const InlineCallableSummary *summary;
+    const InlineFormalSummary *formal_summary;
     Symbol *actual_symbol;
     int type;
 
-    if (!param_arg || !formal_target || !actual_arg || captured_actual_symbol) return 0;
-    if (param_arg->is_ref_arg || param_arg->is_opt_arg || !param_arg->is_const_arg) return 0;
+    if (!param_arg || !formal_target || !actual_arg || !proc_sym || captured_actual_symbol) return 0;
+    summary = proc_sym->inline_summary;
+    if (!summary || summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+        formal_index >= summary->formal_count || !summary->formals) return 0;
+    formal_summary = &summary->formals[formal_index];
+    if (!(formal_summary->flags & RXCP_INLINE_FORMAL_READ_ONLY) ||
+        !(formal_summary->flags & RXCP_INLINE_FORMAL_EXACT_SHAPE) ||
+        (formal_summary->flags & (RXCP_INLINE_FORMAL_BY_REF |
+                                  RXCP_INLINE_FORMAL_OPTIONAL |
+                                  RXCP_INLINE_FORMAL_HAS_DEFAULT |
+                                  RXCP_INLINE_FORMAL_VARG |
+                                  RXCP_INLINE_FORMAL_WRITTEN |
+                                  RXCP_INLINE_FORMAL_ESCAPES))) return 0;
+    /* The immutable callable summary is the proof surface.  The legacy
+     * is_const_arg emitter hint may be absent from an imported body and is not
+     * required once the body-validated summary proves read-only use. */
+    if (param_arg->is_ref_arg || param_arg->is_opt_arg) return 0;
     if (inline_is_missing_actual(actual_arg) || !inline_is_direct_symbol_actual(actual_arg)) return 0;
     if (inline_subtree_reads_class_attribute(actual_arg) || inline_node_has_array_shape(formal_target)) return 0;
 
@@ -583,6 +602,7 @@ static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
         type != TP_FLOAT && type != TP_DECIMAL) {
         return 0;
     }
+    if (formal_summary->type != type || formal_summary->dims != 0) return 0;
 
     /* A promoted value needs its own conversion result. Reference-backed or
      * externally visible storage can change during the inline body and would
@@ -2229,6 +2249,8 @@ static int inline_bind_call_arguments_impl(Context *context,
         if (inline_readonly_scalar_formal_can_share_actual(param_arg,
                                                            formal_target,
                                                            actual_arg,
+                                                           proc_sym,
+                                                           actual_index,
                                                            captured_actual_symbol)) {
             Symbol *cloned_formal;
 

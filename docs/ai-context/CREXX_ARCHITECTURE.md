@@ -71,8 +71,22 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      why new inline cases are opened by specific parent/operand shape instead
      of by globally deciding that a callable is "always inlineable".
    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
-     normal callable metadata. Libraries preserve this metadata for downstream
-     `rxc` optimisation; final linked images strip it by default.
+     normal callable metadata. The current `I6` payload begins with a versioned
+     callable summary containing formal read/write/escape and exact-shape
+     facts, result/control/context facts, and structural cost. The reader
+     reconstructs those facts from the body and checks the result shape against
+     the separately parsed callable declaration. Only exact agreement opens the
+     imported template and summary-backed binding; older, missing, malformed,
+     or mismatched summaries retain the ordinary call. This is an evidence
+     gate, not a permanent exclusion: when a currently closed transformation
+     gains a complete mathematical proof and regression coverage, open that
+     case narrowly rather than leaving the conservative fallback in place.
+     Import attachment also distinguishes the explicit callable from any
+     compiler-created implicit `main`; class-factory evidence is attached to
+     the synthesized `FACTORY` contract node rather than its semantically
+     different generic registry procedure.
+     Libraries preserve this metadata for downstream `rxc` optimisation; final
+     linked images strip it by default.
    - Suitable `SELECT` and equality ladders are lowered through a dedicated
      dispatch AST to RXAS packed jump tables. Eligibility, semantic gates,
      profitability thresholds, and regression invariants are documented in

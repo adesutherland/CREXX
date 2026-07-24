@@ -31,6 +31,50 @@
 
 #include "rxcp_types.h"
 
+#define RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA 1u
+
+#define RXCP_INLINE_FORMAL_BY_REF       1u
+#define RXCP_INLINE_FORMAL_OPTIONAL     2u
+#define RXCP_INLINE_FORMAL_HAS_DEFAULT  4u
+#define RXCP_INLINE_FORMAL_VARG         8u
+#define RXCP_INLINE_FORMAL_READ_ONLY   16u
+#define RXCP_INLINE_FORMAL_WRITTEN     32u
+#define RXCP_INLINE_FORMAL_ESCAPES     64u
+#define RXCP_INLINE_FORMAL_EXACT_SHAPE 128u
+#define RXCP_INLINE_FORMAL_READ        256u
+
+#define RXCP_INLINE_RESULT_FALLTHROUGH  1u
+#define RXCP_INLINE_RESULT_MULTIPLE     2u
+#define RXCP_INLINE_RESULT_EXACT_SCALAR 4u
+#define RXCP_INLINE_RESULT_AGGREGATE    8u
+#define RXCP_INLINE_RESULT_REFERENCE   16u
+
+#define RXCP_INLINE_CONTEXT_SOURCE_IDENTITY 1u
+#define RXCP_INLINE_CONTEXT_TRACE_IDENTITY  2u
+#define RXCP_INLINE_CONTEXT_NUMERIC         4u
+
+typedef struct {
+    ValueType type;
+    size_t dims;
+    unsigned int flags;
+} InlineFormalSummary;
+
+typedef struct {
+    unsigned int schema_version;
+    size_t formal_count;
+    InlineFormalSummary *formals;
+    ValueType result_type;
+    size_t result_dims;
+    unsigned int result_flags;
+    unsigned int control_flags;
+    unsigned int context_flags;
+    size_t structural_nodes;
+    size_t assignments;
+    size_t branches;
+    size_t calls;
+    size_t inline_temp_definitions;
+} InlineCallableSummary;
+
 /* Scope and Symbols */
 struct Scope {
     ASTNode *defining_node;
@@ -96,6 +140,7 @@ struct Symbol {
     char has_reference_target; /* Storage was the target of a reference expression */
     char flow_skip_default_initiation; /* NR-26: every first read is preceded by a safe source write */
     struct Symbol *inline_value_alias; /* PERF2-03: read-only inline formal shares caller storage */
+    InlineCallableSummary *inline_summary; /* PERF2-03: versioned immutable callable facts */
     char is_inlinable;  /* Set if this procedure is inlinable */
     ASTNode *ast_template; /* AST template for inlining */
     int creation_ordinal; /* Ordinal value when the symbol was first created */
@@ -113,6 +158,8 @@ void sym_set_reference_type(Symbol *symbol, ValueType type, size_t dims,
                             const int *dim_base, const int *dim_elements,
                             const char *class_name);
 void sym_copy_reference_type(Symbol *dest, const Symbol *src);
+void sym_clear_inline_summary(Symbol *symbol);
+int sym_copy_inline_summary(Symbol *dest, const InlineCallableSummary *summary);
 
 /* Scope Factory */
 Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);

@@ -1,6 +1,6 @@
 # PERF2-03 flow-aware inlining 2.0 worklist
 
-Status: production in progress; H and slices 1-4 approved, pause before slice 5
+Status: production paused after completed slice 4; slice 5 not authorized
 
 Started: 2026-07-24
 
@@ -137,16 +137,18 @@ Current optimized compilation runs destructive multi-pass inlining inside
 lowering, then one NR-26 build/apply before emission. No-opt skips inlining but
 builds the same flow overlay without applying transformations.
 
-The exact cross-stage gaps are:
+The exact cross-stage gaps at the production starting point were:
 
 1. `InlineCloneState` maps cloned nodes/scopes/symbols and ref/vararg/receiver
    mechanics, but carries no callee formal effect summary, actual-formal value
    equivalence, inline-site identity, result equivalence, cleanup ownership or
    pre/post-cleanup cost snapshot.
-2. Non-reference formals are eagerly materialized as assignments, including
+2. Non-reference formals were eagerly materialized as assignments, including
    optional/default paths, even where later proof could share or eliminate the
-   storage. The existing `is_const_arg` fact concerns procedure entry emission;
-   it is not an inline binding proof and is not exported in inline metadata.
+   storage. The original audit understated the transport: `is_const_arg` was
+   present in the generic AST-node flags, but it was an emitter hint rather
+   than an explicit, versioned inline binding proof. Slice 4 replaces that
+   reliance with body-derived formal read/write/escape evidence.
 3. Expression and multi-return expansion introduces `BLOCK_EXPR`, `LEAVE_WITH`,
    block-result and temporary scaffolding. The flow builder currently treats
    `BLOCK_EXPR`, SELECT/SWITCH and OPT_DISPATCH as an opaque single block and
@@ -283,6 +285,34 @@ Release verdict, requested QA and an independent commit. Stop before slice 5.
 | --- | --- | --- |
 | 1 | `InlineExpansionPlan` detached transaction plus direct receiver equivalence | complete; favorable verdict; 1,907/1,907 QA; `d51bdf30d` |
 | 2 | conservative multi-metric candidate profitability/fallback gate | complete; byte-identical parity verdict; 1,907/1,907 QA; `6687d64d5` |
-| 3 | gated boundary-aware local scalar/formal/result/control cleanup | complete; favorable verdict; 1,907/1,907 QA; commit pending in this slice |
-| 4 | versioned local/imported callable summaries and binding parity | approved; pending |
+| 3 | gated boundary-aware local scalar/formal/result/control cleanup | complete; favorable verdict; 1,907/1,907 QA; `6b97c2ffd` |
+| 4 | versioned local/imported callable summaries and binding parity | complete; runtime-neutral proof/metadata verdict; 1,910/1,910 QA; this commit |
 | 5 | reference/object alias, lifetime and cleanup ownership | not authorized; mandatory pause |
+
+Slice 4 retains the slice-3 Richards image exactly at 1,867 instructions, 62
+peak locals, 79,094 bytes and SHA-256 `6aad1ca91ddb53089fe0b5040f47e1267cabf6bf13c1cc8527b8940d77b50f9a`.
+Its I6 metadata adds 3,672 bytes (0.429%) to the shared library without adding
+an executable instruction. The final same-session timing is neutral: no
+slice-4 runtime improvement is claimed, and the accepted slice-3 Richards gain
+remains the cumulative result. A non-reproducible incremental artifact and its
+approximately 0.13%/0.146% timing were rejected rather than added to that gain.
+Retained evidence is in `production/slice-4.md`.
+
+### Evidence-open rule and fail-closed review ledger
+
+A fail-closed gate is a temporary proof boundary, not a reason to forget an
+optimization. Once the compiler has a complete mathematical proof for a
+specific case, the production rule is to open that case narrowly, add a CTest
+that distinguishes sufficient from insufficient evidence, and keep unknown
+sites on the ordinary call path. Every deferred gate must remain in this ledger
+until it is opened or explicitly rejected on semantic/profitability grounds.
+
+| Gate | Current evidence | Disposition |
+| --- | --- | --- |
+| Imported read-only scalar formal binding without the legacy AST `is_const_arg` hint | I6 summary is derived from symbol reads/writes, exact scalar shape and escape facts; reader reconstructs it from the body | opened in slice 4; CTest proves I6 removes the call/formal copy while matching source register identity |
+| Missing or I4/I5 callable summary | no current proof schema | remain fail closed; CTest requires the ordinary call and correct runtime output |
+| I6 result shape that disagrees with the independently parsed callable declaration | contradictory evidence | remain fail closed; review-derived CTest requires the ordinary call and correct runtime output |
+| I6 body-derived facts or costs that disagree with the payload summary | contradictory evidence | remain fail closed through exact summary comparison; review-derived CTest for the newly trusted formal effects forges a writable reference as read-only and requires the ordinary call/runtime result; add another focused CTest whenever a new field begins opening a transformation |
+| Imported payload offered to an implicit `main` or generic class-factory procedure | declaration and body describe different callable semantics | fixed in slice 4: select the explicit procedure and defer factories to their real contract node; `address_inline_then_parse` guards the debug/attachment path |
+| Reference/object alias, lifetime and cleanup ownership | slice 4 summary records escape/shape but does not prove ownership transfer or last use | deferred to unauthorized slice 5; do not open before the mandatory pause/approval |
+| Dynamic vararg indexing, assembler alias effects and generated association transport | current summary cannot prove locator/liveness, per-operand alias effects or association reconstruction | remain fail closed and listed for later evidence-specific slices; do not treat as permanent blanket exclusions |

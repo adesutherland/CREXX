@@ -298,6 +298,8 @@ typedef struct {
     ASTNode *args_root;
     ASTNode *root;
     Scope *scope;
+    InlineCallableSummary summary;
+    int summary_present;
     int tree_section;
     int version;
     int ok;
@@ -1571,6 +1573,39 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
     return inline_meta_text_append(text, ";<");
 }
 
+static int inline_meta_emit_callable_summary(InlineMetaText *text,
+                                             const InlineCallableSummary *summary) {
+    size_t i;
+
+    if (!text || !summary ||
+        summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+        (summary->formal_count && !summary->formals)) return 0;
+
+    if (!inline_meta_text_appendf(text,
+                                  ";c,%u,%zu,%d,%zu,%u,%u,%u,%zu,%zu,%zu,%zu,%zu",
+                                  summary->schema_version,
+                                  summary->formal_count,
+                                  (int)summary->result_type,
+                                  summary->result_dims,
+                                  summary->result_flags,
+                                  summary->control_flags,
+                                  summary->context_flags,
+                                  summary->structural_nodes,
+                                  summary->assignments,
+                                  summary->branches,
+                                  summary->calls,
+                                  summary->inline_temp_definitions)) return 0;
+
+    for (i = 0; i < summary->formal_count; i++) {
+        if (!inline_meta_text_appendf(text,
+                                      ",%d,%zu,%u",
+                                      (int)summary->formals[i].type,
+                                      summary->formals[i].dims,
+                                      summary->formals[i].flags)) return 0;
+    }
+    return 1;
+}
+
 char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     Symbol *symbol;
     InlineEligibility eligibility;
@@ -1602,6 +1637,10 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         inline_export_debug_eligibility_reject(context, callable, symbol, &eligibility);
         return strdup("");
     }
+    if (!inline_build_callable_summary(callable, symbol, &eligibility)) {
+        inline_export_debug_reject(context, callable, symbol, "failed to build callable summary");
+        return strdup("");
+    }
 
     memset(&meta, 0, sizeof(meta));
     meta.root_scope = callable->scope;
@@ -1623,7 +1662,8 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 
     inline_meta_text_init(&text);
     if (!text.ok ||
-        !inline_meta_text_append(&text, "I5") ||
+        !inline_meta_text_append(&text, "I6") ||
+        !inline_meta_emit_callable_summary(&text, symbol->inline_summary) ||
         !inline_meta_emit_files(&text, &meta) ||
         !inline_meta_emit_sources(&text, &meta) ||
         !inline_meta_emit_scopes(&text, &meta) ||
@@ -1652,20 +1692,24 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 }
 
 int rxcp_inline_payload_is_supported(const char *payload) {
-    return payload && payload[0] == 'I' && (payload[1] == '4' || payload[1] == '5') &&
+    return payload && payload[0] == 'I' &&
+           (payload[1] == '4' || payload[1] == '5' || payload[1] == '6') &&
            (payload[2] == 0 || payload[2] == ';');
 }
 
-static ASTNode *inline_meta_find_first_procedure(ASTNode *node) {
+static ASTNode *inline_meta_find_first_explicit_procedure(ASTNode *node) {
     ASTNode *child;
     ASTNode *found;
 
     if (!node) return NULL;
-    if (node->node_type == PROCEDURE) return node;
+    /* Synthetic imported declarations can acquire an implicit main while
+     * their own dependencies are parsed.  Metadata belongs to the declared
+     * callable, never to that compiler-created wrapper. */
+    if (node->node_type == PROCEDURE && !node->is_implicit_main) return node;
 
     child = node->child;
     while (child) {
-        found = inline_meta_find_first_procedure(child);
+        found = inline_meta_find_first_explicit_procedure(child);
         if (found) return found;
         child = child->sibling;
     }
@@ -1687,6 +1731,117 @@ static char *inline_meta_next_field(char **cursor) {
         *cursor = NULL;
     }
     return field;
+}
+
+static int inline_meta_parse_size_field(const char *field, size_t *value_out) {
+    const char *cursor;
+    size_t value;
+
+    if (value_out) *value_out = 0;
+    if (!field || !*field) return 0;
+
+    value = 0;
+    cursor = field;
+    while (*cursor) {
+        size_t digit;
+
+        if (*cursor < '0' || *cursor > '9') return 0;
+        digit = (size_t)(*cursor - '0');
+        if (value > (((size_t)-1) - digit) / 10) return 0;
+        value = value * 10 + digit;
+        cursor++;
+    }
+    if (value_out) *value_out = value;
+    return 1;
+}
+
+static int inline_meta_size_to_uint(size_t value, unsigned int *value_out) {
+    unsigned int converted;
+
+    converted = (unsigned int)value;
+    if ((size_t)converted != value) return 0;
+    if (value_out) *value_out = converted;
+    return 1;
+}
+
+static int inline_meta_import_callable_summary(InlineMetaImport *meta, char *record) {
+    InlineCallableSummary summary;
+    char *cursor;
+    char *field;
+    size_t header[12];
+    size_t i;
+
+    if (!meta || !record || meta->summary_present) return 0;
+    memset(&summary, 0, sizeof(summary));
+    cursor = record + 2;
+    for (i = 0; i < 12; i++) {
+        field = inline_meta_next_field(&cursor);
+        if (!field || !inline_meta_parse_size_field(field, &header[i])) return 0;
+    }
+
+    if (header[0] != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+        header[1] > INLINE_MAX_NODES || header[2] > TP_REFERENCE ||
+        !inline_meta_size_to_uint(header[4], &summary.result_flags) ||
+        !inline_meta_size_to_uint(header[5], &summary.control_flags) ||
+        !inline_meta_size_to_uint(header[6], &summary.context_flags)) return 0;
+    if (summary.result_flags & ~(RXCP_INLINE_RESULT_FALLTHROUGH |
+                                 RXCP_INLINE_RESULT_MULTIPLE |
+                                 RXCP_INLINE_RESULT_EXACT_SCALAR |
+                                 RXCP_INLINE_RESULT_AGGREGATE |
+                                 RXCP_INLINE_RESULT_REFERENCE)) return 0;
+    if (summary.control_flags != 0) return 0;
+    if (summary.context_flags & ~(RXCP_INLINE_CONTEXT_SOURCE_IDENTITY |
+                                  RXCP_INLINE_CONTEXT_TRACE_IDENTITY |
+                                  RXCP_INLINE_CONTEXT_NUMERIC)) return 0;
+
+    summary.schema_version = (unsigned int)header[0];
+    summary.formal_count = header[1];
+    summary.result_type = (ValueType)header[2];
+    summary.result_dims = header[3];
+    summary.structural_nodes = header[7];
+    summary.assignments = header[8];
+    summary.branches = header[9];
+    summary.calls = header[10];
+    summary.inline_temp_definitions = header[11];
+    if (summary.formal_count) {
+        summary.formals = calloc(summary.formal_count, sizeof(InlineFormalSummary));
+        if (!summary.formals) return 0;
+    }
+
+    for (i = 0; i < summary.formal_count; i++) {
+        size_t type;
+        size_t dims;
+        size_t flags;
+
+        field = inline_meta_next_field(&cursor);
+        if (!field || !inline_meta_parse_size_field(field, &type)) goto fail;
+        field = inline_meta_next_field(&cursor);
+        if (!field || !inline_meta_parse_size_field(field, &dims)) goto fail;
+        field = inline_meta_next_field(&cursor);
+        if (!field || !inline_meta_parse_size_field(field, &flags)) goto fail;
+        if (type > TP_REFERENCE ||
+            !inline_meta_size_to_uint(flags, &summary.formals[i].flags)) goto fail;
+        if (summary.formals[i].flags & ~(RXCP_INLINE_FORMAL_BY_REF |
+                                         RXCP_INLINE_FORMAL_OPTIONAL |
+                                         RXCP_INLINE_FORMAL_HAS_DEFAULT |
+                                         RXCP_INLINE_FORMAL_VARG |
+                                         RXCP_INLINE_FORMAL_READ_ONLY |
+                                         RXCP_INLINE_FORMAL_WRITTEN |
+                                         RXCP_INLINE_FORMAL_ESCAPES |
+                                         RXCP_INLINE_FORMAL_EXACT_SHAPE |
+                                         RXCP_INLINE_FORMAL_READ)) goto fail;
+        summary.formals[i].type = (ValueType)type;
+        summary.formals[i].dims = dims;
+    }
+    if (cursor) goto fail;
+
+    meta->summary = summary;
+    meta->summary_present = 1;
+    return 1;
+
+fail:
+    free(summary.formals);
+    return 0;
 }
 
 static int inline_meta_ensure_symbol_slot(InlineMetaImport *meta, size_t id) {
@@ -2590,17 +2745,122 @@ static ASTNode *inline_meta_create_template_proc(Context *context,
     return template_proc;
 }
 
-static int inline_meta_finish_template(ASTNode *proc,
+static int inline_callable_summaries_equal(const InlineCallableSummary *left,
+                                           const InlineCallableSummary *right) {
+    size_t i;
+
+    if (!left || !right ||
+        left->schema_version != right->schema_version ||
+        left->formal_count != right->formal_count ||
+        left->result_type != right->result_type ||
+        left->result_dims != right->result_dims ||
+        left->result_flags != right->result_flags ||
+        left->control_flags != right->control_flags ||
+        left->context_flags != right->context_flags ||
+        left->structural_nodes != right->structural_nodes ||
+        left->assignments != right->assignments ||
+        left->branches != right->branches ||
+        left->calls != right->calls ||
+        left->inline_temp_definitions != right->inline_temp_definitions) return 0;
+    if (left->formal_count && (!left->formals || !right->formals)) return 0;
+    for (i = 0; i < left->formal_count; i++) {
+        if (left->formals[i].type != right->formals[i].type ||
+            left->formals[i].dims != right->formals[i].dims ||
+            left->formals[i].flags != right->formals[i].flags) return 0;
+    }
+    return 1;
+}
+
+static int inline_meta_finish_template(Context *context,
+                                       ASTNode *proc,
                                        ASTNode *template_proc,
                                        ASTNode *args_root,
-                                       ASTNode *body_root) {
-    if (!proc || !template_proc || !proc->symbolNode || !proc->symbolNode->symbol || !body_root) return 0;
+                                       ASTNode *body_root,
+                                       const InlineCallableSummary *imported_summary) {
+    InlineEligibility eligibility;
+    ASTNode *declared_return;
+    Symbol *symbol;
+    ValueType declared_result_type;
+    size_t declared_result_dims;
+    int *declared_dim_base;
+    int *declared_dim_elements;
+    char *declared_class;
+
+    if (!context || !proc || !template_proc || !proc->symbolNode ||
+        !proc->symbolNode->symbol || !body_root || !imported_summary) return 0;
 
     if (args_root) add_ast(template_proc, args_root);
     add_ast(template_proc, body_root);
 
-    proc->symbolNode->symbol->is_inlinable = 1;
-    proc->symbolNode->symbol->ast_template = template_proc;
+    symbol = proc->symbolNode->symbol;
+    /* The imported symbol is not type-resolved yet when metadata is attached,
+     * but its independently parsed declaration already contains the return
+     * type node. Use that source rather than allowing the summary to validate
+     * its own result type and shape. */
+    declared_return = ast_type_child(proc);
+    if (!declared_return) return 0;
+    declared_result_dims = 0;
+    declared_dim_base = NULL;
+    declared_dim_elements = NULL;
+    declared_class = NULL;
+    declared_result_type = node_to_type(context,
+                                        declared_return,
+                                        &declared_result_dims,
+                                        &declared_dim_base,
+                                        &declared_dim_elements,
+                                        &declared_class);
+    if (declared_dim_base) free(declared_dim_base);
+    if (declared_dim_elements) free(declared_dim_elements);
+    if (declared_class) free(declared_class);
+    if (declared_result_type == TP_UNKNOWN) return 0;
+    template_proc->value_type = declared_result_type;
+    template_proc->value_dims = declared_result_dims;
+    if (inline_analyse_callable_eligibility(context,
+                                            template_proc,
+                                            symbol,
+                                            1,
+                                            1,
+                                            &eligibility) != INLINE_ELIGIBILITY_OK ||
+        !inline_build_callable_summary(template_proc, symbol, &eligibility)) {
+        inline_debug_log(context, template_proc, symbol, "DEBUG_INLINE",
+                         "reject imported body: callable summary reconstruction failed");
+        sym_clear_inline_summary(symbol);
+        symbol->is_inlinable = 0;
+        symbol->ast_template = NULL;
+        return 0;
+    }
+    if (!inline_callable_summaries_equal(symbol->inline_summary, imported_summary)) {
+        const InlineCallableSummary *computed;
+
+        computed = symbol->inline_summary;
+        inline_debug_log(context, template_proc, symbol, "DEBUG_INLINE",
+                         "reject imported body: callable summary mismatch imported=%zu/%d/%zu/%u/%zu/%zu/%zu/%zu/%zu computed=%zu/%d/%zu/%u/%zu/%zu/%zu/%zu/%zu",
+                         imported_summary->formal_count,
+                         (int)imported_summary->result_type,
+                         imported_summary->result_dims,
+                         imported_summary->result_flags,
+                         imported_summary->structural_nodes,
+                         imported_summary->assignments,
+                         imported_summary->branches,
+                         imported_summary->calls,
+                         imported_summary->inline_temp_definitions,
+                         computed ? computed->formal_count : 0,
+                         computed ? (int)computed->result_type : 0,
+                         computed ? computed->result_dims : 0,
+                         computed ? computed->result_flags : 0,
+                         computed ? computed->structural_nodes : 0,
+                         computed ? computed->assignments : 0,
+                         computed ? computed->branches : 0,
+                         computed ? computed->calls : 0,
+                         computed ? computed->inline_temp_definitions : 0);
+        sym_clear_inline_summary(symbol);
+        symbol->is_inlinable = 0;
+        symbol->ast_template = NULL;
+        return 0;
+    }
+
+    symbol->is_inlinable = 1;
+    symbol->ast_template = template_proc;
     return 1;
 }
 
@@ -2633,6 +2893,12 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     if (!context || !rxcp_inline_payload_is_supported(payload)) return 0;
     if (!proc || !proc->scope || !proc->symbolNode || !proc->symbolNode->symbol) return 0;
 
+    /* Reattachment is fail-closed: no rejected or older payload may leave a
+     * previously attached proof/template live on the callable. */
+    proc->symbolNode->symbol->is_inlinable = 0;
+    proc->symbolNode->symbol->ast_template = NULL;
+    sym_clear_inline_summary(proc->symbolNode->symbol);
+
     memset(&meta, 0, sizeof(meta));
     meta.ok = 1;
 
@@ -2650,7 +2916,14 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     else if (strcmp(record, "I3") == 0) meta.version = 3;
     else if (strcmp(record, "I4") == 0) meta.version = 4;
     else if (strcmp(record, "I5") == 0) meta.version = 5;
+    else if (strcmp(record, "I6") == 0) meta.version = 6;
     else {
+        free(copy);
+        return 0;
+    }
+    /* I4/I5 bodies remain recognizable metadata, but they predate the
+     * versioned proof summary. Keep the ordinary call path for them. */
+    if (meta.version < 6) {
         free(copy);
         return 0;
     }
@@ -2690,6 +2963,12 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
                 break;
             }
             meta.tree_section = 2;
+        } else if (record[0] == 'c' && record[1] == ',') {
+            if (meta.version < 6 || meta.stack_count || meta.tree_section ||
+                !inline_meta_import_callable_summary(&meta, record)) {
+                meta.ok = 0;
+                break;
+            }
         } else if (record[0] == 'q' && record[1] == ',') {
             if (meta.version < 2 || !inline_meta_import_scope(context, &meta, record)) {
                 meta.ok = 0;
@@ -2728,6 +3007,16 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
 
     if (meta.stack_count != 0 || !meta.root || meta.root->node_type != INSTRUCTIONS) meta.ok = 0;
     if (meta.version >= 3 && (!meta.args_root || meta.args_root->node_type != ARGS)) meta.ok = 0;
+    if (meta.version >= 6 && !meta.summary_present) meta.ok = 0;
+
+    if (meta.ok) {
+        meta.ok = inline_meta_finish_template(context,
+                                              proc,
+                                              template_proc,
+                                              meta.args_root,
+                                              meta.root,
+                                              &meta.summary);
+    }
 
     free(copy);
     if (meta.files) {
@@ -2750,13 +3039,9 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     free(meta.symbols);
     free(meta.scopes);
     free(meta.stack);
+    free(meta.summary.formals);
 
-    if (!meta.ok) return 0;
-
-    return inline_meta_finish_template(proc,
-                                       template_proc,
-                                       meta.version >= 3 ? meta.args_root : NULL,
-                                       meta.root);
+    return meta.ok;
 }
 
 int rxcp_inline_attach_imported_body(Context *context, const char *payload) {
@@ -2764,7 +3049,7 @@ int rxcp_inline_attach_imported_body(Context *context, const char *payload) {
 
     if (!context || !context->ast || !rxcp_inline_payload_is_supported(payload)) return 0;
 
-    proc = inline_meta_find_first_procedure(context->ast);
+    proc = inline_meta_find_first_explicit_procedure(context->ast);
     if (!proc) return 0;
 
     return inline_meta_attach_to_proc(context, proc, payload);

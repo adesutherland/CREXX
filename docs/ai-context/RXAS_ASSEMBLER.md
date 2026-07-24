@@ -85,15 +85,17 @@ remain in `META_FUNC`; inline-body templates are carried separately in
 `META_INLINE`, emitted in RXAS as:
 
 ```rxas
-.meta "fully.qualified.callable"=".inline" "I4;..."
+.meta "fully.qualified.callable"=".inline" "I6;c,1,..."
 ```
 
-The `I4` payload is the compiler-owned inline transport described in
+The `I6` payload is the compiler-owned inline transport described in
 `compiler/docs/inlining_design.md`. `rxas` stores it as `META_INLINE`, and
-`rxdas` must emit it back to the same logical `.meta ... ".inline" "I4;..."`
+`rxdas` must emit it back to the same logical `.meta ... ".inline" "I6;..."`
 spelling so source, RXAS, and binary import paths do not drift. Linked final
 images normally strip `META_INLINE`; library artifacts preserve it for
-downstream `rxc` optimisation.
+downstream `rxc` optimisation. The leading `c` record is a versioned callable
+proof summary; `rxc` reconstructs its facts from the transported body and
+requires exact agreement before enabling imported inlining.
 
 Source/debug metadata now has two separate identities:
 

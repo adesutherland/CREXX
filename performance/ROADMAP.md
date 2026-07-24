@@ -192,7 +192,7 @@ Source:
 | PERF2-00 | P0 | Close and archive the initial sweep | complete | Historical register retained; successor mappings recorded here. |
 | PERF2-01 | P0 | Clean same-session baseline and complete current attribution refresh | complete | Gate A accepted 2026-07-23; refreshed selection baseline frozen. No production change authorized. |
 | PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
-| PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | production in progress | H and slices 1-4 approved with QA and a commit after each; mandatory pause before slice 5. Slices 1 and 3 are favorable; slice 2 is byte-identical parity. |
+| PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | production paused | H slices 1-4 complete with independent commits/QA; mandatory pause before unauthorized slice 5. Slices 1 and 3 are favorable, slice 2 is byte-identical parity, and slice 4 is runtime-neutral I6 proof metadata with exact slice-3 Richards parity. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | queued | PERF2-01 + PERF2-03 cleanup ceiling; profile ranks BIFs. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | queued | PERF2-01 RXSEQ plus PERF2-03/04 machine ceilings. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
@@ -493,19 +493,29 @@ static ceiling so it cannot pre-empt the inlining-first policy.
 
 ## PERF2-03 — flow-aware inlining 2.0
 
-Status: **production in progress** — Adrian approved H and production slices
-1-4 with QA and an independent commit after each. Slice 1's receiver
+Status: **production paused after slice 4** — Adrian approved H and production
+slices 1-4 with QA and an independent commit after each. Slice 1's receiver
 transaction and slice 3's gated scalar/result cleanup are favorable; slice 2's
-gate infrastructure is byte-identical parity. Execution must pause before
-slice 5 reference/object work. See
+gate infrastructure is byte-identical parity. Slice 4 adds body-reconstructed
+I6 callable summaries and opens the proved imported read-only scalar binding
+case while retaining missing/old/contradictory evidence on the normal call
+path. Its Richards program image is exactly slice-3-identical and its timing
+verdict is neutral, so the accepted slice-3 gain remains cumulative without an
+additive slice-4 claim. Final slice-4 QA is 1,910/1,910. Execution is paused
+before unauthorized slice 5 reference/object work. See
 `PERF2-03-WORKLIST.md`.
 
 ### Current evidence
 
-Inlining already runs before typed flow analysis, so flow sees the expanded
-tree. It does not yet supply pre-inline summaries or a profitability decision,
-and its current facts do not fully model block-expression result equivalence,
-compiler-temporary ownership or inline formal/result coalescing.
+Inlining still runs before the whole-program typed flow pass, so that pass sees
+the expanded tree. Architecture H now supplies versioned local/imported
+pre-inline summaries and a detached per-candidate profitability/fallback gate.
+I6 readers reconstruct formal read/write/escape, result/context and cost facts
+from the transported body, compare the result with the independently parsed
+declaration, and fail closed on missing, old, malformed or contradictory
+evidence. Candidate-local cleanup can coalesce the currently proved scalar and
+result cases. Reference/object alias, ownership/last-use and broader
+block-expression equivalence remain the explicit slice-5 proof boundary.
 
 The retained NR-12/21 comparison found a small helper at 16 instructions after
 inlining versus 13 in the hand-equivalent lowering, with two extra copies, one

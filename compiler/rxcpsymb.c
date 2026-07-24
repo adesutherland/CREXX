@@ -582,6 +582,40 @@ void sym_copy_reference_type(Symbol *dest, const Symbol *src) {
                            src->reference_class);
 }
 
+void sym_clear_inline_summary(Symbol *symbol) {
+    if (!symbol || !symbol->inline_summary) return;
+    if (symbol->inline_summary->formals) free(symbol->inline_summary->formals);
+    free(symbol->inline_summary);
+    symbol->inline_summary = NULL;
+}
+
+int sym_copy_inline_summary(Symbol *dest, const InlineCallableSummary *summary) {
+    InlineCallableSummary *copy;
+
+    if (!dest) return 0;
+    sym_clear_inline_summary(dest);
+    if (!summary) return 1;
+    if (summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+        (summary->formal_count && !summary->formals)) return 0;
+
+    copy = malloc(sizeof(*copy));
+    if (!copy) return 0;
+    *copy = *summary;
+    copy->formals = NULL;
+    if (summary->formal_count) {
+        copy->formals = malloc(sizeof(InlineFormalSummary) * summary->formal_count);
+        if (!copy->formals) {
+            free(copy);
+            return 0;
+        }
+        memcpy(copy->formals,
+               summary->formals,
+               sizeof(InlineFormalSummary) * summary->formal_count);
+    }
+    dest->inline_summary = copy;
+    return 1;
+}
+
 
 /* Returns the type of a symbol as a text string in a malloced buffer */
 char* sym_2tp(Symbol *symbol) {
@@ -703,6 +737,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->has_reference_target = 0;
     symbol->flow_skip_default_initiation = 0;
     symbol->inline_value_alias = 0;
+    symbol->inline_summary = 0;
     symbol->is_inlinable = 0;
     symbol->ast_template = 0;
     symbol->creation_ordinal = -1;
@@ -1162,6 +1197,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
         sym_copy_reference_type(new_symbol, symbol);
         new_symbol->has_reference_target = symbol->has_reference_target;
+        (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
     } else {
         /* Merge status and type if the incoming symbol has more info */
         if (new_symbol->status == SYM_STATUS_UNRESOLVED) new_symbol->status = symbol->status;
@@ -1182,6 +1218,9 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
             }
         }
         if (symbol->has_reference_target) new_symbol->has_reference_target = 1;
+        if (!new_symbol->inline_summary && symbol->inline_summary) {
+            (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
+        }
     }
 
     /* Move all the node/symbol connectors */
@@ -1200,6 +1239,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
     if (symbol->dim_base) free(symbol->dim_base);
     if (symbol->dim_elements) free(symbol->dim_elements);
     sym_clear_reference_type(symbol);
+    sym_clear_inline_summary(symbol);
     free_dpa(symbol->ast_node_array);
     free(symbol);
 
@@ -1267,6 +1307,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->is_this = symbol->is_this;
     new_symbol->is_factory = symbol->is_factory;
     new_symbol->has_reference_target = symbol->has_reference_target;
+    (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
     new_symbol->is_inlinable = symbol->is_inlinable;
     new_symbol->ast_template = symbol->ast_template;
 
@@ -1310,6 +1351,7 @@ void free_sym(Symbol *symbol) {
     if (symbol->dim_base) free(symbol->dim_base);
     if (symbol->dim_elements) free(symbol->dim_elements);
     sym_clear_reference_type(symbol);
+    sym_clear_inline_summary(symbol);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
