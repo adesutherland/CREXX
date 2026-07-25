@@ -53,14 +53,14 @@ address path "rxas -h" output out error err
 
 ### CREXX Command Environment
 
-`CREXX` is not a shell. It is a cRexx-specific command environment with stable
-command names and cRexx-defined return-code behavior across supported operating
+`CREXX` is the default addressable command environment, but it is not a shell implementation. It is a cRexx specific command environment with stable
+command names and cRexx defined return-code behaviour across supported operating
 systems. It does not interpret shell punctuation such as `;`, `&&`, `||`, or
 pipes. Use multiple `ADDRESS` statements, or send newline-separated commands to
 `ADDRESS CREXX "batch"`. Blank batch lines and lines whose first non-blank
 characters are `--` are skipped; batch stops at the first non-zero return code.
 
-`cd`, `pushd`, and `popd` change the cRexx process working directory and
+`cd`, `pushd`, and `popd` *change the cRexx process working directory* and
 therefore persist for later `ADDRESS CREXX`, `ADDRESS PATH`, `ADDRESS SYSTEM`,
 file IO, and relative-path operations in the same process. In contrast,
 `ADDRESS SYSTEM "cd path"` runs inside the child command processor and does not
