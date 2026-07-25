@@ -4,6 +4,8 @@ Date: 2026-07-24
 
 Starting commit: `8b050ff70fc9`
 
+Accepted production commit: `d1c5245d49c0bd9cc48a7d33ef16f2f4555cc986`
+
 ## Scope
 
 - Shared a method receiver with the caller's object register only when I6/body
@@ -93,8 +95,9 @@ images. Every recorded pair favored slice 5.
 | `rxvm` | 182.367 ms | 86.044 ms | 52.818% | 2.119x | 0.203% / 1.089% |
 | `rxbvm` | 201.974 ms | 94.499 ms | 53.212% | 2.137x | 0.106% / 0.097% |
 
-Verdict: **decisively favorable**. Adrian accepted the verdict on 2026-07-24
-and authorized broad closeout. Slice 5 is eligible for its independent commit.
+Verdict: **decisively favorable**. Adrian accepted the verdict on 2026-07-24,
+authorized broad closeout and accepted the independent production commit
+`d1c5245d4` after the complete Debug build and 1,915/1,915 CTest result.
 
 Raw artifact, sample, output and capture data are retained beside this report
 as `slice-5-*` files.

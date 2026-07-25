@@ -1,6 +1,7 @@
 # PERF2-03 flow-aware inlining 2.0 architecture decision
 
-Status: **approved**; production slices 1-4 authorized, pause before slice 5
+Status: **complete**; Architecture H and all five approved production slices
+accepted, final production commit `d1c5245d4`
 
 Date: 2026-07-24
 
@@ -143,9 +144,9 @@ actuals and computed expressions are transformed only when their own alias,
 snapshot, lifetime and cleanup proofs exist. TRACE, calls, references and
 handwritten RXAS are never blanket exclusions.
 
-## Smallest proposed production slice
+## Initial production slice (historical selection)
 
-If Adrian approves implementation, take exactly one slice:
+The first authorized implementation slice was:
 
 > Add the `InlineExpansionPlan` detached transaction/fallback scaffold and use
 > it only for the already-proved P1 direct method-receiver equivalence. Do not
@@ -163,8 +164,21 @@ the ordinary profiling-off Release product, run the smallest decisive Richards
 comparison against retained valid evidence, report the first Release verdict
 to Adrian and stop. No broad closeout precedes that verdict.
 
-## Decision
+## Decision and final outcome
 
 Adrian approved H on 2026-07-24, then authorized production slices 1-4 with QA
-and an independent commit after every slice. Production execution must pause
-before slice 5 reference/object ownership work.
+and an independent commit after every slice. After the mandatory pause, Adrian
+separately authorized Slice 5, accepted its decisive ordinary Release verdict
+and approved broad closeout. The production ladder is complete:
+
+| Slice | Commit | Outcome |
+| --- | --- | --- |
+| 1 | `d51bdf30d` | favorable receiver transaction/fallback verdict |
+| 2 | `6687d64d5` | byte-identical profitability-gate parity verdict |
+| 3 | `6b97c2ffd` | favorable bounded cleanup verdict |
+| 4 | `26f4aeb6f` | runtime-neutral I6 proof/metadata verdict with prior gains retained |
+| 5 | `d1c5245d4` | decisive exact receiver/reference-accessor List verdict; Debug QA 1,915/1,915 |
+
+Future proof opportunities are retained under stable IDs in
+`PERF2-03-WORKLIST.md` and `ROADMAP.md`. They are successor routes, not open
+PERF2-03 deliverables.

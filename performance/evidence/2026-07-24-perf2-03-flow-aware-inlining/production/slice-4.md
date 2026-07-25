@@ -4,6 +4,8 @@ Date: 2026-07-24
 
 Starting commit: `6b97c2ffd2fb2d7077c7e5c6fb24138dafd9f895`
 
+Accepted production commit: `26f4aeb6fa314252c10a5bc3b1b831b62cf84add`
+
 ## Scope
 
 - Added an immutable schema-1 callable summary to local symbols and the
@@ -17,7 +19,7 @@ Starting commit: `6b97c2ffd2fb2d7077c7e5c6fb24138dafd9f895`
   binding safe, even if the older `is_const_arg` emitter hint is absent.
 - Kept missing, I4/I5, malformed or contradictory evidence on the ordinary
   call path. Reference/object alias and ownership cases remain closed for the
-  unauthorized slice 5.
+  then-unauthorized Slice 5.
 - Corrected two attachment paths found during code review: compiler-created
   implicit `main` wrappers are skipped, and generic class-factory registry
   declarations do not receive semantically different FACTORY payloads.
@@ -114,5 +116,6 @@ transient artifact capture and must not be added to the slice-3 improvement.
 - `compiler/rxcpsymb.c`:
   `55f1e4aa74a504f49dd97c1ad67c45d2134a1b7a27d9a776187420969910795c`
 
-Slice 4 is eligible for its independent commit. Execution pauses before slice
-5 as required.
+Slice 4 was committed independently as `26f4aeb6f`. Execution then paused
+before Slice 5 as required; Adrian later authorized, accepted and closed that
+separate slice at `d1c5245d4`.

@@ -19,6 +19,9 @@ Contents:
 - `sha256sums.txt`: bundle integrity manifest, excluding itself.
 
 The selected design and approved production ladder are in
-`performance/PERF2-03-ARCHITECTURE.md`. Approved production slices 1-5 are
-complete. Prototype patches remain inspection evidence; only separately
-approved and validated mechanisms may enter the production compiler.
+`performance/PERF2-03-ARCHITECTURE.md` and the live closeout is in
+`performance/PERF2-03-WORKLIST.md`. Approved production slices 1-5 are
+complete; Slice 5 is production commit `d1c5245d4`. Prototype patches remain
+inspection evidence; only separately approved and validated mechanisms may
+enter the production compiler. Future proof opportunities are routed in the
+worklist and roadmap and do not keep PERF2-03 open.

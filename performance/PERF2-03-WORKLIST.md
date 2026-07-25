@@ -1,14 +1,17 @@
 # PERF2-03 flow-aware inlining 2.0 worklist
 
-Status: production slice 5 complete; decisive Release verdict accepted and QA green
+Status: complete and closed; all five approved production slices accepted,
+committed and QA green
 
 Started: 2026-07-24
+Closed: 2026-07-25
 
 Purpose: resumable control plane for the inline-site census, semantic-fact
 inventory, architecture comparison and bounded P0-P4 prototype panel required
-before any production flow-aware inlining change. This worklist does not
-authorize a production compiler edit, public RXAS/RXBIN/ABI change, language
-change, staging, commit or push.
+before any production flow-aware inlining change. It began as a decision-only
+control plane; the production ladder was added and executed only under Adrian's
+later slice-by-slice approvals recorded below. No approval changed the public
+RXAS/RXBIN/ABI or language boundary.
 
 ## Decision gate and mandatory stops
 
@@ -290,7 +293,7 @@ the independent closeout commit.
 | 2 | conservative multi-metric candidate profitability/fallback gate | complete; byte-identical parity verdict; 1,907/1,907 QA; `6687d64d5` |
 | 3 | gated boundary-aware local scalar/formal/result/control cleanup | complete; favorable verdict; 1,907/1,907 QA; `6b97c2ffd` |
 | 4 | versioned local/imported callable summaries and binding parity | complete; runtime-neutral proof/metadata verdict; 1,910/1,910 QA; `26f4aeb6f` |
-| 5 | reference/object alias, lifetime and cleanup ownership | complete; decisive List verdict; 1,915/1,915 QA; this commit |
+| 5 | reference/object alias, lifetime and cleanup ownership | complete; decisive List verdict; 1,915/1,915 QA; `d1c5245d4` |
 
 Slice 4 retains the slice-3 Richards image exactly at 1,867 instructions, 62
 peak locals, 79,094 bytes and SHA-256 `6aad1ca91ddb53089fe0b5040f47e1267cabf6bf13c1cc8527b8940d77b50f9a`.
@@ -411,3 +414,28 @@ renumbering, and final full Debug CTest 1,915/1,915. Local, source-import and
 binary-import reference accessors run correctly on both VMs; unproved and
 side-effecting cases remain calls. Retained evidence is in
 `production/slice-5.md` and its adjacent `slice-5-*` files.
+
+### PERF2-03 closure and future proof points
+
+PERF2-03 is closed at production commit `d1c5245d4`. Its exit is satisfied by
+the accepted Architecture H fallback/profitability transaction, the five
+independently committed slices, the decisive profiling-off Release List result
+and final Debug QA 1,915/1,915. The immediate baseline guards prove that the
+earlier Richards gain and the other protected products were retained.
+
+The entries below preserve worthwhile future questions without treating them
+as unfinished PERF2-03 scope. At every site, missing proof rejects only the
+candidate transformation; the ordinary call/materialized path remains valid.
+
+| ID | Future point | Reopen gate | Successor route |
+| --- | --- | --- | --- |
+| PERF2-03-F01 | Remove residual link/copy/unlink scaffold or use direct attribute lowering for exact reference accessors | Current profile shows material cost after the accepted List win; exact semantic ceiling beats the existing inline transaction | PERF2-07 reference/value ownership; candidate-specific compiler work only if selected |
+| PERF2-03-F02 | Open broader reference/object alias, lifetime, escape and last-use cases | Complete per-site alias/lifetime/cleanup/unwind proof plus distinguishing CTests | PERF2-07 or a later compiler-analysis activity |
+| PERF2-03-F03 | Remove remaining formal, result, block-exit or compiler-temporary overhead | A current hot helper remains materially above its hand-equivalent instruction/register/image ceiling | Carry as a bounded companion in PERF2-04 or the selecting future activity |
+| PERF2-03-F04 | Transport dynamic vararg, generated association and assembler alias/effect facts | Exact locator/liveness/effect reconstruction and multi-site evidence | Later compiler-analysis work and, where semantic instructions are selected, PERF2-05 |
+| PERF2-03-F05 | Extend I6 with another trusted fact | Independent body/declaration reconstruction, exact summary comparison and a contradictory-evidence regression CTest | The activity consuming that new fact owns the proof and test |
+
+The paste-ready successor brief is `performance/PERF2-04-HANDOVER-PROMPT.md`.
+PERF2-04 begins with a current BIF census because the retained PERF2-01 profile
+predates the accepted inlining work; old rankings are orientation, not a frozen
+selection.

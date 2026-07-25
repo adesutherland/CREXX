@@ -4,6 +4,8 @@ Date: 2026-07-24
 
 Starting commit: `086138f1e93da8e84d45f4cd3ba9b6620f792a14`
 
+Accepted production commit: `d51bdf30d71e2a6a7c7c5e42a28a512a29f0d50e`
+
 ## Scope
 
 - Added `InlineExpansionPlan` as the per-site speculative ownership boundary.
@@ -42,7 +44,8 @@ rotated recorded runs per cell.
 
 Verdict: **favorable**. The exact-head production implementation exceeds the
 retained P1 ceiling while preserving the static/local result and all tested
-semantics. Slice 1 is eligible for its independent commit.
+semantics. Adrian accepted the verdict and Slice 1 was committed independently
+as `d51bdf30d`.
 
 ## Identities before commit
 

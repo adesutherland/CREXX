@@ -192,8 +192,8 @@ Source:
 | PERF2-00 | P0 | Close and archive the initial sweep | complete | Historical register retained; successor mappings recorded here. |
 | PERF2-01 | P0 | Clean same-session baseline and complete current attribution refresh | complete | Gate A accepted 2026-07-23; refreshed selection baseline frozen. No production change authorized. |
 | PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
-| PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | production paused | H slices 1-4 complete with independent commits/QA; mandatory pause before unauthorized slice 5. Slices 1 and 3 are favorable, slice 2 is byte-identical parity, and slice 4 is runtime-neutral I6 proof metadata with exact slice-3 Richards parity. |
-| PERF2-04 | P0 | Inlining-first core Level B BIF campaign | queued | PERF2-01 + PERF2-03 cleanup ceiling; profile ranks BIFs. |
+| PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
+| PERF2-04 | P0 | Inlining-first core Level B BIF campaign | queued | Ready: PERF2-03's cleaned-inline ceiling is accepted. Refresh the current BIF/profile ranking, then compare cleaned Level B, hand-equivalent, compiler/RXAS assist and native controls. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | queued | PERF2-01 RXSEQ plus PERF2-03/04 machine ceilings. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. |
@@ -493,7 +493,9 @@ static ceiling so it cannot pre-empt the inlining-first policy.
 
 ## PERF2-03 — flow-aware inlining 2.0
 
-Status: **production slice 5 complete** —
+Status: **complete** — closed 2026-07-25 after the accepted Slice 5 production
+commit `d1c5245d4` and documentation closeout.
+
 Adrian approved H and production slices 1-4 with QA and an independent commit
 after each, then authorized slice 5 on 2026-07-24. Slice 1's receiver
 transaction and slice 3's gated scalar/result cleanup are favorable; slice 2's
@@ -598,7 +600,33 @@ beyond static instruction reduction in the smallest decisive profiling-off
 Release verdict. Report that verdict and stop for Adrian's acceptance before a
 full-portfolio Release refresh.
 
+That exit is satisfied. Architecture H supplies the detached fallback and
+profitability decision, the accepted slices remove the proved receiver/formal/
+result overhead, and Slice 5 supplies the decisive end-to-end target result.
+The broad Debug closeout is green and the retained evidence is checksum-closed.
+No full-portfolio Release refresh is required to close PERF2-03; later portfolio
+campaigns apply the standing governance rules to the cumulative accepted
+product.
+
+### Successor proof ledger
+
+These are future evidence routes, not incomplete PERF2-03 deliverables. Each
+candidate site continues on the ordinary proven path until the named evidence
+exists; no construct family is permanently excluded.
+
+| ID | Future point | Evidence required to reopen | Route / disposition |
+| --- | --- | --- | --- |
+| PERF2-03-F01 | Residual scaffold around exact reference-attribute accessors, including the observed seven additional static general copies | A current profile must show that scaffold or image pressure is material after the accepted greater-than-52% List win, plus an exact direct-attribute semantic ceiling | Route reference/value ownership to PERF2-07; do not reopen solely to make the RXAS shorter. |
+| PERF2-03-F02 | Broader reference/object ownership, escape and last-use placement | Per-site alias, lifetime, cleanup, unwind and observation proof with positive and negative CTests | Route to PERF2-07 or a later compiler-analysis successor selected by evidence. |
+| PERF2-03-F03 | Remaining formal, block-result, inline-exit or temporary cleanup | A current hot candidate whose cleaned RXAS still loses materially to its hand-equivalent ceiling | Admit as a bounded companion to the selecting activity, especially PERF2-04; do not restart blanket inliner cleanup. |
+| PERF2-03-F04 | Dynamic vararg indexing, generated association transport and assembler alias/effect facts | Exact locator/liveness/effect reconstruction and a measured multi-site deficit | Route compiler facts to a later analysis slice and semantic instruction work to PERF2-05. |
+| PERF2-03-F05 | Future I6 summary fields or newly trusted body facts | Independent declaration/body reconstruction, exact producer/consumer comparison and a review-derived contradictory-evidence CTest | Standing requirement owned by the change that consumes the new fact. |
+
 ## PERF2-04 — inlining-first core Level B BIF campaign
+
+Status: **queued and unblocked** — PERF2-03 is complete. Start from the current
+product and the paste-ready `PERF2-04-HANDOVER-PROMPT.md`; older PERF2-01
+profiles are orientation evidence and must not replace a current BIF ranking.
 
 ### Objective
 

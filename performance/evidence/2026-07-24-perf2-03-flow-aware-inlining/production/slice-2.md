@@ -4,6 +4,8 @@ Date: 2026-07-24
 
 Starting commit: `d51bdf30d71e2a6a7c7c5e42a28a512a29f0d50e`
 
+Accepted production commit: `6687d64d57eb95b148bf64cfd3026e839b5b349f`
+
 ## Scope
 
 - Added candidate cost vectors for structural nodes, assignments/copy proxies,
@@ -37,6 +39,8 @@ The smallest decisive comparison is exact artifact identity with slice 1:
 With the same VMs, byte-identical program/library images make runtime timing
 identical by construction; a noisy timing rerun would add no evidence.
 Verdict: **accepted parity infrastructure**.
+
+Slice 2 was committed independently as `6687d64d5`.
 
 ## Identities before commit
 

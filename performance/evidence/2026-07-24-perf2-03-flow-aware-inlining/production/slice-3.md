@@ -2,7 +2,9 @@
 
 Date: 2026-07-24
 
-Starting commit: `6687d64d5`
+Starting commit: `6687d64d57eb95b148bf64cfd3026e839b5b349f`
+
+Accepted production commit: `6b97c2ffd2fb2d7077c7e5c6fb24138dafd9f895`
 
 ## Scope
 
@@ -70,8 +72,8 @@ capture.
 Against the retained slice 1 medians, slice 3 is 0.307% faster on `rxvm` and
 1.130% slower on `rxbvm`; the primary exact-P0 verdict remains strongly
 favorable on both VMs while improving the static product and peak locals.
-Verdict: **favorable gated cleanup**. Slice 3 is eligible for its independent
-commit.
+Verdict: **favorable gated cleanup**. Adrian accepted the verdict and Slice 3
+was committed independently as `6b97c2ffd`.
 
 ## Identities before commit
 
