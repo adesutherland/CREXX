@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "inline_test_nested_call_expr.main"="b" ".int" main() ""
    .srcstep 16 16 17 "inline_test_nested_call_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -35,18 +35,17 @@ l8dostart:
    .traceevent "V" 6 "R" "I" "r" 4 8 8 0 "val" ""
    iadd r5,r4,1
    .traceevent "O" 4 "R" "I" "r" 5 8 8 0 "" ""
-   icopy r6,r5
+   icopy r3,r5
    br l62bexprend
 l62bexprend:
-   icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 9 9 17 "inline_test_nested_call_expr.crexx" 13 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "val" ""
-   icopy r6,r3
+   icopy r5,r3
    br l58bexprend
 l58bexprend:
-   itos r6
-   say r6
+   itos r5
+   say r5
 l8doinc:
    .srcstep 4 4 17 "inline_test_nested_call_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

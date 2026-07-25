@@ -1360,7 +1360,18 @@ static walker_result emit_walker(walker_direction direction,
                     line = next_line;
                     first_operand = 0;
                 }
-                temp1 = mprintf("%s\n", line);
+                if (node->source_provenance == AST_SOURCE_SYNTHETIC &&
+                    node->node_string_length == 4 &&
+                    strncasecmp(node->node_string, "copy", 4) == 0 &&
+                    node->child && node->child->sibling &&
+                    !node->child->sibling->sibling &&
+                    node->child->register_num >= 0 &&
+                    node->child->register_type == node->child->sibling->register_type &&
+                    node->child->register_num == node->child->sibling->register_num) {
+                    temp1 = strdup("");
+                } else {
+                    temp1 = mprintf("%s\n", line);
+                }
                 free(line);
 
                 /* Finally, append it to the output */

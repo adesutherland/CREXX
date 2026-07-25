@@ -391,7 +391,7 @@ kind. Inline metadata extends that path rather than introducing a separate
 binary side channel. The RXAS source spelling is:
 
 ```rxas
-.meta "fully.qualified.callable"=".inline" "I4;..."
+.meta "fully.qualified.callable"=".inline" "I6;c,..."
 ```
 
 The payload is still the compact compiler-owned inline transport. `rxas` stores
@@ -477,18 +477,20 @@ the target use.
 A compact text form is used for the implementation slice. It is versioned and
 structured as a preorder tree walk with explicit file, source, scope, symbol,
 argument, and body records. It is not JSON and it is not raw source text. The
-active version is `I4`. The `I1`, `I2`, `I3`, and `META_FUNC.inliner` variants
+active version is `I6`. The `I1` through `I5` and `META_FUNC.inliner` variants
 were internal prototypes; none of the inline formats has been released, and the
-development team can rebuild all source artifacts. Backward compatibility with
-these prototype inline payloads is therefore not required.
+development team can rebuild all source artifacts. Older bodies remain
+recognizable metadata but cannot open inlining because they lack the current
+versioned proof summary.
 
-`I4` uses semicolon-separated records. Text fields are hex encoded so the
+`I6` uses semicolon-separated records. Text fields are hex encoded so the
 payload remains safe inside an RXAS quoted metadata string without carrying an
 escaping sub-language. Dimension lists use colon-separated integers, and `-`
 means absent or zero-dimensional.
 
 ```text
-I4
+I6
+;c,<summary-schema>,<formal-count>,<result-type>,<result-dims>,<result-flags>,<control-flags>,<context-flags>,<structural-nodes>,<assignments>,<branches>,<calls>,<inline-temp-definitions>[,<formal-type>,<formal-dims>,<formal-flags>...]
 ;f,<file-id>,<hex-source-file-name>
 ;u,<source-id>,<file-id|-1>,<line>,<active-start-column>,<active-end-column>,<SourceProvenance>,<hex-whole-source-line>
 ;q,<scope-id>,<parent-scope-id|-1>,<ScopeType>
@@ -502,7 +504,17 @@ I4
 ;<
 ```
 
-The important point is the `>` / `<` stream: it lets the importer reconstruct
+The `c` record is an immutable pre-inline proof surface. Formal flags cover
+by-reference, optional/default, vararg, body-proved read-only/write/escape and
+exact shape; result and context flags cover the currently proved return,
+source/TRACE and numeric-context obligations. The reader rebuilds the summary
+from the transported body and checks the result against the separately parsed
+callable declaration. Missing, old-version, malformed or mismatched evidence
+retains the normal call. A valid summary may open a narrowly proved case even
+when an older emitter hint is absent; the direct scalar-binding regression is
+the first such evidence-open gate.
+
+The important point of the `>` / `<` stream is that it lets the importer reconstruct
 the tree without depending on pointer addresses. Symbol records precede the
 tree records and give the importer enough `Symbol` data for the current clone
 and remap paths. The final register fields are used for class attributes in
@@ -598,7 +610,7 @@ Binary, RXAS, and source import paths all feed the same metadata reader for
 plain procedures. Binary and RXAS imports read `META_INLINE`; source imports run
 the same writer while scanning exposed dependency procedures and store the
 result in the import registry alongside the signature. `rxas` and `rxdas`
-round-trip the same `.meta ... ".inline" "I4;..."` spelling, and the binary
+round-trip the same `.meta ... ".inline" "I6;c,..."` spelling, and the binary
 cross-file test deliberately reassembles the RXDAS output before importing it
 so source/RXAS/binary drift is caught. Imported member-body templates are
 currently attached only for source contracts. Binary class contract metadata
@@ -634,7 +646,9 @@ Required contents as the cross-file subset grows:
 
 Initial implementation status:
 
-1. `rxc` writes `I4` payloads through first-class `META_INLINE` records.
+1. `rxc` writes `I6` payloads through first-class `META_INLINE` records. Its
+   callable summary is reconstructed and declaration-checked before a reader
+   may attach the imported template.
    `META_FUNC` remains the callable signature and procedure-reference record.
 2. The writer emits `f` and `u` source-anchor sections plus a per-node
    `source-id` field. The reader restores `file_name`, line, active column
@@ -698,6 +712,12 @@ Import behaviour:
 5. If the payload is missing, stripped, malformed, too new, or semantically
    incomplete, the compiler fails closed and treats the import as signature
    only.
+6. A synthetic imported declaration may contain a compiler-created implicit
+   `main` before its explicit callable. Payload attachment deliberately skips
+   that wrapper and selects the explicit procedure. Class-factory payloads are
+   held until the synthesized contract supplies the real `FACTORY` node,
+   because the generic registry procedure returns the object reference while
+   the factory body itself has initializer/void-return semantics.
 
 Linker/strip behaviour:
 
@@ -762,7 +782,7 @@ The implementation now covers:
 - factory object initialization for inlined class factories
 - conservative emission-time pruning of private local plain procedures once no surviving local call node still targets them
 - source, RXAS, and binary imported plain procedures when the imported module
-  carries compatible `I4` inline metadata
+  carries compatible, body-validated `I6` inline metadata
 - cross-file transport of non-aliasing raw `ASSEMBLER` statements, so helpers
   built on instructions such as `strlen` can export and inline
 - cross-file transport and inlining of by-value vararg plain procedures when

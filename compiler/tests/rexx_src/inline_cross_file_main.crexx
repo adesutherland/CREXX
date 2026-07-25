@@ -3,6 +3,8 @@ import inline_cross_file_dep
 
 main: procedure
   say inc(41)
+  shared = safeLength("abcdef")
+  say inc(shared)
   say classify(-1)
   say classify(0)
   say classify(1)

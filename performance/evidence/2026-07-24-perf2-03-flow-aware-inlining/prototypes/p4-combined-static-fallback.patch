@@ -1,0 +1,250 @@
+diff --git a/compiler/rxcp_emit_reg.c b/compiler/rxcp_emit_reg.c
+index 8d055f0c1..94b474002 100644
+--- a/compiler/rxcp_emit_reg.c
++++ b/compiler/rxcp_emit_reg.c
+@@ -376,6 +376,34 @@ static int node_is_block_expr_leave(ASTNode *node) {
+            parent->parent->node_type == BLOCK_EXPR;
+ }
+ 
++/* PERF2-03 P3 component: place a compiler-created inline BLOCK_EXPR result
++ * directly in a plain scalar assignment destination. */
++static int inline_block_expr_assignment_target_register(ASTNode *node,
++                                                        int *register_num,
++                                                        char *register_type) {
++    ASTNode *assign;
++    ASTNode *target;
++    Symbol *symbol;
++    NodeType association_type;
++
++    if (!node || node->node_type != BLOCK_EXPR || !node->parent ||
++        node->parent->node_type != ASSIGN || !node->association) return 0;
++    association_type = node->association->node_type;
++    if (association_type != PROCEDURE && association_type != METHOD &&
++        association_type != FACTORY) return 0;
++    assign = node->parent;
++    target = assign->child;
++    if (!target || target->sibling != node || target->node_type != VAR_TARGET ||
++        target->child || !target->symbolNode || !target->symbolNode->symbol) return 0;
++    if (node->value_dims || node->value_type == TP_OBJECT ||
++        node->value_type == TP_REFERENCE || node->value_type == TP_BINARY) return 0;
++    symbol = target->symbolNode->symbol;
++    if (symbol_is_class_attribute(symbol) || symbol->register_num < 0) return 0;
++    if (register_num) *register_num = symbol->register_num;
++    if (register_type) *register_type = symbol->register_type;
++    return 1;
++}
++
+ static int scope_assigns_named_registers(Scope *scope) {
+     ASTNode *owner;
+ 
+@@ -1502,8 +1530,12 @@ walker_result register_walker(walker_direction direction,
+                 break;
+ 
+             case BLOCK_EXPR:
+-                node->register_num = get_reg(node->scope);
+-                node->register_type = 'r';
++                if (!inline_block_expr_assignment_target_register(node,
++                                                                  &node->register_num,
++                                                                  &node->register_type)) {
++                    node->register_num = get_reg(node->scope);
++                    node->register_type = 'r';
++                }
+                 break;
+ 
+             case IF:
+diff --git a/compiler/rxcp_inline_bind.c b/compiler/rxcp_inline_bind.c
+index 645db59c0..345d1c6d9 100644
+--- a/compiler/rxcp_inline_bind.c
++++ b/compiler/rxcp_inline_bind.c
+@@ -559,6 +559,24 @@ static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *pa
+     return inline_node_is_plain_object(formal_target) && !(param_arg && param_arg->is_const_arg);
+ }
+ 
++/* PERF2-03 P2 component: carry the existing read-only-formal proof across the
++ * inline boundary for direct caller-local numeric scalars. */
++static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
++                                                          ASTNode *formal_target,
++                                                          ASTNode *actual_arg,
++                                                          Symbol *captured_actual_symbol) {
++    int type;
++
++    if (!param_arg || !formal_target || !actual_arg || captured_actual_symbol) return 0;
++    if (param_arg->is_ref_arg || param_arg->is_opt_arg || !param_arg->is_const_arg) return 0;
++    if (inline_is_missing_actual(actual_arg) || !inline_is_direct_symbol_actual(actual_arg)) return 0;
++    if (inline_subtree_reads_class_attribute(actual_arg) || inline_node_has_array_shape(formal_target)) return 0;
++
++    type = formal_target->value_type;
++    return type == TP_BOOLEAN || type == TP_INTEGER ||
++           type == TP_FLOAT || type == TP_DECIMAL;
++}
++
+ static ASTNode *inline_materialize_capture_clone(Context *context,
+                                                  ASTNode *source_node,
+                                                  Scope *scope,
+@@ -708,29 +726,42 @@ static int inline_scoped_call_needs_actual_capture(ASTNode *proc_def, ASTNode *c
+     return 0;
+ }
+ 
++static Symbol *inline_find_instance_symbol(ASTNode *proc_def,
++                                           InlineCloneState *state);
++
+ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
+                                                               ASTNode *instr_list,
+                                                               Scope *caller_scope,
++                                                              Scope *inline_scope,
+                                                               ASTNode *proc_def,
+                                                               ASTNode *call_node,
+                                                               InlineCloneState *clone_state) {
+     ASTNode *receiver;
+     Symbol *temp_symbol;
++    Scope *capture_lhs_scope;
+     ASTNode *capture_assign;
+     ASTNode *capture_lhs;
+     ASTNode *capture_rhs;
+ 
+-    if (!context || !instr_list || !caller_scope || !proc_def || !call_node || !clone_state) return NULL;
++    if (!context || !instr_list || !caller_scope || !inline_scope ||
++        !proc_def || !call_node || !clone_state) return NULL;
+     if (proc_def->node_type != METHOD) return NULL;
+ 
+     receiver = inline_call_receiver(call_node);
+     if (!receiver) return NULL;
+ 
+-    temp_symbol = rxcp_remap_create_temp_symbol(context,
+-                                            caller_scope,
+-                                            receiver,
+-                                            "__inline_method_receiver",
+-                                            0);
++    capture_lhs_scope = caller_scope;
++    if (!clone_state->method_receiver_uses_locator_copyback &&
++        inline_is_direct_receiver_copyback_target(receiver)) {
++        temp_symbol = inline_find_instance_symbol(proc_def, clone_state);
++        capture_lhs_scope = inline_scope;
++    } else {
++        temp_symbol = rxcp_remap_create_temp_symbol(context,
++                                                caller_scope,
++                                                receiver,
++                                                "__inline_method_receiver",
++                                                0);
++    }
+     if (!temp_symbol) return NULL;
+ 
+     capture_assign = rxcp_remap_create_assignment_node(context, caller_scope, receiver, receiver);
+@@ -739,7 +770,7 @@ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
+     capture_assign->inherit_parent_scope = 1;
+ 
+     capture_lhs = rxcp_remap_create_symbol_node(context,
+-                                            caller_scope,
++                                            capture_lhs_scope,
+                                             receiver,
+                                             temp_symbol,
+                                             VAR_TARGET,
+@@ -805,6 +836,7 @@ static int inline_capture_scoped_call_actuals(Context *context,
+         *captured_receiver_out = inline_capture_method_receiver_for_scoped_args(context,
+                                                                                instr_list,
+                                                                                caller_scope,
++                                                                               inline_scope,
+                                                                                proc_def,
+                                                                                call_node,
+                                                                                clone_state);
+@@ -2097,6 +2129,24 @@ static int inline_bind_call_arguments_impl(Context *context,
+             continue;
+         }
+ 
++        if (inline_readonly_scalar_formal_can_share_actual(param_arg,
++                                                           formal_target,
++                                                           actual_arg,
++                                                           captured_actual_symbol)) {
++            if (!inline_register_ref_actual(context,
++                                            instr_list,
++                                            inline_scope,
++                                            formal_target,
++                                            actual_arg,
++                                            clone_state)) {
++                INLINE_BIND_RETURN(0);
++            }
++            param_arg = param_arg->sibling;
++            actual_arg = actual_arg->sibling;
++            actual_index++;
++            continue;
++        }
++
+         bind_assign = rxcp_remap_create_assignment_node(context, inline_scope, formal_target, formal_target);
+         if (!bind_assign) INLINE_BIND_RETURN(0);
+ 
+diff --git a/compiler/rxcp_inline_rewrite.c b/compiler/rxcp_inline_rewrite.c
+index 966fe2030..040960898 100644
+--- a/compiler/rxcp_inline_rewrite.c
++++ b/compiler/rxcp_inline_rewrite.c
+@@ -409,6 +409,41 @@ static int inline_count_return_nodes(ASTNode *node) {
+     return count;
+ }
+ 
++#define PERF2_P4_CLEANED_NODE_BUDGET 100u
++
++static size_t inline_candidate_node_count(ASTNode *node) {
++    ASTNode *child;
++    size_t count;
++
++    if (!node) return 0;
++    count = 1;
++    for (child = node->child; child; child = child->sibling) {
++        count += inline_candidate_node_count(child);
++    }
++    return count;
++}
++
++/* PERF2-03 P4 prototype.  P1/P2 perform clone-time cleanup and P3 performs
++ * final scalar result placement; this last detached-candidate gate preserves
++ * the original call whenever the remaining expanded tree exceeds the bounded
++ * static-size budget.  It deliberately does not claim profile profitability:
++ * the experiment tests fallback ownership and shows why dynamic frequency and
++ * a candidate-local flow overlay are still required. */
++static int inline_candidate_passes_p4_budget(Context *context,
++                                             ASTNode *candidate,
++                                             ASTNode *call_node,
++                                             Symbol *proc_sym) {
++    size_t nodes;
++
++    nodes = inline_candidate_node_count(candidate);
++    if (nodes <= PERF2_P4_CLEANED_NODE_BUDGET) return 1;
++    inline_debug_fail_closed(context,
++                             call_node,
++                             proc_sym,
++                             "P4 fallback retained original call after bounded candidate cost gate");
++    return 0;
++}
++
+ static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
+                                                               ASTNode *leave_node,
+                                                               ASTNode *block_expr,
+@@ -719,6 +754,14 @@ static ASTNode *inline_build_block_expr(Context *context,
+         }
+     }
+ 
++    if (!inline_candidate_passes_p4_budget(context,
++                                           block_expr,
++                                           call_node,
++                                           proc_sym)) {
++        inline_free_symbol_map(&clone_state);
++        return NULL;
++    }
++
+     inline_free_symbol_map(&clone_state);
+     return block_expr;
+ }
+@@ -928,6 +971,14 @@ static int ast_inline_statement(Context *context,
+         }
+     }
+ 
++    if (!inline_candidate_passes_p4_budget(context,
++                                           block,
++                                           call_node,
++                                           proc_sym)) {
++        inline_free_symbol_map(&clone_state);
++        return 0;
++    }
++
+     rxcp_remap_replace_node(statement_node, block);
+     inline_free_symbol_map(&clone_state);
+ 

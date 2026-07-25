@@ -6,7 +6,7 @@
 .meta "inline_test_object_const_arg_mutation.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=9
+main() .locals=8
    .meta "inline_test_object_const_arg_mutation.main"="b" ".int" main() ""
    .srcstep 18 18 17 "inline_test_object_const_arg_mutation.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -47,15 +47,14 @@ main() .locals=9
    .srcstep 14 14 17 "inline_test_object_const_arg_mutation.crexx" 7 7 10 "  say box.getName()"
    .srcstep 12 12 33 "inline_test_object_const_arg_mutation.crexx" 7 7 10 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 12 12 0 "box" ""
-   copy r7,r0
-   .traceevent "A" 6 "R" "O" "r" 7 12 12 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 0 12 12 0 "§this" ""
    .srcstep 13 13 17 "inline_test_object_const_arg_mutation.crexx" 30 5 16 "    return name"
-   linkattr1 r2,r7,1
+   linkattr1 r2,r0,1
    .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "name" ""
-   scopy r8,r2
+   scopy r7,r2
    unlinkbr r2,l121bexprend
 l121bexprend:
-   say r8
+   say r7
    .srcstep 16 16 17 "inline_test_object_const_arg_mutation.crexx" 8 3 56 "  say \"Object const-arg mutation inline test finished.\""
    say "Object const-arg mutation inline test finished."
    .srcstep 17 17 17 "inline_test_object_const_arg_mutation.crexx" 9 3 11 "  return 0"

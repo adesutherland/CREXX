@@ -138,6 +138,147 @@ typedef struct {
     Symbol *symbol;
 } InlineStructuralEligibilityService;
 
+static void inline_summary_body_symbol_usage(ASTNode *node,
+                                             Symbol *symbol,
+                                             int *read_out,
+                                             int *write_out) {
+    ASTNode *child;
+
+    if (!node || !symbol) return;
+    if (node->symbolNode && node->symbolNode->symbol == symbol) {
+        if (node->symbolNode->readUsage && read_out) *read_out = 1;
+        if (node->symbolNode->writeUsage && write_out) *write_out = 1;
+    }
+    child = node->child;
+    while (child) {
+        inline_summary_body_symbol_usage(child, symbol, read_out, write_out);
+        child = child->sibling;
+    }
+}
+
+static int inline_build_callable_summary(ASTNode *callable,
+                                         Symbol *symbol,
+                                         const InlineEligibility *eligibility) {
+    InlineCallableSummary summary;
+    InlineExpansionCost cost;
+    ASTNode *arg;
+    size_t formal_count;
+    size_t formal_index;
+
+    if (!callable || !symbol || !eligibility || !eligibility->args || !eligibility->instrs) return 0;
+
+    memset(&summary, 0, sizeof(summary));
+    summary.schema_version = RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA;
+    formal_count = inline_count_siblings(eligibility->args->child);
+    summary.formal_count = formal_count;
+    if (formal_count) {
+        summary.formals = calloc(formal_count, sizeof(InlineFormalSummary));
+        if (!summary.formals) return 0;
+    }
+
+    arg = eligibility->args->child;
+    formal_index = 0;
+    while (arg) {
+        ASTNode *formal_target;
+        Symbol *formal_symbol;
+        InlineFormalSummary *formal;
+        int read;
+        int write;
+
+        formal_target = inline_formal_target(arg);
+        formal_symbol = formal_target && formal_target->symbolNode ?
+                        formal_target->symbolNode->symbol : NULL;
+        if (!formal_target || formal_index >= formal_count) {
+            free(summary.formals);
+            return 0;
+        }
+
+        formal = &summary.formals[formal_index];
+        formal->type = formal_target->value_type;
+        formal->dims = formal_target->value_dims;
+        if (arg->is_ref_arg) formal->flags |= RXCP_INLINE_FORMAL_BY_REF;
+        if (arg->is_opt_arg) formal->flags |= RXCP_INLINE_FORMAL_OPTIONAL;
+        if (arg->is_opt_arg && inline_formal_default(arg)) {
+            formal->flags |= RXCP_INLINE_FORMAL_HAS_DEFAULT;
+        }
+        if (arg->is_varg) formal->flags |= RXCP_INLINE_FORMAL_VARG;
+        read = 0;
+        write = 0;
+        /* Derive use facts from this callable's validated body, not from the
+         * symbol's connector-array order. Imported declarations can retain
+         * definition connectors outside the reconstructed template; those
+         * are call-entry bindings, not body writes. */
+        inline_summary_body_symbol_usage(eligibility->instrs,
+                                         formal_symbol,
+                                         &read,
+                                         &write);
+        if (read) formal->flags |= RXCP_INLINE_FORMAL_READ;
+        if (write) formal->flags |= RXCP_INLINE_FORMAL_WRITTEN;
+        /* Derive the proof from validated symbol use, rather than copying the
+         * older emitter hint.  This lets a versioned summary open the binding
+         * only when the body independently proves that the by-value formal is
+         * not written. */
+        if (!arg->is_ref_arg && formal_symbol && !write) {
+            formal->flags |= RXCP_INLINE_FORMAL_READ_ONLY;
+        }
+        if (arg->is_ref_arg || !formal_symbol || formal_symbol->has_reference_target ||
+            formal_target->value_dims || formal_target->value_type == TP_OBJECT ||
+            formal_target->value_type == TP_REFERENCE || formal_target->value_type == TP_BINARY) {
+            formal->flags |= RXCP_INLINE_FORMAL_ESCAPES;
+        }
+        if (formal_target->value_type != TP_UNKNOWN &&
+            formal_target->value_type != TP_OBJECT &&
+            formal_target->value_type != TP_REFERENCE) {
+            formal->flags |= RXCP_INLINE_FORMAL_EXACT_SHAPE;
+        }
+
+        arg = arg->sibling;
+        formal_index++;
+    }
+
+    summary.result_type = callable->value_type;
+    summary.result_dims = callable->value_dims;
+    if (!eligibility->return_shape.final_is_return) {
+        summary.result_flags |= RXCP_INLINE_RESULT_FALLTHROUGH;
+    }
+    if (eligibility->return_shape.return_count > 1) {
+        summary.result_flags |= RXCP_INLINE_RESULT_MULTIPLE;
+    }
+    if (callable->value_dims) summary.result_flags |= RXCP_INLINE_RESULT_AGGREGATE;
+    else if (callable->value_type == TP_REFERENCE || callable->value_type == TP_OBJECT) {
+        summary.result_flags |= RXCP_INLINE_RESULT_REFERENCE;
+    } else if (callable->value_type != TP_UNKNOWN) {
+        summary.result_flags |= RXCP_INLINE_RESULT_EXACT_SCALAR;
+    }
+    summary.context_flags = RXCP_INLINE_CONTEXT_SOURCE_IDENTITY |
+                            RXCP_INLINE_CONTEXT_TRACE_IDENTITY |
+                            RXCP_INLINE_CONTEXT_NUMERIC;
+
+    if (inline_callable_is_method(callable)) {
+        summary.control_flags |= RXCP_INLINE_CONTROL_METHOD_RECEIVER;
+        if (eligibility->check.has_class_attribute_write) {
+            summary.control_flags |= RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE;
+        }
+    }
+
+    if (!inline_expansion_cost_collect(eligibility->instrs, &cost)) {
+        free(summary.formals);
+        return 0;
+    }
+    summary.structural_nodes = cost.structural_nodes;
+    summary.assignments = cost.assignments;
+    summary.branches = cost.branches;
+    summary.calls = cost.calls;
+    summary.inline_temp_definitions = cost.inline_temp_definitions;
+
+    if (!sym_copy_inline_summary(symbol, &summary)) {
+        free(summary.formals);
+        return 0;
+    }
+    free(summary.formals);
+    return 1;
+}
+
 static int inline_structural_eligibility_service(Context *context, void *payload) {
     InlineStructuralEligibilityService *service;
     InlineEligibility eligibility;
@@ -149,6 +290,7 @@ static int inline_structural_eligibility_service(Context *context, void *payload
 
     node = service->node;
     sym = service->symbol;
+    sym_clear_inline_summary(sym);
 
     if (inline_proc_has_procedure_expose(node)) {
         inline_debug_log(context, node, sym, "DEBUG_INLINE",
@@ -159,6 +301,13 @@ static int inline_structural_eligibility_service(Context *context, void *payload
 
     if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
         inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
+        sym->is_inlinable = 0;
+        return 0;
+    }
+
+    if (!inline_build_callable_summary(node, sym, &eligibility)) {
+        inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                         "reject: callable summary construction failed");
         sym->is_inlinable = 0;
         return 0;
     }
@@ -188,15 +337,19 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
 
         sym = node->symbolNode ? node->symbolNode->symbol : NULL;
         if (sym && sym->is_inlinable && inline_symbol_has_callable_template(sym) &&
-            inline_symbol_uses_imported_template(sym)) {
+            inline_symbol_uses_imported_template(sym) && sym->inline_summary &&
+            sym->inline_summary->schema_version == RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA) {
             return result_normal;
         }
 
         if (!sym || sym->is_main || !sym->scope ||
             (node->node_type == PROCEDURE && sym->scope->type == SCOPE_CLASS) ||
-            ((node->node_type == METHOD || node->node_type == FACTORY) &&
+            ((inline_callable_is_method(node) || node->node_type == FACTORY) &&
              (!node->parent || node->parent->node_type != CLASS_DEF))) {
-            if (sym) sym->is_inlinable = 0;
+            if (sym) {
+                sym->is_inlinable = 0;
+                sym_clear_inline_summary(sym);
+            }
             return result_normal;
         }
 
@@ -231,4 +384,3 @@ int rxcp_inline_pass(Context *context) {
 
     return payload.changed;
 }
-

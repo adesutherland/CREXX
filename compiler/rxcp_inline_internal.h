@@ -65,6 +65,7 @@ typedef struct {
     Symbol *method_receiver_source_symbol;
     Symbol *method_receiver_local_symbol;
     RxcpRemapCapturedLocator method_receiver_copyback_locator;
+    size_t cleanup_coalesced_bindings;
     int method_receiver_needs_copyback;
     int method_receiver_uses_locator_copyback;
 } InlineCloneState;
@@ -89,11 +90,54 @@ typedef struct {
     Symbol *return_sink_symbol;
 } InlineReturnPlan;
 
+typedef enum {
+    INLINE_EXPANSION_STATEMENT = 0,
+    INLINE_EXPANSION_ASSIGNMENT_EXPRESSION,
+    INLINE_EXPANSION_CALL_EXPRESSION,
+    INLINE_EXPANSION_VALUE_EXPRESSION,
+    INLINE_EXPANSION_EAGER_OPERATOR
+} InlineExpansionKind;
+
+typedef struct {
+    size_t structural_nodes;
+    size_t assignments;
+    size_t branches;
+    size_t calls;
+    size_t inline_temp_definitions;
+    int valid;
+} InlineExpansionCost;
+
+/*
+ * Per-site speculative ownership boundary.  The original call and replacement
+ * target remain attached to the caller while candidate_root is built and
+ * checked off-tree.  Only inline_expansion_plan_commit() may install it.
+ */
+typedef struct {
+    ASTNode *original_call;
+    ASTNode *replacement_target;
+    ASTNode *candidate_root;
+    Scope *parent_scope;
+    Symbol *callee_symbol;
+    InlineExpansionKind kind;
+    InlineExpansionCost original_call_cost;
+    InlineExpansionCost reference_candidate_cost;
+    InlineExpansionCost final_candidate_cost;
+    InlineExpansionCost cleanup_delta;
+    int profitability_required;
+    int committed;
+} InlineExpansionPlan;
+
 typedef struct {
     int return_count;
     int top_level_return_count;
     int final_is_return;
 } InlineReturnShape;
+
+typedef enum {
+    INLINE_REFERENCE_ACCESSOR_NONE = 0,
+    INLINE_REFERENCE_ACCESSOR_GETTER,
+    INLINE_REFERENCE_ACCESSOR_SETTER
+} InlineReferenceAccessorKind;
 
 typedef enum {
     INLINE_ELIGIBILITY_OK = 0,
@@ -118,6 +162,7 @@ typedef struct {
     ASTNode *instrs;
     InlineReturnShape return_shape;
     InlinableCheck check;
+    InlineReferenceAccessorKind reference_accessor_kind;
     InlineEligibilityReject reject;
 } InlineEligibility;
 

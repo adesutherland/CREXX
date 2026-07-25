@@ -1,0 +1,95 @@
+options levelb
+namespace inline_reference_member_accessors
+
+main: procedure = .int
+  first = .Node(1)
+  second = .Node(2)
+  second_reference = reference second
+
+  call first.setNext(second_reference)
+  next_reference = first.next()
+  if <refvalid>(next_reference) = 0 then return fail("direct getter reference invalid")
+  next_value = dereference next_reference
+  if next_value.value() <> 2 then return fail("direct getter wrong target")
+  call next_value.setValue(3)
+  if second.value() <> 3 then return fail("direct getter lost target identity")
+
+  first_reference = reference first
+  linked_first = dereference first_reference
+  linked_next_reference = linked_first.next()
+  linked_next_value = dereference linked_next_reference
+  if linked_next_value.value() <> 3 then return fail("linked receiver getter wrong target")
+
+  live_value = .int
+  live_value = 41
+  live_holder = .RefHolder(reference live_value)
+  live_reference = live_holder.get()
+  linked_live = dereference live_reference
+  linked_live = 42
+  if live_value <> 42 then return fail("reference getter lost scalar alias")
+
+  dead_holder = makeDeadHolder()
+  dead_reference = dead_holder.get()
+  if <refvalid>(dead_reference) then return fail("reference getter extended target lifetime")
+
+  observed_reference = first.observedNext()
+  if <refvalid>(observed_reference) = 0 then return fail("observed getter reference invalid")
+  if first.readCount() <> 1 then return fail("observed getter side effect lost")
+
+  say "PASS: Inline Reference Member Accessors"
+  return 0
+
+makeDeadHolder: procedure = .RefHolder
+  value = .int
+  value = 99
+  return .RefHolder(reference value)
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+Node: class
+  stored_value = .int
+  next_reference = reference .Node
+  read_count = .int
+
+  *: factory
+    arg value = .int
+    stored_value = value
+    read_count = 0
+    return
+
+  value: method = .int
+    return stored_value
+
+  setValue: method = .void
+    arg value = .int
+    stored_value = value
+    return
+
+  next: method = reference .Node
+    return next_reference
+
+  setNext: method = .void
+    arg value = reference .Node
+    next_reference = value
+    return
+
+  observedNext: method = reference .Node
+    read_count = read_count + 1
+    return next_reference
+
+  readCount: method = .int
+    return read_count
+
+RefHolder: class
+  value_reference = reference .int
+
+  *: factory
+    arg value = reference .int
+    value_reference = value
+    return
+
+  get: method = reference .int
+    return value_reference

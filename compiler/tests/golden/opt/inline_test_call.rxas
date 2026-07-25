@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "inline_test_call.main"="b" ".int" main() ""
    .srcstep 13 13 17 "inline_test_call.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -26,22 +26,21 @@ l8dostart:
    .srcstep 8 8 17 "inline_test_call.crexx" 6 5 22 "    call logDouble(i)"
    .srcstep 5 5 33 "inline_test_call.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r4,r0
-   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "val" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
    .srcstep 6 6 17 "inline_test_call.crexx" 13 3 36 "  say \"Double for\" val \"is\" val * 2"
-   itos r4
-   .traceevent "V" 6 "R" "S" "r" 4 6 6 0 "val" ""
-   sconcat r5,"Double for",r4
-   .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
-   sconcat r5,r5,"is"
-   .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 6 6 0 "val" ""
+   sconcat r4,"Double for",r0
+   .traceevent "O" 4 "R" "S" "r" 4 6 6 0 "" ""
+   sconcat r4,r4,"is"
+   .traceevent "O" 4 "R" "S" "r" 4 6 6 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "val" ""
-   imult r6,r0,2
-   itos r6
-   .traceevent "O" 4 "R" "S" "r" 6 6 6 0 "" ""
-   sconcat r6,r5,r6
-   .traceevent "O" 4 "R" "S" "r" 6 6 6 0 "" ""
-   say r6
+   imult r5,r0,2
+   itos r5
+   .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
+   sconcat r5,r4,r5
+   .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
+   say r5
    .srcstep 7 7 33 "inline_test_call.crexx" 14 3 9 "  return val * 2"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "val" ""
    imult r3,r0,2

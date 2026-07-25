@@ -5,7 +5,7 @@
 .meta "inline_test2.myclass"="b" ".unknown" .class
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "inline_test2.main"="b" ".int" main() ""
    .srcstep 31 31 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -99,8 +99,7 @@ l238bexprend:
    .srcstep 24 24 17 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
    .srcstep 22 22 33 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
    .traceevent "V" 6 "R" "O" "r" 0 22 22 0 "o" ""
-   copy r5,r0
-   .traceevent "A" 6 "R" "O" "r" 5 22 22 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 0 22 22 0 "§this" ""
    .srcstep 23 23 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
    load r3,40
    .traceevent "L" 4 "R" "I" "r" 3 25 25 0 "" ""

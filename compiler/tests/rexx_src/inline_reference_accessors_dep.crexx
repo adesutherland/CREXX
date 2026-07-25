@@ -1,0 +1,18 @@
+options levelb
+namespace inline_reference_accessors_dep expose holder
+
+holder: class
+  value_reference = reference .int
+
+  *: factory
+    arg value = reference .int
+    value_reference = value
+    return
+
+  referenceValue: method = reference .int
+    return value_reference
+
+  setReferenceValue: method = .void
+    arg value = reference .int
+    value_reference = value
+    return

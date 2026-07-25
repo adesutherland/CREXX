@@ -11,7 +11,7 @@
 .meta "inline_test_block_expr_live_sibling.holder.right"="b" ".string" .attr 4
 .globals=0
 
-main() .locals=13
+main() .locals=12
    .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() ""
    .srcstep 24 24 17 "inline_test_block_expr_live_sibling.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -63,55 +63,54 @@ main() .locals=13
    .srcstep 21 21 17 "inline_test_block_expr_live_sibling.crexx" 5 7 13 "  say holder.summary()"
    .srcstep 13 13 33 "inline_test_block_expr_live_sibling.crexx" 5 7 13 "  say holder.summary()"
    .traceevent "V" 6 "R" "O" "r" 0 13 13 0 "holder" ""
-   copy r6,r0
-   .traceevent "A" 6 "R" "O" "r" 6 13 13 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 0 13 13 0 "§this" ""
    .srcstep 20 20 17 "inline_test_block_expr_live_sibling.crexx" 23 5 73 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    .srcstep 19 19 17 "inline_test_block_expr_live_sibling.crexx" 23 12 16 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    .srcstep 14 14 33 "inline_test_block_expr_live_sibling.crexx" 23 32 34 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   linkattr1 r4,r6,3
+   linkattr1 r4,r0,3
    .traceevent "V" 6 "R" "S" "r" 4 14 14 0 "name" ""
-   concat r8,r4,"|"
+   concat r7,r4,"|"
    unlink r4
-   .traceevent "O" 4 "R" "S" "r" 8 14 14 0 "" ""
-   linkattr1 r9,r6,2
-   .traceevent "V" 6 "R" "S" "r" 9 14 14 0 "left" ""
-   concat r8,r8,r9
-   unlink r9
-   .traceevent "O" 4 "R" "S" "r" 8 14 14 0 "" ""
-   concat r7,r8,"|"
    .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 7 14 14 0 "__inline_lhs_64_69" ""
+   linkattr1 r8,r0,2
+   .traceevent "V" 6 "R" "S" "r" 8 14 14 0 "left" ""
+   concat r7,r7,r8
+   unlink r8
+   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
+   concat r6,r7,"|"
+   .traceevent "O" 4 "R" "S" "r" 6 14 14 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 14 14 0 "__inline_lhs_64_69" ""
    .srcstep 18 18 33 "inline_test_block_expr_live_sibling.crexx" 23 39 41 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   .traceevent "V" 6 "R" "S" "r" 7 22 22 0 "__inline_lhs_64_69" ""
+   .traceevent "V" 6 "R" "S" "r" 6 22 22 0 "__inline_lhs_64_69" ""
    .srcstep 17 17 17 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    .srcstep 15 15 33 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   linkattr1 r9,r6,1
-   .traceevent "V" 6 "R" "O" "r" 9 15 15 0 "child" ""
-   copy r10,r9
-   .traceevent "A" 6 "R" "O" "r" 10 15 15 0 "§this" ""
-   unlink r9
+   linkattr1 r8,r0,1
+   .traceevent "V" 6 "R" "O" "r" 8 15 15 0 "child" ""
+   copy r9,r8
+   .traceevent "A" 6 "R" "O" "r" 9 15 15 0 "§this" ""
+   unlink r8
    .srcstep 16 16 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
-   linkattr1 r9,r10,1
-   .traceevent "V" 6 "R" "S" "r" 9 22 22 0 "name" ""
-   scopy r8,r9
-   unlinkbr r9,l232bexprend
+   linkattr1 r8,r9,1
+   .traceevent "V" 6 "R" "S" "r" 8 22 22 0 "name" ""
+   scopy r7,r8
+   unlinkbr r8,l232bexprend
 l232bexprend:
-   concat r8,r7,r8
-   .traceevent "O" 4 "R" "S" "r" 8 22 22 0 "" ""
-   scopy r4,r8
+   concat r7,r6,r7
+   .traceevent "O" 4 "R" "S" "r" 7 22 22 0 "" ""
+   scopy r4,r7
    br l207bexprend
 l207bexprend:
    concat r4,r4,"|"
    .traceevent "O" 4 "R" "S" "r" 4 22 22 0 "" ""
-   linkattr1 r11,r6,4
-   .traceevent "V" 6 "R" "S" "r" 11 22 22 0 "right" ""
-   concat r4,r4,r11
-   unlink r11
+   linkattr1 r10,r0,4
+   .traceevent "V" 6 "R" "S" "r" 10 22 22 0 "right" ""
+   concat r4,r4,r10
+   unlink r10
    .traceevent "O" 4 "R" "S" "r" 4 22 22 0 "" ""
-   scopy r12,r4
+   scopy r11,r4
    br l199bexprend
 l199bexprend:
-   say r12
+   say r11
    .srcstep 23 23 17 "inline_test_block_expr_live_sibling.crexx" 6 3 11 "  return 0"
    ret 0
    .meta "inline_test_block_expr_live_sibling.main.holder"

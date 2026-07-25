@@ -302,7 +302,7 @@ static int inline_callable_writes_class_attribute(Symbol *start,
 static int inline_method_writes_class_attribute(ASTNode *proc_def) {
     Symbol *proc_symbol;
 
-    if (!proc_def || proc_def->node_type != METHOD) return 0;
+    if (!proc_def || !inline_callable_is_method(proc_def)) return 0;
 
     proc_symbol = inline_symbol_from_proc_def(proc_def);
     if (!proc_symbol) return 0;
@@ -407,6 +407,328 @@ static int inline_count_return_nodes(ASTNode *node) {
     }
 
     return count;
+}
+
+static int inline_cost_is_branch(NodeType node_type) {
+    switch (node_type) {
+        case IF:
+        case DO:
+        case REPEAT:
+        case SELECT:
+        case SWITCH:
+        case WHEN:
+        case OPT_DISPATCH:
+        case SIGNAL_BLOCK:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int inline_cost_is_call(NodeType node_type) {
+    switch (node_type) {
+        case FUNCTION:
+        case MEMBER_CALL:
+        case FACTORY_CALL:
+        case INTRINSIC:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void inline_expansion_cost_walk(ASTNode *node, InlineExpansionCost *cost) {
+    ASTNode *child;
+
+    if (!node || !cost) return;
+
+    cost->structural_nodes++;
+    if (node->node_type == ASSIGN || node->node_type == DEFINE) cost->assignments++;
+    if (inline_cost_is_branch(node->node_type)) cost->branches++;
+    if (inline_cost_is_call(node->node_type)) cost->calls++;
+    if (node->node_type == VAR_TARGET && node->symbolNode &&
+        node->symbolNode->symbol && node->symbolNode->symbol->name &&
+        strncmp(node->symbolNode->symbol->name, "__inline_", 9) == 0) {
+        cost->inline_temp_definitions++;
+    }
+
+    if (node->node_type == PROCEDURE || node->node_type == METHOD ||
+        node->node_type == FACTORY || node->node_type == MATCH) {
+        return;
+    }
+    for (child = node->child; child; child = child->sibling) {
+        inline_expansion_cost_walk(child, cost);
+    }
+}
+
+static int inline_expansion_cost_collect(ASTNode *root, InlineExpansionCost *cost) {
+    if (!root || !cost) return 0;
+
+    memset(cost, 0, sizeof(*cost));
+    inline_expansion_cost_walk(root, cost);
+    cost->valid = cost->structural_nodes > 0;
+    return cost->valid;
+}
+
+static int inline_expansion_cost_is_strict_improvement(const InlineExpansionCost *reference,
+                                                       const InlineExpansionCost *candidate) {
+    int strict;
+
+    if (!reference || !candidate || !reference->valid || !candidate->valid) return 0;
+    if (candidate->inline_temp_definitions > reference->inline_temp_definitions ||
+        candidate->calls > reference->calls ||
+        candidate->branches > reference->branches ||
+        candidate->assignments > reference->assignments ||
+        candidate->structural_nodes > reference->structural_nodes) {
+        return 0;
+    }
+
+    strict = candidate->inline_temp_definitions < reference->inline_temp_definitions ||
+             candidate->calls < reference->calls ||
+             candidate->branches < reference->branches ||
+             candidate->assignments < reference->assignments ||
+             candidate->structural_nodes < reference->structural_nodes;
+    return strict;
+}
+
+static void inline_expansion_plan_init(InlineExpansionPlan *plan,
+                                       ASTNode *original_call,
+                                       ASTNode *replacement_target,
+                                       Scope *parent_scope,
+                                       Symbol *callee_symbol,
+                                       InlineExpansionKind kind) {
+    if (!plan) return;
+
+    memset(plan, 0, sizeof(*plan));
+    plan->original_call = original_call;
+    plan->replacement_target = replacement_target;
+    plan->parent_scope = parent_scope;
+    plan->callee_symbol = callee_symbol;
+    plan->kind = kind;
+    (void)inline_expansion_cost_collect(original_call, &plan->original_call_cost);
+}
+
+static int inline_expansion_plan_record_reference(Context *context,
+                                                  InlineExpansionPlan *plan,
+                                                  ASTNode *candidate_root,
+                                                  int require_strict_improvement) {
+    if (!plan || !candidate_root || plan->committed ||
+        !inline_expansion_cost_collect(candidate_root, &plan->reference_candidate_cost)) {
+        inline_debug_fail_closed(context,
+                                 plan ? plan->original_call : NULL,
+                                 plan ? plan->callee_symbol : NULL,
+                                 "failed to record inline candidate profitability reference");
+        return 0;
+    }
+
+    plan->profitability_required = require_strict_improvement;
+    return 1;
+}
+
+static int inline_candidate_is_scalar_self_assignment(ASTNode *node) {
+    ASTNode *lhs;
+    ASTNode *rhs;
+    Symbol *symbol;
+
+    if (!node || node->node_type != ASSIGN || !node->is_compiler_added) return 0;
+    lhs = node->child;
+    rhs = lhs ? lhs->sibling : NULL;
+    if (!lhs || !rhs || rhs->sibling || lhs->node_type != VAR_TARGET ||
+        rhs->node_type != VAR_SYMBOL || !lhs->symbolNode || !rhs->symbolNode ||
+        !lhs->symbolNode->symbol || lhs->symbolNode->symbol != rhs->symbolNode->symbol) {
+        return 0;
+    }
+
+    symbol = lhs->symbolNode->symbol;
+    if (symbol->value_dims || symbol->type == TP_OBJECT || symbol->type == TP_REFERENCE ||
+        symbol->type == TP_BINARY || symbol->is_ref_arg || symbol->exposed ||
+        symbol->has_reference_target) {
+        return 0;
+    }
+    return lhs->target_type == rhs->value_type;
+}
+
+static size_t inline_candidate_cleanup_sequence(ASTNode *sequence,
+                                                ASTNode *boundary_root) {
+    ASTNode *node;
+    ASTNode *next;
+    size_t removed;
+
+    if (!sequence || sequence->node_type != INSTRUCTIONS) return 0;
+    removed = 0;
+    node = sequence->child;
+    while (node) {
+        ASTNode *child;
+
+        next = node->sibling;
+        if (node->node_type != PROCEDURE && node->node_type != METHOD &&
+            node->node_type != FACTORY && node->node_type != MATCH) {
+            for (child = node->child; child; child = child->sibling) {
+                if (child->node_type == INSTRUCTIONS) {
+                    removed += inline_candidate_cleanup_sequence(child, boundary_root);
+                }
+            }
+        }
+
+        if (inline_candidate_is_scalar_self_assignment(node)) {
+            ast_del(node);
+            removed++;
+            node = next;
+            continue;
+        }
+
+        if (node->node_type == LEAVE_WITH && node->association == boundary_root) {
+            ASTNode *dead;
+
+            dead = next;
+            while (dead) {
+                ASTNode *dead_next = dead->sibling;
+                ast_del(dead);
+                removed++;
+                dead = dead_next;
+            }
+            break;
+        }
+        node = next;
+    }
+    return removed;
+}
+
+static int inline_candidate_cleanup_fixed_point(Context *context,
+                                                InlineExpansionPlan *plan,
+                                                ASTNode *candidate_root,
+                                                InlineCloneState *clone_state) {
+    InlineExpansionCost initial_cost;
+    size_t bound;
+    size_t iteration;
+    size_t rewrites;
+
+    if (!plan || !candidate_root || !clone_state ||
+        !inline_expansion_plan_record_reference(context, plan, candidate_root, 0)) {
+        return 0;
+    }
+
+    initial_cost = plan->reference_candidate_cost;
+    if (clone_state->cleanup_coalesced_bindings) {
+        size_t count = clone_state->cleanup_coalesced_bindings;
+        /* The binding remains as a source/TRACE event, but same-register
+         * lowering makes its physical assignment free. Model only that
+         * emitted operation in the candidate-local profitability delta. */
+        plan->reference_candidate_cost.assignments += count;
+    }
+
+    bound = initial_cost.structural_nodes + 1;
+    rewrites = clone_state->cleanup_coalesced_bindings;
+    for (iteration = 0; iteration < bound; iteration++) {
+        ASTNode *sequence;
+        size_t changed;
+
+        sequence = candidate_root->node_type == BLOCK_EXPR ?
+                   candidate_root->child : candidate_root;
+        changed = inline_candidate_cleanup_sequence(sequence, candidate_root);
+        rewrites += changed;
+        if (!changed) break;
+    }
+    if (iteration == bound) {
+        inline_debug_fail_closed(context,
+                                 plan->original_call,
+                                 plan->callee_symbol,
+                                 "inline candidate cleanup did not converge within %zu iterations",
+                                 bound);
+        return 0;
+    }
+
+    if (rewrites) {
+        InlineExpansionCost cleaned_cost;
+
+        if (!inline_expansion_cost_collect(candidate_root, &cleaned_cost) ||
+            !inline_expansion_cost_is_strict_improvement(&plan->reference_candidate_cost,
+                                                         &cleaned_cost)) {
+            inline_debug_fail_closed(context,
+                                     plan->original_call,
+                                     plan->callee_symbol,
+                                     "candidate-local cleanup did not produce a strict multi-metric improvement");
+            return 0;
+        }
+        memset(&plan->cleanup_delta, 0, sizeof(plan->cleanup_delta));
+        plan->cleanup_delta.structural_nodes =
+            plan->reference_candidate_cost.structural_nodes - cleaned_cost.structural_nodes;
+        plan->cleanup_delta.assignments =
+            plan->reference_candidate_cost.assignments - cleaned_cost.assignments;
+        plan->cleanup_delta.branches =
+            plan->reference_candidate_cost.branches - cleaned_cost.branches;
+        plan->cleanup_delta.calls =
+            plan->reference_candidate_cost.calls - cleaned_cost.calls;
+        plan->cleanup_delta.inline_temp_definitions =
+            plan->reference_candidate_cost.inline_temp_definitions - cleaned_cost.inline_temp_definitions;
+        plan->cleanup_delta.valid = 1;
+        plan->profitability_required = 1;
+    }
+    return 1;
+}
+
+static int inline_expansion_plan_commit(Context *context,
+                                        InlineExpansionPlan *plan,
+                                        ASTNode *candidate_root) {
+    if (!plan || !plan->original_call || !plan->replacement_target ||
+        !candidate_root || plan->committed) {
+        inline_debug_fail_closed(context,
+                                 plan ? plan->original_call : NULL,
+                                 plan ? plan->callee_symbol : NULL,
+                                 "invalid inline expansion transaction commit");
+        return 0;
+    }
+
+    if (!plan->reference_candidate_cost.valid &&
+        !inline_expansion_plan_record_reference(context, plan, candidate_root, 0)) {
+        return 0;
+    }
+    if (!inline_expansion_cost_collect(candidate_root, &plan->final_candidate_cost)) {
+        inline_debug_fail_closed(context,
+                                 plan->original_call,
+                                 plan->callee_symbol,
+                                 "failed to cost final inline candidate");
+        return 0;
+    }
+    if (plan->profitability_required && plan->cleanup_delta.valid) {
+        plan->reference_candidate_cost = plan->final_candidate_cost;
+        plan->reference_candidate_cost.structural_nodes += plan->cleanup_delta.structural_nodes;
+        plan->reference_candidate_cost.assignments += plan->cleanup_delta.assignments;
+        plan->reference_candidate_cost.branches += plan->cleanup_delta.branches;
+        plan->reference_candidate_cost.calls += plan->cleanup_delta.calls;
+        plan->reference_candidate_cost.inline_temp_definitions +=
+            plan->cleanup_delta.inline_temp_definitions;
+        plan->reference_candidate_cost.valid = 1;
+    }
+    if (plan->profitability_required &&
+        !inline_expansion_cost_is_strict_improvement(&plan->reference_candidate_cost,
+                                                     &plan->final_candidate_cost)) {
+        inline_debug_fail_closed(context,
+                                 plan->original_call,
+                                 plan->callee_symbol,
+                                 "inline candidate is not a strict multi-metric improvement "
+                                 "(nodes %zu/%zu, assignments %zu/%zu, branches %zu/%zu, "
+                                 "calls %zu/%zu, inline temps %zu/%zu)",
+                                 plan->final_candidate_cost.structural_nodes,
+                                 plan->reference_candidate_cost.structural_nodes,
+                                 plan->final_candidate_cost.assignments,
+                                 plan->reference_candidate_cost.assignments,
+                                 plan->final_candidate_cost.branches,
+                                 plan->reference_candidate_cost.branches,
+                                 plan->final_candidate_cost.calls,
+                                 plan->reference_candidate_cost.calls,
+                                 plan->final_candidate_cost.inline_temp_definitions,
+                                 plan->reference_candidate_cost.inline_temp_definitions);
+        return 0;
+    }
+
+    if (plan->profitability_required && candidate_root->node_type == BLOCK_EXPR) {
+        candidate_root->is_inline_pruned = 1;
+    }
+    plan->candidate_root = candidate_root;
+    rxcp_remap_replace_node(plan->replacement_target, candidate_root);
+    plan->committed = 1;
+    return 1;
 }
 
 static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
@@ -609,7 +931,8 @@ static ASTNode *inline_build_block_expr(Context *context,
                                         ASTNode *call_node,
                                         Symbol *proc_sym,
                                         Scope *parent_scope,
-                                        int allow_dummy_return) {
+                                        int allow_dummy_return,
+                                        InlineExpansionPlan *expansion_plan) {
     ASTNode *proc_def;
     ASTNode *proc_instrs;
     ASTNode *block_expr;
@@ -719,6 +1042,13 @@ static ASTNode *inline_build_block_expr(Context *context,
         }
     }
 
+    if (!inline_candidate_cleanup_fixed_point(context,
+                                              expansion_plan,
+                                              block_expr,
+                                              &clone_state)) {
+        inline_free_symbol_map(&clone_state);
+        return NULL;
+    }
     inline_free_symbol_map(&clone_state);
     return block_expr;
 }
@@ -735,9 +1065,17 @@ static int ast_inline_statement(Context *context,
     ASTNode *proc_instr;
     Scope *inline_scope;
     InlineCloneState clone_state;
+    InlineExpansionPlan expansion_plan;
     int receiver_copyback_appended;
 
     if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               statement_node,
+                               statement_node->scope,
+                               proc_sym,
+                               INLINE_EXPANSION_STATEMENT);
 
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) {
@@ -928,7 +1266,17 @@ static int ast_inline_statement(Context *context,
         }
     }
 
-    rxcp_remap_replace_node(statement_node, block);
+    if (!inline_candidate_cleanup_fixed_point(context,
+                                              &expansion_plan,
+                                              block,
+                                              &clone_state)) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+    if (!inline_expansion_plan_commit(context, &expansion_plan, block)) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
     inline_free_symbol_map(&clone_state);
 
     return 1;
@@ -940,9 +1288,17 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
     ASTNode *proc_def;
     InlineReturnShape return_shape;
     InlineReturnPlan return_plan;
+    InlineExpansionPlan expansion_plan;
     int method_needs_receiver_copyback;
 
     if (!assign_node || !call_node) return 0;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               call_node,
+                               assign_node->scope,
+                               proc_sym,
+                               INLINE_EXPANSION_ASSIGNMENT_EXPRESSION);
 
     lhs = assign_node->child;
     if (!lhs || lhs->node_type != VAR_TARGET) {
@@ -959,7 +1315,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         return 0;
     }
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
-    if (proc_def->node_type == METHOD &&
+    if (inline_callable_is_method(proc_def) &&
         inline_symbol_uses_imported_template(proc_sym) &&
         !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
@@ -967,7 +1323,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         return 0;
     }
     if (method_needs_receiver_copyback &&
-        proc_def->node_type == METHOD &&
+        inline_callable_is_method(proc_def) &&
         !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method assignment inline requires a supported receiver copyback target");
@@ -985,10 +1341,14 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
                                      "mutating method assignment inline requires statement-position copyback");
             return 0;
         }
-        block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
+        block_expr = inline_build_block_expr(context,
+                                             call_node,
+                                             proc_sym,
+                                             assign_node->scope,
+                                             0,
+                                             &expansion_plan);
         if (!block_expr) return 0;
-        rxcp_remap_replace_node(call_node, block_expr);
-        return 1;
+        return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
     }
     if (return_shape.return_count != 1) {
         if (method_needs_receiver_copyback) {
@@ -996,10 +1356,14 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
                                      "mutating method multi-return assignment inline requires statement-position copyback");
             return 0;
         }
-        block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
+        block_expr = inline_build_block_expr(context,
+                                             call_node,
+                                             proc_sym,
+                                             assign_node->scope,
+                                             0,
+                                             &expansion_plan);
         if (!block_expr) return 0;
-        rxcp_remap_replace_node(call_node, block_expr);
-        return 1;
+        return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
     }
 
     return ast_inline_statement(context, assign_node, call_node, proc_sym, &return_plan);
@@ -1014,7 +1378,15 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
     ASTNode *sink_lhs;
     InlineReturnShape return_shape;
     InlineReturnPlan return_plan;
+    InlineExpansionPlan expansion_plan;
     int method_needs_receiver_copyback;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               call_stmt,
+                               call_stmt ? call_stmt->scope : NULL,
+                               proc_sym,
+                               INLINE_EXPANSION_CALL_EXPRESSION);
 
     proc_def = proc_sym ? proc_sym->ast_template : NULL;
     if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) {
@@ -1034,7 +1406,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
     }
 
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
-    if (proc_def->node_type == METHOD &&
+    if (inline_callable_is_method(proc_def) &&
         inline_symbol_uses_imported_template(proc_sym) &&
         !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
@@ -1042,7 +1414,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
         return 0;
     }
     if (method_needs_receiver_copyback &&
-        proc_def->node_type == METHOD &&
+        inline_callable_is_method(proc_def) &&
         !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method call inline requires a supported receiver copyback target");
@@ -1067,7 +1439,12 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
             return 0;
         }
 
-        block_expr = inline_build_block_expr(context, call_node, proc_sym, block_scope, 1);
+        block_expr = inline_build_block_expr(context,
+                                             call_node,
+                                             proc_sym,
+                                             block_scope,
+                                             1,
+                                             &expansion_plan);
         if (!block_expr) return 0;
 
         sink_assign = rxcp_remap_create_assignment_node(context,
@@ -1091,8 +1468,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
 
         rxcp_remap_append_assignment_node(block, sink_assign, sink_lhs, block_expr);
 
-        rxcp_remap_replace_node(call_stmt, block);
-        return 1;
+        return inline_expansion_plan_commit(context, &expansion_plan, block);
     }
 
     memset(&return_plan, 0, sizeof(return_plan));
@@ -1103,10 +1479,18 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
 
 int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym) {
     ASTNode *block_expr;
+    InlineExpansionPlan expansion_plan;
     InlineExprContext expr_context;
     InlineReturnShape return_shape;
 
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
+
+    inline_expansion_plan_init(&expansion_plan,
+                               call_node,
+                               call_node,
+                               call_node->scope,
+                               proc_sym,
+                               INLINE_EXPANSION_VALUE_EXPRESSION);
 
     expr_context = inline_classify_expr_context(call_node);
     if (expr_context == INLINE_EXPR_CONTEXT_NONE) {
@@ -1127,13 +1511,13 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
         return 0;
     }
     if (inline_method_writes_class_attribute(proc_sym->ast_template) &&
-        proc_sym->ast_template->node_type == METHOD &&
+        inline_callable_is_method(proc_sym->ast_template) &&
         !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method expression inline requires a direct receiver copyback target");
         return 0;
     }
-    if (proc_sym->ast_template->node_type == METHOD &&
+    if (inline_callable_is_method(proc_sym->ast_template) &&
         inline_symbol_uses_imported_template(proc_sym) &&
         !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
@@ -1145,12 +1529,15 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
         return 0;
     }
 
-    block_expr = inline_build_block_expr(context, call_node, proc_sym, call_node->scope, 0);
+    block_expr = inline_build_block_expr(context,
+                                         call_node,
+                                         proc_sym,
+                                         call_node->scope,
+                                         0,
+                                         &expansion_plan);
     if (!block_expr) return 0;
 
-    rxcp_remap_replace_node(call_node, block_expr);
-
-    return 1;
+    return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
 }
 
 int ast_inline_rhs_eager_operator(Context *context,
@@ -1171,6 +1558,7 @@ int ast_inline_rhs_eager_operator(Context *context,
     Scope *inline_scope;
     Symbol *left_symbol;
     InlineCloneState clone_state;
+    InlineExpansionPlan expansion_plan;
 
     if (!context || !op_node || !rhs_call) return 0;
     if (!inline_parent_is_eager_operator(op_node)) return 0;
@@ -1185,6 +1573,13 @@ int ast_inline_rhs_eager_operator(Context *context,
                                  "RHS eager-operator inline requires a parent scope");
         return 0;
     }
+
+    inline_expansion_plan_init(&expansion_plan,
+                               rhs_call,
+                               op_node,
+                               parent_scope,
+                               proc_sym,
+                               INLINE_EXPANSION_EAGER_OPERATOR);
 
     block_expr = rxcp_remap_create_block_expr(context,
                                               parent_scope,
@@ -1284,10 +1679,8 @@ int ast_inline_rhs_eager_operator(Context *context,
         return 0;
     }
 
-    rxcp_remap_replace_node(op_node, block_expr);
     inline_free_symbol_map(&clone_state);
-
-    return 1;
+    return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
 }
 
 static walker_result inlinable_check_walker(walker_direction direction, ASTNode *node, void *payload) {
@@ -1363,6 +1756,94 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
     return result_normal;
 }
 
+/* Reference values are weak alias descriptors.  The general reference AST
+ * surface still needs full lifetime/alias proof, but these two method bodies
+ * have no such ambiguity: the getter copies one receiver-owned descriptor to
+ * the return path, while the setter copies one required by-value descriptor
+ * into one receiver-owned attribute.  The existing inline transaction keeps
+ * receiver evaluation, formal capture, copyback and source/TRACE ordering.
+ */
+static InlineReferenceAccessorKind inline_exact_reference_accessor_kind(ASTNode *callable,
+                                                                        ASTNode *args,
+                                                                        ASTNode *instrs) {
+    ASTNode *first;
+
+    if (!callable || !args || !instrs || !inline_callable_is_method(callable)) {
+        return INLINE_REFERENCE_ACCESSOR_NONE;
+    }
+
+    first = instrs->child;
+    if (!first) return INLINE_REFERENCE_ACCESSOR_NONE;
+
+    if (!args->child && callable->value_type == TP_REFERENCE && callable->value_dims == 0) {
+        ASTNode *result;
+        Symbol *attribute;
+
+        if (first->node_type != RETURN || first->sibling) return INLINE_REFERENCE_ACCESSOR_NONE;
+        result = first->child;
+        if (!result || result->sibling || result->child ||
+            result->node_type != VAR_SYMBOL || result->value_type != TP_REFERENCE ||
+            result->value_dims != 0 || !result->symbolNode) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+        attribute = result->symbolNode->symbol;
+        if (!attribute || attribute->type != TP_REFERENCE || attribute->value_dims != 0 ||
+            !inline_symbol_is_class_attribute(attribute)) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+        return INLINE_REFERENCE_ACCESSOR_GETTER;
+    }
+
+    if (callable->value_type == TP_VOID && callable->value_dims == 0 &&
+        args->child && !args->child->sibling) {
+        ASTNode *arg;
+        ASTNode *formal_target;
+        ASTNode *assignment;
+        ASTNode *final_return;
+        ASTNode *lhs;
+        ASTNode *rhs;
+        Symbol *formal_symbol;
+        Symbol *attribute;
+
+        arg = args->child;
+        formal_target = inline_formal_target(arg);
+        if (arg->is_ref_arg || arg->is_opt_arg || arg->is_varg ||
+            !formal_target || formal_target->value_type != TP_REFERENCE ||
+            formal_target->value_dims != 0 || !formal_target->symbolNode) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+
+        assignment = first;
+        final_return = assignment->sibling;
+        if (assignment->node_type != ASSIGN || !final_return || final_return->sibling ||
+            final_return->node_type != RETURN || final_return->child) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+
+        lhs = assignment->child;
+        rhs = lhs ? lhs->sibling : NULL;
+        if (!lhs || !rhs || rhs->sibling || lhs->child || rhs->child ||
+            lhs->node_type != VAR_TARGET || rhs->node_type != VAR_SYMBOL ||
+            lhs->value_type != TP_REFERENCE || rhs->value_type != TP_REFERENCE ||
+            lhs->value_dims != 0 || rhs->value_dims != 0 ||
+            !lhs->symbolNode || !rhs->symbolNode) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+
+        formal_symbol = formal_target->symbolNode->symbol;
+        attribute = lhs->symbolNode->symbol;
+        if (!formal_symbol || !attribute || rhs->symbolNode->symbol != formal_symbol ||
+            formal_symbol->type != TP_REFERENCE || formal_symbol->value_dims != 0 ||
+            attribute->type != TP_REFERENCE || attribute->value_dims != 0 ||
+            !inline_symbol_is_class_attribute(attribute)) {
+            return INLINE_REFERENCE_ACCESSOR_NONE;
+        }
+        return INLINE_REFERENCE_ACCESSOR_SETTER;
+    }
+
+    return INLINE_REFERENCE_ACCESSOR_NONE;
+}
+
 static InlineEligibilityReject inline_analyse_callable_eligibility(Context *context,
                                                                    ASTNode *callable,
                                                                    Symbol *symbol,
@@ -1431,6 +1912,9 @@ static InlineEligibilityReject inline_analyse_callable_eligibility(Context *cont
     varg_arg = inline_find_varg_arg(callable);
     eligibility->check.ref_varg_mode = eligibility->args && varg_arg && varg_arg->is_ref_arg;
     ast_wlkr(callable, inlinable_check_walker, &eligibility->check);
+    eligibility->reference_accessor_kind = inline_exact_reference_accessor_kind(callable,
+                                                                                eligibility->args,
+                                                                                eligibility->instrs);
 
     if (eligibility->check.node_count > INLINE_MAX_NODES) {
         eligibility->reject = INLINE_ELIGIBILITY_NODE_CUTOFF;
@@ -1440,13 +1924,15 @@ static InlineEligibilityReject inline_analyse_callable_eligibility(Context *cont
         eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_ALIAS;
     } else if (eligibility->check.has_unsupported_assembler_effect) {
         eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_EFFECT;
-    } else if (eligibility->check.has_unsupported_reference) {
+    } else if (eligibility->check.has_unsupported_reference &&
+               eligibility->reference_accessor_kind == INLINE_REFERENCE_ACCESSOR_NONE) {
         eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE;
     } else if (eligibility->check.has_unsupported_varg_access) {
         eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS;
     } else if (reject_unportable_class_attribute_shape &&
-               (callable->node_type == METHOD || callable->node_type == FACTORY) &&
-               eligibility->check.has_unportable_class_attribute_shape) {
+               (inline_callable_is_method(callable) || callable->node_type == FACTORY) &&
+               eligibility->check.has_unportable_class_attribute_shape &&
+               eligibility->reference_accessor_kind == INLINE_REFERENCE_ACCESSOR_NONE) {
         eligibility->reject = INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE;
     }
 

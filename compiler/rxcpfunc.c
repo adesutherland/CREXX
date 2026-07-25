@@ -3465,7 +3465,15 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
         /* Fixup the node type */
         func->context->ast->child->node_type = IMPORTED_FILE;
 
-        if (func->implementation && rxcp_inline_payload_is_supported(func->implementation)) {
+        /* A class factory's generic registry declaration returns the object
+         * reference, while its serialized body is expressed in FACTORY
+         * semantics and returns void after initializing the receiver.  Attach
+         * that payload only when the synthesized class contract supplies the
+         * real FACTORY node; treating this PROCEDURE stub as equivalent would
+         * attach evidence to the wrong callable shape. */
+        if (func->implementation &&
+            rxcp_inline_payload_is_supported(func->implementation) &&
+            !parse_class_factory_fqname(func->fqname, 0, 0)) {
             rxcp_inline_attach_imported_body(func->context, func->implementation);
         }
     }

@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "inline_test1.main"="b" ".int" main() ""
    .srcstep 13 13 17 "inline_test1.crexx" 5 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -36,15 +36,15 @@ l8dostart:
    .meta "inline_test1.main.result"="b" ".int" r1
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "i" ""
-   sconcat r5,"Result of multiplyByTwo for",r0
-   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
-   sconcat r5,r5,"is"
-   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
+   sconcat r4,"Result of multiplyByTwo for",r0
+   .traceevent "O" 4 "R" "S" "r" 4 8 8 0 "" ""
+   sconcat r4,r4,"is"
+   .traceevent "O" 4 "R" "S" "r" 4 8 8 0 "" ""
    itos r1
    .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "result" ""
-   sconcat r5,r5,r1
-   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
-   say r5
+   sconcat r4,r4,r1
+   .traceevent "O" 4 "R" "S" "r" 4 8 8 0 "" ""
+   say r4
 l8doinc:
    .srcstep 4 4 17 "inline_test1.crexx" 7 6 7 "  do i = 1 to 5"
    inc r0

@@ -14,12 +14,21 @@ main: procedure = .int
   errors = errors + check(same(9), "nine")
   errors = errors + check(same(10), "ten")
 
+  value = 7
+  errors = errors + check(snapshotThenIncrement(value, value) = 88, "ref-overlap-call-parity")
+  errors = errors + check(value = 8, "ref-overlap-writeback")
+
   if errors = 0 then say "ok"
   return errors
 
 same: procedure = .boolean
   arg value = .int
   return value = value
+
+snapshotThenIncrement: procedure = .int
+  arg original_value = .int, expose target = .int
+  target = target + 1
+  return original_value * 10 + target
 
 check: procedure = .int
   arg passed = .boolean, label = .string

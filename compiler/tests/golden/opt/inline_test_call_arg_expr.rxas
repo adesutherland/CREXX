@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "inline_test_call_arg_expr.main"="b" ".int" main() ""
    .srcstep 19 19 17 "inline_test_call_arg_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -35,30 +35,29 @@ l8dostart:
    .traceevent "V" 6 "R" "I" "r" 4 8 8 0 "val" ""
    iadd r5,r4,1
    .traceevent "O" 4 "R" "I" "r" 5 8 8 0 "" ""
-   icopy r6,r5
+   icopy r3,r5
    br l68bexprend
 l68bexprend:
-   icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 10 10 17 "inline_test_call_arg_expr.crexx" 13 3 15 "  if val > 100 then return 100"
    .traceevent "V" 6 "R" "I" "r" 3 10 10 0 "val" ""
-   igt r6,r3,100
-   .traceevent "O" 4 "R" "B" "r" 6 10 10 0 "" ""
-   brf l77iffalse,r6
+   igt r5,r3,100
+   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+   brf l77iffalse,r5
    .srcstep 11 11 17 "inline_test_call_arg_expr.crexx" 13 16 20 "  if val > 100 then return 100"
    .srcstep 9 9 17 "inline_test_call_arg_expr.crexx" 13 21 31 "  if val > 100 then return 100"
-   load r5,100
-   .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""
-   icopy r6,r5
+   load r4,100
+   .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
+   icopy r5,r4
    br l64bexprend
 l77iffalse:
    .srcstep 12 12 17 "inline_test_call_arg_expr.crexx" 14 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 3 14 14 0 "val" ""
-   icopy r6,r3
+   icopy r5,r3
    br l64bexprend
 l64bexprend:
-   itos r6
-   say r6
+   itos r5
+   say r5
 l8doinc:
    .srcstep 4 4 17 "inline_test_call_arg_expr.crexx" 5 6 7 "  do i = 1 to 4"
    inc r0

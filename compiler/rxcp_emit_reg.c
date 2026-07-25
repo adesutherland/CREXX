@@ -376,6 +376,43 @@ static int node_is_block_expr_leave(ASTNode *node) {
            parent->parent->node_type == BLOCK_EXPR;
 }
 
+/*
+ * A candidate-local cleanup winner may place a scalar BLOCK_EXPR result in
+ * the assignment destination's owned local register.  The strict inline cost
+ * gate marks only candidates with a proved AST reduction; aggregates,
+ * references, objects, binary values, indexed/class targets and unpruned
+ * block expressions retain the established separate result register.
+ */
+static int inline_block_expr_assignment_target_register(ASTNode *node,
+                                                        int *register_num,
+                                                        char *register_type) {
+    ASTNode *assign;
+    ASTNode *target;
+    Symbol *symbol;
+    NodeType association_type;
+
+    if (!node || node->node_type != BLOCK_EXPR || !node->is_inline_pruned ||
+        !node->parent || node->parent->node_type != ASSIGN || !node->association) return 0;
+
+    association_type = node->association->node_type;
+    if (association_type != PROCEDURE && association_type != METHOD &&
+        association_type != FACTORY) return 0;
+
+    assign = node->parent;
+    target = assign->child;
+    if (!target || target->sibling != node || target->node_type != VAR_TARGET ||
+        target->child || !target->symbolNode || !target->symbolNode->symbol) return 0;
+    if (node->value_dims || node->value_type == TP_OBJECT ||
+        node->value_type == TP_REFERENCE || node->value_type == TP_BINARY) return 0;
+
+    symbol = target->symbolNode->symbol;
+    if (symbol_is_class_attribute(symbol) || symbol->register_num < 0) return 0;
+
+    if (register_num) *register_num = symbol->register_num;
+    if (register_type) *register_type = symbol->register_type;
+    return 1;
+}
+
 static int scope_assigns_named_registers(Scope *scope) {
     ASTNode *owner;
 
@@ -423,6 +460,7 @@ static int symbol_has_recyclable_local_storage_type(Symbol *symbol) {
 
 static int symbol_uses_scoped_register(Symbol *symbol) {
     if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (symbol->inline_value_alias) return 0;
     if (!scope_recycles_named_registers(symbol->scope)) return 0;
     if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
         symbol->is_this || symbol->is_factory) return 0;
@@ -436,7 +474,13 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
     walker_payload *pl = (walker_payload*)payload;
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
         if (symbol->register_num == UNSET_REGISTER) {
-            if (symbol->exposed) {
+            if (symbol->inline_value_alias) {
+                if (symbol->inline_value_alias->register_num == UNSET_REGISTER) {
+                    assign_symbol_registers_worker(symbol->inline_value_alias, payload);
+                }
+                symbol->register_num = symbol->inline_value_alias->register_num;
+                symbol->register_type = symbol->inline_value_alias->register_type;
+            } else if (symbol->exposed) {
                 symbol->register_num = pl->globals++;
                 symbol->register_type = 'g';
             } else if (!(symbol->scope &&
@@ -1502,8 +1546,12 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case BLOCK_EXPR:
-                node->register_num = get_reg(node->scope);
-                node->register_type = 'r';
+                if (!inline_block_expr_assignment_target_register(node,
+                                                                  &node->register_num,
+                                                                  &node->register_type)) {
+                    node->register_num = get_reg(node->scope);
+                    node->register_type = 'r';
+                }
                 break;
 
             case IF:

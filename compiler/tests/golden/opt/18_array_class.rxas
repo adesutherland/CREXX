@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=16
+main() .locals=15
    .meta "18_array_class_main.main"="b" ".int" main() ""
    numsci 18,1,1
    .meta "18_array_class_main.main.ary"="b" ".item[1]" r0
@@ -112,10 +112,9 @@ l196dostart:
    .srcstep 28 28 17 "18_array_class_main.crexx" 27 9 29 "        val_i = it_i.get_val()"
    .srcstep 26 26 33 "18_array_class_main.crexx" 27 17 21 "        val_i = it_i.get_val()"
    .traceevent "V" 6 "R" "O" "r" 8 26 26 0 "it_i" ""
-   copy r15,r8
-   .traceevent "A" 6 "R" "O" "r" 15 26 26 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 8 26 26 0 "§this" ""
    .srcstep 27 27 33 "18_array_class_main.crexx" 27 21 21 "        val_i = it_i.get_val()"
-   linkattr1 r14,r15,1
+   linkattr1 r14,r8,1
    .traceevent "V" 6 "R" "S" "r" 14 27 27 0 "val" ""
    copy r7,r14
    .traceevent "A" 6 "R" "S" "r" 7 27 27 0 "val_i" ""

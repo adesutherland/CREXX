@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "inline_test_return_expr.main"="b" ".int" main() ""
    .srcstep 13 13 17 "inline_test_return_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -27,17 +27,16 @@ l8dostart:
    .srcstep 7 7 17 "inline_test_return_expr.crexx" 6 9 13 "    say wrap(i)"
    .srcstep 5 5 33 "inline_test_return_expr.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r3,r0
-   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
    .srcstep 6 6 17 "inline_test_return_expr.crexx" 13 3 21 "  return addOne(val)"
-   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "val" ""
-   call1 r6,addOne(),r3
-   .traceevent "F" 4 "R" "I" "r" 6 8 8 0 "addone" ""
-   icopy r5,r6
+   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "val" ""
+   call1 r5,addOne(),r0
+   .traceevent "F" 4 "R" "I" "r" 5 8 8 0 "addone" ""
+   icopy r4,r5
    br l49bexprend
 l49bexprend:
-   itos r5
-   say r5
+   itos r4
+   say r4
 l8doinc:
    .srcstep 4 4 17 "inline_test_return_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

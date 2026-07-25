@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=7
+main() .locals=5
    .meta "class_import_main.main"="b" ".int" main() ""
    numsci 18,1,1
    .srcstep 4 4 17 "class_import_main.crexx" 5 1 13 "c = .Counter()"
@@ -22,29 +22,26 @@ main() .locals=7
    .srcstep 8 8 17 "class_import_main.crexx" 6 1 11 "call c.inc()"
    .srcstep 5 5 33 "class_import_main.crexx" 6 6 7 "call c.inc()"
    .traceevent "V" 6 "R" "O" "r" 0 5 5 0 "c" ""
-   copy r4,r0
-   .traceevent "A" 6 "R" "O" "r" 4 5 5 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 0 5 5 0 "§this" ""
    .srcstep 6 6 25 "class_import_lib.crexx" 13 5 18 "    val = val + 1"
-   linkattr1 r2,r4,1
+   linkattr1 r2,r0,1
    .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "val" ""
-   iadd r5,r2,1
+   iadd r4,r2,1
    unlink r2
-   .traceevent "O" 4 "R" "I" "r" 5 6 6 0 "" ""
-   isetattr1 r4,1,r5
+   .traceevent "O" 4 "R" "I" "r" 4 6 6 0 "" ""
+   isetattr1 r0,1,r4
    .srcstep 7 7 6 "class_import_main.crexx" 6 6 11 "call c.inc()"
-   .traceevent "V" 6 "R" "O" "r" 4 0 0 0 "§this" ""
-   copy r0,r4
+   .traceevent "V" 6 "R" "O" "r" 0 0 0 0 "§this" ""
    .srcstep 12 12 17 "class_import_main.crexx" 7 1 12 "say c.value()"
    .meta "class_import_main.main.c"="b" ".counter" r0
    .srcstep 11 11 17 "class_import_main.crexx" 7 5 6 "say c.value()"
    .srcstep 9 9 33 "class_import_main.crexx" 7 5 6 "say c.value()"
    .traceevent "V" 6 "R" "O" "r" 0 9 9 0 "c" ""
-   copy r6,r0
-   .traceevent "A" 6 "R" "O" "r" 6 9 9 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 0 9 9 0 "§this" ""
    .srcstep 10 10 25 "class_import_lib.crexx" 17 5 15 "    return val"
-   linkattr1 r5,r6,1
-   .traceevent "V" 6 "R" "I" "r" 5 12 12 0 "val" ""
-   igetunlink r3,r5
+   linkattr1 r4,r0,1
+   .traceevent "V" 6 "R" "I" "r" 4 12 12 0 "val" ""
+   igetunlink r3,r4
    br l104bexprend
 l104bexprend:
    itos r3

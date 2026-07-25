@@ -1913,7 +1913,9 @@ walker_result set_node_types_walker(walker_direction direction,
                 break;
 
             case TYPE_REFERENCE:
-                if (node->value_type == TP_UNKNOWN) {
+                if (node->value_type == TP_UNKNOWN ||
+                    node->value_reference_type == TP_UNKNOWN ||
+                    node->target_reference_type == TP_UNKNOWN) {
                     size_t dims = 0;
                     int *dim_base = 0;
                     int *dim_elements = 0;
@@ -2476,6 +2478,20 @@ walker_result type_safety_walker(walker_direction direction,
                             mknd_err(node, "UNKNOWN_TYPE");
                         }
                     }
+                }
+
+                /* Source-import parsing can establish the outer reference
+                 * type before the referent child has converged.  Complete the
+                 * symbol's reference shape monotonically once that child is
+                 * known; otherwise ast_sttn() would keep copying an unknown
+                 * referent back onto the validated TYPE_REFERENCE node. */
+                if (child1->symbolNode->symbol->type == TP_REFERENCE &&
+                    child1->symbolNode->symbol->reference_type == TP_UNKNOWN &&
+                    child2->value_type == TP_REFERENCE &&
+                    child2->value_reference_type != TP_UNKNOWN) {
+                    rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
+                    ast_svtp(child1, child1->symbolNode->symbol);
+                    context->changed_flags |= FLAG_VAL_TYPE;
                 }
 
                 if (ast_nchd(child1)) {

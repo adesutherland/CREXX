@@ -1,0 +1,63 @@
+diff --git a/compiler/rxcp_emit_reg.c b/compiler/rxcp_emit_reg.c
+index 8d055f0c1..731f513d2 100644
+--- a/compiler/rxcp_emit_reg.c
++++ b/compiler/rxcp_emit_reg.c
+@@ -376,6 +376,43 @@ static int node_is_block_expr_leave(ASTNode *node) {
+            parent->parent->node_type == BLOCK_EXPR;
+ }
+ 
++/* PERF2-03 P3 prototype: a compiler-created inline BLOCK_EXPR that is the
++ * complete RHS of a plain scalar assignment may place its result directly in
++ * the destination's already-owned local register.  LEAVE_WITH computes its
++ * child before writing the block result, so a RHS read of the destination is
++ * complete before the placement.  Aggregates, objects, references, binary,
++ * indexed/attribute targets and non-inline block expressions retain their
++ * separate result register and existing cleanup path. */
++static int inline_block_expr_assignment_target_register(ASTNode *node,
++                                                        int *register_num,
++                                                        char *register_type) {
++    ASTNode *assign;
++    ASTNode *target;
++    Symbol *symbol;
++    NodeType association_type;
++
++    if (!node || node->node_type != BLOCK_EXPR || !node->parent ||
++        node->parent->node_type != ASSIGN || !node->association) return 0;
++
++    association_type = node->association->node_type;
++    if (association_type != PROCEDURE && association_type != METHOD &&
++        association_type != FACTORY) return 0;
++
++    assign = node->parent;
++    target = assign->child;
++    if (!target || target->sibling != node || target->node_type != VAR_TARGET ||
++        target->child || !target->symbolNode || !target->symbolNode->symbol) return 0;
++    if (node->value_dims || node->value_type == TP_OBJECT ||
++        node->value_type == TP_REFERENCE || node->value_type == TP_BINARY) return 0;
++
++    symbol = target->symbolNode->symbol;
++    if (symbol_is_class_attribute(symbol) || symbol->register_num < 0) return 0;
++
++    if (register_num) *register_num = symbol->register_num;
++    if (register_type) *register_type = symbol->register_type;
++    return 1;
++}
++
+ static int scope_assigns_named_registers(Scope *scope) {
+     ASTNode *owner;
+ 
+@@ -1502,8 +1539,12 @@ walker_result register_walker(walker_direction direction,
+                 break;
+ 
+             case BLOCK_EXPR:
+-                node->register_num = get_reg(node->scope);
+-                node->register_type = 'r';
++                if (!inline_block_expr_assignment_target_register(node,
++                                                                  &node->register_num,
++                                                                  &node->register_type)) {
++                    node->register_num = get_reg(node->scope);
++                    node->register_type = 'r';
++                }
+                 break;
+ 
+             case IF:
