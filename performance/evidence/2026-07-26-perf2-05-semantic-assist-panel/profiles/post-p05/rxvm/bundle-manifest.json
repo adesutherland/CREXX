@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g537d3b3d2766 20260726",
+  "result": "pass",
+  "started_utc": "2026-07-26T10:38:48+0000",
+  "completed_utc": "2026-07-26T10:40:43+0000",
+  "repository": {"branch":"unknown","commit":"537d3b3d276606767535ecb84ad2a3c80073e5dd","dirty_scope":["?? performance/tools/run_evidence_bundle.rxas"]},
+  "host": {"os":"Darwin 25.5.0 arm64","cpu":"Apple M5"},
+  "driver_arguments": ["--manifest","/tmp/crexx-perf2-05-sa1.MzdvHT/post-p05-profile-manifest-v1.txt","--release-build","/tmp/crexx-perf2-05-sa1.MzdvHT/baseline-release","--profile-build","/tmp/crexx-perf2-05-sa1.MzdvHT/baseline-profile","--output-dir","/tmp/crexx-perf2-05-sa1.MzdvHT/evidence/current-rxvm","--profile-mode","counts","--vm","rxvm","--force"],
+  "input_manifest": {"path":"/tmp/crexx-perf2-05-sa1.MzdvHT/post-p05-profile-manifest-v1.txt","sha256":"f5167c70b1fa13aa743b92947b7aa96ba35e80102d9167ad6708202ee4e4b94c"},
+  "ordinary_release": {"build":"/tmp/crexx-perf2-05-sa1.MzdvHT/baseline-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxvm","vm_version":"crexx-1.0.0-beta.3+local.g537d3b3d2766 (Threaded Mode)","vm_sha256":"840f29837df7797fe357eec5e81e96fbe73a5a9c547cc5797f53f9d4d8d38254"},
+  "profile_release": {"build":"/tmp/crexx-perf2-05-sa1.MzdvHT/baseline-profile","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxvm","profile_mode":"counts","vm_version":"crexx-1.0.0-beta.3+local.g537d3b3d2766 (Threaded Mode)","vm_sha256":"a0b9de97a569b1c84dc6bcd1ce013503bf6920a2833fc412d4aa4c545ef0aece","rxseq_sha256":"79413938bf29595387d0842b96fe457bf2ecd0b8a14b94c5d6ca0c3548236308"},
+  "toolchain": {"cmake":"cmake version 4.3.2","compiler_path":"/usr/bin/cc","compiler":"Apple clang version 21.0.0 (clang-2100.1.1.101)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/tmp/crexx-perf2-05-sa1.MzdvHT/evidence/current-rxvm"
+}

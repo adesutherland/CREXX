@@ -194,7 +194,7 @@ Source:
 | PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
-| PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | in progress | P05-CF1 generic body evaluation is accepted and closed green; broader profile-selected assist/placement work remains open. |
+| PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | in progress | R2a is accepted and closed green at -2.731%/-1.745% paired median on List; Debug and Release CTest pass 1,922/1,922. R2b is deferred, and separate R1a has not started. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
@@ -709,7 +709,7 @@ combination or private quickened form. A BIF may complete with no new opcode.
 
 ## PERF2-05 — RXAS semantic assists and instruction improvement
 
-Status: **in progress — P05-CF1 complete; broader semantic-assist selection remains open**.
+Status: **in progress — P05-CF1 and R2a complete; separate R1a remains**.
 Adrian accepted P05-CF1's favorable first ordinary Release verdict on
 2026-07-26 because the body-driven design optimizes ordinary user-written and
 future functions without a BIF registry. `LENGTH`, `SUBSTR` and `WORD` all
@@ -732,6 +732,39 @@ optimization without adding BIF-specific evaluator cases. The existing
 PERF2-04 evaluator remains the comparison oracle until equivalence is proved;
 no public RXAS/RXBIN or legacy cursor-semantic change is selected by this
 approval.
+
+The post-P05 P05-SA1 refresh is retained under
+[`2026-07-26-perf2-05-semantic-assist-panel/`](evidence/2026-07-26-perf2-05-semantic-assist-panel/).
+It confirms that the List benchmark's weak/arena-owned references permit a
+narrow **descriptor** materialization without materializing or owning the
+target object. The direct descriptor-copy ceiling improves the selected List
+cell by 6.173%/6.154% on `rxvm`/`rxbvm`; exact relink independently improves it
+by 2.253%/1.623%. Both pass focused dual-VM semantics and exact instruction
+reduction. Their combined ceiling is favorable, but the recommended production
+rungs remain separate. The scalar `ICOPY; BR` control is neutral because its
+timing is noisy and VM-dependent.
+
+The placement recommendation was compiler/RXAS proof for eligibility, TRACE
+and fallback, with private execution only where needed and canonical RXBIN
+unchanged. At that selection stop no public opcode or production edit had been
+selected; Adrian's subsequent decision is recorded below.
+
+Adrian accepted recommendations 1-4 on 2026-07-26: R2a first, R1a second as a
+separate rung, exact canonical-sequence eligibility with private execution, and
+no public RXAS/RXBIN change. The mandatory R2a first Release verdict is
+favorable: work-100 List improves by a paired median 2.731%/1.745% on
+`rxvm`/`rxbvm`, with wholly favorable mean 95% intervals and no absolute-cell
+noise rerun. Focused dual-VM and compiler/import/no-opt correctness pass.
+R2b is deferred because both the scratch ceiling and R2a retain canonical
+`copy_value`; the remaining ceiling gap does not isolate payload-copy cost.
+Evidence is retained under
+[`2026-07-26-perf2-05-r2a-first-release-verdict/`](evidence/2026-07-26-perf2-05-r2a-first-release-verdict/).
+Adrian accepted R2a on 2026-07-26. Its full Debug and ordinary profiling-off
+Release products build, and both broad CTest configurations pass 1,922/1,922.
+R2a is closed green. R2b remains deferred because it lacks separate cost
+attribution and shape/lifetime proof; it was not selected or implemented. R1a
+remains the next independently revertable rung and has not started, so the
+broader PERF2-05 activity remains in progress.
 
 ### Starting point
 

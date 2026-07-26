@@ -263,3 +263,207 @@ P05-CF1 is complete and independently revertable. The broader PERF2-05
 activity stays open for separately profile-selected semantic assists or
 instruction placement. This slice neither selects nor pre-approves a public
 opcode, RXBIN/ABI change, VM handler or change to observable cursor semantics.
+
+## P05-SA1 profile-selected semantic-assist panel
+
+Status: in progress — R2a accepted and closed green; R1a remains a separate rung
+
+Started: 2026-07-26
+
+Purpose: complete the remaining PERF2-05 search against the post-P05-CF1
+product. Rank reusable semantic units and instruction improvements from fresh
+static, dynamic and RXSEQ evidence; compare their efficient owners; retain
+neutral and rejected cases; and stop for Adrian's production selection before
+installing any ladder.
+
+### Exact starting state and approval stop
+
+- Branch: `develop`
+- HEAD: `537d3b3d276606767535ecb84ad2a3c80073e5dd`
+- Subject: `perf: generalize constant call evaluation`
+- Upstream: `origin/develop` at
+  `d1c5245d49c0bd9cc48a7d33ef16f2f4555cc986`
+- Ahead/behind: `+4/-0`
+- Starting worktree: clean
+- P05-CF1 retained manifest: 52/52 entries replayed successfully from the
+  bundle root with `shasum -a 256 -c checksums.sha256`
+
+This slice may create isolated analysis products and reversible PoCs, but it
+must not install production code or select an irreversible owner. It stops
+after the refreshed ranking, semantic/effect panel, placement comparison,
+neutral/rejected ledger and recommended independently measurable ladder are
+complete. A public RXAS instruction, serialized RXBIN/ABI change, observable
+legacy cursor change, language decision or irreversible architectural owner
+requires Adrian's separate approval.
+
+No full formal portfolio, broad closeout, commit or push belongs before that
+selection. `WORD` is an acceptance/semantic guard rather than a preferred
+candidate. P05-CF1 is reopened only if an exact new profile proves a deficit.
+
+### Independently identifiable products
+
+| ID | Identity | Purpose |
+| --- | --- | --- |
+| P05-SA-B0 | clean detached `537d3b3d2`; separately named profiling-off Release and profiling-on attribution builds | post-P05 accepted current-product baseline |
+| P05-SA-NO0 | B0 source and libraries compiled with ordinary no-opt workload images | expose sequences hidden by current compiler/RXAS composition; diagnostic only |
+| P05-SA-C1 | separate detached/scratch product for compiler-owned result-only or existing-composition controls selected by the completed panel | earliest-owner ceiling; never overwrites B0 |
+| P05-SA-R1 | separate detached/scratch product for a canonical private/runtime form or quickening control selected by the completed panel | runtime-placement ceiling with canonical RXBIN unchanged |
+| P05-SA-V1 | separate detached/scratch product for a cleaned/new public RXAS-form control, built only if the panel needs it | public semantic-contract ceiling; no production assignment or serialized change |
+| P05-SA-N1 | isolated native helper/control for the exact shortlisted semantic unit, when useful | upper bound only, not a default owner |
+
+Exact scratch roots, source commits/patch hashes, configure options, executable
+hashes, workload/image hashes and profiling modes are recorded before a product
+is used as evidence. Candidate products remain separable and revertable; no
+candidate shares a mutable build directory with B0 or another candidate.
+
+### Evidence and ranking contract
+
+The refresh distinguishes optimized and no-opt images where they answer the
+selection question and reports `rxvm` and `rxbvm` separately. N=2/3/4 RXSEQ
+windows are used only where the additional length changes semantic-unit or
+placement selection. Each candidate row records:
+
+- dynamic executions, static sites and distinct modules;
+- optimized/no-opt and dual-VM persistence;
+- the non-overlapping machine-work ceiling rather than a sum of overlapping
+  sequence windows;
+- native/instruction time, calls, scans, copies, allocations, representation
+  crossings and artifact/local pressure where available;
+- exact value and cursor effects, liveness, aliases/references and
+  intermediate-write observability;
+- validation, signal and throw order, TRACE/source identity and local,
+  source-import and binary-import implications; and
+- the disposition and evidence needed to reopen any neutral or rejected case.
+
+Every shortlist compares existing compiler composition, compiler-owned
+result-only lowering, cleaned/new public RXAS form, canonical private/runtime
+form, quickening where appropriate and a native upper bound. A PoC advances to
+ordinary profiling-off Release timing only after exact semantic correctness
+and fewer instructions, scans, copies, allocations or representation
+crossings are both proved. The smallest decisive cell is used; neutral and
+negative evidence is retained.
+
+### P05-SA1 advancement ledger
+
+- [x] Exact repository/upstream/dirty state verified.
+- [x] P05-CF1 checksum manifest independently replayed 52/52.
+- [x] Numbered execution plan presented to Adrian.
+- [x] Bounded successor scope, product identities and approval stop recorded
+      in the existing PERF2-05 worklist.
+- [x] Exact B0/NO0 scratch roots, build identities and product hashes recorded.
+- [x] Post-P05 optimized/no-opt dual-VM profile and selected N=2/3/4 RXSEQ
+      evidence retained.
+- [x] Ranked candidate panel completed without overlap double-counting.
+- [x] Shortlisted semantic/effect and placement panels completed.
+- [x] Bounded PoCs pass correctness plus machine-work gates; neutral/negative
+      results retained.
+- [x] Recommended separable production ladder and justified breadth presented
+      at the mandatory Adrian selection stop.
+
+### P05-SA1 selection stop
+
+The exact List reference-getter slice supports partial materialization of the
+weak-reference descriptor, not the target object. Its canonical direct
+attribute-copy ceiling removes 7,641,200 dynamic instructions and improves the
+ordinary Release List cell by 6.173% on `rxvm` and 6.154% on `rxbvm`. Exact
+relink independently removes 3,827,800 instructions and improves it by 2.253%
+and 1.623%. The combined compatibility cell is favorable, but the production
+rungs remain independently revertable.
+
+The `ICOPY; BR` control removes 1,366,001 Base64 instructions but is neutral:
+the ordinary Release medians are +0.318% on `rxvm` and -4.070% on `rxbvm` with
+5.295-8.609% relative MAD. It does not justify a public or private fused form.
+
+Recommendation for Adrian's decision:
+
+1. select R2a canonical direct reference-descriptor materialization first;
+2. select R1a exact relink second as a separate rung;
+3. assign eligibility/TRACE/fallback proof to compiler/RXAS analysis and use a
+   private execution form only where existing composition cannot express the
+   result without the temporary;
+4. keep canonical RXBIN and public RXAS unchanged; and
+5. leave B1 neutral unless a later compiler-owned result-forwarding PoC gives
+   stable multi-workload evidence.
+
+The retained, recursive-checksum-closed package is
+`performance/evidence/2026-07-26-perf2-05-semantic-assist-panel/`. No production
+code, public opcode, full portfolio, commit or push was authorized or made.
+
+### Adrian selection and R2a production gate
+
+Adrian approved recommendations 1-4 on 2026-07-26: implement R2a first, keep
+R1a as the second independently revertable rung, assign eligibility and
+fallback proof to the compiler/RXAS/canonical-sequence layer with private
+execution only where required, and keep public RXAS plus canonical RXBIN
+unchanged. Adrian confirmed that recommendation 5 is R2b and directed that its
+need be reviewed at the end of R2a.
+
+The mandatory first ordinary Release gate applies before R1a begins. R2a must
+freeze after minimum focused correctness, run the smallest decisive List
+comparison against the retained valid baseline, review the residual canonical
+copy cost/R2b case, report, and stop for Adrian's direction.
+
+#### R2a production design selection
+
+| ID | Form | Compatibility and semantic reading | Decision |
+| --- | --- | --- | --- |
+| R2-0 | Retain `LINKATTR1; COPY; UNLINK` | Exact public composition and fallback; three dispatches and a temporary alias | Baseline/fallback. |
+| R2-C | Change compiler/RXAS output to a new direct operation | Earliest authored owner, but requires a public spelling or serialized marker to remove runtime dispatch | Rejected for R2a because public RXAS/RXBIN must remain unchanged. |
+| R2-P | Recognize the exact canonical sequence while preparing the process-local execution image; select a private handler that retains canonical `copy_value` | No public opcode or serialized change; exact-shape eligibility, reference-descriptor guard and complete canonical fallback | Selected production form. |
+| R2-Q | Learn/patch a site after execution | Adds state, transition and invalidation cost although the sequence shape is statically stable | Rejected; preparation-time selection is earlier and sufficient. |
+| R2b | Copy only the reference payload/cell fields | Potentially narrower than canonical `copy_value`, but adds a separate shape/identity/cleanup proof | Review only after the R2a Release verdict shows residual cost. |
+
+R2-P is eligible only for the exact immediate-attribute sequence whose `COPY`
+source and final `UNLINK` are the `LINKATTR1` temporary and whose copy
+destination is distinct. The private handler bounds-checks before mutation,
+uses canonical `copy_value` for reference descriptors, restores the temporary's
+base mapping, and skips the two remaining canonical instructions. It falls
+back to the untouched sequence for non-reference payloads, debug/breakpoint
+execution and every non-matching shape. Canonical instruction cells and
+metadata remain the source of signal/source identity.
+
+#### R2a ledger
+
+- [x] Adrian approved R2a then independently revertable R1a; R2b review is at
+      the end of R2a.
+- [x] Status quo, compiler/public, private preparation, learned and R2b forms
+      compared before production coding.
+- [x] Exact process-local recognizer/private handler implemented with canonical
+      fallback and no public/RXBIN change.
+- [x] Focused reference, bounds, fallback, TRACE/breakpoint, import, no-opt and
+      dual-VM correctness passes.
+- [x] Implementation frozen and ordinary profiling-off Release product built.
+- [x] Smallest decisive exact-input List verdict retained against the accepted
+      R2 control.
+- [x] Residual canonical-copy evidence reviewed for R2b and first Release
+      verdict reported; stop reached before R1a.
+- [x] Adrian accepted the favorable R2a verdict and authorized completion.
+- [x] Full Debug and ordinary profiling-off Release builds pass; both broad
+      CTest configurations pass 1,922/1,922.
+- [x] Worklist, roadmap and retained evidence reconciled with R2b deferred and
+      R1a not started.
+
+#### R2a first Release verdict and R2b review
+
+The accepted work-100 List cell is clearly favorable in 12 serial,
+position-balanced pairs after one warmup per cell. The paired median is
+-2.731% on `rxvm` with 11/12 favorable pairs and a mean 95% interval of
+-3.230% to -1.665%. It is -1.745% on `rxbvm` with 12/12 favorable pairs and a
+mean 95% interval of -2.565% to -1.478%. All four absolute cells remain below
+the noise rerun thresholds. Focused Debug passes 10/10, the compiler/import/
+no-opt matrix passes 49/49, and the ordinary Release compatibility guard passes
+both integrated and retained baseline VMs.
+
+R2b is deferred, not selected. The scratch public `COPYATTR1` ceiling and R2a
+both use canonical `copy_value`, so the smaller production gain does not
+isolate canonical value-copy cost and cannot justify a payload-only helper.
+R2b requires separate post-acceptance attribution plus complete reference-shape
+and lifetime proof. Evidence is retained under
+`performance/evidence/2026-07-26-perf2-05-r2a-first-release-verdict/`.
+
+Adrian accepted R2a on 2026-07-26. Post-verdict closeout is green: the full
+Debug and ordinary profiling-off Release products build, and both broad CTest
+configurations pass 1,922/1,922. R2b remains deferred for separate attribution
+and proof; it was not selected or implemented. R1a remains the next separate
+rung and was not started. R2a is complete, while the broader PERF2-05 activity
+stays open for that separately authorized work.

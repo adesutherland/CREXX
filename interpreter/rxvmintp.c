@@ -2383,6 +2383,49 @@ static char *build_runtime_factory_descriptor(const string_constant *interface_s
     return descriptor;
 }
 
+/*
+ * R2a keeps the canonical LINKATTR1/COPY/UNLINK RXBIN stream immutable and
+ * selects a process-private execution handler only for this exact shape:
+ *
+ *   linkattr1 temporary, object, immediate_attribute
+ *   copy      destination, temporary
+ *   unlink    temporary
+ *
+ * The private handler still checks the runtime payload before taking the
+ * reference-descriptor path.  This recognizer is deliberately structural and
+ * makes no source-name, procedure-name or benchmark assumption.
+ */
+enum { RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT = OP_MAX_INSTRUCTIONS };
+
+static int rxvm_private_r2_copyattr1_candidate(const module *mod,
+                                               size_t instruction_index) {
+    const bin_code *code;
+    size_t temporary;
+    size_t object;
+    size_t destination;
+
+    if (!mod || !mod->segment.binary ||
+            instruction_index > mod->segment.inst_size ||
+            mod->segment.inst_size - instruction_index < 9u)
+        return 0;
+
+    code = mod->segment.binary + instruction_index;
+    if (code[0].instruction.opcode != OP_LINKATTR1_REG_REG_INT ||
+            code[0].instruction.no_ops != 3 ||
+            code[4].instruction.opcode != OP_COPY_REG_REG ||
+            code[4].instruction.no_ops != 2 ||
+            code[7].instruction.opcode != OP_UNLINK_REG ||
+            code[7].instruction.no_ops != 1)
+        return 0;
+
+    temporary = code[1].index;
+    object = code[2].index;
+    destination = code[5].index;
+    return code[6].index == temporary && code[8].index == temporary &&
+           temporary != object && temporary != destination &&
+           object != destination;
+}
+
 typedef struct rxvm_source_context {
     string_constant *file;
     string_constant *source;
@@ -4770,6 +4813,11 @@ typedef Opcode instructions;
 
 #ifdef NTHREADED
 #define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_) ((void)0)
+#define VM_BIND_PRIVATE_R2_COPYATTR1_HANDLER(image_, instruction_)              \
+    do {                                                                        \
+        (image_)[instruction_].instruction.opcode =                             \
+                RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT;                          \
+    } while (0)
 #else
 const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
@@ -4784,6 +4832,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 (opcode_) < OP_MAX_INSTRUCTIONS                                 \
                     ? (void *)address_map[opcode_]                              \
                     : (void *)&&IUNKNOWN;                                       \
+    } while (0)
+#define VM_BIND_PRIVATE_R2_COPYATTR1_HANDLER(image_, instruction_)              \
+    do {                                                                        \
+        (image_)[instruction_].handler = (void *)&&PRIVATE_R2_COPYATTR1;         \
     } while (0)
 #endif
 
@@ -4839,6 +4891,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             }                                                                   \
             VM_BIND_INSTRUCTION_HANDLER(vm_module__->execution_image,           \
                                         vm_instruction__, vm_opcode__);         \
+            if (rxvm_private_r2_copyattr1_candidate(vm_module__,                \
+                                                     vm_instruction__)) {        \
+                VM_BIND_PRIVATE_R2_COPYATTR1_HANDLER(                            \
+                        vm_module__->execution_image, vm_instruction__);        \
+            }                                                                   \
         }                                                                       \
     } while (0)
 
@@ -7919,6 +7976,51 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
             }
             op1R = op2R->attributes[(int)op3I - 1];
             DISPATCH;
+
+#ifdef NTHREADED
+        case RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT:
+#else
+        PRIVATE_R2_COPYATTR1:
+#endif
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
+                    current_module->module_number,
+                    VM_CANONICAL_INDEX(pc), OP_LINKATTR1_REG_REG_INT);
+            DEBUG("TRACE - LINKATTR1 R%lu,R%lu,%d\n",
+                  REG_IDX(1), REG_IDX(2), (int)op3I);
+            {
+                size_t site_index = VM_CANONICAL_INDEX(pc);
+                size_t temporary = REG_IDX(1);
+                size_t destination = (pc + 5)->index;
+                value *object = op2R;
+                value *source;
+
+                if ((int)op3I - 1 < 0 ||
+                        (int)op3I - 1 >= object->num_attributes) {
+                    /* Canonical LINKATTR1 signals before changing the temporary
+                     * and resumes at COPY if the signal is ignored. */
+                    VM_SELECT_INDEX(site_index + 4u,
+                                    RXVM_TRANSITION_SEQUENTIAL);
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+
+                source = object->attributes[(int)op3I - 1];
+                if (context->debug_mode ||
+                        (interrupts & rxsignal_mask(RXSIGNAL_BREAKPOINT)) != 0 ||
+                        !rxvm_reference_payload_cell(source)) {
+                    /* Preserve instruction-by-instruction debug/breakpoint
+                     * observation and the complete generic value fallback. */
+                    current_locals[temporary] = source;
+                    VM_SELECT_INDEX(site_index + 4u,
+                                    RXVM_TRANSITION_SEQUENTIAL);
+                    DISPATCH;
+                }
+
+                copy_value(current_locals[destination], source);
+                current_locals[temporary] = current_frame->baselocals[temporary];
+                VM_SELECT_INDEX(site_index + 9u, RXVM_TRANSITION_SEQUENTIAL);
+                DISPATCH;
+            }
 
         /* Link op3 to attribute op1 of op2 */
         START_INSTRUCTION(LINKTOATTR_REG_REG_REG) VM_ADVANCE(3);

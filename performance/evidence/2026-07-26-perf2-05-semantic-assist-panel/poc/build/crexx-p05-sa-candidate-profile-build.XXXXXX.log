@@ -1,0 +1,83 @@
+[  0%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmintp.c.o
+[  0%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmload.c.o
+[  0%] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[  0%] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[  0%] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[  0%] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[  0%] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[  0%] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[  0%] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[  0%] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[  0%] Linking C static library ../bin/librxpashim.a
+[  0%] Linking C static library ../bin/librxvmref.a
+[  0%] Linking C static library ../bin/librxpa.a
+[  0%] Linking C static library ../bin/libavl_tree.a
+[  0%] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[  0%] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[  0%] Built target rxpashim
+[  0%] Built target rxvmref
+[  0%] Built target rxpa
+[  0%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/interrupt.c.o
+[  0%] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[  0%] Built target avl_tree
+[  0%] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[ 50%] Linking C static library ../bin/libplatform.a
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxspawn.c.o
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxcrexxcmd.c.o
+[ 50%] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/exitfunc.c.o
+[ 50%] Built target platform
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxpafuncs.c.o
+[ 50%] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvml/rxvm_run.c.o
+[ 50%] Linking C static library ../../bin/librxvmplugin.a
+[ 50%] Built target rxvm_platform_objects
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/__/binutils/include/opdata.c.o
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/__/binutils/rxopmeta.c.o
+[ 50%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmprofile.c.o
+[ 50%] Built target rxvmplugin
+[100%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxseqfile.c.o
+[100%] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmsequence.c.o
+[100%] Linking C static library ../../../../bin/libdecnumber.a
+[100%] Built target decnumber
+[100%] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[100%] Linking C static library ../bin/librxbin.a
+[100%] Built target rxbin
+[100%] Linking C static library ../../../../bin/rxvm_mc_decimal_manual.a
+[100%] Built target mc_decimal_manual
+[100%] Built target rxvm_core_objects
+[100%] Building C object interpreter/CMakeFiles/rxvm.dir/rxvmmain.c.o
+[100%] Linking C executable ../bin/rxvm
+[100%] Built target rxvm
+[  0%] Built target rxpa
+[ 50%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[ 50%] Built target platform
+[ 50%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[ 50%] Built target rxvmref
+[ 50%] Built target rxpashim
+[ 50%] Built target rxbin
+[ 50%] Built target avl_tree
+[ 50%] Built target decnumber
+[ 50%] Built target rxvm_platform_objects
+[ 50%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[ 50%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[ 50%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/include/opdata.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[100%] Built target rxvmplugin
+[100%] Built target mc_decimal_manual
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/rxopmeta.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprofile.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxseqfile.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmsequence.c.o
+[100%] Built target rxbvm_core_objects
+[100%] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[100%] Linking C executable ../bin/rxbvm
+[100%] Built target rxbvm
+[  0%] Built target rxbin
+[  0%] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqfile.c.o
+[100%] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqmain.c.o
+[100%] Linking C executable ../bin/rxseq
+[100%] Built target rxseq

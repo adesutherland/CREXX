@@ -1,0 +1,136 @@
+/*
+ * PERF2-05 R2a process-private reference-descriptor materialization guards.
+ * Public RXAS remains the canonical LINKATTR1/COPY/UNLINK composition.
+ */
+
+.globals=1
+
+main() .locals=32
+    /* Build an object attribute containing a weak-reference descriptor. */
+    load r1,"target-a"
+    mkref r2,r1
+    setattrs r3,1
+    linkattr1 r4,r3,1
+    copy r4,r2
+    unlink r4
+
+    /* Exact R2a shape: copy the descriptor and restore the temp base mapping. */
+    load r5,"destination-old"
+    load r6,"temporary-base"
+    .srcstep 1 1 17 "perf2_partial_reference_materialization.rxas" 20 5 35 "copy reference descriptor"
+    linkattr1 r6,r3,1
+    .traceevent "V" 6 "R" "R" "r" 6 1 1 0 "source_reference" ""
+    copy r5,r6
+    .traceevent "A" 6 "R" "R" "r" 5 1 1 0 "copied_reference" ""
+    unlink r6
+
+    refvalid r7,r5
+    ieq r0,r7,1
+    brf fail_reference_valid,r0
+    deref r8,r5
+    seq r0,r8,"target-a"
+    brf fail_reference_value,r0
+    seq r0,r6,"temporary-base"
+    brf fail_temporary_restore,r0
+
+    /* The copied descriptor retains the same reference-cell behavior. */
+    load r9,"target-b"
+    setref r5,r9
+    seq r0,r1,"target-b"
+    brf fail_reference_identity,r0
+    endlife r1
+    refvalid r7,r5
+    ieq r0,r7,0
+    brf fail_reference_invalidation,r0
+
+    /* Non-reference payloads take the untouched canonical fallback. */
+    setattrs r10,1
+    linkattr1 r11,r10,1
+    load r11,"plain-value"
+    unlink r11
+    load r12,"plain-destination"
+    load r13,"plain-temporary"
+    linkattr1 r13,r10,1
+    copy r12,r13
+    unlink r13
+    seq r0,r12,"plain-value"
+    brf fail_plain_fallback_value,r0
+    seq r0,r13,"plain-temporary"
+    brf fail_plain_fallback_restore,r0
+
+    /* Bounds fail before destination or temporary mutation. */
+    load r14,"bounds-destination"
+    load r15,"bounds-temporary"
+    sigbr bounds_caught,"OUT_OF_RANGE"
+    linkattr1 r15,r10,2
+    copy r14,r15
+    unlink r15
+    br fail_bounds_signal
+bounds_caught:
+    seq r0,r14,"bounds-destination"
+    brf fail_bounds_destination,r0
+    seq r0,r15,"bounds-temporary"
+    brf fail_bounds_temporary,r0
+
+    /* Breakpoint mode must observe all three canonical instructions. */
+    load r18,"breakpoint-target"
+    mkref r19,r18
+    linkattr1 r20,r3,1
+    copy r20,r19
+    unlink r20
+    load g0,0
+    sigcall breakpoint_handler(),"BREAKPOINT"
+    bpon
+    linkattr1 r16,r3,1
+    copy r17,r16
+    unlink r16
+    bpoff
+    ieq r0,g0,4
+    brf fail_breakpoint_fallback,r0
+    refvalid r7,r17
+    ieq r0,r7,1
+    brf fail_breakpoint_value,r0
+
+    say "PASS: PERF2-05 Partial Reference Materialization"
+    ret 0
+
+fail_reference_valid:
+    say "FAIL: copied reference invalid"
+    ret 1
+fail_reference_value:
+    say "FAIL: copied reference value"
+    ret 1
+fail_temporary_restore:
+    say "FAIL: reference temporary restore"
+    ret 1
+fail_reference_identity:
+    say "FAIL: copied reference identity"
+    ret 1
+fail_reference_invalidation:
+    say "FAIL: copied reference invalidation"
+    ret 1
+fail_plain_fallback_value:
+    say "FAIL: plain fallback value"
+    ret 1
+fail_plain_fallback_restore:
+    say "FAIL: plain fallback temporary restore"
+    ret 1
+fail_bounds_signal:
+    say "FAIL: bounds signal missing"
+    ret 1
+fail_bounds_destination:
+    say "FAIL: bounds destination mutation"
+    ret 1
+fail_bounds_temporary:
+    say "FAIL: bounds temporary mutation"
+    ret 1
+fail_breakpoint_fallback:
+    say "FAIL: breakpoint canonical fallback"
+    ret 1
+fail_breakpoint_value:
+    say "FAIL: breakpoint copied reference"
+    ret 1
+
+breakpoint_handler() .locals=0
+    iadd g0,g0,1
+    ret

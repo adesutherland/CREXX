@@ -1,0 +1,313 @@
+entry,rank,name,metric,module,kind,count,total_ns,average_ns,completed,unwound,return_type,args,status
+list-r1-control,1,awfy_list.listarena.allocate,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-control,1,awfy_list.listarena.allocate,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-control,1,awfy_list.listarena.allocate,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-control,1,awfy_list.listarena.allocate,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-control,1,awfy_list.listarena.allocate,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-control,1,awfy_list.listarena.allocate,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-control,2,awfy_list.listbenchmark.isshorterthan,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-control,2,awfy_list.listbenchmark.isshorterthan,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-control,2,awfy_list.listbenchmark.isshorterthan,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-control,2,awfy_list.listbenchmark.isshorterthan,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-control,2,awfy_list.listbenchmark.isshorterthan,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-control,2,awfy_list.listbenchmark.isshorterthan,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-control,3,awfy_list.listbenchmark.makelist,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-control,3,awfy_list.listbenchmark.makelist,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-control,3,awfy_list.listbenchmark.makelist,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-control,3,awfy_list.listbenchmark.makelist,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-control,3,awfy_list.listbenchmark.makelist,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-control,3,awfy_list.listbenchmark.makelist,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-control,4,awfy_list.listbenchmark.run,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-control,4,awfy_list.listbenchmark.run,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-control,4,awfy_list.listbenchmark.run,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-control,4,awfy_list.listbenchmark.run,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-control,4,awfy_list.listbenchmark.run,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-control,4,awfy_list.listbenchmark.run,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-control,5,awfy_list.listbenchmark.tail,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-control,5,awfy_list.listbenchmark.tail,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-control,5,awfy_list.listbenchmark.tail,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-control,5,awfy_list.listbenchmark.tail,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-control,5,awfy_list.listbenchmark.tail,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-control,5,awfy_list.listbenchmark.tail,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-control,6,awfy_list.listelement.length,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-control,6,awfy_list.listelement.length,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-control,6,awfy_list.listelement.length,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-control,6,awfy_list.listelement.length,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-control,6,awfy_list.listelement.length,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-control,6,awfy_list.listelement.length,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-control,7,awfy_list.listelement.§factory,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-control,7,awfy_list.listelement.§factory,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-control,7,awfy_list.listelement.§factory,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-control,7,awfy_list.listelement.§factory,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-control,7,awfy_list.listelement.§factory,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-control,7,awfy_list.listelement.§factory,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-control,8,awfy_list.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-control,8,awfy_list.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-control,8,awfy_list.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-control,8,awfy_list.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-control,8,awfy_list.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-control,8,awfy_list.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-candidate,1,awfy_list.listarena.allocate,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-candidate,1,awfy_list.listarena.allocate,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-candidate,1,awfy_list.listarena.allocate,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-candidate,1,awfy_list.listarena.allocate,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-candidate,1,awfy_list.listarena.allocate,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-candidate,1,awfy_list.listarena.allocate,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r1-candidate,2,awfy_list.listbenchmark.isshorterthan,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-candidate,2,awfy_list.listbenchmark.isshorterthan,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-candidate,2,awfy_list.listbenchmark.isshorterthan,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-candidate,2,awfy_list.listbenchmark.isshorterthan,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-candidate,2,awfy_list.listbenchmark.isshorterthan,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-candidate,2,awfy_list.listbenchmark.isshorterthan,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r1-candidate,3,awfy_list.listbenchmark.makelist,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-candidate,3,awfy_list.listbenchmark.makelist,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-candidate,3,awfy_list.listbenchmark.makelist,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-candidate,3,awfy_list.listbenchmark.makelist,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-candidate,3,awfy_list.listbenchmark.makelist,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-candidate,3,awfy_list.listbenchmark.makelist,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r1-candidate,4,awfy_list.listbenchmark.run,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-candidate,4,awfy_list.listbenchmark.run,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-candidate,4,awfy_list.listbenchmark.run,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-candidate,4,awfy_list.listbenchmark.run,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-candidate,4,awfy_list.listbenchmark.run,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-candidate,4,awfy_list.listbenchmark.run,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r1-candidate,5,awfy_list.listbenchmark.tail,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-candidate,5,awfy_list.listbenchmark.tail,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-candidate,5,awfy_list.listbenchmark.tail,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-candidate,5,awfy_list.listbenchmark.tail,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-candidate,5,awfy_list.listbenchmark.tail,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-candidate,5,awfy_list.listbenchmark.tail,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r1-candidate,6,awfy_list.listelement.length,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-candidate,6,awfy_list.listelement.length,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-candidate,6,awfy_list.listelement.length,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-candidate,6,awfy_list.listelement.length,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-candidate,6,awfy_list.listelement.length,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-candidate,6,awfy_list.listelement.length,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r1-candidate,7,awfy_list.listelement.§factory,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-candidate,7,awfy_list.listelement.§factory,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-candidate,7,awfy_list.listelement.§factory,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-candidate,7,awfy_list.listelement.§factory,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-candidate,7,awfy_list.listelement.§factory,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-candidate,7,awfy_list.listelement.§factory,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r1-candidate,8,awfy_list.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-candidate,8,awfy_list.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-candidate,8,awfy_list.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-candidate,8,awfy_list.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-candidate,8,awfy_list.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r1-candidate,8,awfy_list.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r1-relink/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-control,1,awfy_list.listarena.allocate,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-control,1,awfy_list.listarena.allocate,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-control,1,awfy_list.listarena.allocate,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-control,1,awfy_list.listarena.allocate,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-control,1,awfy_list.listarena.allocate,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-control,1,awfy_list.listarena.allocate,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-control,2,awfy_list.listbenchmark.isshorterthan,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-control,2,awfy_list.listbenchmark.isshorterthan,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-control,2,awfy_list.listbenchmark.isshorterthan,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-control,2,awfy_list.listbenchmark.isshorterthan,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-control,2,awfy_list.listbenchmark.isshorterthan,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-control,2,awfy_list.listbenchmark.isshorterthan,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-control,3,awfy_list.listbenchmark.makelist,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-control,3,awfy_list.listbenchmark.makelist,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-control,3,awfy_list.listbenchmark.makelist,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-control,3,awfy_list.listbenchmark.makelist,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-control,3,awfy_list.listbenchmark.makelist,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-control,3,awfy_list.listbenchmark.makelist,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-control,4,awfy_list.listbenchmark.run,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-control,4,awfy_list.listbenchmark.run,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-control,4,awfy_list.listbenchmark.run,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-control,4,awfy_list.listbenchmark.run,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-control,4,awfy_list.listbenchmark.run,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-control,4,awfy_list.listbenchmark.run,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-control,5,awfy_list.listbenchmark.tail,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-control,5,awfy_list.listbenchmark.tail,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-control,5,awfy_list.listbenchmark.tail,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-control,5,awfy_list.listbenchmark.tail,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-control,5,awfy_list.listbenchmark.tail,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-control,5,awfy_list.listbenchmark.tail,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-control,6,awfy_list.listelement.length,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-control,6,awfy_list.listelement.length,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-control,6,awfy_list.listelement.length,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-control,6,awfy_list.listelement.length,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-control,6,awfy_list.listelement.length,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-control,6,awfy_list.listelement.length,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-control,7,awfy_list.listelement.§factory,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-control,7,awfy_list.listelement.§factory,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-control,7,awfy_list.listelement.§factory,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-control,7,awfy_list.listelement.§factory,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-control,7,awfy_list.listelement.§factory,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-control,7,awfy_list.listelement.§factory,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-control,8,awfy_list.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-control,8,awfy_list.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-control,8,awfy_list.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-control,8,awfy_list.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-control,8,awfy_list.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-control,8,awfy_list.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-candidate,1,awfy_list.listarena.allocate,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-candidate,1,awfy_list.listarena.allocate,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-candidate,1,awfy_list.listarena.allocate,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-candidate,1,awfy_list.listarena.allocate,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-candidate,1,awfy_list.listarena.allocate,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-candidate,1,awfy_list.listarena.allocate,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r2-candidate,2,awfy_list.listbenchmark.isshorterthan,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-candidate,2,awfy_list.listbenchmark.isshorterthan,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-candidate,2,awfy_list.listbenchmark.isshorterthan,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-candidate,2,awfy_list.listbenchmark.isshorterthan,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-candidate,2,awfy_list.listbenchmark.isshorterthan,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-candidate,2,awfy_list.listbenchmark.isshorterthan,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r2-candidate,3,awfy_list.listbenchmark.makelist,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-candidate,3,awfy_list.listbenchmark.makelist,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-candidate,3,awfy_list.listbenchmark.makelist,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-candidate,3,awfy_list.listbenchmark.makelist,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-candidate,3,awfy_list.listbenchmark.makelist,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-candidate,3,awfy_list.listbenchmark.makelist,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r2-candidate,4,awfy_list.listbenchmark.run,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-candidate,4,awfy_list.listbenchmark.run,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-candidate,4,awfy_list.listbenchmark.run,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-candidate,4,awfy_list.listbenchmark.run,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-candidate,4,awfy_list.listbenchmark.run,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-candidate,4,awfy_list.listbenchmark.run,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r2-candidate,5,awfy_list.listbenchmark.tail,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-candidate,5,awfy_list.listbenchmark.tail,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-candidate,5,awfy_list.listbenchmark.tail,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-candidate,5,awfy_list.listbenchmark.tail,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-candidate,5,awfy_list.listbenchmark.tail,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-candidate,5,awfy_list.listbenchmark.tail,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r2-candidate,6,awfy_list.listelement.length,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-candidate,6,awfy_list.listelement.length,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-candidate,6,awfy_list.listelement.length,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-candidate,6,awfy_list.listelement.length,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-candidate,6,awfy_list.listelement.length,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-candidate,6,awfy_list.listelement.length,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r2-candidate,7,awfy_list.listelement.§factory,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-candidate,7,awfy_list.listelement.§factory,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-candidate,7,awfy_list.listelement.§factory,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-candidate,7,awfy_list.listelement.§factory,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-candidate,7,awfy_list.listelement.§factory,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-candidate,7,awfy_list.listelement.§factory,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r2-candidate,8,awfy_list.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-candidate,8,awfy_list.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-candidate,8,awfy_list.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-candidate,8,awfy_list.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-candidate,8,awfy_list.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r2-candidate,8,awfy_list.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r2-copyattr/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-control,1,awfy_list.listarena.allocate,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-control,1,awfy_list.listarena.allocate,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-control,1,awfy_list.listarena.allocate,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-control,1,awfy_list.listarena.allocate,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-control,1,awfy_list.listarena.allocate,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-control,1,awfy_list.listarena.allocate,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-control,2,awfy_list.listbenchmark.isshorterthan,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-control,2,awfy_list.listbenchmark.isshorterthan,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-control,2,awfy_list.listbenchmark.isshorterthan,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-control,2,awfy_list.listbenchmark.isshorterthan,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-control,2,awfy_list.listbenchmark.isshorterthan,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-control,2,awfy_list.listbenchmark.isshorterthan,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-control,3,awfy_list.listbenchmark.makelist,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-control,3,awfy_list.listbenchmark.makelist,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-control,3,awfy_list.listbenchmark.makelist,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-control,3,awfy_list.listbenchmark.makelist,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-control,3,awfy_list.listbenchmark.makelist,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-control,3,awfy_list.listbenchmark.makelist,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-control,4,awfy_list.listbenchmark.run,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-control,4,awfy_list.listbenchmark.run,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-control,4,awfy_list.listbenchmark.run,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-control,4,awfy_list.listbenchmark.run,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-control,4,awfy_list.listbenchmark.run,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-control,4,awfy_list.listbenchmark.run,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-control,5,awfy_list.listbenchmark.tail,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-control,5,awfy_list.listbenchmark.tail,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-control,5,awfy_list.listbenchmark.tail,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-control,5,awfy_list.listbenchmark.tail,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-control,5,awfy_list.listbenchmark.tail,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-control,5,awfy_list.listbenchmark.tail,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-control,6,awfy_list.listelement.length,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-control,6,awfy_list.listelement.length,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-control,6,awfy_list.listelement.length,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-control,6,awfy_list.listelement.length,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-control,6,awfy_list.listelement.length,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-control,6,awfy_list.listelement.length,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-control,7,awfy_list.listelement.§factory,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-control,7,awfy_list.listelement.§factory,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-control,7,awfy_list.listelement.§factory,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-control,7,awfy_list.listelement.§factory,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-control,7,awfy_list.listelement.§factory,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-control,7,awfy_list.listelement.§factory,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-control,8,awfy_list.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-control,8,awfy_list.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-control,8,awfy_list.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-control,8,awfy_list.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-control,8,awfy_list.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-control,8,awfy_list.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-candidate,1,awfy_list.listarena.allocate,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-candidate,1,awfy_list.listarena.allocate,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-candidate,1,awfy_list.listarena.allocate,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-candidate,1,awfy_list.listarena.allocate,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-candidate,1,awfy_list.listarena.allocate,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-candidate,1,awfy_list.listarena.allocate,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-r12-candidate,2,awfy_list.listbenchmark.isshorterthan,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-candidate,2,awfy_list.listbenchmark.isshorterthan,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-candidate,2,awfy_list.listbenchmark.isshorterthan,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-candidate,2,awfy_list.listbenchmark.isshorterthan,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-candidate,2,awfy_list.listbenchmark.isshorterthan,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-candidate,2,awfy_list.listbenchmark.isshorterthan,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-r12-candidate,3,awfy_list.listbenchmark.makelist,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-candidate,3,awfy_list.listbenchmark.makelist,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-candidate,3,awfy_list.listbenchmark.makelist,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-candidate,3,awfy_list.listbenchmark.makelist,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-candidate,3,awfy_list.listbenchmark.makelist,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-candidate,3,awfy_list.listbenchmark.makelist,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-r12-candidate,4,awfy_list.listbenchmark.run,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-candidate,4,awfy_list.listbenchmark.run,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-candidate,4,awfy_list.listbenchmark.run,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-candidate,4,awfy_list.listbenchmark.run,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-candidate,4,awfy_list.listbenchmark.run,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-candidate,4,awfy_list.listbenchmark.run,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,100,0,0,100,0,.int,,complete
+list-r12-candidate,5,awfy_list.listbenchmark.tail,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-candidate,5,awfy_list.listbenchmark.tail,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-candidate,5,awfy_list.listbenchmark.tail,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-candidate,5,awfy_list.listbenchmark.tail,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-candidate,5,awfy_list.listbenchmark.tail,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-candidate,5,awfy_list.listbenchmark.tail,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-r12-candidate,6,awfy_list.listelement.length,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-candidate,6,awfy_list.listelement.length,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-candidate,6,awfy_list.listelement.length,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-candidate,6,awfy_list.listelement.length,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-candidate,6,awfy_list.listelement.length,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-candidate,6,awfy_list.listelement.length,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,method,1000,0,0,1000,0,.int,,complete
+list-r12-candidate,7,awfy_list.listelement.§factory,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-candidate,7,awfy_list.listelement.§factory,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-candidate,7,awfy_list.listelement.§factory,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-candidate,7,awfy_list.listelement.§factory,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-candidate,7,awfy_list.listelement.§factory,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-candidate,7,awfy_list.listelement.§factory,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-r12-candidate,8,awfy_list.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-candidate,8,awfy_list.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-candidate,8,awfy_list.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-candidate,8,awfy_list.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-candidate,8,awfy_list.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,procedure,1,0,0,1,0,.int,,complete
+list-r12-candidate,8,awfy_list.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/r12-combined/list.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-control,1,base64_roundtrip.base64_decode,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-control,1,base64_roundtrip.base64_decode,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-control,1,base64_roundtrip.base64_decode,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-control,1,base64_roundtrip.base64_decode,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-control,1,base64_roundtrip.base64_decode,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-control,1,base64_roundtrip.base64_decode,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-control,2,base64_roundtrip.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-control,2,base64_roundtrip.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-control,2,base64_roundtrip.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-control,2,base64_roundtrip.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-control,2,base64_roundtrip.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-control,2,base64_roundtrip.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/control/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-candidate,1,base64_roundtrip.base64_decode,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-candidate,1,base64_roundtrip.base64_decode,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-candidate,1,base64_roundtrip.base64_decode,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-candidate,1,base64_roundtrip.base64_decode,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-candidate,1,base64_roundtrip.base64_decode,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-candidate,1,base64_roundtrip.base64_decode,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-b1-candidate,2,base64_roundtrip.main,elapsed,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-candidate,2,base64_roundtrip.main,inclusive_body,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-candidate,2,base64_roundtrip.main,self,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-candidate,2,base64_roundtrip.main,native_child,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-candidate,2,base64_roundtrip.main,entry_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,1,0,0,1,0,.int,,complete
+base64-b1-candidate,2,base64_roundtrip.main,exit_overhead,/tmp/crexx-perf2-05-sa1.MzdvHT/poc-images/b1-icopybr/base64.rxas,procedure,1,0,0,1,0,.int,,complete
