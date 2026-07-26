@@ -1,0 +1,3 @@
+vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total
+rxvm,elapsed_ns,24,84659500.000000,83771000.000000,-11.927636,-2.191580,-1.151991,-0.425462,4.570769,-1.636791,-3.059377,-0.214205,clear_favorable,21,24
+rxbvm,elapsed_ns,24,93284000.000000,90281000.000000,-4.282108,-3.437600,-3.188586,-2.696221,-2.034331,-3.101040,-3.353505,-2.848575,clear_favorable,24,24

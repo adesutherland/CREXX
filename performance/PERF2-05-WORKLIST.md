@@ -1,8 +1,10 @@
 # PERF2-05 RXAS semantic assists and instruction improvement worklist
 
-Status: P05-CF1 complete — broader PERF2-05 remains in progress
+Status: complete — P05-CF1, R2a and R1a accepted and closed green
 
 Started: 2026-07-26
+
+Completed: 2026-07-26
 
 Purpose: prove whether `rxc` can partially evaluate ordinary Level B callable
 bodies from certified RXAS semantics, so equivalent user-written and future
@@ -266,7 +268,7 @@ opcode, RXBIN/ABI change, VM handler or change to observable cursor semantics.
 
 ## P05-SA1 profile-selected semantic-assist panel
 
-Status: in progress — R2a accepted and closed green; R1a remains a separate rung
+Status: complete — accepted production ladder closed green
 
 Started: 2026-07-26
 
@@ -467,3 +469,117 @@ configurations pass 1,922/1,922. R2b remains deferred for separate attribution
 and proof; it was not selected or implemented. R1a remains the next separate
 rung and was not started. R2a is complete, while the broader PERF2-05 activity
 stays open for that separately authorized work.
+
+### R1a production slice and first Release gate
+
+Status: complete — accepted and closed green
+
+Started: 2026-07-26
+
+Adrian authorized implementation on 2026-07-26. R1a remains independently
+revertable from accepted R2a. This slice ends after minimum focused correctness,
+an ordinary profiling-off Release product and the smallest decisive exact-input
+List comparison against the preserved R2a product. It must then stop for
+Adrian's accept, rework or revert decision before broad QA, closeout, R2b, B1,
+commit or push.
+
+#### Exact R1a starting state
+
+- Branch: `develop`
+- HEAD: `e9ecd880364f4ccc704e1596360128f52f2d52b7`
+- Subject: `perf: materialize reference descriptors privately`
+- Upstream: `origin/develop` at
+  `d1c5245d49c0bd9cc48a7d33ef16f2f4555cc986`
+- Ahead/behind: `+5/-0`
+- Starting worktree: clean
+- Preserved R2a ordinary Release `rxvm` SHA-256:
+  `663de379bd1239e446a42e5e2d269319bf9ae1eb98c487d058c2f8cfc5d9bb9b`
+- Preserved R2a ordinary Release `rxbvm` SHA-256:
+  `63f9b9fbec1ada324b580e950acde3eada0442861f516984e59c1f21d71f5eb4`
+- Release identity: CMake `Release`, `-O3 -DNDEBUG`, VM profiling off.
+- Exact retained optimized List RXBIN SHA-256:
+  `6a0b52d8da3930b2edafc849c83faffa7a8e855d96fef4e43d8d52784ca0c4`
+- Exact retained library RXBIN SHA-256:
+  `0095a9073fad7aeec923705c5a9d50c17d14174fcce96128334b3fe19b34ed8a`
+- Both preserved VMs pass the retained List image at work 100.
+
+#### R1a production design selection
+
+| ID | Form | Compatibility and semantic reading | Decision |
+| --- | --- | --- | --- |
+| R1-0 | Retain canonical `UNLINK destination; LINKREF destination,source` | Exact fallback; two dispatches and an instruction boundary between unlink and validation/link | Baseline/fallback. |
+| R1-C | Replace the pair in compiler/RXAS output | Earliest authored owner, but removing the second dispatch needs a new public or serialized form | Rejected for R1a because public RXAS/RXBIN must remain unchanged. |
+| R1-P | Recognize the exact five-cell canonical pair while preparing the process-local execution image and bind a private handler | No public opcode or serialized change; exact same-destination shape, unlink-first state and complete canonical observability fallback | Selected provisional production form. |
+| R1-Q | Learn or patch the site after execution | Adds state and invalidation although the pair shape is statically stable | Rejected; preparation-time selection is sufficient. |
+
+R1-P is eligible only when canonical `UNLINK_REG; LINKREF_REG_REG` instructions
+are adjacent, the unlinked register is the `LINKREF` destination, and the
+source register is distinct. The private path must restore the destination's
+base mapping before validating the source reference, then link the destination
+to the reference target. An invalid or non-reference source must therefore
+raise canonical `REFERENCE_INVALID` with the destination already unlinked and
+the resume point after `LINKREF`.
+
+Debug/TRACE or pending breakpoint execution falls back after canonical
+`UNLINK` to the untouched `LINKREF`, preserving both instruction observations
+and source identity. Nonmatching shapes remain untouched. Canonical instruction
+cells, public RXAS, serialized RXBIN, ABI, reference ownership and target
+lifetime remain unchanged.
+
+#### R1a provisional ledger
+
+- [x] Exact clean R2a baseline and retained List inputs preserved and hashed.
+- [x] Status quo, compiler/public, private-preparation and learned forms
+      compared before production coding.
+- [x] Exact process-local recognizer/private handler implemented with complete
+      canonical fallback.
+- [x] Focused valid relink, invalid/non-reference failure state,
+      nonmatching-shape, TRACE/breakpoint and dual-VM tests pass: 12/12 core
+      guards and 49/49 compiler/import/optimized/no-opt reference checks.
+- [x] Implementation frozen and ordinary profiling-off Release product built.
+- [x] Governed exact-input List verdict retained against accepted R2a through
+      the 36-pair cap.
+- [x] First Release verdict and accept/rework/revert recommendation reported;
+      stop reached before broad QA, R2b, B1, commit or push.
+- [x] Adrian accepted the clear-favorable R1a verdict on 2026-07-26.
+- [x] Complete Debug and ordinary profiling-off Release products rebuild;
+      focused validation passes 12/12 plus 49/49 in each configuration.
+- [x] Broad Debug and Release CTest each pass 1,924/1,924.
+- [x] Worklist, roadmap and checksum-closed evidence reconciled; R2b and B1
+      retained only as evidence-gated future points.
+
+#### R1a first Release verdict
+
+The corrected fresh ordinary profiling-off Release product passes its new
+dual-VM guard 2/2. The same canonical guard RXBIN passes on both preserved R2a
+VMs, and the retained optimized List RXBIN/library passes on both R1a VMs at
+work 100. Together with the frozen Debug results, focused correctness is 12/12
+core/reference/TRACE checks plus 49/49 compiler/import/optimized/no-opt checks.
+
+The exact-input List comparison reached the governed 36-pair cap without
+removing, replacing or reclassifying a sample:
+
+- `rxvm`: paired median `-1.151991%`, 32/36 favorable, mean 95% interval
+  `[-2.337441%, -0.187062%]`;
+- `rxbvm`: paired median `-3.022743%`, 36/36 favorable, mean 95% interval
+  `[-3.204016%, -2.814217%]`.
+
+Both paired results are clear favorable. The final R1a `rxvm` absolute cell has
+a 13.981496% span, but the cap is reached and the complete paired interval
+remains below zero. The recommendation is to accept R1a for closeout. Evidence
+is retained under
+`performance/evidence/2026-07-26-perf2-05-r1a-first-release-verdict/`.
+Adrian accepted the R1a verdict on 2026-07-26. Post-verdict closeout is green:
+the complete Debug and ordinary profiling-off Release products rebuild, the
+focused 12-test and 49-test sets pass in both configurations, and both broad
+CTest configurations pass 1,924/1,924. No sanitizer, install/package,
+cross-platform, expanded-portfolio or repeated-baseline work was added.
+
+R1a is complete. Together with accepted P05-CF1 and R2a, it completes the
+selected PERF2-05 production ladder without a public RXAS instruction or
+canonical RXBIN/ABI change. R2b and B1 remain unselected: R2b needs separately
+attributed post-R2a `copy_value` cost plus reference payload/lifetime proof;
+B1 needs stable multi-workload evidence for a compiler-owned result-forwarding
+form. They do not keep PERF2-05 open. The accepted closeout evidence is
+retained under
+`performance/evidence/2026-07-26-perf2-05-r1a-first-release-verdict/`.

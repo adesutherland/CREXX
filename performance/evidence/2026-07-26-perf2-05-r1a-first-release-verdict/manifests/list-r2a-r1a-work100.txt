@@ -1,0 +1,5 @@
+crexx-cross-runtime-matrix|1
+r2a-rxvm|List-rxvm|crexx-r2a|rxvm|private-reference-descriptor-materialization|A|no|steady|100|PASS: AWFY List||/tmp/crexx-perf2-05-r1a.xbBPgs/baseline/bin/rxvm;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/list.rxbin;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/library.rxbin;-a;100
+r1a-rxvm|List-rxvm|crexx-r1a|rxvm|private-exact-reference-relink|A|no|steady|100|PASS: AWFY List||/tmp/crexx-perf2-05-r1a.xbBPgs/candidate-release-v2/bin/rxvm;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/list.rxbin;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/library.rxbin;-a;100
+r2a-rxbvm|List-rxbvm|crexx-r2a|rxbvm|private-reference-descriptor-materialization|A|no|steady|100|PASS: AWFY List||/tmp/crexx-perf2-05-r1a.xbBPgs/baseline/bin/rxbvm;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/list.rxbin;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/library.rxbin;-a;100
+r1a-rxbvm|List-rxbvm|crexx-r1a|rxbvm|private-exact-reference-relink|A|no|steady|100|PASS: AWFY List||/tmp/crexx-perf2-05-r1a.xbBPgs/candidate-release-v2/bin/rxbvm;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/list.rxbin;/tmp/crexx-perf2-05-r1a.xbBPgs/inputs/library.rxbin;-a;100

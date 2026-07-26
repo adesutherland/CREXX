@@ -2395,7 +2395,10 @@ static char *build_runtime_factory_descriptor(const string_constant *interface_s
  * reference-descriptor path.  This recognizer is deliberately structural and
  * makes no source-name, procedure-name or benchmark assumption.
  */
-enum { RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT = OP_MAX_INSTRUCTIONS };
+enum {
+    RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT = OP_MAX_INSTRUCTIONS,
+    RXVM_PRIVATE_R1_RELINK_REG_REG
+};
 
 static int rxvm_private_r2_copyattr1_candidate(const module *mod,
                                                size_t instruction_index) {
@@ -2424,6 +2427,37 @@ static int rxvm_private_r2_copyattr1_candidate(const module *mod,
     return code[6].index == temporary && code[8].index == temporary &&
            temporary != object && temporary != destination &&
            object != destination;
+}
+
+/*
+ * R1a recognizes only the exact canonical local-relink shape:
+ *
+ *   unlink  destination
+ *   linkref destination, source_reference
+ *
+ * The source must be distinct so unlinking the destination cannot change the
+ * value subsequently validated by LINKREF.  The serialized instruction stream
+ * remains canonical; only the process-local execution image is specialized.
+ */
+static int rxvm_private_r1_relink_candidate(const module *mod,
+                                             size_t instruction_index) {
+    const bin_code *code;
+    size_t destination;
+
+    if (!mod || !mod->segment.binary ||
+            instruction_index > mod->segment.inst_size ||
+            mod->segment.inst_size - instruction_index < 5u)
+        return 0;
+
+    code = mod->segment.binary + instruction_index;
+    if (code[0].instruction.opcode != OP_UNLINK_REG ||
+            code[0].instruction.no_ops != 1 ||
+            code[2].instruction.opcode != OP_LINKREF_REG_REG ||
+            code[2].instruction.no_ops != 2)
+        return 0;
+
+    destination = code[1].index;
+    return code[3].index == destination && code[4].index != destination;
 }
 
 typedef struct rxvm_source_context {
@@ -4809,7 +4843,9 @@ const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
 #undef X
 };
 
-typedef Opcode instructions;
+/* The switch VM also dispatches process-private execution-image opcodes that
+ * intentionally live beyond the public Opcode enum. */
+typedef int instructions;
 
 #ifdef NTHREADED
 #define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_) ((void)0)
@@ -4817,6 +4853,11 @@ typedef Opcode instructions;
     do {                                                                        \
         (image_)[instruction_].instruction.opcode =                             \
                 RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT;                          \
+    } while (0)
+#define VM_BIND_PRIVATE_R1_RELINK_HANDLER(image_, instruction_)                 \
+    do {                                                                        \
+        (image_)[instruction_].instruction.opcode =                             \
+                RXVM_PRIVATE_R1_RELINK_REG_REG;                                 \
     } while (0)
 #else
 const void *address_map[OP_MAX_INSTRUCTIONS] = {
@@ -4836,6 +4877,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #define VM_BIND_PRIVATE_R2_COPYATTR1_HANDLER(image_, instruction_)              \
     do {                                                                        \
         (image_)[instruction_].handler = (void *)&&PRIVATE_R2_COPYATTR1;         \
+    } while (0)
+#define VM_BIND_PRIVATE_R1_RELINK_HANDLER(image_, instruction_)                 \
+    do {                                                                        \
+        (image_)[instruction_].handler = (void *)&&PRIVATE_R1_RELINK;            \
     } while (0)
 #endif
 
@@ -4894,6 +4939,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             if (rxvm_private_r2_copyattr1_candidate(vm_module__,                \
                                                      vm_instruction__)) {        \
                 VM_BIND_PRIVATE_R2_COPYATTR1_HANDLER(                            \
+                        vm_module__->execution_image, vm_instruction__);        \
+            }                                                                   \
+            if (rxvm_private_r1_relink_candidate(vm_module__,                   \
+                                                  vm_instruction__)) {          \
+                VM_BIND_PRIVATE_R1_RELINK_HANDLER(                              \
                         vm_module__->execution_image, vm_instruction__);        \
             }                                                                   \
         }                                                                       \
@@ -7875,6 +7925,49 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 copy_value(op1R, target);
             }
             DISPATCH;
+
+#ifdef NTHREADED
+        case RXVM_PRIVATE_R1_RELINK_REG_REG:
+#else
+        PRIVATE_R1_RELINK:
+#endif
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
+                    current_module->module_number,
+                    VM_CANONICAL_INDEX(pc), OP_UNLINK_REG);
+            DEBUG("TRACE - UNLINK R%lu\n", REG_IDX(1));
+            {
+                size_t site_index = VM_CANONICAL_INDEX(pc);
+                size_t destination = REG_IDX(1);
+                size_t source_register = (pc + 4)->index;
+                value *source = current_locals[source_register];
+                rxvm_reference_cell *cell;
+                value *target;
+
+                /* Canonical UNLINK precedes LINKREF validation and failure. */
+                current_locals[destination] =
+                        current_frame->baselocals[destination];
+
+                if (context->debug_mode ||
+                        (interrupts & rxsignal_mask(RXSIGNAL_BREAKPOINT)) != 0) {
+                    /* Preserve both canonical observations and their metadata. */
+                    VM_SELECT_INDEX(site_index + 2u,
+                                    RXVM_TRANSITION_SEQUENTIAL);
+                    DISPATCH;
+                }
+
+                cell = rxvm_reference_payload_cell(source);
+                target = rxvm_reference_cell_target(cell);
+                if (!target) {
+                    /* Preserve LINKREF signal attribution and resume behavior. */
+                    VM_SELECT_INDEX(site_index + 2u,
+                                    RXVM_TRANSITION_SEQUENTIAL);
+                    DISPATCH;
+                }
+
+                current_locals[destination] = target;
+                VM_SELECT_INDEX(site_index + 5u, RXVM_TRANSITION_SEQUENTIAL);
+                DISPATCH;
+            }
 
         START_INSTRUCTION(LINKREF_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - LINKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));

@@ -194,7 +194,7 @@ Source:
 | PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
-| PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | in progress | R2a is accepted and closed green at -2.731%/-1.745% paired median on List; Debug and Release CTest pass 1,922/1,922. R2b is deferred, and separate R1a has not started. |
+| PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
@@ -709,7 +709,7 @@ combination or private quickened form. A BIF may complete with no new opcode.
 
 ## PERF2-05 — RXAS semantic assists and instruction improvement
 
-Status: **in progress — P05-CF1 and R2a complete; separate R1a remains**.
+Status: **complete — accepted production ladder closed 2026-07-26**.
 Adrian accepted P05-CF1's favorable first ordinary Release verdict on
 2026-07-26 because the body-driven design optimizes ordinary user-written and
 future functions without a BIF registry. `LENGTH`, `SUBSTR` and `WORD` all
@@ -762,9 +762,47 @@ Evidence is retained under
 Adrian accepted R2a on 2026-07-26. Its full Debug and ordinary profiling-off
 Release products build, and both broad CTest configurations pass 1,922/1,922.
 R2a is closed green. R2b remains deferred because it lacks separate cost
-attribution and shape/lifetime proof; it was not selected or implemented. R1a
-remains the next independently revertable rung and has not started, so the
-broader PERF2-05 activity remains in progress.
+attribution and shape/lifetime proof; it was not selected or implemented. At
+that closeout, R1a remained the next independently revertable rung and had not
+started, so the broader PERF2-05 activity remained in progress.
+
+Adrian authorized the separate R1a production slice on 2026-07-26. It targets
+only exact adjacent `UNLINK destination; LINKREF destination,source` shapes,
+preserves unlink-before-validation failure state, and keeps public RXAS plus
+canonical RXBIN unchanged through a process-local private execution form. The
+accepted R2a ordinary Release product is preserved as the comparison baseline.
+R1a must stop after focused correctness and its own smallest decisive first
+Release verdict; broad QA, closeout, R2b and B1 remain outside that gate.
+
+The corrected R1a product passes 12/12 focused core/reference/TRACE checks,
+49/49 compiler/import/optimized/no-opt checks and its fresh Release dual-VM
+guard 2/2. Its exact-input List verdict reached the governed 36-pair cap:
+`rxvm` is `-1.151991%` paired median with 32/36 favorable pairs and a
+`[-2.337441%, -0.187062%]` mean 95% interval; `rxbvm` is `-3.022743%` with
+36/36 favorable and a `[-3.204016%, -2.814217%]` interval. Both are clear
+favorable, so the recommendation is to accept R1a for closeout. Evidence is
+retained under
+`performance/evidence/2026-07-26-perf2-05-r1a-first-release-verdict/`.
+Adrian accepted R1a on 2026-07-26. The full Debug and ordinary profiling-off
+Release products rebuild, the 12-test core/reference/TRACE and 49-test
+compiler/import/optimized/no-opt sets pass in each configuration, and broad
+CTest passes 1,924/1,924 in both configurations. R1a is closed green. In line
+with the bounded closeout path, sanitizer, install/package, cross-platform,
+expanded-portfolio and repeated-baseline work were not added.
+
+Accepted P05-CF1, R2a and R1a complete PERF2-05. The final production result
+uses compiler composition plus exact private execution-image forms; it adds no
+public RXAS instruction and changes no canonical RXBIN or ABI contract. The
+neutral and deferred opportunities remain explicitly governed below and do
+not keep the activity open.
+
+| ID | Future point | Evidence required to reopen | Route / disposition |
+| --- | --- | --- | --- |
+| PERF2-05-F01 | R2b payload-only reference-descriptor copy | A fresh post-R2a profile must attribute material residual cost to canonical `copy_value`, followed by mechanical destination-cleanup, cell retain/release, identity, representation and invalidation proof | Route ownership/value work to PERF2-07; do not infer benefit from the older public ceiling gap. |
+| PERF2-05-F02 | Neutral `ICOPY; BR`/B1 result forwarding | A compiler-owned result-forwarding PoC must be mathematically equivalent, reduce work and show stable benefit on multiple workloads in both VMs | Route to the selecting compiler/flow activity; do not reopen as frequency-only fusion. |
+
+Final R1a evidence is retained under
+[`2026-07-26-perf2-05-r1a-first-release-verdict/`](evidence/2026-07-26-perf2-05-r1a-first-release-verdict/).
 
 ### Starting point
 

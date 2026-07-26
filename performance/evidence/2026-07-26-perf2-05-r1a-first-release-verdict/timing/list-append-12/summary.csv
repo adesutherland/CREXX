@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+r2a-rxvm,List-rxvm,crexx-r2a,rxvm,private-reference-descriptor-materialization,A,no,steady,100,elapsed_ns,12,83698000.000000,84512750.000000,84945500.000000,88172000.000000,93312000.000000,935500.000000,1.101294,11.317845,yes
+r1a-rxvm,List-rxvm,crexx-r1a,rxvm,private-exact-reference-relink,A,no,steady,100,elapsed_ns,12,82784000.000000,83522250.000000,83794500.000000,85519500.000000,90407000.000000,709000.000000,0.846118,9.097256,no
+r2a-rxbvm,List-rxbvm,crexx-r2a,rxbvm,private-reference-descriptor-materialization,A,no,steady,100,elapsed_ns,12,92717000.000000,93275500.000000,93406500.000000,93534500.000000,93878000.000000,180500.000000,0.193241,1.242954,no
+r1a-rxbvm,List-rxbvm,crexx-r1a,rxbvm,private-exact-reference-relink,A,no,steady,100,elapsed_ns,12,89479000.000000,90106500.000000,90308000.000000,90501000.000000,90871000.000000,206000.000000,0.228108,1.541392,no

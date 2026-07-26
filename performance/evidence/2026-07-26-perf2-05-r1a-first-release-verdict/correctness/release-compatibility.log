@@ -1,0 +1,8 @@
+PASS: PERF2-05 Exact Reference Relink
+PASS: PERF2-05 Exact Reference Relink
+PASS: PERF2-05 Exact Reference Relink
+PASS: PERF2-05 Exact Reference Relink
+benchmark=awfy_list repetitions=100 result=10
+PASS: AWFY List
+benchmark=awfy_list repetitions=100 result=10
+PASS: AWFY List

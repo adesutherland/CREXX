@@ -836,6 +836,10 @@ crexx_add_vm_dual_test(NAME rxasperf2referenceguardtests RXVM_ARGS tests_perf2_r
 crexx_add_rxas_vm_binary(tests_perf2_partial_reference_materialization "PERF2-05 partial reference materialization")
 crexx_add_vm_dual_test(NAME rxasperf2partialreferencetests RXVM_ARGS tests_perf2_partial_reference_materialization PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Partial Reference Materialization")
 
+# PERF2-05 R1a private exact local-reference relink and fallbacks
+crexx_add_rxas_vm_binary(tests_perf2_exact_relink "PERF2-05 exact reference relink")
+crexx_add_vm_dual_test(NAME rxasperf2exactrelinktests RXVM_ARGS tests_perf2_exact_relink PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Exact Reference Relink")
+
 # Instruction Sanity Tests - object initialization lifecycle
 crexx_add_rxas_vm_binary(tests_object_initialization "object initialization lifecycle instructions")
 crexx_add_vm_dual_test(NAME rxasobjectinitializationtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
