@@ -70,7 +70,7 @@
 #include "rxcp_val.h"
 #include "rxcp_util.h"
 #include "rxcp_constant.h"
-#include "rxcp_certified_call.h"
+#include "rxcp_partial_call.h"
 #include "rxcp_remap_build.h"
 #include "rxvmvars.h"
 #include "rxvalue.h"
@@ -94,9 +94,9 @@ static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* st
 static void rewrite_to_parsed_literal_constant(ASTNode* node, Payload* payload, ASTNode* literal, ValueType literal_type);
 static int strict_string_compare_operand(ASTNode *node);
 
-static walker_result certified_call_walker(walker_direction direction,
-                                            ASTNode *node,
-                                            void *pload);
+static walker_result partial_call_walker(walker_direction direction,
+                                         ASTNode *node,
+                                         void *pload);
 
 static int semantic_context_is_internal_operand(ASTNode *node) {
     return ast_semantic_context_kind(node) == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
@@ -1867,39 +1867,38 @@ static walker_result opt1_walker(walker_direction direction,
     return result_normal;
 }
 
-/* Fold enabled certified callables before inlining destroys their callable
- * identity.  Actual expressions are reduced with the ordinary typed constant
- * folder first; the certificate evaluator then accepts only an all-constant,
- * non-signalling semantic cell.  Any rejection leaves the complete Level B
- * call available to the normal inliner/fallback path. */
-static walker_result certified_call_walker(walker_direction direction,
-                                            ASTNode *node,
-                                            void *pload) {
+/* Evaluate proved Level B bodies before inlining destroys their callable
+ * identity. Actual expressions are reduced with the ordinary typed constant
+ * folder first; the bounded evaluator then accepts only an all-constant,
+ * non-signalling path through admitted language and RXAS semantics. Any
+ * rejection leaves the complete Level B call for normal inlining/fallback. */
+static walker_result partial_call_walker(walker_direction direction,
+                                         ASTNode *node,
+                                         void *pload) {
     Payload *payload;
     ASTNode *actual;
-    RxcpCertifiedCallResult result;
+    RxcpPartialCallResult result;
 
-    if (direction == in) return result_normal;
-    if (!rxcp_certified_call_candidate(node)) return result_normal;
+    if (direction == in || !node || node->node_type != FUNCTION) return result_normal;
 
     payload = (Payload *)pload;
     for (actual = node->child; actual; actual = actual->sibling) {
         if (actual->node_type != NOVAL) ast_wlkr(actual, opt1_walker, payload);
     }
 
-    if (!rxcp_certified_call_evaluate(payload->context, node, &result)) {
+    if (!rxcp_partial_call_evaluate(payload->context, node, &result)) {
         return result_normal;
     }
 
-    /* Validate the complete replacement before detaching the proved call.  A
-     * future certificate must never turn an unsupported result representation
+    /* Validate the complete replacement before detaching the proved call. A
+     * future evaluator extension must never turn an unsupported representation
      * into an empty or partially rewritten AST node. */
     if ((result.type == TP_STRING && !result.string_value) ||
         (result.type == TP_DECIMAL && !result.decimal_value) ||
         (result.type != TP_STRING && result.type != TP_INTEGER &&
          result.type != TP_BOOLEAN && result.type != TP_FLOAT &&
          result.type != TP_DECIMAL)) {
-        rxcp_certified_call_result_clear(&result);
+        rxcp_partial_call_result_clear(&result);
         return result_normal;
     }
 
@@ -1929,7 +1928,7 @@ static walker_result certified_call_walker(walker_direction direction,
             /* Guarded above; retained for compiler exhaustiveness. */
             break;
     }
-    rxcp_certified_call_result_clear(&result);
+    rxcp_partial_call_result_clear(&result);
     return result_normal;
 }
 
@@ -2468,16 +2467,17 @@ void optimise(Context *context) {
     payload.explicit_constants_only = 0;
 
     /* Expose the same ordinary constant facts used by the mature optimizer
-     * before certified-call evaluation.  This is deliberately general: a
-     * single-assignment value such as a loop-local string can feed any exact
-     * certificate without a callable-specific variable recognizer. */
+     * before body evaluation. A single-assignment value such as a loop-local
+     * string can feed any proved body without a callable-specific recognizer. */
     fold_and_propagate_constants(context, &payload);
 
-    /* Certified call constant evaluation must retain the resolved callable
-     * identity, so it precedes general inlining. */
-    ast_wlkr(context->ast, certified_call_walker, (void *) &payload);
+    /* Body evaluation retains resolved callable identity and therefore
+     * precedes general inlining. Exact local/source bodies use their validated
+     * callable scope directly; transported binary bodies still require the
+     * normal reconstructed I6/template proof. */
+    ast_wlkr(context->ast, partial_call_walker, (void *) &payload);
 
-    /* A certified value may make its ordinary consumer constant too (for
+    /* An evaluated value may make its ordinary consumer constant too (for
      * example WORD("Key Bee", 1) = "?").  Fold that consumer before
      * inlining so the proved call reaches the zero-runtime-work ceiling. */
     fold_and_propagate_constants(context, &payload);

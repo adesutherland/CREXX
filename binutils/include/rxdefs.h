@@ -217,6 +217,25 @@ typedef enum {
     RXOP_SEM_OPAQUE = 8192
 } RxOpSemanticFlags;
 
+/* Compile-time evaluators are semantic implementations shared by any callable
+ * body that uses the instruction; they are not BIF identities.  NONE is the
+ * fail-closed default for every instruction not individually proved. */
+typedef enum {
+    RXOP_CONST_EVAL_NONE = 0,
+    RXOP_CONST_EVAL_STRLEN,
+    RXOP_CONST_EVAL_SETSTRPOS,
+    RXOP_CONST_EVAL_GETSTRPOS,
+    RXOP_CONST_EVAL_STRCHAR_AT,
+    RXOP_CONST_EVAL_SUBSTRING,
+    RXOP_CONST_EVAL_PADSTR,
+    RXOP_CONST_EVAL_FNDBLNK,
+    RXOP_CONST_EVAL_FNDNBLNK,
+    RXOP_CONST_EVAL_SCOPY,
+    RXOP_CONST_EVAL_APPEND,
+    RXOP_CONST_EVAL_STRLOWER,
+    RXOP_CONST_EVAL_STRUPPER
+} RxOpConstEvaluator;
+
 typedef struct {
     int opcode;
     RxOpEffectState state;
@@ -231,6 +250,11 @@ typedef struct {
     const char *branch_targets_signature;
     RxOpImplicitEffect implicit;
     unsigned int semantics;
+    /* Value-internal cursor state is separately observable through RXAS and
+     * therefore cannot be hidden inside the coarse payload read/write masks. */
+    unsigned int cursor_reads;
+    unsigned int cursor_writes;
+    RxOpConstEvaluator const_evaluator;
     FlowType flow;
     int optimizer_barrier;
 } RxOpEffects;
@@ -269,6 +293,8 @@ int rxop_effect_reads_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_kills_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand_index);
+int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index);
+int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
 
 void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);
 void *src_instv(const char *name, const OperandType *operands, size_t operand_count);

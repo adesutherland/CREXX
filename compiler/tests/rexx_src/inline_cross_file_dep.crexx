@@ -1,5 +1,5 @@
 options levelb
-namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength typeBump vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
+namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength typeBump vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget residualText refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
 
 inc: procedure = .int
   arg value = .int
@@ -134,3 +134,11 @@ box: class
     arg next = .string
     name = next
     return
+
+/* Keep one source-bearing assembler helper dynamic so the source- and
+ * binary-import tests continue to verify transported inline source identity
+ * even when every constant scalar helper is partially evaluated. */
+residualText: procedure = .string
+  value = "abcdef"
+  assembler unlink value
+  return value

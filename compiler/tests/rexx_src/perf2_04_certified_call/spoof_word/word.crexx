@@ -2,8 +2,8 @@ options levelb
 namespace rxfnsb expose word
 
 /* This deliberately retains WORD's exact callable summary and behavior for
- * the selected success case but changes one signal payload.  The body
- * fingerprint must reject its certificate. */
+ * the selected success case but changes one signal payload. Body-driven
+ * evaluation must execute the actual selected path, independent of identity. */
 word: procedure = .string
   arg string = .string, wordnum = .int
   if wordnum < 1 then

@@ -4,456 +4,166 @@
 
 .globals=0
 
-main() .locals=6
+main() .locals=7
    .meta "inline_test_byvalue_arg_reuse.main"="b" ".int" main() ""
-   .srcstep 123 123 17 "inline_test_byvalue_arg_reuse.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 33 33 17 "inline_test_byvalue_arg_reuse.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_byvalue_arg_reuse.crexx" 4 3 13 "  errors = 0"
    .meta "inline_test_byvalue_arg_reuse.main.errors"="b" ".int" r3
    load r3,0
    .traceevent "L" 4 "R" "I" "r" 3 1 1 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 3 1 1 0 "errors" ""
-   .srcstep 11 11 17 "inline_test_byvalue_arg_reuse.crexx" 6 3 42 "  errors = errors + check(same(1), \"one\")"
+   .srcstep 2 2 17 "inline_test_byvalue_arg_reuse.crexx" 6 3 42 "  errors = errors + check(same(1), \"one\")"
+   .traceevent "V" 6 "R" "I" "r" 3 2 2 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 2 2 0 "errors" ""
+   .srcstep 3 3 17 "inline_test_byvalue_arg_reuse.crexx" 7 3 42 "  errors = errors + check(same(2), \"two\")"
+   .traceevent "V" 6 "R" "I" "r" 3 3 3 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 3 3 0 "errors" ""
+   .srcstep 4 4 17 "inline_test_byvalue_arg_reuse.crexx" 8 3 44 "  errors = errors + check(same(3), \"three\")"
+   .traceevent "V" 6 "R" "I" "r" 3 4 4 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "errors" ""
+   .srcstep 5 5 17 "inline_test_byvalue_arg_reuse.crexx" 9 3 43 "  errors = errors + check(same(4), \"four\")"
+   .traceevent "V" 6 "R" "I" "r" 3 5 5 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "errors" ""
+   .srcstep 6 6 17 "inline_test_byvalue_arg_reuse.crexx" 10 3 43 "  errors = errors + check(same(5), \"five\")"
+   .traceevent "V" 6 "R" "I" "r" 3 6 6 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "errors" ""
+   .srcstep 7 7 17 "inline_test_byvalue_arg_reuse.crexx" 11 3 42 "  errors = errors + check(same(6), \"six\")"
+   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "errors" ""
+   .srcstep 8 8 17 "inline_test_byvalue_arg_reuse.crexx" 12 3 44 "  errors = errors + check(same(7), \"seven\")"
+   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "errors" ""
+   .srcstep 9 9 17 "inline_test_byvalue_arg_reuse.crexx" 13 3 44 "  errors = errors + check(same(8), \"eight\")"
+   .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 9 9 0 "errors" ""
+   .srcstep 10 10 17 "inline_test_byvalue_arg_reuse.crexx" 14 3 43 "  errors = errors + check(same(9), \"nine\")"
+   .traceevent "V" 6 "R" "I" "r" 3 10 10 0 "errors" ""
+   iadd r3,r3,0
+   .traceevent "O" 4 "R" "I" "r" 3 10 10 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 10 10 0 "errors" ""
+   .srcstep 11 11 17 "inline_test_byvalue_arg_reuse.crexx" 15 3 43 "  errors = errors + check(same(10), \"ten\")"
    .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "errors" ""
-   .srcstep 10 10 17 "inline_test_byvalue_arg_reuse.crexx" 6 21 26 "  errors = errors + check(same(1), \"one\")"
-   .srcstep 4 4 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 3 3 17 "inline_test_byvalue_arg_reuse.crexx" 6 27 31 "  errors = errors + check(same(1), \"one\")"
-   .srcstep 2 2 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r0,1
-   .traceevent "L" 4 "R" "B" "r" 0 4 4 0 "" ""
-   icopy r4,r0
-   br l189bexprend
-l189bexprend:
-   icopy r2,r4
-   .traceevent "A" 6 "R" "B" "r" 2 4 4 0 "passed" ""
-   .srcstep 6 6 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 2 6 6 0 "passed" ""
-   brf l201iffalse,r2
-   .srcstep 7 7 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 5 5 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 11 11 0 "" ""
-   icopy r0,r4
-   br l185bexprend
-l201iffalse:
-   .srcstep 8 8 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL one"
-   .srcstep 9 9 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r4,1
-   .traceevent "L" 4 "R" "I" "r" 4 11 11 0 "" ""
-   icopy r0,r4
-   br l185bexprend
-l185bexprend:
-   iadd r3,r3,r0
+   iadd r3,r3,0
    .traceevent "O" 4 "R" "I" "r" 3 11 11 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 3 11 11 0 "errors" ""
-   .srcstep 21 21 17 "inline_test_byvalue_arg_reuse.crexx" 7 3 42 "  errors = errors + check(same(2), \"two\")"
-   .traceevent "V" 6 "R" "I" "r" 3 21 21 0 "errors" ""
-   .srcstep 20 20 17 "inline_test_byvalue_arg_reuse.crexx" 7 21 26 "  errors = errors + check(same(2), \"two\")"
-   .srcstep 14 14 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 13 13 17 "inline_test_byvalue_arg_reuse.crexx" 7 27 31 "  errors = errors + check(same(2), \"two\")"
-   .srcstep 12 12 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 14 14 0 "" ""
-   icopy r0,r2
-   br l224bexprend
-l224bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 14 14 0 "passed" ""
-   .srcstep 16 16 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 16 16 0 "passed" ""
-   brf l236iffalse,r4
-   .srcstep 17 17 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 15 15 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 21 21 0 "" ""
-   icopy r0,r2
-   br l220bexprend
-l236iffalse:
-   .srcstep 18 18 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL two"
-   .srcstep 19 19 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 21 21 0 "" ""
-   icopy r0,r2
-   br l220bexprend
-l220bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 21 21 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 21 21 0 "errors" ""
-   .srcstep 31 31 17 "inline_test_byvalue_arg_reuse.crexx" 8 3 44 "  errors = errors + check(same(3), \"three\")"
-   .traceevent "V" 6 "R" "I" "r" 3 31 31 0 "errors" ""
-   .srcstep 30 30 17 "inline_test_byvalue_arg_reuse.crexx" 8 21 26 "  errors = errors + check(same(3), \"three\")"
-   .srcstep 24 24 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 23 23 17 "inline_test_byvalue_arg_reuse.crexx" 8 27 31 "  errors = errors + check(same(3), \"three\")"
-   .srcstep 22 22 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 24 24 0 "" ""
-   icopy r0,r2
-   br l259bexprend
-l259bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 24 24 0 "passed" ""
-   .srcstep 26 26 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 26 26 0 "passed" ""
-   brf l271iffalse,r4
-   .srcstep 27 27 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 25 25 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 31 31 0 "" ""
-   icopy r0,r2
-   br l255bexprend
-l271iffalse:
-   .srcstep 28 28 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL three"
-   .srcstep 29 29 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 31 31 0 "" ""
-   icopy r0,r2
-   br l255bexprend
-l255bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 31 31 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 31 31 0 "errors" ""
-   .srcstep 41 41 17 "inline_test_byvalue_arg_reuse.crexx" 9 3 43 "  errors = errors + check(same(4), \"four\")"
-   .traceevent "V" 6 "R" "I" "r" 3 41 41 0 "errors" ""
-   .srcstep 40 40 17 "inline_test_byvalue_arg_reuse.crexx" 9 21 26 "  errors = errors + check(same(4), \"four\")"
-   .srcstep 34 34 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 33 33 17 "inline_test_byvalue_arg_reuse.crexx" 9 27 31 "  errors = errors + check(same(4), \"four\")"
-   .srcstep 32 32 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 34 34 0 "" ""
-   icopy r0,r2
-   br l294bexprend
-l294bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 34 34 0 "passed" ""
-   .srcstep 36 36 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 36 36 0 "passed" ""
-   brf l306iffalse,r4
-   .srcstep 37 37 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 35 35 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 41 41 0 "" ""
-   icopy r0,r2
-   br l290bexprend
-l306iffalse:
-   .srcstep 38 38 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL four"
-   .srcstep 39 39 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 41 41 0 "" ""
-   icopy r0,r2
-   br l290bexprend
-l290bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 41 41 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 41 41 0 "errors" ""
-   .srcstep 51 51 17 "inline_test_byvalue_arg_reuse.crexx" 10 3 43 "  errors = errors + check(same(5), \"five\")"
-   .traceevent "V" 6 "R" "I" "r" 3 51 51 0 "errors" ""
-   .srcstep 50 50 17 "inline_test_byvalue_arg_reuse.crexx" 10 21 26 "  errors = errors + check(same(5), \"five\")"
-   .srcstep 44 44 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 43 43 17 "inline_test_byvalue_arg_reuse.crexx" 10 27 31 "  errors = errors + check(same(5), \"five\")"
-   .srcstep 42 42 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 44 44 0 "" ""
-   icopy r0,r2
-   br l329bexprend
-l329bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 44 44 0 "passed" ""
-   .srcstep 46 46 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 46 46 0 "passed" ""
-   brf l341iffalse,r4
-   .srcstep 47 47 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 45 45 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 51 51 0 "" ""
-   icopy r0,r2
-   br l325bexprend
-l341iffalse:
-   .srcstep 48 48 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL five"
-   .srcstep 49 49 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 51 51 0 "" ""
-   icopy r0,r2
-   br l325bexprend
-l325bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 51 51 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 51 51 0 "errors" ""
-   .srcstep 61 61 17 "inline_test_byvalue_arg_reuse.crexx" 11 3 42 "  errors = errors + check(same(6), \"six\")"
-   .traceevent "V" 6 "R" "I" "r" 3 61 61 0 "errors" ""
-   .srcstep 60 60 17 "inline_test_byvalue_arg_reuse.crexx" 11 21 26 "  errors = errors + check(same(6), \"six\")"
-   .srcstep 54 54 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 53 53 17 "inline_test_byvalue_arg_reuse.crexx" 11 27 31 "  errors = errors + check(same(6), \"six\")"
-   .srcstep 52 52 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 54 54 0 "" ""
-   icopy r0,r2
-   br l364bexprend
-l364bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 54 54 0 "passed" ""
-   .srcstep 56 56 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 56 56 0 "passed" ""
-   brf l376iffalse,r4
-   .srcstep 57 57 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 55 55 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 61 61 0 "" ""
-   icopy r0,r2
-   br l360bexprend
-l376iffalse:
-   .srcstep 58 58 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL six"
-   .srcstep 59 59 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 61 61 0 "" ""
-   icopy r0,r2
-   br l360bexprend
-l360bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 61 61 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 61 61 0 "errors" ""
-   .srcstep 71 71 17 "inline_test_byvalue_arg_reuse.crexx" 12 3 44 "  errors = errors + check(same(7), \"seven\")"
-   .traceevent "V" 6 "R" "I" "r" 3 71 71 0 "errors" ""
-   .srcstep 70 70 17 "inline_test_byvalue_arg_reuse.crexx" 12 21 26 "  errors = errors + check(same(7), \"seven\")"
-   .srcstep 64 64 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 63 63 17 "inline_test_byvalue_arg_reuse.crexx" 12 27 31 "  errors = errors + check(same(7), \"seven\")"
-   .srcstep 62 62 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 64 64 0 "" ""
-   icopy r0,r2
-   br l399bexprend
-l399bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 64 64 0 "passed" ""
-   .srcstep 66 66 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 66 66 0 "passed" ""
-   brf l411iffalse,r4
-   .srcstep 67 67 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 65 65 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 71 71 0 "" ""
-   icopy r0,r2
-   br l395bexprend
-l411iffalse:
-   .srcstep 68 68 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL seven"
-   .srcstep 69 69 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 71 71 0 "" ""
-   icopy r0,r2
-   br l395bexprend
-l395bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 71 71 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 71 71 0 "errors" ""
-   .srcstep 81 81 17 "inline_test_byvalue_arg_reuse.crexx" 13 3 44 "  errors = errors + check(same(8), \"eight\")"
-   .traceevent "V" 6 "R" "I" "r" 3 81 81 0 "errors" ""
-   .srcstep 80 80 17 "inline_test_byvalue_arg_reuse.crexx" 13 21 26 "  errors = errors + check(same(8), \"eight\")"
-   .srcstep 74 74 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 73 73 17 "inline_test_byvalue_arg_reuse.crexx" 13 27 31 "  errors = errors + check(same(8), \"eight\")"
-   .srcstep 72 72 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 74 74 0 "" ""
-   icopy r0,r2
-   br l434bexprend
-l434bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 74 74 0 "passed" ""
-   .srcstep 76 76 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 76 76 0 "passed" ""
-   brf l446iffalse,r4
-   .srcstep 77 77 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 75 75 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 81 81 0 "" ""
-   icopy r0,r2
-   br l430bexprend
-l446iffalse:
-   .srcstep 78 78 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL eight"
-   .srcstep 79 79 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 81 81 0 "" ""
-   icopy r0,r2
-   br l430bexprend
-l430bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 81 81 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 81 81 0 "errors" ""
-   .srcstep 91 91 17 "inline_test_byvalue_arg_reuse.crexx" 14 3 43 "  errors = errors + check(same(9), \"nine\")"
-   .traceevent "V" 6 "R" "I" "r" 3 91 91 0 "errors" ""
-   .srcstep 90 90 17 "inline_test_byvalue_arg_reuse.crexx" 14 21 26 "  errors = errors + check(same(9), \"nine\")"
-   .srcstep 84 84 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 83 83 17 "inline_test_byvalue_arg_reuse.crexx" 14 27 31 "  errors = errors + check(same(9), \"nine\")"
-   .srcstep 82 82 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 84 84 0 "" ""
-   icopy r0,r2
-   br l469bexprend
-l469bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 84 84 0 "passed" ""
-   .srcstep 86 86 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 86 86 0 "passed" ""
-   brf l481iffalse,r4
-   .srcstep 87 87 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 85 85 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 91 91 0 "" ""
-   icopy r0,r2
-   br l465bexprend
-l481iffalse:
-   .srcstep 88 88 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL nine"
-   .srcstep 89 89 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 91 91 0 "" ""
-   icopy r0,r2
-   br l465bexprend
-l465bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 91 91 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 91 91 0 "errors" ""
-   .srcstep 101 101 17 "inline_test_byvalue_arg_reuse.crexx" 15 3 43 "  errors = errors + check(same(10), \"ten\")"
-   .traceevent "V" 6 "R" "I" "r" 3 101 101 0 "errors" ""
-   .srcstep 100 100 17 "inline_test_byvalue_arg_reuse.crexx" 15 21 26 "  errors = errors + check(same(10), \"ten\")"
-   .srcstep 94 94 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .srcstep 93 93 17 "inline_test_byvalue_arg_reuse.crexx" 15 27 31 "  errors = errors + check(same(10), \"ten\")"
-   .srcstep 92 92 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 23 "  return value = value"
-   load r2,1
-   .traceevent "L" 4 "R" "B" "r" 2 94 94 0 "" ""
-   icopy r0,r2
-   br l504bexprend
-l504bexprend:
-   icopy r4,r0
-   .traceevent "A" 6 "R" "B" "r" 4 94 94 0 "passed" ""
-   .srcstep 96 96 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 96 96 0 "passed" ""
-   brf l516iffalse,r4
-   .srcstep 97 97 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 95 95 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 101 101 0 "" ""
-   icopy r0,r2
-   br l500bexprend
-l516iffalse:
-   .srcstep 98 98 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
-   say "FAIL ten"
-   .srcstep 99 99 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 101 101 0 "" ""
-   icopy r0,r2
-   br l500bexprend
-l500bexprend:
-   iadd r3,r3,r0
-   .traceevent "O" 4 "R" "I" "r" 3 101 101 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 101 101 0 "errors" ""
-   .srcstep 102 102 17 "inline_test_byvalue_arg_reuse.crexx" 17 3 12 "  value = 7"
+   .srcstep 12 12 17 "inline_test_byvalue_arg_reuse.crexx" 17 3 12 "  value = 7"
    .meta "inline_test_byvalue_arg_reuse.main.value"="b" ".int" r1
    load r1,7
-   .traceevent "L" 4 "R" "I" "r" 1 102 102 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 1 102 102 0 "value" ""
-   .srcstep 110 110 17 "inline_test_byvalue_arg_reuse.crexx" 18 3 95 "  errors = errors + check(snapshotThenIncrement(value, value) = 88, \"ref-overlap-call-parity\")"
-   .traceevent "V" 6 "R" "I" "r" 3 110 110 0 "errors" ""
-   .srcstep 109 109 17 "inline_test_byvalue_arg_reuse.crexx" 18 21 26 "  errors = errors + check(snapshotThenIncrement(value, value) = 88, \"ref-overlap-call-parity\")"
-   .srcstep 103 103 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .traceevent "V" 6 "R" "I" "r" 1 103 103 0 "value" ""
-   .traceevent "V" 6 "R" "I" "r" 1 103 103 0 "value" ""
-   call2 r5,snapshotThenIncrement(),r1,r1
-   .traceevent "F" 4 "R" "I" "r" 5 103 103 0 "snapshotthenincrement" ""
-   ieq r4,r5,88
-   .traceevent "O" 4 "R" "B" "r" 4 103 103 0 "" ""
-   .traceevent "A" 6 "R" "B" "r" 4 103 103 0 "passed" ""
-   .srcstep 105 105 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 4 105 105 0 "passed" ""
-   brf l540iffalse,r4
-   .srcstep 106 106 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 104 104 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r5,0
-   .traceevent "L" 4 "R" "I" "r" 5 110 110 0 "" ""
-   icopy r2,r5
-   br l528bexprend
-l540iffalse:
-   .srcstep 107 107 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
+   .traceevent "L" 4 "R" "I" "r" 1 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 12 12 0 "value" ""
+   .srcstep 20 20 17 "inline_test_byvalue_arg_reuse.crexx" 18 3 95 "  errors = errors + check(snapshotThenIncrement(value, value) = 88, \"ref-overlap-call-parity\")"
+   .traceevent "V" 6 "R" "I" "r" 3 20 20 0 "errors" ""
+   .srcstep 19 19 17 "inline_test_byvalue_arg_reuse.crexx" 18 21 26 "  errors = errors + check(snapshotThenIncrement(value, value) = 88, \"ref-overlap-call-parity\")"
+   .srcstep 13 13 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
+   .traceevent "V" 6 "R" "I" "r" 1 13 13 0 "value" ""
+   .traceevent "V" 6 "R" "I" "r" 1 13 13 0 "value" ""
+   call2 r0,snapshotThenIncrement(),r1,r1
+   .traceevent "F" 4 "R" "I" "r" 0 13 13 0 "snapshotthenincrement" ""
+   ieq r2,r0,88
+   .traceevent "O" 4 "R" "B" "r" 2 13 13 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 2 13 13 0 "passed" ""
+   .srcstep 15 15 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
+   .traceevent "V" 6 "R" "B" "r" 2 15 15 0 "passed" ""
+   brf l190iffalse,r2
+   .srcstep 16 16 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
+   .srcstep 14 14 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
+   icopy r5,r6
+   br l178bexprend
+l190iffalse:
+   .srcstep 17 17 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
    say "FAIL ref-overlap-call-parity"
-   .srcstep 108 108 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r5,1
-   .traceevent "L" 4 "R" "I" "r" 5 110 110 0 "" ""
-   icopy r2,r5
-   br l528bexprend
-l528bexprend:
-   iadd r3,r3,r2
-   .traceevent "O" 4 "R" "I" "r" 3 110 110 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 110 110 0 "errors" ""
-   .srcstep 118 118 17 "inline_test_byvalue_arg_reuse.crexx" 19 3 62 "  errors = errors + check(value = 8, \"ref-overlap-writeback\")"
-   .traceevent "V" 6 "R" "I" "r" 3 118 118 0 "errors" ""
-   .srcstep 117 117 17 "inline_test_byvalue_arg_reuse.crexx" 19 21 26 "  errors = errors + check(value = 8, \"ref-overlap-writeback\")"
-   .srcstep 111 111 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
-   .traceevent "V" 6 "R" "I" "r" 1 111 111 0 "value" ""
-   ieq r5,r1,8
-   .traceevent "O" 4 "R" "B" "r" 5 111 111 0 "" ""
-   .traceevent "A" 6 "R" "B" "r" 5 111 111 0 "passed" ""
-   .srcstep 113 113 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 5 113 113 0 "passed" ""
-   brf l560iffalse,r5
-   .srcstep 114 114 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
-   .srcstep 112 112 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 118 118 0 "" ""
-   icopy r2,r4
-   br l550bexprend
-l560iffalse:
-   .srcstep 115 115 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
+   .srcstep 18 18 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
+   icopy r5,r6
+   br l178bexprend
+l178bexprend:
+   iadd r3,r3,r5
+   .traceevent "O" 4 "R" "I" "r" 3 20 20 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 20 20 0 "errors" ""
+   .srcstep 28 28 17 "inline_test_byvalue_arg_reuse.crexx" 19 3 62 "  errors = errors + check(value = 8, \"ref-overlap-writeback\")"
+   .traceevent "V" 6 "R" "I" "r" 3 28 28 0 "errors" ""
+   .srcstep 27 27 17 "inline_test_byvalue_arg_reuse.crexx" 19 21 26 "  errors = errors + check(value = 8, \"ref-overlap-writeback\")"
+   .srcstep 21 21 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
+   .traceevent "V" 6 "R" "I" "r" 1 21 21 0 "value" ""
+   ieq r6,r1,8
+   .traceevent "O" 4 "R" "B" "r" 6 21 21 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 6 21 21 0 "passed" ""
+   .srcstep 23 23 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
+   .traceevent "V" 6 "R" "B" "r" 6 23 23 0 "passed" ""
+   brf l210iffalse,r6
+   .srcstep 24 24 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
+   .srcstep 22 22 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 28 28 0 "" ""
+   icopy r4,r5
+   br l200bexprend
+l210iffalse:
+   .srcstep 25 25 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
    say "FAIL ref-overlap-writeback"
-   .srcstep 116 116 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r4,1
-   .traceevent "L" 4 "R" "I" "r" 4 118 118 0 "" ""
-   icopy r2,r4
-   br l550bexprend
-l550bexprend:
-   iadd r3,r3,r2
-   .traceevent "O" 4 "R" "I" "r" 3 118 118 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 118 118 0 "errors" ""
-   .srcstep 120 120 17 "inline_test_byvalue_arg_reuse.crexx" 21 3 16 "  if errors = 0 then say \"ok\""
-   .traceevent "V" 6 "R" "I" "r" 3 120 120 0 "errors" ""
-   ieq r5,r3,0
-   .traceevent "O" 4 "R" "B" "r" 5 120 120 0 "" ""
-   brf l117iffalse,r5
-   .srcstep 121 121 17 "inline_test_byvalue_arg_reuse.crexx" 21 17 21 "  if errors = 0 then say \"ok\""
-   .srcstep 119 119 17 "inline_test_byvalue_arg_reuse.crexx" 21 22 30 "  if errors = 0 then say \"ok\""
+   .srcstep 26 26 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 28 28 0 "" ""
+   icopy r4,r5
+   br l200bexprend
+l200bexprend:
+   iadd r3,r3,r4
+   .traceevent "O" 4 "R" "I" "r" 3 28 28 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 28 28 0 "errors" ""
+   .srcstep 30 30 17 "inline_test_byvalue_arg_reuse.crexx" 21 3 16 "  if errors = 0 then say \"ok\""
+   .traceevent "V" 6 "R" "I" "r" 3 30 30 0 "errors" ""
+   ieq r6,r3,0
+   .traceevent "O" 4 "R" "B" "r" 6 30 30 0 "" ""
+   brf l117iffalse,r6
+   .srcstep 31 31 17 "inline_test_byvalue_arg_reuse.crexx" 21 17 21 "  if errors = 0 then say \"ok\""
+   .srcstep 29 29 17 "inline_test_byvalue_arg_reuse.crexx" 21 22 30 "  if errors = 0 then say \"ok\""
    say "ok"
 l117iffalse:
-   .srcstep 122 122 17 "inline_test_byvalue_arg_reuse.crexx" 22 3 16 "  return errors"
-   .traceevent "V" 6 "R" "I" "r" 3 122 122 0 "errors" ""
+   .srcstep 32 32 17 "inline_test_byvalue_arg_reuse.crexx" 22 3 16 "  return errors"
+   .traceevent "V" 6 "R" "I" "r" 3 32 32 0 "errors" ""
    ret r3
    .meta "inline_test_byvalue_arg_reuse.main.errors"
    .meta "inline_test_byvalue_arg_reuse.main.value"
 
 snapshotThenIncrement() .locals=3
    .meta "inline_test_byvalue_arg_reuse.snapshotthenincrement"="b" ".int" snapshotThenIncrement() "original_value=.int,expose target=.int"
-   .srcstep 130 130 17 "inline_test_byvalue_arg_reuse.crexx" 28 1 40 "snapshotThenIncrement: procedure = .int"
+   .srcstep 40 40 17 "inline_test_byvalue_arg_reuse.crexx" 28 1 40 "snapshotThenIncrement: procedure = .int"
    numsci 18,1,1
-   .srcstep 126 126 17 "inline_test_byvalue_arg_reuse.crexx" 29 7 28 "  arg original_value = .int, expose target = .int"
+   .srcstep 36 36 17 "inline_test_byvalue_arg_reuse.crexx" 29 7 28 "  arg original_value = .int, expose target = .int"
    .meta "inline_test_byvalue_arg_reuse.snapshotthenincrement.original_value"="b" ".int" a1
-   .srcstep 127 127 17 "inline_test_byvalue_arg_reuse.crexx" 29 30 50 "  arg original_value = .int, expose target = .int"
+   .srcstep 37 37 17 "inline_test_byvalue_arg_reuse.crexx" 29 30 50 "  arg original_value = .int, expose target = .int"
    .meta "inline_test_byvalue_arg_reuse.snapshotthenincrement.target"="b" ".int" a2
-   .srcstep 128 128 17 "inline_test_byvalue_arg_reuse.crexx" 30 3 22 "  target = target + 1"
-   .traceevent "V" 6 "R" "I" "a" 2 128 128 0 "target" ""
+   .srcstep 38 38 17 "inline_test_byvalue_arg_reuse.crexx" 30 3 22 "  target = target + 1"
+   .traceevent "V" 6 "R" "I" "a" 2 38 38 0 "target" ""
    iadd a2,a2,1
-   .traceevent "O" 4 "R" "I" "a" 2 128 128 0 "" ""
-   .traceevent "A" 6 "R" "I" "a" 2 128 128 0 "target" ""
-   .srcstep 129 129 17 "inline_test_byvalue_arg_reuse.crexx" 31 3 38 "  return original_value * 10 + target"
-   .traceevent "V" 6 "R" "I" "a" 1 129 129 0 "original_value" ""
+   .traceevent "O" 4 "R" "I" "a" 2 38 38 0 "" ""
+   .traceevent "A" 6 "R" "I" "a" 2 38 38 0 "target" ""
+   .srcstep 39 39 17 "inline_test_byvalue_arg_reuse.crexx" 31 3 38 "  return original_value * 10 + target"
+   .traceevent "V" 6 "R" "I" "a" 1 39 39 0 "original_value" ""
    imult r2,a1,10
-   .traceevent "O" 4 "R" "I" "r" 2 129 129 0 "" ""
-   .traceevent "V" 6 "R" "I" "a" 2 129 129 0 "target" ""
+   .traceevent "O" 4 "R" "I" "r" 2 39 39 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 2 39 39 0 "target" ""
    iadd r2,r2,a2
-   .traceevent "O" 4 "R" "I" "r" 2 129 129 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 2 39 39 0 "" ""
    ret r2
    .meta "inline_test_byvalue_arg_reuse.snapshotthenincrement.original_value"
    .meta "inline_test_byvalue_arg_reuse.snapshotthenincrement.target"

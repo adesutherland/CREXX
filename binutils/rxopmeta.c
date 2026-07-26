@@ -19,18 +19,28 @@ typedef struct {
     const char *branch_targets_signature;
     RxOpImplicitEffect implicit;
     unsigned int semantics;
+    unsigned int cursor_reads;
+    unsigned int cursor_writes;
+    RxOpConstEvaluator const_evaluator;
 } RxOpEffectSpec;
 
 #define RXE(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
-    STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS
+    STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS, \
+    RXOP_OP_NONE, RXOP_OP_NONE, RXOP_CONST_EVAL_NONE
 #define RXEV(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
     STATE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, \
-    READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS
+    READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
+    RXOP_OP_NONE, RXOP_OP_NONE, RXOP_CONST_EVAL_NONE
+#define RXEC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
+             CURSOR_READS, CURSOR_WRITES, CONST_EVALUATOR) \
+    STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS, \
+    CURSOR_READS, CURSOR_WRITES, CONST_EVALUATOR
 #define RXOP_EFFECT(NAME, EFFECTS) { OP_##NAME, EFFECTS },
 static const RxOpEffectSpec rxop_effect_specs[] = {
 #include "rxopeffects.h"
 };
 #undef RXOP_EFFECT
+#undef RXEC
 #undef RXEV
 #undef RXE
 
@@ -50,6 +60,9 @@ RxOpEffects rxop_effects(int opcode) {
     effects.branch_targets_signature = NULL;
     effects.implicit = RXOP_IMPLICIT_NONE;
     effects.semantics = RXOP_SEM_MAY_THROW | RXOP_SEM_OPAQUE;
+    effects.cursor_reads = RXOP_OP_ALL;
+    effects.cursor_writes = RXOP_OP_ALL;
+    effects.const_evaluator = RXOP_CONST_EVAL_NONE;
     effects.flow = FLOW_TERM;
     effects.optimizer_barrier = 1;
 
@@ -70,6 +83,9 @@ RxOpEffects rxop_effects(int opcode) {
     effects.branch_targets_signature = spec->branch_targets_signature;
     effects.implicit = spec->implicit;
     effects.semantics = spec->semantics;
+    effects.cursor_reads = spec->cursor_reads;
+    effects.cursor_writes = spec->cursor_writes;
+    effects.const_evaluator = spec->const_evaluator;
     effects.flow = op_table[opcode].flow;
     effects.optimizer_barrier =
         spec->state != RXOP_EFFECT_CLASSIFIED ||
@@ -109,5 +125,15 @@ int rxop_effect_kills_operand(const RxOpEffects *effects, size_t operand_index) 
 int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand_index) {
     return effects && rxop_effect_has_operand(effects->branch_targets,
                                               effects->branch_targets_signature,
+                                              operand_index);
+}
+
+int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index) {
+    return effects && rxop_effect_has_operand(effects->cursor_reads, NULL,
+                                              operand_index);
+}
+
+int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index) {
+    return effects && rxop_effect_has_operand(effects->cursor_writes, NULL,
                                               operand_index);
 }

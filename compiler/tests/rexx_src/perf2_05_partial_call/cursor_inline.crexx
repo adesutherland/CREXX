@@ -1,0 +1,23 @@
+options levelb
+
+call cursor_guard("é Alpha")
+
+/* SAY keeps this outer procedure on the ordinary normal-call path. The
+ * nested scan helper remains eligible for normal inlining with a dynamic
+ * formal, so its incidental source-cursor write must stay private. */
+cursor_guard: procedure = .void
+  arg text = .string
+  initial = 4
+  after = .int
+  assembler setstrpos text,initial
+  say scan_blank(text)
+  assembler getstrpos after,text
+  say after
+  return
+
+scan_blank: procedure = .int
+  arg text = .string
+  start = 0
+  found = .int
+  assembler fndblnk found,text,start
+  return found

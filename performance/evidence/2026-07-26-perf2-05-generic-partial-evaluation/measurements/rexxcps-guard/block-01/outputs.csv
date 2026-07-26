@@ -1,0 +1,521 @@
+sample_id,stream,line_number,text
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,8,     Performance: 40240153 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,8,     Performance: 39096480 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,8,     Performance: 37449677 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,8,     Performance: 39214302 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,8,     Performance: 39510621 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,8,     Performance: 39429028 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,8,     Performance: 39323595 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,8,     Performance: 38825189 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,8,     Performance: 39699278 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,8,     Performance: 38984835 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,8,     Performance: 39218262 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,8,     Performance: 39413527 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,8,     Performance: 39525770 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,8,     Performance: 39233534 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,8,     Performance: 38954462 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,8,     Performance: 38381638 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,8,     Performance: 38582405 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,8,     Performance: 39367173 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,8,     Performance: 39057923 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,8,     Performance: 39191595 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,8,     Performance: 39038368 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,8,     Performance: 39005439 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,8,     Performance: 39616669 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,8,     Performance: 38988027 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,8,     Performance: 39202696 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-candidate-rxvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,7,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,8,     Performance: 39075703 cREXX clauses per second
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,9,
+timing-RexxCPS-guard-rxvm-p05-guard-baseline-rxvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,8,     Performance: 36538924 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,8,     Performance: 36874448 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,8,     Performance: 37111948 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,8,     Performance: 36992680 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,8,     Performance: 36620747 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,8,     Performance: 36796836 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,8,     Performance: 35921637 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,8,     Performance: 37062054 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,8,     Performance: 36845305 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,8,     Performance: 37036660 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,8,     Performance: 36540259 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,8,     Performance: 37414788 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,8,     Performance: 36869486 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,8,     Performance: 36412495 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,8,     Performance: 37048426 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,8,     Performance: 37734568 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,8,     Performance: 37360656 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,8,     Performance: 37019042 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,8,     Performance: 37037826 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,8,     Performance: 36414086 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,8,     Performance: 36440161 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,8,     Performance: 36779039 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,8,     Performance: 35764228 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,8,     Performance: 37161839 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g22dd01a5b2e9.dirty 20260726
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,8,     Performance: 37186057 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-candidate-rxbvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2.dirty 20260725
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,7,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,8,     Performance: 35752816 cREXX clauses per second
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,9,
+timing-RexxCPS-guard-rxbvm-p05-guard-baseline-rxbvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port

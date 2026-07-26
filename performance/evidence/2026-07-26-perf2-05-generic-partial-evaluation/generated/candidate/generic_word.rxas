@@ -1,0 +1,62 @@
+/*
+ * SOURCE                 : generic_word_cell.crexx
+ */
+
+.globals=0
+
+main() .locals=4
+   .meta "generic_word_cell.main"="b" ".int" main() ""
+   .srcstep 14 14 17 "generic_word_cell.crexx" 3 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "generic_word_cell.crexx" 5 3 15 "  checksum = 0"
+   .meta "generic_word_cell.main.checksum"="b" ".int" r0
+   .meta "generic_word_cell.main.iterations"="b" ".int" "2000000"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "checksum" ""
+   .srcstep 6 6 17 "generic_word_cell.crexx" 6 3 5 "  do i = 1 to iterations"
+   .srcstep 2 2 17 "generic_word_cell.crexx" 6 6 11 "  do i = 1 to iterations"
+   .meta "generic_word_cell.main.i"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "i" ""
+   .srcstep 3 3 17 "generic_word_cell.crexx" 6 12 25 "  do i = 1 to iterations"
+   load r2,2000000
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+l12dostart:
+   .srcstep 3 3 17 "generic_word_cell.crexx" 6 12 25 "  do i = 1 to iterations"
+   igt r3,r1,r2
+   brt l12doend,r3
+   .srcstep 5 5 17 "generic_word_cell.crexx" 7 51 74 "    if user_word(\"  Alpha Beta\", 2) = \"Beta\" then checksum = checksum + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "checksum" ""
+   iadd r0,r0,1
+   .traceevent "O" 4 "R" "I" "r" 0 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "checksum" ""
+l12doinc:
+   .srcstep 4 4 17 "generic_word_cell.crexx" 6 6 7 "  do i = 1 to iterations"
+   inc r1
+   .srcstep 7 7 17 "generic_word_cell.crexx" 8 3 6 "  end"
+   br l12dostart
+l12doend:
+   .meta "generic_word_cell.main.i"
+   .srcstep 10 10 17 "generic_word_cell.crexx" 9 3 28 "  if checksum <> iterations then do"
+   .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "checksum" ""
+   ine r3,r0,2000000
+   .traceevent "O" 4 "R" "B" "r" 3 10 10 0 "" ""
+   brf l41iffalse,r3
+   .srcstep 11 11 17 "generic_word_cell.crexx" 9 29 33 "  if checksum <> iterations then do"
+   .srcstep 8 8 17 "generic_word_cell.crexx" 10 5 52 "    say \"FAIL: PERF2-05 generic user body\" checksum"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "checksum" ""
+   sconcat r1,"FAIL: PERF2-05 generic user body",r0
+   .traceevent "O" 4 "R" "S" "r" 1 8 8 0 "" ""
+   say r1
+   .srcstep 9 9 17 "generic_word_cell.crexx" 11 5 13 "    return 1"
+   ret 1
+l41iffalse:
+   .srcstep 12 12 17 "generic_word_cell.crexx" 13 3 41 "  say \"PASS: PERF2-05 generic user body\""
+   say "PASS: PERF2-05 generic user body"
+   .srcstep 13 13 17 "generic_word_cell.crexx" 14 3 11 "  return 0"
+   ret 0
+   .meta "generic_word_cell.main.checksum"
+   .meta "generic_word_cell.main.iterations"

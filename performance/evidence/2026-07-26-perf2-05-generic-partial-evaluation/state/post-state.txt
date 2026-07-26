@@ -1,0 +1,39 @@
+utc=2026-07-26T08:56:05Z
+{ 1.17 1.36 1.53 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+17621 /bin/zsh -c p05_verdict=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(ninja|cmake|rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  shasum -a 256 "$p05_verdict"/timing/samples.csv "$p05_verdict"/timing-append/samples.csv "$p05_verdict"/timing-consolidated/summary.csv "$p05_verdict"/paired-summary.csv
+) >"$p05_verdict/post-state.txt" 2>&1
+printf 'passing_samples='
+rg -c ',pass,' "$p05_verdict/timing/samples.csv" "$p05_verdict/timing-append/samples.csv"
+printf 'nonpassing_rows='
+rg -n ',(fail|error),' "$p05_verdict/timing/samples.csv" "$p05_verdict/timing-append/samples.csv" || true
+cat "$p05_verdict/post-state.txt"
+17622 /bin/zsh -c p05_verdict=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(ninja|cmake|rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  shasum -a 256 "$p05_verdict"/timing/samples.csv "$p05_verdict"/timing-append/samples.csv "$p05_verdict"/timing-consolidated/summary.csv "$p05_verdict"/paired-summary.csv
+) >"$p05_verdict/post-state.txt" 2>&1
+printf 'passing_samples='
+rg -c ',pass,' "$p05_verdict/timing/samples.csv" "$p05_verdict/timing-append/samples.csv"
+printf 'nonpassing_rows='
+rg -n ',(fail|error),' "$p05_verdict/timing/samples.csv" "$p05_verdict/timing-append/samples.csv" || true
+cat "$p05_verdict/post-state.txt"
+f7f40aaf22369597abff841e2ec61e686544900b508644749fccfb5c02eac15a  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/timing/samples.csv
+f8771733deb37f06f7ae24aa81d527c42babb2eee455ffc6beffd5fb4e78daa3  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/timing-append/samples.csv
+4a6f8a678ef40b063dd5db136a95ad076fce8344bf7866ba792a24610c2377b3  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/timing-consolidated/summary.csv
+419dc8f4243d88a510bff262abca02b08561e6db6667bd8eeaed28f1571ac55d  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/paired-summary.csv

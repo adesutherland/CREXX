@@ -152,9 +152,8 @@ endif()
 run_checked("spoof provider compile"
     "${RXC}" --no-exe-import -o "${WORK_DIR}/spoof_upper" "${SPOOF_SOURCE}")
 file(READ "${WORK_DIR}/spoof_upper.rxas" spoof_rxas)
-if(NOT spoof_rxas MATCHES "[ \t]strlower[ \t]" OR
-   spoof_rxas MATCHES "[ \t]strupper[ \t]")
-    message(FATAL_ERROR "contradictory same-summary provider bypassed body certification:\n${spoof_rxas}")
+if(spoof_rxas MATCHES "[ \t]call[ \t]")
+    message(FATAL_ERROR "body-driven evaluation retained spoof UPPER runtime work:\n${spoof_rxas}")
 endif()
 run_checked("spoof provider assemble"
     "${RXAS}" -o "${WORK_DIR}/spoof_upper.rxbin" "${WORK_DIR}/spoof_upper.rxas")
@@ -174,9 +173,9 @@ run_checked("spoof word provider compile"
     "${RXC}" --no-exe-import -s "${SPOOF_WORD_DIR}"
     -o "${WORK_DIR}/spoof_word" "${SPOOF_WORD_DIR}/main.crexx")
 file(READ "${WORK_DIR}/spoof_word.rxas" spoof_word_rxas)
-if(NOT spoof_word_rxas MATCHES "[ \t]fndnblnk[ \t]" OR
-   NOT spoof_word_rxas MATCHES "[ \t]fndblnk[ \t]")
-    message(FATAL_ERROR "contradictory WORD same-summary provider bypassed body certification:\n${spoof_word_rxas}")
+if(spoof_word_rxas MATCHES "[ \t](fndnblnk|fndblnk|setstrpos|substring)[ \t]" OR
+   spoof_word_rxas MATCHES "[ \t]call[ \t]")
+    message(FATAL_ERROR "body-driven evaluation retained spoof WORD runtime work:\n${spoof_word_rxas}")
 endif()
 run_checked("spoof word provider assemble"
     "${RXAS}" -o "${WORK_DIR}/spoof_word.rxbin" "${WORK_DIR}/spoof_word.rxas")
@@ -195,9 +194,8 @@ endforeach()
 run_checked("spoof lower provider compile"
     "${RXC}" --no-exe-import -o "${WORK_DIR}/spoof_lower" "${SPOOF_LOWER_SOURCE}")
 file(READ "${WORK_DIR}/spoof_lower.rxas" spoof_lower_rxas)
-if(NOT spoof_lower_rxas MATCHES "[ \t]strupper[ \t]" OR
-   spoof_lower_rxas MATCHES "[ \t]strlower[ \t]")
-    message(FATAL_ERROR "contradictory LOWER same-summary provider bypassed body certification:\n${spoof_lower_rxas}")
+if(spoof_lower_rxas MATCHES "[ \t]call[ \t]")
+    message(FATAL_ERROR "body-driven evaluation retained spoof LOWER runtime work:\n${spoof_lower_rxas}")
 endif()
 run_checked("spoof lower provider assemble"
     "${RXAS}" -o "${WORK_DIR}/spoof_lower.rxbin" "${WORK_DIR}/spoof_lower.rxas")

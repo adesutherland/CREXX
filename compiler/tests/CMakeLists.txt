@@ -1268,6 +1268,20 @@ add_test(NAME perf2_04_certified_call
 set_tests_properties(perf2_04_certified_call PROPERTIES
         LABELS "compiler;performance;constants;imports;perf2_04")
 
+add_test(NAME perf2_05_partial_call
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DSELECTED_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_05_partial_call/selected.crexx
+                 -DCURSOR_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_05_partial_call/cursor_inline.crexx
+                 -DARRAY_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_05_partial_call/array_result.crexx
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_05_partial_call_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_05_partial_call.cmake)
+set_tests_properties(perf2_05_partial_call PROPERTIES
+        LABELS "compiler;performance;constants;inlining;perf2_05")
+
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
     set(RUNTIME_MODULES ${ARGN})

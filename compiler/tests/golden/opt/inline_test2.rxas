@@ -7,7 +7,7 @@
 
 main() .locals=5
    .meta "inline_test2.main"="b" ".int" main() ""
-   .srcstep 31 31 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 28 28 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test2.crexx" 4 3 49 "  say \"Testing ineligible inlining scenarios...\""
    say "Testing ineligible inlining scenarios..."
@@ -109,64 +109,49 @@ l265bexprend:
    sconcat r2,"Method result:",r2
    .traceevent "O" 4 "R" "S" "r" 2 25 25 0 "" ""
    say r2
-   .srcstep 29 29 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
-   .srcstep 28 28 17 "inline_test2.crexx" 17 29 40 "  say \"MultiReturn result:\" multiReturn(1)"
-   .srcstep 26 26 17 "inline_test2.crexx" 57 17 25 "  if v > 0 then return 1"
-   load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 29 29 0 "" ""
-   icopy r1,r3
-   br l277bexprend
-   .srcstep 27 27 17 "inline_test2.crexx" 58 3 11 "  return 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 29 29 0 "" ""
-   icopy r1,r2
-   br l277bexprend
-l277bexprend:
-   itos r1
-   sconcat r1,"MultiReturn result:",r1
-   .traceevent "O" 4 "R" "S" "r" 1 29 29 0 "" ""
-   say r1
-   .srcstep 30 30 17 "inline_test2.crexx" 19 3 11 "  return 0"
+   .srcstep 26 26 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
+   say "MultiReturn result: 1"
+   .srcstep 27 27 17 "inline_test2.crexx" 19 3 11 "  return 0"
    ret 0
    .meta "inline_test2.main.o"
 
 helper() .locals=2
    .meta "inline_test2.helper"="b" ".int" helper() "v=.int"
-   .srcstep 55 55 17 "inline_test2.crexx" 41 1 25 "helper: procedure = .int"
+   .srcstep 52 52 17 "inline_test2.crexx" 41 1 25 "helper: procedure = .int"
    numsci 18,1,1
-   .srcstep 53 53 17 "inline_test2.crexx" 42 7 15 "  arg v = .int"
+   .srcstep 50 50 17 "inline_test2.crexx" 42 7 15 "  arg v = .int"
    .meta "inline_test2.helper.v"="b" ".int" a1
-   .srcstep 54 54 17 "inline_test2.crexx" 43 3 15 "  return v + 1"
-   .traceevent "V" 6 "R" "I" "a" 1 54 54 0 "v" ""
+   .srcstep 51 51 17 "inline_test2.crexx" 43 3 15 "  return v + 1"
+   .traceevent "V" 6 "R" "I" "a" 1 51 51 0 "v" ""
    iadd r1,a1,1
-   .traceevent "O" 4 "R" "I" "r" 1 54 54 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 1 51 51 0 "" ""
    ret r1
    .meta "inline_test2.helper.v"
 
 §inline_test2.myclass.§factory() .locals=1
    .meta "inline_test2.myclass.§factory"="b" ".inline_test2..myclass" §inline_test2.myclass.§factory() ""
-   .srcstep 57 57 17 "inline_test2.crexx" 47 3 13 "  *: factory"
+   .srcstep 54 54 17 "inline_test2.crexx" 47 3 13 "  *: factory"
    setattrs r0,0
    setobjtype r0,"inline_test2.myclass"
    numsci 18,1,1
-   .srcstep 56 56 17 "inline_test2.crexx" 48 5 11 "    return"
+   .srcstep 53 53 17 "inline_test2.crexx" 48 5 11 "    return"
    .meta "inline_test2.myclass.§factory.§factory"="b" ".myclass" r0
-   .traceevent "V" 6 "R" "O" "r" 0 56 56 0 "§factory" ""
+   .traceevent "V" 6 "R" "O" "r" 0 53 53 0 "§factory" ""
    ret r0
    .meta "inline_test2.myclass.§factory.§factory"
 
 §inline_test2.myclass.mymethod() .locals=3
    .meta "inline_test2.myclass.mymethod"="b" ".int" §inline_test2.myclass.mymethod() "v=.int"
-   .srcstep 60 60 17 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
+   .srcstep 57 57 17 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 58 58 17 "inline_test2.crexx" 51 9 17 "    arg v = .int"
+   .srcstep 55 55 17 "inline_test2.crexx" 51 9 17 "    arg v = .int"
    .meta "inline_test2.myclass.mymethod.v"="b" ".int" a2
    .meta "inline_test2.myclass.mymethod.§this"="b" ".myclass" a1
-   .srcstep 59 59 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
-   .traceevent "V" 6 "R" "I" "a" 2 59 59 0 "v" ""
+   .srcstep 56 56 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
+   .traceevent "V" 6 "R" "I" "a" 2 56 56 0 "v" ""
    imult r2,a2,2
-   .traceevent "O" 4 "R" "I" "r" 2 59 59 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 2 56 56 0 "" ""
    ret r2
    .meta "inline_test2.myclass.mymethod.v"
    .meta "inline_test2.myclass.mymethod.§this"

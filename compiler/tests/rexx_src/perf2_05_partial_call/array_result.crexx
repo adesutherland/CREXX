@@ -1,0 +1,15 @@
+options levelb
+
+say render(make_array())
+
+/* An array-returning callable must never be reduced through the scalar-only
+ * partial-value model. Normal inlining or the call fallback remains valid. */
+make_array: procedure = .string[]
+  values = .string[]
+  values[1] = "TEMP"
+  values[2] = "seed"
+  return values
+
+render: procedure = .string
+  arg values = .string[]
+  return values[1] || ":" || values[2]

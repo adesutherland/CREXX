@@ -4,9 +4,9 @@
 
 .globals=0
 
-main() .locals=4
+main() .locals=3
    .meta "inline_test_ref_opt.main"="b" ".int" main() ""
-   .srcstep 16 16 17 "inline_test_ref_opt.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 12 12 17 "inline_test_ref_opt.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_ref_opt.crexx" 4 3 40 "  say \"Starting ref/opt inline test...\""
    say "Starting ref/opt inline test..."
@@ -33,28 +33,12 @@ l60bexprend:
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 7 7 0 "x" ""
    say r0
-   .srcstep 10 10 17 "inline_test_ref_opt.crexx" 8 3 13 "  say optAdd()"
-   .srcstep 9 9 17 "inline_test_ref_opt.crexx" 8 7 13 "  say optAdd()"
-   .srcstep 8 8 17 "inline_test_ref_opt.crexx" 20 3 15 "  return a + b"
-   load r2,15
-   .traceevent "L" 4 "R" "I" "r" 2 10 10 0 "" ""
-   icopy r3,r2
-   br l69bexprend
-l69bexprend:
-   itos r3
-   say r3
-   .srcstep 13 13 17 "inline_test_ref_opt.crexx" 9 3 16 "  say optAdd(3)"
-   .srcstep 12 12 17 "inline_test_ref_opt.crexx" 9 7 13 "  say optAdd(3)"
-   .srcstep 11 11 17 "inline_test_ref_opt.crexx" 20 3 15 "  return a + b"
-   load r3,8
-   .traceevent "L" 4 "R" "I" "r" 3 13 13 0 "" ""
-   icopy r2,r3
-   br l81bexprend
-l81bexprend:
-   itos r2
-   say r2
-   .srcstep 14 14 17 "inline_test_ref_opt.crexx" 10 3 38 "  say \"Ref/opt inline test finished.\""
+   .srcstep 8 8 17 "inline_test_ref_opt.crexx" 8 3 13 "  say optAdd()"
+   say "15"
+   .srcstep 9 9 17 "inline_test_ref_opt.crexx" 9 3 16 "  say optAdd(3)"
+   say "8"
+   .srcstep 10 10 17 "inline_test_ref_opt.crexx" 10 3 38 "  say \"Ref/opt inline test finished.\""
    say "Ref/opt inline test finished."
-   .srcstep 15 15 17 "inline_test_ref_opt.crexx" 11 3 11 "  return 0"
+   .srcstep 11 11 17 "inline_test_ref_opt.crexx" 11 3 11 "  return 0"
    ret 0
    .meta "inline_test_ref_opt.main.x"

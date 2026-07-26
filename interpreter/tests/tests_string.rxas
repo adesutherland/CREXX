@@ -279,6 +279,56 @@ fndblnk_pass:
     say "PASS: FNDBLNK"
 fndblnk_end:
 
+    /* Cursor effects are observable state and must remain locked to the
+       semantics used by compiler inlining and partial evaluation. */
+    load r1, "AéZ"
+    load r2, 1
+    setstrpos r1, r2
+    load r3, 1
+    substring r4, r1, r3
+    getstrpos r5, r1
+    ieq r0, r5, 1
+    brf cursor_effects_fail, r0
+    getstrpos r5, r4
+    ieq r0, r5, 0
+    brf cursor_effects_fail, r0
+
+    load r1, "AéZ"
+    load r2, 1
+    strchar r3, r1, r2
+    getstrpos r4, r1
+    ieq r0, r4, 1
+    brf cursor_effects_fail, r0
+
+    /* Unicode scan path advances the source cursor to the examined result. */
+    load r1, "é Alpha"
+    load r2, 0
+    fndblnk r3, r1, r2
+    getstrpos r4, r1
+    ieq r0, r4, 1
+    brf cursor_effects_fail, r0
+    load r2, 1
+    fndnblnk r3, r1, r2
+    getstrpos r4, r1
+    ieq r0, r4, 2
+    brf cursor_effects_fail, r0
+
+    /* ASCII fast scan is permitted to preserve the existing cursor. The
+       effects database remains conservative because the path is data-driven. */
+    load r1, "One Two"
+    load r2, 4
+    setstrpos r1, r2
+    load r2, 0
+    fndblnk r3, r1, r2
+    getstrpos r4, r1
+    ieq r0, r4, 4
+    brf cursor_effects_fail, r0
+    say "PASS: string cursor effects"
+    br cursor_effects_end
+cursor_effects_fail:
+    say "FAIL: string cursor effects"
+cursor_effects_end:
+
     /* Robustness: Whitespace-only strings */
     load r1, "   "
     load r2, " "

@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-24
+Last updated: 2026-07-26
 
 Status: live planning register for the second performance programme.
 Production work requires the explicit decision gates recorded in each activity;
@@ -194,7 +194,7 @@ Source:
 | PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
-| PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | queued | PERF2-01 RXSEQ plus PERF2-03/04 machine ceilings. |
+| PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | in progress | P05-CF1 generic body evaluation is accepted and closed green; broader profile-selected assist/placement work remains open. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
@@ -708,6 +708,30 @@ machine work, and is demonstrably better as public RXAS than a compiler-owned
 combination or private quickened form. A BIF may complete with no new opcode.
 
 ## PERF2-05 — RXAS semantic assists and instruction improvement
+
+Status: **in progress — P05-CF1 complete; broader semantic-assist selection remains open**.
+Adrian accepted P05-CF1's favorable first ordinary Release verdict on
+2026-07-26 because the body-driven design optimizes ordinary user-written and
+future functions without a BIF registry. `LENGTH`, `SUBSTR` and `WORD` all
+reach their constant ceilings from unregistered Level B bodies; existing
+PERF2-04 selected output remains RXAS-identical. The completed slice adds
+bounded body evaluation plus exact opcode cursor/evaluator metadata without a
+public RXAS/RXBIN/ABI or VM-semantic change. Review-derived scalar-result,
+callable-scope and procedure-level `EXPOSE` fences are installed; final Debug
+QA is 1,920/1,920, focused Release QA is 6/6 plus metadata, and the final
+generated decision cell is byte-identical to the accepted timed candidate.
+Closeout evidence is retained under
+[`2026-07-26-perf2-05-generic-partial-evaluation/`](evidence/2026-07-26-perf2-05-generic-partial-evaluation/).
+The resumable control plane is
+[`PERF2-05-WORKLIST.md`](PERF2-05-WORKLIST.md). Adrian approved the bounded
+order on 2026-07-26: prove generic evaluation with `LENGTH`, prove useful
+composition with `SUBSTR`, audit and lock cursor/effect contracts, then require
+certified and equivalent user-written `WORD` bodies as the acceptance case.
+The design objective is that user-written and future functions receive the
+optimization without adding BIF-specific evaluator cases. The existing
+PERF2-04 evaluator remains the comparison oracle until equivalence is proved;
+no public RXAS/RXBIN or legacy cursor-semantic change is selected by this
+approval.
 
 ### Starting point
 

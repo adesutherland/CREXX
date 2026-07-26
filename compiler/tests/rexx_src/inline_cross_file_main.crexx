@@ -2,8 +2,9 @@ options levelb
 import inline_cross_file_dep
 
 main: procedure
+  runtime_text = residualText()
   say inc(41)
-  shared = safeLength("abcdef")
+  shared = safeLength(runtime_text)
   say inc(shared)
   say classify(-1)
   say classify(0)
@@ -34,7 +35,7 @@ main: procedure
   say y
   say <typeof>(typeBump(y))
   say y
-  say safeLength("abcdef")
+  say safeLength(runtime_text)
   say vargTotal(4, 5, 6)
   say vargPick(2, 7, 9, 11)
   say residualFunctionDependency(2)
