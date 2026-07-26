@@ -900,8 +900,8 @@ justify retaining the slice. Full Debug and ordinary profiling-off Release QA
 both pass 1,924/1,924. `PERF2-06-D01` retains the unresolved Apple-Clang global
 code-layout/register-allocation debt and requires a supported Intel x86-64
 GCC/Clang matrix before final architecture selection. The implementation
-commit is anchored after creation as `TO_BE_RECORDED`. VM-C2 is authorized as
-the next separate clean-base PoC; no push is authorized.
+commit is `a39608426e2c1bb84d5fc0c4f767f4c9492339a9`. VM-C2 is authorized as the
+next separate clean-base PoC; no push is authorized.
 
 ### Objective
 

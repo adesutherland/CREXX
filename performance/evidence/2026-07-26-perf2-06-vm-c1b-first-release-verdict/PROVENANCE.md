@@ -58,5 +58,4 @@ The evidence-local Level B paired reducer SHA-256 is
 
 The closeout products confirm the committed tree but are not substituted for
 the isolated timing products above; build path and identity differ. The exact
-implementation commit is recorded in the follow-up ledger as
-`TO_BE_RECORDED`.
+implementation commit is `a39608426e2c1bb84d5fc0c4f767f4c9492339a9`.

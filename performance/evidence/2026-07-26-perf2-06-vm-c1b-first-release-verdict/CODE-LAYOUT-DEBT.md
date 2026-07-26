@@ -3,7 +3,8 @@
 Status: accepted known debt; mandatory revisit at the cross-platform
 performance gate
 
-Accepted VM-C1b implementation commit: `TO_BE_RECORDED`
+Accepted VM-C1b implementation commit:
+`a39608426e2c1bb84d5fc0c4f767f4c9492339a9`
 
 ## Observation
 

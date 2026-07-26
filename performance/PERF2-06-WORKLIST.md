@@ -320,7 +320,8 @@ ledger is regenerated after the accepted closeout and diagnostic additions.
 - [x] Full Debug build and CTest pass 1,924/1,924.
 - [x] Full ordinary profiling-off Release build and CTest pass 1,924/1,924.
 - [x] The implementation commit is recorded by exact SHA in a follow-up ledger
-      commit after the implementation commit exists: `TO_BE_RECORDED`.
+      commit after the implementation commit exists:
+      `a39608426e2c1bb84d5fc0c4f767f4c9492339a9`.
 
 **Accepted closeout:** VM-C1b is production-selected with `PERF2-06-D01` as
 explicit debt, rather than reclassifying the adverse Sieve result as neutral.
