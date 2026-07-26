@@ -44,6 +44,11 @@ Binary roots are controlled separately with `-i`. The compiler always
 includes the executable directory in the binary-root set so deployed
 libraries remain visible without adding them explicitly. `-i` can be
 repeated, and repeated `-s` options are accumulated in the same way.
+Toolchain and library self-builds can pass `--no-exe-import` to suppress that
+implicit root and use only their explicit binary dependencies; this prevents a
+previous installed or build-tree library image from competing with current
+source interfaces. Normal application compilation retains the executable-root
+default.
 The source file's directory is not automatically treated as a binary root; pass
 `-i .` or `-i build-dir` when a sibling or build-output `.rxbin` is an intended
 compile-time dependency.

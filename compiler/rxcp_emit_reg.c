@@ -413,6 +413,82 @@ static int inline_block_expr_assignment_target_register(ASTNode *node,
     return 1;
 }
 
+typedef struct InlineOwnedReturnScan {
+    ASTNode *block_expr;
+    Symbol *symbol;
+    size_t leave_count;
+    int invalid;
+} InlineOwnedReturnScan;
+
+static void inline_scan_owned_block_return(ASTNode *node,
+                                           InlineOwnedReturnScan *scan) {
+    ASTNode *child;
+    Symbol *symbol;
+
+    if (!node || !scan || scan->invalid) return;
+    if (node != scan->block_expr &&
+        (node->node_type == PROCEDURE || node->node_type == METHOD ||
+         node->node_type == FACTORY || node->node_type == MATCH)) return;
+
+    if (node->node_type == LEAVE_WITH && node->association == scan->block_expr) {
+        child = node->child;
+        scan->leave_count++;
+        if (!child || child->sibling || child->node_type != VAR_SYMBOL ||
+            child->child || child->flow_substitute_symbol || !child->symbolNode ||
+            !(symbol = child->symbolNode->symbol)) {
+            scan->invalid = 1;
+            return;
+        }
+        if (scan->symbol && scan->symbol != symbol) {
+            scan->invalid = 1;
+            return;
+        }
+        scan->symbol = symbol;
+        return;
+    }
+
+    for (child = node->child; child; child = child->sibling) {
+        inline_scan_owned_block_return(child, scan);
+    }
+}
+
+/* A real call transfers a callee-owned return local into the caller. Preserve
+ * that ownership plan when a single-return callable becomes a BLOCK_EXPR:
+ * make the block result be the returned local's register, so LEAVE_WITH emits
+ * no deep copy. Caller storage, formals, aliases, aggregates and reference
+ * values retain the established copy path. */
+static int inline_block_expr_owned_return_register(ASTNode *node,
+                                                   int *register_num,
+                                                   char *register_type) {
+    InlineOwnedReturnScan scan;
+    Symbol *symbol;
+    NodeType association_type;
+
+    if (!node || node->node_type != BLOCK_EXPR || !node->association || !node->scope) return 0;
+    association_type = node->association->node_type;
+    if (association_type != PROCEDURE && association_type != METHOD &&
+        association_type != FACTORY) return 0;
+
+    memset(&scan, 0, sizeof(scan));
+    scan.block_expr = node;
+    inline_scan_owned_block_return(node, &scan);
+    if (scan.invalid || scan.leave_count != 1 || !(symbol = scan.symbol)) return 0;
+
+    if (symbol->symbol_type != VARIABLE_SYMBOL || symbol->scope != node->scope ||
+        symbol->register_type != 'r' || symbol->register_num < 0 ||
+        symbol->inline_value_alias || symbol->exposed || symbol->is_global_var ||
+        symbol->is_arg || symbol->is_ref_arg || symbol->is_this || symbol->is_factory ||
+        symbol->has_reference_target || symbol_is_class_attribute(symbol) ||
+        symbol->value_dims || node->value_dims ||
+        symbol->type != node->value_type ||
+        symbol->type == TP_OBJECT || symbol->type == TP_REFERENCE ||
+        symbol->type == TP_BINARY) return 0;
+
+    if (register_num) *register_num = symbol->register_num;
+    if (register_type) *register_type = symbol->register_type;
+    return 1;
+}
+
 static int scope_assigns_named_registers(Scope *scope) {
     ASTNode *owner;
 
@@ -1548,7 +1624,10 @@ walker_result register_walker(walker_direction direction,
             case BLOCK_EXPR:
                 if (!inline_block_expr_assignment_target_register(node,
                                                                   &node->register_num,
-                                                                  &node->register_type)) {
+                                                                  &node->register_type) &&
+                    !inline_block_expr_owned_return_register(node,
+                                                             &node->register_num,
+                                                             &node->register_type)) {
                     node->register_num = get_reg(node->scope);
                     node->register_type = 'r';
                 }

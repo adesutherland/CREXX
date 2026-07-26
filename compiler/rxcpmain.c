@@ -159,6 +159,7 @@ static void help() {
             "  --level level   Default source level when OPTIONS omits one\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
+            "  --no-exe-import Do not add the executable directory to binary roots\n"
             "  --diagnostics mode  Diagnostic rendering: localized or raw\n"
             "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
             "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
@@ -338,6 +339,7 @@ int rxcmain(int argc, char *argv[]) {
     int do_optimise = 1;
     int disable_exits = 0;
     int auto_import_rxas = 0;
+    int add_executable_import = 1;
     char *file_directory = 0;
     char *input_source_extension = 0;
     char *srcmap_cleaned = 0;
@@ -414,6 +416,11 @@ int rxcmain(int argc, char *argv[]) {
 
         if (strcmp(argv[i], "--import-rxas") == 0) {
             auto_import_rxas = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--no-exe-import") == 0) {
+            add_executable_import = 0;
             continue;
         }
 
@@ -544,30 +551,34 @@ int rxcmain(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    /* Add the executable-path binary import root. */
-    exe_path = exepath();
-    if (import_locations) {
-        char *user_import_locations = import_locations;
-        size_t combined_import_locations_size = strlen(import_locations) + strlen(exe_path) + 2;
-        combined_import_locations = malloc(combined_import_locations_size);
-        if (!combined_import_locations) {
-            RX_PANIC_OOM("malloc rxc binary import locations",
-                         combined_import_locations_size, import_locations);
+    /* Deployed programs see libraries next to rxc by default. Toolchain and
+     * library self-builds can suppress that implicit root so an older product
+     * image cannot compete with the current source/interface set. */
+    if (add_executable_import) {
+        exe_path = exepath();
+        if (import_locations) {
+            char *user_import_locations = import_locations;
+            size_t combined_import_locations_size = strlen(import_locations) + strlen(exe_path) + 2;
+            combined_import_locations = malloc(combined_import_locations_size);
+            if (!combined_import_locations) {
+                RX_PANIC_OOM("malloc rxc binary import locations",
+                             combined_import_locations_size, import_locations);
+            }
+            sprintf(combined_import_locations, "%s;%s", user_import_locations, exe_path);
+            free(user_import_locations);
+            import_locations = combined_import_locations;
+        } else {
+            size_t combined_import_locations_size = strlen(exe_path) + 1;
+            combined_import_locations = malloc(combined_import_locations_size);
+            if (!combined_import_locations) {
+                RX_PANIC_OOM("malloc rxc binary import locations",
+                             combined_import_locations_size, exe_path);
+            }
+            sprintf(combined_import_locations, "%s", exe_path);
+            import_locations = combined_import_locations;
         }
-        sprintf(combined_import_locations, "%s;%s", user_import_locations, exe_path);
-        free(user_import_locations);
-        import_locations = combined_import_locations;
-    } else {
-        size_t combined_import_locations_size = strlen(exe_path) + 1;
-        combined_import_locations = malloc(combined_import_locations_size);
-        if (!combined_import_locations) {
-            RX_PANIC_OOM("malloc rxc binary import locations",
-                         combined_import_locations_size, exe_path);
-        }
-        sprintf(combined_import_locations, "%s", exe_path);
-        import_locations = combined_import_locations;
+        free(exe_path);
     }
-    free(exe_path);
     if (source_import_locations && debug_mode >= 2) fprintf(stderr, "Combined source import roots: %s\n", source_import_locations);
     if (import_locations && debug_mode >= 2) fprintf(stderr, "Combined binary import roots: %s\n", import_locations);
 

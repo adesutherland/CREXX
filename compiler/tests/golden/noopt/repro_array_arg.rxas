@@ -40,7 +40,7 @@ main() .locals=6
    minlinkattr1 r5,r2,r1,0
    .traceevent "V" 6 "R" "S" "r" 5 5 5 0 "s" ""
    load r3,1
-   swapcall r0,rxfnsb.upper(),r3,r5,r4
+   settpswapcall r0,rxfnsb.upper(),r3,r5,256,r4
    swap r5,r4
    unlink r5
    .traceevent "F" 4 "R" "S" "r" 0 5 5 0 "upper" ""
@@ -90,4 +90,4 @@ l46ifend:
 /* Imported Declaration from file: upper@library.rxbin */
 
 rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "string=.string"

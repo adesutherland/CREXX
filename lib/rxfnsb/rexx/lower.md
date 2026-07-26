@@ -20,8 +20,8 @@ U+0000 is an ordinary codepoint for this bounded operation; it does not stop
 conversion of later text.
 
 The argument is read-only and valid `.string` input has no error branch. The
-implementation is one direct `strlower` instruction and creates only the result
-string.
+typed result is completely defined by one direct `strlower` instruction, so an
+optimized build does not need a defensive input copy or a prior result value.
 
 This Level B helper lowercases the complete string. It does not accept start or
 length arguments. `LOWER` is not a required Level C BIF in the repository's

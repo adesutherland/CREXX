@@ -407,6 +407,15 @@ static void flow_mark_node_effect(RxcpFlowProcedure *procedure,
                 (!node->parent || (node->parent->node_type != DEFINE &&
                                    node->parent->node_type != ARG))) {
                 bits_set(&block->defs, (size_t)value);
+                /* A validated assembler destination whose refined connector
+                 * is write-only kills the old value. On the normal successor
+                 * path it is therefore a safe definition for default-init
+                 * analysis; instructions with conservative read/write links
+                 * retain the old fail-closed behaviour. */
+                if (!node->symbolNode->readUsage && node->parent &&
+                    node->parent->node_type == ASSEMBLER) {
+                    bits_set(&block->safe_defs, (size_t)value);
+                }
                 procedure->values[value].writes++;
                 flow_note_anchor(&procedure->values[value].first_write_anchor,
                                  &procedure->values[value].last_use_anchor, node);

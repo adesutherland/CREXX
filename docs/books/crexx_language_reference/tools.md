@@ -21,6 +21,8 @@ Common options:
 - `--level level`: default source level when the source omits one
 - `--import ns`: inject a file-level import; repeatable
 - `--import-rxas`: allow `.rxas` import scanning in binary roots
+- `--no-exe-import`: omit the compiler executable directory from binary roots;
+  intended for toolchain and library self-builds with an explicit dependency set
 - `-o output_stem`: RXAS output stem or `.rxas` file
 - `-n`: disable optimisation
 - `-x`: disable compiler exits; explicit certified-exit statements such as

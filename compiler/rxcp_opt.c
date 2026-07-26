@@ -69,6 +69,9 @@
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxcp_val.h"
 #include "rxcp_util.h"
+#include "rxcp_constant.h"
+#include "rxcp_certified_call.h"
+#include "rxcp_remap_build.h"
 #include "rxvmvars.h"
 #include "rxvalue.h"
 
@@ -90,6 +93,10 @@ static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int val
 static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length);
 static void rewrite_to_parsed_literal_constant(ASTNode* node, Payload* payload, ASTNode* literal, ValueType literal_type);
 static int strict_string_compare_operand(ASTNode *node);
+
+static walker_result certified_call_walker(walker_direction direction,
+                                            ASTNode *node,
+                                            void *pload);
 
 static int semantic_context_is_internal_operand(ASTNode *node) {
     return ast_semantic_context_kind(node) == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
@@ -298,9 +305,9 @@ static void opt_append_hex_byte(char *buffer, size_t *pos, unsigned char byte) {
     buffer[(*pos)++] = hex[byte & 0x0f];
 }
 
-static unsigned char *rxas_escaped_string_to_bytes(const char *string,
-                                                   size_t length,
-                                                   size_t *byte_length) {
+unsigned char *rxcp_constant_string_decode(const char *string,
+                                           size_t length,
+                                           size_t *byte_length) {
     unsigned char *buffer;
     size_t i;
     size_t out = 0;
@@ -377,9 +384,9 @@ static char *rxas_escaped_string_to_binary_literal(ASTNode *node,
     size_t byte_length = 0;
     char *literal;
 
-    bytes = rxas_escaped_string_to_bytes(node->node_string,
-                                         node->node_string_length,
-                                         &byte_length);
+    bytes = rxcp_constant_string_decode(node->node_string,
+                                        node->node_string_length,
+                                        &byte_length);
     if (!bytes) return 0;
 
     literal = bytes_to_binary_literal(bytes, byte_length, literal_length);
@@ -413,9 +420,9 @@ static unsigned char *binary_literal_to_bytes(ASTNode *node, size_t *byte_length
     return bytes;
 }
 
-static char *bytes_to_rxas_escaped_string(const unsigned char *bytes,
-                                          size_t byte_length,
-                                          size_t *string_length) {
+char *rxcp_constant_string_encode(const unsigned char *bytes,
+                                  size_t byte_length,
+                                  size_t *string_length) {
     char *buffer;
     char *out;
     size_t i;
@@ -579,7 +586,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                     }
                 }
 #endif
-                buffer = bytes_to_rxas_escaped_string(bytes, byte_length, &length);
+                buffer = rxcp_constant_string_encode(bytes, byte_length, &length);
                 free(bytes);
                 if (!buffer) {
                     mknd_err(node, "BAD_CONVERSION");
@@ -1860,6 +1867,72 @@ static walker_result opt1_walker(walker_direction direction,
     return result_normal;
 }
 
+/* Fold enabled certified callables before inlining destroys their callable
+ * identity.  Actual expressions are reduced with the ordinary typed constant
+ * folder first; the certificate evaluator then accepts only an all-constant,
+ * non-signalling semantic cell.  Any rejection leaves the complete Level B
+ * call available to the normal inliner/fallback path. */
+static walker_result certified_call_walker(walker_direction direction,
+                                            ASTNode *node,
+                                            void *pload) {
+    Payload *payload;
+    ASTNode *actual;
+    RxcpCertifiedCallResult result;
+
+    if (direction == in) return result_normal;
+    if (!rxcp_certified_call_candidate(node)) return result_normal;
+
+    payload = (Payload *)pload;
+    for (actual = node->child; actual; actual = actual->sibling) {
+        if (actual->node_type != NOVAL) ast_wlkr(actual, opt1_walker, payload);
+    }
+
+    if (!rxcp_certified_call_evaluate(payload->context, node, &result)) {
+        return result_normal;
+    }
+
+    /* Validate the complete replacement before detaching the proved call.  A
+     * future certificate must never turn an unsupported result representation
+     * into an empty or partially rewritten AST node. */
+    if ((result.type == TP_STRING && !result.string_value) ||
+        (result.type == TP_DECIMAL && !result.decimal_value) ||
+        (result.type != TP_STRING && result.type != TP_INTEGER &&
+         result.type != TP_BOOLEAN && result.type != TP_FLOAT &&
+         result.type != TP_DECIMAL)) {
+        rxcp_certified_call_result_clear(&result);
+        return result_normal;
+    }
+
+    rxcp_remap_disconnect_subtree_symbols(node);
+    node->association = 0;
+    switch (result.type) {
+        case TP_STRING:
+            rewrite_to_string_constant(node, payload,
+                                       result.string_value,
+                                       result.string_length);
+            result.string_value = 0;
+            break;
+        case TP_INTEGER:
+            rewrite_to_integer_constant(node, payload, result.int_value);
+            break;
+        case TP_BOOLEAN:
+            rewrite_to_boolean_constant(node, payload,
+                                        result.int_value != 0);
+            break;
+        case TP_FLOAT:
+            rewrite_to_float_constant(node, payload, result.float_value);
+            break;
+        case TP_DECIMAL:
+            rewrite_to_decimal_constant(node, payload, result.decimal_value);
+            break;
+        default:
+            /* Guarded above; retained for compiler exhaustiveness. */
+            break;
+    }
+    rxcp_certified_call_result_clear(&result);
+    return result_normal;
+}
+
 
 static int constant_definition_for_symbol(Symbol *symbol, ASTNode **target_out, ASTNode **value_out) {
     size_t i;
@@ -1903,6 +1976,92 @@ static int constant_symbol_use_keeps_identifier(ASTNode *node) {
     return node &&
            (node->node_type == INSTRUCTIONS ||
             (node->parent && node->parent->node_type == EXPOSED));
+}
+
+static OperandType constant_substitution_assembler_operand_type(ASTNode *node,
+                                                                Symbol *symbol,
+                                                                ValueType replacement_type) {
+    ValueType type;
+
+    if (node && node->symbolNode && node->symbolNode->symbol == symbol) {
+        type = replacement_type;
+    } else if (node && node->node_type == CONSTANT) {
+        type = node->target_type != TP_UNKNOWN ? node->target_type : node->value_type;
+    } else if (node) {
+        switch (node->node_type) {
+            case INTEGER: return OP_INT;
+            case FLOAT: return OP_FLOAT;
+            case DECIMAL: return OP_DECIMAL;
+            case STRING: return OP_STRING;
+            case BINARY: return OP_BINARY;
+            case FUNC_SYMBOL: return OP_FUNC;
+            default: return OP_REG;
+        }
+    } else {
+        return OP_NONE;
+    }
+
+    switch (type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER: return OP_INT;
+        case TP_FLOAT: return OP_FLOAT;
+        case TP_DECIMAL: return OP_DECIMAL;
+        case TP_STRING: return OP_STRING;
+        case TP_BINARY: return OP_BINARY;
+        default: return OP_REG;
+    }
+}
+
+/* Inlining introduces ordinary assignments after the final assembler
+ * validation pass. Constant propagation may remove one of those assignments,
+ * but only when every affected assembler statement has a legal immediate
+ * form. A read-only RXAS operand is not necessarily an immediate operand. */
+static int constant_substitution_preserves_assembler_forms(Symbol *symbol,
+                                                           ValueType replacement_type) {
+    size_t i;
+
+    if (!symbol) return 1;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *use = sym_trnd(symbol, i)->node;
+        ASTNode *assembler;
+        ASTNode *child;
+        OperandType *types;
+        size_t operand_count;
+        size_t operand_index;
+        char *name;
+        char *cursor;
+        int legal;
+
+        if (!use || !use->parent || use->parent->node_type != ASSEMBLER) continue;
+        assembler = use->parent;
+
+        operand_count = 0;
+        for (child = assembler->child; child; child = child->sibling) operand_count++;
+        types = operand_count ? malloc(operand_count * sizeof(*types)) : 0;
+        if (operand_count && !types) return 0;
+
+        operand_index = 0;
+        for (child = assembler->child; child; child = child->sibling) {
+            types[operand_index++] = constant_substitution_assembler_operand_type(
+                child, symbol, replacement_type);
+        }
+
+        name = malloc(assembler->node_string_length + 1);
+        if (!name) {
+            free(types);
+            return 0;
+        }
+        memcpy(name, assembler->node_string, assembler->node_string_length);
+        name[assembler->node_string_length] = 0;
+        for (cursor = name; *cursor; cursor++) *cursor = (char)tolower((unsigned char)*cursor);
+
+        legal = src_instv(name, types, operand_count) != 0;
+        free(name);
+        free(types);
+        if (!legal) return 0;
+    }
+
+    return 1;
 }
 
 static void copy_string_payload_to_node(ASTNode *node, const char *string, size_t length) {
@@ -2076,6 +2235,8 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         node_string = value_node->node_string;
         node_string_length = value_node->node_string_length;
 
+        if (!constant_substitution_preserves_assembler_forms(symbol, value_type)) return;
+
         /* Prune the original assignment from the tree */
         ast_prun(n->parent);
     }
@@ -2103,6 +2264,8 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
                 decimal_value = value_node->decimal_value; /* Memory management is owned by the node */
                 node_string = value_node->node_string;
                 node_string_length = value_node->node_string_length;
+
+                if (!constant_substitution_preserves_assembler_forms(symbol, value_type)) return;
 
                 /* Remove the assign */
                 ast_prun(m->parent);
@@ -2138,6 +2301,8 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
                 node_string = "0";
                 node_string_length = 1;
             }
+
+            if (!constant_substitution_preserves_assembler_forms(symbol, value_type)) return;
 
             /* Remove the define */
             m = sym_trnd(symbol,0)->node->parent;
@@ -2197,6 +2362,15 @@ static void propagete_constant_symbols(Scope* scope, Payload* payload) {
     for (i=0; i < scp_noch(scope); i++) {
         propagete_constant_symbols(scp_chd(scope, i), payload);
     }
+}
+
+static void fold_and_propagate_constants(Context *context, Payload *payload) {
+    if (!context || !context->ast || !payload) return;
+    do {
+        payload->changed = 0;
+        ast_wlkr(context->ast, opt1_walker, (void *)payload);
+        propagete_constant_symbols(context->ast->scope, payload);
+    } while (payload->changed);
 }
 
 void propagate_explicit_constants(Context *context) {
@@ -2293,6 +2467,21 @@ void optimise(Context *context) {
     payload.changed = 0;
     payload.explicit_constants_only = 0;
 
+    /* Expose the same ordinary constant facts used by the mature optimizer
+     * before certified-call evaluation.  This is deliberately general: a
+     * single-assignment value such as a loop-local string can feed any exact
+     * certificate without a callable-specific variable recognizer. */
+    fold_and_propagate_constants(context, &payload);
+
+    /* Certified call constant evaluation must retain the resolved callable
+     * identity, so it precedes general inlining. */
+    ast_wlkr(context->ast, certified_call_walker, (void *) &payload);
+
+    /* A certified value may make its ordinary consumer constant too (for
+     * example WORD("Key Bee", 1) = "?").  Fold that consumer before
+     * inlining so the proved call reaches the zero-runtime-work ceiling. */
+    fold_and_propagate_constants(context, &payload);
+
     /* Inlining Pass */
     if (context->optimise) {
         int inline_pass;
@@ -2306,17 +2495,7 @@ void optimise(Context *context) {
 
     payload.changed = 0;
 
-    while (1) {
-        payload.changed = 0;
-
-        /* Constant Folding */
-        ast_wlkr(context->ast, opt1_walker, (void *) &payload);
-
-        /* Propagate constant symbols  */
-        propagete_constant_symbols(context->ast->scope, &payload);
-
-        if (!payload.changed) break;
-    }
+    fold_and_propagate_constants(context, &payload);
 
     /* Mark read-only by-value formals for semantic copy elision. */
     mark_const_args(context);

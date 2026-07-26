@@ -279,6 +279,10 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         mapped_symbol = inline_find_mapped_symbol(state, node->symbolNode->symbol);
         if (!mapped_symbol) mapped_symbol = node->symbolNode->symbol;
         sym_adnd(mapped_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+        if (mapped_symbol != node->symbolNode->symbol &&
+            node->symbolNode->symbol->creation_node == node) {
+            mapped_symbol->creation_node = new_node;
+        }
     }
 
     child = node->child;

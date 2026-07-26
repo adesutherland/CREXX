@@ -45,14 +45,14 @@ l59iffalse:
    .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "val" ""
    igt r5,r0,0
    .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
-   brf l66iffalse,r5
+   brf l65iffalse,r5
    .srcstep 11 11 17 "inline_test_multi_return_assign.crexx" 15 14 18 "  if val > 0 then return 1"
    .srcstep 9 9 17 "inline_test_multi_return_assign.crexx" 15 19 27 "  if val > 0 then return 1"
    load r4,1
    .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
    icopy r1,r4
    br l54bexprend
-l66iffalse:
+l65iffalse:
    .srcstep 12 12 17 "inline_test_multi_return_assign.crexx" 16 3 11 "  return 0"
    load r5,0
    .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""

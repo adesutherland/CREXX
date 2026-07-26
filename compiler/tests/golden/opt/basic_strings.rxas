@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=14
+main() .locals=5
    .meta "basic_strings.main"="b" ".void" main() ""
    numsci 18,1,1
    .srcstep 1 1 17 "basic_strings.crexx" 6 1 6 "say c"
@@ -15,233 +15,56 @@ main() .locals=14
    .srcstep 2 2 17 "basic_strings.crexx" 9 1 6 "say d"
    .meta "basic_strings.main.d"="b" ".string" "Hello   World"
    say "Hello   World"
-   .srcstep 8 8 17 "basic_strings.crexx" 11 1 14 "say length(c)"
-   .srcstep 7 7 17 "basic_strings.crexx" 11 5 11 "say length(c)"
-   .srcstep 3 3 33 "basic_strings.crexx" 11 11 11 "say length(c)"
+   .srcstep 3 3 17 "basic_strings.crexx" 11 1 14 "say length(c)"
+   say "11"
+   .srcstep 4 4 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
+   say "Hello"
+   .srcstep 13 13 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
+   .srcstep 12 12 17 "basic_strings.crexx" 13 5 8 "say pos(\"World\", c)"
+   .meta "basic_strings.main.found_position"="b" ".int" r0
+   .srcstep 5 5 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r0
+   .srcstep 6 6 33 "basic_strings.crexx" 13 8 8 "say pos(\"World\", c)"
+   load r2,"World"
+   .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 6 6 0 "needle" ""
+   .srcstep 7 7 33 "basic_strings.crexx" 13 8 8 "say pos(\"World\", c)"
    load r1,"Hello World"
-   .traceevent "L" 4 "R" "S" "r" 1 3 3 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 1 3 3 0 "string" ""
-   .srcstep 4 4 25 "length.crexx" 42 3 13 "  result = 0"
-   load r0,0
-   .traceevent "L" 4 "R" "I" "r" 0 4 4 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "result" ""
-   .srcstep 5 5 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
-   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "result" ""
-   .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "string" ""
-   strlen r0,r1
-   .srcstep 6 6 25 "length.crexx" 44 3 16 "  return result"
-   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "result" ""
-   icopy r2,r0
+   .traceevent "L" 4 "R" "S" "r" 1 7 7 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 7 7 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "needle" ""
+   seq r3,r2,""
+   .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
+   brt l360orend,r3
+   .traceevent "V" 6 "R" "S" "r" 1 13 13 0 "haystack" ""
+   seq r3,r1,""
+   .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
+l360orend:
+   .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
+   brf l359iffalse,r3
+   .srcstep 8 8 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   br l338bexprend
+l359iffalse:
+   .srcstep 9 9 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 9 9 0 "found_position" ""
+   .srcstep 10 10 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 1 13 13 0 "haystack" ""
+   strpos r0,r2,r1
+   .srcstep 11 11 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "found_position" ""
+   icopy r4,r0
    br l338bexprend
 l338bexprend:
-   itos r2
-   say r2
-   .srcstep 36 36 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
-   .srcstep 35 35 17 "basic_strings.crexx" 12 5 11 "say substr(c, 1, 5)"
-   .meta "basic_strings.main.available"="b" ".int" r2
-   .srcstep 9 9 25 "substr.crexx" 51 3 19 "  available = .int"
-   null r2
-   .meta "basic_strings.main.copy_length"="b" ".int" r1
-   .srcstep 10 10 25 "substr.crexx" 52 3 21 "  copy_length = .int"
-   null r1
-   .meta "basic_strings.main.pad_character"="b" ".int" r3
-   .srcstep 11 11 25 "substr.crexx" 48 3 23 "  pad_character = .int"
-   null r3
-   .meta "basic_strings.main.pad_length"="b" ".int" r5
-   .srcstep 12 12 25 "substr.crexx" 47 3 20 "  pad_length = .int"
-   null r5
-   .meta "basic_strings.main.padding_length"="b" ".int" r6
-   .srcstep 13 13 25 "substr.crexx" 53 3 24 "  padding_length = .int"
-   null r6
-   .meta "basic_strings.main.start_offset"="b" ".int" r8
-   .srcstep 14 14 25 "substr.crexx" 50 3 22 "  start_offset = .int"
-   null r8
-   .meta "basic_strings.main.string_length"="b" ".int" r10
-   .srcstep 15 15 25 "substr.crexx" 46 3 23 "  string_length = .int"
-   null r10
-   .srcstep 16 16 33 "basic_strings.crexx" 12 11 11 "say substr(c, 1, 5)"
-   load r9,"Hello World"
-   .traceevent "L" 4 "R" "S" "r" 9 16 16 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 9 16 16 0 "string" ""
-   .srcstep 17 17 33 "basic_strings.crexx" 12 11 11 "say substr(c, 1, 5)"
-   load r0," "
-   .traceevent "L" 4 "R" "S" "r" 0 17 17 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 0 17 17 0 "pad" ""
-   .srcstep 18 18 25 "substr.crexx" 49 3 16 "  pad_index = 0"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 18 18 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 4 18 18 0 "pad_index" ""
-   .srcstep 19 19 25 "substr.crexx" 54 3 14 "  result = \"\""
-   load r7,""
-   .traceevent "L" 4 "R" "S" "r" 7 19 19 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 7 19 19 0 "result" ""
-   .srcstep 20 20 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
-   .traceevent "V" 6 "R" "I" "r" 5 36 36 0 "pad_length" ""
-   .traceevent "V" 6 "R" "S" "r" 0 36 36 0 "pad" ""
-   strlen r5,r0
-   .traceevent "V" 6 "R" "I" "r" 5 36 36 0 "pad_length" ""
-   ine r11,r5,1
-   .traceevent "O" 4 "R" "B" "r" 11 36 36 0 "" ""
-   brf l414iffalse,r11
-   .srcstep 21 21 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
-   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
-l414iffalse:
-   .srcstep 22 22 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
-   .traceevent "V" 6 "R" "I" "r" 10 36 36 0 "string_length" ""
-   .traceevent "V" 6 "R" "S" "r" 9 36 36 0 "string" ""
-   strlen r10,r9
-   .srcstep 23 23 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
-   load r8,0
-   .traceevent "L" 4 "R" "I" "r" 8 23 23 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 8 23 23 0 "start_offset" ""
-   .srcstep 24 24 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
-   .traceevent "V" 6 "R" "I" "r" 10 24 24 0 "string_length" ""
-   .traceevent "V" 6 "R" "I" "r" 8 24 24 0 "start_offset" ""
-   isub r2,r10,r8
-   .traceevent "O" 4 "R" "I" "r" 2 24 24 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 2 24 24 0 "available" ""
-   .traceevent "V" 6 "R" "I" "r" 2 36 36 0 "available" ""
-   ilt r11,r2,0
-   .traceevent "O" 4 "R" "B" "r" 11 36 36 0 "" ""
-   brf l434iffalse,r11
-   .srcstep 25 25 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 25 25 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 2 25 25 0 "available" ""
-l434iffalse:
-   .srcstep 26 26 25 "substr.crexx" 78 3 23 "  copy_length = length"
-   load r1,5
-   .traceevent "L" 4 "R" "I" "r" 1 26 26 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 1 26 26 0 "copy_length" ""
-   .traceevent "V" 6 "R" "I" "r" 2 36 36 0 "available" ""
-   .traceevent "V" 6 "R" "I" "r" 1 36 36 0 "copy_length" ""
-   ilt r11,r2,r1
-   .traceevent "O" 4 "R" "B" "r" 11 36 36 0 "" ""
-   brf l475iffalse,r11
-   .srcstep 27 27 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
-   .traceevent "V" 6 "R" "I" "r" 2 27 27 0 "available" ""
-   icopy r1,r2
-   .traceevent "A" 6 "R" "I" "r" 1 27 27 0 "copy_length" ""
-l475iffalse:
-   .traceevent "V" 6 "R" "I" "r" 1 36 36 0 "copy_length" ""
-   igt r11,r1,0
-   .traceevent "O" 4 "R" "B" "r" 11 36 36 0 "" ""
-   brf l482iffalse,r11
-   .traceevent "V" 6 "R" "I" "r" 8 36 36 0 "start_offset" ""
-   ieq r12,r8,0
-   .traceevent "O" 4 "R" "B" "r" 12 36 36 0 "" ""
-   brf l489andend,r12
-   .traceevent "V" 6 "R" "I" "r" 1 36 36 0 "copy_length" ""
-   .traceevent "V" 6 "R" "I" "r" 10 36 36 0 "string_length" ""
-   ieq r12,r1,r10
-   .traceevent "O" 4 "R" "B" "r" 12 36 36 0 "" ""
-l489andend:
-   .traceevent "O" 4 "R" "B" "r" 12 36 36 0 "" ""
-   brf l488andfalse,r12
-   .traceevent "V" 6 "R" "I" "r" 10 36 36 0 "string_length" ""
-   ieq r13,r10,5
-   .traceevent "O" 4 "R" "B" "r" 13 36 36 0 "" ""
-   br l488andend
-l488andfalse:
-   load r13,0
-l488andend:
-   .traceevent "O" 4 "R" "B" "r" 13 36 36 0 "" ""
-   brf l487iffalse,r13
-   .srcstep 28 28 25 "substr.crexx" 82 7 20 "      return string"
-   .traceevent "V" 6 "R" "S" "r" 9 36 36 0 "string" ""
-   scopy r13,r9
-   br l351bexprend
-l487iffalse:
-   .srcstep 29 29 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
-   .traceevent "V" 6 "R" "S" "r" 9 36 36 0 "string" ""
-   .traceevent "V" 6 "R" "I" "r" 8 36 36 0 "start_offset" ""
-   setstrpos r9,r8
-   .srcstep 30 30 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
-   .traceevent "V" 6 "R" "S" "r" 7 36 36 0 "result" ""
-   .traceevent "V" 6 "R" "S" "r" 9 36 36 0 "string" ""
-   .traceevent "V" 6 "R" "I" "r" 1 36 36 0 "copy_length" ""
-   substring r7,r9,r1
-l482iffalse:
-   .srcstep 31 31 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
-   .traceevent "V" 6 "R" "I" "r" 1 31 31 0 "copy_length" ""
-   isub r6,5,r1
-   .traceevent "O" 4 "R" "I" "r" 6 31 31 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 6 31 31 0 "padding_length" ""
-   .traceevent "V" 6 "R" "I" "r" 6 36 36 0 "padding_length" ""
-   igt r13,r6,0
-   .traceevent "O" 4 "R" "B" "r" 13 36 36 0 "" ""
-   brf l513iffalse,r13
-   .srcstep 32 32 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
-   .traceevent "V" 6 "R" "I" "r" 3 36 36 0 "pad_character" ""
-   .traceevent "V" 6 "R" "S" "r" 0 36 36 0 "pad" ""
-   .traceevent "V" 6 "R" "I" "r" 4 36 36 0 "pad_index" ""
-   strchar r3,r0,r4
-   .srcstep 33 33 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
-   .traceevent "V" 6 "R" "S" "r" 7 36 36 0 "result" ""
-   .traceevent "V" 6 "R" "I" "r" 3 36 36 0 "pad_character" ""
-   .traceevent "V" 6 "R" "I" "r" 6 36 36 0 "padding_length" ""
-   padstr r7,r3,r6
-l513iffalse:
-   .srcstep 34 34 25 "substr.crexx" 92 3 16 "  return result"
-   .traceevent "V" 6 "R" "S" "r" 7 36 36 0 "result" ""
-   scopy r13,r7
-   br l351bexprend
-l351bexprend:
-   .meta "basic_strings.main.available"
-   .meta "basic_strings.main.copy_length"
-   .meta "basic_strings.main.pad_character"
-   .meta "basic_strings.main.pad_length"
-   .meta "basic_strings.main.padding_length"
-   .meta "basic_strings.main.start_offset"
-   .meta "basic_strings.main.string_length"
-   say r13
-   .srcstep 45 45 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
-   .srcstep 44 44 17 "basic_strings.crexx" 13 5 8 "say pos(\"World\", c)"
-   .meta "basic_strings.main.found_position"="b" ".int" r13
-   .srcstep 37 37 25 "pos.crexx" 44 3 24 "  found_position = .int"
-   null r13
-   .srcstep 38 38 33 "basic_strings.crexx" 13 8 8 "say pos(\"World\", c)"
-   load r10,"World"
-   .traceevent "L" 4 "R" "S" "r" 10 38 38 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 10 38 38 0 "needle" ""
-   .srcstep 39 39 33 "basic_strings.crexx" 13 8 8 "say pos(\"World\", c)"
-   load r11,"Hello World"
-   .traceevent "L" 4 "R" "S" "r" 11 39 39 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 11 39 39 0 "haystack" ""
-   .traceevent "V" 6 "R" "S" "r" 10 45 45 0 "needle" ""
-   seq r9,r10,""
-   .traceevent "O" 4 "R" "B" "r" 9 45 45 0 "" ""
-   brt l550orend,r9
-   .traceevent "V" 6 "R" "S" "r" 11 45 45 0 "haystack" ""
-   seq r9,r11,""
-   .traceevent "O" 4 "R" "B" "r" 9 45 45 0 "" ""
-l550orend:
-   .traceevent "O" 4 "R" "B" "r" 9 45 45 0 "" ""
-   brf l549iffalse,r9
-   .srcstep 40 40 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
-   load r8,0
-   .traceevent "L" 4 "R" "I" "r" 8 45 45 0 "" ""
-   icopy r9,r8
-   br l528bexprend
-l549iffalse:
-   .srcstep 41 41 25 "pos.crexx" 50 3 25 "  found_position = start"
-   load r13,1
-   .traceevent "L" 4 "R" "I" "r" 13 41 41 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 13 41 41 0 "found_position" ""
-   .srcstep 42 42 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
-   .traceevent "V" 6 "R" "I" "r" 13 45 45 0 "found_position" ""
-   .traceevent "V" 6 "R" "S" "r" 10 45 45 0 "needle" ""
-   .traceevent "V" 6 "R" "S" "r" 11 45 45 0 "haystack" ""
-   strpos r13,r10,r11
-   .srcstep 43 43 25 "pos.crexx" 52 3 24 "  return found_position"
-   .traceevent "V" 6 "R" "I" "r" 13 45 45 0 "found_position" ""
-   icopy r9,r13
-   br l528bexprend
-l528bexprend:
    .meta "basic_strings.main.found_position"
-   itos r9
-   say r9
-   .srcstep 46 46 17 "basic_strings.crexx" 14 1 7 "return"
+   itos r4
+   say r4
+   .srcstep 14 14 17 "basic_strings.crexx" 14 1 7 "return"
    ret
    .meta "basic_strings.main.a"
    .meta "basic_strings.main.b"

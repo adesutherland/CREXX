@@ -161,21 +161,12 @@ set(REXX_IMPORT_RXAS
 unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
-	set(_rxc_import_args -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas)
-	# These modules consume helpers built earlier in this list. Import their
-	# freshly built metadata rather than the previous library archive so an
-	# interface or inline-body update is correct in one clean/incremental pass.
-	if("${_basename}" STREQUAL "_datei" OR
-	   "${_basename}" STREQUAL "_dateo" OR
-	   "${_basename}" STREQUAL "date" OR
-	   "${_basename}" STREQUAL "parse" OR
-	   "${_basename}" STREQUAL "intformat" OR
-	   "${_basename}" STREQUAL "floatformat")
-		set(_rxc_import_args -i ${CMAKE_CURRENT_BINARY_DIR})
-	endif()
 	add_custom_command(
 		  COMMAND ${CMAKE_COMMAND} -E rm -f ${_basename}.rxas
-		  COMMAND $<TARGET_FILE:rxc> -x --import-rxas -o ${_basename} ${_rxc_import_args} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
+		  # A library self-build must not import the previous library image next
+		  # to rxc. Current sibling sources and the explicit RXAS root are the
+		  # complete compile-time interface set for every module.
+		  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import --import-rxas -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
 		  DEPENDS rxas rxc library-rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx ${REXX_IMPORT_RXAS} ${_prev_target}
 		  OUTPUT ${_binfile}

@@ -736,6 +736,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_global_var = 0;
     symbol->has_reference_target = 0;
     symbol->flow_skip_default_initiation = 0;
+    symbol->inline_skip_default_initiation = 0;
     symbol->inline_value_alias = 0;
     symbol->inline_summary = 0;
     symbol->is_inlinable = 0;
@@ -1307,6 +1308,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->is_this = symbol->is_this;
     new_symbol->is_factory = symbol->is_factory;
     new_symbol->has_reference_target = symbol->has_reference_target;
+    new_symbol->inline_skip_default_initiation = symbol->inline_skip_default_initiation;
     (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
     new_symbol->is_inlinable = symbol->is_inlinable;
     new_symbol->ast_template = symbol->ast_template;

@@ -29,13 +29,13 @@ l642bexprend:
    load r1,202
    .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
    icopy r0,r1
-   br l678bexprend
+   br l676bexprend
    .srcstep 6 6 17 "select_dispatch_strings.crexx" 46 3 14 "  return -201"
    load r1,-201
    .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
    icopy r0,r1
-   br l678bexprend
-l678bexprend:
+   br l676bexprend
+l676bexprend:
    itos r0
    say r0
    .srcstep 12 12 17 "select_dispatch_strings.crexx" 7 3 22 "  say c_mixed(\"03.0\")"
@@ -44,13 +44,13 @@ l678bexprend:
    load r1,213
    .traceevent "L" 4 "R" "I" "r" 1 12 12 0 "" ""
    icopy r0,r1
-   br l714bexprend
+   br l710bexprend
    .srcstep 10 10 17 "select_dispatch_strings.crexx" 60 3 14 "  return -211"
    load r1,-211
    .traceevent "L" 4 "R" "I" "r" 1 12 12 0 "" ""
    icopy r0,r1
-   br l714bexprend
-l714bexprend:
+   br l710bexprend
+l710bexprend:
    itos r0
    say r0
    .srcstep 16 16 17 "select_dispatch_strings.crexx" 8 3 24 "  say c_mixed(\"green \")"
@@ -59,13 +59,13 @@ l714bexprend:
    load r1,222
    .traceevent "L" 4 "R" "I" "r" 1 16 16 0 "" ""
    icopy r0,r1
-   br l768bexprend
+   br l762bexprend
    .srcstep 14 14 17 "select_dispatch_strings.crexx" 60 3 14 "  return -211"
    load r1,-211
    .traceevent "L" 4 "R" "I" "r" 1 16 16 0 "" ""
    icopy r0,r1
-   br l768bexprend
-l768bexprend:
+   br l762bexprend
+l762bexprend:
    itos r0
    say r0
    .srcstep 20 20 17 "select_dispatch_strings.crexx" 9 3 28 "  say strict_string(\"beta\")"
@@ -74,13 +74,13 @@ l768bexprend:
    load r1,302
    .traceevent "L" 4 "R" "I" "r" 1 20 20 0 "" ""
    icopy r2,r1
-   br l822bexprend
+   br l814bexprend
    .srcstep 18 18 17 "select_dispatch_strings.crexx" 69 3 14 "  return -301"
    load r0,-301
    .traceevent "L" 4 "R" "I" "r" 0 20 20 0 "" ""
    icopy r2,r0
-   br l822bexprend
-l822bexprend:
+   br l814bexprend
+l814bexprend:
    itos r2
    say r2
    .srcstep 24 24 17 "select_dispatch_strings.crexx" 10 3 29 "  say strict_string(\"beta \")"
@@ -89,13 +89,13 @@ l822bexprend:
    load r2,-300
    .traceevent "L" 4 "R" "I" "r" 2 24 24 0 "" ""
    icopy r0,r2
-   br l851bexprend
+   br l841bexprend
    .srcstep 22 22 17 "select_dispatch_strings.crexx" 69 3 14 "  return -301"
    load r1,-301
    .traceevent "L" 4 "R" "I" "r" 1 24 24 0 "" ""
    icopy r0,r1
-   br l851bexprend
-l851bexprend:
+   br l841bexprend
+l841bexprend:
    itos r0
    say r0
    .srcstep 28 28 17 "select_dispatch_strings.crexx" 11 3 32 "  say padded_string(\"gamma   \")"
@@ -104,13 +104,13 @@ l851bexprend:
    load r2,403
    .traceevent "L" 4 "R" "I" "r" 2 28 28 0 "" ""
    icopy r0,r2
-   br l880bexprend
+   br l868bexprend
    .srcstep 26 26 17 "select_dispatch_strings.crexx" 78 3 14 "  return -401"
    load r1,-401
    .traceevent "L" 4 "R" "I" "r" 1 28 28 0 "" ""
    icopy r0,r1
-   br l880bexprend
-l880bexprend:
+   br l868bexprend
+l868bexprend:
    itos r0
    say r0
    .srcstep 32 32 17 "select_dispatch_strings.crexx" 12 3 32 "  say numeric_string(\"003.000\")"
@@ -119,13 +119,13 @@ l880bexprend:
    load r2,503
    .traceevent "L" 4 "R" "I" "r" 2 32 32 0 "" ""
    icopy r0,r2
-   br l909bexprend
+   br l895bexprend
    .srcstep 30 30 17 "select_dispatch_strings.crexx" 87 3 14 "  return -501"
    load r1,-501
    .traceevent "L" 4 "R" "I" "r" 1 32 32 0 "" ""
    icopy r0,r1
-   br l909bexprend
-l909bexprend:
+   br l895bexprend
+l895bexprend:
    itos r0
    say r0
    .srcstep 36 36 17 "select_dispatch_strings.crexx" 13 3 28 "  say numeric_string(\"nan\")"
@@ -134,13 +134,13 @@ l909bexprend:
    load r2,501
    .traceevent "L" 4 "R" "I" "r" 2 36 36 0 "" ""
    icopy r0,r2
-   br l938bexprend
+   br l922bexprend
    .srcstep 34 34 17 "select_dispatch_strings.crexx" 87 3 14 "  return -501"
    load r1,-501
    .traceevent "L" 4 "R" "I" "r" 1 36 36 0 "" ""
    icopy r0,r1
-   br l938bexprend
-l938bexprend:
+   br l922bexprend
+l922bexprend:
    itos r0
    say r0
    .srcstep 40 40 17 "select_dispatch_strings.crexx" 14 3 27 "  say mixed_string(\"02.0\")"
@@ -149,13 +149,13 @@ l938bexprend:
    load r2,602
    .traceevent "L" 4 "R" "I" "r" 2 40 40 0 "" ""
    icopy r0,r2
-   br l967bexprend
+   br l949bexprend
    .srcstep 38 38 17 "select_dispatch_strings.crexx" 99 3 14 "  return -601"
    load r1,-601
    .traceevent "L" 4 "R" "I" "r" 1 40 40 0 "" ""
    icopy r0,r1
-   br l967bexprend
-l967bexprend:
+   br l949bexprend
+l949bexprend:
    itos r0
    say r0
    .srcstep 44 44 17 "select_dispatch_strings.crexx" 15 3 30 "  say mixed_string(\"blue   \")"
@@ -164,13 +164,13 @@ l967bexprend:
    load r2,613
    .traceevent "L" 4 "R" "I" "r" 2 44 44 0 "" ""
    icopy r0,r2
-   br l1014bexprend
+   br l994bexprend
    .srcstep 42 42 17 "select_dispatch_strings.crexx" 99 3 14 "  return -601"
    load r1,-601
    .traceevent "L" 4 "R" "I" "r" 1 44 44 0 "" ""
    icopy r0,r1
-   br l1014bexprend
-l1014bexprend:
+   br l994bexprend
+l994bexprend:
    itos r0
    say r0
    .srcstep 48 48 17 "select_dispatch_strings.crexx" 16 3 32 "  say duplicate_padded(\"same \")"
@@ -179,13 +179,13 @@ l1014bexprend:
    load r2,701
    .traceevent "L" 4 "R" "I" "r" 2 48 48 0 "" ""
    icopy r0,r2
-   br l1061bexprend
+   br l1039bexprend
    .srcstep 46 46 17 "select_dispatch_strings.crexx" 108 3 14 "  return -701"
    load r1,-701
    .traceevent "L" 4 "R" "I" "r" 1 48 48 0 "" ""
    icopy r0,r1
-   br l1061bexprend
-l1061bexprend:
+   br l1039bexprend
+l1039bexprend:
    itos r0
    say r0
    .srcstep 52 52 17 "select_dispatch_strings.crexx" 17 3 32 "  say duplicate_numeric(\"01.0\")"
@@ -194,13 +194,13 @@ l1061bexprend:
    load r2,801
    .traceevent "L" 4 "R" "I" "r" 2 52 52 0 "" ""
    icopy r0,r2
-   br l1090bexprend
+   br l1066bexprend
    .srcstep 50 50 17 "select_dispatch_strings.crexx" 117 3 14 "  return -801"
    load r1,-801
    .traceevent "L" 4 "R" "I" "r" 1 52 52 0 "" ""
    icopy r0,r1
-   br l1090bexprend
-l1090bexprend:
+   br l1066bexprend
+l1066bexprend:
    itos r0
    say r0
    .srcstep 64 64 17 "select_dispatch_strings.crexx" 18 3 38 "  say binary_select(\"fe\"x as .binary)"
@@ -220,42 +220,42 @@ l1090bexprend:
    bcopy r4,r2
    .traceevent "A" 6 "R" "X" "r" 4 56 56 0 "select_tmp" ""
    .srcstep 61 61 6 "select_dispatch_strings.crexx" 122 3 15 "  select value"
-   .jtable jtable1344 auto
-   jumpb r4,jtable1344
-   br l1344dispatchdefault
-l1344dispatchcase0: .jcase jtable1344 0xff
+   .jtable jtable1282 auto
+   jumpb r4,jtable1282
+   br l1282dispatchdefault
+l1282dispatchcase0: .jcase jtable1282 0xff
    .srcstep 57 57 17 "select_dispatch_strings.crexx" 123 32 42 "    when \"ff\"x as .binary then return 901"
    load r1,901
    .traceevent "L" 4 "R" "I" "r" 1 64 64 0 "" ""
    icopy r5,r1
-   br l1119bexprend
-   br l1344dispatchend
-l1344dispatchcase1: .jcase jtable1344 0xfe
+   br l1093bexprend
+   br l1282dispatchend
+l1282dispatchcase1: .jcase jtable1282 0xfe
    .srcstep 58 58 17 "select_dispatch_strings.crexx" 124 32 42 "    when \"fe\"x as .binary then return 902"
    load r0,902
    .traceevent "L" 4 "R" "I" "r" 0 64 64 0 "" ""
    icopy r5,r0
-   br l1119bexprend
-   br l1344dispatchend
-l1344dispatchcase2: .jcase jtable1344 0xfd
+   br l1093bexprend
+   br l1282dispatchend
+l1282dispatchcase2: .jcase jtable1282 0xfd
    .srcstep 59 59 17 "select_dispatch_strings.crexx" 125 32 42 "    when \"fd\"x as .binary then return 903"
    load r5,903
    .traceevent "L" 4 "R" "I" "r" 5 64 64 0 "" ""
-   br l1119bexprend
-   br l1344dispatchend
-l1344dispatchdefault:
+   br l1093bexprend
+   br l1282dispatchend
+l1282dispatchdefault:
    .srcstep 60 60 17 "select_dispatch_strings.crexx" 126 15 26 "    otherwise return -900"
    load r6,-900
    .traceevent "L" 4 "R" "I" "r" 6 64 64 0 "" ""
    icopy r5,r6
-   br l1119bexprend
-l1344dispatchend:
+   br l1093bexprend
+l1282dispatchend:
    .srcstep 62 62 17 "select_dispatch_strings.crexx" 128 3 14 "  return -901"
    load r6,-901
    .traceevent "L" 4 "R" "I" "r" 6 64 64 0 "" ""
    icopy r5,r6
-   br l1119bexprend
-l1119bexprend:
+   br l1093bexprend
+l1093bexprend:
    endlife r2
    itos r5
    say r5
@@ -272,57 +272,57 @@ l1119bexprend:
    .traceevent "V" 6 "R" "X" "r" 6 77 77 0 "value" ""
    bineq r5,r6,0xff
    .traceevent "O" 4 "R" "B" "r" 5 77 77 0 "" ""
-   brf l1182iffalse,r5
+   brf l1144iffalse,r5
    .srcstep 78 78 17 "select_dispatch_strings.crexx" 133 31 35 "  if value = \"ff\"x as .binary then return 1001"
    .srcstep 67 67 17 "select_dispatch_strings.crexx" 133 36 47 "  if value = \"ff\"x as .binary then return 1001"
    load r2,1001
    .traceevent "L" 4 "R" "I" "r" 2 82 82 0 "" ""
    icopy r9,r2
-   br l1169bexprend
-   br l1182ifend
+   br l1133bexprend
+   br l1144ifend
    .srcstep 79 79 17 "select_dispatch_strings.crexx" 134 3 7 "  else if value = \"fe\"x as .binary then return 1002"
-l1182iffalse:
+l1144iffalse:
    .srcstep 74 74 17 "select_dispatch_strings.crexx" 134 8 35 "  else if value = \"fe\"x as .binary then return 1002"
    .traceevent "V" 6 "R" "X" "r" 6 74 74 0 "value" ""
    bineq r1,r6,0xfe
    .traceevent "O" 4 "R" "B" "r" 1 74 74 0 "" ""
-   brf l1190iffalse,r1
+   brf l1150iffalse,r1
    .srcstep 75 75 17 "select_dispatch_strings.crexx" 134 36 40 "  else if value = \"fe\"x as .binary then return 1002"
    .srcstep 68 68 17 "select_dispatch_strings.crexx" 134 41 52 "  else if value = \"fe\"x as .binary then return 1002"
    load r0,1002
    .traceevent "L" 4 "R" "I" "r" 0 82 82 0 "" ""
    icopy r9,r0
-   br l1169bexprend
-   br l1190ifend
+   br l1133bexprend
+   br l1150ifend
    .srcstep 76 76 17 "select_dispatch_strings.crexx" 135 3 7 "  else if value <> \"00\"x as .binary then return 1003"
-l1190iffalse:
+l1150iffalse:
    .srcstep 71 71 17 "select_dispatch_strings.crexx" 135 8 36 "  else if value <> \"00\"x as .binary then return 1003"
    .traceevent "V" 6 "R" "X" "r" 6 71 71 0 "value" ""
    binne r8,r6,0x00
    .traceevent "O" 4 "R" "B" "r" 8 71 71 0 "" ""
-   brf l1198iffalse,r8
+   brf l1156iffalse,r8
    .srcstep 72 72 17 "select_dispatch_strings.crexx" 135 37 41 "  else if value <> \"00\"x as .binary then return 1003"
    .srcstep 69 69 17 "select_dispatch_strings.crexx" 135 42 53 "  else if value <> \"00\"x as .binary then return 1003"
    load r9,1003
    .traceevent "L" 4 "R" "I" "r" 9 82 82 0 "" ""
-   br l1169bexprend
-   br l1198ifend
+   br l1133bexprend
+   br l1156ifend
    .srcstep 73 73 17 "select_dispatch_strings.crexx" 136 3 7 "  else return -1000"
-l1198iffalse:
+l1156iffalse:
    .srcstep 70 70 17 "select_dispatch_strings.crexx" 136 8 20 "  else return -1000"
    load r10,-1000
    .traceevent "L" 4 "R" "I" "r" 10 82 82 0 "" ""
    icopy r9,r10
-   br l1169bexprend
-l1198ifend:
-l1190ifend:
-l1182ifend:
+   br l1133bexprend
+l1156ifend:
+l1150ifend:
+l1144ifend:
    .srcstep 80 80 17 "select_dispatch_strings.crexx" 137 3 15 "  return -1001"
    load r10,-1001
    .traceevent "L" 4 "R" "I" "r" 10 82 82 0 "" ""
    icopy r9,r10
-   br l1169bexprend
-l1169bexprend:
+   br l1133bexprend
+l1133bexprend:
    endlife r6
    itos r9
    say r9
@@ -339,57 +339,57 @@ l1169bexprend:
    .traceevent "V" 6 "R" "X" "r" 10 95 95 0 "value" ""
    bineq r9,r10,0xff
    .traceevent "O" 4 "R" "B" "r" 9 95 95 0 "" ""
-   brf l1225iffalse,r9
+   brf l1177iffalse,r9
    .srcstep 96 96 17 "select_dispatch_strings.crexx" 133 31 35 "  if value = \"ff\"x as .binary then return 1001"
    .srcstep 85 85 17 "select_dispatch_strings.crexx" 133 36 47 "  if value = \"ff\"x as .binary then return 1001"
    load r8,1001
    .traceevent "L" 4 "R" "I" "r" 8 100 100 0 "" ""
-   br l1212bexprend
-   br l1225ifend
+   br l1166bexprend
+   br l1177ifend
    .srcstep 97 97 17 "select_dispatch_strings.crexx" 134 3 7 "  else if value = \"fe\"x as .binary then return 1002"
-l1225iffalse:
+l1177iffalse:
    .srcstep 92 92 17 "select_dispatch_strings.crexx" 134 8 35 "  else if value = \"fe\"x as .binary then return 1002"
    .traceevent "V" 6 "R" "X" "r" 10 92 92 0 "value" ""
    bineq r6,r10,0xfe
    .traceevent "O" 4 "R" "B" "r" 6 92 92 0 "" ""
-   brf l1233iffalse,r6
+   brf l1183iffalse,r6
    .srcstep 93 93 17 "select_dispatch_strings.crexx" 134 36 40 "  else if value = \"fe\"x as .binary then return 1002"
    .srcstep 86 86 17 "select_dispatch_strings.crexx" 134 41 52 "  else if value = \"fe\"x as .binary then return 1002"
    load r5,1002
    .traceevent "L" 4 "R" "I" "r" 5 100 100 0 "" ""
    icopy r8,r5
-   br l1212bexprend
-   br l1233ifend
+   br l1166bexprend
+   br l1183ifend
    .srcstep 94 94 17 "select_dispatch_strings.crexx" 135 3 7 "  else if value <> \"00\"x as .binary then return 1003"
-l1233iffalse:
+l1183iffalse:
    .srcstep 89 89 17 "select_dispatch_strings.crexx" 135 8 36 "  else if value <> \"00\"x as .binary then return 1003"
    .traceevent "V" 6 "R" "X" "r" 10 89 89 0 "value" ""
    binne r2,r10,0x00
    .traceevent "O" 4 "R" "B" "r" 2 89 89 0 "" ""
-   brf l1241iffalse,r2
+   brf l1189iffalse,r2
    .srcstep 90 90 17 "select_dispatch_strings.crexx" 135 37 41 "  else if value <> \"00\"x as .binary then return 1003"
    .srcstep 87 87 17 "select_dispatch_strings.crexx" 135 42 53 "  else if value <> \"00\"x as .binary then return 1003"
    load r1,1003
    .traceevent "L" 4 "R" "I" "r" 1 100 100 0 "" ""
    icopy r8,r1
-   br l1212bexprend
-   br l1241ifend
+   br l1166bexprend
+   br l1189ifend
    .srcstep 91 91 17 "select_dispatch_strings.crexx" 136 3 7 "  else return -1000"
-l1241iffalse:
+l1189iffalse:
    .srcstep 88 88 17 "select_dispatch_strings.crexx" 136 8 20 "  else return -1000"
    load r0,-1000
    .traceevent "L" 4 "R" "I" "r" 0 100 100 0 "" ""
    icopy r8,r0
-   br l1212bexprend
-l1241ifend:
-l1233ifend:
-l1225ifend:
+   br l1166bexprend
+l1189ifend:
+l1183ifend:
+l1177ifend:
    .srcstep 98 98 17 "select_dispatch_strings.crexx" 137 3 15 "  return -1001"
    load r9,-1001
    .traceevent "L" 4 "R" "I" "r" 9 100 100 0 "" ""
    icopy r8,r9
-   br l1212bexprend
-l1212bexprend:
+   br l1166bexprend
+l1166bexprend:
    endlife r10
    itos r8
    say r8
@@ -399,13 +399,13 @@ l1212bexprend:
    load r10,1101
    .traceevent "L" 4 "R" "I" "r" 10 104 104 0 "" ""
    icopy r8,r10
-   br l1255bexprend
+   br l1199bexprend
    .srcstep 102 102 17 "select_dispatch_strings.crexx" 146 3 15 "  return -1101"
    load r9,-1101
    .traceevent "L" 4 "R" "I" "r" 9 104 104 0 "" ""
    icopy r8,r9
-   br l1255bexprend
-l1255bexprend:
+   br l1199bexprend
+l1199bexprend:
    itos r8
    say r8
    .srcstep 108 108 17 "select_dispatch_strings.crexx" 22 3 28 "  say padded_two(\"second \")"
@@ -414,13 +414,13 @@ l1255bexprend:
    load r10,1202
    .traceevent "L" 4 "R" "I" "r" 10 108 108 0 "" ""
    icopy r9,r10
-   br l1284bexprend
+   br l1226bexprend
    .srcstep 106 106 17 "select_dispatch_strings.crexx" 156 3 15 "  return -1201"
    load r10,-1201
    .traceevent "L" 4 "R" "I" "r" 10 108 108 0 "" ""
    icopy r9,r10
-   br l1284bexprend
-l1284bexprend:
+   br l1226bexprend
+l1226bexprend:
    itos r9
    say r9
    .srcstep 112 112 17 "select_dispatch_strings.crexx" 23 3 26 "  say numeric_two(\"02.0\")"
@@ -429,13 +429,13 @@ l1284bexprend:
    load r10,1302
    .traceevent "L" 4 "R" "I" "r" 10 112 112 0 "" ""
    icopy r9,r10
-   br l1314bexprend
+   br l1254bexprend
    .srcstep 110 110 17 "select_dispatch_strings.crexx" 166 3 15 "  return -1301"
    load r10,-1301
    .traceevent "L" 4 "R" "I" "r" 10 112 112 0 "" ""
    icopy r9,r10
-   br l1314bexprend
-l1314bexprend:
+   br l1254bexprend
+l1254bexprend:
    itos r9
    say r9
    .srcstep 113 113 17 "select_dispatch_strings.crexx" 24 3 11 "  return 0"
@@ -455,43 +455,43 @@ c_mixed() .locals=2 .expose=select_dispatch_strings.c_mixed
    scopy r1,a1
    .traceevent "A" 6 "R" "S" "r" 1 135 135 0 "select_tmp" ""
    .srcstep 144 144 6 "select_dispatch_strings.crexx" 51 3 15 "  select value"
-   .jtable jtable1376 auto
-   jumpn r1,jtable1376
-   br l1376dispatchdefault
-l1376dispatchcase0: .jcase jtable1376 "1"
+   .jtable jtable1314 auto
+   jumpn r1,jtable1314
+   br l1314dispatchdefault
+l1314dispatchcase0: .jcase jtable1314 "1"
    .srcstep 136 136 17 "select_dispatch_strings.crexx" 52 19 29 "    when \"1\" then return 211"
    ret 211
-   br l1376dispatchend
-l1376dispatchcase1: .jcase jtable1376 "2"
+   br l1314dispatchend
+l1314dispatchcase1: .jcase jtable1314 "2"
    .srcstep 137 137 17 "select_dispatch_strings.crexx" 53 19 29 "    when \"2\" then return 212"
    ret 212
-   br l1376dispatchend
-l1376dispatchcase2: .jcase jtable1376 "3"
+   br l1314dispatchend
+l1314dispatchcase2: .jcase jtable1314 "3"
    .srcstep 138 138 17 "select_dispatch_strings.crexx" 54 19 29 "    when \"3\" then return 213"
    ret 213
-   br l1376dispatchend
-l1376dispatchdefault:
+   br l1314dispatchend
+l1314dispatchdefault:
    .srcstep 143 143 6 "select_dispatch_strings.crexx" 51 3 15 "  select value"
-   .jtable jtable1368 auto
-   jumpr r1,jtable1368
-   br l1368dispatchdefault
-l1368dispatchcase0: .jcase jtable1368 "red"
+   .jtable jtable1306 auto
+   jumpr r1,jtable1306
+   br l1306dispatchdefault
+l1306dispatchcase0: .jcase jtable1306 "red"
    .srcstep 139 139 17 "select_dispatch_strings.crexx" 55 21 31 "    when \"red\" then return 221"
    ret 221
-   br l1368dispatchend
-l1368dispatchcase1: .jcase jtable1368 "green"
+   br l1306dispatchend
+l1306dispatchcase1: .jcase jtable1306 "green"
    .srcstep 140 140 17 "select_dispatch_strings.crexx" 56 23 33 "    when \"green\" then return 222"
    ret 222
-   br l1368dispatchend
-l1368dispatchcase2: .jcase jtable1368 "blue"
+   br l1306dispatchend
+l1306dispatchcase2: .jcase jtable1306 "blue"
    .srcstep 141 141 17 "select_dispatch_strings.crexx" 57 22 32 "    when \"blue\" then return 223"
    ret 223
-   br l1368dispatchend
-l1368dispatchdefault:
+   br l1306dispatchend
+l1306dispatchdefault:
    .srcstep 142 142 17 "select_dispatch_strings.crexx" 58 15 26 "    otherwise return -210"
    ret -210
-l1368dispatchend:
-l1376dispatchend:
+l1306dispatchend:
+l1314dispatchend:
    .srcstep 145 145 17 "select_dispatch_strings.crexx" 60 3 14 "  return -211"
    ret -211
    .meta "select_dispatch_strings.c_mixed.value"
@@ -504,25 +504,25 @@ strict_string() .locals=1 .expose=select_dispatch_strings.strict_string
    .meta "select_dispatch_strings.strict_string.value"="b" ".string" a1
    .srcstep 152 152 6 "select_dispatch_strings.crexx" 65 3 38 "  if value == \"alpha\" then return 301"
    .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "value" ""
-   .jtable jtable1404 auto
-   jumps a1,jtable1404
-   br l1404dispatchdefault
-l1404dispatchcase0: .jcase jtable1404 "alpha"
+   .jtable jtable1342 auto
+   jumps a1,jtable1342
+   br l1342dispatchdefault
+l1342dispatchcase0: .jcase jtable1342 "alpha"
    .srcstep 148 148 17 "select_dispatch_strings.crexx" 65 28 38 "  if value == \"alpha\" then return 301"
    ret 301
-   br l1404dispatchend
-l1404dispatchcase1: .jcase jtable1404 "beta"
+   br l1342dispatchend
+l1342dispatchcase1: .jcase jtable1342 "beta"
    .srcstep 149 149 17 "select_dispatch_strings.crexx" 66 32 42 "  else if value == \"beta\" then return 302"
    ret 302
-   br l1404dispatchend
-l1404dispatchcase2: .jcase jtable1404 "gamma"
+   br l1342dispatchend
+l1342dispatchcase2: .jcase jtable1342 "gamma"
    .srcstep 150 150 17 "select_dispatch_strings.crexx" 67 33 43 "  else if value == \"gamma\" then return 303"
    ret 303
-   br l1404dispatchend
-l1404dispatchdefault:
+   br l1342dispatchend
+l1342dispatchdefault:
    .srcstep 151 151 17 "select_dispatch_strings.crexx" 68 8 19 "  else return -300"
    ret -300
-l1404dispatchend:
+l1342dispatchend:
    .srcstep 153 153 17 "select_dispatch_strings.crexx" 69 3 14 "  return -301"
    ret -301
    .meta "select_dispatch_strings.strict_string.value"
@@ -535,25 +535,25 @@ padded_string() .locals=1 .expose=select_dispatch_strings.padded_string
    .meta "select_dispatch_strings.padded_string.value"="b" ".string" a1
    .srcstep 160 160 6 "select_dispatch_strings.crexx" 74 3 37 "  if value = \"alpha\" then return 401"
    .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "value" ""
-   .jtable jtable1412 auto
-   jumpr a1,jtable1412
-   br l1412dispatchdefault
-l1412dispatchcase0: .jcase jtable1412 "alpha"
+   .jtable jtable1350 auto
+   jumpr a1,jtable1350
+   br l1350dispatchdefault
+l1350dispatchcase0: .jcase jtable1350 "alpha"
    .srcstep 156 156 17 "select_dispatch_strings.crexx" 74 27 37 "  if value = \"alpha\" then return 401"
    ret 401
-   br l1412dispatchend
-l1412dispatchcase1: .jcase jtable1412 "beta"
+   br l1350dispatchend
+l1350dispatchcase1: .jcase jtable1350 "beta"
    .srcstep 157 157 17 "select_dispatch_strings.crexx" 75 31 41 "  else if value = \"beta\" then return 402"
    ret 402
-   br l1412dispatchend
-l1412dispatchcase2: .jcase jtable1412 "gamma"
+   br l1350dispatchend
+l1350dispatchcase2: .jcase jtable1350 "gamma"
    .srcstep 158 158 17 "select_dispatch_strings.crexx" 76 32 42 "  else if value = \"gamma\" then return 403"
    ret 403
-   br l1412dispatchend
-l1412dispatchdefault:
+   br l1350dispatchend
+l1350dispatchdefault:
    .srcstep 159 159 17 "select_dispatch_strings.crexx" 77 8 19 "  else return -400"
    ret -400
-l1412dispatchend:
+l1350dispatchend:
    .srcstep 161 161 17 "select_dispatch_strings.crexx" 78 3 14 "  return -401"
    ret -401
    .meta "select_dispatch_strings.padded_string.value"
@@ -566,25 +566,25 @@ numeric_string() .locals=1 .expose=select_dispatch_strings.numeric_string
    .meta "select_dispatch_strings.numeric_string.value"="b" ".string" a1
    .srcstep 168 168 6 "select_dispatch_strings.crexx" 83 3 33 "  if value = \"1\" then return 501"
    .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "value" ""
-   .jtable jtable1420 auto
-   jumpn a1,jtable1420
-   br l1420dispatchdefault
-l1420dispatchcase0: .jcase jtable1420 "1"
+   .jtable jtable1358 auto
+   jumpn a1,jtable1358
+   br l1358dispatchdefault
+l1358dispatchcase0: .jcase jtable1358 "1"
    .srcstep 164 164 17 "select_dispatch_strings.crexx" 83 23 33 "  if value = \"1\" then return 501"
    ret 501
-   br l1420dispatchend
-l1420dispatchcase1: .jcase jtable1420 "2.0"
+   br l1358dispatchend
+l1358dispatchcase1: .jcase jtable1358 "2.0"
    .srcstep 165 165 17 "select_dispatch_strings.crexx" 84 30 40 "  else if value = \"2.0\" then return 502"
    ret 502
-   br l1420dispatchend
-l1420dispatchcase2: .jcase jtable1420 "3e0"
+   br l1358dispatchend
+l1358dispatchcase2: .jcase jtable1358 "3e0"
    .srcstep 166 166 17 "select_dispatch_strings.crexx" 85 30 40 "  else if value = \"3e0\" then return 503"
    ret 503
-   br l1420dispatchend
-l1420dispatchdefault:
+   br l1358dispatchend
+l1358dispatchdefault:
    .srcstep 167 167 17 "select_dispatch_strings.crexx" 86 8 19 "  else return -500"
    ret -500
-l1420dispatchend:
+l1358dispatchend:
    .srcstep 169 169 17 "select_dispatch_strings.crexx" 87 3 14 "  return -501"
    ret -501
    .meta "select_dispatch_strings.numeric_string.value"
@@ -597,44 +597,44 @@ mixed_string() .locals=1 .expose=select_dispatch_strings.mixed_string
    .meta "select_dispatch_strings.mixed_string.value"="b" ".string" a1
    .srcstep 180 180 6 "select_dispatch_strings.crexx" 92 3 33 "  if value = \"1\" then return 601"
    .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "value" ""
-   .jtable jtable1436 auto
-   jumpn a1,jtable1436
-   br l1436dispatchdefault
-l1436dispatchcase0: .jcase jtable1436 "1"
+   .jtable jtable1374 auto
+   jumpn a1,jtable1374
+   br l1374dispatchdefault
+l1374dispatchcase0: .jcase jtable1374 "1"
    .srcstep 172 172 17 "select_dispatch_strings.crexx" 92 23 33 "  if value = \"1\" then return 601"
    ret 601
-   br l1436dispatchend
-l1436dispatchcase1: .jcase jtable1436 "2"
+   br l1374dispatchend
+l1374dispatchcase1: .jcase jtable1374 "2"
    .srcstep 173 173 17 "select_dispatch_strings.crexx" 93 28 38 "  else if value = \"2\" then return 602"
    ret 602
-   br l1436dispatchend
-l1436dispatchcase2: .jcase jtable1436 "3"
+   br l1374dispatchend
+l1374dispatchcase2: .jcase jtable1374 "3"
    .srcstep 174 174 17 "select_dispatch_strings.crexx" 94 28 38 "  else if value = \"3\" then return 603"
    ret 603
-   br l1436dispatchend
-l1436dispatchdefault:
+   br l1374dispatchend
+l1374dispatchdefault:
    .srcstep 179 179 6 "select_dispatch_strings.crexx" 95 8 40 "  else if value = \"red\" then return 611"
    .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "value" ""
-   .jtable jtable1428 auto
-   jumpr a1,jtable1428
-   br l1428dispatchdefault
-l1428dispatchcase0: .jcase jtable1428 "red"
+   .jtable jtable1366 auto
+   jumpr a1,jtable1366
+   br l1366dispatchdefault
+l1366dispatchcase0: .jcase jtable1366 "red"
    .srcstep 175 175 17 "select_dispatch_strings.crexx" 95 30 40 "  else if value = \"red\" then return 611"
    ret 611
-   br l1428dispatchend
-l1428dispatchcase1: .jcase jtable1428 "green"
+   br l1366dispatchend
+l1366dispatchcase1: .jcase jtable1366 "green"
    .srcstep 176 176 17 "select_dispatch_strings.crexx" 96 32 42 "  else if value = \"green\" then return 612"
    ret 612
-   br l1428dispatchend
-l1428dispatchcase2: .jcase jtable1428 "blue"
+   br l1366dispatchend
+l1366dispatchcase2: .jcase jtable1366 "blue"
    .srcstep 177 177 17 "select_dispatch_strings.crexx" 97 31 41 "  else if value = \"blue\" then return 613"
    ret 613
-   br l1428dispatchend
-l1428dispatchdefault:
+   br l1366dispatchend
+l1366dispatchdefault:
    .srcstep 178 178 17 "select_dispatch_strings.crexx" 98 8 19 "  else return -600"
    ret -600
-l1428dispatchend:
-l1436dispatchend:
+l1366dispatchend:
+l1374dispatchend:
    .srcstep 181 181 17 "select_dispatch_strings.crexx" 99 3 14 "  return -601"
    ret -601
    .meta "select_dispatch_strings.mixed_string.value"
@@ -805,21 +805,21 @@ nan_key() .locals=2 .expose=select_dispatch_strings.nan_key
 l477iffalse:
    .srcstep 245 245 6 "select_dispatch_strings.crexx" 143 8 39 "  else if value = \"1\" then return 1102"
    .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "value" ""
-   .jtable jtable1444 auto
-   jumpn a1,jtable1444
-   br l1444dispatchdefault
-l1444dispatchcase0: .jcase jtable1444 "1"
+   .jtable jtable1382 auto
+   jumpn a1,jtable1382
+   br l1382dispatchdefault
+l1382dispatchcase0: .jcase jtable1382 "1"
    .srcstep 242 242 17 "select_dispatch_strings.crexx" 143 28 39 "  else if value = \"1\" then return 1102"
    ret 1102
-   br l1444dispatchend
-l1444dispatchcase1: .jcase jtable1444 "2"
+   br l1382dispatchend
+l1382dispatchcase1: .jcase jtable1382 "2"
    .srcstep 243 243 17 "select_dispatch_strings.crexx" 144 28 39 "  else if value = \"2\" then return 1103"
    ret 1103
-   br l1444dispatchend
-l1444dispatchdefault:
+   br l1382dispatchend
+l1382dispatchdefault:
    .srcstep 244 244 17 "select_dispatch_strings.crexx" 145 8 20 "  else return -1100"
    ret -1100
-l1444dispatchend:
+l1382dispatchend:
 l477ifend:
    .srcstep 249 249 17 "select_dispatch_strings.crexx" 146 3 15 "  return -1101"
    ret -1101

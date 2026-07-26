@@ -112,6 +112,11 @@ enable_testing()
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
+add_test(NAME rxc_help_no_exe_import COMMAND $<TARGET_FILE:rxc> -h)
+set_tests_properties(rxc_help_no_exe_import PROPERTIES
+        PASS_REGULAR_EXPRESSION "--no-exe-import"
+        LABELS "compiler;imports")
+
 add_executable(test_rxcp_super_combiner test_rxcp_super_combiner.c)
 target_link_libraries(test_rxcp_super_combiner PRIVATE rxclib)
 target_include_directories(test_rxcp_super_combiner PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
@@ -1217,6 +1222,51 @@ add_test(NAME nr26_flow_contract
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr26_flow_contract.cmake)
 set_tests_properties(nr26_flow_contract PROPERTIES
         LABELS "compiler;performance;flow")
+
+add_test(NAME perf2_04_inline_assembler_effects
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_inline_assembler_effects.crexx
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_04_inline_assembler_effects_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_04_inline_assembler_effects.cmake)
+set_tests_properties(perf2_04_inline_assembler_effects PROPERTIES
+        LABELS "compiler;performance;inlining;perf2_04")
+
+add_test(NAME perf2_04_inline_assembler_imports
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_case_import/dep/case_helpers.crexx
+                 -DDEP_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_case_import/dep
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_case_import/main/case_main.crexx
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_04_inline_assembler_imports_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_04_inline_assembler_imports.cmake)
+set_tests_properties(perf2_04_inline_assembler_imports PROPERTIES
+        LABELS "compiler;performance;imports;inlining;perf2_04")
+
+add_test(NAME perf2_04_certified_call
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIF_SOURCE_DIR=${CMAKE_SOURCE_DIR}/lib/rxfnsb/rexx
+                 -DSELECTED_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_certified_call/selected.crexx
+                 -DFALLBACK_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_certified_call/fallback.crexx
+                 -DSPOOF_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_certified_call/spoof_upper.crexx
+                 -DSPOOF_LOWER_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_certified_call/spoof_lower.crexx
+                 -DSPOOF_WORD_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_certified_call/spoof_word
+                 -DHUGE_WIDTH_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_certified_call/huge_width.crexx
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_04_certified_call_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_04_certified_call.cmake)
+set_tests_properties(perf2_04_certified_call PROPERTIES
+        LABELS "compiler;performance;constants;imports;perf2_04")
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)

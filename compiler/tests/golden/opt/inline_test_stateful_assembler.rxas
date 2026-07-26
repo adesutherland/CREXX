@@ -10,7 +10,6 @@ main() .locals=14
    .srcstep 8 8 17 "inline_test_stateful_assembler.crexx" 4 1 18 "x = char_at(s, 4)"
    .meta "inline_test_stateful_assembler.main.out"="b" ".string" r5
    .srcstep 1 1 17 "inline_test_stateful_assembler.crexx" 16 3 16 "  out = .string"
-   null r5
    .srcstep 2 2 33 "inline_test_stateful_assembler.crexx" 13 7 11 "  arg text = .string, posn = .int"
    load r6,"abc123"
    .traceevent "L" 4 "R" "S" "r" 6 2 2 0 "" ""
@@ -39,7 +38,6 @@ main() .locals=14
    .srcstep 16 16 17 "inline_test_stateful_assembler.crexx" 5 1 18 "y = char_at(s, 1)"
    .meta "inline_test_stateful_assembler.main.out"="b" ".string" r9
    .srcstep 9 9 17 "inline_test_stateful_assembler.crexx" 16 3 16 "  out = .string"
-   null r9
    .srcstep 10 10 33 "inline_test_stateful_assembler.crexx" 13 7 11 "  arg text = .string, posn = .int"
    load r10,"abc123"
    .traceevent "L" 4 "R" "S" "r" 10 10 10 0 "" ""

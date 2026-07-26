@@ -377,7 +377,8 @@ void add_initiator(Symbol *symbol, void *payload) {
 
         /* Keep metadata/source anchors even when NR-26 proves the default
          * value is overwritten before every first read. */
-        if (!symbol->flow_skip_default_initiation) {
+        if (!symbol->flow_skip_default_initiation &&
+            !symbol->inline_skip_default_initiation) {
             char* init = mprintf("   null %c%d\n", symbol->register_type, symbol->register_num);
             output_append_text(output, init);
             free(init);

@@ -132,12 +132,11 @@ l72c:
    swap r1,a1
 l72d:
    .srcstep 19 19 17 "inline_test_stateful_assembler.crexx" 22 23 33 "  arg text = .string, len = .int"
-   .meta "inline_test_stateful_assembler.left_copy.len"="b" ".int" r0
-   icopy r0,a2
+   .meta "inline_test_stateful_assembler.left_copy.len"="b" ".int" a2
    .srcstep 20 20 17 "inline_test_stateful_assembler.crexx" 23 13 31 "  assembler substcut text, len"
    .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "text" ""
-   .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "len" ""
-   substcut r1,r0
+   .traceevent "V" 6 "R" "I" "a" 2 0 0 0 "len" ""
+   substcut r1,a2
    .srcstep 21 21 17 "inline_test_stateful_assembler.crexx" 24 3 14 "  return text"
    .traceevent "V" 6 "R" "S" "r" 1 21 21 0 "text" ""
    ret r1

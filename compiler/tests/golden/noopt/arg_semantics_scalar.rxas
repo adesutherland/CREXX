@@ -158,7 +158,7 @@ l103d:
    .srcstep 29 29 17 "arg_semantics_scalar.crexx" 39 3 21 "  text = upper(text)"
    .traceevent "V" 6 "R" "S" "r" 0 29 29 0 "text" ""
    load r1,1
-   swapcall r2,rxfnsb.upper(),r1,r0,r2
+   settpswapcall r2,rxfnsb.upper(),r1,r0,256,r2
    swap r0,r2
    .traceevent "F" 4 "R" "S" "r" 0 29 29 0 "upper" ""
    .traceevent "A" 6 "R" "S" "r" 0 29 29 0 "text" ""
@@ -172,4 +172,4 @@ l103d:
 /* Imported Declaration from file: upper@library.rxbin */
 
 rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "string=.string"

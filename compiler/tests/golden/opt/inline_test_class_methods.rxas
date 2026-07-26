@@ -6,7 +6,7 @@
 .meta "inline_test_class_methods.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=21
+main() .locals=20
    .meta "inline_test_class_methods.main"="b" ".int" main() ""
    .srcstep 72 72 17 "inline_test_class_methods.crexx" 4 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -176,62 +176,61 @@ l303bexprend:
    .traceevent "V" 6 "R" "O" "r" 0 53 53 0 "§this" ""
    .srcstep 51 51 17 "inline_test_class_methods.crexx" 48 5 16 "    return name"
    .traceevent "V" 6 "R" "S" "r" 13 53 53 0 "__inline_leave_322_321" ""
-   scopy r9,r13
    br l310bexprend
 l310bexprend:
-   say r9
+   say r13
    .srcstep 57 57 17 "inline_test_class_methods.crexx" 16 3 16 "  say box.label()"
    .srcstep 56 56 17 "inline_test_class_methods.crexx" 16 7 10 "  say box.label()"
    .srcstep 54 54 33 "inline_test_class_methods.crexx" 16 7 10 "  say box.label()"
    .traceevent "V" 6 "R" "O" "r" 0 54 54 0 "box" ""
    .traceevent "A" 6 "R" "O" "r" 0 54 54 0 "§this" ""
    .srcstep 55 55 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
-   linkattr1 r9,r0,1
-   .traceevent "V" 6 "R" "S" "r" 9 57 57 0 "name" ""
-   scopy r14,r9
-   unlinkbr r9,l332bexprend
+   linkattr1 r13,r0,1
+   .traceevent "V" 6 "R" "S" "r" 13 57 57 0 "name" ""
+   scopy r9,r13
+   unlinkbr r13,l332bexprend
 l332bexprend:
-   say r14
+   say r9
    .srcstep 70 70 17 "inline_test_class_methods.crexx" 17 3 33 "  say .Box(\"direct\").prefix(\"q\")"
    .srcstep 69 69 17 "inline_test_class_methods.crexx" 17 7 11 "  say .Box(\"direct\").prefix(\"q\")"
    .srcstep 62 62 17 "inline_test_class_methods.crexx" 17 7 33 "  say .Box(\"direct\").prefix(\"q\")"
    .srcstep 58 58 6 "inline_test_class_methods.crexx" 28 3 13 "  *: factory"
-   setattrs r16,2
+   setattrs r15,2
    .srcstep 59 59 6 "inline_test_class_methods.crexx" 28 3 13 "  *: factory"
-   setobjtype r16,"inline_test_class_methods.box"
+   setobjtype r15,"inline_test_class_methods.box"
    .srcstep 60 60 17 "inline_test_class_methods.crexx" 30 5 19 "    name = initial"
    load r9,"direct"
    .traceevent "L" 4 "R" "S" "r" 9 60 60 0 "" ""
-   linkattr1 r14,r16,1
-   scopy r14,r9
-   unlink r14
+   linkattr1 r13,r15,1
+   scopy r13,r9
+   unlink r13
    .srcstep 61 61 33 "inline_test_class_methods.crexx" 31 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 16 61 61 0 "§factory" ""
-   copy r15,r16
-   .traceevent "A" 6 "R" "O" "r" 15 61 61 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 15 61 61 0 "§factory" ""
+   copy r14,r15
+   .traceevent "A" 6 "R" "O" "r" 14 61 61 0 "§this" ""
    .srcstep 68 68 17 "inline_test_class_methods.crexx" 43 5 31 "    return tag || \":\" || label()"
    .srcstep 67 67 17 "inline_test_class_methods.crexx" 43 12 15 "    return tag || \":\" || label()"
    .srcstep 66 66 33 "inline_test_class_methods.crexx" 43 23 25 "    return tag || \":\" || label()"
    .srcstep 65 65 17 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
    .srcstep 63 63 33 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
-   .traceevent "V" 6 "R" "O" "r" 15 63 63 0 "§this" ""
-   copy r17,r15
-   .traceevent "A" 6 "R" "O" "r" 17 63 63 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 14 63 63 0 "§this" ""
+   copy r16,r14
+   .traceevent "A" 6 "R" "O" "r" 16 63 63 0 "§this" ""
    .srcstep 64 64 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
-   linkattr1 r14,r17,1
-   .traceevent "V" 6 "R" "S" "r" 14 70 70 0 "name" ""
-   scopy r18,r14
-   unlinkbr r14,l359bexprend
+   linkattr1 r13,r16,1
+   .traceevent "V" 6 "R" "S" "r" 13 70 70 0 "name" ""
+   scopy r17,r13
+   unlinkbr r13,l359bexprend
 l359bexprend:
-   concat r18,"q:",r18
-   .traceevent "O" 4 "R" "S" "r" 18 70 70 0 "" ""
-   scopy r19,r18
+   concat r17,"q:",r17
+   .traceevent "O" 4 "R" "S" "r" 17 70 70 0 "" ""
+   scopy r18,r17
    br l349bexprend
 l349bexprend:
-   scopy r20,r19
+   scopy r19,r18
    br l339bexprend
 l339bexprend:
-   say r20
+   say r19
    .srcstep 71 71 17 "inline_test_class_methods.crexx" 18 3 11 "  return 0"
    ret 0
    .meta "inline_test_class_methods.main.box"

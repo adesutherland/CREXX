@@ -145,11 +145,43 @@ static int assembler_has_unresolved_symbol_operand(ASTNode *node) {
     return 0;
 }
 
+/* Refine the conservative symbol links created before assembler validation.
+ * The shared RXAS table is the authority for operand reads and writes. Keep
+ * the old read/write assumption whenever the opcode is not fully classified
+ * or has implicit/alias/reference/opaque effects that cannot be represented
+ * by one explicit operand mask. */
+static void apply_assembler_operand_effects(ASTNode *node,
+                                            const OpInfo *instruction) {
+    RxOpEffects effects;
+    ASTNode *child;
+    size_t operand_index;
+
+    if (!node || !instruction) return;
+    effects = rxop_effects(instruction->opcode);
+    if (effects.state != RXOP_EFFECT_CLASSIFIED ||
+        effects.implicit != RXOP_IMPLICIT_NONE ||
+        (effects.semantics & ~RXOP_SEM_MAY_THROW) != 0) {
+        return;
+    }
+
+    operand_index = 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (child->symbolNode) {
+            child->symbolNode->readUsage =
+                (unsigned int)rxop_effect_reads_operand(&effects, operand_index);
+            child->symbolNode->writeUsage =
+                (unsigned int)rxop_effect_writes_operand(&effects, operand_index);
+        }
+        operand_index++;
+    }
+}
+
 static void validate_assembler_node(Context *context, ASTNode *node) {
     ASTNode *child;
     OperandType *types = 0;
     size_t operand_count = 0;
     size_t operand_index = 0;
+    const OpInfo *instruction;
     char *buffer;
     char *c;
 
@@ -177,13 +209,16 @@ static void validate_assembler_node(Context *context, ASTNode *node) {
     buffer[node->node_string_length] = 0;
     for (c = buffer; *c; ++c) *c = (char) tolower(*c);
 
-    if (!src_instv(buffer, types, operand_count)) {
+    instruction = (const OpInfo *)src_instv(buffer, types, operand_count);
+    if (!instruction) {
         if (!context->is_final_pass && assembler_has_unresolved_symbol_operand(node)) {
             free(types);
             free(buffer);
             return;
         }
         mknd_err_unique(node, "INVALID_ASSEMBLER");
+    } else {
+        apply_assembler_operand_effects(node, instruction);
     }
     free(types);
     free(buffer);

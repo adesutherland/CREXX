@@ -38,7 +38,7 @@ namespace rxfnsb expose upper
  * @return uppercased text
  */
 upper: procedure = .string
-  arg expose string = .string
-  result = ""
+  arg string = .string
+  result = .string
   assembler strupper result,string
   return result

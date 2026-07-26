@@ -6,7 +6,7 @@
 
 main() .locals=9
    .meta "arg_semantics_scalar.main"="b" ".int" main() ""
-   .srcstep 34 34 17 "arg_semantics_scalar.crexx" 4 1 23 "main: procedure = .int"
+   .srcstep 36 36 17 "arg_semantics_scalar.crexx" 4 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "arg_semantics_scalar.crexx" 5 3 8 "  i = 7"
    .meta "arg_semantics_scalar.main.i"="b" ".int" r0
@@ -42,11 +42,10 @@ l151bexprend:
    .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "value" ""
    .srcstep 8 8 17 "arg_semantics_scalar.crexx" 26 3 15 "  return value"
    .traceevent "V" 6 "R" "I" "r" 2 10 10 0 "value" ""
-   icopy r1,r2
    br l160bexprend
 l160bexprend:
-   itos r1
-   concat r2,"int-mut=",r1
+   itos r2
+   concat r2,"int-mut=",r2
    .traceevent "O" 4 "R" "S" "r" 2 10 10 0 "" ""
    say r2
    .srcstep 11 11 17 "arg_semantics_scalar.crexx" 8 3 24 "  say \"int-after=\" || i"
@@ -74,70 +73,76 @@ l160bexprend:
    load r2,"mix:read"
    .traceevent "L" 4 "R" "S" "r" 2 17 17 0 "" ""
    scopy r1,r2
-   br l188bexprend
-l188bexprend:
+   br l191bexprend
+l191bexprend:
    concat r1,"str-read=",r1
    .traceevent "O" 4 "R" "S" "r" 1 17 17 0 "" ""
    say r1
-   .srcstep 24 24 17 "arg_semantics_scalar.crexx" 14 3 36 "  say \"str-mut=\" || shoutText(text)"
-   .srcstep 23 23 17 "arg_semantics_scalar.crexx" 14 21 30 "  say \"str-mut=\" || shoutText(text)"
+   .srcstep 25 25 17 "arg_semantics_scalar.crexx" 14 3 36 "  say \"str-mut=\" || shoutText(text)"
+   .srcstep 24 24 17 "arg_semantics_scalar.crexx" 14 21 30 "  say \"str-mut=\" || shoutText(text)"
    .srcstep 18 18 33 "arg_semantics_scalar.crexx" 38 7 11 "  arg text = .string"
    load r2,"mix"
    .traceevent "L" 4 "R" "S" "r" 2 18 18 0 "" ""
    .traceevent "A" 6 "R" "S" "r" 2 18 18 0 "text" ""
-   .srcstep 21 21 17 "arg_semantics_scalar.crexx" 39 3 21 "  text = upper(text)"
-   .srcstep 19 19 25 "upper.crexx" 42 3 14 "  result = \"\""
-   load r4,""
-   .traceevent "L" 4 "R" "S" "r" 4 19 19 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 4 19 19 0 "result" ""
-   .srcstep 20 20 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
-   .traceevent "V" 6 "R" "S" "r" 4 24 24 0 "result" ""
-   .traceevent "V" 6 "R" "S" "r" 2 24 24 0 "text" ""
-   strupper r4,r2
-   .traceevent "V" 6 "R" "S" "r" 4 24 24 0 "result" ""
+   .srcstep 22 22 17 "arg_semantics_scalar.crexx" 39 3 21 "  text = upper(text)"
+   .meta "arg_semantics_scalar.main.result"="b" ".string" r4
+   .srcstep 19 19 25 "upper.crexx" 42 3 19 "  result = .string"
+   null r4
+   .srcstep 20 20 33 "arg_semantics_scalar.crexx" 39 21 21 "  text = upper(text)"
+   .traceevent "V" 6 "R" "S" "r" 2 20 20 0 "text" ""
+   scopy r5,r2
+   .traceevent "A" 6 "R" "S" "r" 5 20 20 0 "string" ""
+   .srcstep 21 21 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 4 25 25 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 5 25 25 0 "string" ""
+   strupper r4,r5
+   .traceevent "V" 6 "R" "S" "r" 4 25 25 0 "result" ""
    copy r2,r4
-   .traceevent "A" 6 "R" "S" "r" 2 24 24 0 "text" ""
-   .srcstep 22 22 17 "arg_semantics_scalar.crexx" 40 3 26 "  return text || \":local\""
-   .traceevent "V" 6 "R" "S" "r" 2 24 24 0 "text" ""
+   .traceevent "A" 6 "R" "S" "r" 2 25 25 0 "text" ""
+   .srcstep 23 23 17 "arg_semantics_scalar.crexx" 40 3 26 "  return text || \":local\""
+   .traceevent "V" 6 "R" "S" "r" 2 25 25 0 "text" ""
    concat r1,r2,":local"
-   .traceevent "O" 4 "R" "S" "r" 1 24 24 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 1 25 25 0 "" ""
    scopy r6,r1
-   br l197bexprend
-l197bexprend:
+   br l200bexprend
+l200bexprend:
    concat r6,"str-mut=",r6
-   .traceevent "O" 4 "R" "S" "r" 6 24 24 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 25 25 0 "" ""
    say r6
-   .srcstep 25 25 17 "arg_semantics_scalar.crexx" 15 3 27 "  say \"str-after=\" || text"
+   .srcstep 26 26 17 "arg_semantics_scalar.crexx" 15 3 27 "  say \"str-after=\" || text"
    say "str-after=mix"
-   .srcstep 32 32 17 "arg_semantics_scalar.crexx" 16 3 39 "  say \"str-temp=\" || shoutText(\"temp\")"
-   .srcstep 31 31 17 "arg_semantics_scalar.crexx" 16 22 31 "  say \"str-temp=\" || shoutText(\"temp\")"
-   .srcstep 26 26 33 "arg_semantics_scalar.crexx" 38 7 11 "  arg text = .string"
+   .srcstep 34 34 17 "arg_semantics_scalar.crexx" 16 3 39 "  say \"str-temp=\" || shoutText(\"temp\")"
+   .srcstep 33 33 17 "arg_semantics_scalar.crexx" 16 22 31 "  say \"str-temp=\" || shoutText(\"temp\")"
+   .srcstep 27 27 33 "arg_semantics_scalar.crexx" 38 7 11 "  arg text = .string"
    load r6,"temp"
-   .traceevent "L" 4 "R" "S" "r" 6 26 26 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 6 26 26 0 "text" ""
-   .srcstep 29 29 17 "arg_semantics_scalar.crexx" 39 3 21 "  text = upper(text)"
-   .srcstep 27 27 25 "upper.crexx" 42 3 14 "  result = \"\""
-   load r7,""
-   .traceevent "L" 4 "R" "S" "r" 7 27 27 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 7 27 27 0 "result" ""
-   .srcstep 28 28 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
-   .traceevent "V" 6 "R" "S" "r" 7 32 32 0 "result" ""
-   .traceevent "V" 6 "R" "S" "r" 6 32 32 0 "text" ""
-   strupper r7,r6
-   .traceevent "V" 6 "R" "S" "r" 7 32 32 0 "result" ""
+   .traceevent "L" 4 "R" "S" "r" 6 27 27 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 27 27 0 "text" ""
+   .srcstep 31 31 17 "arg_semantics_scalar.crexx" 39 3 21 "  text = upper(text)"
+   .meta "arg_semantics_scalar.main.result"="b" ".string" r7
+   .srcstep 28 28 25 "upper.crexx" 42 3 19 "  result = .string"
+   null r7
+   .srcstep 29 29 33 "arg_semantics_scalar.crexx" 39 21 21 "  text = upper(text)"
+   .traceevent "V" 6 "R" "S" "r" 6 29 29 0 "text" ""
+   scopy r8,r6
+   .traceevent "A" 6 "R" "S" "r" 8 29 29 0 "string" ""
+   .srcstep 30 30 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 7 34 34 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 8 34 34 0 "string" ""
+   strupper r7,r8
+   .traceevent "V" 6 "R" "S" "r" 7 34 34 0 "result" ""
    copy r6,r7
-   .traceevent "A" 6 "R" "S" "r" 6 32 32 0 "text" ""
-   .srcstep 30 30 17 "arg_semantics_scalar.crexx" 40 3 26 "  return text || \":local\""
-   .traceevent "V" 6 "R" "S" "r" 6 32 32 0 "text" ""
+   .traceevent "A" 6 "R" "S" "r" 6 34 34 0 "text" ""
+   .srcstep 32 32 17 "arg_semantics_scalar.crexx" 40 3 26 "  return text || \":local\""
+   .traceevent "V" 6 "R" "S" "r" 6 34 34 0 "text" ""
    concat r2,r6,":local"
-   .traceevent "O" 4 "R" "S" "r" 2 32 32 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 2 34 34 0 "" ""
    scopy r1,r2
-   br l216bexprend
-l216bexprend:
+   br l222bexprend
+l222bexprend:
    concat r6,"str-temp=",r1
-   .traceevent "O" 4 "R" "S" "r" 6 32 32 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 34 34 0 "" ""
    say r6
-   .srcstep 33 33 17 "arg_semantics_scalar.crexx" 17 3 11 "  return 0"
+   .srcstep 35 35 17 "arg_semantics_scalar.crexx" 17 3 11 "  return 0"
    ret 0
    .meta "arg_semantics_scalar.main.i"
    .meta "arg_semantics_scalar.main.text"

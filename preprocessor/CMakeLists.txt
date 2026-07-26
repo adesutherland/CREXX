@@ -41,6 +41,12 @@ add_custom_command(
         BYPRODUCTS
                 ${CMAKE_CURRENT_BINARY_DIR}/rxpp.rxbin
                 ${CMAKE_CURRENT_BINARY_DIR}/rxpp_linked.rxbin
+        # rxpp's binary import root is also its output directory.  Never let a
+        # previous linked self-image reintroduce stale callable contracts while
+        # rebuilding after a library signature change.
+        COMMAND ${CMAKE_COMMAND} -E rm -f
+                ${CMAKE_CURRENT_BINARY_DIR}/rxpp.rxbin
+                ${CMAKE_CURRENT_BINARY_DIR}/rxpp_linked.rxbin
         COMMAND $<TARGET_FILE:rxc> -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"" -o rxpp ${CMAKE_CURRENT_SOURCE_DIR}/rxpp
         COMMAND $<TARGET_FILE:rxas> rxpp
         COMMAND $<TARGET_FILE:rxlink> -s -o rxpp_linked

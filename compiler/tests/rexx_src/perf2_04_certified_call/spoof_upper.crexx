@@ -1,0 +1,12 @@
+options levelb
+namespace rxfnsb expose upper
+
+say upper("MiXeD ÄÖ")
+
+/* This deliberately has UPPER's exact callable summary but different
+ * semantics.  The body fingerprint must reject its certificate. */
+upper: procedure = .string
+  arg string = .string
+  result = .string
+  assembler strlower result,string
+  return result

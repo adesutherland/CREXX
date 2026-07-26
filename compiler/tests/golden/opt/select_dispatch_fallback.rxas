@@ -106,54 +106,54 @@ l126bexprend:
    .srcstep 33 33 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
    ieq r9,r11,1
    .traceevent "O" 4 "R" "B" "r" 9 33 33 0 "" ""
-   brf l179iffalse,r9
+   brf l177iffalse,r9
    .srcstep 25 25 17 "select_dispatch_fallback.crexx" 27 17 26 "    when 1 then return 10"
    load r8,10
    .traceevent "L" 4 "R" "I" "r" 8 37 37 0 "" ""
    icopy r9,r8
-   br l162bexprend
-   br l179ifend
+   br l160bexprend
+   br l177ifend
    .srcstep 34 34 17 "select_dispatch_fallback.crexx" 28 5 9 "    when dynamic then return 20"
-l179iffalse:
+l177iffalse:
    .srcstep 31 31 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
    .traceevent "V" 6 "R" "I" "r" 10 31 31 0 "dynamic" ""
    ieq r7,r11,r10
    .traceevent "O" 4 "R" "B" "r" 7 31 31 0 "" ""
-   brf l185iffalse,r7
+   brf l183iffalse,r7
    .srcstep 26 26 17 "select_dispatch_fallback.crexx" 28 23 32 "    when dynamic then return 20"
    load r6,20
    .traceevent "L" 4 "R" "I" "r" 6 37 37 0 "" ""
    icopy r9,r6
-   br l162bexprend
-   br l185ifend
+   br l160bexprend
+   br l183ifend
    .srcstep 32 32 17 "select_dispatch_fallback.crexx" 29 5 9 "    when 3 then return 30"
-l185iffalse:
+l183iffalse:
    .srcstep 29 29 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
    ieq r5,r11,3
    .traceevent "O" 4 "R" "B" "r" 5 29 29 0 "" ""
-   brf l191iffalse,r5
+   brf l189iffalse,r5
    .srcstep 27 27 17 "select_dispatch_fallback.crexx" 29 17 26 "    when 3 then return 30"
    load r4,30
    .traceevent "L" 4 "R" "I" "r" 4 37 37 0 "" ""
    icopy r9,r4
-   br l162bexprend
-   br l191ifend
+   br l160bexprend
+   br l189ifend
    .srcstep 30 30 17 "select_dispatch_fallback.crexx" 30 5 14 "    otherwise return -1"
-l191iffalse:
+l189iffalse:
    .srcstep 28 28 17 "select_dispatch_fallback.crexx" 30 15 24 "    otherwise return -1"
    load r12,-1
    .traceevent "L" 4 "R" "I" "r" 12 37 37 0 "" ""
    icopy r9,r12
-   br l162bexprend
-l191ifend:
-l185ifend:
-l179ifend:
+   br l160bexprend
+l189ifend:
+l183ifend:
+l177ifend:
    .srcstep 35 35 17 "select_dispatch_fallback.crexx" 32 3 12 "  return -2"
    load r12,-2
    .traceevent "L" 4 "R" "I" "r" 12 37 37 0 "" ""
    icopy r9,r12
-   br l162bexprend
-l162bexprend:
+   br l160bexprend
+l160bexprend:
    itos r9
    say r9
 l9doinc:

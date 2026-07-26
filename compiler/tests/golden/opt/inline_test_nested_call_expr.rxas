@@ -41,11 +41,10 @@ l62bexprend:
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 9 9 17 "inline_test_nested_call_expr.crexx" 13 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "val" ""
-   icopy r5,r3
    br l58bexprend
 l58bexprend:
-   itos r5
-   say r5
+   itos r3
+   say r3
 l8doinc:
    .srcstep 4 4 17 "inline_test_nested_call_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

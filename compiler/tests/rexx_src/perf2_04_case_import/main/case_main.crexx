@@ -1,0 +1,10 @@
+options levelb
+import perf2case
+
+source = "MiXeD äÖ"
+
+say caseupper("literal")
+say caseupper(source)
+say caselower("ÄÖÜÉ")
+say caseupper("a" || "b")
+say source

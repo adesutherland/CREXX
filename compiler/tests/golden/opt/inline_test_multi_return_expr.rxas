@@ -44,13 +44,13 @@ l58iffalse:
    .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "val" ""
    igt r4,r0,0
    .traceevent "O" 4 "R" "B" "r" 4 10 10 0 "" ""
-   brf l65iffalse,r4
+   brf l64iffalse,r4
    .srcstep 11 11 17 "inline_test_multi_return_expr.crexx" 14 14 18 "  if val > 0 then return 1"
    .srcstep 9 9 17 "inline_test_multi_return_expr.crexx" 14 19 27 "  if val > 0 then return 1"
    load r3,1
    .traceevent "L" 4 "R" "I" "r" 3 14 14 0 "" ""
    br l53bexprend
-l65iffalse:
+l64iffalse:
    .srcstep 12 12 17 "inline_test_multi_return_expr.crexx" 15 3 11 "  return 0"
    load r4,0
    .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""

@@ -1,0 +1,87 @@
+options levelb
+import rxfnsb
+
+source = "René日🙂"
+start = 2
+count = 3
+pad = "."
+mixed = "MiXeD äÖ"
+
+say substr(source, start, count, pad)
+say source
+say substr("abc", 2)
+say substr("abc", 2, 0) = ""
+say substr("abc", 5, 3, ".")
+say upper(mixed)
+say mixed
+say lower(mixed)
+say length(source)
+say left(source, count)
+say right(source, count)
+say left("a", count, pad)
+say right("a", count, pad)
+say word(source, 1)
+say word(source, 1) = source
+
+caught = 0
+do
+  ignored = substr("abc", 0, 1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = substr("abc", 1, -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = substr("abc", 1, 1, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = substr("abc", 1, 1, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = left("abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  /* PAD is validated before the width-zero return. */
+  ignored = left("abc", 0, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = right("abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = right("abc", 0, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = word(source, 0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+say caught
+
+/* Kept as a generated but uncalled dynamic-form guard.  Formal values are not
+ * compile-time constants, so every certificate must retain the complete Level
+ * B inline body in optimized output and the normal call in no-opt output. */
+dynamic_fallback: procedure = .void
+  arg text = .string, start_at = .int, width = .int, padding = .string
+  say upper(text)
+  say lower(text)
+  say length(text)
+  say substr(text, start_at, width, padding)
+  say left(text, width, padding)
+  say right(text, width, padding)
+  say word(text, start_at)
+  return

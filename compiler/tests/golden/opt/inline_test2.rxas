@@ -64,13 +64,12 @@ main() .locals=5
    .traceevent "A" 6 "R" "I" "r" 1 11 11 0 "x" ""
    .srcstep 12 12 17 "inline_test2.crexx" 34 3 11 "  return x"
    .traceevent "V" 6 "R" "I" "r" 1 14 14 0 "x" ""
-   icopy r2,r1
    br l169bexprend
 l169bexprend:
-   itos r2
-   sconcat r2,"LargeProc result:",r2
-   .traceevent "O" 4 "R" "S" "r" 2 14 14 0 "" ""
-   say r2
+   itos r1
+   sconcat r1,"LargeProc result:",r1
+   .traceevent "O" 4 "R" "S" "r" 1 14 14 0 "" ""
+   say r1
    .srcstep 17 17 17 "inline_test2.crexx" 10 3 50 "  say \"NestedCallProc result:\" nestedCallProc(10)"
    .srcstep 16 16 17 "inline_test2.crexx" 10 32 46 "  say \"NestedCallProc result:\" nestedCallProc(10)"
    .srcstep 15 15 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"

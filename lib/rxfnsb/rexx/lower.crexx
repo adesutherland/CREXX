@@ -39,6 +39,6 @@ namespace rxfnsb expose lower
  */
 lower: procedure = .string
   arg string = .string
-  result = ""
+  result = .string
   assembler strlower result,string
   return result

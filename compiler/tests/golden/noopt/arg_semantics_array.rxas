@@ -123,7 +123,7 @@ l82d:
    minlinkattr1 r4,r0,1
    .traceevent "V" 6 "R" "S" "r" 4 16 16 0 "value" ""
    load r2,1
-   swapcall r5,rxfnsb.upper(),r2,r4,r3
+   settpswapcall r5,rxfnsb.upper(),r2,r4,256,r3
    swap r4,r3
    unlink r4
    .traceevent "F" 4 "R" "S" "r" 5 16 16 0 "upper" ""
@@ -169,7 +169,7 @@ mutateArrayRef() .locals=6
    minlinkattr1 r1,a1,2
    .traceevent "V" 6 "R" "S" "r" 1 22 22 0 "value" ""
    load r3,1
-   swapcall r5,rxfnsb.upper(),r3,r1,r4
+   settpswapcall r5,rxfnsb.upper(),r3,r1,256,r4
    swap r1,r4
    unlink r1
    .traceevent "F" 4 "R" "S" "r" 5 22 22 0 "upper" ""
@@ -209,4 +209,4 @@ makeArray() .locals=3
 /* Imported Declaration from file: upper@library.rxbin */
 
 rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "string=.string"

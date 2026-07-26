@@ -594,6 +594,119 @@ static size_t inline_candidate_cleanup_sequence(ASTNode *sequence,
     return removed;
 }
 
+typedef struct InlineDefaultResultProof {
+    ASTNode *boundary_root;
+    Symbol *symbol;
+    size_t leave_count;
+    int invalid;
+} InlineDefaultResultProof;
+
+static void inline_find_default_result_symbol(ASTNode *node,
+                                              InlineDefaultResultProof *proof) {
+    ASTNode *child;
+    Symbol *symbol;
+
+    if (!node || !proof || proof->invalid) return;
+    if (node != proof->boundary_root &&
+        (node->node_type == PROCEDURE || node->node_type == METHOD ||
+         node->node_type == FACTORY || node->node_type == MATCH)) return;
+
+    if (node->node_type == LEAVE_WITH && node->association == proof->boundary_root) {
+        child = node->child;
+        proof->leave_count++;
+        if (!child || child->sibling || child->node_type != VAR_SYMBOL || child->child ||
+            child->flow_substitute_symbol || !child->symbolNode ||
+            !(symbol = child->symbolNode->symbol)) {
+            proof->invalid = 1;
+            return;
+        }
+        if (proof->symbol && proof->symbol != symbol) {
+            proof->invalid = 1;
+            return;
+        }
+        proof->symbol = symbol;
+        return;
+    }
+
+    for (child = node->child; child; child = child->sibling) {
+        inline_find_default_result_symbol(child, proof);
+    }
+}
+
+static void inline_statement_result_effects(ASTNode *node,
+                                            Symbol *symbol,
+                                            int *reads,
+                                            int *safe_assembler_write) {
+    ASTNode *child;
+
+    if (!node || !symbol) return;
+    if (node->symbolNode && node->symbolNode->symbol == symbol &&
+        (!node->parent || (node->parent->node_type != DEFINE &&
+                           node->parent->node_type != ARG))) {
+        if (node->symbolNode->readUsage && reads) *reads = 1;
+        if (node->symbolNode->writeUsage && !node->symbolNode->readUsage &&
+            node->parent && node->parent->node_type == ASSEMBLER &&
+            safe_assembler_write) {
+            *safe_assembler_write = 1;
+        }
+    }
+    for (child = node->child; child; child = child->sibling) {
+        inline_statement_result_effects(child, symbol, reads, safe_assembler_write);
+    }
+}
+
+/* BLOCK_EXPR is intentionally opaque to the whole-procedure flow consumer.
+ * Recover only the bounded F03 case proved inside one inline candidate: one
+ * scalar local result, linear control, a classified write-only assembler
+ * destination before its first read, and one final ownership-transferring
+ * return. Source metadata remains; only the redundant physical default is
+ * omitted. */
+static void inline_candidate_prove_owned_result_default(ASTNode *candidate_root) {
+    InlineDefaultResultProof proof;
+    ASTNode *sequence;
+    ASTNode *statement;
+    Symbol *symbol;
+    int safely_defined;
+
+    if (!candidate_root || candidate_root->node_type != BLOCK_EXPR ||
+        !candidate_root->association || !candidate_root->scope) return;
+
+    memset(&proof, 0, sizeof(proof));
+    proof.boundary_root = candidate_root;
+    inline_find_default_result_symbol(candidate_root, &proof);
+    if (proof.invalid || proof.leave_count != 1 || !(symbol = proof.symbol)) return;
+    if (!symbol->needs_default_initiation || symbol->scope != candidate_root->scope ||
+        symbol->symbol_type != VARIABLE_SYMBOL || symbol->inline_value_alias ||
+        symbol->exposed || symbol->is_global_var || symbol->is_arg || symbol->is_ref_arg ||
+        symbol->is_this || symbol->is_factory || symbol->has_reference_target ||
+        symbol->value_dims || symbol->type == TP_OBJECT || symbol->type == TP_REFERENCE ||
+        symbol->type == TP_BINARY) return;
+
+    sequence = candidate_root->child;
+    if (!sequence || sequence->node_type != INSTRUCTIONS) return;
+    safely_defined = 0;
+    for (statement = sequence->child; statement; statement = statement->sibling) {
+        int reads = 0;
+        int safe_assembler_write = 0;
+
+        if (statement->node_type == IF || statement->node_type == DO ||
+            statement->node_type == SIGNAL_BLOCK || statement->node_type == BLOCK_EXPR ||
+            statement->node_type == SELECT || statement->node_type == SWITCH ||
+            statement->node_type == OPT_DISPATCH) return;
+
+        inline_statement_result_effects(statement,
+                                        symbol,
+                                        &reads,
+                                        &safe_assembler_write);
+        if (reads && !safely_defined) return;
+        if (safe_assembler_write) safely_defined = 1;
+        if (statement->node_type == LEAVE_WITH &&
+            statement->association == candidate_root) break;
+    }
+
+    if (safely_defined) symbol->inline_skip_default_initiation = 1;
+}
+
 static int inline_candidate_cleanup_fixed_point(Context *context,
                                                 InlineExpansionPlan *plan,
                                                 ASTNode *candidate_root,
@@ -664,6 +777,7 @@ static int inline_candidate_cleanup_fixed_point(Context *context,
         plan->cleanup_delta.valid = 1;
         plan->profitability_required = 1;
     }
+    inline_candidate_prove_owned_result_default(candidate_root);
     return 1;
 }
 

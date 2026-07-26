@@ -71,12 +71,12 @@ main() .locals=9
    .srcstep 12 12 17 "inline_test_array_multi_return_expr.crexx" 22 20 30 "  if flag < 0 then return neg"
    .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "neg" ""
    copy r6,r2
-   br l181bexprend
+   br l180bexprend
    .srcstep 13 13 17 "inline_test_array_multi_return_expr.crexx" 24 3 14 "  return zero"
    .traceevent "V" 6 "R" "S" "r" 4 15 15 0 "zero" ""
    copy r6,r4
-   br l181bexprend
-l181bexprend:
+   br l180bexprend
+l180bexprend:
    endlife r2
    endlife r3
    endlife r4
@@ -100,14 +100,14 @@ l181bexprend:
    unlink r4
    .traceevent "O" 4 "R" "S" "r" 5 19 19 0 "" ""
    scopy r3,r5
-   br l175bexprend
-l175bexprend:
+   br l174bexprend
+l174bexprend:
    endlife r1
    .meta "inline_test_array_multi_return_expr.main.__inline_bind_113_0"
    say r3
    .srcstep 36 36 17 "inline_test_array_multi_return_expr.crexx" 6 3 34 "  say renderArray(selectArray(0))"
    .srcstep 35 35 17 "inline_test_array_multi_return_expr.crexx" 6 7 18 "  say renderArray(selectArray(0))"
-   .meta "inline_test_array_multi_return_expr.main.__inline_bind_255_0"="b" ".string[*]" r7
+   .meta "inline_test_array_multi_return_expr.main.__inline_bind_253_0"="b" ".string[*]" r7
    .srcstep 20 20 33 "inline_test_array_multi_return_expr.crexx" 6 19 30 "  say renderArray(selectArray(0))"
    null r7
    .srcstep 32 32 33 "inline_test_array_multi_return_expr.crexx" 6 19 30 "  say renderArray(selectArray(0))"
@@ -166,8 +166,8 @@ l175bexprend:
    .srcstep 30 30 17 "inline_test_array_multi_return_expr.crexx" 24 3 14 "  return zero"
    .traceevent "V" 6 "R" "S" "r" 3 32 32 0 "zero" ""
    copy r2,r3
-   br l322bexprend
-l322bexprend:
+   br l320bexprend
+l320bexprend:
    endlife r5
    endlife r4
    endlife r3
@@ -175,9 +175,9 @@ l322bexprend:
    .meta "inline_test_array_multi_return_expr.main.pos"
    .meta "inline_test_array_multi_return_expr.main.zero"
    copy r7,r2
-   .traceevent "A" 6 "R" "S" "r" 7 32 32 0 "__inline_bind_255_0" ""
+   .traceevent "A" 6 "R" "S" "r" 7 32 32 0 "__inline_bind_253_0" ""
    .srcstep 33 33 6 "inline_test_array_multi_return_expr.crexx" 27 7 12 "  arg value = .string[]"
-   .traceevent "V" 6 "R" "S" "r" 7 36 36 0 "__inline_bind_255_0" ""
+   .traceevent "V" 6 "R" "S" "r" 7 36 36 0 "__inline_bind_253_0" ""
    copy r6,r7
    .srcstep 34 34 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"
    minlinkattr1 r5,r6,1
@@ -191,14 +191,14 @@ l322bexprend:
    unlink r3
    .traceevent "O" 4 "R" "S" "r" 4 36 36 0 "" ""
    scopy r2,r4
-   br l316bexprend
-l316bexprend:
+   br l314bexprend
+l314bexprend:
    endlife r6
-   .meta "inline_test_array_multi_return_expr.main.__inline_bind_255_0"
+   .meta "inline_test_array_multi_return_expr.main.__inline_bind_253_0"
    say r2
    .srcstep 54 54 17 "inline_test_array_multi_return_expr.crexx" 7 3 34 "  say renderArray(selectArray(1))"
    .srcstep 53 53 17 "inline_test_array_multi_return_expr.crexx" 7 7 18 "  say renderArray(selectArray(1))"
-   .meta "inline_test_array_multi_return_expr.main.__inline_bind_395_0"="b" ".string[*]" r8
+   .meta "inline_test_array_multi_return_expr.main.__inline_bind_393_0"="b" ".string[*]" r8
    .srcstep 37 37 33 "inline_test_array_multi_return_expr.crexx" 7 19 30 "  say renderArray(selectArray(1))"
    null r8
    .srcstep 50 50 33 "inline_test_array_multi_return_expr.crexx" 7 19 30 "  say renderArray(selectArray(1))"
@@ -257,12 +257,12 @@ l316bexprend:
    .srcstep 47 47 17 "inline_test_array_multi_return_expr.crexx" 23 20 30 "  if flag > 0 then return pos"
    .traceevent "V" 6 "R" "S" "r" 4 50 50 0 "pos" ""
    copy r2,r4
-   br l462bexprend
+   br l460bexprend
    .srcstep 48 48 17 "inline_test_array_multi_return_expr.crexx" 24 3 14 "  return zero"
    .traceevent "V" 6 "R" "S" "r" 3 50 50 0 "zero" ""
    copy r2,r3
-   br l462bexprend
-l462bexprend:
+   br l460bexprend
+l460bexprend:
    endlife r5
    endlife r4
    endlife r3
@@ -270,9 +270,9 @@ l462bexprend:
    .meta "inline_test_array_multi_return_expr.main.pos"
    .meta "inline_test_array_multi_return_expr.main.zero"
    copy r8,r2
-   .traceevent "A" 6 "R" "S" "r" 8 50 50 0 "__inline_bind_395_0" ""
+   .traceevent "A" 6 "R" "S" "r" 8 50 50 0 "__inline_bind_393_0" ""
    .srcstep 51 51 6 "inline_test_array_multi_return_expr.crexx" 27 7 12 "  arg value = .string[]"
-   .traceevent "V" 6 "R" "S" "r" 8 54 54 0 "__inline_bind_395_0" ""
+   .traceevent "V" 6 "R" "S" "r" 8 54 54 0 "__inline_bind_393_0" ""
    copy r6,r8
    .srcstep 52 52 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"
    minlinkattr1 r5,r6,1
@@ -286,10 +286,10 @@ l462bexprend:
    unlink r3
    .traceevent "O" 4 "R" "S" "r" 4 54 54 0 "" ""
    scopy r2,r4
-   br l456bexprend
-l456bexprend:
+   br l454bexprend
+l454bexprend:
    endlife r6
-   .meta "inline_test_array_multi_return_expr.main.__inline_bind_395_0"
+   .meta "inline_test_array_multi_return_expr.main.__inline_bind_393_0"
    say r2
    .srcstep 55 55 17 "inline_test_array_multi_return_expr.crexx" 8 3 54 "  say \"Array multi return expr inline test finished.\""
    say "Array multi return expr inline test finished."
