@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+p04-cex1-slc1-rxvm,PERF2-04 P04-CEX1 decisive,crexx,rxvm,accepted-SLC1,P,no,no,5000000-iterations,elapsed_ns,17,1045336000.000000,1067035000.000000,1092735000.000000,1116371000.000000,1138211000.000000,23652000.000000,2.164477,8.499316,no
+p04-cex1-candidate-rxvm,PERF2-04 P04-CEX1 decisive,crexx,rxvm,P04-CEX1-candidate,P,no,no,5000000-iterations,elapsed_ns,17,42603000.000000,48745000.000000,51803000.000000,54336000.000000,57575000.000000,2864000.000000,5.528637,28.901801,yes
+p04-cex1-slc1-rxbvm,PERF2-04 P04-CEX1 decisive,crexx,rxbvm,accepted-SLC1,P,no,no,5000000-iterations,elapsed_ns,17,1194683000.000000,1234552000.000000,1250143000.000000,1289028000.000000,1333705000.000000,26665000.000000,2.132956,11.120488,yes
+p04-cex1-candidate-rxbvm,PERF2-04 P04-CEX1 decisive,crexx,rxbvm,P04-CEX1-candidate,P,no,no,5000000-iterations,elapsed_ns,17,55472000.000000,56335000.000000,56995000.000000,59299000.000000,61936000.000000,812000.000000,1.424686,11.341346,yes

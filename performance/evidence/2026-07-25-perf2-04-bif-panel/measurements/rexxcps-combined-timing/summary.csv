@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+combined-current-rxvm,PERF2-04 combined RexxCPS,crexx,rxvm,CF-C0-current,P,no,no,1000-clauses,benchmark_rate,7,28415361.000000,29202940.000000,29293128.000000,29383538.000000,29492029.000000,101663.000000,0.347054,3.675497,no
+combined-current-rxbvm,PERF2-04 combined RexxCPS,crexx,rxbvm,CF-C0-current,P,no,no,1000-clauses,benchmark_rate,7,27329548.000000,27436302.500000,27502423.000000,27694970.000000,27958733.000000,126014.000000,0.458192,2.287744,no
+combined-ceiling-rxvm,PERF2-04 combined RexxCPS,crexx,rxvm,CF-COMB1,P,no,no,1000-clauses,benchmark_rate,7,37075932.000000,38469791.500000,38924099.000000,39302140.500000,39689312.000000,648595.000000,1.666307,6.714041,no
+combined-ceiling-rxbvm,PERF2-04 combined RexxCPS,crexx,rxbvm,CF-COMB1,P,no,no,1000-clauses,benchmark_rate,7,36384872.000000,36653149.000000,36963282.000000,37009042.000000,37208195.000000,213506.000000,0.577616,2.227408,no

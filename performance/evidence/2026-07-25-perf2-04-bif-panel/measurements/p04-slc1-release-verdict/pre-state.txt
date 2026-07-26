@@ -1,0 +1,22 @@
+utc=2026-07-25T19:31:23Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+10
+{ 2.24 3.95 3.88 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+1707 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; uname -a; sysctl -n hw.logicalcpu; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true; shasum -a 256 cmake-build-release/bin/rxc cmake-build-release/bin/rxas cmake-build-release/bin/rxlink cmake-build-release/bin/rxvm cmake-build-release/bin/rxbvm cmake-build-release/bin/library.rxbin cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-slc1-release-verdict-matrix.txt) > /private/tmp/perf2-04-slc1-verdict.KL63QH/pre-state.txt 2>&1 && sed -n '1,80p' /private/tmp/perf2-04-slc1-verdict.KL63QH/pre-state.txt
+1708 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; uname -a; sysctl -n hw.logicalcpu; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true; shasum -a 256 cmake-build-release/bin/rxc cmake-build-release/bin/rxas cmake-build-release/bin/rxlink cmake-build-release/bin/rxvm cmake-build-release/bin/rxbvm cmake-build-release/bin/library.rxbin cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-slc1-release-verdict-matrix.txt) > /private/tmp/perf2-04-slc1-verdict.KL63QH/pre-state.txt 2>&1 && sed -n '1,80p' /private/tmp/perf2-04-slc1-verdict.KL63QH/pre-state.txt
+147e326b47b8f747934d5ce5c9bdd804ce943274ace0e690c2d0ba27fb5ed503  cmake-build-release/bin/rxc
+6fdb7ba0b7979608a6faa20ae2ce8ebf5ba9bd66a24cacc1e654dd6515ac5aff  cmake-build-release/bin/rxas
+b3cdedeebb096e2b9513c86f0c2e5fb20c53dda336f7a650c2b43dc2d08b2625  cmake-build-release/bin/rxlink
+225952dbd23a56baffd032461977d8a686866dfbef77613ac8bbd40ebe615815  cmake-build-release/bin/rxvm
+0a880d163f0fb3fc653ce42adc48356e3390f12b36eeccb104b251865cf3b144  cmake-build-release/bin/rxbvm
+221727fccba50f74a0da57a0ae0dcd94241f21bfe6d5cc60145a767a41f0aab4  cmake-build-release/bin/library.rxbin
+0156af796d8bffbe91668565cbdaaeb0c527334b60e67980d37f8f8207218fa4  cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas
+eb8ac9690ab77f43ba88333fd27f5f1061b43932caa7894b753fe9d8edd1a072  cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+fb6534bf21a13cd54050086d14bd92cb7c50b184b37b16f937fb5b85e3e89d03  cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin
+77cfd1d1b4532b545d19f8313ac74567211834ca4fd7e2537a493c8f40bbceab  performance/tools/run_cross_runtime_matrix.crexx
+ed87953918aeec9eed0a9e11b8aaba92992caa3bb3877187b7e6dfb9e9879034  performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-slc1-release-verdict-matrix.txt

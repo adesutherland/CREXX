@@ -1,0 +1,3 @@
+vm,n,favorable,q1_percent,median_percent,q3_percent,mean_percent,sample_sd_percent,mean_95ci_low_percent,mean_95ci_high_percent,baseline_median_rate,candidate_median_rate,ratio_higher_is_better,ratio_median_change_percent
+rxvm,7,3,-0.387871315,-0.003330690,0.375538942,0.151226842,0.768463446,-0.559483352,0.861937036,29363287,29362309,0.999966693102,-0.003330690
+rxbvm,7,5,-0.036908617,0.614624455,0.841229628,0.431619407,1.548187525,-1.000215330,1.863454144,27533292,27739431,1.007486899859,0.748689986

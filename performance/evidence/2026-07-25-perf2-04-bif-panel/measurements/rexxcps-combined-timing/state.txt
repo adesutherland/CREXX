@@ -1,0 +1,42 @@
+PERF2-04 CF-COMB1 RexxCPS profiling-off Release wall state
+
+Repository commit: 6567f0ba23f20623e01322f5a62323b2347ab09d
+Ordinary product: /private/tmp/crexx-perf2-04.3k3Dfw/build-release
+Configuration: Ninja Release, -O3 -DNDEBUG, CREXX_VM_PROFILING=OFF
+Host: Mac.lan, Darwin 25.5.0 arm64, 10 logical CPUs, 24 GiB
+Toolchain: Apple clang 21.0.0, CMake 4.3.2, Ninja 1.13.2
+
+Pre-capture snapshot UTC: 2026-07-25T16:40:28+0000
+Pre-capture local: 2026-07-25T17:40:28+0100
+Pre-capture uptime: 11 days 10:48
+Pre-capture load: 2.30 2.08 2.08
+Pre-capture power: AC attached, battery 80%, not charging
+Pre-capture thermal/performance warning: none recorded
+Pre-capture relevant benchmark processes: none
+
+Capture started UTC: 2026-07-25T16:40:36+0000
+Capture completed UTC: 2026-07-25T16:41:26+0000
+
+Post-capture snapshot UTC: 2026-07-25T16:41:35+0000
+Post-capture local: 2026-07-25T17:41:35+0100
+Post-capture uptime: 11 days 10:49
+Post-capture load: 2.20 2.12 2.09
+Post-capture power: AC attached, battery 80%, not charging
+Post-capture thermal/performance warning: none recorded
+Post-capture relevant benchmark processes: none
+
+Control: serial rotated sampling, 2 warmups and 7 recorded samples per cell
+Cells: CF-C0 current and CF-COMB1, each on rxvm and rxbvm
+Total invocations: 36 (8 warmups plus 28 recorded)
+Correctness: 36/36 exit 0 and canonical RexxCPS PASS, zero retained stderr
+Combined guard: 18/18 candidate invocations printed PERF2-04-COMBINED-GUARD PASS
+Capture result: pass
+
+Maintained runner source SHA-256: 77cfd1d1b4532b545d19f8313ac74567211834ca4fd7e2537a493c8f40bbceab
+Maintained runner RXBIN SHA-256: 21e8dd72abe2293b51e38a3242479b621ff07ed1fd9f975a078796f4e21297a8
+Control manifest SHA-256: b46099b7ba79a86372b609c648090e31aadf4926b06622697ac9ff4d832e3082
+B0-R rxvm SHA-256: aab099d2f1e52f09976002935b21b189c104200f7a4b4155c65eef6eb21ac1d4
+B0-R rxbvm SHA-256: a4a61df9cceac8a0178ef5583835953f55f882f7b4bab29c754d3c41aed87b5f
+B0-R library.rxbin SHA-256: d4b35ddefa1b7d6711788b38dc33d0b66ff8a1af43690f2367c98a8ee5f7fcf1
+Current RexxCPS RXBIN SHA-256: 9b535403baddc5b7076d5eb23027a296d982660546bcecc74d3784bb2fa23741
+CF-COMB1 RXBIN SHA-256: 209cefdb8ca88768ffe46e38a0d7c7b646182db0afdf1991e7a4f1395caeec15

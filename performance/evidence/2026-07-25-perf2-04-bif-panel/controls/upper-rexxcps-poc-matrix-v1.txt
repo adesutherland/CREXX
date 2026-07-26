@@ -1,0 +1,9 @@
+# PERF2-04 ordinary profiling-off Release RexxCPS UPPER-inlining PoC matrix.
+# The candidate is scratch-only: it materializes the four pure UPPER actuals
+# as local symbols so the current generic reference binder admits the imported
+# Level B body.  It is a ceiling/discriminator, not a production source edit.
+crexx-cross-runtime-matrix|1
+upper-baseline-rxvm|PERF2-04 UPPER RexxCPS|crexx|rxvm|UPR-C0-current|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxvm;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+upper-baseline-rxbvm|PERF2-04 UPPER RexxCPS|crexx|rxbvm|UPR-C0-current|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxbvm;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+upper-symbol-poc-rxvm|PERF2-04 UPPER RexxCPS|crexx|rxvm|UPR-L0-current-symbol|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_upper_symbol_poc.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+upper-symbol-poc-rxbvm|PERF2-04 UPPER RexxCPS|crexx|rxbvm|UPR-L0-current-symbol|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxbvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_upper_symbol_poc.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a

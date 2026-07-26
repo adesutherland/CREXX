@@ -1,0 +1,541 @@
+sample_id,stream,line_number,text
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,8,     Performance: 28736541 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,8,     Performance: 26766404 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,8,     Performance: 31234993 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,8,     Performance: 29421601 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,8,     Performance: 31289870 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,8,     Performance: 29928620 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,8,     Performance: 27424334 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,8,     Performance: 30371089 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,8,     Performance: 28951884 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,8,     Performance: 31453910 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,8,     Performance: 30328825 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,8,     Performance: 29385491 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,8,     Performance: 29660418 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,8,     Performance: 28069808 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,8,     Performance: 30792918 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,8,     Performance: 29178281 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,8,     Performance: 31471580 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,8,     Performance: 30046903 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,8,     Performance: 27588110 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,8,     Performance: 31758483 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,8,     Performance: 29785633 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,8,     Performance: 31872815 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,8,     Performance: 29561281 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,8,     Performance: 29127005 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,8,     Performance: 30169325 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,8,     Performance: 29319896 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,8,     Performance: 31706298 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,8,     Performance: 30011524 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,8,     Performance: 29413062 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,8,     Performance: 28039637 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,8,     Performance: 29540701 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,8,     Performance: 31672757 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,8,     Performance: 28321070 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,8,     Performance: 28692182 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,8,     Performance: 27613859 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,8,     Performance: 31019559 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,8,     Performance: 31810663 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,8,     Performance: 29755056 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,8,     Performance: 29428874 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,8,     Performance: 27400814 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,8,     Performance: 31216418 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,8,     Performance: 27473006 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,8,     Performance: 28524513 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,8,     Performance: 27818088 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,8,     Performance: 27385281 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,8,     Performance: 29995846 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,8,     Performance: 29343096 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,8,     Performance: 31406246 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,8,     Performance: 29340829 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,8,     Performance: 27568386 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-baseline-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,8,     Performance: 29975727 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,8,     Performance: 28879449 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-symbol-poc-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.3 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,8,     Performance: 31484287 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,3,       System is: macOS
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,5,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=300 averaging=100 calibrated=1
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,7,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,8,     Performance: 29244042 cREXX clauses per second
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,9,
+timing-PERF2-04-UPPER-RexxCPS-upper-direct-poc-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port

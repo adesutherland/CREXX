@@ -1,0 +1,2 @@
+PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+PASS: PERF2-04 UPPER control

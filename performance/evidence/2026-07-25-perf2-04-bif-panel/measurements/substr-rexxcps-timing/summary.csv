@@ -1,0 +1,7 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+substr-baseline-rxvm,PERF2-04 SUBSTR RexxCPS,crexx,rxvm,SLC-C0-current,P,no,no,1000-clauses,benchmark_rate,7,28708629.000000,28769687.500000,28818112.000000,28915263.500000,29163333.000000,95658.000000,0.331937,1.577841,no
+substr-baseline-rxbvm,PERF2-04 SUBSTR RexxCPS,crexx,rxbvm,SLC-C0-current,P,no,no,1000-clauses,benchmark_rate,7,27300996.000000,27387100.500000,27540875.000000,27617663.500000,27650789.000000,96496.000000,0.350374,1.270087,no
+substr-direct-rxvm,PERF2-04 SUBSTR RexxCPS,crexx,rxvm,SLC-H1-direct-composition,P,no,no,1000-clauses,benchmark_rate,7,30465327.000000,31215159.000000,31318043.000000,31438388.000000,31497948.000000,149947.000000,0.478788,3.297208,no
+substr-direct-rxbvm,PERF2-04 SUBSTR RexxCPS,crexx,rxbvm,SLC-H1-direct-composition,P,no,no,1000-clauses,benchmark_rate,7,28932869.000000,29148899.000000,29437133.000000,29695609.500000,29925306.000000,350245.000000,1.189807,3.371378,no
+substr-constant-rxvm,PERF2-04 SUBSTR RexxCPS,crexx,rxvm,SLC-CF1-constant-fold,P,no,no,1000-clauses,benchmark_rate,7,31480893.000000,32112352.500000,32145168.000000,32693215.500000,32777912.000000,540713.000000,1.682097,4.034880,no
+substr-constant-rxbvm,PERF2-04 SUBSTR RexxCPS,crexx,rxbvm,SLC-CF1-constant-fold,P,no,no,1000-clauses,benchmark_rate,7,29455717.000000,29711214.000000,29765360.000000,30430145.000000,30439802.000000,309643.000000,1.040280,3.306142,no

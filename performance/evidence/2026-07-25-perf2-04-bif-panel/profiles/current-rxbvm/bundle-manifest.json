@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g6567f0ba23f2 20260725",
+  "result": "pass",
+  "started_utc": "2026-07-25T08:25:44+0000",
+  "completed_utc": "2026-07-25T08:27:38+0000",
+  "repository": {"branch":"develop","commit":"6567f0ba23f20623e01322f5a62323b2347ab09d","dirty_scope":[" M performance/ROADMAP.md","?? performance/PERF2-04-WORKLIST.md","?? performance/evidence/2026-07-25-perf2-04-bif-panel/","?? performance/tools/run_evidence_bundle.rxas"]},
+  "host": {"os":"Darwin 25.5.0 arm64","cpu":"Apple M5"},
+  "driver_arguments": ["--manifest","performance/evidence/2026-07-25-perf2-04-bif-panel/controls/current-opt-profile-manifest-v1.txt","--release-build","/private/tmp/crexx-perf2-04.3k3Dfw/build-release","--profile-build","/private/tmp/crexx-perf2-04.3k3Dfw/build-profile","--output-dir","performance/evidence/2026-07-25-perf2-04-bif-panel/profiles/current-rxbvm","--profile-mode","counts","--vm","rxbvm","--force"],
+  "input_manifest": {"path":"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-25-perf2-04-bif-panel/controls/current-opt-profile-manifest-v1.txt","sha256":"3fe375a454009113ccc517fdc437e980da162d87f43ddd4dd7c6964f600ecf08"},
+  "ordinary_release": {"build":"/private/tmp/crexx-perf2-04.3k3Dfw/build-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxbvm","vm_version":"crexx-1.0.0-beta.3+local.g6567f0ba23f2 (Bytecode Mode)","vm_sha256":"a4a61df9cceac8a0178ef5583835953f55f882f7b4bab29c754d3c41aed87b5f"},
+  "profile_release": {"build":"/private/tmp/crexx-perf2-04.3k3Dfw/build-profile","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxbvm","profile_mode":"counts","vm_version":"crexx-1.0.0-beta.3+local.g6567f0ba23f2 (Bytecode Mode)","vm_sha256":"9ae6721988a5605d29433129e9bcdad95f9d1c4ca9c366d5dcf237c892484795","rxseq_sha256":"79413938bf29595387d0842b96fe457bf2ecd0b8a14b94c5d6ca0c3548236308"},
+  "toolchain": {"cmake":"cmake version 4.3.2","compiler_path":"/usr/bin/cc","compiler":"Apple clang version 21.0.0 (clang-2100.1.1.101)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-25-perf2-04-bif-panel/profiles/current-rxbvm"
+}

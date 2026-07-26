@@ -1,0 +1,4 @@
+crexx-perf2-artifacts|1
+shared-library|rxfnsb|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin|/private/tmp/crexx-perf2-04.3k3Dfw/evidence/disassembly/library.rxas
+workload|SLC-C0-current|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin|/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_current_baseline.rxdas.rxas
+workload|CF-COMB1|/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps-combined/rexxcps_combined_ceiling.rxbin|/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps-combined/rexxcps_combined_ceiling.rxdas.rxas

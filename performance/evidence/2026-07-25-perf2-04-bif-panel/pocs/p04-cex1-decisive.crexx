@@ -1,0 +1,38 @@
+/*
+ * PERF2-04 P04-CEX1 smallest end-to-end constant core-string cell.
+ *
+ * The accepted SLC1 compiler retains the complete Level B bodies below.  The
+ * CEX1 compiler proves their exact providers and replaces each call with its
+ * canonical constant result.  The checksum keeps the values live without
+ * mixing output cost into the repeated region.
+ */
+options levelb
+import rxfnsb
+
+arg argv = .string[]
+
+repetitions = 1000000
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then do
+  say "FAIL: repetitions must be positive"
+  return 1
+end
+
+checksum = 0
+do iteration = 1 to repetitions
+  checksum = checksum + length("é日🙂")
+  checksum = checksum + length(lower("MiXeD ÄÖ"))
+  checksum = checksum + length(left("é日🙂", 2))
+  checksum = checksum + length(right("é日🙂", 2))
+  checksum = checksum + length(left("a", 3, "🙂"))
+  checksum = checksum + length(right("a", 3, "🙂"))
+end
+
+expected = repetitions * 21
+if checksum <> expected then do
+  say "FAIL: expected "expected" got "checksum
+  return 1
+end
+
+say "PASS: P04-CEX1 repetitions="repetitions" checksum="checksum
+return 0

@@ -1,0 +1,18 @@
+diff --git a/tests/benchmarks/rexxcps_levelb.crexx b/tests/benchmarks/rexxcps_levelb.crexx
+index 26cf0175a..bc4b830ab 100644
+--- a/tests/benchmarks/rexxcps_levelb.crexx
++++ b/tests/benchmarks/rexxcps_levelb.crexx
+@@ -188,7 +188,12 @@ do trial = 1 to 2
+         parse value "Foo Bar" with v1 +5 v2 .
+         trace value _trace_current_mode()
+         address value addressenv().environment_name()
+-        call cps_subroutine(upper("with"), upper("2"), upper("args"), upper("(This is the second)" || 1 || "" || 1))
++        __perf2_upper_arg1 = "with"
++        __perf2_upper_arg2 = "2"
++        __perf2_upper_arg3 = "args"
++        __perf2_upper_arg4 = "(This is the second)" || 1 || "" || 1
++        call cps_subroutine(upper(__perf2_upper_arg1), upper(__perf2_upper_arg2), ,
++            upper(__perf2_upper_arg3), upper(__perf2_upper_arg4))
+         text = "This is an awfully boring program"; parse var text p1 (p0) p5
+         text = "is an awfully boring program This"; parse var text p2 (p0) p6
+         text = "an awfully boring program This is"; parse var text p3 (p0) p7

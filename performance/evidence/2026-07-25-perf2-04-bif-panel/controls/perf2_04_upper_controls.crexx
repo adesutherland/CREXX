@@ -1,0 +1,108 @@
+/* PERF2-04 UPPER inlining controls.
+ *
+ * current-literal reproduces the four RexxCPS actual shapes that the current
+ * imported Level B body does not inline.  current-symbol presents the same
+ * values through direct local symbols, which the existing reference binder
+ * can inline.  direct is the hand-equivalent/compiler-lowering ceiling: each
+ * already-evaluated input feeds the existing STRUPPER primitive directly.
+ * These are attribution-only controls, not benchmark replacements.
+ */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 2 then return fail("use VARIANT ITERATIONS")
+variant = lower(argv[1])
+if verify(argv[2], "0123456789") <> 0 then
+  return fail("ITERATIONS must be positive")
+iterations = argv[2] as .int
+if iterations < 1 then return fail("ITERATIONS must be positive")
+
+select
+  when variant = "current-literal" then checksum = upper_current_literal(iterations)
+  when variant = "current-symbol" then checksum = upper_current_symbol(iterations)
+  when variant = "direct" then checksum = upper_direct(iterations)
+  when variant = "verify" then checksum = verify_upper_contract()
+  otherwise return fail("unknown VARIANT")
+end
+
+if checksum <= 0 then return fail("non-positive checksum")
+say "PERF2-04-UPPER-CONTROL variant=" || variant ,
+    "iterations=" || iterations ,
+    "checksum=" || checksum ,
+    "publication=attribution-only"
+say "PASS: PERF2-04 UPPER control"
+return 0
+
+upper_current_literal: procedure = .int
+  arg iterations = .int
+  checksum = 0
+  do i = 1 to iterations
+    suffix = i as .string
+    checksum = checksum + length(upper("with"))
+    checksum = checksum + length(upper("2"))
+    checksum = checksum + length(upper("args"))
+    checksum = checksum + length(upper("(This is the second)" || suffix))
+  end
+  return checksum
+
+upper_current_symbol: procedure = .int
+  arg iterations = .int
+  checksum = 0
+  source1 = "with"
+  source2 = "2"
+  source3 = "args"
+  do i = 1 to iterations
+    source4 = "(This is the second)" || (i as .string)
+    checksum = checksum + length(upper(source1))
+    checksum = checksum + length(upper(source2))
+    checksum = checksum + length(upper(source3))
+    checksum = checksum + length(upper(source4))
+  end
+  return checksum
+
+upper_direct: procedure = .int
+  arg iterations = .int
+  checksum = 0
+  source1 = "with"
+  source2 = "2"
+  source3 = "args"
+  result1 = ""
+  result2 = ""
+  result3 = ""
+  result4 = ""
+  do i = 1 to iterations
+    source4 = "(This is the second)" || (i as .string)
+    assembler strupper result1,source1
+    assembler strupper result2,source2
+    assembler strupper result3,source3
+    assembler strupper result4,source4
+    checksum = checksum + length(result1)
+    checksum = checksum + length(result2)
+    checksum = checksum + length(result3)
+    checksum = checksum + length(result4)
+  end
+  return checksum
+
+verify_upper_contract: procedure = .int
+  checks = 0
+  if direct_upper("") <> upper("") then return 0
+  checks = checks + 1
+  if direct_upper("already UPPER 123") <> upper("already UPPER 123") then return 0
+  checks = checks + 1
+  if direct_upper("Mixed case") <> upper("Mixed case") then return 0
+  checks = checks + 1
+  if direct_upper("café") <> upper("café") then return 0
+  checks = checks + 1
+  return checks
+
+direct_upper: procedure = .string
+  arg source = .string
+  result = ""
+  assembler strupper result,source
+  return result
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

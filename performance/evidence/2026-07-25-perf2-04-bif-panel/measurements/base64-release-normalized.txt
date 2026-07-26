@@ -1,0 +1,3 @@
+vm|current_median_ns|current_ns_per_rep|current_rep_per_s|poschar_median_ns|poschar_ns_per_rep|poschar_rep_per_s|poschar_speedup|poschar_reduction_pct|arithmetic_median_ns|arithmetic_ns_per_rep|arithmetic_rep_per_s|arithmetic_speedup|arithmetic_reduction_pct|arithmetic_vs_poschar_speedup
+rxvm|1775334000|710133.600|1408.185727|580242000|232096.800|4308.547123|3.059644|67.316460|145622000|58248.800|17167.735644|12.191386|91.797487|3.984577
+rxbvm|1812428000|724971.200|1379.365139|611462000|244584.800|4088.561513|2.964089|66.262825|171654000|68661.600|14564.181435|10.558612|90.529058|3.562177

@@ -1,0 +1,1 @@
+PASS: compact cross-runtime timing matrix retained under /private/tmp/perf2-04-slc1-verdict.KL63QH

@@ -1,0 +1,5 @@
+# PERF2-04 P04-CAS1 first ordinary Release verdict
+# Pipe fields follow performance/tools/run_cross_runtime_matrix.crexx.
+crexx-cross-runtime-matrix|1
+p04-cas1-rxvm|PERF2-04 P04-CAS1 RexxCPS|crexx|rxvm|P04-CAS1-candidate|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin;-a
+p04-cas1-rxbvm|PERF2-04 P04-CAS1 RexxCPS|crexx|rxbvm|P04-CAS1-candidate|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin;-a

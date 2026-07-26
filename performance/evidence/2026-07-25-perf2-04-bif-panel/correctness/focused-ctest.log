@@ -1,0 +1,161 @@
+Test project /private/tmp/crexx-perf2-04.3k3Dfw/build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/72 Test    #1: linked_opt_runtime_artifacts_build .......................   Passed   22.59 sec
+      Start  545: inline_summary_version_fallback_binary_opt
+      Start  546: inline_summary_shape_fallback_binary_opt
+      Start  547: inline_summary_formal_fallback_binary_opt
+      Start  548: inline_receiver_summary_fallback_binary_opt
+      Start  563: inline_receiver_reference_alias_opt
+      Start  564: inline_reference_member_accessors_opt
+      Start  565: inline_reference_accessors_import_opt
+      Start  721: inline_test_imported_bif_block_expr_lifetime_run_noopt
+      Start  722: inline_test_imported_bif_block_expr_lifetime_run_opt
+      Start 1296: ts_left_noopt
+ 2/72 Test #1296: ts_left_noopt ............................................   Passed    0.02 sec
+      Start 1297: ts_left_opt
+ 3/72 Test #1297: ts_left_opt ..............................................   Passed    0.05 sec
+      Start 1298: ts_length_noopt
+ 4/72 Test #1298: ts_length_noopt ..........................................   Passed    0.03 sec
+      Start 1299: ts_length_opt
+ 5/72 Test #1299: ts_length_opt ............................................   Passed    0.03 sec
+      Start 1300: ts_lower_noopt
+ 6/72 Test #1300: ts_lower_noopt ...........................................   Passed    0.02 sec
+      Start 1301: ts_lower_opt
+ 7/72 Test #1301: ts_lower_opt .............................................   Passed    0.04 sec
+      Start 1306: ts_pos_noopt
+ 8/72 Test #1306: ts_pos_noopt .............................................   Passed    0.03 sec
+      Start 1307: ts_pos_opt
+ 9/72 Test #1307: ts_pos_opt ...............................................   Passed    0.03 sec
+      Start 1308: ts_qpos_noopt
+10/72 Test #1308: ts_qpos_noopt ............................................   Passed    0.02 sec
+      Start 1309: ts_qpos_opt
+11/72 Test  #564: inline_reference_member_accessors_opt ....................   Passed    0.28 sec
+      Start 1318: ts_right_noopt
+12/72 Test  #721: inline_test_imported_bif_block_expr_lifetime_run_noopt ...   Passed    0.29 sec
+      Start 1319: ts_right_opt
+13/72 Test  #563: inline_receiver_reference_alias_opt ......................   Passed    0.30 sec
+      Start 1338: ts_upper_noopt
+14/72 Test  #722: inline_test_imported_bif_block_expr_lifetime_run_opt .....   Passed    0.30 sec
+      Start 1339: ts_upper_opt
+15/72 Test #1318: ts_right_noopt ...........................................   Passed    0.02 sec
+      Start 1340: ts_upper_lower_noopt
+16/72 Test #1309: ts_qpos_opt ..............................................   Passed    0.04 sec
+      Start 1341: ts_upper_lower_opt
+17/72 Test #1340: ts_upper_lower_noopt .....................................   Passed    0.02 sec
+      Start 1348: ts_wordlength_noopt
+18/72 Test #1338: ts_upper_noopt ...........................................   Passed    0.02 sec
+      Start 1349: ts_wordlength_opt
+19/72 Test #1319: ts_right_opt .............................................   Passed    0.04 sec
+      Start 1350: ts_wordpos_noopt
+20/72 Test #1339: ts_upper_opt .............................................   Passed    0.03 sec
+21/72 Test #1341: ts_upper_lower_opt .......................................   Passed    0.02 sec
+      Start 1351: ts_wordpos_opt
+      Start 1362: tslastpos_noopt
+22/72 Test #1348: ts_wordlength_noopt ......................................   Passed    0.02 sec
+      Start 1363: tslastpos_opt
+23/72 Test #1350: ts_wordpos_noopt .........................................   Passed    0.02 sec
+      Start 1364: tsubstr_noopt
+24/72 Test #1362: tslastpos_noopt ..........................................   Passed    0.02 sec
+      Start 1365: tsubstr_opt
+25/72 Test #1349: ts_wordlength_opt ........................................   Passed    0.03 sec
+      Start 1366: tsword_noopt
+26/72 Test #1351: ts_wordpos_opt ...........................................   Passed    0.03 sec
+      Start 1367: tsword_opt
+27/72 Test #1364: tsubstr_noopt ............................................   Passed    0.02 sec
+      Start 1368: ts_words_noopt
+28/72 Test #1363: tslastpos_opt ............................................   Passed    0.03 sec
+      Start 1369: ts_words_opt
+29/72 Test #1366: tsword_noopt .............................................   Passed    0.02 sec
+      Start 1382: ts_datatype_noopt
+30/72 Test #1365: tsubstr_opt ..............................................   Passed    0.03 sec
+      Start 1383: ts_datatype_opt
+31/72 Test #1367: tsword_opt ...............................................   Passed    0.03 sec
+      Start 1610: testRexxClassicBifDatatype_noopt
+32/72 Test #1368: ts_words_noopt ...........................................   Passed    0.02 sec
+      Start 1611: testRexxClassicBifDatatype_opt
+33/72 Test #1382: ts_datatype_noopt ........................................   Passed    0.02 sec
+      Start 1620: testRexxClassicBifLastpos_noopt
+34/72 Test #1369: ts_words_opt .............................................   Passed    0.03 sec
+      Start 1621: testRexxClassicBifLastpos_opt
+35/72 Test #1383: ts_datatype_opt ..........................................   Passed    0.03 sec
+      Start 1622: testRexxClassicBifLeft_noopt
+36/72 Test #1610: testRexxClassicBifDatatype_noopt .........................   Passed    0.04 sec
+      Start 1623: testRexxClassicBifLeft_opt
+37/72 Test #1620: testRexxClassicBifLastpos_noopt ..........................   Passed    0.06 sec
+      Start 1624: testRexxClassicBifLength_noopt
+38/72 Test  #545: inline_summary_version_fallback_binary_opt ...............   Passed    0.48 sec
+      Start 1625: testRexxClassicBifLength_opt
+39/72 Test #1622: testRexxClassicBifLeft_noopt .............................   Passed    0.07 sec
+      Start 1634: testRexxClassicBifPos_noopt
+40/72 Test  #548: inline_receiver_summary_fallback_binary_opt ..............   Passed    0.50 sec
+      Start 1635: testRexxClassicBifPos_opt
+41/72 Test  #546: inline_summary_shape_fallback_binary_opt .................   Passed    0.50 sec
+      Start 1640: testRexxClassicBifRight_noopt
+42/72 Test  #547: inline_summary_formal_fallback_binary_opt ................   Passed    0.50 sec
+      Start 1641: testRexxClassicBifRight_opt
+43/72 Test #1624: testRexxClassicBifLength_noopt ...........................   Passed    0.04 sec
+      Start 1648: testRexxClassicBifSubstr_noopt
+44/72 Test #1634: testRexxClassicBifPos_noopt ..............................   Passed    0.05 sec
+      Start 1649: testRexxClassicBifSubstr_opt
+45/72 Test #1640: testRexxClassicBifRight_noopt ............................   Passed    0.05 sec
+      Start 1650: testRexxClassicBifSubword_noopt
+46/72 Test #1648: testRexxClassicBifSubstr_noopt ...........................   Passed    0.06 sec
+      Start 1651: testRexxClassicBifSubword_opt
+47/72 Test #1621: testRexxClassicBifLastpos_opt ............................   Passed    0.17 sec
+      Start 1666: testRexxClassicBifWord_noopt
+48/72 Test #1611: testRexxClassicBifDatatype_opt ...........................   Passed    0.19 sec
+      Start 1667: testRexxClassicBifWord_opt
+49/72 Test #1623: testRexxClassicBifLeft_opt ...............................   Passed    0.16 sec
+      Start 1668: testRexxClassicBifWordindex_noopt
+50/72 Test #1650: testRexxClassicBifSubword_noopt ..........................   Passed    0.05 sec
+      Start 1669: testRexxClassicBifWordindex_opt
+51/72 Test #1666: testRexxClassicBifWord_noopt .............................   Passed    0.07 sec
+      Start 1670: testRexxClassicBifWordlength_noopt
+52/72 Test #1668: testRexxClassicBifWordindex_noopt ........................   Passed    0.06 sec
+      Start 1671: testRexxClassicBifWordlength_opt
+53/72 Test #1625: testRexxClassicBifLength_opt .............................   Passed    0.18 sec
+      Start 1672: testRexxClassicBifWordpos_noopt
+54/72 Test #1635: testRexxClassicBifPos_opt ................................   Passed    0.16 sec
+      Start 1673: testRexxClassicBifWordpos_opt
+55/72 Test #1641: testRexxClassicBifRight_opt ..............................   Passed    0.17 sec
+      Start 1674: testRexxClassicBifWords_noopt
+56/72 Test #1670: testRexxClassicBifWordlength_noopt .......................   Passed    0.05 sec
+      Start 1675: testRexxClassicBifWords_opt
+57/72 Test #1672: testRexxClassicBifWordpos_noopt ..........................   Passed    0.06 sec
+      Start 1783: benchmark_base64_roundtrip_noopt
+58/72 Test #1649: testRexxClassicBifSubstr_opt .............................   Passed    0.18 sec
+      Start 1784: benchmark_base64_roundtrip_opt
+59/72 Test #1651: testRexxClassicBifSubword_opt ............................   Passed    0.17 sec
+      Start 1789: benchmark_rexxcps_levelb_noopt
+60/72 Test #1674: testRexxClassicBifWords_noopt ............................   Passed    0.07 sec
+      Start 1790: benchmark_rexxcps_levelb_opt
+61/72 Test #1783: benchmark_base64_roundtrip_noopt .........................   Passed    0.02 sec
+      Start 1791: benchmark_rexxcps_levelb_opaque_noopt
+62/72 Test #1784: benchmark_base64_roundtrip_opt ...........................   Passed    0.03 sec
+      Start 1792: benchmark_rexxcps_levelb_opaque_opt
+63/72 Test #1791: benchmark_rexxcps_levelb_opaque_noopt ....................   Passed    0.02 sec
+64/72 Test #1667: testRexxClassicBifWord_opt ...............................   Passed    0.18 sec
+65/72 Test #1669: testRexxClassicBifWordindex_opt ..........................   Passed    0.18 sec
+66/72 Test #1792: benchmark_rexxcps_levelb_opaque_opt ......................   Passed    0.04 sec
+67/72 Test #1671: testRexxClassicBifWordlength_opt .........................   Passed    0.17 sec
+68/72 Test #1673: testRexxClassicBifWordpos_opt ............................   Passed    0.18 sec
+69/72 Test #1675: testRexxClassicBifWords_opt ..............................   Passed    0.16 sec
+70/72 Test  #565: inline_reference_accessors_import_opt ....................   Passed    0.89 sec
+71/72 Test #1789: benchmark_rexxcps_levelb_noopt ...........................   Passed    0.91 sec
+72/72 Test #1790: benchmark_rexxcps_levelb_opt .............................   Passed    1.04 sec
+
+100% tests passed, 0 tests failed out of 72
+
+Label Time Summary:
+benchmark               =   2.06 sec*proc (6 tests)
+imports                 =   0.89 sec*proc (1 test)
+language                =   2.06 sec*proc (6 tests)
+linked_opt              =   7.61 sec*proc (39 tests)
+noncanonical            =   1.95 sec*proc (2 tests)
+optimizer-resistance    =   0.06 sec*proc (2 tests)
+receiver                =   1.18 sec*proc (2 tests)
+reference               =   1.48 sec*proc (3 tests)
+rexxcps-smoke           =   1.95 sec*proc (2 tests)
+smoke                   =   1.11 sec*proc (3 tests)
+
+Total Test time (real) =  24.40 sec

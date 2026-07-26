@@ -1,0 +1,93 @@
+PERF2-04-UPPER-CONTROL variant=current-literal iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls current-literal
+PERF2-04-UPPER-CONTROL variant=current-symbol iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls current-symbol
+PERF2-04-UPPER-CONTROL variant=direct iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls direct
+PERF2-04-UPPER-CONTROL variant=verify iterations=3 checksum=4 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls verify
+PERF2-04-UPPER-CONTROL variant=current-literal iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls-noopt current-literal
+PERF2-04-UPPER-CONTROL variant=current-symbol iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls-noopt current-symbol
+PERF2-04-UPPER-CONTROL variant=direct iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls-noopt direct
+PERF2-04-UPPER-CONTROL variant=verify iterations=3 checksum=4 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxvm perf2_04_upper_controls-noopt verify
+PERF2-04-BASE64-CONTROL variant=current repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxvm perf2_04_base64_controls current
+PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxvm perf2_04_base64_controls codepoint-poschar
+PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxvm perf2_04_base64_controls codepoint-arithmetic
+PERF2-04-BASE64-CONTROL variant=current repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxvm perf2_04_base64_controls-noopt current
+PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxvm perf2_04_base64_controls-noopt codepoint-poschar
+PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxvm perf2_04_base64_controls-noopt codepoint-arithmetic
+PASS: PERF2-04 UPPER inline call-shape probe
+PASS-CELL rxvm perf2_04_upper_inline_probe
+PASS: PERF2-04 UPPER inline call-shape probe
+PASS-CELL rxvm perf2_04_upper_inline_probe-noopt
+PERF2-04-UPPER-CONTROL variant=current-literal iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls current-literal
+PERF2-04-UPPER-CONTROL variant=current-symbol iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls current-symbol
+PERF2-04-UPPER-CONTROL variant=direct iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls direct
+PERF2-04-UPPER-CONTROL variant=verify iterations=3 checksum=4 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls verify
+PERF2-04-UPPER-CONTROL variant=current-literal iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls-noopt current-literal
+PERF2-04-UPPER-CONTROL variant=current-symbol iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls-noopt current-symbol
+PERF2-04-UPPER-CONTROL variant=direct iterations=3 checksum=90 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls-noopt direct
+PERF2-04-UPPER-CONTROL variant=verify iterations=3 checksum=4 publication=attribution-only
+PASS: PERF2-04 UPPER control
+PASS-CELL rxbvm perf2_04_upper_controls-noopt verify
+PERF2-04-BASE64-CONTROL variant=current repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxbvm perf2_04_base64_controls current
+PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxbvm perf2_04_base64_controls codepoint-poschar
+PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxbvm perf2_04_base64_controls codepoint-arithmetic
+PERF2-04-BASE64-CONTROL variant=current repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxbvm perf2_04_base64_controls-noopt current
+PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxbvm perf2_04_base64_controls-noopt codepoint-poschar
+PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=3 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PASS-CELL rxbvm perf2_04_base64_controls-noopt codepoint-arithmetic
+PASS: PERF2-04 UPPER inline call-shape probe
+PASS-CELL rxbvm perf2_04_upper_inline_probe
+PASS: PERF2-04 UPPER inline call-shape probe
+PASS-CELL rxbvm perf2_04_upper_inline_probe-noopt
+PASS: 32 dual-VM optimized/no-opt PoC correctness cells

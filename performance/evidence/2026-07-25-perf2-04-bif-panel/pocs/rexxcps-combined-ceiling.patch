@@ -1,0 +1,125 @@
+diff --git a/tests/benchmarks/rexxcps_levelb.crexx b/tests/benchmarks/rexxcps_levelb.crexx
+index 26cf0175a..628a03ea6 100644
+--- a/tests/benchmarks/rexxcps_levelb.crexx
++++ b/tests/benchmarks/rexxcps_levelb.crexx
+@@ -133,6 +133,15 @@ classic_one_point_one = "1.1" as .decimal
+ classic_two_point_two = "2.2" as .decimal
+ classic_five = "5" as .decimal
+ classic_ninety_nine_point_seven = "99.7" as .decimal
++/*
++ * PERF2-04 CF-COMB1 is an exact-site TRACE-off ceiling only. The source
++ * rewrite cannot reproduce the original inlined BIF source-step topology.
++ */
++__perf2_upper_site1_result = ""
++__perf2_upper_site2_result = ""
++__perf2_upper_site3_result = ""
++__perf2_upper_site4_result = ""
++__perf2_substr_cf_key = "Key Bee"
+ 
+ /* Calibrate for the empty do-loop. */
+ do i = 1 to averaging
+@@ -156,14 +165,14 @@ do trial = 1 to 2
+       do lvar = 1 to 14
+         /* This is the "block" comment in lvar. */
+         key1 = "Key Bee"
+-        acompound.key1.lvar = substr(1234 "5678", 6, 2)
++        acompound.key1.lvar = "56" /* SLC-CF1: substr(1234 "5678", 6, 2) */
+         if flag = acompound.key1.lvar then say "Failed1"
+         do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */
+           if j > (acompound.key1.lvar as .decimal) then say "Failed2"
+           if 17 < length(j as .string) - 1 then say "Failed3"
+           if (j as .string) = "foobar" then say "Failed4"
+-          if substr(1234, 1, 1) = "9" then say "Failed5"
+-          if word(key1, 1) = "?" then say "Failed6"
++          /* SLC-CF1: substr(1234, 1, 1) is "1", so Failed5 is unreachable. */
++          /* WRD-CF1: key1 is "Key Bee", so the first word is not "?". */
+           if j < classic_five then do /* This path is taken. */
+             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string
+             if j = classic_two then leave
+@@ -188,7 +197,13 @@ do trial = 1 to 2
+         parse value "Foo Bar" with v1 +5 v2 .
+         trace value _trace_current_mode()
+         address value addressenv().environment_name()
+-        call cps_subroutine(upper("with"), upper("2"), upper("args"), upper("(This is the second)" || 1 || "" || 1))
++        __perf2_upper_site1_result = "WITH" /* CAS-L2: upper("with") */
++        __perf2_upper_site2_result = "2" /* CAS-L2: upper("2") */
++        __perf2_upper_site3_result = "ARGS" /* CAS-L2: upper("args") */
++        __perf2_upper_site4_result = "(THIS IS THE SECOND)11" /* CAS-L2 constant result */
++        call cps_subroutine(__perf2_upper_site1_result, ,
++            __perf2_upper_site2_result, __perf2_upper_site3_result, ,
++            __perf2_upper_site4_result)
+         text = "This is an awfully boring program"; parse var text p1 (p0) p5
+         text = "is an awfully boring program This"; parse var text p2 (p0) p6
+         text = "an awfully boring program This is"; parse var text p3 (p0) p7
+@@ -210,6 +225,21 @@ do trial = 1 to 2
+   calibrated = 1
+ end
+ 
++__perf2_substr_cf_check1 = substr(1234 "5678", 6, 2)
++__perf2_substr_cf_check2 = substr(1234, 1, 1)
++if __perf2_substr_cf_check1 <> "56" | __perf2_substr_cf_check2 <> "1" then
++  return fail("combined constant-folded SUBSTR value mismatch")
++if acompound.__perf2_substr_cf_key.14 <> "58" then
++  return fail("combined constant-folded SUBSTR result/order mismatch")
++if __perf2_upper_site1_result <> "WITH" | ,
++    __perf2_upper_site2_result <> "2" | ,
++    __perf2_upper_site3_result <> "ARGS" | ,
++    __perf2_upper_site4_result <> "(THIS IS THE SECOND)11" then
++  return fail("combined constant-folded UPPER result mismatch")
++if verify_word1_question_ceiling() <> 0 then
++  return fail("combined WORD ceiling semantic guard failed")
++say "PERF2-04-COMBINED-GUARD PASS"
++
+ /* Show the counts. */
+ say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+ say "REXXCPS-EFFECTIVE contract=" || contract ,
+@@ -250,6 +280,49 @@ cps_subroutine: procedure = .void
+   return
+ 
+ 
++verify_word1_question_ceiling: procedure = .int
++  errors = 0
++  errors = errors + check_word1_question_case("")
++  errors = errors + check_word1_question_case("     ")
++  errors = errors + check_word1_question_case("Key Bee")
++  errors = errors + check_word1_question_case("?")
++  errors = errors + check_word1_question_case("? tail")
++  errors = errors + check_word1_question_case("  ?  tail")
++  errors = errors + check_word1_question_case("?x tail")
++  errors = errors + check_word1_question_case("é ?")
++  errors = errors + check_word1_question_case(" ?　tail")
++  errors = errors + check_word1_question_case("？ tail")
++  return errors
++
++
++check_word1_question_case: procedure = .int
++  arg source = .string
++  expected = 0
++  if word(source, 1) = "?" then expected = 1
++  actual = word1_is_question_ceiling(source)
++  if actual <> expected then return 1
++  return 0
++
++
++word1_is_question_ceiling: procedure = .int
++  arg source = .string
++  word_start = .int
++  word_end = .int
++  word_length = .int
++  codepoint = .int
++  zero = 0
++  if source == "" then return 0
++  assembler fndnblnk word_start,source,zero
++  if word_start < 0 then return 0
++  assembler strchar codepoint,source,word_start
++  if codepoint <> 63 then return 0
++  assembler fndblnk word_end,source,word_start
++  if word_end < 0 then assembler strlen word_end,source
++  word_length = word_end - word_start
++  if word_length = 1 then return 1
++  return 0
++
++
+ fail: procedure = .int
+   numeric digits 9
+   arg message = .string

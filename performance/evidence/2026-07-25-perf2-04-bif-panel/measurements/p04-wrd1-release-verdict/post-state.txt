@@ -1,0 +1,63 @@
+utc=2026-07-25T20:44:24Z
+{ 1.33 3.07 3.86 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+58912 /bin/zsh -c perf2_wrd1_run=$(mktemp -d /private/tmp/perf2-04-wrd1-verdict.XXXXXX)
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n machdep.cpu.brand_string
+  sysctl -n hw.logicalcpu
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  rg -n '^CMAKE_BUILD_TYPE:|^CREXX_VM_PROFILING:' cmake-build-release/CMakeCache.txt
+  shasum -a 256 cmake-build-release/bin/rxc cmake-build-release/bin/rxas cmake-build-release/bin/rxlink cmake-build-release/bin/rxvm cmake-build-release/bin/rxbvm cmake-build-release/bin/library.rxbin cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-wrd1-release-verdict-matrix.txt
+) >"$perf2_wrd1_run/pre-state.txt" 2>&1
+cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-wrd1-release-verdict-matrix.txt --output-dir "$perf2_wrd1_run" --measurement timing --warmups 2 --runs 7 >"$perf2_wrd1_run/runner.stdout.txt" 2>"$perf2_wrd1_run/runner.stderr.txt"
+perf2_wrd1_rc=$?
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+) >"$perf2_wrd1_run/post-state.txt" 2>&1
+printf 'run_dir=%s rc=%d\n' "$perf2_wrd1_run" "$perf2_wrd1_rc"
+cat "$perf2_wrd1_run/summary.csv"
+cat "$perf2_wrd1_run/runner.stdout.txt"
+if test -s "$perf2_wrd1_run/runner.stderr.txt"; then cat "$perf2_wrd1_run/runner.stderr.txt"; else printf '%s\n' 'runner.stderr: empty'; fi
+exit "$perf2_wrd1_rc"
+58945 /bin/zsh -c perf2_wrd1_run=$(mktemp -d /private/tmp/perf2-04-wrd1-verdict.XXXXXX)
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n machdep.cpu.brand_string
+  sysctl -n hw.logicalcpu
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  rg -n '^CMAKE_BUILD_TYPE:|^CREXX_VM_PROFILING:' cmake-build-release/CMakeCache.txt
+  shasum -a 256 cmake-build-release/bin/rxc cmake-build-release/bin/rxas cmake-build-release/bin/rxlink cmake-build-release/bin/rxvm cmake-build-release/bin/rxbvm cmake-build-release/bin/library.rxbin cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-wrd1-release-verdict-matrix.txt
+) >"$perf2_wrd1_run/pre-state.txt" 2>&1
+cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-wrd1-release-verdict-matrix.txt --output-dir "$perf2_wrd1_run" --measurement timing --warmups 2 --runs 7 >"$perf2_wrd1_run/runner.stdout.txt" 2>"$perf2_wrd1_run/runner.stderr.txt"
+perf2_wrd1_rc=$?
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+) >"$perf2_wrd1_run/post-state.txt" 2>&1
+printf 'run_dir=%s rc=%d\n' "$perf2_wrd1_run" "$perf2_wrd1_rc"
+cat "$perf2_wrd1_run/summary.csv"
+cat "$perf2_wrd1_run/runner.stdout.txt"
+if test -s "$perf2_wrd1_run/runner.stderr.txt"; then cat "$perf2_wrd1_run/runner.stderr.txt"; else printf '%s\n' 'runner.stderr: empty'; fi
+exit "$perf2_wrd1_rc"

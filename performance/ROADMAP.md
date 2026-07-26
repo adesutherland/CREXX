@@ -193,10 +193,10 @@ Source:
 | PERF2-01 | P0 | Clean same-session baseline and complete current attribution refresh | complete | Gate A accepted 2026-07-23; refreshed selection baseline frozen. No production change authorized. |
 | PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
-| PERF2-04 | P0 | Inlining-first core Level B BIF campaign | queued | Ready: PERF2-03's cleaned-inline ceiling is accepted. Refresh the current BIF/profile ranking, then compare cleaned Level B, hand-equivalent, compiler/RXAS assist and native controls. |
+| PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | queued | PERF2-01 RXSEQ plus PERF2-03/04 machine ceilings. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
-| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. |
+| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
 | PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued | Begins as dossiers in PERF2-01; production slices come from PERF2-02 through 08. |
 | PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | queued | Time-box after dominant semantic costs; select only cross-platform wins. |
@@ -624,9 +624,33 @@ exists; no construct family is permanently excluded.
 
 ## PERF2-04 — inlining-first core Level B BIF campaign
 
-Status: **queued and unblocked** — PERF2-03 is complete. Start from the current
-product and the paste-ready `PERF2-04-HANDOVER-PROMPT.md`; older PERF2-01
-profiles are orientation evidence and must not replace a current BIF ranking.
+Status: **complete — accepted ladder closed 2026-07-26**. The exact-current
+census, semantic/machine panel and bounded
+controls are complete from documentation-only closeout HEAD `6567f0ba2`, whose
+exact accepted production parent is `d1c5245d4`. The resumable control plane
+and full decision package are [`PERF2-04-WORKLIST.md`](PERF2-04-WORKLIST.md).
+Older PERF2-01 profiles remain orientation evidence and do not replace the
+current BIF ranking.
+
+Adrian approved the compiler ladder on 2026-07-25: P04-CAS1 (`UPPER` through
+general classified assembler-effect/read-only-exposed binding and constant
+result), P04-SLC1 (general certified-call evaluation, initially `UPPER` and
+proved-domain `SUBSTR`), the P04-CEX1 certificate expansion (`LENGTH`, `LEFT`,
+`RIGHT`, `LOWER`), then P04-WRD1 (`WORD` certified constant evaluation plus
+ordinary consumer folding). The original three timed families' combined
+exact-site ceiling improves RexxCPS by 32.878%/34.400% and removes 46.52% of
+normalized instructions. LEN-H1 is neutral; the Base64 algorithm result routes
+to CAP-03.
+
+P04-CAS1, P04-SLC1 and P04-CEX1 have favorable accepted first verdicts.
+P04-WRD1's frozen provisional first ordinary Release verdict is also
+favorable: the exact timed word path disappears, executable RXAS falls by 68,
+and RexxCPS improves by 7.650234%/8.812155% on `rxvm`/`rxbvm`. All 18
+invocations pass, relative MAD is 0.881617%/0.547875%, and neither cell requests
+a rerun. Adrian accepted this verdict on 2026-07-26. The complete accepted
+ladder is production commit `f8f34092e`; focused affected-surface QA is 24/24
+and final broad Debug QA is 1,919/1,919. The retained bundle is checksum-closed.
+No full formal portfolio or push was performed.
 
 ### Objective
 
@@ -635,10 +659,10 @@ semantic machine path while retaining the maintainable Level B source as the
 complete fallback and documentation of behavior.
 
 The component catalogue identifies a measured Level B bootstrap closure rather
-than “make every function native.” PERF2-01 must refresh the exact library
-module/selector inventory and rank it by product calls and self/child cost.
-Known RexxCPS timed controls are `LENGTH`, `SUBSTR` and `WORD`; formatting BIFs
-outside its timed kernel must not be presented as RexxCPS causes.
+than “make every function native.” PERF2-04's completed exact library
+callable/module inventory is ranked by current product calls, phase and machine
+work. Known RexxCPS timed controls are `LENGTH`, `SUBSTR` and `WORD`;
+formatting BIFs outside its timed kernel are not RexxCPS causes.
 
 ### Per-BIF ladder
 
@@ -648,11 +672,15 @@ Every candidate moves through the same ladder:
    cleanup and existing primitives.
 2. **Hand-equivalent ceiling:** express the simplest known semantically correct
    lowering to quantify remaining scaffold/scan/copy cost.
-3. **General assist control:** prototype one narrow RXAS/VM semantic kernel only
+3. **Best Level B algorithm:** remove repeated scans, materialization or other
+   avoidable source-algorithm work while keeping the complete semantic body.
+4. **Compiler lowering/composition:** use existing primitives when proved call,
+   value, range or consumer facts can reach the machine ceiling.
+5. **General assist control:** prototype one narrow RXAS/VM semantic kernel only
    if cleaned source cannot reach the ceiling.
-4. **Native/intrinsic control:** use a direct runtime implementation to bound
+6. **Native/intrinsic control:** use a direct runtime implementation to bound
    overhead, not as the automatic production answer.
-5. **Placement decision:** choose Level B inline, compiler lowering, public
+7. **Placement decision:** choose Level B inline, compiler lowering, public
    RXAS assist or private quickening using the shared PERF2-02/05 gate.
 
 ### Seed panel
@@ -911,6 +939,12 @@ both avoidable copies and a premature global layout rewrite risky.
 | V4 | share inherited frame state and reset only live slots | signal/context ownership and recursion |
 | V5 | size/shape-targeted frame/value pools | teardown, plugins, sanitizer visibility, memory retention |
 | V6 | hot/cold `value` split | ABI/layout breadth, cache trade-off, widespread code complexity |
+
+### Proved entry cases
+
+| ID | Evidence and exact failure | Required distinguishing regression | Boundary |
+| --- | --- | --- | --- |
+| PERF2-07-V3-R01 | PERF2-04's valid Level B sequence initializes a string to `""`, initializes a decimal from `"2.2"`, assigns that decimal to the same string using `as .string`, then executes `strlen`. Both current VMs preserve the new bytes but return stale codepoint length `0` rather than `3`; the retained source rebuilds to byte-identical RXAS containing `load`, `dcopy`, in-place `dtos`, then `strlen`. | Keep the empty initialization and same-destination `dcopy; dtos` representation crossing, assert source `"2.2"` and length `3`, and run optimized/no-opt on `rxvm` and `rxbvm`. A typed-null sibling is only a control and must not replace this case. | Open exactly the V3 representation-validity/mutation-invalidation case. Audit other in-place string-producing conversions before selecting a fix; PERF2-04 installs none. Evidence: [`classification.md`](evidence/2026-07-25-perf2-04-bif-panel/diagnostics/length-empty-init-representation-regression/classification.md). |
 
 Mutable object/string copy-on-write and a general allocator replacement do not
 enter the first panel. They require explicit alias/reference proof and current

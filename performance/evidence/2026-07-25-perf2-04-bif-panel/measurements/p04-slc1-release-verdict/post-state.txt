@@ -1,0 +1,9 @@
+utc=2026-07-25T19:32:21Z
+{ 2.02 3.59 3.74 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+1779 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > /private/tmp/perf2-04-slc1-verdict.KL63QH/post-state.txt 2>&1 && cat /private/tmp/perf2-04-slc1-verdict.KL63QH/summary.csv && cat /private/tmp/perf2-04-slc1-verdict.KL63QH/runner.stdout.txt && if test -s /private/tmp/perf2-04-slc1-verdict.KL63QH/runner.stderr.txt; then cat /private/tmp/perf2-04-slc1-verdict.KL63QH/runner.stderr.txt; else printf '%s\n' 'runner.stderr: empty'; fi && sed -n '1,40p' /private/tmp/perf2-04-slc1-verdict.KL63QH/post-state.txt
+1780 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > /private/tmp/perf2-04-slc1-verdict.KL63QH/post-state.txt 2>&1 && cat /private/tmp/perf2-04-slc1-verdict.KL63QH/summary.csv && cat /private/tmp/perf2-04-slc1-verdict.KL63QH/runner.stdout.txt && if test -s /private/tmp/perf2-04-slc1-verdict.KL63QH/runner.stderr.txt; then cat /private/tmp/perf2-04-slc1-verdict.KL63QH/runner.stderr.txt; else printf '%s\n' 'runner.stderr: empty'; fi && sed -n '1,40p' /private/tmp/perf2-04-slc1-verdict.KL63QH/post-state.txt

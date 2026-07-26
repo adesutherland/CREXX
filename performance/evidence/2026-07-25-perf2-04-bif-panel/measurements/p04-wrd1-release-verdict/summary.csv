@@ -1,0 +1,3 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+p04-wrd1-rxvm,PERF2-04 P04-WRD1 RexxCPS,crexx,rxvm,P04-WRD1-candidate,P,no,no,1000-clauses,benchmark_rate,7,38516387.000000,38869357.500000,39000952.000000,39484497.500000,39635276.000000,343839.000000,0.881617,2.868876,no
+p04-wrd1-rxbvm,PERF2-04 P04-WRD1 RexxCPS,crexx,rxbvm,P04-WRD1-candidate,P,no,no,1000-clauses,benchmark_rate,7,36197195.000000,36754414.000000,36892167.000000,37193592.500000,37536305.000000,202123.000000,0.547875,3.629795,no
