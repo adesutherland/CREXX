@@ -241,8 +241,19 @@ The four production slices were implemented sequentially from
 coherent active-frame state, the separate computed-goto runtime instruction
 image, then full QA and documentation. Canonical `segment.binary` remains the
 reflection/serialization source, while only the owned `rxvm` execution copy
-contains process-local handler pointers. `rxbvm` continues to execute canonical
-opcodes.
+contains process-local handler pointers. At that implementation point,
+`rxbvm` still executed canonical opcodes.
+
+That wording describes the 2026-07-12 implementation point, not the current
+post-PERF2-05 representation. The 2026-07-26 PERF2-06 audit confirms that both
+VM modes now allocate an equal-sized process-local `execution_image`.
+`rxvm` binds handler pointers in instruction cells; `rxbvm` dispatches copied
+canonical or selected process-private opcodes from its owned copy. Direct
+function operands are privately rebound in both. Canonical `segment.binary`
+remains immutable and authoritative for serialization, reflection,
+source/profile coordinates and debug identity. The historical timings and
+code sizes below are intentionally retained as measured at their stated
+commits.
 
 The final Apple clang comparison used Release `-O3 -DNDEBUG`, the NETWORK TLS
 backend, identical prelinked images, alternating VM order, one unrecorded

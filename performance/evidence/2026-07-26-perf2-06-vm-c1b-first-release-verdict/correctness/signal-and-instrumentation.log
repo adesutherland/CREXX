@@ -1,0 +1,219 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 949: test_signal_block_bin_build
+ 1/17 Test #949: test_signal_block_bin_build .................   Passed   49.23 sec
+      Start 946: test_signal_direct_bin_build
+ 2/17 Test #946: test_signal_direct_bin_build ................   Passed    0.98 sec
+      Start 943: test_signal_bin_build
+ 3/17 Test #943: test_signal_bin_build .......................   Passed    0.63 sec
+      Start 952: reference_source_invalid_signal_bin_build
+ 4/17 Test #952: reference_source_invalid_signal_bin_build ...   Passed    0.58 sec
+      Start 955: test_signal_no_arg_diagnostic
+      Start 956: test_signal_missing_handler_diagnostic
+      Start 953: test_signal_bad_arg_diagnostic
+      Start 954: test_signal_bad_return_diagnostic
+      Start 957: test_signal_block_counted_bad_diagnostic
+      Start 945: test_signal_direct_opt
+      Start 944: test_signal_direct_noopt
+      Start 941: test_signal_noopt
+      Start 942: test_signal_opt
+      Start 950: reference_source_invalid_signal_noopt
+ 5/17 Test #957: test_signal_block_counted_bad_diagnostic ....   Passed    0.34 sec
+      Start 951: reference_source_invalid_signal_opt
+ 6/17 Test #941: test_signal_noopt ...........................   Passed    0.46 sec
+      Start 948: test_signal_block_opt
+ 7/17 Test #942: test_signal_opt .............................   Passed    0.46 sec
+      Start 947: test_signal_block_noopt
+ 8/17 Test #950: reference_source_invalid_signal_noopt .......   Passed    0.48 sec
+ 9/17 Test #951: reference_source_invalid_signal_opt .........   Passed    0.19 sec
+10/17 Test #944: test_signal_direct_noopt ....................   Passed    0.60 sec
+11/17 Test #945: test_signal_direct_opt ......................   Passed    0.62 sec
+12/17 Test #947: test_signal_block_noopt .....................   Passed    0.17 sec
+13/17 Test #948: test_signal_block_opt .......................   Passed    0.18 sec
+14/17 Test #953: test_signal_bad_arg_diagnostic ..............   Passed    0.73 sec
+15/17 Test #956: test_signal_missing_handler_diagnostic ......   Passed    0.74 sec
+16/17 Test #955: test_signal_no_arg_diagnostic ...............   Passed    0.74 sec
+17/17 Test #954: test_signal_bad_return_diagnostic ...........   Passed    0.74 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Total Test time (real) =  52.20 sec
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 1053: rxbvminstrumentedsignaltests
+      Start 1052: rxvminstrumentedsignaltests
+      Start 1049: test_signal_mask
+      Start 1081: rxasperf2exactrelinktests-rxbvm
+      Start 1080: rxasperf2exactrelinktests
+      Start 1078: rxasperf2partialreferencetests
+      Start 1079: rxasperf2partialreferencetests-rxbvm
+      Start 1077: rxasperf2referenceguardtests-rxbvm
+      Start 1076: rxasperf2referenceguardtests
+      Start 1062: rxvminstrumentedbreakpointtests
+ 1/83 Test #1080: rxasperf2exactrelinktests ....................   Passed    0.00 sec
+      Start 1063: rxbvminstrumentedbreakpointtests
+ 2/83 Test #1078: rxasperf2partialreferencetests ...............   Passed    0.00 sec
+      Start 1055: rxaspanicaddresstests-rxbvm
+ 3/83 Test #1076: rxasperf2referenceguardtests .................   Passed    0.00 sec
+      Start 1050: rxassignalstests
+ 4/83 Test #1050: rxassignalstests .............................   Passed    0.01 sec
+      Start 1051: rxassignalstests-rxbvm
+ 5/83 Test #1049: test_signal_mask .............................   Passed    0.25 sec
+      Start 1054: rxaspanicaddresstests
+ 6/83 Test #1054: rxaspanicaddresstests ........................   Passed    0.03 sec
+      Start 1107: rxassignalmaskbreakpointignoretests-rxbvm
+ 7/83 Test #1081: rxasperf2exactrelinktests-rxbvm ..............   Passed    0.48 sec
+ 8/83 Test #1079: rxasperf2partialreferencetests-rxbvm .........   Passed    0.48 sec
+ 9/83 Test #1077: rxasperf2referenceguardtests-rxbvm ...........   Passed    0.48 sec
+      Start 1061: rxasbreakpointtraceeventtests-rxbvm
+      Start 1056: rxaspanicsourcetests
+      Start 1106: rxassignalmaskbreakpointignoretests
+10/83 Test #1107: rxassignalmaskbreakpointignoretests-rxbvm ....   Passed    0.21 sec
+      Start 1057: rxaspanicsourcetests-rxbvm
+11/83 Test #1061: rxasbreakpointtraceeventtests-rxbvm ..........   Passed    0.01 sec
+      Start 1060: rxasbreakpointtraceeventtests
+12/83 Test #1106: rxassignalmaskbreakpointignoretests ..........   Passed    0.01 sec
+      Start 1073: rxasreferencetests-rxbvm
+13/83 Test #1055: rxaspanicaddresstests-rxbvm ..................   Passed    0.49 sec
+      Start 1072: rxasreferencetests
+14/83 Test #1051: rxassignalstests-rxbvm .......................   Passed    0.48 sec
+      Start 1090: rxassignalattrpayloadtests
+15/83 Test #1060: rxasbreakpointtraceeventtests ................   Passed    0.01 sec
+      Start 1129: rxassignalbrvnametests-rxbvm
+16/83 Test #1073: rxasreferencetests-rxbvm .....................   Passed    0.00 sec
+      Start 1089: rxassignalattrnametests-rxbvm
+17/83 Test #1072: rxasreferencetests ...........................   Passed    0.00 sec
+      Start 1108: rxassignalsilenthalttests
+18/83 Test #1090: rxassignalattrpayloadtests ...................   Passed    0.00 sec
+      Start 1086: rxassignalattrcodetests
+19/83 Test #1129: rxassignalbrvnametests-rxbvm .................   Passed    0.00 sec
+      Start 1094: rxassignalmodeignoretests
+20/83 Test #1089: rxassignalattrnametests-rxbvm ................   Passed    0.00 sec
+      Start 1125: rxassignalpushpophandlerrestoretests-rxbvm
+21/83 Test #1108: rxassignalsilenthalttests ....................   Passed    0.00 sec
+      Start 1121: rxassignalpushpoprestoretests-rxbvm
+22/83 Test #1086: rxassignalattrcodetests ......................   Passed    0.00 sec
+      Start 1116: rxassignalactionskiptests
+23/83 Test #1125: rxassignalpushpophandlerrestoretests-rxbvm ...   Passed    0.00 sec
+      Start 1064: rxasregisterflagtests
+24/83 Test #1094: rxassignalmodeignoretests ....................   Passed    0.00 sec
+      Start 1124: rxassignalpushpophandlerrestoretests
+25/83 Test #1121: rxassignalpushpoprestoretests-rxbvm ..........   Passed    0.00 sec
+      Start 1095: rxassignalmodeignoretests-rxbvm
+26/83 Test #1056: rxaspanicsourcetests .........................   Passed    0.02 sec
+      Start 1113: rxassignalframescopeparenttests-rxbvm
+27/83 Test #1064: rxasregisterflagtests ........................   Passed    0.00 sec
+      Start 1109: rxassignalsilenthalttests-rxbvm
+28/83 Test #1124: rxassignalpushpophandlerrestoretests .........   Passed    0.00 sec
+      Start 1091: rxassignalattrpayloadtests-rxbvm
+29/83 Test #1057: rxaspanicsourcetests-rxbvm ...................   Passed    0.02 sec
+30/83 Test #1116: rxassignalactionskiptests ....................   Passed    0.00 sec
+      Start 1098: rxassignalmodecallbranchtests
+      Start 1120: rxassignalpushpoprestoretests
+31/83 Test #1095: rxassignalmodeignoretests-rxbvm ..............   Passed    0.00 sec
+32/83 Test #1113: rxassignalframescopeparenttests-rxbvm ........   Passed    0.00 sec
+      Start 1066: rxasutfflagtests
+      Start 1131: rxassignalbrvpayloadtests-rxbvm
+33/83 Test #1109: rxassignalsilenthalttests-rxbvm ..............   Passed    0.00 sec
+      Start 1087: rxassignalattrcodetests-rxbvm
+34/83 Test #1091: rxassignalattrpayloadtests-rxbvm .............   Passed    0.00 sec
+      Start 1117: rxassignalactionskiptests-rxbvm
+35/83 Test #1098: rxassignalmodecallbranchtests ................   Passed    0.00 sec
+      Start 1093: rxassignalattrsourcetests-rxbvm
+36/83 Test #1120: rxassignalpushpoprestoretests ................   Passed    0.00 sec
+      Start 1101: rxassignalmodereturntests-rxbvm
+37/83 Test #1066: rxasutfflagtests .............................   Passed    0.00 sec
+      Start 1088: rxassignalattrnametests
+38/83 Test #1087: rxassignalattrcodetests-rxbvm ................   Passed    0.00 sec
+      Start 1096: rxassignalmodebranchtests
+39/83 Test #1117: rxassignalactionskiptests-rxbvm ..............   Passed    0.00 sec
+      Start 1097: rxassignalmodebranchtests-rxbvm
+40/83 Test #1131: rxassignalbrvpayloadtests-rxbvm ..............   Passed    0.00 sec
+41/83 Test #1093: rxassignalattrsourcetests-rxbvm ..............   Passed    0.00 sec
+      Start 1119: rxassignalactiondynamictests-rxbvm
+      Start 1099: rxassignalmodecallbranchtests-rxbvm
+42/83 Test #1101: rxassignalmodereturntests-rxbvm ..............   Passed    0.00 sec
+      Start 1058: rxasbreakpointaddresstests
+43/83 Test #1096: rxassignalmodebranchtests ....................   Passed    0.00 sec
+      Start 1104: rxassignalmaskotherignoretests
+44/83 Test #1097: rxassignalmodebranchtests-rxbvm ..............   Passed    0.00 sec
+      Start 1067: rxasutfflagtests-rxbvm
+45/83 Test #1119: rxassignalactiondynamictests-rxbvm ...........   Passed    0.00 sec
+      Start 1084: rxasobjectinitializationcatchtests
+46/83 Test #1088: rxassignalattrnametests ......................   Passed    0.00 sec
+      Start 1085: rxasobjectinitializationcatchtests-rxbvm
+47/83 Test #1058: rxasbreakpointaddresstests ...................   Passed    0.00 sec
+      Start 1092: rxassignalattrsourcetests
+48/83 Test #1099: rxassignalmodecallbranchtests-rxbvm ..........   Passed    0.00 sec
+      Start 1112: rxassignalframescopeparenttests
+49/83 Test #1067: rxasutfflagtests-rxbvm .......................   Passed    0.00 sec
+      Start 1114: rxassignalnestedpendingtests
+50/83 Test #1104: rxassignalmaskotherignoretests ...............   Passed    0.00 sec
+51/83 Test #1084: rxasobjectinitializationcatchtests ...........   Passed    0.00 sec
+      Start 1126: rxassignalbrvrawtests
+      Start 1123: rxassignalpushpopbranchtests-rxbvm
+52/83 Test #1092: rxassignalattrsourcetests ....................   Passed    0.00 sec
+53/83 Test #1085: rxasobjectinitializationcatchtests-rxbvm .....   Passed    0.00 sec
+      Start 1082: rxasobjectinitializationtests
+      Start 1083: rxasobjectinitializationtests-rxbvm
+54/83 Test #1112: rxassignalframescopeparenttests ..............   Passed    0.00 sec
+      Start 1127: rxassignalbrvrawtests-rxbvm
+55/83 Test #1114: rxassignalnestedpendingtests .................   Passed    0.00 sec
+      Start 1110: rxassignalframescopechildtests
+56/83 Test #1126: rxassignalbrvrawtests ........................   Passed    0.00 sec
+57/83 Test #1123: rxassignalpushpopbranchtests-rxbvm ...........   Passed    0.00 sec
+      Start 1070: rxasattributebulktests
+      Start 1059: rxasbreakpointaddresstests-rxbvm
+58/83 Test #1082: rxasobjectinitializationtests ................   Passed    0.00 sec
+      Start 1118: rxassignalactiondynamictests
+59/83 Test #1083: rxasobjectinitializationtests-rxbvm ..........   Passed    0.00 sec
+60/83 Test #1127: rxassignalbrvrawtests-rxbvm ..................   Passed    0.00 sec
+      Start 1100: rxassignalmodereturntests
+      Start 1130: rxassignalbrvpayloadtests
+61/83 Test #1110: rxassignalframescopechildtests ...............   Passed    0.00 sec
+      Start 1122: rxassignalpushpopbranchtests
+62/83 Test #1059: rxasbreakpointaddresstests-rxbvm .............   Passed    0.00 sec
+      Start 1111: rxassignalframescopechildtests-rxbvm
+63/83 Test #1070: rxasattributebulktests .......................   Passed    0.00 sec
+      Start 1068: rxasutfboundaryfreadlinetests
+64/83 Test #1118: rxassignalactiondynamictests .................   Passed    0.00 sec
+      Start 1115: rxassignalnestedpendingtests-rxbvm
+65/83 Test #1100: rxassignalmodereturntests ....................   Passed    0.00 sec
+      Start 1065: rxasregisterflagtests-rxbvm
+66/83 Test #1130: rxassignalbrvpayloadtests ....................   Passed    0.00 sec
+      Start 1128: rxassignalbrvnametests
+67/83 Test #1122: rxassignalpushpopbranchtests .................   Passed    0.00 sec
+      Start 1071: rxasattributebulktests-rxbvm
+68/83 Test #1111: rxassignalframescopechildtests-rxbvm .........   Passed    0.00 sec
+      Start 1105: rxassignalmaskotherignoretests-rxbvm
+69/83 Test #1115: rxassignalnestedpendingtests-rxbvm ...........   Passed    0.00 sec
+      Start 1069: rxasutfboundaryfreadcdpttests
+70/83 Test #1065: rxasregisterflagtests-rxbvm ..................   Passed    0.00 sec
+      Start 1074: rxasreferencecatchtests
+71/83 Test #1128: rxassignalbrvnametests .......................   Passed    0.00 sec
+      Start 1075: rxasreferencecatchtests-rxbvm
+72/83 Test #1071: rxasattributebulktests-rxbvm .................   Passed    0.00 sec
+      Start 1103: rxassignalcallunwindtests-rxbvm
+73/83 Test #1105: rxassignalmaskotherignoretests-rxbvm .........   Passed    0.00 sec
+      Start 1102: rxassignalcallunwindtests
+74/83 Test #1074: rxasreferencecatchtests ......................   Passed    0.00 sec
+75/83 Test #1075: rxasreferencecatchtests-rxbvm ................   Passed    0.00 sec
+76/83 Test #1103: rxassignalcallunwindtests-rxbvm ..............   Passed    0.00 sec
+77/83 Test #1102: rxassignalcallunwindtests ....................   Passed    0.00 sec
+78/83 Test #1068: rxasutfboundaryfreadlinetests ................   Passed    0.02 sec
+79/83 Test #1069: rxasutfboundaryfreadcdpttests ................   Passed    0.01 sec
+80/83 Test #1062: rxvminstrumentedbreakpointtests ..............   Passed    0.72 sec
+81/83 Test #1052: rxvminstrumentedsignaltests ..................   Passed    0.73 sec
+82/83 Test #1063: rxbvminstrumentedbreakpointtests .............   Passed    0.95 sec
+83/83 Test #1053: rxbvminstrumentedsignaltests .................   Passed    0.97 sec
+
+100% tests passed, 0 tests failed out of 83
+
+Label Time Summary:
+breakpoint         =   1.67 sec*proc (2 tests)
+instrumentation    =   3.37 sec*proc (4 tests)
+interpreter        =   3.65 sec*proc (7 tests)
+rxas               =   0.03 sec*proc (2 tests)
+signal             =   1.95 sec*proc (3 tests)
+smoke              =   0.02 sec*proc (4 tests)
+utf                =   0.03 sec*proc (2 tests)
+
+Total Test time (real) =   1.01 sec

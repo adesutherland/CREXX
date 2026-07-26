@@ -1,0 +1,5 @@
+variant,vm,work,sample_count,physical_footprint_mib,run_top,copy_value_top,memmove_top,trim_top,reference_release_top,numeric_sync_top,notes
+current,rxvm,6000,1545,12.4,967,259,115,98,46,20,two-second one-millisecond native diagnostic
+current,rxbvm,6000,1543,12.3,983,279,114,68,39,14,two-second one-millisecond native diagnostic
+cow,rxvm,6000,1707,12.3,1145,283,0,125,64,19,memmove absent from collapsed entries at five-sample threshold
+cow,rxbvm,6000,1709,12.2,1170,295,0,123,40,25,memmove absent from collapsed entries at five-sample threshold

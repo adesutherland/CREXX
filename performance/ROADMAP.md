@@ -195,7 +195,7 @@ Source:
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
-| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | queued | PERF2-02 rejects eager/core state for Bounce; its accepted exact canonical-handler Q3b slice remains the zero-state reference baseline. |
+| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | VM-C1b accepted; VM-C2 PoC next | VM-C1b is accepted after green Debug/Release QA despite the measured optimized-Sieve `rxbvm` regression. `PERF2-06-D01` records the Apple-Clang code-layout debt and required Intel GCC/Clang revisit. VM-C2 proceeds only on a separate clean, discardable PoC base. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
 | PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued | Begins as dossiers in PERF2-01; production slices come from PERF2-02 through 08. |
@@ -858,6 +858,50 @@ Otherwise retain the optimization in the earliest private layer that owns the
 facts, or reject it with evidence.
 
 ## PERF2-06 — VM execution-engine programme
+
+Activity start (2026-07-26): exact `develop` HEAD `e7090198e` was verified six
+commits ahead of `origin/develop` with a clean worktree. The five accepted
+PERF2-01/02/05 evidence manifests actually used replayed successfully. The
+resumable control plane is [`PERF2-06-WORKLIST.md`](PERF2-06-WORKLIST.md).
+Production installation remains blocked until the complete attribution and
+bounded PoC panel is presented to Adrian.
+
+First mandatory stop (2026-07-26): the complete package is retained at
+[`evidence/2026-07-26-perf2-06-vm-audit/`](evidence/2026-07-26-perf2-06-vm-audit/).
+Exact current profiles show 432,950/572,500 optimized Permute/List bytecode
+calls but only 7/44 fresh frames; allocation is already amortized, while each
+child call still copies the 1,280-byte interrupt table and recycled entry
+relinks 9,957,712/13,312,071 local pointers. Native List samples put the table
+`memmove` at 7.4% in both VMs. The bounded COW control removes it and passes
+65/65 focused tests, but its repeated cold-failure shape grows `run()` by
+10,700/6,268 bytes and is clearly adverse on Base64 and Sieve `rxbvm`; that
+exact patch is rejected. The recommendation is a call/frame direction:
+VM-C1b centralizes shared interrupt-policy mutation off the hot path, while
+Adrian's VM-C2 non-moving segmented value arena plus compact control stack is a
+first-class broader architecture PoC whose decisive issue is eliminating
+pointer-map relinks without taxing every operand. No production edit, broad
+closeout, commit or push is authorized before Adrian selects the direction.
+
+Approval (2026-07-26): Adrian selected the recommended VM-C1b-first sequence.
+The production slice may centralize shared/COW interrupt-policy mutation and
+remove eager child-table copying, then must stop at the mandatory first
+profiling-off Release verdict. The retained COW PoC shape remains rejected;
+VM-C2, broad QA, closeout, commit and push are not authorized by this approval.
+
+First Release verdict and acceptance (2026-07-26): the checksum-closed package is retained at
+[`evidence/2026-07-26-perf2-06-vm-c1b-first-release-verdict/`](evidence/2026-07-26-perf2-06-vm-c1b-first-release-verdict/).
+VM-C1b removes the 1,280-byte child copy, reduces `stack_frame` by 1,264 bytes
+and shrinks `run()` by 5,660/796 bytes in `rxvm`/`rxbvm`.  Twelve balanced
+pairs are clear favorable for List `rxvm` and both Permute modes, but Sieve
+`rxbvm` is clear adverse: paired mean `+5.368694%`, 95% interval
+`[+4.720473%, +6.016915%]`, 0/12 favorable. Adrian explicitly accepted that
+trade-off after diagnosis because the call-heavy gains and faster `rxvm` Sieve
+justify retaining the slice. Full Debug and ordinary profiling-off Release QA
+both pass 1,924/1,924. `PERF2-06-D01` retains the unresolved Apple-Clang global
+code-layout/register-allocation debt and requires a supported Intel x86-64
+GCC/Clang matrix before final architecture selection. The implementation
+commit is anchored after creation as `TO_BE_RECORDED`. VM-C2 is authorized as
+the next separate clean-base PoC; no push is authorized.
 
 ### Objective
 

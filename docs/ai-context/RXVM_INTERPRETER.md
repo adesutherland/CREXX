@@ -8,11 +8,14 @@ The execution of a program within `rxvm` is handled in discrete phases (as defin
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests one or more 007 containers, validates the fixed header and six sections, materializes portable constants/metadata and the semantic graph, expands variable-integer instructions into the normal runtime image, and loads each module directory entry into an internal `module` struct. A linked container shares one materialized pool and graph across its modules; concatenated archive containers remain independently owned.
 3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
-4. **Preparation**: `rxvm_prepare()` builds an owned per-module runtime
-   instruction image for computed-goto execution. Operand cells are copied
-   unchanged and instruction cells hold process-local handler pointers; the
-   canonical and serialized bytecode remains immutable. Switch-dispatch
-   `rxbvm` continues to execute the canonical opcode image directly.
+4. **Preparation**: `rxvm_prepare()` builds an owned per-module
+   `execution_image` for both VM modes. Operand cells are copied and direct
+   function operands are rebound to process-local `proc_runtime *` values.
+   Computed-goto `rxvm` stores process-local handler pointers in instruction
+   cells; switch-dispatch `rxbvm` keeps copied opcodes there and may install
+   process-private opcode forms. Canonical `segment.binary` remains immutable
+   and is still the serialization, reflection, source/profile and debug
+   identity.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
 
 Runtime code can explicitly late-load another `.rxbin` or `.rxplugin` through
@@ -103,7 +106,8 @@ struct stack_frame {
     size_t number_args;              /* Argument count for the frame */
     unsigned char is_interrupt;      /* Signal currently being handled, or zero */
     uint32_t caller_arg_base;         /* First caller call-window argument */
-    interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Signal / Exception handlers */
+    interrupt_entry *interrupt_table; /* Shared or frame-owned signal policy */
+    unsigned char interrupt_table_owned; /* Frame owns and must free the table */
     interrupt_saved_entry *interrupt_stack; /* Block-scoped signal handler saves */
     numeric_context num_context;     /* Numeric context for the procedure */
     struct decplugin *decimal;       /* Decimal plugin context */
@@ -141,7 +145,9 @@ TRACE helper, but they are excluded from scoped reuse allocation. This is the
 same lifetime invalidation operation as frame cleanup, but scoped to the
 storage whose block lifetime has ended.
 `clear_frame()` performs full storage cleanup, remaining signal-handler stack
-cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
+cleanup, releases any frame-owned private interrupt table, and performs any VM
+plugin instance cleanup when a frame is finally destroyed. Signal-stack
+cleanup never allocates while unwinding or destroying a frame.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
 locals on reuse.
 
@@ -174,16 +180,25 @@ without a generic operand scan. Any future call-bearing fused opcode must be
 added to this cold decoder as part of its signal/unwind contract.
 
 ### Signal / Interrupt Handling
-The VM signal model is implemented directly in the interpreter loop. Each
-`stack_frame` owns an `interrupt_table[RXSIGNAL_MAX]` and an `is_interrupt`
-marker. `frame_f()` copies the caller's table into a newly entered child frame,
-so handlers installed by a caller are visible to procedures it calls later, but
-changes made in a child frame do not mutate the caller's table. Returning from a
-procedure restores the caller's signal state by returning to the caller frame.
+The VM signal model is implemented directly in the interpreter loop. A root
+frame owns an initialized `interrupt_table[RXSIGNAL_MAX]`; a child frame starts
+by sharing its parent's table pointer. This makes the common procedure-entry
+path pointer inheritance rather than a 1,280-byte policy copy. Before the first
+frame-local mutation, the child makes a private copy and marks it owned, so
+handlers installed by a caller are visible to later callees while child changes
+still cannot mutate the caller's policy. The LIFO call-frame lifetime keeps a
+shared parent table live until its children return. Returning restores the
+caller's signal state by returning to the caller frame, and a recycled child
+releases any private table before it is reused.
+
 Each frame also owns an `interrupt_stack` used by block-scoped handlers. The
 `sigpush` and `sigpop` instructions save and restore individual handler entries
-on that stack. Frame cleanup clears any remaining pushed entries, which gives
-block-scoped handling a safety net for frame exit and frame recycling.
+on that stack. Any instruction that must change the frame's handler policy
+first uses the common copy-on-write helper; allocation failure follows the
+normal signal/OOM path. Frame cleanup clears any remaining pushed entries and
+discards their saved table values without forcing a private copy, which gives
+block-scoped handling a safety net for frame exit and frame recycling without
+allocating during cleanup.
 
 Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
 `IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `BRANCH_VALUE`, `CALL`,
@@ -757,7 +772,12 @@ The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two exe
    `next_pc->handler`, and dispatch uses `goto *next_inst;`. The runtime image
    is process-local, is never serialized or exposed through reflection, and is
    refreshed safely after a late link.
-2. **Switch Dispatch (`rxbvm`, `NTHREADED`)**: Dispatches the serialized opcode through a C `switch(opcode)` statement.
+2. **Switch Dispatch (`rxbvm`, `NTHREADED`)**: Executes the owned
+   `execution_image` through a C `switch(opcode)` statement. Public instruction
+   cells initially contain copied canonical opcodes; preparation may replace a
+   selected cell with a process-private opcode while leaving
+   `segment.binary` unchanged. Operands, calls, branches and active-frame
+   transitions use the same owned-image contract as `rxvm`.
 
 Neither source form is assumed to be universally faster. Generated performance
 depends on compiler transformations, architecture, branch prediction, code

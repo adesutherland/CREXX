@@ -3978,6 +3978,28 @@ static void rxsignal_apply_native_interrupt_mode(unsigned char sig, interrupt_en
     }
 }
 
+static RXVM_LABEL_OWNER_NOINLINE int rxsignal_ensure_private_interrupt_table(stack_frame *frame) {
+    interrupt_entry *private_table;
+
+    if (!frame || !frame->interrupt_table) return 0;
+    if (frame->interrupt_table_owned) return 1;
+
+    private_table = malloc(sizeof(interrupt_entry) * RXSIGNAL_MAX);
+    if (!private_table) return 0;
+    memcpy(private_table, frame->interrupt_table,
+           sizeof(interrupt_entry) * RXSIGNAL_MAX);
+    frame->interrupt_table = private_table;
+    frame->interrupt_table_owned = 1;
+    return 1;
+}
+
+static void rxsignal_release_private_interrupt_table(stack_frame *frame) {
+    if (!frame) return;
+    if (frame->interrupt_table_owned) free(frame->interrupt_table);
+    frame->interrupt_table = 0;
+    frame->interrupt_table_owned = 0;
+}
+
 static void rxsignal_push_handler(stack_frame *frame, unsigned char sig) {
     interrupt_saved_entry *saved;
 
@@ -3991,34 +4013,46 @@ static void rxsignal_push_handler(stack_frame *frame, unsigned char sig) {
     frame->interrupt_stack = saved;
 }
 
-static int rxsignal_pop_handler(stack_frame *frame, unsigned char sig) {
+typedef enum rxsignal_pop_result {
+    RXSIGNAL_POP_NOT_FOUND = 0,
+    RXSIGNAL_POP_RESTORED = 1,
+    RXSIGNAL_POP_NO_MEMORY = -1
+} rxsignal_pop_result;
+
+static rxsignal_pop_result rxsignal_pop_handler(stack_frame *frame, unsigned char sig) {
     interrupt_saved_entry *saved;
     interrupt_saved_entry *previous;
 
-    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return 0;
+    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return RXSIGNAL_POP_NOT_FOUND;
 
     previous = 0;
     saved = frame->interrupt_stack;
     while (saved) {
         if (saved->signal == sig) {
+            if (!rxsignal_ensure_private_interrupt_table(frame)) return RXSIGNAL_POP_NO_MEMORY;
             frame->interrupt_table[sig - 1] = saved->entry;
             rxsignal_apply_native_interrupt_mode(sig, &frame->interrupt_table[sig - 1]);
             if (previous) previous->next = saved->next;
             else frame->interrupt_stack = saved->next;
             free(saved);
-            return 1;
+            return RXSIGNAL_POP_RESTORED;
         }
         previous = saved;
         saved = saved->next;
     }
 
-    return 0;
+    return RXSIGNAL_POP_NOT_FOUND;
 }
 
 static void rxsignal_clear_handler_stack(stack_frame *frame) {
+    interrupt_saved_entry *saved;
+
     if (!frame) return;
     while (frame->interrupt_stack) {
-        rxsignal_pop_handler(frame, frame->interrupt_stack->signal);
+        saved = frame->interrupt_stack;
+        frame->interrupt_stack = saved->next;
+        rxsignal_apply_native_interrupt_mode(saved->signal, &saved->entry);
+        free(saved);
     }
 }
 
@@ -4042,6 +4076,7 @@ RX_INLINE stack_frame *frame_f(
     int i, j;
     size_t frame_size;
     value *value_buffer;
+    int reused_frame = 0;
 #ifdef CREXX_VM_PROFILING
     uint64_t profile_phase_start;
     int profile_reused_frame = 0;
@@ -4075,6 +4110,7 @@ RX_INLINE stack_frame *frame_f(
         this = *procedure->frame_free_list;
         *procedure->frame_free_list = this->prev_free;
         this->prev_free = 0;
+        reused_frame = 1;
 #ifdef CREXX_VM_PROFILING
         rxvm_profile_record_frame_activation(1, 0, 0);
         profile_reused_frame = 1;
@@ -4192,12 +4228,15 @@ RX_INLINE stack_frame *frame_f(
         this->nominal_number_locals = nominal_num_locals;
     }
     this->parent = parent;
+    this->interrupt_table = 0;
+    this->interrupt_table_owned = 0;
     if (parent) {
 #ifdef CREXX_VM_PROFILING
         profile_phase_start = rxvm_profile_frame_phase_begin();
 #endif
-        /* Set the interrupt mask based on parent settings */
-        memcpy(this->interrupt_table, parent->interrupt_table, sizeof(interrupt_entry) * (RXSIGNAL_MAX));
+        /* Inherit the parent's immutable policy.  A frame-local signal
+         * instruction takes a private copy before its first mutation. */
+        this->interrupt_table = parent->interrupt_table;
         this->is_interrupt = parent->is_interrupt;
 
         /* VM Plugins */
@@ -4223,7 +4262,21 @@ RX_INLINE stack_frame *frame_f(
 #ifdef CREXX_VM_PROFILING
         profile_phase_start = rxvm_profile_frame_phase_begin();
 #endif
+        this->interrupt_table = malloc(sizeof(interrupt_entry) * RXSIGNAL_MAX);
+        if (!this->interrupt_table) {
+#ifdef CREXX_VM_PROFILING
+            rxvm_profile_record_frame_release();
+#endif
+            if (reused_frame) {
+                this->prev_free = *procedure->frame_free_list;
+                *procedure->frame_free_list = this;
+            }
+            else free(this);
+            return 0;
+        }
+        this->interrupt_table_owned = 1;
         for (i = 0; i < RXSIGNAL_MAX; i++) {
+            this->interrupt_table[i].response = RXSIGNAL_RESPONSE_IGNORE;
             this->interrupt_table[i].function = 0;
             this->interrupt_table[i].jump = 0;
             this->interrupt_table[i].frame = 0;
@@ -4303,6 +4356,7 @@ RX_INLINE stack_frame *frame_f(
 RX_INLINE void clear_frame(stack_frame *frame) {
     int i, offset;
     rxsignal_clear_handler_stack(frame);
+    rxsignal_release_private_interrupt_table(frame);
     /* Reset Local Registers and a0 */
     for (i = 0; i < frame->procedure->locals; i++) {
         clear_value(frame->baselocals[i]);
@@ -4326,6 +4380,7 @@ RX_INLINE void free_frame(stack_frame *frame) {
     rxvm_profile_record_frame_release();
 #endif
     rxsignal_clear_handler_stack(frame);
+    rxsignal_release_private_interrupt_table(frame);
     rxvm_release_frame_reference_lifetimes(frame);
     /* Add to free list */
     frame->prev_free = *(frame->procedure->frame_free_list);
@@ -4604,6 +4659,18 @@ void raise_signal(unsigned char signal) {
 // Function to clear an interrupt
 void clear_signal(unsigned char signal) {
     interrupts &= ~rxsignal_mask(signal);
+}
+
+static RXVM_LABEL_OWNER_NOINLINE void rxsignal_raise_private_table_oom(
+        stack_frame *frame,
+        bin_code **interrupted_pc,
+        bin_code *pc,
+        value **interrupt_object) {
+    if (!frame->is_interrupt) *interrupted_pc = pc;
+    interrupts |= rxsignal_mask(RXSIGNAL_FAILURE);
+    value_zero(interrupt_object[RXSIGNAL_FAILURE]);
+    set_null_string(interrupt_object[RXSIGNAL_FAILURE],
+                    "Unable to allocate private interrupt table");
 }
 
 // Macro to detect and throw a signal if a RXVM plugin-raised error is present
@@ -5374,6 +5441,8 @@ START_OF_INSTRUCTIONS
             {
                 proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - BPON %s()\n", signal_function->name);
+                if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                    goto interrupt_table_oom;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
                 interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
@@ -5395,6 +5464,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_IGNORE;
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].jump = 0;
@@ -5414,6 +5485,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_HALT;
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].jump = 0;
@@ -5433,6 +5506,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].jump = 0;
@@ -5452,6 +5527,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
                     current_frame->interrupt_table[sig-1].function = 0;
@@ -5471,6 +5548,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH_VALUE;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
                     current_frame->interrupt_table[sig-1].function = 0;
@@ -5492,6 +5571,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = 0;
@@ -5513,6 +5594,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_ACTION;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = 0;
@@ -5533,6 +5616,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_BRANCH;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
@@ -5552,6 +5637,8 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
                 else {
+                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
+                        goto interrupt_table_oom;
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_RETURN;
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].jump = 0;
@@ -5580,7 +5667,12 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - SIGPOP \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
                 size_t sig = string_to_interrupt(op1S->string);
-                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL || !rxsignal_pop_handler(current_frame, (unsigned char)sig)) {
+                rxsignal_pop_result pop_result = RXSIGNAL_POP_NOT_FOUND;
+                if (sig != RXSIGNAL_MAX && sig != RXSIGNAL_KILL)
+                    pop_result = rxsignal_pop_handler(current_frame, (unsigned char)sig);
+                if (pop_result == RXSIGNAL_POP_NO_MEMORY) goto interrupt_table_oom;
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL ||
+                    pop_result == RXSIGNAL_POP_NOT_FOUND) {
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
             }
@@ -13879,6 +13971,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         RESERVED_IMPL(RESERVED_449)
 
     END_OF_INSTRUCTIONS
+
+    interrupt_table_oom:
+        rxsignal_raise_private_table_oom(current_frame, &interrupted_pc, pc,
+                                         interrupt_object);
+        DISPATCH;
 
     interprt_finished:
 

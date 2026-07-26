@@ -1,0 +1,7 @@
+workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total
+List-canonical,rxvm,elapsed_ns,12,83780000.000000,78305500.000000,-8.008330,-7.119514,-6.900818,-6.020048,-5.254839,-6.627466,-7.194387,-6.060546,clear_favorable,12,12
+List-canonical,rxbvm,elapsed_ns,12,90685000.000000,90725500.000000,-1.055533,-0.546624,-0.186340,0.140364,0.984934,-0.157684,-0.540938,0.225570,noisy_inconclusive,8,12
+Permute-canonical,rxvm,elapsed_ns,12,86161000.000000,80457000.000000,-7.765565,-7.290988,-6.632206,-6.189252,-5.309704,-6.671110,-7.184704,-6.157516,clear_favorable,12,12
+Permute-canonical,rxbvm,elapsed_ns,12,92998500.000000,86552000.000000,-8.218958,-7.310491,-6.571901,-6.177506,-5.197256,-6.680053,-7.224686,-6.135421,clear_favorable,12,12
+Sieve-canonical,rxvm,elapsed_ns,12,23139500.000000,23078000.000000,-2.088207,-0.511649,-0.122667,0.625061,1.796591,-0.098318,-0.815555,0.618918,noisy_inconclusive,7,12
+Sieve-canonical,rxbvm,elapsed_ns,12,24793500.000000,26103500.000000,3.931026,4.332046,5.727739,5.978468,7.200807,5.368694,4.720473,6.016915,clear_adverse,0,12

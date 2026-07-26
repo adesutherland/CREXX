@@ -1,0 +1,5 @@
+variant,vm,file_bytes,macho_text_bytes,run_bytes
+baseline,rxvm,998776,810700,543340
+c1b,rxvm,982392,806136,537680
+baseline,rxbvm,982440,804704,536668
+c1b,rxbvm,982552,805004,535872

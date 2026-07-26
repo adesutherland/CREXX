@@ -243,7 +243,8 @@ struct stack_frame {
     unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
     unsigned char is_interrupt_action; /* Set when an interrupt handler return value is action-aware */
     uint32_t caller_arg_base; /* First caller call-window argument, or UINT32_MAX */
-    interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */
+    interrupt_entry *interrupt_table; /* Inherited table; private after first frame-local mutation */
+    unsigned char interrupt_table_owned; /* This frame owns and must release interrupt_table */
     interrupt_saved_entry *interrupt_stack; /* Block-scoped saved interrupt handlers */
     numeric_context num_context; /* Numeric context for the procedure */
     struct decplugin *decimal;
