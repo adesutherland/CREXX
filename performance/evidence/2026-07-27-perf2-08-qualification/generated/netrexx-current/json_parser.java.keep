@@ -1,0 +1,161 @@
+/* Generated from 'json_parser.nrx' 27 Jul 2026 18:14:57 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class json_parser{private static final java.lang.String $0="json_parser.nrx";
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int repetitions;java.lang.String payload;int result;int iteration=0;java.util.Map document=null;java.util.List operations=null;
+repetitions=1;
+if (args.length>=1) repetitions=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (repetitions<1) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+payload="{\"head\":{\"requestCounter\":4,\"ok\":true},\"operations\":["+"[\"destroy\",\"w54\"],"+"[\"set\",\"w2\",{\"activeControl\":\"w99\"}],"+"[\"set\",\"w21\",{\"customVariant\":\"variant_navigation\"}],"+"[\"create\",\"w95\",\"rwt.widgets.Composite\",{\"parent\":\"w53\",\"bounds\":[0,0,1008,586],\"children\":[\"w96\",\"w97\"],\"tabIndex\":-1}],"+"[\"create\",\"w96\",\"rwt.widgets.Label\",{\"parent\":\"w95\",\"bounds\":[10,30,112,26],\"text\":\"TableViewer\"}],"+"[\"listen\",\"w98\",{\"KeyDown\":true,\"Modify\":true}],"+"[\"set\",\"w99\",{\"itemCount\":118,\"headerVisible\":true,\"selection\":[\"w108\"]}],"+"[\"call\",\"rwt.client.BrowserNavigation\",\"addToHistory\",{\"entries\":[[\"tableviewer\",\"TableViewer\"]]}]"+"]}";
+
+
+
+
+
+
+
+
+
+result=0;
+{int $1=repetitions;iteration=1;iteration:for(;iteration<=$1;iteration++){
+document=(java.util.Map)((new JsonDomParser(payload)).parse());
+operations=(java.util.List)(document.get((java.lang.Object)"operations"));
+result=operations.size();
+if (result!=8) {
+netrexx.lang.RexxIO.Say("FAIL: expected 8 operations, got"+" "+result);
+{System.exit(1);return;}
+}
+}}/*iteration*/
+netrexx.lang.RexxIO.Say("benchmark=json_parser repetitions="+repetitions+" "+"operations="+result);
+netrexx.lang.RexxIO.Say("PASS: JSON Parser NetRexx port");return;}
+
+private json_parser(){return;}}class JsonDomParser{private static final java.lang.String $0="json_parser.nrx";
+/* properties private */
+private java.lang.String text;
+private int position;
+
+@SuppressWarnings("unchecked") public JsonDomParser(java.lang.String source){super();
+text=source;
+position=0;return;}
+
+@SuppressWarnings("unchecked") public java.lang.Object parse(){java.lang.Object value;
+value=parseValue();
+skipWhitespace();
+if (position!=(text.length())) throw new java.lang.IllegalArgumentException("trailing JSON input");
+return value;}
+
+@SuppressWarnings("unchecked") private java.lang.Object parseValue(){int code;
+skipWhitespace();
+if (position>=(text.length())) throw new java.lang.IllegalArgumentException("missing JSON value");
+code=text.codePointAt(position);
+if (code==123) return parseObject();
+if (code==91) return parseArray();
+if (code==34) return parseString();
+if (code==116) {
+expectLiteral("true");
+return (java.lang.Object)java.lang.Boolean.TRUE;
+}
+if (code==102) {
+expectLiteral("false");
+return (java.lang.Object)java.lang.Boolean.FALSE;
+}
+if (code==110) {
+expectLiteral("null");
+return (java.lang.Object)null;
+}
+return parseNumber();}
+
+@SuppressWarnings("unchecked") private java.lang.Object parseObject(){java.util.LinkedHashMap result;java.lang.String key=null;int code=0;
+result=new java.util.LinkedHashMap();
+position++;
+skipWhitespace();
+if ((position<(text.length()))&((text.codePointAt(position))==125)) {
+position++;
+return (java.lang.Object)result;
+}
+{$1:for(;;){
+key=(java.lang.String)(parseString());
+skipWhitespace();
+expectCode(58);
+result.put((java.lang.Object)key,parseValue());
+skipWhitespace();
+code=text.codePointAt(position);
+position++;
+if (code==125) break $1;
+if (code!=44) throw new java.lang.IllegalArgumentException("invalid JSON object");
+}}
+return (java.lang.Object)result;}
+
+@SuppressWarnings("unchecked") private java.lang.Object parseArray(){java.util.ArrayList result;int code=0;
+result=new java.util.ArrayList();
+position++;
+skipWhitespace();
+if ((position<(text.length()))&((text.codePointAt(position))==93)) {
+position++;
+return (java.lang.Object)result;
+}
+{$2:for(;;){
+result.add(parseValue());
+skipWhitespace();
+code=text.codePointAt(position);
+position++;
+if (code==93) break $2;
+if (code!=44) throw new java.lang.IllegalArgumentException("invalid JSON array");
+}}
+return (java.lang.Object)result;}
+
+@SuppressWarnings("unchecked") private java.lang.Object parseString(){java.lang.StringBuilder result;int code=0;int escape=0;
+expectCode(34);
+result=new java.lang.StringBuilder();
+{for(;;){if(!(position<(text.length())))break;
+code=text.codePointAt(position);
+position++;
+if (code==34) return (java.lang.Object)(result.toString());
+if (code==92) {
+escape=text.codePointAt(position);
+position++;
+{/*select*/
+if (((escape==34)|(escape==92))|(escape==47))result.append(java.lang.Character.toChars(escape));
+else if (escape==98)result.append(java.lang.Character.toChars(8));
+else if (escape==102)result.append(java.lang.Character.toChars(12));
+else if (escape==110)result.append(java.lang.Character.toChars(10));
+else if (escape==114)result.append(java.lang.Character.toChars(13));
+else if (escape==116)result.append(java.lang.Character.toChars(9));
+else{throw new java.lang.IllegalArgumentException("unsupported JSON escape");}
+}
+}
+else result.append(java.lang.Character.toChars(code));
+}}
+throw new java.lang.IllegalArgumentException("unterminated JSON string");}
+
+@SuppressWarnings("unchecked") private java.lang.Object parseNumber(){int start;int code=0;
+start=position;
+{$3:for(;;){if(!(position<(text.length())))break;
+code=text.codePointAt(position);
+if ((((((((code>=48)&(code<=57)))|(code==45))|(code==43))|(code==46))|(code==69))|(code==101)) position++;
+else break $3;
+}}
+if (position==start) throw new java.lang.IllegalArgumentException("invalid JSON number");
+return (java.lang.Object)(text.substring(start,position));}
+
+@SuppressWarnings("unchecked") private void expectLiteral(java.lang.String literal){
+if ((!(text.startsWith(literal,position)))) throw new java.lang.IllegalArgumentException("invalid JSON literal");
+position=position+(literal.length());return;}
+
+@SuppressWarnings("unchecked") private void expectCode(int expected){
+if ((position>=(text.length()))|((text.codePointAt(position))!=expected)) throw new java.lang.IllegalArgumentException("invalid JSON punctuation");
+position++;return;}
+
+@SuppressWarnings("unchecked") private void skipWhitespace(){int code=0;
+{$4:for(;;){if(!(position<(text.length())))break;
+code=text.codePointAt(position);
+if ((((code==32)|(code==9))|(code==10))|(code==13)) position++;
+else break $4;
+}}return;}}

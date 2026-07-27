@@ -95,11 +95,11 @@ as part of NR-01 and NR-02.
 | RexxCPS | qualified 2.2d disclosed adaptation; prior 2.2c evidence remains historical | qualified canonical 2.2 plus A/B diagnostics | qualified canonical 2.2 plus A/B diagnostics | qualified disclosed 2.2n adaptation; unchanged 2.1n retained/excluded | mechanical/dynamic C ceilings remain optional; Java only if a defensible port is added |
 | AWFY Sieve | qualified equivalent port | qualified equivalent Classic/stem port | out of scope: RexxCPS only | qualified decimal-`Rexx` equivalent port | prior binary-typed form retained only as control |
 | AWFY Permute | qualified equivalent port | qualified equivalent procedural port | out of scope: RexxCPS only | qualified decimal-`Rexx` object port | prior binary-typed form retained only as control |
-| AWFY Mandelbrot | qualified equivalent port | `not comparable`: decimal numerics fail common checksums at sizes 500/750 | out of scope: RexxCPS only | disclosed arithmetic-XOR adaptation; aggregate review open | inventory/provenance review required |
-| AWFY Towers | qualified equivalent object port | correct procedural diagnostic but `not comparable` for object/allocation scoring | out of scope: RexxCPS only | qualified equivalent object port | inventory/provenance review required |
+| AWFY Mandelbrot | qualified equivalent port | `not comparable`: decimal numerics fail common checksums at sizes 500/750 | out of scope: RexxCPS only | disclosed arithmetic-XOR adaptation; excluded from the common score | inventory/provenance review required |
+| AWFY Towers | qualified equivalent object port | qualified PERF2-08 object-equivalent port: one benchmark plus 14 disk objects and 8,191 recursive moves | out of scope: RexxCPS only | qualified equivalent object port; binary/JVM timing remains a labelled control | inventory/provenance review required |
 | AWFY Bounce | qualified equivalent reference/object port | qualified equivalent object port | out of scope: RexxCPS only | qualified decimal-`Rexx` object port | upstream Java reference available; binary form is control-only |
 | AWFY Storage | correct disclosed node-wrapper diagnostic; `not comparable` for allocation score | qualified equivalent object/array port | out of scope: RexxCPS only | qualified equivalent object/array port | upstream Java reference available |
-| AWFY List | qualified disclosed weak-reference arena; aggregate review open | qualified equivalent object port | out of scope: RexxCPS only | qualified equivalent object port | upstream Java reference available |
+| AWFY List | correct weak-reference arena diagnostic; `not comparable` for the ownership score | qualified equivalent object port | out of scope: RexxCPS only | qualified equivalent object port | upstream Java reference available |
 | AWFY Richards | qualified common state-machine adaptation | qualified common state-machine adaptation | out of scope: RexxCPS only | qualified decimal-`Rexx` common state-machine adaptation | upstream queue/hold result retained; binary form is control-only |
 | JSON capability probe | correct path/count diagnostic; `not comparable` to DOM cells | correct supplied-DOM diagnostic | out of scope: RexxCPS only | correct Java-collections-DOM diagnostic | common correctness only; no common timing score |
 | RFC 4648 Base64 | qualified preallocated `.binary` port | qualified byte-string port | out of scope: RexxCPS only | qualified decimal-arithmetic port with disclosed Java `byte[]` storage | exact round-trip/length/checksum contract; binary arithmetic form is control-only |
@@ -138,7 +138,7 @@ runtime provenance, deterministic correctness contract, canonical execution
 mode, approved work contract and formal samples required by
 `../PERFORMANCE-GOVERNANCE.md`. The five common aggregate workloads use one
 equal integer argument per workload across CREXX, ooRexx and decimal NetRexx;
-the qualified NR-10 arguments keep the fastest median above one second and the
+the current PERF2-09 arguments keep the fastest median above one second and the
 slowest below 30 seconds. Qualification pilots, unequal-work observations and
 binary-typed NetRexx controls remain outside the aggregate.
 

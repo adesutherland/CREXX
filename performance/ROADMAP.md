@@ -155,35 +155,35 @@ This roadmap was written against clean `develop` at
 its own exact execution baseline and upstream state rather than inheriting that
 snapshot by assumption.
 
-## Current orientation, not a new baseline
+## Current same-session Mac closure
 
-The 2026-07-23 cREXX absolute checkpoint is the newest product result. Its
-competitor columns reuse the governed 2026-07-20 session, so the ratios below
-are planning orientation only and must not be published as a same-session
-comparison.
+The 2026-07-27 PERF2-09 bundle is the current accepted-product same-session
+Apple baseline. Its competitor cells, work arguments and ordinary
+profiling-off Release products were frozen and captured together. It supersedes
+the July 20/23 cross-session orientation for Mac candidate ranking but is not a
+cross-platform or final-superiority claim.
 
 | Workload | Qualification | `rxvm / ooRexx` | `rxbvm / ooRexx` | Approximate gain needed to pass ooRexx | Programme disposition |
 | --- | --- | ---: | ---: | ---: | --- |
-| Sieve | common | 7.12x | 5.39x | already ahead | Guard the win; use as a regression control. |
-| Permute | common | 2.13x | 1.99x | already ahead | Guard the win; diagnose only if a shared mechanism is selected. |
-| Bounce | common | 0.319x | 0.307x | 3.13x / 3.26x | Major object, call/frame and value-path target. |
-| Richards | common | 0.143x | 0.141x | 7.00x / 7.07x | Largest valid deficit; state-machine and small-operation dossier first. |
-| Base64 | common | 0.712x | 0.793x | 1.40x / 1.26x | Close byte/string access, conversion and loop costs. |
-| RexxCPS | governed disclosed diagnostic, not common | 0.704x | 0.654x | 1.42x / 1.53x | Visible target for BIF, inline, stable-site and representation work. |
-| Mandelbrot | not common | — | — | ooRexx checksum invalid | Repair/replace the ooRexx port before a claim. |
-| Towers | not common | — | — | representation mismatch | Restore equivalent object/allocation work. |
-| Storage | not common | — | — | cREXX container mismatch | Resolve CAP-02 ownership/container capability first. |
-| List | disclosed adaptation | — | — | ownership adaptation | Re-audit equivalence; preserve the current speed result. |
-| JSON | API diagnostic | — | — | representation/API mismatch | Resolve CAP-01 common parse/result contract first. |
+| Sieve | common | 7.214291x | 5.338790x | already ahead | Guard the win; `rxbvm` remains 1.400305x NetRexx. |
+| Permute | common | 8.005043x | 7.015322x | already ahead | Guard accepted direct placement; current deficit is only to NetRexx. |
+| Bounce | common | 3.902513x | 2.963270x | already ahead | Guard; only `rxbvm` misses the 1.50 NetRexx band. |
+| Richards | common | 0.267262x | 0.264171x | 3.74x / 3.79x | Largest qualified common deficit; re-attribute residual accepted-product work before selecting a mechanism. |
+| Base64 | common | 0.719817x | 0.724922x | 1.39x / 1.38x | Both cREXX series remain noisy after the governed append; require exact materialization reduction. |
+| RexxCPS | governed disclosed diagnostic, not common | 0.995754x | 0.933193x | 1.004x / 1.072x | Near-parity guard; still 1.506x/1.607x from the separate strong band. |
+| Mandelbrot | approved exclusion | — | — | ooRexx checksum invalid | No ratio; ordinary decimal modes do not reproduce the binary64 contract. |
+| Towers | qualified separate object lane | 0.328060x | 0.321343x | 3.05x / 3.11x | Re-attribution required before any allocation/value candidate. |
+| Storage | diagnostic exclusion | — | — | cREXX container mismatch | CAP-02 deferred to an explicit post-Release 1 Level G decision. |
+| List | diagnostic exclusion | — | — | ownership adaptation | cREXX's weak-reference arena is material extra work. |
+| JSON | diagnostic exclusion | — | — | representation/API mismatch | CAP-01 deferred; no common ratio. |
 
-The cross-session five-common geomean is 0.8683 (`rxvm`) and 0.8197 (`rxbvm`)
-versus ooRexx. The current cREXX RexxCPS checkpoint is 28.120M/26.119M clauses
-per second versus historical ooRexx at 39.921M. These figures show that
-RexxCPS is now a plausible bounded closure target while Bounce and Richards,
-not RexxCPS alone, govern the “faster on every benchmark” objective.
+The exact common-five geometric means are 2.125260/1.842840 versus ooRexx and
+0.742985/0.644251 versus decimal NetRexx (`rxvm`/`rxbvm`). Richards is the
+largest qualified common deficit. The accepted product is ahead of ooRexx in
+aggregate but does not yet meet the per-benchmark or NetRexx exit criteria.
 
 Source:
-[`2026-07-23 NR-16/NR-17 closeout`](evidence/2026-07-23-nr-16-17-closeout/README.md).
+[`2026-07-27 PERF2-09 Mac closure`](evidence/2026-07-27-perf2-09-mac-closure/).
 
 ## Live activity register
 
@@ -197,10 +197,10 @@ Source:
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | Apple tactical frame tuning closed; relevant residual joins PERF2-07 | The Apple slice carries only value/reference helper ownership, payload/frame coupling and handover preparation into the combined PERF2-06/07 worklist. `PERF2-06-D01`, compact/hot-cold stream selection and the final VM recommendation wait for the supported hardware/compiler matrix. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | Apple slice complete; V1R01-R1 accepted | The proof-wide direct-placement candidate and V3-R01 correctness prerequisite are installed. At the 36-pair cap Richards is -21.224%/-21.076%, Permute -58.019%/-56.466%, common ratios are 1.244352x/1.242301x and no guard hits. Debug/Release each pass 1,925/1,925; focused ASan passes 10/10; lifecycle, RSS, retained-RXBIN and isolated-install guards pass. Other high-cost shapes are evidence-backed defer/reject/architecture transfers. Evidence: [`first verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/) and [`Apple closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/). |
-| PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued as Mac prerequisite to PERF2-09 | Complete or explicitly disposition CAP-01 through CAP-04 and every Tier A non-common cell before the Mac closure scorecard; language decisions still require Adrian. |
-| PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued for first full run on Mac | Run after the combined PERF2-06/07 slice and PERF2-08 qualification gate. Produce the Apple closure dossiers and scorecard before hardware handover. |
-| PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | Apple screen queued; final tuning reserved for Intel Linux | On Mac retain only bounded screening/controls. Select or tune build/layout options on the Intel Linux host under both GCC and Clang, then validate the frozen result on all required platforms. |
-| PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | Mac pre-handover run, then Intel Linux and Windows completion | Freeze the Mac scorecard/handover bundle; perform decision-critical Intel Linux testing/tuning, obtain required Linux ARM64 coverage, and finish on the same x86-64 machine under supported Windows before Gate E/F. |
+| PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | Mac gate complete; dispositions approved | Common `N=5`; Towers and RexxCPS qualified separately; Mandelbrot, Storage, List and JSON have explicit no-ratio dispositions; CAP-01 through CAP-04 remain under their recorded future owners. Evidence: [`qualification`](evidence/2026-07-27-perf2-08-qualification/) and [`worklist`](PERF2-08-09-WORKLIST.md). |
+| PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | Mac closure complete | Current same-session Apple scorecard is checksum-closed. Richards is the largest qualified common deficit. No next candidate is selected. Evidence: [`Mac closure`](evidence/2026-07-27-perf2-09-mac-closure/). |
+| PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | not started; Apple screen remains queued | On Mac retain only bounded screening/controls. Select or tune build/layout options on the Intel Linux host under both GCC and Clang, then validate the frozen result on all required platforms. |
+| PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | not started; PERF2-09 Mac handover ready | Perform the bounded Apple pre-handover work only when separately authorized, then decision-critical Intel Linux testing/tuning, required Linux ARM64 coverage and supported Windows completion before Gate E/F. |
 | PERF2-12 | P3 | JIT/AOT/native-backend architecture decision | deferred | Revisit only if the non-JIT programme cannot meet the unquestionable-superiority exit. |
 
 ## Execution order
@@ -1307,17 +1307,14 @@ implementation.
 
 ### Equivalence closure
 
-- investigate whether a correct equivalent ooRexx Mandelbrot port can be built;
-  retain `not comparable` if equivalence cannot be established;
-- construct an object/allocation-equivalent Towers port;
-- resolve Storage's owned nested-container mismatch through CAP-02;
-- re-audit List's weak-reference/arena adaptation against the intended work;
-- agree a common JSON parse/result/access contract through CAP-01; and
-- keep every non-common timing visible as a diagnostic, never in the common
-  aggregate until qualification passes.
-
-PERF2-08 completes when every Tier A non-common row has joined the qualified
-matrix or has a final, approved capability/language disposition.
+The Apple gate completed on 2026-07-27. Towers now has a qualified
+object/allocation-equivalent ooRexx port. Mandelbrot is an approved exclusion
+because ordinary ooRexx decimal modes cannot satisfy the binary64 checksums.
+Storage, List and JSON are approved diagnostic exclusions under their exact
+ownership/result-model mismatches. CAP-01 and CAP-02 are deferred to separately
+approved library/runtime or post-Release 1 Level G decisions; CAP-03 does not
+block the qualified Base64 benchmark; CAP-04 retains honestly named lifecycle
+phases and excludes an unavailable pure-load comparison.
 
 ## PERF2-09 — per-benchmark ooRexx closure campaign
 
@@ -1336,22 +1333,21 @@ and diagnostic static/dynamic work, top native/procedure/opcode/call paths,
 copies/conversions/allocations/RSS, selected mechanism, machine ceiling and
 accepted/rejected verdicts.
 
-The hypotheses below are routing assumptions only until PERF2-01 replaces
-them:
+The current Mac closure routing is:
 
 | Workload | Current planning hypothesis | Candidate owners | Closure gate |
 | --- | --- | --- | --- |
-| Sieve | Already a large cREXX win; sensitive to generic loop/value regressions. | Guard only; compiler/VM regression control. | Both VMs remain ahead with no guard. |
-| Permute | Already ahead; recursion/call/inlining remains a useful control. | PERF2-03, residual PERF2-06 call path. | Preserve win and image size while shared call work lands. |
-| Bounce | Small object methods, references, dispatch, frames and value/allocation traffic likely dominate. | PERF2-02, 03, 06 and 07. | Qualified same-session parity checkpoint, then 1.50x exit. |
-| Richards | State-machine calls, branches, object/value state and frame/context work likely dominate. | PERF2-02, 03, 05, 06 and 07. | Largest gap closed without weakening semantics; 1.50x exit. |
-| Base64 | Byte/string access, conversion and scan/loop costs in the existing common codec workload; a standard API is a separate product track. | PERF2-04, 05, 07 and CAP-03. | Preserve the unchanged common workload; default reaches 1.50x and alternate clearly wins, with no opaque native-only claim. |
-| RexxCPS | Timed BIFs, inline scaffold, stable-site setup, loops, conversions and residual frames. | PERF2-02 through 07. | Disclosed cREXX rate reaches at least 1.50x same-session canonical Classic ooRexx. |
-| Mandelbrot | Invalid ooRexx comparator blocks the claim; arithmetic/value path remains diagnostic. | PERF2-08 then 07. | Valid checksum/equal work before any ratio. |
-| Towers | Current ports do different object/allocation work. | PERF2-08, then 02/06/07. | Equivalent port and qualification before the superiority target. |
-| Storage | Missing owned/nested container shape creates radically different work and RSS. | CAP-02 decision, then 07. | Equivalent ownership/allocation contract and governed result. |
-| List | The current cross-session diagnostic appears faster, but ownership differs. | PERF2-08 equivalence, then guard. | Qualification or final disclosed exclusion. |
-| JSON | Different parser/result APIs dominate interpretation. | CAP-01 plus PERF2-04/07. | Common parse-once/result-access contract, then the superiority target. |
+| Sieve | Large current cREXX win; no selected hot value/reference mechanism. | Guard only; compiler/VM regression control. | Preserve both-VM ooRexx win and the NetRexx bands. |
+| Permute | Accepted direct placement removed the proved receiver-copy explosion; current product remains far ahead of ooRexx but behind NetRexx. | Guard accepted V1R01-R1; re-attribute before any residual call/value candidate. | Preserve ooRexx win and image size; do not infer a mechanism from the NetRexx gap alone. |
+| Bounce | Current cREXX is ahead of ooRexx; reference traffic remains visible without one proved redundant owner operation. | Residual PERF2-06/07 proof only if a new exact nonzero reduction appears. | Guard both VMs; bytecode VM remains below the NetRexx strong band. |
+| Richards | Largest qualified common deficit after accepted direct placement; residual copy/value work remains large. | Re-attribute accepted-product caller/copy shapes; no rejected reset/ledger/slab/layout retry. | Select only an exact general mechanism with a material current ceiling; preserve semantics and guards. |
+| Base64 | Current deficit and post-append timing noise; string copy/length materialization remains visible. | PERF2-04/05/07 evidence only; CAP-03 API remains separate. | Require exact reduced work and a stable decisive cell before a candidate. |
+| RexxCPS | Near ooRexx parity, but below the separate 1.50 band; conversions remain visible. | Later general representation/BIF evidence, not a selected slice. | Preserve disclosed 2.2d semantics and reach 1.50x canonical Classic ooRexx. |
+| Mandelbrot | Approved not-comparable result: ooRexx decimal checksums differ. | No current performance owner. | No ratio unless an honest same-numeric-contract port exists. |
+| Towers | Qualified object/allocation port is 3.05–3.11x from ooRexx parity. | Current payload/lifetime/high-water attribution before any PERF2-06/07 candidate. | No pooling, slab or broad layout inference without the required proof/decision. |
+| Storage | Approved diagnostic exclusion under CAP-02. | Explicit post-Release 1 Level G ownership/container decision. | Equivalent ownership/allocation contract before any ratio. |
+| List | Approved diagnostic exclusion because the weak-reference arena is material extra work. | Future ownership architecture only if separately selected. | No common ratio under the current forms. |
+| JSON | Approved diagnostic exclusion under CAP-01. | Independently approved parse-once/result-access design. | Common contract before any ratio. |
 
 After every accepted production slice, run the smallest decisive target and
 guard comparison first, report it and stop. A full portfolio refresh follows

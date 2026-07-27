@@ -1,8 +1,7 @@
 # Benchmark median summary
 
-Status: live comparison index; qualification pilots, historical evidence,
-the 2026-07-20 NR-10 formal absolute baseline and the accepted 2026-07-23
-PERF2-01 Gate A same-session selection baseline
+Status: live comparison index; qualification pilots, historical evidence and
+the current 2026-07-27 PERF2-09 same-session Mac closure
 
 This master table gives one row per dated evidence bundle and benchmark/run.
 Platform cells are `median (recorded sample count)`. Process-time rows are in
@@ -21,6 +20,13 @@ bundle's scope or no valid observation exists.
 
 | Date / evidence run | Benchmark / run | Metric | CREXX | ooRexx | Regina | NetRexx |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
+| 2026-07-27 / PERF2-09 Mac closure | Sieve | work/s | 5,080 / 3,760 (10) | 704 (10) | — | 2,680 (10) |
+| 2026-07-27 / PERF2-09 Mac closure | Permute | work/s | 2,460 / 2,150 (10) | 307 (10) | — | 4,580 (10) |
+| 2026-07-27 / PERF2-09 Mac closure | Bounce | work/s | 3,590 / 2,730 (10) | 921 (10) | — | 2,100 (10) |
+| 2026-07-27 / PERF2-09 Mac closure | Richards | work/s | 2.87 / 2.84 (10) | 10.7 (10) | — | 18.2 (10) |
+| 2026-07-27 / PERF2-09 Mac closure | Base64 | work/s | 1,500 / 1,510 (20) | 2,080 (10) | — | 1,810 (10) |
+| 2026-07-27 / PERF2-09 Mac closure | Towers / qualified object port | process ms | 3,630 / 3,710 (10) | 1,190 (10) | — | 35.2 (10) control |
+| 2026-07-27 / PERF2-09 Mac closure | RexxCPS 2.2d / disclosed versus canonical | native MCPS | 37.9 / 35.5 (10) | 38.1 (10) | 32.2 (10) | 46.0 (10)††† |
 | 2026-07-23 / PERF2-01 same-session | Sieve | work/s | 5,100 / 3,860 (10) | 713 (10) | — | 2,730 (10) |
 | 2026-07-23 / PERF2-01 same-session | Permute | work/s | 675 / 633 (10) | 315 (10) | — | 4,420 (10) |
 | 2026-07-23 / PERF2-01 same-session | Bounce | work/s | 330 / 316 (10) | 994 (10) | — | 1,990 (10) |
@@ -72,6 +78,16 @@ bundle's scope or no valid observation exists.
 | 2026-07-20 / NR-10 corrected equal-work | Richards | work/s | 1.73 / 1.72 (10) | 11.4 (10) | — | 17.7 (10) |
 | 2026-07-20 / NR-10 corrected equal-work | Base64 | work/s | 1,580 / 1,550 (20) | 2,130 (10) | — | 1,840 (10) |
 | 2026-07-20 / NR-10 formal | RexxCPS | native MCPS | 1.23 / 1.22 (10) | 39.9 (10) | 33.2 (10) | 48.1 (10) |
+
+The PERF2-09 cREXX cells show `rxvm / rxbvm`. Its exact common-five geometric
+means are 2.125260/1.842840 versus ooRexx and 0.742985/0.644251 versus decimal
+NetRexx. Richards is the largest qualified common deficit. The new Towers row
+uses the PERF2-08-approved object-equivalent ooRexx port; its NetRexx cell is a
+binary/JVM startup control and receives no cross-Rexx ratio. Both cREXX Base64
+series remain noisy after their single governed append, with every
+correctness-passing sample retained. Full identities, ratios and separate
+lifecycle/RSS/artifact results are in
+`2026-07-27-perf2-09-mac-closure/scorecard.md`.
 
 The NR-09 rows are the final corrected-product Cell C medians: 1,211,556 CPS
 for `rxvm` and 1,208,420.5 CPS for `rxbvm`. In the same-session paired
@@ -180,6 +196,9 @@ later established, add its sample id and reason here before changing the table.
 - `2026-07-23-perf2-01-current-baseline/` for the current same-session common
   matrix, separately disclosed RexxCPS results, schema-5 attribution, native
   samples, allocation profiles and workload dossiers
+- `2026-07-27-perf2-09-mac-closure/` for the current accepted-product
+  same-session Mac common-five baseline, separately qualified Towers/RexxCPS,
+  lifecycle, RSS, artifact inventory and closure dossiers
 
 Do not combine rows from different dates/bundles into one median. Add a new row
 for each future benchmark/run so environment drift remains visible.

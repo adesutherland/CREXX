@@ -1,0 +1,22 @@
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot NetRexx port
+benchmark=awfy_mandelbrot size=500 result=191
+PASS: AWFY Mandelbrot NetRexx port
+benchmark=awfy_mandelbrot size=750 result=50
+PASS: AWFY Mandelbrot NetRexx port
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers NetRexx port
+benchmark=awfy_towers repetitions=2 result=8191
+PASS: AWFY Towers NetRexx port
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage NetRexx port
+benchmark=awfy_storage repetitions=2 result=5461
+PASS: AWFY Storage NetRexx port
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List NetRexx port
+benchmark=awfy_list repetitions=2 result=10
+PASS: AWFY List NetRexx port
+benchmark=json_parser repetitions=1 operations=8
+PASS: JSON Parser NetRexx port
+benchmark=json_parser repetitions=2 operations=8
+PASS: JSON Parser NetRexx port

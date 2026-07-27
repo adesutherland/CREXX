@@ -1,0 +1,116 @@
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program awfy_mandelbrot.nrx
+  === class awfy_mandelbrot ===
+    function main(String[])
+    function mandelbrot(int)
+ 49 +++         loop z=0 to 49 while escape=0
+    +++              ^
+    +++ [34mWarning[0m: Variable is set but not used
+ 65 +++           loop pad=bitNum+1 to 8
+    +++                ^^^
+    +++ [34mWarning[0m: Variable is set but not used
+    function xorByte(int,int)
+ 81 +++     loop bit=1 to 8
+    +++          ^^^
+    +++ [34mWarning[0m: Variable is set but not used
+Compilation of '[33mawfy_mandelbrot.nrx[0m' successful [[33m 3 [34mwarnings[0m]
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program awfy_towers.nrx
+  === class awfy_towers ===
+    function main(String[])
+  19 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ [34mWarning[0m: Variable is set but not used
+
+  === class TowersDisk ===
+    constructor TowersDisk(int)
+    method size
+    method next
+    method hasNext
+    method setNext(TowersDisk)
+
+  === class TowersBenchmark ===
+    constructor TowersBenchmark()
+      overrides Object()
+    method run
+    method pushDisk(TowersDisk,int)
+    method popDiskFrom(int)
+    method moveTopDisk(int,int)
+    method buildTowerAt(int,int)
+    method moveDisks(int,int,int)
+Compilation of '[33mawfy_towers.nrx[0m' successful [3 classes, [34mone warning[0m]
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program awfy_storage.nrx
+  === class awfy_storage ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+
+  === class StorageRandom ===
+    method next
+
+  === class StorageBenchmark ===
+    method run
+    method buildTreeDepth(int,StorageRandom)
+Compilation of '[33mawfy_storage.nrx[0m' successful [3 classes, [34mone warning[0m]
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program awfy_list.nrx
+  === class awfy_list ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+
+  === class ListElement ===
+    constructor ListElement(int)
+    method length
+    method next
+    method setNext(ListElement)
+ 32 +++     value=int
+    +++     ^^^^^
+    +++ [34mWarning[0m: Private property is defined but not used
+
+  === class ListBenchmark ===
+    method run
+    method makeList(int)
+    method isShorterThan(ListElement,ListElement)
+    method tail(ListElement,ListElement,ListElement)
+Compilation of '[33mawfy_list.nrx[0m' successful [3 classes, [33m 2 [34mwarnings[0m]
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program json_parser.nrx
+  === class json_parser ===
+    function main(String[])
+  27 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ [34mWarning[0m: Variable is set but not used
+
+  === class JsonDomParser ===
+    constructor JsonDomParser(String)
+    method parse
+    method parseValue
+    method parseObject
+    method parseArray
+    method parseString
+    method parseNumber
+    method expectLiteral(String)
+    method expectCode(int)
+    method skipWhitespace
+Compilation of '[33mjson_parser.nrx[0m' successful [2 classes, [34mone warning[0m]
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program rexxcps_2_2n.nrx
+    function subroutine(Rexx,Rexx)
+    function formatThousands(Rexx)
+Compilation of '[33mrexxcps_2_2n.nrx[0m' successful

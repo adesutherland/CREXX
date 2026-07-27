@@ -64,17 +64,20 @@ all validate length, byte equality and checksum.
 
 ## Classic seed ports
 
-`classic/` contains procedural ports for the ooRexx lane. Regina surrogate
-checks are not Regina portfolio results and do not qualify an ooRexx cell.
-Sieve and Permute retain the algorithm and observable work and qualify on
-ooRexx 5.1.0. Mandelbrot uses an exact arithmetic byte-XOR helper because a
-portable Classic source-level integer XOR spelling is not shared with the typed
-source, but ooRexx decimal arithmetic also changes the common size-500/750
-checksums; the current cell is therefore `not comparable`, not a runtime-
-specific accepted answer. Towers represents allocated disk nodes with numeric
-ids and stems; it preserves recursion/link mutations but not object dispatch or
-allocator pressure, so its correct ooRexx run remains a disclosed diagnostic
-and is `not comparable` for the common object/allocation score.
+`classic/` contains portable or object-native ports for the ooRexx lane.
+Regina surrogate checks are not Regina portfolio results and do not qualify an
+ooRexx cell. Sieve and Permute retain the algorithm and observable work and
+qualify on ooRexx 5.1.0. Mandelbrot uses an exact arithmetic byte-XOR helper
+because a portable Classic source-level integer XOR spelling is not shared
+with the typed source, but ooRexx decimal arithmetic also changes the common
+size-500/750 checksums; the current cell is therefore `not comparable`, not a
+runtime-specific accepted answer. The PERF2-08 Towers candidate replaces the
+earlier numeric-node/stem diagnostic with an ordinary ooRexx object graph: one
+benchmark object plus 14 disk objects, object-method link mutation and the same
+8,191 recursive moves per repetition. Adrian approved it as a qualified
+separate object/allocation lane on 2026-07-27. PERF2-09 formal timing uses
+source SHA-256
+`bb081b76306ce1d360f4e739e480e3e89ebceb31028326bc93910c8daa0267b9`.
 
 ## Lifecycle probes
 

@@ -1,0 +1,95 @@
+Test project /private/tmp/crexx-perf2-0809.uMsNxm/build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/39 Test    #1: linked_opt_runtime_artifacts_build .........   Passed  186.74 sec
+      Start 1775: benchmark_awfy_sieve_noopt
+      Start 1776: benchmark_awfy_sieve_opt
+      Start 1777: benchmark_awfy_permute_noopt
+      Start 1778: benchmark_awfy_permute_opt
+      Start 1779: benchmark_awfy_mandelbrot_noopt
+      Start 1780: benchmark_awfy_mandelbrot_opt
+      Start 1781: benchmark_awfy_towers_noopt
+      Start 1782: benchmark_awfy_towers_opt
+      Start 1783: benchmark_awfy_bounce_noopt
+      Start 1784: benchmark_awfy_bounce_opt
+ 2/39 Test #1784: benchmark_awfy_bounce_opt ..................   Passed    0.27 sec
+      Start 1785: benchmark_awfy_storage_noopt
+ 3/39 Test #1778: benchmark_awfy_permute_opt .................   Passed    0.27 sec
+ 4/39 Test #1780: benchmark_awfy_mandelbrot_opt ..............   Passed    0.27 sec
+      Start 1786: benchmark_awfy_storage_opt
+      Start 1787: benchmark_awfy_list_noopt
+ 5/39 Test #1776: benchmark_awfy_sieve_opt ...................   Passed    0.28 sec
+      Start 1788: benchmark_awfy_list_opt
+ 6/39 Test #1779: benchmark_awfy_mandelbrot_noopt ............   Passed    0.28 sec
+      Start 1789: benchmark_awfy_richards_noopt
+ 7/39 Test #1783: benchmark_awfy_bounce_noopt ................   Passed    0.28 sec
+      Start 1790: benchmark_awfy_richards_opt
+ 8/39 Test #1775: benchmark_awfy_sieve_noopt .................   Passed    0.28 sec
+      Start 1791: benchmark_json_parser_noopt
+ 9/39 Test #1777: benchmark_awfy_permute_noopt ...............   Passed    0.28 sec
+      Start 1792: benchmark_json_parser_opt
+10/39 Test #1787: benchmark_awfy_list_noopt ..................   Passed    0.04 sec
+11/39 Test #1791: benchmark_json_parser_noopt ................   Passed    0.03 sec
+      Start 1793: benchmark_base64_roundtrip_noopt
+      Start 1794: benchmark_base64_roundtrip_opt
+12/39 Test #1792: benchmark_json_parser_opt ..................   Passed    0.04 sec
+      Start 1795: benchmark_parse_frozen_noopt
+13/39 Test #1788: benchmark_awfy_list_opt ....................   Passed    0.05 sec
+      Start 1796: benchmark_parse_frozen_opt
+14/39 Test #1793: benchmark_base64_roundtrip_noopt ...........   Passed    0.02 sec
+      Start 1797: benchmark_parse_frozen_generic_noopt
+15/39 Test #1781: benchmark_awfy_towers_noopt ................   Passed    0.34 sec
+      Start 1798: benchmark_parse_frozen_generic_opt
+16/39 Test #1789: benchmark_awfy_richards_noopt ..............   Passed    0.06 sec
+      Start 1799: benchmark_rexxcps_levelb_noopt
+17/39 Test #1782: benchmark_awfy_towers_opt ..................   Passed    0.35 sec
+18/39 Test #1794: benchmark_base64_roundtrip_opt .............   Passed    0.04 sec
+      Start 1800: benchmark_rexxcps_levelb_opt
+      Start 1801: benchmark_rexxcps_levelb_opaque_noopt
+19/39 Test #1795: benchmark_parse_frozen_noopt ...............   Passed    0.03 sec
+      Start 1802: benchmark_rexxcps_levelb_opaque_opt
+20/39 Test #1797: benchmark_parse_frozen_generic_noopt .......   Passed    0.02 sec
+      Start 1803: benchmark_runner_noopt
+21/39 Test #1796: benchmark_parse_frozen_opt .................   Passed    0.05 sec
+      Start 1804: benchmark_runner_opt
+22/39 Test #1801: benchmark_rexxcps_levelb_opaque_noopt ......   Passed    0.03 sec
+      Start 1805: nr03_evidence_tool_selftest_noopt
+23/39 Test #1798: benchmark_parse_frozen_generic_opt .........   Passed    0.04 sec
+      Start 1806: nr03_evidence_tool_selftest_opt
+24/39 Test #1802: benchmark_rexxcps_levelb_opaque_opt ........   Passed    0.06 sec
+      Start 1807: nr10_cross_runtime_matrix_selftest_noopt
+25/39 Test #1805: nr03_evidence_tool_selftest_noopt ..........   Passed    0.04 sec
+      Start 1808: nr10_cross_runtime_matrix_selftest_opt
+26/39 Test #1807: nr10_cross_runtime_matrix_selftest_noopt ...   Passed    0.03 sec
+      Start 1809: nr10_lifecycle_tool_selftest_noopt
+27/39 Test #1809: nr10_lifecycle_tool_selftest_noopt .........   Passed    0.03 sec
+      Start 1810: nr10_lifecycle_tool_selftest_opt
+28/39 Test #1806: nr03_evidence_tool_selftest_opt ............   Passed    0.11 sec
+      Start 1811: nr10_artifact_inventory_selftest_noopt
+29/39 Test #1785: benchmark_awfy_storage_noopt ...............   Passed    0.23 sec
+      Start 1812: nr10_artifact_inventory_selftest_opt
+30/39 Test #1786: benchmark_awfy_storage_opt .................   Passed    0.25 sec
+31/39 Test #1808: nr10_cross_runtime_matrix_selftest_opt .....   Passed    0.10 sec
+32/39 Test #1811: nr10_artifact_inventory_selftest_noopt .....   Passed    0.03 sec
+33/39 Test #1810: nr10_lifecycle_tool_selftest_opt ...........   Passed    0.07 sec
+34/39 Test #1812: nr10_artifact_inventory_selftest_opt .......   Passed    0.07 sec
+35/39 Test #1790: benchmark_awfy_richards_opt ................   Passed    0.80 sec
+36/39 Test #1799: benchmark_rexxcps_levelb_noopt .............   Passed    1.22 sec
+37/39 Test #1800: benchmark_rexxcps_levelb_opt ...............   Passed    1.34 sec
+38/39 Test #1803: benchmark_runner_noopt .....................   Passed    1.61 sec
+39/39 Test #1804: benchmark_runner_opt .......................   Passed    1.64 sec
+
+100% tests passed, 0 tests failed out of 39
+
+Label Time Summary:
+benchmark               =  10.98 sec*proc (38 tests)
+canonical-contract      =   3.25 sec*proc (2 tests)
+language                =   7.24 sec*proc (28 tests)
+linked_opt              =   6.09 sec*proc (19 tests)
+noncanonical            =   2.56 sec*proc (2 tests)
+optimizer-resistance    =   0.09 sec*proc (2 tests)
+performance             =   0.48 sec*proc (8 tests)
+rexxcps-smoke           =   2.56 sec*proc (2 tests)
+runner                  =   3.73 sec*proc (10 tests)
+smoke                   =   6.05 sec*proc (18 tests)
+
+Total Test time (real) = 188.80 sec

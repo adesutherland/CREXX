@@ -1,0 +1,87 @@
+/* Generated from 'awfy_mandelbrot.nrx' 27 Jul 2026 18:14:56 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_mandelbrot{private static final java.lang.String $0="awfy_mandelbrot.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int size;int result;int expected;
+size=500;
+if (args.length>=1) size=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (size<1) {
+netrexx.lang.RexxIO.Say("FAIL: size must be positive");
+{System.exit(1);return;}
+}
+
+result=mandelbrot(size);
+expected=-1;
+if (size==1) expected=128;
+if (size==500) expected=191;
+if (size==750) expected=50;
+if (expected==(-1)) {
+netrexx.lang.RexxIO.Say("FAIL: no reference checksum for size"+" "+size);
+{System.exit(1);return;}
+}
+if (result!=expected) {
+netrexx.lang.RexxIO.Say("FAIL: expected"+" "+expected+", got"+" "+result);
+{System.exit(1);return;}
+}
+
+netrexx.lang.RexxIO.Say("benchmark=awfy_mandelbrot size="+size+" "+"result="+result);
+netrexx.lang.RexxIO.Say("PASS: AWFY Mandelbrot NetRexx port");return;}
+
+@SuppressWarnings("unchecked") public static int mandelbrot(int size){int checksum;int byteAcc;int bitNum;int y=0;double ci=0;int x=0;double zrzr=0;double zi=0;double zizi=0;double cr=0;int escape=0;int z=0;double zr=0;int pad=0;
+checksum=0;
+byteAcc=0;
+bitNum=0;
+
+{int $1=size-1;y=0;y:for(;y<=$1;y++){
+ci=(((2.0D*((double)(y)))/((double)(size))))-1.0D;
+{int $2=size-1;x=0;x:for(;x<=$2;x++){
+zrzr=(double)0.0D;
+zi=(double)0.0D;
+zizi=(double)0.0D;
+cr=(((2.0D*((double)(x)))/((double)(size))))-1.5D;
+escape=0;
+
+{z=0;z:for(;z<=49;z++){if(!(escape==0))break;
+zr=(zrzr-zizi)+cr;
+zi=((2.0D*zr)*zi)+ci;
+zrzr=zr*zr;
+zizi=zi*zi;
+if ((zrzr+zizi)>4.0D) escape=1;
+}}/*z*/
+
+byteAcc=(byteAcc*2)+escape;
+bitNum++;
+if (bitNum==8) {
+checksum=xorByte(checksum,byteAcc);
+byteAcc=0;
+bitNum=0;
+}
+else if (x==(size-1)) {
+{pad=bitNum+1;pad:for(;pad<=8;pad++){
+byteAcc=byteAcc*2;
+}}/*pad*/
+checksum=xorByte(checksum,byteAcc);
+byteAcc=0;
+bitNum=0;
+}
+}}/*x*/
+}}/*y*/
+return checksum;}
+
+
+
+@SuppressWarnings("unchecked") public static int xorByte(int left,int right){int result;int place;int bit=0;
+result=0;
+place=1;
+{bit=1;bit:for(;bit<=8;bit++){
+if ((left%2)!=(right%2)) result=result+place;
+left=left/2;
+right=right/2;
+place=place*2;
+}}/*bit*/
+return result;}private awfy_mandelbrot(){return;}}

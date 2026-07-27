@@ -1,7 +1,7 @@
 # Performance capability observations
 
-Status: reviewed against the 2026-07-15 expanded portfolio, current Level B
-documentation and retained qualification evidence
+Status: PERF2-08 Apple dispositions approved 2026-07-27; future surfaces remain
+unselected
 
 This register keeps capability findings separate from benchmark results. A
 workaround is not automatically a language-design request, and a slower pilot
@@ -11,12 +11,12 @@ performance case are agreed.
 
 ## Confirmed gaps
 
-| ID | Missing surface | Evidence and benchmark consequence | Candidate closure to evaluate |
+| ID | Missing surface | Evidence and benchmark consequence | Approved disposition / future owner |
 | --- | --- | --- | --- |
-| CAP-01 | Parse-once JSON object model or indexed document handle | `rxjson` is deliberately string/path oriented and its own documentation says it is not a full object model. `json_parser.crexx` can validate/count the common payload, while ooRexx builds its supplied DOM and NetRexx builds Java collections. The timings are therefore diagnostic and not a common JSON score. | Prototype either a Level B JSON value hierarchy or an opaque indexed document handle with typed object/array/scalar access. Compare parse-once lookup, allocation and repeated path access before selecting an API. |
-| CAP-02 | Heterogeneous nested array/reference containers suitable for an array-of-arrays tree | Level B references are present, including references to arrays, but the language reference explicitly excludes nested reference containers. Arrays cannot currently be stored as ordinary `.object` values. `awfy_storage.crexx` therefore represents each logical upstream array with a `StorageNode` plus an `.object[]`, adding an allocation and object dispatch per logical node; its cREXX time is not a common Storage score. | First test the smaller surface: allow a safely owned array value in a heterogeneous object/container slot. Compare that with a purpose-built nested-array or owned-reference container. Preserve weak-reference lifetime rules and typed-array fast paths. |
-| CAP-03 | Standard RFC 4648 Base64 library API | Repository search found no Level B Base64 service, so every runtime port contains the full codec loop. This is a library gap, not a byte-language gap: cREXX's pre-sized `.binary` implementation passes the exact 1,024-byte round trip and materially improves on the initial concatenating draft. | Add a pure Level B reference API such as `base64encode(.binary) -> .string` and `base64decode(.string) -> .binary`; retain the benchmark as its contract. Consider a native/SIMD provider only after the portable version is measured. |
-| CAP-04 | Public load-only lifecycle timing boundary | The public cREXX, ooRexx and NetRexx command paths expose compile/translate and execution, but not one consistent loaded-without-executing phase. `run_lifecycle.crexx` therefore reports `load_first_result`, not pure loader time. | For cREXX, evaluate an `rxvm` validation/load-only mode or loader counters exposed by the existing VM API. Keep CLI startup, module decode/link and first instructions separately attributable without changing normal execution. |
+| CAP-01 | Parse-once JSON object model or indexed document handle | `rxjson` is deliberately string/path oriented and its own documentation says it is not a full object model. `json_parser.crexx` can validate/count the common payload, while ooRexx builds its supplied DOM and NetRexx builds Java collections. The timings are therefore diagnostic and not a common JSON score. | **Diagnostic + defer.** No common ratio. A Level B hierarchy or opaque handle requires an independently approved library/runtime design covering lifetime, invalidation, access and error behavior. |
+| CAP-02 | Heterogeneous nested array/reference containers suitable for an array-of-arrays tree | Level B references are present, including references to arrays, but the language reference explicitly excludes nested reference containers. Arrays cannot currently be stored as ordinary `.object` values. `awfy_storage.crexx` therefore represents each logical upstream array with a `StorageNode` plus an `.object[]`, adding an allocation and object dispatch per logical node; its cREXX time is not a common Storage score. | **Diagnostic + defer to post-Release 1 Level G.** No Level B ownership/type change was approved. A future decision must preserve weak-reference lifetime rules and typed-array fast paths. |
+| CAP-03 | Standard RFC 4648 Base64 library API | Repository search found no Level B Base64 service, so every runtime port contains the full codec loop. This is a library gap, not a byte-language gap: cREXX's pre-sized `.binary` implementation passes the exact 1,024-byte round trip. | **Benchmark qualified; API deferred.** The existing equal-work benchmark remains common. A pure Level B API is a separate product track; native/SIMD is considered only after the portable form is selected and measured. |
+| CAP-04 | Public load-only lifecycle timing boundary | The public cREXX, ooRexx and NetRexx command paths expose compile/translate and execution, but not one consistent loaded-without-executing phase. `run_lifecycle.crexx` therefore reports `load_first_result`, not pure loader time. | **Pure-load comparison excluded.** Retain the honestly named phase. A new CLI mode, VM API or counter is a separate public-interface decision. |
 
 ## Accuracy checks and non-gaps
 
@@ -40,7 +40,9 @@ performance case are agreed.
   reproducer is retained. Do not open a language/performance item until a
   focused opt/no-opt source proves a current compiler or runtime defect.
 
-## Closure order
+## Future evaluation order
+
+These are recorded owners, not authorization or a queued PERF2-09 follow-on:
 
 1. CAP-01 is the highest-value library/runtime experiment because it affects
    parser reuse, allocations and real application code, and the current JSON

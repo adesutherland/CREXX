@@ -1,0 +1,56 @@
+/* Generated from 'awfy_storage.nrx' 27 Jul 2026 18:14:56 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_storage{private static final java.lang.String $0="awfy_storage.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int repetitions;int result;int iteration=0;
+repetitions=1;
+if (args.length>=1) repetitions=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (repetitions<1) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+result=0;
+{int $1=repetitions;iteration=1;iteration:for(;iteration<=$1;iteration++){
+result=(new StorageBenchmark()).run();
+if (result!=5461) {
+netrexx.lang.RexxIO.Say("FAIL: expected 5461 allocations, got"+" "+result);
+{System.exit(1);return;}
+}
+}}/*iteration*/
+
+netrexx.lang.RexxIO.Say("benchmark=awfy_storage repetitions="+repetitions+" "+"result="+result);
+netrexx.lang.RexxIO.Say("PASS: AWFY Storage NetRexx port");return;}
+
+private awfy_storage(){return;}}class StorageRandom{private static final java.lang.String $0="awfy_storage.nrx";
+/* properties private */
+private int seedValue=74755;
+
+@SuppressWarnings("unchecked") public int next(){
+seedValue=((((seedValue*1309))+13849))%65536;
+return seedValue;}
+
+public StorageRandom(){return;}}class StorageBenchmark{private static final java.lang.String $0="awfy_storage.nrx";
+/* properties private */
+private int allocationCount;
+
+@SuppressWarnings("unchecked") public int run(){StorageRandom random;java.lang.Object tree;
+random=new StorageRandom();
+allocationCount=0;
+tree=buildTreeDepth(7,random);
+if (tree==null) return 0;
+return allocationCount;}
+
+@SuppressWarnings("unchecked") private java.lang.Object buildTreeDepth(int depth,StorageRandom random){java.lang.Object tree[];int i=0;
+allocationCount++;
+if (depth==1) return (java.lang.Object)(new java.lang.Object[(((random.next())%10))+1]);
+tree=new java.lang.Object[4];
+{i=0;i:for(;i<=3;i++){
+tree[i]=buildTreeDepth(depth-1,random);
+}}/*i*/
+return (java.lang.Object)tree;}public StorageBenchmark(){return;}}

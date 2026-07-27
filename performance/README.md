@@ -19,11 +19,13 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/ROADMAP.md` | Live second-programme priorities, dependencies, gates and per-benchmark outcome plan |
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
+| `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/PERF2-01-HANDOVER-PROMPT.md` | Paste-ready new-session prompt for the first successor-roadmap activity |
 | `performance/PERF2-02-HANDOVER-PROMPT.md` | Paste-ready Ultra-session prompt for quickening architecture and the bounded reference/value placement PoC |
 | `performance/PERF2-04-HANDOVER-PROMPT.md` | Paste-ready new-session prompt for the inlining-first core Level B BIF campaign after PERF2-03 closure |
 | `performance/PERF2-06-07-WORKLIST.md` | Combined Mac control plane for relevant PERF2-06 value/VM ownership and PERF2-07 representation/allocation work |
 | `performance/PERF2-06-07-HANDOVER-PROMPT.md` | Preserved execution prompt for the completed combined PERF2-06/07 Mac slice; successor hardware instructions now live in its closeout evidence |
+| `performance/PERF2-08-09-WORKLIST.md` | Resumable Mac control plane for the capability/equivalence gate and subsequent formal per-benchmark closure run |
 | `performance/PERFORMANCE-GOVERNANCE.md` | Normative portfolio, sampling, aggregation, regression and claim policy |
 | `performance/rexxcps-runtime-source-review-2026-07-22.md` | Dated Regina/ooRexx/NetRexx mechanism review, with current-status addendum |
 | `performance/templates/performance-scorecard.md` | Standard publication structure |
@@ -35,6 +37,8 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/` | Isolated V1R01 first ordinary Release verdict, exact copy reduction and causal Bounce guard hit |
 | `performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/` | Proof-wide V1R01-R1 rework, exact operation proof and capped favorable first ordinary Release verdict later accepted by Adrian |
 | `performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/` | Adrian-accepted V1R01-R1 Apple closeout: broad Debug/Release, focused ASan, lifecycle/RSS, retained-RXBIN, install and successor-hardware handover |
+| `performance/evidence/2026-07-27-perf2-08-qualification/` | Approved Mac capability/equivalence panel: complete non-common qualification, exact source/runtime identities and negative Mandelbrot evidence |
+| `performance/evidence/2026-07-27-perf2-09-mac-closure/` | Formal same-session Mac closure: common-five scorecard, Towers/RexxCPS/lifecycle lanes, RSS/artifacts, workload dossiers and recursive checksums |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
