@@ -25,11 +25,30 @@ programming guide. This book is the detailed reference.
 This document is in three parts:
 
 Objectives
-: Current design goals and the release scope.
+: The Objectives part explains what cRexx is intended to achieve and defines the
+scope of the current release. It describes the principles that guide the
+language design, the intended uses of the language, and the balance between
+compatibility with traditional Rexx and the introduction of new facilities. It
+also identifies which language levels and features are included in this
+release, which are still under development, and which are deliberately outside
+its scope.
 
 Overview
-: The language model, modules, calls, options, and program structure.
+: The Overview introduces the language as a whole before its individual features
+are described in detail. It explains the cRexx language model, the organization
+of source programs into modules, and the mechanisms used to call routines,
+functions, and methods. It also describes compiler and language options, the
+structure of a program, and the relationships between declarations, executable
+code, imported modules, and external libraries. This part provides the
+conceptual framework needed to understand the more formal reference material.
 
 Reference
-: Syntax and behaviour for types, literals, variables, operators, classes,
-  namespaces, numeric settings, statements, and libraries.
+: The Reference gives the detailed definition of the language. It specifies the
+syntax and behaviour of types, literal values, variables, expressions, and
+operators. It describes classes and objects, namespaces and name resolution,
+numeric settings and arithmetic, and all executable and declarative statements.
+It also documents the standard libraries and their interfaces. Where relevant,
+the reference states the applicable language level, default behaviour,
+restrictions, error conditions, and interactions with other language features.
+
+
