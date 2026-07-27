@@ -195,7 +195,7 @@ Source:
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
-| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | VM-C1b accepted; C2 allocation/reset PoCs rejected | VM-C1b remains accepted. C2-A/B and C2R01 fail their Release gates; the retained controls strengthen `PERF2-06-D01` code-layout debt. A procedure-affine value-slab/linear-control design is recorded for later architecture selection, not approved for implementation. |
+| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | VM-C1b accepted; Apple tactical frame tuning closed | C2-A/B, C2R01 and C3R01 fail their Release gates. No further current-frame reset, allocation, numeric-sync or cleanup-only Apple tuning is queued. `PERF2-06-D01` and the supported cross-platform compiler/architecture matrix remain before the final recommendation; C2R03 is architecture selection only, not an approved implementation. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
 | PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued | Begins as dossiers in PERF2-01; production slices come from PERF2-02 through 08. |
@@ -933,14 +933,40 @@ code-layout/register-allocation sensitivity, not residual reset cost. R2 scans
 classifier and layout effects, but likewise cannot be reset work. The R1
 absolute cell is span-flagged while its paired interval remains wholly adverse.
 This strengthens `PERF2-06-D01` and its supported Intel x86-64 GCC/Clang
-requirement. The isolated implementation remains uncommitted and discardable;
-exact reset lists and quickened clearing do not advance from this result.
+requirement. The isolated reset implementation was discarded and the earlier
+C2 source was restored after the final review; retained patches and evidence
+remain the result authority. Exact reset lists and quickened clearing do not
+advance from this result.
+
+Final tactical review (2026-07-27): after restoring every rejected C2 source
+change, the accepted frame implementation was reviewed once more for a bounded
+current-design win. Allocation is already amortized, mapping reset alternatives
+are exhausted by the C2 controls, and reference-lifetime release is already
+guarded by `has_reference_lifetimes`. The only remaining measured local
+candidate was C3R01: rebind the decimal plugin's context pointer but omit the
+redundant child-entry synchronization after an exact context copy, then
+synchronize on return only when the effective context or backend differs.
+Twelve balanced profiling-off Release pairs were all inconclusive. Means were
+`-0.384474%`/`-0.204769%` for Permute, `-0.835582%`/`+0.613827%` for List and
+`+1.440812%`/`+0.936526%` for Sieve in `rxvm`/`rxbvm`. Optimized Sieve performs
+zero bytecode calls, so its adverse movement cannot be numeric-context work and
+again exposes global native-code layout sensitivity. C3R01 was discarded; its
+compact raw record is retained at
+[`evidence/2026-07-27-perf2-06-vm-c3-tactical-rejection/`](evidence/2026-07-27-perf2-06-vm-c3-tactical-rejection/).
+
+Do not repeat C2-A/B, C2R01, an exact reset list, quickened clearing, C3R01 or
+cleanup-only reshaping of the flattened interpreter on the current Apple
+product. Reopening requires a materially different ownership/representation
+contract or cross-platform counter evidence that identifies a stable mechanism
+and includes zero-work drift controls. Source tidiness or smaller text alone is
+not evidence of a faster VM.
 
 | Stable ID | Hypothesis and surface | Semantic/evidence gate | Disposition |
 | --- | --- | --- | --- |
 | PERF2-06-C2R01 | One contiguous fixed-core reset, then a procedure-static `may_rebind_core` flag, can reduce recycled frame-entry work without touching mapping writes/reads; arguments remain a separately rebound tail. | Exact coverage of `LOAD`/`SWAP`/`LINK*`/private mapping effects, recursion, fixed/count calls, refs, signals, TRACE, late load, both VMs, Release time and text. | rejected: correct but adverse and code-layout-sensitive at 34 pairs |
 | PERF2-06-C2R02 | Private quickening may remove exact nonescaping `LINK/LINKATTR; use; UNLINK` mappings rather than accelerating their cleanup. | No activation pointer/state in the shared image; exact debug/signal/reference/failure/resume fallback and independent code-layout verdict. | deferred; C2R01 provides no reason to advance clearing work |
 | PERF2-06-C2R03 | A linear segmented control stack can point to procedure-affine non-moving value slabs, preserving same-procedure/register payload capacity without retaining the full frame/control design. | Compare strict LIFO value slices; exact reference/native/object/decimal teardown and signal unwind; context/thread ownership; high-water memory; fixed-call embedded arguments; no hot per-register transfer ledger. | post-verdict architecture candidate; control/mapping split remains PERF2-06, payload-capacity policy routes to PERF2-07; analysis only, not approved |
+| PERF2-06-C3R01 | Skip decimal-backend synchronization when child entry copies the already-active effective numeric context; on return always rebind the pointer and synchronize only for a changed context/backend. | Exact five-field context equality and plugin ownership; decimal modes and nested context changes; both VMs; call-heavy Release cells plus zero-call Sieve drift control. | rejected: all 12-pair intervals inconclusive; Sieve moved adversely despite zero calls, so no stable mechanism beat code-layout noise |
 
 ### Objective
 
@@ -1070,6 +1096,9 @@ use evidence changes the ranking.
 | Add broad superinstruction families from raw RXSEQ counts | Rejected without effects, overlap, footprint and complete-product proof. |
 | Remove `RX_FLATTEN` | Rejected: it reduced text but was neutral/slower. |
 | Mark the interrupt path globally `unlikely` | Rejected after severe Apple-clang layout regressions. |
+| Retry fixed-core reset, reset-needed flags, exact reset lists or quickened clearing | Rejected by C2R01 and its zero-reuse Sieve control; no retry without a materially different mapping contract and new profile selection. |
+| Changed-only numeric/plugin synchronization in the current frame model | Rejected as C3R01: call-heavy movement was inconclusive and zero-call Sieve moved adversely. |
+| Cleanup-only reshaping of the flattened interpreter | Not a performance candidate: repeated zero-work controls demonstrate global compiler/layout sensitivity. Require an independently measured mechanism and drift controls. |
 
 Opcode-indexed/switch dispatch remains a safe portable comparison and fallback,
 not a rejected design.

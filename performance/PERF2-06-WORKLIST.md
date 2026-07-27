@@ -1,7 +1,8 @@
 # PERF2-06 VM execution-engine worklist
 
-Status: VM-C1b explicitly accepted with recorded `rxbvm` code-layout debt;
-Debug/Release closeout green and VM-C2 clean-base PoC authorized
+Status: VM-C1b accepted and green; C2 allocation/reset and C3 numeric-sync
+PoCs rejected; no further Apple tactical frame tuning queued; cross-platform
+`PERF2-06-D01` completion remains
 
 Started: 2026-07-26
 
@@ -329,6 +330,43 @@ ASan, install/package and a cross-platform campaign were not required by this
 shortest accepted closeout. Adrian authorized VM-C2 as the next separate PoC;
 it must start from the clean committed base and remain independently
 discardable.
+
+## Final tactical review and stop
+
+On 2026-07-27 Adrian rejected the C2 allocation/reset family and requested one
+last evidence-gated review of the accepted frame implementation. All rejected
+C2 source changes were restored. The review found no further allocation,
+mapping-reset or reference-cleanup candidate: fresh frames are already rare,
+C2-A/B and C2R01 exhaust the current mapping forms, and reference release is
+already guarded by `has_reference_lifetimes`.
+
+The only bounded measured candidate, `PERF2-06-C3R01`, removed redundant
+decimal-backend synchronization after exact inherited-context copies and
+synchronized a returning parent only when its five-field numeric context or
+backend differed. Both VM products built, but twelve balanced profiling-off
+Release pairs did not establish a win. Permute/List means ranged from
+`-0.835582%` to `+0.613827%`; zero-call Sieve moved `+1.440812%`/`+0.936526%`
+in `rxvm`/`rxbvm`. All intervals crossed zero. The candidate was discarded at
+the Release stop; no correctness or production-selection claim is made.
+
+The retained compact record is
+`evidence/2026-07-27-perf2-06-vm-c3-tactical-rejection/`. Do not retry C2-A/B,
+C2R01, exact reset lists, quickened clearing, C3R01 or cleanup-only interpreter
+reshaping on the current Apple product. Reopen only for a materially different
+ownership/representation contract or cross-platform counter evidence with
+zero-work drift controls.
+
+Remaining PERF2-06 scope is therefore bounded to:
+
+1. complete `PERF2-06-D01` on Apple ARM64, Linux ARM64 GCC/Clang, Intel
+   x86-64 GCC/Clang and supported Windows x86-64, with Sieve drift controls and
+   call-heavy guards;
+2. use those native counters to decide whether compact/private stream or
+   hot/cold partitioning deserves an architecture comparison; and
+3. issue the cross-platform recommendation. `PERF2-11` Gate E owns the final
+   default/private execution-architecture decision. C2R03 remains an
+   unapproved architecture candidate shared with PERF2-07, not current
+   PERF2-06 implementation work.
 
 ## Resumption rule
 

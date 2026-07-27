@@ -21,8 +21,10 @@ Adrian later authorized a results-only closeout commit after rejecting R1/R2.
 - `origin/develop`: `d1c5245d49c0bd9cc48a7d33ef16f2f4555cc986`.
 - Base relation to `origin/develop`: `+9/-0`.
 - Base and new isolated worktree were clean before this worklist.
-- The rejected C2-A/C2-B implementation and evidence remain untouched in the
-  earlier discardable worktree.
+- At PoC start the rejected C2-A/C2-B implementation and evidence remained
+  untouched in the earlier discardable worktree. After the final tactical
+  review, its interpreter source changes were restored while its result
+  worklist/evidence remained available.
 
 ## Selected question and falsifiable hypothesis
 
@@ -190,8 +192,8 @@ profiling-off Release verdict.
 
 R1 and R2 are rejected. Do not install either implementation and do not add an
 exact reset list or quickened clearing form from this result. The isolated
-branch remains dirty and discardable so the accepted base can be recovered
-without a revert.
+implementation branch/worktree was removed after the final tactical review;
+the accepted base required no revert.
 
 ## Post-verdict payload-affinity conclusion
 

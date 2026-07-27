@@ -45,6 +45,29 @@ wrong.
 The diagnostic work-500 timing, native samples and pad control are retained
 under `diagnostics/`. They do not alter the original 12-pair verdict block.
 
+## Reinforcing zero-work controls
+
+Two later rejected investigations make this debt a standing guard against
+unmeasured cleanup, not merely a VM-C1b anomaly:
+
+- C2R01's fixed-core reset candidate moved `rxbvm` Sieve by `+1.801135%` and
+  its static-flag form by `+2.284914%`, although optimized Sieve reused no frame
+  and R1 executed no reset or classifier work. Smaller `run()`/text did not
+  produce a stable portfolio win.
+- C3R01's changed-only numeric-context synchronization candidate likewise
+  cannot execute its intended child-entry/return saving in optimized Sieve,
+  which has zero bytecode calls. Over 12 balanced pairs Sieve nevertheless
+  moved `+1.440812%` in `rxvm` and `+0.936526%` in `rxbvm`; all C3R01 workload
+  intervals crossed zero. The candidate was discarded immediately.
+
+Consequently, do not treat source simplification, fewer duplicated statements,
+smaller text or an operation-local machine saving as a performance result in
+the flattened interpreter. Every future candidate needs an independently
+measured mechanism plus a zero-work drift control in both VMs. Do not repeat
+C2R01, exact reset lists, quickened clearing or C3R01 on the current Apple
+product without a materially changed ownership/representation contract or the
+cross-platform counter matrix below.
+
 ## Required revisit matrix
 
 Before final VM architecture selection, compare the exact parent of the
