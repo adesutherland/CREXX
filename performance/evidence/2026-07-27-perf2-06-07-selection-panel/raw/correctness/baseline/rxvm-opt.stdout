@@ -1,0 +1,6 @@
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gb08611179db5 20260727
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+FAIL: direct STRLEN result mismatch: 0 source=2.2

@@ -1,0 +1,306 @@
+/*
+ * Level B state-machine port of the Are We Fast Yet? Richards benchmark.
+ * Derived from the SOM/Java Richards benchmark; see THIRD_PARTY_NOTICES.md.
+ *
+ * The scheduler, queues, packet payloads and task states are preserved. A
+ * task-kind dispatch replaces the upstream language-specific closures so the
+ * same representation can be reviewed across cREXX, ooRexx and NetRexx.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+queue_count = 0
+hold_count = 0
+do iteration = 1 to repetitions
+  scheduler = .RichardsScheduler()
+  result = scheduler.run()
+  queue_count = scheduler.queueCount()
+  hold_count = scheduler.holdCount()
+  if result = 0 then
+    return fail("expected queue/hold counts 23246/9297, got " || queue_count || "/" || hold_count)
+end
+
+say "benchmark=awfy_richards repetitions="repetitions "queue_packets="queue_count "holds="hold_count
+say "PASS: AWFY Richards"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+RichardsScheduler: class
+  task_link = .int[0 to 5]
+  task_priority = .int[0 to 5]
+  task_input = .int[0 to 5]
+  task_pending = .boolean[0 to 5]
+  task_waiting = .boolean[0 to 5]
+  task_holding = .boolean[0 to 5]
+  handler_work = .int[0 to 5]
+  handler_device = .int[0 to 5]
+  device_pending = .int[0 to 5]
+  packet_link = .int[]
+  packet_identity = .int[]
+  packet_kind = .int[]
+  packet_datum = .int[]
+  packet_data0 = .int[]
+  packet_data1 = .int[]
+  packet_data2 = .int[]
+  packet_data3 = .int[]
+  task_list = .int
+  current_task = .int
+  current_identity = .int
+  packet_count = .int
+  queue_packet_count = .int
+  hold_count = .int
+  idle_control = .int
+  idle_count = .int
+  worker_destination = .int
+  worker_count = .int
+
+  *: factory
+    task_list = -1
+    current_task = -1
+    current_identity = 0
+    packet_count = 0
+    queue_packet_count = 0
+    hold_count = 0
+    idle_control = 1
+    idle_count = 10000
+    worker_destination = 2
+    worker_count = 0
+    return
+
+  run: method = .boolean
+    call createTask 0, 0, 0, 0, 0, 0
+
+    work_queue = createPacket(0, 1, 1)
+    work_queue = createPacket(work_queue, 1, 1)
+    call createTask 1, 1000, work_queue, 1, 1, 0
+
+    work_queue = createPacket(0, 4, 0)
+    work_queue = createPacket(work_queue, 4, 0)
+    work_queue = createPacket(work_queue, 4, 0)
+    call createTask 2, 2000, work_queue, 1, 1, 0
+
+    work_queue = createPacket(0, 5, 0)
+    work_queue = createPacket(work_queue, 5, 0)
+    work_queue = createPacket(work_queue, 5, 0)
+    call createTask 3, 3000, work_queue, 1, 1, 0
+
+    call createTask 4, 4000, 0, 0, 1, 0
+    call createTask 5, 5000, 0, 0, 1, 0
+    call schedule
+    if queue_packet_count <> 23246 then return 0
+    if hold_count <> 9297 then return 0
+    return 1
+
+  queueCount: method = .int
+    return queue_packet_count
+
+  holdCount: method = .int
+    return hold_count
+
+  createTask: method = .void
+    arg identity = .int, priority = .int, input = .int, pending = .boolean, waiting = .boolean, holding = .boolean
+    task_link[identity] = task_list
+    task_priority[identity] = priority
+    task_input[identity] = input
+    task_pending[identity] = pending
+    task_waiting[identity] = waiting
+    task_holding[identity] = holding
+    task_list = identity
+    return
+
+  createPacket: method = .int
+    arg link = .int, identity = .int, kind = .int
+    packet_count = packet_count + 1
+    packet_link[packet_count] = link
+    packet_identity[packet_count] = identity
+    packet_kind[packet_count] = kind
+    packet_datum[packet_count] = 0
+    packet_data0[packet_count] = 0
+    packet_data1[packet_count] = 0
+    packet_data2[packet_count] = 0
+    packet_data3[packet_count] = 0
+    return packet_count
+
+  appendPacket: method = .int
+    arg packet = .int, queue_head = .int
+    packet_link[packet] = 0
+    if queue_head = 0 then return packet
+    mouse = queue_head
+    link = packet_link[mouse]
+    do while link <> 0
+      mouse = link
+      link = packet_link[mouse]
+    end
+    packet_link[mouse] = packet
+    return queue_head
+
+  setRunning: method = .void
+    arg identity = .int
+    task_pending[identity] = 0
+    task_waiting[identity] = 0
+    task_holding[identity] = 0
+    return
+
+  setPacketPending: method = .void
+    arg identity = .int
+    task_pending[identity] = 1
+    task_waiting[identity] = 0
+    task_holding[identity] = 0
+    return
+
+  isHoldingOrWaiting: method = .boolean
+    arg identity = .int
+    if task_holding[identity] then return 1
+    if task_pending[identity] then return 0
+    if task_waiting[identity] then return 1
+    return 0
+
+  isWaitingWithPacket: method = .boolean
+    arg identity = .int
+    if task_pending[identity] = 0 then return 0
+    if task_waiting[identity] = 0 then return 0
+    if task_holding[identity] then return 0
+    return 1
+
+  addInput: method = .int
+    arg identity = .int, packet = .int, old_task = .int
+    if task_input[identity] = 0 then do
+      task_input[identity] = packet
+      task_pending[identity] = 1
+      if task_priority[identity] > task_priority[old_task] then return identity
+    end
+    else task_input[identity] = appendPacket(packet, task_input[identity])
+    return old_task
+
+  findTask: method = .int
+    arg identity = .int
+    if identity < 0 | identity > 5 then return -1
+    return identity
+
+  holdSelf: method = .int
+    hold_count = hold_count + 1
+    task_holding[current_task] = 1
+    return task_link[current_task]
+
+  markWaiting: method = .int
+    task_waiting[current_task] = 1
+    return current_task
+
+  release: method = .int
+    arg identity = .int
+    task = findTask(identity)
+    if task < 0 then return -1
+    task_holding[task] = 0
+    if task_priority[task] > task_priority[current_task] then return task
+    return current_task
+
+  queuePacket: method = .int
+    arg packet = .int
+    task = findTask(packet_identity[packet])
+    if task < 0 then return -1
+    queue_packet_count = queue_packet_count + 1
+    packet_link[packet] = 0
+    packet_identity[packet] = current_identity
+    return addInput(task, packet, current_task)
+
+  runTask: method = .int
+    arg identity = .int
+    message = 0
+    if isWaitingWithPacket(identity) then do
+      message = task_input[identity]
+      task_input[identity] = packet_link[message]
+      if task_input[identity] = 0 then call setRunning identity
+      else call setPacketPending identity
+    end
+    select
+      when identity = 0 then return runIdler()
+      when identity = 1 then return runWorker(message)
+      when identity = 2 | identity = 3 then return runHandler(identity, message)
+      when identity = 4 | identity = 5 then return runDevice(identity, message)
+      otherwise return -1
+    end
+    return -1
+
+  runIdler: method = .int
+    idle_count = idle_count - 1
+    if idle_count = 0 then return holdSelf()
+    if (idle_control <and> 1) = 0 then do
+      idle_control = idle_control <idiv> 2
+      return release(4)
+    end
+    idle_control = (idle_control <idiv> 2) <xor> 53256
+    return release(5)
+
+  runWorker: method = .int
+    arg work = .int
+    if work = 0 then return markWaiting()
+    if worker_destination = 2 then worker_destination = 3
+    else worker_destination = 2
+    packet_identity[work] = worker_destination
+    packet_datum[work] = 0
+    do i = 0 to 3
+      worker_count = worker_count + 1
+      if worker_count > 26 then worker_count = 1
+      value = 65 + worker_count - 1
+      if i = 0 then packet_data0[work] = value
+      else if i = 1 then packet_data1[work] = value
+      else if i = 2 then packet_data2[work] = value
+      else packet_data3[work] = value
+    end
+    return queuePacket(work)
+
+  runHandler: method = .int
+    arg identity = .int, work = .int
+    if work <> 0 then do
+      if packet_kind[work] = 1 then
+        handler_work[identity] = appendPacket(work, handler_work[identity])
+      else
+        handler_device[identity] = appendPacket(work, handler_device[identity])
+    end
+    work_packet = handler_work[identity]
+    if work_packet = 0 then return markWaiting()
+    count = packet_datum[work_packet]
+    if count >= 4 then do
+      handler_work[identity] = packet_link[work_packet]
+      return queuePacket(work_packet)
+    end
+    device_packet = handler_device[identity]
+    if device_packet = 0 then return markWaiting()
+    handler_device[identity] = packet_link[device_packet]
+    if count = 0 then packet_datum[device_packet] = packet_data0[work_packet]
+    else if count = 1 then packet_datum[device_packet] = packet_data1[work_packet]
+    else if count = 2 then packet_datum[device_packet] = packet_data2[work_packet]
+    else packet_datum[device_packet] = packet_data3[work_packet]
+    packet_datum[work_packet] = count + 1
+    return queuePacket(device_packet)
+
+  runDevice: method = .int
+    arg identity = .int, work = .int
+    if work = 0 then do
+      pending = device_pending[identity]
+      if pending = 0 then return markWaiting()
+      device_pending[identity] = 0
+      return queuePacket(pending)
+    end
+    device_pending[identity] = work
+    return holdSelf()
+
+  schedule: method = .void
+    current_task = task_list
+    do while current_task >= 0
+      if isHoldingOrWaiting(current_task) then current_task = task_link[current_task]
+      else do
+        current_identity = current_task
+        current_task = runTask(current_task)
+      end
+    end
+    return

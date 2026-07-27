@@ -1,6 +1,6 @@
 # PERF2-06/07 combined Mac value and VM-ownership worklist
 
-Status: planned; start in the next session after live-state verification
+Status: Apple slice complete; V1R01-R1 accepted and closeout green
 
 Planned: 2026-07-27
 
@@ -10,6 +10,22 @@ evidence-led slice. This joins only the still-relevant PERF2-06 ownership
 boundary to PERF2-07. It does not reopen rejected frame reset/allocation PoCs,
 complete `PERF2-06-D01`, select a final execution stream/default VM, or make a
 cross-platform release claim.
+
+First-stop evidence and the complete disposition panel are retained in
+[`evidence/2026-07-27-perf2-06-07-selection-panel/`](evidence/2026-07-27-perf2-06-07-selection-panel/).
+Adrian selected the smallest material candidate, `PERF2-06-07-V1R01`, for its
+mandatory first ordinary Release verdict. The rejected initial linear-leaf form
+is retained in
+[`evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/`](evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/).
+Adrian approved a proof-wide rework. V1R01-R1 restores the ordinary receiver
+path and admits nested `§this` through arbitrary branches/calls when there is
+at most one explicit return, including fallthrough; multiple-return methods
+retain materialisation. Its favorable capped first Release verdict is retained
+in
+[`evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/).
+Adrian accepted that verdict. The exact candidate is installed in the main
+tree, and proportional Apple closeout is green and retained in
+[`evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/).
 
 ## Approved programme sequence
 
@@ -101,21 +117,21 @@ cross-platform counter matrix selects it with zero-work drift controls.
 
 ## Stage 0 — live freeze and evidence audit
 
-- [ ] Read repository and performance instructions plus the relevant
+- [x] Read repository and performance instructions plus the relevant
       interpreter/value/compiler documentation.
-- [ ] Record branch, HEAD, upstream, dirty scope and all linked worktrees.
-- [ ] Verify checksums for the accepted PERF2-01 baseline, PERF2-02 direct
+- [x] Record branch, HEAD, upstream, dirty scope and all linked worktrees.
+- [x] Verify checksums for the accepted PERF2-01 baseline, PERF2-02 direct
       reference result, PERF2-05 value/relink assists, PERF2-06 VM audit,
       VM-C1b verdict, C2/reset rejections and C3 tactical rejection actually
       used.
-- [ ] Record Apple model/CPU, OS, logical CPUs, AC/low-power/thermal/load state,
+- [x] Record Apple model/CPU, OS, logical CPUs, AC/low-power/thermal/load state,
       compiler, CMake, Ninja and build options.
-- [ ] Identify clean ordinary profiling-off Release, profiling/count and any
+- [x] Identify clean ordinary profiling-off Release, profiling/count and any
       native-sampling builds without sharing mutable artifacts.
-- [ ] Verify current `sizeof(value)`, alignment, important field offsets,
+- [x] Verify current `sizeof(value)`, alignment, important field offsets,
       `stack_frame` size and plugin/native/reference side structures on Apple
       ARM64. Record target-ABI-dependent facts rather than generalizing them.
-- [ ] Freeze exact optimized/no-opt workload and library hashes for selected
+- [x] Freeze exact optimized/no-opt workload and library hashes for selected
       cells.
 
 ## Stage 1 — correctness prerequisite and representation audit
@@ -126,15 +142,15 @@ Reproduce the exact empty-string, decimal `2.2`, same-destination `dcopy; dtos`,
 then `strlen` sequence. The required result is string `"2.2"` and codepoint
 length `3`; the current retained observation returns stale length `0`.
 
-- [ ] Run optimized/no-opt on `rxvm` and `rxbvm` with byte-identical authored
+- [x] Run optimized/no-opt on `rxvm` and `rxbvm` with byte-identical authored
       source/RXAS where expected.
-- [ ] Audit every in-place operation that can replace string bytes while leaving
+- [x] Audit every in-place operation that can replace string bytes while leaving
       cached byte/codepoint, numeric, decimal, binary or object validity state.
-- [ ] Separate the correctness fix from any performance claim. Define which
+- [x] Separate the correctness fix from any performance claim. Define which
       representation-validity bits/caches must be invalidated or preserved.
-- [ ] Produce a distinguishing regression matrix, including typed-null,
+- [x] Produce a distinguishing regression matrix, including typed-null,
       non-empty destination, Unicode/codepoint and alias/reference controls.
-- [ ] Include V3-R01 in the selection panel. Do not silently install it while
+- [x] Include V3-R01 in the selection panel. Do not silently install it while
       measuring unrelated value work.
 
 ## Stage 2 — current combined attribution
@@ -164,6 +180,14 @@ The refreshed panel, not pre-PERF2-02 numbers, decides whether Bounce reference
 storage or Richards copying still dominates. A zero current mechanism count is
 a rejection, not permission to optimize a historical profile.
 
+Completed result: current optimized Richards dominates whole-value copying at
+73,307,574 recursive copies/582,076,729 bytes per profiled run in both VMs;
+optimized Permute is the secondary copy-owner cell at 10,259,602/74,012,810.
+Bounce retains large reference traffic but no isolated statically redundant
+helper. Broad representation-cache retention has zero current mechanism count.
+Allocation histories show high churn but only 1.5-1.7 MB high water, selecting
+copy elimination ahead of pooling or slabs.
+
 ## Stage 3 — candidate and placement panel
 
 Every candidate needs exact mathematical/semantic correctness, a machine-work
@@ -172,13 +196,13 @@ fallback/failure behavior and a decisive end-to-end cell.
 
 | Stable ID | Candidate | Required pre-timing proof | Initial disposition |
 | --- | --- | --- | --- |
-| PERF2-06-07-V1R01 | Eliminate a dead/full value operation or place a result directly using compiler/RXAS flow and typed copy/move facts. | Final-stream liveness/alias/exception/return proof; fewer exact operations/bytes; no hidden payload release. | preferred first owner when current profiles select it |
-| PERF2-06-07-V1R02 | Reduce residual direct reference-helper/root/tree work without runtime site state. | Exact reference identity, owner discovery, invalidation, escape and teardown; lower helper/heap work in current Bounce-like cells. | panel only; PERF2-02 forbids assuming quickening |
-| PERF2-06-07-V2R01 | Payload-shape fast copy/move/clear/reset for proved scalar, string, binary or simple non-native shape. | Complete destination cleanup and validity flags; no object/native/reference shortcut; exact operation/byte reduction. | panel only after V1 ceiling |
-| PERF2-06-07-V3R01 | Correct and then selectively retain valid string/numeric/decimal representations across conversions. | Distinguishing stale-cache regression; mutation invalidation; numeric context and memory-growth accounting. | correctness prerequisite plus bounded performance panel |
-| PERF2-06-07-V5R01 | Size/shape-specific payload capacity reuse or pooling. | Allocation-stack/lifetime/size-class/high-water proof; teardown, plugin/native and sanitizer visibility; beats narrower V1-V3. | conditional; request counts/RSS alone cannot select it |
-| PERF2-06-07-C2R03 | Procedure-affine non-moving value slabs with a compact linear control stack and fixed-call embedded arguments. | A new payload-capacity mechanism beyond rejected pointer-map/reset forms; reference/native/object/decimal/signal/thread ownership; no hot mapping ledger; high-water comparison. | architecture option only if current V5 evidence selects it; Adrian decision required |
-| PERF2-06-07-V6R01 | Hot/cold `value` representation or broad layout split. | Demonstrated cache/footprint owner on current products; ABI blast radius; complete payload semantics; supported-platform plan. | defer to hardware architecture matrix unless narrower work cannot close a measured cost |
+| PERF2-06-07-V1R01 | Eliminate a dead/full value operation or place a result directly using compiler/RXAS flow and typed copy/move facts. | Final-stream liveness/alias/exception/return proof; fewer exact operations/bytes; no hidden payload release. | **accepted as V1R01-R1:** the rejected initial form disabled ordinary receiver sharing. The rework restores that path and uses the widest current proof: nested `§this` direct placement for no more than one explicit return, arbitrary internal branches/calls and fallthrough, with alias proof preserved through later clones. Richards is -21.224%/-21.076%, Permute -58.019%/-56.466%, Bounce is exact-work neutral, and no first-verdict or closeout guard hits. |
+| PERF2-06-07-V1R02 | Reduce residual direct reference-helper/root/tree work without runtime site state. | Exact reference identity, owner discovery, invalidation, escape and teardown; lower helper/heap work in current Bounce-like cells. | defer: Bounce traffic is material, but no safely redundant current helper is isolated |
+| PERF2-06-07-V2R01 | Payload-shape fast copy/move/clear/reset for proved scalar, string, binary or simple non-native shape. | Complete destination cleanup and validity flags; no object/native/reference shortcut; exact operation/byte reduction. | defer behind V1: dominant generic work is induced by avoidable full-object copies |
+| PERF2-06-07-V3R01 | Correct and then selectively retain valid string/numeric/decimal representations across conversions. | Distinguishing stale-cache regression; mutation invalidation; numeric context and memory-growth accounting. | correctness accepted; performance retention deferred because the current broad cache mechanism count is zero |
+| PERF2-06-07-V5R01 | Size/shape-specific payload capacity reuse or pooling. | Allocation-stack/lifetime/size-class/high-water proof; teardown, plugin/native and sanitizer visibility; beats narrower V1-V3. | defer: 1.5-1.7 MB high water and copy-induced churn select narrower V1 |
+| PERF2-06-07-C2R03 | Procedure-affine non-moving value slabs with a compact linear control stack and fixed-call embedded arguments. | A new payload-capacity mechanism beyond rejected pointer-map/reset forms; reference/native/object/decimal/signal/thread ownership; no hot mapping ledger; high-water comparison. | reject from current panel: evidence entrance gate not met; Adrian architecture decision still required to reopen |
+| PERF2-06-07-V6R01 | Hot/cold `value` representation or broad layout split. | Demonstrated cache/footprint owner on current products; ABI blast radius; complete payload semantics; supported-platform plan. | defer to supported-platform architecture matrix; Adrian architecture/ABI decision required |
 
 Required comparisons include status quo, earliest safe static owner, narrow
 helper/representation form and a hand-equivalent/native ceiling where useful.
@@ -186,13 +210,13 @@ Do not implement every row merely because it is listed.
 
 ## First mandatory stop — panel selection
 
-- [ ] Present current attribution and the complete disposition table.
-- [ ] Name the smallest candidate with a material machine ceiling and its exact
+- [x] Present current attribution and the complete disposition table.
+- [x] Name the smallest candidate with a material machine ceiling and its exact
       target/guard cells.
-- [ ] Identify candidates rejected without timing and why.
-- [ ] Identify any language, public RXAS/RXBIN, ABI or architecture decision and
+- [x] Identify candidates rejected without timing and why.
+- [x] Identify any language, public RXAS/RXBIN, ABI or architecture decision and
       stop for Adrian.
-- [ ] Do not install a production optimization, run broad QA, polish a rejected
+- [x] Do not install a production optimization, run broad QA, polish a rejected
       PoC, start PERF2-08/09 or commit implementation work before selection.
 
 ## Stage 4 — approved PoC and production ladder
@@ -216,19 +240,43 @@ Formal portfolio guards remain zero correctness failures, no worse than 1%
 common aggregate, no worse than 3% comparable Tier A cell, plus the separate
 lifecycle, RSS and artifact budgets in governance.
 
+Current approved-slice checkpoint (2026-07-27):
+
+- [x] rejected initial form and its Bounce causal review remain retained;
+- [x] proof-wide V1R01-R1 source/build identity and replayable patch retained;
+- [x] focused semantic/ownership gate passes 10/10, including single-return
+      branches, nested calls/clone passes, fallthrough, multiple-return fallback
+      and the established ordinary-object path;
+- [x] exact dual-VM operation/byte reduction proved: Richards removes
+      16,404,842 copies/130,345,888 bytes; Permute `-a 50` removes
+      10,078,400/72,564,000; Bounce selected counts are exactly unchanged;
+- [x] ordinary profiling-off Release product frozen;
+- [x] initial 12 pairs plus two governed appends reach the 36-pair cap for six
+      workloads, both VMs and both products; 888/888 executions pass;
+- [x] first verdict recommends accept: Richards and Permute are clear favorable,
+      common aggregates are 1.244352x/1.242301x, and no 3% workload, 1%
+      aggregate or artifact-size guard hits;
+- [x] Adrian accepted V1R01-R1;
+- [x] acceptance-only closeout passes: focused Debug/Release 10/10, broad
+      Debug and profiling-off Release 1,925/1,925 each, focused ASan 10/10
+      (`detect_leaks=0` because Apple LSan is unsupported), 10-observation
+      lifecycle controls, 72 RSS samples, 12/12 retained-RXBIN cells and an
+      isolated 133-file install with both VMs. The configured project has no
+      CPack `package` target.
+
 ## Stage 5 — Mac closeout and hardware handover
 
 PERF2-06/07 Apple completion requires:
 
-- [ ] every high-cost current value/reference shape has an accepted slice or an
+- [x] every high-cost current value/reference shape has an accepted slice or an
       evidence-backed reject/defer/owner transfer;
-- [ ] V3-R01 has a correct explicit disposition;
-- [ ] rejected C2/C3 forms remain closed and C2R03/V6 are either selected for a
+- [x] V3-R01 has a correct explicit disposition;
+- [x] rejected C2/C3 forms remain closed and C2R03/V6 are either selected for a
       later architecture decision or explicitly deferred;
-- [ ] accepted Apple product commits have focused and proportional broad QA;
-- [ ] affected Apple Tier A cells, lifecycle, RSS and artifacts are retained;
-- [ ] roadmap, worklist, technical docs and evidence checksums reconcile; and
-- [ ] no cross-platform or final-superiority claim is made.
+- [x] accepted Apple product commits have focused and proportional broad QA;
+- [x] affected Apple Tier A cells, lifecycle, RSS and artifacts are retained;
+- [x] roadmap, worklist, technical docs and evidence checksums reconcile; and
+- [x] no cross-platform or final-superiority claim is made.
 
 The hardware handover bundle must contain:
 
@@ -245,8 +293,9 @@ The hardware handover bundle must contain:
 
 ## Resumption rule
 
-Reread repository/performance instructions and this worklist, verify the live
-roadmap and Git state, replay only the accepted evidence actually used, and
-resume at the first unchecked item. Keep verbose builds/profiles in temporary
-logs and inspect focused slices. Never allow an isolated PoC or diagnostic build
-to become the timing baseline by accident.
+The Apple PERF2-06/07 slice is complete. The next approved programme item is the
+PERF2-08 equivalence/capability gate in a new session; do not treat that ordering
+as authorization to start it here. For any later audit, reread repository and
+performance instructions, verify live roadmap/Git state and replay only the
+accepted checksum-closed evidence actually used. Never allow an isolated PoC or
+diagnostic build to become an ordinary timing baseline.

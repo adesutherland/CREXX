@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gb08611179db5.dirty 20260727",
+  "result": "pass",
+  "started_utc": "2026-07-27T12:13:39+0000",
+  "completed_utc": "2026-07-27T12:14:15+0000",
+  "repository": {"branch":"develop","commit":"b08611179db5ff4257c3be3103f3aeab55ea5b50","dirty_scope":[" M compiler/tests/CMakeLists.txt"," M docs/ai-context/RXVM_INTERPRETER.md"," M interpreter/rxvmintp.c"," M interpreter/rxvmvars.h"," M performance/PERF2-06-07-WORKLIST.md"," M performance/README.md"," M performance/ROADMAP.md","?? compiler/tests/perf2_07_v3_representation.cmake","?? compiler/tests/rexx_src/perf2_07_v3_representation.crexx","?? performance/evidence/2026-07-27-perf2-06-07-selection-panel/","?? performance/tools/run_evidence_bundle.rxas"]},
+  "host": {"os":"Darwin 25.5.0 arm64","cpu":"Apple M5"},
+  "driver_arguments": ["--manifest","/private/tmp/crexx-perf2-0607.HOrlKC/current-linked-steady-manifest.txt","--release-build","/private/tmp/crexx-perf2-0607.HOrlKC/build-v3-fixed","--profile-build","/private/tmp/crexx-perf2-0607.HOrlKC/build-v3-fixed-counts","--vm","rxbvm","--profile-mode","counts","--output-dir","/private/tmp/crexx-perf2-0607.HOrlKC/final-linked-steady-rxbvm","--force"],
+  "input_manifest": {"path":"/private/tmp/crexx-perf2-0607.HOrlKC/current-linked-steady-manifest.txt","sha256":"82c7e632a8a13644b36296695ca1725517d00a8ed1e8f78c70502adda32c5da4"},
+  "ordinary_release": {"build":"/private/tmp/crexx-perf2-0607.HOrlKC/build-v3-fixed","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxbvm","vm_version":"crexx-1.0.0-beta.3+local.gb08611179db5.dirty (Bytecode Mode)","vm_sha256":"3468d9c0f5006e4dcdf04f436611a881810766532723c186c69eab12b66e05e8"},
+  "profile_release": {"build":"/private/tmp/crexx-perf2-0607.HOrlKC/build-v3-fixed-counts","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxbvm","profile_mode":"counts","vm_version":"crexx-1.0.0-beta.3+local.gb08611179db5.dirty (Bytecode Mode)","vm_sha256":"92fde641e6936370a54709daeaf6ca3fe0ec2037af2a71374587bfdd40f0366d","rxseq_sha256":"79413938bf29595387d0842b96fe457bf2ecd0b8a14b94c5d6ca0c3548236308"},
+  "toolchain": {"cmake":"cmake version 4.3.2","compiler_path":"/usr/bin/cc","compiler":"Apple clang version 21.0.0 (clang-2100.1.1.101)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/private/tmp/crexx-perf2-0607.HOrlKC/final-linked-steady-rxbvm"
+}

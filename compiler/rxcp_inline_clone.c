@@ -84,6 +84,31 @@ static int inline_duplicate_scope_symbols(Scope *old_scope,
         }
     }
 
+    /* A receiver already coalesced by an earlier nested-inline pass denotes
+     * the same storage after its containing body is cloned again. Preserve
+     * that proved relation, remapping the target when it belongs to the body
+     * being cloned and retaining the caller symbol when it does not. */
+    for (i = 0; symbols[i]; i++) {
+        Symbol *old_symbol;
+        Symbol *new_symbol;
+        Symbol *new_alias;
+
+        old_symbol = symbols[i];
+        if (!old_symbol || !old_symbol->is_this || !old_symbol->inline_value_alias) continue;
+        new_symbol = inline_find_mapped_symbol(state, old_symbol);
+        if (!new_symbol) {
+            free(symbols);
+            return 0;
+        }
+        new_alias = inline_find_mapped_symbol(state, old_symbol->inline_value_alias);
+        if (!new_alias) new_alias = old_symbol->inline_value_alias;
+        if (new_alias == new_symbol) {
+            free(symbols);
+            return 0;
+        }
+        new_symbol->inline_value_alias = new_alias;
+    }
+
     free(symbols);
     return 1;
 }

@@ -147,6 +147,31 @@ RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
 }
 #endif
 
+/* Complete an in-place string-byte replacement. Public/compiler type flags and
+ * the value's other representations remain unchanged; VM-private string
+ * validity and cursor state describe only the newly written byte span. */
+RX_INLINE void finish_string_write(value *v, size_t length) {
+    v->string_length = length;
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_char_pos = 0;
+    refresh_utf8_flags(v);
+#else
+    clear_vm_private_flags(v);
+#endif
+}
+
+/* Numeric formatting and hex rendering are known to produce ASCII. */
+RX_INLINE void finish_ascii_string_write(value *v, size_t length) {
+    v->string_length = length;
+    v->string_pos = 0;
+#ifndef NUTF8
+    mark_ascii_string_valid_count(v);
+#else
+    clear_vm_private_flags(v);
+#endif
+}
+
 /* Clears the binary payload and runs native cleanup if the payload owns native resources. */
 RX_INLINE void clear_binary_payload(value *v) {
     if (!v) return;

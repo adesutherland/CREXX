@@ -1,0 +1,39 @@
+ compiler/rxcp_inline_bind.c                        |  24 ++-
+ compiler/rxcp_inline_clone.c                       |  25 ++++
+ compiler/tests/CMakeLists.txt                      |  18 ++-
+ compiler/tests/golden/opt/18_array_class.rxas      |  39 +++--
+ .../golden/opt/inline_test_class_methods.rxas      | 161 ++++++++++-----------
+ ...ine_test_mutating_method_scalar_attr_return.out |   8 +
+ ...e_test_mutating_method_scalar_attr_return.crexx |  54 +++++++
+ .../run_inline_receiver_nested_this_opt.cmake      |  73 +++++++++-
+ docs/ai-context/CREXX_ARCHITECTURE.md              |  11 ++
+ docs/ai-context/RXVM_INTERPRETER.md                |  13 ++
+ interpreter/rxvmintp.c                             |  27 ++--
+ interpreter/rxvmvars.h                             |  25 ++++
+ performance/PERF2-06-07-HANDOVER-PROMPT.md         |   7 +-
+ performance/PERF2-06-07-WORKLIST.md                | 123 +++++++++++-----
+ performance/README.md                              |   6 +-
+ performance/ROADMAP.md                             |  52 ++++++-
+ 16 files changed, 491 insertions(+), 175 deletions(-)
+ M compiler/rxcp_inline_bind.c
+ M compiler/rxcp_inline_clone.c
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/golden/opt/18_array_class.rxas
+ M compiler/tests/golden/opt/inline_test_class_methods.rxas
+ M compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
+ M compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+ M compiler/tests/run_inline_receiver_nested_this_opt.cmake
+ M docs/ai-context/CREXX_ARCHITECTURE.md
+ M docs/ai-context/RXVM_INTERPRETER.md
+ M interpreter/rxvmintp.c
+ M interpreter/rxvmvars.h
+ M performance/PERF2-06-07-HANDOVER-PROMPT.md
+ M performance/PERF2-06-07-WORKLIST.md
+ M performance/README.md
+ M performance/ROADMAP.md
+?? compiler/tests/perf2_07_v3_representation.cmake
+?? compiler/tests/rexx_src/perf2_07_v3_representation.crexx
+?? performance/evidence/2026-07-27-perf2-06-07-selection-panel/
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/

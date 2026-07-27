@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gb08611179db5.dirty 20260727",
+  "source_manifest": "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/manifests/first-verdict.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-27T14:25:46+0000",
+  "completed_utc": "2026-07-27T14:27:22+0000",
+  "result": "pass"
+}

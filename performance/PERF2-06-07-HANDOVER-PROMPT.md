@@ -1,6 +1,11 @@
 # PERF2-06/07 combined Mac-slice handover prompt
 
-Recommended setting: **Ultra** for the current attribution, ownership analysis,
+> **Completed 2026-07-27.** This is the preserved execution prompt for the
+> closed Apple slice; do not paste it to restart the work. The accepted result,
+> proportional closeout and successor-hardware instructions are in
+> [`evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/).
+
+Historical recommended setting: **Ultra** for the current attribution, ownership analysis,
 representation audit and complete candidate panel. After Adrian selects one
 proved implementation slice, **Very High** is normally sufficient for its
 focused PoC and first Release verdict.

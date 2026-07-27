@@ -1,0 +1,41 @@
+Test project /private/tmp/crexx-perf2-0607.HOrlKC/build-v3-fixed
+      Start  212: basic_strings_noopt
+ 1/13 Test  #212: basic_strings_noopt ..............   Passed    0.12 sec
+      Start  213: basic_strings_opt
+ 2/13 Test  #213: basic_strings_opt ................   Passed    0.12 sec
+      Start  349: perf2_07_v3_representation
+ 3/13 Test  #349: perf2_07_v3_representation .......   Passed    0.92 sec
+      Start  400: basic_strings_run_noopt
+ 4/13 Test  #400: basic_strings_run_noopt ..........   Passed    0.15 sec
+      Start  401: basic_strings_run_opt
+ 5/13 Test  #401: basic_strings_run_opt ............   Passed    0.15 sec
+      Start  591: test_utf_math_run_noopt
+ 6/13 Test  #591: test_utf_math_run_noopt ..........   Passed    0.15 sec
+      Start  592: test_utf_math_run_opt
+ 7/13 Test  #592: test_utf_math_run_opt ............   Passed    0.15 sec
+      Start 1067: rxasutfflagtests
+ 8/13 Test #1067: rxasutfflagtests .................   Passed    0.00 sec
+      Start 1068: rxasutfflagtests-rxbvm
+ 9/13 Test #1068: rxasutfflagtests-rxbvm ...........   Passed    0.00 sec
+      Start 1215: rxasdecimaltests
+10/13 Test #1215: rxasdecimaltests .................   Passed    0.00 sec
+      Start 1216: rxasdecimaltests-rxbvm
+11/13 Test #1216: rxasdecimaltests-rxbvm ...........   Passed    0.00 sec
+      Start 1221: rxasconversiontests
+12/13 Test #1221: rxasconversiontests ..............   Passed    0.00 sec
+      Start 1222: rxasconversiontests-rxbvm
+13/13 Test #1222: rxasconversiontests-rxbvm ........   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Label Time Summary:
+compiler          =   0.92 sec*proc (1 test)
+interpreter       =   0.92 sec*proc (1 test)
+linked_opt        =   0.30 sec*proc (2 tests)
+perf2_07          =   0.92 sec*proc (1 test)
+performance       =   0.92 sec*proc (1 test)
+reference         =   0.92 sec*proc (1 test)
+representation    =   0.92 sec*proc (1 test)
+smoke             =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   1.81 sec

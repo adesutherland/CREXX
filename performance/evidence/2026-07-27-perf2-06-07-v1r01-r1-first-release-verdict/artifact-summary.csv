@@ -1,0 +1,8 @@
+artifact,current_bytes,candidate_bytes,delta_bytes
+sieve-opt.rxbin,4840,4920,80
+permute-opt.rxbin,11909,11869,-40
+bounce-opt.rxbin,17215,17295,80
+richards-opt.rxbin,79150,78846,-304
+base64-opt.rxbin,38417,38497,80
+rexxcps-opt.rxbin,159739,159699,-40
+library.rxbin,862920,862520,-400

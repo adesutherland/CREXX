@@ -1,0 +1,226 @@
+UTC 2026-07-27T15:04:04Z
+develop
+b08611179db5ff4257c3be3103f3aeab55ea5b50
+origin/develop
+53f7757c5b21c15d405b17920d4cd7f6c554c46b
+ M compiler/rxcp_inline_bind.c
+ M compiler/rxcp_inline_clone.c
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
+ M compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+ M compiler/tests/run_inline_receiver_nested_this_opt.cmake
+ M docs/ai-context/RXVM_INTERPRETER.md
+ M interpreter/rxvmintp.c
+ M interpreter/rxvmvars.h
+ M performance/PERF2-06-07-WORKLIST.md
+ M performance/README.md
+ M performance/ROADMAP.md
+?? compiler/tests/perf2_07_v3_representation.cmake
+?? compiler/tests/rexx_src/perf2_07_v3_representation.crexx
+?? performance/evidence/2026-07-27-perf2-06-07-selection-panel/
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/
+worktree /Users/adrian/CLionProjects/CREXX
+HEAD b08611179db5ff4257c3be3103f3aeab55ea5b50
+branch refs/heads/develop
+
+worktree /private/tmp/crexx-nr09-bootstrap-32bf
+HEAD 32bf7e76f3fe4b776ee30eb60e85af7ca1e22b46
+detached
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/crexx-nr21-baseline-src.S10nbu
+HEAD 5626d6b871d740387765de40bfbebd246471102f
+detached
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/crexx-nr27-base.Wa1aCg/src
+HEAD 65ea6b9e292b5335565ec63d86c6a40e5f35853b
+detached
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/crexx-perf2-01-product.dbLYqo
+HEAD d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+detached
+
+worktree /private/tmp/crexx-perf2-02.kJ5sZT/q1-richards
+HEAD d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+detached
+
+worktree /private/tmp/crexx-perf2-02.kJ5sZT/q3-direct
+HEAD d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+detached
+
+worktree /private/tmp/crexx-perf2-02.kJ5sZT/q3b-exact
+HEAD d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+detached
+
+worktree /private/tmp/crexx-perf2-02.kJ5sZT/q4-eager
+HEAD d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+detached
+
+worktree /private/tmp/crexx-perf2-02.kJ5sZT/q7-core
+HEAD d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+detached
+
+worktree /private/tmp/crexx-perf2-02.kJ5sZT/q7-core/perf2-02-q7-diagnostics/diagnostic-src
+HEAD d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+detached
+
+worktree /private/tmp/crexx-perf2-03-slice3-baseline.hdPHUZ/src
+HEAD 6b97c2ffd2fb2d7077c7e5c6fb24138dafd9f895
+detached
+
+worktree /private/tmp/crexx-perf2-03.9pQYlh/p0-source
+HEAD 086138f1e93da8e84d45f4cd3ba9b6620f792a14
+detached
+
+worktree /private/tmp/crexx-perf2-03.9pQYlh/p1-source
+HEAD 086138f1e93da8e84d45f4cd3ba9b6620f792a14
+detached
+
+worktree /private/tmp/crexx-perf2-03.9pQYlh/p2-source
+HEAD 086138f1e93da8e84d45f4cd3ba9b6620f792a14
+detached
+
+worktree /private/tmp/crexx-perf2-03.9pQYlh/p3-source
+HEAD 086138f1e93da8e84d45f4cd3ba9b6620f792a14
+detached
+
+worktree /private/tmp/crexx-perf2-03.9pQYlh/p4-source
+HEAD 086138f1e93da8e84d45f4cd3ba9b6620f792a14
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/baseline-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/length-direct-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/length-empty-init-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/rexxcps-combined-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/substr-const-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/substr-direct-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/upper-const-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/upper-direct-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/upper-inline-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/word-baseline-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/word-ceiling-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/word-constant-false-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-04.3k3Dfw/word-predicate-first-src
+HEAD 6567f0ba23f20623e01322f5a62323b2347ab09d
+detached
+
+worktree /private/tmp/crexx-perf2-05-sa1.MzdvHT/baseline-src
+HEAD 537d3b3d276606767535ecb84ad2a3c80073e5dd
+detached
+
+worktree /private/tmp/crexx-perf2-05-sa1.MzdvHT/candidate-src
+HEAD 537d3b3d276606767535ecb84ad2a3c80073e5dd
+detached
+
+worktree /private/tmp/crexx-perf2-06-c1b.gQ4Wvm/candidate-src
+HEAD e7090198e45002a6a73b654f6d98b9eb91d2e5cb
+detached
+
+worktree /private/tmp/crexx-perf2-06-reset.0ozeyr/r0-src
+HEAD ab9eef54576388121cdb02e285bd99981e68d8b3
+detached
+
+worktree /private/tmp/crexx-perf2-06-vm-c2-poc.yvemdD/baseline-src
+HEAD ab9eef54576388121cdb02e285bd99981e68d8b3
+detached
+
+worktree /private/tmp/crexx-perf2-06-vm-c2-poc.yvemdD/c2a-src
+HEAD ab9eef54576388121cdb02e285bd99981e68d8b3
+detached
+
+worktree /private/tmp/crexx-perf2-06-vm-c2-poc.yvemdD/c2b-src
+HEAD ab9eef54576388121cdb02e285bd99981e68d8b3
+detached
+
+worktree /private/tmp/crexx-perf2-06-vm-c2.LRjTOJ/worktree
+HEAD ab9eef54576388121cdb02e285bd99981e68d8b3
+branch refs/heads/codex/perf2-06-vm-c2-poc
+
+worktree /private/tmp/crexx-perf2-06.Pn88uJ/baseline-src
+HEAD e7090198e45002a6a73b654f6d98b9eb91d2e5cb
+detached
+
+worktree /private/tmp/crexx-perf2-06.Pn88uJ/cow-src
+HEAD e7090198e45002a6a73b654f6d98b9eb91d2e5cb
+detached
+
+worktree /private/tmp/crexx-perf2-06.Pn88uJ/diagnostic-src
+HEAD e7090198e45002a6a73b654f6d98b9eb91d2e5cb
+detached
+
+worktree /private/tmp/crexx-perf2-0607.HOrlKC/baseline-src
+HEAD b08611179db5ff4257c3be3103f3aeab55ea5b50
+detached
+
+worktree /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-r1-src
+HEAD b08611179db5ff4257c3be3103f3aeab55ea5b50
+detached
+
+worktree /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-replay
+HEAD b08611179db5ff4257c3be3103f3aeab55ea5b50
+detached
+
+worktree /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-src
+HEAD b08611179db5ff4257c3be3103f3aeab55ea5b50
+detached
+
+worktree /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-wide-diag-src
+HEAD b08611179db5ff4257c3be3103f3aeab55ea5b50
+detached
+
+worktree /private/tmp/crexx-perf2-0607.HOrlKC/v3-trace-src
+HEAD b08611179db5ff4257c3be3103f3aeab55ea5b50
+detached
+
+worktree /private/tmp/crexx-slice4-exact.W6qkVP/src
+HEAD 26f4aeb6fa314252c10a5bc3b1b831b62cf84add
+detached
+
+worktree /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/baseline-src
+HEAD 22dd01a5b2e98e7e05682141b025633f8aecdd0a
+detached
+
+worktree /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/candidate-src
+HEAD 22dd01a5b2e98e7e05682141b025633f8aecdd0a
+detached
+

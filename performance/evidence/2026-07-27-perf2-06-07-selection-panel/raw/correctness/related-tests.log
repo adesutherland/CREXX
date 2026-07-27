@@ -1,0 +1,33 @@
+Test project /private/tmp/crexx-perf2-0607.HOrlKC/build-v3-fixed
+      Start  212: basic_strings_noopt
+ 1/12 Test  #212: basic_strings_noopt ..............   Passed    0.43 sec
+      Start  213: basic_strings_opt
+ 2/12 Test  #213: basic_strings_opt ................   Passed    0.11 sec
+      Start  400: basic_strings_run_noopt
+ 3/12 Test  #400: basic_strings_run_noopt ..........   Passed    0.15 sec
+      Start  401: basic_strings_run_opt
+ 4/12 Test  #401: basic_strings_run_opt ............   Passed    0.15 sec
+      Start  591: test_utf_math_run_noopt
+ 5/12 Test  #591: test_utf_math_run_noopt ..........   Passed    0.14 sec
+      Start  592: test_utf_math_run_opt
+ 6/12 Test  #592: test_utf_math_run_opt ............   Passed    0.15 sec
+      Start 1067: rxasutfflagtests
+ 7/12 Test #1067: rxasutfflagtests .................   Passed    0.00 sec
+      Start 1068: rxasutfflagtests-rxbvm
+ 8/12 Test #1068: rxasutfflagtests-rxbvm ...........   Passed    0.00 sec
+      Start 1215: rxasdecimaltests
+ 9/12 Test #1215: rxasdecimaltests .................   Passed    0.00 sec
+      Start 1216: rxasdecimaltests-rxbvm
+10/12 Test #1216: rxasdecimaltests-rxbvm ...........   Passed    0.00 sec
+      Start 1221: rxasconversiontests
+11/12 Test #1221: rxasconversiontests ..............   Passed    0.00 sec
+      Start 1222: rxasconversiontests-rxbvm
+12/12 Test #1222: rxasconversiontests-rxbvm ........   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+linked_opt    =   0.29 sec*proc (2 tests)
+smoke         =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   1.17 sec

@@ -1,0 +1,5 @@
+workload,vm,current_dynamic_instructions,candidate_dynamic_instructions,current_copy_ops,candidate_copy_ops,copy_ops_delta,copy_ops_delta_percent,current_copy_bytes,candidate_copy_bytes,copy_bytes_delta,copy_bytes_delta_percent,current_static_copy_mnemonics,candidate_static_copy_mnemonics
+Richards,rxvm,8726851,8615245,73307574,56902732,-16404842,-22.378100,582076729,451730841,-130345888,-22.393248,115,71
+Richards,rxbvm,8726851,8615245,73307574,56902732,-16404842,-22.378100,582076729,451730841,-130345888,-22.393248,115,71
+Permute,rxvm,12906826,11899126,10259602,182602,-10077000,-98.220184,74012810,1458410,-72554400,-98.029517,19,9
+Permute,rxbvm,12906826,11899126,10259602,182602,-10077000,-98.220184,74012810,1458410,-72554400,-98.029517,19,9

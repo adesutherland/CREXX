@@ -1,0 +1,321 @@
+diff --git a/compiler/tests/CMakeLists.txt b/compiler/tests/CMakeLists.txt
+index a7c6da54d..8f2dafaed 100644
+--- a/compiler/tests/CMakeLists.txt
++++ b/compiler/tests/CMakeLists.txt
+@@ -1282,6 +1282,20 @@ add_test(NAME perf2_05_partial_call
+ set_tests_properties(perf2_05_partial_call PROPERTIES
+         LABELS "compiler;performance;constants;inlining;perf2_05")
+ 
++add_test(NAME perf2_07_v3_representation
++         COMMAND ${CMAKE_COMMAND}
++                 -DRXC=$<TARGET_FILE:rxc>
++                 -DRXAS=$<TARGET_FILE:rxas>
++                 -DRXVM=$<TARGET_FILE:rxvm>
++                 -DRXBVM=$<TARGET_FILE:rxbvm>
++                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
++                 -DLIBRARY_DIR=${CMAKE_BINARY_DIR}/bin
++                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_07_v3_representation.crexx
++                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/perf2_07_v3_representation_ws
++                 -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_07_v3_representation.cmake)
++set_tests_properties(perf2_07_v3_representation PROPERTIES
++        LABELS "compiler;interpreter;representation;reference;performance;perf2_07")
++
+ # Macro to add a run test
+ macro(add_crexx_run_test NAME SOURCE_FILE)
+     set(RUNTIME_MODULES ${ARGN})
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 1392b5686..b2b2328d4 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -6727,7 +6727,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+     extend_string_buffer(op1R, string_size);
+     /* Convert */
+     current_frame->decimal->decimalToString(current_frame->decimal, op1R, op1R->string_value);
+-    op1R->string_length = strlen(op1R->string_value);
++    finish_ascii_string_write(op1R, strlen(op1R->string_value));
+     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+     DISPATCH;
+ /* ------------------------------------------------------------------------------------
+@@ -7227,7 +7227,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+     DEBUG("TRACE - DEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+     prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(current_frame->decimal));
+     current_frame->decimal->decimalExtract(current_frame->decimal, op1R->string_value, &(op2R->int_value), op3R);
+-    op1R->string_length = strlen(op1R->string_value);
++    finish_ascii_string_write(op1R, strlen(op1R->string_value));
+     DISPATCH;
+ /* ====================================================================================
+  * End of Decimal Plugin instructions
+@@ -8964,8 +8964,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
+                 case 'N':  {
+                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
+-                     op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
+-                     op1R->string_pos = 0;
++                     snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
++                     finish_string_write(op1R, strlen(op1R->string_value));
+                      break;  // time zone names
+                 }
+                 case 'U':  {
+@@ -9020,6 +9020,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                 }
+                 op1R->string_length = i;
+                 null_terminate_string_buffer(op1R);
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -9043,6 +9044,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                            op1R->string_length);
+                     null_terminate_string_buffer(op1R);
+                 }
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -10406,12 +10408,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
+             null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
+-            op1R->string_length = rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
+-            op1R->string_pos = 0;
+-  #ifndef NUTF8
+-            op1R->string_char_pos = 0;
+-            op1R->string_chars = op1R->string_length;
+-  #endif
++            finish_ascii_string_write(op1R,
++                    rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value));
+             DISPATCH;
+ /* ------------------------------------------------------------------------------------
+  * FEXTR_REG_REG_REG Extract float to string coefficient and decimal exponent integer
+@@ -10555,7 +10553,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+ #endif
+                 prep_string_buffer(op1R, 3);
+                 split2hex(ch, 0)                    // split the character into their 2 byte hex presentation
+-                PUTSTRLEN(op1R, 2)                  // hex length is 2
++                finish_ascii_string_write(op1R, 2); // hex length is 2
+                 goto hexdispatch;
+    /* ----- create full UTF8 code -------------- */
+                 hexm2:
+@@ -10573,7 +10571,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     unsigned char b = bytebuf[i];
+                     split2hex(b, i*2)                     // split the character into their 2 byte hex presentation
+                 }
+-                PUTSTRLEN(op1R, 8);
++                finish_ascii_string_write(op1R, 8);
+                 goto hexdispatch;
+     /* ----- add UTF8 code depending on length -------------- */
+             hexm3:
+@@ -10588,7 +10586,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     unsigned char b = start[i];
+                     split2hex(b, i * 2)                     // split the character into their 2 byte hex presentation
+                 }
+-                PUTSTRLEN(op1R, bytelen * 2);
++                finish_ascii_string_write(op1R, (size_t)bytelen * 2);
+             }
+         hexdispatch:
+         DISPATCH;
+@@ -12961,6 +12959,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     op1R->string_length = i;
+                 }
+                 null_terminate_string_buffer(op1R);
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -12985,6 +12984,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     if (i > 0) memmove(op1R->string_value, op1R->string_value + i, op1R->string_length);
+                 }
+                 null_terminate_string_buffer(op1R);
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -13001,6 +13001,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                 if (len < op1R->string_length) {
+                     op1R->string_length = len;
+                     null_terminate_string_buffer(op1R);
++                    finish_string_write(op1R, op1R->string_length);
+                 }
+             }
+             DISPATCH;
+diff --git a/interpreter/rxvmvars.h b/interpreter/rxvmvars.h
+index c76999bb3..94c35b9db 100644
+--- a/interpreter/rxvmvars.h
++++ b/interpreter/rxvmvars.h
+@@ -147,6 +147,31 @@ RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
+ }
+ #endif
+ 
++/* Complete an in-place string-byte replacement. Public/compiler type flags and
++ * the value's other representations remain unchanged; VM-private string
++ * validity and cursor state describe only the newly written byte span. */
++RX_INLINE void finish_string_write(value *v, size_t length) {
++    v->string_length = length;
++    v->string_pos = 0;
++#ifndef NUTF8
++    v->string_char_pos = 0;
++    refresh_utf8_flags(v);
++#else
++    clear_vm_private_flags(v);
++#endif
++}
++
++/* Numeric formatting and hex rendering are known to produce ASCII. */
++RX_INLINE void finish_ascii_string_write(value *v, size_t length) {
++    v->string_length = length;
++    v->string_pos = 0;
++#ifndef NUTF8
++    mark_ascii_string_valid_count(v);
++#else
++    clear_vm_private_flags(v);
++#endif
++}
++
+ /* Clears the binary payload and runs native cleanup if the payload owns native resources. */
+ RX_INLINE void clear_binary_payload(value *v) {
+     if (!v) return;
+diff --git a/compiler/tests/perf2_07_v3_representation.cmake b/compiler/tests/perf2_07_v3_representation.cmake
+new file mode 100644
+index 000000000..84a5d647f
+--- /dev/null
++++ b/compiler/tests/perf2_07_v3_representation.cmake
+@@ -0,0 +1,55 @@
++if(NOT DEFINED RXC OR NOT DEFINED RXAS OR NOT DEFINED RXVM OR
++   NOT DEFINED RXBVM OR NOT DEFINED LIBRARY OR NOT DEFINED SOURCE OR
++   NOT DEFINED WORK)
++  message(FATAL_ERROR "PERF2-07 V3 test requires RXC, RXAS, RXVM, RXBVM, LIBRARY, SOURCE and WORK")
++endif()
++
++file(REMOVE_RECURSE "${WORK}")
++file(MAKE_DIRECTORY "${WORK}")
++
++foreach(mode IN ITEMS noopt opt)
++  set(compiler_flags "")
++  if(mode STREQUAL "noopt")
++    list(APPEND compiler_flags -n)
++  endif()
++
++  set(base "${WORK}/perf2_07_v3_${mode}")
++  execute_process(
++    COMMAND "${RXC}" -i "${LIBRARY_DIR}" ${compiler_flags} -o "${base}" "${SOURCE}"
++    RESULT_VARIABLE rc
++    OUTPUT_VARIABLE out
++    ERROR_VARIABLE err)
++  if(NOT rc EQUAL 0)
++    message(FATAL_ERROR "${mode} rxc failed (${rc}):\n${out}${err}")
++  endif()
++
++  file(READ "${base}.rxas" rxas_text)
++  if(NOT rxas_text MATCHES "dcopy r[0-9]+,r[0-9]+" OR
++     NOT rxas_text MATCHES "dtos r[0-9]+" OR
++     NOT rxas_text MATCHES "strlen r[0-9]+,r[0-9]+")
++    message(FATAL_ERROR "${mode} RXAS lost the distinguishing dcopy/dtos/strlen sequence")
++  endif()
++
++  execute_process(
++    COMMAND "${RXAS}" -o "${base}.rxbin" "${base}"
++    RESULT_VARIABLE rc
++    OUTPUT_VARIABLE out
++    ERROR_VARIABLE err)
++  if(NOT rc EQUAL 0)
++    message(FATAL_ERROR "${mode} rxas failed (${rc}):\n${out}${err}")
++  endif()
++
++  foreach(runner IN ITEMS RXVM RXBVM)
++    execute_process(
++      COMMAND "${${runner}}" "${LIBRARY}" "${base}.rxbin" -a "2.2"
++      RESULT_VARIABLE rc
++      OUTPUT_VARIABLE out
++      ERROR_VARIABLE err)
++    if(NOT rc EQUAL 0)
++      message(FATAL_ERROR "${mode} ${runner} failed (${rc}):\n${out}${err}")
++    endif()
++    if(NOT out STREQUAL "PASS: PERF2-07 V3 representation validity\n")
++      message(FATAL_ERROR "${mode} ${runner} output mismatch:\n${out}${err}")
++    endif()
++  endforeach()
++endforeach()
+diff --git a/compiler/tests/rexx_src/perf2_07_v3_representation.crexx b/compiler/tests/rexx_src/perf2_07_v3_representation.crexx
+new file mode 100644
+index 000000000..d6a6d6f1e
+--- /dev/null
++++ b/compiler/tests/rexx_src/perf2_07_v3_representation.crexx
+@@ -0,0 +1,78 @@
++options levelb
++
++main: procedure = .int
++  arg argv = .string[]
++  if argv[0] <> 1 | argv[1] <> "2.2" then return fail("test input")
++  decimal_source = argv[1] as .decimal
++  length_result = .int
++
++  /* Distinguishing regression: an explicitly empty destination has a trusted
++   * zero codepoint count before dcopy/dtos replaces its string bytes. */
++  empty_destination = ""
++  empty_destination = decimal_source as .string
++  assembler strlen length_result,empty_destination
++  if empty_destination <> "2.2" then return fail("empty destination bytes")
++  if length_result <> 3 then return fail("empty destination codepoint length")
++
++  /* A previous non-ASCII representation must not donate its cached count. */
++  unicode_destination = "é🙂"
++  unicode_destination = decimal_source as .string
++  assembler strlen length_result,unicode_destination
++  if unicode_destination <> "2.2" then return fail("Unicode destination bytes")
++  if length_result <> 3 then return fail("Unicode destination codepoint length")
++
++  /* A typed-null destination is a control: it has no trusted old string count. */
++  null_destination = .string
++  null_destination = decimal_source as .string
++  assembler strlen length_result,null_destination
++  if null_destination <> "2.2" then return fail("typed-null destination bytes")
++  if length_result <> 3 then return fail("typed-null destination codepoint length")
++
++  /* Conversion writes through the storage location without detaching a live
++   * reference identity for that location. */
++  aliased_destination = "é"
++  destination_ref = reference .string
++  destination_ref = reference aliased_destination
++  aliased_destination = decimal_source as .string
++  assembler strlen length_result,aliased_destination
++  if <refvalid>(destination_ref) = 0 then return fail("destination reference invalidated")
++  if snapshot destination_ref <> "2.2" then return fail("destination reference bytes")
++  if length_result <> 3 then return fail("destination reference codepoint length")
++
++  /* Sibling in-place numeric string producers are controls for the same cache
++   * contract. */
++  integer_source = 123
++  integer_destination = "é"
++  integer_destination = integer_source as .string
++  assembler strlen length_result,integer_destination
++  if integer_destination <> "123" | length_result <> 3 then return fail("integer conversion")
++
++  float_source = 1.5
++  float_destination = "é🙂"
++  float_destination = float_source as .string
++  assembler strlen length_result,float_destination
++  if float_destination <> "1.5" | length_result <> 3 then return fail("float conversion")
++
++  boolean_source = 1 as .boolean
++  boolean_destination = "é🙂"
++  boolean_destination = boolean_source as .string
++  assembler strlen length_result,boolean_destination
++  if boolean_destination <> "1" | length_result <> 1 then return fail("boolean conversion")
++
++  /* DEXTR writes a coefficient into an independently initialized destination. */
++  coefficient = "é🙂"
++  exponent = .int
++  extract_source = "1234.5" as .decimal
++  assembler dextr coefficient,exponent,extract_source
++  assembler strlen length_result,coefficient
++  if coefficient <> "1.2345" then return fail("decimal extract bytes")
++  if exponent <> 3 then return fail("decimal extract exponent")
++  if length_result <> 6 then return fail("decimal extract codepoint length")
++
++  say "PASS: PERF2-07 V3 representation validity"
++  return 0
++
++fail: procedure = .int
++  arg label = .string
++  say "FAIL:" label
++  return 1

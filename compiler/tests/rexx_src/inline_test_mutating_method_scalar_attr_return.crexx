@@ -6,6 +6,14 @@ main: procedure = .int
   say probe.directAttr()
   say probe.localThenAttr()
   say probe.callOnly()
+  say probe.branchCaller(1)
+  say probe.branchCaller(0)
+  say probe.localBranchCaller(1)
+  say probe.localBranchCaller(0)
+  say probe.singleExitCaller(1)
+  say probe.singleExitCaller(0)
+  say probe.callingSingleExitCaller()
+  say probe.fallthroughCaller()
   return 0
 
 Probe: class
@@ -37,4 +45,50 @@ Probe: class
   callOnly: method = .int
     call reset()
     call changeAndReturnDifferent()
+    return root
+
+  branchAndMutate: method = .int
+    arg choose_first = .boolean
+    if choose_first then do
+      root = root + 1
+      return root + 100
+    end
+    root = root + 2
+    return root + 200
+
+  branchCaller: method = .int
+    arg choose_first = .boolean
+    call reset()
+    return branchAndMutate(choose_first)
+
+  localBranchCaller: method = .int
+    arg choose_first = .boolean
+    other = .Probe()
+    return other.branchAndMutate(choose_first)
+
+  singleExitAndMutate: method = .int
+    arg choose_first = .boolean
+    if choose_first then root = root + 3
+    else root = root + 4
+    return root
+
+  singleExitCaller: method = .int
+    arg choose_first = .boolean
+    call reset()
+    return singleExitAndMutate(choose_first)
+
+  callingSingleExitAndMutate: method = .int
+    call reset()
+    root = changeAndReturnDifferent()
+    return root
+
+  callingSingleExitCaller: method = .int
+    return callingSingleExitAndMutate()
+
+  fallthroughMutate: method = .void
+    root = root + 6
+
+  fallthroughCaller: method = .int
+    call reset()
+    call fallthroughMutate()
     return root

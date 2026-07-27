@@ -1,0 +1,9 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 100: 18_array_class_opt
+1/2 Test #100: 18_array_class_opt ...............   Passed    0.54 sec
+    Start 337: inline_test_class_methods_opt
+2/2 Test #337: inline_test_class_methods_opt ....   Passed    0.50 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   1.07 sec

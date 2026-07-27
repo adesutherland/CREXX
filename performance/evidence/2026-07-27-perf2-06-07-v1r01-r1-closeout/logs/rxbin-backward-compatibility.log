@@ -1,0 +1,78 @@
+CELL rxvm-sieve-old-rxbin
+RC 0
+benchmark=awfy_sieve repetitions=50 result=669
+PASS: AWFY Sieve
+PASS rxvm-sieve-old-rxbin
+CELL rxvm-permute-old-rxbin
+RC 0
+benchmark=awfy_permute repetitions=50 result=8660
+PASS: AWFY Permute
+PASS rxvm-permute-old-rxbin
+CELL rxvm-bounce-old-rxbin
+RC 0
+benchmark=awfy_bounce repetitions=100 result=1331
+PASS: AWFY Bounce
+PASS rxvm-bounce-old-rxbin
+CELL rxvm-richards-old-rxbin
+RC 0
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+PASS rxvm-richards-old-rxbin
+CELL rxvm-base64-old-rxbin
+RC 0
+benchmark=base64_roundtrip repetitions=500 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+PASS rxvm-base64-old-rxbin
+CELL rxvm-rexxcps-old-rxbin
+RC 0
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gb08611179db5.dirty 20260727
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 339 x 100 iterations of 1000 clauses (over 1.0 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=1 effective_count=339 averaging=100 calibrated=1
+
+     Performance: 35116652 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+PASS rxvm-rexxcps-old-rxbin
+CELL rxbvm-sieve-old-rxbin
+RC 0
+benchmark=awfy_sieve repetitions=50 result=669
+PASS: AWFY Sieve
+PASS rxbvm-sieve-old-rxbin
+CELL rxbvm-permute-old-rxbin
+RC 0
+benchmark=awfy_permute repetitions=50 result=8660
+PASS: AWFY Permute
+PASS rxbvm-permute-old-rxbin
+CELL rxbvm-bounce-old-rxbin
+RC 0
+benchmark=awfy_bounce repetitions=100 result=1331
+PASS: AWFY Bounce
+PASS rxbvm-bounce-old-rxbin
+CELL rxbvm-richards-old-rxbin
+RC 0
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+PASS rxbvm-richards-old-rxbin
+CELL rxbvm-base64-old-rxbin
+RC 0
+benchmark=base64_roundtrip repetitions=500 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+PASS rxbvm-base64-old-rxbin
+CELL rxbvm-rexxcps-old-rxbin
+RC 0
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gb08611179db5.dirty 20260727
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 337 x 100 iterations of 1000 clauses (over 1.0 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=1 effective_count=337 averaging=100 calibrated=1
+
+     Performance: 33050006 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+PASS rxbvm-rexxcps-old-rxbin

@@ -1,0 +1,245 @@
+/*
+ * SOURCE                 : awfy_sieve.crexx
+ */
+
+.globals=0
+
+main() .locals=9
+   .meta "awfy_sieve.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "awfy_sieve.crexx" 8 5 19 "arg argv = .string[]"
+   .meta "awfy_sieve.main.argv"="b" ".string[*]" r0
+   brtpandt l4c,a1,512
+   copy r0,a1
+   br l4d
+l4c:
+   swap r0,a1
+l4d:
+   .srcstep 2 2 17 "awfy_sieve.crexx" 10 1 16 "repetitions = 1"
+   .meta "awfy_sieve.main.repetitions"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+   .srcstep 4 4 17 "awfy_sieve.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+   getattrs r4,r0,0
+   .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+   igte r4,r4,1
+   .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+   brf l23iffalse,r4
+   .srcstep 5 5 17 "awfy_sieve.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 3 3 17 "awfy_sieve.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minlinkattr1 r5,r0,1
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 3 3 0 "argv" ""
+   igetunlink r1,r5
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+l23iffalse:
+   .srcstep 7 7 17 "awfy_sieve.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "repetitions" ""
+   ilt r5,r1,1
+   .traceevent "O" 4 "R" "B" "r" 5 7 7 0 "" ""
+   brf l30iffalse,r5
+   .srcstep 8 8 17 "awfy_sieve.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 6 6 17 "awfy_sieve.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   load r4,"repetitions must be positive"
+   .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
+   settp r4,768
+   call1 r6,fail(),r4
+   .traceevent "F" 4 "R" "I" "r" 6 6 6 0 "fail" ""
+   ret r6
+l30iffalse:
+   .srcstep 9 9 17 "awfy_sieve.crexx" 14 1 11 "result = 0"
+   .meta "awfy_sieve.main.result"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "result" ""
+   .srcstep 17 17 17 "awfy_sieve.crexx" 15 1 3 "do iteration = 1 to repetitions"
+   .srcstep 10 10 17 "awfy_sieve.crexx" 15 4 17 "do iteration = 1 to repetitions"
+   .meta "awfy_sieve.main.iteration"="b" ".int" r6
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 10 10 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 10 10 0 "iteration" ""
+   .srcstep 11 11 17 "awfy_sieve.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+l34dostart:
+   .srcstep 11 11 17 "awfy_sieve.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   igt r5,r6,r1
+   brt l34doend,r5
+   .srcstep 13 13 17 "awfy_sieve.crexx" 16 3 22 "  result = sieve_once()"
+   call r2,sieve_once()
+   .traceevent "F" 4 "R" "I" "r" 2 13 13 0 "sieve_once" ""
+   .traceevent "A" 6 "R" "I" "r" 2 13 13 0 "result" ""
+   .srcstep 15 15 17 "awfy_sieve.crexx" 17 3 19 "  if result <> 669 then return fail(\"expected 669 primes, got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 2 15 15 0 "result" ""
+   ine r4,r2,669
+   .traceevent "O" 4 "R" "B" "r" 4 15 15 0 "" ""
+   brf l54iffalse,r4
+   .srcstep 16 16 17 "awfy_sieve.crexx" 17 20 24 "  if result <> 669 then return fail(\"expected 669 primes, got \" || result)"
+   .srcstep 14 14 17 "awfy_sieve.crexx" 17 25 75 "  if result <> 669 then return fail(\"expected 669 primes, got \" || result)"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 14 14 0 "result" ""
+   concat r8,"expected 669 primes, got ",r2
+   .traceevent "O" 4 "R" "S" "r" 8 14 14 0 "" ""
+   settp r8,768
+   call1 r3,fail(),r8
+   .traceevent "F" 4 "R" "I" "r" 3 14 14 0 "fail" ""
+   ret r3
+l54iffalse:
+l34doinc:
+   .srcstep 12 12 17 "awfy_sieve.crexx" 15 4 13 "do iteration = 1 to repetitions"
+   inc r6
+   .srcstep 18 18 17 "awfy_sieve.crexx" 18 1 4 "end"
+   br l34dostart
+l34doend:
+   .meta "awfy_sieve.main.iteration"
+   .srcstep 19 19 17 "awfy_sieve.crexx" 20 1 67 "say \"benchmark=awfy_sieve repetitions=\"repetitions \"result=\"result"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 19 19 0 "repetitions" ""
+   concat r8,"benchmark=awfy_sieve repetitions=",r1
+   .traceevent "O" 4 "R" "S" "r" 8 19 19 0 "" ""
+   sconcat r8,r8,"result="
+   .traceevent "O" 4 "R" "S" "r" 8 19 19 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 19 19 0 "result" ""
+   concat r8,r8,r2
+   .traceevent "O" 4 "R" "S" "r" 8 19 19 0 "" ""
+   say r8
+   .srcstep 20 20 17 "awfy_sieve.crexx" 21 1 23 "say \"PASS: AWFY Sieve\""
+   say "PASS: AWFY Sieve"
+   .srcstep 21 21 17 "awfy_sieve.crexx" 22 1 9 "return 0"
+   ret 0
+   .meta "awfy_sieve.main.argv"
+   .meta "awfy_sieve.main.repetitions"
+   .meta "awfy_sieve.main.result"
+
+sieve_once() .locals=11
+   .meta "awfy_sieve.sieve_once"="b" ".int" sieve_once() ""
+   .srcstep 45 45 17 "awfy_sieve.crexx" 24 1 29 "sieve_once: procedure = .int"
+   numsci 18,1,1
+   .meta "awfy_sieve.sieve_once.flags"="b" ".int[5000]" r0
+   .srcstep 22 22 17 "awfy_sieve.crexx" 25 3 20 "  flags = .int[5000]"
+   null r0
+   .srcstep 27 27 17 "awfy_sieve.crexx" 26 3 5 "  do i = 1 to 5000"
+   .srcstep 23 23 17 "awfy_sieve.crexx" 26 6 11 "  do i = 1 to 5000"
+   .meta "awfy_sieve.sieve_once.i"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 23 23 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 23 23 0 "i" ""
+   .srcstep 24 24 17 "awfy_sieve.crexx" 26 12 19 "  do i = 1 to 5000"
+   load r3,5000
+   .traceevent "L" 4 "R" "I" "r" 3 0 0 0 "" ""
+l75dostart:
+   .srcstep 24 24 17 "awfy_sieve.crexx" 26 12 19 "  do i = 1 to 5000"
+   igt r4,r2,r3
+   brt l75doend,r4
+   .srcstep 26 26 17 "awfy_sieve.crexx" 27 5 17 "    flags[i] = 1"
+   .traceevent "V" 6 "R" "I" "r" 2 26 26 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 2 26 26 0 "flags" ""
+   setlinkiload r5,r0,5000,r2,r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 26 26 0 "" ""
+   isetunlink r5,r6
+   .traceevent "A" 6 "R" "I" "r" 6 26 26 0 "flags" ""
+l75doinc:
+   .srcstep 25 25 17 "awfy_sieve.crexx" 26 6 7 "  do i = 1 to 5000"
+   inc r2
+   .srcstep 28 28 17 "awfy_sieve.crexx" 28 3 6 "  end"
+   br l75dostart
+l75doend:
+   .meta "awfy_sieve.sieve_once.i"
+   .srcstep 29 29 17 "awfy_sieve.crexx" 30 3 18 "  prime_count = 0"
+   .meta "awfy_sieve.sieve_once.prime_count"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 29 29 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 29 29 0 "prime_count" ""
+   .srcstep 42 42 17 "awfy_sieve.crexx" 31 3 5 "  do i = 2 to 5000"
+   .srcstep 30 30 17 "awfy_sieve.crexx" 31 6 11 "  do i = 2 to 5000"
+   .meta "awfy_sieve.sieve_once.i"="b" ".int" r6
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 30 30 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 30 30 0 "i" ""
+   .srcstep 31 31 17 "awfy_sieve.crexx" 31 12 19 "  do i = 2 to 5000"
+   load r5,5000
+   .traceevent "L" 4 "R" "I" "r" 5 0 0 0 "" ""
+l90dostart:
+   .srcstep 31 31 17 "awfy_sieve.crexx" 31 12 19 "  do i = 2 to 5000"
+   igt r4,r6,r5
+   brt l90doend,r4
+   .srcstep 40 40 17 "awfy_sieve.crexx" 32 5 15 "    if flags[i] then do"
+   .traceevent "V" 6 "R" "I" "r" 6 40 40 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 6 40 40 0 "flags" ""
+   setlinkattr1 r3,r0,5000,r6
+   .traceevent "V" 6 "R" "B" "r" 3 40 40 0 "flags" ""
+   brf l121iffalse,r3
+   .srcstep 41 41 17 "awfy_sieve.crexx" 32 15 16 "    if flags[i] then do"
+   .srcstep 33 33 17 "awfy_sieve.crexx" 33 7 36 "      prime_count = prime_count + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 33 33 0 "prime_count" ""
+   iadd r1,r1,1
+   .traceevent "O" 4 "R" "I" "r" 1 33 33 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 33 33 0 "prime_count" ""
+   .srcstep 38 38 17 "awfy_sieve.crexx" 34 7 9 "      do k = i + i to 5000 by i"
+   .srcstep 34 34 17 "awfy_sieve.crexx" 34 10 19 "      do k = i + i to 5000 by i"
+   .meta "awfy_sieve.sieve_once.k"="b" ".int" r2
+   .traceevent "V" 6 "R" "I" "r" 6 34 34 0 "i" ""
+   .traceevent "V" 6 "R" "I" "r" 6 34 34 0 "i" ""
+   iadd r2,r6,r6
+   .traceevent "O" 4 "R" "I" "r" 2 34 34 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 34 34 0 "k" ""
+   .srcstep 35 35 17 "awfy_sieve.crexx" 34 20 27 "      do k = i + i to 5000 by i"
+   load r7,5000
+   .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+   .srcstep 36 36 17 "awfy_sieve.crexx" 34 28 32 "      do k = i + i to 5000 by i"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "i" ""
+l105dostart:
+   .srcstep 35 35 17 "awfy_sieve.crexx" 34 20 27 "      do k = i + i to 5000 by i"
+   ilt r8,r6,0
+   brt l105doneg1,r8
+   igt r8,r2,r7
+   brtf l105doend,l105doneg2,r8
+l105doneg1:
+   ilt r8,r2,r7
+   brt l105doend,r8
+l105doneg2:
+   .srcstep 37 37 17 "awfy_sieve.crexx" 35 9 21 "        flags[k] = 0"
+   .traceevent "V" 6 "R" "I" "r" 2 37 37 0 "k" ""
+   .traceevent "C" 4 "R" "I" "r" 2 37 37 0 "flags" ""
+   setlinkiload r9,r0,5000,r2,r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 37 37 0 "" ""
+   isetunlink r9,r10
+   .traceevent "A" 6 "R" "I" "r" 10 37 37 0 "flags" ""
+l105doinc:
+   .srcstep 36 36 17 "awfy_sieve.crexx" 34 28 32 "      do k = i + i to 5000 by i"
+ iadd r2,r6,r2
+   .srcstep 39 39 17 "awfy_sieve.crexx" 36 7 10 "      end"
+   br l105dostart
+l105doend:
+   .meta "awfy_sieve.sieve_once.k"
+l121iffalse:
+   unlink r3
+l90doinc:
+   .srcstep 32 32 17 "awfy_sieve.crexx" 31 6 7 "  do i = 2 to 5000"
+   inc r6
+   .srcstep 43 43 17 "awfy_sieve.crexx" 36 7 10 "      end"
+   br l90dostart
+l90doend:
+   .meta "awfy_sieve.sieve_once.i"
+   .srcstep 44 44 17 "awfy_sieve.crexx" 39 3 21 "  return prime_count"
+   .traceevent "V" 6 "R" "I" "r" 1 44 44 0 "prime_count" ""
+   ret r1
+   .meta "awfy_sieve.sieve_once.flags"
+   .meta "awfy_sieve.sieve_once.prime_count"
+
+fail() .locals=2
+   .meta "awfy_sieve.fail"="b" ".int" fail() "message=.string"
+   .srcstep 49 49 17 "awfy_sieve.crexx" 41 1 23 "fail: procedure = .int"
+   numsci 18,1,1
+   .srcstep 46 46 17 "awfy_sieve.crexx" 42 7 24 "  arg message = .string"
+   .meta "awfy_sieve.fail.message"="b" ".string" a1
+   .srcstep 47 47 17 "awfy_sieve.crexx" 43 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "a" 1 47 47 0 "message" ""
+   sconcat r1,"FAIL:",a1
+   .traceevent "O" 4 "R" "S" "r" 1 47 47 0 "" ""
+   say r1
+   .srcstep 48 48 17 "awfy_sieve.crexx" 44 3 11 "  return 1"
+   ret 1
+   .meta "awfy_sieve.fail.message"

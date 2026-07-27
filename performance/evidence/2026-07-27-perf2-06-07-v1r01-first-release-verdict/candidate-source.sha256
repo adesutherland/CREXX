@@ -1,0 +1,6 @@
+280a8c3af4e364e9683fb98325b25e36cf6005faf13400fc048d3c1af119b7db  /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-src/compiler/rxcp_inline_bind.c
+5c40ae7a5d3a9e0789c7bf66e81b9fe2595a372a07d3d71cb206c5f462e22330  /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-src/compiler/tests/run_inline_receiver_nested_this_opt.cmake
+455ddbe08d137abcc96ecc06bbcab9e7ba2a4b20dc4ae6dadb6770bab055d4d2  /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-src/compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+7ef60e9e5d6d15b6c57310c3d8d2b6702b7d0d08b3f34bee0097c58e5b86d240  /private/tmp/crexx-perf2-0607.HOrlKC/v1r01-src/compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
+0c864c2b9d834001c83d4649b16db218a1fb0a71c0da20e8c433664102a8e04a  performance/evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/v3-correctness-base.patch
+eedffb6ef301cabf730ca87f6492148bdf0f3a4d7341299a31f63063f9f78c4e  performance/evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/v1r01-linear-leaf.patch

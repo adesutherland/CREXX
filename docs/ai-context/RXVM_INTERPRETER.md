@@ -412,6 +412,19 @@ codepoint count. Any instruction that synthesizes or truncates a string must
 keep both in sync and reset `string_pos` / `string_char_pos` to the start of
 the new value.
 
+In-place string-byte writers use the private completion helpers rather than
+assigning `string_length` alone. `finish_string_write()` resets both cursors,
+validates/recounts an arbitrary UTF-8 byte span and replaces only the
+VM-private UTF validity bits. `finish_ascii_string_write()` records the exact
+byte/codepoint count for known ASCII output. Both preserve compiler/public
+type flags, other scalar/decimal/binary/object representations, buffer
+capacity and reference identity. This contract applies even when conversion
+materializes a string through a linked value: the referenced storage remains
+the owner, but stale codepoint validity from the previous byte span must never
+survive. The PERF2-07 V3 regression covers `DCOPY; DTOS; STRLEN`, Unicode and
+typed-null destinations, a live reference alias and sibling numeric writers
+on both VMs and both optimization modes.
+
 The `xtos` family of scalar-to-string conversions is allowed to mutate the
 destination value to materialize its string representation. This is acceptable
 for linked values, including object attributes, as representation

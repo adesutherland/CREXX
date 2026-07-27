@@ -70,6 +70,17 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      and leave the downstream emitter with an ordinary validated tree. This is
      why new inline cases are opened by specific parent/operand shape instead
      of by globally deciding that a callable is "always inlineable".
+   - A real method call binds the receiver value directly as `a1`. The inliner
+     may therefore place a proved direct-object receiver in that same storage.
+     For a nested call on the enclosing method's direct `§this`, the current
+     summary proof admits arbitrary internal branches and calls, plus
+     fallthrough, when there is no more than one explicit return. Already-proved
+     receiver aliases are remapped or retained through later clone passes.
+     Multiple explicit returns keep the materialise/copyback path because the
+     summary does not yet prove receiver-owned attribute-link balance on every
+     rewritten exit. Computed receivers, class attributes, reference arguments
+     and flow-substituted receivers also retain their evaluate-once/copyback
+     paths. This is a per-site ownership proof, not a general `§this` shortcut.
    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
      normal callable metadata. The current `I6` payload begins with a versioned
      callable summary containing formal read/write/escape and exact-shape

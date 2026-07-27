@@ -1700,7 +1700,15 @@ static int inline_symbol_has_generated_storage_scope(Symbol *symbol) {
 /* A real Rexx method call binds the caller's receiver value pointer directly
  * as a1.  Once an I6 summary reconstructed from the validated method body
  * proves that this is the method receiver, a direct object symbol can use the
- * identical storage in the inline instance.  Computed and class-attribute
+ * identical storage in the inline instance.  This also applies to an enclosing
+ * method's direct §this whenever the reconstructed result proof has at most
+ * one explicit return: its a1 mapping, or its already-proved inline alias, is
+ * the same receiver storage across arbitrary internal branches and calls, and
+ * the single-exit/fallthrough rewrite keeps receiver-owned link cleanup on one
+ * path.  Multiple explicit returns remain materialised because the current
+ * summary does not prove that every rewritten exit balances receiver-owned
+ * class-attribute links.  The established ordinary direct-object path does not
+ * need this nested-§this exit restriction.  Computed and class-attribute
  * receivers still need their existing evaluate-once locator/copyback path. */
 static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
                                                    ASTNode *receiver,
@@ -1723,12 +1731,16 @@ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
     summary = proc_symbol ? proc_symbol->inline_summary : NULL;
     if (!receiver_symbol || receiver_symbol->symbol_type != VARIABLE_SYMBOL ||
         receiver_symbol->type != TP_OBJECT || receiver_symbol->value_dims != 0 ||
-        receiver_symbol->is_this ||
-        receiver_symbol->is_arg || receiver_symbol->is_ref_arg ||
-        inline_symbol_has_generated_storage_scope(receiver_symbol) ||
-        receiver_symbol->inline_value_alias || receiver->flow_substitute_symbol ||
+        receiver_symbol->is_ref_arg ||
+        (!receiver_symbol->is_this &&
+         (receiver_symbol->is_arg ||
+          inline_symbol_has_generated_storage_scope(receiver_symbol) ||
+          receiver_symbol->inline_value_alias)) ||
+        receiver->flow_substitute_symbol ||
         !summary || summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
-        !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER)) {
+        !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER) ||
+        (receiver_symbol->is_this &&
+         (summary->result_flags & RXCP_INLINE_RESULT_MULTIPLE))) {
         return 0;
     }
 

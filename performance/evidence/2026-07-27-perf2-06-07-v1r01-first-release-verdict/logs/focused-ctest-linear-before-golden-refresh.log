@@ -1,0 +1,96 @@
+Test project /private/tmp/crexx-perf2-0607.HOrlKC/build-v1r01-focused-debug
+      Start   1: linked_opt_runtime_artifacts_build
+ 1/10 Test   #1: linked_opt_runtime_artifacts_build .........................   Passed  119.25 sec
+      Start 349: perf2_07_v3_representation
+ 2/10 Test #349: perf2_07_v3_representation .................................   Passed    1.58 sec
+      Start 567: inline_local_member_scalar_opt
+ 3/10 Test #567: inline_local_member_scalar_opt .............................   Passed    0.63 sec
+      Start 568: inline_receiver_nested_this_direct_placement_opt
+ 4/10 Test #568: inline_receiver_nested_this_direct_placement_opt ...........   Passed    0.75 sec
+      Start 569: inline_receiver_reference_alias_opt
+ 5/10 Test #569: inline_receiver_reference_alias_opt ........................   Passed    0.74 sec
+      Start 572: inline_test_computed_receiver_copyback_opt_rewrites
+ 6/10 Test #572: inline_test_computed_receiver_copyback_opt_rewrites ........   Passed    0.50 sec
+      Start 659: inline_test_computed_receiver_copyback_run_noopt
+ 7/10 Test #659: inline_test_computed_receiver_copyback_run_noopt ...........   Passed    0.63 sec
+      Start 660: inline_test_computed_receiver_copyback_run_opt
+ 8/10 Test #660: inline_test_computed_receiver_copyback_run_opt .............   Passed    0.56 sec
+      Start 661: inline_test_mutating_method_scalar_attr_return_run_noopt
+ 9/10 Test #661: inline_test_mutating_method_scalar_attr_return_run_noopt ...***Failed    0.64 sec
+CMake Error at run_inline_test_mutating_method_scalar_attr_return_noopt.cmake:21 (message):
+  Output mismatch:
+
+  Expected:
+
+  115
+
+  115
+
+  15
+
+
+
+  Got:
+
+  115
+
+  115
+
+  15
+
+  111
+
+  212
+
+
+
+
+      Start 662: inline_test_mutating_method_scalar_attr_return_run_opt
+10/10 Test #662: inline_test_mutating_method_scalar_attr_return_run_opt .....***Failed    0.56 sec
+CMake Error at run_inline_test_mutating_method_scalar_attr_return_opt.cmake:21 (message):
+  Output mismatch:
+
+  Expected:
+
+  115
+
+  115
+
+  15
+
+
+
+  Got:
+
+  115
+
+  115
+
+  15
+
+  111
+
+  212
+
+
+
+
+
+80% tests passed, 2 tests failed out of 10
+
+Label Time Summary:
+compiler          =   1.58 sec*proc (1 test)
+interpreter       =   1.58 sec*proc (1 test)
+linked_opt        =   3.74 sec*proc (6 tests)
+perf2_07          =   1.58 sec*proc (1 test)
+performance       =   1.58 sec*proc (1 test)
+receiver          =   0.75 sec*proc (1 test)
+reference         =   2.32 sec*proc (2 tests)
+representation    =   1.58 sec*proc (1 test)
+
+Total Test time (real) = 125.87 sec
+
+The following tests FAILED:
+	661 - inline_test_mutating_method_scalar_attr_return_run_noopt (Failed)
+	662 - inline_test_mutating_method_scalar_attr_return_run_opt (Failed) linked_opt
+Errors while running CTest

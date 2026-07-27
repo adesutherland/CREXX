@@ -1,0 +1,23 @@
+utc=2026-07-27T14:27:36Z
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+ lowpowermode         0
+AC Power:
+ lowpowermode         0
+15:27  up 13 days,  8:35, 1 user, load averages: 3.05 4.45 4.24
+ %CPU    RSS COMMAND
+ 46.5 107520 /usr/libexec/avconferenced
+ 38.2 101968 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+ 16.1 137072 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=gpu-process --user-data-dir=/Users/adrian/Library/Application Support/Codex --start-stack-profiler --gpu-preferences=UAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAOAAAAAAAAAADAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAABgAAAAAAAAAGAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --shared-files --metrics-shmem-handle=1752395122,r,10293679119155527867,2615798704996130412,262144 --field-trial-handle=1718379636,r,13939458281266442705,13500631505225940157,262144 --enable-features=OwlAuth,OwlAutofillAndPasswords,OwlDownloads,OwlPermissions,OwlPrinting,OwlWebViewEnhancements --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlHistory,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,10255997598677216281,14299835712959432543,4 --trace-process-track-uuid=3190708988185955192 --seatbelt-client=41
+ 12.3 519616 /Applications/ChatGPT.app/Contents/Resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled
+  8.3  45936 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+  5.8 1231472 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/adrian/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1784082395132553 --launch-time-ticks=755927053520 --shared-files --metrics-shmem-handle=1752395122,r,9229587612005446834,9420012420987103300,2097152 --field-trial-handle=1718379636,r,13939458281266442705,13500631505225940157,262144 --enable-features=OwlAuth,OwlAutofillAndPasswords,OwlDownloads,OwlPermissions,OwlPrinting,OwlWebViewEnhancements --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlHistory,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,10255997598677216281,14299835712959432543,4 --trace-process-track-uuid=3190708990997080739 --seatbelt-client=115
+  2.6  34832 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+  0.6  40016 /usr/sbin/coreaudiod
+  0.0  22880 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared -s mdworker -c MDSImporterWorker -m com.apple.mdworker.shared
+  0.0  12704 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared -s mdworker -c MDSImporterWorker -m com.apple.mdworker.shared
+  0.0  24320 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared -s mdworker -c MDSImporterWorker -m com.apple.mdworker.shared
+  0.0  10000 /System/Library/PrivateFrameworks/AOSKit.framework/Versions/A/XPCServices/com.apple.iCloudHelper.xpc/Contents/MacOS/com.apple.iCloudHelper

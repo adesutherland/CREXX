@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-26
+Last updated: 2026-07-27
 
 Status: live planning register for the second performance programme.
 Production work requires the explicit decision gates recorded in each activity;
@@ -196,7 +196,7 @@ Source:
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | Apple tactical frame tuning closed; relevant residual joins PERF2-07 | The Apple slice carries only value/reference helper ownership, payload/frame coupling and handover preparation into the combined PERF2-06/07 worklist. `PERF2-06-D01`, compact/hot-cold stream selection and the final VM recommendation wait for the supported hardware/compiler matrix. |
-| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | planned with relevant PERF2-06 residual as one Apple slice | Execute [`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md): refresh current value/reference ownership, close V3-R01, compare only evidence-selected V1-V6 forms, and stop at each Release verdict. No rejected frame-reset variant reopens. |
+| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | Apple slice complete; V1R01-R1 accepted | The proof-wide direct-placement candidate and V3-R01 correctness prerequisite are installed. At the 36-pair cap Richards is -21.224%/-21.076%, Permute -58.019%/-56.466%, common ratios are 1.244352x/1.242301x and no guard hits. Debug/Release each pass 1,925/1,925; focused ASan passes 10/10; lifecycle, RSS, retained-RXBIN and isolated-install guards pass. Other high-cost shapes are evidence-backed defer/reject/architecture transfers. Evidence: [`first verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/) and [`Apple closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/). |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued as Mac prerequisite to PERF2-09 | Complete or explicitly disposition CAP-01 through CAP-04 and every Tier A non-common cell before the Mac closure scorecard; language decisions still require Adrian. |
 | PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued for first full run on Mac | Run after the combined PERF2-06/07 slice and PERF2-08 qualification gate. Produce the Apple closure dossiers and scorecard before hardware handover. |
 | PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | Apple screen queued; final tuning reserved for Intel Linux | On Mac retain only bounded screening/controls. Select or tune build/layout options on the Intel Linux host under both GCC and Clang, then validate the frozen result on all required platforms. |
@@ -1005,6 +1005,35 @@ the Intel/Linux, Linux ARM64 and Windows matrix. C2R03 may enter the combined
 panel only if current payload-capacity/high-water evidence creates a materially
 different mechanism; its earlier pointer-map and reset forms remain rejected.
 
+Combined selection panel (2026-07-27): the fresh dual-VM Apple attribution
+selects compiler/inliner ownership before another VM/frame intervention.
+Optimized Richards performs 73,307,574 recursive copies and moves 582,076,729
+copy bytes per profiled run in both VMs; optimized Permute performs
+10,259,602/74,012,810. Native stacks and retired-instruction controls agree
+that `copy_value` is the Richards mechanism. Adrian selected
+`PERF2-06-07-V1R01`. Its rejected first form accidentally disabled the accepted
+ordinary receiver path in Bounce; that exact +1,000,000-copy failure remains
+retained. Adrian then approved a proof-wide rework. V1R01-R1 restores the
+ordinary path and directly places nested `§this` through arbitrary branches and
+calls when the reconstructed result has at most one explicit return, including
+fallthrough. Already-proved receiver aliases survive later inline cloning;
+multiple explicit returns retain materialisation because per-exit receiver-link
+balance is not yet proved. Exact Bounce work returns to status quo. At the
+36-pair cap Richards is -21.224%/-21.076%, Permute -58.019%/-56.466%, common
+aggregates are 1.244352x/1.242301x and no workload, aggregate or artifact-size
+guard hits. Adrian accepted the candidate. Proportional closeout passes broad
+Debug/Release 1,925/1,925, focused ASan 10/10, lifecycle/RSS, 12/12 retained
+RXBIN cells and the isolated install; Apple LSan is unsupported and recorded as
+such. C2R03 still fails its current payload-capacity/high-water entrance gate,
+and V6 remains a supported-platform architecture decision. Panel evidence:
+[`2026-07-27-perf2-06-07-selection-panel`](evidence/2026-07-27-perf2-06-07-selection-panel/).
+Rejected first-form evidence:
+[`2026-07-27-perf2-06-07-v1r01-first-release-verdict`](evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/).
+Reworked first Release evidence:
+[`2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/).
+Accepted Apple closeout:
+[`2026-07-27-perf2-06-07-v1r01-r1-closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/).
+
 | Stable ID | Hypothesis and surface | Semantic/evidence gate | Disposition |
 | --- | --- | --- | --- |
 | PERF2-06-C2R01 | One contiguous fixed-core reset, then a procedure-static `may_rebind_core` flag, can reduce recycled frame-entry work without touching mapping writes/reads; arguments remain a separately rebound tail. | Exact coverage of `LOAD`/`SWAP`/`LINK*`/private mapping effects, recursion, fixed/count calls, refs, signals, TRACE, late load, both VMs, Release time and text. | rejected: correct but adverse and code-layout-sensitive at 34 pairs |
@@ -1159,9 +1188,10 @@ owns the final default/private execution-architecture decision.
 
 The Mac execution of PERF2-07 is combined with the still-relevant PERF2-06
 value/reference/VM ownership boundary. The approved plan is
-[`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md), and the paste-ready
-successor prompt is
-[`PERF2-06-07-HANDOVER-PROMPT.md`](PERF2-06-07-HANDOVER-PROMPT.md). This does
+[`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md); its completed execution
+prompt is preserved in
+[`PERF2-06-07-HANDOVER-PROMPT.md`](PERF2-06-07-HANDOVER-PROMPT.md), and the
+successor hardware protocol is in the accepted closeout evidence. This does
 not pull `PERF2-06-D01` or final stream/default selection onto the Mac; those
 remain in the hardware handover matrix.
 
@@ -1203,7 +1233,7 @@ both avoidable copies and a premature global layout rewrite risky.
 
 | ID | Evidence and exact failure | Required distinguishing regression | Boundary |
 | --- | --- | --- | --- |
-| PERF2-07-V3-R01 | PERF2-04's valid Level B sequence initializes a string to `""`, initializes a decimal from `"2.2"`, assigns that decimal to the same string using `as .string`, then executes `strlen`. Both current VMs preserve the new bytes but return stale codepoint length `0` rather than `3`; the retained source rebuilds to byte-identical RXAS containing `load`, `dcopy`, in-place `dtos`, then `strlen`. | Keep the empty initialization and same-destination `dcopy; dtos` representation crossing, assert source `"2.2"` and length `3`, and run optimized/no-opt on `rxvm` and `rxbvm`. A typed-null sibling is only a control and must not replace this case. | Open exactly the V3 representation-validity/mutation-invalidation case. Audit other in-place string-producing conversions before selecting a fix; PERF2-04 installs none. Evidence: [`classification.md`](evidence/2026-07-25-perf2-04-bif-panel/diagnostics/length-empty-init-representation-regression/classification.md). |
+| PERF2-07-V3-R01 | PERF2-04's valid Level B sequence initializes a string to `""`, initializes a decimal from `"2.2"`, assigns that decimal to the same string using `as .string`, then executes `strlen`. Both VMs and both optimization modes preserved `2.2` but returned stale codepoint length `0`. `DCOPY` retained the old trusted zero count and `DTOS` changed bytes/byte length without completing VM-private UTF validity. | The maintained regression preserves `dcopy; dtos; strlen` and covers empty, non-empty Unicode, typed-null, live reference alias, numeric siblings and `DEXTR` on optimized/no-opt `rxvm` and `rxbvm`. All four retained reproducer cells and the related focused group pass. | Correctness fixed with one explicit in-place string-write completion contract; no performance claim, language, public RXAS/RXBIN or ABI change. Broad selective cache retention remains deferred because the current mechanism count is zero. Evidence: [`CORRECTNESS.md`](evidence/2026-07-27-perf2-06-07-selection-panel/CORRECTNESS.md). |
 
 Mutable object/string copy-on-write and a general allocator replacement do not
 enter the first panel. They require explicit alias/reference proof and current
@@ -1219,6 +1249,16 @@ after all high-cost shapes have an accepted optimization or an evidence-backed
 defer/reject decision. Pooling decisions additionally require the targeted
 alloc/free lifetime, retained/high-water, size-class, reuse and allocator-stack
 evidence defined by PERF2-01; request counts and RSS alone are insufficient.
+
+Apple closeout (2026-07-27): Adrian accepted V1R01-R1. The prerequisite V3-R01
+fix and proof-wide compiler placement are installed; all other panel rows retain
+their explicit defer/reject/architecture-owner dispositions. The accepted Mac
+slice passes broad Debug and profiling-off Release 1,925/1,925, focused ASan
+10/10, lifecycle/RSS guards, retained-RXBIN compatibility 12/12 and isolated
+install smoke in both VMs. The bundle is
+[`2026-07-27-perf2-06-07-v1r01-r1-closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/).
+This is not a cross-platform claim and does not close `PERF2-06-D01`, Gate E or
+the final VM/default decision.
 
 ## PERF2-08 — capability, equivalence and Level B/G decision lane
 

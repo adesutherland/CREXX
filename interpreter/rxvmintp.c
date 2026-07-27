@@ -6727,7 +6727,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     extend_string_buffer(op1R, string_size);
     /* Convert */
     current_frame->decimal->decimalToString(current_frame->decimal, op1R, op1R->string_value);
-    op1R->string_length = strlen(op1R->string_value);
+    finish_ascii_string_write(op1R, strlen(op1R->string_value));
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -7227,7 +7227,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     DEBUG("TRACE - DEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(current_frame->decimal));
     current_frame->decimal->decimalExtract(current_frame->decimal, op1R->string_value, &(op2R->int_value), op3R);
-    op1R->string_length = strlen(op1R->string_value);
+    finish_ascii_string_write(op1R, strlen(op1R->string_value));
     DISPATCH;
 /* ====================================================================================
  * End of Decimal Plugin instructions
@@ -8964,8 +8964,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
                 case 'N':  {
                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
-                     op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
-                     op1R->string_pos = 0;
+                     snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
+                     finish_string_write(op1R, strlen(op1R->string_value));
                      break;  // time zone names
                 }
                 case 'U':  {
@@ -9020,6 +9020,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 }
                 op1R->string_length = i;
                 null_terminate_string_buffer(op1R);
+                finish_string_write(op1R, op1R->string_length);
             }
             DISPATCH;
 
@@ -9043,6 +9044,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                            op1R->string_length);
                     null_terminate_string_buffer(op1R);
                 }
+                finish_string_write(op1R, op1R->string_length);
             }
             DISPATCH;
 
@@ -10406,12 +10408,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
             null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
-            op1R->string_length = rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
-            op1R->string_pos = 0;
-  #ifndef NUTF8
-            op1R->string_char_pos = 0;
-            op1R->string_chars = op1R->string_length;
-  #endif
+            finish_ascii_string_write(op1R,
+                    rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value));
             DISPATCH;
 /* ------------------------------------------------------------------------------------
  * FEXTR_REG_REG_REG Extract float to string coefficient and decimal exponent integer
@@ -10555,7 +10553,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #endif
                 prep_string_buffer(op1R, 3);
                 split2hex(ch, 0)                    // split the character into their 2 byte hex presentation
-                PUTSTRLEN(op1R, 2)                  // hex length is 2
+                finish_ascii_string_write(op1R, 2); // hex length is 2
                 goto hexdispatch;
    /* ----- create full UTF8 code -------------- */
                 hexm2:
@@ -10573,7 +10571,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     unsigned char b = bytebuf[i];
                     split2hex(b, i*2)                     // split the character into their 2 byte hex presentation
                 }
-                PUTSTRLEN(op1R, 8);
+                finish_ascii_string_write(op1R, 8);
                 goto hexdispatch;
     /* ----- add UTF8 code depending on length -------------- */
             hexm3:
@@ -10588,7 +10586,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     unsigned char b = start[i];
                     split2hex(b, i * 2)                     // split the character into their 2 byte hex presentation
                 }
-                PUTSTRLEN(op1R, bytelen * 2);
+                finish_ascii_string_write(op1R, (size_t)bytelen * 2);
             }
         hexdispatch:
         DISPATCH;
@@ -12961,6 +12959,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     op1R->string_length = i;
                 }
                 null_terminate_string_buffer(op1R);
+                finish_string_write(op1R, op1R->string_length);
             }
             DISPATCH;
 
@@ -12985,6 +12984,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     if (i > 0) memmove(op1R->string_value, op1R->string_value + i, op1R->string_length);
                 }
                 null_terminate_string_buffer(op1R);
+                finish_string_write(op1R, op1R->string_length);
             }
             DISPATCH;
 
@@ -13001,6 +13001,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 if (len < op1R->string_length) {
                     op1R->string_length = len;
                     null_terminate_string_buffer(op1R);
+                    finish_string_write(op1R, op1R->string_length);
                 }
             }
             DISPATCH;
