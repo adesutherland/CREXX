@@ -1,0 +1,125 @@
+/* Collapse exact rxvm/rxbvm VM-C2 reset diagnostic rows into one summary. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] < 5 | ((argv[0] - 1) <mod> 4) <> 0 then do
+  say "Usage: summarize_vm_c2_reset OUTPUT VARIANT WORKLOAD RXVM RXBVM [VARIANT WORKLOAD RXVM RXBVM ...]"
+  return 2
+end
+
+output_path = argv[1]
+remove_out = .string[]
+remove_err = .string[]
+address crexx "rm :output_path" output remove_out error remove_err
+
+header = "variant,workload,vm_parity,reused_activations,eligible_core_slots," || ,
+    "core_reset_activations,core_reset_slots,core_reset_bytes," || ,
+    "static_skip_activations,static_skip_slots,prepared_procedures," || ,
+    "may_rebind_procedures,proved_clean_procedures," || ,
+    "unknown_fallback_procedures,instructions_scanned"
+if lineout(output_path, header) <> 0 then return fail("could not create output")
+
+keys = .string[]
+keys[1] = "reused_activations"
+keys[2] = "eligible_core_slots"
+keys[3] = "core_reset_activations"
+keys[4] = "core_reset_slots"
+keys[5] = "core_reset_bytes"
+keys[6] = "static_skip_activations"
+keys[7] = "static_skip_slots"
+keys[8] = "prepared_procedures"
+keys[9] = "may_rebind_procedures"
+keys[10] = "proved_clean_procedures"
+keys[11] = "unknown_fallback_procedures"
+keys[12] = "instructions_scanned"
+
+arg_at = 2
+do while arg_at <= argv[0]
+  variant = argv[arg_at]
+  workload = argv[arg_at + 1]
+  rxvm_path = argv[arg_at + 2]
+  rxbvm_path = argv[arg_at + 3]
+  rxvm_stats = read_stats(rxvm_path)
+  rxbvm_stats = read_stats(rxbvm_path)
+
+  if rxvm_stats[0] = 0 then return fail(rxvm_path || " has no diagnostic row")
+  if rxbvm_stats[0] = 0 then return fail(rxbvm_path || " has no diagnostic row")
+  if rxvm_stats[2] <> "vm=rxvm" then return fail(rxvm_path || " is not rxvm")
+  if rxbvm_stats[2] <> "vm=rxbvm" then return fail(rxbvm_path || " is not rxbvm")
+  if \same_stats(rxvm_stats, rxbvm_stats) then
+    return fail(variant || "/" || workload || " VM diagnostic rows differ")
+
+  expected_mode = ""
+  if variant = "r1" then expected_mode = "1"
+  else if variant = "r2" then expected_mode = "2"
+  else return fail("unexpected variant " || variant)
+  if stat_value(rxvm_stats, "mode") <> expected_mode then
+    return fail(variant || "/" || workload || " has the wrong mode")
+
+  values = .string[]
+  do key_at = 1 to keys[0]
+    values[key_at] = stat_value(rxvm_stats, keys[key_at])
+    if values[key_at] = "" then
+      return fail(variant || "/" || workload || " lacks " || keys[key_at])
+  end
+
+  row = variant || "," || workload || ",both-exact"
+  do value_at = 1 to values[0]
+    row = row || "," || values[value_at]
+  end
+  if lineout(output_path, row) <> 0 then return fail("could not append output")
+  arg_at = arg_at + 4
+end
+
+call lineout output_path
+say "PASS: VM-C2 reset diagnostic rows are exact at" output_path
+return 0
+
+read_stats: procedure = .string[]
+  arg path = .string
+  stats = .string[]
+  prefix = "VM_C2_RESET_STATS,"
+  do while lines(path)
+    line = linein(path)
+    if left(line, length(prefix)) = prefix then stats = split_delimited(line, ",")
+  end
+  call linein path
+  return stats
+
+same_stats: procedure = .int
+  arg left_stats = .string[], right_stats = .string[]
+  if left_stats[0] <> right_stats[0] then return 0
+  do field = 3 to left_stats[0]
+    if left_stats[field] <> right_stats[field] then return 0
+  end
+  return 1
+
+stat_value: procedure = .string
+  arg stats = .string[], key = .string
+  prefix = key || "="
+  do field = 2 to stats[0]
+    if left(stats[field], length(prefix)) = prefix then
+      return substr(stats[field], length(prefix) + 1)
+  end
+  return ""
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

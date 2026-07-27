@@ -1,0 +1,734 @@
+diff --git a/interpreter/CMakeLists.txt b/interpreter/CMakeLists.txt
+index dff459347..78db79b47 100644
+--- a/interpreter/CMakeLists.txt
++++ b/interpreter/CMakeLists.txt
+@@ -9,6 +9,15 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is ab
+ option(CREXX_VM_PROFILING
+         "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
+         OFF)
++set(RXVM_VM_C2_RESET_MODE "0" CACHE STRING
++        "PERF2-06 VM-C2 reset PoC mode: 0=dense loops, 1=fixed-core copy, 2=static guarded copy")
++set_property(CACHE RXVM_VM_C2_RESET_MODE PROPERTY STRINGS 0 1 2)
++option(RXVM_VM_C2_RESET_DIAGNOSTICS
++        "Emit PERF2-06 VM-C2 reset PoC structural counters (never use for timing)"
++        OFF)
++if(NOT RXVM_VM_C2_RESET_MODE MATCHES "^[012]$")
++    message(FATAL_ERROR "RXVM_VM_C2_RESET_MODE must be 0, 1, or 2")
++endif()
+ 
+ set(_rxvmintp_sanitizer_flags
+         "${CMAKE_C_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
+@@ -58,6 +67,12 @@ endif()
+ 
+ function(crexx_add_rxvm_core_objects target_name)
+     add_library(${target_name} OBJECT ${RXVM_CORE_OBJECT_SOURCES})
++    target_compile_definitions(${target_name} PRIVATE
++            RXVM_VM_C2_RESET_MODE=${RXVM_VM_C2_RESET_MODE})
++    if(RXVM_VM_C2_RESET_DIAGNOSTICS)
++        target_compile_definitions(${target_name} PRIVATE
++                RXVM_VM_C2_RESET_DIAGNOSTICS=1)
++    endif()
+     target_include_directories(${target_name} PRIVATE
+             .
+             ./rxvmplugin
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 1392b5686..e1305b427 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -4068,6 +4068,7 @@ RX_INLINE stack_frame *frame_f(
+     size_t nominal_num_locals;
+     size_t local_count;
+     size_t global_count = 0;
++    size_t core_count;
+     size_t arg_count;
+     size_t pointer_count;
+     size_t pointer_bytes;
+@@ -4089,11 +4090,10 @@ RX_INLINE stack_frame *frame_f(
+     arg_count = (size_t)no_args;
+     if (procedure->binarySpace) global_count = (size_t)procedure->binarySpace->globals;
+ 
+-    if (!rxvm_checked_size_add(local_count, global_count, &num_locals) ||
+-        !rxvm_checked_size_add(num_locals, arg_count, &num_locals) ||
++    if (!rxvm_checked_size_add(local_count, global_count, &core_count) ||
++        !rxvm_checked_size_add(core_count, arg_count, &num_locals) ||
+         !rxvm_checked_size_add(num_locals, 1, &num_locals) ||
+-        !rxvm_checked_size_add(local_count, global_count, &nominal_num_locals) ||
+-        !rxvm_checked_size_add(nominal_num_locals, NOMINAL_NUM_ARGS, &nominal_num_locals) ||
++        !rxvm_checked_size_add(core_count, NOMINAL_NUM_ARGS, &nominal_num_locals) ||
+         !rxvm_checked_size_add(nominal_num_locals, 1, &nominal_num_locals)) {
+         return 0;
+     }
+@@ -4115,8 +4115,13 @@ RX_INLINE stack_frame *frame_f(
+         rxvm_profile_record_frame_activation(1, 0, 0);
+         profile_reused_frame = 1;
+ #endif
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++        procedure->vm_c2_reused_activations++;
++        procedure->vm_c2_eligible_core_slots += (uint64_t)core_count;
++#endif
+ 
+-        /* Reset Local Registers */
++        /* Reset the fixed local/global pointer mapping. */
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_DENSE
+ #ifdef CREXX_VM_PROFILING
+         profile_phase_start = rxvm_profile_frame_phase_begin();
+ #endif
+@@ -4144,6 +4149,56 @@ RX_INLINE stack_frame *frame_f(
+         rxvm_profile_record_frame_phase(
+                 RXVM_PROFILE_FRAME_GLOBAL_RELINK, 1, profile_phase_start,
+                 global_count);
++#endif
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++        if (core_count) {
++            procedure->vm_c2_core_reset_activations++;
++            procedure->vm_c2_core_reset_slots += (uint64_t)core_count;
++        }
++        else procedure->vm_c2_zero_core_activations++;
++#endif
++#else
++        {
++            int reset_core = 1;
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++            reset_core = procedure->may_rebind_core != 0;
++#endif
++            if (core_count && reset_core) {
++#ifdef CREXX_VM_PROFILING
++                profile_phase_start = rxvm_profile_frame_phase_begin();
++#endif
++                memcpy(this->locals, this->baselocals,
++                       core_count * sizeof(*this->locals));
++#ifdef CREXX_VM_PROFILING
++                rxvm_profile_record_frame_phase(
++                        RXVM_PROFILE_FRAME_FIXED_CORE_MAPPING_RESET, 1,
++                        profile_phase_start, core_count);
++#endif
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++                procedure->vm_c2_core_reset_activations++;
++                procedure->vm_c2_core_reset_slots += (uint64_t)core_count;
++#endif
++            }
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++            else if (core_count) {
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++                procedure->vm_c2_static_skip_activations++;
++                procedure->vm_c2_static_skip_slots += (uint64_t)core_count;
++#endif
++            }
++#endif
++            else {
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++                procedure->vm_c2_zero_core_activations++;
++#endif
++            }
++        }
++#ifdef SAFE_RECYCLED_STACKFRAMES
++        for (i = 0; i < procedure->locals; i++) {
++            value_zero(this->locals[i]);
++        }
++#endif
++        i = (int)core_count;
+ #endif
+         /* Reset register a0 - number of arguments */
+ #ifdef CREXX_VM_PROFILING
+@@ -4152,6 +4207,9 @@ RX_INLINE stack_frame *frame_f(
+         this->locals[i] = this->baselocals[i];
+         value_zero(this->locals[i]);
+         this->locals[i]->int_value = no_args;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++        procedure->vm_c2_reused_a0_resets++;
++#endif
+ #ifdef CREXX_VM_PROFILING
+         rxvm_profile_record_frame_phase(
+                 RXVM_PROFILE_FRAME_ARGUMENT_COUNT_RESET, 1,
+@@ -4171,6 +4229,9 @@ RX_INLINE stack_frame *frame_f(
+ 
+         this = (stack_frame *) malloc( frame_size );
+         if (!this) return 0;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++        procedure->vm_c2_fresh_activations++;
++#endif
+ #ifdef CREXX_VM_PROFILING
+         rxvm_profile_record_frame_activation(0, frame_size, value_count);
+ #endif
+@@ -4352,6 +4413,109 @@ RX_INLINE stack_frame *frame_f(
+     return this;
+ }
+ 
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++static void rxvm_vm_c2_reset_diagnostics_begin(rxvm_context *context) {
++    size_t mod_index;
++
++    if (!context) return;
++    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
++        size_t proc_index;
++        module *mod = context->modules[mod_index];
++        if (!mod) continue;
++        for (proc_index = 0; proc_index < mod->procedure_count; proc_index++) {
++            proc_runtime *runtime = &mod->procedures[proc_index];
++            runtime->vm_c2_fresh_activations = 0;
++            runtime->vm_c2_reused_activations = 0;
++            runtime->vm_c2_eligible_core_slots = 0;
++            runtime->vm_c2_core_reset_activations = 0;
++            runtime->vm_c2_core_reset_slots = 0;
++            runtime->vm_c2_static_skip_activations = 0;
++            runtime->vm_c2_static_skip_slots = 0;
++            runtime->vm_c2_zero_core_activations = 0;
++            runtime->vm_c2_reused_a0_resets = 0;
++        }
++    }
++}
++
++static void rxvm_vm_c2_reset_diagnostics_report(rxvm_context *context, int rc) {
++    uint64_t prepared_procedures = 0;
++    uint64_t may_rebind_procedures = 0;
++    uint64_t proved_clean_procedures = 0;
++    uint64_t unknown_fallback_procedures = 0;
++    uint64_t instructions_scanned = 0;
++    uint64_t fresh_activations = 0;
++    uint64_t reused_activations = 0;
++    uint64_t eligible_core_slots = 0;
++    uint64_t core_reset_activations = 0;
++    uint64_t core_reset_slots = 0;
++    uint64_t static_skip_activations = 0;
++    uint64_t static_skip_slots = 0;
++    uint64_t zero_core_activations = 0;
++    uint64_t reused_a0_resets = 0;
++    size_t mod_index;
++
++    if (!context) return;
++    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
++        size_t proc_index;
++        module *mod = context->modules[mod_index];
++        if (!mod) continue;
++        for (proc_index = 0; proc_index < mod->procedure_count; proc_index++) {
++            proc_runtime *runtime = &mod->procedures[proc_index];
++            prepared_procedures++;
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++            instructions_scanned += (uint64_t)runtime->vm_c2_instructions_scanned;
++            if (runtime->vm_c2_reset_class == RXVM_VM_C2_RESET_CLASS_MAY_REBIND)
++                may_rebind_procedures++;
++            else if (runtime->vm_c2_reset_class == RXVM_VM_C2_RESET_CLASS_PROVED_CLEAN)
++                proved_clean_procedures++;
++            else unknown_fallback_procedures++;
++#endif
++            fresh_activations += runtime->vm_c2_fresh_activations;
++            reused_activations += runtime->vm_c2_reused_activations;
++            eligible_core_slots += runtime->vm_c2_eligible_core_slots;
++            core_reset_activations += runtime->vm_c2_core_reset_activations;
++            core_reset_slots += runtime->vm_c2_core_reset_slots;
++            static_skip_activations += runtime->vm_c2_static_skip_activations;
++            static_skip_slots += runtime->vm_c2_static_skip_slots;
++            zero_core_activations += runtime->vm_c2_zero_core_activations;
++            reused_a0_resets += runtime->vm_c2_reused_a0_resets;
++        }
++    }
++
++    fprintf(stderr,
++            "VM_C2_RESET_STATS,vm=%s,mode=%d,result=%d,"
++            "prepared_procedures=%llu,may_rebind_procedures=%llu,"
++            "proved_clean_procedures=%llu,unknown_fallback_procedures=%llu,"
++            "instructions_scanned=%llu,fresh_activations=%llu,"
++            "reused_activations=%llu,eligible_core_slots=%llu,"
++            "core_reset_activations=%llu,core_reset_slots=%llu,"
++            "core_reset_bytes=%llu,static_skip_activations=%llu,"
++            "static_skip_slots=%llu,zero_core_activations=%llu,"
++            "reused_a0_resets=%llu\n",
++#ifdef NTHREADED
++            "rxbvm",
++#else
++            "rxvm",
++#endif
++            RXVM_VM_C2_RESET_MODE, rc,
++            (unsigned long long)prepared_procedures,
++            (unsigned long long)may_rebind_procedures,
++            (unsigned long long)proved_clean_procedures,
++            (unsigned long long)unknown_fallback_procedures,
++            (unsigned long long)instructions_scanned,
++            (unsigned long long)fresh_activations,
++            (unsigned long long)reused_activations,
++            (unsigned long long)eligible_core_slots,
++            (unsigned long long)core_reset_activations,
++            (unsigned long long)core_reset_slots,
++            (unsigned long long)(core_reset_slots * sizeof(value *)),
++            (unsigned long long)static_skip_activations,
++            (unsigned long long)static_skip_slots,
++            (unsigned long long)zero_core_activations,
++            (unsigned long long)reused_a0_resets);
++}
++#endif
++
+ /* Clear Stack Frame - deallocating register contents and plugins */
+ RX_INLINE void clear_frame(stack_frame *frame) {
+     int i, offset;
+@@ -4876,6 +5040,9 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
+     value *work2;
+     value *work3;
+     module *current_module = 0;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    int vm_c2_reset_diagnostics_active = 0;
++#endif
+ #ifdef NTHREADED
+     void *next_inst = 0;
+ #else
+@@ -5036,6 +5203,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
+         goto interprt_finished;
+     }
+ 
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    rxvm_vm_c2_reset_diagnostics_begin(context);
++    vm_c2_reset_diagnostics_active = 1;
++#endif
++
+     /* Find the program's entry point */
+     DEBUG("Find program entry point\n");
+     if (context->ext_proc) {
+@@ -14056,6 +14228,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+     if (context->debug_mode) rxvm_mprintf("Interpreter Finished with rc=%d\n", rc);
+ #endif
+ 
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    if (vm_c2_reset_diagnostics_active)
++        rxvm_vm_c2_reset_diagnostics_report(context, rc);
++#endif
++
+     RXVM_INSTRUMENTATION_VM_END(context, rc);
+ 
+     return rc;
+diff --git a/interpreter/rxvmintp.h b/interpreter/rxvmintp.h
+index 203f8e195..cd63e9627 100644
+--- a/interpreter/rxvmintp.h
++++ b/interpreter/rxvmintp.h
+@@ -36,12 +36,49 @@
+ #include <assert.h>
+ #include <stdint.h>
+ 
++/* PERF2-06 VM-C2 isolated reset PoC.  Mode 0 preserves the accepted product,
++ * mode 1 uses one fixed-core copy, and mode 2 guards that copy with a
++ * conservative procedure-static proof. */
++#define RXVM_VM_C2_RESET_DENSE 0
++#define RXVM_VM_C2_RESET_FIXED 1
++#define RXVM_VM_C2_RESET_STATIC 2
++
++#ifndef RXVM_VM_C2_RESET_MODE
++#define RXVM_VM_C2_RESET_MODE RXVM_VM_C2_RESET_DENSE
++#endif
++
++#if RXVM_VM_C2_RESET_MODE < RXVM_VM_C2_RESET_DENSE || \
++    RXVM_VM_C2_RESET_MODE > RXVM_VM_C2_RESET_STATIC
++#error "RXVM_VM_C2_RESET_MODE must be 0, 1, or 2"
++#endif
++
++#ifndef RXVM_VM_C2_RESET_DIAGNOSTICS
++#define RXVM_VM_C2_RESET_DIAGNOSTICS 0
++#endif
++
++#if RXVM_VM_C2_RESET_DIAGNOSTICS != 0 && RXVM_VM_C2_RESET_DIAGNOSTICS != 1
++#error "RXVM_VM_C2_RESET_DIAGNOSTICS must be 0 or 1"
++#endif
++
++typedef enum rxvm_vm_c2_reset_class {
++    RXVM_VM_C2_RESET_CLASS_UNKNOWN = 0,
++    RXVM_VM_C2_RESET_CLASS_PROVED_CLEAN,
++    RXVM_VM_C2_RESET_CLASS_MAY_REBIND
++} rxvm_vm_c2_reset_class;
++
+ typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
+ 
+ typedef struct module module;
+ typedef struct proc_runtime {
+     proc_constant *definition;
+     int locals;
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++    unsigned char may_rebind_core;
++    unsigned char vm_c2_reset_class;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    size_t vm_c2_instructions_scanned;
++#endif
++#endif
+     bin_space *binarySpace;
+     stack_frame **frame_free_list;
+     stack_frame *frame_free_list_head;
+@@ -50,6 +87,17 @@ typedef struct proc_runtime {
+ #ifdef CREXX_VM_PROFILING
+     size_t profile_id;
+ #endif
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    uint64_t vm_c2_fresh_activations;
++    uint64_t vm_c2_reused_activations;
++    uint64_t vm_c2_eligible_core_slots;
++    uint64_t vm_c2_core_reset_activations;
++    uint64_t vm_c2_core_reset_slots;
++    uint64_t vm_c2_static_skip_activations;
++    uint64_t vm_c2_static_skip_slots;
++    uint64_t vm_c2_zero_core_activations;
++    uint64_t vm_c2_reused_a0_resets;
++#endif
+ } proc_runtime;
+ 
+ typedef struct rxvm_graph_provider_binding {
+diff --git a/interpreter/rxvmload.c b/interpreter/rxvmload.c
+index 715a9d423..1e9143746 100644
+--- a/interpreter/rxvmload.c
++++ b/interpreter/rxvmload.c
+@@ -25,6 +25,7 @@
+ /* CREXX Module Loader */
+ 
+ #include <stdlib.h>
++#include <string.h>
+ #include "rxvmintp.h"
+ #include "rxastree.h"
+ #include "rxvmvars.h"
+@@ -102,6 +103,266 @@ static void free_interface_method_registry(rxvm_context *context);
+ static void build_module_runtime_procedures(module *mod);
+ static void build_module_dynamic_site_caches(module *mod);
+ 
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++static int rxvm_vm_c2_expected_operands(int opcode) {
++    switch (opcode) {
++#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
++        case OP_##NAME: return (int)(sizeof(FMT) - 1u);
++#include "../binutils/include/rxops.h"
++#undef X
++        default: return -1;
++    }
++}
++
++static int rxvm_vm_c2_effect_state(int opcode) {
++    switch (opcode) {
++#define RXE(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
++        (STATE)
++#define RXEV(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
++        (STATE)
++#define RXEC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
++             CURSOR_READS, CURSOR_WRITES, CONST_EVALUATOR) (STATE)
++#define RXOP_EFFECT(NAME, EFFECTS) case OP_##NAME: return EFFECTS;
++#include "../binutils/include/rxopeffects.h"
++#undef RXOP_EFFECT
++#undef RXEC
++#undef RXEV
++#undef RXE
++        default: return RXOP_EFFECT_CONSERVATIVE;
++    }
++}
++
++static unsigned int rxvm_vm_c2_effect_semantics(int opcode) {
++    switch (opcode) {
++#define RXE(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
++        (SEMANTICS)
++#define RXEV(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
++        (SEMANTICS)
++#define RXEC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
++             CURSOR_READS, CURSOR_WRITES, CONST_EVALUATOR) (SEMANTICS)
++#define RXOP_EFFECT(NAME, EFFECTS) case OP_##NAME: return EFFECTS;
++#include "../binutils/include/rxopeffects.h"
++#undef RXOP_EFFECT
++#undef RXEC
++#undef RXEV
++#undef RXE
++        default: return RXOP_SEM_OPAQUE;
++    }
++}
++
++static FlowType rxvm_vm_c2_opcode_flow(int opcode) {
++    switch (opcode) {
++#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) case OP_##NAME: return FLOW;
++#include "../binutils/include/rxops.h"
++#undef X
++        default: return FLOW_TERM;
++    }
++}
++
++static int rxvm_vm_c2_legacy_operand_selected(
++        unsigned int mask, size_t operand_index) {
++    if (mask == RXOP_OP_ALL) return 1;
++    if (operand_index >= 3u) return 0;
++    return (mask & (1u << operand_index)) != 0;
++}
++
++static int rxvm_vm_c2_signature_operand_selected(
++        const char *signature, size_t operand_index) {
++    size_t signature_length;
++
++    if (!signature) return 0;
++    signature_length = strlen(signature);
++    return operand_index < signature_length &&
++           signature[operand_index] == '1';
++}
++
++static int rxvm_vm_c2_effect_branch_target(
++        int opcode, size_t operand_index) {
++    switch (opcode) {
++#define RXE(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
++        rxvm_vm_c2_legacy_operand_selected(BRANCH_TARGETS, operand_index)
++#define RXEV(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
++        rxvm_vm_c2_signature_operand_selected(BRANCH_TARGETS, operand_index)
++#define RXEC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
++             CURSOR_READS, CURSOR_WRITES, CONST_EVALUATOR) \
++        rxvm_vm_c2_legacy_operand_selected(BRANCH_TARGETS, operand_index)
++#define RXOP_EFFECT(NAME, EFFECTS) case OP_##NAME: return EFFECTS;
++#include "../binutils/include/rxopeffects.h"
++#undef RXOP_EFFECT
++#undef RXEC
++#undef RXEV
++#undef RXE
++        default: return 0;
++    }
++}
++
++/* These are the canonical instructions that can change a frame register's
++ * pointer mapping, including call-window restoration hazards.  Object
++ * attribute LINKTOATTR/UNLINKATTR instructions intentionally do not appear:
++ * they change an object's attribute table, not the frame mapping. */
++static int rxvm_vm_c2_opcode_may_rebind_frame(int opcode) {
++    unsigned int semantics = rxvm_vm_c2_effect_semantics(opcode);
++
++    if (semantics & (RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE)) {
++        switch (opcode) {
++            case OP_LINKTOATTR_REG_REG_REG:
++            case OP_LINKTOATTR_INT_REG_REG:
++            case OP_LINKTOATTR1_REG_REG_REG:
++            case OP_LINKTOATTR1_INT_REG_REG:
++            case OP_UNLINKATTR_REG_REG:
++            case OP_UNLINKATTR_INT_REG:
++            case OP_UNLINKATTR1_REG_REG:
++            case OP_UNLINKATTR1_INT_REG:
++                break;
++            default:
++                return 1;
++        }
++    }
++
++    switch (opcode) {
++        case OP_LOAD_REG_REG:
++        case OP_LOAD_INT_INT:
++        case OP_LOAD_INT_REG:
++        case OP_CALL_REG_FUNC_REG:
++        case OP_DCALL_REG_REG_REG:
++        case OP_SWAPN_REG_REG_REG_REG:
++        case OP_SWAPN_REG_REG_REG_REG_REG_REG:
++        case OP_SWAPN_REG_REG_REG_REG_REG_REG_REG_REG:
++        case OP_SETTPSWAP_REG_INT_REG:
++        case OP_LOADSETTPSWAP_REG_INT_REG_INT_REG:
++        case OP_SWAPSETTP_REG_REG_REG_INT:
++        case OP_SWAPSETTPSWAP_REG_REG_REG_INT_REG:
++        case OP_SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG:
++        case OP_SWAPCALL_REG_FUNC_REG_REG_REG:
++        case OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG:
++        case OP_SETTPCALL_REG_FUNC_REG_REG_INT:
++        case OP_SWAP_REG_REG:
++            return 1;
++        default:
++            return 0;
++    }
++}
++
++static void rxvm_vm_c2_classify_runtime_procedure(
++        module *mod, proc_runtime *runtime,
++        const unsigned char *instruction_boundaries) {
++    size_t end;
++    size_t index;
++    size_t candidate;
++    size_t proc_index;
++    int may_rebind = 0;
++
++    runtime->may_rebind_core = 1;
++    runtime->vm_c2_reset_class = RXVM_VM_C2_RESET_CLASS_UNKNOWN;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    runtime->vm_c2_instructions_scanned = 0;
++#endif
++
++    if (!mod || mod->native || !runtime->binarySpace ||
++        runtime->start == SIZE_MAX || !mod->segment.binary ||
++        runtime->start >= mod->segment.inst_size || !instruction_boundaries ||
++        !instruction_boundaries[runtime->start]) return;
++
++    end = mod->segment.inst_size;
++    for (proc_index = 0; proc_index < mod->procedure_count; proc_index++) {
++        if (mod->procedures[proc_index].binarySpace != &mod->segment) continue;
++        candidate = mod->procedures[proc_index].start;
++        if (candidate > runtime->start && candidate < end) end = candidate;
++    }
++    if (!instruction_boundaries[end]) return;
++
++    index = runtime->start;
++    while (index < end) {
++        int opcode = mod->segment.binary[index].instruction.opcode;
++        int operand_count = mod->segment.binary[index].instruction.no_ops;
++        int expected_operands = rxvm_vm_c2_expected_operands(opcode);
++        unsigned int semantics;
++        FlowType flow;
++        size_t operand_index;
++        size_t branch_target_count = 0;
++        size_t next;
++
++        if (expected_operands < 0 ||
++            rxvm_vm_c2_effect_state(opcode) != RXOP_EFFECT_CLASSIFIED ||
++            operand_count != expected_operands ||
++            (size_t)operand_count >= end - index) return;
++        semantics = rxvm_vm_c2_effect_semantics(opcode);
++        if (semantics & RXOP_SEM_INDIRECT_BRANCH) return;
++        flow = rxvm_vm_c2_opcode_flow(opcode);
++        for (operand_index = 0;
++             operand_index < (size_t)operand_count;
++             operand_index++) {
++            size_t target;
++
++            if (!rxvm_vm_c2_effect_branch_target(opcode, operand_index))
++                continue;
++            branch_target_count++;
++            target = mod->segment.binary[index + operand_index + 1u].index;
++            if (target < runtime->start || target >= end ||
++                !instruction_boundaries[target]) return;
++        }
++        if ((flow == FLOW_JUMP || flow == FLOW_COND) &&
++            branch_target_count == 0) return;
++        next = index + (size_t)operand_count + 1u;
++        if (next == end &&
++            (flow == FLOW_NEXT ||
++             (flow == FLOW_COND && branch_target_count < 2u))) return;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++        runtime->vm_c2_instructions_scanned++;
++#endif
++        if (rxvm_vm_c2_opcode_may_rebind_frame(opcode)) may_rebind = 1;
++        index = next;
++    }
++
++    if (index != end) return;
++    runtime->may_rebind_core = (unsigned char)may_rebind;
++    runtime->vm_c2_reset_class = may_rebind
++            ? RXVM_VM_C2_RESET_CLASS_MAY_REBIND
++            : RXVM_VM_C2_RESET_CLASS_PROVED_CLEAN;
++}
++
++static void rxvm_vm_c2_classify_module_procedures(module *mod) {
++    unsigned char *instruction_boundaries;
++    size_t instruction_index;
++    size_t proc_index;
++    int valid_stream = 0;
++
++    if (!mod || !mod->segment.binary || !mod->segment.inst_size ||
++        mod->segment.inst_size == SIZE_MAX) return;
++    instruction_boundaries = (unsigned char *)calloc(
++            mod->segment.inst_size + 1u, sizeof(*instruction_boundaries));
++    if (!instruction_boundaries) return;
++
++    instruction_index = 0;
++    while (instruction_index < mod->segment.inst_size) {
++        int opcode = mod->segment.binary[instruction_index].instruction.opcode;
++        int operand_count =
++                mod->segment.binary[instruction_index].instruction.no_ops;
++        int expected_operands = rxvm_vm_c2_expected_operands(opcode);
++
++        instruction_boundaries[instruction_index] = 1;
++        if (expected_operands < 0 || operand_count != expected_operands ||
++            (size_t)operand_count >=
++                    mod->segment.inst_size - instruction_index) break;
++        instruction_index += (size_t)operand_count + 1u;
++    }
++    if (instruction_index == mod->segment.inst_size) {
++        instruction_boundaries[instruction_index] = 1;
++        valid_stream = 1;
++    }
++
++    if (!valid_stream) {
++        free(instruction_boundaries);
++        return;
++    }
++    for (proc_index = 0; proc_index < mod->procedure_count; proc_index++) {
++        rxvm_vm_c2_classify_runtime_procedure(
++                mod, &mod->procedures[proc_index], instruction_boundaries);
++    }
++    free(instruction_boundaries);
++}
++#endif
++
+ // End of RXPA Declarations for this file
+ 
+ /* Initialise modules context */
+@@ -310,6 +571,13 @@ static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, si
+ 
+     runtime->definition = definition;
+     runtime->locals = definition->locals;
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++    runtime->may_rebind_core = 1;
++    runtime->vm_c2_reset_class = RXVM_VM_C2_RESET_CLASS_UNKNOWN;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    runtime->vm_c2_instructions_scanned = 0;
++#endif
++#endif
+     runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
+     runtime->frame_free_list_head = 0;
+     runtime->frame_free_list = &runtime->frame_free_list_head;
+@@ -318,6 +586,17 @@ static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, si
+ #ifdef CREXX_VM_PROFILING
+     runtime->profile_id = SIZE_MAX;
+ #endif
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++    runtime->vm_c2_fresh_activations = 0;
++    runtime->vm_c2_reused_activations = 0;
++    runtime->vm_c2_eligible_core_slots = 0;
++    runtime->vm_c2_core_reset_activations = 0;
++    runtime->vm_c2_core_reset_slots = 0;
++    runtime->vm_c2_static_skip_activations = 0;
++    runtime->vm_c2_static_skip_slots = 0;
++    runtime->vm_c2_zero_core_activations = 0;
++    runtime->vm_c2_reused_a0_resets = 0;
++#endif
+ }
+ 
+ static void build_module_runtime_procedures(module *mod) {
+@@ -386,6 +665,9 @@ static void build_module_runtime_procedures(module *mod) {
+         qsort(mod->proc_runtime_lookup, mod->proc_runtime_lookup_size,
+               sizeof(proc_runtime_lookup_entry), compare_proc_runtime_lookup_entries);
+     }
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++    rxvm_vm_c2_classify_module_procedures(mod);
++#endif
+ }
+ 
+ static void build_module_dynamic_site_caches(module *mod) {
+@@ -535,6 +817,16 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
+                                         p_entry_linked->binarySpace;
+                                 p_entry->frame_free_list =
+                                         p_entry_linked->frame_free_list;
++#if RXVM_VM_C2_RESET_MODE == RXVM_VM_C2_RESET_STATIC
++                                p_entry->may_rebind_core =
++                                        p_entry_linked->may_rebind_core;
++                                p_entry->vm_c2_reset_class =
++                                        p_entry_linked->vm_c2_reset_class;
++#if RXVM_VM_C2_RESET_DIAGNOSTICS
++                                p_entry->vm_c2_instructions_scanned =
++                                        p_entry_linked->vm_c2_instructions_scanned;
++#endif
++#endif
+ 
+                                 /* Reduce the number of unresolved symbols */
+                                 context->modules[mod_index]
+diff --git a/interpreter/rxvmprofile.c b/interpreter/rxvmprofile.c
+index 755ff55b2..35bbc0bea 100644
+--- a/interpreter/rxvmprofile.c
++++ b/interpreter/rxvmprofile.c
+@@ -85,8 +85,9 @@ static const char *const rxvm_profile_value_shape_names[
+ 
+ static const char *const rxvm_profile_frame_phase_names[
+         RXVM_PROFILE_FRAME_PHASE_COUNT] = {
+-        "local_relink", "global_relink", "argument_count_reset",
+-        "inherited_context", "root_context", "finalize"
++        "local_relink", "global_relink", "fixed_core_mapping_reset",
++        "argument_count_reset", "inherited_context", "root_context",
++        "finalize"
+ };
+ 
+ static const char *const rxvm_profile_frame_source_names[
+diff --git a/interpreter/rxvmprofile.h b/interpreter/rxvmprofile.h
+index cb5da275e..89e06df60 100644
+--- a/interpreter/rxvmprofile.h
++++ b/interpreter/rxvmprofile.h
+@@ -225,6 +225,7 @@ typedef enum rxvm_profile_value_shape {
+ typedef enum rxvm_profile_frame_phase {
+     RXVM_PROFILE_FRAME_LOCAL_RELINK = 0,
+     RXVM_PROFILE_FRAME_GLOBAL_RELINK,
++    RXVM_PROFILE_FRAME_FIXED_CORE_MAPPING_RESET,
+     RXVM_PROFILE_FRAME_ARGUMENT_COUNT_RESET,
+     RXVM_PROFILE_FRAME_INHERITED_CONTEXT,
+     RXVM_PROFILE_FRAME_ROOT_CONTEXT,

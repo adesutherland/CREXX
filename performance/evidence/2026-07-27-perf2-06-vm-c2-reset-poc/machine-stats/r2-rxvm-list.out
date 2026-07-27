@@ -1,0 +1,3 @@
+benchmark=awfy_list repetitions=100 result=10
+PASS: AWFY List
+VM_C2_RESET_STATS,vm=rxvm,mode=2,result=0,prepared_procedures=714,may_rebind_procedures=514,proved_clean_procedures=164,unknown_fallback_procedures=36,instructions_scanned=55271,fresh_activations=44,reused_activations=572457,eligible_core_slots=13312071,core_reset_activations=569358,core_reset_slots=13302774,core_reset_bytes=106422192,static_skip_activations=3099,static_skip_slots=9297,zero_core_activations=0,reused_a0_resets=572457

@@ -1,0 +1,9 @@
+variant,workload,vm_parity,reused_activations,eligible_core_slots,core_reset_activations,core_reset_slots,core_reset_bytes,static_skip_activations,static_skip_slots,prepared_procedures,may_rebind_procedures,proved_clean_procedures,unknown_fallback_procedures,instructions_scanned
+r1,permute,both-exact,432944,9957712,432944,9957712,79661696,0,0,707,0,0,0,0
+r1,list,both-exact,572457,13312071,572457,13312071,106496568,0,0,714,0,0,0,0
+r1,base64,both-exact,499,19461,499,19461,155688,0,0,704,0,0,0,0
+r1,sieve,both-exact,0,0,0,0,0,0,0,703,0,0,0,0
+r2,permute,both-exact,432944,9957712,432944,9957712,79661696,0,0,707,509,162,36,55257
+r2,list,both-exact,572457,13312071,569358,13302774,106422192,3099,9297,714,514,164,36,55271
+r2,base64,both-exact,499,19461,0,0,0,499,19461,704,506,162,36,55647
+r2,sieve,both-exact,0,0,0,0,0,0,0,703,506,161,36,55104

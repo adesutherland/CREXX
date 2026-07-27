@@ -195,7 +195,7 @@ Source:
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
-| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | VM-C1b accepted; VM-C2 PoC next | VM-C1b is accepted after green Debug/Release QA despite the measured optimized-Sieve `rxbvm` regression. `PERF2-06-D01` records the Apple-Clang code-layout debt and required Intel GCC/Clang revisit. VM-C2 proceeds only on a separate clean, discardable PoC base. |
+| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | VM-C1b accepted; C2 allocation/reset PoCs rejected | VM-C1b remains accepted. C2-A/B and C2R01 fail their Release gates; the retained controls strengthen `PERF2-06-D01` code-layout debt. A procedure-affine value-slab/linear-control design is recorded for later architecture selection, not approved for implementation. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
 | PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued | Begins as dossiers in PERF2-01; production slices come from PERF2-02 through 08. |
@@ -902,6 +902,45 @@ code-layout/register-allocation debt and requires a supported Intel x86-64
 GCC/Clang matrix before final architecture selection. The implementation
 commit is `a39608426e2c1bb84d5fc0c4f767f4c9492339a9`. VM-C2 is authorized as the
 next separate clean-base PoC; no push is authorized.
+
+VM-C2 first PoC result and reset follow-on (2026-07-26/27): C2-A's segmented
+allocator retained the full pointer map and did not win; C2-B removed
+97.31-100% of reuse relink stores but replaced them with 8.02/8.93 million
+mapping-mark attempts on List/Permute and 2.11 million attempts on Sieve despite
+zero frame reuse. C2-B is rejected: no future variant may add bookkeeping to
+ordinary mapping writes or operand reads. Adrian approved the bounded
+`PERF2-06-C2R01` follow-on: compare one fixed-core reset for locals/globals,
+with `a0` still restored and reinitialized separately and `a1...aN` remaining
+a call-bound variable tail, then a conservative
+preparation-time per-procedure `may_rebind_core` flag. `CALL1...CALL4` are the
+future embedded-argument fast path. Exact static reset lists and new quickened
+link/use/unlink forms were deferred pending this verdict. The resumable
+isolated control plane is
+[`PERF2-06-VM-C2-RESET-WORKLIST.md`](PERF2-06-VM-C2-RESET-WORKLIST.md).
+
+VM-C2 reset verdict (2026-07-27): the retained package is
+[`evidence/2026-07-27-perf2-06-vm-c2-reset-poc/`](evidence/2026-07-27-perf2-06-vm-c2-reset-poc/).
+R1 replaces the fixed local/global reset loops with one copy; R2 guards that
+copy with a canonical, fail-closed procedure-static proof. Both pass 143/143
+focused tests per variant and preserve exact instruction/call/branch/value
+operation rows. R2 skips every Base64 reuse reset, no Permute reset and only
+3,099/572,457 List reuse resets. Thirty-four balanced pairs reject both
+variants: List is adverse in both VMs, and `rxbvm` Sieve is adverse by
+`+1.801135%` for R1 and `+2.284914%` for R2 despite zero frame reuse. The
+R1 control has no classifier and therefore exposes native
+code-layout/register-allocation sensitivity, not residual reset cost. R2 scans
+55,104 Sieve instructions at startup, so its result combines possible
+classifier and layout effects, but likewise cannot be reset work. The R1
+absolute cell is span-flagged while its paired interval remains wholly adverse.
+This strengthens `PERF2-06-D01` and its supported Intel x86-64 GCC/Clang
+requirement. The isolated implementation remains uncommitted and discardable;
+exact reset lists and quickened clearing do not advance from this result.
+
+| Stable ID | Hypothesis and surface | Semantic/evidence gate | Disposition |
+| --- | --- | --- | --- |
+| PERF2-06-C2R01 | One contiguous fixed-core reset, then a procedure-static `may_rebind_core` flag, can reduce recycled frame-entry work without touching mapping writes/reads; arguments remain a separately rebound tail. | Exact coverage of `LOAD`/`SWAP`/`LINK*`/private mapping effects, recursion, fixed/count calls, refs, signals, TRACE, late load, both VMs, Release time and text. | rejected: correct but adverse and code-layout-sensitive at 34 pairs |
+| PERF2-06-C2R02 | Private quickening may remove exact nonescaping `LINK/LINKATTR; use; UNLINK` mappings rather than accelerating their cleanup. | No activation pointer/state in the shared image; exact debug/signal/reference/failure/resume fallback and independent code-layout verdict. | deferred; C2R01 provides no reason to advance clearing work |
+| PERF2-06-C2R03 | A linear segmented control stack can point to procedure-affine non-moving value slabs, preserving same-procedure/register payload capacity without retaining the full frame/control design. | Compare strict LIFO value slices; exact reference/native/object/decimal teardown and signal unwind; context/thread ownership; high-water memory; fixed-call embedded arguments; no hot per-register transfer ledger. | post-verdict architecture candidate; control/mapping split remains PERF2-06, payload-capacity policy routes to PERF2-07; analysis only, not approved |
 
 ### Objective
 
