@@ -195,12 +195,12 @@ Source:
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
-| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | VM-C1b accepted; Apple tactical frame tuning closed | C2-A/B, C2R01 and C3R01 fail their Release gates. No further current-frame reset, allocation, numeric-sync or cleanup-only Apple tuning is queued. `PERF2-06-D01` and the supported cross-platform compiler/architecture matrix remain before the final recommendation; C2R03 is architecture selection only, not an approved implementation. |
-| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | queued | PERF2-02 assigns direct reference-helper work here/with PERF2-06; Richards removable receiver copy stays compiler-owned. PERF2-04 opens only V3-R01 below: stale UTF codepoint-count metadata after an in-place decimal-to-string conversion. |
-| PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued | Re-audit CAP-01 through CAP-04; language decisions require Adrian. |
-| PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued | Begins as dossiers in PERF2-01; production slices come from PERF2-02 through 08. |
-| PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | queued | Time-box after dominant semantic costs; select only cross-platform wins. |
-| PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | queued | Accepted slices plus Apple ARM64, Linux x86-64 and Windows evidence. |
+| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | Apple tactical frame tuning closed; relevant residual joins PERF2-07 | The Apple slice carries only value/reference helper ownership, payload/frame coupling and handover preparation into the combined PERF2-06/07 worklist. `PERF2-06-D01`, compact/hot-cold stream selection and the final VM recommendation wait for the supported hardware/compiler matrix. |
+| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | planned with relevant PERF2-06 residual as one Apple slice | Execute [`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md): refresh current value/reference ownership, close V3-R01, compare only evidence-selected V1-V6 forms, and stop at each Release verdict. No rejected frame-reset variant reopens. |
+| PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | queued as Mac prerequisite to PERF2-09 | Complete or explicitly disposition CAP-01 through CAP-04 and every Tier A non-common cell before the Mac closure scorecard; language decisions still require Adrian. |
+| PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | queued for first full run on Mac | Run after the combined PERF2-06/07 slice and PERF2-08 qualification gate. Produce the Apple closure dossiers and scorecard before hardware handover. |
+| PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | Apple screen queued; final tuning reserved for Intel Linux | On Mac retain only bounded screening/controls. Select or tune build/layout options on the Intel Linux host under both GCC and Clang, then validate the frozen result on all required platforms. |
+| PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | Mac pre-handover run, then Intel Linux and Windows completion | Freeze the Mac scorecard/handover bundle; perform decision-critical Intel Linux testing/tuning, obtain required Linux ARM64 coverage, and finish on the same x86-64 machine under supported Windows before Gate E/F. |
 | PERF2-12 | P3 | JIT/AOT/native-backend architecture decision | deferred | Revisit only if the non-JIT programme cannot meet the unquestionable-superiority exit. |
 
 ## Execution order
@@ -239,6 +239,41 @@ PERF2-01 current profiles and same-session comparisons
 PERF2-02 through PERF2-08 accepted slices
 └── PERF2-09 per-benchmark closure ──> PERF2-11 architecture/final scorecard
 ```
+
+### Approved remaining platform sequence — 2026-07-27
+
+Adrian selected a Mac-first completion sequence followed by one physical Intel
+x86-64 machine running Linux and then Windows. The operational order is:
+
+1. **Mac combined PERF2-06/07 slice.** Finish current value/reference,
+   copy/move/clear/conversion/allocation ownership and only the VM/frame questions
+   that those results genuinely require. Do not retry rejected C2/C3 or
+   cleanup-only interpreter shapes. The resumable control plane is
+   [`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md).
+2. **Mac PERF2-08 gate.** Resolve equivalence/capability status before claiming a
+   complete PERF2-09 scorecard. This gate may end in an explicit approved
+   exclusion; it need not manufacture new language work.
+3. **Mac PERF2-09+ first pass.** Run per-benchmark closure, bounded PERF2-10
+   Apple controls and the PERF2-11 Apple pre-handover scorecard. Freeze exact
+   source/product/workload hashes and the remaining deficit/debt ledger.
+4. **Intel Linux handover.** On the target x86-64 machine run both GCC and Clang,
+   collect the decision-critical `PERF2-06-D01` compiler/layout lanes and native
+   counters, and do final evidence-selected PERF2-10 tuning. D01 closes only
+   after the retained Apple and later Linux ARM64/Windows lanes reconcile. Any
+   accepted change must repeat the mandatory Release verdict and preserve the
+   Mac guards.
+5. **Linux ARM64 coverage.** Gate E still requires supported Linux ARM64
+   correctness/timing evidence. Apple ARM64 is not a substitute. This may be a
+   separate supported host/runner and is a validation lane, not the principal
+   tuning machine.
+6. **Same-machine Windows finish.** Freeze the Linux-selected candidate, boot
+   the same x86-64 hardware into the supported Windows toolchain, and run the
+   final dual-VM correctness, timing, lifecycle, RSS and artifact matrix. A
+   Windows guard failure reopens the cross-platform decision; it does not
+   authorize a Windows-only shortcut.
+
+PERF2-12 remains deferred until the accepted non-JIT programme and final
+cross-platform scorecard show it is economically necessary.
 
 ## PERF2-01 — current baseline and attribution refresh
 
@@ -961,6 +996,15 @@ contract or cross-platform counter evidence that identifies a stable mechanism
 and includes zero-work drift controls. Source tidiness or smaller text alone is
 not evidence of a faster VM.
 
+Mac continuation boundary (2026-07-27): PERF2-06 no longer runs as a separate
+Apple tuning campaign. Its relevant value/reference-helper ownership,
+payload/frame coupling and future-hardware manifest work join PERF2-07 in
+[`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md). `PERF2-06-D01`, native
+compact/hot-cold stream selection and the final VM recommendation stay open for
+the Intel/Linux, Linux ARM64 and Windows matrix. C2R03 may enter the combined
+panel only if current payload-capacity/high-water evidence creates a materially
+different mechanism; its earlier pointer-map and reset forms remain rejected.
+
 | Stable ID | Hypothesis and surface | Semantic/evidence gate | Disposition |
 | --- | --- | --- | --- |
 | PERF2-06-C2R01 | One contiguous fixed-core reset, then a procedure-static `may_rebind_core` flag, can reduce recycled frame-entry work without touching mapping writes/reads; arguments remain a separately rebound tail. | Exact coverage of `LOAD`/`SWAP`/`LINK*`/private mapping effects, recursion, fixed/count calls, refs, signals, TRACE, late load, both VMs, Release time and text. | rejected: correct but adverse and code-layout-sensitive at 34 pairs |
@@ -1113,6 +1157,14 @@ owns the final default/private execution-architecture decision.
 
 ## PERF2-07 — value, frame, representation and allocation work
 
+The Mac execution of PERF2-07 is combined with the still-relevant PERF2-06
+value/reference/VM ownership boundary. The approved plan is
+[`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md), and the paste-ready
+successor prompt is
+[`PERF2-06-07-HANDOVER-PROMPT.md`](PERF2-06-07-HANDOVER-PROMPT.md). This does
+not pull `PERF2-06-D01` or final stream/default selection onto the Mac; those
+remain in the hardware handover matrix.
+
 ### Question
 
 Which parts of cREXX's general `value` and frame semantics still create repeated
@@ -1232,6 +1284,12 @@ matrix or has a final, approved capability/language disposition.
 PERF2-09 is the outcome lane. It consumes general mechanisms from PERF2-02
 through PERF2-08; it does not authorize benchmark-specific shortcuts.
 
+The first complete closure run is on the Mac after PERF2-06/07 and the PERF2-08
+qualification gate. It is the source of the exact handover scorecard, not the
+final cross-platform claim. Repeat the frozen portfolio on Intel Linux and
+Windows after any accepted Linux tuning; do not compare unmatched Mac/Linux/
+Windows sessions as before/after results.
+
 Each dossier contains exact source/image/runtime hashes, comparability status,
 same-session cREXX/ooRexx throughput, gain to parity and strong band, optimized
 and diagnostic static/dynamic work, top native/procedure/opcode/call paths,
@@ -1264,6 +1322,12 @@ which benchmark is easiest to improve.
 ## PERF2-10 — toolchain, code layout, build and lifecycle
 
 This is a bounded optional lane, not a substitute for semantic work.
+
+Sequence: screen coherent options on Apple ARM64 only to bound them, then do
+decision/tuning work on the Intel Linux machine under both GCC and Clang. Freeze
+the selected source/flags before the same-machine Windows run. An Apple-only or
+Linux-only win is retained as a control unless the required platform matrix
+accepts it.
 
 ### Experiments
 
@@ -1338,6 +1402,12 @@ supported compiler/version coverage: Apple clang on ARM64, GCC and Clang on
 native Linux x86-64 where supported/available, and the supported Windows
 toolchain. Select the default/private stream using the whole scorecard rather
 than one dispatch microbenchmark.
+
+The approved collection order is Apple ARM64 pre-handover, Intel x86-64 Linux
+GCC/Clang tuning and decision, supported Linux ARM64 validation, then the same
+Intel x86-64 hardware under the supported Windows toolchain. Gate E is not met
+by Apple plus Intel/Windows alone: Linux ARM64 remains a required supported
+release-architecture lane.
 
 ### Gate F — final external claim
 

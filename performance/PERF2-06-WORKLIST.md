@@ -368,6 +368,13 @@ Remaining PERF2-06 scope is therefore bounded to:
    unapproved architecture candidate shared with PERF2-07, not current
    PERF2-06 implementation work.
 
+Mac successor (2026-07-27): do not resume PERF2-06 as a separate Apple tuning
+campaign. The still-relevant value/reference ownership and payload/frame
+questions move to
+[`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md). The D01 compiler/layout
+matrix and final VM recommendation remain here for the later Intel Linux,
+supported Linux ARM64 and Windows hardware stages.
+
 ## Resumption rule
 
 Reread root/performance instructions and the live roadmap, verify Git state and
