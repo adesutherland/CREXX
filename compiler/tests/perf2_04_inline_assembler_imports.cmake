@@ -27,8 +27,8 @@ function(check_main_rxas label path optimized)
             message(FATAL_ERROR "${label} retained non-overlap formal/result scaffolding:\n${rxas_text}")
         endif()
     else()
-        if(NOT rxas_text MATCHES "call[^\n]*perf2case\.caseupper\\(\\)" OR
-           NOT rxas_text MATCHES "call[^\n]*perf2case\.caselower\\(\\)")
+        if(NOT rxas_text MATCHES "call[^\n]*perf2case\\.caseupper\\(\\)" OR
+           NOT rxas_text MATCHES "call[^\n]*perf2case\\.caselower\\(\\)")
             message(FATAL_ERROR "${label} no-opt build did not retain normal-call fallback:\n${rxas_text}")
         endif()
     endif()
