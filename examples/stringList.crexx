@@ -1,0 +1,13 @@
+options levelb
+import data
+
+message = "Hello from CREXX"
+say message
+
+languages = .StringLinkedList()
+languages.add("Rexx")
+languages.add("CREXX")
+
+do name over languages
+  say "Welcome to" name
+end

@@ -23,7 +23,9 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
+/* *********** insertion point 1 *************** */
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_upper rexxclassicbif_verify,
+          rexxclassicbif_word rexxclassicbif_words rexxclassicbif_subword
 import rexxvalue
 import rexxpool
 import rexxclassicconfig
@@ -233,6 +235,8 @@ rexxclassicbif_call: procedure = .RexxValue
     when name = "VERIFY" then return rexxclassicbif_verify(context_ref)
     when name = "WORD" then return rexxclassicbif_word(context_ref)
     when name = "WORDS" then return rexxclassicbif_words(context_ref)
+    when name = "SUBWORD" then return rexxclassicbif_subword(context_ref)
+/* *********** insertion point 2 *************** */
     otherwise do
       call _set_bif_error(context_ref, "43.1", 1, name, "")
       return _context_error(context_ref)
@@ -917,6 +921,43 @@ rexxclassicbif_word: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return _context_error(context_ref)
   return _ok(word(context.argumentText(1), context.argumentText(2) + 0))
+
+/**
+ * Returns the remaining string beginning with word n.
+ *
+ * @bif SUBWORD
+ * @signature SUBWORD(string, n)
+ * @checkargs rANY rWHOLE>0
+ * @sandbox pure
+ * @return word n, or the empty string when absent
+ * @deprecated compatibility-controller body; use RexxClassicBifWord
+ */
+rexxclassicbif_subword: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return _context_error(context_ref)
+  return _ok(subword(context.argumentText(1), context.argumentText(2) + 0))
+
+/* *********** insertion point 3 *************** */
+/**
+ * Returns the remaining string beginning with word n.
+ *
+ * @bif function-name
+ * @signature function(...,...,...)
+ * @checkargs rANY rWHOLE>0
+ * @sandbox pure
+ * @return description of return value or string
+ * @deprecated compatibility-controller body; use RexxClassicBiffunction-name
+ */
+ /*
+rexxclassicbif_template: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return _context_error(context_ref)
+  return _ok(subword(context.argumentText(1), context.argumentText(2) + 0))
+*/
 
 /**
  * Counts blank-delimited words.

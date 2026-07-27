@@ -308,7 +308,16 @@ rexxscriptcoreevaluator: class
        expr=_modify_var_symbol(expr)
        if _eval_expression(expr, stmtno) = 0 then return 0
        output_count = output_count + 1
-       output_lines[output_count] = eval_value
+       output_lines[output_count] = '@.main@'eval_value
+       return 1
+    end
+    if _starts_keyword(text, ".TAIL") = 1 then do
+       expr = strip(substr(text, 6))
+       if expr == "" then return _set_error("missing_expression", "missing .TAIL expression", stmtno, 1)
+       expr=_modify_var_symbol(expr)
+       if _eval_expression(expr, stmtno) = 0 then return 0
+       output_count = output_count + 1
+       output_lines[output_count] = '@.tail@'eval_value
        return 1
     end
     if _starts_keyword(text, "##MEND") = 1 then return 1
@@ -1148,6 +1157,9 @@ rexxscriptcoreevaluator: class
       when name = "VERIFY" then return 1
       when name = "WORD" then return 1
       when name = "WORDS" then return 1
+      when name = "SUBWORD" then return 1
+      when name = "QUOTE" then return 1
+      when name = "UNQUOTE" then return 1
       otherwise return 0
     end
     return 0
@@ -1185,6 +1197,7 @@ rexxscriptcoreevaluator: class
       when name = "VERIFY" then bif_result = rexxclassicbif_verify(reference context)
       when name = "WORD" then bif_result = rexxclassicbif_word(reference context)
       when name = "WORDS" then bif_result = rexxclassicbif_words(reference context)
+      when name = "SUBWORD" then bif_result = rexxclassicbif_subword(reference context)
       otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
     end
 
@@ -1227,7 +1240,75 @@ rexxscriptcoreevaluator: class
       else bif_args[i] = .RexxValue("")
     end
 
+      /*
+         * RexxScript-specific intrinsic functions.
+         *
+         * These do not belong to the Classic Rexx BIF library and therefore
+         * bypass RexxBifCallContext and the Classic BIF dispatcher.
+         */
+        if upper_name = "QUOTE" then return _intrinsic_quote(bif_args, bif_exists, parsed_arg_count, stmtno)
+        if upper_name = "UNQUOTE" then return _intrinsic_unquote(bif_args, bif_exists, parsed_arg_count, stmtno)
+
     return _dispatch_builtin(upper_name, bif_args, bif_exists, stmtno)
+
+  _intrinsic_quote: method = .int
+    arg args = .RexxValue[], exists = .int[], argc = .int, stmtno = .int
+    if argc <> 1 then return _set_error("invalid_arguments", "QUOTE requires exactly one argument", stmtno, 1)
+
+    if exists[1] = 0 then return _set_error("invalid_arguments", "QUOTE argument must not be omitted", stmtno, 1)
+
+    value = args[1].asString()
+
+    /*
+     * Generate a single-quoted Rexx source literal.
+     * Embedded apostrophes are represented by doubled apostrophes.
+     */
+    eval_value = _quote_String(value)
+    eval_type = "string"
+   return 1
+
+    _intrinsic_unquote: method = .int
+       arg args = .RexxValue[], exists = .int[], argc = .int, stmtno = .int
+       if argc <> 1 then return _set_error("invalid_arguments", "QUOTE requires exactly one argument", stmtno, 1)
+
+       if exists[1] = 0 then return _set_error("invalid_arguments", "QUOTE argument must not be omitted", stmtno, 1)
+
+       value = args[1].asString()
+
+       /*
+        * Generate a single-quoted Rexx source literal.
+        * Embedded apostrophes are represented by doubled apostrophes.
+        */
+       eval_value = _unquote_String(value)
+       eval_type = "string"
+      return 1
+
+_quote_string: method = .string
+  arg value = .string
+  value_length=0
+  assembler strlen value_length,value
+
+   if value_length >= 2 then do
+      first_char = substr(value, 1, 1)
+      last_char  = substr(value, value_length, 1)
+      if (first_char = "'" & last_char = "'") | ,
+         (first_char = '"' & last_char = '"') then return value  /* is already quoted */
+   end
+   if pos("'",value)=0 then return "'"value"'"
+   if pos('"',value)=0 then return '"'value'"'
+return value
+
+_unquote_string: method = .string
+  arg quoted_string = .string
+  slen=0
+  assembler strlen slen,quoted_string
+  if slen >= 2 then do
+     first_char = substr(quoted_string, 1, 1)
+     last_char  = substr(quoted_string, slen, 1)
+     if (first_char = "'" & last_char = "'") | ,
+        (first_char = '"' & last_char = '"') then return substr(quoted_string, 2, slen - 2)
+  end
+return quoted_string
 
   header: method
     arg statements=.string
