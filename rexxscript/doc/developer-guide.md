@@ -123,6 +123,24 @@ attributes.
    argument to another BIF.
 5. Update [user-guide.md](user-guide.md) and any generated API comments.
 
+## Adding A Classic Function
+
+Use this checklist when wiring a new Classic-compatible function into
+RexxScript:
+
+1. Add the function name to `_builtin_known()` in
+   [RexxScriptEvaluator.crexx](../RexxScriptEvaluator.crexx).
+2. Add the dispatch case in `_dispatch_builtin()` in the same file.
+3. Put the implementation in `lib/rxfnsc/RexxClassicBifs.crexx` if the function
+   should be shared by RexxScript and other classic callers.
+4. Export the helper from `rexxclassicbifs` and add any extra imports the shared
+   bundle needs, such as character-scan helpers.
+5. Keep the evaluator thin: it should only gate names, build the call context,
+   and forward to the shared helper.
+6. Add or update shared BIF tests in `lib/rxfnsc/tests_functional/`.
+7. Add or update RexxScript integration tests if the new function changes
+   evaluator behavior, error propagation, or nested-call handling.
+
 ## Source Comments And Generated Docs
 
 Use Javadoc-style comments for public classes, public procedures, and future
