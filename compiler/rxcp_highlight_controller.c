@@ -92,6 +92,9 @@ typedef struct HighlightTokenCursor {
     size_t semantic_token_count;
     size_t semantic_token_capacity;
     size_t semantic_token_index;
+    struct HighlightProjectedToken *projected_tokens;
+    size_t projected_token_count;
+    int projected_tokens_ready;
 } HighlightTokenCursor;
 
 typedef struct HighlightSemanticTokenOwner {
@@ -99,6 +102,12 @@ typedef struct HighlightSemanticTokenOwner {
     SourceNode *source_node;
     size_t depth;
 } HighlightSemanticTokenOwner;
+
+typedef struct HighlightProjectedToken {
+    Token *token;
+    size_t pos;
+    size_t len;
+} HighlightProjectedToken;
 
 typedef struct HighlightWatchedPath {
     char *path;
@@ -142,6 +151,8 @@ typedef struct HighlightProjection {
     const char *editor_source;
     size_t editor_source_len;
     const RxcpSrcMapRawMapping *raw_srcmap_mapping;
+    const CB_UTF8PositionIndex *source_position_index;
+    const CB_UTF8PositionIndex *editor_position_index;
     int map_diagnostics_to_editor_buffer;
     int suppress_generated_tokens;
 } HighlightProjection;
@@ -784,20 +795,35 @@ static int context_byte_span_to_cb_span(Context *context,
         raw_start = raw_map->cleaned_to_raw_start[byte_offset];
         raw_end = raw_map->cleaned_to_raw_end[byte_end - 1];
         if (raw_end < raw_start || raw_end > projection->editor_source_len) return 0;
+        if (projection->editor_position_index) {
+            return cb_utf8_position_index_span(projection->editor_position_index,
+                                               raw_start,
+                                               raw_end - raw_start,
+                                               pos,
+                                               len) && *len > 0;
+        }
         return cb_utf8_byte_span_to_codepoint_span(projection->editor_source,
-                                                   projection->editor_source_len,
-                                                   raw_start,
-                                                   raw_end - raw_start,
-                                                   pos,
-                                                   len) && *len > 0;
+                                                    projection->editor_source_len,
+                                                    raw_start,
+                                                    raw_end - raw_start,
+                                                    pos,
+                                                    len) && *len > 0;
     }
 
-    if (!cb_utf8_byte_span_to_codepoint_span(context->buff_start,
-                                             source_byte_length,
-                                             byte_offset,
-                                             byte_length,
-                                             pos,
-                                             len)) {
+    if (projection && projection->source_position_index) {
+        if (!cb_utf8_position_index_span(projection->source_position_index,
+                                         byte_offset,
+                                         byte_length,
+                                         pos,
+                                         len)) {
+            return 0;
+        }
+    } else if (!cb_utf8_byte_span_to_codepoint_span(context->buff_start,
+                                                    source_byte_length,
+                                                    byte_offset,
+                                                    byte_length,
+                                                    pos,
+                                                    len)) {
         return 0;
     }
     return *len > 0;
@@ -1082,6 +1108,102 @@ static void highlight_free_semantic_tokens(HighlightTokenCursor *cursor) {
     cursor->semantic_token_count = 0;
     cursor->semantic_token_capacity = 0;
     cursor->semantic_token_index = 0;
+}
+
+static int highlight_projected_token_compare(const void *lhs, const void *rhs) {
+    const HighlightProjectedToken *left = (const HighlightProjectedToken *)lhs;
+    const HighlightProjectedToken *right = (const HighlightProjectedToken *)rhs;
+
+    if (left->pos < right->pos) return -1;
+    if (left->pos > right->pos) return 1;
+    if (left->token->token_number < right->token->token_number) return -1;
+    if (left->token->token_number > right->token->token_number) return 1;
+    return 0;
+}
+
+static void highlight_prepare_projected_tokens(HighlightTokenCursor *cursor) {
+    HighlightProjectedToken *projected_tokens;
+    Token *token;
+    size_t capacity;
+    size_t pos;
+    size_t len;
+    int sorted;
+
+    if (!cursor || !cursor->context) return;
+    cursor->projected_tokens = 0;
+    cursor->projected_token_count = 0;
+    cursor->projected_tokens_ready = 0;
+
+    capacity = 0;
+    token = cursor->context->token_head;
+    while (token) {
+        capacity++;
+        token = token->token_next;
+    }
+    if (capacity == 0) {
+        cursor->projected_tokens_ready = 1;
+        return;
+    }
+
+    projected_tokens = malloc(sizeof(*projected_tokens) * capacity);
+    if (!projected_tokens) return;
+
+    sorted = 1;
+    token = cursor->context->token_head;
+    while (token) {
+        if (token_span_utf8(cursor->context, token, cursor->projection, &pos, &len)) {
+            if (cursor->projected_token_count > 0 &&
+                projected_tokens[cursor->projected_token_count - 1].pos > pos) {
+                sorted = 0;
+            }
+            projected_tokens[cursor->projected_token_count].token = token;
+            projected_tokens[cursor->projected_token_count].pos = pos;
+            projected_tokens[cursor->projected_token_count].len = len;
+            cursor->projected_token_count++;
+        }
+        token = token->token_next;
+    }
+
+    if (!sorted && cursor->projected_token_count > 1) {
+        qsort(projected_tokens,
+              cursor->projected_token_count,
+              sizeof(*projected_tokens),
+              highlight_projected_token_compare);
+    }
+    cursor->projected_tokens = projected_tokens;
+    cursor->projected_tokens_ready = 1;
+}
+
+static void highlight_free_projected_tokens(HighlightTokenCursor *cursor) {
+    if (!cursor) return;
+    if (cursor->projected_tokens) free(cursor->projected_tokens);
+    cursor->projected_tokens = 0;
+    cursor->projected_token_count = 0;
+    cursor->projected_tokens_ready = 0;
+}
+
+static Token *highlight_projected_token_at_pos(HighlightTokenCursor *cursor,
+                                               size_t pos,
+                                               size_t *len) {
+    size_t low;
+    size_t high;
+    size_t mid;
+
+    if (len) *len = 0;
+    if (!cursor || !cursor->projected_tokens_ready || !len) return 0;
+    low = 0;
+    high = cursor->projected_token_count;
+    while (low < high) {
+        mid = low + (high - low) / 2;
+        if (cursor->projected_tokens[mid].pos < pos) low = mid + 1;
+        else high = mid;
+    }
+    if (low >= cursor->projected_token_count ||
+        cursor->projected_tokens[low].pos != pos) {
+        return 0;
+    }
+    *len = cursor->projected_tokens[low].len;
+    return cursor->projected_tokens[low].token;
 }
 
 static SourceNode *highlight_source_node_for_token(HighlightTokenCursor *cursor, Token *token) {
@@ -1816,12 +1938,19 @@ static CB_Node compiler_get_token_callback(void *user_data,
     CB_Node marker_node;
 
     cursor = (HighlightTokenCursor *)user_data;
-    token = cursor ? cursor->context->token_head : 0;
-    while (token) {
-        if (token_span_utf8(cursor->context, token, cursor->projection, &token_pos, &token_len) && token_pos == pos) {
-            return highlight_cb_node_for_token(cursor, token, pos, token_len);
+    token = highlight_projected_token_at_pos(cursor, pos, &token_len);
+    if (token) {
+        return highlight_cb_node_for_token(cursor, token, pos, token_len);
+    }
+    if (cursor && !cursor->projected_tokens_ready) {
+        token = cursor->context->token_head;
+        while (token) {
+            if (token_span_utf8(cursor->context, token, cursor->projection, &token_pos, &token_len) &&
+                token_pos == pos) {
+                return highlight_cb_node_for_token(cursor, token, pos, token_len);
+            }
+            token = token->token_next;
         }
-        token = token->token_next;
     }
 
     if (highlight_raw_srcmap_marker_span(cursor, pos, &marker_node)) {
@@ -1890,10 +2019,14 @@ static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
     HighlightTokenCursor cursor;
     HighlightDocumentInfo doc_info;
     HighlightProjection raw_projection;
+    HighlightProjection indexed_projection;
     const HighlightProjection *active_projection;
+    CB_UTF8PositionIndex source_position_index;
+    CB_UTF8PositionIndex editor_position_index;
     int have_doc_info;
     int suppress_generated_tokens;
     int using_srcmap_cleaned;
+    int have_indexed_projection;
 
     if (!cb) return;
     if (!source_code) return;
@@ -1907,6 +2040,9 @@ static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
     srcmap_cleaned_len = 0;
     memset(&raw_srcmap_mapping, 0, sizeof(raw_srcmap_mapping));
     memset(&raw_projection, 0, sizeof(raw_projection));
+    memset(&indexed_projection, 0, sizeof(indexed_projection));
+    memset(&source_position_index, 0, sizeof(source_position_index));
+    memset(&editor_position_index, 0, sizeof(editor_position_index));
     active_projection = projection;
     suppress_generated_tokens = projection && projection->suppress_generated_tokens;
     using_srcmap_cleaned = 0;
@@ -1950,6 +2086,21 @@ static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
         }
     }
     cntx_buf(context, parse_code, parse_len);
+    if (active_projection) indexed_projection = *active_projection;
+    have_indexed_projection = active_projection != 0;
+    if (cb_utf8_position_index_init(&source_position_index, parse_code, parse_len)) {
+        indexed_projection.source_position_index = &source_position_index;
+        have_indexed_projection = 1;
+    }
+    if (active_projection && active_projection->raw_srcmap_mapping &&
+        active_projection->editor_source &&
+        cb_utf8_position_index_init(&editor_position_index,
+                                    active_projection->editor_source,
+                                    active_projection->editor_source_len)) {
+        indexed_projection.editor_position_index = &editor_position_index;
+        have_indexed_projection = 1;
+    }
+    if (have_indexed_projection) active_projection = &indexed_projection;
     if (!root_context) {
         configure_parser_import_locations(context);
         if (!context->disable_exits) rxcp_init_exits(context);
@@ -1988,6 +2139,7 @@ static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
         cursor.last_source_ptr = highlight_cursor_source_start(&cursor);
         cursor.last_source_pos = 0;
         highlight_prepare_semantic_tokens(&cursor, context->source_tree);
+        highlight_prepare_projected_tokens(&cursor);
         emit_source_projection(tb, context, context->source_tree->child, &cursor);
         emit_tokens_until(tb, &cursor, output_len);
         emit_diagnostics_from_source_state(tb, context, active_projection);
@@ -2007,11 +2159,13 @@ static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
     cursor.last_source_ptr = highlight_cursor_source_start(&cursor);
     cursor.last_source_pos = 0;
     if (!cursor.semantic_tokens && context->source_tree) highlight_prepare_semantic_tokens(&cursor, context->source_tree);
+    if (!cursor.projected_tokens_ready) highlight_prepare_projected_tokens(&cursor);
     if (suppress_generated_tokens) cb_add_missing_tokens(tb, cb, cb_default_get_token_callback, NULL);
     else cb_add_missing_tokens(tb, cb, compiler_get_token_callback, &cursor);
     cb_tweak_tree_positions(tb);
     highlight_overlay_diagnostics_on_tree(tb, context, active_projection);
     cb_validate_tree(tb);
+    highlight_free_projected_tokens(&cursor);
     highlight_free_semantic_tokens(&cursor);
 
     if (context->master_context != context) {
@@ -2019,6 +2173,8 @@ static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
     }
     if (context->file_name) free(context->file_name);
     fre_cntx(context);
+    cb_utf8_position_index_free(&editor_position_index);
+    cb_utf8_position_index_free(&source_position_index);
     if (using_srcmap_cleaned) free(raw_source_code);
     rxcp_srcmap_raw_mapping_free(&raw_srcmap_mapping);
     if (have_doc_info) highlight_free_document_info(&doc_info);

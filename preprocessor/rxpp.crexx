@@ -580,6 +580,7 @@ CMD_define: procedure=.int
    end
 
  /* Register macro */
+   name=strip(name)
    if dspace=1 then macro_name = upper(name)' '
    else macro_name = upper(name)'('
 
@@ -610,6 +611,7 @@ CMD_macro: procedure=.int
      scriptMacros[scriptMacros[0]+1]=macname
      scriptMacro.macname.parms=subword(source.line_no,3)
      scriptMacro.macname.parms=translate(scriptMacro.macname.parms,,',')
+     scriptMacro.macname.calls=0
      i=.int
      do i=line_no+1 to source.0
         line=strip(source.i)
@@ -1176,8 +1178,8 @@ return 0
 
 /* ------------------------------------------------------------------
  * insert_source: Inserts reserved lines into source[]/stype[] and shifts following lines down.
- * the line number is the first which is shifted,
- * !! it does not mean add empty line after provided at position !!
+ * the line number is the first line which is shifted,
+ * !! it does not mean add empty line after provided line number !!
  * ------------------------------------------------------------------
  */
 insert_source: Procedure=.int
@@ -1397,6 +1399,7 @@ newMacros:  procedure=.string
         call rxpp_diag 'warning','RXPP_SCRIPT_MACRO_MISSING','file',missing_file
         return line' ## 'rxpp_diag_text('RXPP_SCRIPT_MACRO_MISSING','file',missing_file)
      end
+     scriptMacro.macname.calls=0
      ipj=pos(';',scriptMacro.macname)
      if ipj>1 then do
         parm=substr(scriptMacro.macname,1,ipj-1)
@@ -1419,33 +1422,66 @@ newMacros:  procedure=.string
   stype[linnum]='D'
   source[linnum]='/* 'source[linnum]' */'
   do kk=1 to words(scriptMacro.macname.parms)
-     sword=word(subparm,kk)
-     if sword \= '' then inparms=inparms||word(scriptMacro.macname.parms,kk)' = 'word(subparm,kk)'; '
+     sword=qword(subparm,kk)
+     sword=quote(sword)
+     if sword \= '' then inparms=inparms||word(scriptMacro.macname.parms,kk)' = 'sword'; '
   end
-/*  result = rexxscript_evaluate(inparms' 'scriptMacro.macname,1)
-      out = rexxscript_output()
- */
+/* Prepare RexxScript Call */
    out=.string[]
    result=.string[]
-
-  instructionSet=scriptMacro.macname
+   scriptMacro.macname.calls=scriptMacro.macname.calls+1
+   instructionSet=scriptMacro.macname
+   _mcalls=scriptMacro.macname.calls
    _sysndx=scriptMacroCounter
+   _macro_calls=_sysndx
    _date=date()
    _time=time('l')
    _macro=macname
-   _mcall=instructionSet
+   _mline=source_origin_text[linnum]
+   _mlino=source_origin_line[linnum]
+   _file=getvar('rxpp_rexx')
+   _module=rxmodule
+   REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls OUTPUT out RESULT result /* DEBUG */
 
-   REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _date, _time, _macro, _mcall OUTPUT out RESULT result   /*DEBUG */
-
-/* Logging of rexxscript just for debugging
-  do k=1 to result.0
-     say 119 result.k
+   if result[1]='OK' then nop
+   else do
+      say '/// Macro Error at line : '_mlino
+      say '/// Macro Call          : '_mline
+      say '/// Error Message       : 'result.1
+   end
+/* Logging of rexxscript just for debugging */
+  if pos(' maclog',cflags)>0 then do
+     do k=1 to result.0
+        say "Script Result" k result.k
+     end
   end
- */
-  rc= insert_source(linnum+1,out[0]+1)
+
+  main_insert=0
+  do kk=1 to out[0]
+     genline=strip(out[kk])
+     if left(genline,7)\='@.main@' then iterate
+     genline=changestr("''",genline,"")
+     main_insert=main_insert+1
+     out[kk]=substr(genline,8)
+  end
+  source_len=length(original_call)
+  tail_insert=0
+  do kk=1 to out[0]
+     genline=strip(out[kk])
+     genline=changestr("''",genline,"")
+     if left(genline,7)\='@.tail@' then iterate
+     tail_insert=tail_insert+1
+     source[source[0]+1]="  "
+     if tail_insert=1 then source[source[0]+1]='/* Appended by 'original_call' */'
+     source[source[0]+1]=substr(genline,8)
+     if rxpp_srcmap_enabled() then source[source[0]]=rxpp_srcmap_span(1,source_len,source[source[0]])
+  end
+
+  rc= insert_source(linnum+1,out[0]-tail_insert+1)
   inew=linnum+1
   source_len=length(original_call)
   do kk=1 to out[0]
+     if pos('@.tail@',out[kk])>0 then iterate
      /*
       * RexxScript-backed script macros can produce arbitrary output text.  RXPP
       * does not know token-level provenance inside that script output, so the
@@ -2447,7 +2483,7 @@ rxppinit: procedure=.string
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rxmodule
   rxmodule=word(translate(rxmodule,,'.'),1)
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse strictmacrocheck '
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse strictmacrocheck nmaclog'
   call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags

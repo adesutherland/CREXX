@@ -190,8 +190,32 @@ projected into that model, so the required contract is:
 
 ASCII source-map tests are reliable today. Non-ASCII column behavior remains a
 known baseline blocker across RXPP source maps, diagnostics, `.srcstep`, RXAS
-style/source-step output, and THE ranges until the compiler-side byte-pointer
-call sites are converted to that contract.
+style/source-step output, and THE ranges until the remaining compiler-side
+byte-pointer call sites are converted to that contract. The cREXX parser-mode
+highlighter itself now performs its repeated whole-source projections through
+the indexed, exact-boundary path described below; that does not by itself close
+the broader source-map audit.
+
+### Position and token indexing
+
+Parser mode constructs a DSLSH `CB_UTF8PositionIndex` for each immutable source
+used during one request. ASCII sources use direct byte/codepoint identity and
+allocate no boundary vector. Unicode sources store exact codepoint boundaries
+and use order-independent binary lookups. The index preserves the existing
+rejection of a span boundary that falls inside a multibyte character.
+
+The controller also projects the authoritative cREXX token list once into a
+position-sorted vector. The missing-token callback then performs a binary
+lookup at the requested DSLSH position instead of restarting at
+`context->token_head` and reconverting every preceding token. Both indexes are
+request-local and are freed before the parse context or source storage is
+released. If index preparation cannot allocate, the controller retains the
+compatible stateless conversion/token-scan fallback.
+
+This indexing is part of parser-mode correctness and responsiveness, not a
+wire-protocol change. Parser adapters with only a few byte spans may continue
+to use `cb_utf8_byte_span_to_codepoint_span()` directly; adapters projecting a
+whole token stream should reuse a `CB_UTF8PositionIndex`.
 
 ## cREXX to DSLSH Mapping
 

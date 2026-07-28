@@ -168,7 +168,7 @@ jobs:
         if: matrix.platform == 'windows'
         shell: msys2 {0}
         run: |
-          cmake --build "${{ runner.temp }}/build" --parallel 2
+          cmake --build "${{ runner.temp }}/build" --parallel 4
 
       - name: CTest
         if: matrix.platform != 'windows'
@@ -186,7 +186,7 @@ jobs:
           ctest --test-dir "${{ runner.temp }}/build" \
             --output-on-failure \
             --no-tests=error \
-            --parallel 1
+            --parallel 2
 
       - name: Stage release payload
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform != 'windows'

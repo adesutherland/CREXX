@@ -23,11 +23,12 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
 import rexxvalue
 import rexxpool
 import rexxclassicconfig
 import rexxclassicdatatype
+import rexxclassiccharacterscan
 import rxfnsb
 
 /**
@@ -229,6 +230,7 @@ rexxclassicbif_call: procedure = .RexxValue
     when name = "SPACE" then return rexxclassicbif_space(context_ref)
     when name = "STRIP" then return rexxclassicbif_strip(context_ref)
     when name = "SUBSTR" then return rexxclassicbif_substr(context_ref)
+    when name = "SUBWORD" then return rexxclassicbif_subword(context_ref)
     when name = "UPPER" then return rexxclassicbif_upper(context_ref)
     when name = "VERIFY" then return rexxclassicbif_verify(context_ref)
     when name = "WORD" then return rexxclassicbif_word(context_ref)
@@ -849,6 +851,112 @@ rexxclassicbif_substr: procedure = .RexxValue
 
   if start > source_len then return _ok("")
   return _ok(substr(source, start))
+
+/**
+ * Returns a range of blank-delimited words.
+ *
+ * @bif SUBWORD
+ * @signature SUBWORD(string, start [,count])
+ * @checkargs rANY rWHOLE>0 oWHOLE>=0
+ * @sandbox pure
+ * @return selected words as a RexxValue
+ * @deprecated compatibility-controller body; use RexxClassicBifSubword
+ */
+rexxclassicbif_subword: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0") = 0 then return _context_error(context_ref)
+
+  start = context.argumentText(2) + 0
+  count_supplied = context.argumentExists(3)
+  wordcount = 0
+  if count_supplied then wordcount = context.argumentText(3) + 0
+  if count_supplied & wordcount = 0 then return _ok("")
+
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    other_blanks = config.byteOtherBlanks()
+    byte_length = .int
+    assembler blen byte_length,bytes
+    if byte_length = 0 then return .RexxValue.fromBinary("" as .binary)
+
+    scan = 0
+    current_word = 0
+    selection_start = 0
+    do while scan < byte_length
+      selection_start = rexxclassic_find_byte_nonblank(bytes, scan, other_blanks)
+      if selection_start < 0 then return .RexxValue.fromBinary("" as .binary)
+      current_word = current_word + 1
+      if current_word = start then leave
+      scan = rexxclassic_find_byte_blank(bytes, selection_start, other_blanks)
+      if scan < 0 then return .RexxValue.fromBinary("" as .binary)
+    end
+
+    selection_end = selection_start
+    selected = 0
+    scan = selection_start
+    word_end = 0
+    next_word = 0
+    do while \count_supplied | selected < wordcount
+      word_end = rexxclassic_find_byte_blank(bytes, scan, other_blanks)
+      if word_end < 0 then do
+        selection_end = byte_length
+        leave
+      end
+      selection_end = word_end
+      selected = selected + 1
+      if count_supplied & selected = wordcount then leave
+      next_word = rexxclassic_find_byte_nonblank(bytes, word_end, other_blanks)
+      if next_word < 0 then leave
+      scan = next_word
+    end
+
+    result_bytes = rexxclassic_byte_slice(bytes, selection_start, selection_end - selection_start)
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  text_other_blanks = config.textOtherBlanks()
+
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return _ok("")
+
+  scan = 0
+  current_word = 0
+  selection_start = 0
+  do while scan < string_length
+    selection_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
+    if selection_start < 0 then return _ok("")
+    current_word = current_word + 1
+    if current_word = start then leave
+    scan = rexxclassic_find_text_blank(string, selection_start, text_other_blanks)
+    if scan < 0 then return _ok("")
+  end
+
+  selection_end = selection_start
+  selected = 0
+  scan = selection_start
+  word_end = 0
+  next_word = 0
+  do while \count_supplied | selected < wordcount
+    word_end = rexxclassic_find_text_blank(string, scan, text_other_blanks)
+    if word_end < 0 then do
+      selection_end = string_length
+      leave
+    end
+    selection_end = word_end
+    selected = selected + 1
+    if count_supplied & selected = wordcount then leave
+    next_word = rexxclassic_find_text_nonblank(string, word_end, text_other_blanks)
+    if next_word < 0 then leave
+    scan = next_word
+  end
+
+  result = substr(string, selection_start + 1, selection_end - selection_start)
+  return _ok(result)
 
 /**
  * Uppercases a string.
