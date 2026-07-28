@@ -516,7 +516,7 @@
 \clearpage
 \begin{description}
 \item[\texttt{ITOF}]  - Integer to Float\index{itof}\\
-\item[\texttt{Syntax}] - form \\
+\item[\texttt{Syntax}] - variants\\
 \fontspec{IBM Plex Mono}
 \includesvg{../../svg/itof.gv}
 \fontspec{Minion Pro}
@@ -528,6 +528,11 @@
 \IfFileExists{../../examples/itofREG.def}{\input{../../examples/itofREG.def}}{}
 \IfFileExists{../../examples/itofREG.rexx}{\splice{rxc ../../examples/itofREG}}{}
 \IfFileExists{../../examples/itofREG.rxas}{\lstinputlisting[language=rxas,label=itof,caption=itof example.]{../../examples/itofREG.rxas} \splice{rxas ../../examples/itofREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/itofREG} \end{terminaloutput}}{}
+\item[\texttt{0x0127}]\fontspec{IBM Plex Sans Condensed} Convert integer op2 directly to float op1 REGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/itofREGREG.def}{\input{../../examples/itofREGREG.def}}{}
+\IfFileExists{../../examples/itofREGREG.rexx}{\splice{rxc ../../examples/itofREGREG}}{}
+\IfFileExists{../../examples/itofREGREG.rxas}{\lstinputlisting[language=rxas,label=itof,caption=itof example.]{../../examples/itofREGREG.rxas} \splice{rxas ../../examples/itofREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/itofREGREG} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}
@@ -1604,6 +1609,70 @@
 \end{description}
 \clearpage
 \begin{description}
+\item[\texttt{CALL1}]  - \index{call1}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/call1.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/call1.operation}{\input{operation/call1.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0191}]\fontspec{IBM Plex Sans Condensed} Direct bytecode call with one explicit argument register REGFUNCREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/call1REGFUNCREG.def}{\input{../../examples/call1REGFUNCREG.def}}{}
+\IfFileExists{../../examples/call1REGFUNCREG.rexx}{\splice{rxc ../../examples/call1REGFUNCREG}}{}
+\IfFileExists{../../examples/call1REGFUNCREG.rxas}{\lstinputlisting[language=rxas,label=call1,caption=call1 example.]{../../examples/call1REGFUNCREG.rxas} \splice{rxas ../../examples/call1REGFUNCREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/call1REGFUNCREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{CALL2}]  - \index{call2}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/call2.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/call2.operation}{\input{operation/call2.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0192}]\fontspec{IBM Plex Sans Condensed} Direct bytecode call with two explicit argument registers REGFUNCREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/call2REGFUNCREGREG.def}{\input{../../examples/call2REGFUNCREGREG.def}}{}
+\IfFileExists{../../examples/call2REGFUNCREGREG.rexx}{\splice{rxc ../../examples/call2REGFUNCREGREG}}{}
+\IfFileExists{../../examples/call2REGFUNCREGREG.rxas}{\lstinputlisting[language=rxas,label=call2,caption=call2 example.]{../../examples/call2REGFUNCREGREG.rxas} \splice{rxas ../../examples/call2REGFUNCREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/call2REGFUNCREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{CALL3}]  - \index{call3}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/call3.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/call3.operation}{\input{operation/call3.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0193}]\fontspec{IBM Plex Sans Condensed} Direct bytecode call with three explicit argument registers REGFUNCREGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/call3REGFUNCREGREGREG.def}{\input{../../examples/call3REGFUNCREGREGREG.def}}{}
+\IfFileExists{../../examples/call3REGFUNCREGREGREG.rexx}{\splice{rxc ../../examples/call3REGFUNCREGREGREG}}{}
+\IfFileExists{../../examples/call3REGFUNCREGREGREG.rxas}{\lstinputlisting[language=rxas,label=call3,caption=call3 example.]{../../examples/call3REGFUNCREGREGREG.rxas} \splice{rxas ../../examples/call3REGFUNCREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/call3REGFUNCREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{CALL4}]  - \index{call4}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/call4.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/call4.operation}{\input{operation/call4.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0194}]\fontspec{IBM Plex Sans Condensed} Direct bytecode call with four explicit argument registers REGFUNCREGREGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/call4REGFUNCREGREGREGREG.def}{\input{../../examples/call4REGFUNCREGREGREGREG.def}}{}
+\IfFileExists{../../examples/call4REGFUNCREGREGREGREG.rexx}{\splice{rxc ../../examples/call4REGFUNCREGREGREGREG}}{}
+\IfFileExists{../../examples/call4REGFUNCREGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=call4,caption=call4 example.]{../../examples/call4REGFUNCREGREGREGREG.rxas} \splice{rxas ../../examples/call4REGFUNCREGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/call4REGFUNCREGREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
 \item[\texttt{CNOP}]  - No Operation\index{cnop}\\
 \item[\texttt{Syntax}] - variants\\
 \fontspec{IBM Plex Mono}
@@ -1622,6 +1691,102 @@
 \IfFileExists{../../examples/cnopno.def}{\input{../../examples/cnopno.def}}{}
 \IfFileExists{../../examples/cnopno.rexx}{\splice{rxc ../../examples/cnopno}}{}
 \IfFileExists{../../examples/cnopno.rxas}{\lstinputlisting[language=rxas,label=cnop,caption=cnop example.]{../../examples/cnopno.rxas} \splice{rxas ../../examples/cnopno} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/cnopno} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{JUMPB}]  - \index{jumpb}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/jumpb.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/jumpb.operation}{\input{operation/jumpb.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0278}]\fontspec{IBM Plex Sans Condensed} Jump through table op2 using binary register op1 REGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/jumpbREGBINARY.def}{\input{../../examples/jumpbREGBINARY.def}}{}
+\IfFileExists{../../examples/jumpbREGBINARY.rexx}{\splice{rxc ../../examples/jumpbREGBINARY}}{}
+\IfFileExists{../../examples/jumpbREGBINARY.rxas}{\lstinputlisting[language=rxas,label=jumpb,caption=jumpb example.]{../../examples/jumpbREGBINARY.rxas} \splice{rxas ../../examples/jumpbREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/jumpbREGBINARY} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{JUMPBS}]  - \index{jumpbs}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/jumpbs.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/jumpbs.operation}{\input{operation/jumpbs.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0279}]\fontspec{IBM Plex Sans Condensed} Jump through fixed-width table op3 using binary register op1 at byte offset op2 REGREGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/jumpbsREGREGBINARY.def}{\input{../../examples/jumpbsREGREGBINARY.def}}{}
+\IfFileExists{../../examples/jumpbsREGREGBINARY.rexx}{\splice{rxc ../../examples/jumpbsREGREGBINARY}}{}
+\IfFileExists{../../examples/jumpbsREGREGBINARY.rxas}{\lstinputlisting[language=rxas,label=jumpbs,caption=jumpbs example.]{../../examples/jumpbsREGREGBINARY.rxas} \splice{rxas ../../examples/jumpbsREGREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/jumpbsREGREGBINARY} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{JUMPI}]  - \index{jumpi}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/jumpi.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/jumpi.operation}{\input{operation/jumpi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x027a}]\fontspec{IBM Plex Sans Condensed} Jump through table op2 using integer register op1 REGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/jumpiREGBINARY.def}{\input{../../examples/jumpiREGBINARY.def}}{}
+\IfFileExists{../../examples/jumpiREGBINARY.rexx}{\splice{rxc ../../examples/jumpiREGBINARY}}{}
+\IfFileExists{../../examples/jumpiREGBINARY.rxas}{\lstinputlisting[language=rxas,label=jumpi,caption=jumpi example.]{../../examples/jumpiREGBINARY.rxas} \splice{rxas ../../examples/jumpiREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/jumpiREGBINARY} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{JUMPN}]  - \index{jumpn}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/jumpn.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/jumpn.operation}{\input{operation/jumpn.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x027c}]\fontspec{IBM Plex Sans Condensed} Jump through table op2 using numeric string register op1 REGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/jumpnREGBINARY.def}{\input{../../examples/jumpnREGBINARY.def}}{}
+\IfFileExists{../../examples/jumpnREGBINARY.rexx}{\splice{rxc ../../examples/jumpnREGBINARY}}{}
+\IfFileExists{../../examples/jumpnREGBINARY.rxas}{\lstinputlisting[language=rxas,label=jumpn,caption=jumpn example.]{../../examples/jumpnREGBINARY.rxas} \splice{rxas ../../examples/jumpnREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/jumpnREGBINARY} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{JUMPR}]  - \index{jumpr}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/jumpr.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/jumpr.operation}{\input{operation/jumpr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x027b}]\fontspec{IBM Plex Sans Condensed} Jump through table op2 using blank-padded Rexx string register op1 REGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/jumprREGBINARY.def}{\input{../../examples/jumprREGBINARY.def}}{}
+\IfFileExists{../../examples/jumprREGBINARY.rexx}{\splice{rxc ../../examples/jumprREGBINARY}}{}
+\IfFileExists{../../examples/jumprREGBINARY.rxas}{\lstinputlisting[language=rxas,label=jumpr,caption=jumpr example.]{../../examples/jumprREGBINARY.rxas} \splice{rxas ../../examples/jumprREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/jumprREGBINARY} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{JUMPS}]  - \index{jumps}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/jumps.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/jumps.operation}{\input{operation/jumps.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0277}]\fontspec{IBM Plex Sans Condensed} Jump through table op2 using string register op1 REGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/jumpsREGBINARY.def}{\input{../../examples/jumpsREGBINARY.def}}{}
+\IfFileExists{../../examples/jumpsREGBINARY.rexx}{\splice{rxc ../../examples/jumpsREGBINARY}}{}
+\IfFileExists{../../examples/jumpsREGBINARY.rxas}{\lstinputlisting[language=rxas,label=jumps,caption=jumps example.]{../../examples/jumpsREGBINARY.rxas} \splice{rxas ../../examples/jumpsREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/jumpsREGBINARY} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}
@@ -2078,6 +2243,150 @@
 \end{description}
 \clearpage
 \begin{description}
+\item[\texttt{STEMGET}]  - \index{stemget}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemget.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemget.operation}{\input{operation/stemget.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0282}]\fontspec{IBM Plex Sans Condensed} Get op1=op2[op3] from a native stem REGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemgetREGREGREG.def}{\input{../../examples/stemgetREGREGREG.def}}{}
+\IfFileExists{../../examples/stemgetREGREGREG.rexx}{\splice{rxc ../../examples/stemgetREGREGREG}}{}
+\IfFileExists{../../examples/stemgetREGREGREG.rxas}{\lstinputlisting[language=rxas,label=stemget,caption=stemget example.]{../../examples/stemgetREGREGREG.rxas} \splice{rxas ../../examples/stemgetREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemgetREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMGET2}]  - \index{stemget2}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemget2.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemget2.operation}{\input{operation/stemget2.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0285}]\fontspec{IBM Plex Sans Condensed} Get op1=op2[op3||'.'||op4] without materializing the key REGREGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemget2REGREGREGREG.def}{\input{../../examples/stemget2REGREGREGREG.def}}{}
+\IfFileExists{../../examples/stemget2REGREGREGREG.rexx}{\splice{rxc ../../examples/stemget2REGREGREGREG}}{}
+\IfFileExists{../../examples/stemget2REGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=stemget2,caption=stemget2 example.]{../../examples/stemget2REGREGREGREG.rxas} \splice{rxas ../../examples/stemget2REGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemget2REGREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMINIT}]  - \index{steminit}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/steminit.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/steminit.operation}{\input{operation/steminit.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0281}]\fontspec{IBM Plex Sans Condensed} Initialize the private native stem representation in op1 REG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/steminitREG.def}{\input{../../examples/steminitREG.def}}{}
+\IfFileExists{../../examples/steminitREG.rexx}{\splice{rxc ../../examples/steminitREG}}{}
+\IfFileExists{../../examples/steminitREG.rxas}{\lstinputlisting[language=rxas,label=steminit,caption=steminit example.]{../../examples/steminitREG.rxas} \splice{rxas ../../examples/steminitREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/steminitREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMKEYAT}]  - \index{stemkeyat}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemkeyat.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemkeyat.operation}{\input{operation/stemkeyat.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0288}]\fontspec{IBM Plex Sans Condensed} Return insertion-order key op3 from native stem op2 into op1 REGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemkeyatREGREGREG.def}{\input{../../examples/stemkeyatREGREGREG.def}}{}
+\IfFileExists{../../examples/stemkeyatREGREGREG.rexx}{\splice{rxc ../../examples/stemkeyatREGREGREG}}{}
+\IfFileExists{../../examples/stemkeyatREGREGREG.rxas}{\lstinputlisting[language=rxas,label=stemkeyat,caption=stemkeyat example.]{../../examples/stemkeyatREGREGREG.rxas} \splice{rxas ../../examples/stemkeyatREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemkeyatREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMRESET}]  - \index{stemreset}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemreset.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemreset.operation}{\input{operation/stemreset.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0284}]\fontspec{IBM Plex Sans Condensed} Set native stem op1 default to op2 and advance its generation REGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemresetREGREG.def}{\input{../../examples/stemresetREGREG.def}}{}
+\IfFileExists{../../examples/stemresetREGREG.rexx}{\splice{rxc ../../examples/stemresetREGREG}}{}
+\IfFileExists{../../examples/stemresetREGREG.rxas}{\lstinputlisting[language=rxas,label=stemreset,caption=stemreset example.]{../../examples/stemresetREGREG.rxas} \splice{rxas ../../examples/stemresetREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemresetREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMSET}]  - \index{stemset}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemset.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemset.operation}{\input{operation/stemset.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0283}]\fontspec{IBM Plex Sans Condensed} Set native stem op1[op2]=op3 REGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemsetREGREGREG.def}{\input{../../examples/stemsetREGREGREG.def}}{}
+\IfFileExists{../../examples/stemsetREGREGREG.rexx}{\splice{rxc ../../examples/stemsetREGREGREG}}{}
+\IfFileExists{../../examples/stemsetREGREGREG.rxas}{\lstinputlisting[language=rxas,label=stemset,caption=stemset example.]{../../examples/stemsetREGREGREG.rxas} \splice{rxas ../../examples/stemsetREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemsetREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMSET2}]  - \index{stemset2}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemset2.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemset2.operation}{\input{operation/stemset2.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0286}]\fontspec{IBM Plex Sans Condensed} Set op1[op2||'.'||op3]=op4 and materialize only a new key REGREGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemset2REGREGREGREG.def}{\input{../../examples/stemset2REGREGREGREG.def}}{}
+\IfFileExists{../../examples/stemset2REGREGREGREG.rexx}{\splice{rxc ../../examples/stemset2REGREGREGREG}}{}
+\IfFileExists{../../examples/stemset2REGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=stemset2,caption=stemset2 example.]{../../examples/stemset2REGREGREGREG.rxas} \splice{rxas ../../examples/stemset2REGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemset2REGREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMSIZE}]  - \index{stemsize}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemsize.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemsize.operation}{\input{operation/stemsize.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0287}]\fontspec{IBM Plex Sans Condensed} Return the stored entry count op1 for native stem op2 REGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemsizeREGREG.def}{\input{../../examples/stemsizeREGREG.def}}{}
+\IfFileExists{../../examples/stemsizeREGREG.rexx}{\splice{rxc ../../examples/stemsizeREGREG}}{}
+\IfFileExists{../../examples/stemsizeREGREG.rxas}{\lstinputlisting[language=rxas,label=stemsize,caption=stemsize example.]{../../examples/stemsizeREGREG.rxas} \splice{rxas ../../examples/stemsizeREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemsizeREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{STEMVALUEAT}]  - \index{stemvalueat}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/stemvalueat.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/stemvalueat.operation}{\input{operation/stemvalueat.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0289}]\fontspec{IBM Plex Sans Condensed} Return generation-aware insertion-order value op3 from native stem op2 into op1 REGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stemvalueatREGREGREG.def}{\input{../../examples/stemvalueatREGREGREG.def}}{}
+\IfFileExists{../../examples/stemvalueatREGREGREG.rexx}{\splice{rxc ../../examples/stemvalueatREGREGREG}}{}
+\IfFileExists{../../examples/stemvalueatREGREGREG.rxas}{\lstinputlisting[language=rxas,label=stemvalueat,caption=stemvalueat example.]{../../examples/stemvalueatREGREGREG.rxas} \splice{rxas ../../examples/stemvalueatREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stemvalueatREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
 \item[\texttt{UNLINK}]  - Unlink Register\index{unlink}\\
 \item[\texttt{Syntax}] - form \\
 \fontspec{IBM Plex Mono}
@@ -2370,6 +2679,70 @@
 \end{description}
 \clearpage
 \begin{description}
+\item[\texttt{PARSEPLAN}]  - \index{parseplan}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/parseplan.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/parseplan.operation}{\input{operation/parseplan.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x019a}]\fontspec{IBM Plex Sans Condensed} Execute a compact frozen PARSE plan into result vector op1 from string op2 using descriptor op3 REGREGSTRING\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/parseplanREGREGSTRING.def}{\input{../../examples/parseplanREGREGSTRING.def}}{}
+\IfFileExists{../../examples/parseplanREGREGSTRING.rexx}{\splice{rxc ../../examples/parseplanREGREGSTRING}}{}
+\IfFileExists{../../examples/parseplanREGREGSTRING.rxas}{\lstinputlisting[language=rxas,label=parseplan,caption=parseplan example.]{../../examples/parseplanREGREGSTRING.rxas} \splice{rxas ../../examples/parseplanREGREGSTRING} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/parseplanREGREGSTRING} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{PARSEPOS2}]  - \index{parsepos2}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/parsepos2.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/parsepos2.operation}{\input{operation/parsepos2.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0198}]\fontspec{IBM Plex Sans Condensed} Parse op1 as a fixed prefix and op2 as the next word from string op3 using character split op4 REGREGREGINT\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/parsepos2REGREGREGINT.def}{\input{../../examples/parsepos2REGREGREGINT.def}}{}
+\IfFileExists{../../examples/parsepos2REGREGREGINT.rexx}{\splice{rxc ../../examples/parsepos2REGREGREGINT}}{}
+\IfFileExists{../../examples/parsepos2REGREGREGINT.rxas}{\lstinputlisting[language=rxas,label=parsepos2,caption=parsepos2 example.]{../../examples/parsepos2REGREGREGINT.rxas} \splice{rxas ../../examples/parsepos2REGREGREGINT} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/parsepos2REGREGREGINT} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{PARSEWORDS3}]  - \index{parsewords3}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/parsewords3.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/parsewords3.operation}{\input{operation/parsewords3.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0195}]\fontspec{IBM Plex Sans Condensed} Parse three blank-delimited fields directly into op1-op3 from string op4 REGREGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/parsewords3REGREGREGREG.def}{\input{../../examples/parsewords3REGREGREGREG.def}}{}
+\IfFileExists{../../examples/parsewords3REGREGREGREG.rexx}{\splice{rxc ../../examples/parsewords3REGREGREGREG}}{}
+\IfFileExists{../../examples/parsewords3REGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=parsewords3,caption=parsewords3 example.]{../../examples/parsewords3REGREGREGREG.rxas} \splice{rxas ../../examples/parsewords3REGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/parsewords3REGREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{PARSEWORDS3D}]  - \index{parsewords3d}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/parsewords3d.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/parsewords3d.operation}{\input{operation/parsewords3d.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0199}]\fontspec{IBM Plex Sans Condensed} Parse three blank-delimited words into op1-op3 from string op4 and discard the remaining tail REGREGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/parsewords3dREGREGREGREG.def}{\input{../../examples/parsewords3dREGREGREGREG.def}}{}
+\IfFileExists{../../examples/parsewords3dREGREGREGREG.rexx}{\splice{rxc ../../examples/parsewords3dREGREGREGREG}}{}
+\IfFileExists{../../examples/parsewords3dREGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=parsewords3d,caption=parsewords3d example.]{../../examples/parsewords3dREGREGREGREG.rxas} \splice{rxas ../../examples/parsewords3dREGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/parsewords3dREGREGREGREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
 \item[\texttt{POSCHAR}]  - Position of Char\index{poschar}\\
 \item[\texttt{Syntax}] - form \\
 \fontspec{IBM Plex Mono}
@@ -2644,7 +3017,7 @@
 \clearpage
 \begin{description}
 \item[\texttt{STOI}]  - String to Int\index{stoi}\\
-\item[\texttt{Syntax}] - form \\
+\item[\texttt{Syntax}] - variants\\
 \fontspec{IBM Plex Mono}
 \includesvg{../../svg/stoi.gv}
 \fontspec{Minion Pro}
@@ -2656,6 +3029,11 @@
 \IfFileExists{../../examples/stoiREG.def}{\input{../../examples/stoiREG.def}}{}
 \IfFileExists{../../examples/stoiREG.rexx}{\splice{rxc ../../examples/stoiREG}}{}
 \IfFileExists{../../examples/stoiREG.rxas}{\lstinputlisting[language=rxas,label=stoi,caption=stoi example.]{../../examples/stoiREG.rxas} \splice{rxas ../../examples/stoiREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stoiREG} \end{terminaloutput}}{}
+\item[\texttt{0x0128}]\fontspec{IBM Plex Sans Condensed} Convert string op2 directly to integer op1 REGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/stoiREGREG.def}{\input{../../examples/stoiREGREG.def}}{}
+\IfFileExists{../../examples/stoiREGREG.rexx}{\splice{rxc ../../examples/stoiREGREG}}{}
+\IfFileExists{../../examples/stoiREGREG.rxas}{\lstinputlisting[language=rxas,label=stoi,caption=stoi example.]{../../examples/stoiREGREG.rxas} \splice{rxas ../../examples/stoiREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/stoiREGREG} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}
@@ -3696,6 +4074,48 @@
 \IfFileExists{../../examples/bgetu8REGBINARYREG.def}{\input{../../examples/bgetu8REGBINARYREG.def}}{}
 \IfFileExists{../../examples/bgetu8REGBINARYREG.rexx}{\splice{rxc ../../examples/bgetu8REGBINARYREG}}{}
 \IfFileExists{../../examples/bgetu8REGBINARYREG.rxas}{\lstinputlisting[language=rxas,label=bgetu8,caption=bgetu8 example.]{../../examples/bgetu8REGBINARYREG.rxas} \splice{rxas ../../examples/bgetu8REGBINARYREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/bgetu8REGBINARYREG} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{BINEQ}]  - \index{bineq}\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/bineq.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/bineq.operation}{\input{operation/bineq.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x027d}]\fontspec{IBM Plex Sans Condensed} Whole binary equals op1=(op2==op3) REGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/bineqREGREGREG.def}{\input{../../examples/bineqREGREGREG.def}}{}
+\IfFileExists{../../examples/bineqREGREGREG.rexx}{\splice{rxc ../../examples/bineqREGREGREG}}{}
+\IfFileExists{../../examples/bineqREGREGREG.rxas}{\lstinputlisting[language=rxas,label=bineq,caption=bineq example.]{../../examples/bineqREGREGREG.rxas} \splice{rxas ../../examples/bineqREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/bineqREGREGREG} \end{terminaloutput}}{}
+\item[\texttt{0x027e}]\fontspec{IBM Plex Sans Condensed} Whole binary equals op1=(op2==op3) REGREGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/bineqREGREGBINARY.def}{\input{../../examples/bineqREGREGBINARY.def}}{}
+\IfFileExists{../../examples/bineqREGREGBINARY.rexx}{\splice{rxc ../../examples/bineqREGREGBINARY}}{}
+\IfFileExists{../../examples/bineqREGREGBINARY.rxas}{\lstinputlisting[language=rxas,label=bineq,caption=bineq example.]{../../examples/bineqREGREGBINARY.rxas} \splice{rxas ../../examples/bineqREGREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/bineqREGREGBINARY} \end{terminaloutput}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{BINNE}]  - \index{binne}\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/binne.gv}
+\fontspec{Minion Pro}
+\item[\texttt{Operation}]
+\IfFileExists{operation/binne.operation}{\input{operation/binne.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x027f}]\fontspec{IBM Plex Sans Condensed} Whole binary not equals op1=(op2!=op3) REGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/binneREGREGREG.def}{\input{../../examples/binneREGREGREG.def}}{}
+\IfFileExists{../../examples/binneREGREGREG.rexx}{\splice{rxc ../../examples/binneREGREGREG}}{}
+\IfFileExists{../../examples/binneREGREGREG.rxas}{\lstinputlisting[language=rxas,label=binne,caption=binne example.]{../../examples/binneREGREGREG.rxas} \splice{rxas ../../examples/binneREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/binneREGREGREG} \end{terminaloutput}}{}
+\item[\texttt{0x0280}]\fontspec{IBM Plex Sans Condensed} Whole binary not equals op1=(op2!=op3) REGREGBINARY\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/binneREGREGBINARY.def}{\input{../../examples/binneREGREGBINARY.def}}{}
+\IfFileExists{../../examples/binneREGREGBINARY.rexx}{\splice{rxc ../../examples/binneREGREGBINARY}}{}
+\IfFileExists{../../examples/binneREGREGBINARY.rxas}{\lstinputlisting[language=rxas,label=binne,caption=binne example.]{../../examples/binneREGREGBINARY.rxas} \splice{rxas ../../examples/binneREGREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/binneREGREGBINARY} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}

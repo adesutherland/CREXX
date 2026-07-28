@@ -5,5 +5,9 @@ Foo [label=<
 <table border="0" cellborder="1" cellspacing="0">
 <tr><td> Name </td> <td> OP1 </td> </tr>
 <tr><td> CNOP </td><td> no operand </td> </tr>
+<tr><td> CNOP </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td> </tr>
+</table>>];
+}
+G </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td><td> REG </td> </tr>
 </table>>];
 }

@@ -26,7 +26,7 @@
 <polygon fill="none" stroke="black" points="87,-45 87,-67.5 162,-67.5 162,-45 87,-45"/>
 <text xml:space="preserve" text-anchor="start" x="107.25" y="-51.75" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="162,-45 162,-67.5 237,-67.5 237,-45 162,-45"/>
-<text xml:space="preserve" text-anchor="start" x="165" y="-51.75" font-family="Times,serif" font-size="14.00"> DECIMAL </text>
+<text xml:space="preserve" text-anchor="start" x="182.25" y="-51.75" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="0,-22.5 0,-45 46.5,-45 46.5,-22.5 0,-22.5"/>
 <text xml:space="preserve" text-anchor="start" x="6" y="-29.25" font-family="Times,serif" font-size="14.00"> DGT </text>
 <polygon fill="none" stroke="black" points="46.5,-22.5 46.5,-45 87,-45 87,-22.5 46.5,-22.5"/>
@@ -34,7 +34,7 @@
 <polygon fill="none" stroke="black" points="87,-22.5 87,-45 162,-45 162,-22.5 87,-22.5"/>
 <text xml:space="preserve" text-anchor="start" x="107.25" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="162,-22.5 162,-45 237,-45 237,-22.5 162,-22.5"/>
-<text xml:space="preserve" text-anchor="start" x="182.25" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
+<text xml:space="preserve" text-anchor="start" x="165" y="-29.25" font-family="Times,serif" font-size="14.00"> DECIMAL </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 46.5,-22.5 46.5,0 0,0"/>
 <text xml:space="preserve" text-anchor="start" x="6" y="-6.75" font-family="Times,serif" font-size="14.00"> DGT </text>
 <polygon fill="none" stroke="black" points="46.5,0 46.5,-22.5 87,-22.5 87,0 46.5,0"/>
