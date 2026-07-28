@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-27
+Last updated: 2026-07-28
 
 Status: live planning register for the second performance programme.
 Production work requires the explicit decision gates recorded in each activity;
@@ -202,6 +202,7 @@ Source:
 | PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | not started; Apple screen remains queued | On Mac retain only bounded screening/controls. Select or tune build/layout options on the Intel Linux host under both GCC and Clang, then validate the frozen result on all required platforms. |
 | PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | not started; PERF2-09 Mac handover ready | Perform the bounded Apple pre-handover work only when separately authorized, then decision-critical Intel Linux testing/tuning, required Linux ARM64 coverage and supported Windows completion before Gate E/F. |
 | PERF2-12 | P3 | JIT/AOT/native-backend architecture decision | deferred | Revisit only if the non-JIT programme cannot meet the unquestionable-superiority exit. |
+| HIGHLIGHT-01 | P0 | Parser-mode UTF-8 projection and missing-token scalability | complete; Release verdict accepted 2026-07-28 | The selected DSLSH position index and cREXX projected-token lookup reduced the formerly timing-out large parser path to a roughly 0.36-second median. THE then removed per-request profile/render compilation, per-span variable-pool traffic and quadratic rendering; the 1,942-line end-user wrapper median is 0.61 seconds. Cross-project Release/Debug suites are green; evidence and boundaries are in [`HIGHLIGHT-01-WORKLIST.md`](HIGHLIGHT-01-WORKLIST.md). |
 
 ## Execution order
 
