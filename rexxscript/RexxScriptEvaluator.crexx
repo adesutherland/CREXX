@@ -1197,7 +1197,7 @@ rexxscriptcoreevaluator: class
       when name = "VERIFY" then bif_result = rexxclassicbif_verify(reference context)
       when name = "WORD" then bif_result = rexxclassicbif_word(reference context)
       when name = "WORDS" then bif_result = rexxclassicbif_words(reference context)
-      when name = "SUBWORD" then bif_result = rexxclassicbif_subword(reference context)
+ ##     when name = "SUBWORD" then bif_result = rexxclassicbif_subword(reference context)
       otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
     end
 
