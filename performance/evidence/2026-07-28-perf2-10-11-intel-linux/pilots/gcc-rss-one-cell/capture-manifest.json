@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "linux 64 crexx-1.0.0-beta.3+local.gd5f0827ca270 20260728",
+  "source_manifest": "/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/pilots/rss-one-cell-manifest.txt",
+  "measurement": "rss",
+  "warmups": 0,
+  "recorded_runs": 1,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-28T20:23:58+0000",
+  "completed_utc": "2026-07-28T20:24:01+0000",
+  "result": "pass"
+}

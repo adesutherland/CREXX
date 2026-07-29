@@ -157,6 +157,32 @@ continue with the sanitizer tree rather than blocking the whole investigation.
 If `cmake-build-debug` is not configured locally, skip the plain Debug check and
 record that the command was validated only in the sanitizer tree.
 
+## Exploratory UBSan
+
+UBSan is an exploratory inventory rather than the supported maintained
+sanitizer workflow. Configure it in a separate tree, keep
+`UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1`, stop on the first report,
+and run the same focused normal-Debug control before accepting a correction.
+Do not reuse the ASan tree or treat instrumented elapsed time as performance
+evidence.
+
+The 2026-07-28 Intel Linux x86-64 inventory found and corrected:
+
+* Lemon null zero-element `qsort` and incompatible comparator calls;
+* compiler empty-string constant-fold null arguments to zero-length `memcpy`;
+* signed shift overflow in bundled decNumber bit scans;
+* NaN-to-integer conversion in diagnostic `db_decimal`;
+* an out-of-domain signed shift in Level B `x2d`;
+* an unaligned linked-list back-fence store; and
+* empty `bintos` validation passing `(NULL, 0)` to a non-null UTF helper.
+
+The final Clang UBSan tree passed 1,925/1,925 with immediate abort enabled in
+868.47 seconds. The matching final supported GCC ASan/LSan runner completed a
+leak-enabled full build and passed 1,925/1,925 in 1,301.74 seconds. Its first
+broad run had found a 10,000-byte successful-return leak in
+`rxtcp.tcpreceive`; the final run directory is retained under
+`performance/evidence/2026-07-28-perf2-10-11-intel-linux/logs/gcc-asan/`.
+
 ## Triage Rules
 
 * Read `build.log`, `ctest.log`, or the current log through the runner status

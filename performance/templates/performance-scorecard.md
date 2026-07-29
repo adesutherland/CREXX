@@ -34,6 +34,18 @@ separate from process elapsed time.
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `<name>` | `<elapsed/rate>` | `<argument>` | | | | | | `<IQR/MAD/range>` |
 
+## RexxCPS community lane
+
+RexxCPS is mandatory in every multi-workload representative scorecard but
+remains separate from the common aggregate. Report cREXX 2.2d, canonical
+ooRexx/Regina 2.2 and NetRexx 2.2n with their exact comparability labels.
+
+| Comparison | `rxvm` ratio | `rxbvm` ratio | Exact forms | Target/guard | Disposition |
+| --- | ---: | ---: | --- | --- | --- |
+| cREXX / ooRexx | | | 2.2d / canonical 2.2 | parity and 1.50x band | |
+| cREXX / Regina | | | 2.2d / canonical 2.2 | separate control | |
+| cREXX / NetRexx | | | 2.2d / 2.2n | separate adaptation control | |
+
 ## Common aggregate
 
 Membership: Sieve, Permute, Bounce, Richards and Base64. `N=5` unless a named

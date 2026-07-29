@@ -1,0 +1,1 @@
+/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/rxvm /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/library.rxbin -a 5000 

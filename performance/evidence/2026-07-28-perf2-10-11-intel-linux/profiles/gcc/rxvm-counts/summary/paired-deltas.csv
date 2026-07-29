@@ -1,0 +1,12 @@
+pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent
+sieve,sieve-noopt,sieve-opt,noopt,opt,78253000,91039000,12786000,16.339
+permute,permute-noopt,permute-opt,noopt,opt,149247000,113401000,-35846000,-24.018
+mandelbrot,mandelbrot-noopt,mandelbrot-opt,noopt,opt,612312000,558814000,-53498000,-8.737
+towers,towers-noopt,towers-opt,noopt,opt,1149843000,1103118000,-46725000,-4.064
+bounce,bounce-noopt,bounce-opt,noopt,opt,198051000,166944000,-31107000,-15.707
+storage,storage-noopt,storage-opt,noopt,opt,3127825000,4220103000,1092278000,34.921
+list,list-noopt,list-opt,noopt,opt,517496000,303943000,-213553000,-41.267
+richards,richards-noopt,richards-opt,noopt,opt,223518000,1189110000,965592000,431.997
+json,json-noopt,json-opt,noopt,opt,964436000,1004669000,40233000,4.172
+base64,base64-noopt,base64-opt,noopt,opt,1596854000,1331214000,-265640000,-16.635
+rexxcps,rexxcps-noopt,rexxcps-opt,noopt,opt,1273600000,2069118000,795518000,62.462

@@ -97,6 +97,8 @@ main: procedure = .int
     return argument_error("--summary-only requires at least one --samples PATH")
   if measurement = "rss" & warmups <> 0 then
     return argument_error("RSS capture uses --warmups 0")
+  rss_time_option = ""
+  if measurement = "rss" then rss_time_option = detect_rss_time_option()
 
   manifest_rows = read_input_manifest(manifest_path)
   if manifest_rows[0] = 0 then return execution_error("manifest has no entries")
@@ -132,8 +134,8 @@ main: procedure = .int
       group_end = group_end + 1
     end
 
-    if run_group(manifest_rows, group_start, group_end, measurement, warmups, runs, ,
-        samples, outputs) <> 0 then do
+    if run_group(manifest_rows, group_start, group_end, measurement, rss_time_option, ,
+        warmups, runs, samples, outputs) <> 0 then do
       call write_lines output_dir || "/samples.csv", samples
       call write_lines output_dir || "/outputs.csv", outputs
       completed = timestamp_utc()
@@ -239,7 +241,8 @@ validate_manifest: procedure = .int
 
 run_group: procedure = .int
   arg rows = .string[], group_start = .int, group_end = .int, measurement = .string, ,
-      warmups = .int, runs = .int, expose samples = .string[], expose outputs = .string[]
+      rss_time_option = .string, warmups = .int, runs = .int, ,
+      expose samples = .string[], expose outputs = .string[]
   group_count = group_end - group_start + 1
 
   do phase_index = 1 to 2
@@ -255,7 +258,8 @@ run_group: procedure = .int
         relative = (position + offset - 1) <mod> group_count
         row_index = group_start + relative
         fields = split_delimited(rows[row_index], "|")
-        result = capture_entry(fields, measurement, phase, round_number, position, samples, outputs)
+        result = capture_entry(fields, measurement, rss_time_option, phase, ,
+            round_number, position, samples, outputs)
         if result <> 0 then return result
       end
     end
@@ -263,9 +267,9 @@ run_group: procedure = .int
   return 0
 
 capture_entry: procedure = .int
-  arg fields = .string[], measurement = .string, phase = .string, ,
-      round_number = .int, position = .int, expose samples = .string[], ,
-      expose outputs = .string[]
+  arg fields = .string[], measurement = .string, rss_time_option = .string, ,
+      phase = .string, round_number = .int, position = .int, ,
+      expose samples = .string[], expose outputs = .string[]
   entry_id = fields[1]
   workload = fields[2]
   runtime = fields[3]
@@ -281,7 +285,7 @@ capture_entry: procedure = .int
   if measurement = "rss" then do
     timed_command = .string[]
     timed_command[1] = "/usr/bin/time"
-    timed_command[2] = "-l"
+    timed_command[2] = rss_time_option
     do command_index = 1 to command[0]
       timed_command[timed_command[0] + 1] = command[command_index]
     end
@@ -567,12 +571,26 @@ normalized_rate: procedure = .float
 extract_rss: procedure = .string
   arg text_lines = .string[]
   do i = 1 to text_lines[0]
-    if pos("maximum resident set size", text_lines[i]) > 0 then do
+    lowered = lower(text_lines[i])
+    if pos("maximum resident set size", lowered) > 0 then do
       candidate = word(text_lines[i], 1)
       if is_digits(candidate) then return candidate
+      candidate = word(text_lines[i], words(text_lines[i]))
+      if is_digits(candidate) & pos("(kbytes)", lowered) > 0 then
+        return candidate * 1024
     end
   end
   return ""
+
+detect_rss_time_option: procedure = .string
+  command = .string[]
+  command[1] = "/usr/bin/time"
+  command[2] = "--version"
+  child_output = .string[]
+  child_error = .string[]
+  address crexx "run :command[]" output child_output error child_error
+  if rc = 0 then return "-v"
+  return "-l"
 
 has_text: procedure = .int
   arg text_lines = .string[], needle = .string
@@ -799,5 +817,13 @@ self_test: procedure = .int
     return execution_error("safe-component self-test failed")
   if floatabs(normalized_rate(2000.0, 2000000000.0) - 1000.0) > 0.000001 then
     return execution_error("normalized-rate self-test failed")
+  bsd_rss = .string[]
+  bsd_rss[1] = "12345  maximum resident set size"
+  if extract_rss(bsd_rss) <> "12345" then
+    return execution_error("BSD RSS parser self-test failed")
+  gnu_rss = .string[]
+  gnu_rss[1] = "Maximum resident set size (kbytes): 12345"
+  if extract_rss(gnu_rss) <> "12641280" then
+    return execution_error("GNU RSS parser self-test failed")
   say "PASS: compact cross-runtime matrix tool self-test"
   return 0

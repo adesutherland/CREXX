@@ -1,0 +1,74 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 590  of event 'cycles:u'
+# Event count (approx.): 7029448303
+#
+# Overhead;Command;Shared Object;Symbol                                     ;IPC   [IPC Coverage]
+ 35.00% ;rxbvm  ;rxbvm        ;[.] run                                    ;-      -            
+ 9.19%  ;rxbvm  ;libc.so.6    ;[.] __GI_____strtod_l_internal             ;-      -            
+ 5.09%  ;rxbvm  ;libc.so.6    ;[.] __strlen_evex                          ;-      -            
+ 3.88%  ;rxbvm  ;libc.so.6    ;[.] __memmove_evex_unaligned_erms          ;-      -            
+ 3.00%  ;rxbvm  ;rxbvm        ;[.] decToString                            ;-      -            
+ 2.98%  ;rxbvm  ;libc.so.6    ;[.] __printf_buffer                        ;-      -            
+ 2.80%  ;rxbvm  ;rxbvm        ;[.] decNumberFromString                    ;-      -            
+ 2.49%  ;rxbvm  ;libc.so.6    ;[.] str_to_mpn.isra.0                      ;-      -            
+ 2.22%  ;rxbvm  ;libc.so.6    ;[.] round_and_return                       ;-      -            
+ 1.88%  ;rxbvm  ;rxbvm        ;[.] decNumberCompare                       ;-      -            
+ 1.75%  ;rxbvm  ;rxbvm        ;[.] rxvm_loose_compare_text                ;-      -            
+ 1.57%  ;rxbvm  ;rxbvm        ;[.] decTrim                                ;-      -            
+ 1.43%  ;rxbvm  ;rxbvm        ;[.] decimalFromString                      ;-      -            
+ 1.40%  ;rxbvm  ;rxbvm        ;[.] decUnitAddSub                          ;-      -            
+ 1.39%  ;rxbvm  ;libc.so.6    ;[.] cfree@GLIBC_2.2.5                      ;-      -            
+ 1.39%  ;rxbvm  ;rxbvm        ;[.] decimalToString                        ;-      -            
+ 1.22%  ;rxbvm  ;rxbvm        ;[.] decCompare                             ;-      -            
+ 1.18%  ;rxbvm  ;libc.so.6    ;[.] __memcmp_evex_movbe                    ;-      -            
+ 1.05%  ;rxbvm  ;rxbvm        ;[.] decNumberToInt32                       ;-      -            
+ 1.05%  ;rxbvm  ;libc.so.6    ;[.] __vsnprintf_internal                   ;-      -            
+ 1.00%  ;rxbvm  ;rxbvm        ;[.] decMultiplyOp                          ;-      -            
+ 0.98%  ;rxbvm  ;libc.so.6    ;[.] __strcpy_evex                          ;-      -            
+ 0.97%  ;rxbvm  ;libc.so.6    ;[.] _itoa_word                             ;-      -            
+ 0.94%  ;rxbvm  ;libc.so.6    ;[.] __printf_buffer_write                  ;-      -            
+ 0.87%  ;rxbvm  ;libc.so.6    ;[.] __mpn_lshift                           ;-      -            
+ 0.87%  ;rxbvm  ;rxbvm        ;[.] RexxDecimalFormat                      ;-      -            
+ 0.86%  ;rxbvm  ;libc.so.6    ;[.] malloc                                 ;-      -            
+ 0.85%  ;rxbvm  ;rxbvm        ;[.] clear_value_contents                   ;-      -            
+ 0.71%  ;rxbvm  ;rxbvm        ;[.] rxvm_rebuild_interface_method_registry ;-      -            
+ 0.71%  ;rxbvm  ;libc.so.6    ;[.] __strchrnul_evex                       ;-      -            
+ 0.70%  ;rxbvm  ;rxbvm        ;[.] decimalAdd                             ;-      -            
+ 0.70%  ;rxbvm  ;rxbvm        ;[.] memcpy@plt                             ;-      -            
+ 0.65%  ;rxbvm  ;libc.so.6    ;[.] __strchr_evex                          ;-      -            
+ 0.62%  ;rxbvm  ;rxbvm        ;[.] decimalCompare                         ;-      -            
+ 0.54%  ;rxbvm  ;libc.so.6    ;[.] strtod                                 ;-      -            
+ 0.53%  ;rxbvm  ;libc.so.6    ;[.] __mpn_construct_double                 ;-      -            
+ 0.52%  ;rxbvm  ;rxbvm        ;[.] decSetCoeff                            ;-      -            
+ 0.52%  ;rxbvm  ;rxbvm        ;[.] decAddOp                               ;-      -            
+ 0.36%  ;rxbvm  ;rxbvm        ;[.] syncNumericContext                     ;-      -            
+ 0.34%  ;rxbvm  ;rxbvm        ;[.] __errno_location@plt                   ;-      -            
+ 0.29%  ;rxbvm  ;rxbvm        ;[.] decNumberReduce                        ;-      -            
+ 0.28%  ;rxbvm  ;rxbvm        ;[.] decFinalize                            ;-      -            
+ 0.26%  ;rxbvm  ;rxbvm        ;[.] strcpy@plt                             ;-      -            
+ 0.20%  ;rxbvm  ;rxbvm        ;[.] rxbin007_lzss_decompress               ;-      -            
+ 0.18%  ;rxbvm  ;rxbvm        ;[.] decimalMul                             ;-      -            
+ 0.18%  ;rxbvm  ;libc.so.6    ;[.] __mpn_mul                              ;-      -            
+ 0.18%  ;rxbvm  ;libc.so.6    ;[.] __strchrnul_ifunc@plt                  ;-      -            
+ 0.18%  ;rxbvm  ;rxbvm        ;[.] free@plt                               ;-      -            
+ 0.18%  ;rxbvm  ;libc.so.6    ;[.] snprintf                               ;-      -            
+ 0.18%  ;rxbvm  ;rxbvm        ;[.] number_to_simple_format                ;-      -            
+ 0.18%  ;rxbvm  ;rxbvm        ;[.] decNumberAdd                           ;-      -            
+ 0.18%  ;rxbvm  ;rxbvm        ;[.] memmove@plt                            ;-      -            
+ 0.17%  ;rxbvm  ;rxbvm        ;[.] strchr@plt                             ;-      -            
+ 0.17%  ;rxbvm  ;rxbvm        ;[.] strtod@plt                             ;-      -            
+ 0.17%  ;rxbvm  ;rxbvm        ;[.] rxvm_rebuild_interface_factory_registry;-      -            
+ 0.17%  ;rxbvm  ;rxbvm        ;[.] strncpy@plt                            ;-      -            
+ 0.17%  ;rxbvm  ;rxbvm        ;[.] decNumberMultiply                      ;-      -            
+ 0.17%  ;rxbvm  ;rxbvm        ;[.] getRequiredStringSize                  ;-      -            
+ 0.15%  ;rxbvm  ;libc.so.6    ;[.] strlen@plt                             ;-      -            
+ 0.15%  ;rxbvm  ;libc.so.6    ;[.] __errno_location                       ;-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

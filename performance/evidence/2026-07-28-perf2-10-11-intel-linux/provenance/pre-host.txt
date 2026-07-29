@@ -1,0 +1,121 @@
+captured_utc=2026-07-28T10:21:12Z
+captured_local=2026-07-28T11:21:12+01:00
+main_head=d5f0827ca2708eae9d9be182c6d0d53bd6229b74
+main_branch=develop
+main_upstream=d5f0827ca2708eae9d9be182c6d0d53bd6229b74
+main_status_begin
+ M .gitignore
+ M performance/README.md
+ M performance/ROADMAP.md
+?? performance/PERF2-10-11-INTEL-LINUX-WORKLIST.md
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/lifecycle-candidate/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/lifecycle-current/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-27-perf2-09-mac-closure/lifecycle/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-28-perf2-10-11-intel-linux/
+?? performance/manifests/perf2-11-linux-x86-64-clang-baseline-v1.txt
+?? performance/manifests/perf2-11-linux-x86-64-gcc-baseline-v1.txt
+main_status_end
+source_head=d5f0827ca2708eae9d9be182c6d0d53bd6229b74
+source_status_begin
+source_status_end
+Linux adrian-linux 7.0.0-27-generic #27-Ubuntu SMP PREEMPT_DYNAMIC Thu Jun 18 19:13:49 UTC 2026 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 26.04 LTS"
+NAME="Ubuntu"
+VERSION_ID="26.04"
+VERSION="26.04 LTS (Resolute Raccoon)"
+VERSION_CODENAME=resolute
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=resolute
+LOGO=ubuntu-logo
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           39 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  8
+On-line CPU(s) list:                     0-7
+Vendor ID:                               GenuineIntel
+Model name:                              11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+CPU family:                              6
+Model:                                   140
+Thread(s) per core:                      2
+Core(s) per socket:                      4
+Socket(s):                               1
+Stepping:                                1
+CPU(s) scaling MHz:                      35%
+CPU max MHz:                             4200.0000
+CPU min MHz:                             400.0000
+BogoMIPS:                                4838.40
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l2 cdp_l2 ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid movdiri movdir64b fsrm avx512_vp2intersect md_clear ibt flush_l1d arch_capabilities
+Virtualization:                          VT-x
+L1d cache:                               192 KiB (4 instances)
+L1i cache:                               128 KiB (4 instances)
+L2 cache:                                5 MiB (4 instances)
+L3 cache:                                8 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-7
+Vulnerability Gather data sampling:      Vulnerable
+Vulnerability Ghostwrite:                Not affected
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Not affected
+Vulnerability Old microcode:             Not affected
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+               total        used        free      shared  buff/cache   available
+Mem:            18Gi       5.5Gi       5.2Gi       896Mi       9.3Gi        13Gi
+Swap:          8.0Gi       8.0Ki       8.0Gi
+uptime= 11:21:13 up  3:08,  1 user,  load average: 0.55, 0.46, 1.13
+loadavg=0.55 0.46 1.13 2/1099 54492
+gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+Ubuntu clang version 21.1.8 (6ubuntu1)
+Ubuntu clang version 21.1.8 (6ubuntu1)
+cmake version 4.2.3
+1.13.2
+perf version 7.0.6
+valgrind-3.26.0
+openjdk version "26.0.1" 2026-04-21
+OpenJDK Runtime Environment Temurin-26.0.1+8 (build 26.0.1+8)
+OpenJDK 64-Bit Server VM Temurin-26.0.1+8 (build 26.0.1+8, mixed mode, sharing)
+kernel.perf_event_paranoid = -1
+kernel.kptr_restrict = 1
+kernel.nmi_watchdog = 1
+kernel.perf_event_mlock_kb = 516
+/sys/class/power_supply/ACAD/online=1
+/sys/class/power_supply/BAT1/status=Full
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver=intel_pstate
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=powersave
+/sys/devices/system/cpu/intel_pstate/status=active
+/sys/devices/system/cpu/intel_pstate/no_turbo=0
+/sys/devices/system/cpu/smt/control=on
+analyzing CPU 6:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 6
+  CPUs which need to have their frequency coordinated by software: 6
+  energy performance preference: performance
+  hardware limits: 400 MHz - 4.20 GHz
+  available cpufreq governors: performance powersave
+  current policy: frequency should be within 400 MHz and 4.20 GHz.
+                  The governor "powersave" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 3.69 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: yes
+    Active: yes

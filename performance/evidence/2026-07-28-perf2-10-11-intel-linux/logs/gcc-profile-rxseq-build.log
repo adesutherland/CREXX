@@ -1,0 +1,5 @@
+ninja: Entering directory `/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-profile'
+[0/2] Re-checking globbed directories...
+[1/4] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqmain.c.o
+[2/4] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqfile.c.o
+[3/4] Linking C executable bin/rxseq

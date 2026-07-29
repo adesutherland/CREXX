@@ -1,0 +1,91 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+# symbol: reset_value_storage_for_reuse
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cycles:u'
+# Event count (approx.): 27469022209
+#
+# Overhead;     Samples;Symbol Offset;IPC   [IPC Coverage]
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x919;
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0x918;
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x913;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x8f6;
+ 0.03%  ; 1          ;[.] reset_value_storage_for_reuse+0x8ee;
+ 0.13%  ; 3          ;[.] reset_value_storage_for_reuse+0x8e6;
+ 0.03%  ; 1          ;[.] reset_value_storage_for_reuse+0x8db;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x8d3;
+ 0.10%  ; 2          ;[.] reset_value_storage_for_reuse+0x8cb;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x8c4;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x879;
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0x872;
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0x859;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x854;
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x83d;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x835;
+ 0.14%  ; 4          ;[.] reset_value_storage_for_reuse+0x822;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x812;
+ 0.03%  ; 1          ;[.] reset_value_storage_for_reuse+0x807;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x7f7;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x79f;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x798;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x775;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x771;
+ 0.07%  ; 2          ;[.] reset_value_storage_for_reuse+0x76d;
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x768;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x751;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x741;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x736;
+ 0.07%  ; 2          ;[.] reset_value_storage_for_reuse+0x726;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x701;
+ 0.03%  ; 1          ;[.] reset_value_storage_for_reuse+0x6b4;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x68a;
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x686;
+ 0.11%  ; 3          ;[.] reset_value_storage_for_reuse+0x649;
+ 0.06%  ; 1          ;[.] reset_value_storage_for_reuse+0x641;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x5c5;
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0x597;
+ 0.03%  ; 1          ;[.] reset_value_storage_for_reuse+0x580;
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0x56b;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x54d;
+ 0.13%  ; 3          ;[.] reset_value_storage_for_reuse+0x538;
+ 0.13%  ; 3          ;[.] reset_value_storage_for_reuse+0x52f;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x394;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x37c;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x35c;
+ 0.13%  ; 3          ;[.] reset_value_storage_for_reuse+0x33b;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x31f;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x318;
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x244;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x226;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x214;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x20b;
+ 0.10%  ; 3          ;[.] reset_value_storage_for_reuse+0x1c4;
+ 0.11%  ; 3          ;[.] reset_value_storage_for_reuse+0x1b4;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x1b0;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x1a0;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x17b;
+ 0.05%  ; 1          ;[.] reset_value_storage_for_reuse+0x174;
+ 0.39%  ; 9          ;[.] reset_value_storage_for_reuse+0x134;
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0x12d;
+ 0.13%  ; 3          ;[.] reset_value_storage_for_reuse+0x124;
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0xf9;-
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0xf4;-
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0xeb;-
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0xe4;-
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0xcf;-
+ 0.26%  ; 6          ;[.] reset_value_storage_for_reuse+0xa4;-
+ 0.06%  ; 2          ;[.] reset_value_storage_for_reuse+0x9d;-
+ 0.28%  ; 7          ;[.] reset_value_storage_for_reuse+0x94;-
+ 0.08%  ; 2          ;[.] reset_value_storage_for_reuse+0x71;-
+ 0.21%  ; 5          ;[.] reset_value_storage_for_reuse+0x68;-
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x4c;-
+ 0.17%  ; 4          ;[.] reset_value_storage_for_reuse+0x21;-
+ 0.04%  ; 1          ;[.] reset_value_storage_for_reuse+0x15;-
+ 0.09%  ; 2          ;[.] reset_value_storage_for_reuse+0x0;- 
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

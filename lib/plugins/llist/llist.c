@@ -254,8 +254,8 @@ struct NodeEntry* createNodeEntry(char *message) {
     newNode->sNext = NULL;
     
     // Set back fence after string
-    unsigned int *backFence = (unsigned int*)(newNode->String + messageLen + 1);
-    *backFence = NODE_FENCE_VALUE;
+    unsigned int backFence = NODE_FENCE_VALUE;
+    memcpy(newNode->String + messageLen + 1, &backFence, sizeof(backFence));
     
     return newNode;
 }

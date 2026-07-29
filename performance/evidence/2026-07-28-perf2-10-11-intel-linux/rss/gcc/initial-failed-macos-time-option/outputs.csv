@@ -1,0 +1,3 @@
+sample_id,stream,line_number,text
+rss-Sieve-sieve-rxvm-recorded-1,stderr,1,/usr/bin/time: invalid option -- 'l'
+rss-Sieve-sieve-rxvm-recorded-1,stderr,2,Try '/usr/bin/time --help' for more information.

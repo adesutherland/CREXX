@@ -1,0 +1,31 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cycles:u'
+# Event count (approx.): 27469022209
+#
+# Overhead;Command;Shared Object;Symbol                                     ;IPC   [IPC Coverage]
+ 42.96% ;rxvm   ;rxvm         ;[.] copy_value                             ;-      -            
+ 23.33% ;rxvm   ;rxvm         ;[.] run                                    ;-      -            
+ 10.24% ;rxvm   ;rxvm         ;[.] clear_value_contents                   ;-      -            
+ 5.84%  ;rxvm   ;rxvm         ;[.] reset_value_storage_for_reuse          ;-      -            
+ 3.93%  ;rxvm   ;libc.so.6    ;[.] _int_malloc                            ;-      -            
+ 3.70%  ;rxvm   ;libc.so.6    ;[.] _int_free_merge_chunk                  ;-      -            
+ 3.04%  ;rxvm   ;libc.so.6    ;[.] cfree@GLIBC_2.2.5                      ;-      -            
+ 2.37%  ;rxvm   ;libc.so.6    ;[.] malloc                                 ;-      -            
+ 1.43%  ;rxvm   ;rxvm         ;[.] release_value_reference_lifetime       ;-      -            
+ 0.71%  ;rxvm   ;libc.so.6    ;[.] _int_free_chunk                        ;-      -            
+ 0.51%  ;rxvm   ;libc.so.6    ;[.] unlink_chunk.isra.0                    ;-      -            
+ 0.46%  ;rxvm   ;rxvm         ;[.] free@plt                               ;-      -            
+ 0.38%  ;rxvm   ;libc.so.6    ;[.] __libc_malloc2                         ;-      -            
+ 0.20%  ;rxvm   ;rxvm         ;[.] rx_graph_type_ref                      ;-      -            
+ 0.19%  ;rxvm   ;libc.so.6    ;[.] _int_free_maybe_trim                   ;-      -            
+ 0.14%  ;rxvm   ;rxvm         ;[.] syncNumericContext                     ;-      -            
+ 0.11%  ;rxvm   ;rxvm         ;[.] malloc@plt                             ;-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

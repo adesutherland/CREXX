@@ -1,0 +1,2 @@
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.068 MB performance/evidence/2026-07-28-perf2-10-11-intel-linux/native-perf/record/gcc/base64-rxvm/perf.data (1721 samples) ]

@@ -47,6 +47,20 @@ separately reported lifecycle lane:
 The initial common aggregate is therefore exactly **Sieve, Permute, Bounce,
 Richards and Base64** across CREXX, ooRexx and NetRexx.
 
+Aggregate membership does not determine sampling priority. RexxCPS is a
+first-class governed community lane and is mandatory in every multi-workload
+representative sampling set, including formal baselines, candidate verdicts,
+compiler/layout screens, diagnostic profile subsets and native PMU/sample
+subsets. Formal timing, candidate-verdict and native-PMU cells use the
+canonical-default cREXX 2.2d command and applicable qualified comparators,
+retain its benchmark-native rate, and report it separately from the common-five
+aggregate. Counts-only instrumentation may use a versioned bounded smoke form
+when canonical execution is disproportionate, provided that form is labelled
+and linked to the retained canonical result. A focused single-workload or
+single-mechanism experiment may omit RexxCPS only when it is explicitly
+labelled non-representative. If a tool is technically inapplicable, retain a
+named exclusion with the reason rather than silently dropping the row.
+
 Regina remains RexxCPS-only. Java and native C remain labelled controls rather
 than mandatory portfolio members. A valid result excluded from the common
 aggregate stays visible with its comparability label and reason.
@@ -135,6 +149,12 @@ it does not waive a throughput regression.
 All samples run serially. Rotate runtime order by workload/round in a formal
 cross-runtime baseline. For before/after decisions, balance and interleave the
 cells in the same session.
+
+Every multi-workload schedule records its RexxCPS disposition explicitly.
+`representative`, `portfolio`, `focus set`, `guard set` and similar labels are
+invalid when RexxCPS is silently absent. This requirement does not add RexxCPS
+to the common geometric mean and does not make the disclosed 2.2d/2.2n ports
+lower-level-work-equivalent to canonical Classic 2.2.
 
 For common elapsed-time workloads, use one common argument across CREXX,
 ooRexx and NetRexx that makes the fastest pilot at least 1.0 second. If this

@@ -1,0 +1,10 @@
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gd5f0827ca270 20260728
+       System is: linux
+REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+
+     Performance: 10364311 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port

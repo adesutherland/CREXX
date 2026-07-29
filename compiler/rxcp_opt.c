@@ -1346,11 +1346,19 @@ static walker_result opt1_walker(walker_direction direction,
                                 child1->node_string_length +
                                 child2->node_string_length + 1;
                         buffer = malloc(buffer_length);
-                        memcpy(buffer, child1->node_string,
-                               child1->node_string_length);
+                        if (!buffer) {
+                            mknd_err(node, "OUT_OF_MEMORY");
+                            break;
+                        }
+                        if (child1->node_string_length) {
+                            memcpy(buffer, child1->node_string,
+                                   child1->node_string_length);
+                        }
                         buffer[child1->node_string_length] = ' ';
-                        memcpy(buffer + child1->node_string_length + 1,
-                               child2->node_string, child2->node_string_length);
+                        if (child2->node_string_length) {
+                            memcpy(buffer + child1->node_string_length + 1,
+                                   child2->node_string, child2->node_string_length);
+                        }
                         rewrite_to_string_constant(node, payload, buffer,
                                                    buffer_length);
                         break;
@@ -1360,11 +1368,19 @@ static walker_result opt1_walker(walker_direction direction,
                         buffer_length =
                                 child1->node_string_length +
                                 child2->node_string_length;
-                        buffer = malloc(buffer_length);
-                        memcpy(buffer, child1->node_string,
-                               child1->node_string_length);
-                        memcpy(buffer + child1->node_string_length,
-                               child2->node_string, child2->node_string_length);
+                        buffer = malloc(buffer_length ? buffer_length : 1);
+                        if (!buffer) {
+                            mknd_err(node, "OUT_OF_MEMORY");
+                            break;
+                        }
+                        if (child1->node_string_length) {
+                            memcpy(buffer, child1->node_string,
+                                   child1->node_string_length);
+                        }
+                        if (child2->node_string_length) {
+                            memcpy(buffer + child1->node_string_length,
+                                   child2->node_string, child2->node_string_length);
+                        }
                         rewrite_to_string_constant(node, payload, buffer,
                                                    buffer_length);
                         break;

@@ -1,0 +1,19 @@
+[0/2] Re-checking globbed directories...
+[1/1189] Building C object lemon/CMakeFiles/lemon.dir/lemon.c.o
+[2/1189] Linking C executable lemon/lemon
+[3/1189] Create REXX ASSEMBLER Parser...
+FAILED: [code=1] assembler/rxasgrmr.c assembler/rxasgrmr.h /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debugubsan/assembler/rxasgrmr.c /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debugubsan/assembler/rxasgrmr.h 
+cd /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debugubsan/assembler && /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debugubsan/lemon/lemon -q -c -d/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debugubsan/assembler /tmp/crexx-perf2-linux-x64.d5f0827ca/source/assembler/rxasgrmr.y
+/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:1974:9: runtime error: call to function actioncmp through pointer to incorrect function type 'int (*)(const char *, const char *)'
+/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:597: note: actioncmp defined here
+    #0 0x56f910744d97 in merge /tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:1974:9
+    #1 0x56f9106f385f in msort /tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:2029:12
+    #2 0x56f9106ee383 in Action_sort /tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:616:25
+    #3 0x56f9106ed3f7 in FindActions /tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:1281:15
+    #4 0x56f9106f5aa6 in main /tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:1874:5
+    #5 0x728f0a02a600 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:59:16
+    #6 0x728f0a02a717 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #7 0x56f9106ae5e4 in _start (/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debugubsan/lemon/lemon+0x4d5e4) (BuildId: a27e76d3815d7ed1e3019e9d8ff9a8dbf6aaf9c4)
+
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /tmp/crexx-perf2-linux-x64.d5f0827ca/source/lemon/lemon.c:1974:9 
+ninja: build stopped: subcommand failed.

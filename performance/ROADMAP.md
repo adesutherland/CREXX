@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-28
+Last updated: 2026-07-29
 
 Status: live planning register for the second performance programme.
 Production work requires the explicit decision gates recorded in each activity;
@@ -114,6 +114,11 @@ Three further boundaries are fixed:
 - VM work is first-class. Dispatch, execution-image layout, frames, values,
   conversions, interrupt state, code layout and lifecycle all receive current
   measurement rather than being treated as a residual implementation detail.
+- RexxCPS is first-class in sampling as well as in the programme exit. Every
+  multi-workload representative benchmark, profile, native-PMU,
+  compiler/layout and candidate-verdict set carries its separately governed
+  cREXX 2.2d lane. Its disclosed adaptation status keeps it outside the
+  common-five aggregate; it does not justify omitting it from the evidence set.
 
 The detailed competitor evidence is retained in
 [`rexxcps-runtime-source-review-2026-07-22.md`](rexxcps-runtime-source-review-2026-07-22.md).
@@ -195,12 +200,12 @@ Source:
 | PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
-| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | Apple tactical frame tuning closed; relevant residual joins PERF2-07 | The Apple slice carries only value/reference helper ownership, payload/frame coupling and handover preparation into the combined PERF2-06/07 worklist. `PERF2-06-D01`, compact/hot-cold stream selection and the final VM recommendation wait for the supported hardware/compiler matrix. |
+| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | Apple tactical frame tuning and initial Intel Linux attribution complete | Linux selects copy/value/storage and workload-sensitive compiler layout as PoC questions, not a production candidate. `PERF2-06-D01`, compact/hot-cold stream selection and the final VM recommendation remain unstarted and return to the faster Mac for bounded design work. |
 | PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | Apple slice complete; V1R01-R1 accepted | The proof-wide direct-placement candidate and V3-R01 correctness prerequisite are installed. At the 36-pair cap Richards is -21.224%/-21.076%, Permute -58.019%/-56.466%, common ratios are 1.244352x/1.242301x and no guard hits. Debug/Release each pass 1,925/1,925; focused ASan passes 10/10; lifecycle, RSS, retained-RXBIN and isolated-install guards pass. Other high-cost shapes are evidence-backed defer/reject/architecture transfers. Evidence: [`first verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/) and [`Apple closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/). |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | Mac gate complete; dispositions approved | Common `N=5`; Towers and RexxCPS qualified separately; Mandelbrot, Storage, List and JSON have explicit no-ratio dispositions; CAP-01 through CAP-04 remain under their recorded future owners. Evidence: [`qualification`](evidence/2026-07-27-perf2-08-qualification/) and [`worklist`](PERF2-08-09-WORKLIST.md). |
 | PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | Mac closure complete | Current same-session Apple scorecard is checksum-closed. Richards is the largest qualified common deficit. No next candidate is selected. Evidence: [`Mac closure`](evidence/2026-07-27-perf2-09-mac-closure/). |
-| PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | not started; Apple screen remains queued | On Mac retain only bounded screening/controls. Select or tune build/layout options on the Intel Linux host under both GCC and Clang, then validate the frozen result on all required platforms. |
-| PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | not started; PERF2-09 Mac handover ready | Perform the bounded Apple pre-handover work only when separately authorized, then decision-critical Intel Linux testing/tuning, required Linux ARM64 coverage and supported Windows completion before Gate E/F. |
+| PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | Initial Intel Linux baseline/attribution complete; no option selected | GCC/Clang ordinary-product, sanitizer, schema-5 and native-PMU evidence is retained under [`PERF2-10-11-INTEL-LINUX-WORKLIST.md`](PERF2-10-11-INTEL-LINUX-WORKLIST.md). Rebuild-heavy PoCs return to macOS; LTO/PGO/layout selection remains unstarted. |
+| PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | Linux x86-64 evidence retained; Gate E incomplete | PERF2-09 Mac and the initial GCC/Clang Linux x86-64 lanes are frozen. A selected candidate, supported Linux ARM64, same-hardware Windows and final VM/default selection remain open. |
 | PERF2-12 | P3 | JIT/AOT/native-backend architecture decision | deferred | Revisit only if the non-JIT programme cannot meet the unquestionable-superiority exit. |
 | HIGHLIGHT-01 | P0 | Parser-mode UTF-8 projection and missing-token scalability | complete; Release verdict accepted 2026-07-28 | The selected DSLSH position index and cREXX projected-token lookup reduced the formerly timing-out large parser path to a roughly 0.36-second median. THE then removed per-request profile/render compilation, per-span variable-pool traffic and quadratic rendering; the 1,942-line end-user wrapper median is 0.61 seconds. Cross-project Release/Debug suites are green; evidence and boundaries are in [`HIGHLIGHT-01-WORKLIST.md`](HIGHLIGHT-01-WORKLIST.md). |
 
@@ -257,12 +262,13 @@ x86-64 machine running Linux and then Windows. The operational order is:
 3. **Mac PERF2-09+ first pass.** Run per-benchmark closure, bounded PERF2-10
    Apple controls and the PERF2-11 Apple pre-handover scorecard. Freeze exact
    source/product/workload hashes and the remaining deficit/debt ledger.
-4. **Intel Linux handover.** On the target x86-64 machine run both GCC and Clang,
-   collect the decision-critical `PERF2-06-D01` compiler/layout lanes and native
-   counters, and do final evidence-selected PERF2-10 tuning. D01 closes only
-   after the retained Apple and later Linux ARM64/Windows lanes reconcile. Any
-   accepted change must repeat the mandatory Release verdict and preserve the
-   Mac guards.
+4. **Intel Linux handover.** The initial GCC/Clang correctness, sanitizer,
+   baseline, schema-5 and native-counter campaign is complete. Its build cost
+   makes this host a validation authority rather than the primary iteration
+   machine. Use macOS for bounded design/PoCs and rebuild-heavy candidate
+   selection, then return here only for a batched selected candidate,
+   Linux-specific PMU/sanitizer questions or final validation. D01 closes only
+   after retained Apple and later Linux ARM64/Windows lanes reconcile.
 5. **Linux ARM64 coverage.** Gate E still requires supported Linux ARM64
    correctness/timing evidence. Apple ARM64 is not a substitute. This may be a
    separate supported host/runner and is a validation lane, not the principal
@@ -275,6 +281,34 @@ x86-64 machine running Linux and then Windows. The operational order is:
 
 PERF2-12 remains deferred until the accepted non-JIT programme and final
 cross-platform scorecard show it is economically necessary.
+
+### Intel Linux handback — 2026-07-29
+
+The initial Linux x86-64 campaign meets its explicit sufficiency gate. GCC and
+Clang ordinary Debug/Release pass 1,925/1,925; supported GCC ASan/LSan and the
+bounded exploratory Clang UBSan inventory also pass 1,925/1,925. Formal
+timing/RSS/lifecycle/artifact evidence, full dual-VM GCC schema-5 profiles, a
+bounded dual-VM Clang profile control, 154 non-multiplexed PMU captures and 16
+focused cycle profiles are retained in
+[`2026-07-28-perf2-10-11-intel-linux`](evidence/2026-07-28-perf2-10-11-intel-linux/).
+
+No production optimization or compiler/layout option is selected. Richards
+selects general value copying and attribute-storage trimming; Towers selects
+copy/clear/reset/allocation work plus front-end/indirect-branch pressure;
+Base64 selects the large dispatch function and string-copy path. Clang/GCC
+direction reverses by workload, so a future compiler/layout decision requires
+a paired same-session candidate experiment rather than comparing the two
+formal lanes directly. RexxCPS is now present in the Clang schema, native-PMU
+and cycle-sampling controls as well as formal timing; its samples add
+front-end, decimal conversion/formatting and string-movement pressure.
+
+The GCC profile build is the practical stop signal for iteration on this host:
+two concurrent `rxvmintp.c` compiles caused a kernel OOM kill, while the serial
+completion took 1:01:49 and peaked at 15.95 GiB RSS. Retain every build tree and
+profile as an immutable asset. Next perform disposable mechanism ceilings and
+candidate ranking on macOS, batch any selected production edit, apply the
+mandatory first ordinary Release verdict there, and return to Linux only after
+Adrian accepts that verdict.
 
 ## PERF2-01 — current baseline and attribution refresh
 

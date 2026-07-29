@@ -1,0 +1,67 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+# symbol: clear_value_contents
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cycles:u'
+# Event count (approx.): 27469022209
+#
+# Overhead;     Samples;Symbol Offset;IPC   [IPC Coverage]
+ 0.27%  ; 7          ;[.] clear_value_contents+0x4e8;-      - 
+ 0.11%  ; 3          ;[.] clear_value_contents+0x4e0;-      - 
+ 0.12%  ; 3          ;[.] clear_value_contents+0x464;-      - 
+ 0.05%  ; 2          ;[.] clear_value_contents+0x460;-      - 
+ 0.09%  ; 3          ;[.] clear_value_contents+0x45e;-      - 
+ 0.05%  ; 1          ;[.] clear_value_contents+0x45d;-      - 
+ 0.20%  ; 5          ;[.] clear_value_contents+0x45c;-      - 
+ 0.16%  ; 4          ;[.] clear_value_contents+0x458;-      - 
+ 0.09%  ; 2          ;[.] clear_value_contents+0x454;-      - 
+ 0.12%  ; 4          ;[.] clear_value_contents+0x44c;-      - 
+ 0.12%  ; 3          ;[.] clear_value_contents+0x439;-      - 
+ 0.04%  ; 1          ;[.] clear_value_contents+0x431;-      - 
+ 0.05%  ; 1          ;[.] clear_value_contents+0x426;-      - 
+ 0.13%  ; 3          ;[.] clear_value_contents+0x40c;-      - 
+ 0.04%  ; 1          ;[.] clear_value_contents+0x1d1;-      - 
+ 0.16%  ; 4          ;[.] clear_value_contents+0x1cd;-      - 
+ 0.04%  ; 1          ;[.] clear_value_contents+0x1c3;-      - 
+ 0.08%  ; 2          ;[.] clear_value_contents+0x1b8;-      - 
+ 0.17%  ; 4          ;[.] clear_value_contents+0x19d;-      - 
+ 0.03%  ; 1          ;[.] clear_value_contents+0x193;-      - 
+ 0.06%  ; 2          ;[.] clear_value_contents+0x18f;-      - 
+ 0.02%  ; 1          ;[.] clear_value_contents+0x17c;-      - 
+ 0.12%  ; 3          ;[.] clear_value_contents+0x16c;-      - 
+ 0.06%  ; 2          ;[.] clear_value_contents+0x15b;-      - 
+ 0.05%  ; 1          ;[.] clear_value_contents+0x157;-      - 
+ 0.16%  ; 4          ;[.] clear_value_contents+0x14f;-      - 
+ 0.03%  ; 1          ;[.] clear_value_contents+0x147;-      - 
+ 0.59%  ; 15         ;[.] clear_value_contents+0x143;-      - 
+ 0.32%  ; 8          ;[.] clear_value_contents+0x129;-      - 
+ 0.03%  ; 1          ;[.] clear_value_contents+0x11b;-      - 
+ 0.56%  ; 14         ;[.] clear_value_contents+0x117;-      - 
+ 0.26%  ; 7          ;[.] clear_value_contents+0x113;-      - 
+ 0.08%  ; 2          ;[.] clear_value_contents+0xfe;-      -  
+ 0.32%  ; 8          ;[.] clear_value_contents+0xf7;-      -  
+ 0.04%  ; 1          ;[.] clear_value_contents+0xbd;-      -  
+ 0.15%  ; 4          ;[.] clear_value_contents+0xb4;-      -  
+ 0.04%  ; 1          ;[.] clear_value_contents+0xb0;-      -  
+ 0.07%  ; 2          ;[.] clear_value_contents+0xad;-      -  
+ 0.23%  ; 6          ;[.] clear_value_contents+0x9c;-      -  
+ 0.18%  ; 5          ;[.] clear_value_contents+0x95;-      -  
+ 0.06%  ; 1          ;[.] clear_value_contents+0x8a;-      -  
+ 0.14%  ; 4          ;[.] clear_value_contents+0x7c;-      -  
+ 0.12%  ; 3          ;[.] clear_value_contents+0x75;-      -  
+ 0.27%  ; 7          ;[.] clear_value_contents+0x66;-      -  
+ 2.16%  ; 54         ;[.] clear_value_contents+0x41;-      -  
+ 0.67%  ; 18         ;[.] clear_value_contents+0x34;-      -  
+ 0.04%  ; 1          ;[.] clear_value_contents+0x30;-      -  
+ 0.12%  ; 3          ;[.] clear_value_contents+0x1e;-      -  
+ 0.03%  ; 1          ;[.] clear_value_contents+0x17;-      -  
+ 0.41%  ; 9          ;[.] clear_value_contents+0x12;-      -  
+ 0.17%  ; 4          ;[.] clear_value_contents+0x7;-      -   
+ 0.54%  ; 13         ;[.] clear_value_contents+0x0;-      -   
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

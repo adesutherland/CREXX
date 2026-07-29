@@ -1,0 +1,32 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cycles:u'
+# Event count (approx.): 27405749253
+#
+# Overhead  Command  Shared Object     Symbol                                       IPC   [IPC Coverage]
+# ........  .......  ................  ...........................................  ....................
+#
+    43.34%  rxbvm    rxbvm             [.] copy_value                               -      -            
+    23.06%  rxbvm    rxbvm             [.] run                                      -      -            
+    11.54%  rxbvm    rxbvm             [.] clear_value_contents                     -      -            
+     4.99%  rxbvm    rxbvm             [.] reset_value_storage_for_reuse            -      -            
+     3.17%  rxbvm    libc.so.6         [.] malloc                                   -      -            
+     3.02%  rxbvm    libc.so.6         [.] _int_malloc                              -      -            
+     2.91%  rxbvm    libc.so.6         [.] cfree@GLIBC_2.2.5                        -      -            
+     2.86%  rxbvm    libc.so.6         [.] _int_free_merge_chunk                    -      -            
+     1.91%  rxbvm    rxbvm             [.] release_value_reference_lifetime         -      -            
+     0.83%  rxbvm    libc.so.6         [.] unlink_chunk.isra.0                      -      -            
+     0.60%  rxbvm    libc.so.6         [.] _int_free_chunk                          -      -            
+     0.42%  rxbvm    rxbvm             [.] free@plt                                 -      -            
+     0.33%  rxbvm    libc.so.6         [.] _int_free_maybe_trim                     -      -            
+     0.31%  rxbvm    rxbvm             [.] rx_graph_type_ref                        -      -            
+     0.27%  rxbvm    rxbvm             [.] malloc@plt                               -      -            
+     0.20%  rxbvm    libc.so.6         [.] __libc_malloc2                           -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

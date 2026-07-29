@@ -1,0 +1,121 @@
+NetRexx portable processor 5.10-GA build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program awfy_sieve.nrx
+  === class awfy_sieve ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ Warning: Variable is set but not used
+    function sieveOnce
+Program awfy_permute.nrx
+  === class awfy_permute ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ Warning: Variable is set but not used
+
+  === class PermuteBenchmark ===
+    constructor PermuteBenchmark()
+      overrides Object()
+    method run
+    method permute(Rexx)
+    method swap(Rexx,Rexx)
+Program awfy_bounce.nrx
+  === class awfy_bounce ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ Warning: Variable is set but not used
+
+  === class BounceRandom ===
+    method next
+
+  === class BounceBall ===
+    constructor BounceBall(BounceRandom)
+    method bounce
+
+  === class BounceBenchmark ===
+    method run
+ 85 +++     loop step=1 to 50
+    +++          ^^^^
+    +++ Warning: Variable is set but not used
+Program awfy_richards.nrx
+  === class awfy_richards ===
+    function main(String[])
+  19 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ Warning: Variable is set but not used
+
+  === class RichardsScheduler ===
+    constructor RichardsScheduler()
+      overrides Object()
+    method run
+    method queueCount
+    method holdCount
+    method createTask(Rexx,Rexx,Rexx,Rexx,Rexx,Rexx)
+    method createPacket(Rexx,Rexx,Rexx)
+    method appendPacket(Rexx,Rexx)
+    method setRunning(Rexx)
+    method setPacketPending(Rexx)
+    method isHoldingOrWaiting(Rexx)
+    method isWaitingWithPacket(Rexx)
+    method addInput(Rexx,Rexx,Rexx)
+    method holdSelf
+    method markWaiting
+    method release(Rexx)
+    method queuePacket(Rexx)
+    method runTask(Rexx)
+    method runIdler
+    function xorInt(Rexx,Rexx)
+ 200 +++     loop i=1 to 16
+     +++          ^
+     +++ Warning: Variable is set but not used
+    method runWorker(Rexx)
+    method runHandler(Rexx,Rexx)
+    method runDevice(Rexx,Rexx)
+    method schedule
+Program base64_roundtrip.nrx
+  === class base64_roundtrip ===
+    function main(String[])
+  22 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ Warning: Variable is set but not used
+    function encode(byte[])
+    function decode(String)
+Program awfy_towers.nrx
+  === class awfy_towers ===
+    function main(String[])
+  19 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ Warning: Variable is set but not used
+
+  === class TowersDisk ===
+    constructor TowersDisk(int)
+    method size
+    method next
+    method hasNext
+    method setNext(TowersDisk)
+
+  === class TowersBenchmark ===
+    constructor TowersBenchmark()
+      overrides Object()
+    method run
+    method pushDisk(TowersDisk,int)
+    method popDiskFrom(int)
+    method moveTopDisk(int,int)
+    method buildTowerAt(int,int)
+    method moveDisks(int,int,int)
+Program rexxcps_2_2n.nrx
+    function subroutine(Rexx,Rexx)
+    function formatThousands(Rexx)
+Compilation of 'awfy_sieve.nrx' successful [one warning]
+Compilation of 'awfy_permute.nrx' successful [2 classes, one warning]
+Compilation of 'awfy_bounce.nrx' successful [4 classes,  2 warnings]
+Compilation of 'awfy_richards.nrx' successful [2 classes,  2 warnings]
+Compilation of 'base64_roundtrip.nrx' successful [one warning]
+Compilation of 'awfy_towers.nrx' successful [3 classes, one warning]
+Compilation of 'rexxcps_2_2n.nrx' successful
+Translate time: 0.7s
+    javac time: 1.0s
+    Total time: 1.7s

@@ -146,8 +146,10 @@ _x2d_signed: procedure = .int
         assembler signal "OVERFLOW_UNDERFLOW", "X2D signed result exceeds native integer range"
     end
     else do
-      assembler ishl result,result,4
-      assembler ior result,result,nibble
+      if signed_length >= 16 & low_digits_seen = 0 & negative & nibble >= 8 then
+        result = nibble - 16
+      else
+        result = result * 16 + nibble
       low_digits_seen = low_digits_seen + 1
     end
     selected_index = selected_index + 1

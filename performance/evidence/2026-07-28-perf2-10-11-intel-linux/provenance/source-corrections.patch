@@ -1,0 +1,216 @@
+diff --git a/compiler/rxcp_opt.c b/compiler/rxcp_opt.c
+index dcbeb8c3f..9626762dc 100644
+--- a/compiler/rxcp_opt.c
++++ b/compiler/rxcp_opt.c
+@@ -1346,11 +1346,19 @@ static walker_result opt1_walker(walker_direction direction,
+                                 child1->node_string_length +
+                                 child2->node_string_length + 1;
+                         buffer = malloc(buffer_length);
+-                        memcpy(buffer, child1->node_string,
+-                               child1->node_string_length);
++                        if (!buffer) {
++                            mknd_err(node, "OUT_OF_MEMORY");
++                            break;
++                        }
++                        if (child1->node_string_length) {
++                            memcpy(buffer, child1->node_string,
++                                   child1->node_string_length);
++                        }
+                         buffer[child1->node_string_length] = ' ';
+-                        memcpy(buffer + child1->node_string_length + 1,
+-                               child2->node_string, child2->node_string_length);
++                        if (child2->node_string_length) {
++                            memcpy(buffer + child1->node_string_length + 1,
++                                   child2->node_string, child2->node_string_length);
++                        }
+                         rewrite_to_string_constant(node, payload, buffer,
+                                                    buffer_length);
+                         break;
+@@ -1360,11 +1368,19 @@ static walker_result opt1_walker(walker_direction direction,
+                         buffer_length =
+                                 child1->node_string_length +
+                                 child2->node_string_length;
+-                        buffer = malloc(buffer_length);
+-                        memcpy(buffer, child1->node_string,
+-                               child1->node_string_length);
+-                        memcpy(buffer + child1->node_string_length,
+-                               child2->node_string, child2->node_string_length);
++                        buffer = malloc(buffer_length ? buffer_length : 1);
++                        if (!buffer) {
++                            mknd_err(node, "OUT_OF_MEMORY");
++                            break;
++                        }
++                        if (child1->node_string_length) {
++                            memcpy(buffer, child1->node_string,
++                                   child1->node_string_length);
++                        }
++                        if (child2->node_string_length) {
++                            memcpy(buffer + child1->node_string_length,
++                                   child2->node_string, child2->node_string_length);
++                        }
+                         rewrite_to_string_constant(node, payload, buffer,
+                                                    buffer_length);
+                         break;
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index b2b2328d4..94a5df619 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -11975,7 +11975,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+ #ifndef NUTF8
+     {
+         size_t chars = 0;
+-        if (utf8nvalid_count(op1R->binary_value, op1R->binary_length, &chars)) {
++        if (validate_utf8_bytes(op1R->binary_value, op1R->binary_length, &chars) != 0) {
+             SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in binary-to-string conversion");
+         } else {
+             set_string(op1R,
+diff --git a/interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c b/interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c
+index a75e4b57a..4fbfde03a 100644
+--- a/interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c
++++ b/interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c
+@@ -144,6 +144,10 @@ static const long double powers_of_10[] = {
+ 
+ // Rounding a long double to a given number of significant digits
+ long double round_decimal(long double value, size_t significant_digits) {
++    // NaN is preserved for the caller's normal decimal signal handling.
++    if (isnan(value)) {
++        return value;
++    }
+     // Check for overflow
+     if (value == HUGE_VALL || value == LDBL_MAX) {
+         return HUGE_VALL;
+diff --git a/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c b/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
+index 112186e58..c1e0e9f92 100644
+--- a/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
++++ b/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
+@@ -2335,6 +2335,7 @@ decNumber * decNumberPower(decNumber *res, const decNumber *lhs,
+   decNumber *allocinv=NULL;        // -> allocated 1/x buffer, iff used
+   Int   reqdigits=set->digits;     // requested DIGITS
+   Int   n;                         // rhs in binary
++  uInt  nbits;                     // rhs bits for unsigned power scan
+   Flag  rhsint=0;                  // 1 if rhs is an integer
+   Flag  useint=0;                  // 1 if can use integer calculation
+   Flag  isoddint=0;                // 1 if rhs is an integer and odd
+@@ -2502,6 +2503,7 @@ decNumber * decNumberPower(decNumber *res, const decNumber *lhs,
+         break;}
+       // rhs is a non-zero integer
+       if (n<0) n=-n;                    // use abs(n)
++      nbits=(uInt)n;
+ 
+       aset=*set;                        // clone the context
+       aset.round=DEC_ROUND_HALF_EVEN;   // internally use balanced
+@@ -2590,8 +2592,8 @@ decNumber * decNumberPower(decNumber *res, const decNumber *lhs,
+           }
+         // [the following two lines revealed an optimizer bug in a C++
+         // compiler, with symptom: 5**3 -> 25, when n=n+n was used]
+-        n=n<<1;                    // move next bit to testable position
+-        if (n<0) {                 // top bit is set
++        nbits=nbits<<1;            // move next bit to testable position
++        if (nbits&((uInt)1<<31)) { // top bit is set
+           seenbit=1;               // OK, significant bit seen
+           decMultiplyOp(dac, dac, lhs, &aset, &status); // dac=dac*x
+           }
+@@ -5847,7 +5849,7 @@ decNumber * decExpOp(decNumber *res, const decNumber *rhs,
+     if (h>0) {
+       Int seenbit=0;               // set once a 1-bit is seen
+       Int i;                       // counter
+-      Int n=powers[h];             // always positive
++      uInt n=(uInt)powers[h];      // always positive
+       aset.digits=p+2;             // sufficient precision
+       // avoid the overhead and many extra digits of decNumberPower
+       // as all that is needed is the short 'multipliers' loop; here
+@@ -5858,7 +5860,7 @@ decNumber * decExpOp(decNumber *res, const decNumber *rhs,
+         if (*status & (DEC_Overflow|DEC_Underflow)) { // interesting?
+           if (*status&DEC_Overflow || ISZERO(t)) break;}
+         n=n<<1;                    // move next bit to testable position
+-        if (n<0) {                 // top bit is set
++        if (n&((uInt)1<<31)) {     // top bit is set
+           seenbit=1;               // OK, have a significant bit
+           decMultiplyOp(t, t, a, &aset, status); // acc=acc*x
+           }
+diff --git a/lemon/lemon.c b/lemon/lemon.c
+index d6e495c89..e1e78c3f5 100644
+--- a/lemon/lemon.c
++++ b/lemon/lemon.c
+@@ -592,9 +592,11 @@ static struct action *Action_new(void){
+ ** the first
+ */
+ static int actioncmp(
+-  struct action *ap1,
+-  struct action *ap2
++  const char *a,
++  const char *b
+ ){
++  const struct action *ap1 = (const struct action *)a;
++  const struct action *ap2 = (const struct action *)b;
+   int rc;
+   rc = ap1->sp->index - ap2->sp->index;
+   if( rc==0 ){
+@@ -613,8 +615,7 @@ static int actioncmp(
+ static struct action *Action_sort(
+   struct action *ap
+ ){
+-  ap = (struct action *)msort((char *)ap,(char **)&ap->next,
+-                              (int(*)(const char*,const char*))actioncmp);
++  ap = (struct action *)msort((char *)ap,(char **)&ap->next,actioncmp);
+   return ap;
+ }
+ 
+@@ -1792,7 +1793,9 @@ int main(int argc, char **argv){
+   }
+   memset(&lem, 0, sizeof(lem));
+   lem.errorcnt = 0;
+-  qsort(azDefine, nDefine, sizeof(azDefine[0]), defineCmp);
++  if( nDefine>1 ){
++    qsort(azDefine, nDefine, sizeof(azDefine[0]), defineCmp);
++  }
+ 
+   /* Initialize the machine */
+   Strsafe_init();
+diff --git a/lib/plugins/llist/llist.c b/lib/plugins/llist/llist.c
+index ec3b481a5..9b8585f03 100644
+--- a/lib/plugins/llist/llist.c
++++ b/lib/plugins/llist/llist.c
+@@ -254,8 +254,8 @@ struct NodeEntry* createNodeEntry(char *message) {
+     newNode->sNext = NULL;
+     
+     // Set back fence after string
+-    unsigned int *backFence = (unsigned int*)(newNode->String + messageLen + 1);
+-    *backFence = NODE_FENCE_VALUE;
++    unsigned int backFence = NODE_FENCE_VALUE;
++    memcpy(newNode->String + messageLen + 1, &backFence, sizeof(backFence));
+     
+     return newNode;
+ }
+diff --git a/lib/plugins/rxtcp/rxtcp.c b/lib/plugins/rxtcp/rxtcp.c
+index a57163f4c..9bc6ed945 100644
+--- a/lib/plugins/rxtcp/rxtcp.c
++++ b/lib/plugins/rxtcp/rxtcp.c
+@@ -285,7 +285,9 @@ PROCEDURE(tcpreceive) {
+     }
+ 
+     buffer[total_received] = '\0';
+-    RETURNSTRX(buffer);
++    SETSTRING(RETURN, buffer);
++    free(buffer);
++    PROCRETURN
+     ENDPROC
+ }
+ 
+diff --git a/lib/rxfnsb/rexx/x2d.crexx b/lib/rxfnsb/rexx/x2d.crexx
+index 603823e4f..5259b3406 100644
+--- a/lib/rxfnsb/rexx/x2d.crexx
++++ b/lib/rxfnsb/rexx/x2d.crexx
+@@ -146,8 +146,10 @@ _x2d_signed: procedure = .int
+         assembler signal "OVERFLOW_UNDERFLOW", "X2D signed result exceeds native integer range"
+     end
+     else do
+-      assembler ishl result,result,4
+-      assembler ior result,result,nibble
++      if signed_length >= 16 & low_digits_seen = 0 & negative & nibble >= 8 then
++        result = nibble - 16
++      else
++        result = result * 16 + nibble
+       low_digits_seen = low_digits_seen + 1
+     end
+     selected_index = selected_index + 1

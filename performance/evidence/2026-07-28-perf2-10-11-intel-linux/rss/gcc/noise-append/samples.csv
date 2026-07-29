@@ -1,0 +1,51 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+rss-Permute-permute-netrexx-recorded-1,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,1,1,5000,3579981000,232697856,0,pass,,
+rss-Permute-permute-netrexx-recorded-2,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,2,1,5000,3663548000,443392000,0,pass,,
+rss-Permute-permute-netrexx-recorded-3,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,3,1,5000,3670994000,358952960,0,pass,,
+rss-Permute-permute-netrexx-recorded-4,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,4,1,5000,3511807000,392945664,0,pass,,
+rss-Permute-permute-netrexx-recorded-5,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,5,1,5000,3396352000,216276992,0,pass,,
+rss-Permute-permute-netrexx-recorded-6,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,6,1,5000,3483987000,291553280,0,pass,,
+rss-Permute-permute-netrexx-recorded-7,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,7,1,5000,3451577000,443523072,0,pass,,
+rss-Permute-permute-netrexx-recorded-8,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,8,1,5000,3472907000,232816640,0,pass,,
+rss-Permute-permute-netrexx-recorded-9,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,9,1,5000,3509256000,371474432,0,pass,,
+rss-Permute-permute-netrexx-recorded-10,rss,Permute,permute-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,10,1,5000,3483452000,434692096,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-1,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,1,1,4200,6298738000,208879616,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-2,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,2,1,4200,6113758000,238039040,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-3,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,3,1,4200,6260903000,229249024,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-4,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,4,1,4200,6085159000,417374208,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-5,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,5,1,4200,6132381000,219082752,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-6,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,6,1,4200,6114237000,393019392,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-7,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,7,1,4200,6263542000,212439040,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-8,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,8,1,4200,6078954000,415059968,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-9,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,9,1,4200,6170912000,174882816,0,pass,,
+rss-Bounce-bounce-netrexx-recorded-10,rss,Bounce,bounce-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,10,1,4200,5983254000,173039616,0,pass,,
+rss-Richards-richards-netrexx-recorded-1,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,1,1,20,3916653000,209993728,0,pass,,
+rss-Richards-richards-netrexx-recorded-2,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,2,1,20,3340836000,211304448,0,pass,,
+rss-Richards-richards-netrexx-recorded-3,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,3,1,20,3425357000,208146432,0,pass,,
+rss-Richards-richards-netrexx-recorded-4,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,4,1,20,3279128000,210522112,0,pass,,
+rss-Richards-richards-netrexx-recorded-5,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,5,1,20,3441749000,211972096,0,pass,,
+rss-Richards-richards-netrexx-recorded-6,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,6,1,20,3389025000,206110720,0,pass,,
+rss-Richards-richards-netrexx-recorded-7,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,7,1,20,3289747000,207155200,0,pass,,
+rss-Richards-richards-netrexx-recorded-8,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,8,1,20,3362149000,204492800,0,pass,,
+rss-Richards-richards-netrexx-recorded-9,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,9,1,20,3337124000,220700672,0,pass,,
+rss-Richards-richards-netrexx-recorded-10,rss,Richards,richards-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,10,1,20,3298772000,208871424,0,pass,,
+rss-Base64-base64-netrexx-recorded-1,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,1,1,2500,3680058000,223481856,0,pass,,
+rss-Base64-base64-netrexx-recorded-2,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,2,1,2500,3740054000,184946688,0,pass,,
+rss-Base64-base64-netrexx-recorded-3,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,3,1,2500,3693925000,218624000,0,pass,,
+rss-Base64-base64-netrexx-recorded-4,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,4,1,2500,3785133000,184877056,0,pass,,
+rss-Base64-base64-netrexx-recorded-5,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,5,1,2500,3621907000,223268864,0,pass,,
+rss-Base64-base64-netrexx-recorded-6,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,6,1,2500,3669415000,252649472,0,pass,,
+rss-Base64-base64-netrexx-recorded-7,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,7,1,2500,3601040000,185659392,0,pass,,
+rss-Base64-base64-netrexx-recorded-8,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,8,1,2500,3655512000,183975936,0,pass,,
+rss-Base64-base64-netrexx-recorded-9,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,9,1,2500,3666844000,184856576,0,pass,,
+rss-Base64-base64-netrexx-recorded-10,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,yes,no,recorded,10,1,2500,3843943000,221409280,0,pass,,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,1,1,1000-clauses,1373608000,325165056,0,pass,7717485,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-2,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,2,1,1000-clauses,1398205000,455856128,0,pass,7613461,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-3,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,3,1,1000-clauses,1304915000,271773696,0,pass,8140953,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-4,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,4,1,1000-clauses,1346600000,297787392,0,pass,7855570,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-5,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,5,1,1000-clauses,1389946000,451342336,0,pass,7647832,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-6,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,6,1,1000-clauses,1343923000,451780608,0,pass,7916664,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-7,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,7,1,1000-clauses,1326636000,450371584,0,pass,8061714,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-8,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,8,1,1000-clauses,1315616000,237993984,0,pass,8043445,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-9,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,9,1,1000-clauses,1253255000,361877504,0,pass,8432009,NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-10,rss,RexxCPS,rexxcps-netrexx,netrexx,netrexx,disclosed-2.2n,A,no,no,recorded,10,1,1000-clauses,1425631000,457154560,0,pass,7418311,NetRexx clauses per second

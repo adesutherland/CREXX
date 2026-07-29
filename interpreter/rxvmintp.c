@@ -11975,7 +11975,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #ifndef NUTF8
     {
         size_t chars = 0;
-        if (utf8nvalid_count(op1R->binary_value, op1R->binary_length, &chars)) {
+        if (validate_utf8_bytes(op1R->binary_value, op1R->binary_length, &chars) != 0) {
             SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in binary-to-string conversion");
         } else {
             set_string(op1R,

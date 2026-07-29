@@ -144,6 +144,10 @@ static const long double powers_of_10[] = {
 
 // Rounding a long double to a given number of significant digits
 long double round_decimal(long double value, size_t significant_digits) {
+    // NaN is preserved for the caller's normal decimal signal handling.
+    if (isnan(value)) {
+        return value;
+    }
     // Check for overflow
     if (value == HUGE_VALL || value == LDBL_MAX) {
         return HUGE_VALL;

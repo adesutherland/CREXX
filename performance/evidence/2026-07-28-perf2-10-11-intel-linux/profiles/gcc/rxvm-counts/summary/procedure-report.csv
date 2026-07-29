@@ -1,0 +1,1075 @@
+entry,rank,name,metric,module,kind,count,total_ns,average_ns,completed,unwound,return_type,args,status
+sieve-noopt,1,awfy_sieve.main,elapsed,benchmark_awfy_sieve_noopt,procedure,1,0,0,1,0,.int,,complete
+sieve-noopt,1,awfy_sieve.main,inclusive_body,benchmark_awfy_sieve_noopt,procedure,1,0,0,1,0,.int,,complete
+sieve-noopt,1,awfy_sieve.main,self,benchmark_awfy_sieve_noopt,procedure,1,0,0,1,0,.int,,complete
+sieve-noopt,1,awfy_sieve.main,native_child,benchmark_awfy_sieve_noopt,procedure,1,0,0,1,0,.int,,complete
+sieve-noopt,1,awfy_sieve.main,entry_overhead,benchmark_awfy_sieve_noopt,procedure,1,0,0,1,0,.int,,complete
+sieve-noopt,1,awfy_sieve.main,exit_overhead,benchmark_awfy_sieve_noopt,procedure,1,0,0,1,0,.int,,complete
+sieve-noopt,2,awfy_sieve.sieve_once,elapsed,benchmark_awfy_sieve_noopt,procedure,50,0,0,50,0,.int,,complete
+sieve-noopt,2,awfy_sieve.sieve_once,inclusive_body,benchmark_awfy_sieve_noopt,procedure,50,0,0,50,0,.int,,complete
+sieve-noopt,2,awfy_sieve.sieve_once,self,benchmark_awfy_sieve_noopt,procedure,50,0,0,50,0,.int,,complete
+sieve-noopt,2,awfy_sieve.sieve_once,native_child,benchmark_awfy_sieve_noopt,procedure,50,0,0,50,0,.int,,complete
+sieve-noopt,2,awfy_sieve.sieve_once,entry_overhead,benchmark_awfy_sieve_noopt,procedure,50,0,0,50,0,.int,,complete
+sieve-noopt,2,awfy_sieve.sieve_once,exit_overhead,benchmark_awfy_sieve_noopt,procedure,50,0,0,50,0,.int,,complete
+sieve-opt,1,awfy_sieve.main,elapsed,benchmark_awfy_sieve_opt,procedure,1,0,0,1,0,.int,,complete
+sieve-opt,1,awfy_sieve.main,inclusive_body,benchmark_awfy_sieve_opt,procedure,1,0,0,1,0,.int,,complete
+sieve-opt,1,awfy_sieve.main,self,benchmark_awfy_sieve_opt,procedure,1,0,0,1,0,.int,,complete
+sieve-opt,1,awfy_sieve.main,native_child,benchmark_awfy_sieve_opt,procedure,1,0,0,1,0,.int,,complete
+sieve-opt,1,awfy_sieve.main,entry_overhead,benchmark_awfy_sieve_opt,procedure,1,0,0,1,0,.int,,complete
+sieve-opt,1,awfy_sieve.main,exit_overhead,benchmark_awfy_sieve_opt,procedure,1,0,0,1,0,.int,,complete
+permute-noopt,1,awfy_permute.main,elapsed,benchmark_awfy_permute_noopt,procedure,1,0,0,1,0,.int,,complete
+permute-noopt,1,awfy_permute.main,inclusive_body,benchmark_awfy_permute_noopt,procedure,1,0,0,1,0,.int,,complete
+permute-noopt,1,awfy_permute.main,self,benchmark_awfy_permute_noopt,procedure,1,0,0,1,0,.int,,complete
+permute-noopt,1,awfy_permute.main,native_child,benchmark_awfy_permute_noopt,procedure,1,0,0,1,0,.int,,complete
+permute-noopt,1,awfy_permute.main,entry_overhead,benchmark_awfy_permute_noopt,procedure,1,0,0,1,0,.int,,complete
+permute-noopt,1,awfy_permute.main,exit_overhead,benchmark_awfy_permute_noopt,procedure,1,0,0,1,0,.int,,complete
+permute-noopt,2,awfy_permute.permutebenchmark.permute,elapsed,benchmark_awfy_permute_noopt,method,433000,0,0,433000,0,.void,n=.int,complete
+permute-noopt,2,awfy_permute.permutebenchmark.permute,inclusive_body,benchmark_awfy_permute_noopt,method,433000,0,0,433000,0,.void,n=.int,complete
+permute-noopt,2,awfy_permute.permutebenchmark.permute,self,benchmark_awfy_permute_noopt,method,433000,0,0,433000,0,.void,n=.int,complete
+permute-noopt,2,awfy_permute.permutebenchmark.permute,native_child,benchmark_awfy_permute_noopt,method,433000,0,0,433000,0,.void,n=.int,complete
+permute-noopt,2,awfy_permute.permutebenchmark.permute,entry_overhead,benchmark_awfy_permute_noopt,method,433000,0,0,433000,0,.void,n=.int,complete
+permute-noopt,2,awfy_permute.permutebenchmark.permute,exit_overhead,benchmark_awfy_permute_noopt,method,433000,0,0,433000,0,.void,n=.int,complete
+permute-noopt,3,awfy_permute.permutebenchmark.run,elapsed,benchmark_awfy_permute_noopt,method,50,0,0,50,0,.int,,complete
+permute-noopt,3,awfy_permute.permutebenchmark.run,inclusive_body,benchmark_awfy_permute_noopt,method,50,0,0,50,0,.int,,complete
+permute-noopt,3,awfy_permute.permutebenchmark.run,self,benchmark_awfy_permute_noopt,method,50,0,0,50,0,.int,,complete
+permute-noopt,3,awfy_permute.permutebenchmark.run,native_child,benchmark_awfy_permute_noopt,method,50,0,0,50,0,.int,,complete
+permute-noopt,3,awfy_permute.permutebenchmark.run,entry_overhead,benchmark_awfy_permute_noopt,method,50,0,0,50,0,.int,,complete
+permute-noopt,3,awfy_permute.permutebenchmark.run,exit_overhead,benchmark_awfy_permute_noopt,method,50,0,0,50,0,.int,,complete
+permute-noopt,4,awfy_permute.permutebenchmark.swap,elapsed,benchmark_awfy_permute_noopt,method,503900,0,0,503900,0,.void,"i=.int,j=.int",complete
+permute-noopt,4,awfy_permute.permutebenchmark.swap,inclusive_body,benchmark_awfy_permute_noopt,method,503900,0,0,503900,0,.void,"i=.int,j=.int",complete
+permute-noopt,4,awfy_permute.permutebenchmark.swap,self,benchmark_awfy_permute_noopt,method,503900,0,0,503900,0,.void,"i=.int,j=.int",complete
+permute-noopt,4,awfy_permute.permutebenchmark.swap,native_child,benchmark_awfy_permute_noopt,method,503900,0,0,503900,0,.void,"i=.int,j=.int",complete
+permute-noopt,4,awfy_permute.permutebenchmark.swap,entry_overhead,benchmark_awfy_permute_noopt,method,503900,0,0,503900,0,.void,"i=.int,j=.int",complete
+permute-noopt,4,awfy_permute.permutebenchmark.swap,exit_overhead,benchmark_awfy_permute_noopt,method,503900,0,0,503900,0,.void,"i=.int,j=.int",complete
+permute-noopt,5,awfy_permute.permutebenchmark.§factory,elapsed,benchmark_awfy_permute_noopt,factory,50,0,0,50,0,.awfy_permute..permutebenchmark,,complete
+permute-noopt,5,awfy_permute.permutebenchmark.§factory,inclusive_body,benchmark_awfy_permute_noopt,factory,50,0,0,50,0,.awfy_permute..permutebenchmark,,complete
+permute-noopt,5,awfy_permute.permutebenchmark.§factory,self,benchmark_awfy_permute_noopt,factory,50,0,0,50,0,.awfy_permute..permutebenchmark,,complete
+permute-noopt,5,awfy_permute.permutebenchmark.§factory,native_child,benchmark_awfy_permute_noopt,factory,50,0,0,50,0,.awfy_permute..permutebenchmark,,complete
+permute-noopt,5,awfy_permute.permutebenchmark.§factory,entry_overhead,benchmark_awfy_permute_noopt,factory,50,0,0,50,0,.awfy_permute..permutebenchmark,,complete
+permute-noopt,5,awfy_permute.permutebenchmark.§factory,exit_overhead,benchmark_awfy_permute_noopt,factory,50,0,0,50,0,.awfy_permute..permutebenchmark,,complete
+permute-opt,1,awfy_permute.main,elapsed,benchmark_awfy_permute_opt,procedure,1,0,0,1,0,.int,,complete
+permute-opt,1,awfy_permute.main,inclusive_body,benchmark_awfy_permute_opt,procedure,1,0,0,1,0,.int,,complete
+permute-opt,1,awfy_permute.main,self,benchmark_awfy_permute_opt,procedure,1,0,0,1,0,.int,,complete
+permute-opt,1,awfy_permute.main,native_child,benchmark_awfy_permute_opt,procedure,1,0,0,1,0,.int,,complete
+permute-opt,1,awfy_permute.main,entry_overhead,benchmark_awfy_permute_opt,procedure,1,0,0,1,0,.int,,complete
+permute-opt,1,awfy_permute.main,exit_overhead,benchmark_awfy_permute_opt,procedure,1,0,0,1,0,.int,,complete
+permute-opt,2,awfy_permute.permutebenchmark.permute,elapsed,benchmark_awfy_permute_opt,method,432950,0,0,432950,0,.void,n=.int,complete
+permute-opt,2,awfy_permute.permutebenchmark.permute,inclusive_body,benchmark_awfy_permute_opt,method,432950,0,0,432950,0,.void,n=.int,complete
+permute-opt,2,awfy_permute.permutebenchmark.permute,self,benchmark_awfy_permute_opt,method,432950,0,0,432950,0,.void,n=.int,complete
+permute-opt,2,awfy_permute.permutebenchmark.permute,native_child,benchmark_awfy_permute_opt,method,432950,0,0,432950,0,.void,n=.int,complete
+permute-opt,2,awfy_permute.permutebenchmark.permute,entry_overhead,benchmark_awfy_permute_opt,method,432950,0,0,432950,0,.void,n=.int,complete
+permute-opt,2,awfy_permute.permutebenchmark.permute,exit_overhead,benchmark_awfy_permute_opt,method,432950,0,0,432950,0,.void,n=.int,complete
+mandelbrot-noopt,1,awfy_mandelbrot.main,elapsed,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-noopt,1,awfy_mandelbrot.main,inclusive_body,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-noopt,1,awfy_mandelbrot.main,self,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-noopt,1,awfy_mandelbrot.main,native_child,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-noopt,1,awfy_mandelbrot.main,entry_overhead,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-noopt,1,awfy_mandelbrot.main,exit_overhead,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-noopt,2,awfy_mandelbrot.mandelbrot,elapsed,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,size=.int,complete
+mandelbrot-noopt,2,awfy_mandelbrot.mandelbrot,inclusive_body,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,size=.int,complete
+mandelbrot-noopt,2,awfy_mandelbrot.mandelbrot,self,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,size=.int,complete
+mandelbrot-noopt,2,awfy_mandelbrot.mandelbrot,native_child,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,size=.int,complete
+mandelbrot-noopt,2,awfy_mandelbrot.mandelbrot,entry_overhead,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,size=.int,complete
+mandelbrot-noopt,2,awfy_mandelbrot.mandelbrot,exit_overhead,benchmark_awfy_mandelbrot_noopt,procedure,1,0,0,1,0,.int,size=.int,complete
+mandelbrot-opt,1,awfy_mandelbrot.main,elapsed,benchmark_awfy_mandelbrot_opt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-opt,1,awfy_mandelbrot.main,inclusive_body,benchmark_awfy_mandelbrot_opt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-opt,1,awfy_mandelbrot.main,self,benchmark_awfy_mandelbrot_opt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-opt,1,awfy_mandelbrot.main,native_child,benchmark_awfy_mandelbrot_opt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-opt,1,awfy_mandelbrot.main,entry_overhead,benchmark_awfy_mandelbrot_opt,procedure,1,0,0,1,0,.int,,complete
+mandelbrot-opt,1,awfy_mandelbrot.main,exit_overhead,benchmark_awfy_mandelbrot_opt,procedure,1,0,0,1,0,.int,,complete
+towers-noopt,1,awfy_towers.main,elapsed,benchmark_awfy_towers_noopt,procedure,1,0,0,1,0,.int,,complete
+towers-noopt,1,awfy_towers.main,inclusive_body,benchmark_awfy_towers_noopt,procedure,1,0,0,1,0,.int,,complete
+towers-noopt,1,awfy_towers.main,self,benchmark_awfy_towers_noopt,procedure,1,0,0,1,0,.int,,complete
+towers-noopt,1,awfy_towers.main,native_child,benchmark_awfy_towers_noopt,procedure,1,0,0,1,0,.int,,complete
+towers-noopt,1,awfy_towers.main,entry_overhead,benchmark_awfy_towers_noopt,procedure,1,0,0,1,0,.int,,complete
+towers-noopt,1,awfy_towers.main,exit_overhead,benchmark_awfy_towers_noopt,procedure,1,0,0,1,0,.int,,complete
+towers-noopt,2,awfy_towers.towersbenchmark.buildtowerat,elapsed,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.void,"pile=.int,disks=.int",complete
+towers-noopt,2,awfy_towers.towersbenchmark.buildtowerat,inclusive_body,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.void,"pile=.int,disks=.int",complete
+towers-noopt,2,awfy_towers.towersbenchmark.buildtowerat,self,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.void,"pile=.int,disks=.int",complete
+towers-noopt,2,awfy_towers.towersbenchmark.buildtowerat,native_child,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.void,"pile=.int,disks=.int",complete
+towers-noopt,2,awfy_towers.towersbenchmark.buildtowerat,entry_overhead,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.void,"pile=.int,disks=.int",complete
+towers-noopt,2,awfy_towers.towersbenchmark.buildtowerat,exit_overhead,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.void,"pile=.int,disks=.int",complete
+towers-noopt,3,awfy_towers.towersbenchmark.movedisks,elapsed,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-noopt,3,awfy_towers.towersbenchmark.movedisks,inclusive_body,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-noopt,3,awfy_towers.towersbenchmark.movedisks,self,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-noopt,3,awfy_towers.towersbenchmark.movedisks,native_child,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-noopt,3,awfy_towers.towersbenchmark.movedisks,entry_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-noopt,3,awfy_towers.towersbenchmark.movedisks,exit_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-noopt,4,awfy_towers.towersbenchmark.movetopdisk,elapsed,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"from_pile=.int,to_pile=.int",complete
+towers-noopt,4,awfy_towers.towersbenchmark.movetopdisk,inclusive_body,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"from_pile=.int,to_pile=.int",complete
+towers-noopt,4,awfy_towers.towersbenchmark.movetopdisk,self,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"from_pile=.int,to_pile=.int",complete
+towers-noopt,4,awfy_towers.towersbenchmark.movetopdisk,native_child,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"from_pile=.int,to_pile=.int",complete
+towers-noopt,4,awfy_towers.towersbenchmark.movetopdisk,entry_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"from_pile=.int,to_pile=.int",complete
+towers-noopt,4,awfy_towers.towersbenchmark.movetopdisk,exit_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.void,"from_pile=.int,to_pile=.int",complete
+towers-noopt,5,awfy_towers.towersbenchmark.popdiskfrom,elapsed,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,pile=.int,complete
+towers-noopt,5,awfy_towers.towersbenchmark.popdiskfrom,inclusive_body,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,pile=.int,complete
+towers-noopt,5,awfy_towers.towersbenchmark.popdiskfrom,self,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,pile=.int,complete
+towers-noopt,5,awfy_towers.towersbenchmark.popdiskfrom,native_child,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,pile=.int,complete
+towers-noopt,5,awfy_towers.towersbenchmark.popdiskfrom,entry_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,pile=.int,complete
+towers-noopt,5,awfy_towers.towersbenchmark.popdiskfrom,exit_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,pile=.int,complete
+towers-noopt,6,awfy_towers.towersbenchmark.pushdisk,elapsed,benchmark_awfy_towers_noopt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-noopt,6,awfy_towers.towersbenchmark.pushdisk,inclusive_body,benchmark_awfy_towers_noopt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-noopt,6,awfy_towers.towersbenchmark.pushdisk,self,benchmark_awfy_towers_noopt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-noopt,6,awfy_towers.towersbenchmark.pushdisk,native_child,benchmark_awfy_towers_noopt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-noopt,6,awfy_towers.towersbenchmark.pushdisk,entry_overhead,benchmark_awfy_towers_noopt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-noopt,6,awfy_towers.towersbenchmark.pushdisk,exit_overhead,benchmark_awfy_towers_noopt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-noopt,7,awfy_towers.towersbenchmark.run,elapsed,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.int,,complete
+towers-noopt,7,awfy_towers.towersbenchmark.run,inclusive_body,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.int,,complete
+towers-noopt,7,awfy_towers.towersbenchmark.run,self,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.int,,complete
+towers-noopt,7,awfy_towers.towersbenchmark.run,native_child,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.int,,complete
+towers-noopt,7,awfy_towers.towersbenchmark.run,entry_overhead,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.int,,complete
+towers-noopt,7,awfy_towers.towersbenchmark.run,exit_overhead,benchmark_awfy_towers_noopt,method,10,0,0,10,0,.int,,complete
+towers-noopt,8,awfy_towers.towersbenchmark.§factory,elapsed,benchmark_awfy_towers_noopt,factory,10,0,0,10,0,.awfy_towers..towersbenchmark,,complete
+towers-noopt,8,awfy_towers.towersbenchmark.§factory,inclusive_body,benchmark_awfy_towers_noopt,factory,10,0,0,10,0,.awfy_towers..towersbenchmark,,complete
+towers-noopt,8,awfy_towers.towersbenchmark.§factory,self,benchmark_awfy_towers_noopt,factory,10,0,0,10,0,.awfy_towers..towersbenchmark,,complete
+towers-noopt,8,awfy_towers.towersbenchmark.§factory,native_child,benchmark_awfy_towers_noopt,factory,10,0,0,10,0,.awfy_towers..towersbenchmark,,complete
+towers-noopt,8,awfy_towers.towersbenchmark.§factory,entry_overhead,benchmark_awfy_towers_noopt,factory,10,0,0,10,0,.awfy_towers..towersbenchmark,,complete
+towers-noopt,8,awfy_towers.towersbenchmark.§factory,exit_overhead,benchmark_awfy_towers_noopt,factory,10,0,0,10,0,.awfy_towers..towersbenchmark,,complete
+towers-noopt,9,awfy_towers.towersdisk.hasnext,elapsed,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.int,,complete
+towers-noopt,9,awfy_towers.towersdisk.hasnext,inclusive_body,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.int,,complete
+towers-noopt,9,awfy_towers.towersdisk.hasnext,self,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.int,,complete
+towers-noopt,9,awfy_towers.towersdisk.hasnext,native_child,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.int,,complete
+towers-noopt,9,awfy_towers.towersdisk.hasnext,entry_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.int,,complete
+towers-noopt,9,awfy_towers.towersdisk.hasnext,exit_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.int,,complete
+towers-noopt,10,awfy_towers.towersdisk.next,elapsed,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,,complete
+towers-noopt,10,awfy_towers.towersdisk.next,inclusive_body,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,,complete
+towers-noopt,10,awfy_towers.towersdisk.next,self,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,,complete
+towers-noopt,10,awfy_towers.towersdisk.next,native_child,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,,complete
+towers-noopt,10,awfy_towers.towersdisk.next,entry_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,,complete
+towers-noopt,10,awfy_towers.towersdisk.next,exit_overhead,benchmark_awfy_towers_noopt,method,81910,0,0,81910,0,.awfy_towers..towersdisk,,complete
+towers-noopt,11,awfy_towers.towersdisk.setnext,elapsed,benchmark_awfy_towers_noopt,method,81800,0,0,81800,0,.void,value=.towersdisk,complete
+towers-noopt,11,awfy_towers.towersdisk.setnext,inclusive_body,benchmark_awfy_towers_noopt,method,81800,0,0,81800,0,.void,value=.towersdisk,complete
+towers-noopt,11,awfy_towers.towersdisk.setnext,self,benchmark_awfy_towers_noopt,method,81800,0,0,81800,0,.void,value=.towersdisk,complete
+towers-noopt,11,awfy_towers.towersdisk.setnext,native_child,benchmark_awfy_towers_noopt,method,81800,0,0,81800,0,.void,value=.towersdisk,complete
+towers-noopt,11,awfy_towers.towersdisk.setnext,entry_overhead,benchmark_awfy_towers_noopt,method,81800,0,0,81800,0,.void,value=.towersdisk,complete
+towers-noopt,11,awfy_towers.towersdisk.setnext,exit_overhead,benchmark_awfy_towers_noopt,method,81800,0,0,81800,0,.void,value=.towersdisk,complete
+towers-noopt,12,awfy_towers.towersdisk.size,elapsed,benchmark_awfy_towers_noopt,method,164040,0,0,164040,0,.int,,complete
+towers-noopt,12,awfy_towers.towersdisk.size,inclusive_body,benchmark_awfy_towers_noopt,method,164040,0,0,164040,0,.int,,complete
+towers-noopt,12,awfy_towers.towersdisk.size,self,benchmark_awfy_towers_noopt,method,164040,0,0,164040,0,.int,,complete
+towers-noopt,12,awfy_towers.towersdisk.size,native_child,benchmark_awfy_towers_noopt,method,164040,0,0,164040,0,.int,,complete
+towers-noopt,12,awfy_towers.towersdisk.size,entry_overhead,benchmark_awfy_towers_noopt,method,164040,0,0,164040,0,.int,,complete
+towers-noopt,12,awfy_towers.towersdisk.size,exit_overhead,benchmark_awfy_towers_noopt,method,164040,0,0,164040,0,.int,,complete
+towers-noopt,13,awfy_towers.towersdisk.§factory,elapsed,benchmark_awfy_towers_noopt,factory,140,0,0,140,0,.awfy_towers..towersdisk,size=.int,complete
+towers-noopt,13,awfy_towers.towersdisk.§factory,inclusive_body,benchmark_awfy_towers_noopt,factory,140,0,0,140,0,.awfy_towers..towersdisk,size=.int,complete
+towers-noopt,13,awfy_towers.towersdisk.§factory,self,benchmark_awfy_towers_noopt,factory,140,0,0,140,0,.awfy_towers..towersdisk,size=.int,complete
+towers-noopt,13,awfy_towers.towersdisk.§factory,native_child,benchmark_awfy_towers_noopt,factory,140,0,0,140,0,.awfy_towers..towersdisk,size=.int,complete
+towers-noopt,13,awfy_towers.towersdisk.§factory,entry_overhead,benchmark_awfy_towers_noopt,factory,140,0,0,140,0,.awfy_towers..towersdisk,size=.int,complete
+towers-noopt,13,awfy_towers.towersdisk.§factory,exit_overhead,benchmark_awfy_towers_noopt,factory,140,0,0,140,0,.awfy_towers..towersdisk,size=.int,complete
+towers-opt,1,awfy_towers.main,elapsed,benchmark_awfy_towers_opt,procedure,1,0,0,1,0,.int,,complete
+towers-opt,1,awfy_towers.main,inclusive_body,benchmark_awfy_towers_opt,procedure,1,0,0,1,0,.int,,complete
+towers-opt,1,awfy_towers.main,self,benchmark_awfy_towers_opt,procedure,1,0,0,1,0,.int,,complete
+towers-opt,1,awfy_towers.main,native_child,benchmark_awfy_towers_opt,procedure,1,0,0,1,0,.int,,complete
+towers-opt,1,awfy_towers.main,entry_overhead,benchmark_awfy_towers_opt,procedure,1,0,0,1,0,.int,,complete
+towers-opt,1,awfy_towers.main,exit_overhead,benchmark_awfy_towers_opt,procedure,1,0,0,1,0,.int,,complete
+towers-opt,2,awfy_towers.towersbenchmark.movedisks,elapsed,benchmark_awfy_towers_opt,method,81900,0,0,81900,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-opt,2,awfy_towers.towersbenchmark.movedisks,inclusive_body,benchmark_awfy_towers_opt,method,81900,0,0,81900,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-opt,2,awfy_towers.towersbenchmark.movedisks,self,benchmark_awfy_towers_opt,method,81900,0,0,81900,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-opt,2,awfy_towers.towersbenchmark.movedisks,native_child,benchmark_awfy_towers_opt,method,81900,0,0,81900,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-opt,2,awfy_towers.towersbenchmark.movedisks,entry_overhead,benchmark_awfy_towers_opt,method,81900,0,0,81900,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-opt,2,awfy_towers.towersbenchmark.movedisks,exit_overhead,benchmark_awfy_towers_opt,method,81900,0,0,81900,0,.void,"disks=.int,from_pile=.int,to_pile=.int",complete
+towers-opt,3,awfy_towers.towersbenchmark.pushdisk,elapsed,benchmark_awfy_towers_opt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-opt,3,awfy_towers.towersbenchmark.pushdisk,inclusive_body,benchmark_awfy_towers_opt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-opt,3,awfy_towers.towersbenchmark.pushdisk,self,benchmark_awfy_towers_opt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-opt,3,awfy_towers.towersbenchmark.pushdisk,native_child,benchmark_awfy_towers_opt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-opt,3,awfy_towers.towersbenchmark.pushdisk,entry_overhead,benchmark_awfy_towers_opt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+towers-opt,3,awfy_towers.towersbenchmark.pushdisk,exit_overhead,benchmark_awfy_towers_opt,method,82050,0,0,82050,0,.void,"disk=.towersdisk,pile=.int",complete
+bounce-noopt,1,awfy_bounce.awfyrandom.next,elapsed,benchmark_awfy_bounce_noopt,method,40000,0,0,40000,0,.int,,complete
+bounce-noopt,1,awfy_bounce.awfyrandom.next,inclusive_body,benchmark_awfy_bounce_noopt,method,40000,0,0,40000,0,.int,,complete
+bounce-noopt,1,awfy_bounce.awfyrandom.next,self,benchmark_awfy_bounce_noopt,method,40000,0,0,40000,0,.int,,complete
+bounce-noopt,1,awfy_bounce.awfyrandom.next,native_child,benchmark_awfy_bounce_noopt,method,40000,0,0,40000,0,.int,,complete
+bounce-noopt,1,awfy_bounce.awfyrandom.next,entry_overhead,benchmark_awfy_bounce_noopt,method,40000,0,0,40000,0,.int,,complete
+bounce-noopt,1,awfy_bounce.awfyrandom.next,exit_overhead,benchmark_awfy_bounce_noopt,method,40000,0,0,40000,0,.int,,complete
+bounce-noopt,2,awfy_bounce.awfyrandom.§factory,elapsed,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..awfyrandom,,complete
+bounce-noopt,2,awfy_bounce.awfyrandom.§factory,inclusive_body,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..awfyrandom,,complete
+bounce-noopt,2,awfy_bounce.awfyrandom.§factory,self,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..awfyrandom,,complete
+bounce-noopt,2,awfy_bounce.awfyrandom.§factory,native_child,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..awfyrandom,,complete
+bounce-noopt,2,awfy_bounce.awfyrandom.§factory,entry_overhead,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..awfyrandom,,complete
+bounce-noopt,2,awfy_bounce.awfyrandom.§factory,exit_overhead,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..awfyrandom,,complete
+bounce-noopt,3,awfy_bounce.bounceball.bounce,elapsed,benchmark_awfy_bounce_noopt,method,500000,0,0,500000,0,.boolean,,complete
+bounce-noopt,3,awfy_bounce.bounceball.bounce,inclusive_body,benchmark_awfy_bounce_noopt,method,500000,0,0,500000,0,.boolean,,complete
+bounce-noopt,3,awfy_bounce.bounceball.bounce,self,benchmark_awfy_bounce_noopt,method,500000,0,0,500000,0,.boolean,,complete
+bounce-noopt,3,awfy_bounce.bounceball.bounce,native_child,benchmark_awfy_bounce_noopt,method,500000,0,0,500000,0,.boolean,,complete
+bounce-noopt,3,awfy_bounce.bounceball.bounce,entry_overhead,benchmark_awfy_bounce_noopt,method,500000,0,0,500000,0,.boolean,,complete
+bounce-noopt,3,awfy_bounce.bounceball.bounce,exit_overhead,benchmark_awfy_bounce_noopt,method,500000,0,0,500000,0,.boolean,,complete
+bounce-noopt,4,awfy_bounce.bounceball.§factory,elapsed,benchmark_awfy_bounce_noopt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-noopt,4,awfy_bounce.bounceball.§factory,inclusive_body,benchmark_awfy_bounce_noopt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-noopt,4,awfy_bounce.bounceball.§factory,self,benchmark_awfy_bounce_noopt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-noopt,4,awfy_bounce.bounceball.§factory,native_child,benchmark_awfy_bounce_noopt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-noopt,4,awfy_bounce.bounceball.§factory,entry_overhead,benchmark_awfy_bounce_noopt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-noopt,4,awfy_bounce.bounceball.§factory,exit_overhead,benchmark_awfy_bounce_noopt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-noopt,5,awfy_bounce.bouncebenchmark.run,elapsed,benchmark_awfy_bounce_noopt,method,100,0,0,100,0,.int,,complete
+bounce-noopt,5,awfy_bounce.bouncebenchmark.run,inclusive_body,benchmark_awfy_bounce_noopt,method,100,0,0,100,0,.int,,complete
+bounce-noopt,5,awfy_bounce.bouncebenchmark.run,self,benchmark_awfy_bounce_noopt,method,100,0,0,100,0,.int,,complete
+bounce-noopt,5,awfy_bounce.bouncebenchmark.run,native_child,benchmark_awfy_bounce_noopt,method,100,0,0,100,0,.int,,complete
+bounce-noopt,5,awfy_bounce.bouncebenchmark.run,entry_overhead,benchmark_awfy_bounce_noopt,method,100,0,0,100,0,.int,,complete
+bounce-noopt,5,awfy_bounce.bouncebenchmark.run,exit_overhead,benchmark_awfy_bounce_noopt,method,100,0,0,100,0,.int,,complete
+bounce-noopt,6,awfy_bounce.bouncebenchmark.§factory,elapsed,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..bouncebenchmark,,complete
+bounce-noopt,6,awfy_bounce.bouncebenchmark.§factory,inclusive_body,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..bouncebenchmark,,complete
+bounce-noopt,6,awfy_bounce.bouncebenchmark.§factory,self,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..bouncebenchmark,,complete
+bounce-noopt,6,awfy_bounce.bouncebenchmark.§factory,native_child,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..bouncebenchmark,,complete
+bounce-noopt,6,awfy_bounce.bouncebenchmark.§factory,entry_overhead,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..bouncebenchmark,,complete
+bounce-noopt,6,awfy_bounce.bouncebenchmark.§factory,exit_overhead,benchmark_awfy_bounce_noopt,factory,100,0,0,100,0,.awfy_bounce..bouncebenchmark,,complete
+bounce-noopt,7,awfy_bounce.main,elapsed,benchmark_awfy_bounce_noopt,procedure,1,0,0,1,0,.int,,complete
+bounce-noopt,7,awfy_bounce.main,inclusive_body,benchmark_awfy_bounce_noopt,procedure,1,0,0,1,0,.int,,complete
+bounce-noopt,7,awfy_bounce.main,self,benchmark_awfy_bounce_noopt,procedure,1,0,0,1,0,.int,,complete
+bounce-noopt,7,awfy_bounce.main,native_child,benchmark_awfy_bounce_noopt,procedure,1,0,0,1,0,.int,,complete
+bounce-noopt,7,awfy_bounce.main,entry_overhead,benchmark_awfy_bounce_noopt,procedure,1,0,0,1,0,.int,,complete
+bounce-noopt,7,awfy_bounce.main,exit_overhead,benchmark_awfy_bounce_noopt,procedure,1,0,0,1,0,.int,,complete
+bounce-noopt,8,rxfnsb.intabs,elapsed,intabs,procedure,142600,0,0,142600,0,.int,number=.int,complete
+bounce-noopt,8,rxfnsb.intabs,inclusive_body,intabs,procedure,142600,0,0,142600,0,.int,number=.int,complete
+bounce-noopt,8,rxfnsb.intabs,self,intabs,procedure,142600,0,0,142600,0,.int,number=.int,complete
+bounce-noopt,8,rxfnsb.intabs,native_child,intabs,procedure,142600,0,0,142600,0,.int,number=.int,complete
+bounce-noopt,8,rxfnsb.intabs,entry_overhead,intabs,procedure,142600,0,0,142600,0,.int,number=.int,complete
+bounce-noopt,8,rxfnsb.intabs,exit_overhead,intabs,procedure,142600,0,0,142600,0,.int,number=.int,complete
+bounce-opt,1,awfy_bounce.bounceball.§factory,elapsed,benchmark_awfy_bounce_opt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-opt,1,awfy_bounce.bounceball.§factory,inclusive_body,benchmark_awfy_bounce_opt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-opt,1,awfy_bounce.bounceball.§factory,self,benchmark_awfy_bounce_opt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-opt,1,awfy_bounce.bounceball.§factory,native_child,benchmark_awfy_bounce_opt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-opt,1,awfy_bounce.bounceball.§factory,entry_overhead,benchmark_awfy_bounce_opt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-opt,1,awfy_bounce.bounceball.§factory,exit_overhead,benchmark_awfy_bounce_opt,factory,10000,0,0,10000,0,.awfy_bounce..bounceball,random_ref=reference .awfyrandom,complete
+bounce-opt,2,awfy_bounce.bouncebenchmark.run,elapsed,benchmark_awfy_bounce_opt,method,100,0,0,100,0,.int,,complete
+bounce-opt,2,awfy_bounce.bouncebenchmark.run,inclusive_body,benchmark_awfy_bounce_opt,method,100,0,0,100,0,.int,,complete
+bounce-opt,2,awfy_bounce.bouncebenchmark.run,self,benchmark_awfy_bounce_opt,method,100,0,0,100,0,.int,,complete
+bounce-opt,2,awfy_bounce.bouncebenchmark.run,native_child,benchmark_awfy_bounce_opt,method,100,0,0,100,0,.int,,complete
+bounce-opt,2,awfy_bounce.bouncebenchmark.run,entry_overhead,benchmark_awfy_bounce_opt,method,100,0,0,100,0,.int,,complete
+bounce-opt,2,awfy_bounce.bouncebenchmark.run,exit_overhead,benchmark_awfy_bounce_opt,method,100,0,0,100,0,.int,,complete
+bounce-opt,3,awfy_bounce.main,elapsed,benchmark_awfy_bounce_opt,procedure,1,0,0,1,0,.int,,complete
+bounce-opt,3,awfy_bounce.main,inclusive_body,benchmark_awfy_bounce_opt,procedure,1,0,0,1,0,.int,,complete
+bounce-opt,3,awfy_bounce.main,self,benchmark_awfy_bounce_opt,procedure,1,0,0,1,0,.int,,complete
+bounce-opt,3,awfy_bounce.main,native_child,benchmark_awfy_bounce_opt,procedure,1,0,0,1,0,.int,,complete
+bounce-opt,3,awfy_bounce.main,entry_overhead,benchmark_awfy_bounce_opt,procedure,1,0,0,1,0,.int,,complete
+bounce-opt,3,awfy_bounce.main,exit_overhead,benchmark_awfy_bounce_opt,procedure,1,0,0,1,0,.int,,complete
+storage-noopt,1,awfy_storage.main,elapsed,benchmark_awfy_storage_noopt,procedure,1,0,0,1,0,.int,,complete
+storage-noopt,1,awfy_storage.main,inclusive_body,benchmark_awfy_storage_noopt,procedure,1,0,0,1,0,.int,,complete
+storage-noopt,1,awfy_storage.main,self,benchmark_awfy_storage_noopt,procedure,1,0,0,1,0,.int,,complete
+storage-noopt,1,awfy_storage.main,native_child,benchmark_awfy_storage_noopt,procedure,1,0,0,1,0,.int,,complete
+storage-noopt,1,awfy_storage.main,entry_overhead,benchmark_awfy_storage_noopt,procedure,1,0,0,1,0,.int,,complete
+storage-noopt,1,awfy_storage.main,exit_overhead,benchmark_awfy_storage_noopt,procedure,1,0,0,1,0,.int,,complete
+storage-noopt,2,awfy_storage.storagebenchmark.buildtreedepth,elapsed,benchmark_awfy_storage_noopt,method,54610,0,0,54610,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-noopt,2,awfy_storage.storagebenchmark.buildtreedepth,inclusive_body,benchmark_awfy_storage_noopt,method,54610,0,0,54610,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-noopt,2,awfy_storage.storagebenchmark.buildtreedepth,self,benchmark_awfy_storage_noopt,method,54610,0,0,54610,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-noopt,2,awfy_storage.storagebenchmark.buildtreedepth,native_child,benchmark_awfy_storage_noopt,method,54610,0,0,54610,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-noopt,2,awfy_storage.storagebenchmark.buildtreedepth,entry_overhead,benchmark_awfy_storage_noopt,method,54610,0,0,54610,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-noopt,2,awfy_storage.storagebenchmark.buildtreedepth,exit_overhead,benchmark_awfy_storage_noopt,method,54610,0,0,54610,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-noopt,3,awfy_storage.storagebenchmark.run,elapsed,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,3,awfy_storage.storagebenchmark.run,inclusive_body,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,3,awfy_storage.storagebenchmark.run,self,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,3,awfy_storage.storagebenchmark.run,native_child,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,3,awfy_storage.storagebenchmark.run,entry_overhead,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,3,awfy_storage.storagebenchmark.run,exit_overhead,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,4,awfy_storage.storagebenchmark.§factory,elapsed,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagebenchmark,,complete
+storage-noopt,4,awfy_storage.storagebenchmark.§factory,inclusive_body,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagebenchmark,,complete
+storage-noopt,4,awfy_storage.storagebenchmark.§factory,self,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagebenchmark,,complete
+storage-noopt,4,awfy_storage.storagebenchmark.§factory,native_child,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagebenchmark,,complete
+storage-noopt,4,awfy_storage.storagebenchmark.§factory,entry_overhead,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagebenchmark,,complete
+storage-noopt,4,awfy_storage.storagebenchmark.§factory,exit_overhead,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagebenchmark,,complete
+storage-noopt,5,awfy_storage.storagenode.addchild,elapsed,benchmark_awfy_storage_noopt,method,54600,0,0,54600,0,.void,child=.storagenode,complete
+storage-noopt,5,awfy_storage.storagenode.addchild,inclusive_body,benchmark_awfy_storage_noopt,method,54600,0,0,54600,0,.void,child=.storagenode,complete
+storage-noopt,5,awfy_storage.storagenode.addchild,self,benchmark_awfy_storage_noopt,method,54600,0,0,54600,0,.void,child=.storagenode,complete
+storage-noopt,5,awfy_storage.storagenode.addchild,native_child,benchmark_awfy_storage_noopt,method,54600,0,0,54600,0,.void,child=.storagenode,complete
+storage-noopt,5,awfy_storage.storagenode.addchild,entry_overhead,benchmark_awfy_storage_noopt,method,54600,0,0,54600,0,.void,child=.storagenode,complete
+storage-noopt,5,awfy_storage.storagenode.addchild,exit_overhead,benchmark_awfy_storage_noopt,method,54600,0,0,54600,0,.void,child=.storagenode,complete
+storage-noopt,6,awfy_storage.storagenode.allocateleaf,elapsed,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-noopt,6,awfy_storage.storagenode.allocateleaf,inclusive_body,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-noopt,6,awfy_storage.storagenode.allocateleaf,self,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-noopt,6,awfy_storage.storagenode.allocateleaf,native_child,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-noopt,6,awfy_storage.storagenode.allocateleaf,entry_overhead,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-noopt,6,awfy_storage.storagenode.allocateleaf,exit_overhead,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-noopt,7,awfy_storage.storagenode.size,elapsed,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,7,awfy_storage.storagenode.size,inclusive_body,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,7,awfy_storage.storagenode.size,self,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,7,awfy_storage.storagenode.size,native_child,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,7,awfy_storage.storagenode.size,entry_overhead,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,7,awfy_storage.storagenode.size,exit_overhead,benchmark_awfy_storage_noopt,method,10,0,0,10,0,.int,,complete
+storage-noopt,8,awfy_storage.storagenode.§factory,elapsed,benchmark_awfy_storage_noopt,factory,54610,0,0,54610,0,.awfy_storage..storagenode,,complete
+storage-noopt,8,awfy_storage.storagenode.§factory,inclusive_body,benchmark_awfy_storage_noopt,factory,54610,0,0,54610,0,.awfy_storage..storagenode,,complete
+storage-noopt,8,awfy_storage.storagenode.§factory,self,benchmark_awfy_storage_noopt,factory,54610,0,0,54610,0,.awfy_storage..storagenode,,complete
+storage-noopt,8,awfy_storage.storagenode.§factory,native_child,benchmark_awfy_storage_noopt,factory,54610,0,0,54610,0,.awfy_storage..storagenode,,complete
+storage-noopt,8,awfy_storage.storagenode.§factory,entry_overhead,benchmark_awfy_storage_noopt,factory,54610,0,0,54610,0,.awfy_storage..storagenode,,complete
+storage-noopt,8,awfy_storage.storagenode.§factory,exit_overhead,benchmark_awfy_storage_noopt,factory,54610,0,0,54610,0,.awfy_storage..storagenode,,complete
+storage-noopt,9,awfy_storage.storagerandom.next,elapsed,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.int,,complete
+storage-noopt,9,awfy_storage.storagerandom.next,inclusive_body,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.int,,complete
+storage-noopt,9,awfy_storage.storagerandom.next,self,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.int,,complete
+storage-noopt,9,awfy_storage.storagerandom.next,native_child,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.int,,complete
+storage-noopt,9,awfy_storage.storagerandom.next,entry_overhead,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.int,,complete
+storage-noopt,9,awfy_storage.storagerandom.next,exit_overhead,benchmark_awfy_storage_noopt,method,40960,0,0,40960,0,.int,,complete
+storage-noopt,10,awfy_storage.storagerandom.§factory,elapsed,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagerandom,,complete
+storage-noopt,10,awfy_storage.storagerandom.§factory,inclusive_body,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagerandom,,complete
+storage-noopt,10,awfy_storage.storagerandom.§factory,self,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagerandom,,complete
+storage-noopt,10,awfy_storage.storagerandom.§factory,native_child,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagerandom,,complete
+storage-noopt,10,awfy_storage.storagerandom.§factory,entry_overhead,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagerandom,,complete
+storage-noopt,10,awfy_storage.storagerandom.§factory,exit_overhead,benchmark_awfy_storage_noopt,factory,10,0,0,10,0,.awfy_storage..storagerandom,,complete
+storage-noopt,11,rxfnsb.objectarrayappend,elapsed,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-noopt,11,rxfnsb.objectarrayappend,inclusive_body,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-noopt,11,rxfnsb.objectarrayappend,self,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-noopt,11,rxfnsb.objectarrayappend,native_child,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-noopt,11,rxfnsb.objectarrayappend,entry_overhead,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-noopt,11,rxfnsb.objectarrayappend,exit_overhead,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-opt,1,awfy_storage.main,elapsed,benchmark_awfy_storage_opt,procedure,1,0,0,1,0,.int,,complete
+storage-opt,1,awfy_storage.main,inclusive_body,benchmark_awfy_storage_opt,procedure,1,0,0,1,0,.int,,complete
+storage-opt,1,awfy_storage.main,self,benchmark_awfy_storage_opt,procedure,1,0,0,1,0,.int,,complete
+storage-opt,1,awfy_storage.main,native_child,benchmark_awfy_storage_opt,procedure,1,0,0,1,0,.int,,complete
+storage-opt,1,awfy_storage.main,entry_overhead,benchmark_awfy_storage_opt,procedure,1,0,0,1,0,.int,,complete
+storage-opt,1,awfy_storage.main,exit_overhead,benchmark_awfy_storage_opt,procedure,1,0,0,1,0,.int,,complete
+storage-opt,2,awfy_storage.storagebenchmark.buildtreedepth,elapsed,benchmark_awfy_storage_opt,method,54600,0,0,54600,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-opt,2,awfy_storage.storagebenchmark.buildtreedepth,inclusive_body,benchmark_awfy_storage_opt,method,54600,0,0,54600,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-opt,2,awfy_storage.storagebenchmark.buildtreedepth,self,benchmark_awfy_storage_opt,method,54600,0,0,54600,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-opt,2,awfy_storage.storagebenchmark.buildtreedepth,native_child,benchmark_awfy_storage_opt,method,54600,0,0,54600,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-opt,2,awfy_storage.storagebenchmark.buildtreedepth,entry_overhead,benchmark_awfy_storage_opt,method,54600,0,0,54600,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-opt,2,awfy_storage.storagebenchmark.buildtreedepth,exit_overhead,benchmark_awfy_storage_opt,method,54600,0,0,54600,0,.awfy_storage..storagenode,"depth=.int,random=.storagerandom",complete
+storage-opt,3,awfy_storage.storagebenchmark.run,elapsed,benchmark_awfy_storage_opt,method,10,0,0,10,0,.int,,complete
+storage-opt,3,awfy_storage.storagebenchmark.run,inclusive_body,benchmark_awfy_storage_opt,method,10,0,0,10,0,.int,,complete
+storage-opt,3,awfy_storage.storagebenchmark.run,self,benchmark_awfy_storage_opt,method,10,0,0,10,0,.int,,complete
+storage-opt,3,awfy_storage.storagebenchmark.run,native_child,benchmark_awfy_storage_opt,method,10,0,0,10,0,.int,,complete
+storage-opt,3,awfy_storage.storagebenchmark.run,entry_overhead,benchmark_awfy_storage_opt,method,10,0,0,10,0,.int,,complete
+storage-opt,3,awfy_storage.storagebenchmark.run,exit_overhead,benchmark_awfy_storage_opt,method,10,0,0,10,0,.int,,complete
+storage-opt,4,awfy_storage.storagenode.allocateleaf,elapsed,benchmark_awfy_storage_opt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-opt,4,awfy_storage.storagenode.allocateleaf,inclusive_body,benchmark_awfy_storage_opt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-opt,4,awfy_storage.storagenode.allocateleaf,self,benchmark_awfy_storage_opt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-opt,4,awfy_storage.storagenode.allocateleaf,native_child,benchmark_awfy_storage_opt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-opt,4,awfy_storage.storagenode.allocateleaf,entry_overhead,benchmark_awfy_storage_opt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-opt,4,awfy_storage.storagenode.allocateleaf,exit_overhead,benchmark_awfy_storage_opt,method,40960,0,0,40960,0,.void,"leaf_size=.int,marker=.object",complete
+storage-opt,5,rxfnsb.objectarrayappend,elapsed,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-opt,5,rxfnsb.objectarrayappend,inclusive_body,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-opt,5,rxfnsb.objectarrayappend,self,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-opt,5,rxfnsb.objectarrayappend,native_child,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-opt,5,rxfnsb.objectarrayappend,entry_overhead,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+storage-opt,5,rxfnsb.objectarrayappend,exit_overhead,objectarrayappend,procedure,95560,0,0,95560,0,.int,"expose array=.object[*],value=.object,?count=.int",complete
+list-noopt,1,awfy_list.listarena.allocate,elapsed,benchmark_awfy_list_noopt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-noopt,1,awfy_list.listarena.allocate,inclusive_body,benchmark_awfy_list_noopt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-noopt,1,awfy_list.listarena.allocate,self,benchmark_awfy_list_noopt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-noopt,1,awfy_list.listarena.allocate,native_child,benchmark_awfy_list_noopt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-noopt,1,awfy_list.listarena.allocate,entry_overhead,benchmark_awfy_list_noopt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-noopt,1,awfy_list.listarena.allocate,exit_overhead,benchmark_awfy_list_noopt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-noopt,2,awfy_list.listarena.§factory,elapsed,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listarena,,complete
+list-noopt,2,awfy_list.listarena.§factory,inclusive_body,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listarena,,complete
+list-noopt,2,awfy_list.listarena.§factory,self,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listarena,,complete
+list-noopt,2,awfy_list.listarena.§factory,native_child,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listarena,,complete
+list-noopt,2,awfy_list.listarena.§factory,entry_overhead,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listarena,,complete
+list-noopt,2,awfy_list.listarena.§factory,exit_overhead,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listarena,,complete
+list-noopt,3,awfy_list.listbenchmark.isshorterthan,elapsed,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-noopt,3,awfy_list.listbenchmark.isshorterthan,inclusive_body,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-noopt,3,awfy_list.listbenchmark.isshorterthan,self,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-noopt,3,awfy_list.listbenchmark.isshorterthan,native_child,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-noopt,3,awfy_list.listbenchmark.isshorterthan,entry_overhead,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-noopt,3,awfy_list.listbenchmark.isshorterthan,exit_overhead,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-noopt,4,awfy_list.listbenchmark.makelist,elapsed,benchmark_awfy_list_noopt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-noopt,4,awfy_list.listbenchmark.makelist,inclusive_body,benchmark_awfy_list_noopt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-noopt,4,awfy_list.listbenchmark.makelist,self,benchmark_awfy_list_noopt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-noopt,4,awfy_list.listbenchmark.makelist,native_child,benchmark_awfy_list_noopt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-noopt,4,awfy_list.listbenchmark.makelist,entry_overhead,benchmark_awfy_list_noopt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-noopt,4,awfy_list.listbenchmark.makelist,exit_overhead,benchmark_awfy_list_noopt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-noopt,5,awfy_list.listbenchmark.run,elapsed,benchmark_awfy_list_noopt,method,100,0,0,100,0,.int,,complete
+list-noopt,5,awfy_list.listbenchmark.run,inclusive_body,benchmark_awfy_list_noopt,method,100,0,0,100,0,.int,,complete
+list-noopt,5,awfy_list.listbenchmark.run,self,benchmark_awfy_list_noopt,method,100,0,0,100,0,.int,,complete
+list-noopt,5,awfy_list.listbenchmark.run,native_child,benchmark_awfy_list_noopt,method,100,0,0,100,0,.int,,complete
+list-noopt,5,awfy_list.listbenchmark.run,entry_overhead,benchmark_awfy_list_noopt,method,100,0,0,100,0,.int,,complete
+list-noopt,5,awfy_list.listbenchmark.run,exit_overhead,benchmark_awfy_list_noopt,method,100,0,0,100,0,.int,,complete
+list-noopt,6,awfy_list.listbenchmark.tail,elapsed,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-noopt,6,awfy_list.listbenchmark.tail,inclusive_body,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-noopt,6,awfy_list.listbenchmark.tail,self,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-noopt,6,awfy_list.listbenchmark.tail,native_child,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-noopt,6,awfy_list.listbenchmark.tail,entry_overhead,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-noopt,6,awfy_list.listbenchmark.tail,exit_overhead,benchmark_awfy_list_noopt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-noopt,7,awfy_list.listbenchmark.§factory,elapsed,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listbenchmark,,complete
+list-noopt,7,awfy_list.listbenchmark.§factory,inclusive_body,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listbenchmark,,complete
+list-noopt,7,awfy_list.listbenchmark.§factory,self,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listbenchmark,,complete
+list-noopt,7,awfy_list.listbenchmark.§factory,native_child,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listbenchmark,,complete
+list-noopt,7,awfy_list.listbenchmark.§factory,entry_overhead,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listbenchmark,,complete
+list-noopt,7,awfy_list.listbenchmark.§factory,exit_overhead,benchmark_awfy_list_noopt,factory,100,0,0,100,0,.awfy_list..listbenchmark,,complete
+list-noopt,8,awfy_list.listelement.length,elapsed,benchmark_awfy_list_noopt,method,1000,0,0,1000,0,.int,,complete
+list-noopt,8,awfy_list.listelement.length,inclusive_body,benchmark_awfy_list_noopt,method,1000,0,0,1000,0,.int,,complete
+list-noopt,8,awfy_list.listelement.length,self,benchmark_awfy_list_noopt,method,1000,0,0,1000,0,.int,,complete
+list-noopt,8,awfy_list.listelement.length,native_child,benchmark_awfy_list_noopt,method,1000,0,0,1000,0,.int,,complete
+list-noopt,8,awfy_list.listelement.length,entry_overhead,benchmark_awfy_list_noopt,method,1000,0,0,1000,0,.int,,complete
+list-noopt,8,awfy_list.listelement.length,exit_overhead,benchmark_awfy_list_noopt,method,1000,0,0,1000,0,.int,,complete
+list-noopt,9,awfy_list.listelement.next,elapsed,benchmark_awfy_list_noopt,method,3820600,0,0,3820600,0,reference .listelement,,complete
+list-noopt,9,awfy_list.listelement.next,inclusive_body,benchmark_awfy_list_noopt,method,3820600,0,0,3820600,0,reference .listelement,,complete
+list-noopt,9,awfy_list.listelement.next,self,benchmark_awfy_list_noopt,method,3820600,0,0,3820600,0,reference .listelement,,complete
+list-noopt,9,awfy_list.listelement.next,native_child,benchmark_awfy_list_noopt,method,3820600,0,0,3820600,0,reference .listelement,,complete
+list-noopt,9,awfy_list.listelement.next,entry_overhead,benchmark_awfy_list_noopt,method,3820600,0,0,3820600,0,reference .listelement,,complete
+list-noopt,9,awfy_list.listelement.next,exit_overhead,benchmark_awfy_list_noopt,method,3820600,0,0,3820600,0,reference .listelement,,complete
+list-noopt,10,awfy_list.listelement.setnext,elapsed,benchmark_awfy_list_noopt,method,2800,0,0,2800,0,.void,element=reference .listelement,complete
+list-noopt,10,awfy_list.listelement.setnext,inclusive_body,benchmark_awfy_list_noopt,method,2800,0,0,2800,0,.void,element=reference .listelement,complete
+list-noopt,10,awfy_list.listelement.setnext,self,benchmark_awfy_list_noopt,method,2800,0,0,2800,0,.void,element=reference .listelement,complete
+list-noopt,10,awfy_list.listelement.setnext,native_child,benchmark_awfy_list_noopt,method,2800,0,0,2800,0,.void,element=reference .listelement,complete
+list-noopt,10,awfy_list.listelement.setnext,entry_overhead,benchmark_awfy_list_noopt,method,2800,0,0,2800,0,.void,element=reference .listelement,complete
+list-noopt,10,awfy_list.listelement.setnext,exit_overhead,benchmark_awfy_list_noopt,method,2800,0,0,2800,0,.void,element=reference .listelement,complete
+list-noopt,11,awfy_list.listelement.§factory,elapsed,benchmark_awfy_list_noopt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-noopt,11,awfy_list.listelement.§factory,inclusive_body,benchmark_awfy_list_noopt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-noopt,11,awfy_list.listelement.§factory,self,benchmark_awfy_list_noopt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-noopt,11,awfy_list.listelement.§factory,native_child,benchmark_awfy_list_noopt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-noopt,11,awfy_list.listelement.§factory,entry_overhead,benchmark_awfy_list_noopt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-noopt,11,awfy_list.listelement.§factory,exit_overhead,benchmark_awfy_list_noopt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-noopt,12,awfy_list.main,elapsed,benchmark_awfy_list_noopt,procedure,1,0,0,1,0,.int,,complete
+list-noopt,12,awfy_list.main,inclusive_body,benchmark_awfy_list_noopt,procedure,1,0,0,1,0,.int,,complete
+list-noopt,12,awfy_list.main,self,benchmark_awfy_list_noopt,procedure,1,0,0,1,0,.int,,complete
+list-noopt,12,awfy_list.main,native_child,benchmark_awfy_list_noopt,procedure,1,0,0,1,0,.int,,complete
+list-noopt,12,awfy_list.main,entry_overhead,benchmark_awfy_list_noopt,procedure,1,0,0,1,0,.int,,complete
+list-noopt,12,awfy_list.main,exit_overhead,benchmark_awfy_list_noopt,procedure,1,0,0,1,0,.int,,complete
+list-opt,1,awfy_list.listarena.allocate,elapsed,benchmark_awfy_list_opt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-opt,1,awfy_list.listarena.allocate,inclusive_body,benchmark_awfy_list_opt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-opt,1,awfy_list.listarena.allocate,self,benchmark_awfy_list_opt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-opt,1,awfy_list.listarena.allocate,native_child,benchmark_awfy_list_opt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-opt,1,awfy_list.listarena.allocate,entry_overhead,benchmark_awfy_list_opt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-opt,1,awfy_list.listarena.allocate,exit_overhead,benchmark_awfy_list_opt,method,3100,0,0,3100,0,reference .listelement,value=.int,complete
+list-opt,2,awfy_list.listbenchmark.isshorterthan,elapsed,benchmark_awfy_list_opt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-opt,2,awfy_list.listbenchmark.isshorterthan,inclusive_body,benchmark_awfy_list_opt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-opt,2,awfy_list.listbenchmark.isshorterthan,self,benchmark_awfy_list_opt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-opt,2,awfy_list.listbenchmark.isshorterthan,native_child,benchmark_awfy_list_opt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-opt,2,awfy_list.listbenchmark.isshorterthan,entry_overhead,benchmark_awfy_list_opt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-opt,2,awfy_list.listbenchmark.isshorterthan,exit_overhead,benchmark_awfy_list_opt,method,280900,0,0,280900,0,.boolean,"x=reference .listelement,y=reference .listelement",complete
+list-opt,3,awfy_list.listbenchmark.makelist,elapsed,benchmark_awfy_list_opt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-opt,3,awfy_list.listbenchmark.makelist,inclusive_body,benchmark_awfy_list_opt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-opt,3,awfy_list.listbenchmark.makelist,self,benchmark_awfy_list_opt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-opt,3,awfy_list.listbenchmark.makelist,native_child,benchmark_awfy_list_opt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-opt,3,awfy_list.listbenchmark.makelist,entry_overhead,benchmark_awfy_list_opt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-opt,3,awfy_list.listbenchmark.makelist,exit_overhead,benchmark_awfy_list_opt,method,3400,0,0,3400,0,reference .listelement,"list_length=.int,arena_reference=reference .listarena",complete
+list-opt,4,awfy_list.listbenchmark.run,elapsed,benchmark_awfy_list_opt,method,100,0,0,100,0,.int,,complete
+list-opt,4,awfy_list.listbenchmark.run,inclusive_body,benchmark_awfy_list_opt,method,100,0,0,100,0,.int,,complete
+list-opt,4,awfy_list.listbenchmark.run,self,benchmark_awfy_list_opt,method,100,0,0,100,0,.int,,complete
+list-opt,4,awfy_list.listbenchmark.run,native_child,benchmark_awfy_list_opt,method,100,0,0,100,0,.int,,complete
+list-opt,4,awfy_list.listbenchmark.run,entry_overhead,benchmark_awfy_list_opt,method,100,0,0,100,0,.int,,complete
+list-opt,4,awfy_list.listbenchmark.run,exit_overhead,benchmark_awfy_list_opt,method,100,0,0,100,0,.int,,complete
+list-opt,5,awfy_list.listbenchmark.tail,elapsed,benchmark_awfy_list_opt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-opt,5,awfy_list.listbenchmark.tail,inclusive_body,benchmark_awfy_list_opt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-opt,5,awfy_list.listbenchmark.tail,self,benchmark_awfy_list_opt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-opt,5,awfy_list.listbenchmark.tail,native_child,benchmark_awfy_list_opt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-opt,5,awfy_list.listbenchmark.tail,entry_overhead,benchmark_awfy_list_opt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-opt,5,awfy_list.listbenchmark.tail,exit_overhead,benchmark_awfy_list_opt,method,280900,0,0,280900,0,reference .listelement,"x=reference .listelement,y=reference .listelement,z=reference .listelement",complete
+list-opt,6,awfy_list.listelement.length,elapsed,benchmark_awfy_list_opt,method,1000,0,0,1000,0,.int,,complete
+list-opt,6,awfy_list.listelement.length,inclusive_body,benchmark_awfy_list_opt,method,1000,0,0,1000,0,.int,,complete
+list-opt,6,awfy_list.listelement.length,self,benchmark_awfy_list_opt,method,1000,0,0,1000,0,.int,,complete
+list-opt,6,awfy_list.listelement.length,native_child,benchmark_awfy_list_opt,method,1000,0,0,1000,0,.int,,complete
+list-opt,6,awfy_list.listelement.length,entry_overhead,benchmark_awfy_list_opt,method,1000,0,0,1000,0,.int,,complete
+list-opt,6,awfy_list.listelement.length,exit_overhead,benchmark_awfy_list_opt,method,1000,0,0,1000,0,.int,,complete
+list-opt,7,awfy_list.listelement.§factory,elapsed,benchmark_awfy_list_opt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-opt,7,awfy_list.listelement.§factory,inclusive_body,benchmark_awfy_list_opt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-opt,7,awfy_list.listelement.§factory,self,benchmark_awfy_list_opt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-opt,7,awfy_list.listelement.§factory,native_child,benchmark_awfy_list_opt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-opt,7,awfy_list.listelement.§factory,entry_overhead,benchmark_awfy_list_opt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-opt,7,awfy_list.listelement.§factory,exit_overhead,benchmark_awfy_list_opt,factory,3100,0,0,3100,0,.awfy_list..listelement,initial_value=.int,complete
+list-opt,8,awfy_list.main,elapsed,benchmark_awfy_list_opt,procedure,1,0,0,1,0,.int,,complete
+list-opt,8,awfy_list.main,inclusive_body,benchmark_awfy_list_opt,procedure,1,0,0,1,0,.int,,complete
+list-opt,8,awfy_list.main,self,benchmark_awfy_list_opt,procedure,1,0,0,1,0,.int,,complete
+list-opt,8,awfy_list.main,native_child,benchmark_awfy_list_opt,procedure,1,0,0,1,0,.int,,complete
+list-opt,8,awfy_list.main,entry_overhead,benchmark_awfy_list_opt,procedure,1,0,0,1,0,.int,,complete
+list-opt,8,awfy_list.main,exit_overhead,benchmark_awfy_list_opt,procedure,1,0,0,1,0,.int,,complete
+richards-noopt,1,awfy_richards.main,elapsed,benchmark_awfy_richards_noopt,procedure,1,0,0,1,0,.int,,complete
+richards-noopt,1,awfy_richards.main,inclusive_body,benchmark_awfy_richards_noopt,procedure,1,0,0,1,0,.int,,complete
+richards-noopt,1,awfy_richards.main,self,benchmark_awfy_richards_noopt,procedure,1,0,0,1,0,.int,,complete
+richards-noopt,1,awfy_richards.main,native_child,benchmark_awfy_richards_noopt,procedure,1,0,0,1,0,.int,,complete
+richards-noopt,1,awfy_richards.main,entry_overhead,benchmark_awfy_richards_noopt,procedure,1,0,0,1,0,.int,,complete
+richards-noopt,1,awfy_richards.main,exit_overhead,benchmark_awfy_richards_noopt,procedure,1,0,0,1,0,.int,,complete
+richards-noopt,2,awfy_richards.richardsscheduler.addinput,elapsed,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,"identity=.int,packet=.int,old_task=.int",complete
+richards-noopt,2,awfy_richards.richardsscheduler.addinput,inclusive_body,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,"identity=.int,packet=.int,old_task=.int",complete
+richards-noopt,2,awfy_richards.richardsscheduler.addinput,self,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,"identity=.int,packet=.int,old_task=.int",complete
+richards-noopt,2,awfy_richards.richardsscheduler.addinput,native_child,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,"identity=.int,packet=.int,old_task=.int",complete
+richards-noopt,2,awfy_richards.richardsscheduler.addinput,entry_overhead,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,"identity=.int,packet=.int,old_task=.int",complete
+richards-noopt,2,awfy_richards.richardsscheduler.addinput,exit_overhead,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,"identity=.int,packet=.int,old_task=.int",complete
+richards-noopt,3,awfy_richards.richardsscheduler.appendpacket,elapsed,benchmark_awfy_richards_noopt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-noopt,3,awfy_richards.richardsscheduler.appendpacket,inclusive_body,benchmark_awfy_richards_noopt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-noopt,3,awfy_richards.richardsscheduler.appendpacket,self,benchmark_awfy_richards_noopt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-noopt,3,awfy_richards.richardsscheduler.appendpacket,native_child,benchmark_awfy_richards_noopt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-noopt,3,awfy_richards.richardsscheduler.appendpacket,entry_overhead,benchmark_awfy_richards_noopt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-noopt,3,awfy_richards.richardsscheduler.appendpacket,exit_overhead,benchmark_awfy_richards_noopt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-noopt,4,awfy_richards.richardsscheduler.createpacket,elapsed,benchmark_awfy_richards_noopt,method,8,0,0,8,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-noopt,4,awfy_richards.richardsscheduler.createpacket,inclusive_body,benchmark_awfy_richards_noopt,method,8,0,0,8,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-noopt,4,awfy_richards.richardsscheduler.createpacket,self,benchmark_awfy_richards_noopt,method,8,0,0,8,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-noopt,4,awfy_richards.richardsscheduler.createpacket,native_child,benchmark_awfy_richards_noopt,method,8,0,0,8,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-noopt,4,awfy_richards.richardsscheduler.createpacket,entry_overhead,benchmark_awfy_richards_noopt,method,8,0,0,8,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-noopt,4,awfy_richards.richardsscheduler.createpacket,exit_overhead,benchmark_awfy_richards_noopt,method,8,0,0,8,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-noopt,5,awfy_richards.richardsscheduler.createtask,elapsed,benchmark_awfy_richards_noopt,method,6,0,0,6,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-noopt,5,awfy_richards.richardsscheduler.createtask,inclusive_body,benchmark_awfy_richards_noopt,method,6,0,0,6,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-noopt,5,awfy_richards.richardsscheduler.createtask,self,benchmark_awfy_richards_noopt,method,6,0,0,6,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-noopt,5,awfy_richards.richardsscheduler.createtask,native_child,benchmark_awfy_richards_noopt,method,6,0,0,6,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-noopt,5,awfy_richards.richardsscheduler.createtask,entry_overhead,benchmark_awfy_richards_noopt,method,6,0,0,6,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-noopt,5,awfy_richards.richardsscheduler.createtask,exit_overhead,benchmark_awfy_richards_noopt,method,6,0,0,6,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-noopt,6,awfy_richards.richardsscheduler.findtask,elapsed,benchmark_awfy_richards_noopt,method,33245,0,0,33245,0,.int,identity=.int,complete
+richards-noopt,6,awfy_richards.richardsscheduler.findtask,inclusive_body,benchmark_awfy_richards_noopt,method,33245,0,0,33245,0,.int,identity=.int,complete
+richards-noopt,6,awfy_richards.richardsscheduler.findtask,self,benchmark_awfy_richards_noopt,method,33245,0,0,33245,0,.int,identity=.int,complete
+richards-noopt,6,awfy_richards.richardsscheduler.findtask,native_child,benchmark_awfy_richards_noopt,method,33245,0,0,33245,0,.int,identity=.int,complete
+richards-noopt,6,awfy_richards.richardsscheduler.findtask,entry_overhead,benchmark_awfy_richards_noopt,method,33245,0,0,33245,0,.int,identity=.int,complete
+richards-noopt,6,awfy_richards.richardsscheduler.findtask,exit_overhead,benchmark_awfy_richards_noopt,method,33245,0,0,33245,0,.int,identity=.int,complete
+richards-noopt,7,awfy_richards.richardsscheduler.holdcount,elapsed,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,7,awfy_richards.richardsscheduler.holdcount,inclusive_body,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,7,awfy_richards.richardsscheduler.holdcount,self,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,7,awfy_richards.richardsscheduler.holdcount,native_child,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,7,awfy_richards.richardsscheduler.holdcount,entry_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,7,awfy_richards.richardsscheduler.holdcount,exit_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,8,awfy_richards.richardsscheduler.holdself,elapsed,benchmark_awfy_richards_noopt,method,9297,0,0,9297,0,.int,,complete
+richards-noopt,8,awfy_richards.richardsscheduler.holdself,inclusive_body,benchmark_awfy_richards_noopt,method,9297,0,0,9297,0,.int,,complete
+richards-noopt,8,awfy_richards.richardsscheduler.holdself,self,benchmark_awfy_richards_noopt,method,9297,0,0,9297,0,.int,,complete
+richards-noopt,8,awfy_richards.richardsscheduler.holdself,native_child,benchmark_awfy_richards_noopt,method,9297,0,0,9297,0,.int,,complete
+richards-noopt,8,awfy_richards.richardsscheduler.holdself,entry_overhead,benchmark_awfy_richards_noopt,method,9297,0,0,9297,0,.int,,complete
+richards-noopt,8,awfy_richards.richardsscheduler.holdself,exit_overhead,benchmark_awfy_richards_noopt,method,9297,0,0,9297,0,.int,,complete
+richards-noopt,9,awfy_richards.richardsscheduler.isholdingorwaiting,elapsed,benchmark_awfy_richards_noopt,method,106604,0,0,106604,0,.boolean,identity=.int,complete
+richards-noopt,9,awfy_richards.richardsscheduler.isholdingorwaiting,inclusive_body,benchmark_awfy_richards_noopt,method,106604,0,0,106604,0,.boolean,identity=.int,complete
+richards-noopt,9,awfy_richards.richardsscheduler.isholdingorwaiting,self,benchmark_awfy_richards_noopt,method,106604,0,0,106604,0,.boolean,identity=.int,complete
+richards-noopt,9,awfy_richards.richardsscheduler.isholdingorwaiting,native_child,benchmark_awfy_richards_noopt,method,106604,0,0,106604,0,.boolean,identity=.int,complete
+richards-noopt,9,awfy_richards.richardsscheduler.isholdingorwaiting,entry_overhead,benchmark_awfy_richards_noopt,method,106604,0,0,106604,0,.boolean,identity=.int,complete
+richards-noopt,9,awfy_richards.richardsscheduler.isholdingorwaiting,exit_overhead,benchmark_awfy_richards_noopt,method,106604,0,0,106604,0,.boolean,identity=.int,complete
+richards-noopt,10,awfy_richards.richardsscheduler.iswaitingwithpacket,elapsed,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.boolean,identity=.int,complete
+richards-noopt,10,awfy_richards.richardsscheduler.iswaitingwithpacket,inclusive_body,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.boolean,identity=.int,complete
+richards-noopt,10,awfy_richards.richardsscheduler.iswaitingwithpacket,self,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.boolean,identity=.int,complete
+richards-noopt,10,awfy_richards.richardsscheduler.iswaitingwithpacket,native_child,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.boolean,identity=.int,complete
+richards-noopt,10,awfy_richards.richardsscheduler.iswaitingwithpacket,entry_overhead,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.boolean,identity=.int,complete
+richards-noopt,10,awfy_richards.richardsscheduler.iswaitingwithpacket,exit_overhead,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.boolean,identity=.int,complete
+richards-noopt,11,awfy_richards.richardsscheduler.markwaiting,elapsed,benchmark_awfy_richards_noopt,method,23248,0,0,23248,0,.int,,complete
+richards-noopt,11,awfy_richards.richardsscheduler.markwaiting,inclusive_body,benchmark_awfy_richards_noopt,method,23248,0,0,23248,0,.int,,complete
+richards-noopt,11,awfy_richards.richardsscheduler.markwaiting,self,benchmark_awfy_richards_noopt,method,23248,0,0,23248,0,.int,,complete
+richards-noopt,11,awfy_richards.richardsscheduler.markwaiting,native_child,benchmark_awfy_richards_noopt,method,23248,0,0,23248,0,.int,,complete
+richards-noopt,11,awfy_richards.richardsscheduler.markwaiting,entry_overhead,benchmark_awfy_richards_noopt,method,23248,0,0,23248,0,.int,,complete
+richards-noopt,11,awfy_richards.richardsscheduler.markwaiting,exit_overhead,benchmark_awfy_richards_noopt,method,23248,0,0,23248,0,.int,,complete
+richards-noopt,12,awfy_richards.richardsscheduler.queuecount,elapsed,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,12,awfy_richards.richardsscheduler.queuecount,inclusive_body,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,12,awfy_richards.richardsscheduler.queuecount,self,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,12,awfy_richards.richardsscheduler.queuecount,native_child,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,12,awfy_richards.richardsscheduler.queuecount,entry_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,12,awfy_richards.richardsscheduler.queuecount,exit_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.int,,complete
+richards-noopt,13,awfy_richards.richardsscheduler.queuepacket,elapsed,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-noopt,13,awfy_richards.richardsscheduler.queuepacket,inclusive_body,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-noopt,13,awfy_richards.richardsscheduler.queuepacket,self,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-noopt,13,awfy_richards.richardsscheduler.queuepacket,native_child,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-noopt,13,awfy_richards.richardsscheduler.queuepacket,entry_overhead,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-noopt,13,awfy_richards.richardsscheduler.queuepacket,exit_overhead,benchmark_awfy_richards_noopt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-noopt,14,awfy_richards.richardsscheduler.release,elapsed,benchmark_awfy_richards_noopt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-noopt,14,awfy_richards.richardsscheduler.release,inclusive_body,benchmark_awfy_richards_noopt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-noopt,14,awfy_richards.richardsscheduler.release,self,benchmark_awfy_richards_noopt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-noopt,14,awfy_richards.richardsscheduler.release,native_child,benchmark_awfy_richards_noopt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-noopt,14,awfy_richards.richardsscheduler.release,entry_overhead,benchmark_awfy_richards_noopt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-noopt,14,awfy_richards.richardsscheduler.release,exit_overhead,benchmark_awfy_richards_noopt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-noopt,15,awfy_richards.richardsscheduler.run,elapsed,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.boolean,,complete
+richards-noopt,15,awfy_richards.richardsscheduler.run,inclusive_body,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.boolean,,complete
+richards-noopt,15,awfy_richards.richardsscheduler.run,self,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.boolean,,complete
+richards-noopt,15,awfy_richards.richardsscheduler.run,native_child,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.boolean,,complete
+richards-noopt,15,awfy_richards.richardsscheduler.run,entry_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.boolean,,complete
+richards-noopt,15,awfy_richards.richardsscheduler.run,exit_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.boolean,,complete
+richards-noopt,16,awfy_richards.richardsscheduler.rundevice,elapsed,benchmark_awfy_richards_noopt,method,27884,0,0,27884,0,.int,"identity=.int,work=.int",complete
+richards-noopt,16,awfy_richards.richardsscheduler.rundevice,inclusive_body,benchmark_awfy_richards_noopt,method,27884,0,0,27884,0,.int,"identity=.int,work=.int",complete
+richards-noopt,16,awfy_richards.richardsscheduler.rundevice,self,benchmark_awfy_richards_noopt,method,27884,0,0,27884,0,.int,"identity=.int,work=.int",complete
+richards-noopt,16,awfy_richards.richardsscheduler.rundevice,native_child,benchmark_awfy_richards_noopt,method,27884,0,0,27884,0,.int,"identity=.int,work=.int",complete
+richards-noopt,16,awfy_richards.richardsscheduler.rundevice,entry_overhead,benchmark_awfy_richards_noopt,method,27884,0,0,27884,0,.int,"identity=.int,work=.int",complete
+richards-noopt,16,awfy_richards.richardsscheduler.rundevice,exit_overhead,benchmark_awfy_richards_noopt,method,27884,0,0,27884,0,.int,"identity=.int,work=.int",complete
+richards-noopt,17,awfy_richards.richardsscheduler.runhandler,elapsed,benchmark_awfy_richards_noopt,method,23252,0,0,23252,0,.int,"identity=.int,work=.int",complete
+richards-noopt,17,awfy_richards.richardsscheduler.runhandler,inclusive_body,benchmark_awfy_richards_noopt,method,23252,0,0,23252,0,.int,"identity=.int,work=.int",complete
+richards-noopt,17,awfy_richards.richardsscheduler.runhandler,self,benchmark_awfy_richards_noopt,method,23252,0,0,23252,0,.int,"identity=.int,work=.int",complete
+richards-noopt,17,awfy_richards.richardsscheduler.runhandler,native_child,benchmark_awfy_richards_noopt,method,23252,0,0,23252,0,.int,"identity=.int,work=.int",complete
+richards-noopt,17,awfy_richards.richardsscheduler.runhandler,entry_overhead,benchmark_awfy_richards_noopt,method,23252,0,0,23252,0,.int,"identity=.int,work=.int",complete
+richards-noopt,17,awfy_richards.richardsscheduler.runhandler,exit_overhead,benchmark_awfy_richards_noopt,method,23252,0,0,23252,0,.int,"identity=.int,work=.int",complete
+richards-noopt,18,awfy_richards.richardsscheduler.runidler,elapsed,benchmark_awfy_richards_noopt,method,10000,0,0,10000,0,.int,,complete
+richards-noopt,18,awfy_richards.richardsscheduler.runidler,inclusive_body,benchmark_awfy_richards_noopt,method,10000,0,0,10000,0,.int,,complete
+richards-noopt,18,awfy_richards.richardsscheduler.runidler,self,benchmark_awfy_richards_noopt,method,10000,0,0,10000,0,.int,,complete
+richards-noopt,18,awfy_richards.richardsscheduler.runidler,native_child,benchmark_awfy_richards_noopt,method,10000,0,0,10000,0,.int,,complete
+richards-noopt,18,awfy_richards.richardsscheduler.runidler,entry_overhead,benchmark_awfy_richards_noopt,method,10000,0,0,10000,0,.int,,complete
+richards-noopt,18,awfy_richards.richardsscheduler.runidler,exit_overhead,benchmark_awfy_richards_noopt,method,10000,0,0,10000,0,.int,,complete
+richards-noopt,19,awfy_richards.richardsscheduler.runtask,elapsed,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-noopt,19,awfy_richards.richardsscheduler.runtask,inclusive_body,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-noopt,19,awfy_richards.richardsscheduler.runtask,self,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-noopt,19,awfy_richards.richardsscheduler.runtask,native_child,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-noopt,19,awfy_richards.richardsscheduler.runtask,entry_overhead,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-noopt,19,awfy_richards.richardsscheduler.runtask,exit_overhead,benchmark_awfy_richards_noopt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-noopt,20,awfy_richards.richardsscheduler.runworker,elapsed,benchmark_awfy_richards_noopt,method,4654,0,0,4654,0,.int,work=.int,complete
+richards-noopt,20,awfy_richards.richardsscheduler.runworker,inclusive_body,benchmark_awfy_richards_noopt,method,4654,0,0,4654,0,.int,work=.int,complete
+richards-noopt,20,awfy_richards.richardsscheduler.runworker,self,benchmark_awfy_richards_noopt,method,4654,0,0,4654,0,.int,work=.int,complete
+richards-noopt,20,awfy_richards.richardsscheduler.runworker,native_child,benchmark_awfy_richards_noopt,method,4654,0,0,4654,0,.int,work=.int,complete
+richards-noopt,20,awfy_richards.richardsscheduler.runworker,entry_overhead,benchmark_awfy_richards_noopt,method,4654,0,0,4654,0,.int,work=.int,complete
+richards-noopt,20,awfy_richards.richardsscheduler.runworker,exit_overhead,benchmark_awfy_richards_noopt,method,4654,0,0,4654,0,.int,work=.int,complete
+richards-noopt,21,awfy_richards.richardsscheduler.schedule,elapsed,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.void,,complete
+richards-noopt,21,awfy_richards.richardsscheduler.schedule,inclusive_body,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.void,,complete
+richards-noopt,21,awfy_richards.richardsscheduler.schedule,self,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.void,,complete
+richards-noopt,21,awfy_richards.richardsscheduler.schedule,native_child,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.void,,complete
+richards-noopt,21,awfy_richards.richardsscheduler.schedule,entry_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.void,,complete
+richards-noopt,21,awfy_richards.richardsscheduler.schedule,exit_overhead,benchmark_awfy_richards_noopt,method,1,0,0,1,0,.void,,complete
+richards-noopt,22,awfy_richards.richardsscheduler.setpacketpending,elapsed,benchmark_awfy_richards_noopt,method,8490,0,0,8490,0,.void,identity=.int,complete
+richards-noopt,22,awfy_richards.richardsscheduler.setpacketpending,inclusive_body,benchmark_awfy_richards_noopt,method,8490,0,0,8490,0,.void,identity=.int,complete
+richards-noopt,22,awfy_richards.richardsscheduler.setpacketpending,self,benchmark_awfy_richards_noopt,method,8490,0,0,8490,0,.void,identity=.int,complete
+richards-noopt,22,awfy_richards.richardsscheduler.setpacketpending,native_child,benchmark_awfy_richards_noopt,method,8490,0,0,8490,0,.void,identity=.int,complete
+richards-noopt,22,awfy_richards.richardsscheduler.setpacketpending,entry_overhead,benchmark_awfy_richards_noopt,method,8490,0,0,8490,0,.void,identity=.int,complete
+richards-noopt,22,awfy_richards.richardsscheduler.setpacketpending,exit_overhead,benchmark_awfy_richards_noopt,method,8490,0,0,8490,0,.void,identity=.int,complete
+richards-noopt,23,awfy_richards.richardsscheduler.setrunning,elapsed,benchmark_awfy_richards_noopt,method,14760,0,0,14760,0,.void,identity=.int,complete
+richards-noopt,23,awfy_richards.richardsscheduler.setrunning,inclusive_body,benchmark_awfy_richards_noopt,method,14760,0,0,14760,0,.void,identity=.int,complete
+richards-noopt,23,awfy_richards.richardsscheduler.setrunning,self,benchmark_awfy_richards_noopt,method,14760,0,0,14760,0,.void,identity=.int,complete
+richards-noopt,23,awfy_richards.richardsscheduler.setrunning,native_child,benchmark_awfy_richards_noopt,method,14760,0,0,14760,0,.void,identity=.int,complete
+richards-noopt,23,awfy_richards.richardsscheduler.setrunning,entry_overhead,benchmark_awfy_richards_noopt,method,14760,0,0,14760,0,.void,identity=.int,complete
+richards-noopt,23,awfy_richards.richardsscheduler.setrunning,exit_overhead,benchmark_awfy_richards_noopt,method,14760,0,0,14760,0,.void,identity=.int,complete
+richards-noopt,24,awfy_richards.richardsscheduler.§factory,elapsed,benchmark_awfy_richards_noopt,factory,1,0,0,1,0,.awfy_richards..richardsscheduler,,complete
+richards-noopt,24,awfy_richards.richardsscheduler.§factory,inclusive_body,benchmark_awfy_richards_noopt,factory,1,0,0,1,0,.awfy_richards..richardsscheduler,,complete
+richards-noopt,24,awfy_richards.richardsscheduler.§factory,self,benchmark_awfy_richards_noopt,factory,1,0,0,1,0,.awfy_richards..richardsscheduler,,complete
+richards-noopt,24,awfy_richards.richardsscheduler.§factory,native_child,benchmark_awfy_richards_noopt,factory,1,0,0,1,0,.awfy_richards..richardsscheduler,,complete
+richards-noopt,24,awfy_richards.richardsscheduler.§factory,entry_overhead,benchmark_awfy_richards_noopt,factory,1,0,0,1,0,.awfy_richards..richardsscheduler,,complete
+richards-noopt,24,awfy_richards.richardsscheduler.§factory,exit_overhead,benchmark_awfy_richards_noopt,factory,1,0,0,1,0,.awfy_richards..richardsscheduler,,complete
+richards-opt,1,awfy_richards.main,elapsed,benchmark_awfy_richards_opt,procedure,1,0,0,1,0,.int,,complete
+richards-opt,1,awfy_richards.main,inclusive_body,benchmark_awfy_richards_opt,procedure,1,0,0,1,0,.int,,complete
+richards-opt,1,awfy_richards.main,self,benchmark_awfy_richards_opt,procedure,1,0,0,1,0,.int,,complete
+richards-opt,1,awfy_richards.main,native_child,benchmark_awfy_richards_opt,procedure,1,0,0,1,0,.int,,complete
+richards-opt,1,awfy_richards.main,entry_overhead,benchmark_awfy_richards_opt,procedure,1,0,0,1,0,.int,,complete
+richards-opt,1,awfy_richards.main,exit_overhead,benchmark_awfy_richards_opt,procedure,1,0,0,1,0,.int,,complete
+richards-opt,2,awfy_richards.richardsscheduler.appendpacket,elapsed,benchmark_awfy_richards_opt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-opt,2,awfy_richards.richardsscheduler.appendpacket,inclusive_body,benchmark_awfy_richards_opt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-opt,2,awfy_richards.richardsscheduler.appendpacket,self,benchmark_awfy_richards_opt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-opt,2,awfy_richards.richardsscheduler.appendpacket,native_child,benchmark_awfy_richards_opt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-opt,2,awfy_richards.richardsscheduler.appendpacket,entry_overhead,benchmark_awfy_richards_opt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-opt,2,awfy_richards.richardsscheduler.appendpacket,exit_overhead,benchmark_awfy_richards_opt,method,20114,0,0,20114,0,.int,"packet=.int,queue_head=.int",complete
+richards-opt,3,awfy_richards.richardsscheduler.createpacket,elapsed,benchmark_awfy_richards_opt,method,3,0,0,3,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-opt,3,awfy_richards.richardsscheduler.createpacket,inclusive_body,benchmark_awfy_richards_opt,method,3,0,0,3,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-opt,3,awfy_richards.richardsscheduler.createpacket,self,benchmark_awfy_richards_opt,method,3,0,0,3,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-opt,3,awfy_richards.richardsscheduler.createpacket,native_child,benchmark_awfy_richards_opt,method,3,0,0,3,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-opt,3,awfy_richards.richardsscheduler.createpacket,entry_overhead,benchmark_awfy_richards_opt,method,3,0,0,3,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-opt,3,awfy_richards.richardsscheduler.createpacket,exit_overhead,benchmark_awfy_richards_opt,method,3,0,0,3,0,.int,"link=.int,identity=.int,kind=.int",complete
+richards-opt,4,awfy_richards.richardsscheduler.createtask,elapsed,benchmark_awfy_richards_opt,method,3,0,0,3,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-opt,4,awfy_richards.richardsscheduler.createtask,inclusive_body,benchmark_awfy_richards_opt,method,3,0,0,3,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-opt,4,awfy_richards.richardsscheduler.createtask,self,benchmark_awfy_richards_opt,method,3,0,0,3,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-opt,4,awfy_richards.richardsscheduler.createtask,native_child,benchmark_awfy_richards_opt,method,3,0,0,3,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-opt,4,awfy_richards.richardsscheduler.createtask,entry_overhead,benchmark_awfy_richards_opt,method,3,0,0,3,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-opt,4,awfy_richards.richardsscheduler.createtask,exit_overhead,benchmark_awfy_richards_opt,method,3,0,0,3,0,.void,"identity=.int,priority=.int,input=.int,pending=.boolean,waiting=.boolean,holding=.boolean",complete
+richards-opt,5,awfy_richards.richardsscheduler.queuepacket,elapsed,benchmark_awfy_richards_opt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-opt,5,awfy_richards.richardsscheduler.queuepacket,inclusive_body,benchmark_awfy_richards_opt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-opt,5,awfy_richards.richardsscheduler.queuepacket,self,benchmark_awfy_richards_opt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-opt,5,awfy_richards.richardsscheduler.queuepacket,native_child,benchmark_awfy_richards_opt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-opt,5,awfy_richards.richardsscheduler.queuepacket,entry_overhead,benchmark_awfy_richards_opt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-opt,5,awfy_richards.richardsscheduler.queuepacket,exit_overhead,benchmark_awfy_richards_opt,method,23246,0,0,23246,0,.int,packet=.int,complete
+richards-opt,6,awfy_richards.richardsscheduler.release,elapsed,benchmark_awfy_richards_opt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-opt,6,awfy_richards.richardsscheduler.release,inclusive_body,benchmark_awfy_richards_opt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-opt,6,awfy_richards.richardsscheduler.release,self,benchmark_awfy_richards_opt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-opt,6,awfy_richards.richardsscheduler.release,native_child,benchmark_awfy_richards_opt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-opt,6,awfy_richards.richardsscheduler.release,entry_overhead,benchmark_awfy_richards_opt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-opt,6,awfy_richards.richardsscheduler.release,exit_overhead,benchmark_awfy_richards_opt,method,9999,0,0,9999,0,.int,identity=.int,complete
+richards-opt,7,awfy_richards.richardsscheduler.run,elapsed,benchmark_awfy_richards_opt,method,1,0,0,1,0,.boolean,,complete
+richards-opt,7,awfy_richards.richardsscheduler.run,inclusive_body,benchmark_awfy_richards_opt,method,1,0,0,1,0,.boolean,,complete
+richards-opt,7,awfy_richards.richardsscheduler.run,self,benchmark_awfy_richards_opt,method,1,0,0,1,0,.boolean,,complete
+richards-opt,7,awfy_richards.richardsscheduler.run,native_child,benchmark_awfy_richards_opt,method,1,0,0,1,0,.boolean,,complete
+richards-opt,7,awfy_richards.richardsscheduler.run,entry_overhead,benchmark_awfy_richards_opt,method,1,0,0,1,0,.boolean,,complete
+richards-opt,7,awfy_richards.richardsscheduler.run,exit_overhead,benchmark_awfy_richards_opt,method,1,0,0,1,0,.boolean,,complete
+richards-opt,8,awfy_richards.richardsscheduler.runtask,elapsed,benchmark_awfy_richards_opt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-opt,8,awfy_richards.richardsscheduler.runtask,inclusive_body,benchmark_awfy_richards_opt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-opt,8,awfy_richards.richardsscheduler.runtask,self,benchmark_awfy_richards_opt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-opt,8,awfy_richards.richardsscheduler.runtask,native_child,benchmark_awfy_richards_opt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-opt,8,awfy_richards.richardsscheduler.runtask,entry_overhead,benchmark_awfy_richards_opt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-opt,8,awfy_richards.richardsscheduler.runtask,exit_overhead,benchmark_awfy_richards_opt,method,65790,0,0,65790,0,.int,identity=.int,complete
+richards-opt,9,awfy_richards.richardsscheduler.schedule,elapsed,benchmark_awfy_richards_opt,method,1,0,0,1,0,.void,,complete
+richards-opt,9,awfy_richards.richardsscheduler.schedule,inclusive_body,benchmark_awfy_richards_opt,method,1,0,0,1,0,.void,,complete
+richards-opt,9,awfy_richards.richardsscheduler.schedule,self,benchmark_awfy_richards_opt,method,1,0,0,1,0,.void,,complete
+richards-opt,9,awfy_richards.richardsscheduler.schedule,native_child,benchmark_awfy_richards_opt,method,1,0,0,1,0,.void,,complete
+richards-opt,9,awfy_richards.richardsscheduler.schedule,entry_overhead,benchmark_awfy_richards_opt,method,1,0,0,1,0,.void,,complete
+richards-opt,9,awfy_richards.richardsscheduler.schedule,exit_overhead,benchmark_awfy_richards_opt,method,1,0,0,1,0,.void,,complete
+json-noopt,1,json_parser.main,elapsed,benchmark_json_parser_noopt,procedure,1,0,0,1,0,.int,,complete
+json-noopt,1,json_parser.main,inclusive_body,benchmark_json_parser_noopt,procedure,1,0,0,1,0,.int,,complete
+json-noopt,1,json_parser.main,self,benchmark_json_parser_noopt,procedure,1,0,0,1,0,.int,,complete
+json-noopt,1,json_parser.main,native_child,benchmark_json_parser_noopt,procedure,1,0,0,1,0,.int,,complete
+json-noopt,1,json_parser.main,entry_overhead,benchmark_json_parser_noopt,procedure,1,0,0,1,0,.int,,complete
+json-noopt,1,json_parser.main,exit_overhead,benchmark_json_parser_noopt,procedure,1,0,0,1,0,.int,,complete
+json-noopt,2,rxjson._json_parse_object,elapsed,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,2,rxjson._json_parse_object,inclusive_body,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,2,rxjson._json_parse_object,self,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,2,rxjson._json_parse_object,native_child,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,2,rxjson._json_parse_object,entry_overhead,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,2,rxjson._json_parse_object,exit_overhead,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,3,rxjson._json_parse_path,elapsed,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-noopt,3,rxjson._json_parse_path,inclusive_body,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-noopt,3,rxjson._json_parse_path,self,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-noopt,3,rxjson._json_parse_path,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-noopt,3,rxjson._json_parse_path,entry_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-noopt,3,rxjson._json_parse_path,exit_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-noopt,4,rxjson._json_parse_value,elapsed,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,4,rxjson._json_parse_value,inclusive_body,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,4,rxjson._json_parse_value,self,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,4,rxjson._json_parse_value,native_child,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,4,rxjson._json_parse_value,entry_overhead,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,4,rxjson._json_parse_value,exit_overhead,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-noopt,5,rxjson.jsoncount,elapsed,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-noopt,5,rxjson.jsoncount,inclusive_body,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-noopt,5,rxjson.jsoncount,self,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-noopt,5,rxjson.jsoncount,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-noopt,5,rxjson.jsoncount,entry_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-noopt,5,rxjson.jsoncount,exit_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-opt,1,json_parser.main,elapsed,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-opt,1,json_parser.main,inclusive_body,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-opt,1,json_parser.main,self,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-opt,1,json_parser.main,native_child,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-opt,1,json_parser.main,entry_overhead,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-opt,1,json_parser.main,exit_overhead,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-opt,2,rxjson._json_parse_object,elapsed,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,2,rxjson._json_parse_object,inclusive_body,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,2,rxjson._json_parse_object,self,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,2,rxjson._json_parse_object,native_child,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,2,rxjson._json_parse_object,entry_overhead,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,2,rxjson._json_parse_object,exit_overhead,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,3,rxjson._json_parse_path,elapsed,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-opt,3,rxjson._json_parse_path,inclusive_body,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-opt,3,rxjson._json_parse_path,self,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-opt,3,rxjson._json_parse_path,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-opt,3,rxjson._json_parse_path,entry_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-opt,3,rxjson._json_parse_path,exit_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-opt,4,rxjson._json_parse_value,elapsed,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,4,rxjson._json_parse_value,inclusive_body,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,4,rxjson._json_parse_value,self,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,4,rxjson._json_parse_value,native_child,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,4,rxjson._json_parse_value,entry_overhead,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,4,rxjson._json_parse_value,exit_overhead,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-opt,5,rxjson.jsoncount,elapsed,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-opt,5,rxjson.jsoncount,inclusive_body,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-opt,5,rxjson.jsoncount,self,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-opt,5,rxjson.jsoncount,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-opt,5,rxjson.jsoncount,entry_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-opt,5,rxjson.jsoncount,exit_overhead,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+base64-noopt,1,base64_roundtrip.base64_decode,elapsed,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-noopt,1,base64_roundtrip.base64_decode,inclusive_body,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-noopt,1,base64_roundtrip.base64_decode,self,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-noopt,1,base64_roundtrip.base64_decode,native_child,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-noopt,1,base64_roundtrip.base64_decode,entry_overhead,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-noopt,1,base64_roundtrip.base64_decode,exit_overhead,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-noopt,2,base64_roundtrip.base64_digit,elapsed,benchmark_base64_roundtrip_noopt,procedure,683000,0,0,683000,0,.int,"character=.string,alphabet=.string",complete
+base64-noopt,2,base64_roundtrip.base64_digit,inclusive_body,benchmark_base64_roundtrip_noopt,procedure,683000,0,0,683000,0,.int,"character=.string,alphabet=.string",complete
+base64-noopt,2,base64_roundtrip.base64_digit,self,benchmark_base64_roundtrip_noopt,procedure,683000,0,0,683000,0,.int,"character=.string,alphabet=.string",complete
+base64-noopt,2,base64_roundtrip.base64_digit,native_child,benchmark_base64_roundtrip_noopt,procedure,683000,0,0,683000,0,.int,"character=.string,alphabet=.string",complete
+base64-noopt,2,base64_roundtrip.base64_digit,entry_overhead,benchmark_base64_roundtrip_noopt,procedure,683000,0,0,683000,0,.int,"character=.string,alphabet=.string",complete
+base64-noopt,2,base64_roundtrip.base64_digit,exit_overhead,benchmark_base64_roundtrip_noopt,procedure,683000,0,0,683000,0,.int,"character=.string,alphabet=.string",complete
+base64-noopt,3,base64_roundtrip.base64_encode,elapsed,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.string,data=.binary,complete
+base64-noopt,3,base64_roundtrip.base64_encode,inclusive_body,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.string,data=.binary,complete
+base64-noopt,3,base64_roundtrip.base64_encode,self,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.string,data=.binary,complete
+base64-noopt,3,base64_roundtrip.base64_encode,native_child,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.string,data=.binary,complete
+base64-noopt,3,base64_roundtrip.base64_encode,entry_overhead,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.string,data=.binary,complete
+base64-noopt,3,base64_roundtrip.base64_encode,exit_overhead,benchmark_base64_roundtrip_noopt,procedure,500,0,0,500,0,.string,data=.binary,complete
+base64-noopt,4,base64_roundtrip.byte_checksum,elapsed,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,data=.binary,complete
+base64-noopt,4,base64_roundtrip.byte_checksum,inclusive_body,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,data=.binary,complete
+base64-noopt,4,base64_roundtrip.byte_checksum,self,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,data=.binary,complete
+base64-noopt,4,base64_roundtrip.byte_checksum,native_child,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,data=.binary,complete
+base64-noopt,4,base64_roundtrip.byte_checksum,entry_overhead,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,data=.binary,complete
+base64-noopt,4,base64_roundtrip.byte_checksum,exit_overhead,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,data=.binary,complete
+base64-noopt,5,base64_roundtrip.main,elapsed,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,,complete
+base64-noopt,5,base64_roundtrip.main,inclusive_body,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,,complete
+base64-noopt,5,base64_roundtrip.main,self,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,,complete
+base64-noopt,5,base64_roundtrip.main,native_child,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,,complete
+base64-noopt,5,base64_roundtrip.main,entry_overhead,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,,complete
+base64-noopt,5,base64_roundtrip.main,exit_overhead,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.int,,complete
+base64-noopt,6,base64_roundtrip.make_input,elapsed,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.binary,,complete
+base64-noopt,6,base64_roundtrip.make_input,inclusive_body,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.binary,,complete
+base64-noopt,6,base64_roundtrip.make_input,self,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.binary,,complete
+base64-noopt,6,base64_roundtrip.make_input,native_child,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.binary,,complete
+base64-noopt,6,base64_roundtrip.make_input,entry_overhead,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.binary,,complete
+base64-noopt,6,base64_roundtrip.make_input,exit_overhead,benchmark_base64_roundtrip_noopt,procedure,1,0,0,1,0,.binary,,complete
+base64-noopt,7,rxfnsb.bincompare,elapsed,binary,procedure,1,0,0,1,0,.int,"left=.binary,right=.binary",complete
+base64-noopt,7,rxfnsb.bincompare,inclusive_body,binary,procedure,1,0,0,1,0,.int,"left=.binary,right=.binary",complete
+base64-noopt,7,rxfnsb.bincompare,self,binary,procedure,1,0,0,1,0,.int,"left=.binary,right=.binary",complete
+base64-noopt,7,rxfnsb.bincompare,native_child,binary,procedure,1,0,0,1,0,.int,"left=.binary,right=.binary",complete
+base64-noopt,7,rxfnsb.bincompare,entry_overhead,binary,procedure,1,0,0,1,0,.int,"left=.binary,right=.binary",complete
+base64-noopt,7,rxfnsb.bincompare,exit_overhead,binary,procedure,1,0,0,1,0,.int,"left=.binary,right=.binary",complete
+base64-noopt,8,rxfnsb.binlength,elapsed,binary,procedure,501,0,0,501,0,.int,data=.binary,complete
+base64-noopt,8,rxfnsb.binlength,inclusive_body,binary,procedure,501,0,0,501,0,.int,data=.binary,complete
+base64-noopt,8,rxfnsb.binlength,self,binary,procedure,501,0,0,501,0,.int,data=.binary,complete
+base64-noopt,8,rxfnsb.binlength,native_child,binary,procedure,501,0,0,501,0,.int,data=.binary,complete
+base64-noopt,8,rxfnsb.binlength,entry_overhead,binary,procedure,501,0,0,501,0,.int,data=.binary,complete
+base64-noopt,8,rxfnsb.binlength,exit_overhead,binary,procedure,501,0,0,501,0,.int,data=.binary,complete
+base64-noopt,9,rxfnsb.binresize,elapsed,binary,procedure,1001,0,0,1001,0,.int,"expose data=.binary,length=.int",complete
+base64-noopt,9,rxfnsb.binresize,inclusive_body,binary,procedure,1001,0,0,1001,0,.int,"expose data=.binary,length=.int",complete
+base64-noopt,9,rxfnsb.binresize,self,binary,procedure,1001,0,0,1001,0,.int,"expose data=.binary,length=.int",complete
+base64-noopt,9,rxfnsb.binresize,native_child,binary,procedure,1001,0,0,1001,0,.int,"expose data=.binary,length=.int",complete
+base64-noopt,9,rxfnsb.binresize,entry_overhead,binary,procedure,1001,0,0,1001,0,.int,"expose data=.binary,length=.int",complete
+base64-noopt,9,rxfnsb.binresize,exit_overhead,binary,procedure,1001,0,0,1001,0,.int,"expose data=.binary,length=.int",complete
+base64-noopt,10,rxfnsb.length,elapsed,length,procedure,502,0,0,502,0,.int,string=.string,complete
+base64-noopt,10,rxfnsb.length,inclusive_body,length,procedure,502,0,0,502,0,.int,string=.string,complete
+base64-noopt,10,rxfnsb.length,self,length,procedure,502,0,0,502,0,.int,string=.string,complete
+base64-noopt,10,rxfnsb.length,native_child,length,procedure,502,0,0,502,0,.int,string=.string,complete
+base64-noopt,10,rxfnsb.length,entry_overhead,length,procedure,502,0,0,502,0,.int,string=.string,complete
+base64-noopt,10,rxfnsb.length,exit_overhead,length,procedure,502,0,0,502,0,.int,string=.string,complete
+base64-noopt,11,rxfnsb.pos,elapsed,pos,procedure,683000,0,0,683000,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+base64-noopt,11,rxfnsb.pos,inclusive_body,pos,procedure,683000,0,0,683000,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+base64-noopt,11,rxfnsb.pos,self,pos,procedure,683000,0,0,683000,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+base64-noopt,11,rxfnsb.pos,native_child,pos,procedure,683000,0,0,683000,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+base64-noopt,11,rxfnsb.pos,entry_overhead,pos,procedure,683000,0,0,683000,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+base64-noopt,11,rxfnsb.pos,exit_overhead,pos,procedure,683000,0,0,683000,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+base64-noopt,12,rxfnsb.substr,elapsed,substr,procedure,685000,0,0,685000,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+base64-noopt,12,rxfnsb.substr,inclusive_body,substr,procedure,685000,0,0,685000,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+base64-noopt,12,rxfnsb.substr,self,substr,procedure,685000,0,0,685000,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+base64-noopt,12,rxfnsb.substr,native_child,substr,procedure,685000,0,0,685000,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+base64-noopt,12,rxfnsb.substr,entry_overhead,substr,procedure,685000,0,0,685000,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+base64-noopt,12,rxfnsb.substr,exit_overhead,substr,procedure,685000,0,0,685000,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+base64-opt,1,base64_roundtrip.base64_decode,elapsed,benchmark_base64_roundtrip_opt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-opt,1,base64_roundtrip.base64_decode,inclusive_body,benchmark_base64_roundtrip_opt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-opt,1,base64_roundtrip.base64_decode,self,benchmark_base64_roundtrip_opt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-opt,1,base64_roundtrip.base64_decode,native_child,benchmark_base64_roundtrip_opt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-opt,1,base64_roundtrip.base64_decode,entry_overhead,benchmark_base64_roundtrip_opt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-opt,1,base64_roundtrip.base64_decode,exit_overhead,benchmark_base64_roundtrip_opt,procedure,500,0,0,500,0,.binary,encoded=.string,complete
+base64-opt,2,base64_roundtrip.main,elapsed,benchmark_base64_roundtrip_opt,procedure,1,0,0,1,0,.int,,complete
+base64-opt,2,base64_roundtrip.main,inclusive_body,benchmark_base64_roundtrip_opt,procedure,1,0,0,1,0,.int,,complete
+base64-opt,2,base64_roundtrip.main,self,benchmark_base64_roundtrip_opt,procedure,1,0,0,1,0,.int,,complete
+base64-opt,2,base64_roundtrip.main,native_child,benchmark_base64_roundtrip_opt,procedure,1,0,0,1,0,.int,,complete
+base64-opt,2,base64_roundtrip.main,entry_overhead,benchmark_base64_roundtrip_opt,procedure,1,0,0,1,0,.int,,complete
+base64-opt,2,base64_roundtrip.main,exit_overhead,benchmark_base64_roundtrip_opt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-noopt,1,_rxsysb._elapsed,elapsed,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-noopt,1,_rxsysb._elapsed,inclusive_body,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-noopt,1,_rxsysb._elapsed,self,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-noopt,1,_rxsysb._elapsed,native_child,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-noopt,1,_rxsysb._elapsed,entry_overhead,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-noopt,1,_rxsysb._elapsed,exit_overhead,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-noopt,2,_rxsysb._typedformat,elapsed,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-noopt,2,_rxsysb._typedformat,inclusive_body,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-noopt,2,_rxsysb._typedformat,self,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-noopt,2,_rxsysb._typedformat,native_child,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-noopt,2,_rxsysb._typedformat,entry_overhead,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-noopt,2,_rxsysb._typedformat,exit_overhead,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-noopt,3,rexxcps_levelb.__rxtrace_reset_display_state,elapsed,benchmark_rexxcps_levelb_noopt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-noopt,3,rexxcps_levelb.__rxtrace_reset_display_state,inclusive_body,benchmark_rexxcps_levelb_noopt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-noopt,3,rexxcps_levelb.__rxtrace_reset_display_state,self,benchmark_rexxcps_levelb_noopt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-noopt,3,rexxcps_levelb.__rxtrace_reset_display_state,native_child,benchmark_rexxcps_levelb_noopt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-noopt,3,rexxcps_levelb.__rxtrace_reset_display_state,entry_overhead,benchmark_rexxcps_levelb_noopt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-noopt,3,rexxcps_levelb.__rxtrace_reset_display_state,exit_overhead,benchmark_rexxcps_levelb_noopt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-noopt,4,rexxcps_levelb.cps_subroutine,elapsed,benchmark_rexxcps_levelb_noopt,procedure,12600,0,0,12600,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-noopt,4,rexxcps_levelb.cps_subroutine,inclusive_body,benchmark_rexxcps_levelb_noopt,procedure,12600,0,0,12600,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-noopt,4,rexxcps_levelb.cps_subroutine,self,benchmark_rexxcps_levelb_noopt,procedure,12600,0,0,12600,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-noopt,4,rexxcps_levelb.cps_subroutine,native_child,benchmark_rexxcps_levelb_noopt,procedure,12600,0,0,12600,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-noopt,4,rexxcps_levelb.cps_subroutine,entry_overhead,benchmark_rexxcps_levelb_noopt,procedure,12600,0,0,12600,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-noopt,4,rexxcps_levelb.cps_subroutine,exit_overhead,benchmark_rexxcps_levelb_noopt,procedure,12600,0,0,12600,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-noopt,5,rexxcps_levelb.main,elapsed,benchmark_rexxcps_levelb_noopt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-noopt,5,rexxcps_levelb.main,inclusive_body,benchmark_rexxcps_levelb_noopt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-noopt,5,rexxcps_levelb.main,self,benchmark_rexxcps_levelb_noopt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-noopt,5,rexxcps_levelb.main,native_child,benchmark_rexxcps_levelb_noopt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-noopt,5,rexxcps_levelb.main,entry_overhead,benchmark_rexxcps_levelb_noopt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-noopt,5,rexxcps_levelb.main,exit_overhead,benchmark_rexxcps_levelb_noopt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-noopt,6,rxfnsb._trace_current_mode,elapsed,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-noopt,6,rxfnsb._trace_current_mode,inclusive_body,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-noopt,6,rxfnsb._trace_current_mode,self,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-noopt,6,rxfnsb._trace_current_mode,native_child,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-noopt,6,rxfnsb._trace_current_mode,entry_overhead,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-noopt,6,rxfnsb._trace_current_mode,exit_overhead,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-noopt,7,rxfnsb._trace_ensure_runtime,elapsed,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-noopt,7,rxfnsb._trace_ensure_runtime,inclusive_body,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-noopt,7,rxfnsb._trace_ensure_runtime,self,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-noopt,7,rxfnsb._trace_ensure_runtime,native_child,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-noopt,7,rxfnsb._trace_ensure_runtime,entry_overhead,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-noopt,7,rxfnsb._trace_ensure_runtime,exit_overhead,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-noopt,8,rxfnsb._trace_mode_from_option,elapsed,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-noopt,8,rxfnsb._trace_mode_from_option,inclusive_body,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-noopt,8,rxfnsb._trace_mode_from_option,self,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-noopt,8,rxfnsb._trace_mode_from_option,native_child,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-noopt,8,rxfnsb._trace_mode_from_option,entry_overhead,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-noopt,8,rxfnsb._trace_mode_from_option,exit_overhead,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-noopt,9,rxfnsb._trace_normalize_mode,elapsed,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-noopt,9,rxfnsb._trace_normalize_mode,inclusive_body,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-noopt,9,rxfnsb._trace_normalize_mode,self,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-noopt,9,rxfnsb._trace_normalize_mode,native_child,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-noopt,9,rxfnsb._trace_normalize_mode,entry_overhead,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-noopt,9,rxfnsb._trace_normalize_mode,exit_overhead,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-noopt,10,rxfnsb._trace_set,elapsed,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-noopt,10,rxfnsb._trace_set,inclusive_body,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-noopt,10,rxfnsb._trace_set,self,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-noopt,10,rxfnsb._trace_set,native_child,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-noopt,10,rxfnsb._trace_set,entry_overhead,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-noopt,10,rxfnsb._trace_set,exit_overhead,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-noopt,11,rxfnsb._trace_set_off,elapsed,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-noopt,11,rxfnsb._trace_set_off,inclusive_body,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-noopt,11,rxfnsb._trace_set_off,self,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-noopt,11,rxfnsb._trace_set_off,native_child,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-noopt,11,rxfnsb._trace_set_off,entry_overhead,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-noopt,11,rxfnsb._trace_set_off,exit_overhead,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-noopt,12,rxfnsb.floatformat,elapsed,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-noopt,12,rxfnsb.floatformat,inclusive_body,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-noopt,12,rxfnsb.floatformat,self,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-noopt,12,rxfnsb.floatformat,native_child,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-noopt,12,rxfnsb.floatformat,entry_overhead,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-noopt,12,rxfnsb.floatformat,exit_overhead,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-noopt,13,rxfnsb.floattrunc,elapsed,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-noopt,13,rxfnsb.floattrunc,inclusive_body,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-noopt,13,rxfnsb.floattrunc,self,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-noopt,13,rxfnsb.floattrunc,native_child,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-noopt,13,rxfnsb.floattrunc,entry_overhead,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-noopt,13,rxfnsb.floattrunc,exit_overhead,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-noopt,14,rxfnsb.left,elapsed,left,procedure,1,0,0,1,0,.string,"string=.string,width=.int,?pad=.string",complete
+rexxcps-noopt,14,rxfnsb.left,inclusive_body,left,procedure,1,0,0,1,0,.string,"string=.string,width=.int,?pad=.string",complete
+rexxcps-noopt,14,rxfnsb.left,self,left,procedure,1,0,0,1,0,.string,"string=.string,width=.int,?pad=.string",complete
+rexxcps-noopt,14,rxfnsb.left,native_child,left,procedure,1,0,0,1,0,.string,"string=.string,width=.int,?pad=.string",complete
+rexxcps-noopt,14,rxfnsb.left,entry_overhead,left,procedure,1,0,0,1,0,.string,"string=.string,width=.int,?pad=.string",complete
+rexxcps-noopt,14,rxfnsb.left,exit_overhead,left,procedure,1,0,0,1,0,.string,"string=.string,width=.int,?pad=.string",complete
+rexxcps-noopt,15,rxfnsb.length,elapsed,length,procedure,25200,0,0,25200,0,.int,string=.string,complete
+rexxcps-noopt,15,rxfnsb.length,inclusive_body,length,procedure,25200,0,0,25200,0,.int,string=.string,complete
+rexxcps-noopt,15,rxfnsb.length,self,length,procedure,25200,0,0,25200,0,.int,string=.string,complete
+rexxcps-noopt,15,rxfnsb.length,native_child,length,procedure,25200,0,0,25200,0,.int,string=.string,complete
+rexxcps-noopt,15,rxfnsb.length,entry_overhead,length,procedure,25200,0,0,25200,0,.int,string=.string,complete
+rexxcps-noopt,15,rxfnsb.length,exit_overhead,length,procedure,25200,0,0,25200,0,.int,string=.string,complete
+rexxcps-noopt,16,rxfnsb.pos,elapsed,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-noopt,16,rxfnsb.pos,inclusive_body,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-noopt,16,rxfnsb.pos,self,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-noopt,16,rxfnsb.pos,native_child,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-noopt,16,rxfnsb.pos,entry_overhead,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-noopt,16,rxfnsb.pos,exit_overhead,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-noopt,17,rxfnsb.stem.§factory,elapsed,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-noopt,17,rxfnsb.stem.§factory,inclusive_body,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-noopt,17,rxfnsb.stem.§factory,self,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-noopt,17,rxfnsb.stem.§factory,native_child,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-noopt,17,rxfnsb.stem.§factory,entry_overhead,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-noopt,17,rxfnsb.stem.§factory,exit_overhead,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-noopt,18,rxfnsb.strip,elapsed,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-noopt,18,rxfnsb.strip,inclusive_body,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-noopt,18,rxfnsb.strip,self,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-noopt,18,rxfnsb.strip,native_child,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-noopt,18,rxfnsb.strip,entry_overhead,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-noopt,18,rxfnsb.strip,exit_overhead,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-noopt,19,rxfnsb.substr,elapsed,substr,procedure,37800,0,0,37800,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+rexxcps-noopt,19,rxfnsb.substr,inclusive_body,substr,procedure,37800,0,0,37800,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+rexxcps-noopt,19,rxfnsb.substr,self,substr,procedure,37800,0,0,37800,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+rexxcps-noopt,19,rxfnsb.substr,native_child,substr,procedure,37800,0,0,37800,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+rexxcps-noopt,19,rxfnsb.substr,entry_overhead,substr,procedure,37800,0,0,37800,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+rexxcps-noopt,19,rxfnsb.substr,exit_overhead,substr,procedure,37800,0,0,37800,0,.string,"string=.string,start=.int,?length=.int,?pad=.string",complete
+rexxcps-noopt,20,rxfnsb.time,elapsed,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-noopt,20,rxfnsb.time,inclusive_body,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-noopt,20,rxfnsb.time,self,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-noopt,20,rxfnsb.time,native_child,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-noopt,20,rxfnsb.time,entry_overhead,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-noopt,20,rxfnsb.time,exit_overhead,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-noopt,21,rxfnsb.tracecontroller.add_suppressed_namespace,elapsed,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-noopt,21,rxfnsb.tracecontroller.add_suppressed_namespace,inclusive_body,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-noopt,21,rxfnsb.tracecontroller.add_suppressed_namespace,self,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-noopt,21,rxfnsb.tracecontroller.add_suppressed_namespace,native_child,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-noopt,21,rxfnsb.tracecontroller.add_suppressed_namespace,entry_overhead,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-noopt,21,rxfnsb.tracecontroller.add_suppressed_namespace,exit_overhead,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-noopt,22,rxfnsb.upper,elapsed,upper,procedure,50400,0,0,50400,0,.string,string=.string,complete
+rexxcps-noopt,22,rxfnsb.upper,inclusive_body,upper,procedure,50400,0,0,50400,0,.string,string=.string,complete
+rexxcps-noopt,22,rxfnsb.upper,self,upper,procedure,50400,0,0,50400,0,.string,string=.string,complete
+rexxcps-noopt,22,rxfnsb.upper,native_child,upper,procedure,50400,0,0,50400,0,.string,string=.string,complete
+rexxcps-noopt,22,rxfnsb.upper,entry_overhead,upper,procedure,50400,0,0,50400,0,.string,string=.string,complete
+rexxcps-noopt,22,rxfnsb.upper,exit_overhead,upper,procedure,50400,0,0,50400,0,.string,string=.string,complete
+rexxcps-noopt,23,rxfnsb.verify,elapsed,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-noopt,23,rxfnsb.verify,inclusive_body,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-noopt,23,rxfnsb.verify,self,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-noopt,23,rxfnsb.verify,native_child,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-noopt,23,rxfnsb.verify,entry_overhead,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-noopt,23,rxfnsb.verify,exit_overhead,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-noopt,24,rxfnsb.version,elapsed,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-noopt,24,rxfnsb.version,inclusive_body,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-noopt,24,rxfnsb.version,self,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-noopt,24,rxfnsb.version,native_child,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-noopt,24,rxfnsb.version,entry_overhead,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-noopt,24,rxfnsb.version,exit_overhead,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-noopt,25,rxfnsb.word,elapsed,word,procedure,25201,0,0,25201,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-noopt,25,rxfnsb.word,inclusive_body,word,procedure,25201,0,0,25201,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-noopt,25,rxfnsb.word,self,word,procedure,25201,0,0,25201,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-noopt,25,rxfnsb.word,native_child,word,procedure,25201,0,0,25201,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-noopt,25,rxfnsb.word,entry_overhead,word,procedure,25201,0,0,25201,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-noopt,25,rxfnsb.word,exit_overhead,word,procedure,25201,0,0,25201,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-opt,1,_rxsysb._elapsed,elapsed,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-opt,1,_rxsysb._elapsed,inclusive_body,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-opt,1,_rxsysb._elapsed,self,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-opt,1,_rxsysb._elapsed,native_child,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-opt,1,_rxsysb._elapsed,entry_overhead,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-opt,1,_rxsysb._elapsed,exit_overhead,/tmp/crexx-perf2-linux-x64.d5f0827ca/source/lib/rxfnsb/rxas/_elapsed,procedure,1800,0,0,1800,0,.int,value=.int,complete
+rexxcps-opt,2,_rxsysb._typedformat,elapsed,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-opt,2,_rxsysb._typedformat,inclusive_body,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-opt,2,_rxsysb._typedformat,self,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-opt,2,_rxsysb._typedformat,native_child,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-opt,2,_rxsysb._typedformat,entry_overhead,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-opt,2,_rxsysb._typedformat,exit_overhead,_typedformat,procedure,2,0,0,2,0,.string,"number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean",complete
+rexxcps-opt,3,rexxcps_levelb.__rxtrace_reset_display_state,elapsed,benchmark_rexxcps_levelb_opt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-opt,3,rexxcps_levelb.__rxtrace_reset_display_state,inclusive_body,benchmark_rexxcps_levelb_opt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-opt,3,rexxcps_levelb.__rxtrace_reset_display_state,self,benchmark_rexxcps_levelb_opt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-opt,3,rexxcps_levelb.__rxtrace_reset_display_state,native_child,benchmark_rexxcps_levelb_opt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-opt,3,rexxcps_levelb.__rxtrace_reset_display_state,entry_overhead,benchmark_rexxcps_levelb_opt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-opt,3,rexxcps_levelb.__rxtrace_reset_display_state,exit_overhead,benchmark_rexxcps_levelb_opt,procedure,200,0,0,200,0,.void,,complete
+rexxcps-opt,4,rexxcps_levelb.cps_subroutine,elapsed,benchmark_rexxcps_levelb_opt,procedure,29400,0,0,29400,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-opt,4,rexxcps_levelb.cps_subroutine,inclusive_body,benchmark_rexxcps_levelb_opt,procedure,29400,0,0,29400,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-opt,4,rexxcps_levelb.cps_subroutine,self,benchmark_rexxcps_levelb_opt,procedure,29400,0,0,29400,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-opt,4,rexxcps_levelb.cps_subroutine,native_child,benchmark_rexxcps_levelb_opt,procedure,29400,0,0,29400,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-opt,4,rexxcps_levelb.cps_subroutine,entry_overhead,benchmark_rexxcps_levelb_opt,procedure,29400,0,0,29400,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-opt,4,rexxcps_levelb.cps_subroutine,exit_overhead,benchmark_rexxcps_levelb_opt,procedure,29400,0,0,29400,0,.void,"a1=.string,a2=.string,a3=.string,a4=.string",complete
+rexxcps-opt,5,rexxcps_levelb.main,elapsed,benchmark_rexxcps_levelb_opt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-opt,5,rexxcps_levelb.main,inclusive_body,benchmark_rexxcps_levelb_opt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-opt,5,rexxcps_levelb.main,self,benchmark_rexxcps_levelb_opt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-opt,5,rexxcps_levelb.main,native_child,benchmark_rexxcps_levelb_opt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-opt,5,rexxcps_levelb.main,entry_overhead,benchmark_rexxcps_levelb_opt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-opt,5,rexxcps_levelb.main,exit_overhead,benchmark_rexxcps_levelb_opt,procedure,1,0,0,1,0,.int,,complete
+rexxcps-opt,6,rxfnsb._trace_current_mode,elapsed,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-opt,6,rxfnsb._trace_current_mode,inclusive_body,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-opt,6,rxfnsb._trace_current_mode,self,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-opt,6,rxfnsb._trace_current_mode,native_child,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-opt,6,rxfnsb._trace_current_mode,entry_overhead,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-opt,6,rxfnsb._trace_current_mode,exit_overhead,trace,procedure,200,0,0,200,0,.string,,complete
+rexxcps-opt,7,rxfnsb._trace_ensure_runtime,elapsed,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-opt,7,rxfnsb._trace_ensure_runtime,inclusive_body,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-opt,7,rxfnsb._trace_ensure_runtime,self,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-opt,7,rxfnsb._trace_ensure_runtime,native_child,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-opt,7,rxfnsb._trace_ensure_runtime,entry_overhead,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-opt,7,rxfnsb._trace_ensure_runtime,exit_overhead,trace,procedure,400,0,0,400,0,.void,,complete
+rexxcps-opt,8,rxfnsb._trace_mode_from_option,elapsed,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-opt,8,rxfnsb._trace_mode_from_option,inclusive_body,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-opt,8,rxfnsb._trace_mode_from_option,self,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-opt,8,rxfnsb._trace_mode_from_option,native_child,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-opt,8,rxfnsb._trace_mode_from_option,entry_overhead,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-opt,8,rxfnsb._trace_mode_from_option,exit_overhead,trace,procedure,200,0,0,200,0,.string,option=.string,complete
+rexxcps-opt,9,rxfnsb._trace_normalize_mode,elapsed,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-opt,9,rxfnsb._trace_normalize_mode,inclusive_body,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-opt,9,rxfnsb._trace_normalize_mode,self,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-opt,9,rxfnsb._trace_normalize_mode,native_child,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-opt,9,rxfnsb._trace_normalize_mode,entry_overhead,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-opt,9,rxfnsb._trace_normalize_mode,exit_overhead,trace,procedure,400,0,0,400,0,.string,mode=.string,complete
+rexxcps-opt,10,rxfnsb._trace_set,elapsed,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-opt,10,rxfnsb._trace_set,inclusive_body,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-opt,10,rxfnsb._trace_set,self,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-opt,10,rxfnsb._trace_set,native_child,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-opt,10,rxfnsb._trace_set,entry_overhead,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-opt,10,rxfnsb._trace_set,exit_overhead,trace,procedure,200,0,0,200,0,.void,mode=.string,complete
+rexxcps-opt,11,rxfnsb._trace_set_off,elapsed,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-opt,11,rxfnsb._trace_set_off,inclusive_body,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-opt,11,rxfnsb._trace_set_off,self,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-opt,11,rxfnsb._trace_set_off,native_child,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-opt,11,rxfnsb._trace_set_off,entry_overhead,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-opt,11,rxfnsb._trace_set_off,exit_overhead,trace,procedure,200,0,0,200,0,.int,,complete
+rexxcps-opt,12,rxfnsb.floatformat,elapsed,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-opt,12,rxfnsb.floatformat,inclusive_body,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-opt,12,rxfnsb.floatformat,self,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-opt,12,rxfnsb.floatformat,native_child,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-opt,12,rxfnsb.floatformat,entry_overhead,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-opt,12,rxfnsb.floatformat,exit_overhead,floatformat,procedure,2,0,0,2,0,.string,"number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int",complete
+rexxcps-opt,13,rxfnsb.floattrunc,elapsed,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-opt,13,rxfnsb.floattrunc,inclusive_body,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-opt,13,rxfnsb.floattrunc,self,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-opt,13,rxfnsb.floattrunc,native_child,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-opt,13,rxfnsb.floattrunc,entry_overhead,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-opt,13,rxfnsb.floattrunc,exit_overhead,floattrunc,procedure,1,0,0,1,0,.string,"number=.float,?fraction=.int",complete
+rexxcps-opt,14,rxfnsb.pos,elapsed,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-opt,14,rxfnsb.pos,inclusive_body,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-opt,14,rxfnsb.pos,self,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-opt,14,rxfnsb.pos,native_child,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-opt,14,rxfnsb.pos,entry_overhead,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-opt,14,rxfnsb.pos,exit_overhead,pos,procedure,400,0,0,400,0,.int,"needle=.string,haystack=.string,?start=.int",complete
+rexxcps-opt,15,rxfnsb.stem.§factory,elapsed,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-opt,15,rxfnsb.stem.§factory,inclusive_body,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-opt,15,rxfnsb.stem.§factory,self,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-opt,15,rxfnsb.stem.§factory,native_child,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-opt,15,rxfnsb.stem.§factory,entry_overhead,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-opt,15,rxfnsb.stem.§factory,exit_overhead,stem,factory,2,0,0,2,0,.rxfnsb..stem,,complete
+rexxcps-opt,16,rxfnsb.strip,elapsed,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-opt,16,rxfnsb.strip,inclusive_body,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-opt,16,rxfnsb.strip,self,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-opt,16,rxfnsb.strip,native_child,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-opt,16,rxfnsb.strip,entry_overhead,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-opt,16,rxfnsb.strip,exit_overhead,strip,procedure,416,0,0,416,0,.string,"string=.string,?option=.string,?char=.string",complete
+rexxcps-opt,17,rxfnsb.time,elapsed,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-opt,17,rxfnsb.time,inclusive_body,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-opt,17,rxfnsb.time,self,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-opt,17,rxfnsb.time,native_child,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-opt,17,rxfnsb.time,entry_overhead,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-opt,17,rxfnsb.time,exit_overhead,time,procedure,600,0,0,600,0,.string,?option=.string,complete
+rexxcps-opt,18,rxfnsb.tracecontroller.add_suppressed_namespace,elapsed,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-opt,18,rxfnsb.tracecontroller.add_suppressed_namespace,inclusive_body,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-opt,18,rxfnsb.tracecontroller.add_suppressed_namespace,self,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-opt,18,rxfnsb.tracecontroller.add_suppressed_namespace,native_child,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-opt,18,rxfnsb.tracecontroller.add_suppressed_namespace,entry_overhead,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-opt,18,rxfnsb.tracecontroller.add_suppressed_namespace,exit_overhead,trace,method,16,0,0,16,0,.void,namespace_name=.string,complete
+rexxcps-opt,19,rxfnsb.verify,elapsed,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-opt,19,rxfnsb.verify,inclusive_body,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-opt,19,rxfnsb.verify,self,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-opt,19,rxfnsb.verify,native_child,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-opt,19,rxfnsb.verify,entry_overhead,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-opt,19,rxfnsb.verify,exit_overhead,verify,procedure,1,0,0,1,0,.int,"expose string=.string,expose refchars=.string,?option=.string,?start=.int",complete
+rexxcps-opt,20,rxfnsb.version,elapsed,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-opt,20,rxfnsb.version,inclusive_body,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-opt,20,rxfnsb.version,self,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-opt,20,rxfnsb.version,native_child,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-opt,20,rxfnsb.version,entry_overhead,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-opt,20,rxfnsb.version,exit_overhead,version,procedure,1,0,0,1,0,.string,,complete
+rexxcps-opt,21,rxfnsb.word,elapsed,word,procedure,1,0,0,1,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-opt,21,rxfnsb.word,inclusive_body,word,procedure,1,0,0,1,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-opt,21,rxfnsb.word,self,word,procedure,1,0,0,1,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-opt,21,rxfnsb.word,native_child,word,procedure,1,0,0,1,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-opt,21,rxfnsb.word,entry_overhead,word,procedure,1,0,0,1,0,.string,"string=.string,wordnum=.int",complete
+rexxcps-opt,21,rxfnsb.word,exit_overhead,word,procedure,1,0,0,1,0,.string,"string=.string,wordnum=.int",complete

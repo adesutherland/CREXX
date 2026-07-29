@@ -1,0 +1,4 @@
+crexx-nr05-call-census-manifest|1
+# PERF2-11 exact current optimized/noopt Tier A steady-state portfolio; bounded counts-only diagnostics.
+sieve-noopt|sieve|Sieve|baseline|noopt|/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/tests/benchmarks/benchmark_awfy_sieve_noopt.rxbin|/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/library.rxbin|50|PASS: AWFY Sieve|source=tests/benchmarks/awfy_sieve.crexx;TRACE=Off|0|1|0c8d9099db3f12caee8bc89ba14bbdffbb418002092590fb85100a3bdc7ea472|637c816a010255cd33260d86f24f700c8be9b1d62a3eaf0e8d9e9bdcdbdacf9b
+sieve-opt|sieve|Sieve|candidate|opt|/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin|/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/library.rxbin|50|PASS: AWFY Sieve|source=tests/benchmarks/awfy_sieve.crexx;TRACE=Off|0|1|75d264a9acb4f17aab6c85e1a2991904580950ec6cd4da1c235d1010319e4f7f|637c816a010255cd33260d86f24f700c8be9b1d62a3eaf0e8d9e9bdcdbdacf9b

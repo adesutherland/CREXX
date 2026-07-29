@@ -77,6 +77,19 @@ claims. Apply these standing rules to future performance work:
 - Keep the 12-item Tier A coverage portfolio distinct from the five-workload
   common CREXX/ooRexx/NetRexx aggregate: Sieve, Permute, Bounce, Richards and
   Base64.
+- Treat RexxCPS as a first-class governed community lane in every
+  multi-workload representative sampling set. Formal baselines, candidate
+  verdicts, compiler/layout screens, diagnostic profile subsets and native
+  PMU/sample subsets must include a RexxCPS result and its applicable qualified
+  comparators. Formal timing, candidate-verdict and native-PMU cells use the
+  canonical-default cREXX 2.2d command. Counts-only instrumentation may use a
+  versioned bounded smoke form when canonical execution is disproportionate,
+  but must label that form and link it to the retained canonical result. Keep
+  RexxCPS separately reported from the common-five aggregate because cREXX and
+  NetRexx are disclosed adaptations.
+  A single-mechanism or single-workload experiment may omit RexxCPS only when
+  it is explicitly labelled non-representative; record any technical
+  inapplicability rather than silently dropping the row.
 - Keep Regina RexxCPS-only and Java/native C as labelled controls. Exclude
   missing, failing, `not comparable` and materially adapted cells from common
   aggregates without imputation.

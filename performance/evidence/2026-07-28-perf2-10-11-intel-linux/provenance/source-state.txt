@@ -1,0 +1,24 @@
+base_commit=d5f0827ca2708eae9d9be182c6d0d53bd6229b74
+branch=detached HEAD
+describe=v1.0.0-beta.1-test.3-592-gd5f0827ca-dirty
+diff_sha256=258d2a3f93fdb98ada849640291bc1eddc5af49298998ccb928349a89fa6f5fc
+
+changed_files:
+ M compiler/rxcp_opt.c
+ M interpreter/rxvmintp.c
+ M interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c
+ M interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
+ M lemon/lemon.c
+ M lib/plugins/llist/llist.c
+ M lib/plugins/rxtcp/rxtcp.c
+ M lib/rxfnsb/rexx/x2d.crexx
+
+source_sha256:
+5691da88609b2d93236e2c850d72285910310298520f76b643e158516c647746  compiler/rxcp_opt.c
+4048234e0232bb50cb560ef3c8310a6260c80743b4e5a3e18dbbe68bf2b180e4  interpreter/rxvmintp.c
+5c3b12c7c030a270be209f24b46d1a7fc48b7c7dd4d00529206bcb89c108fbb0  interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c
+0784f88b28941a7286a4bddf990e774e2fc5fc6a099842b7ba172051475d26b8  interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
+3defe4850e61bedaa9b701c64d497637e46ff9beb20bab24800ef4b361d7e869  lemon/lemon.c
+277a1fd09de42b0f59f1574485d28299a573935e8e12680d6213368728251bda  lib/plugins/llist/llist.c
+e399d7aa487deccfc44c2f2c813525480db48186724415ebbf6f6a236c9d4d44  lib/plugins/rxtcp/rxtcp.c
+26d60e0381fa95cc5cde8068bdc52d5e2f277242b324c3286155e907ac1368c7  lib/rxfnsb/rexx/x2d.crexx

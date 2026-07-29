@@ -1,0 +1,5 @@
+comparison,n,geometric_mean,membership
+rxvm/oorexx,2,7.481387,Sieve;Permute
+rxvm/netrexx,2,0.965015,Sieve;Permute
+rxbvm/oorexx,2,7.242426,Sieve;Permute
+rxbvm/netrexx,2,0.934191,Sieve;Permute

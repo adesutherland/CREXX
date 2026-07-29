@@ -1,0 +1,33 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+# symbol: maybe_trim_attribute_storage
+#
+# Total Lost Samples: 0
+#
+# Samples: 5K of event 'cycles:u'
+# Event count (approx.): 62785866855
+#
+# Overhead;     Samples;Symbol Offset;IPC   [IPC Coverage]
+ 0.15%  ; 8          ;[.] maybe_trim_attribute_storage+0x855;-
+ 1.02%  ; 53         ;[.] maybe_trim_attribute_storage+0x854;-
+ 1.03%  ; 55         ;[.] maybe_trim_attribute_storage+0x852;-
+ 0.39%  ; 23         ;[.] maybe_trim_attribute_storage+0x850;-
+ 0.43%  ; 23         ;[.] maybe_trim_attribute_storage+0x84e;-
+ 1.77%  ; 94         ;[.] maybe_trim_attribute_storage+0x84c;-
+ 0.52%  ; 27         ;[.] maybe_trim_attribute_storage+0x84b;-
+ 0.32%  ; 17         ;[.] maybe_trim_attribute_storage+0x847;-
+ 0.89%  ; 48         ;[.] maybe_trim_attribute_storage+0x1e;- 
+ 0.06%  ; 3          ;[.] maybe_trim_attribute_storage+0x17;- 
+ 1.22%  ; 63         ;[.] maybe_trim_attribute_storage+0xe;-  
+ 0.27%  ; 14         ;[.] maybe_trim_attribute_storage+0xa;-  
+ 0.29%  ; 15         ;[.] maybe_trim_attribute_storage+0x9;-  
+ 4.39%  ; 225        ;[.] maybe_trim_attribute_storage+0x7;-  
+ 0.77%  ; 40         ;[.] maybe_trim_attribute_storage+0x5;-  
+ 0.80%  ; 42         ;[.] maybe_trim_attribute_storage+0x3;-  
+ 0.14%  ; 9          ;[.] maybe_trim_attribute_storage+0x1;-  
+ 2.08%  ; 112        ;[.] maybe_trim_attribute_storage+0x0;-  
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

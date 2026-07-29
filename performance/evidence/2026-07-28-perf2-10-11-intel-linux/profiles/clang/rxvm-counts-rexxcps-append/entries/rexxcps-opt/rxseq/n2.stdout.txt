@@ -1,0 +1,11 @@
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gd5f0827ca270.dirty 20260729
+       System is: linux
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 57 x 100 iterations of 1000 clauses (over 1.0 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=1 effective_count=57 averaging=100 calibrated=1
+
+     Performance: 5549644 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port

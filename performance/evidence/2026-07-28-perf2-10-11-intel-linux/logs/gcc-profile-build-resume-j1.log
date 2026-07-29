@@ -1,0 +1,29 @@
+[0/2] Re-checking globbed directories...
+[1/25] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmintp.c.o
+[2/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[3/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[4/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[5/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+/tmp/crexx-perf2-linux-x64.d5f0827ca/source/interpreter/rxspawn.c: In function ‘shell_argv_name’:
+/tmp/crexx-perf2-linux-x64.d5f0827ca/source/interpreter/rxspawn.c:562:11: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+  562 |     slash = strrchr(shell_path, '/');
+      |           ^
+[6/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[7/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[8/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[9/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[10/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/include/opdata.c.o
+[11/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/rxopmeta.c.o
+[12/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprofile.c.o
+[13/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxseqfile.c.o
+[14/25] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmsequence.c.o
+[15/25] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[16/25] Building C object interpreter/CMakeFiles/rxvm.dir/rxvmmain.c.o
+[17/25] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[18/25] Building C object interpreter/CMakeFiles/test_rxvmprofile.dir/tests/test_rxvmprofile.c.o
+[19/25] Linking C static library bin/librxpashim.a
+[20/25] Linking C static library bin/rxvm_mc_decimal_manual.a
+[21/25] Linking C static library bin/librxpa.a
+[22/25] Linking C executable bin/rxvm
+[23/25] Linking C executable bin/rxbvm
+[24/25] Linking C executable bin/test_rxvmprofile

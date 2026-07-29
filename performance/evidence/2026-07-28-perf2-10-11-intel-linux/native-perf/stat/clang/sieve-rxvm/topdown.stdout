@@ -1,0 +1,2 @@
+benchmark=awfy_sieve repetitions=5500 result=669
+PASS: AWFY Sieve

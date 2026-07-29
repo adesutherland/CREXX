@@ -1,0 +1,8 @@
+RECORD gcc rexxcps-rxvm
+PASS gcc rexxcps-rxvm samples=242
+RECORD gcc rexxcps-rxbvm
+PASS gcc rexxcps-rxbvm samples=570
+RECORD clang rexxcps-rxvm
+PASS clang rexxcps-rxvm samples=566
+RECORD clang rexxcps-rxbvm
+PASS clang rexxcps-rxbvm samples=590

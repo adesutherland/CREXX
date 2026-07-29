@@ -220,9 +220,15 @@ capture_oorexx: procedure = .int
     if capture_phase("oorexx", "oorexx", "translate", sequence, command, "", rows) <> 0 then return 1
 
     command = .string[]
-    command[1] = oorexx_home || "/rxenv.sh"
-    command[2] = "rexx"
-    command[3] = image
+    if file_exists(oorexx_home || "/rxenv.sh") then do
+      command[1] = oorexx_home || "/rxenv.sh"
+      command[2] = "rexx"
+      command[3] = image
+    end
+    else do
+      command[1] = oorexx_home || "/bin/rexx"
+      command[2] = image
+    end
     if capture_phase("oorexx", "oorexx", "load_first_result", sequence, command, ,
         "PASS: Lifecycle Probe", rows) <> 0 then return 1
   end
@@ -300,6 +306,13 @@ make_directory: procedure = .int
   if rc = 0 then return 0
   say "ERROR: could not create directory" path
   return 1
+
+file_exists: procedure = .int
+  arg path = .string
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "stat :path" output command_out error command_err
+  return rc = 0
 
 has_text: procedure = .int
   arg lines = .string[], needle = .string

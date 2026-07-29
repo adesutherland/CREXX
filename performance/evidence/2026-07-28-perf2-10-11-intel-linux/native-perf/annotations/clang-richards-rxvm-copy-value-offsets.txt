@@ -1,0 +1,104 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+# symbol: copy_value
+#
+# Total Lost Samples: 0
+#
+# Samples: 5K of event 'cycles:u'
+# Event count (approx.): 62785866855
+#
+# Overhead;     Samples;Symbol Offset;IPC   [IPC Coverage]
+ 0.53%  ; 28         ;[.] copy_value+0x8b5;-      -           
+ 1.12%  ; 58         ;[.] copy_value+0x8b4;-      -           
+ 0.27%  ; 15         ;[.] copy_value+0x8b2;-      -           
+ 0.75%  ; 39         ;[.] copy_value+0x8b0;-      -           
+ 0.48%  ; 25         ;[.] copy_value+0x8ae;-      -           
+ 1.00%  ; 53         ;[.] copy_value+0x8ac;-      -           
+ 1.04%  ; 54         ;[.] copy_value+0x8ab;-      -           
+ 1.58%  ; 83         ;[.] copy_value+0x8a7;-      -           
+ 0.40%  ; 21         ;[.] copy_value+0x89e;-      -           
+ 1.20%  ; 65         ;[.] copy_value+0x89b;-      -           
+ 1.77%  ; 92         ;[.] copy_value+0x896;-      -           
+ 0.19%  ; 10         ;[.] copy_value+0x892;-      -           
+ 9.81%  ; 514        ;[.] copy_value+0x88b;-      -           
+ 1.83%  ; 94         ;[.] copy_value+0x887;-      -           
+ 3.52%  ; 186        ;[.] copy_value+0x880;-      -           
+ 0.05%  ; 3          ;[.] copy_value+0x873;-      -           
+ 0.47%  ; 23         ;[.] copy_value+0x870;-      -           
+ 0.01%  ; 1          ;[.] copy_value+0x869;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x853;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x83a;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x833;-      -           
+ 0.04%  ; 2          ;[.] copy_value+0x82c;-      -           
+ 0.04%  ; 2          ;[.] copy_value+0x825;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x81e;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x7ca;-      -           
+ 0.03%  ; 2          ;[.] copy_value+0x7a2;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x790;-      -           
+ 0.01%  ; 1          ;[.] copy_value+0x782;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x77b;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x771;-      -           
+ 0.01%  ; 1          ;[.] copy_value+0x765;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x481;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x465;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x454;-      -           
+ 0.02%  ; 1          ;[.] copy_value+0x3eb;-      -           
+ 0.01%  ; 1          ;[.] copy_value+0x3e4;-      -           
+ 0.98%  ; 52         ;[.] copy_value+0x314;-      -           
+ 2.98%  ; 158        ;[.] copy_value+0x30e;-      -           
+ 1.51%  ; 80         ;[.] copy_value+0x306;-      -           
+ 0.44%  ; 23         ;[.] copy_value+0x301;-      -           
+ 0.09%  ; 5          ;[.] copy_value+0x2fe;-      -           
+ 1.22%  ; 64         ;[.] copy_value+0x2f7;-      -           
+ 0.51%  ; 28         ;[.] copy_value+0x2c9;-      -           
+ 1.51%  ; 81         ;[.] copy_value+0x2c0;-      -           
+ 0.67%  ; 37         ;[.] copy_value+0x2b9;-      -           
+ 1.07%  ; 57         ;[.] copy_value+0x2b2;-      -           
+ 0.02%  ; 2          ;[.] copy_value+0x2ad;-      -           
+ 0.18%  ; 10         ;[.] copy_value+0x2aa;-      -           
+ 0.06%  ; 3          ;[.] copy_value+0x29f;-      -           
+ 0.67%  ; 35         ;[.] copy_value+0x294;-      -           
+ 0.24%  ; 12         ;[.] copy_value+0x246;-      -           
+ 0.61%  ; 32         ;[.] copy_value+0x242;-      -           
+ 0.17%  ; 9          ;[.] copy_value+0x210;-      -           
+ 0.56%  ; 29         ;[.] copy_value+0x209;-      -           
+ 0.08%  ; 4          ;[.] copy_value+0x206;-      -           
+ 0.33%  ; 18         ;[.] copy_value+0x203;-      -           
+ 0.06%  ; 3          ;[.] copy_value+0x13d;-      -           
+ 0.97%  ; 52         ;[.] copy_value+0x135;-      -           
+ 0.58%  ; 32         ;[.] copy_value+0x12d;-      -           
+ 0.20%  ; 11         ;[.] copy_value+0x125;-      -           
+ 0.56%  ; 30         ;[.] copy_value+0x120;-      -           
+ 0.28%  ; 14         ;[.] copy_value+0x114;-      -           
+ 0.20%  ; 11         ;[.] copy_value+0xf0;-      -            
+ 1.00%  ; 51         ;[.] copy_value+0xec;-      -            
+ 0.31%  ; 16         ;[.] copy_value+0xe5;-      -            
+ 0.78%  ; 39         ;[.] copy_value+0xde;-      -            
+ 0.12%  ; 6          ;[.] copy_value+0xd8;-      -            
+ 1.12%  ; 59         ;[.] copy_value+0xd3;-      -            
+ 0.28%  ; 15         ;[.] copy_value+0xcf;-      -            
+ 0.46%  ; 25         ;[.] copy_value+0xcb;-      -            
+ 0.52%  ; 27         ;[.] copy_value+0xc8;-      -            
+ 1.16%  ; 62         ;[.] copy_value+0xc6;-      -            
+ 1.02%  ; 54         ;[.] copy_value+0xa1;-      -            
+ 0.96%  ; 50         ;[.] copy_value+0x99;-      -            
+ 1.41%  ; 74         ;[.] copy_value+0x84;-      -            
+ 1.11%  ; 58         ;[.] copy_value+0x7d;-      -            
+ 3.52%  ; 183        ;[.] copy_value+0x5a;-      -            
+ 1.68%  ; 88         ;[.] copy_value+0x53;-      -            
+ 11.47% ; 605        ;[.] copy_value+0x21;-      -            
+ 0.02%  ; 1          ;[.] copy_value+0x1a;-      -            
+ 0.02%  ; 1          ;[.] copy_value+0x17;-      -            
+ 1.39%  ; 73         ;[.] copy_value+0x14;-      -            
+ 0.20%  ; 10         ;[.] copy_value+0xb;-      -            
+ 0.06%  ; 3          ;[.] copy_value+0xa;-      -            
+ 0.09%  ; 5          ;[.] copy_value+0x9;-      -            
+ 0.52%  ; 27         ;[.] copy_value+0x7;-      -            
+ 2.82%  ; 148        ;[.] copy_value+0x5;-      -            
+ 0.13%  ; 7          ;[.] copy_value+0x3;-      -            
+ 1.82%  ; 95         ;[.] copy_value+0x0;-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

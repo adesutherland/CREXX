@@ -1,0 +1,26 @@
+Test project /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debugubsan
+    Start  873: levelc_slice6_expressions_target_shape
+1/8 Test  #873: levelc_slice6_expressions_target_shape ...   Passed    1.42 sec
+    Start  874: levelc_slice6_expressions
+2/8 Test  #874: levelc_slice6_expressions ................   Passed    1.32 sec
+    Start 1215: rxasdecimaltests
+3/8 Test #1215: rxasdecimaltests .........................   Passed    0.01 sec
+    Start 1216: rxasdecimaltests-rxbvm
+4/8 Test #1216: rxasdecimaltests-rxbvm ...................   Passed    0.01 sec
+    Start 1217: rxasdecimaltests-mc
+5/8 Test #1217: rxasdecimaltests-mc ......................   Passed    0.01 sec
+    Start 1218: rxasdecimaltests-mc-rxbvm
+6/8 Test #1218: rxasdecimaltests-mc-rxbvm ................   Passed    0.01 sec
+    Start 1221: rxasconversiontests
+7/8 Test #1221: rxasconversiontests ......................   Passed    0.01 sec
+    Start 1222: rxasconversiontests-rxbvm
+8/8 Test #1222: rxasconversiontests-rxbvm ................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+compiler    =   2.74 sec*proc (2 tests)
+levelc      =   2.74 sec*proc (2 tests)
+smoke       =   1.33 sec*proc (2 tests)
+
+Total Test time (real) =   2.85 sec

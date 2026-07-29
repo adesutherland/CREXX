@@ -1,0 +1,15 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve-rxvm,Sieve,crexx,rxvm,equivalent-port,A,yes,no,5500,normalized_work_per_second,10,1327.302393,1528.470911,1538.336388,1560.588584,1581.951259,19.565804,1.271881,16.553523,yes
+sieve-rxbvm,Sieve,crexx,rxbvm,equivalent-port,A,yes,no,5500,normalized_work_per_second,10,1442.249574,1517.986530,1548.257921,1554.441793,1555.693399,6.472194,0.418031,7.327192,no
+sieve-oorexx,Sieve,oorexx,oorexx,equivalent-port,A,yes,no,5500,normalized_work_per_second,10,220.355477,234.478016,236.909701,241.457540,245.037828,3.993349,1.685600,10.418463,yes
+sieve-netrexx,Sieve,netrexx,netrexx,decimal-rexx-port,A,yes,no,5500,normalized_work_per_second,10,820.544525,897.672476,901.939137,908.422871,915.424131,6.277070,0.695953,10.519513,yes
+permute-rxvm,Permute,crexx,rxvm,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,772.949130,779.729389,786.292889,789.049919,799.490501,5.521143,0.702174,3.375507,no
+permute-rxbvm,Permute,crexx,rxbvm,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,698.932660,725.158730,732.143479,735.567928,750.703747,4.573279,0.624642,7.071167,no
+permute-oorexx,Permute,oorexx,oorexx,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,88.898876,91.026767,91.219686,91.553582,91.937771,0.309229,0.338994,3.331403,no
+permute-netrexx,Permute,netrexx,netrexx,decimal-rexx-port,A,yes,no,5000,normalized_work_per_second,10,1410.434450,1426.907553,1440.093492,1456.238095,1460.387856,14.253610,0.989770,3.468761,no
+towers-netrexx,Towers,netrexx,netrexx,binary-object-jvm-control,A,no,no,100,elapsed_ns,10,55782000.000000,58200250.000000,59647000.000000,61266750.000000,65355000.000000,1650000.000000,2.766275,16.049424,yes
+rexxcps-rxvm,RexxCPS,crexx,rxvm,disclosed-2.2d,A,no,no,1000-clauses,benchmark_rate,10,13472459.000000,13556465.250000,13843288.000000,14085902.000000,14234176.000000,283671.000000,2.049159,5.502428,no
+rexxcps-rxbvm,RexxCPS,crexx,rxbvm,disclosed-2.2d,A,no,no,1000-clauses,benchmark_rate,10,12838240.000000,13133594.750000,13300049.500000,13498270.500000,13571983.000000,204971.000000,1.541130,5.516844,no
+rexxcps-oorexx,RexxCPS,oorexx,oorexx,canonical-2.2,A,no,no,1000-clauses,benchmark_rate,10,11394570.000000,11601253.750000,11704833.500000,11918558.500000,12057047.000000,155332.000000,1.327076,5.659858,no
+rexxcps-regina,RexxCPS,regina,regina,canonical-2.2,A,no,no,1000-clauses,benchmark_rate,10,12079264.000000,12412921.750000,12539831.000000,12628256.750000,12715617.000000,126433.500000,1.008255,5.074654,no
+rexxcps-netrexx,RexxCPS,netrexx,netrexx,disclosed-2.2n,A,no,no,1000-clauses,benchmark_rate,10,7415437.000000,7770633.000000,8219338.500000,8322083.750000,8482193.000000,219723.000000,2.673244,12.978611,yes

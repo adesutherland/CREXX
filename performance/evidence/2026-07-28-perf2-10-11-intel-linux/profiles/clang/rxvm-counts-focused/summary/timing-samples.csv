@@ -1,0 +1,13 @@
+entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness
+sieve-noopt,sieve,Sieve,baseline,noopt,process,recorded,1,94067000,0,pass
+sieve-opt,sieve,Sieve,candidate,opt,process,recorded,1,72440000,0,pass
+permute-noopt,permute,Permute,baseline,noopt,process,recorded,1,138319000,0,pass
+permute-opt,permute,Permute,candidate,opt,process,recorded,1,109752000,0,pass
+towers-noopt,towers,Towers,baseline,noopt,process,recorded,1,1129601000,0,pass
+towers-opt,towers,Towers,candidate,opt,process,recorded,1,1100883000,0,pass
+bounce-noopt,bounce,Bounce,baseline,noopt,process,recorded,1,178893000,0,pass
+bounce-opt,bounce,Bounce,candidate,opt,process,recorded,1,132827000,0,pass
+richards-noopt,richards,Richards,baseline,noopt,process,recorded,1,109096000,0,pass
+richards-opt,richards,Richards,candidate,opt,process,recorded,1,1220014000,0,pass
+base64-noopt,base64,Base64,baseline,noopt,process,recorded,1,1340565000,0,pass
+base64-opt,base64,Base64,candidate,opt,process,recorded,1,1124007000,0,pass

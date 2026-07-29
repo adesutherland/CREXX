@@ -1,0 +1,5 @@
+ERROR: oorexx load_first_result failed; rc=127
+stdout:
+  <empty>
+stderr:
+  <empty>

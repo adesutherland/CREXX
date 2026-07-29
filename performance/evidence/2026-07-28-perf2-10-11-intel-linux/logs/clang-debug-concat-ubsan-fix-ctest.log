@@ -1,0 +1,22 @@
+Test project /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debug
+    Start    1: linked_opt_runtime_artifacts_build
+1/7 Test    #1: linked_opt_runtime_artifacts_build ...   Passed  362.36 sec
+    Start  414: repro_sconcat_run_noopt
+2/7 Test  #414: repro_sconcat_run_noopt ..............   Passed    1.29 sec
+    Start  415: repro_sconcat_run_opt
+3/7 Test  #415: repro_sconcat_run_opt ................   Passed    1.15 sec
+    Start 1272: ts_c2x_noopt
+4/7 Test #1272: ts_c2x_noopt .........................   Passed    0.24 sec
+    Start 1273: ts_c2x_opt
+5/7 Test #1273: ts_c2x_opt ...........................   Passed    0.11 sec
+    Start 1558: testStringTreeMap_noopt
+6/7 Test #1558: testStringTreeMap_noopt ..............   Passed    0.49 sec
+    Start 1559: testStringTreeMap_opt
+7/7 Test #1559: testStringTreeMap_opt ................   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+linked_opt    =   1.47 sec*proc (3 tests)
+
+Total Test time (real) = 365.96 sec

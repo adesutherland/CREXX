@@ -1,0 +1,11 @@
+skip complete gcc richards-rxvm
+flat record start gcc richards-rxbvm
+flat record complete gcc richards-rxbvm elapsed=26s size=219424
+flat record start gcc base64-rxvm
+flat record complete gcc base64-rxvm elapsed=9s size=84064
+flat record start gcc base64-rxbvm
+flat record complete gcc base64-rxbvm elapsed=7s size=73224
+flat record start gcc towers-rxvm
+flat record complete gcc towers-rxvm elapsed=13s size=115464
+flat record start gcc towers-rxbvm
+flat record complete gcc towers-rxbvm elapsed=12s size=113184

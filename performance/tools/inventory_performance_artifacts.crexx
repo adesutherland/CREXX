@@ -111,21 +111,22 @@ read_manifest: procedure = .string[]
 file_size: procedure = .string
   arg path = .string
   command = .string[]
-  command[1] = "/usr/bin/stat"
-  command[2] = "-f"
-  command[3] = "%z"
-  command[4] = path
-  out = .string[]
-  err = .string[]
-  address crexx "run :command[]" output out error err
-  if rc = 0 & out[0] > 0 then return strip(out[1])
+  command[1] = "/usr/bin/wc"
   command[2] = "-c"
-  command[3] = "%s"
+  command[3] = path
   out = .string[]
   err = .string[]
   address crexx "run :command[]" output out error err
-  if rc = 0 & out[0] > 0 then return strip(out[1])
+  if rc = 0 & out[0] > 0 then do
+    size = word(out[1], 1)
+    if is_digits(size) then return size
+  end
   return ""
+
+is_digits: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return verify(value, "0123456789") = 0
 
 sha256_file: procedure = .string
   arg path = .string
@@ -237,6 +238,8 @@ self_test: procedure = .int
   fields = split_delimited("role|runtime|workload|form|path", "|")
   if fields[0] <> 5 | fields[4] <> "form" then
     return execution_error("artifact manifest parser self-test failed")
+  if \is_digits("12345") | is_digits("File: artifact") then
+    return execution_error("artifact size parser self-test failed")
   say "PASS: performance artifact inventory self-test"
   return 0
 

@@ -1,0 +1,4 @@
+# started on Wed Jul 29 09:15:20 2026
+
+4494547;;icache_64b.iftag_miss;3860309803;100.00;;
+1051103;;itlb_misses.walk_completed;3860309803;100.00;;

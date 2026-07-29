@@ -1,0 +1,10 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve-rxbvm,Sieve,crexx,rxbvm,equivalent-port,A,yes,no,5500,normalized_work_per_second,10,1512.005045,1673.569099,1691.413716,1706.425140,1714.831075,17.875642,1.056846,11.991509,yes
+permute-rxvm,Permute,crexx,rxvm,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,796.319475,842.368178,862.265520,868.570582,877.195906,9.955068,1.154525,9.379527,no
+permute-rxbvm,Permute,crexx,rxbvm,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,871.330305,905.492041,922.333153,925.463516,931.961933,9.385017,1.017530,6.573723,no
+permute-oorexx,Permute,oorexx,oorexx,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,85.799629,88.607273,90.896762,91.541602,91.769288,0.696224,0.765950,6.567515,no
+permute-netrexx,Permute,netrexx,netrexx,decimal-rexx-port,A,yes,no,5000,normalized_work_per_second,10,1353.891545,1408.560839,1424.843967,1442.081191,1443.988690,17.909718,1.256960,6.323299,no
+bounce-rxvm,Bounce,crexx,rxvm,equivalent-port,A,yes,no,4200,normalized_work_per_second,10,1193.486971,1258.677740,1264.639535,1276.136280,1294.825231,10.664281,0.843266,8.013213,no
+bounce-rxbvm,Bounce,crexx,rxbvm,equivalent-port,A,yes,no,4200,normalized_work_per_second,10,1307.110620,1316.634293,1330.248130,1349.404059,1369.720055,16.252299,1.221749,4.706598,no
+base64-rxbvm,Base64,crexx,rxbvm,equivalent-port,A,yes,no,2500,normalized_work_per_second,10,510.868419,515.259028,520.521925,521.663195,524.777804,2.136203,0.410396,2.672200,no
+base64-netrexx,Base64,netrexx,netrexx,decimal-rexx-port,A,yes,no,2500,normalized_work_per_second,10,552.244543,630.165082,632.517727,640.772038,658.775416,4.613701,0.729418,16.842354,yes

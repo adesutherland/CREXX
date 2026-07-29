@@ -1,0 +1,71 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 566  of event 'cycles:u'
+# Event count (approx.): 6683258455
+#
+# Overhead  Command  Shared Object     Symbol                                       IPC   [IPC Coverage]
+# ........  .......  ................  ...........................................  ....................
+#
+    40.05%  rxvm     rxvm              [.] run                                      -      -            
+     7.26%  rxvm     libc.so.6         [.] __GI_____strtod_l_internal               -      -            
+     5.60%  rxvm     libc.so.6         [.] __memmove_evex_unaligned_erms            -      -            
+     4.99%  rxvm     libc.so.6         [.] __printf_buffer                          -      -            
+     3.59%  rxvm     libc.so.6         [.] __strlen_evex                            -      -            
+     2.74%  rxvm     rxvm              [.] decNumberFromString                      -      -            
+     2.72%  rxvm     rxvm              [.] decToString                              -      -            
+     2.15%  rxvm     rxvm              [.] decimalToString                          -      -            
+     1.85%  rxvm     libc.so.6         [.] str_to_mpn.isra.0                        -      -            
+     1.80%  rxvm     libc.so.6         [.] _itoa_word                               -      -            
+     1.44%  rxvm     libc.so.6         [.] __memcmp_evex_movbe                      -      -            
+     1.42%  rxvm     rxvm              [.] decNumberToInt32                         -      -            
+     1.42%  rxvm     rxvm              [.] rxvm_loose_compare_text                  -      -            
+     1.28%  rxvm     libc.so.6         [.] malloc                                   -      -            
+     1.28%  rxvm     libc.so.6         [.] __printf_buffer_write                    -      -            
+     1.24%  rxvm     rxvm              [.] RexxDecimalFormat                        -      -            
+     1.22%  rxvm     libc.so.6         [.] round_and_return                         -      -            
+     1.20%  rxvm     rxvm              [.] decimalFromString                        -      -            
+     1.09%  rxvm     libc.so.6         [.] __strchr_evex                            -      -            
+     1.07%  rxvm     rxvm              [.] decUnitAddSub                            -      -            
+     1.06%  rxvm     rxvm              [.] decUnitCompare                           -      -            
+     1.02%  rxvm     rxvm              [.] memcpy@plt                               -      -            
+     0.89%  rxvm     libc.so.6         [.] __strcpy_evex                            -      -            
+     0.85%  rxvm     rxvm              [.] decMultiplyOp                            -      -            
+     0.70%  rxvm     rxvm              [.] rxvm_rebuild_interface_method_registry   -      -            
+     0.69%  rxvm     rxvm              [.] decNumberReduce                          -      -            
+     0.54%  rxvm     libc.so.6         [.] __mpn_lshift                             -      -            
+     0.54%  rxvm     rxvm              [.] decCompare                               -      -            
+     0.54%  rxvm     rxvm              [.] number_to_simple_format                  -      -            
+     0.53%  rxvm     rxvm              [.] decNumberCompare                         -      -            
+     0.52%  rxvm     rxvm              [.] decimalAdd                               -      -            
+     0.52%  rxvm     libc.so.6         [.] __strchrnul_evex                         -      -            
+     0.50%  rxvm     rxvm              [.] __errno_location@plt                     -      -            
+     0.40%  rxvm     libc.so.6         [.] snprintf                                 -      -            
+     0.37%  rxvm     rxvm              [.] decTrim                                  -      -            
+     0.36%  rxvm     libc.so.6         [.] strlen@plt                               -      -            
+     0.36%  rxvm     rxvm              [.] clear_value_contents                     -      -            
+     0.36%  rxvm     libc.so.6         [.] __vsnprintf_internal                     -      -            
+     0.36%  rxvm     rxvm              [.] getRequiredStringSize                    -      -            
+     0.35%  rxvm     libc.so.6         [.] __strchrnul_ifunc@plt                    -      -            
+     0.34%  rxvm     libc.so.6         [.] __mpn_mul_1                              -      -            
+     0.32%  rxvm     rxvm              [.] bcmp@plt                                 -      -            
+     0.20%  rxvm     rxvm              [.] decShiftToLeast                          -      -            
+     0.19%  rxvm     libc.so.6         [.] __errno_location                         -      -            
+     0.19%  rxvm     rxvm              [.] strtod@plt                               -      -            
+     0.19%  rxvm     rxvm              [.] decFinalize                              -      -            
+     0.18%  rxvm     rxvm              [.] decNumberToString                        -      -            
+     0.18%  rxvm     rxvm              [.] decNumberAdd                             -      -            
+     0.18%  rxvm     libc.so.6         [.] __printf_buffer_done                     -      -            
+     0.17%  rxvm     libc.so.6         [.] __strncpy_evex                           -      -            
+     0.17%  rxvm     rxvm              [.] malloc@plt                               -      -            
+     0.17%  rxvm     rxvm              [.] rxvm_rebuild_interface_factory_registry  -      -            
+     0.16%  rxvm     libc.so.6         [.] strtod                                   -      -            
+     0.16%  rxvm     rxvm              [.] decimalCompareString                     -      -            
+     0.16%  rxvm     rxvm              [.] rxbin007_lzss_decompress                 -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

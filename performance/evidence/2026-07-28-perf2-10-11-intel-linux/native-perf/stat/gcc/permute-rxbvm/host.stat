@@ -1,0 +1,6 @@
+# started on Wed Jul 29 09:01:59 2026
+
+8812.31;msec;task-clock;8812308520;100.00;;
+76;;context-switches;8812308520;100.00;;
+1;;cpu-migrations;8812308520;100.00;;
+3000;;page-faults;8812308520;100.00;;

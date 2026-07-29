@@ -26,6 +26,7 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/PERF2-06-07-WORKLIST.md` | Combined Mac control plane for relevant PERF2-06 value/VM ownership and PERF2-07 representation/allocation work |
 | `performance/PERF2-06-07-HANDOVER-PROMPT.md` | Preserved execution prompt for the completed combined PERF2-06/07 Mac slice; successor hardware instructions now live in its closeout evidence |
 | `performance/PERF2-08-09-WORKLIST.md` | Resumable Mac control plane for the capability/equivalence gate and subsequent formal per-benchmark closure run |
+| `performance/PERF2-10-11-INTEL-LINUX-WORKLIST.md` | Completed initial Intel Linux GCC/Clang correctness, sanitizer, formal baseline and native-attribution control plane; rebuild-heavy PoCs return to macOS before any tuning selection |
 | `performance/PERFORMANCE-GOVERNANCE.md` | Normative portfolio, sampling, aggregation, regression and claim policy |
 | `performance/rexxcps-runtime-source-review-2026-07-22.md` | Dated Regina/ooRexx/NetRexx mechanism review, with current-status addendum |
 | `performance/templates/performance-scorecard.md` | Standard publication structure |
@@ -39,6 +40,7 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/` | Adrian-accepted V1R01-R1 Apple closeout: broad Debug/Release, focused ASan, lifecycle/RSS, retained-RXBIN, install and successor-hardware handover |
 | `performance/evidence/2026-07-27-perf2-08-qualification/` | Approved Mac capability/equivalence panel: complete non-common qualification, exact source/runtime identities and negative Mandelbrot evidence |
 | `performance/evidence/2026-07-27-perf2-09-mac-closure/` | Formal same-session Mac closure: common-five scorecard, Towers/RexxCPS/lifecycle lanes, RSS/artifacts, workload dossiers and recursive checksums |
+| `performance/evidence/2026-07-28-perf2-10-11-intel-linux/` | Initial Intel Linux x86-64 handover: GCC/Clang correctness and sanitizer closure, formal runtime/RSS/lifecycle/artifacts, schema-5 profiles, native PMU attribution and macOS handback |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
@@ -90,6 +92,12 @@ do not become formal baselines merely by appearing in the result index. Use the
 scorecard template, keep `rxvm`/`rxbvm` separate, publish the exact aggregate
 membership, and retain one compact checksum-closed bundle with consolidated
 raw tables rather than one output file per successful sample.
+
+RexxCPS is a mandatory first-class community lane in every multi-workload
+representative benchmark, profile, PMU and candidate-verdict set. It remains
+separate from the common-five aggregate because cREXX 2.2d and NetRexx 2.2n
+are disclosed adaptations. A genuinely single-mechanism experiment may omit
+it only when the experiment is explicitly labelled non-representative.
 
 Canonical NetRexx common cells use `options nobinary decimal` with timed
 numeric work held in NetRexx `Rexx` values. The generated Java and default

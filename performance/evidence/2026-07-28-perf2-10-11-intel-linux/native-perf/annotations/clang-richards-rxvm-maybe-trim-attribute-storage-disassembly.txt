@@ -1,0 +1,524 @@
+
+/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/rxvm:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.got:
+
+Disassembly of section .text:
+
+00000000000bcaf0 <maybe_trim_attribute_storage>:
+   bcaf0:	55                   	push   rbp
+   bcaf1:	41 57                	push   r15
+   bcaf3:	41 56                	push   r14
+   bcaf5:	41 55                	push   r13
+   bcaf7:	41 54                	push   r12
+   bcaf9:	53                   	push   rbx
+   bcafa:	48 83 ec 48          	sub    rsp,0x48
+   bcafe:	48 85 ff             	test   rdi,rdi
+   bcb01:	0f 84 30 08 00 00    	je     bd337 <maybe_trim_attribute_storage+0x847>
+   bcb07:	4c 8b af c0 00 00 00 	mov    r13,QWORD PTR [rdi+0xc0]
+   bcb0e:	49 83 fd 40          	cmp    r13,0x40
+   bcb12:	0f 82 1f 08 00 00    	jb     bd337 <maybe_trim_attribute_storage+0x847>
+   bcb18:	4c 8b a7 c8 00 00 00 	mov    r12,QWORD PTR [rdi+0xc8]
+   bcb1f:	4a 8d 04 a5 00 00 00 	lea    rax,[r12*4+0x0]
+   bcb26:	00 
+   bcb27:	49 39 c5             	cmp    r13,rax
+   bcb2a:	0f 86 07 08 00 00    	jbe    bd337 <maybe_trim_attribute_storage+0x847>
+   bcb30:	48 8b af a8 00 00 00 	mov    rbp,QWORD PTR [rdi+0xa8]
+   bcb37:	4c 8b b7 b0 00 00 00 	mov    r14,QWORD PTR [rdi+0xb0]
+   bcb3e:	48 8b 87 b8 00 00 00 	mov    rax,QWORD PTR [rdi+0xb8]
+   bcb45:	48 89 44 24 30       	mov    QWORD PTR [rsp+0x30],rax
+   bcb4a:	48 8b 87 d0 00 00 00 	mov    rax,QWORD PTR [rdi+0xd0]
+   bcb51:	48 89 44 24 28       	mov    QWORD PTR [rsp+0x28],rax
+   bcb56:	4d 85 e4             	test   r12,r12
+   bcb59:	0f 84 28 02 00 00    	je     bcd87 <maybe_trim_attribute_storage+0x297>
+   bcb5f:	49 83 fc 09          	cmp    r12,0x9
+   bcb63:	b8 08 00 00 00       	mov    eax,0x8
+   bcb68:	49 0f 43 c4          	cmovae rax,r12
+   bcb6c:	48 ff c8             	dec    rax
+   bcb6f:	48 89 c1             	mov    rcx,rax
+   bcb72:	48 d1 e9             	shr    rcx,1
+   bcb75:	48 09 c1             	or     rcx,rax
+   bcb78:	48 89 c8             	mov    rax,rcx
+   bcb7b:	48 c1 e8 02          	shr    rax,0x2
+   bcb7f:	48 09 c8             	or     rax,rcx
+   bcb82:	48 89 c1             	mov    rcx,rax
+   bcb85:	48 c1 e9 04          	shr    rcx,0x4
+   bcb89:	48 09 c1             	or     rcx,rax
+   bcb8c:	48 89 c8             	mov    rax,rcx
+   bcb8f:	48 c1 e8 08          	shr    rax,0x8
+   bcb93:	48 09 c8             	or     rax,rcx
+   bcb96:	48 89 c1             	mov    rcx,rax
+   bcb99:	48 c1 e9 10          	shr    rcx,0x10
+   bcb9d:	48 09 c1             	or     rcx,rax
+   bcba0:	48 89 cb             	mov    rbx,rcx
+   bcba3:	48 c1 eb 20          	shr    rbx,0x20
+   bcba7:	48 09 cb             	or     rbx,rcx
+   bcbaa:	48 8d 43 01          	lea    rax,[rbx+0x1]
+   bcbae:	4c 39 e8             	cmp    rax,r13
+   bcbb1:	0f 83 80 07 00 00    	jae    bd337 <maybe_trim_attribute_storage+0x847>
+   bcbb7:	48 89 6c 24 40       	mov    QWORD PTR [rsp+0x40],rbp
+   bcbbc:	48 89 7c 24 38       	mov    QWORD PTR [rsp+0x38],rdi
+   bcbc1:	48 89 c5             	mov    rbp,rax
+   bcbc4:	4c 8d 3c c5 00 00 00 	lea    r15,[rax*8+0x0]
+   bcbcb:	00 
+   bcbcc:	4c 89 ff             	mov    rdi,r15
+   bcbcf:	e8 5c 6b f5 ff       	call   13730 <malloc@plt>
+   bcbd4:	48 89 44 24 18       	mov    QWORD PTR [rsp+0x18],rax
+   bcbd9:	4c 89 ff             	mov    rdi,r15
+   bcbdc:	e8 4f 6b f5 ff       	call   13730 <malloc@plt>
+   bcbe1:	49 89 c7             	mov    r15,rax
+   bcbe4:	bf 08 00 00 00       	mov    edi,0x8
+   bcbe9:	e8 42 6b f5 ff       	call   13730 <malloc@plt>
+   bcbee:	48 89 44 24 20       	mov    QWORD PTR [rsp+0x20],rax
+   bcbf3:	48 69 fd f8 00 00 00 	imul   rdi,rbp,0xf8
+   bcbfa:	e8 31 6b f5 ff       	call   13730 <malloc@plt>
+   bcbff:	48 8b 7c 24 18       	mov    rdi,QWORD PTR [rsp+0x18]
+   bcc04:	48 85 ff             	test   rdi,rdi
+   bcc07:	0f 94 c2             	sete   dl
+   bcc0a:	4c 89 7c 24 08       	mov    QWORD PTR [rsp+0x8],r15
+   bcc0f:	4d 85 ff             	test   r15,r15
+   bcc12:	4c 8b 7c 24 20       	mov    r15,QWORD PTR [rsp+0x20]
+   bcc17:	0f 94 c1             	sete   cl
+   bcc1a:	08 d1                	or     cl,dl
+   bcc1c:	4d 85 ff             	test   r15,r15
+   bcc1f:	0f 94 c2             	sete   dl
+   bcc22:	08 ca                	or     dl,cl
+   bcc24:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+   bcc28:	48 85 c0             	test   rax,rax
+   bcc2b:	0f 94 c1             	sete   cl
+   bcc2e:	08 d1                	or     cl,dl
+   bcc30:	0f 85 fb 01 00 00    	jne    bce31 <maybe_trim_attribute_storage+0x341>
+   bcc36:	48 89 6c 24 10       	mov    QWORD PTR [rsp+0x10],rbp
+   bcc3b:	48 85 ed             	test   rbp,rbp
+   bcc3e:	0f 84 e5 02 00 00    	je     bcf29 <maybe_trim_attribute_storage+0x439>
+   bcc44:	48 85 db             	test   rbx,rbx
+   bcc47:	0f 84 2d 02 00 00    	je     bce7a <maybe_trim_attribute_storage+0x38a>
+   bcc4d:	48 8b 4c 24 10       	mov    rcx,QWORD PTR [rsp+0x10]
+   bcc52:	48 83 e1 fe          	and    rcx,0xfffffffffffffffe
+   bcc56:	48 8b 04 24          	mov    rax,QWORD PTR [rsp]
+   bcc5a:	48 8d 90 f8 00 00 00 	lea    rdx,[rax+0xf8]
+   bcc61:	31 c0                	xor    eax,eax
+   bcc63:	0f 57 c0             	xorps  xmm0,xmm0
+   bcc66:	4c 8b 44 24 08       	mov    r8,QWORD PTR [rsp+0x8]
+   bcc6b:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+   bcc70:	48 8d b2 08 ff ff ff 	lea    rsi,[rdx-0xf8]
+   bcc77:	48 8d 7a e0          	lea    rdi,[rdx-0x20]
+   bcc7b:	48 89 ba 38 ff ff ff 	mov    QWORD PTR [rdx-0xc8],rdi
+   bcc82:	48 c7 82 48 ff ff ff 	mov    QWORD PTR [rdx-0xb8],0x20
+   bcc89:	20 00 00 00 
+   bcc8d:	c7 82 08 ff ff ff 00 	mov    DWORD PTR [rdx-0xf8],0x0
+   bcc94:	00 00 00 
+   bcc97:	48 c7 82 40 ff ff ff 	mov    QWORD PTR [rdx-0xc0],0x0
+   bcc9e:	00 00 00 00 
+   bcca2:	0f 11 82 10 ff ff ff 	movups XMMWORD PTR [rdx-0xf0],xmm0
+   bcca9:	0f 11 82 20 ff ff ff 	movups XMMWORD PTR [rdx-0xe0],xmm0
+   bccb0:	48 c7 82 30 ff ff ff 	mov    QWORD PTR [rdx-0xd0],0x0
+   bccb7:	00 00 00 00 
+   bccbb:	0f 11 82 50 ff ff ff 	movups XMMWORD PTR [rdx-0xb0],xmm0
+   bccc2:	0f 11 82 60 ff ff ff 	movups XMMWORD PTR [rdx-0xa0],xmm0
+   bccc9:	0f 11 82 70 ff ff ff 	movups XMMWORD PTR [rdx-0x90],xmm0
+   bccd0:	0f 11 42 80          	movups XMMWORD PTR [rdx-0x80],xmm0
+   bccd4:	c7 42 90 00 00 00 00 	mov    DWORD PTR [rdx-0x70],0x0
+   bccdb:	0f 11 42 98          	movups XMMWORD PTR [rdx-0x68],xmm0
+   bccdf:	0f 11 42 a8          	movups XMMWORD PTR [rdx-0x58],xmm0
+   bcce3:	0f 11 42 b8          	movups XMMWORD PTR [rdx-0x48],xmm0
+   bcce7:	0f 11 42 c8          	movups XMMWORD PTR [rdx-0x38],xmm0
+   bcceb:	48 c7 42 d8 00 00 00 	mov    QWORD PTR [rdx-0x28],0x0
+   bccf2:	00 
+   bccf3:	49 89 34 c0          	mov    QWORD PTR [r8+rax*8],rsi
+   bccf7:	48 8d b2 d8 00 00 00 	lea    rsi,[rdx+0xd8]
+   bccfe:	48 89 72 30          	mov    QWORD PTR [rdx+0x30],rsi
+   bcd02:	48 c7 42 40 20 00 00 	mov    QWORD PTR [rdx+0x40],0x20
+   bcd09:	00 
+   bcd0a:	c7 02 00 00 00 00    	mov    DWORD PTR [rdx],0x0
+   bcd10:	48 c7 42 38 00 00 00 	mov    QWORD PTR [rdx+0x38],0x0
+   bcd17:	00 
+   bcd18:	0f 11 42 08          	movups XMMWORD PTR [rdx+0x8],xmm0
+   bcd1c:	0f 11 42 18          	movups XMMWORD PTR [rdx+0x18],xmm0
+   bcd20:	48 c7 42 28 00 00 00 	mov    QWORD PTR [rdx+0x28],0x0
+   bcd27:	00 
+   bcd28:	0f 11 42 48          	movups XMMWORD PTR [rdx+0x48],xmm0
+   bcd2c:	0f 11 42 58          	movups XMMWORD PTR [rdx+0x58],xmm0
+   bcd30:	0f 11 42 68          	movups XMMWORD PTR [rdx+0x68],xmm0
+   bcd34:	0f 11 42 78          	movups XMMWORD PTR [rdx+0x78],xmm0
+   bcd38:	c7 82 88 00 00 00 00 	mov    DWORD PTR [rdx+0x88],0x0
+   bcd3f:	00 00 00 
+   bcd42:	0f 11 82 90 00 00 00 	movups XMMWORD PTR [rdx+0x90],xmm0
+   bcd49:	0f 11 82 a0 00 00 00 	movups XMMWORD PTR [rdx+0xa0],xmm0
+   bcd50:	0f 11 82 b0 00 00 00 	movups XMMWORD PTR [rdx+0xb0],xmm0
+   bcd57:	0f 11 82 c0 00 00 00 	movups XMMWORD PTR [rdx+0xc0],xmm0
+   bcd5e:	48 c7 82 d0 00 00 00 	mov    QWORD PTR [rdx+0xd0],0x0
+   bcd65:	00 00 00 00 
+   bcd69:	49 89 54 c0 08       	mov    QWORD PTR [r8+rax*8+0x8],rdx
+   bcd6e:	48 83 c0 02          	add    rax,0x2
+   bcd72:	48 81 c2 f0 01 00 00 	add    rdx,0x1f0
+   bcd79:	48 39 c1             	cmp    rcx,rax
+   bcd7c:	0f 85 ee fe ff ff    	jne    bcc70 <maybe_trim_attribute_storage+0x180>
+   bcd82:	e9 f5 00 00 00       	jmp    bce7c <maybe_trim_attribute_storage+0x38c>
+   bcd87:	49 89 ff             	mov    r15,rdi
+   bcd8a:	4d 85 f6             	test   r14,r14
+   bcd8d:	4c 8b 64 24 30       	mov    r12,QWORD PTR [rsp+0x30]
+   bcd92:	74 24                	je     bcdb8 <maybe_trim_attribute_storage+0x2c8>
+   bcd94:	31 db                	xor    ebx,ebx
+   bcd96:	eb 10                	jmp    bcda8 <maybe_trim_attribute_storage+0x2b8>
+   bcd98:	0f 1f 84 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+   bcd9f:	00 
+   bcda0:	48 ff c3             	inc    rbx
+   bcda3:	49 39 dd             	cmp    r13,rbx
+   bcda6:	74 10                	je     bcdb8 <maybe_trim_attribute_storage+0x2c8>
+   bcda8:	49 8b 3c de          	mov    rdi,QWORD PTR [r14+rbx*8]
+   bcdac:	48 85 ff             	test   rdi,rdi
+   bcdaf:	74 ef                	je     bcda0 <maybe_trim_attribute_storage+0x2b0>
+   bcdb1:	e8 9a e3 ff ff       	call   bb150 <clear_value_contents>
+   bcdb6:	eb e8                	jmp    bcda0 <maybe_trim_attribute_storage+0x2b0>
+   bcdb8:	4d 85 e4             	test   r12,r12
+   bcdbb:	74 33                	je     bcdf0 <maybe_trim_attribute_storage+0x300>
+   bcdbd:	4c 8b 6c 24 28       	mov    r13,QWORD PTR [rsp+0x28]
+   bcdc2:	4d 85 ed             	test   r13,r13
+   bcdc5:	74 21                	je     bcde8 <maybe_trim_attribute_storage+0x2f8>
+   bcdc7:	31 db                	xor    ebx,ebx
+   bcdc9:	eb 0d                	jmp    bcdd8 <maybe_trim_attribute_storage+0x2e8>
+   bcdcb:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+   bcdd0:	48 ff c3             	inc    rbx
+   bcdd3:	49 39 dd             	cmp    r13,rbx
+   bcdd6:	74 10                	je     bcde8 <maybe_trim_attribute_storage+0x2f8>
+   bcdd8:	49 8b 3c dc          	mov    rdi,QWORD PTR [r12+rbx*8]
+   bcddc:	48 85 ff             	test   rdi,rdi
+   bcddf:	74 ef                	je     bcdd0 <maybe_trim_attribute_storage+0x2e0>
+   bcde1:	e8 7a 68 f5 ff       	call   13660 <free@plt>
+   bcde6:	eb e8                	jmp    bcdd0 <maybe_trim_attribute_storage+0x2e0>
+   bcde8:	4c 89 e7             	mov    rdi,r12
+   bcdeb:	e8 70 68 f5 ff       	call   13660 <free@plt>
+   bcdf0:	48 85 ed             	test   rbp,rbp
+   bcdf3:	74 08                	je     bcdfd <maybe_trim_attribute_storage+0x30d>
+   bcdf5:	48 89 ef             	mov    rdi,rbp
+   bcdf8:	e8 63 68 f5 ff       	call   13660 <free@plt>
+   bcdfd:	4c 89 f8             	mov    rax,r15
+   bce00:	49 8d 9f a8 00 00 00 	lea    rbx,[r15+0xa8]
+   bce07:	4d 85 f6             	test   r14,r14
+   bce0a:	74 0b                	je     bce17 <maybe_trim_attribute_storage+0x327>
+   bce0c:	4c 89 f7             	mov    rdi,r14
+   bce0f:	e8 4c 68 f5 ff       	call   13660 <free@plt>
+   bce14:	4c 89 f8             	mov    rax,r15
+   bce17:	48 c7 80 d0 00 00 00 	mov    QWORD PTR [rax+0xd0],0x0
+   bce1e:	00 00 00 00 
+   bce22:	0f 57 c0             	xorps  xmm0,xmm0
+   bce25:	0f 11 43 10          	movups XMMWORD PTR [rbx+0x10],xmm0
+   bce29:	0f 11 03             	movups XMMWORD PTR [rbx],xmm0
+   bce2c:	e9 06 05 00 00       	jmp    bd337 <maybe_trim_attribute_storage+0x847>
+   bce31:	48 85 ff             	test   rdi,rdi
+   bce34:	74 05                	je     bce3b <maybe_trim_attribute_storage+0x34b>
+   bce36:	e8 25 68 f5 ff       	call   13660 <free@plt>
+   bce3b:	48 8b 7c 24 08       	mov    rdi,QWORD PTR [rsp+0x8]
+   bce40:	48 85 ff             	test   rdi,rdi
+   bce43:	48 8b 1c 24          	mov    rbx,QWORD PTR [rsp]
+   bce47:	74 05                	je     bce4e <maybe_trim_attribute_storage+0x35e>
+   bce49:	e8 12 68 f5 ff       	call   13660 <free@plt>
+   bce4e:	4d 85 ff             	test   r15,r15
+   bce51:	74 08                	je     bce5b <maybe_trim_attribute_storage+0x36b>
+   bce53:	4c 89 ff             	mov    rdi,r15
+   bce56:	e8 05 68 f5 ff       	call   13660 <free@plt>
+   bce5b:	48 85 db             	test   rbx,rbx
+   bce5e:	0f 84 d3 04 00 00    	je     bd337 <maybe_trim_attribute_storage+0x847>
+   bce64:	48 89 df             	mov    rdi,rbx
+   bce67:	48 83 c4 48          	add    rsp,0x48
+   bce6b:	5b                   	pop    rbx
+   bce6c:	41 5c                	pop    r12
+   bce6e:	41 5d                	pop    r13
+   bce70:	41 5e                	pop    r14
+   bce72:	41 5f                	pop    r15
+   bce74:	5d                   	pop    rbp
+   bce75:	e9 e6 67 f5 ff       	jmp    13660 <free@plt>
+   bce7a:	31 c0                	xor    eax,eax
+   bce7c:	f6 c3 01             	test   bl,0x1
+   bce7f:	0f 85 a4 00 00 00    	jne    bcf29 <maybe_trim_attribute_storage+0x439>
+   bce85:	48 69 c8 f8 00 00 00 	imul   rcx,rax,0xf8
+   bce8c:	48 8b 3c 24          	mov    rdi,QWORD PTR [rsp]
+   bce90:	48 8d 14 0f          	lea    rdx,[rdi+rcx*1]
+   bce94:	48 81 c2 d8 00 00 00 	add    rdx,0xd8
+   bce9b:	48 89 fe             	mov    rsi,rdi
+   bce9e:	48 01 ce             	add    rsi,rcx
+   bcea1:	48 89 54 0f 30       	mov    QWORD PTR [rdi+rcx*1+0x30],rdx
+   bcea6:	48 c7 44 0f 40 20 00 	mov    QWORD PTR [rdi+rcx*1+0x40],0x20
+   bcead:	00 00 
+   bceaf:	c7 04 0f 00 00 00 00 	mov    DWORD PTR [rdi+rcx*1],0x0
+   bceb6:	48 c7 44 0f 38 00 00 	mov    QWORD PTR [rdi+rcx*1+0x38],0x0
+   bcebd:	00 00 
+   bcebf:	0f 57 c0             	xorps  xmm0,xmm0
+   bcec2:	0f 11 44 0f 08       	movups XMMWORD PTR [rdi+rcx*1+0x8],xmm0
+   bcec7:	0f 11 44 0f 18       	movups XMMWORD PTR [rdi+rcx*1+0x18],xmm0
+   bcecc:	48 c7 44 0f 28 00 00 	mov    QWORD PTR [rdi+rcx*1+0x28],0x0
+   bced3:	00 00 
+   bced5:	0f 11 44 0f 48       	movups XMMWORD PTR [rdi+rcx*1+0x48],xmm0
+   bceda:	0f 11 44 0f 58       	movups XMMWORD PTR [rdi+rcx*1+0x58],xmm0
+   bcedf:	0f 11 44 0f 68       	movups XMMWORD PTR [rdi+rcx*1+0x68],xmm0
+   bcee4:	0f 11 44 0f 78       	movups XMMWORD PTR [rdi+rcx*1+0x78],xmm0
+   bcee9:	c7 84 0f 88 00 00 00 	mov    DWORD PTR [rdi+rcx*1+0x88],0x0
+   bcef0:	00 00 00 00 
+   bcef4:	0f 11 84 0f 90 00 00 	movups XMMWORD PTR [rdi+rcx*1+0x90],xmm0
+   bcefb:	00 
+   bcefc:	0f 11 84 0f a0 00 00 	movups XMMWORD PTR [rdi+rcx*1+0xa0],xmm0
+   bcf03:	00 
+   bcf04:	0f 11 84 0f b0 00 00 	movups XMMWORD PTR [rdi+rcx*1+0xb0],xmm0
+   bcf0b:	00 
+   bcf0c:	0f 11 84 0f c0 00 00 	movups XMMWORD PTR [rdi+rcx*1+0xc0],xmm0
+   bcf13:	00 
+   bcf14:	48 c7 84 0f d0 00 00 	mov    QWORD PTR [rdi+rcx*1+0xd0],0x0
+   bcf1b:	00 00 00 00 00 
+   bcf20:	48 8b 4c 24 08       	mov    rcx,QWORD PTR [rsp+0x8]
+   bcf25:	48 89 34 c1          	mov    QWORD PTR [rcx+rax*8],rsi
+   bcf29:	45 31 ff             	xor    r15d,r15d
+   bcf2c:	48 8b 2c 24          	mov    rbp,QWORD PTR [rsp]
+   bcf30:	e9 98 00 00 00       	jmp    bcfcd <maybe_trim_attribute_storage+0x4dd>
+   bcf35:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+   bcf3c:	00 00 00 00 
+   bcf40:	48 8d 43 08          	lea    rax,[rbx+0x8]
+   bcf44:	4c 89 63 30          	mov    QWORD PTR [rbx+0x30],r12
+   bcf48:	48 c7 43 40 20 00 00 	mov    QWORD PTR [rbx+0x40],0x20
+   bcf4f:	00 
+   bcf50:	c7 03 00 00 00 00    	mov    DWORD PTR [rbx],0x0
+   bcf56:	48 c7 43 38 00 00 00 	mov    QWORD PTR [rbx+0x38],0x0
+   bcf5d:	00 
+   bcf5e:	0f 11 48 10          	movups XMMWORD PTR [rax+0x10],xmm1
+   bcf62:	0f 11 08             	movups XMMWORD PTR [rax],xmm1
+   bcf65:	48 c7 40 20 00 00 00 	mov    QWORD PTR [rax+0x20],0x0
+   bcf6c:	00 
+   bcf6d:	0f 11 4b 78          	movups XMMWORD PTR [rbx+0x78],xmm1
+   bcf71:	0f 11 4b 68          	movups XMMWORD PTR [rbx+0x68],xmm1
+   bcf75:	0f 11 4b 58          	movups XMMWORD PTR [rbx+0x58],xmm1
+   bcf79:	0f 11 4b 48          	movups XMMWORD PTR [rbx+0x48],xmm1
+   bcf7d:	c7 83 88 00 00 00 00 	mov    DWORD PTR [rbx+0x88],0x0
+   bcf84:	00 00 00 
+   bcf87:	0f 11 8b 90 00 00 00 	movups XMMWORD PTR [rbx+0x90],xmm1
+   bcf8e:	0f 11 8b a0 00 00 00 	movups XMMWORD PTR [rbx+0xa0],xmm1
+   bcf95:	0f 11 8b b0 00 00 00 	movups XMMWORD PTR [rbx+0xb0],xmm1
+   bcf9c:	0f 11 8b c0 00 00 00 	movups XMMWORD PTR [rbx+0xc0],xmm1
+   bcfa3:	48 c7 83 d0 00 00 00 	mov    QWORD PTR [rbx+0xd0],0x0
+   bcfaa:	00 00 00 00 
+   bcfae:	48 8b 44 24 38       	mov    rax,QWORD PTR [rsp+0x38]
+   bcfb3:	4c 8b a0 c8 00 00 00 	mov    r12,QWORD PTR [rax+0xc8]
+   bcfba:	49 ff c7             	inc    r15
+   bcfbd:	48 81 c5 f8 00 00 00 	add    rbp,0xf8
+   bcfc4:	4d 39 e7             	cmp    r15,r12
+   bcfc7:	0f 83 3f 02 00 00    	jae    bd20c <maybe_trim_attribute_storage+0x71c>
+   bcfcd:	4b 8b 1c fe          	mov    rbx,QWORD PTR [r14+r15*8]
+   bcfd1:	48 39 dd             	cmp    rbp,rbx
+   bcfd4:	74 e4                	je     bcfba <maybe_trim_attribute_storage+0x4ca>
+   bcfd6:	4c 8d a5 90 00 00 00 	lea    r12,[rbp+0x90]
+   bcfdd:	48 8b bd 90 00 00 00 	mov    rdi,QWORD PTR [rbp+0x90]
+   bcfe4:	48 85 ff             	test   rdi,rdi
+   bcfe7:	74 1c                	je     bd005 <maybe_trim_attribute_storage+0x515>
+   bcfe9:	49 c7 04 24 00 00 00 	mov    QWORD PTR [r12],0x0
+   bcff0:	00 
+   bcff1:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   bcff8:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   bcfff:	00 
+   bd000:	e8 bb d9 01 00       	call   da9c0 <rxvm_reference_cell_release_slow>
+   bd005:	48 89 ef             	mov    rdi,rbp
+   bd008:	e8 43 e1 ff ff       	call   bb150 <clear_value_contents>
+   bd00d:	48 8d bd d8 00 00 00 	lea    rdi,[rbp+0xd8]
+   bd014:	48 89 7d 30          	mov    QWORD PTR [rbp+0x30],rdi
+   bd018:	48 c7 45 40 20 00 00 	mov    QWORD PTR [rbp+0x40],0x20
+   bd01f:	00 
+   bd020:	c7 45 00 00 00 00 00 	mov    DWORD PTR [rbp+0x0],0x0
+   bd027:	48 c7 45 38 00 00 00 	mov    QWORD PTR [rbp+0x38],0x0
+   bd02e:	00 
+   bd02f:	0f 57 c9             	xorps  xmm1,xmm1
+   bd032:	0f 11 4d 08          	movups XMMWORD PTR [rbp+0x8],xmm1
+   bd036:	0f 11 4d 18          	movups XMMWORD PTR [rbp+0x18],xmm1
+   bd03a:	48 c7 45 28 00 00 00 	mov    QWORD PTR [rbp+0x28],0x0
+   bd041:	00 
+   bd042:	0f 11 4d 48          	movups XMMWORD PTR [rbp+0x48],xmm1
+   bd046:	0f 11 4d 58          	movups XMMWORD PTR [rbp+0x58],xmm1
+   bd04a:	0f 11 4d 68          	movups XMMWORD PTR [rbp+0x68],xmm1
+   bd04e:	0f 11 4d 78          	movups XMMWORD PTR [rbp+0x78],xmm1
+   bd052:	c7 85 88 00 00 00 00 	mov    DWORD PTR [rbp+0x88],0x0
+   bd059:	00 00 00 
+   bd05c:	41 0f 11 4c 24 30    	movups XMMWORD PTR [r12+0x30],xmm1
+   bd062:	41 0f 11 4c 24 20    	movups XMMWORD PTR [r12+0x20],xmm1
+   bd068:	41 0f 11 4c 24 10    	movups XMMWORD PTR [r12+0x10],xmm1
+   bd06e:	41 0f 11 0c 24       	movups XMMWORD PTR [r12],xmm1
+   bd073:	49 c7 44 24 40 00 00 	mov    QWORD PTR [r12+0x40],0x0
+   bd07a:	00 00 
+   bd07c:	8b 03                	mov    eax,DWORD PTR [rbx]
+   bd07e:	89 45 00             	mov    DWORD PTR [rbp+0x0],eax
+   bd081:	48 8b 43 08          	mov    rax,QWORD PTR [rbx+0x8]
+   bd085:	48 89 45 08          	mov    QWORD PTR [rbp+0x8],rax
+   bd089:	f2 0f 10 43 10       	movsd  xmm0,QWORD PTR [rbx+0x10]
+   bd08e:	f2 0f 11 45 10       	movsd  QWORD PTR [rbp+0x10],xmm0
+   bd093:	48 8b 83 a0 00 00 00 	mov    rax,QWORD PTR [rbx+0xa0]
+   bd09a:	48 89 85 a0 00 00 00 	mov    QWORD PTR [rbp+0xa0],rax
+   bd0a1:	48 c7 83 a0 00 00 00 	mov    QWORD PTR [rbx+0xa0],0x0
+   bd0a8:	00 00 00 00 
+   bd0ac:	48 8b 43 18          	mov    rax,QWORD PTR [rbx+0x18]
+   bd0b0:	48 85 c0             	test   rax,rax
+   bd0b3:	74 1b                	je     bd0d0 <maybe_trim_attribute_storage+0x5e0>
+   bd0b5:	48 8d 4b 18          	lea    rcx,[rbx+0x18]
+   bd0b9:	48 89 45 18          	mov    QWORD PTR [rbp+0x18],rax
+   bd0bd:	0f 10 43 20          	movups xmm0,XMMWORD PTR [rbx+0x20]
+   bd0c1:	0f 11 45 20          	movups XMMWORD PTR [rbp+0x20],xmm0
+   bd0c5:	0f 11 09             	movups XMMWORD PTR [rcx],xmm1
+   bd0c8:	48 c7 41 10 00 00 00 	mov    QWORD PTR [rcx+0x10],0x0
+   bd0cf:	00 
+   bd0d0:	48 8b 73 30          	mov    rsi,QWORD PTR [rbx+0x30]
+   bd0d4:	4c 8d a3 d8 00 00 00 	lea    r12,[rbx+0xd8]
+   bd0db:	4c 39 e6             	cmp    rsi,r12
+   bd0de:	74 1e                	je     bd0fe <maybe_trim_attribute_storage+0x60e>
+   bd0e0:	48 89 75 30          	mov    QWORD PTR [rbp+0x30],rsi
+   bd0e4:	0f 10 43 38          	movups xmm0,XMMWORD PTR [rbx+0x38]
+   bd0e8:	0f 11 45 38          	movups XMMWORD PTR [rbp+0x38],xmm0
+   bd0ec:	0f 10 43 48          	movups xmm0,XMMWORD PTR [rbx+0x48]
+   bd0f0:	0f 11 45 48          	movups XMMWORD PTR [rbp+0x48],xmm0
+   bd0f4:	48 8b 43 58          	mov    rax,QWORD PTR [rbx+0x58]
+   bd0f8:	48 89 45 58          	mov    QWORD PTR [rbp+0x58],rax
+   bd0fc:	eb 25                	jmp    bd123 <maybe_trim_attribute_storage+0x633>
+   bd0fe:	48 8b 53 38          	mov    rdx,QWORD PTR [rbx+0x38]
+   bd102:	48 89 55 38          	mov    QWORD PTR [rbp+0x38],rdx
+   bd106:	0f 10 43 48          	movups xmm0,XMMWORD PTR [rbx+0x48]
+   bd10a:	0f 11 45 48          	movups XMMWORD PTR [rbp+0x48],xmm0
+   bd10e:	48 8b 43 58          	mov    rax,QWORD PTR [rbx+0x58]
+   bd112:	48 89 45 58          	mov    QWORD PTR [rbp+0x58],rax
+   bd116:	48 85 d2             	test   rdx,rdx
+   bd119:	74 08                	je     bd123 <maybe_trim_attribute_storage+0x633>
+   bd11b:	e8 10 63 f5 ff       	call   13430 <memcpy@plt>
+   bd120:	0f 57 c9             	xorps  xmm1,xmm1
+   bd123:	48 8b 43 60          	mov    rax,QWORD PTR [rbx+0x60]
+   bd127:	48 85 c0             	test   rax,rax
+   bd12a:	74 3f                	je     bd16b <maybe_trim_attribute_storage+0x67b>
+   bd12c:	48 8d 4b 60          	lea    rcx,[rbx+0x60]
+   bd130:	0f 10 43 68          	movups xmm0,XMMWORD PTR [rbx+0x68]
+   bd134:	0f 11 45 68          	movups XMMWORD PTR [rbp+0x68],xmm0
+   bd138:	48 89 45 60          	mov    QWORD PTR [rbp+0x60],rax
+   bd13c:	48 8b 43 78          	mov    rax,QWORD PTR [rbx+0x78]
+   bd140:	48 89 45 78          	mov    QWORD PTR [rbp+0x78],rax
+   bd144:	48 8b 83 80 00 00 00 	mov    rax,QWORD PTR [rbx+0x80]
+   bd14b:	48 89 85 80 00 00 00 	mov    QWORD PTR [rbp+0x80],rax
+   bd152:	8b 83 88 00 00 00    	mov    eax,DWORD PTR [rbx+0x88]
+   bd158:	89 85 88 00 00 00    	mov    DWORD PTR [rbp+0x88],eax
+   bd15e:	0f 11 49 1c          	movups XMMWORD PTR [rcx+0x1c],xmm1
+   bd162:	0f 11 49 10          	movups XMMWORD PTR [rcx+0x10],xmm1
+   bd166:	0f 11 09             	movups XMMWORD PTR [rcx],xmm1
+   bd169:	eb 2f                	jmp    bd19a <maybe_trim_attribute_storage+0x6aa>
+   bd16b:	48 8b 83 80 00 00 00 	mov    rax,QWORD PTR [rbx+0x80]
+   bd172:	48 89 85 80 00 00 00 	mov    QWORD PTR [rbp+0x80],rax
+   bd179:	8b 83 88 00 00 00    	mov    eax,DWORD PTR [rbx+0x88]
+   bd17f:	89 85 88 00 00 00    	mov    DWORD PTR [rbp+0x88],eax
+   bd185:	48 c7 83 80 00 00 00 	mov    QWORD PTR [rbx+0x80],0x0
+   bd18c:	00 00 00 00 
+   bd190:	c7 83 88 00 00 00 00 	mov    DWORD PTR [rbx+0x88],0x0
+   bd197:	00 00 00 
+   bd19a:	0f 10 83 a8 00 00 00 	movups xmm0,XMMWORD PTR [rbx+0xa8]
+   bd1a1:	0f 11 85 a8 00 00 00 	movups XMMWORD PTR [rbp+0xa8],xmm0
+   bd1a8:	48 8b 83 b8 00 00 00 	mov    rax,QWORD PTR [rbx+0xb8]
+   bd1af:	48 89 85 b8 00 00 00 	mov    QWORD PTR [rbp+0xb8],rax
+   bd1b6:	0f 10 83 c0 00 00 00 	movups xmm0,XMMWORD PTR [rbx+0xc0]
+   bd1bd:	0f 11 85 c0 00 00 00 	movups XMMWORD PTR [rbp+0xc0],xmm0
+   bd1c4:	48 8b 83 d0 00 00 00 	mov    rax,QWORD PTR [rbx+0xd0]
+   bd1cb:	48 89 85 d0 00 00 00 	mov    QWORD PTR [rbp+0xd0],rax
+   bd1d2:	48 8b 83 90 00 00 00 	mov    rax,QWORD PTR [rbx+0x90]
+   bd1d9:	48 85 c0             	test   rax,rax
+   bd1dc:	74 12                	je     bd1f0 <maybe_trim_attribute_storage+0x700>
+   bd1de:	48 89 85 90 00 00 00 	mov    QWORD PTR [rbp+0x90],rax
+   bd1e5:	c7 40 0c 01 00 00 00 	mov    DWORD PTR [rax+0xc],0x1
+   bd1ec:	48 89 68 18          	mov    QWORD PTR [rax+0x18],rbp
+   bd1f0:	48 8b 83 98 00 00 00 	mov    rax,QWORD PTR [rbx+0x98]
+   bd1f7:	48 85 c0             	test   rax,rax
+   bd1fa:	0f 84 40 fd ff ff    	je     bcf40 <maybe_trim_attribute_storage+0x450>
+   bd200:	48 89 85 98 00 00 00 	mov    QWORD PTR [rbp+0x98],rax
+   bd207:	e9 34 fd ff ff       	jmp    bcf40 <maybe_trim_attribute_storage+0x450>
+   bd20c:	4d 85 e4             	test   r12,r12
+   bd20f:	4c 8b 7c 24 38       	mov    r15,QWORD PTR [rsp+0x38]
+   bd214:	48 8b 6c 24 40       	mov    rbp,QWORD PTR [rsp+0x40]
+   bd219:	48 8b 3c 24          	mov    rdi,QWORD PTR [rsp]
+   bd21d:	4c 8b 44 24 18       	mov    r8,QWORD PTR [rsp+0x18]
+   bd222:	74 43                	je     bd267 <maybe_trim_attribute_storage+0x777>
+   bd224:	31 c0                	xor    eax,eax
+   bd226:	eb 17                	jmp    bd23f <maybe_trim_attribute_storage+0x74f>
+   bd228:	0f 1f 84 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+   bd22f:	00 
+   bd230:	48 89 d1             	mov    rcx,rdx
+   bd233:	49 89 0c c0          	mov    QWORD PTR [r8+rax*8],rcx
+   bd237:	48 ff c0             	inc    rax
+   bd23a:	4c 39 e0             	cmp    rax,r12
+   bd23d:	74 28                	je     bd267 <maybe_trim_attribute_storage+0x777>
+   bd23f:	48 8b 54 c5 00       	mov    rdx,QWORD PTR [rbp+rax*8+0x0]
+   bd244:	48 89 f9             	mov    rcx,rdi
+   bd247:	31 f6                	xor    esi,esi
+   bd249:	0f 1f 80 00 00 00 00 	nop    DWORD PTR [rax+0x0]
+   bd250:	49 3b 14 f6          	cmp    rdx,QWORD PTR [r14+rsi*8]
+   bd254:	74 dd                	je     bd233 <maybe_trim_attribute_storage+0x743>
+   bd256:	48 ff c6             	inc    rsi
+   bd259:	48 81 c1 f8 00 00 00 	add    rcx,0xf8
+   bd260:	49 39 f4             	cmp    r12,rsi
+   bd263:	75 eb                	jne    bd250 <maybe_trim_attribute_storage+0x760>
+   bd265:	eb c9                	jmp    bd230 <maybe_trim_attribute_storage+0x740>
+   bd267:	48 8b 54 24 10       	mov    rdx,QWORD PTR [rsp+0x10]
+   bd26c:	4c 29 e2             	sub    rdx,r12
+   bd26f:	76 16                	jbe    bd287 <maybe_trim_attribute_storage+0x797>
+   bd271:	4b 8d 3c e0          	lea    rdi,[r8+r12*8]
+   bd275:	48 8b 44 24 08       	mov    rax,QWORD PTR [rsp+0x8]
+   bd27a:	4a 8d 34 e0          	lea    rsi,[rax+r12*8]
+   bd27e:	48 c1 e2 03          	shl    rdx,0x3
+   bd282:	e8 a9 61 f5 ff       	call   13430 <memcpy@plt>
+   bd287:	31 db                	xor    ebx,ebx
+   bd289:	4c 8b 64 24 30       	mov    r12,QWORD PTR [rsp+0x30]
+   bd28e:	eb 08                	jmp    bd298 <maybe_trim_attribute_storage+0x7a8>
+   bd290:	48 ff c3             	inc    rbx
+   bd293:	49 39 dd             	cmp    r13,rbx
+   bd296:	74 10                	je     bd2a8 <maybe_trim_attribute_storage+0x7b8>
+   bd298:	49 8b 3c de          	mov    rdi,QWORD PTR [r14+rbx*8]
+   bd29c:	48 85 ff             	test   rdi,rdi
+   bd29f:	74 ef                	je     bd290 <maybe_trim_attribute_storage+0x7a0>
+   bd2a1:	e8 aa de ff ff       	call   bb150 <clear_value_contents>
+   bd2a6:	eb e8                	jmp    bd290 <maybe_trim_attribute_storage+0x7a0>
+   bd2a8:	4d 85 e4             	test   r12,r12
+   bd2ab:	74 33                	je     bd2e0 <maybe_trim_attribute_storage+0x7f0>
+   bd2ad:	4c 8b 6c 24 28       	mov    r13,QWORD PTR [rsp+0x28]
+   bd2b2:	4d 85 ed             	test   r13,r13
+   bd2b5:	74 21                	je     bd2d8 <maybe_trim_attribute_storage+0x7e8>
+   bd2b7:	31 db                	xor    ebx,ebx
+   bd2b9:	eb 0d                	jmp    bd2c8 <maybe_trim_attribute_storage+0x7d8>
+   bd2bb:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+   bd2c0:	48 ff c3             	inc    rbx
+   bd2c3:	49 39 dd             	cmp    r13,rbx
+   bd2c6:	74 10                	je     bd2d8 <maybe_trim_attribute_storage+0x7e8>
+   bd2c8:	49 8b 3c dc          	mov    rdi,QWORD PTR [r12+rbx*8]
+   bd2cc:	48 85 ff             	test   rdi,rdi
+   bd2cf:	74 ef                	je     bd2c0 <maybe_trim_attribute_storage+0x7d0>
+   bd2d1:	e8 8a 63 f5 ff       	call   13660 <free@plt>
+   bd2d6:	eb e8                	jmp    bd2c0 <maybe_trim_attribute_storage+0x7d0>
+   bd2d8:	4c 89 e7             	mov    rdi,r12
+   bd2db:	e8 80 63 f5 ff       	call   13660 <free@plt>
+   bd2e0:	48 85 ed             	test   rbp,rbp
+   bd2e3:	74 08                	je     bd2ed <maybe_trim_attribute_storage+0x7fd>
+   bd2e5:	48 89 ef             	mov    rdi,rbp
+   bd2e8:	e8 73 63 f5 ff       	call   13660 <free@plt>
+   bd2ed:	4c 89 f7             	mov    rdi,r14
+   bd2f0:	e8 6b 63 f5 ff       	call   13660 <free@plt>
+   bd2f5:	48 8b 44 24 20       	mov    rax,QWORD PTR [rsp+0x20]
+   bd2fa:	48 8b 0c 24          	mov    rcx,QWORD PTR [rsp]
+   bd2fe:	48 89 08             	mov    QWORD PTR [rax],rcx
+   bd301:	48 8b 4c 24 18       	mov    rcx,QWORD PTR [rsp+0x18]
+   bd306:	49 89 8f a8 00 00 00 	mov    QWORD PTR [r15+0xa8],rcx
+   bd30d:	48 8b 4c 24 08       	mov    rcx,QWORD PTR [rsp+0x8]
+   bd312:	49 89 8f b0 00 00 00 	mov    QWORD PTR [r15+0xb0],rcx
+   bd319:	49 89 87 b8 00 00 00 	mov    QWORD PTR [r15+0xb8],rax
+   bd320:	49 c7 87 d0 00 00 00 	mov    QWORD PTR [r15+0xd0],0x1
+   bd327:	01 00 00 00 
+   bd32b:	48 8b 44 24 10       	mov    rax,QWORD PTR [rsp+0x10]
+   bd330:	49 89 87 c0 00 00 00 	mov    QWORD PTR [r15+0xc0],rax
+   bd337:	48 83 c4 48          	add    rsp,0x48
+   bd33b:	5b                   	pop    rbx
+   bd33c:	41 5c                	pop    r12
+   bd33e:	41 5d                	pop    r13
+   bd340:	41 5e                	pop    r14
+   bd342:	41 5f                	pop    r15
+   bd344:	5d                   	pop    rbp
+   bd345:	c3                   	ret
+
+Disassembly of section .fini:

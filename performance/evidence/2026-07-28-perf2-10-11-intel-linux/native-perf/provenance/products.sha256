@@ -1,0 +1,7 @@
+c4fbe32a5df9d4562d69e6a37217905c4af6082ff54f6010c50cb6e7eb3d312e  /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxvm
+9cda6f69d6b1be5b8d345cc64ab3afc7593f75cad62b3670c98f4262dc30a58d  /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxbvm
+812117ce6d6c410ec19c30b5f3b77cc87a231f504a6e511533b10efe8e2a86c0  /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/rxvm
+3c2d3010fa16ff5bdee279486c1c9581580256b46112665fd6a9c59cf7451c10  /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/rxbvm
+637c816a010255cd33260d86f24f700c8be9b1d62a3eaf0e8d9e9bdcdbdacf9b  /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/library.rxbin
+f5cdbe4ff3457e2ada497215b6c3a7be376bd7411cdd143a4ceba6db1c5803d4  performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-gcc-baseline-v1.txt
+33b6227b16eb10bf3d381facc39fd6df43670faa8e35c3e7c1a53595c6db9cc5  performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-clang-baseline-v1.txt

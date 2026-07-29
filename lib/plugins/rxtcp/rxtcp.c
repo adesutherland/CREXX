@@ -285,7 +285,9 @@ PROCEDURE(tcpreceive) {
     }
 
     buffer[total_received] = '\0';
-    RETURNSTRX(buffer);
+    SETSTRING(RETURN, buffer);
+    free(buffer);
+    PROCRETURN
     ENDPROC
 }
 

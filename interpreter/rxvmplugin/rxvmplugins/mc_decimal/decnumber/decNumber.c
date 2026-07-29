@@ -2335,6 +2335,7 @@ decNumber * decNumberPower(decNumber *res, const decNumber *lhs,
   decNumber *allocinv=NULL;        // -> allocated 1/x buffer, iff used
   Int   reqdigits=set->digits;     // requested DIGITS
   Int   n;                         // rhs in binary
+  uInt  nbits;                     // rhs bits for unsigned power scan
   Flag  rhsint=0;                  // 1 if rhs is an integer
   Flag  useint=0;                  // 1 if can use integer calculation
   Flag  isoddint=0;                // 1 if rhs is an integer and odd
@@ -2502,6 +2503,7 @@ decNumber * decNumberPower(decNumber *res, const decNumber *lhs,
         break;}
       // rhs is a non-zero integer
       if (n<0) n=-n;                    // use abs(n)
+      nbits=(uInt)n;
 
       aset=*set;                        // clone the context
       aset.round=DEC_ROUND_HALF_EVEN;   // internally use balanced
@@ -2590,8 +2592,8 @@ decNumber * decNumberPower(decNumber *res, const decNumber *lhs,
           }
         // [the following two lines revealed an optimizer bug in a C++
         // compiler, with symptom: 5**3 -> 25, when n=n+n was used]
-        n=n<<1;                    // move next bit to testable position
-        if (n<0) {                 // top bit is set
+        nbits=nbits<<1;            // move next bit to testable position
+        if (nbits&((uInt)1<<31)) { // top bit is set
           seenbit=1;               // OK, significant bit seen
           decMultiplyOp(dac, dac, lhs, &aset, &status); // dac=dac*x
           }
@@ -5847,7 +5849,7 @@ decNumber * decExpOp(decNumber *res, const decNumber *rhs,
     if (h>0) {
       Int seenbit=0;               // set once a 1-bit is seen
       Int i;                       // counter
-      Int n=powers[h];             // always positive
+      uInt n=(uInt)powers[h];      // always positive
       aset.digits=p+2;             // sufficient precision
       // avoid the overhead and many extra digits of decNumberPower
       // as all that is needed is the short 'multipliers' loop; here
@@ -5858,7 +5860,7 @@ decNumber * decExpOp(decNumber *res, const decNumber *rhs,
         if (*status & (DEC_Overflow|DEC_Underflow)) { // interesting?
           if (*status&DEC_Overflow || ISZERO(t)) break;}
         n=n<<1;                    // move next bit to testable position
-        if (n<0) {                 // top bit is set
+        if (n&((uInt)1<<31)) {     // top bit is set
           seenbit=1;               // OK, have a significant bit
           decMultiplyOp(t, t, a, &aset, status); // acc=acc*x
           }
