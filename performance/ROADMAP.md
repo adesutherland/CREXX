@@ -313,6 +313,27 @@ No profiling, tuning candidate or rebuild-heavy analysis was performed on the
 Windows host. Gate E remains open for supported Linux ARM64 coverage and the
 later whole-scorecard architecture decision.
 
+### Windows compiler and RexxCPS follow-up - 2026-07-30
+
+A bounded same-session Windows experiment compared MinGW GCC 15.2 and portable
+Clang 22.1.8 `rxvm`/`rxbvm` products at Release `-O3 -DNDEBUG`, profiling off,
+with identical GCC-generated RXBIN/library inputs. The common-five Clang/GCC
+geometric means are 0.989609x for threaded `rxvm` and 1.178044x for switch
+`rxbvm`; RexxCPS itself is 0.968556x/1.029856x. Compiler choice therefore does
+not explain the 31-34% Windows/Linux cREXX RexxCPS rate difference.
+
+The cross-platform review also ran the exact retained macOS/Linux Java 8
+NetRexx class and identical runtime JAR on Windows. It reaches 19,032,852.5
+clauses/s versus 7,980,203.5 in the retained Linux GCC session, excluding the
+Windows ECJ versus Unix `javac` class-generation difference as the main cause.
+The remaining comparator difference belongs to the Windows JVM/OS lane.
+
+No production compiler, VM or optimization was selected and no Windows
+profiling was performed. Clang's workload-specific `rxbvm` gains are a future
+code-layout/dispatch lead for a faster profiling host; Linux remains the
+tuning-control report. Evidence:
+[`2026-07-30-perf2-11-windows-compiler-comparison`](evidence/2026-07-30-perf2-11-windows-compiler-comparison/).
+
 No production optimization or compiler/layout option is selected. Richards
 selects general value copying and attribute-storage trimming; Towers selects
 copy/clear/reset/allocation work plus front-end/indirect-branch pressure;

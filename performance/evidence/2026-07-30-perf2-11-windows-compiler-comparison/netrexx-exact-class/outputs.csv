@@ -1,0 +1,157 @@
+sample_id,stream,line_number,text
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,5,                       of 1000 clauses (over 1.0173886    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,7,Total (full DOs): 1.0173886 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,8,Time for one iteration (1000 clauses) was: 0.00005085445 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,10,     Performance: 19_663_963 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,11,                ( 19.664E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,5,                       of 1000 clauses (over 1.024651    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,7,Total (full DOs): 1.024651 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,8,Time for one iteration (1000 clauses) was: 0.00005121473 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,10,     Performance: 19_525_633 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,11,                ( 19.526E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,5,                       of 1000 clauses (over 1.027759    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,7,Total (full DOs): 1.027759 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,8,Time for one iteration (1000 clauses) was: 0.000051372645 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,10,     Performance: 19_465_612 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,11,                ( 19.466E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,5,                       of 1000 clauses (over 1.0384152    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,7,Total (full DOs): 1.0384152 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,8,Time for one iteration (1000 clauses) was: 0.000051906155 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,10,     Performance: 19_265_538 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,11,                ( 19.266E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,5,                       of 1000 clauses (over 1.0365    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,7,Total (full DOs): 1.0365 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,8,Time for one iteration (1000 clauses) was: 0.000051808105 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,10,     Performance: 19_301_999 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,11,                ( 19.302E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,5,                       of 1000 clauses (over 1.1838483    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,7,Total (full DOs): 1.1838483 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,8,Time for one iteration (1000 clauses) was: 0.000059176465 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,10,     Performance: 16_898_610 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,11,                ( 16.899E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,5,                       of 1000 clauses (over 1.0441922    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,7,Total (full DOs): 1.0441922 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,8,Time for one iteration (1000 clauses) was: 0.000052192685 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,10,     Performance: 19_159_773 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,11,                ( 19.160E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,5,                       of 1000 clauses (over 1.0455614    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,7,Total (full DOs): 1.0455614 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,8,Time for one iteration (1000 clauses) was: 0.000052262555 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,10,     Performance: 19_134_158 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,11,                ( 19.134E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,5,                       of 1000 clauses (over 1.0400512    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,7,Total (full DOs): 1.0400512 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,8,Time for one iteration (1000 clauses) was: 0.00005198686 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,10,     Performance: 19_235_630 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,11,                ( 19.236E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,5,                       of 1000 clauses (over 1.0360138    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,7,Total (full DOs): 1.0360138 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,8,Time for one iteration (1000 clauses) was: 0.00005178385 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,10,     Performance: 19_311_040 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,11,                ( 19.311E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,5,                       of 1000 clauses (over 1.1508233    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,7,Total (full DOs): 1.1508233 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,8,Time for one iteration (1000 clauses) was: 0.000057525115 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,10,     Performance: 17_383_711 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,11,                ( 17.384E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,5,                       of 1000 clauses (over 1.0666484    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,7,Total (full DOs): 1.0666484 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,8,Time for one iteration (1000 clauses) was: 0.000053315065 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,10,     Performance: 18_756_425 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,11,                ( 18.756E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation

@@ -690,32 +690,27 @@ merge_sample_files: procedure = .string[]
   merged = .string[]
   expected_header = "sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit"
   do path_index = 1 to paths[0]
-    input = read_text_lines(paths[path_index])
-    if input[0] = 0 then do
-      say "ERROR: sample file is empty or unreadable:" paths[path_index]
+    path = paths[path_index]
+    if \lines(path) then do
+      say "ERROR: sample file is empty or unreadable:" path
+      call linein path
       empty = .string[]
       return empty
     end
-    if input[1] <> expected_header then do
-      say "ERROR: unexpected sample header:" paths[path_index]
+    header = linein(path)
+    if header <> expected_header then do
+      say "ERROR: unexpected sample header:" path
+      call linein path
       empty = .string[]
       return empty
     end
     if merged[0] = 0 then merged[1] = expected_header
-    do line_index = 2 to input[0]
-      merged[merged[0] + 1] = input[line_index]
+    do while lines(path)
+      merged[merged[0] + 1] = linein(path)
     end
+    call linein path
   end
   return merged
-
-read_text_lines: procedure = .string[]
-  arg path = .string
-  result = .string[]
-  do while lines(path)
-    result[result[0] + 1] = linein(path)
-  end
-  call linein path
-  return result
 
 parse_csv_line: procedure = .string[]
   arg line = .string

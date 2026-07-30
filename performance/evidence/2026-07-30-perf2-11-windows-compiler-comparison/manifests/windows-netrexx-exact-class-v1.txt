@@ -1,0 +1,4 @@
+# Exact-class NetRexx control. This executes the byte-identical Java 8 class
+# retained by the macOS and Linux lanes on the Windows Temurin 26.0.1+8 JVM.
+crexx-cross-runtime-matrix|1
+rexxcps-netrexx-exact-class|RexxCPS|netrexx-exact-class|netrexx-exact-class|disclosed-2.2n-javac8-exact|A|no|no|1000-clauses|PASS: RexxCPS 2.2n NetRexx disclosed adaptation|Performance:|powershell.exe;-NoProfile;-ExecutionPolicy;Bypass;-File;C:/Users/adria/CLionProjects/CREXX/performance/tools/run_java_class.ps1;-Java;C:/Users/adria/CLionProjects/CREXX/.tmp-windows-runtimes/runtimes/temurin/jdk-26.0.1+8/bin/java.exe;-ClassDirectory;C:/Users/adria/CLionProjects/CREXX/performance/evidence/2026-07-27-perf2-09-mac-closure/generated/netrexx;-RuntimeJar;C:/Users/adria/CLionProjects/CREXX/.tmp-windows-runtimes/runtimes/netrexx/runlib/NetRexxR.jar;-MainClass;rexxcps_2_2n

@@ -1,0 +1,2 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rexxcps-netrexx-exact-class,RexxCPS,netrexx-exact-class,netrexx-exact-class,disclosed-2.2n-javac8-exact,A,no,no,1000-clauses,benchmark_rate,10,17784757.000000,18929950.250000,18973644.500000,19051315.250000,19283102.000000,71975.500000,0.379345,7.896980,no

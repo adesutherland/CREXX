@@ -1,0 +1,13 @@
+captured_utc=2026-07-30T08:32:33.7703058Z
+repository_head=ccb71bb1eccffb4fb5de7524f94d27d26420264c
+repository_branch=develop
+formal_compiler_matrix=384 of 384 executions passed
+formal_compiler_append=60 of 60 executions passed
+formal_exact_class=24 of 24 executions passed
+samples_removed=0
+compiler_summary_direct_merge=pass
+exact_class_summary_direct_merge=pass
+direct_vs_mechanical_summary_hashes=identical
+competing_build_test_benchmark_processes=none
+profiling_performed=no
+production_compiler_selected=no

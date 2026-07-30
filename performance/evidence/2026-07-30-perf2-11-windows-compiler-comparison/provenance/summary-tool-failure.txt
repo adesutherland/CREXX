@@ -1,0 +1,10 @@
+scope=diagnostic; no formal sample was lost or changed
+operation=summary-only with initial and append sample CSVs
+original_exit_code=-1073740940
+original_windows_status=0xC0000374 heap corruption
+cause=merge_sample_files retained a whole-file temporary Level B array while extending the merged array
+fix=stream each validated input directly into the merged collection
+self_test=pass
+compiler_two_file_summary=pass
+exact_class_two_file_summary=pass
+direct_vs_independent_mechanical_summary=byte-identical for summary.csv ratios.csv geomeans.csv

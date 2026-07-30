@@ -42,11 +42,13 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/evidence/2026-07-27-perf2-09-mac-closure/` | Formal same-session Mac closure: common-five scorecard, Towers/RexxCPS/lifecycle lanes, RSS/artifacts, workload dossiers and recursive checksums |
 | `performance/evidence/2026-07-28-perf2-10-11-intel-linux/` | Initial Intel Linux x86-64 handover: GCC/Clang correctness and sanitizer closure, formal runtime/RSS/lifecycle/artifacts, schema-5 profiles, native PMU attribution and macOS handback |
 | `performance/evidence/2026-07-29-perf2-11-windows-x86-64/` | Windows x86-64 correctness and formal timing/RSS/lifecycle/artifact scorecard under the supported CLion MinGW toolchain; no profiling or tuning |
+| `performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/` | Same-session Windows GCC/Clang `-O3` comparison, cross-platform RexxCPS review and exact-class NetRexx control; no profiling |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
 | `performance/tools/run_evidence_bundle.crexx` | Level B exact-image timing/profile/RXSEQ bundle orchestration and reporting |
 | `performance/tools/run_cross_runtime_matrix.crexx` | Level B compact formal timing/RSS matrix capture, summary and aggregate reporting |
+| `performance/tools/run_java_class.ps1` | Windows Java launcher that preserves the classpath as one argument inside semicolon-delimited matrix manifests |
 | `performance/tools/windows_peak_rss.ps1` | Native Windows child-process peak working-set sampler used by the formal matrix RSS fallback |
 | `performance/tools/inventory_performance_artifacts.crexx` | Level B hash/size inventory for versioned performance artifact manifests |
 | `performance/tools/report_nr09_macro_timings.zsh` | NR-09 all-form component/macro timing and review-ledger report from paired schema-4 profiles |
@@ -88,7 +90,14 @@ process-inclusive `work / elapsed` normalized throughput; raw elapsed time and
 the exact work count remain in `samples.csv`. `--summary-only` with one or more
 `--samples PATH` arguments refreshes the summary/ratio/geomean files from an
 initial capture plus policy-required append blocks without changing the raw
-captures.
+captures. Sample files are streamed into the merged collection so Windows
+multi-file summaries do not retain a second whole-file array for each input.
+
+`tools/run_java_class.ps1` is a Windows-only matrix adapter for Java controls.
+The manifest format uses semicolons as argv separators, which conflicts with
+the Windows Java classpath separator. The adapter accepts the Java executable,
+class directory, runtime JAR and main class as separate manifest arguments,
+constructs one native classpath argument and preserves the child exit code.
 
 Formal campaigns and publications follow
 [`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md). Qualification pilots
