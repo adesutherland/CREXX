@@ -594,6 +594,22 @@ static int flow_do_is_loop(ASTNode *node) {
     return 0;
 }
 
+static int flow_do_is_unconditional_forever(ASTNode *node) {
+    ASTNode *child;
+    int has_forever = 0;
+
+    for (child = node ? node->child : 0; child; child = child->sibling) {
+        if (child->node_type == REPEAT && nodeis(child, "forever")) {
+            has_forever = 1;
+        } else if (child->node_type == WHILE || child->node_type == UNTIL ||
+                   child->node_type == FOR || child->node_type == TO ||
+                   child->node_type == BY) {
+            return 0;
+        }
+    }
+    return has_forever;
+}
+
 static void flow_collect_do_condition(RxcpFlowProcedure *procedure,
                                       int block_id,
                                       ASTNode *node) {
@@ -659,7 +675,8 @@ static int flow_build_do(FlowBuilder *builder,
     loop_control.parent = control;
     body_entry = flow_build_sequence(builder, body->child, latch_block, &loop_control);
     if (body_entry < 0 ||
-        !flow_add_edge(procedure, condition_block, body_entry) ||
+        !flow_add_edge(procedure, condition_block, body_entry)) return -1;
+    if (!flow_do_is_unconditional_forever(node) &&
         !flow_add_edge(procedure, condition_block, next)) return -1;
 
     if (!initial) return condition_block;

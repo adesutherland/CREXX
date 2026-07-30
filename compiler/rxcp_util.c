@@ -1105,7 +1105,9 @@ char *ast_interpolate_exit_fragment(const char *prefix,
     return interpolated;
 }
 
-int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code, ASTNode **node_map, size_t num_tokens) {
+int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code,
+                          ASTNode **node_map, size_t num_tokens,
+                          int certified_exit_fragment) {
     SourceMap *map;
     char *interpolated;
     size_t int_pos;
@@ -1126,7 +1128,12 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     frag->master_context = ctx->master_context;
     frag->location = ctx->location;
     frag->file_name = "exit_fragment";
-    frag->level = ctx->level;
+    /* Certified exits are registered compiler components whose replacement
+     * fragments are explicitly prefixed with OPTIONS LEVELB above. Validate
+     * those internal fragments at that declared level before grafting them
+     * into a source AST. Non-certified replacement code retains the caller's
+     * level and cannot use Level-B-only source features. */
+    frag->level = certified_exit_fragment ? LEVELB : ctx->level;
     frag->debug_mode = ctx->debug_mode;
     frag->disable_exits = ctx->disable_exits;
     frag->floats_decimal = ctx->floats_decimal;
@@ -1168,6 +1175,14 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
             ast_copy_source_anchor(compiler_added, target_node, AST_SOURCE_SYNTHETIC);
             ast_mark_compiler_generated_block(compiler_added);
             compiler_added->mark_internal_diagnostics = 1;
+            if (certified_exit_fragment) {
+                ast_attach_semantic_context(
+                    compiler_added,
+                    ast_make_semantic_context(ctx,
+                                              AST_SEMANTIC_CONTEXT_CERTIFIED_EXIT,
+                                              target_node,
+                                              "certified-exit-fragment"));
+            }
             compiler_added->parent = target_node->parent;
             compiler_added->scope = NULL;
 
@@ -1217,7 +1232,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
 }
 
 int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
-    return ast_grft_interpolated(ctx, target_node, rexx_code, NULL, 0);
+    return ast_grft_interpolated(ctx, target_node, rexx_code, NULL, 0, 0);
 }
 
 const char* node_type_to_string(NodeType type) {

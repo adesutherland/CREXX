@@ -2539,6 +2539,16 @@ walker_result type_safety_walker(walker_direction direction,
                 else if (rxcp_binary_memory_is_access(child1)) {
                     RxcpBinaryStorageInfo info;
                     if (binary_memory_storage_info(context, child1, &info)) {
+                        ASTNode *base = 0;
+
+                        /* A typed binary-memory store mutates its base even
+                         * though the syntactic LHS is the <at..T> access node.
+                         * Keep that write visible to argument-isolation and
+                         * inline-summary analysis. */
+                        if (rxcp_binary_memory_at_parts(child1, 0, &base, 0) &&
+                            base && base->symbolNode) {
+                            base->symbolNode->writeUsage = 1;
+                        }
                         if (rxcp_binary_memory_base_is_readonly(child1)) {
                             mknd_err(child1, "BINARY_MEMORY_READ_ONLY");
                         }

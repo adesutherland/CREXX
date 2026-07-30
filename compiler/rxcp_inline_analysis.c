@@ -223,7 +223,7 @@ static int inline_build_callable_summary(ASTNode *callable,
         }
         if (arg->is_ref_arg || !formal_symbol || formal_symbol->has_reference_target ||
             formal_target->value_dims || formal_target->value_type == TP_OBJECT ||
-            formal_target->value_type == TP_REFERENCE || formal_target->value_type == TP_BINARY) {
+            formal_target->value_type == TP_REFERENCE) {
             formal->flags |= RXCP_INLINE_FORMAL_ESCAPES;
         }
         if (formal_target->value_type != TP_UNKNOWN &&

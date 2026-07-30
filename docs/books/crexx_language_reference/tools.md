@@ -135,6 +135,24 @@ Common options:
 - `-l location`: working location
 - `-o output_file`: output file; stdout by default
 
+## Operation contract exporter: `crexx-contract`
+
+```bash
+crexx-contract --rxbin input.rxbin \
+  --operation namespace.interface.method \
+  --contract-version 1.0.0 \
+  --output operation.rxcontract.json
+```
+
+The exporter validates a compiled Level B interface operation and writes the
+deterministic public `crexx.operation-contract/1` JSON artifact. Repeatable
+`--nullable TYPE.FIELD`, `--optional-field TYPE.FIELD`, and `--error TYPE`
+options supply facts that are deliberately not inferred from naming. An
+optional `--previous FILE` rejects changes not permitted by the declared
+semantic-version increase. See [Operation Contracts](../crexx_programming_guide/operation_contracts.md)
+for the source convention, type mapping, evolution rules, and installed CMake
+helper.
+
 ## Packager: `rxcpack`
 
 ```bash

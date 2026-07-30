@@ -1,0 +1,10 @@
+options levelg
+namespace imported_record_return_wrong_type
+import repro_record
+
+badfacade: class
+  *: factory
+    return
+
+  record: method = .wrongrecord
+    return makereprorecord()

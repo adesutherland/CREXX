@@ -94,8 +94,8 @@ remain flags on the parameter record rather than becoming separate type names.
 The node makes the text recoverable for diagnostics, `typeof`, tooling, and a
 language-policy callback while the ID makes traversal and comparison cheap.
 
-Built-ins such as `.void`, `.object`, `.int`, `.float`, `.decimal`, `.string`,
-and `.binary` are ordinary preseeded type nodes with a built-in flag. They do
+Built-ins such as `.void`, `.object`, `.boolean`, `.int`, `.float`, `.decimal`,
+`.string`, and `.binary` are ordinary preseeded type nodes with a built-in flag. They do
 not require a separate runtime type path. A language runtime may seed
 additional built-ins before graph finalization.
 
@@ -355,7 +355,7 @@ question by inventing a language rule.
 ## 5. Common binutils ownership
 
 The shared implementation belongs in a compiled binutils library, not another
-header-only serializer. The intended public boundary is:
+header-only serializer. Its repository-internal component boundary is:
 
 - `binutils/include/rxbin.h` — declarative 007 container types and limits;
 - `binutils/rxbin007.c` — checked section codec and validation, with
@@ -370,6 +370,20 @@ RXBVM, RXDAS, RXSEQ, and the compiler binary importer. Existing shared helpers
 such as signature parsing are compiled into this target rather than duplicated
 across consumers. `platform` remains the OS-specific library; `rxbin` includes
 the portable fixed-width integer definition but does not link `platform`.
+
+The signature helper retains source parameter names for build-time tooling,
+while contract comparison continues to use parameter types and flags. Argument
+separators are commas at bracket depth zero; commas inside array dimensions,
+such as `.string[2,3]`, are part of the type. Relative object spellings remain
+valid selector identities. Tooling that needs a portable external type identity
+must resolve them against the owning namespace and reject ambiguous matches;
+`crexx-contract` performs that step in its private RXBIN adapter.
+
+These headers and the `rxbin` archive are not an installed external SDK. The
+supported external metadata surface is the deterministic
+`crexx.operation-contract/1` artifact produced by `crexx-contract`; RXBIN graph
+IDs, structs, and acquisition details remain private and may evolve behind that
+adapter.
 
 The policy-neutral query surface provides operations equivalent to:
 

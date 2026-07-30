@@ -79,6 +79,7 @@ void rx_sig_free(rx_callable_signature *signature) {
     if (signature->return_type) free(signature->return_type);
     if (signature->args) {
         for (i = 0; i < signature->arg_count; i++) {
+            if (signature->args[i].name) free(signature->args[i].name);
             if (signature->args[i].type) free(signature->args[i].type);
         }
         free(signature->args);
@@ -130,18 +131,31 @@ static int rx_sig_parse_one_arg(rx_callable_arg *arg, const char *start, size_t 
         arg->is_vararg = 1;
     }
 
+    arg->name = rxsig_strdup_range(name_start, (size_t)(name_end - name_start));
+    if (!arg->name) {
+        free(text);
+        return 0;
+    }
+
     type_start = equals + 1;
     type_end = text + strlen(text);
     while (type_start < type_end && isspace((unsigned char)*type_start)) type_start++;
     while (type_end > type_start && isspace((unsigned char)*(type_end - 1))) type_end--;
     if (type_start == type_end) {
+        free(arg->name);
+        arg->name = 0;
         free(text);
         return 0;
     }
 
     arg->type = rxsig_strdup_range(type_start, (size_t)(type_end - type_start));
     free(text);
-    return arg->type != 0;
+    if (!arg->type) {
+        free(arg->name);
+        arg->name = 0;
+        return 0;
+    }
+    return 1;
 }
 
 static int rx_sig_parse_args(rx_callable_signature *signature, const char *args) {
@@ -149,13 +163,20 @@ static int rx_sig_parse_args(rx_callable_signature *signature, const char *args)
     const char *segment_start;
     size_t count;
     size_t index;
+    unsigned bracket_depth;
 
     if (!args || !*args) return 1;
 
     count = 1;
+    bracket_depth = 0u;
     for (cursor = args; *cursor; cursor++) {
-        if (*cursor == ',') count++;
+        if (*cursor == '[') bracket_depth++;
+        else if (*cursor == ']') {
+            if (!bracket_depth) return 0;
+            bracket_depth--;
+        } else if (*cursor == ',' && !bracket_depth) count++;
     }
+    if (bracket_depth) return 0;
 
     signature->args = (rx_callable_arg *)calloc(count, sizeof(rx_callable_arg));
     if (!signature->args) return 0;
@@ -163,8 +184,11 @@ static int rx_sig_parse_args(rx_callable_signature *signature, const char *args)
 
     segment_start = args;
     index = 0;
+    bracket_depth = 0u;
     for (cursor = args; ; cursor++) {
-        if (*cursor == ',' || *cursor == 0) {
+        if (*cursor == '[') bracket_depth++;
+        else if (*cursor == ']') bracket_depth--;
+        if ((*cursor == ',' && !bracket_depth) || *cursor == 0) {
             if (!rx_sig_parse_one_arg(&signature->args[index],
                                       segment_start,
                                       (size_t)(cursor - segment_start))) {

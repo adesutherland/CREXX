@@ -30,6 +30,7 @@
 #define RXSIG_DESCRIPTOR_PREFIX "rxsig1|"
 
 typedef struct rx_callable_arg {
+    char *name;
     char *type;
     unsigned char is_ref;
     unsigned char is_optional;

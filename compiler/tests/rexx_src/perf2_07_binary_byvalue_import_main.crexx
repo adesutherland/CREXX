@@ -1,0 +1,16 @@
+options levelb
+
+import rxfnsb
+import perf2_07_binary_byvalue_import_dep
+
+main: procedure = .int
+  data = .binary
+  call binresize data, 4
+  <at..u32>(0) data = 16909060
+
+  if readOnly(data) <> 16909060 then return 1
+  if mutate(data) <> 17 then return 2
+  if readOnly(data) <> 16909060 then return 3
+
+  say "PASS: PERF2-07 imported binary summary"
+  return 0

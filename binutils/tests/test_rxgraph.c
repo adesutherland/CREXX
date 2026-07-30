@@ -56,6 +56,36 @@ int main(void) {
     ok &= require(builder != 0, "create graph builder");
     if (!builder) return 1;
 
+    ok &= require(rx_graph_builder_find_type(builder, ".boolean") != RX_GRAPH_NONE,
+                  "seed boolean as a built-in graph type");
+    {
+        rx_callable_signature parsed;
+        ok &= require(rx_sig_init_from_parts(&parsed,
+                                             "execute",
+                                             ".string",
+                                             "request=.object,?correlation=.string") &&
+                      parsed.arg_count == 2u &&
+                      parsed.args[0].name &&
+                      strcmp(parsed.args[0].name, "request") == 0 &&
+                      parsed.args[1].name &&
+                      strcmp(parsed.args[1].name, "correlation") == 0 &&
+                      parsed.args[1].is_optional,
+                      "retain callable parameter names in the private signature model");
+        rx_sig_free(&parsed);
+    }
+    {
+        rx_callable_signature parsed;
+        ok &= require(rx_sig_init_from_parts(&parsed,
+                                             "shape",
+                                             ".void",
+                                             "matrix=.string[2,3],label=.string") &&
+                      parsed.arg_count == 2u &&
+                      strcmp(parsed.args[0].type, ".string[2,3]") == 0 &&
+                      strcmp(parsed.args[1].name, "label") == 0,
+                      "split signature arguments outside array dimension brackets");
+        rx_sig_free(&parsed);
+    }
+
     shape = rx_graph_builder_add_type(builder,
                                       "graph_test.shape",
                                       RX_GRAPH_TYPE_INTERFACE,

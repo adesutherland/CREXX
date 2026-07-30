@@ -1,0 +1,167 @@
+/* Functional contract for CRI-13 Option B numeric array projections. */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+failures = 0
+packed = "ffff"x as .binary
+error = "stale"
+
+document = .jsondocument('{"f32":[0.5,-2,3],"i64":[1,1.0,1e3,9223372036854775807,-9223372036854775808],"empty":[],"mixed":[1,"x"],"nested":[1,[2]],"scalar":7}')
+root = document.root()
+f32_node = document.member(root, "f32")
+i64_node = document.member(root, "i64")
+
+status = document.node_f32_array(f32_node, 3, packed, error)
+failures = failures + check_int("f32 success", status, 0)
+failures = failures + check_str("f32 error cleared", error, "")
+failures = failures + check_int("f32 byte length", binlength(packed), 12)
+failures = failures + check_str("f32 exact little endian", bin2x(packed), "0000003F000000C000004040")
+failures = failures + check_true("f32 first value", <at..f32>(0) packed = ("0.5" as .float))
+failures = failures + check_true("f32 last value", <at..f32>(8) packed = ("3" as .float))
+
+status = document.node_f32_array(f32_node, -1, packed, error)
+failures = failures + check_int("f32 inferred count", status, 0)
+failures = failures + check_int("f32 inferred byte length", binlength(packed), 12)
+
+status = document.node_i64_array(i64_node, 5, packed, error)
+failures = failures + check_int("i64 success", status, 0)
+failures = failures + check_str("i64 error cleared", error, "")
+failures = failures + check_int("i64 byte length", binlength(packed), 40)
+failures = failures + check_str("i64 exact little endian", bin2x(packed), "01000000000000000100000000000000E803000000000000FFFFFFFFFFFFFF7F0000000000000080")
+failures = failures + check_int("i64 integral decimal", <at..i64>(8) packed, 1)
+failures = failures + check_int("i64 integral exponent", <at..i64>(16) packed, 1000)
+failures = failures + check_int("i64 maximum", <at..i64>(24) packed, 9223372036854775807)
+failures = failures + check_int("i64 minimum", <at..i64>(32) packed, -9223372036854775807 - 1)
+
+empty_node = document.member(root, "empty")
+status = document.node_f32_array(empty_node, 0, packed, error)
+failures = failures + check_int("empty f32 success", status, 0)
+failures = failures + check_int("empty f32 bytes", binlength(packed), 0)
+status = document.node_i64_array(empty_node, -1, packed, error)
+failures = failures + check_int("empty i64 success", status, 0)
+failures = failures + check_int("empty i64 bytes", binlength(packed), 0)
+
+packed = "aabb"x as .binary
+error = "stale"
+status = document.node_f32_array(99999, -1, packed, error)
+failures = failures + check_failure("invalid node", status, -1, packed, error)
+status = document.node_f32_array(document.member(root, "scalar"), -1, packed, error)
+failures = failures + check_failure("wrong node type", status, -2, packed, error)
+status = document.node_f32_array(f32_node, -2, packed, error)
+failures = failures + check_failure("invalid expected count", status, -3, packed, error)
+status = document.node_f32_array(f32_node, 4, packed, error)
+failures = failures + check_failure("count mismatch", status, -4, packed, error)
+status = document.node_i64_array(document.member(root, "scalar"), -1, packed, error)
+failures = failures + check_failure("i64 wrong node type", status, -2, packed, error)
+status = document.node_i64_array(i64_node, -2, packed, error)
+failures = failures + check_failure("i64 invalid expected count", status, -3, packed, error)
+status = document.node_i64_array(i64_node, 4, packed, error)
+failures = failures + check_failure("i64 count mismatch", status, -4, packed, error)
+
+mixed_node = document.member(root, "mixed")
+status = document.node_f32_array(mixed_node, -1, packed, error)
+failures = failures + check_failure("f32 non-number", status, -5, packed, error)
+failures = failures + check_true("f32 non-number element", pos("element 2", error) > 0)
+status = document.node_i64_array(mixed_node, -1, packed, error)
+failures = failures + check_failure("i64 non-number", status, -5, packed, error)
+failures = failures + check_true("i64 non-number element", pos("element 2", error) > 0)
+
+nested_node = document.member(root, "nested")
+status = document.node_f32_array(nested_node, -1, packed, error)
+failures = failures + check_failure("nested array element", status, -5, packed, error)
+
+range_document = .jsondocument('{"f32_exponents":[1e2,1E-2],"f32_zero_exp":[0e999,-0E-999],"f32_max":[3.4028234663852886e38],"f32_subnormal":[1.401298464324817e-45],"f32_over":[3.5e38],"f32_under":[1e-50],"f64_subnormal":[1e-320],"f64_min_edge":[1e-324],"f64_max_edge":[1.8e308],"f64_over":[1e999],"i64_fraction":[1.5],"i64_high":[9223372036854775808],"i64_low":[-9223372036854775809]}')
+range_root = range_document.root()
+status = range_document.node_f32_array(range_document.member(range_root, "f32_exponents"), 2, packed, error)
+failures = failures + check_int("f32 lower/upper exponent success", status, 0)
+failures = failures + check_true("f32 lower exponent value", <at..f32>(0) packed = ("100" as .float))
+failures = failures + check_true("f32 upper exponent value", <at..f32>(4) packed > 0)
+status = range_document.node_f32_array(range_document.member(range_root, "f32_zero_exp"), 2, packed, error)
+failures = failures + check_int("f32 extreme zero exponent success", status, 0)
+failures = failures + check_true("f32 extreme zero exponent values", <at..f32>(0) packed = 0 & <at..f32>(4) packed = 0)
+status = range_document.node_f32_array(range_document.member(range_root, "f32_max"), 1, packed, error)
+failures = failures + check_int("f32 maximum success", status, 0)
+failures = failures + check_true("f32 maximum finite", <at..f32>(0) packed > 0)
+status = range_document.node_f32_array(range_document.member(range_root, "f32_subnormal"), 1, packed, error)
+failures = failures + check_int("f32 minimum subnormal success", status, 0)
+failures = failures + check_true("f32 minimum subnormal nonzero", <at..f32>(0) packed > 0)
+status = range_document.node_f32_array(range_document.member(range_root, "f32_over"), 1, packed, error)
+failures = failures + check_failure("f32 overflow", status, -6, packed, error)
+failures = failures + check_true("f32 overflow element", pos("element 1", error) > 0)
+status = range_document.node_f32_array(range_document.member(range_root, "f32_under"), 1, packed, error)
+failures = failures + check_failure("f32 underflow", status, -6, packed, error)
+status = range_document.node_f32_array(range_document.member(range_root, "f64_subnormal"), 1, packed, error)
+failures = failures + check_failure("binary64 subnormal conversion signal", status, -6, packed, error)
+status = range_document.node_f32_array(range_document.member(range_root, "f64_min_edge"), 1, packed, error)
+failures = failures + check_failure("binary64 minimum edge conversion signal", status, -6, packed, error)
+status = range_document.node_f32_array(range_document.member(range_root, "f64_max_edge"), 1, packed, error)
+failures = failures + check_failure("binary64 maximum edge conversion signal", status, -6, packed, error)
+status = range_document.node_f32_array(range_document.member(range_root, "f64_over"), 1, packed, error)
+failures = failures + check_failure("binary64 overflow", status, -6, packed, error)
+float_value = 0 as .float
+status = range_document.node_float(range_document.element(range_document.member(range_root, "f64_subnormal"), 1), float_value)
+failures = failures + check_int("node_float subnormal status", status, -4)
+status = range_document.node_float(range_document.element(range_document.member(range_root, "f64_max_edge"), 1), float_value)
+failures = failures + check_int("node_float maximum edge status", status, -4)
+status = range_document.node_i64_array(range_document.member(range_root, "i64_fraction"), 1, packed, error)
+failures = failures + check_failure("i64 non-integral", status, -6, packed, error)
+status = range_document.node_i64_array(range_document.member(range_root, "i64_high"), 1, packed, error)
+failures = failures + check_failure("i64 positive range", status, -6, packed, error)
+status = range_document.node_i64_array(range_document.member(range_root, "i64_low"), 1, packed, error)
+failures = failures + check_failure("i64 negative range", status, -6, packed, error)
+
+invalid = .jsondocument("[")
+status = invalid.node_i64_array(invalid.root(), -1, packed, error)
+failures = failures + check_failure("invalid document", status, -1, packed, error)
+status = document.node_i64_array(document.member(root, "missing"), -1, packed, error)
+failures = failures + check_failure("missing node", status, -1, packed, error)
+
+if failures \= 0 then do
+  say "rxjson numeric projection failures:" failures
+  exit 1
+end
+
+say "PASS: rxjson numeric projection contract"
+exit 0
+
+check_failure: procedure = .int
+  arg label = .string, actual = .int, expected = .int, packed = .binary, error = .string
+  failed = 0
+  if actual \= expected then do
+    say label || ": expected status " || expected || " got " || actual
+    failed = failed + 1
+  end
+  if binlength(packed) \= 0 then do
+    say label || ": failure did not clear packed output"
+    failed = failed + 1
+  end
+  if length(error) = 0 then do
+    say label || ": failure did not report an error"
+    failed = failed + 1
+  end
+  return failed
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual \= expected then do
+    say label || ": expected " || expected || " got " || actual
+    return 1
+  end
+  return 0
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual \= expected then do
+    say label || ": expected [" || expected || "] got [" || actual || "]"
+    return 1
+  end
+  return 0
+
+check_true: procedure = .int
+  arg label = .string, actual = .int
+  if actual = 0 then do
+    say label || ": expected true"
+    return 1
+  end
+  return 0

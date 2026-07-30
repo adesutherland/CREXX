@@ -188,6 +188,23 @@ static ExitEntry *rxcp_find_exit_entry(Context *ctx, const char *keyword, size_t
     return NULL;
 }
 
+static ExitEntry *rxcp_find_exit_entry_by_class(Context *ctx,
+                                                const char *class_name) {
+    Context *root;
+    ExitEntry *entry;
+
+    if (!ctx || !class_name || !class_name[0]) return NULL;
+    root = ctx->master_context ? ctx->master_context : ctx;
+    entry = (ExitEntry *)root->exit_registry;
+    while (entry) {
+        if (entry->class_name && strcmp(entry->class_name, class_name) == 0) {
+            return entry;
+        }
+        entry = entry->next;
+    }
+    return NULL;
+}
+
 static ExitEntry *rxcp_register_exit_entry(Context *ctx,
                                            const char *primary_keyword,
                                            size_t primary_len,
@@ -2610,7 +2627,14 @@ static int rxcp_exit_handle_response(Context* ctx,
         }
 
         rxcp_preserve_replaced_node_diagnostics(ctx, node);
-        rc = ast_grft_interpolated(ctx, node, replacement_code, node_map, num_tokens);
+        rc = ast_grft_interpolated(ctx,
+                                   node,
+                                   replacement_code,
+                                   node_map,
+                                   num_tokens,
+                                   entry &&
+                                   rxcp_find_certified_exit_by_keyword(
+                                       entry->primary_keyword) != NULL);
         ctx->changed_flags |= FLAG_EXIT;
         free(replacement_code);
         free(status);
@@ -2720,6 +2744,8 @@ int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
 
         obj = rxvml_reg_get(vctx, node->exit_obj_reg, class_name);
         if (obj) {
+            ExitEntry *attached_entry =
+                rxcp_find_exit_entry_by_class(ctx, class_name);
             if (rxcp_call_method_contract(vctx,
                                           obj,
                                           class_name,
@@ -2729,7 +2755,13 @@ int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
                                           1,
                                           &tok_array,
                                           &response) == 0 && response) {
-                handled = rxcp_exit_handle_response(ctx, node, vctx, NULL, response, node_map, num_tokens);
+                handled = rxcp_exit_handle_response(ctx,
+                                                    node,
+                                                    vctx,
+                                                    attached_entry,
+                                                    response,
+                                                    node_map,
+                                                    num_tokens);
                 if (response) rxvml_value_free(response);
                 response = NULL;
             } else {

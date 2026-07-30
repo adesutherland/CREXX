@@ -12,6 +12,7 @@ It focuses on the tools and workflows around Level B source:
 - running `.rxbin` with the crexx virtual machine executables `rxvm` and `rxvme`
 - linking modules with `rxlink`
 - packaging native executables with `crexx -native` and `rxcpack`
+- exporting versioned typed operation contracts with `crexx-contract`
 - using standard libraries, classes, interfaces, plugins, compiler exits, and integration APIs
 
 The language itself is defined in the cRexx *Language Reference*. The lower

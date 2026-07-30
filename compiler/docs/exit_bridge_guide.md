@@ -171,6 +171,13 @@ When a result returns `REPLACE`, the bridge:
 4. runs the early structural/source fixup passes on the fragment
 5. grafts the fragment back into the main AST
 
+Replacement fragments from a registered certified exit are compiler-owned
+Level B implementation code. The bridge validates those fragments at the
+declared Level B before and after grafting, while retaining their original
+source anchors. This exception is attached to the certified fragment wrapper;
+it does not make authored `ASSEMBLER` statements or replacement text from an
+uncertified exit legal in Level G source.
+
 The bridge intentionally preserves source-valid token text where possible so
 quoted literals stay quoted in generated Rexx code.
 

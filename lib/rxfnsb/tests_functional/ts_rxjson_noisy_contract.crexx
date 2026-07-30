@@ -1,0 +1,154 @@
+/*
+ * Generic CRI-09 noisy-input and application-local validation contract.
+ */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+failures = 0
+
+payload = '{"name":"Gràdh 中","count":3,"note":null}'
+failures = failures + check_int("complete JSON valid", jsonvalid(payload), 1)
+error = ""
+failures = failures + check_int("typed contract", validate_payload(payload, 0, error), 1)
+failures = failures + check_str("Unicode preserved", jsonget(payload, "name"), "Gràdh 中")
+failures = failures + check_str("null distinct", jsontype(payload, "note"), "null")
+failures = failures + check_str("missing distinct", jsontype(payload, "optional"), "missing")
+
+leading = "Préface 中: " || payload || " complete."
+fenced = "Here is the value:" || "0a"x || "```json" || "0a"x || payload || "0a"x || "```"
+failures = failures + check_int("leading and trailing prose strict", jsonvalid(leading), 0)
+failures = failures + check_int("fenced JSON strict", jsonvalid(fenced), 0)
+
+extracted = ""
+start_at = 0
+after = 0
+attempts = 0
+parsed_bytes = 0
+status = extract_next_container(leading, 1, extracted, start_at, after, attempts, parsed_bytes)
+failures = failures + check_int("prose extraction workaround", status, 1)
+failures = failures + check_str("prose extraction value", extracted, payload)
+error = ""
+failures = failures + check_int("prose extracted typed contract", validate_payload(extracted, 0, error), 1)
+
+status = extract_next_container(fenced, 1, extracted, start_at, after, attempts, parsed_bytes)
+failures = failures + check_int("fence extraction workaround", status, 1)
+failures = failures + check_str("fence extraction value", extracted, payload)
+
+missing = '{"name":"Gràdh 中","note":null}'
+error = ""
+failures = failures + check_int("missing required field rejected", validate_payload(missing, 0, error), 0)
+failures = failures + check_str("missing diagnostic", error, "field count is missing")
+
+extra = '{"name":"Gràdh 中","count":3,"note":null,"extension":true}'
+error = ""
+failures = failures + check_int("extra field rejected", validate_payload(extra, 0, error), 0)
+failures = failures + check_str("extra diagnostic", error, "unexpected field extension")
+error = ""
+failures = failures + check_int("extra field policy can allow", validate_payload(extra, 1, error), 1)
+
+wrong_type = '{"name":"value","count":3.5,"note":null}'
+error = ""
+failures = failures + check_int("non-integer number rejected", validate_payload(wrong_type, 0, error), 0)
+failures = failures + check_str("type diagnostic", error, "field count expected integer")
+
+truncated = '{"name":"value","count":3'
+malformed = '{"name":"value","count":3,}'
+failures = failures + check_int("truncated strict", jsonvalid(truncated), 0)
+failures = failures + check_int("malformed strict", jsonvalid(malformed), 0)
+status = extract_next_container(truncated, 1, extracted, start_at, after, attempts, parsed_bytes)
+failures = failures + check_int("truncated extraction absent", status, 0)
+status = extract_next_container(malformed, 1, extracted, start_at, after, attempts, parsed_bytes)
+failures = failures + check_int("malformed extraction absent", status, 0)
+
+ambiguous = 'metadata {"incidental":true} then ' || payload
+status = extract_next_container(ambiguous, 1, extracted, start_at, after, attempts, parsed_bytes)
+failures = failures + check_int("first valid container found", status, 1)
+error = ""
+failures = failures + check_int("first container is not typed payload", validate_payload(extracted, 0, error), 0)
+status = extract_next_container(ambiguous, after, extracted, start_at, after, attempts, parsed_bytes)
+failures = failures + check_int("caller can continue scan", status, 1)
+error = ""
+failures = failures + check_int("later container satisfies contract", validate_payload(extracted, 0, error), 1)
+
+/* Retain the exact adversarial shape whose pre-edit workaround required 4,161
+ * complete parses. The production scanner now owns the lexical boundary. */
+stress = ""
+do i = 1 to 64
+  stress = stress || "{noise"
+end
+stress = stress || payload
+do i = 1 to 64
+  stress = stress || "}"
+end
+status = extract_next_container(stress, 1, extracted, start_at, after, attempts, parsed_bytes)
+failures = failures + check_int("adversarial noisy extraction", status, 1)
+failures = failures + check_str("adversarial extraction value", extracted, payload)
+failures = failures + check_int("adversarial production scan", attempts, 1)
+say "RXJSON_NOISY_SCAN input_characters=" || length(stress) || " public_calls=" || attempts || " returned_bytes=" || parsed_bytes
+if failures <> 0 then do
+  say "rxjson noisy contract failures:" failures
+  exit 1
+end
+
+say "PASS: rxjson noisy contract"
+exit 0
+
+extract_next_container: procedure = .int
+  arg text = .string, from = .int, expose value = .string, expose start_at = .int, expose after = .int, expose attempts = .int, expose parsed_bytes = .int
+  value = ""
+  start_at = 0
+  after = 0
+  attempts = 0
+  parsed_bytes = 0
+  document = .jsondocument("")
+  attempts = 1
+  status = jsonscancontainer(text, from, document, start_at, after)
+  if status = 0 then return 0
+  value = document.source()
+  parsed_bytes = document.source_bytes()
+  return 1
+
+validate_payload: procedure = .int
+  arg json = .string, allow_extra = .int, expose error = .string
+  error = ""
+  if jsontype(json, "") \= "object" then return invalid("root expected object", error)
+  if jsontype(json, "name") = "missing" then return invalid("field name is missing", error)
+  if jsontype(json, "name") \= "string" then return invalid("field name expected string", error)
+  if jsontype(json, "count") = "missing" then return invalid("field count is missing", error)
+  if jsontype(json, "count") \= "number" then return invalid("field count expected integer", error)
+  if datatype(jsonget(json, "count"), "W") = 0 then return invalid("field count expected integer", error)
+  note_kind = jsontype(json, "note")
+  if note_kind = "missing" then return invalid("field note is missing", error)
+  if note_kind \= "null" & note_kind \= "string" then return invalid("field note expected string or null", error)
+  if allow_extra then return 1
+
+  names = .string[]
+  count = jsonmembers(json, "", names)
+  if count < 0 then return invalid("root member scan failed", error)
+  do i = 1 to count
+    name = names[i]
+    if name \= "name" & name \= "count" & name \= "note" then return invalid("unexpected field " || name, error)
+  end
+  return 1
+
+invalid: procedure = .int
+  arg message = .string, expose error = .string
+  error = message
+  return 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual \= expected then do
+    say label || ": expected " || expected || " got " || actual
+    return 1
+  end
+  return 0
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual \= expected then do
+    say label || ": expected [" || expected || "] got [" || actual || "]"
+    return 1
+  end
+  return 0

@@ -123,6 +123,19 @@ else()
     set(CREXX_MATH_LIBRARY m)
 endif()
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+set(CREXX_CMAKE_PACKAGE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/CREXX")
+configure_package_config_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CREXXConfig.cmake.in"
+        "${CMAKE_BINARY_DIR}/generated/CREXXConfig.cmake"
+        INSTALL_DESTINATION "${CREXX_CMAKE_PACKAGE_INSTALL_DIR}")
+write_basic_package_version_file(
+        "${CMAKE_BINARY_DIR}/generated/CREXXConfigVersion.cmake"
+        VERSION "${PROJECT_VERSION}"
+        COMPATIBILITY SameMajorVersion)
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # Fallback to local user bin to avoid sudo permission errors during testing
   if(WIN32)
@@ -249,6 +262,7 @@ endforeach()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CREXX_RXPA_PLUGIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 file(GLOB CREXX_MESSAGE_CATALOGS CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/messages/*.msg")
@@ -319,6 +333,7 @@ add_subdirectory(platform)
 add_subdirectory(avl_tree)
 add_subdirectory(cpacker)
 add_subdirectory(binutils)
+add_subdirectory(contract)
 add_subdirectory(assembler)
 add_subdirectory(compiler)
 add_subdirectory(linker)
@@ -333,6 +348,17 @@ add_subdirectory(demos)
 add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
+
+install(EXPORT CREXXTargets
+        FILE CREXXTargets.cmake
+        NAMESPACE CREXX::
+        DESTINATION "${CREXX_CMAKE_PACKAGE_INSTALL_DIR}")
+install(FILES
+        "${CMAKE_BINARY_DIR}/generated/CREXXConfig.cmake"
+        "${CMAKE_BINARY_DIR}/generated/CREXXConfigVersion.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxOperationContract.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa/RXPluginFunction.cmake"
+        DESTINATION "${CREXX_CMAKE_PACKAGE_INSTALL_DIR}")
 
 if(TARGET linked_opt_runtime_artifacts)
     # Linked-opt tests consume the shared runtime images; classlib member

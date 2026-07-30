@@ -1,4 +1,30 @@
 # Functions to add a plugin target
+function(_crexx_configure_rxpa_plugin_target target)
+    if(TARGET CREXX::RXPA)
+        target_link_libraries(${target} PRIVATE CREXX::RXPA)
+    elseif(TARGET crexx_rxpa_sdk)
+        target_link_libraries(${target} PRIVATE crexx_rxpa_sdk)
+    else()
+        # Compatibility path for existing source-tree users that include this
+        # helper before the RXPA SDK target exists.
+        target_include_directories(${target} PRIVATE
+                "${CMAKE_SOURCE_DIR}/rxpa"
+                "${CMAKE_BINARY_DIR}/generated")
+    endif()
+endfunction()
+
+function(_crexx_set_dynamic_plugin_output target)
+    if(DEFINED CREXX_RXPA_PLUGIN_OUTPUT_DIRECTORY AND
+       NOT CREXX_RXPA_PLUGIN_OUTPUT_DIRECTORY STREQUAL "")
+        set(_crexx_plugin_output "${CREXX_RXPA_PLUGIN_OUTPUT_DIRECTORY}")
+    else()
+        set(_crexx_plugin_output "${CMAKE_CURRENT_BINARY_DIR}/bin")
+    endif()
+    set_target_properties(${target} PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY "${_crexx_plugin_output}"
+            RUNTIME_OUTPUT_DIRECTORY "${_crexx_plugin_output}")
+endfunction()
+
 # Create a dynamic link module
 function(add_dynamic_plugin_target plugin_name)
     # Assuming the rest of the source files are passed as additional arguments
@@ -10,12 +36,12 @@ function(add_dynamic_plugin_target plugin_name)
 
     # Create the plugin module
     add_library(${plugin_name} MODULE ${sources})
-    target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/rxpa)
+    _crexx_configure_rxpa_plugin_target(${plugin_name})
     target_compile_definitions(${plugin_name} PRIVATE BUILD_DLL)
     target_compile_definitions(${plugin_name} PRIVATE "PLUGIN_ID=rx${plugin_name}")
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rx")
     set_target_properties(${plugin_name} PROPERTIES SUFFIX ".rxplugin")
-    set_target_properties(${plugin_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    _crexx_set_dynamic_plugin_output(${plugin_name})
 
     # Virtual target rx{plugin_name} to rx{plugin_name}.rxplugin
     # add_custom_target(rx${plugin_name} ALL DEPENDS ${plugin_name})
@@ -32,7 +58,7 @@ function(add_decl_plugin_target plugin_name)
 
     # Create a static library version of the plugin declaration
     add_library(${plugin_name}_decl STATIC ${sources})
-    target_include_directories(${plugin_name}_decl PRIVATE ${CMAKE_SOURCE_DIR}/rxpa)
+    _crexx_configure_rxpa_plugin_target(${plugin_name}_decl)
     target_compile_definitions(${plugin_name}_decl PRIVATE "PLUGIN_ID=rx${plugin_name}")
     target_compile_definitions(${plugin_name}_decl PRIVATE "DECL_ONLY")
     set_target_properties(${plugin_name}_decl PROPERTIES PREFIX "rx")
@@ -49,7 +75,7 @@ function(add_static_plugin_target plugin_name)
 
     # Create a static library version of the plugin
     add_library(${plugin_name}_static STATIC ${sources})
-    target_include_directories(${plugin_name}_static PRIVATE ${CMAKE_SOURCE_DIR}/rxpa)
+    _crexx_configure_rxpa_plugin_target(${plugin_name}_static)
     target_compile_definitions(${plugin_name}_static PRIVATE "PLUGIN_ID=rx${plugin_name}")
     set_target_properties(${plugin_name}_static PROPERTIES PREFIX "rx")
 endfunction()

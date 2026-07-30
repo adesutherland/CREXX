@@ -377,7 +377,7 @@ static void rx_graph_destroy(RxGraph *graph) {
 
 RxGraphBuilder *rx_graph_builder_create(void) {
     static const char *builtins[] = {
-        ".void", ".object", ".int", ".float", ".decimal", ".string",
+        ".void", ".object", ".boolean", ".int", ".float", ".decimal", ".string",
         ".binary", ".unknown"
     };
     RxGraphBuilder *builder;

@@ -140,4 +140,17 @@ configure_linker_for_static_lib_rel(rexxscript_cli system _system)
 target_link_libraries(rexxscript_cli rxvml rxpashim)
 add_dependencies(rexxscript_cli rxvme rxvml rxpa avl_tree platform _system _system_static)
 
+# The compiler-exit RexxScript fixtures are declared before this subdirectory
+# and also name the consolidated image as a file prerequisite. Ninja can infer
+# the cross-directory producer, but Unix Makefiles require the target-level
+# ordering edge so they do not report bin/rexxscript.rxbin as rule-less during
+# a clean parallel build.
+foreach(_rexxscript_exit_consumer IN ITEMS
+    test_rexxscript_bin
+    test_rexxscript_direct_bin)
+  if(TARGET ${_rexxscript_exit_consumer})
+    add_dependencies(${_rexxscript_exit_consumer} rexxscript)
+  endif()
+endforeach()
+
 add_subdirectory(tests_functional)

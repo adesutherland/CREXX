@@ -1,0 +1,20 @@
+options levelb
+
+import rxfnsb
+import cri07_sdk_probe
+import cri08_const_cpp
+
+main: procedure = .int
+  version = sdkversion()
+  sum = addints(20, 22)
+  copied = copycontract()
+  cpp = cppconst()
+  if pos("crexx-", version) <> 1 then return 1
+  if sum <> 42 then return 2
+  if copied <> "copy-owned" then return 3
+  if cpp <> "cpp-immutable" then return 4
+  say "SDK_VERSION=" || version
+  say "SDK_ADD_RESULT=" || sum
+  say "SDK_COPY_RESULT=" || copied
+  say "SDK_CPP_RESULT=" || cpp
+  return 0

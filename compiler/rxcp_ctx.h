@@ -169,6 +169,8 @@ struct imported_func {
     Context *context;
     char is_variable; /* 0=function, 1=global variable */
     char *error_state; /* Pointer to a constant string with error code (or null). Not malloced/freed */
+    const char *error_field; /* Constant metadata field name for structured import diagnostics */
+    const char *error_detail; /* Constant reason for structured import diagnostics */
     struct imported_func *duplicate;
 };
 

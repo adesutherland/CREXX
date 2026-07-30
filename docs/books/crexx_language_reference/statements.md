@@ -29,6 +29,61 @@ address crexx "echo #42" output out error err
 say out
 ```
 
+The capture destination determines the representation:
+
+- a `.string` receives the stream text, including line-ending characters as
+  delivered by the selected environment;
+- a `.string[]` receives one element per newline-delimited record, without the
+  newline; an empty line is retained as an empty element; and
+- `OUTPUT` and `ERROR` are independent, so either or both may be a string or
+  string array.
+
+After the command returns, `rc` contains its integer status independently of
+whether either stream was captured. A successful command may produce no output;
+with fresh destinations that is an empty string or an array whose count is
+zero. Captured Unicode text remains Level B text. Quotes, brackets, semicolons,
+pipes, and similar delimiters in emitted text are data and receive no special
+interpretation from capture.
+
+```rexx
+input_lines = .string[]
+input_lines[1] = "echo first"
+input_lines[2] = "echo second"
+
+output_lines = .string[]
+error_text = .string
+address crexx "batch" input input_lines output output_lines error error_text
+
+if rc = 0 then do
+  do i = 1 to output_lines.0
+    say output_lines[i]
+  end
+end
+```
+
+Array destinations are mutable append targets. Redirection adds each captured
+record after the array's current last element; it does not clear or replace
+existing elements. An empty stream adds nothing, so any existing elements
+remain. Command failure does not change this rule: emitted records are appended
+to the corresponding `OUTPUT` or `ERROR` array, while a stream that emits
+nothing leaves its array unchanged.
+
+Use `arraydrop` immediately before each command when the array should contain
+only that command's records. `OUTPUT` and `ERROR` are independent arrays and
+must each be dropped when replacement-style reuse is required:
+
+```rexx
+output_lines = .string[]
+error_lines = .string[]
+
+call arraydrop output_lines
+call arraydrop error_lines
+address crexx "echo current" output output_lines error error_lines
+```
+
+A fresh array needs no preliminary `arraydrop`. Reusing without a drop is the
+supported accumulation form, not an implicit reset operation.
+
 When `OUTPUT` or `ERROR` is omitted, that stream is written to the normal cRexx
 standard stream and flushed as the command emits it. Long-running later work
 does not delay already-emitted CREXX command output until task completion.
@@ -117,6 +172,33 @@ Anchors must occupy a whole parsed operand. For example, `cat :file` expands
 Rexx first, then pass the result with a scalar anchor. Stem anchors preserve
 each item as one operand, even when an item contains spaces or shell punctuation
 such as `&&`.
+
+### Argument-Vector Execution
+
+The argv-preserving command path is `ADDRESS CREXX "run :argv[]"`. The first
+array element is the executable and every later element is exactly one child
+argument. Empty elements remain empty arguments; whitespace, quotes, Unicode,
+wildcards, variable-like text and shell metacharacters are not split, expanded
+or executed. The child is launched directly through the platform process API.
+
+```rexx
+argv = .string[]
+argv[1] = executable
+argv[2] = "value with spaces"
+argv[3] = ""
+argv[4] = "; && | * ?"
+
+out = .string[]
+err = .string[]
+address crexx "run :argv[]" output out error err
+say rc
+```
+
+This is intentionally distinct from `ADDRESS COMMAND`, `ADDRESS SYSTEM`, and
+`ADDRESS CMD`: those environments accept one command string and invoke the
+platform command processor. Use them only when shell parsing is required. The
+`PATH` environment is direct process dispatch too, but accepts parsed command
+text; use `CREXX run :argv[]` when exact argument boundaries matter.
 
 ## ARG
 
@@ -295,6 +377,9 @@ PARSE \[ option \] \[ CASELESS \] type \[ template \] ;
 Current implementation status:
 
 * `PARSE VALUE ...`, `PARSE VAR ...`, and `PARSE ARG ...` are implemented through the certified `PARSE` exit.
+* These forms are supported in both Level G and Level B source. Their internal
+  certified lowering may use Level B instructions; that compiler detail does
+  not permit an authored `ASSEMBLER` statement in Level G source.
 * `PARSE ARG` uses the current procedure's `arg()` compatibility view.
 * In implicit `main`, that means command-line arguments.
 * In other procedures, that means the `...` tail if present, or an empty source string if there is no `...` tail.

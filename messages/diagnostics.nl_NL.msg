@@ -147,6 +147,7 @@ RXPP_SCRIPT_MACRO_MISSING = Scriptmacrobestand is niet gevonden: {file}.
 RXPP_SOURCE_MISSING = Source-bestand ontbreekt: {file}.
 RXPP_SYSTEM_MACLIB_MISSING = Systeemmacrobibliotheek is niet gevonden of is niet toegankelijk: {file}.
 RXPP_TERMINATED = RXPP-verwerking beëindigd.
+RXPA_IMPORT_SIGNATURE_INVALID = RXPA-routine "{name}" in {import_file} heeft een ongeldige {field}-declaratie "{declaration}": {detail}.
 SHADOWING = Symbool overschaduwt een eerdere declaratie.
 SIGNAL_BLOCK_ONLY_LEVELB = SIGNAL-bloksyntaxis wordt alleen ondersteund in Level B.
 SIGNAL_CANNOT_BE_MASKED = Dit signaal kan niet worden gemaskeerd.

@@ -100,6 +100,26 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
+add_custom_target(performance_binary_byvalue ALL)
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rexx_opt_matrix(
+            NAME binary_byvalue_compare_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_byvalue_compare.crexx
+            TARGET_GROUP performance_binary_byvalue
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH}
+            TEST_LABELS "performance;binary;inlining;perf2_07"
+    )
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        set_tests_properties(binary_byvalue_compare_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: PERF2-07 binary by-value compare"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
 add_custom_target(performance_rxjson_parser ALL)
 crexx_add_rexx_opt_matrix(
         NAME rxjson_parser_compare
@@ -116,6 +136,46 @@ foreach(_crexx_mode IN ITEMS noopt opt)
             FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
     )
 endforeach()
+
+add_custom_target(performance_rxjson_numeric ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rxjson_numeric_materialization_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxjson_numeric_materialization_compare.crexx
+        TARGET_GROUP performance_rxjson_numeric
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        TEST_LABELS "performance;json;binary;cap01_j02"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(rxjson_numeric_materialization_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: CRI-13 JSON numeric materialization compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+_crexx_register_runtime_test(
+        NAME rxjson_numeric_materialization_compare_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM rxjson_numeric_materialization_compare_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        TEST_LABELS "performance;json;binary;cap01_j02"
+)
+_crexx_register_runtime_test(
+        NAME rxjson_numeric_materialization_compare_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM rxjson_numeric_materialization_compare_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        TEST_LABELS "performance;json;binary;cap01_j02"
+)
+set_tests_properties(
+        rxjson_numeric_materialization_compare_rxbvm_noopt
+        rxjson_numeric_materialization_compare_rxbvm_opt
+        PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: CRI-13 JSON numeric materialization compare"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+)
 
 add_custom_target(performance_tinyexpr_dispatch ALL)
 crexx_add_rexx_opt_matrix(

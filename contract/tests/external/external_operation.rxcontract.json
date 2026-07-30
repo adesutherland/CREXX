@@ -1,0 +1,26 @@
+{
+  "format": "crexx.operation-contract",
+  "formatVersion": 1,
+  "contractVersion": "1.0.0",
+  "operation": "external_operation.operationcontract.execute",
+  "input": [
+    {"name": "request", "required": true, "nullable": false, "schema": {"kind": "record", "type": "external_operation.requestcontract"}}
+  ],
+  "result": {"kind": "record", "type": "external_operation.resultcontract"},
+  "errors": [
+    {"kind": "record", "type": "external_operation.errorcontract"}
+  ],
+  "types": [
+    {"name": "external_operation.errorcontract", "kind": "record", "fields": [
+      {"name": "code", "required": true, "nullable": false, "schema": {"kind": "string"}},
+      {"name": "message", "required": true, "nullable": false, "schema": {"kind": "string"}}
+    ]},
+    {"name": "external_operation.requestcontract", "kind": "record", "fields": [
+      {"name": "query", "required": true, "nullable": false, "schema": {"kind": "string"}}
+    ]},
+    {"name": "external_operation.resultcontract", "kind": "record", "fields": [
+      {"name": "ok", "required": true, "nullable": false, "schema": {"kind": "boolean"}},
+      {"name": "problem", "required": true, "nullable": true, "schema": {"kind": "record", "type": "external_operation.errorcontract"}}
+    ]}
+  ]
+}

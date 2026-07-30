@@ -10,6 +10,29 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
+add_custom_target(cri07_rxpa_sdk_consumer_prereqs
+        DEPENDS rxc rxas rxvm rxbvm library)
+
+add_test(
+        NAME rxpa_external_sdk_consumer
+        COMMAND ${CMAKE_COMMAND}
+                -DCREXX_BUILD_DIR=${CMAKE_BINARY_DIR}
+                -DCREXX_VERSION=${CREXX_VERSION}
+                -DCREXX_VERSION_CORE=${CREXX_VERSION_CORE}
+                -DCREXX_VERSION_DISPLAY=${CREXX_VERSION_DISPLAY}
+                -DCREXX_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+                -DCMAKE_GENERATOR_NAME=${CMAKE_GENERATOR}
+                -DEXE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}
+                -DPACKAGE_RELATIVE_DIR=${CREXX_CMAKE_PACKAGE_INSTALL_DIR}
+                -DCONSUMER_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/external_sdk
+                -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxpa_external_sdk_consumer_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
+        LABELS "install;package;rxpa;external-consumer"
+        RUN_SERIAL TRUE
+        TIMEOUT 240)
+
 function(localize_test_plugin_output target)
     # Keep test-only plugins out of the shared release bin directory.
     set_target_properties(${target} PROPERTIES
@@ -38,6 +61,13 @@ add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) de
 add_dynamic_plugin_target(_rxpa_classdecl rxpa_classdecl.c)
 localize_test_plugin_output(_rxpa_classdecl)
 add_dependencies(_rxpa_classdecl rxpa library rxvm rxc)
+
+# Compiler-facing signature validation fixture. The deliberately malformed
+# declarations are never invoked; they exercise import diagnostics alongside
+# three valid declarations that compile and run through both VM engines.
+add_dynamic_plugin_target(_rxpa_bad_signatures rxpa_bad_signatures.c)
+localize_test_plugin_output(_rxpa_bad_signatures)
+add_dependencies(_rxpa_bad_signatures rxpa library rxvm rxbvm rxc rxas)
 
 # Create a version of rxc that statically links the _rxpa_static library
 # Create static link module for rxc
@@ -113,6 +143,23 @@ crexx_add_rexx_opt_matrix(
 
 # Enable testing functionality
 enable_testing()
+
+add_test(
+        NAME rxpa_signature_diagnostics
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXBVM=$<TARGET_FILE:rxbvm>
+                -DLIBRARY=${CMAKE_BINARY_DIR}/bin
+                -DPLUGIN_DIR=$<TARGET_FILE_DIR:_rxpa_bad_signatures>
+                -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+                -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxpa_signature_diagnostics_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_signature_diagnostics.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpa_signature_diagnostics PROPERTIES
+        LABELS "compiler;diagnostics;rxpa;runtime;optimizer"
+        TIMEOUT 120)
 
 foreach(_mode IN ITEMS noopt opt)
     set(_mode_flag)

@@ -1,0 +1,72 @@
+/* PERF2-07-B01: optimized versus non-optimized `.binary` by-value boundary. */
+options levelb
+
+import rxfnsb
+
+readByValue: procedure = .int
+  arg data = .binary, offset = .int
+  return <at..u32>(offset) data
+
+readExposed: procedure = .int
+  arg expose data = .binary, offset = .int
+  return <at..u32>(offset) data
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+main: procedure = .int
+  arg argv = .string[]
+  dimension = 3072
+  iterations = 10
+  if argv[0] >= 1 then dimension = argv[1] as .int
+  if argv[0] >= 2 then iterations = argv[2] as .int
+
+  data = .binary
+  call binresize data, dimension * 4
+  do i = 1 to dimension
+    <at..u32>((i - 1) * 4) data = i
+  end
+
+  by_value_sum = 0
+  started = time("us")
+  do iteration = 1 to iterations
+    do i = 1 to dimension
+      by_value_sum = by_value_sum + readByValue(data, (i - 1) * 4)
+    end
+  end
+  by_value_us = elapsedUs(started)
+
+  exposed_sum = 0
+  started = time("us")
+  do iteration = 1 to iterations
+    do i = 1 to dimension
+      exposed_sum = exposed_sum + readExposed(data, (i - 1) * 4)
+    end
+  end
+  exposed_us = elapsedUs(started)
+
+  direct_sum = 0
+  started = time("us")
+  do iteration = 1 to iterations
+    do i = 1 to dimension
+      direct_sum = direct_sum + <at..u32>((i - 1) * 4) data
+    end
+  end
+  direct_us = elapsedUs(started)
+
+  expected = (dimension * (dimension + 1) / 2) * iterations
+  if by_value_sum <> expected | exposed_sum <> expected | direct_sum <> expected then do
+    say "FAIL: PERF2-07 binary by-value checksum"
+    return 1
+  end
+
+  say "benchmark=binary_byvalue_compare"
+  say "variant=by_value elapsed_us=" || by_value_us || " dimension=" || dimension || " iterations=" || iterations
+  say "variant=exposed elapsed_us=" || exposed_us || " dimension=" || dimension || " iterations=" || iterations
+  say "variant=direct elapsed_us=" || direct_us || " dimension=" || dimension || " iterations=" || iterations
+  say "checksum=" || expected
+  say "PASS: PERF2-07 binary by-value compare"
+  return 0

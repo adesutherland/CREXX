@@ -94,7 +94,9 @@ typedef void (*rxpa_func_addimplements)(char* name, char* interface_name); /* Ad
 typedef void (*rxpa_func_addmember)(char* owner, char* kind, char* member,
                                     char* type, char* args); /* Add class/interface member metadata */
 typedef char* (*rxpa_func_getstring)(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
-typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
+/* The text is copied during the call; the callback does not mutate or retain it. */
+typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue,
+                                    const char* string); /* Set a string in an attribute value */
 typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
 typedef rxinteger (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
@@ -129,8 +131,14 @@ typedef void (*rxpa_set_say_exit)(say_exit_func sayExitFunc); /* Set Say exit fu
 typedef void (*rxpa_reset_say_exit)(); /* Set Say exit function */
 
 // The initialization context struct
-typedef struct rxpa_initctxptr* rxpa_initctxptr;
-struct rxpa_initctxptr {
+#ifdef __cplusplus
+#define RXPA_INITCTX_TAG rxpa_initctx
+#else
+#define RXPA_INITCTX_TAG rxpa_initctxptr
+#endif
+typedef struct RXPA_INITCTX_TAG rxpa_initctx;
+typedef rxpa_initctx* rxpa_initctxptr;
+struct RXPA_INITCTX_TAG {
     rxpa_func_addfunc addfunc;
     rxpa_func_addclass addclass;
     rxpa_func_addinterface addinterface;
@@ -154,6 +162,7 @@ struct rxpa_initctxptr {
     rxpa_set_say_exit setsayexit;
     rxpa_reset_say_exit resetsayexit;
 };
+#undef RXPA_INITCTX_TAG
 
 // Are we building a statically linked library?
 #ifdef BUILD_DLL
@@ -162,7 +171,7 @@ struct rxpa_initctxptr {
 #include <string.h>
 
 // Global context variable declaration
-static struct rxpa_initctxptr _rxpa_initctx;
+static rxpa_initctx _rxpa_initctx;
 static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 // Macro is used to register a procedure - dynamic linkage
 #define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
@@ -217,9 +226,14 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 
 // The plugin is being built as a DLL
 // INITIALIZER is redefined to be a simple function
+#ifdef __cplusplus
+#define RXPA_EXTERN_C extern "C"
+#else
+#define RXPA_EXTERN_C
+#endif
 #define INITIALIZER(f) \
-    void f(rxpa_initctxptr context); \
-    void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
+    RXPA_EXTERN_C void f(rxpa_initctxptr context); \
+    RXPA_EXTERN_C void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
 // Define EXPORT appropriately for windows
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
@@ -241,10 +255,12 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 
 // With thanks to this Initializer/finalizer sample for MSVC and GCC/Clang. 2010-2016 Joe Lowe. Released into the public domain.
 #ifdef __cplusplus
-#define INITIALIZER(f) \
+#define RXPA_CPP_INITIALIZER_EXPANDED(f) \
         static void f(void); \
         struct f##_t_ { f##_t_(void) { f(); } }; static f##_t_ f##_; \
-        static void f(void)
+        static void f(void) {
+#define RXPA_CPP_INITIALIZER(f) RXPA_CPP_INITIALIZER_EXPANDED(f)
+#define INITIALIZER(f) RXPA_CPP_INITIALIZER(f)
 #elif defined(_MSC_VER)
 #pragma section(".CRT$XCU",read)
 #define INITIALIZER2_(f,p) \
@@ -285,13 +301,17 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
 
 // Helper functions provided by the REXX interpreter
+#ifdef __cplusplus
+extern "C" {
+#endif
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
 void rxpa_addclass(char* name, char* option, char* type); /* Add class metadata */
 void rxpa_addinterface(char* name, char* option, char* type); /* Add interface metadata */
 void rxpa_addimplements(char* name, char* interface_name); /* Add class/interface implementation metadata */
 void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args); /* Add class/interface member metadata */
 char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
-void rxpa_setstring(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
+void rxpa_setstring(rxpa_attribute_value attributeValue,
+                    const char* string); /* Copies string into the attribute value */
 void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
 rxinteger rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
@@ -311,6 +331,9 @@ void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxint
 // Exit Functions
 void rxpa_setsayexit(say_exit_func sayExitFunc); /* Set Say exit function */
 void rxpa_resetsayexit(); /* Set Say exit function */
+#ifdef __cplusplus
+}
+#endif
 
 // Macro is used to register a procedure - static linkage
 #ifndef DECL_ONLY

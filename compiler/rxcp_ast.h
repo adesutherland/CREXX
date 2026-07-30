@@ -168,7 +168,9 @@ ASTSemanticContextKind ast_semantic_context_kind(ASTNode *node);
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */
 int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code);
-int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code, ASTNode **node_map, size_t num_tokens);
+int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code,
+                          ASTNode **node_map, size_t num_tokens,
+                          int certified_exit_fragment);
 char *ast_interpolate_exit_fragment(const char *prefix, const char *rexx_code, ASTNode **node_map, size_t num_tokens, SourceMap **map_out, size_t *length_out);
 void ast_apply_exit_source_map(ASTNode *tree, SourceMap *map);
 void ast_free_exit_source_map(SourceMap *map);

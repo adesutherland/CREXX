@@ -217,6 +217,7 @@ static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *s
 
 static int flow_symbol_owns_scope_lifetime(Symbol *symbol) {
     if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (symbol->inline_value_alias) return 0;
     if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
         symbol->is_this || symbol->is_factory) return 0;
     if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;

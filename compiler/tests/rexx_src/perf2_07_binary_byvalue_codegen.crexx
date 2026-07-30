@@ -1,0 +1,23 @@
+options levelb
+namespace perf2_07_binary_byvalue_codegen expose readByValue
+
+import rxfnsb
+
+readByValue: procedure = .int
+  arg data = .binary, offset = .int
+  return <at..u32>(offset) data
+
+main: procedure = .int
+  data = .binary
+  call binresize data, 8
+  <at..u32>(0) data = 16909060
+  <at..u32>(4) data = 84281096
+
+  observed = readByValue(data, 4)
+  if observed <> 84281096 then do
+    say "FAIL: PERF2-07 binary by-value codegen checksum"
+    return 1
+  end
+
+  say "PASS: PERF2-07 binary by-value codegen"
+  return 0

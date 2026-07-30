@@ -1,0 +1,5 @@
+options levelb
+namespace do_forever_fallthrough_fail
+
+ordinary_fallthrough: procedure = .int
+  value = 1

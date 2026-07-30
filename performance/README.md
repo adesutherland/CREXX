@@ -28,6 +28,7 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/PERF2-06-07-HANDOVER-PROMPT.md` | Preserved execution prompt for the completed combined PERF2-06/07 Mac slice; successor hardware instructions now live in its closeout evidence |
 | `performance/PERF2-08-09-WORKLIST.md` | Resumable Mac control plane for the capability/equivalence gate and subsequent formal per-benchmark closure run |
 | `performance/PERF2-10-11-INTEL-LINUX-WORKLIST.md` | Completed initial Intel Linux GCC/Clang correctness, sanitizer, formal baseline and native-attribution control plane; rebuild-heavy PoCs return to macOS before any tuning selection |
+| `performance/CRI02-BINARY-BYVALUE-WORKLIST.md` | Governed `PERF2-07-B01` control plane for the crexx-rag `.binary` read-only by-value optimizer regression and mandatory first Release verdict |
 | `performance/PERFORMANCE-GOVERNANCE.md` | Normative portfolio, sampling, aggregation, regression and claim policy |
 | `performance/rexxcps-runtime-source-review-2026-07-22.md` | Dated Regina/ooRexx/NetRexx mechanism review, with current-status addendum |
 | `performance/templates/performance-scorecard.md` | Standard publication structure |

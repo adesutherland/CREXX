@@ -28,8 +28,8 @@ main() .locals=13
    .srcstep 4 4 25 "_address.crexx" 1683 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
    bcopy r10,r9
-   br l83bexprend
-l83bexprend:
+   br l84bexprend
+l84bexprend:
    endlife r9
    .meta "address_expose.main.handle"
    .srcstep 8 8 33 "exit_fragment" 2 1 9 "_noredir"
@@ -39,8 +39,8 @@ l83bexprend:
    .srcstep 7 7 25 "_address.crexx" 1683 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
    bcopy r11,r9
-   br l90bexprend
-l90bexprend:
+   br l91bexprend
+l91bexprend:
    endlife r9
    .meta "address_expose.main.handle"
    .srcstep 11 11 33 "exit_fragment" 2 1 9 "_noredir"
@@ -50,8 +50,8 @@ l90bexprend:
    .srcstep 10 10 25 "_address.crexx" 1683 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
    bcopy r12,r9
-   br l97bexprend
-l97bexprend:
+   br l98bexprend
+l98bexprend:
    endlife r9
    .meta "address_expose.main.handle"
    load r6,"userid"

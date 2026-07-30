@@ -1,0 +1,21 @@
+options levelb
+namespace imported_record_runner_levelg
+import repro_record
+import imported_record_return_levelg
+
+exit run()
+
+run: procedure = .int
+  direct = .reprorecord
+  facade = .recordfacade
+  via_method = .reprorecord
+
+  direct = makereprorecord()
+  facade = .recordfacade()
+  via_method = facade.record()
+
+  if direct.value() <> "typed" then return 1
+  if via_method.value() <> "typed" then return 2
+
+  say "IMPORTED_RECORD_RETURN_OK level=levelg"
+  return 0

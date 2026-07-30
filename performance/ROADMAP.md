@@ -201,7 +201,7 @@ Source:
 | PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
 | PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
 | PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | Apple tactical frame tuning and initial Intel Linux attribution complete | Linux selects copy/value/storage and workload-sensitive compiler layout as PoC questions, not a production candidate. `PERF2-06-D01`, compact/hot-cold stream selection and the final VM recommendation remain unstarted and return to the faster Mac for bounded design work. |
-| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | Apple slice complete; V1R01-R1 accepted | The proof-wide direct-placement candidate and V3-R01 correctness prerequisite are installed. At the 36-pair cap Richards is -21.224%/-21.076%, Permute -58.019%/-56.466%, common ratios are 1.244352x/1.242301x and no guard hits. Debug/Release each pass 1,925/1,925; focused ASan passes 10/10; lifecycle, RSS, retained-RXBIN and isolated-install guards pass. Other high-cost shapes are evidence-backed defer/reject/architecture transfers. Evidence: [`first verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/) and [`Apple closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/). |
+| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | CRI-02 B01 complete; B02 residual payload-copy census and C01 bounded numeric-conversion review queued, neither active | `PERF2-07-B01` passed its mandatory first Release verdict and 34-pair order/per-variant adjudication. The apparent `rxvm` adjacent-path guard hit was fixed-order warm-state coupling: isolated control medians are -2.93%/-1.15%, their RXAS is byte-identical, and dual-VM RSS is -0.56%/-0.37%. Adrian accepted frozen V1 on 2026-07-30. Proportional closeout passes focused 8/8, affected ASan 3/3, and complete Debug 1934/1934; the imported summary regression locks read-only mask `400` and writable-isolated mask `416`. CRI-13 R1 exposed a separate non-local-attribute/post-inline residual: 6,144 full-source copies and 359,294,976 logical bytes per projection. `PERF2-07-B02` will census byte-weighted shapes and compare `rxc` semantic proof with bounded RXAS full-copy projection; RXAS already has CFG/liveness/effects and currently reports `full-value-ownership-unproved`. `PERF2-07-C01` will independently review the allocation, locale, grammar and range contracts of the existing string-to-number conversions and bounded no-copy alternatives. Both items are evidence only while CRI-13 is stopped. Evidence/control: [`CRI-02 worklist`](CRI02-BINARY-BYVALUE-WORKLIST.md), [`CRI-13 RXAS trace`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R1-RXAS-TRACE.md), [`CRI-13 bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md), [`V1R01-R1 first verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/) and [`Apple closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/). |
 | PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | Mac gate complete; dispositions approved | Common `N=5`; Towers and RexxCPS qualified separately; Mandelbrot, Storage, List and JSON have explicit no-ratio dispositions; CAP-01 through CAP-04 remain under their recorded future owners. Evidence: [`qualification`](evidence/2026-07-27-perf2-08-qualification/) and [`worklist`](PERF2-08-09-WORKLIST.md). |
 | PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | Mac closure complete | Current same-session Apple scorecard is checksum-closed. Richards is the largest qualified common deficit. No next candidate is selected. Evidence: [`Mac closure`](evidence/2026-07-27-perf2-09-mac-closure/). |
 | PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | Initial Intel Linux baseline/attribution complete; no option selected | GCC/Clang ordinary-product, sanitizer, schema-5 and native-PMU evidence is retained under [`PERF2-10-11-INTEL-LINUX-WORKLIST.md`](PERF2-10-11-INTEL-LINUX-WORKLIST.md). Rebuild-heavy PoCs return to macOS; LTO/PGO/layout selection remains unstarted. |
@@ -748,6 +748,7 @@ exists; no construct family is permanently excluded.
 | PERF2-03-F03 | Remaining formal, block-result, inline-exit or temporary cleanup | A current hot candidate whose cleaned RXAS still loses materially to its hand-equivalent ceiling | Admit as a bounded companion to the selecting activity, especially PERF2-04; do not restart blanket inliner cleanup. |
 | PERF2-03-F04 | Dynamic vararg indexing, generated association transport and assembler alias/effect facts | Exact locator/liveness/effect reconstruction and a measured multi-site deficit | Route compiler facts to a later analysis slice and semantic instruction work to PERF2-05. |
 | PERF2-03-F05 | Future I6 summary fields or newly trusted body facts | Independent declaration/body reconstruction, exact producer/consumer comparison and a review-derived contradictory-evidence CTest | Standing requirement owned by the change that consumes the new fact. |
+| PERF2-03-F06 | Statically resolved concrete/final scalar accessors retain direct calls, receiver initialization and attribute link/unlink instead of approaching direct typed-memory cost | CRI-13 C measures f32/i64 wrapper reads at 4.56x--5.10x raw B and writes at 2.41x--3.67x across both VMs. Reopen only with a generic semantic proof covering initialization, receiver identity, writable ownership, signals, source/debug identity and a hand-equivalent ceiling. | **Queued evidence only; not active.** Do not add JSON/vector-specific opcodes or members. Evidence: [`CRI-13 C verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-C-CLASS-RELEASE-VERDICT.md). |
 
 ## PERF2-04 — inlining-first core Level B BIF campaign
 
@@ -1326,6 +1327,8 @@ both avoidable copies and a premature global layout rewrite risky.
 | ID | Evidence and exact failure | Required distinguishing regression | Boundary |
 | --- | --- | --- | --- |
 | PERF2-07-V3-R01 | PERF2-04's valid Level B sequence initializes a string to `""`, initializes a decimal from `"2.2"`, assigns that decimal to the same string using `as .string`, then executes `strlen`. Both VMs and both optimization modes preserved `2.2` but returned stale codepoint length `0`. `DCOPY` retained the old trusted zero count and `DTOS` changed bytes/byte length without completing VM-private UTF validity. | The maintained regression preserves `dcopy; dtos; strlen` and covers empty, non-empty Unicode, typed-null, live reference alias, numeric siblings and `DEXTR` on optimized/no-opt `rxvm` and `rxbvm`. All four retained reproducer cells and the related focused group pass. | Correctness fixed with one explicit in-place string-write completion contract; no performance claim, language, public RXAS/RXBIN or ABI change. Broad selective cache retention remains deferred because the current mechanism count is zero. Evidence: [`CORRECTNESS.md`](evidence/2026-07-27-perf2-06-07-selection-panel/CORRECTNESS.md). |
+| PERF2-07-B01 | The reproduced optimized inversion came from 614,400 defensive 12,288-byte copies (7,549,747,200 logical bytes). Frozen V1 removes the copy for a proved read-only local alias while failing closed for writable/escaping/exposed/reference cases. | First Release target gains are 92.72%/92.65% on `rxvm`/`rxbvm`. The 34-pair `rxvm` order/per-variant adjudication proves the adjacent-control hit followed baseline copy-loop preconditioning, not changed control code; isolated RXAS is byte-identical. Dual-VM RSS changes -0.56%/-0.37%. Final focused/ASan/Debug QA is 8/8, 3/3, and 1934/1934; imported summary masks `400`/`416` lock direct-read versus isolated-write behavior. | **Complete.** Adrian accepted frozen V1 on 2026-07-30 and proportional closeout passed. Preserve `.binary` value semantics and public RXAS/RXBIN/ABI. Evidence: [`CRI02-BINARY-BYVALUE-WORKLIST.md`](CRI02-BINARY-BYVALUE-WORKLIST.md). |
+| PERF2-07-C01 | `rx_string_to_double` copies a bounded string to a NUL-terminated local or heap buffer before `strtod`, rejects every `ERANGE`, and inherits the C library's locale and accepted grammar. `string2integer` likewise allocates a temporary NUL-terminated buffer. CRI-13 proved the resulting floating edge signal can be translated correctly without changing those generic contracts. | Compare retained current behavior with bounded no-copy, locale-independent and correctly rounded candidates across signed zero, halfway rounding, normal/subnormal and finite/overflow boundaries, long inputs, whitespace/sign/`inf`/`nan` compatibility, locale changes, allocation/copy counts and both VMs. | **Queued evidence/design only; not active and not a CRI-13 blocker.** No RXAS/RXBIN operation, ABI, language surface or general conversion-semantic change is selected. Any public instruction or contract requires its own decision and first Release gate. Evidence: [`CRI-13 bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md). |
 
 Mutable object/string copy-on-write and a general allocator replacement do not
 enter the first panel. They require explicit alias/reference proof and current
@@ -1362,7 +1365,7 @@ smuggled into an optimization nor blocked by an optimizer-only worklist.
 
 | Gap | Performance relevance | Default route | Decision boundary |
 | --- | --- | --- | --- |
-| CAP-01 JSON parse-once/indexed document | Current JSON cells build/use different result models. | Library/runtime handle or indexed object model first. | Language change only if the library/runtime surface cannot express ownership/use safely. |
+| CAP-01 JSON parse-once/indexed document | Current JSON cells build/use different result models. | Option B approved 2026-07-30: one pure-Level-B immutable indexed `rxjson` document plus strict traversal and noisy-container framing. Active as `CAP-01-J01`. | Packed numeric serialization, schema/repair policy, public C ABI, RXAS/RXBIN, or language changes remain separate decisions. |
 | CAP-02 owned heterogeneous/nested containers | cREXX Storage performs materially different allocation/object work. | Specify ownership, nested references and lifecycle; build an equivalent control. Post-Release 1 Level G is the default source-language route. | A Level B source surface requires a separate explicit scope decision after proving a library/runtime solution insufficient; Adrian approval required. |
 | CAP-03 standard Base64 surface | Base64 is a valid common cell but lacks one standard portable cREXX product API. | Keep the current common codec-loop benchmark unchanged. Develop a pure Level B API as a separate product track; measure before native/SIMD. | A new API benchmark is separate unless every runtime receives an equivalent workload. Native/SIMD is an optional backend/control, not the semantic API. |
 | CAP-04 load-only lifecycle boundary | Current public CLIs combine load and first result. | Measurement/runtime lifecycle boundary. | Promote to public API only with a product use case and API approval. |
@@ -1403,8 +1406,9 @@ The Apple gate completed on 2026-07-27. Towers now has a qualified
 object/allocation-equivalent ooRexx port. Mandelbrot is an approved exclusion
 because ordinary ooRexx decimal modes cannot satisfy the binary64 checksums.
 Storage, List and JSON are approved diagnostic exclusions under their exact
-ownership/result-model mismatches. CAP-01 and CAP-02 are deferred to separately
-approved library/runtime or post-Release 1 Level G decisions; CAP-03 does not
+ownership/result-model mismatches. CAP-01's independently approved Level-B
+library surface is active under `CAP-01-J01`; CAP-02 remains deferred to a
+separately approved library/runtime or post-Release 1 Level G decision; CAP-03 does not
 block the qualified Base64 benchmark; CAP-04 retains honestly named lifecycle
 phases and excludes an unavailable pure-load comparison.
 
@@ -1424,6 +1428,164 @@ same-session cREXX/ooRexx throughput, gain to parity and strong band, optimized
 and diagnostic static/dynamic work, top native/procedure/opcode/call paths,
 copies/conversions/allocations/RSS, selected mechanism, machine ceiling and
 accepted/rejected verdicts.
+
+### CAP-01-J01 — approved indexed `rxjson` document
+
+Status: complete. Option B, A2 and B1 were approved and frozen A2 was accepted
+on 2026-07-30. Option B was approved
+exactly as specified on 2026-07-30; frozen V1 is correct and wins retained
+access but failed its compatibility guard. Adrian approved recommended
+countermeasure Option 1 on 2026-07-30. Frozen V2 passes correctness and removes
+the scanner pathology but still fails the one-shot compatibility guard.
+
+The implementation keeps one strict parser in `rxjson`, preserves existing
+functional selectors through ephemeral documents, and adds an immutable
+document with path compatibility, document-local node traversal, arbitrary-key
+lookup, strict typed getters, stable parse diagnostics, and
+`jsonscancontainer`. Alternatives retained in the decision packet are the
+status quo, promotion of the duplicate-parser incubation, and a native opaque
+handle. Semantic risks are Unicode byte/character positions, malformed
+surrogates, duplicate-key first-match compatibility, numeric range handling,
+document-local node lifetime, and structural framing in noisy text.
+
+Predeclared first Release gate: focused correctness must pass; retained-document
+construction plus 30 indexed accesses must be no more than 50% of the pre-edit
+30-call repeated-parse workload on both optimized VMs; neither VM may show an
+optimizer-induced inversion; existing one-shot compatibility-operation medians
+must remain within 25% of the retained pre-edit product; and noisy extraction
+must replace the reproduced 4,161-parser loop with a structural scan plus one
+strict parse of the returned document. Freeze after minimum correctness, run
+the ordinary profiling-off Release comparison, report the verdict, and stop
+before broad validation.
+
+Frozen V1 verdict (2026-07-30): focused correctness passes 11/11. Document
+construction plus 30 indexed path gets is 79.14%/79.67% faster than the paired
+legacy repeated-parse baseline on `rxvm`/`rxbvm`, with no material optimizer
+inversion. Eight of ten one-shot compatibility cells are 36.96--53.39% slower,
+however, and the adversarial scanner takes 639,531/688,135.5 us because it
+restarts at 64 invalid openers. V1 is rejected by the guard and frozen pending
+the recommended single-parser/result-sink countermeasure decision. Evidence:
+[`CRI09 first Release verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-FIRST-RELEASE-VERDICT.md).
+
+V2 approval keeps the public Option B API fixed and changes only private result
+routing: one strict grammar/parser/Unicode/error core will drive a full index
+for retained documents, an allocation-free legacy query/validation result, and
+a fail-fast recoverable consumed-boundary result for noisy scanning. Frozen V1
+and the pre-edit product remain comparators. Stop again at the V2 ordinary
+Release verdict before broad validation.
+
+Frozen V2 verdict (2026-07-30): focused correctness passes 11/11. The
+hand-written streaming lexer uses a 256-byte class table and number DFA without
+a token list. Retained path access is 75.56%/78.64% faster than pre-edit
+repeated access, scanner time improves 99.92%/99.90% to 413/523 us, and there
+is no material optimizer inversion. Seven of ten legacy cells remain
+26.92--40.23% slower than pre-edit, so the unchanged guard rejects V2. The
+successful scanner slice is boundary-validated and then indexed, requiring two
+grammar passes but only one owned slice/index. Recommended next decisions are a
+lean hybrid streaming hot core and separate acceptance of the measured
+two-pass successful scanner construction. Evidence:
+[`CRI09 V2 Release verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-V2-RELEASE-VERDICT.md).
+
+Adrian approved A2 and B1 on 2026-07-30, sequencing the A2 implementation and
+mandatory Release comparison before B1 documentation/closure. A2 keeps one
+recursive grammar and the handwritten streaming tokenizer while moving tables
+to token boundaries, restoring tight string/number inner loops, scalar hot
+sink fields, binary path segments and zero-copy unescaped-key matching. Stop at
+the A2 verdict before B1 or broad closeout. B1 accepts one allocation-free
+boundary-validation pass plus one indexing pass for the successful slice; it
+does not introduce another tokenizer implementation.
+
+Frozen A2 verdict (2026-07-30): **pass**. Focused correctness passes 11/11;
+all ten legacy cells meet the 25% guard; retained path use is 76.25%/79.05%
+faster than repeated parsing; scanner medians are 394.5/480.5 us; and no
+material optimizer inversion is present. Adrian accepted frozen A2. B1's
+allocation-free boundary-validation pass plus successful-slice indexing pass
+is documented, focused Debug and macOS ASan pass 11/11, and complete Debug
+passes 1,943/1,943 with zero failures or skips. Evidence:
+[`CRI09 A2 Release verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-A2-RELEASE-VERDICT.md).
+[`CRI09 closeout`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-CLOSEOUT.md).
+
+### CAP-01-J02 — JSON numeric materialization and packed entities
+
+Status: **complete for CRI-13 on 2026-07-30**; accepted B is closed and no
+performance item is active. Frozen R1 passed its retained
+focused matrix but was
+20.47x--22.01x the prototype projection ceiling and reaches 25.38% of retained
+current total on optimized `rxbvm`. The exact RXAS/VM trace proves the private
+classifier is already fully inlined. Its dominant regression is two
+whole-source copies per element: 6,144 copies and 359,294,976 logical bytes for
+the retained workload. One scratch local snapshot removes the loop copies and
+improves projection to 1.311/1.755 ms, yet remains about 5.07x/6.59x the
+prototype ceiling because roughly 1.28 million interpreted instructions and
+61,441 strict byte reads remain. The recommended CRI-13 R2 computes nonzero and
+binary64-safe flags during the parser's existing number scan and stores them
+in the existing private unused u32 node field; no public API, index size, ABI
+or serialized format changes. A later Option C class comparison remains
+deferred. The systemic residual-copy issue is queued separately as
+`PERF2-07-B02`, including a bounded RXAS full-copy proof, and does not reopen
+the accepted `CAP-01-J01` surface. Evidence:
+[`R1 verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-B-R1-RELEASE-VERDICT.md)
+and [`RXAS trace`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R1-RXAS-TRACE.md).
+After Adrian approved R2 D, a pre-edit conversion audit proved that `1e-320`,
+`1e-324`, and `1.8e308` escape the public projection method as
+`CONVERSION_ERROR` on both VMs instead of returning documented status `-6`.
+The approved adjusted-exponent flags would retain that boundary flaw. D is
+paused before production edit. The recommended independently revertible next
+rung is a non-throwing bounded binary span-to-binary64 operation backed by an
+allocation-free, locale-independent, correctly rounded converter, measured
+against a repaired f32-specific D fallback. This is an explicit public
+RXAS/RXBIN architecture decision. Evidence:
+[`bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md).
+
+Adrian observed that the conversion signal can be caught. R2 therefore keeps
+parse-time classification and places one handler around the entire projection
+loop. Focused Debug and Release pass 5/5, the broader Debug JSON slice passes
+17/17, and formal Release passes 40/40 numeric plus 24/24 parser samples.
+Optimized projection is 295/326 us, 1.14x/1.22x the same-cell prototype, and
+the production total is 9.60%/11.03% of retained current. Every rule passes;
+Adrian accepted frozen R2 on 2026-07-30. Proportional closeout passes complete
+Debug 1,963/1,963 and affected ASan 17/17. The approved benchmark-local Option
+C comparison then passed focused 5/5 and formal Release 40/40, but optimized
+typed reads are 5.01x/4.71x raw B and writes are 3.67x/3.19x on
+`rxvm`/`rxbvm`. Optimized RXAS retains exact direct method calls plus receiver
+initialization and attribute link/unlink; it does not copy the complete binary
+per element and does not inline the concrete methods. The recommendation is B
+only for Release 1, with C deferred until a separately governed generic
+concrete/final method-access countermeasure is proved. Adrian accepted that
+disposition; the benchmark-local C probe was removed and the maintained
+benchmark and Release images exactly match frozen R2. The generic bounded
+conversion/helper review is queued, not active, as `PERF2-07-C01`. Evidence:
+[`R2 verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R2-RELEASE-VERDICT.md).
+[`R2 closeout`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R2-CLOSEOUT.md).
+[`C verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-C-CLASS-RELEASE-VERDICT.md).
+[`CRI-13 closeout`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-CLOSEOUT.md).
+
+Hypothesis: the current immutable document can traverse large numeric arrays
+once and support both ordinary typed-array materialization and explicit
+canonical-little-endian `.binary` packing without reparsing. Packed storage may
+reduce footprint and improve repeated hot scans, but adopting a public wrapper,
+envelope, width, metadata or serialization contract is a separate API/format
+decision.
+
+Semantic risks are exact signed-integer validation; binary64-to-binary32 range
+and rounding; JSON null/missing/non-number distinctions; expected dimensions;
+normalization metadata; empty/nested containers; byte order; corrupt/truncated
+payload validation; `.binary` copy boundaries; and confusing a JSON numeric
+array with a mathematical vector. The diagnostic benchmark must report first
+parse, repeated node traversal, ordinary typed materialization/copy, raw packed
+f32 and i64 conversion, JSON encoding, direct packed scans, total time and
+per-process peak RSS. It must run optimized and non-optimized on both VMs with
+exact checksums. Its raw packed controls are existing binary-memory operations,
+not a selected public format.
+
+The current-surface and renamed-prototype measurements are retained. The
+recommended API is explicit `node_f32_array`/`node_i64_array` projection to
+owning, headerless canonical-little-endian `.binary`, with no wrapper,
+normalization metadata, inference, cache or envelope. Exact alternatives and
+the predeclared first Release gate are in
+[`CRI13-PACKED-NUMERIC-DECISION.md`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-PACKED-NUMERIC-DECISION.md).
+Option B is approved. Do not add a wrapper class, envelope, codec name, flags,
+inference rule or serialization promise before the mandatory B Release stop.
 
 The current Mac closure routing is:
 

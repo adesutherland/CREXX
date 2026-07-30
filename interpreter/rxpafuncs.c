@@ -302,7 +302,7 @@ char* rxvm_getstring(rxpa_attribute_value attributeValue) {
 }
 
 /* Set a string in an attribute value */
-void rxvm_setstring(rxpa_attribute_value attributeValue, char* string){
+void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string){
     value* val = (value*)attributeValue;
     if (val) set_null_string(val, string);
 }

@@ -560,17 +560,17 @@ static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *pa
 }
 
 /*
- * The normal call path permits a proved read-only numeric formal to share its
- * incoming value. Preserve that fact at an inline site only for a direct
- * caller-local scalar with no optional/default, reference, aggregate, binary,
+ * The normal call path permits a proved read-only numeric or binary formal to
+ * share its incoming value. Preserve that fact at an inline site only for a
+ * direct caller-local scalar with no optional/default, reference, aggregate,
  * object, class-attribute or captured-expression obligation.
  */
-static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
-                                                          ASTNode *formal_target,
-                                                          ASTNode *actual_arg,
-                                                          Symbol *proc_sym,
-                                                          size_t formal_index,
-                                                          Symbol *captured_actual_symbol) {
+static int inline_readonly_value_formal_can_share_actual(ASTNode *param_arg,
+                                                         ASTNode *formal_target,
+                                                         ASTNode *actual_arg,
+                                                         Symbol *proc_sym,
+                                                         size_t formal_index,
+                                                         Symbol *captured_actual_symbol) {
     const InlineCallableSummary *summary;
     const InlineFormalSummary *formal_summary;
     Symbol *actual_symbol;
@@ -599,7 +599,7 @@ static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
     actual_symbol = actual_arg->symbolNode->symbol;
     type = formal_target->value_type;
     if (type != TP_BOOLEAN && type != TP_INTEGER &&
-        type != TP_FLOAT && type != TP_DECIMAL) {
+        type != TP_FLOAT && type != TP_DECIMAL && type != TP_BINARY) {
         return 0;
     }
     if (formal_summary->type != type || formal_summary->dims != 0) return 0;
@@ -616,7 +616,7 @@ static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
         actual_symbol->exposed ||
         actual_symbol->is_global_var ||
         actual_symbol->is_ref_arg ||
-        actual_symbol->has_reference_target) {
+        (actual_symbol->has_reference_target && type != TP_BINARY)) {
         return 0;
     }
 
@@ -2364,12 +2364,12 @@ static int inline_bind_call_arguments_impl(Context *context,
             continue;
         }
 
-        if (inline_readonly_scalar_formal_can_share_actual(param_arg,
-                                                           formal_target,
-                                                           actual_arg,
-                                                           proc_sym,
-                                                           actual_index,
-                                                           captured_actual_symbol)) {
+        if (inline_readonly_value_formal_can_share_actual(param_arg,
+                                                          formal_target,
+                                                          actual_arg,
+                                                          proc_sym,
+                                                          actual_index,
+                                                          captured_actual_symbol)) {
             Symbol *cloned_formal;
 
             cloned_formal = inline_find_mapped_symbol(clone_state,

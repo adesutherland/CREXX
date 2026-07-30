@@ -1,0 +1,6 @@
+options levelg
+
+text = "authored"
+length = .int
+assembler strlen length,text
+say length

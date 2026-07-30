@@ -1296,6 +1296,24 @@ add_test(NAME perf2_07_v3_representation
 set_tests_properties(perf2_07_v3_representation PROPERTIES
         LABELS "compiler;interpreter;representation;reference;performance;perf2_07")
 
+add_test(NAME perf2_07_binary_byvalue_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DLIBRARY_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DCODEGEN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_07_binary_byvalue_codegen.crexx
+                 -DSEMANTICS_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_07_binary_byvalue_semantics.crexx
+                 -DIMPORT_DEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_07_binary_byvalue_import_dep.crexx
+                 -DIMPORT_MAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_07_binary_byvalue_import_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/perf2_07_binary_byvalue_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_07_binary_byvalue_contract.cmake)
+set_tests_properties(perf2_07_binary_byvalue_contract PROPERTIES
+        LABELS "compiler;interpreter;binary;inlining;performance;perf2_07")
+
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
     set(RUNTIME_MODULES ${ARGN})
@@ -1950,6 +1968,53 @@ add_crexx_dual_import_run_test(interface_split_same_namespace_binary rexx_src/in
 add_crexx_dual_import_run_test(interface_binary_covariant rexx_src/interface_binary_covariant_main.crexx rexx_src/interface_binary_covariant_contract.crexx rexx_src/interface_binary_covariant_provider.crexx binary)
 add_crexx_dual_import_run_test(qualified_interface_import rexx_src/qualified_interface_main.crexx rexx_src/qualified_interface_dep_a.crexx rexx_src/qualified_interface_dep_b.crexx source)
 add_crexx_dual_import_run_test(qualified_interface_binary_import rexx_src/qualified_interface_main.crexx rexx_src/qualified_interface_dep_a.crexx rexx_src/qualified_interface_dep_b.crexx binary)
+
+add_test(
+        NAME imported_record_return_contract
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXBVM=$<TARGET_FILE:rxbvm>
+                -DLIBRARY=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/imported_record_return_contract_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/imported_record_return_contract.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(imported_record_return_contract PROPERTIES
+        LABELS "compiler;imports;runtime;optimizer")
+
+add_test(
+        NAME do_forever_return_contract
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXBVM=$<TARGET_FILE:rxbvm>
+                -DLIBRARY=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/do_forever_return_contract_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/do_forever_return_contract.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(do_forever_return_contract PROPERTIES
+        LABELS "compiler;control-flow;runtime;optimizer"
+        TIMEOUT 120)
+
+add_test(
+        NAME parse_levelg_contract
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXBVM=$<TARGET_FILE:rxbvm>
+                -DLIBRARY=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/parse_levelg_contract_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/parse_levelg_contract.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(parse_levelg_contract PROPERTIES
+        LABELS "compiler;exits;parse;runtime;optimizer"
+        TIMEOUT 120)
 
 set(INLINE_CROSS_FILE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_cross_file_binary_opt.cmake")
 set(INLINE_CROSS_FILE_CONTENT "set(full_out \"\")\n")

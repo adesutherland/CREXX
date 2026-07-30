@@ -1,0 +1,35 @@
+options levelg
+
+source = "one   two three"
+parse var source word1 word2 word3
+if word1 <> "one" | word2 <> "two" | word3 <> "three" then exit 1
+
+source = "left||right"
+parse var source left "|" middle "|" right
+if left <> "left" | middle <> "" | right <> "right" then exit 2
+
+source = "whole"
+parse var source before ":" after
+if before <> "whole" | after <> "" then exit 3
+
+source = "abcdef"
+parse var source 1 prefix 4 suffix
+if prefix <> "abc" | suffix <> "def" then exit 4
+
+source = ""
+parse var source empty ":" missing
+if empty <> "" | missing <> "" then exit 5
+
+source = "καλημέρα|世界"
+parse var source greek "|" han
+if greek <> "καλημέρα" | han <> "世界" then exit 6
+
+rest = "alpha|beta||gamma"
+gathered = ""
+do while rest <> ""
+  parse var rest item "|" rest
+  gathered = gathered || "[" || item || "]"
+end
+if gathered <> "[alpha][beta][][gamma]" then exit 7
+
+say "PARSE_LEVELG_OK"

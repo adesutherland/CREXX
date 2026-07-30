@@ -40,7 +40,7 @@ void rxvm_addinterface(char* name, char* option, char* type);
 void rxvm_addimplements(char* name, char* interface_name);
 void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args);
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
-void rxvm_setstring(rxpa_attribute_value attributeValue, char* string);
+void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
 rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
 void rxvm_setfloat(rxpa_attribute_value attributeValue, double double_value);

@@ -1,0 +1,10 @@
+options levelb
+namespace imported_record_return_levelb expose recordfacade
+import repro_record
+
+recordfacade: class
+  *: factory
+    return
+
+  record: method = .reprorecord
+    return makereprorecord()

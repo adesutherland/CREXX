@@ -23,76 +23,565 @@
  */
 
 options levelb
-namespace rxjson expose jsonvalid jsontype jsonget jsoncount jsonmembers jsonquote jsonunquote jsonarray jsonobject
+namespace rxjson expose jsondocument jsonvalid jsontype jsonget jsoncount jsonmembers jsonscancontainer jsonquote jsonunquote jsonarray jsonobject
 import rxfnsb
+
+/*
+ * The lexer is deliberately streaming: the table classifies token-boundary
+ * source bytes, while tight string/number loops consume token interiors. No
+ * token list is materialized. The
+ * recursive parser consumes each transient token directly so indexing,
+ * compatibility queries and noisy-text boundary scans share one grammar.
+ */
+rxjson_constants: procedure expose JSON_MODE_INDEX JSON_MODE_QUERY JSON_MODE_BOUNDARY JSON_CLASS_SPACE JSON_CLASS_QUOTE JSON_CLASS_MINUS JSON_CLASS_ZERO JSON_CLASS_DIGIT JSON_CLASS_FALSE JSON_CLASS_NULL JSON_CLASS_TRUE JSON_CLASS_OBJECT JSON_CLASS_ARRAY JSON_CLASS_PLUS JSON_CLASS_DOT JSON_CLASS_EXPONENT JSON_CLASS_BACKSLASH JSON_CLASS_COLON JSON_CLASS_COMMA JSON_CLASS_END_OBJECT JSON_CLASS_END_ARRAY JSON_ASCII_CLASS
+  constant JSON_MODE_INDEX = 1
+  constant JSON_MODE_QUERY = 2
+  constant JSON_MODE_BOUNDARY = 3
+
+  constant JSON_CLASS_SPACE = 1
+  constant JSON_CLASS_QUOTE = 2
+  constant JSON_CLASS_MINUS = 3
+  constant JSON_CLASS_ZERO = 4
+  constant JSON_CLASS_DIGIT = 5
+  constant JSON_CLASS_FALSE = 6
+  constant JSON_CLASS_NULL = 7
+  constant JSON_CLASS_TRUE = 8
+  constant JSON_CLASS_OBJECT = 9
+  constant JSON_CLASS_ARRAY = 10
+  constant JSON_CLASS_PLUS = 11
+  constant JSON_CLASS_DOT = 12
+  constant JSON_CLASS_EXPONENT = 13
+  constant JSON_CLASS_BACKSLASH = 14
+  constant JSON_CLASS_COLON = 15
+  constant JSON_CLASS_COMMA = 16
+  constant JSON_CLASS_END_OBJECT = 17
+  constant JSON_CLASS_END_ARRAY = 18
+
+  constant JSON_ASCII_CLASS = '0000000000000000000101000001000000000000000000000000000000000000'
+                              '01000200000000000000000b10030c00040505050505050505050f0000000000'
+                              '00000000000d0000000000000000000000000000000000000000000a0e120000'
+                              '00000000000d0600000000000000070000000000080000000000000900110000'
+                              '0000000000000000000000000000000000000000000000000000000000000000'
+                              '0000000000000000000000000000000000000000000000000000000000000000'
+                              '0000000000000000000000000000000000000000000000000000000000000000'
+                              '0000000000000000000000000000000000000000000000000000000000000000'x as .binary
+
+  return
+
+/**
+ * Immutable JSON source and private structural index.
+ *
+ * Node identifiers are positive, document-local and ephemeral. Zero means a
+ * missing node; negative method results report invalid usage. The index layout
+ * is private and is neither an ABI nor a serialized format.
+ */
+jsondocument: class
+  _source = .binary
+  _nodes = .binary
+  _keys = .binary
+  _valid = .int
+  _error_code = .string
+  _error_position = .int
+  _error = .string
+  _root = .int
+  _node_count = .int
+
+  /** Parse and retain one complete strict JSON value. */
+  *: factory
+    arg json = .string
+    source = json as .binary
+    nodes = .binary
+    keys = .binary
+    root = 0
+    node_total = 0
+    parse_code = ""
+    parse_byte = 0
+    parse_error = ""
+    status = _json_parse_document(source, nodes, keys, root, node_total, parse_code, parse_byte, parse_error)
+    _source = source
+    if status = 1 then do
+      _nodes = nodes
+      _keys = keys
+      _root = root
+      _node_count = node_total
+      _valid = 1
+      _error_code = "none"
+      _error_position = 0
+      _error = ""
+    end
+    else do
+      _nodes = .binary
+      _keys = .binary
+      _root = 0
+      _node_count = 0
+      _valid = 0
+      _error_code = parse_code
+      _error_position = _json_character_position(source, parse_byte)
+      _error = parse_error
+    end
+
+  /** Return one when the complete source is strict JSON. */
+  valid: method = .int
+    return _valid
+
+  /** Stable parse code: none, syntax, truncated, or trailing. */
+  error_code: method = .string
+    return _error_code
+
+  /** One-based character position, or zero for a valid document. */
+  error_position: method = .int
+    return _error_position
+
+  /** Human-readable parse diagnostic. */
+  error: method = .string
+    return _error
+
+  /** Return the immutable JSON source owned by this document. */
+  source: method = .string
+    return _source as .string
+
+  /** Return the UTF-8 source size in bytes. */
+  source_bytes: method = .int
+    return binlength(_source)
+
+  /** Return the current private index footprint in bytes. */
+  index_bytes: method = .int
+    return binlength(_nodes) + binlength(_keys)
+
+  /**
+   * Return the number of indexed values, or an addressed node's child count.
+   * The optional form preserves both approved `node_count()` call shapes in a
+   * language that does not overload methods by arity.
+   */
+  node_count: method = .int
+    arg node = 0
+    if node = 0 then return _node_count
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return -1
+    kind = _json_node_u8(_nodes, node, 0)
+    if kind = 4 | kind = 5 then return _json_node_u32(_nodes, node, 32)
+    return 0
+
+  /** Return the compatibility type selector for a legacy path. */
+  type: method = .string
+    arg path = .string
+    if _valid = 0 then return "error"
+    find_status = 0
+    node = _json_find_node(_nodes, _keys, _root, path, find_status)
+    if find_status < 0 then return "error"
+    if find_status = 0 then return "missing"
+    return _json_kind_name(_json_node_u8(_nodes, node, 0))
+
+  /** Return the compatibility string value for a legacy path. */
+  get: method = .string
+    arg path = .string
+    if _valid = 0 then return ""
+    find_status = 0
+    node = _json_find_node(_nodes, _keys, _root, path, find_status)
+    if find_status <= 0 then return ""
+    return _json_node_get(_source, _nodes, node)
+
+  /** Count object members or array elements at a legacy path. */
+  count: method = .int
+    arg path = .string
+    if _valid = 0 then return -1
+    find_status = 0
+    node = _json_find_node(_nodes, _keys, _root, path, find_status)
+    if find_status <= 0 then return -1
+    kind = _json_node_u8(_nodes, node, 0)
+    if kind = 4 | kind = 5 then return _json_node_u32(_nodes, node, 32)
+    return 0
+
+  /** Return object keys or one-based array indexes at a legacy path. */
+  members: method = .int
+    arg path = .string, expose names = .string[]
+    if _valid = 0 then return -1
+    find_status = 0
+    node = _json_find_node(_nodes, _keys, _root, path, find_status)
+    if find_status <= 0 then return -1
+    kind = _json_node_u8(_nodes, node, 0)
+    if kind \= 4 & kind \= 5 then return 0
+    child = _json_node_u32(_nodes, node, 8)
+    member_index = 0
+    do while child > 0
+      member_index = member_index + 1
+      if kind = 4 then do
+        key_offset = _json_node_u32(_nodes, child, 16)
+        key_length = _json_node_u32(_nodes, child, 20)
+        names[member_index] = (<at..binary>(key_offset, key_length) _keys) as .string
+      end
+      else names[member_index] = member_index as .string
+      child = _json_node_u32(_nodes, child, 12)
+    end
+    return member_index
+
+  /** Return the root node, or zero for an invalid document. */
+  root: method = .int
+    if _valid = 0 then return 0
+    return _root
+
+  /** Resolve a legacy path to a node; -1 invalid, 0 missing. */
+  find: method = .int
+    arg path = .string
+    if _valid = 0 then return -1
+    find_status = 0
+    node = _json_find_node(_nodes, _keys, _root, path, find_status)
+    if find_status < 0 then return -1
+    if find_status = 0 then return 0
+    return node
+
+  /** Find the first object member with an exact decoded name. */
+  member: method = .int
+    arg parent = .int, name = .string
+    if _valid = 0 | _json_node_valid(parent, _node_count) = 0 then return -1
+    if _json_node_u8(_nodes, parent, 0) \= 4 then return -2
+    return _json_member_node(_nodes, _keys, parent, name)
+
+  /** Find a one-based array element. */
+  element: method = .int
+    arg parent = .int, index = .int
+    if _valid = 0 | _json_node_valid(parent, _node_count) = 0 then return -1
+    if _json_node_u8(_nodes, parent, 0) \= 5 then return -2
+    return _json_element_node(_nodes, parent, index)
+
+  /** Return a node's JSON type, or error for an invalid node. */
+  node_type: method = .string
+    arg node = .int
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return "error"
+    return _json_kind_name(_json_node_u8(_nodes, node, 0))
+
+  /** Return a node's decoded string or exact JSON source text. */
+  node_get: method = .string
+    arg node = .int
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return ""
+    return _json_node_get(_source, _nodes, node)
+
+  /** Copy immediate child node IDs in source order. */
+  children: method = .int
+    arg node = .int, expose child_nodes = .int[]
+    child_nodes = .int[]
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return -1
+    kind = _json_node_u8(_nodes, node, 0)
+    if kind \= 4 & kind \= 5 then return 0
+    child = _json_node_u32(_nodes, node, 8)
+    child_index = 0
+    do while child > 0
+      child_index = child_index + 1
+      child_nodes[child_index] = child
+      child = _json_node_u32(_nodes, child, 12)
+    end
+    return child_index
+
+  /** Return an object key or one-based array index for a child node. */
+  node_name: method = .string
+    arg node = .int
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return ""
+    parent = _json_node_u32(_nodes, node, 4)
+    if parent = 0 then return ""
+    parent_kind = _json_node_u8(_nodes, parent, 0)
+    if parent_kind = 4 then do
+      key_offset = _json_node_u32(_nodes, node, 16)
+      key_length = _json_node_u32(_nodes, node, 20)
+      return (<at..binary>(key_offset, key_length) _keys) as .string
+    end
+    if parent_kind = 5 then do
+      child = _json_node_u32(_nodes, parent, 8)
+      index = 1
+      do while child > 0
+        if child = node then return index as .string
+        child = _json_node_u32(_nodes, child, 12)
+        index = index + 1
+      end
+    end
+    return ""
+
+  /** Decode a string node. Status: 0 success, -1 invalid, -2 wrong type. */
+  node_string: method = .int
+    arg node = .int, expose value = .string
+    value = ""
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return -1
+    if _json_node_u8(_nodes, node, 0) \= 1 then return -2
+    value = _json_node_get(_source, _nodes, node)
+    return 0
+
+  /**
+   * Decode an exact signed 64-bit integer.
+   * Status: 0 success, -1 invalid, -2 wrong type, -3 non-integral, -4 range.
+   */
+  node_int: method = .int
+    arg node = .int, expose value = .int
+    value = 0
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return -1
+    if _json_node_u8(_nodes, node, 0) \= 2 then return -2
+    start = _json_node_u32(_nodes, node, 24)
+    after = _json_node_u32(_nodes, node, 28)
+    integer_text = ""
+    integer_status = _json_i64_text(_source, start, after, integer_text)
+    if integer_status = 0 then return -3
+    if integer_status < 0 then return -4
+    if integer_text = "-9223372036854775808" then value = -9223372036854775807 - 1
+    else value = integer_text as .int
+    return 0
+
+  /** Decode a finite binary64 number; -4 reports overflow or underflow. */
+  node_float: method = .int
+    arg node = .int, expose value = .float
+    value = 0 as .float
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return -1
+    if _json_node_u8(_nodes, node, 0) \= 2 then return -2
+    start = _json_node_u32(_nodes, node, 24)
+    after = _json_node_u32(_nodes, node, 28)
+    number_text = (<at..binary>(start, after - start) _source) as .string
+    nonzero = _json_number_nonzero(number_text)
+    if _json_float_token_in_range(number_text) = 0 then return -4
+    conversion_failed = 0
+    number = 0 as .float
+    do
+      number = number_text as .float
+    on signal conversion_error
+      conversion_failed = 1
+    end
+    if conversion_failed = 1 then return -4
+    maximum = "1.7976931348623157e308" as .float
+    minimum = "-1.7976931348623157e308" as .float
+    if number > maximum | number < minimum then return -4
+    if nonzero = 1 & number = 0 then return -4
+    value = number
+    return 0
+
+  /**
+   * Project one JSON numeric array to owning canonical little-endian f32 bytes.
+   *
+   * `expected_count` is -1 to accept the current array length or a required
+   * non-negative length. Status: 0 success, -1 invalid document/node, -2 wrong
+   * node type, -3 invalid expected count, -4 count mismatch, -5 non-number
+   * element, -6 numeric conversion/range failure. Failure clears `packed` and
+   * reports the one-based element where relevant.
+   */
+  node_f32_array: method = .int
+    arg node = .int, expected_count = .int, expose packed = .binary, expose error = .string
+    call binclear packed
+    error = ""
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then do
+      error = "invalid JSON document or node"
+      return -1
+    end
+    if _json_node_u8(_nodes, node, 0) \= 5 then do
+      error = "JSON node is not an array"
+      return -2
+    end
+    if expected_count < -1 then do
+      error = "expected count must be -1 or non-negative"
+      return -3
+    end
+    count = _json_node_u32(_nodes, node, 32)
+    if expected_count >= 0 & count \= expected_count then do
+      error = "count mismatch: expected " || expected_count || ", found " || count
+      return -4
+    end
+
+    call binresize packed, count * 4
+    child = _json_node_u32(_nodes, node, 8)
+    element_index = 1
+    maximum = "3.4028234663852886e38" as .float
+    minimum = "-3.4028234663852886e38" as .float
+    conversion_failed = 0
+    do
+      do while child > 0
+        child_offset = (child - 1) * 40
+        if <at..u8>(child_offset) _nodes \= 2 then do
+          call binclear packed
+          error = "element " || element_index || " is not a JSON number"
+          return -5
+        end
+        start = <at..u32>(child_offset + 24) _nodes
+        after = <at..u32>(child_offset + 28) _nodes
+        number_flags = <at..u32>(child_offset + 36) _nodes
+        if number_flags < 2 then do
+          call binclear packed
+          error = "element " || element_index || " cannot be represented as f32"
+          return -6
+        end
+        nonzero = 0
+        if number_flags = 3 then nonzero = 1
+        number_text = (<at..binary>(start, after - start) _source) as .string
+        number = number_text as .float
+        if number > maximum | number < minimum then do
+          call binclear packed
+          error = "element " || element_index || " cannot be represented as f32"
+          return -6
+        end
+        offset = (element_index - 1) * 4
+        <at..f32>(offset) packed = number
+        if nonzero = 1 & <at..f32>(offset) packed = 0 then do
+          call binclear packed
+          error = "element " || element_index || " cannot be represented as f32"
+          return -6
+        end
+        element_index = element_index + 1
+        child = <at..u32>(child_offset + 12) _nodes
+      end
+    on signal conversion_error
+      conversion_failed = 1
+    end
+    if conversion_failed = 1 then do
+      call binclear packed
+      error = "element " || element_index || " cannot be represented as f32"
+      return -6
+    end
+    return 0
+
+  /**
+   * Project one JSON numeric array to owning canonical little-endian i64 bytes.
+   *
+   * `expected_count` and status values have the same contract as
+   * `node_f32_array`. Exact integral decimal and exponent forms are accepted;
+   * non-integral and out-of-range values return -6.
+   */
+  node_i64_array: method = .int
+    arg node = .int, expected_count = .int, expose packed = .binary, expose error = .string
+    call binclear packed
+    error = ""
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then do
+      error = "invalid JSON document or node"
+      return -1
+    end
+    if _json_node_u8(_nodes, node, 0) \= 5 then do
+      error = "JSON node is not an array"
+      return -2
+    end
+    if expected_count < -1 then do
+      error = "expected count must be -1 or non-negative"
+      return -3
+    end
+    count = _json_node_u32(_nodes, node, 32)
+    if expected_count >= 0 & count \= expected_count then do
+      error = "count mismatch: expected " || expected_count || ", found " || count
+      return -4
+    end
+
+    call binresize packed, count * 8
+    child = _json_node_u32(_nodes, node, 8)
+    element_index = 1
+    do while child > 0
+      child_offset = (child - 1) * 40
+      if <at..u8>(child_offset) _nodes \= 2 then do
+        call binclear packed
+        error = "element " || element_index || " is not a JSON number"
+        return -5
+      end
+      start = <at..u32>(child_offset + 24) _nodes
+      after = <at..u32>(child_offset + 28) _nodes
+      integer_text = ""
+      integer_status = _json_i64_text(_source, start, after, integer_text)
+      if integer_status <= 0 then do
+        call binclear packed
+        error = "element " || element_index || " cannot be represented as i64"
+        return -6
+      end
+      if integer_text = "-9223372036854775808" then integer_value = -9223372036854775807 - 1
+      else integer_value = integer_text as .int
+      <at..i64>((element_index - 1) * 8) packed = integer_value
+      element_index = element_index + 1
+      child = <at..u32>(child_offset + 12) _nodes
+    end
+    return 0
+
+  /** Decode a JSON boolean as zero or one. */
+  node_boolean: method = .int
+    arg node = .int, expose value = .int
+    value = 0
+    if _valid = 0 | _json_node_valid(node, _node_count) = 0 then return -1
+    if _json_node_u8(_nodes, node, 0) \= 3 then return -2
+    start = _json_node_u32(_nodes, node, 24)
+    if <at..u8>(start) _source = 116 then value = 1
+    return 0
 
 jsonvalid: procedure = .int
   arg json = .string
-  data = json as .binary
-  len = binlength(data)
-  p = 0
-  found = 1
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  segment_kind = .int[]
-  segment_text = .string[]
-  segment_index = .int[]
-  segment_bin = .binary[]
-
-  if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return 0
-  call _json_skip_ws data, len, p
-  if p \= len then return 0
-  return 1
+  return _json_validate(json as .binary)
 
 jsontype: procedure = .string
   arg json = .string, path = .string
-  data = .binary
-  len = 0
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  kind = 0
+  value_start = 0
+  value_after = 0
+  child_count = 0
+  names = .string[]
+  status = _json_query(json as .binary, path, 0, kind, value_start, value_after, child_count, names)
   if status < 0 then return "error"
   if status = 0 then return "missing"
-  return _json_kind_name(found_kind)
+  return _json_kind_name(kind)
 
 jsonget: procedure = .string
   arg json = .string, path = .string
-  data = .binary
-  len = 0
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  source = json as .binary
+  kind = 0
+  value_start = 0
+  value_after = 0
+  child_count = 0
+  names = .string[]
+  status = _json_query(source, path, 0, kind, value_start, value_after, child_count, names)
   if status <= 0 then return ""
-  if found_kind = 1 then return _json_unquote_binary(data, found_start, found_after)
-  return (<at..binary>(found_start, found_after - found_start) data) as .string
+  if kind = 1 then return _json_unquote_binary(source, value_start, value_after)
+  return (<at..binary>(value_start, value_after - value_start) source) as .string
 
 jsoncount: procedure = .int
   arg json = .string, path = .string
-  data = .binary
-  len = 0
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  kind = 0
+  value_start = 0
+  value_after = 0
+  child_count = 0
+  names = .string[]
+  status = _json_query(json as .binary, path, 0, kind, value_start, value_after, child_count, names)
   if status <= 0 then return -1
-  if found_kind = 5 then return _json_array_count(data, len, found_start, found_after)
-  if found_kind = 4 then return _json_object_count(data, len, found_start, found_after)
-  return 0
+  return child_count
 
 jsonmembers: procedure = .int
   arg json = .string, path = .string, expose names = .string[]
-  data = .binary
-  len = 0
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  names = .string[]
+  kind = 0
+  value_start = 0
+  value_after = 0
+  child_count = 0
+  status = _json_query(json as .binary, path, 1, kind, value_start, value_after, child_count, names)
   if status <= 0 then return -1
-  if found_kind = 5 then return _json_array_members(data, len, found_start, found_after, names)
-  if found_kind = 4 then return _json_object_members(data, len, found_start, found_after, names)
+  return child_count
+
+/**
+ * Find the first complete strict JSON object or array at or after from.
+ * Returned start and after positions are one-based character positions in the
+ * original text. The returned document owns only the exact JSON slice.
+ */
+jsonscancontainer: procedure = .int
+  arg text = .string, from = 1, expose document = .jsondocument, expose start = .int, expose after = .int
+  document = .jsondocument("")
+  start = 0
+  after = 0
+  if from < 1 then from = 1
+  if from > length(text) then return 0
+  data = text as .binary
+  len = binlength(data)
+  if from = 1 then p = 0
+  else p = binlength(substr(text, 1, from - 1) as .binary)
+  do while p < len
+    byte = <at..u8>(p) data
+    cls = <at..u8>(byte) JSON_ASCII_CLASS
+    if cls = JSON_CLASS_OBJECT | cls = JSON_CLASS_ARRAY then do
+      candidate_start = p
+      candidate_after = 0
+      if _json_parse_boundary(data, candidate_start, candidate_after) = 1 then do
+        candidate = (<at..binary>(candidate_start, candidate_after - candidate_start) data) as .string
+        candidate_document = .jsondocument(candidate)
+        if candidate_document.valid() = 1 then do
+          document = candidate_document
+          start = _json_character_position(data, candidate_start)
+          after = _json_character_position(data, candidate_after)
+          return 1
+        end
+      end
+    end
+    p = p + 1
+  end
   return 0
 
 jsonquote: procedure = .string
@@ -115,14 +604,11 @@ jsonquote: procedure = .string
 
 jsonunquote: procedure = .string
   arg json = .string
-  data = json as .binary
-  len = binlength(data)
-  p = 0
-  escaped = 0
-  if _json_scan_string(data, len, p, escaped) = 0 then return ""
-  call _json_skip_ws data, len, p
-  if p \= len then return ""
-  return _json_unquote_binary(data, 0, p)
+  document = .jsondocument(json)
+  if document.valid() = 0 then return ""
+  root = document.root()
+  if document.node_type(root) \= "string" then return ""
+  return document.node_get(root)
 
 jsonarray: procedure = .string
   arg values = .string[]
@@ -145,40 +631,491 @@ jsonobject: procedure = .string
   end
   return out || "}"
 
-_json_find: procedure = .int
-  arg json = .string, path = .string, expose data = .binary, expose len = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
-  data = json as .binary
-  len = binlength(data)
+_json_parse_document: procedure = .int
+  arg data = .binary, expose nodes = .binary, expose keys = .binary, expose root = .int, expose node_total = .int, expose error_code = .string, expose error_byte = .int, expose error = .string
+  nodes = .binary
+  keys = .binary
+  root = 0
+  node_total = 0
+  capacity = 0
+  segment_kind = .int[]
+  segment_bin = .binary[]
+  segment_index = .int[]
+  state = .int[]
+  state[1] = JSON_MODE_INDEX
+  state[2] = 0
+  state[3] = 0
+  state[4] = 0
+  found_names = .string[]
+  error_code = ""
+  error_byte = 0
+  error = ""
+  p = 0
+  return _json_parse_core(data, p, 1, nodes, keys, root, node_total, capacity, state, segment_kind, segment_bin, segment_index, 0, found_names, error_code, error_byte, error)
+
+_json_query: procedure = .int
+  arg data = .binary, path = .string, capture_names = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int, expose found_count = .int, expose found_names = .string[]
   segment_kind = .int[]
   segment_text = .string[]
   segment_index = .int[]
   segment_bin = .binary[]
-  segment_count = _json_parse_path(path, segment_kind, segment_text, segment_index, segment_bin)
+  segment_count = _json_parse_path(path, segment_kind, segment_text, segment_index)
   if segment_count < 0 then return -1
-
+  do segment = 1 to segment_count
+    segment_bin[segment] = segment_text[segment] as .binary
+  end
+  nodes = .binary
+  keys = .binary
+  root = 0
+  node_total = 0
+  capacity = 0
+  state = .int[]
+  state[1] = JSON_MODE_QUERY
+  state[2] = segment_count
+  state[3] = capture_names
+  state[4] = 0
+  state[5] = 0
+  state[6] = 0
+  state[7] = 0
+  state[8] = 0
+  state[9] = 0
+  found_names = .string[]
+  error_code = ""
+  error_byte = 0
+  error = ""
   p = 0
-  found = 0
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  if _json_parse_value(data, len, p, 0, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
-  call _json_skip_ws data, len, p
-  if p \= len then return -1
-  if found = 0 then return 0
+  if _json_parse_core(data, p, 1, nodes, keys, root, node_total, capacity, state, segment_kind, segment_bin, segment_index, 0, found_names, error_code, error_byte, error) = 0 then return -1
+  if state[4] = 0 then return 0
+  found_kind = state[5]
+  found_start = state[6]
+  found_after = state[7]
+  found_count = state[8]
   return 1
 
+_json_validate: procedure = .int
+  arg data = .binary
+  nodes = .binary
+  keys = .binary
+  root = 0
+  node_total = 0
+  capacity = 0
+  state = .int[]
+  state[1] = JSON_MODE_BOUNDARY
+  state[2] = 0
+  state[3] = 0
+  state[4] = 0
+  segment_kind = .int[]
+  segment_bin = .binary[]
+  segment_index = .int[]
+  found_names = .string[]
+  error_code = ""
+  error_byte = 0
+  error = ""
+  p = 0
+  return _json_parse_core(data, p, 1, nodes, keys, root, node_total, capacity, state, segment_kind, segment_bin, segment_index, -1, found_names, error_code, error_byte, error)
+
+_json_parse_boundary: procedure = .int
+  arg data = .binary, candidate_start = .int, expose candidate_after = .int
+  nodes = .binary
+  keys = .binary
+  root = 0
+  node_total = 0
+  capacity = 0
+  state = .int[]
+  state[1] = JSON_MODE_BOUNDARY
+  state[2] = 0
+  state[3] = 0
+  state[4] = 0
+  segment_kind = .int[]
+  segment_bin = .binary[]
+  segment_index = .int[]
+  found_names = .string[]
+  error_code = ""
+  error_byte = 0
+  error = ""
+  p = candidate_start
+  if _json_parse_core(data, p, 0, nodes, keys, root, node_total, capacity, state, segment_kind, segment_bin, segment_index, -1, found_names, error_code, error_byte, error) = 0 then return 0
+  candidate_after = state[9]
+  return 1
+
+_json_parse_core: procedure = .int
+  arg data = .binary, expose p = .int, require_complete = .int, expose nodes = .binary, expose keys = .binary, expose root = .int, expose node_total = .int, expose capacity = .int, expose state = .int[], segment_kind = .int[], segment_bin = .binary[], segment_index = .int[], active = .int, expose found_names = .string[], expose error_code = .string, expose error_byte = .int, expose error = .string
+  len = binlength(data)
+  mode = state[1]
+  if _json_parse_value(data, len, p, 0, 0, 0, nodes, node_total, capacity, keys, root, state, segment_kind, segment_bin, segment_index, active, found_names, error_code, error_byte, error) = 0 then return 0
+  state[9] = p
+  if require_complete = 1 then do
+    call _json_skip_ws data, len, p
+    if p \= len then do
+      error_code = "trailing"
+      error_byte = p
+      error = "unexpected trailing data"
+      return 0
+    end
+  end
+  if mode = JSON_MODE_INDEX then call binresize nodes, node_total * 40
+  return 1
+
+_json_parse_value: procedure = .int
+  arg data = .binary, len = .int, expose p = .int, parent = .int, key_offset = .int, key_length = .int, expose nodes = .binary, expose node_total = .int, expose capacity = .int, expose keys = .binary, expose node_id = .int, expose state = .int[], segment_kind = .int[], segment_bin = .binary[], segment_index = .int[], active = .int, expose found_names = .string[], expose error_code = .string, expose error_byte = .int, expose error = .string
+  call _json_skip_ws data, len, p
+  mode = state[1]
+  if p >= len then do
+    error_code = "truncated"
+    error_byte = p
+    error = "missing JSON value"
+    return 0
+  end
+  start = p
+  byte = <at..u8>(p) data
+  cls = <at..u8>(byte) JSON_ASCII_CLASS
+  kind = 0
+  if cls = JSON_CLASS_QUOTE then kind = 1
+  else if cls = JSON_CLASS_MINUS | cls = JSON_CLASS_ZERO | cls = JSON_CLASS_DIGIT then kind = 2
+  else if cls = JSON_CLASS_TRUE | cls = JSON_CLASS_FALSE then kind = 3
+  else if cls = JSON_CLASS_OBJECT then kind = 4
+  else if cls = JSON_CLASS_ARRAY then kind = 5
+  else if cls = JSON_CLASS_NULL then kind = 6
+  else do
+    error_code = "syntax"
+    error_byte = p
+    error = "unexpected JSON value"
+    return 0
+  end
+
+  node_id = 0
+  if mode = JSON_MODE_INDEX then call _json_append_node nodes, node_total, capacity, kind, parent, key_offset, key_length, start, node_id
+
+  if kind = 1 then do
+    escaped_string = 0
+    if _json_scan_string(data, len, p, escaped_string, error_code, error_byte, error) = 0 then return 0
+    if mode = JSON_MODE_INDEX then call _json_set_node_u32 nodes, node_id, 28, p
+    call _json_record_query state, active, kind, start, p, 0
+    return 1
+  end
+  if kind = 2 then do
+    number_flags = 0
+    if _json_scan_number(data, len, p, number_flags) = 0 then do
+      if p >= len then error_code = "truncated"
+      else error_code = "syntax"
+      error_byte = p
+      error = "invalid JSON number"
+      return 0
+    end
+    if mode = JSON_MODE_INDEX then do
+      call _json_set_node_u32 nodes, node_id, 28, p
+      call _json_set_node_u32 nodes, node_id, 36, number_flags
+    end
+    call _json_record_query state, active, kind, start, p, 0
+    return 1
+  end
+  if kind = 3 then do
+    if cls = JSON_CLASS_TRUE then literal = "true" as .binary
+    else literal = "false" as .binary
+    literal_length = binlength(literal)
+    if p + literal_length > len then do
+      error_code = "truncated"
+      error_byte = len
+      error = "truncated JSON literal"
+      return 0
+    end
+    if _json_match_literal(data, len, p, literal) = 0 then do
+      error_code = "syntax"
+      error_byte = p
+      error = "invalid JSON literal"
+      return 0
+    end
+    p = p + literal_length
+    if mode = JSON_MODE_INDEX then call _json_set_node_u32 nodes, node_id, 28, p
+    call _json_record_query state, active, kind, start, p, 0
+    return 1
+  end
+  if kind = 6 then do
+    literal = "null" as .binary
+    if p + 4 > len then do
+      error_code = "truncated"
+      error_byte = len
+      error = "truncated JSON literal"
+      return 0
+    end
+    if _json_match_literal(data, len, p, literal) = 0 then do
+      error_code = "syntax"
+      error_byte = p
+      error = "invalid JSON literal"
+      return 0
+    end
+    p = p + 4
+    if mode = JSON_MODE_INDEX then call _json_set_node_u32 nodes, node_id, 28, p
+    call _json_record_query state, active, kind, start, p, 0
+    return 1
+  end
+  if kind = 4 then return _json_parse_object(data, len, p, start, node_id, nodes, node_total, capacity, keys, state, segment_kind, segment_bin, segment_index, active, found_names, error_code, error_byte, error)
+  return _json_parse_array(data, len, p, start, node_id, nodes, node_total, capacity, keys, state, segment_kind, segment_bin, segment_index, active, found_names, error_code, error_byte, error)
+
+_json_parse_object: procedure = .int
+  arg data = .binary, len = .int, expose p = .int, start = .int, node = .int, expose nodes = .binary, expose node_total = .int, expose capacity = .int, expose keys = .binary, expose state = .int[], segment_kind = .int[], segment_bin = .binary[], segment_index = .int[], active = .int, expose found_names = .string[], expose error_code = .string, expose error_byte = .int, expose error = .string
+  mode = state[1]
+  segment_count = state[2]
+  capture_names = state[3]
+  p = p + 1
+  call _json_skip_ws data, len, p
+  if p < len & <at..u8>(p) data = 125 then do
+    p = p + 1
+    if mode = JSON_MODE_INDEX then call _json_set_node_u32 nodes, node, 28, p
+    call _json_record_query state, active, 4, start, p, 0
+    return 1
+  end
+  first_child = 0
+  previous_child = 0
+  child_total = 0
+  matched_child = 0
+  do while p < len
+    key_start = p
+    escaped_string = 0
+    if _json_scan_string(data, len, p, escaped_string, error_code, error_byte, error) = 0 then return 0
+    key_after = p
+    key_offset = 0
+    key_length = 0
+    key_text = ""
+    need_key = 0
+    if mode = JSON_MODE_INDEX then need_key = 1
+    else if mode = JSON_MODE_QUERY & active = segment_count & capture_names = 1 then need_key = 1
+    if need_key = 1 then key_text = _json_unquote_binary(data, key_start, key_after)
+    if mode = JSON_MODE_INDEX then do
+      key_bytes = key_text as .binary
+      key_offset = binlength(keys)
+      key_length = binlength(key_bytes)
+      call binappend keys, key_bytes
+    end
+    call _json_skip_ws data, len, p
+    if p >= len then do
+      error_code = "truncated"
+      error_byte = p
+      error = "missing colon after object member"
+      return 0
+    end
+    if <at..u8>(p) data \= 58 then do
+      error_code = "syntax"
+      error_byte = p
+      error = "missing colon after object member"
+      return 0
+    end
+    p = p + 1
+    child = 0
+    child_active = -1
+    found = state[4]
+    if mode = JSON_MODE_QUERY & active >= 0 & active < segment_count & found = 0 & matched_child = 0 then do
+      if segment_kind[active + 1] = 0 & _json_key_matches(data, key_start, key_after, escaped_string, segment_bin[active + 1]) = 1 then do
+        child_active = active + 1
+        matched_child = 1
+      end
+    end
+    if mode = JSON_MODE_QUERY & active = segment_count & capture_names = 1 then found_names[child_total + 1] = key_text
+    if _json_parse_value(data, len, p, node, key_offset, key_length, nodes, node_total, capacity, keys, child, state, segment_kind, segment_bin, segment_index, child_active, found_names, error_code, error_byte, error) = 0 then return 0
+    if mode = JSON_MODE_INDEX then do
+      if first_child = 0 then first_child = child
+      if previous_child > 0 then call _json_set_node_u32 nodes, previous_child, 12, child
+      previous_child = child
+    end
+    child_total = child_total + 1
+    call _json_skip_ws data, len, p
+    if p < len & <at..u8>(p) data = 44 then do
+      p = p + 1
+      call _json_skip_ws data, len, p
+      iterate
+    end
+    if p < len & <at..u8>(p) data = 125 then do
+      p = p + 1
+      if mode = JSON_MODE_INDEX then do
+        call _json_set_node_u32 nodes, node, 8, first_child
+        call _json_set_node_u32 nodes, node, 28, p
+        call _json_set_node_u32 nodes, node, 32, child_total
+      end
+      call _json_record_query state, active, 4, start, p, child_total
+      return 1
+    end
+    if p >= len then error_code = "truncated"
+    else error_code = "syntax"
+    error_byte = p
+    error = "missing comma or object terminator"
+    return 0
+  end
+  error_code = "truncated"
+  error_byte = p
+  error = "unterminated JSON object"
+  return 0
+
+_json_parse_array: procedure = .int
+  arg data = .binary, len = .int, expose p = .int, start = .int, node = .int, expose nodes = .binary, expose node_total = .int, expose capacity = .int, expose keys = .binary, expose state = .int[], segment_kind = .int[], segment_bin = .binary[], segment_index = .int[], active = .int, expose found_names = .string[], expose error_code = .string, expose error_byte = .int, expose error = .string
+  mode = state[1]
+  segment_count = state[2]
+  capture_names = state[3]
+  p = p + 1
+  call _json_skip_ws data, len, p
+  if p < len & <at..u8>(p) data = 93 then do
+    p = p + 1
+    if mode = JSON_MODE_INDEX then call _json_set_node_u32 nodes, node, 28, p
+    call _json_record_query state, active, 5, start, p, 0
+    return 1
+  end
+  first_child = 0
+  previous_child = 0
+  child_total = 0
+  do while p < len
+    child = 0
+    child_active = -1
+    found = state[4]
+    if mode = JSON_MODE_QUERY & active >= 0 & active < segment_count & found = 0 then do
+      if segment_index[active + 1] = child_total + 1 then child_active = active + 1
+    end
+    if mode = JSON_MODE_QUERY & active = segment_count & capture_names = 1 then found_names[child_total + 1] = (child_total + 1) as .string
+    if _json_parse_value(data, len, p, node, 0, 0, nodes, node_total, capacity, keys, child, state, segment_kind, segment_bin, segment_index, child_active, found_names, error_code, error_byte, error) = 0 then return 0
+    if mode = JSON_MODE_INDEX then do
+      if first_child = 0 then first_child = child
+      if previous_child > 0 then call _json_set_node_u32 nodes, previous_child, 12, child
+      previous_child = child
+    end
+    child_total = child_total + 1
+    call _json_skip_ws data, len, p
+    if p < len & <at..u8>(p) data = 44 then do
+      p = p + 1
+      call _json_skip_ws data, len, p
+      iterate
+    end
+    if p < len & <at..u8>(p) data = 93 then do
+      p = p + 1
+      if mode = JSON_MODE_INDEX then do
+        call _json_set_node_u32 nodes, node, 8, first_child
+        call _json_set_node_u32 nodes, node, 28, p
+        call _json_set_node_u32 nodes, node, 32, child_total
+      end
+      call _json_record_query state, active, 5, start, p, child_total
+      return 1
+    end
+    if p >= len then error_code = "truncated"
+    else error_code = "syntax"
+    error_byte = p
+    error = "missing comma or array terminator"
+    return 0
+  end
+  error_code = "truncated"
+  error_byte = p
+  error = "unterminated JSON array"
+  return 0
+
+_json_record_query: procedure
+  arg expose state = .int[], active = .int, kind = .int, start = .int, after = .int, child_count = .int
+  if state[1] \= JSON_MODE_QUERY then return
+  if state[4] \= 0 then return
+  if active \= state[2] then return
+  state[4] = 1
+  state[5] = kind
+  state[6] = start
+  state[7] = after
+  state[8] = child_count
+  return
+
+_json_append_node: procedure
+  arg expose nodes = .binary, expose node_total = .int, expose capacity = .int, kind = .int, parent = .int, key_offset = .int, key_length = .int, value_start = .int, expose node_id = .int
+  if node_total >= capacity then do
+    if capacity = 0 then capacity = 64
+    else capacity = capacity * 2
+    call binresize nodes, capacity * 40
+  end
+  node_total = node_total + 1
+  node_id = node_total
+  offset = (node_id - 1) * 40
+  <at..u8>(offset) nodes = kind
+  <at..u8>(offset + 1) nodes = 0
+  <at..u16>(offset + 2) nodes = 0
+  <at..u32>(offset + 4) nodes = parent
+  <at..u32>(offset + 8) nodes = 0
+  <at..u32>(offset + 12) nodes = 0
+  <at..u32>(offset + 16) nodes = key_offset
+  <at..u32>(offset + 20) nodes = key_length
+  <at..u32>(offset + 24) nodes = value_start
+  <at..u32>(offset + 28) nodes = 0
+  <at..u32>(offset + 32) nodes = 0
+  <at..u32>(offset + 36) nodes = 0
+  return
+
+_json_node_u8: procedure = .int
+  arg nodes = .binary, node = .int, field = .int
+  return <at..u8>((node - 1) * 40 + field) nodes
+
+_json_node_u32: procedure = .int
+  arg nodes = .binary, node = .int, field = .int
+  return <at..u32>((node - 1) * 40 + field) nodes
+
+_json_set_node_u32: procedure
+  arg expose nodes = .binary, node = .int, field = .int, value = .int
+  <at..u32>((node - 1) * 40 + field) nodes = value
+  return
+
+_json_node_valid: procedure = .int
+  arg node = .int, node_total = .int
+  if node >= 1 & node <= node_total then return 1
+  return 0
+
+_json_node_get: procedure = .string
+  arg source = .binary, nodes = .binary, node = .int
+  kind = _json_node_u8(nodes, node, 0)
+  start = _json_node_u32(nodes, node, 24)
+  after = _json_node_u32(nodes, node, 28)
+  if kind = 1 then return _json_unquote_binary(source, start, after)
+  return (<at..binary>(start, after - start) source) as .string
+
+_json_find_node: procedure = .int
+  arg nodes = .binary, keys = .binary, root = .int, path = .string, expose status = .int
+  segment_kind = .int[]
+  segment_text = .string[]
+  segment_index = .int[]
+  segment_count = _json_parse_path(path, segment_kind, segment_text, segment_index)
+  if segment_count < 0 then do
+    status = -1
+    return 0
+  end
+  current = root
+  if current <= 0 then do
+    status = -1
+    return 0
+  end
+  status = 1
+  do segment = 1 to segment_count
+    kind = _json_node_u8(nodes, current, 0)
+    if kind = 4 then do
+      if segment_kind[segment] \= 0 then do
+        status = 0
+        return 0
+      end
+      current = _json_member_node(nodes, keys, current, segment_text[segment])
+    end
+    else if kind = 5 then do
+      if segment_kind[segment] \= 1 & segment_index[segment] < 0 then do
+        status = 0
+        return 0
+      end
+      current = _json_element_node(nodes, current, segment_index[segment])
+    end
+    else current = 0
+    if current = 0 then do
+      status = 0
+      return 0
+    end
+  end
+  return current
+
 _json_parse_path: procedure = .int
-  arg path = .string, expose segment_kind = .int[], expose segment_text = .string[], expose segment_index = .int[], expose segment_bin = .binary[]
+  arg path = .string, expose segment_kind = .int[], expose segment_text = .string[], expose segment_index = .int[]
   if length(path) = 0 then return 0
   count = 0
   p = 1
-  plen = length(path)
-  do while p <= plen
+  path_length = length(path)
+  do while p <= path_length
     if substr(path, p, 1) = "." then do
       p = p + 1
       iterate
     end
-
     if substr(path, p, 1) = "[" then do
       close = pos("]", path, p + 1)
       if close = 0 then return -1
@@ -188,13 +1125,11 @@ _json_parse_path: procedure = .int
       segment_kind[count] = 1
       segment_text[count] = index_text
       segment_index[count] = index_text + 0
-      segment_bin[count] = index_text as .binary
       p = close + 1
       iterate
     end
-
     start = p
-    do while p <= plen
+    do while p <= path_length
       c = substr(path, p, 1)
       if c = "." | c = "[" then leave
       p = p + 1
@@ -206,362 +1141,348 @@ _json_parse_path: procedure = .int
     segment_text[count] = text
     if _json_is_digits(text) = 1 then segment_index[count] = text + 0
     else segment_index[count] = -1
-    segment_bin[count] = text as .binary
   end
   return count
 
-_json_parse_value: procedure = .int
-  arg data = .binary, len = .int, expose p = .int, active = .int, segment_count = .int, segment_kind = .int[], segment_text = .string[], segment_index = .int[], segment_bin = .binary[], expose found = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
-  call _json_skip_ws data, len, p
-  if p >= len then return 0
-  start = p
-  b = <at..u8>(p) data
-
-  if b = 34 then do
-    escaped = 0
-    if _json_scan_string(data, len, p, escaped) = 0 then return 0
-    if active = segment_count & found = 0 then do
-      found = 1
-      found_kind = 1
-      found_start = start
-      found_after = p
+_json_member_node: procedure = .int
+  arg nodes = .binary, keys = .binary, parent = .int, name = .string
+  wanted = name as .binary
+  wanted_length = binlength(wanted)
+  child = _json_node_u32(nodes, parent, 8)
+  do while child > 0
+    key_offset = _json_node_u32(nodes, child, 16)
+    key_length = _json_node_u32(nodes, child, 20)
+    if key_length = wanted_length then do
+      if <compare..binary>(keys, key_offset, wanted) = 0 then return child
     end
-    return 1
+    child = _json_node_u32(nodes, child, 12)
   end
-
-  if b = 123 then return _json_parse_object(data, len, p, start, active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after)
-  if b = 91 then return _json_parse_array(data, len, p, start, active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after)
-
-  if b = 116 then do
-    if _json_match_literal(data, len, p, "true" as .binary) = 0 then return 0
-    p = p + 4
-    if active = segment_count & found = 0 then do
-      found = 1
-      found_kind = 3
-      found_start = start
-      found_after = p
-    end
-    return 1
-  end
-
-  if b = 102 then do
-    if _json_match_literal(data, len, p, "false" as .binary) = 0 then return 0
-    p = p + 5
-    if active = segment_count & found = 0 then do
-      found = 1
-      found_kind = 3
-      found_start = start
-      found_after = p
-    end
-    return 1
-  end
-
-  if b = 110 then do
-    if _json_match_literal(data, len, p, "null" as .binary) = 0 then return 0
-    p = p + 4
-    if active = segment_count & found = 0 then do
-      found = 1
-      found_kind = 6
-      found_start = start
-      found_after = p
-    end
-    return 1
-  end
-
-  if b = 45 | (b >= 48 & b <= 57) then do
-    if _json_scan_number(data, len, p) = 0 then return 0
-    if active = segment_count & found = 0 then do
-      found = 1
-      found_kind = 2
-      found_start = start
-      found_after = p
-    end
-    return 1
-  end
-
   return 0
 
-_json_parse_object: procedure = .int
-  arg data = .binary, len = .int, expose p = .int, start = .int, active = .int, segment_count = .int, segment_kind = .int[], segment_text = .string[], segment_index = .int[], segment_bin = .binary[], expose found = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
-  p = p + 1
-  call _json_skip_ws data, len, p
-  if p < len & <at..u8>(p) data = 125 then do
-    p = p + 1
-    if active = segment_count & found = 0 then do
-      found = 1
-      found_kind = 4
-      found_start = start
-      found_after = p
-    end
-    return 1
-  end
-
-  do while p < len
-    key_start = p
-    escaped = 0
-    if _json_scan_string(data, len, p, escaped) = 0 then return 0
-    key_after = p
-    call _json_skip_ws data, len, p
-    if p >= len | <at..u8>(p) data \= 58 then return 0
-    p = p + 1
-
-    child_active = -1
-    if active >= 0 & active < segment_count then do
-      next = active + 1
-      if segment_kind[next] = 0 then do
-        if _json_key_matches(data, key_start, key_after, escaped, segment_text[next], segment_bin[next]) = 1 then child_active = next
-      end
-    end
-
-    if active = segment_count then child_active = -1
-    if _json_parse_value(data, len, p, child_active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return 0
-    call _json_skip_ws data, len, p
-    if p < len & <at..u8>(p) data = 44 then do
-      p = p + 1
-      call _json_skip_ws data, len, p
-      iterate
-    end
-    if p < len & <at..u8>(p) data = 125 then do
-      p = p + 1
-      if active = segment_count & found = 0 then do
-        found = 1
-        found_kind = 4
-        found_start = start
-        found_after = p
-      end
-      return 1
-    end
+_json_key_matches: procedure = .int
+  arg data = .binary, start = .int, after = .int, escaped = .int, wanted = .binary
+  if escaped = 0 then do
+    if after - start - 2 \= binlength(wanted) then return 0
+    if <compare..binary>(data, start + 1, wanted) = 0 then return 1
     return 0
   end
+  candidate = _json_unquote_binary(data, start, after) as .binary
+  if binlength(candidate) \= binlength(wanted) then return 0
+  if <compare..binary>(candidate, 0, wanted) = 0 then return 1
   return 0
 
-_json_parse_array: procedure = .int
-  arg data = .binary, len = .int, expose p = .int, start = .int, active = .int, segment_count = .int, segment_kind = .int[], segment_text = .string[], segment_index = .int[], segment_bin = .binary[], expose found = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
-  p = p + 1
-  call _json_skip_ws data, len, p
-  if p < len & <at..u8>(p) data = 93 then do
-    p = p + 1
-    if active = segment_count & found = 0 then do
-      found = 1
-      found_kind = 5
-      found_start = start
-      found_after = p
-    end
-    return 1
+_json_element_node: procedure = .int
+  arg nodes = .binary, parent = .int, wanted = .int
+  if wanted < 1 then return 0
+  child = _json_node_u32(nodes, parent, 8)
+  index = 1
+  do while child > 0 & index < wanted
+    child = _json_node_u32(nodes, child, 12)
+    index = index + 1
   end
-
-  current = 1
-  do while p < len
-    child_active = -1
-    if active >= 0 & active < segment_count then do
-      next = active + 1
-      if segment_kind[next] = 1 | segment_index[next] >= 0 then do
-        if current = segment_index[next] then child_active = next
-      end
-    end
-    if active = segment_count then child_active = -1
-    if _json_parse_value(data, len, p, child_active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return 0
-    current = current + 1
-    call _json_skip_ws data, len, p
-    if p < len & <at..u8>(p) data = 44 then do
-      p = p + 1
-      call _json_skip_ws data, len, p
-      iterate
-    end
-    if p < len & <at..u8>(p) data = 93 then do
-      p = p + 1
-      if active = segment_count & found = 0 then do
-        found = 1
-        found_kind = 5
-        found_start = start
-        found_after = p
-      end
-      return 1
-    end
-    return 0
-  end
-  return 0
+  return child
 
 _json_scan_string: procedure = .int
-  arg data = .binary, len = .int, expose p = .int, expose escaped = .int
-  if p >= len | <at..u8>(p) data \= 34 then return 0
+  arg data = .binary, len = .int, expose p = .int, expose escaped_string = .int, expose error_code = .string, expose error_byte = .int, expose error = .string
+  if p >= len | <at..u8>(p) data \= 34 then do
+    error_code = "syntax"
+    error_byte = p
+    error = "expected JSON string"
+    return 0
+  end
   p = p + 1
-  escaped = 0
+  escaped_string = 0
   do while p < len
-    b = <at..u8>(p) data
-    if b = 34 then do
+    byte = <at..u8>(p) data
+    if byte = 34 then do
       p = p + 1
       return 1
     end
-    if b < 32 then return 0
-    if b = 92 then do
-      escaped = 1
-      p = p + 1
-      if p >= len then return 0
-      esc = <at..u8>(p) data
+    if byte < 32 then do
+      error_code = "syntax"
+      error_byte = p
+      error = "unescaped control character in JSON string"
+      return 0
+    end
+    if byte = 92 then do
+      escaped_string = 1
+      if p + 1 >= len then do
+        error_code = "truncated"
+        error_byte = len
+        error = "truncated JSON escape"
+        return 0
+      end
+      esc = <at..u8>(p + 1) data
       if esc = 34 | esc = 92 | esc = 47 | esc = 98 | esc = 102 | esc = 110 | esc = 114 | esc = 116 then do
-        p = p + 1
+        p = p + 2
         iterate
       end
       if esc = 117 then do
-        if p + 4 >= len then return 0
-        if _json_hex4_at(data, p + 1) < 0 then return 0
-        p = p + 5
+        if p + 5 >= len then do
+          error_code = "truncated"
+          error_byte = len
+          error = "truncated Unicode escape"
+          return 0
+        end
+        code = _json_hex4_at(data, p + 2)
+        if code < 0 then do
+          error_code = "syntax"
+          error_byte = p + 2
+          error = "invalid Unicode escape"
+          return 0
+        end
+        if code >= 55296 & code <= 56319 then do
+          next = p + 6
+          if next + 5 >= len then do
+            error_code = "truncated"
+            error_byte = len
+            error = "truncated Unicode surrogate pair"
+            return 0
+          end
+          if <at..u8>(next) data \= 92 | <at..u8>(next + 1) data \= 117 then do
+            error_code = "syntax"
+            error_byte = next
+            error = "high surrogate is not followed by a low surrogate"
+            return 0
+          end
+          low = _json_hex4_at(data, next + 2)
+          if low < 56320 | low > 57343 then do
+            error_code = "syntax"
+            error_byte = next + 2
+            error = "invalid low surrogate"
+            return 0
+          end
+          p = next + 6
+          iterate
+        end
+        if code >= 56320 & code <= 57343 then do
+          error_code = "syntax"
+          error_byte = p + 2
+          error = "unpaired low surrogate"
+          return 0
+        end
+        p = p + 6
         iterate
       end
+      error_code = "syntax"
+      error_byte = p + 1
+      error = "invalid JSON escape"
       return 0
     end
     p = p + 1
   end
+  error_code = "truncated"
+  error_byte = len
+  error = "unterminated JSON string"
   return 0
 
 _json_scan_number: procedure = .int
-  arg data = .binary, len = .int, expose p = .int
+  arg data = .binary, len = .int, expose p = .int, expose number_flags = .int
+  number_flags = 0
+  nonzero = 0
+  digit_count = 0
+  fractional_digits = 0
+  first_nonzero_digit = 0
   if p < len & <at..u8>(p) data = 45 then p = p + 1
   if p >= len then return 0
-  b = <at..u8>(p) data
-  if b = 48 then p = p + 1
-  else if b >= 49 & b <= 57 then do
+  byte = <at..u8>(p) data
+  if byte = 48 then do
+    digit_count = 1
     p = p + 1
+  end
+  else if byte >= 49 & byte <= 57 then do
     do while p < len
-      b = <at..u8>(p) data
-      if b < 48 | b > 57 then leave
+      byte = <at..u8>(p) data
+      if byte < 48 | byte > 57 then leave
+      digit_count = digit_count + 1
+      if nonzero = 0 & byte >= 49 then do
+        nonzero = 1
+        first_nonzero_digit = digit_count
+      end
       p = p + 1
     end
   end
   else return 0
-
   if p < len & <at..u8>(p) data = 46 then do
     p = p + 1
     if p >= len then return 0
-    b = <at..u8>(p) data
-    if b < 48 | b > 57 then return 0
+    byte = <at..u8>(p) data
+    if byte < 48 | byte > 57 then return 0
     do while p < len
-      b = <at..u8>(p) data
-      if b < 48 | b > 57 then leave
+      byte = <at..u8>(p) data
+      if byte < 48 | byte > 57 then leave
+      digit_count = digit_count + 1
+      fractional_digits = fractional_digits + 1
+      if nonzero = 0 & byte >= 49 then do
+        nonzero = 1
+        first_nonzero_digit = digit_count
+      end
       p = p + 1
     end
   end
-
+  exponent = 0
+  exponent_negative = 0
   if p < len then do
-    b = <at..u8>(p) data
-    if b = 69 | b = 101 then do
+    byte = <at..u8>(p) data
+    if byte = 69 | byte = 101 then do
       p = p + 1
       if p < len then do
-        b = <at..u8>(p) data
-        if b = 43 | b = 45 then p = p + 1
+        byte = <at..u8>(p) data
+        if byte = 43 | byte = 45 then p = p + 1
+        if byte = 45 then exponent_negative = 1
       end
       if p >= len then return 0
-      b = <at..u8>(p) data
-      if b < 48 | b > 57 then return 0
+      byte = <at..u8>(p) data
+      if byte < 48 | byte > 57 then return 0
       do while p < len
-        b = <at..u8>(p) data
-        if b < 48 | b > 57 then leave
+        byte = <at..u8>(p) data
+        if byte < 48 | byte > 57 then leave
+        if exponent <= 1000 then exponent = exponent * 10 + (byte - 48)
         p = p + 1
       end
+      if exponent > 1000 then exponent = 1001
+      if exponent_negative = 1 then exponent = -exponent
     end
+  end
+  if nonzero = 0 then number_flags = 2
+  else do
+    adjusted_exponent = exponent - fractional_digits + digit_count - first_nonzero_digit
+    number_flags = 1
+    if adjusted_exponent >= -324 & adjusted_exponent <= 308 then number_flags = 3
   end
   return 1
 
-_json_object_count: procedure = .int
-  arg data = .binary, len = .int, start = .int, after = .int
-  p = start + 1
-  call _json_skip_ws data, len, p
-  count = 0
-  if p < after & <at..u8>(p) data = 125 then return 0
-  segment_kind = .int[]
-  segment_text = .string[]
-  segment_index = .int[]
-  segment_bin = .binary[]
-  found = 1
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  do while p < after
-    escaped = 0
-    if _json_scan_string(data, len, p, escaped) = 0 then return -1
-    call _json_skip_ws data, len, p
-    if p >= after | <at..u8>(p) data \= 58 then return -1
-    p = p + 1
-    if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
-    count = count + 1
-    call _json_skip_ws data, len, p
-    if p < after & <at..u8>(p) data = 44 then do
-      p = p + 1
-      call _json_skip_ws data, len, p
+_json_i64_text: procedure = .int
+  arg data = .binary, start = .int, after = .int, expose integer_text = .string
+  text = (<at..binary>(start, after - start) data) as .string
+  negative = 0
+  p = 1
+  mantissa = ""
+  exponent = 0
+  fractional_digits = 0
+  digits = ""
+  if substr(text, 1, 1) = "-" then do
+    negative = 1
+    p = 2
+  end
+  exponent_position = pos("e", lower(text), p)
+  if exponent_position = 0 then do
+    mantissa = substr(text, p)
+  end
+  else do
+    mantissa = substr(text, p, exponent_position - p)
+    exponent_text = substr(text, exponent_position + 1)
+    exponent_negative = 0
+    exponent_p = 1
+    if substr(exponent_text, 1, 1) = "+" then exponent_p = 2
+    else if substr(exponent_text, 1, 1) = "-" then do
+      exponent_negative = 1
+      exponent_p = 2
     end
-    else leave
-  end
-  return count
-
-_json_array_count: procedure = .int
-  arg data = .binary, len = .int, start = .int, after = .int
-  p = start + 1
-  call _json_skip_ws data, len, p
-  count = 0
-  if p < after & <at..u8>(p) data = 93 then return 0
-  segment_kind = .int[]
-  segment_text = .string[]
-  segment_index = .int[]
-  segment_bin = .binary[]
-  found = 1
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  do while p < after
-    if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
-    count = count + 1
-    call _json_skip_ws data, len, p
-    if p < after & <at..u8>(p) data = 44 then do
-      p = p + 1
-      call _json_skip_ws data, len, p
+    exponent = 0
+    do i = exponent_p to length(exponent_text)
+      if exponent > 1000 then leave
+      exponent = exponent * 10 + (c2d(substr(exponent_text, i, 1)) - 48)
     end
-    else leave
+    if exponent > 1000 then exponent = 1001
+    if exponent_negative = 1 then exponent = -exponent
   end
-  return count
-
-_json_object_members: procedure = .int
-  arg data = .binary, len = .int, start = .int, after = .int, expose names = .string[]
-  p = start + 1
-  call _json_skip_ws data, len, p
-  count = 0
-  if p < after & <at..u8>(p) data = 125 then return 0
-  segment_kind = .int[]
-  segment_text = .string[]
-  segment_index = .int[]
-  segment_bin = .binary[]
-  found = 1
-  found_kind = 0
-  found_start = 0
-  found_after = 0
-  do while p < after
-    key_start = p
-    escaped = 0
-    if _json_scan_string(data, len, p, escaped) = 0 then return -1
-    key_after = p
-    call _json_skip_ws data, len, p
-    if p >= after | <at..u8>(p) data \= 58 then return -1
-    p = p + 1
-    if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
-    count = count + 1
-    names[count] = _json_unquote_binary(data, key_start, key_after)
-    call _json_skip_ws data, len, p
-    if p < after & <at..u8>(p) data = 44 then do
-      p = p + 1
-      call _json_skip_ws data, len, p
+  decimal_position = pos(".", mantissa)
+  if decimal_position = 0 then do
+    digits = mantissa
+    fractional_digits = 0
+  end
+  else do
+    fractional_digits = length(mantissa) - decimal_position
+    digits = substr(mantissa, 1, decimal_position - 1) || substr(mantissa, decimal_position + 1)
+  end
+  first = 1
+  do while first <= length(digits) & substr(digits, first, 1) = "0"
+    first = first + 1
+  end
+  if first > length(digits) then do
+    integer_text = "0"
+    return 1
+  end
+  digits = substr(digits, first)
+  scale = exponent - fractional_digits
+  if scale < 0 then do
+    trim = -scale
+    if trim >= length(digits) then return 0
+    do i = length(digits) - trim + 1 to length(digits)
+      if substr(digits, i, 1) \= "0" then return 0
     end
-    else leave
+    digits = substr(digits, 1, length(digits) - trim)
   end
-  return count
+  else if scale > 0 then do
+    if length(digits) + scale > 19 then return -1
+    digits = digits || copies("0", scale)
+  end
+  if length(digits) > 19 then return -1
+  if length(digits) = 19 then do
+    if negative = 1 then limit = "9223372036854775808"
+    else limit = "9223372036854775807"
+    digits_binary = digits as .binary
+    limit_binary = limit as .binary
+    if <compare..binary>(digits_binary, 0, limit_binary) > 0 then return -1
+  end
+  if negative = 1 then integer_text = "-" || digits
+  else integer_text = digits
+  return 1
 
-_json_array_members: procedure = .int
-  arg data = .binary, len = .int, start = .int, after = .int, expose names = .string[]
-  count = _json_array_count(data, len, start, after)
-  if count < 0 then return -1
-  do i = 1 to count
-    names[i] = i
+_json_float_token_in_range: procedure = .int
+  arg text = .string
+  p = 1
+  if substr(text, 1, 1) = "-" then p = 2
+  mantissa = ""
+  exponent = 0
+  fractional_digits = 0
+  digits = ""
+  exponent_position = pos("e", lower(text), p)
+  if exponent_position = 0 then mantissa = substr(text, p)
+  else do
+    mantissa = substr(text, p, exponent_position - p)
+    exponent_text = substr(text, exponent_position + 1)
+    exponent_negative = 0
+    exponent_p = 1
+    if substr(exponent_text, 1, 1) = "+" then exponent_p = 2
+    else if substr(exponent_text, 1, 1) = "-" then do
+      exponent_negative = 1
+      exponent_p = 2
+    end
+    do i = exponent_p to length(exponent_text)
+      if exponent > 1000 then leave
+      exponent = exponent * 10 + (c2d(substr(exponent_text, i, 1)) - 48)
+    end
+    if exponent > 1000 then exponent = 1001
+    if exponent_negative = 1 then exponent = -exponent
   end
-  return count
+  decimal_position = pos(".", mantissa)
+  if decimal_position = 0 then do
+    digits = mantissa
+    fractional_digits = 0
+  end
+  else do
+    fractional_digits = length(mantissa) - decimal_position
+    digits = substr(mantissa, 1, decimal_position - 1) || substr(mantissa, decimal_position + 1)
+  end
+  first = 1
+  do while first <= length(digits) & substr(digits, first, 1) = "0"
+    first = first + 1
+  end
+  if first > length(digits) then return 1
+  significant = length(digits) - first + 1
+  adjusted_exponent = exponent - fractional_digits + significant - 1
+  if adjusted_exponent > 308 | adjusted_exponent < -324 then return 0
+  return 1
+
+_json_number_nonzero: procedure = .int
+  arg text = .string
+  do i = 1 to length(text)
+    c = substr(text, i, 1)
+    if c >= "1" & c <= "9" then return 1
+  end
+  return 0
 
 _json_unquote_binary: procedure = .string
   arg data = .binary, start = .int, after = .int
@@ -570,11 +1491,10 @@ _json_unquote_binary: procedure = .string
   segment_start = p
   limit = after - 1
   do while p < limit
-    b = <at..u8>(p) data
-    if b = 92 then do
+    byte = <at..u8>(p) data
+    if byte = 92 then do
       if p > segment_start then out = out || ((<at..binary>(segment_start, p - segment_start) data) as .string)
       p = p + 1
-      if p >= limit then return ""
       esc = <at..u8>(p) data
       if esc = 34 then out = out || '"'
       else if esc = 92 then out = out || '\'
@@ -585,23 +1505,16 @@ _json_unquote_binary: procedure = .string
       else if esc = 114 then out = out || '0d'x
       else if esc = 116 then out = out || '09'x
       else if esc = 117 then do
-        if p + 4 >= limit then return ""
         code = _json_hex4_at(data, p + 1)
-        if code < 0 then return ""
         if code >= 55296 & code <= 56319 then do
           next = p + 5
-          if next + 5 >= limit then return ""
-          if <at..u8>(next) data \= 92 | <at..u8>(next + 1) data \= 117 then return ""
           low = _json_hex4_at(data, next + 2)
-          if low < 56320 | low > 57343 then return ""
           code = 65536 + (code - 55296) * 1024 + (low - 56320)
           p = next + 5
         end
-        else if code >= 56320 & code <= 57343 then return ""
         else p = p + 4
         out = out || d2c(code)
       end
-      else return ""
       segment_start = p + 1
     end
     p = p + 1
@@ -609,30 +1522,19 @@ _json_unquote_binary: procedure = .string
   if limit > segment_start then out = out || ((<at..binary>(segment_start, limit - segment_start) data) as .string)
   return out
 
-_json_key_matches: procedure = .int
-  arg data = .binary, start = .int, after = .int, escaped = .int, wanted = .string, wanted_bin = .binary
-  if escaped = 0 then do
-    if after - start - 2 \= binlength(wanted_bin) then return 0
-    if <compare..binary>(data, start + 1, wanted_bin) = 0 then return 1
-    return 0
-  end
-  candidate = _json_unquote_binary(data, start, after)
-  if length(candidate) = length(wanted) & candidate = wanted then return 1
-  return 0
-
 _json_skip_ws: procedure
   arg data = .binary, len = .int, expose p = .int
   do while p < len
-    b = <at..u8>(p) data
-    if b = 32 | b = 9 | b = 10 | b = 13 then p = p + 1
+    byte = <at..u8>(p) data
+    if <at..u8>(byte) JSON_ASCII_CLASS = JSON_CLASS_SPACE then p = p + 1
     else leave
   end
   return
 
 _json_match_literal: procedure = .int
   arg data = .binary, len = .int, p = .int, literal = .binary
-  literal_len = binlength(literal)
-  if p + literal_len > len then return 0
+  literal_length = binlength(literal)
+  if p + literal_length > len then return 0
   if <compare..binary>(data, p, literal) = 0 then return 1
   return 0
 
@@ -646,6 +1548,15 @@ _json_kind_name: procedure = .string
   if kind = 6 then return "null"
   return "error"
 
+_json_character_position: procedure = .int
+  arg data = .binary, byte_position = .int
+  bytes = binlength(data)
+  if byte_position < 0 then byte_position = 0
+  if byte_position > bytes then byte_position = bytes
+  if byte_position = 0 then return 1
+  prefix = (<at..binary>(0, byte_position) data) as .string
+  return length(prefix) + 1
+
 _json_hex4_at: procedure = .int
   arg data = .binary, p = .int
   n1 = _json_hex_nibble(<at..u8>(p) data)
@@ -656,21 +1567,17 @@ _json_hex4_at: procedure = .int
   return n1 * 4096 + n2 * 256 + n3 * 16 + n4
 
 _json_hex_nibble: procedure = .int
-  arg b = .int
-  if b >= 48 & b <= 57 then return b - 48
-  if b >= 65 & b <= 70 then return b - 55
-  if b >= 97 & b <= 102 then return b - 87
+  arg byte = .int
+  if byte >= 48 & byte <= 57 then return byte - 48
+  if byte >= 65 & byte <= 70 then return byte - 55
+  if byte >= 97 & byte <= 102 then return byte - 87
   return -1
 
 _json_is_digits: procedure = .int
   arg text = .string
   if length(text) = 0 then return 0
   do i = 1 to length(text)
-    if _json_is_digit(substr(text, i, 1)) = 0 then return 0
+    c = substr(text, i, 1)
+    if c < "0" | c > "9" then return 0
   end
   return 1
-
-_json_is_digit: procedure = .int
-  arg c = .string
-  if c >= "0" & c <= "9" then return 1
-  return 0

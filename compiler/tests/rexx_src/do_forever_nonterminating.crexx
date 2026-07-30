@@ -1,0 +1,8 @@
+options levelb
+namespace do_forever_nonterminating
+
+never_returns: procedure = .int
+  do forever
+    iterate
+    leave
+  end

@@ -178,6 +178,20 @@ static void apply_assembler_operand_effects(ASTNode *node,
     }
 }
 
+static int assembler_is_from_certified_exit(ASTNode *node) {
+    ASTNode *ancestor;
+
+    for (ancestor = node ? node->parent : 0; ancestor; ancestor = ancestor->parent) {
+        if (ancestor->is_compiler_added &&
+            ancestor->skip_exit_dispatch &&
+            ast_semantic_context_kind(ancestor) ==
+                AST_SEMANTIC_CONTEXT_CERTIFIED_EXIT) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static void validate_assembler_node(Context *context, ASTNode *node) {
     ASTNode *child;
     OperandType *types = 0;
@@ -187,7 +201,7 @@ static void validate_assembler_node(Context *context, ASTNode *node) {
     char *buffer;
     char *c;
 
-    if (context->level != LEVELB) {
+    if (context->level != LEVELB && !assembler_is_from_certified_exit(node)) {
         /* ASSEMBLER is only valid in level b */
         mknd_err_unique(node, "ASSEMBLER_ONLY_LEVELB");
         return;
@@ -758,6 +772,134 @@ static ASTNode *ensure_args_child(Context *context,
     return args_node;
 }
 
+typedef struct TerminalLoopFlow {
+    int may_fall_through;
+    int exits_target_loop;
+} TerminalLoopFlow;
+
+static int terminal_do_is_unconditional_forever(ASTNode *node) {
+    ASTNode *child;
+    int has_forever = 0;
+
+    if (!node || node->node_type != DO) return 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (child->node_type == REPEAT && nodeis(child, "forever")) {
+            has_forever = 1;
+        } else if (child->node_type == WHILE || child->node_type == UNTIL ||
+                   child->node_type == FOR || child->node_type == TO ||
+                   child->node_type == BY) {
+            return 0;
+        }
+    }
+    return has_forever;
+}
+
+static int terminal_do_is_loop(ASTNode *node) {
+    ASTNode *child;
+
+    for (child = node ? node->child : 0; child; child = child->sibling) {
+        if (child->node_type == REPEAT || child->node_type == WHILE ||
+            child->node_type == UNTIL || child->node_type == FOR ||
+            child->node_type == TO || child->node_type == BY) return 1;
+    }
+    return 0;
+}
+
+static TerminalLoopFlow summarize_terminal_loop_statement(ASTNode *node,
+                                                           ASTNode *target_loop,
+                                                           ASTNode *current_loop);
+
+static TerminalLoopFlow summarize_terminal_loop_sequence(ASTNode *first,
+                                                          ASTNode *target_loop,
+                                                          ASTNode *current_loop) {
+    TerminalLoopFlow result = {1, 0};
+    ASTNode *node;
+
+    for (node = first; node && result.may_fall_through; node = node->sibling) {
+        TerminalLoopFlow statement =
+            summarize_terminal_loop_statement(node, target_loop, current_loop);
+        if (statement.exits_target_loop) result.exits_target_loop = 1;
+        result.may_fall_through = statement.may_fall_through;
+    }
+    return result;
+}
+
+static TerminalLoopFlow summarize_terminal_loop_statement(ASTNode *node,
+                                                           ASTNode *target_loop,
+                                                           ASTNode *current_loop) {
+    TerminalLoopFlow result = {1, 0};
+    ASTNode *condition;
+    ASTNode *yes;
+    ASTNode *no;
+    ASTNode *body;
+
+    if (!node) return result;
+    switch (node->node_type) {
+        case RETURN:
+        case EXIT:
+        case ITERATE:
+            result.may_fall_through = 0;
+            return result;
+
+        case LEAVE:
+            result.may_fall_through = 0;
+            result.exits_target_loop =
+                target_loop && current_loop == target_loop;
+            return result;
+
+        case INSTRUCTIONS:
+            return summarize_terminal_loop_sequence(node->child,
+                                                    target_loop,
+                                                    current_loop);
+
+        case IF: {
+            TerminalLoopFlow yes_flow;
+            TerminalLoopFlow no_flow = {1, 0};
+
+            condition = node->child;
+            yes = condition ? condition->sibling : 0;
+            no = yes ? yes->sibling : 0;
+            yes_flow = summarize_terminal_loop_statement(yes,
+                                                         target_loop,
+                                                         current_loop);
+            if (no) {
+                no_flow = summarize_terminal_loop_statement(no,
+                                                            target_loop,
+                                                            current_loop);
+            }
+            result.may_fall_through =
+                yes_flow.may_fall_through || no_flow.may_fall_through;
+            result.exits_target_loop =
+                yes_flow.exits_target_loop || no_flow.exits_target_loop;
+            return result;
+        }
+
+        case DO: {
+            TerminalLoopFlow body_flow;
+
+            body = find_child_of_type(node, INSTRUCTIONS);
+            body_flow = summarize_terminal_loop_sequence(body ? body->child : 0,
+                                                         node,
+                                                         node);
+            if (!terminal_do_is_loop(node)) {
+                result.may_fall_through = body_flow.may_fall_through;
+            } else if (terminal_do_is_unconditional_forever(node)) {
+                result.may_fall_through = body_flow.exits_target_loop;
+            } else {
+                result.may_fall_through = 1;
+            }
+            /* An unqualified LEAVE inside a nested loop belongs to that loop,
+             * not to the terminal outer loop. A FOREVER loop has no control
+             * variable that a qualified LEAVE could name. */
+            result.exits_target_loop = 0;
+            return result;
+        }
+
+        default:
+            return result;
+    }
+}
+
 static void structure_callable_body(Context *context,
                                     ASTNode *node,
                                     int add_empty_args,
@@ -774,6 +916,7 @@ static void structure_callable_body(Context *context,
     char done_case;
     char done_standard;
     char first_instruction;
+    TerminalLoopFlow body_flow;
 
     if (!node) return;
 
@@ -884,7 +1027,10 @@ static void structure_callable_body(Context *context,
 
     if (!last) last = existing_last;
 
-    if (last && add_implicit_return && last->node_type != RETURN && !context->in_exit_bridge) {
+    body_flow = summarize_terminal_loop_sequence(instructions->child, 0, 0);
+    if (last && add_implicit_return && last->node_type != RETURN &&
+        body_flow.may_fall_through &&
+        !context->in_exit_bridge) {
         add_ast(last->parent, ast_ft(context, RETURN));
     }
 }

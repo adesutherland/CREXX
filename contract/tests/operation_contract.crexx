@@ -1,0 +1,30 @@
+/** Generic build-time operation contract fixture. */
+options levelb
+namespace operation_contract_test expose operationcontract requestcontract resultcontract errorcontract nestedcontract
+
+operationcontract: interface
+  execute: method = .resultcontract
+    arg request = .requestcontract, correlation = ""
+
+requestcontract: interface
+  amount: method = .decimal
+  count: method = .int
+  enabled: method = .boolean
+  nested: method = .nestedcontract
+  payload: method = .binary
+  query: method = .string
+  score: method = .float
+  tags: method = .string[]
+
+nestedcontract: interface
+  label: method = .string
+  étiquette: method = .string
+
+resultcontract: interface
+  items: method = .string[]
+  problem: method = .errorcontract
+
+errorcontract: interface
+  code: method = .string
+  details: method = .string[]
+  message: method = .string

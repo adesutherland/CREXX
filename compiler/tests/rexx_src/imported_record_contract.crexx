@@ -1,0 +1,28 @@
+options levelb
+namespace repro_record expose reprorecord wrongrecord makereprorecord makewrongrecord
+
+reprorecord: class
+  _value = .string
+
+  *: factory
+    arg value = .string
+    _value = value
+
+  value: method = .string
+    return _value
+
+wrongrecord: class
+  _value = .string
+
+  *: factory
+    arg value = .string
+    _value = value
+
+  value: method = .string
+    return _value
+
+makereprorecord: procedure = .reprorecord
+  return .reprorecord("typed")
+
+makewrongrecord: procedure = .wrongrecord
+  return .wrongrecord("wrong")

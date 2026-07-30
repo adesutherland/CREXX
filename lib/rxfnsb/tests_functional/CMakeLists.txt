@@ -15,6 +15,9 @@ set(REXXBINS
 	        ts_address_protocol.rxbin
 	ts_address.rxbin
         ts_address_crexx.rxbin
+        ts_address_capture.rxbin
+        ts_address_argv.rxbin
+        ts_address_array_lifecycle.rxbin
         ts_binary.rxbin
         ts_c2x.rxbin
         ts_center.rxbin
@@ -127,12 +130,20 @@ set(REXXBINS
         ts_objectarray.rxbin
         ts_stem.rxbin
         ts_rxjson.rxbin
+        ts_rxjson_document.rxbin
+        ts_rxjson_numeric_projection.rxbin
+        ts_rxjson_noisy_contract.rxbin
         ts_rxsocket.rxbin
         ts_socket_tls_live.rxbin
         ts_rxhttp.rxbin
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
+
+add_executable(address_argv_fixture address_argv_fixture.c)
+if(MINGW)
+    target_link_options(address_argv_fixture PRIVATE -municode)
+endif()
 
 add_custom_target(testbifs ALL)
 
@@ -173,7 +184,11 @@ foreach(_binfile ${REXXBINS})
     add_custom_target(${_basename})
     add_dependencies(testbifs ${_basename})
     set(_rxc_flags -x)
-    if("${_basename}" STREQUAL "ts_address" OR "${_basename}" STREQUAL "ts_address_crexx")
+    if("${_basename}" STREQUAL "ts_address" OR
+            "${_basename}" STREQUAL "ts_address_crexx" OR
+            "${_basename}" STREQUAL "ts_address_capture" OR
+            "${_basename}" STREQUAL "ts_address_argv" OR
+            "${_basename}" STREQUAL "ts_address_array_lifecycle")
         set(_rxc_flags)
     endif()
     set(_pass_test_name_argument)
@@ -189,8 +204,13 @@ foreach(_binfile ${REXXBINS})
         set(_expected_failure_description "Level B _exit must preserve the requested process status")
     endif()
     set(_extra_depends)
+    set(_runtime_args ${LIBRPATH})
     if("${_basename}" STREQUAL "ts_loadmodule")
         list(APPEND _extra_depends ts_loadmodule_provider_artifact ${_loadmodule_provider})
+    endif()
+    if("${_basename}" STREQUAL "ts_address_argv")
+        list(APPEND _extra_depends address_argv_fixture)
+        list(APPEND _runtime_args -a $<TARGET_FILE:address_argv_fixture>)
     endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
@@ -199,13 +219,109 @@ foreach(_binfile ${REXXBINS})
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
             DEPENDS library ${_rexx_dep} ${_prev_target} ${_extra_depends}
-            RUNTIME_ARGS ${LIBRPATH}
+            RUNTIME_ARGS ${_runtime_args}
             EXPECTED_EXIT_CODE "${_expected_exit_code}"
             EXPECTED_FAILURE_DESCRIPTION "${_expected_failure_description}"
             ${_pass_test_name_argument}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
+
+# CRI-09 is an integration-boundary contract, so retain the same optimized and
+# non-optimized images under the independent bytecode VM as well as rxvm.
+_crexx_register_runtime_test(
+        NAME ts_rxjson_document_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM ts_rxjson_document_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+_crexx_register_runtime_test(
+        NAME ts_rxjson_document_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM ts_rxjson_document_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+_crexx_register_runtime_test(
+        NAME ts_rxjson_noisy_contract_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM ts_rxjson_noisy_contract_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+_crexx_register_runtime_test(
+        NAME ts_rxjson_noisy_contract_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM ts_rxjson_noisy_contract_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+_crexx_register_runtime_test(
+        NAME ts_rxjson_numeric_projection_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM ts_rxjson_numeric_projection_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+_crexx_register_runtime_test(
+        NAME ts_rxjson_numeric_projection_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM ts_rxjson_numeric_projection_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+
+# CRI-10 locks the existing ADDRESS capture contract on both VMs and both
+# compiler modes. It uses only deterministic CREXX-environment commands.
+_crexx_register_runtime_test(
+        NAME ts_address_capture_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM ts_address_capture_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+_crexx_register_runtime_test(
+        NAME ts_address_capture_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM ts_address_capture_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+
+# CRI-11 proves that CREXX run expands a bound string array directly to argv;
+# COMMAND/SYSTEM shell string parsing is deliberately outside this route.
+_crexx_register_runtime_test(
+        NAME ts_address_argv_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM ts_address_argv_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a $<TARGET_FILE:address_argv_fixture>
+)
+_crexx_register_runtime_test(
+        NAME ts_address_argv_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM ts_address_argv_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a $<TARGET_FILE:address_argv_fixture>
+)
+
+# CRI-12 locks array redirection's append lifecycle, including explicit
+# arraydrop before replacement-style reuse, empty output and failure output.
+_crexx_register_runtime_test(
+        NAME ts_address_array_lifecycle_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM ts_address_array_lifecycle_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
+_crexx_register_runtime_test(
+        NAME ts_address_array_lifecycle_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM ts_address_array_lifecycle_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH}
+)
 
 # Run each caught-signal sequence in one VM so the harnesses verify that call
 # unwind preserves exposed arrays and object receivers across repeated errors.
@@ -235,6 +351,18 @@ crexx_add_rexx_opt_matrix(
 
 set_tests_properties(ts_rxjson_noopt ts_rxjson_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxjson helpers")
+set_tests_properties(ts_rxjson_noisy_contract_noopt ts_rxjson_noisy_contract_opt
+        ts_rxjson_noisy_contract_rxbvm_noopt ts_rxjson_noisy_contract_rxbvm_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxjson noisy contract")
+set_tests_properties(ts_rxjson_numeric_projection_noopt ts_rxjson_numeric_projection_opt
+        ts_rxjson_numeric_projection_rxbvm_noopt ts_rxjson_numeric_projection_rxbvm_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxjson numeric projection contract")
+set_tests_properties(ts_address_capture_noopt ts_address_capture_opt
+        ts_address_capture_rxbvm_noopt ts_address_capture_rxbvm_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: ADDRESS capture contract")
+set_tests_properties(ts_address_argv_noopt ts_address_argv_opt
+        ts_address_argv_rxbvm_noopt ts_address_argv_rxbvm_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: ADDRESS argv contract")
 
 crexx_label_smoke_tests(
         ts_address_noopt

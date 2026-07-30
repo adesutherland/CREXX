@@ -1,0 +1,51 @@
+/* Functional contract for CRI-11 argv-preserving ADDRESS execution. */
+options levelb
+
+arg test_args = .string[]
+fixture = test_args[1]
+failures = 0
+
+quotes = "double" || '"' || " and 'single'"
+unicode = "Gràdh 中 😀"
+metacharacters = "; && | $(touch NEVER) * ? [x] {y}"
+
+argv = .string[]
+argv[1] = fixture
+argv[2] = "alpha beta"
+argv[3] = ""
+argv[4] = quotes
+argv[5] = unicode
+argv[6] = metacharacters
+
+captured = .string[]
+errors = .string[]
+address crexx "run :argv[]" output captured error errors
+
+failures = failures + check_int("direct run rc", rc, 0)
+failures = failures + check_int("argv output count", captured.0, 5)
+failures = failures + check_str("whitespace", captured[1], "ARG1=alpha beta")
+failures = failures + check_str("empty", captured[2], "ARG2=")
+failures = failures + check_str("quotes", captured[3], "ARG3=" || quotes)
+failures = failures + check_str("Unicode", captured[4], "ARG4=" || unicode)
+failures = failures + check_str("metacharacters", captured[5], "ARG5=" || metacharacters)
+failures = failures + check_int("stderr empty", errors.0, 0)
+
+if failures <> 0 then do
+  say "ADDRESS argv failures:" failures
+  return 1
+end
+
+say "PASS: ADDRESS argv contract"
+return 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say label || ": expected " || expected || " got " || actual
+  return 1
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual = expected then return 0
+  say label || ": expected [" || expected || "] got [" || actual || "]"
+  return 1

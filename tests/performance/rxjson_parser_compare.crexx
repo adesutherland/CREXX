@@ -48,6 +48,42 @@ do i = 1 to iterations
 end
 members_elapsed = time("us") - start
 
+start = time("us")
+document = .jsondocument(payload)
+document_build_elapsed = time("us") - start
+if document.valid() \= 1 then return fail("jsondocument build")
+
+start = time("us")
+do i = 1 to iterations
+  if document.get(target_path) \= target_sku then return fail("document tail path")
+end
+document_path_elapsed = time("us") - start
+
+tail_node = document.find(target_path)
+if tail_node <= 0 then return fail("document tail node")
+start = time("us")
+do i = 1 to iterations
+  if document.node_get(tail_node) \= target_sku then return fail("document tail node get")
+end
+document_node_elapsed = time("us") - start
+
+stress = ""
+do i = 1 to 64
+  stress = stress || "{noise"
+end
+stress = stress || payload
+do i = 1 to 64
+  stress = stress || "}"
+end
+scanned = .jsondocument("")
+scan_start = 0
+scan_after = 0
+start = time("us")
+scan_status = jsonscancontainer(stress, 1, scanned, scan_start, scan_after)
+scan_elapsed = time("us") - start
+if scan_status \= 1 then return fail("noisy container scan")
+if scanned.source() \= payload then return fail("noisy container source")
+
 say "benchmark=rxjson_parser_compare"
 say "rows="rows
 say "iterations="iterations
@@ -58,6 +94,11 @@ say "deep_get_us="deep_get_elapsed
 say "tail_get_us="tail_get_elapsed
 say "count_us="count_elapsed
 say "members_us="members_elapsed
+say "document_build_us="document_build_elapsed
+say "document_path_get_us="document_path_elapsed
+say "document_node_get_us="document_node_elapsed
+say "scan_input_characters="length(stress)
+say "scan_us="scan_elapsed
 say "PASS: rxjson parser compare"
 return 0
 

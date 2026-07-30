@@ -1,0 +1,42 @@
+@PACKAGE_INIT@
+
+set(CREXX_VERSION "@CREXX_VERSION@")
+set(CREXX_VERSION_STRING "@CREXX_VERSION@")
+set(CREXX_VERSION_DISPLAY "@CREXX_VERSION_DISPLAY@")
+set(CREXX_VERSION_CORE "@CREXX_VERSION_CORE@")
+set(CREXX_BUILD_CHANNEL "@CREXX_BUILD_CHANNEL@")
+set(CREXX_PACKAGE_PREFIX "${PACKAGE_PREFIX_DIR}")
+
+set_and_check(CREXX_BIN_DIR "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_BINDIR@")
+set_and_check(CREXX_INCLUDE_DIR "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_INCLUDEDIR@")
+set_and_check(CREXX_RXPA_INCLUDE_DIR "${CREXX_INCLUDE_DIR}/rxpa")
+set_and_check(CREXX_BUILDINFO_FILE "${PACKAGE_PREFIX_DIR}/BUILDINFO")
+
+set(CREXX_IMPORT_DIR "${CREXX_BIN_DIR}")
+set(CREXX_PLUGIN_DIR "${CREXX_BIN_DIR}")
+set(CREXX_RUNTIME_DIR "${CREXX_BIN_DIR}")
+
+include("${CMAKE_CURRENT_LIST_DIR}/CREXXTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/RXPluginFunction.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CrexxOperationContract.cmake")
+
+function(_crexx_import_executable target_name file_name)
+    if(NOT TARGET "CREXX::${target_name}")
+        add_executable("CREXX::${target_name}" IMPORTED GLOBAL)
+        set_target_properties("CREXX::${target_name}" PROPERTIES
+                IMPORTED_LOCATION "${CREXX_BIN_DIR}/${file_name}@CMAKE_EXECUTABLE_SUFFIX@")
+    endif()
+endfunction()
+
+foreach(_crexx_tool IN ITEMS crexx rxc rxas rxlink rxdas crexx-contract rxvm rxbvm rxvme rxbvme)
+    _crexx_import_executable("${_crexx_tool}" "${_crexx_tool}")
+    if(NOT EXISTS "${CREXX_BIN_DIR}/${_crexx_tool}@CMAKE_EXECUTABLE_SUFFIX@")
+        set(CREXX_${_crexx_tool}_FOUND FALSE)
+    else()
+        set(CREXX_${_crexx_tool}_FOUND TRUE)
+        set(CREXX_${_crexx_tool}_EXECUTABLE
+                "${CREXX_BIN_DIR}/${_crexx_tool}@CMAKE_EXECUTABLE_SUFFIX@")
+    endif()
+endforeach()
+
+check_required_components(CREXX)

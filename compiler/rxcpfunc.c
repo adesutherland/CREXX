@@ -432,17 +432,28 @@ int sym_is_class_contract_symbol(Symbol *symbol) {
 
 static Symbol *resolve_contract_symbol(Context *context, const char *name) {
     Symbol *symbol;
+    char *normalized_name;
 
     if (!context || !name || !*name) return 0;
 
-    symbol = lookup_loaded_symbol(context, name);
-    if (symbol && symbol->symbol_type == CLASS_SYMBOL) return symbol;
+    /* Imported callable metadata carries qualified object types in source
+     * form (`.namespace..class`), while class symbols use the compiler's
+     * internal `namespace.class` identity.  Normalize at this comparison
+     * boundary so return and assignment checks converge on the already loaded
+     * nominal class instead of treating the two spellings as different
+     * classes. */
+    normalized_name = rxcp_normalize_source_symbol_name(name, strlen(name), 1, 1);
+    if (!normalized_name) return 0;
 
-    ensure_class_imported(context, name, strlen(name));
-    symbol = lookup_loaded_symbol(context, name);
-    if (symbol && symbol->symbol_type == CLASS_SYMBOL) return symbol;
+    symbol = lookup_loaded_symbol(context, normalized_name);
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL) {
+        ensure_class_imported(context, normalized_name, strlen(normalized_name));
+        symbol = lookup_loaded_symbol(context, normalized_name);
+    }
 
-    return 0;
+    free(normalized_name);
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL) return 0;
+    return symbol;
 }
 
 static int loaded_class_implements_interface(Context *context, Symbol *class_symbol, Symbol *interface_symbol) {
@@ -604,6 +615,51 @@ static int safe_strcmp(const char *s1, const char* s2) {
     return strcmp(s1,s2);
 }
 
+static int metadata_type_strings_equivalent(Context *context,
+                                            const char *left_type,
+                                            const char *right_type) {
+    const char *left_shape;
+    const char *right_shape;
+    const char *left_base;
+    const char *right_base;
+    size_t left_base_len;
+    size_t right_base_len;
+    char *left_name;
+    char *right_name;
+    int equivalent;
+
+    if (safe_strcmp(left_type, right_type) == 0) return 1;
+    if (!context || !left_type || !right_type) return 0;
+
+    left_base = left_type;
+    right_base = right_type;
+    if (strncmp(left_base, "reference ", 10) == 0) left_base += 10;
+    if (strncmp(right_base, "reference ", 10) == 0) right_base += 10;
+    if ((left_base != left_type) != (right_base != right_type)) return 0;
+
+    left_shape = strchr(left_base, '[');
+    right_shape = strchr(right_base, '[');
+    if ((left_shape == 0) != (right_shape == 0)) return 0;
+    if (left_shape && strcmp(left_shape, right_shape) != 0) return 0;
+
+    left_base_len = left_shape ? (size_t)(left_shape - left_base) : strlen(left_base);
+    right_base_len = right_shape ? (size_t)(right_shape - right_base) : strlen(right_base);
+    if (!left_base_len || !right_base_len || left_base[0] != '.' || right_base[0] != '.') return 0;
+
+    left_name = rx_strndup(left_base, left_base_len);
+    right_name = rx_strndup(right_base, right_base_len);
+    if (!left_name || !right_name) {
+        free(left_name);
+        free(right_name);
+        return 0;
+    }
+
+    equivalent = symbol_names_equivalent(context, left_name, right_name);
+    free(left_name);
+    free(right_name);
+    return equivalent;
+}
+
 static int append_arg_text(char **buffer, size_t *capacity, size_t *length, const char *text, size_t text_len) {
     char *tmp;
 
@@ -709,6 +765,70 @@ static char *metadata_args_to_source_args(const char *args) {
     return buffer;
 }
 
+static int metadata_args_has_empty_component(const char *args) {
+    const char *p;
+
+    if (!args) return 0;
+    p = args;
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (!*p) return 0;
+
+    while (*p) {
+        const char *start = p;
+        const char *end;
+
+        while (*p && *p != ',') p++;
+        end = p;
+        while (start < end && isspace((unsigned char)*start)) start++;
+        while (end > start && isspace((unsigned char)*(end - 1))) end--;
+        if (start == end) return 1;
+
+        if (*p == ',') {
+            p++;
+            if (!*p) return 1;
+        }
+    }
+    return 0;
+}
+
+static int metadata_args_has_statement_separator(const char *args) {
+    const char *p;
+    char quote = 0;
+
+    if (!args) return 0;
+    for (p = args; *p; p++) {
+        if (quote) {
+            if (*p == quote) {
+                if (p[1] == quote) {
+                    p++;
+                } else {
+                    quote = 0;
+                }
+            }
+            continue;
+        }
+        if (*p == '\'' || *p == '"') {
+            quote = *p;
+        } else if (*p == ';' || *p == '\n' || *p == '\r') {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int import_is_rxpa_metadata(const char *file_name) {
+    const char *suffix = ".rxplugin";
+    size_t file_len;
+    size_t suffix_len;
+
+    if (!file_name) return 0;
+    if (strcmp(file_name, "statically-linked") == 0) return 1;
+    file_len = strlen(file_name);
+    suffix_len = strlen(suffix);
+    if (file_len < suffix_len) return 0;
+    return strcasecmp(file_name + file_len - suffix_len, suffix) == 0;
+}
+
 /* Adds a func / variable to the master context*/
 /* Returns 0 on success, 1 on duplicate
  * If it is a duplicate this function either calls freimpfc(func) or stashes it in the duplicate list
@@ -728,7 +848,7 @@ static int add_func(Context *context, imported_func *func) {
         }
 
         /* Both should have the same type */
-        if (safe_strcmp(func->type, existing_func->type) != 0) {
+        if (!metadata_type_strings_equivalent(context, func->type, existing_func->type)) {
             add_inconsistent_duplicate(existing_func, func);
             return 1;
         }
@@ -2357,7 +2477,7 @@ static void disablerFunction(char* fname) {
 char* rxpa_getstring(rxpa_attribute_value attributeValue)  /* Get a string from an attribute value */
     { disablerFunction("rxpa_getstring"); return NULL; }
 
-void rxpa_setstring(rxpa_attribute_value attributeValue, char* string)  /* Set a string in an attribute value */
+void rxpa_setstring(rxpa_attribute_value attributeValue, const char* string)  /* Set a string in an attribute value */
     { disablerFunction("rxpa_setstring"); }
 
 void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value)  /* Set an integer in an attribute value */
@@ -2870,6 +2990,36 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
     return context;
 }
 
+static int imported_return_declaration_parses(Context *context,
+                                               const char *file_name,
+                                               const char *namespace_name,
+                                               const char *routine_name,
+                                               const char *type) {
+    char *probe_source;
+    Context *probe_context;
+    int valid;
+
+    probe_source = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\n",
+                           namespace_name ? namespace_name : "",
+                           routine_name ? routine_name : "",
+                           type ? type : "");
+    if (!probe_source) return 0;
+    probe_context = parseRexx(context,
+                              context->location,
+                              (char *)file_name,
+                              LEVELB,
+                              context->debug_mode,
+                              probe_source,
+                              strlen(probe_source));
+    valid = probe_context && probe_context->ast &&
+            !error_in_node(probe_context->ast) &&
+            probe_context->ast->child &&
+            probe_context->ast->child->node_type == PROGRAM_FILE;
+    if (probe_context) fre_cntx(probe_context);
+    else free(probe_source);
+    return valid;
+}
+
 /* Load the next importable file */
 /* return 1 if a file was loaded, or 0 if no more files are available */
 static int load_another_file(Context *context) {
@@ -3219,10 +3369,23 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
 
         /* Has the func got an error_state? */
         if (found_func->error_state) {
-            mknd_err2(node,
-                      found_func->error_state,
-                      "name", name,
-                      "import_file", found_func->file_name);
+            if (found_func->error_field && found_func->error_detail) {
+                const char *declaration =
+                    strcmp(found_func->error_field, "return") == 0 ?
+                    found_func->type : found_func->args;
+                mknd_err5(node,
+                          found_func->error_state,
+                          "name", name,
+                          "import_file", found_func->file_name,
+                          "field", found_func->error_field,
+                          "declaration", declaration ? declaration : "",
+                          "detail", found_func->error_detail);
+            } else {
+                mknd_err2(node,
+                          found_func->error_state,
+                          "name", name,
+                          "import_file", found_func->file_name);
+            }
             error = 1;
         }
 
@@ -3396,6 +3559,8 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     func->is_variable = is_variable; /* Is a function or a Variable */
     func->duplicate = 0;
     func->error_state = 0;
+    func->error_field = 0;
+    func->error_detail = 0;
 
     /* Store the namespace */
     func->namespace = malloc(len + 1);
@@ -3444,26 +3609,59 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     if (func->is_variable == 0) {
         /* Generate Function Declaration AST - only if we are a function not a variable */
         // TODO This only does Level B
-        char *source_args = metadata_args_to_source_args(func->args);
-        if (!source_args) source_args = strdup("");
-        buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name,
-                         func->type, source_args);
-        free(source_args);
-        if (context->debug_mode >= 2) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
-        func->context = parseRexx(context, context->location, func->file_name, LEVELB, context->debug_mode, buffer,
-                                  strlen(buffer));
+        char *source_args = 0;
+        int empty_component = metadata_args_has_empty_component(func->args);
+        int statement_separator = metadata_args_has_statement_separator(func->args);
 
-        if (!func->context || error_in_node(func->context->ast)) {
-            func->error_state = "INTERNAL_ERROR_PARSING_IMPORT_AST";
+        if (!empty_component && !statement_separator) {
+            source_args = metadata_args_to_source_args(func->args);
+        }
+        if (empty_component || statement_separator) {
+            func->error_state = import_is_rxpa_metadata(func->file_name) ?
+                                "RXPA_IMPORT_SIGNATURE_INVALID" :
+                                "SYNTAX_ERROR_IN_IMPORT_DECL";
+            func->error_field = "arguments";
+            func->error_detail = empty_component ?
+                                 "empty declaration component" :
+                                 "invalid declaration separator";
+        } else if (!source_args) {
+            func->error_state = "OUT_OF_MEMORY";
+        } else {
+            buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name,
+                             func->type, source_args);
+            free(source_args);
+            if (!buffer) {
+                func->error_state = "OUT_OF_MEMORY";
+            } else {
+                if (context->debug_mode >= 2) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
+                func->context = parseRexx(context, context->location, func->file_name, LEVELB, context->debug_mode, buffer,
+                                          strlen(buffer));
+
+                if (!func->context || !func->context->ast ||
+                    error_in_node(func->context->ast) ||
+                    !func->context->ast->child ||
+                    func->context->ast->child->node_type != PROGRAM_FILE) {
+                    func->error_state = import_is_rxpa_metadata(func->file_name) ?
+                                        "RXPA_IMPORT_SIGNATURE_INVALID" :
+                                        "SYNTAX_ERROR_IN_IMPORT_DECL";
+                    if (!imported_return_declaration_parses(context,
+                                                            func->file_name,
+                                                            func->namespace,
+                                                            func->name,
+                                                            func->type)) {
+                        func->error_field = "return";
+                    } else {
+                        func->error_field = "arguments";
+                    }
+                    func->error_detail = "invalid Level B declaration";
+                }
+            }
         }
 
-        /* Make sure the AST seems sane */
-        else if (func->context->ast->child->node_type != PROGRAM_FILE) {
-            func->error_state = "INTERNAL_ERROR_PARSING_IMPORT_AST";
+        if (!func->error_state) {
+            /* Fixup the node type */
+            func->context->ast->child->node_type = IMPORTED_FILE;
         }
-
-        /* Fixup the node type */
-        func->context->ast->child->node_type = IMPORTED_FILE;
 
         /* A class factory's generic registry declaration returns the object
          * reference, while its serialized body is expressed in FACTORY
@@ -3471,7 +3669,7 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
          * that payload only when the synthesized class contract supplies the
          * real FACTORY node; treating this PROCEDURE stub as equivalent would
          * attach evidence to the wrong callable shape. */
-        if (func->implementation &&
+        if (!func->error_state && func->implementation &&
             rxcp_inline_payload_is_supported(func->implementation) &&
             !parse_class_factory_fqname(func->fqname, 0, 0)) {
             rxcp_inline_attach_imported_body(func->context, func->implementation);
