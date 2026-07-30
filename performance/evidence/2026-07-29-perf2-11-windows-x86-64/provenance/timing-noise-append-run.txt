@@ -1,0 +1,2 @@
+﻿started_utc=2026-07-29T20:09:58.4522207Z measurement=timing-noise-append warmups=2 recorded_runs=10 serial=yes
+completed_utc=2026-07-29T20:24:03.1842586Z result=pass sample_rows=132

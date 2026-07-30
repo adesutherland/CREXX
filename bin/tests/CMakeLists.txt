@@ -471,7 +471,7 @@ crexx_label_smoke_tests(
         crexx_native_default_link_strip
 )
 
-function(crexx_force_raw_diagnostics_for_bin_tests)
+function(crexx_isolate_bin_test_environment)
     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
     foreach(_crexx_test IN LISTS _crexx_tests)
         get_test_property(${_crexx_test} ENVIRONMENT _crexx_env)
@@ -479,8 +479,9 @@ function(crexx_force_raw_diagnostics_for_bin_tests)
             set(_crexx_env)
         endif()
         list(APPEND _crexx_env "CREXX_DIAGNOSTICS=raw")
+        list(APPEND _crexx_env "CREXX_HOME=${CMAKE_BINARY_DIR}")
         set_tests_properties(${_crexx_test} PROPERTIES ENVIRONMENT "${_crexx_env}")
     endforeach()
 endfunction()
 
-crexx_force_raw_diagnostics_for_bin_tests()
+crexx_isolate_bin_test_environment()

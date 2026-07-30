@@ -4464,7 +4464,8 @@ endforeach()
 add_test(NAME dynamic_interface_load_driver
         COMMAND ${CMAKE_COMMAND} -P ${DYNAMIC_INTERFACE_DRIVER_SCRIPT})
 set_tests_properties(dynamic_interface_load_driver PROPERTIES
-        LABELS "compiler;stage3;driver;interfaces;late-load")
+        LABELS "compiler;stage3;driver;interfaces;late-load"
+        ENVIRONMENT "CREXX_HOME=${CMAKE_BINARY_DIR}")
 add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
 set_tests_properties(crexxsaa_variables PROPERTIES
         LABELS "compiler;stage3"
@@ -4602,6 +4603,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "    OUTPUT_VARIABLE out\n"
        "    ERROR_VARIABLE err\n"
        "    RESULT_VARIABLE res\n"
+       "    ENCODING UTF-8\n"
        "  )\n"
        "  set(full_out \"\${out}\${err}\")\n"
        "  if(NOT res EQUAL 0)\n"
@@ -4627,6 +4629,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "    OUTPUT_VARIABLE out\n"
        "    ERROR_VARIABLE err\n"
        "    RESULT_VARIABLE res\n"
+       "    ENCODING UTF-8\n"
        "  )\n"
        "  set(full_out \"\${out}\${err}\")\n"
        "  if(res EQUAL 0)\n"

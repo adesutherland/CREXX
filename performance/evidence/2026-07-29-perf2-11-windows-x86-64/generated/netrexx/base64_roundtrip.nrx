@@ -1,0 +1,106 @@
+/* Decimal-arithmetic RFC 4648 Base64 encode/decode workload for NetRexx. */
+options nobinary decimal
+
+class base64_roundtrip
+  method main(args=String[]) static
+    repetitions=1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+
+    input=byte[1024]
+    loop offset=0 to 1023
+      value=(offset*31+7)//256
+      if value>127 then value=value-256
+      input[offset]=Rexx(value)
+    end
+
+    encoded=String ''
+    decoded=byte[]
+    loop iteration=1 to repetitions
+      encoded=encode(input)
+      decoded=decode(encoded)
+    end
+
+    if encoded.length()\=1368 then do
+      say 'FAIL: expected encoded length 1368, got' encoded.length()
+      exit 1
+    end
+    if \java.util.Arrays.equals(input,decoded) then do
+      say 'FAIL: decoded bytes differ from input'
+      exit 1
+    end
+    checksum=0
+    loop encodedByte over decoded
+      checksum=checksum+java.lang.Byte.toUnsignedInt(encodedByte)
+    end
+    if checksum\=130560 then do
+      say 'FAIL: expected checksum 130560, got' checksum
+      exit 1
+    end
+    say 'benchmark=base64_roundtrip repetitions='repetitions 'encoded_length='encoded.length() 'checksum='checksum
+    say 'PASS: Base64 Roundtrip NetRexx decimal port'
+
+  method encode(data=byte[]) static returns String
+    alphabet=String 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    result=StringBuilder()
+    offset=0
+    loop while offset<data.length
+      remaining=data.length-offset
+      byte1=java.lang.Byte.toUnsignedInt(data[offset])
+      byte2=0
+      byte3=0
+      if remaining>1 then byte2=java.lang.Byte.toUnsignedInt(data[offset+1])
+      if remaining>2 then byte3=java.lang.Byte.toUnsignedInt(data[offset+2])
+      digit1=byte1%4
+      digit2=(byte1//4)*16+byte2%16
+      digit3=(byte2//16)*4+byte3%64
+      digit4=byte3//64
+      result.append(alphabet.substring(digit1,digit1+1))
+      result.append(alphabet.substring(digit2,digit2+1))
+      if remaining>1 then result.append(alphabet.substring(digit3,digit3+1))
+      else result.append('=')
+      if remaining>2 then result.append(alphabet.substring(digit4,digit4+1))
+      else result.append('=')
+      offset=offset+3
+    end
+    return result.toString()
+
+  method decode(encoded=String) static returns byte[]
+    alphabet=String 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    padding=0
+    if encoded.codePointAt(encoded.length()-1)=61 then padding=padding+1
+    if encoded.codePointAt(encoded.length()-2)=61 then padding=padding+1
+    result=byte[(encoded.length()%4)*3-padding]
+    inputOffset=0
+    outputOffset=0
+    loop while inputOffset<encoded.length()
+      digit1=alphabet.indexOf(encoded.codePointAt(inputOffset))
+      digit2=alphabet.indexOf(encoded.codePointAt(inputOffset+1))
+      char3=encoded.codePointAt(inputOffset+2)
+      char4=encoded.codePointAt(inputOffset+3)
+      digit3=0
+      digit4=0
+      if char3\=61 then digit3=alphabet.indexOf(char3)
+      if char4\=61 then digit4=alphabet.indexOf(char4)
+      value=digit1*4+digit2%16
+      if value>127 then value=value-256
+      result[outputOffset]=Rexx(value)
+      outputOffset=outputOffset+1
+      if char3\=61 then do
+        value=(digit2//16)*16+digit3%4
+        if value>127 then value=value-256
+        result[outputOffset]=Rexx(value)
+        outputOffset=outputOffset+1
+      end
+      if char4\=61 then do
+        value=(digit3//4)*64+digit4
+        if value>127 then value=value-256
+        result[outputOffset]=Rexx(value)
+        outputOffset=outputOffset+1
+      end
+      inputOffset=inputOffset+4
+    end
+    return result

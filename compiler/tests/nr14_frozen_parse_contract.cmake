@@ -15,7 +15,8 @@ function(run_checked description)
             COMMAND ${ARGN}
             OUTPUT_VARIABLE out
             ERROR_VARIABLE err
-            RESULT_VARIABLE result)
+            RESULT_VARIABLE result
+            ENCODING UTF-8)
     if(NOT result EQUAL 0)
         message(FATAL_ERROR "${description} failed:\n${out}${err}")
     endif()
@@ -52,7 +53,8 @@ function(assert_runs image expected)
                 COMMAND "${${runner}}" "${image}"
                 OUTPUT_VARIABLE out
                 ERROR_VARIABLE err
-                RESULT_VARIABLE result)
+                RESULT_VARIABLE result
+                ENCODING UTF-8)
         string(REPLACE "\r\n" "\n" out "${out}")
         string(REPLACE "\r" "\n" out "${out}")
         if(NOT result EQUAL 0 OR NOT out STREQUAL "${expected}")
@@ -122,7 +124,8 @@ execute_process(
         COMMAND "${RXDAS}" "${WORK_DIR}/missing_feature.rxbin"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE result)
+        RESULT_VARIABLE result
+        ENCODING UTF-8)
 if(result EQUAL 0 OR NOT err MATCHES "opcode 405 requires feature flag 0x00000002")
     message(FATAL_ERROR "missing frozen-PARSE feature was not rejected precisely:\n${out}${err}")
 endif()
@@ -134,7 +137,8 @@ execute_process(
         COMMAND "${RXDAS}" "${WORK_DIR}/unknown_feature.rxbin"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE result)
+        RESULT_VARIABLE result
+        ENCODING UTF-8)
 if(result EQUAL 0 OR NOT err MATCHES "unsupported feature flags 0x00000008")
     message(FATAL_ERROR "unknown RXBIN feature was not rejected precisely:\n${out}${err}")
 endif()
@@ -153,7 +157,8 @@ execute_process(
         COMMAND "${RXDAS}" "${WORK_DIR}/invalid_parseplan_missing_feature.rxbin"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE result)
+        RESULT_VARIABLE result
+        ENCODING UTF-8)
 if(result EQUAL 0 OR NOT err MATCHES "opcode 410 requires feature flag 0x00000002")
     message(FATAL_ERROR
             "missing prepared-plan feature was not rejected precisely:\n${out}${err}")
@@ -163,7 +168,8 @@ foreach(runner IN ITEMS RXVM RXBVM)
             COMMAND "${${runner}}" "${WORK_DIR}/invalid_parseplan.rxbin"
             OUTPUT_VARIABLE out
             ERROR_VARIABLE err
-            RESULT_VARIABLE result)
+            RESULT_VARIABLE result
+            ENCODING UTF-8)
     if(result EQUAL 0 OR NOT "${out}${err}" MATCHES "INVALID_ARGUMENTS")
         message(FATAL_ERROR
                 "${runner} accepted an invalid prepared descriptor: rc=${result}\n${out}${err}")

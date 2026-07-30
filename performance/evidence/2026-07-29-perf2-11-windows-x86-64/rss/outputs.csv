@@ -1,0 +1,373 @@
+sample_id,stream,line_number,text
+rss-Sieve-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14040
+rss-Sieve-sieve-rxbvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxbvm-recorded-1,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14040
+rss-Sieve-sieve-oorexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500  result=669
+rss-Sieve-sieve-oorexx-recorded-1,stdout,2,PASS: AWFY Sieve Classic port
+rss-Sieve-sieve-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 24508
+rss-Sieve-sieve-netrexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-netrexx-recorded-1,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+rss-Sieve-sieve-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 516892
+rss-Sieve-sieve-rxbvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxbvm-recorded-2,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxbvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14036
+rss-Sieve-sieve-oorexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500  result=669
+rss-Sieve-sieve-oorexx-recorded-2,stdout,2,PASS: AWFY Sieve Classic port
+rss-Sieve-sieve-oorexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 23852
+rss-Sieve-sieve-netrexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-netrexx-recorded-2,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+rss-Sieve-sieve-netrexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 516668
+rss-Sieve-sieve-rxvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-2,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14044
+rss-Sieve-sieve-oorexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500  result=669
+rss-Sieve-sieve-oorexx-recorded-3,stdout,2,PASS: AWFY Sieve Classic port
+rss-Sieve-sieve-oorexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 23856
+rss-Sieve-sieve-netrexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-netrexx-recorded-3,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+rss-Sieve-sieve-netrexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 516556
+rss-Sieve-sieve-rxvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-3,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14048
+rss-Sieve-sieve-rxbvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxbvm-recorded-3,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxbvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14036
+rss-Permute-permute-rxvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxvm-recorded-1,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14064
+rss-Permute-permute-rxbvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxbvm-recorded-1,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14056
+rss-Permute-permute-oorexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000  result=8660
+rss-Permute-permute-oorexx-recorded-1,stdout,2,PASS: AWFY Permute Classic procedural port
+rss-Permute-permute-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 23832
+rss-Permute-permute-netrexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 205820
+rss-Permute-permute-rxbvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxbvm-recorded-2,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxbvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14076
+rss-Permute-permute-oorexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000  result=8660
+rss-Permute-permute-oorexx-recorded-2,stdout,2,PASS: AWFY Permute Classic procedural port
+rss-Permute-permute-oorexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 23844
+rss-Permute-permute-netrexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 246284
+rss-Permute-permute-rxvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxvm-recorded-2,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14060
+rss-Permute-permute-oorexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000  result=8660
+rss-Permute-permute-oorexx-recorded-3,stdout,2,PASS: AWFY Permute Classic procedural port
+rss-Permute-permute-oorexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 23848
+rss-Permute-permute-netrexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-3,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 206360
+rss-Permute-permute-rxvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxvm-recorded-3,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14064
+rss-Permute-permute-rxbvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-rxbvm-recorded-3,stdout,2,PASS: AWFY Permute
+rss-Permute-permute-rxbvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14060
+rss-Bounce-bounce-rxvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-rxvm-recorded-1,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14100
+rss-Bounce-bounce-rxbvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-rxbvm-recorded-1,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14084
+rss-Bounce-bounce-oorexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200  result=1331
+rss-Bounce-bounce-oorexx-recorded-1,stdout,2,PASS: AWFY Bounce ooRexx object port
+rss-Bounce-bounce-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 23880
+rss-Bounce-bounce-netrexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-1,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 195304
+rss-Bounce-bounce-rxbvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-rxbvm-recorded-2,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxbvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14084
+rss-Bounce-bounce-oorexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200  result=1331
+rss-Bounce-bounce-oorexx-recorded-2,stdout,2,PASS: AWFY Bounce ooRexx object port
+rss-Bounce-bounce-oorexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 23852
+rss-Bounce-bounce-netrexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-2,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 231868
+rss-Bounce-bounce-rxvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-rxvm-recorded-2,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14088
+rss-Bounce-bounce-oorexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200  result=1331
+rss-Bounce-bounce-oorexx-recorded-3,stdout,2,PASS: AWFY Bounce ooRexx object port
+rss-Bounce-bounce-oorexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 23848
+rss-Bounce-bounce-netrexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-3,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 195048
+rss-Bounce-bounce-rxvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-rxvm-recorded-3,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14092
+rss-Bounce-bounce-rxbvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-rxbvm-recorded-3,stdout,2,PASS: AWFY Bounce
+rss-Bounce-bounce-rxbvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14096
+rss-Richards-richards-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14328
+rss-Richards-richards-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14320
+rss-Richards-richards-oorexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20  queue_packets=23246 holds=9297
+rss-Richards-richards-oorexx-recorded-1,stdout,2,PASS: AWFY Richards ooRexx port
+rss-Richards-richards-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 23924
+rss-Richards-richards-netrexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-netrexx-recorded-1,stdout,2,PASS: AWFY Richards NetRexx decimal port
+rss-Richards-richards-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 231628
+rss-Richards-richards-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxbvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14328
+rss-Richards-richards-oorexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20  queue_packets=23246 holds=9297
+rss-Richards-richards-oorexx-recorded-2,stdout,2,PASS: AWFY Richards ooRexx port
+rss-Richards-richards-oorexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 23888
+rss-Richards-richards-netrexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-netrexx-recorded-2,stdout,2,PASS: AWFY Richards NetRexx decimal port
+rss-Richards-richards-netrexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 234108
+rss-Richards-richards-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxvm-recorded-2,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14336
+rss-Richards-richards-oorexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20  queue_packets=23246 holds=9297
+rss-Richards-richards-oorexx-recorded-3,stdout,2,PASS: AWFY Richards ooRexx port
+rss-Richards-richards-oorexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 24132
+rss-Richards-richards-netrexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-netrexx-recorded-3,stdout,2,PASS: AWFY Richards NetRexx decimal port
+rss-Richards-richards-netrexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 229256
+rss-Richards-richards-rxvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxvm-recorded-3,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14332
+rss-Richards-richards-rxbvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+rss-Richards-richards-rxbvm-recorded-3,stdout,2,PASS: AWFY Richards
+rss-Richards-richards-rxbvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14320
+rss-Base64-base64-rxvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14164
+rss-Base64-base64-rxbvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxbvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14156
+rss-Base64-base64-oorexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500  encoded_length=1368 checksum=130560
+rss-Base64-base64-oorexx-recorded-1,stdout,2,PASS: Base64 Roundtrip ooRexx port
+rss-Base64-base64-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 23844
+rss-Base64-base64-netrexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-1,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 206576
+rss-Base64-base64-rxbvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxbvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxbvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14152
+rss-Base64-base64-oorexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500  encoded_length=1368 checksum=130560
+rss-Base64-base64-oorexx-recorded-2,stdout,2,PASS: Base64 Roundtrip ooRexx port
+rss-Base64-base64-oorexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 23844
+rss-Base64-base64-netrexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-2,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 207364
+rss-Base64-base64-rxvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14160
+rss-Base64-base64-oorexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500  encoded_length=1368 checksum=130560
+rss-Base64-base64-oorexx-recorded-3,stdout,2,PASS: Base64 Roundtrip ooRexx port
+rss-Base64-base64-oorexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 23852
+rss-Base64-base64-netrexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-3,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 172844
+rss-Base64-base64-rxvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14148
+rss-Base64-base64-rxbvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-rxbvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+rss-Base64-base64-rxbvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14156
+rss-Towers-towers-rxvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-rxvm-recorded-1,stdout,2,PASS: AWFY Towers
+rss-Towers-towers-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14128
+rss-Towers-towers-rxbvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-rxbvm-recorded-1,stdout,2,PASS: AWFY Towers
+rss-Towers-towers-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14112
+rss-Towers-towers-oorexx-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100  result=8191
+rss-Towers-towers-oorexx-recorded-1,stdout,2,PASS: AWFY Towers ooRexx object port
+rss-Towers-towers-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 23848
+rss-Towers-towers-netrexx-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-netrexx-recorded-1,stdout,2,PASS: AWFY Towers NetRexx port
+rss-Towers-towers-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 42084
+rss-Towers-towers-rxbvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-rxbvm-recorded-2,stdout,2,PASS: AWFY Towers
+rss-Towers-towers-rxbvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14116
+rss-Towers-towers-oorexx-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100  result=8191
+rss-Towers-towers-oorexx-recorded-2,stdout,2,PASS: AWFY Towers ooRexx object port
+rss-Towers-towers-oorexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 23852
+rss-Towers-towers-netrexx-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-netrexx-recorded-2,stdout,2,PASS: AWFY Towers NetRexx port
+rss-Towers-towers-netrexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 42204
+rss-Towers-towers-rxvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-rxvm-recorded-2,stdout,2,PASS: AWFY Towers
+rss-Towers-towers-rxvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14124
+rss-Towers-towers-oorexx-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100  result=8191
+rss-Towers-towers-oorexx-recorded-3,stdout,2,PASS: AWFY Towers ooRexx object port
+rss-Towers-towers-oorexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 23844
+rss-Towers-towers-netrexx-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-netrexx-recorded-3,stdout,2,PASS: AWFY Towers NetRexx port
+rss-Towers-towers-netrexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 42176
+rss-Towers-towers-rxvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-rxvm-recorded-3,stdout,2,PASS: AWFY Towers
+rss-Towers-towers-rxvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14124
+rss-Towers-towers-rxbvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+rss-Towers-towers-rxbvm-recorded-3,stdout,2,PASS: AWFY Towers
+rss-Towers-towers-rxbvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14120
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,3,       System is: windows
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,7,
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,8,     Performance: 9226395 cREXX clauses per second
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,9,
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-RexxCPS-rexxcps-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14276
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,3,       System is: windows
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.2 s)
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,7,
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,8,     Performance: 8436305 cREXX clauses per second
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,9,
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-RexxCPS-rexxcps-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14272
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stdout,3,       System is: WindowsNT
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stdout,5,
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stdout,6,     Performance: 15151515 REXX clauses per second
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stdout,7,
+rss-RexxCPS-rexxcps-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 23920
+rss-RexxCPS-rexxcps-regina-recorded-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+rss-RexxCPS-rexxcps-regina-recorded-1,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+rss-RexxCPS-rexxcps-regina-recorded-1,stdout,3,       System is: WIN64
+rss-RexxCPS-rexxcps-regina-recorded-1,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+rss-RexxCPS-rexxcps-regina-recorded-1,stdout,5,
+rss-RexxCPS-rexxcps-regina-recorded-1,stdout,6,     Performance: 14992504 REXX clauses per second
+rss-RexxCPS-rexxcps-regina-recorded-1,stdout,7,
+rss-RexxCPS-rexxcps-regina-recorded-1,stderr,1,Maximum resident set size (kbytes): 6216
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,4,          Averaging: 100 measures of 200 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,5,                       of 1000 clauses (over 1.2410305    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,7,Total (full DOs): 1.2410305 secs (average of 100 measures of 200 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,8,Time for one iteration (1000 clauses) was: 0.000062033485 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,10,     Performance: 16_120_326 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,11,                ( 16.120E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 385012
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,3,       System is: windows
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.2 s)
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,7,
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,8,     Performance: 8468053 cREXX clauses per second
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,9,
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-RexxCPS-rexxcps-rxbvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14272
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stdout,3,       System is: WindowsNT
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.4s)
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stdout,5,
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stdout,6,     Performance: 13879251 REXX clauses per second
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stdout,7,
+rss-RexxCPS-rexxcps-oorexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 23900
+rss-RexxCPS-rexxcps-regina-recorded-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+rss-RexxCPS-rexxcps-regina-recorded-2,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+rss-RexxCPS-rexxcps-regina-recorded-2,stdout,3,       System is: WIN64
+rss-RexxCPS-rexxcps-regina-recorded-2,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+rss-RexxCPS-rexxcps-regina-recorded-2,stdout,5,
+rss-RexxCPS-rexxcps-regina-recorded-2,stdout,6,     Performance: 14914243 REXX clauses per second
+rss-RexxCPS-rexxcps-regina-recorded-2,stdout,7,
+rss-RexxCPS-rexxcps-regina-recorded-2,stderr,1,Maximum resident set size (kbytes): 6088
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,4,          Averaging: 100 measures of 200 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,5,                       of 1000 clauses (over 1.1511074    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,7,Total (full DOs): 1.1511074 secs (average of 100 measures of 200 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,8,Time for one iteration (1000 clauses) was: 0.00005753588 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,10,     Performance: 17_380_459 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,11,                ( 17.380E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,1,Maximum resident set size (kbytes): 260524
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,3,       System is: windows
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,7,
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,8,     Performance: 9132946 cREXX clauses per second
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,9,
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-RexxCPS-rexxcps-rxvm-recorded-2,stderr,1,Maximum resident set size (kbytes): 14276
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stdout,3,       System is: WindowsNT
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stdout,5,
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stdout,6,     Performance: 15290520 REXX clauses per second
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stdout,7,
+rss-RexxCPS-rexxcps-oorexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 23912
+rss-RexxCPS-rexxcps-regina-recorded-3,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+rss-RexxCPS-rexxcps-regina-recorded-3,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+rss-RexxCPS-rexxcps-regina-recorded-3,stdout,3,       System is: WIN64
+rss-RexxCPS-rexxcps-regina-recorded-3,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.4s)
+rss-RexxCPS-rexxcps-regina-recorded-3,stdout,5,
+rss-RexxCPS-rexxcps-regina-recorded-3,stdout,6,     Performance: 14577260 REXX clauses per second
+rss-RexxCPS-rexxcps-regina-recorded-3,stdout,7,
+rss-RexxCPS-rexxcps-regina-recorded-3,stderr,1,Maximum resident set size (kbytes): 6096
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,4,          Averaging: 100 measures of 200 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,5,                       of 1000 clauses (over 1.1496576    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,7,Total (full DOs): 1.1496576 secs (average of 100 measures of 200 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,8,Time for one iteration (1000 clauses) was: 0.00005746637 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,10,     Performance: 17_401_482 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,11,                ( 17.401E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,1,Maximum resident set size (kbytes): 276624
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,3,       System is: windows
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,7,
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,8,     Performance: 9261232 cREXX clauses per second
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,9,
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-RexxCPS-rexxcps-rxvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14280
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,3,       System is: windows
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.2 s)
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,7,
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,8,     Performance: 8591338 cREXX clauses per second
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,9,
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-RexxCPS-rexxcps-rxbvm-recorded-3,stderr,1,Maximum resident set size (kbytes): 14280

@@ -8,7 +8,8 @@ function(run_checked label)
         COMMAND ${ARGN}
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE res)
+        RESULT_VARIABLE res
+        ENCODING UTF-8)
     if(NOT res EQUAL 0)
         message(FATAL_ERROR "${label} failed: ${out}${err}")
     endif()
@@ -20,7 +21,8 @@ function(run_dual_vm label rxbin)
             COMMAND "${${vm}}" "${rxbin}"
             OUTPUT_VARIABLE run_out
             ERROR_VARIABLE err
-            RESULT_VARIABLE res)
+            RESULT_VARIABLE res
+            ENCODING UTF-8)
         string(REPLACE "\r\n" "\n" run_out "${run_out}")
         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
             message(FATAL_ERROR
@@ -72,7 +74,8 @@ foreach(mode opt noopt)
             COMMAND "${${vm}}" "${WORK_DIR}/array_${mode}.rxbin"
             OUTPUT_VARIABLE array_out
             ERROR_VARIABLE array_err
-            RESULT_VARIABLE array_res)
+            RESULT_VARIABLE array_res
+            ENCODING UTF-8)
         string(REPLACE "\r\n" "\n" array_out "${array_out}")
         if(NOT array_res EQUAL 0 OR NOT array_out STREQUAL array_expected)
             message(FATAL_ERROR

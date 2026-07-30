@@ -1,0 +1,8 @@
+﻿captured_utc=2026-07-29T20:24:03.1874102Z
+captured_local=2026-07-29T21:24:03.1916301+01:00
+cpu_load_percent=5
+free_physical_memory_kib=9376276
+battery_status=2
+estimated_charge_percent=100
+active_power_scheme=Power Scheme GUID: f1d59edc-8b32-46bf-8471-1011851f06a3  (Acer)
+selected_benchmark_processes=

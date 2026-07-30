@@ -1,0 +1,15 @@
+﻿captured_utc=2026-07-29T18:57:41.7132426Z head=d78c6fcfa81ef03fdbea65ff9cc39ed99e8716bf branch=develop status:
+ M bin/tests/CMakeLists.txt
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/nr14_frozen_parse_contract.cmake
+ M compiler/tests/perf2_04_certified_call.cmake
+ M compiler/tests/perf2_04_inline_assembler_effects.cmake
+ M compiler/tests/perf2_04_inline_assembler_imports.cmake
+ M compiler/tests/perf2_05_partial_call.cmake
+?? performance/evidence/2026-07-29-perf2-11-windows-x86-64/
+?? performance/windows-release-build-current.log
+?? performance/windows-release-build-resume.err.log
+?? performance/windows-release-build-resume.log
+?? performance/windows-release-focused-ctest.log
+?? performance/windows-release-full-ctest.log
+?? performance/windows-release-rerun-failed-current.log

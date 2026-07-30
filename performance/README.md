@@ -41,11 +41,13 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/evidence/2026-07-27-perf2-08-qualification/` | Approved Mac capability/equivalence panel: complete non-common qualification, exact source/runtime identities and negative Mandelbrot evidence |
 | `performance/evidence/2026-07-27-perf2-09-mac-closure/` | Formal same-session Mac closure: common-five scorecard, Towers/RexxCPS/lifecycle lanes, RSS/artifacts, workload dossiers and recursive checksums |
 | `performance/evidence/2026-07-28-perf2-10-11-intel-linux/` | Initial Intel Linux x86-64 handover: GCC/Clang correctness and sanitizer closure, formal runtime/RSS/lifecycle/artifacts, schema-5 profiles, native PMU attribution and macOS handback |
+| `performance/evidence/2026-07-29-perf2-11-windows-x86-64/` | Windows x86-64 correctness and formal timing/RSS/lifecycle/artifact scorecard under the supported CLion MinGW toolchain; no profiling or tuning |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
 | `performance/tools/run_evidence_bundle.crexx` | Level B exact-image timing/profile/RXSEQ bundle orchestration and reporting |
 | `performance/tools/run_cross_runtime_matrix.crexx` | Level B compact formal timing/RSS matrix capture, summary and aggregate reporting |
+| `performance/tools/windows_peak_rss.ps1` | Native Windows child-process peak working-set sampler used by the formal matrix RSS fallback |
 | `performance/tools/inventory_performance_artifacts.crexx` | Level B hash/size inventory for versioned performance artifact manifests |
 | `performance/tools/report_nr09_macro_timings.zsh` | NR-09 all-form component/macro timing and review-ledger report from paired schema-4 profiles |
 | `performance/capability-gaps.md` | Audited missing surfaces and candidates uncovered by portfolio ports |
@@ -78,7 +80,9 @@ versioned manifest groups runtime cells by workload, and the driver rotates the
 cell order per warmup and recorded round. It writes consolidated sample and
 output tables, per-cell median/IQR/MAD/noise summaries, higher-is-better ratios,
 and the four separately named common-portfolio geometric means. RSS capture
-uses the same manifest with zero warmups and remains separate from timing. For
+uses the same manifest with zero warmups and remains separate from timing.
+Unix hosts use `/usr/bin/time`; native Windows uses `windows_peak_rss.ps1` to
+sample the direct child's `PeakWorkingSet64`. For
 an aggregate row, `work` must be a positive integer and the timing summary uses
 process-inclusive `work / elapsed` normalized throughput; raw elapsed time and
 the exact work count remain in `samples.csv`. `--summary-only` with one or more

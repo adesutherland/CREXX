@@ -97,8 +97,12 @@ main: procedure = .int
     return argument_error("--summary-only requires at least one --samples PATH")
   if measurement = "rss" & warmups <> 0 then
     return argument_error("RSS capture uses --warmups 0")
+  rss_time_command = ""
   rss_time_option = ""
-  if measurement = "rss" then rss_time_option = detect_rss_time_option()
+  if measurement = "rss" then do
+    rss_time_command = detect_rss_time_command()
+    rss_time_option = detect_rss_time_option(rss_time_command)
+  end
 
   manifest_rows = read_input_manifest(manifest_path)
   if manifest_rows[0] = 0 then return execution_error("manifest has no entries")
@@ -134,8 +138,8 @@ main: procedure = .int
       group_end = group_end + 1
     end
 
-    if run_group(manifest_rows, group_start, group_end, measurement, rss_time_option, ,
-        warmups, runs, samples, outputs) <> 0 then do
+    if run_group(manifest_rows, group_start, group_end, measurement, rss_time_command, ,
+        rss_time_option, warmups, runs, samples, outputs) <> 0 then do
       call write_lines output_dir || "/samples.csv", samples
       call write_lines output_dir || "/outputs.csv", outputs
       completed = timestamp_utc()
@@ -241,7 +245,8 @@ validate_manifest: procedure = .int
 
 run_group: procedure = .int
   arg rows = .string[], group_start = .int, group_end = .int, measurement = .string, ,
-      rss_time_option = .string, warmups = .int, runs = .int, ,
+      rss_time_command = .string, rss_time_option = .string, ,
+      warmups = .int, runs = .int, ,
       expose samples = .string[], expose outputs = .string[]
   group_count = group_end - group_start + 1
 
@@ -258,8 +263,8 @@ run_group: procedure = .int
         relative = (position + offset - 1) <mod> group_count
         row_index = group_start + relative
         fields = split_delimited(rows[row_index], "|")
-        result = capture_entry(fields, measurement, rss_time_option, phase, ,
-            round_number, position, samples, outputs)
+        result = capture_entry(fields, measurement, rss_time_command, ,
+            rss_time_option, phase, round_number, position, samples, outputs)
         if result <> 0 then return result
       end
     end
@@ -267,8 +272,8 @@ run_group: procedure = .int
   return 0
 
 capture_entry: procedure = .int
-  arg fields = .string[], measurement = .string, rss_time_option = .string, ,
-      phase = .string, round_number = .int, position = .int, ,
+  arg fields = .string[], measurement = .string, rss_time_command = .string, ,
+      rss_time_option = .string, phase = .string, round_number = .int, position = .int, ,
       expose samples = .string[], expose outputs = .string[]
   entry_id = fields[1]
   workload = fields[2]
@@ -284,8 +289,16 @@ capture_entry: procedure = .int
   command = split_list(fields[12])
   if measurement = "rss" then do
     timed_command = .string[]
-    timed_command[1] = "/usr/bin/time"
-    timed_command[2] = rss_time_option
+    timed_command[1] = rss_time_command
+    if rss_time_command = "powershell.exe" then do
+      timed_command[2] = "-NoLogo"
+      timed_command[3] = "-NoProfile"
+      timed_command[4] = "-ExecutionPolicy"
+      timed_command[5] = "Bypass"
+      timed_command[6] = "-File"
+      timed_command[7] = "performance/tools/windows_peak_rss.ps1"
+    end
+    else timed_command[2] = rss_time_option
     do command_index = 1 to command[0]
       timed_command[timed_command[0] + 1] = command[command_index]
     end
@@ -582,9 +595,22 @@ extract_rss: procedure = .string
   end
   return ""
 
+file_exists: procedure = .int
+  arg path = .string
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "stat :path" output command_out error command_err
+  return rc = 0
+
+detect_rss_time_command: procedure = .string
+  if file_exists("/usr/bin/time") then return "/usr/bin/time"
+  return "powershell.exe"
+
 detect_rss_time_option: procedure = .string
+  arg time_command = .string
+  if time_command = "powershell.exe" then return ""
   command = .string[]
-  command[1] = "/usr/bin/time"
+  command[1] = time_command
   command[2] = "--version"
   child_output = .string[]
   child_error = .string[]

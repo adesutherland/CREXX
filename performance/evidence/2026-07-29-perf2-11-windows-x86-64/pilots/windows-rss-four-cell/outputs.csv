@@ -1,0 +1,13 @@
+sample_id,stream,line_number,text
+rss-Sieve-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14036
+rss-Sieve-sieve-rxbvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxbvm-recorded-1,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxbvm-recorded-1,stderr,1,Maximum resident set size (kbytes): 14036
+rss-Sieve-sieve-oorexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500  result=669
+rss-Sieve-sieve-oorexx-recorded-1,stdout,2,PASS: AWFY Sieve Classic port
+rss-Sieve-sieve-oorexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 23880
+rss-Sieve-sieve-netrexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-netrexx-recorded-1,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+rss-Sieve-sieve-netrexx-recorded-1,stderr,1,Maximum resident set size (kbytes): 516492

@@ -8,7 +8,8 @@ function(run_checked label)
         COMMAND ${ARGN}
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE res)
+        RESULT_VARIABLE res
+        ENCODING UTF-8)
     if(NOT res EQUAL 0)
         message(FATAL_ERROR "${label} failed: ${out}${err}")
     endif()
@@ -40,7 +41,8 @@ function(run_dual_vm label dep_rxbin main_rxbin)
             COMMAND "${${vm}}" "${dep_rxbin}" "${main_rxbin}"
             OUTPUT_VARIABLE run_out
             ERROR_VARIABLE err
-            RESULT_VARIABLE res)
+            RESULT_VARIABLE res
+            ENCODING UTF-8)
         string(REPLACE "\r\n" "\n" run_out "${run_out}")
         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
             message(FATAL_ERROR "${label} ${vm} mismatch: expected [${expected}], got [${run_out}], stderr [${err}]")

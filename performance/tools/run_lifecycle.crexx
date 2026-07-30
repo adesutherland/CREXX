@@ -167,11 +167,15 @@ capture_crexx: procedure = .int
   if make_directory(runtime_dir) <> 0 then return 1
   source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.crexx"
   output_stem = runtime_dir || "/lifecycle_probe"
+  rxc_path = build_dir || "/bin/rxc"
+  if file_exists(rxc_path || ".exe") then rxc_path = rxc_path || ".exe"
+  rxas_path = build_dir || "/bin/rxas"
+  if file_exists(rxas_path || ".exe") then rxas_path = rxas_path || ".exe"
 
   do local_sequence = 1 to runs
     sequence = sequence_offset + local_sequence
     command = .string[]
-    command[1] = build_dir || "/bin/rxc"
+    command[1] = rxc_path
     command[2] = "-x"
     command[3] = "-o"
     command[4] = output_stem
@@ -183,7 +187,7 @@ capture_crexx: procedure = .int
     command[2] = "-E"
     command[3] = "chdir"
     command[4] = runtime_dir
-    command[5] = build_dir || "/bin/rxas"
+    command[5] = rxas_path
     command[6] = "-o"
     command[7] = "lifecycle_probe"
     command[8] = "lifecycle_probe"
@@ -194,7 +198,9 @@ capture_crexx: procedure = .int
       if vm_index = 2 then vm = "rxbvm"
       if crexx_vm <> "both" & crexx_vm <> vm then iterate
       vm_command = .string[]
-      vm_command[1] = build_dir || "/bin/" || vm
+      vm_path = build_dir || "/bin/" || vm
+      if file_exists(vm_path || ".exe") then vm_path = vm_path || ".exe"
+      vm_command[1] = vm_path
       vm_command[2] = output_stem || ".rxbin"
       vm_command[3] = "-a"
       if capture_phase("crexx", vm, "load_first_result", sequence, vm_command, ,
@@ -210,11 +216,15 @@ capture_oorexx: procedure = .int
   if make_directory(runtime_dir) <> 0 then return 1
   source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.rex"
   image = runtime_dir || "/lifecycle_probe.orx"
+  rexxc_path = oorexx_home || "/bin/rexxc"
+  if file_exists(rexxc_path || ".exe") then rexxc_path = rexxc_path || ".exe"
+  rexx_path = oorexx_home || "/bin/rexx"
+  if file_exists(rexx_path || ".exe") then rexx_path = rexx_path || ".exe"
 
   do local_sequence = 1 to runs
     sequence = sequence_offset + local_sequence
     command = .string[]
-    command[1] = oorexx_home || "/bin/rexxc"
+    command[1] = rexxc_path
     command[2] = source
     command[3] = image
     if capture_phase("oorexx", "oorexx", "translate", sequence, command, "", rows) <> 0 then return 1
@@ -226,7 +236,7 @@ capture_oorexx: procedure = .int
       command[3] = image
     end
     else do
-      command[1] = oorexx_home || "/bin/rexx"
+      command[1] = rexx_path
       command[2] = image
     end
     if capture_phase("oorexx", "oorexx", "load_first_result", sequence, command, ,
@@ -242,24 +252,39 @@ capture_netrexx: procedure = .int
   source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.nrx"
   local_source = runtime_dir || "/lifecycle_probe.nrx"
   copy_command = .string[]
-  copy_command[1] = "cp"
-  copy_command[2] = source
-  copy_command[3] = local_source
+  copy_command[1] = "cmake"
+  copy_command[2] = "-E"
+  copy_command[3] = "copy"
+  copy_command[4] = source
+  copy_command[5] = local_source
   if run_setup(copy_command) <> 0 then return execution_error("could not stage NetRexx lifecycle source")
 
   do local_sequence = 1 to runs
     sequence = sequence_offset + local_sequence
     command = .string[]
-    command[1] = netrexx_home || "/bin/NetRexxC.sh"
-    command[2] = "-keep"
-    command[3] = "-sourcedir"
-    command[4] = local_source
+    if file_exists(netrexx_home || "/bin/NetRexxC.bat") then do
+      command[1] = "cmd.exe"
+      command[2] = "/d"
+      command[3] = "/c"
+      command[4] = netrexx_home || "/bin/NetRexxC.bat"
+      command[5] = "-keep"
+      command[6] = "-sourcedir"
+      command[7] = local_source
+    end
+    else do
+      command[1] = netrexx_home || "/bin/NetRexxC.sh"
+      command[2] = "-keep"
+      command[3] = "-sourcedir"
+      command[4] = local_source
+    end
     if capture_phase("netrexx", "netrexx", "compile", sequence, command, "", rows) <> 0 then return 1
 
     command = .string[]
     command[1] = "java"
     command[2] = "-cp"
-    command[3] = runtime_dir || ":" || netrexx_home || "/runlib/NetRexxR.jar"
+    classpath_separator = ":"
+    if file_exists(netrexx_home || "/bin/NetRexxC.bat") then classpath_separator = ";"
+    command[3] = runtime_dir || classpath_separator || netrexx_home || "/runlib/NetRexxR.jar"
     command[4] = "lifecycle_probe"
     if capture_phase("netrexx", "netrexx", "load_first_result", sequence, command, ,
         "PASS: Lifecycle Probe", rows) <> 0 then return 1

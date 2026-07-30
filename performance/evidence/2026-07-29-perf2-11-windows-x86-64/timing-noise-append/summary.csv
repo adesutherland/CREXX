@@ -1,0 +1,12 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve-rxvm,Sieve,crexx,rxvm,equivalent-port,A,yes,no,5500,normalized_work_per_second,10,2339.238990,2384.229298,2418.251312,2440.817660,2455.216845,29.195148,1.207283,4.795939,no
+sieve-oorexx,Sieve,oorexx,oorexx,equivalent-port,A,yes,no,5500,normalized_work_per_second,10,335.709629,347.958321,350.747232,352.168812,355.507568,2.334382,0.665545,5.644504,no
+sieve-netrexx,Sieve,netrexx,netrexx,decimal-rexx-port,A,yes,no,5500,normalized_work_per_second,10,1089.528110,1236.349557,1266.473475,1275.242233,1297.914888,25.685039,2.028076,16.454097,yes
+permute-rxvm,Permute,crexx,rxvm,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,1099.591788,1152.415587,1161.087054,1174.256397,1180.838022,11.692280,1.007011,6.997428,no
+permute-rxbvm,Permute,crexx,rxbvm,equivalent-port,A,yes,no,5000,normalized_work_per_second,10,870.400802,875.873369,885.096204,893.033057,898.620994,9.187225,1.037992,3.188376,no
+bounce-rxvm,Bounce,crexx,rxvm,equivalent-port,A,yes,no,4200,normalized_work_per_second,10,1728.559382,1773.096750,1796.764835,1806.563210,1821.959821,15.215843,0.846847,5.198256,no
+bounce-rxbvm,Bounce,crexx,rxbvm,equivalent-port,A,yes,no,4200,normalized_work_per_second,10,1257.404089,1275.038931,1286.901960,1302.560428,1320.407176,15.249305,1.184962,4.895718,no
+bounce-oorexx,Bounce,oorexx,oorexx,equivalent-port,A,yes,no,4200,normalized_work_per_second,10,345.456982,353.722963,355.788351,356.703041,359.088070,1.342147,0.377232,3.831235,no
+bounce-netrexx,Bounce,netrexx,netrexx,decimal-rexx-port,A,yes,no,4200,normalized_work_per_second,10,822.766014,891.698641,897.324764,901.085301,906.035295,4.572860,0.509610,9.279726,no
+richards-netrexx,Richards,netrexx,netrexx,decimal-rexx-port,A,yes,no,20,normalized_work_per_second,10,7.610182,7.729158,7.819876,7.965353,8.260739,0.106683,1.364253,8.319269,no
+base64-oorexx,Base64,oorexx,oorexx,equivalent-port,A,yes,no,2500,normalized_work_per_second,10,784.134143,809.268652,816.714333,818.704261,820.781397,3.357889,0.411146,4.487157,no

@@ -10,7 +10,8 @@ function(run_checked label)
         COMMAND ${ARGN}
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE res)
+        RESULT_VARIABLE res
+        ENCODING UTF-8)
     if(NOT res EQUAL 0)
         message(FATAL_ERROR "${label} failed: ${out}${err}")
     endif()
@@ -69,7 +70,8 @@ function(run_dual_vm label expected upper_rxbin lower_rxbin length_rxbin
                     "${substr_rxbin}" "${word_rxbin}" "${main_rxbin}"
             OUTPUT_VARIABLE run_out
             ERROR_VARIABLE err
-            RESULT_VARIABLE res)
+            RESULT_VARIABLE res
+            ENCODING UTF-8)
         string(REPLACE "\r\n" "\n" run_out "${run_out}")
         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
             message(FATAL_ERROR "${label} ${vm} mismatch: expected [${expected}], got [${run_out}], stderr [${err}]")
@@ -162,7 +164,8 @@ foreach(vm RXVM RXBVM)
         COMMAND "${${vm}}" "${WORK_DIR}/spoof_upper.rxbin"
         OUTPUT_VARIABLE run_out
         ERROR_VARIABLE err
-        RESULT_VARIABLE res)
+        RESULT_VARIABLE res
+        ENCODING UTF-8)
     string(REPLACE "\r\n" "\n" run_out "${run_out}")
     if(NOT res EQUAL 0 OR NOT run_out STREQUAL spoof_expected)
         message(FATAL_ERROR "spoof provider ${vm} mismatch: expected [${spoof_expected}], got [${run_out}], stderr [${err}]")
@@ -184,7 +187,8 @@ foreach(vm RXVM RXBVM)
         COMMAND "${${vm}}" "${WORK_DIR}/spoof_word.rxbin"
         OUTPUT_VARIABLE spoof_word_out
         ERROR_VARIABLE spoof_word_err
-        RESULT_VARIABLE spoof_word_res)
+        RESULT_VARIABLE spoof_word_res
+        ENCODING UTF-8)
     string(REPLACE "\r\n" "\n" spoof_word_out "${spoof_word_out}")
     if(NOT spoof_word_res EQUAL 0 OR NOT spoof_word_out STREQUAL "Alpha\n")
         message(FATAL_ERROR "spoof word provider ${vm} mismatch: [${spoof_word_out}] [${spoof_word_err}]")
@@ -204,7 +208,8 @@ foreach(vm RXVM RXBVM)
         COMMAND "${${vm}}" "${WORK_DIR}/spoof_lower.rxbin"
         OUTPUT_VARIABLE spoof_lower_out
         ERROR_VARIABLE spoof_lower_err
-        RESULT_VARIABLE spoof_lower_res)
+        RESULT_VARIABLE spoof_lower_res
+        ENCODING UTF-8)
     string(REPLACE "\r\n" "\n" spoof_lower_out "${spoof_lower_out}")
     if(NOT spoof_lower_res EQUAL 0 OR NOT spoof_lower_out STREQUAL "MIXED ÄÖ\n")
         message(FATAL_ERROR "spoof lower provider ${vm} mismatch: [${spoof_lower_out}] [${spoof_lower_err}]")

@@ -1,0 +1,34 @@
+﻿[cREXX]
+CREXX compiler driver crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty  (windows 64 20260729)
+cREXX License (MIT)
+Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+See https://github.com/adesutherland/CREXX for project details
+[ooRexx]
+Open Object Rexx Version 5.1.0 r12973
+Build date: May  2 2025
+Addressing mode: 64
+Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
+Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.
+This program and the accompanying materials are made available under the terms
+of the Common Public License v1.0 which accompanies this distribution or at
+https://www.oorexx.org/license.html
+[Regina]
+C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\runtimes\regina\regina.exe: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025 (64 bit)
+[Java]
+openjdk version "26.0.1" 2026-04-21
+OpenJDK Runtime Environment Temurin-26.0.1+8 (build 26.0.1+8)
+OpenJDK 64-Bit Server VM Temurin-26.0.1+8 (build 26.0.1+8, mixed mode, sharing)
+[NetRexx]
+java -cp ";;C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\runtimes\netrexx\lib\NetRexxF.jar;." -Dnrx.compiler=ecj org.netrexx.process.NetRexxC  -version
+ +++ Warning: Unknown command option '-version' ignored
+NetRexx portable processor 5.10-GA build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+
+Arguments are: in_file_specification... [-option]...
+
+Use "--help" to show all options
+[CMake]
+cmake version 4.3.1
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).

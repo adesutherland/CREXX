@@ -292,6 +292,27 @@ bounded dual-VM Clang profile control, 154 non-multiplexed PMU captures and 16
 focused cycle profiles are retained in
 [`2026-07-28-perf2-10-11-intel-linux`](evidence/2026-07-28-perf2-10-11-intel-linux/).
 
+### Windows baseline completion - 2026-07-29
+
+The supported CLion MinGW Windows x86-64 Release product now passes
+1,926/1,926 tests after correcting UTF-8 decoding in six CMake-script tests
+and isolating nine driver/native tests from an inherited stale `CREXX_HOME`.
+No compiler, VM, RXAS or language behavior changed.
+
+The formal same-session Windows scorecard retains dual-VM timing, a governed
+variability append, native child-process peak working set, 20-sample lifecycle
+phases, artifact hashes/sizes and exact ooRexx 5.1.0, Regina 3.9.7, NetRexx
+5.10-GA and Temurin 26.0.1+8 identities. The common-five geometric means are
+2.363219x/1.984737x versus ooRexx and 0.749453x/0.629424x versus decimal
+NetRexx for `rxvm`/`rxbvm`. Richards, Base64, Towers and the separately
+disclosed RexxCPS row remain below ooRexx, so no final superiority or default
+VM claim is made. Evidence:
+[`2026-07-29-perf2-11-windows-x86-64`](evidence/2026-07-29-perf2-11-windows-x86-64/).
+
+No profiling, tuning candidate or rebuild-heavy analysis was performed on the
+Windows host. Gate E remains open for supported Linux ARM64 coverage and the
+later whole-scorecard architecture decision.
+
 No production optimization or compiler/layout option is selected. Richards
 selects general value copying and attribute-storage trimming; Towers selects
 copy/clear/reset/allocation work plus front-end/indirect-branch pressure;
@@ -1479,6 +1500,12 @@ GCC/Clang tuning and decision, supported Linux ARM64 validation, then the same
 Intel x86-64 hardware under the supported Windows toolchain. Gate E is not met
 by Apple plus Intel/Windows alone: Linux ARM64 remains a required supported
 release-architecture lane.
+
+The 2026-07-29 Windows x86-64 baseline is retained under
+[`2026-07-29-perf2-11-windows-x86-64`](evidence/2026-07-29-perf2-11-windows-x86-64/).
+It completes the requested Windows scorecard lane but does not close Gate E:
+supported Linux ARM64 and a selected cross-platform/default-VM decision remain
+outstanding.
 
 ### Gate F — final external claim
 

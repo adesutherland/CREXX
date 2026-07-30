@@ -15,7 +15,8 @@ foreach(mode opt noopt)
         WORKING_DIRECTORY "${WORK_DIR}"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE res)
+        RESULT_VARIABLE res
+        ENCODING UTF-8)
     if(NOT res EQUAL 0)
         message(FATAL_ERROR "rxc ${mode} failed: ${out}${err}")
     endif()
@@ -51,7 +52,8 @@ foreach(mode opt noopt)
         WORKING_DIRECTORY "${WORK_DIR}"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
-        RESULT_VARIABLE res)
+        RESULT_VARIABLE res
+        ENCODING UTF-8)
     if(NOT res EQUAL 0)
         message(FATAL_ERROR "rxas ${mode} failed: ${out}${err}")
     endif()
@@ -62,7 +64,8 @@ foreach(mode opt noopt)
             WORKING_DIRECTORY "${WORK_DIR}"
             OUTPUT_VARIABLE run_out
             ERROR_VARIABLE err
-            RESULT_VARIABLE res)
+            RESULT_VARIABLE res
+            ENCODING UTF-8)
         string(REPLACE "\r\n" "\n" run_out "${run_out}")
         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
             message(FATAL_ERROR "${vm} ${mode} mismatch: expected [${expected}], got [${run_out}], stderr [${err}]")
