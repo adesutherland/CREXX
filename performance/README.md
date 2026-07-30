@@ -44,6 +44,7 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/evidence/2026-07-28-perf2-10-11-intel-linux/` | Initial Intel Linux x86-64 handover: GCC/Clang correctness and sanitizer closure, formal runtime/RSS/lifecycle/artifacts, schema-5 profiles, native PMU attribution and macOS handback |
 | `performance/evidence/2026-07-29-perf2-11-windows-x86-64/` | Windows x86-64 correctness and formal timing/RSS/lifecycle/artifact scorecard under the supported CLion MinGW toolchain; no profiling or tuning |
 | `performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/` | Same-session Windows GCC/Clang `-O3` comparison, cross-platform RexxCPS review and exact-class NetRexx control; no profiling |
+| `performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/` | Bounded MSVC `rxbvm` build/portability control and same-session RexxCPS compiler comparison; no profiling or toolchain selection |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |

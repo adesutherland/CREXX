@@ -285,7 +285,7 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
 
 // Helper functions provided by the REXX interpreter
-void rxpa_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
 void rxpa_addclass(char* name, char* option, char* type); /* Add class metadata */
 void rxpa_addinterface(char* name, char* option, char* type); /* Add interface metadata */
 void rxpa_addimplements(char* name, char* interface_name); /* Add class/interface implementation metadata */

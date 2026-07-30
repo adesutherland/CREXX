@@ -117,6 +117,12 @@ set(CREXX_VERSION_FILE_PATH "${CMAKE_BINARY_DIR}/generated/VERSION")
 project(CREXX VERSION ${CREXX_VERSION_CORE})
 set(CREXX_VERSION "${CREXX_VERSION_SEMVER}")
 
+if(MSVC)
+    set(CREXX_MATH_LIBRARY)
+else()
+    set(CREXX_MATH_LIBRARY m)
+endif()
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # Fallback to local user bin to avoid sudo permission errors during testing
   if(WIN32)

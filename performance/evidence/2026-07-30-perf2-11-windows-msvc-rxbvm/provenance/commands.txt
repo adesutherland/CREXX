@@ -1,0 +1,19 @@
+# Configure the isolated MSVC tree.
+cmake -S . -B cmake-build-msvc-rxbvm-release -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=OFF -DCREXX_VM_PROFILING=OFF -DCMAKE_CONFIGURATION_TYPES=Release
+
+# Build only rxbvm and its dependency closure.
+cmake --build cmake-build-msvc-rxbvm-release --config Release --target rxbvm --parallel 2
+
+# Rebuild only rxbvm under the existing GCC and Clang configurations.
+cmake --build cmake-build-release --target rxbvm --parallel 2
+cmake --build cmake-build-clang-release-v2 --target rxbvm --parallel 2
+
+# Formal six-cell matrix and governed append: 2 warmups plus 10 recorded.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -nokeep -args --manifest performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/manifests/windows-rxbvm-three-compiler-rexxcps-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/timing --measurement timing --warmups 2 --runs 10
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -nokeep -args --manifest performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/manifests/windows-rxbvm-three-compiler-rexxcps-append-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/timing-append --measurement timing --warmups 2 --runs 10
+
+# Direct all-sample summary.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -nokeep -args --summary-only --measurement timing --manifest performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/manifests/windows-rxbvm-three-compiler-rexxcps-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/timing-final --samples performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/timing/samples.csv --samples performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/timing-append/samples.csv
+
+# One-run common-five plus Towers correctness sweep.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -nokeep -args --manifest performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/manifests/windows-msvc-rxbvm-correctness-pilot-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/pilots/common-six --measurement timing --warmups 0 --runs 1

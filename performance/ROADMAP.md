@@ -334,6 +334,15 @@ code-layout/dispatch lead for a faster profiling host; Linux remains the
 tuning-control report. Evidence:
 [`2026-07-30-perf2-11-windows-compiler-comparison`](evidence/2026-07-30-perf2-11-windows-compiler-comparison/).
 
+A subsequent target-only MSVC control made `rxbvm` portable under MSVC 19.44
+and reused the exact retained RXBIN/library inputs. In the stable cooldown
+RexxCPS block MSVC is 1.148026x GCC and 1.134453x Clang, but only 0.648559x
+ooRexx. Compiler choice therefore explains part of the Windows ratio without
+closing the comparator or cross-platform gap. The initial post-build block was
+machine-wide noisy, all samples remain retained, and no production MSVC lane
+was selected. Evidence:
+[`2026-07-30-perf2-11-windows-msvc-rxbvm`](evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/).
+
 No production optimization or compiler/layout option is selected. Richards
 selects general value copying and attribute-storage trimming; Towers selects
 copy/clear/reset/allocation work plus front-end/indirect-branch pressure;

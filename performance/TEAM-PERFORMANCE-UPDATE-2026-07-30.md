@@ -85,6 +85,14 @@ Regina and exact-class NetRexx also improve substantially on Windows. Rebuilding
 ooRexx with MSVC would repeat its normal Windows toolchain rather than provide a
 new compiler control.
 
+### cREXX MSVC follow-up
+
+We subsequently built only cREXX's switch-based `rxbvm` with MSVC 19.44. In the
+stable post-cooldown RexxCPS block it was 14.8% faster than MinGW GCC and 13.4%
+faster than Clang, confirming that compiler/runtime choice contributes to the
+Windows result. It still reached only 64.9% of ooRexx speed, so MSVC explains a
+useful fraction rather than the platform reversal.
+
 Official build instructions:
 <https://sourceforge.net/p/oorexx/wiki/how-to-build-oorexx/>
 

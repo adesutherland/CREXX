@@ -73,7 +73,9 @@
 #include <mach/thread_policy.h>
 #include <dlfcn.h>
 #endif
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
 #include <time.h>
 #include <stdint.h>
 #include <signal.h>
@@ -92,6 +94,46 @@
 #include "rxvmstem.h"
 #include "rxvmplugin_framework.h"
 #include "rxvmsock.h"
+
+#ifdef _MSC_VER
+typedef struct rxvm_timeval {
+    time_t tv_sec;
+    long tv_usec;
+} rxvm_timeval;
+
+static void rxvm_get_timeval(rxvm_timeval *time_value) {
+    FILETIME file_time;
+    ULARGE_INTEGER ticks;
+    uint64_t unix_ticks;
+
+    GetSystemTimePreciseAsFileTime(&file_time);
+    ticks.LowPart = file_time.dwLowDateTime;
+    ticks.HighPart = file_time.dwHighDateTime;
+    unix_ticks = ticks.QuadPart - UINT64_C(116444736000000000);
+    time_value->tv_sec = (time_t) (unix_ticks / UINT64_C(10000000));
+    time_value->tv_usec = (long) ((unix_ticks % UINT64_C(10000000)) / UINT64_C(10));
+}
+
+static long rxvm_timezone_seconds(void) {
+    long timezone_seconds = 0;
+    _tzset();
+    (void) _get_timezone(&timezone_seconds);
+    return timezone_seconds;
+}
+#define RXVM_TZNAME _tzname
+#else
+typedef struct timeval rxvm_timeval;
+
+static void rxvm_get_timeval(rxvm_timeval *time_value) {
+    (void) gettimeofday(time_value, NULL);
+}
+
+static long rxvm_timezone_seconds(void) {
+    tzset();
+    return timezone;
+}
+#define RXVM_TZNAME tzname
+#endif
 
 typedef char rxvm_execution_slot_must_hold_pointer[
         sizeof(bin_code) >= sizeof(void *) ? 1 : -1];
@@ -3817,37 +3859,31 @@ static int runtime_value_matches_graph_type(rxvm_context *context,
                                              strlen(target_name));
 }
 
-/* Constant to get create the compile time data in ta "iso" like format */
-/* __DATE__ format "Mmm dd yyyy" -> Convert to yyyymmdd */
-const char compile_date[8+1] =
-        {
-                /* yyyy year */
-                __DATE__[7], __DATE__[8],
-                __DATE__[9], __DATE__[10],
+/* Convert the compiler's "Mmm dd yyyy" date to yyyymmdd. */
+static void rxvm_format_compile_date(char compile_date[9]) {
+    const char *source_date = __DATE__;
 
-                /* First month letter, Oct Nov Dec = '1' otherwise '0' */
-                (__DATE__[0] == 'O' || __DATE__[0] == 'N' || __DATE__[0] == 'D') ? '1' : '0',
-
-                /* Second month letter */
-                (__DATE__[0] == 'J') ? ( (__DATE__[1] == 'a') ? '1' :       /* Jan, Jun or Jul */
-                                         ((__DATE__[2] == 'n') ? '6' : '7') ) :
-                (__DATE__[0] == 'F') ? '2' :                                /* Feb */
-                (__DATE__[0] == 'M') ? (__DATE__[2] == 'r') ? '3' : '5' :   /* Mar or May */
-                (__DATE__[0] == 'A') ? (__DATE__[1] == 'p') ? '4' : '8' :   /* Apr or Aug */
-                (__DATE__[0] == 'S') ? '9' :                                /* Sep */
-                (__DATE__[0] == 'O') ? '0' :                                /* Oct */
-                (__DATE__[0] == 'N') ? '1' :                                /* Nov */
-                (__DATE__[0] == 'D') ? '2' :                                /* Dec */
-                0,
-
-                /* First day letter, replace space with digit */
-                __DATE__[4]==' ' ? '0' : __DATE__[4],
-
-                /* Second day letter */
-                __DATE__[5],
-
-                '\0'
-        };
+    compile_date[0] = source_date[7];
+    compile_date[1] = source_date[8];
+    compile_date[2] = source_date[9];
+    compile_date[3] = source_date[10];
+    compile_date[4] =
+            (source_date[0] == 'O' || source_date[0] == 'N' || source_date[0] == 'D')
+            ? '1' : '0';
+    compile_date[5] =
+            source_date[0] == 'J' ? (source_date[1] == 'a' ? '1' :
+                                     (source_date[2] == 'n' ? '6' : '7')) :
+            source_date[0] == 'F' ? '2' :
+            source_date[0] == 'M' ? (source_date[2] == 'r' ? '3' : '5') :
+            source_date[0] == 'A' ? (source_date[1] == 'p' ? '4' : '8') :
+            source_date[0] == 'S' ? '9' :
+            source_date[0] == 'O' ? '0' :
+            source_date[0] == 'N' ? '1' :
+            source_date[0] == 'D' ? '2' : '0';
+    compile_date[6] = source_date[4] == ' ' ? '0' : source_date[4];
+    compile_date[7] = source_date[5];
+    compile_date[8] = '\0';
+}
 
 /* Function to convert an interrupt to a string: interrupt_entry -> Code Description Massage */
 const char *interrupt_to_string(unsigned char interrupt) {
@@ -8941,10 +8977,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(TIME_REG) VM_ADVANCE(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
             {
-                struct timeval tv;
-                tzset();
-                gettimeofday(&tv, NULL);
-                REG_RETURN_INT(tv.tv_sec - timezone)
+                rxvm_timeval tv;
+                rxvm_get_timeval(&tv);
+                REG_RETURN_INT(tv.tv_sec - rxvm_timezone_seconds())
             }
             DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -8954,30 +8989,30 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(XTIME_REG_STRING) VM_ADVANCE(2);
         DEBUG("TRACE - XTIME R%d,\"%s\"\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
 
-            tzset();
             switch ((CONSTSTRING_OP(2))->string[0]) {
                 case 'Z':
-                    tzset();
-                    op1R->int_value  = timezone;
+                    op1R->int_value = rxvm_timezone_seconds();
                     break;
                 case 'T':  op1R->int_value  = (rxinteger)clock(); break;
                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
                 case 'N':  {
+                     (void) rxvm_timezone_seconds();
                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
-                     snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
+                     snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,
+                              "%s;%s", RXVM_TZNAME[0], RXVM_TZNAME[1]);
                      finish_string_write(op1R, strlen(op1R->string_value));
                      break;  // time zone names
                 }
                 case 'U':  {
                      time_t ctime;
                      rxinteger tm;
-                     struct timeval tv;
+                     rxvm_timeval tv;
                      struct tm *tmdata;
-                     gettimeofday(&tv, NULL);
+                     rxvm_get_timeval(&tv);
                      ctime = tv.tv_sec;
                      tmdata = localtime(&ctime);
-                     tzset();
-                     tm=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+timezone;
+                     tm = ((tmdata->tm_hour * 3600) + (tmdata->tm_min * 60) +
+                           tmdata->tm_sec) + rxvm_timezone_seconds();
                      op1R->int_value = tm*1000000+tv.tv_usec;
                      break;  // UTC Time
                 }
@@ -8992,12 +9027,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
             DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
             {
                 rxinteger tm;
-                struct timeval tv;
-                //struct timezone tz;
+                rxvm_timeval tv;
                 time_t	ctime;
                 struct tm *tmdata;
 
-                gettimeofday(&tv, NULL);
+                rxvm_get_timeval(&tv);
                 ctime = tv.tv_sec;
                 tmdata = localtime(&ctime);
                 tm =
@@ -12453,6 +12487,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     START_INSTRUCTION(RXVERS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
     {
+        char compile_date[9];
         char vers[256];
         const char *platform;
         const char *bits;
@@ -12470,6 +12505,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #endif
 
         bits = sizeof(void *) == 4 ? "32" : "64";
+        rxvm_format_compile_date(compile_date);
 
         snprintf(vers, sizeof(vers), "%s %s %s %s", platform, bits, rxversion, compile_date);
 

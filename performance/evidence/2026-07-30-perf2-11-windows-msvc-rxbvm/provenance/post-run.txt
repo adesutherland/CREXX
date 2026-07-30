@@ -1,0 +1,12 @@
+captured_utc=2026-07-30T09:51:39.5254004Z
+initial_matrix=72 of 72 executions passed
+cooldown_append=72 of 72 executions passed
+common_six_pilot=6 of 6 executions passed
+functional_time_gcc=pass
+functional_time_msvc=pass
+samples_removed=0
+competing_build_test_benchmark_processes=none
+merged_summary=pass
+merged_cells_flagged=6 of 6 due two machine-state blocks
+profiling_performed=no
+production_toolchain_selected=no

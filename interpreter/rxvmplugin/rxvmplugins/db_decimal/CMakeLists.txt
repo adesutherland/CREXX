@@ -26,7 +26,7 @@ set_target_properties(db_decimal_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CM
 target_compile_definitions(db_decimal_tests PRIVATE DYNAMIC)
 target_include_directories(db_decimal_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(db_decimal_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
-target_link_libraries(db_decimal_tests rxvmplugin db_decimal_manual m)
+target_link_libraries(db_decimal_tests rxvmplugin db_decimal_manual ${CREXX_MATH_LIBRARY})
 #add_dependencies(db_decimal_tests db_decimal_dynamic)
 #add_dependencies(db_decimal_tests db_decimal_manual)
 

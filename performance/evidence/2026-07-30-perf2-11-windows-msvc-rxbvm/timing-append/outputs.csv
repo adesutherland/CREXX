@@ -1,0 +1,685 @@
+sample_id,stream,line_number,text
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.4 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,8,     Performance: 6936530 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.2 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,8,     Performance: 8359324 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,8,     Performance: 10481933 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,6,     Performance: 16260163 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,5,
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,6,     Performance: 15785320 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,5,                       of 1000 clauses (over 1.0492129    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,7,Total (full DOs): 1.0492129 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,8,Time for one iteration (1000 clauses) was: 0.000052439485 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,10,     Performance: 19_069_600 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,11,                ( 19.070E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,8,     Performance: 9039058 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,8,     Performance: 10484257 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,6,     Performance: 16116036 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,5,
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,6,     Performance: 15588465 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,5,                       of 1000 clauses (over 1.0379225    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,7,Total (full DOs): 1.0379225 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,8,Time for one iteration (1000 clauses) was: 0.00005187977 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,10,     Performance: 19_275_336 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,11,                ( 19.275E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-warmup-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,8,     Performance: 9052149 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,8,     Performance: 9117765 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,8,     Performance: 9326279 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,8,     Performance: 10403819 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,6,     Performance: 16103060 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,6,     Performance: 15822785 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,5,                       of 1000 clauses (over 1.0593234    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,7,Total (full DOs): 1.0593234 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,8,Time for one iteration (1000 clauses) was: 0.000052949915 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,10,     Performance: 18_885_772 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,11,                ( 18.886E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,8,     Performance: 9309669 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,8,     Performance: 10393525 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,6,     Performance: 15898251 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,6,     Performance: 15723270 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,5,                       of 1000 clauses (over 1.0549365    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,7,Total (full DOs): 1.0549365 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,8,Time for one iteration (1000 clauses) was: 0.00005272987 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,10,     Performance: 18_964_583 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,11,                ( 18.965E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,8,     Performance: 8953489 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,8,     Performance: 10477496 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,6,     Performance: 15948963 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,6,     Performance: 15360983 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,5,                       of 1000 clauses (over 1.0906717    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,7,Total (full DOs): 1.0906717 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,8,Time for one iteration (1000 clauses) was: 0.00005451638 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,10,     Performance: 18_343_111 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,11,                ( 18.343E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-3,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,8,     Performance: 8905869 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,8,     Performance: 8895713 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,6,     Performance: 16025641 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.4s)
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,6,     Performance: 14545455 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,5,                       of 1000 clauses (over 1.0700257    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,7,Total (full DOs): 1.0700257 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,8,Time for one iteration (1000 clauses) was: 0.000053481175 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,10,     Performance: 18_698_168 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,11,                ( 18.698E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-4,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.2 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,8,     Performance: 8317966 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,8,     Performance: 9249616 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,8,     Performance: 10369620 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,6,     Performance: 15444015 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,5,                       of 1000 clauses (over 1.0615366    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,7,Total (full DOs): 1.0615366 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,8,Time for one iteration (1000 clauses) was: 0.00005305962 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,10,     Performance: 18_846_724 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,11,                ( 18.847E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-5,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,8,     Performance: 9012980 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,8,     Performance: 9060827 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 2.0 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,8,     Performance: 10054157 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,6,     Performance: 15936255 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,5,                       of 1000 clauses (over 1.0881684    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,7,Total (full DOs): 1.0881684 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,8,Time for one iteration (1000 clauses) was: 0.00005439122 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,10,     Performance: 18_385_320 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,11,                ( 18.385E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-6,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,8,     Performance: 8995483 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,8,     Performance: 9071430 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,8,     Performance: 10297993 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,6,     Performance: 16025641 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,6,     Performance: 15479876 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,8,     Performance: 9082462 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,8,     Performance: 9110347 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 2.0 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,8,     Performance: 10195514 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,6,     Performance: 15637217 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,6,     Performance: 15661707 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,5,                       of 1000 clauses (over 1.0759366    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,7,Total (full DOs): 1.0759366 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,8,Time for one iteration (1000 clauses) was: 0.0000537797 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,10,     Performance: 18_594_377 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,11,                ( 18.594E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-7,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,8,     Performance: 9089232 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 2.0 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,8,     Performance: 10212486 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,6,     Performance: 15625000 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,6,     Performance: 15649452 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,5,                       of 1000 clauses (over 1.0714498    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,7,Total (full DOs): 1.0714498 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,8,Time for one iteration (1000 clauses) was: 0.00005355532 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,10,     Performance: 18_672_281 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,11,                ( 18.672E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-8,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,8,     Performance: 9013849 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.9 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,8,     Performance: 10348571 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,6,     Performance: 15337423 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,6,     Performance: 15037594 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,5,                       of 1000 clauses (over 1.108891    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,7,Total (full DOs): 1.108891 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,8,Time for one iteration (1000 clauses) was: 0.00005542807 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,10,     Performance: 18_041_400 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,11,                ( 18.041E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-9,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.2 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,8,     Performance: 8484146 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,8,     Performance: 8838154 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,3,       System is: WindowsNT
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,6,     Performance: 15313936 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,3,       System is: WIN64
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 1.3s)
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,6,     Performance: 15071590 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,4,          Averaging: 100 measures of 200 iterations
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,5,                       of 1000 clauses (over 1.1055956    s)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,7,Total (full DOs): 1.1055956 secs (average of 100 measures of 200 iterations)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,8,Time for one iteration (1000 clauses) was: 0.00005525885 seconds
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,10,     Performance: 18_096_649 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,11,                ( 18.097E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-exact-class-recorded-10,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,8,     Performance: 8988926 cREXX clauses per second
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-gcc-rxbvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,8,     Performance: 9203840 cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,2, cREXX version is: windows 64 crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty 20260730
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,3,       System is: windows
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,5,        Averaged: 200 x 100 iterations of 1000 clauses (over 2.0 s)
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,8,     Performance: 10194002 cREXX clauses per second
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-msvc-rxbvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port

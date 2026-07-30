@@ -1,0 +1,235 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+cl : command line  warning D9002: ignoring unknown option '-O3' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  rxvmsock.c
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,63): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,50): error C2081: '__attribute__': name in formal parameter list illegal [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,64): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,6): error C2091: function returns function [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,71): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,72): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,74): error C2143: syntax error: missing ')' before 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,80): error C2085: 'option': not in formal parameter list [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,88): error C2059: syntax error: 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,110): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmsock.c')
+
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+cl : command line  warning D9002: ignoring unknown option '-O3' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  rxvmintp.c
+  rxvmload.c
+  interrupt.c
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(76,10): error C1083: Cannot open include file: 'sys/time.h': No such file or directory [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,63): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,50): error C2081: '__attribute__': name in formal parameter list illegal [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,64): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,6): error C2091: function returns function [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,71): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,72): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,74): error C2143: syntax error: missing ')' before 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,80): error C2085: 'option': not in formal parameter list [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,88): error C2059: syntax error: 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,110): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\avl_tree\avl_tree.h(31,1): error C1021: invalid preprocessor command 'warning' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvmload.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,63): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,50): error C2081: '__attribute__': name in formal parameter list illegal [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,64): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,6): error C2091: function returns function [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,71): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,72): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,74): error C2143: syntax error: missing ')' before 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,80): error C2085: 'option': not in formal parameter list [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,88): error C2059: syntax error: 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,110): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/interrupt.c')
+
+  rxspawn.c
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,63): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,50): error C2081: '__attribute__': name in formal parameter list illegal [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,64): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,6): error C2091: function returns function [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,71): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,72): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,74): error C2143: syntax error: missing ')' before 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,80): error C2085: 'option': not in formal parameter list [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,88): error C2059: syntax error: 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,110): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxspawn.c')
+
+  rxcrexxcmd.c
+  exitfunc.c
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,63): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,50): error C2081: '__attribute__': name in formal parameter list illegal [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,64): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,6): error C2091: function returns function [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,71): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,72): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,74): error C2143: syntax error: missing ')' before 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,80): error C2085: 'option': not in formal parameter list [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,88): error C2059: syntax error: 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,110): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/exitfunc.c')
+
+  rxpafuncs.c
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,63): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,50): error C2081: '__attribute__': name in formal parameter list illegal [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,64): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,6): error C2091: function returns function [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,71): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,72): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,74): error C2143: syntax error: missing ')' before 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,80): error C2085: 'option': not in formal parameter list [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,88): error C2059: syntax error: 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,110): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxpafuncs.c')
+
+  rxvm_run.c
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,63): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,50): error C2081: '__attribute__': name in formal parameter list illegal [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,64): error C2143: syntax error: missing ')' before '(' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,6): error C2091: function returns function [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,71): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,72): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,74): error C2143: syntax error: missing ')' before 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,80): error C2085: 'option': not in formal parameter list [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,88): error C2059: syntax error: 'type' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\rxpa\crexxpa.h(288,110): error C2059: syntax error: ')' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+C:\Users\adria\CLionProjects\CREXX\avl_tree\avl_tree.h(31,1): error C1021: invalid preprocessor command 'warning' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  (compiling source file '../../interpreter/rxvml/rxvm_run.c')
+
+  Generating Code...

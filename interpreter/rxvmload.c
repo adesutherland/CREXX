@@ -904,6 +904,10 @@ static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context) {
     return new_rxpa_context;
 }
 
+static unsigned char *rxpa_constant_pool_at(rxpa_context *context, size_t offset) {
+    return (unsigned char *) context->plugin_being_loaded->constant + offset;
+}
+
 /* Reserves space in the constant pool for an entry and returns its index;
  * This is used to create a fake  constant pool for native functions with the function name and pointer
  * the caller can then populate the entry.
@@ -939,13 +943,14 @@ static size_t reserve_in_const_pool(rxpa_context *context, size_t size, enum con
                          context->plugin_being_loaded->name);
         }
         context->plugin_being_loaded->constant = new_buffer;
-        memset(context->plugin_being_loaded->constant + context->const_buffer_size, 0, context->const_buffer_size);
+        memset(rxpa_constant_pool_at(context, context->const_buffer_size),
+               0, context->const_buffer_size);
         context->const_buffer_size = new_size;
     }
 
     /* We are putting the entry at the top of the pool */
     index = context->const_buffer_top;
-    entry = (chameleon_constant*)(context->plugin_being_loaded->constant + index);
+    entry = (chameleon_constant *) rxpa_constant_pool_at(context, index);
 
     entry->type = type;
 
@@ -972,7 +977,7 @@ static size_t add_native_string_to_pool(rxpa_context *context, const char *value
     string_len = strlen(value);
     entry_size = sizeof(string_constant) + string_len;
     entry_index = reserve_in_const_pool(context, entry_size, STRING_CONST);
-    sentry = (string_constant *) (context->plugin_being_loaded->constant + entry_index);
+    sentry = (string_constant *) rxpa_constant_pool_at(context, entry_index);
     sentry->string_len = string_len;
 #ifndef NUTF8
     sentry->string_chars = string_len;
@@ -986,10 +991,11 @@ static size_t add_native_meta_entry(rxpa_context *context, size_t entry_size, en
     size_t entry_index;
 
     entry_index = reserve_in_const_pool(context, entry_size, type);
-    entry = (meta_entry*)(context->plugin_being_loaded->constant + entry_index);
+    entry = (meta_entry *) rxpa_constant_pool_at(context, entry_index);
 
     if (context->plugin_being_loaded->header.meta_head != -1) {
-        ((meta_entry*)(context->plugin_being_loaded->constant + context->meta_tail))->next = (int)entry_index;
+        ((meta_entry *) rxpa_constant_pool_at(context, context->meta_tail))->next =
+                (int) entry_index;
         entry->prev = context->meta_tail;
         context->meta_tail = (int)entry_index;
         entry->next = -1;
@@ -1012,7 +1018,7 @@ static void add_class_meta_to_module(rxpa_context *context, char *name, char *op
     size_t entry = add_native_meta_entry(context, sizeof(meta_class_constant), META_CLASS);
     meta_class_constant *meta;
 
-    meta = (meta_class_constant*)(context->plugin_being_loaded->constant + entry);
+    meta = (meta_class_constant *) rxpa_constant_pool_at(context, entry);
     meta->symbol = s_name;
     meta->option = s_option;
     meta->type = s_type;
@@ -1025,7 +1031,7 @@ static void add_interface_meta_to_module(rxpa_context *context, char *name, char
     size_t entry = add_native_meta_entry(context, sizeof(meta_interface_constant), META_INTERFACE);
     meta_interface_constant *meta;
 
-    meta = (meta_interface_constant*)(context->plugin_being_loaded->constant + entry);
+    meta = (meta_interface_constant *) rxpa_constant_pool_at(context, entry);
     meta->symbol = s_name;
     meta->option = s_option;
     meta->type = s_type;
@@ -1037,7 +1043,7 @@ static void add_implements_meta_to_module(rxpa_context *context, char *name, cha
     size_t entry = add_native_meta_entry(context, sizeof(meta_implements_constant), META_IMPLEMENTS);
     meta_implements_constant *meta;
 
-    meta = (meta_implements_constant*)(context->plugin_being_loaded->constant + entry);
+    meta = (meta_implements_constant *) rxpa_constant_pool_at(context, entry);
     meta->symbol = s_name;
     meta->interface_symbol = s_interface;
 }
@@ -1051,7 +1057,7 @@ static void add_member_meta_to_module(rxpa_context *context, char *owner, char *
     size_t entry = add_native_meta_entry(context, sizeof(meta_member_constant), META_MEMBER);
     meta_member_constant *meta;
 
-    meta = (meta_member_constant*)(context->plugin_being_loaded->constant + entry);
+    meta = (meta_member_constant *) rxpa_constant_pool_at(context, entry);
     meta->owner = s_owner;
     meta->kind = s_kind;
     meta->member = s_member;
@@ -1068,7 +1074,7 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
     /* Create Procedure Entry */
     entry_size = sizeof(proc_constant) + strlen(index);
     proc_index = reserve_in_const_pool(context, entry_size, PROC_CONST);
-    proc = (proc_constant *) (context->plugin_being_loaded->constant + proc_index);
+    proc = (proc_constant *) rxpa_constant_pool_at(context, proc_index);
 
     /* Set structure data */
     memcpy(proc->name, index, strlen(index) + 1);
@@ -1079,7 +1085,8 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
     /* Create Exposed Procedure Entry */
     entry_size = sizeof(expose_proc_constant) + strlen(index);
     exposed_proc_index = reserve_in_const_pool(context, entry_size,EXPOSE_PROC_CONST);
-    exposed_proc = (expose_proc_constant *) (context->plugin_being_loaded->constant + exposed_proc_index);
+    exposed_proc = (expose_proc_constant *)
+            rxpa_constant_pool_at(context, exposed_proc_index);
 
     /* Set structure data */
     memcpy(exposed_proc->index, index, strlen(index) + 1);
@@ -1090,14 +1097,17 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
     exposed_proc->next = context->plugin_being_loaded->header.expose_head;
     context->plugin_being_loaded->header.expose_head = (int)exposed_proc_index;
 
-    proc = (proc_constant *) (context->plugin_being_loaded->constant + proc_index);
+    proc = (proc_constant *) rxpa_constant_pool_at(context, proc_index);
     proc->exposed = exposed_proc_index;
 }
 
 // RXPA Add Function Implementation
 // This is the callback function for rxldmod() when the plugin adds functions,
 // or is called during initialising a statically linked plugin
-void rxvm_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, __attribute__((unused)) char* type, __attribute__((unused)) char* args) {
+void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
+    (void) option;
+    (void) type;
+    (void) args;
 
     if (current_rxpa_context) {
         rxvm_context *context = current_rxpa_context->rxvm_context;

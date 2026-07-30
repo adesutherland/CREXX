@@ -5,7 +5,11 @@ project(Interpreter C)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 
 set(CMAKE_C_STANDARD 99) # enables inline keyword
-set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
+if(MSVC)
+    set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG")
+else()
+    set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
+endif()
 option(CREXX_VM_PROFILING
         "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
         OFF)
@@ -408,11 +412,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
-target_link_libraries(ts_regvalue_tester rxvmref platform m)
+target_link_libraries(ts_regvalue_tester rxvmref platform ${CREXX_MATH_LIBRARY})
 
 add_executable(test_rxvmstem tests/test_rxvmstem.c rxvalue.h rxvmvars.h rxvmstem.h)
 target_include_directories(test_rxvmstem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
-target_link_libraries(test_rxvmstem rxvmref platform m)
+target_link_libraries(test_rxvmstem rxvmref platform ${CREXX_MATH_LIBRARY})
 
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
@@ -437,7 +441,7 @@ target_include_directories(test_rxpa_utf_validation PRIVATE
         ../avl_tree
         ../utf8
         ../inc)
-target_link_libraries(test_rxpa_utf_validation rxvmref platform m)
+target_link_libraries(test_rxpa_utf_validation rxvmref platform ${CREXX_MATH_LIBRARY})
 
 # Enable testing
 enable_testing()

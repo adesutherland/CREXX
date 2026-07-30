@@ -1,0 +1,15 @@
+[0/2] Re-checking globbed directories...
+[1/17] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.obj
+[2/17] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.obj
+[3/17] Linking C static library bin\libavl_tree.a
+[4/17] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.obj
+[5/17] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.obj
+[6/17] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.obj
+[7/17] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.obj
+[8/17] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.obj
+[9/17] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.obj
+[10/17] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.obj
+[11/17] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.obj
+[12/17] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.obj
+[13/17] Linking C static library bin\librxpashim.a
+[14/17] Linking C static library bin\librxpa.a
