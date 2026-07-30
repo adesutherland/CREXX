@@ -38,6 +38,47 @@ For orientation only, the MSVC cooldown rate is 0.775466x the retained Linux
 GCC `rxbvm` rate. That comparison changes both compiler and operating system
 and comes from separate sessions, so it does not isolate either effect.
 
+## C runtime linkage follow-up
+
+PE inspection found another concrete Windows build difference. The measured
+ooRexx `rexx.dll` uses Microsoft linker 14.36 and has no VCRUNTIME or UCRT DLL
+dependency. Regina's `regina.dll` similarly uses Microsoft linker 14.39 with
+no dynamic CRT dependency. The ooRexx Windows CMake source explicitly replaces
+`/MD` with `/MT`, statically linking the Microsoft C runtime.
+
+The original MSVC cREXX product used `/MD`. A second target-only product used
+`CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`, giving `/MT` while retaining
+Release `/O2 /Ob2`, profiling off, the same source content, RXBIN and library.
+
+The exact clean-commit seeded randomized block recorded two warmups and ten
+executions per cell:
+
+| Product | Median clauses/s | Relative MAD | Span |
+| --- | ---: | ---: | ---: |
+| MSVC `/MD` | 10,377,446.5 | 0.49% | 2.49% |
+| MSVC `/MT` | 10,889,342.5 | 0.77% | 7.79% |
+| ooRexx | 16,070,838.5 | 0.65% | 2.47% |
+
+| Comparison | Ratio |
+| --- | ---: |
+| `/MT` / `/MD` | **1.049328x** |
+| `/MD` / ooRexx | 0.645731x |
+| `/MT` / ooRexx | **0.677584x** |
+
+Two preceding randomized blocks measured `/MT`/`/MD` at 1.060356x and
+1.053428x. Static CRT linkage therefore contributes a repeatable 4.9-6.0%,
+closing about 9% of the absolute `/MD`-to-ooRexx gap. It does not account for
+the remaining one-third throughput deficit.
+
+The `/MT` cREXX product, ooRexx and Regina all import `HeapAlloc`, `HeapFree`
+and `HeapReAlloc`. The result is not evidence of a missing Windows service; it
+measures CRT linkage, call boundaries and the resulting binary layout.
+
+This was a supplementary direct capture because the retained pre-update
+Release driver could not compile the current matrix tool after the `dslsh`
+update. It is not promoted to a formal baseline. Raw samples, products and
+method are in [`crt-control/`](crt-control/).
+
 ## Machine-state qualification
 
 The initial block ran after installing Visual Studio Build Tools and compiling
@@ -89,6 +130,10 @@ The MSVC product uses:
 - dynamic MSVC/UCRT runtime (`MultiThreadedDLL`); and
 - profiling off.
 
+The supplementary static product changes only the CRT selection to
+`MultiThreaded` (`/MT`). It is 888,320 bytes versus 669,696 bytes for the exact
+clean `/MD` control and removes the VCRUNTIME/UCRT DLL dependencies.
+
 The threaded `rxvm` was not attempted because it depends on GNU/Clang
 computed-goto extensions not implemented by MSVC.
 
@@ -122,6 +167,7 @@ GCC and Clang `rxbvm` were rebuilt from the same adjusted source.
 | Initial six-cell matrix | 72/72 |
 | Append six-cell matrix | 72/72 |
 | Existing functional `time` RXBIN under GCC/MSVC | pass/pass |
+| CRT linkage controls, including warmups | 96/96 |
 
 No full MSVC CTest was run because this experiment deliberately built only
 `rxbvm`. No profiling was performed.
@@ -133,6 +179,11 @@ compiler/runtime choice accounts for a measurable part of the Windows ratio.
 It does not close the ooRexx gap or explain the cross-platform reversal, and
 this single noisy-host diagnostic is insufficient to add MSVC as a supported
 production toolchain.
+
+Static `/MT` is worth retaining as an experimental monolithic Windows
+configuration, but it is not selected as the default. A static CRT creates a
+separate runtime instance in every DLL, so allocator ownership across
+plugin/API boundaries requires full validation before production use.
 
 Future work should first use the Linux profiling evidence. If a supported MSVC
 lane is considered later, it needs full Debug/Release build and CTest coverage,

@@ -343,6 +343,12 @@ machine-wide noisy, all samples remain retained, and no production MSVC lane
 was selected. Evidence:
 [`2026-07-30-perf2-11-windows-msvc-rxbvm`](evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/).
 
+A supplementary static-CRT (`/MT`) control then improved MSVC `rxbvm` by
+4.9-6.0% over the DLL CRT (`/MD`) across three randomized blocks. The exact
+clean block moved cREXX from 0.645731x to 0.677584x ooRexx and closed only 8.99%
+of the absolute gap. `/MT` remains experimental pending plugin/API allocator
+ownership validation.
+
 No production optimization or compiler/layout option is selected. Richards
 selects general value copying and attribute-storage trimming; Towers selects
 copy/clear/reset/allocation work plus front-end/indirect-branch pressure;

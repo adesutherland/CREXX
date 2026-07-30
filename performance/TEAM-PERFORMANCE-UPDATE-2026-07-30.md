@@ -62,12 +62,12 @@ The Java Virtual Machine uses a JIT, or just-in-time compiler, to convert active
 Java methods into machine code while the program runs. This exact-class control
 therefore points to the Windows JVM/operating-system lane.
 
-The remaining difference is interesting but unexplained. Windows and Linux use
-different native ABIs, executable formats and C runtime libraries. An ABI is
-the low-level rule set for calls, registers and data layout; the C runtime
-supplies basic services such as memory, strings and timekeeping. RexxCPS also
-uses a wall-clock VM timer, so an external monotonic-timer cross-check would be
-a useful cheap validation.
+The remaining difference is interesting and now only partly explained. Windows
+and Linux use different native ABIs, executable formats and C runtime
+libraries. An ABI is the low-level rule set for calls, registers and data
+layout; the C runtime supplies basic services such as memory, strings and
+timekeeping. RexxCPS also uses a wall-clock VM timer, so an external
+monotonic-timer cross-check would be a useful cheap validation.
 
 We deliberately did not profile on this slow Windows host. The Linux profiles
 remain the evidence for selecting tuning work; selected changes should return
@@ -93,8 +93,34 @@ faster than Clang, confirming that compiler/runtime choice contributes to the
 Windows result. It still reached only 64.9% of ooRexx speed, so MSVC explains a
 useful fraction rather than the platform reversal.
 
+There is also a concrete C runtime difference. `/MD` means that a Microsoft
+build calls the C runtime supplied in DLLs; `/MT` puts a private copy of that
+runtime into the product. The measured ooRexx and Regina binaries both use a
+static Microsoft runtime, while our first MSVC `rxbvm` used `/MD`.
+
+We therefore rebuilt only `rxbvm` with `/MT`. Across three randomized
+RexxCPS blocks it was 4.9-6.0% faster than `/MD`. In the exact clean-commit
+block:
+
+| Product | Median clauses/s | Relative MAD |
+| --- | ---: | ---: |
+| cREXX MSVC `/MD` | 10.377m | 0.49% |
+| cREXX MSVC `/MT` | 10.889m | 0.77% |
+| ooRexx | 16.071m | 0.65% |
+
+The static build improved cREXX from 64.6% to 67.8% of ooRexx speed and closed
+about 9% of the absolute gap. This is useful, but it leaves the main difference
+in interpreter behaviour rather than a missing Windows service: the static
+cREXX build, ooRexx and Regina all ultimately call the same Windows heap APIs.
+
+`/MT` is not a production selection. Static runtimes create separate allocator
+state in each DLL, so cREXX's plugin and API memory-ownership boundaries need
+full testing before this can be considered safe as a default.
+
 Official build instructions:
 <https://sourceforge.net/p/oorexx/wiki/how-to-build-oorexx/>
 
 Detailed measurements and qualifications:
-[`evidence/2026-07-30-perf2-11-windows-compiler-comparison/SCORECARD.md`](evidence/2026-07-30-perf2-11-windows-compiler-comparison/SCORECARD.md).
+[`evidence/2026-07-30-perf2-11-windows-compiler-comparison/SCORECARD.md`](evidence/2026-07-30-perf2-11-windows-compiler-comparison/SCORECARD.md)
+and
+[`evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/SCORECARD.md`](evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/SCORECARD.md).

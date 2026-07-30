@@ -12,6 +12,12 @@ and CMake portability fixes. In the stable post-cooldown RexxCPS block it is
 MSVC therefore explains part of the Windows comparator gap, not the
 Windows/Linux split.
 
+A supplementary CRT-linkage control then rebuilt only MSVC `rxbvm` with the
+static `/MT` runtime used by ooRexx instead of the DLL `/MD` runtime. Three
+randomized blocks measured a 4.9-6.0% `/MT` uplift. The exact clean block moved
+cREXX from 0.645731x to 0.677584x ooRexx, closing only 8.99% of the absolute
+gap. `/MT` remains experimental pending plugin/API allocator-boundary tests.
+
 The initial formal block followed the Build Tools installation and long GCC
 compile. Every runtime slowed and all cells were noise-flagged. After five
 minutes idle, the governed append was stable, with relative MAD between 0.70%
@@ -31,6 +37,7 @@ replacement Windows baseline.
 | `timing-append/` | Post-cooldown 2-warmup/10-recorded append |
 | `timing-final/` | Direct merged summary retaining all samples |
 | `pilots/common-six/` | One-run MSVC correctness sweep |
+| `crt-control/` | Supplementary `/MD` versus `/MT` A/B samples and PE evidence |
 | `logs/` | Configure, failed portability attempts, builds and captures |
 | `provenance/` | Toolchain, commands and exact source/product boundaries |
 | `checksums.sha256` | SHA-256 closure for every other file in this bundle |

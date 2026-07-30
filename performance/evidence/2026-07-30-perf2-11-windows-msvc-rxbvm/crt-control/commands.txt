@@ -1,0 +1,16 @@
+# Static-runtime target-only build.
+cmake -S . -B cmake-build-msvc-rxbvm-static-release -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=OFF -DCREXX_VM_PROFILING=OFF -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+cmake --build cmake-build-msvc-rxbvm-static-release --config Release --target rxbvm --parallel 2
+
+# Exact clean-commit dynamic-runtime control.
+# The first, longer tree name failed during FetchContent because a generated path exceeded 260 characters.
+cmake -S . -B cmake-build-md -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=OFF -DCREXX_VM_PROFILING=OFF -DCMAKE_CONFIGURATION_TYPES=Release
+cmake --build cmake-build-md --config Release --target rxbvm --parallel 2
+
+# Capture method used for each block.
+PowerShell direct seeded randomized round order; 2 warmups; 10 recorded runs per cell; exit code, correctness marker and Performance value checked.
+
+# PE inspection.
+dumpbin /headers PRODUCT
+dumpbin /dependents PRODUCT
+dumpbin /imports PRODUCT

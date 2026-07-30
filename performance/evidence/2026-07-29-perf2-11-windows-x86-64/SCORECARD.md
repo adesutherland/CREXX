@@ -66,6 +66,32 @@ The cREXX/Regina ratios are 0.621452x for `rxvm` and 0.576550x for `rxbvm`.
 Because the cREXX and NetRexx sources are disclosed adaptations, RexxCPS does
 not enter the common aggregate.
 
+### Compiler and runtime-library follow-up
+
+Subsequent target-only controls explain part of the RexxCPS result. MSVC 19.44
+made `rxbvm` 14.8% faster than MinGW GCC and 13.4% faster than Clang in the
+stable compiler block. PE inspection then showed that both ooRexx 5.1 and
+Regina 3.9.7 use Microsoft-built, statically linked C runtimes on Windows.
+
+An exact clean-commit MSVC control compared the normal DLL runtime (`/MD`) with
+the static runtime (`/MT`) using the same retained RXBIN and library:
+
+| Runtime / linkage | Median clauses/s | Relative MAD |
+| --- | ---: | ---: |
+| cREXX MSVC `/MD` | 10,377,446.5 | 0.49% |
+| cREXX MSVC `/MT` | 10,889,342.5 | 0.77% |
+| ooRexx | 16,070,838.5 | 0.65% |
+
+`/MT` is 1.049328x `/MD` and reaches 0.677584x ooRexx rather than 0.645731x.
+Two earlier randomized blocks measured 1.060356x and 1.053428x, bounding the
+static-runtime benefit at about 5-6%. It closes only about 9% of the absolute
+MSVC-to-ooRexx gap, so it is a contributor rather than the main explanation.
+
+Both the static cREXX build and the comparators ultimately import the same
+Windows heap APIs. This is a CRT-linkage and binary-layout effect, not a missing
+OS service. The supported GCC scorecard above is unchanged. Detailed evidence:
+[`../2026-07-30-perf2-11-windows-msvc-rxbvm/`](../2026-07-30-perf2-11-windows-msvc-rxbvm/).
+
 ## Peak working set
 
 The common-five geometric means are:
@@ -116,4 +142,5 @@ in `artifacts.csv`.
 This is a Windows scorecard, not a tuning verdict. No profiling was performed,
 no candidate/default VM was selected, and absolute Windows timings are not
 paired against Mac or Linux sessions. PERF2-11 Gate E remains open because
-supported Linux ARM64 coverage is still required.
+supported Linux ARM64 coverage is still required. The later MSVC and CRT
+controls are bounded diagnostics and do not replace this formal baseline.
