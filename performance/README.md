@@ -20,6 +20,7 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
+| `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |
 | `performance/PERF2-01-HANDOVER-PROMPT.md` | Paste-ready new-session prompt for the first successor-roadmap activity |
 | `performance/PERF2-02-HANDOVER-PROMPT.md` | Paste-ready Ultra-session prompt for quickening architecture and the bounded reference/value placement PoC |
 | `performance/PERF2-04-HANDOVER-PROMPT.md` | Paste-ready new-session prompt for the inlining-first core Level B BIF campaign after PERF2-03 closure |
