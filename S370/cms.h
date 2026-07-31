@@ -23,7 +23,7 @@
 #define NUTF8
 
 
-/* Date / tiem stubs */
+/* Date / time stubs */
 struct timeval {
     long	tv_sec;		/* seconds */
     long	tv_usec;	/* and microseconds */
