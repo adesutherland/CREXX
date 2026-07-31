@@ -45,9 +45,10 @@ run_checked(compare-optimized
         "${WORK}/contract-noopt.rxcontract.json"
         "${WORK}/contract-opt.rxcontract.json")
 run_checked(compare-golden
-        "${CMAKE_COMMAND}" -E compare_files
-        "${WORK}/contract-noopt.rxcontract.json"
-        "${GOLDEN}")
+        "${CMAKE_COMMAND}"
+        "-DACTUAL=${WORK}/contract-noopt.rxcontract.json"
+        "-DEXPECTED=${GOLDEN}"
+        -P "${CMAKE_CURRENT_LIST_DIR}/compare_text_files.cmake")
 
 run_checked(export-noerror-previous
         "${CONTRACT_TOOL}"

@@ -1,5 +1,8 @@
 file(REMOVE_RECURSE "${WORK}")
 file(MAKE_DIRECTORY "${WORK}")
+if(NOT DEFINED CONTRACT_TOOL_FILE_NAME OR CONTRACT_TOOL_FILE_NAME STREQUAL "")
+    message(FATAL_ERROR "installed_consumer.cmake requires CONTRACT_TOOL_FILE_NAME")
+endif()
 set(prefix "${WORK}/prefix")
 set(build "${WORK}/build")
 set(log "${WORK}/commands-and-results.txt")
@@ -28,9 +31,10 @@ run_checked(configure-external
 run_checked(build-external
         "${CMAKE_COMMAND}" --build "${build}" --target external_operation_contract)
 run_checked(compare-external
-        "${CMAKE_COMMAND}" -E compare_files
-        "${build}/external-operation.rxcontract.json"
-        "${EXTERNAL_GOLDEN}")
+        "${CMAKE_COMMAND}"
+        "-DACTUAL=${build}/external-operation.rxcontract.json"
+        "-DEXPECTED=${EXTERNAL_GOLDEN}"
+        -P "${CMAKE_CURRENT_LIST_DIR}/compare_text_files.cmake")
 
 file(READ "${prefix}/lib/cmake/CREXX/CREXXConfig.cmake" installed_config)
 file(READ "${prefix}/lib/cmake/CREXX/CrexxOperationContract.cmake" installed_helper)
@@ -41,7 +45,7 @@ endif()
 
 set(manifest "")
 foreach(path IN ITEMS
-        "${prefix}/bin/crexx-contract"
+        "${prefix}/bin/${CONTRACT_TOOL_FILE_NAME}"
         "${prefix}/lib/cmake/CREXX/CREXXConfig.cmake"
         "${prefix}/lib/cmake/CREXX/CrexxOperationContract.cmake"
         "${build}/external-operation.rxbin"

@@ -19,6 +19,7 @@ add_test(
         COMMAND ${CMAKE_COMMAND}
                 -DCREXX_BUILD=${CMAKE_BINARY_DIR}
                 -DCREXX_SOURCE=${CMAKE_SOURCE_DIR}
+                -DCONTRACT_TOOL_FILE_NAME=$<TARGET_FILE_NAME:crexx-contract>
                 -DEXTERNAL_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/external
                 -DEXTERNAL_GOLDEN=${CMAKE_CURRENT_SOURCE_DIR}/external/external_operation.rxcontract.json
                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/installed-consumer
