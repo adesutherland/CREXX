@@ -1,22 +1,26 @@
 # cREXX performance workspace
 
 This is the operational home for the cREXX performance programme. It keeps the
-live roadmap, closed initial-sweep/idea ledger, portfolio contract and retained
+live roadmap, closed programme ledgers, portfolio contract and retained
 evidence together without turning test directories into a planning system.
 
 The original programme charter and 2026-07-15 evidence review remain in
 [`docs/planning/release-1/performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
 The initial `NR-*` sweep and its evidence ledger are closed in
 [`ROADMAP-INITIAL-SWEEP-2026-07-23.md`](ROADMAP-INITIAL-SWEEP-2026-07-23.md).
-[`ROADMAP.md`](ROADMAP.md) is the live successor programme: current profiling,
-semantic quickening, flow-aware inlining, core Level B BIFs, RXAS/VM work,
-capability decisions and per-benchmark ooRexx closure.
+PERF2 is closed in
+[`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md).
+[`ROADMAP.md`](ROADMAP.md) is the approved live PERF3 programme: exact-current
+Mac evidence, evidence-selected copy/ownership, conversion, accessor and
+layout/stream panels, qualified-deficit closure and selected-candidate platform
+validation.
 
 ## Directory map
 
 | Location | Purpose |
 | --- | --- |
-| `performance/ROADMAP.md` | Live second-programme priorities, dependencies, gates and per-benchmark outcome plan |
+| `performance/ROADMAP.md` | Approved live PERF3 priorities, transfers, dependencies and exit gates |
+| `performance/ROADMAP-PERF2-2026-07-31.md` | Closed PERF2 status, findings, decisions, future-point ledger and retained evidence links |
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
@@ -222,12 +226,14 @@ approved portfolio, serial correctness-gated raw capture, machine/build
 provenance and separate steady-state/lifecycle reports are proved by the NR-10
 formal bundle; the NR-11 governance and scorecard define future publication.
 
-The successor roadmap starts with a clean current-HEAD profiling and
-same-session comparison refresh. Cross-runtime work remains staged: qualify
-equal work first, keep Regina limited to RexxCPS, preserve non-comparable cells
-as diagnostics, and add each repaired capability/equivalence cell to the
-governed score only when it passes the portfolio contract. See
-`portfolio/cross-runtime-plan.md` and `ROADMAP.md`.
+PERF3 starts, after roadmap approval, with a current-HEAD Mac baseline-validity
+and evidence audit. It reuses retained PERF2 evidence where hashes and product
+scope remain valid and refreshes only the cells needed to restore current
+ranking authority. Cross-runtime work remains staged: qualify equal work first,
+keep Regina limited to RexxCPS, preserve non-comparable cells as diagnostics,
+and add each repaired capability/equivalence cell to the governed score only
+when it passes the portfolio contract. See `portfolio/cross-runtime-plan.md`
+and `ROADMAP.md`.
 
 ## Technical pointers
 
