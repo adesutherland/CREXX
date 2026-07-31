@@ -1,0 +1,55 @@
+PERF3-01 corrected current-product Apple formal refresh pre-run environment
+captured_utc=2026-07-31T13:34:51Z
+repository_branch=develop
+repository_head=3f43a0014be10c930a12b8a636297b60f294c0a6
+product_worktree_head=3f43a0014be10c930a12b8a636297b60f294c0a6
+product_worktree_status=0 rows
+upstream=21fdcf529d0e51ea264bf0c92ccfbdc06dea8200
+prior_timing_disposition=invalid old-product block retained under timing-invalid-old-product; excluded from every current claim
+build_type=Release
+c_flags_release=-O3 -DNDEBUG
+crexx_vm_profiling=OFF
+host=Mac17,3; Apple M5; 10 logical CPUs; 25769803776 bytes
+os=macOS 26.5.2 build 25F84; Darwin 25.5.0 arm64
+power_source='AC Power'
+battery= -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+low_power_mode=0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+load_averages={ 1.34 1.46 1.53 }
+compiler=Apple clang version 21.0.0 (clang-2100.1.1.101)
+cmake=4.3.2
+ninja=1.13.2
+rxvm=crexx-1.0.0-beta.3+local.g3f43a0014be1 (Threaded Mode)
+rxbvm=crexx-1.0.0-beta.3+local.g3f43a0014be1 (Bytecode Mode)
+rxvm_sha256=8330e6c4818b809291f1f9bce88d0aeb0513671a13a713736e5d8cea8fbaf13e
+rxbvm_sha256=4563326c3f295fc91f49a7c71d1e13f9e66ecd86c243b60afb783745f5ee6931
+library_sha256=66cc67b42886ead14c79c3740d78cf14e73ac4fba69a88a3814fcb78ff0ca3bb
+manifest=performance/manifests/perf3-01-current-mac-v1.txt
+manifest_sha256=8d0c45c1fa1bbce938e9a1ce88b32594ac727b8cbe857e82e24c161dcd911462
+manifest_current_build_path_rows=14
+manifest_old_build_path_rows=
+sampling=serial; runtime order rotated by workload and round
+formal_timing=2 warmups plus 10 recorded samples per cell
+active_build_test_vm_processes_before_run:
+active_process_name_count=0
+top_processes_before_run:
+  PID  %CPU %MEM COMM
+ 1137  96.6  5.4 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+  753  18.6  0.0 /usr/libexec/sysmond
+ 1113   7.0  1.7 /Applications/ChatGPT.app/Contents/Resources/codex
+56147   2.3  0.0 /bin/zsh
+14673   1.3  0.4 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+ 2559   1.0  0.1 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+  591   0.7  0.0 /usr/sbin/notifyd
+settled_load_averages={ 1.31 1.45 1.53 }
+settled_top_processes_before_run:
+  PID  %CPU %MEM COMM
+ 1113  12.2  1.7 /Applications/ChatGPT.app/Contents/Resources/codex
+ 2559   2.8  0.1 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+ 1137   2.2  5.3 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+14673   1.6  0.4 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+ 1535   1.3  0.4 /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+ 1135   1.1  3.4 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+ 1074   1.0  2.3 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT

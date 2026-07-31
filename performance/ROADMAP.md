@@ -3,10 +3,10 @@
 Approved: 2026-07-31
 
 Status: **approved live control plane for PERF3**. Adrian approved the roadmap
-and transfer boundary on 2026-07-31. PERF3-01 is the only authorized next
-activity; it remains queued until its evidence work actually starts. This
-approval does not authorize a production implementation, candidate selection,
-commit or push.
+and transfer boundary on 2026-07-31, then accepted the PERF3-01 current-product
+evidence boundary and ranked panel on 2026-07-31. PERF3-02 is the authorized
+next evidence/design activity. This does not authorize a production
+implementation, candidate installation or push.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -18,9 +18,10 @@ Standing measurement, regression and publication rules remain normative in
 [`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md) and
 [`AGENTS.md`](AGENTS.md).
 
-The planning snapshot is `develop` at
-`21fdcf529d0e51ea264bf0c92ccfbdc06dea8200`, aligned with
-`origin/develop`. The pre-existing worktree also contains five untracked
+The approved transition is local `develop` at
+`3f43a0014be10c930a12b8a636297b60f294c0a6`, one commit ahead of
+`origin/develop` at `21fdcf529d0e51ea264bf0c92ccfbdc06dea8200`.
+The pre-existing worktree also contains five untracked
 generated `lifecycle_probe.rxbin` files under retained evidence directories;
 they are outside this documentation transition and must not be overwritten or
 deleted casually. This is a planning baseline, not a benchmark baseline.
@@ -175,7 +176,7 @@ their recorded trigger fires:
 | ID | Priority | Activity | Status | Exit / next gate |
 | --- | --- | --- | --- | --- |
 | PERF3-00 | P0 | Archive PERF2 and approve the transfer boundary | complete | Adrian approved the roadmap and transfer boundary on 2026-07-31; no production work was bundled with approval. |
-| PERF3-01 | P0 | Current-HEAD Mac evidence and baseline-validity gate | queued — authorized next | Exact current product is reconciled with retained PERF2 evidence; Adrian accepts the ranked mechanism panel. No production edit. |
+| PERF3-01 | P0 | Current-HEAD Mac evidence and baseline-validity gate | complete | Adrian accepted the current-product evidence boundary and ranked panel on 2026-07-31. No production edit was made. Evidence: [`2026-07-31-perf3-01-current-mac`](evidence/2026-07-31-perf3-01-current-mac/); control: [`PERF3-01-WORKLIST.md`](PERF3-01-WORKLIST.md). |
 | PERF3-02 | P0 | Full-copy, ownership and attribute-storage panel | queued | Compiler, RXAS and runtime ceilings are compared; one bounded candidate or an evidence-backed defer/reject recommendation is presented. |
 | PERF3-03 | P1 | Bounded string-to-number conversion review | queued | Current semantics and costs are frozen; no-copy/locale-independent/correct-rounding options are compared without silently changing public behavior. |
 | PERF3-04 | P1 | Generic final/concrete scalar accessor proof | queued evidence only | A general proof and hand-equivalent ceiling justify a candidate, or the lead is deferred. |
@@ -233,6 +234,19 @@ PERF3-09 remains deferred unless the non-JIT economic gate fires.
 ```
 
 ## PERF3-01 — current-HEAD Mac truth gate
+
+Started 2026-07-31 at local `develop` commit `3f43a0014`. The resumable
+evidence-only control plane is
+[`PERF3-01-WORKLIST.md`](PERF3-01-WORKLIST.md). No production edit or candidate
+selection is authorized in this activity.
+
+Evidence collection is complete and Adrian accepted it on 2026-07-31. Clean current
+Release timing records a common-five `2.139811x/1.818954x` versus ooRexx and
+`0.779920x/0.662974x` versus decimal NetRexx for `rxvm`/`rxbvm`. Richards
+remains the dominant common deficit; current deterministic counts plus retained
+Linux native attribution keep PERF3-02 first. The evidence panel ranks
+PERF3-05 second, PERF3-03 third and keeps PERF3-04 evidence-gated. See the
+[`decision summary`](evidence/2026-07-31-perf3-01-current-mac/decision-summary.md).
 
 ### Question
 
@@ -443,6 +457,10 @@ Adrian approved these five points on 2026-07-31:
    behind their separate entry and decision gates.
 5. Mac iteration is followed by selected Linux x86-64, required Linux ARM64
    and Windows validation before the default-VM/final architecture decision.
+
+Adrian subsequently accepted the PERF3-01 current-product evidence boundary
+and ranked PERF3-02/03/04/05 panel on 2026-07-31. This closes PERF3-01 and
+opens PERF3-02 for its bounded evidence/design and PoC comparison only.
 
 ## Authoritative references
 

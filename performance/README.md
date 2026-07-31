@@ -22,6 +22,7 @@ validation.
 | `performance/ROADMAP.md` | Approved live PERF3 priorities, transfers, dependencies and exit gates |
 | `performance/ROADMAP-PERF2-2026-07-31.md` | Closed PERF2 status, findings, decisions, future-point ledger and retained evidence links |
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
+| `performance/PERF3-01-WORKLIST.md` | Evidence/ranking package complete for the current-HEAD Mac baseline-validity gate; awaiting Adrian acceptance |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |
@@ -50,6 +51,7 @@ validation.
 | `performance/evidence/2026-07-29-perf2-11-windows-x86-64/` | Windows x86-64 correctness and formal timing/RSS/lifecycle/artifact scorecard under the supported CLion MinGW toolchain; no profiling or tuning |
 | `performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/` | Same-session Windows GCC/Clang `-O3` comparison, cross-platform RexxCPS review and exact-class NetRexx control; no profiling |
 | `performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/` | Bounded MSVC `rxbvm` build/portability, compiler and static-CRT controls; no profiling or toolchain selection |
+| `performance/evidence/2026-07-31-perf3-01-current-mac/` | Current-product Apple baseline-validity package: formal timing, focused schema-5 counts, retained Linux native attribution and ranked PERF3-02/03/04/05 disposition |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |

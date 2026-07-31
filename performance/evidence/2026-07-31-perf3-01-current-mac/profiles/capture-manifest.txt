@@ -1,0 +1,17 @@
+PERF3-01 current-product schema-5 counts capture
+source_commit=3f43a0014be10c930a12b8a636297b60f294c0a6
+mode=counts-only; diagnostic timings ignored
+profile_rxvm_sha256=8144c17abd46e4bc697e99f9c4f9a9b9787695b7a010860c1c25372a9a47f4da
+profile_rxbvm_sha256=b3b1513f62f90848acea789735ee92927ca0ffa21bbc1914218f8d420c9409f2
+release_library_sha256=66cc67b42886ead14c79c3740d78cf14e73ac4fba69a88a3814fcb78ff0ca3bb
+command_template=PROFILE_VM --profile=counts --profile-output OUTPUT PROFILED_IMAGE RELEASE_LIBRARY -a ARGS
+
+workload|image|image_sha256|args|expectation|disclosure
+Sieve|benchmark_awfy_sieve_opt.rxbin|204e4e3bfd0542cc75235cf42e1604f139b13c0e936660fbb74c107e6a81bc5f|50|PASS: AWFY Sieve|bounded zero-work/layout guard
+Richards|benchmark_awfy_richards_opt.rxbin|f38cd5cea7a9a7d838e78de5933e6d156e72767d5c6a1da6b730b23ee7bcf03e|1|PASS: AWFY Richards|bounded deterministic counts
+Base64|benchmark_base64_roundtrip_opt.rxbin|f0d86b2a1da359f6e15b2f1f7c7d6b392d7ed74b5dd99ef364bd5c4e4f02c3d6|500|PASS: Base64 Roundtrip|bounded deterministic counts
+Towers|benchmark_awfy_towers_opt.rxbin|62f0596b0f928bb4bec7187b77ee69057c896804294530c1d940a7f09c642ff8|10|PASS: AWFY Towers|bounded deterministic counts
+RexxCPS|benchmark_rexxcps_levelb_opt.rxbin|d85192dab1d74e54a71029f530992396b8f073b75624a10e4eac85dc96a4d1c7|--smoke-count 1|PASS: RexxCPS 2.2d cREXX port|noncanonical self-calibrated smoke; effective_count=93 in both VMs
+
+result=10/10 correctness-passing schema-5 files; all seven profile domains complete
+boundary=RexxCPS absolute counts are valid for this matched effective-count capture only and are not compared with differently calibrated retained captures
