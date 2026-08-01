@@ -2606,6 +2606,38 @@ set_tests_properties(inline_receiver_nested_this_direct_placement_opt PROPERTIES
         LABELS "linked_opt;receiver"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
+add_test(NAME inline_receiver_detached_guard_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DLOCAL_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_guard_local.crexx
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_guard_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_guard_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_detached_guard_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_guard_opt.cmake)
+set_tests_properties(inline_receiver_detached_guard_opt PROPERTIES
+        LABELS "linked_opt;receiver"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_receiver_production_ladder_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_production_ladder.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_production_ladder_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_production_ladder.cmake)
+set_tests_properties(inline_receiver_production_ladder_opt PROPERTIES
+        LABELS "linked_opt;receiver"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 add_test(NAME inline_receiver_reference_alias_opt
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>

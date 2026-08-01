@@ -322,6 +322,28 @@ Implemented behaviour:
 - Method bodies get an inline-scope `§this` binding and class attribute reads/writes resolve against that inlined receiver.
 - Direct-receiver mutating method calls in statement position and simple whole-RHS assignment position copy the receiver object back after the cloned method body.
 - Direct-receiver mutating method calls in supported single-consumer expression position copy the receiver object back before each generated `LEAVE_WITH`, so the returned value and receiver mutation are both preserved.
+- A nested-`§this`, multi-return method may share the direct receiver when its
+  body is call-free and never reads or writes a receiver attribute. This exact
+  unused-receiver proof creates no receiver-owned link and therefore has no
+  per-exit receiver cleanup to bypass.
+- A nested-`§this`, multi-return method may share a direct receiver only for
+  the bounded attribute-reading detached-guard shape: one or more top-level `IF` statements whose
+  Boolean conditions each contain exactly one indexed scalar Boolean receiver
+  attribute read and whose bodies immediately return a scalar Boolean,
+  followed by a final scalar Boolean return. Each condition is first evaluated
+  into compiler-owned scalar storage, so its receiver-derived alias cleanup is
+  complete before the following branch or `LEAVE_WITH`.
+- The detached-guard path rejects calls, writes, non-guard receiver reads,
+  loops, references, nested-return blocks, assembler, callee-local signal
+  constructs and same-caller-frame signal continuations. The cloned
+  assignment/`IF`/`LEAVE_WITH` sequence and attribute-read count are validated
+  again before the rewrite commits. `I6` may transport only this exact
+  otherwise-unportable indexed Boolean attribute shape, and the reader repeats
+  the same structural proof; the summary schema and runtime ABI are unchanged.
+- An already-bound, non-reference scalar object formal may serve directly as a
+  nested method receiver. Generated/captured storage, inline value aliases,
+  array-shaped values, references and flow-substituted symbols remain excluded;
+  their existing materialisation/copyback paths are unchanged.
 - Simple whole-RHS assignment of a value-returning mutating method can copy
   back through a computed variable-like receiver such as
   `saved = items[pickIndex()].setAndReport("changed")`. The receiver locator

@@ -1,0 +1,9 @@
+metric,c0,c1b_r1,delta
+richards_rxas_lines,4925,4947,22
+richards_copy_instructions,71,69,-2
+detached_guard_snapshots,0,6,6
+runTask_target_receiver_copy,1,0,-1
+schedule_target_receiver_copy,1,0,-1
+dynamic_target_receiver_copies,172394,0,-172394
+dynamic_recursive_copy_operations,25341738,0,-25341738
+dynamic_logical_copy_bytes,201354752,0,-201354752

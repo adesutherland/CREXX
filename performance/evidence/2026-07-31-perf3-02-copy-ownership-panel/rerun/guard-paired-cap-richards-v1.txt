@@ -1,0 +1,7 @@
+# PERF3-02 exact guard-pair cap for Richards.
+# Initial 12 + noise append 10 + paired append 12 = 34; this block adds two.
+crexx-cross-runtime-matrix|1
+richards-c0-rxvm|Richards|c0|rxvm|accepted-product|A|no|no|20|PASS: AWFY Richards||/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxvm;/private/tmp/crexx-perf3-01.jetu7C/build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/library.rxbin;-a;20
+richards-c1c-r1-rxvm|Richards|c1c-r1|rxvm|unchanged-main-image-library-guard|A|no|no|20|PASS: AWFY Richards||/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxvm;/private/tmp/crexx-perf3-02-c1c-r1.34OsFa/build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;/private/tmp/crexx-perf3-02-c1c-r1.34OsFa/build-release/bin/library.rxbin;-a;20
+richards-c0-rxbvm|Richards|c0|rxbvm|accepted-product|A|no|no|20|PASS: AWFY Richards||/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxbvm;/private/tmp/crexx-perf3-01.jetu7C/build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/library.rxbin;-a;20
+richards-c1c-r1-rxbvm|Richards|c1c-r1|rxbvm|unchanged-main-image-library-guard|A|no|no|20|PASS: AWFY Richards||/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxbvm;/private/tmp/crexx-perf3-02-c1c-r1.34OsFa/build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;/private/tmp/crexx-perf3-02-c1c-r1.34OsFa/build-release/bin/library.rxbin;-a;20

@@ -1,0 +1,16 @@
+PERF3-02-R1 governed timing pre-run
+
+- User readiness had been confirmed for the ongoing clean-host PERF3 work.
+- UTC: 2026-08-01T07:09:04Z; local: 2026-08-01T08:09:04+0100.
+- Host: macOS 26.5.2 build 25F84; Darwin 25.5.0 arm64; 10 logical CPUs.
+- Power: AC attached, battery 80%, not charging; low-power mode 0.
+- No thermal warning, performance warning or CPU power warning recorded.
+- Interactive sessions: Adrian console only.
+- Load snapshots: 1.06/1.40/1.65, 1.13/1.40/1.65 and 1.26/1.42/1.65.
+- No overlapping cmake, ctest, ninja, make, rxc, rxas, rxlink, rxvm or rxbvm process.
+- The process query showed two long-lived macOS ScreenSharingSubscriber XPC
+  services but no interactive remote session or benchmark/build process.
+- Ten unique executable/image inputs existed and were SHA-256 recorded before
+  launch; the PERF3-01 retained common products matched their artifact ledger.
+- Protocol: 12 cells, one warmup, 12 recorded serial rounds rotated by
+  workload; Richards work 20 and Towers work 100; no outlier removal.

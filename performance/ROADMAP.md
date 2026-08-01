@@ -4,9 +4,23 @@ Approved: 2026-07-31
 
 Status: **approved live control plane for PERF3**. Adrian approved the roadmap
 and transfer boundary on 2026-07-31, then accepted the PERF3-01 current-product
-evidence boundary and ranked panel on 2026-07-31. PERF3-02 is the authorized
-next evidence/design activity. This does not authorize a production
-implementation, candidate installation or push.
+evidence boundary and ranked panel on 2026-07-31. PERF3-02's clean-host panel,
+C1b detached-guard proof, C2E2 storage-identity infrastructure and
+infrastructure-enabled R1 repanel are complete. Adrian selected the composed
+C1abc production ladder on 2026-08-01. The disposable option mask and broad
+correctness-negative branch are removed from the ordinary compiler while the
+checksum-closed replay source preserves every investigated option.
+
+C1abc emits the exact measured C1a+C1b Richards program and C1c Towers
+program. The accepted R1 paired medians are 53.55%/52.57% lower Richards
+elapsed and 18.92%/18.97% lower Towers elapsed on `rxvm`/`rxbvm`, with every
+pair favorable. Production closeout passes 11/11 focused Release checks,
+16/16 reviewed object structural/runtime pairs and 1,972/1,972 broad Debug
+tests. The old clean-host C0/C1a/C1c timings remain historical authority. C2
+still lacks ownership/lifetime proof, C3 is immaterial, C4 is met by the
+selected C1 rows and P1A assembler-cost recovery remains separately queued.
+No tactical-rule deletion or public format change was made; commit and push
+remain separate user-authorized actions.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -18,9 +32,10 @@ Standing measurement, regression and publication rules remain normative in
 [`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md) and
 [`AGENTS.md`](AGENTS.md).
 
-The approved transition is local `develop` at
-`3f43a0014be10c930a12b8a636297b60f294c0a6`, one commit ahead of
-`origin/develop` at `21fdcf529d0e51ea264bf0c92ccfbdc06dea8200`.
+The live local control-plane commit is `e38e514bf611ae3873513368c44742e2ae7332d1`;
+its product-code parent is `3f43a0014be10c930a12b8a636297b60f294c0a6`.
+Local `develop` is two commits ahead of `origin/develop` at
+`21fdcf529d0e51ea264bf0c92ccfbdc06dea8200`.
 The pre-existing worktree also contains five untracked
 generated `lifecycle_probe.rxbin` files under retained evidence directories;
 they are outside this documentation transition and must not be overwritten or
@@ -124,8 +139,8 @@ the source column so no unfinished item disappears during renumbering.
 
 | PERF2 source | PERF3 owner | Closing disposition carried forward | PERF3 entry condition |
 | --- | --- | --- | --- |
-| `PERF2-07-B02` | PERF3-02 | queued evidence/design | Current byte-weighted copy census confirms a material general full-copy cost. |
-| Linux Richards/Towers copy and attribute-trim findings | PERF3-02 | selected mechanism family, no candidate | Exact caller/payload/lifetime shapes and machine ceilings distinguish compiler, RXAS and runtime ownership. |
+| `PERF2-07-B02` | PERF3-02 | C1abc selected and Apple closeout complete | Closed by the selected C1a+C1b Richards and C1c Towers production ladder; retain timing and replay evidence. |
+| Linux Richards/Towers copy and attribute-trim findings | PERF3-02 | exact C0 attribution and selected C1abc proof complete | Closed for Apple; reuse retained evidence in the later platform-validation gate. |
 | `PERF2-05-F01` | PERF3-02 | evidence-gated | A fresh profile attributes material residual reference-descriptor payload cost after accepted R2a. |
 | `PERF2-03-F01` and `PERF2-03-F02` | PERF3-02 | evidence-gated | Current hot sites prove residual accessor/ownership/escape cost and exact alias/lifetime obligations. |
 | `PERF2-07-C01` | PERF3-03 | queued evidence/design | Conversion allocation/copy and semantic-contract review shows a material current ceiling. |
@@ -177,7 +192,12 @@ their recorded trigger fires:
 | --- | --- | --- | --- | --- |
 | PERF3-00 | P0 | Archive PERF2 and approve the transfer boundary | complete | Adrian approved the roadmap and transfer boundary on 2026-07-31; no production work was bundled with approval. |
 | PERF3-01 | P0 | Current-HEAD Mac evidence and baseline-validity gate | complete | Adrian accepted the current-product evidence boundary and ranked panel on 2026-07-31. No production edit was made. Evidence: [`2026-07-31-perf3-01-current-mac`](evidence/2026-07-31-perf3-01-current-mac/); control: [`PERF3-01-WORKLIST.md`](PERF3-01-WORKLIST.md). |
-| PERF3-02 | P0 | Full-copy, ownership and attribute-storage panel | queued | Compiler, RXAS and runtime ceilings are compared; one bounded candidate or an evidence-backed defer/reject recommendation is presented. |
+| PERF3-02 | P0 | Full-copy, ownership and attribute-storage panel | complete | Adrian selected C1abc. The ordinary compiler emits the exact measured C1ab Richards and C1c Towers programs; 11/11 focused Release and 1,972/1,972 broad Debug tests pass. Broad C1a-R1 remains rejected and replayable; C2 is ownership-deferred and C3 immaterial. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
+| PERF3-02-C1B | P0 | Multi-return receiver-link ownership feasibility | complete — correct and decisively faster | The exact detached scalar receiver-guard rule preserves canonical `23246/9297`, all fail-closed boundaries and link/unlink state. The R1 panel measures 44.28%/44.01% lower Richards elapsed alone and proves clean composition with C1a. The broad no-write route remains rejected. Control: [`PERF3-02-C1B-WORKLIST.md`](PERF3-02-C1B-WORKLIST.md); correctness: [`2026-08-01-perf3-02-c1b-correctness`](evidence/2026-08-01-perf3-02-c1b-correctness/); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/). |
+| PERF3-02-C2E2 | P0 | RXAS symbolic register-storage identity | complete — core-infrastructure candidate | The diagnostic PoC safely follows direct link/swap/unlink identity, recovers exact point state at all 55 globally tainted Richards full-copy sites and 13/56 Towers sites, and proves a consolidated swap-round-trip route. Throwing attribute/reference links require split normal and signal/skip edges before production use. No rewrite or tactical-rule deletion is selected. Control: [`PERF3-02-C2E2-WORKLIST.md`](PERF3-02-C2E2-WORKLIST.md); evidence: [`2026-07-31-perf3-02-c2e2-storage-identity`](evidence/2026-07-31-perf3-02-c2e2-storage-identity/). |
+| PERF3-02-C2E2-P1 | P0 | Core storage identity and signal continuations | locked — infrastructure retained | Typed normal/signal-skip/signal-retry edges and the graph-owned bounded storage service are the frozen R1 foundation. No rewrite consumer or tactical rule is bundled. Control: [`PERF3-02-C2E2-P1-WORKLIST.md`](PERF3-02-C2E2-P1-WORKLIST.md). |
+| PERF3-02-C2E2-P1A | P1 | Recover storage-analysis assembler cost | queued near | Recover the accepted Richards +5.3% median and Towers +0.5% median (+2.0% mean) assembly overhead without weakening typed continuation or point-identity semantics and without changing emitted RXBIN. |
+| PERF3-02-R1 | P0 | Infrastructure-enabled copy/ownership option re-investigation | complete — C1abc selected | All positive, combined and rejected masks remain replayable in retained evidence; correctness and 156/156 formal timing executions pass for eligible rows. Production contains only C1a+C1b+C1c and passes proportional closeout. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); evidence: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
 | PERF3-03 | P1 | Bounded string-to-number conversion review | queued | Current semantics and costs are frozen; no-copy/locale-independent/correct-rounding options are compared without silently changing public behavior. |
 | PERF3-04 | P1 | Generic final/concrete scalar accessor proof | queued evidence only | A general proof and hand-equivalent ceiling justify a candidate, or the lead is deferred. |
 | PERF3-05 | P1 | Compiler, native layout and private-stream panel | queued | D01, semantic string/copy controls, hot/cold layout, LTO/PGO and compact private representation receive bounded paired dispositions; no flag or stream is preselected. |
@@ -284,6 +304,61 @@ Adrian accepts the current-product evidence boundary and a ranked PERF3-02/03/
 silently selected and no broad platform rerun occurs in PERF3-01.
 
 ## PERF3-02 — full-copy, ownership and attribute-storage panel
+
+Started 2026-07-31 at local `develop` commit `e38e514bf`; its product-code
+parent remains `3f43a0014`. The resumable control plane is
+[`PERF3-02-WORKLIST.md`](PERF3-02-WORKLIST.md). Adrian authorized the bounded
+evidence/design and isolated C1-C4 PoC comparison, not a production candidate,
+architecture/ISA/ABI change, commit of later evidence or push.
+
+The panel is complete. C1a-R2 removes 4,910,249 total Richards copy operations
+and authoritative clean-host paired Release elapsed improves 9.18%/9.33% on
+`rxvm`/`rxbvm`. C1c-R1 removes 7,140,440 total Towers copy operations,
+55,158,560 logical bytes and 202,314 attribute blocks, improving 19.42%/19.65%.
+Every target pair is favorable and all target mean intervals exclude zero.
+Both pass the focused optimized/no-opt dual-VM matrix and keep their opposite
+workload image byte-identical; those four guards pass the +3% budget at the
+36-pair cap while remaining noisy around zero. C1c-R1 is recommended first;
+C1a-R2 remains an independent alternative. The original remote-terminal timing,
+exact products, rejected variants and every clean-host sample are preserved.
+C1a-R1 is correctness-invalid, C2 accepts zero full copies with current facts,
+and C3's zero-byte scalar residual is immaterial. No production candidate is
+selected until Adrian approves one. See the
+[`decision summary`](evidence/2026-07-31-perf3-02-copy-ownership-panel/decision-summary.md).
+
+The approved follow-on analysis-only C1b gate is also complete. It proves the
+C1a-R1 failure is caused by four taken Boolean-guard returns bypassing
+receiver-derived `unlinkn` cleanup; later register reuse writes through stale
+aliases into the scheduler object. Common-exit normalization is already
+present and insufficient, while retaining private storage with per-exit
+copyback removes no target copy. A narrow candidate-local rewrite that first
+snapshots every receiver-derived scalar guard, then directly binds the
+receiver only under a fail-closed structural and same-frame-signal gate, is a
+bounded isolated PoC candidate. Its ceiling is two static/172,394 dynamic full
+receiver copies, 25,341,738 recursive operations and 201,354,752 bytes, with
+small scalar snapshot/cleanup work retained. Adrian approved the isolated
+correctness PoC on 2026-08-01. Its exact structural recognizer and post-clone
+validation preserve canonical `23246/9297` on `rxvm` and `rxbvm` with
+optimization on and off, reduce the total static copy count by two with both
+target receiver copies absent, retain six scalar snapshots, and leave Towers
+plus the class-method control
+byte-identical. The independent P1 storage proof keeps exact link/unlink
+balance, removes one full-copy event from each target procedure and reduces
+unknown join state to zero. That correctness-only gate performed no timing;
+the later R1 repanel measures C1b alone at 44.28%/44.01% lower Richards elapsed
+and the safe C1a+C1b composition at 53.55%/52.57%, with 12/12 favorable pairs
+in both VMs. See the
+[`C1b analysis`](evidence/2026-07-31-perf3-02-c1b-analysis/analysis.md) and
+[`R1 evidence`](evidence/2026-08-01-perf3-02-r1-repanel/README.md).
+
+The R1 replay retains eight build masks and rejects the broad rule both alone
+and in combination. C1abc emits the exact C1ab Richards image and exact C1c
+Towers image. The locked storage service finds 59 remaining exact-base full
+copies in combined Richards and 18 in C1c Towers, but independent ownership,
+destruction, value, lifetime, TRACE and continuation proofs remain absent, so
+C2 installs no rewrite. C3 remains a zero-byte scalar residual and C4 is met
+by the correct C1 paths. The decision gate is now whether to install C1abc as
+one production ladder and remove the disposable replay mask.
 
 ### Question
 

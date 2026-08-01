@@ -1,0 +1,8 @@
+options levelb
+import inline_receiver_guard_dep
+
+main: procedure = .int
+  probe = .inline_receiver_guard_dep..Probe()
+  identity = 1
+  say probe.guard(identity)
+  return 0

@@ -1,0 +1,5 @@
+cell,retained_consolidated_median_ns,r1_control_median_ns,diagnostic_drift_percent,interpretation
+richards-c0-rxvm,7097345500,6738950000,-5.049712,new-session-faster-do-not-replace-historical-authority
+richards-c0-rxbvm,7190692500,6837446500,-4.912545,new-session-faster-do-not-replace-historical-authority
+towers-c0-rxvm,3781547500,3527321000,-6.722817,new-session-faster-do-not-replace-historical-authority
+towers-c0-rxbvm,3842952000,3592661500,-6.512975,new-session-faster-do-not-replace-historical-authority

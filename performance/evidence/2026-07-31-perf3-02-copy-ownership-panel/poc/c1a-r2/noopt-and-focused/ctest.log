@@ -1,0 +1,11 @@
+Test project /private/tmp/crexx-perf3-02-c1a-r2.wDliEF/build-release
+    Start 28: rxc_inline_byvalue_arg_reuse
+1/1 Test #28: rxc_inline_byvalue_arg_reuse .....   Passed    0.15 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler     =   0.15 sec*proc (1 test)
+registers    =   0.15 sec*proc (1 test)
+
+Total Test time (real) =   0.17 sec

@@ -1,0 +1,17 @@
+PERF3-02-R1 governed timing post-run
+
+- Driver: exit 0 and PASS.
+- Started UTC: 2026-08-01T07:10:37+0000.
+- Completed UTC: 2026-08-01T07:22:03+0000.
+- Postflight UTC: 2026-08-01T07:22:18Z; local:
+  2026-08-01T08:22:18+0100.
+- Executions: 156/156 passed, comprising 12 warmups and 144 recorded samples.
+- Power: AC attached, battery 80%, not charging; low-power mode 0.
+- No thermal warning, performance warning or CPU power warning recorded.
+- Postflight load: 1.18/1.25/1.39; Adrian console remained the only
+  interactive session; no overlapping build/test/VM process remained.
+- All ten timed inputs retained their pre-run SHA-256 values after completion.
+- No sample was removed. Towers C1c `rxvm` has a 12.12% absolute cell span and
+  the runner's rerun advisory, but its slow outlier weakens rather than creates
+  the paired improvement; all 12 pairs remain favorable and the paired mean
+  interval is wholly below zero. No append was needed for the candidate verdict.

@@ -1,0 +1,9 @@
+workload,vm,candidate,retained_2026_07_31_median_percent,r1_same_session_median_percent,difference_percentage_points,interpretation
+Richards,rxvm,C1a-R2,-9.178933,-9.043939,0.134994,reproduced
+Richards,rxbvm,C1a-R2,-9.330797,-9.109690,0.221107,reproduced
+Towers,rxvm,C1c-R1,-19.424614,-18.923272,0.501342,reproduced
+Towers,rxbvm,C1c-R1,-19.645181,-18.972750,0.672431,reproduced
+Richards,rxvm,C1b-R1,,-44.277539,,new-decisive-result
+Richards,rxbvm,C1b-R1,,-44.009829,,new-decisive-result
+Richards,rxvm,C1ab-R1,,-53.551893,,new-decisive-result
+Richards,rxbvm,C1ab-R1,,-52.567830,,new-decisive-result

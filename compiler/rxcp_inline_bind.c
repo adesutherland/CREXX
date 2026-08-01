@@ -1697,6 +1697,236 @@ static int inline_symbol_has_generated_storage_scope(Symbol *symbol) {
     return 0;
 }
 
+/* C1b-R1 is deliberately a shape proof, not a no-write heuristic.  A guard
+ * predicate may read one indexed Boolean receiver attribute, but only when it
+ * is the condition of a top-level IF whose body is an immediate scalar
+ * Boolean return.  The clone builder detaches each accepted predicate into a
+ * statement-complete scalar snapshot before permitting direct receiver
+ * storage. */
+static int inline_receiver_guard_boolean_return(ASTNode *node) {
+    ASTNode *value;
+    int integer_value;
+
+    if (!node || node->node_type != RETURN || node->sibling ||
+        node->value_type != TP_BOOLEAN || node->value_dims != 0) {
+        return 0;
+    }
+
+    value = node->child;
+    if (!value || value->sibling ||
+        (value->node_type != INTEGER && value->node_type != CONSTANT) ||
+        (value->value_type != TP_BOOLEAN && value->value_type != TP_INTEGER) ||
+        value->value_dims != 0) {
+        return 0;
+    }
+    integer_value = node_to_integer(value);
+    return integer_value == 0 || integer_value == 1;
+}
+
+static int inline_receiver_guard_condition_walk(ASTNode *node,
+                                                size_t *attribute_reads) {
+    ASTNode *child;
+    Symbol *symbol;
+
+    if (!node || !attribute_reads) return 0;
+
+    switch (node->node_type) {
+        case FUNCTION:
+        case MEMBER_CALL:
+        case FACTORY_CALL:
+        case CALL:
+        case INTRINSIC:
+        case ASSEMBLER:
+        case DO:
+        case REPEAT:
+        case WHILE:
+        case UNTIL:
+        case FOR:
+        case SELECT:
+        case SWITCH:
+        case WHEN:
+        case OTHERWISE:
+        case SIGNAL_BLOCK:
+        case SIGNAL_HANDLER:
+        case LEVELC_SIGNAL:
+        case BLOCK_EXPR:
+        case VAR_REFERENCE:
+            return 0;
+        default:
+            break;
+    }
+
+    symbol = node->symbolNode ? node->symbolNode->symbol : NULL;
+    if (node->value_type == TP_REFERENCE || node->target_type == TP_REFERENCE ||
+        (symbol && (symbol->type == TP_REFERENCE || symbol->is_ref_arg ||
+                    symbol->has_reference_target))) {
+        return 0;
+    }
+
+    if (symbol && inline_symbol_is_class_attribute(symbol)) {
+        ASTNode *index;
+
+        if (node->node_type != VAR_SYMBOL ||
+            !node->symbolNode->readUsage || node->symbolNode->writeUsage ||
+            node->value_type != TP_BOOLEAN || node->value_dims != 0 ||
+            symbol->type != TP_BOOLEAN || symbol->value_dims != 1) {
+            return 0;
+        }
+        index = node->child;
+        if (!index || index->sibling || index->value_dims != 0 ||
+            index->value_type != TP_INTEGER) {
+            return 0;
+        }
+        (*attribute_reads)++;
+    }
+
+    for (child = node->child; child; child = child->sibling) {
+        if (!inline_receiver_guard_condition_walk(child, attribute_reads)) return 0;
+    }
+    return 1;
+}
+
+static int inline_receiver_guard_if_shape(ASTNode *node) {
+    ASTNode *condition;
+    ASTNode *then_statement;
+    size_t attribute_reads;
+
+    if (!node || node->node_type != IF) return 0;
+    condition = node->child;
+    then_statement = condition ? condition->sibling : NULL;
+    if (!condition || !then_statement || then_statement->sibling ||
+        condition->value_type != TP_BOOLEAN || condition->value_dims != 0 ||
+        !inline_receiver_guard_boolean_return(then_statement)) {
+        return 0;
+    }
+
+    attribute_reads = 0;
+    return inline_receiver_guard_condition_walk(condition, &attribute_reads) &&
+           attribute_reads == 1;
+}
+
+static int inline_receiver_guard_args_are_scalar_values(ASTNode *proc_def) {
+    ASTNode *args;
+    ASTNode *arg;
+
+    args = proc_def ? ast_chld(proc_def, ARGS, 0) : NULL;
+    if (!args) return 0;
+
+    for (arg = args->child; arg; arg = arg->sibling) {
+        ASTNode *formal;
+        Symbol *symbol;
+
+        formal = inline_formal_target(arg);
+        symbol = formal && formal->symbolNode ? formal->symbolNode->symbol : NULL;
+        if (!formal || !symbol || arg->is_ref_arg || arg->is_opt_arg || arg->is_varg ||
+            formal->value_dims != 0 || formal->value_type == TP_UNKNOWN ||
+            formal->value_type == TP_OBJECT || formal->value_type == TP_REFERENCE ||
+            symbol->is_ref_arg || symbol->has_reference_target) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int inline_subtree_contains_local_signal(ASTNode *node,
+                                                ASTNode *root_callable) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (node != root_callable && inline_node_is_callable_def(node)) return 0;
+    if (node->node_type == SIGNAL_BLOCK || node->node_type == SIGNAL_HANDLER ||
+        node->node_type == LEVELC_SIGNAL) {
+        return 1;
+    }
+    for (child = node->child; child; child = child->sibling) {
+        if (inline_subtree_contains_local_signal(child, root_callable)) return 1;
+    }
+    return 0;
+}
+
+static int inline_receiver_guard_template_shape(ASTNode *proc_def,
+                                                size_t *guard_count_out) {
+    ASTNode *instrs;
+    ASTNode *statement;
+    size_t guard_count;
+
+    if (guard_count_out) *guard_count_out = 0;
+    if (!proc_def || !inline_callable_is_method(proc_def) ||
+        proc_def->value_type != TP_BOOLEAN || proc_def->value_dims != 0 ||
+        !inline_receiver_guard_args_are_scalar_values(proc_def)) {
+        return 0;
+    }
+
+    instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
+    if (!instrs || inline_subtree_contains_local_signal(instrs, proc_def)) return 0;
+
+    guard_count = 0;
+    statement = instrs->child;
+    while (statement && statement->sibling) {
+        if (!inline_receiver_guard_if_shape(statement)) return 0;
+        guard_count++;
+        statement = statement->sibling;
+    }
+    if (guard_count == 0 || !inline_receiver_guard_boolean_return(statement)) return 0;
+
+    if (guard_count_out) *guard_count_out = guard_count;
+    return 1;
+}
+
+static int inline_method_receiver_has_detached_guard_shape(
+        ASTNode *proc_def,
+        ASTNode *call_node,
+        const InlineCallableSummary *summary,
+        size_t *guard_count_out) {
+    ASTNode *caller;
+    ASTNode *caller_instrs;
+    size_t guard_count;
+
+    if (guard_count_out) *guard_count_out = 0;
+    if (!proc_def || !call_node || !summary ||
+        proc_def->value_type != TP_BOOLEAN || proc_def->value_dims != 0 ||
+        summary->result_type != TP_BOOLEAN || summary->result_dims != 0 ||
+        !(summary->result_flags & RXCP_INLINE_RESULT_MULTIPLE) ||
+        !(summary->result_flags & RXCP_INLINE_RESULT_EXACT_SCALAR) ||
+        (summary->result_flags & (RXCP_INLINE_RESULT_FALLTHROUGH |
+                                  RXCP_INLINE_RESULT_AGGREGATE |
+                                  RXCP_INLINE_RESULT_REFERENCE)) ||
+        (summary->control_flags & RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE) ||
+        summary->assignments != 0 || summary->calls != 0 ||
+        summary->inline_temp_definitions != 0 ||
+        !inline_receiver_guard_template_shape(proc_def, &guard_count)) {
+        return 0;
+    }
+    if (summary->branches != guard_count) return 0;
+
+    caller = ast_proc(call_node);
+    caller_instrs = caller ? ast_chld(caller, INSTRUCTIONS, 0) : NULL;
+    if (!caller || !caller_instrs ||
+        inline_subtree_contains_local_signal(caller_instrs, caller)) {
+        return 0;
+    }
+
+    if (guard_count_out) *guard_count_out = guard_count;
+    return 1;
+}
+
+/* A multi-return nested receiver that is call-free and never reads or writes
+ * a receiver attribute cannot create a receiver-owned link, so it needs
+ * neither a private receiver nor detached per-exit cleanup. */
+static int inline_method_receiver_is_unused(
+        ASTNode *proc_def,
+        const InlineCallableSummary *summary) {
+    ASTNode *instrs;
+
+    if (!proc_def || !summary || summary->calls != 0 ||
+        (summary->control_flags & RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE)) {
+        return 0;
+    }
+
+    instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
+    return instrs && !inline_subtree_reads_class_attribute(instrs);
+}
+
 /* A real Rexx method call binds the caller's receiver value pointer directly
  * as a1.  Once an I6 summary reconstructed from the validated method body
  * proves that this is the method receiver, a direct object symbol can use the
@@ -1705,19 +1935,22 @@ static int inline_symbol_has_generated_storage_scope(Symbol *symbol) {
  * one explicit return: its a1 mapping, or its already-proved inline alias, is
  * the same receiver storage across arbitrary internal branches and calls, and
  * the single-exit/fallthrough rewrite keeps receiver-owned link cleanup on one
- * path.  Multiple explicit returns remain materialised because the current
- * summary does not prove that every rewritten exit balances receiver-owned
- * class-attribute links.  The established ordinary direct-object path does not
- * need this nested-§this exit restriction.  Computed and class-attribute
+ * path.  Three bounded production proofs extend that path: an attribute-free
+ * unused receiver, the detached Boolean guard above, and an already-isolated
+ * by-value object formal.  The established ordinary direct-object path does
+ * not need this nested-§this exit restriction.  Computed and class-attribute
  * receivers still need their existing evaluate-once locator/copyback path. */
 static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
                                                    ASTNode *receiver,
-                                                   Symbol **storage_out) {
+                                                   Symbol **storage_out,
+                                                   size_t *detached_guard_count_out) {
     Symbol *proc_symbol;
     Symbol *receiver_symbol;
     const InlineCallableSummary *summary;
+    size_t detached_guard_count;
 
     if (storage_out) *storage_out = NULL;
+    if (detached_guard_count_out) *detached_guard_count_out = 0;
 
     if (!proc_def || !inline_callable_is_method(proc_def) ||
         !inline_is_direct_receiver_copyback_target(receiver) ||
@@ -1733,18 +1966,33 @@ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
         receiver_symbol->type != TP_OBJECT || receiver_symbol->value_dims != 0 ||
         receiver_symbol->is_ref_arg ||
         (!receiver_symbol->is_this &&
-         (receiver_symbol->is_arg ||
-          inline_symbol_has_generated_storage_scope(receiver_symbol) ||
+         (inline_symbol_has_generated_storage_scope(receiver_symbol) ||
           receiver_symbol->inline_value_alias)) ||
         receiver->flow_substitute_symbol ||
         !summary || summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
-        !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER) ||
-        (receiver_symbol->is_this &&
-         (summary->result_flags & RXCP_INLINE_RESULT_MULTIPLE))) {
+        !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER)) {
         return 0;
     }
 
+    detached_guard_count = 0;
+    if (receiver_symbol->is_this &&
+        (summary->result_flags & RXCP_INLINE_RESULT_MULTIPLE)) {
+        if (inline_method_receiver_has_detached_guard_shape(proc_def,
+                                                            receiver->parent,
+                                                            summary,
+                                                            &detached_guard_count)) {
+            /* The clone builder revalidates and detaches every guard. */
+        }
+        else if (inline_method_receiver_is_unused(proc_def, summary)) {
+            /* No receiver-owned link exists to balance. */
+        }
+        else {
+            return 0;
+        }
+    }
+
     if (storage_out) *storage_out = receiver_symbol;
+    if (detached_guard_count_out) *detached_guard_count_out = detached_guard_count;
     return 1;
 }
 
@@ -1835,6 +2083,7 @@ static int inline_bind_method_receiver(Context *context,
     int method_needs_receiver_copyback;
     int receiver_shares_actual;
     Symbol *receiver_storage;
+    size_t detached_guard_count;
 
     if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !clone_state) return 0;
     if (!inline_callable_is_method(proc_def)) return 1;
@@ -1846,12 +2095,18 @@ static int inline_bind_method_receiver(Context *context,
     if (!this_symbol) return 0;
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
     receiver_storage = NULL;
+    detached_guard_count = 0;
     receiver_shares_actual = inline_method_receiver_can_share_actual(proc_def,
                                                                      receiver,
-                                                                     &receiver_storage);
+                                                                     &receiver_storage,
+                                                                     &detached_guard_count);
     if (receiver_shares_actual) {
         this_symbol->inline_value_alias = receiver_storage;
         clone_state->cleanup_coalesced_bindings++;
+        if (detached_guard_count) {
+            clone_state->method_receiver_detach_guards = 1;
+            clone_state->method_receiver_detached_guard_expected = detached_guard_count;
+        }
     }
 
     assign_node = rxcp_remap_create_assignment_node(context, inline_scope, receiver, receiver);

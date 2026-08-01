@@ -77,6 +77,16 @@ function(_count REGEX EXPECTED DESCRIPTION)
     endif()
 endfunction()
 
+function(_require_debug REGEX DESCRIPTION)
+    if(NOT _rxas_err MATCHES "${REGEX}")
+        message(FATAL_ERROR
+                "Expected ${DESCRIPTION}: ${REGEX}\n"
+                "case: ${CASE}\n"
+                "source: ${SOURCE}\n"
+                "--- rxas stderr ---\n${_rxas_err}")
+    endif()
+endfunction()
+
 set(_line_prefix "(^|\n)([ \t]*[A-Za-z_][A-Za-z0-9_]*:[ \t]*)?[ \t]*")
 set(_line_suffix "[ \t]*(\\*|\n|$)")
 
@@ -330,6 +340,21 @@ elseif(CASE STREQUAL "nr18_flow_harvest_noopt")
         string(REPLACE " " "[ \t]+" _copy_regex "${_copy}")
         _require("${_line_prefix}${_copy_regex}${_line_suffix}" "${_copy} with -n")
     endforeach()
+elseif(CASE STREQUAL "storage_identity_flow")
+    _require_debug("NR27 identity procedure=identity_straight status=complete[^\n]*links=2/0[^\n]*swaps=1/0[^\n]*unlinks=1[^\n]*edges=4/3/3" "exact straight-line link/swap/unlink transfer with typed normal/skip/retry edges")
+    _require_debug("NR27 identity procedure=identity_join_agrees status=complete[^\n]*links=3/0[^\n]*joins=1[^\n]*join-unknown=0" "agreeing must-alias join")
+    _require_debug("NR27 identity procedure=identity_join_disagrees status=complete[^\n]*links=1/1[^\n]*joins=1[^\n]*join-unknown=[1-9][0-9]*" "disagreeing join fails closed")
+    _require_debug("NR27 identity procedure=identity_loop_stable status=complete[^\n]*links=2/0[^\n]*unlinks=1[^\n]*backedges=1[^\n]*edges=6/3/3" "stable loop preserves exact link transfers across typed continuations")
+    _require_debug("NR27 identity procedure=identity_attribute_loop status=complete[^\n]*links=1/1[^\n]*success-only-links=1[^\n]*unlinks=2[^\n]*backedges=1" "normal attribute-link completion is exact while skip and loop continuation fail closed")
+    _require_debug("NR27 identity procedure=identity_tainted_copy_base status=complete[^\n]*full-copy=1[^\n]*tainted-full=1[^\n]*tainted-full-exact=1[^\n]*tainted-full-base=1" "point-exact base identity recovers a globally tainted full-copy site")
+    _require_debug("NR27 identity procedure=identity_alias_self_copy status=complete[^\n]*alias-self-copy=1" "distinct register numbers address the same storage")
+    _require_debug("NR27 identity procedure=identity_cri13_shape status=complete[^\n]*success-only-links=1[^\n]*full-copy=2[^\n]*full-copy-exact=1[^\n]*full-copy-base=1" "CRI-13 register-local copy is exact while the throwing attribute source fails closed")
+    _require_debug("NR27 identity procedure=identity_signal_handler_unknown status=complete[^\n]*links=1/1[^\n]*joins=1[^\n]*join-unknown=[1-9][0-9]*[^\n]*handler-entries=1" "same-frame signal-handler entry starts unknown and remains explicit")
+    _require_debug("NR27 identity procedure=identity_reference_unknown status=complete[^\n]*links=1/1[^\n]*success-only-links=1[^\n]*unlinks=1[^\n]*edges=3/3/3" "normal reference-link completion is exact while skip continuation fails closed")
+    _require_debug("NR27 identity procedure=identity_fused_partial_signal status=complete[^\n]*links=2/1[^\n]*success-only-links=1[^\n]*edges=3/3/3" "fused partial signal state invalidates dynamic identities and meets with the normal successor")
+    _require_debug("NR27 identity procedure=identity_lifetime_forgets_dynamic status=complete[^\n]*links=2/1[^\n]*full-copy=1[^\n]*full-copy-exact=1" "whole-value lifetime mutation forgets dynamic storage identities")
+    _require_debug("NR27 identity procedure=identity_swap_roundtrip status=complete[^\n]*swap-roundtrip=1[^\n]*roundtrip-instructions=2" "unobserved swapn permutation round trip")
+    _require_debug("NR27 identity procedure=identity_swap_observed status=complete[^\n]*swap-roundtrip=0[^\n]*roundtrip-instructions=0" "observed permutation is not a round-trip candidate")
 elseif(CASE STREQUAL "nr09_class1_boundaries")
     foreach(_fused IN ITEMS swapn loadsettpswap swapsettpswap settpswapsettpswap nulln)
         _forbid("${_line_prefix}${_fused}[ \t]+" "${_fused} across a boundary or mismatched dependency")

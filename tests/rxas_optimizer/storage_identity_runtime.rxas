@@ -1,0 +1,51 @@
+* PERF3-02-C2E2 optimized/no-opt link/swap/unlink semantic oracle.
+
+main() .locals=9
+    sigcalla identity_skip_handler(),"OUT_OF_RANGE"
+
+    load r0,11
+    link r1,r0
+    icopy r2,r1
+    unlink r1
+    ieq r8,r2,11
+    brf failed,r8
+
+    load r1,22
+    load r2,33
+    load r3,44
+    swapn r0,r1,r2,r3
+    ieq r8,r0,22
+    brf failed,r8
+    ieq r8,r1,11
+    brf failed,r8
+    ieq r8,r2,44
+    brf failed,r8
+    ieq r8,r3,33
+    brf failed,r8
+    swapn r0,r1,r2,r3
+
+    setattrs r4,1
+    linkattr1 r5,r4,1
+    load r5,55
+    unlink r5
+    linkattr1 r6,r4,1
+    ieq r8,r6,55
+    unlink r6
+    brf failed,r8
+
+    /* LINKATTR1 validates before installing its destination mapping. A skip
+     * continuation must therefore retain r7's original base storage/value. */
+    load r7,77
+    setattrs r4,0
+    linkattr1 r7,r4,1
+    ieq r8,r7,77
+    brf failed,r8
+
+    say "PASS: C2-E2 storage identity runtime"
+    ret 0
+failed:
+    say "FAIL: C2-E2 storage identity runtime"
+    ret 1
+
+identity_skip_handler() .locals=1
+    ret "__rxsignal_skip"

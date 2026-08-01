@@ -1,0 +1,17 @@
+candidate,workload,vm,rounds,candidate_over_c0_median_elapsed_percent,c0_over_candidate_median_speedup,c0_over_candidate_geomean_speedup,min_round_speedup,max_round_speedup,interpretation,authority
+C1a-R2,Richards,rxvm,12,-8.075226,1.087860,1.084076,1.029476,1.107519,target-positive-all-rounds,provisional-remote-terminal-confound
+C1a-R2,Richards,rxbvm,12,-9.471819,1.104646,1.107668,1.055714,1.162284,target-positive-all-rounds,provisional-remote-terminal-confound
+C1a-R2,Towers,rxvm,12,-1.114974,1.011300,1.021582,0.990855,1.112757,byte-identical-guard-within-3-percent-median,provisional-remote-terminal-confound
+C1a-R2,Towers,rxbvm,12,0.988300,0.990215,0.996893,0.965306,1.079186,byte-identical-guard-within-3-percent-median,provisional-remote-terminal-confound
+C1c-R1,Towers,rxvm,12,-20.499377,1.257857,1.264248,1.226274,1.402810,target-positive-all-rounds,provisional-remote-terminal-confound
+C1c-R1,Towers,rxbvm,12,-19.000059,1.234570,1.238488,1.167417,1.364140,target-positive-all-rounds,provisional-remote-terminal-confound
+C1c-R1,Richards,rxvm,12,-0.150684,1.001509,1.011788,0.975017,1.162172,byte-identical-guard-within-3-percent-median,provisional-remote-terminal-confound
+C1c-R1,Richards,rxbvm,12,0.083448,0.999184,1.001235,0.979386,1.055533,byte-identical-guard-within-3-percent-median,provisional-remote-terminal-confound
+C1a-R2,Richards,rxvm,22,-9.178933,1.101066,1.101589,1.075093,1.140323,target-positive-all-rounds,authoritative-clean-host-governed-final
+C1a-R2,Richards,rxbvm,22,-9.330797,1.102911,1.101884,1.055973,1.141625,target-positive-all-rounds,authoritative-clean-host-governed-final
+C1a-R2,Towers,rxvm,36,0.122903,0.998774,1.001596,0.947727,1.088987,byte-identical-guard-pass-noisy-at-36-pair-cap,authoritative-clean-host-governed-final
+C1a-R2,Towers,rxbvm,36,0.017574,0.999824,1.002563,0.980726,1.065684,byte-identical-guard-pass-noisy-at-36-pair-cap,authoritative-clean-host-governed-final
+C1c-R1,Towers,rxvm,22,-19.424614,1.241074,1.235118,1.138274,1.261752,target-positive-all-rounds,authoritative-clean-host-governed-final
+C1c-R1,Towers,rxbvm,12,-19.645181,1.244481,1.245047,1.188478,1.302069,target-positive-all-rounds,authoritative-clean-host-governed-final
+C1c-R1,Richards,rxvm,36,-0.163078,1.001633,1.001614,0.971860,1.033157,byte-identical-guard-pass-noisy-at-36-pair-cap,authoritative-clean-host-governed-final
+C1c-R1,Richards,rxbvm,36,0.139125,0.998611,0.997353,0.961262,1.034381,byte-identical-guard-pass-noisy-at-36-pair-cap,authoritative-clean-host-governed-final

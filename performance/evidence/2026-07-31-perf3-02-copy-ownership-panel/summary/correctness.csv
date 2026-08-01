@@ -1,0 +1,15 @@
+candidate,proof,executions_passed,executions_total,result,evidence
+C0,PERF3-01 recursive checksum replay,101,101,pass,diagnostic/perf3-01-checksum-replay.txt
+C0,RXSEQ N=2 Richards and Towers both VMs,4,4,pass,raw/rxseq
+C1a-R1,optimized Richards rxvm smoke,0,1,fail expected 23246/9297 got 0/1,poc/c1a-r1/release-correctness
+C1a-R2,optimized Richards Towers Permute Bounce Sieve both VMs,10,10,pass,poc/c1a-r2/release-correctness
+C1a-R2,diagnostic-profile Richards and Towers both VMs,4,4,pass,poc/c1a-r2/profile
+C1a-R2,no-opt Richards and Towers both VMs,4,4,pass,poc/c1a-r2/noopt-and-focused
+C1a-R2,existing focused compiler test,1,1,pass,poc/c1a-r2/noopt-and-focused/ctest.log
+C1a-R2,paired ordinary Release target and guard executions,104,104,pass,poc/c1a-r2/timing
+C1c-R1,optimized Richards Towers Permute Bounce Sieve both VMs,10,10,pass,poc/c1c-r1/release-correctness
+C1c-R1,diagnostic-profile Towers both VMs,2,2,pass,poc/c1c-r1/profile
+C1c-R1,no-opt Richards and Towers both VMs,4,4,pass,poc/c1c-r1/noopt-and-focused
+C1c-R1,existing focused compiler test,1,1,pass,poc/c1c-r1/noopt-and-focused/ctest.log
+C1c-R1,paired ordinary Release target and guard executions,104,104,pass,poc/c1c-r1/timing
+C2-E1,reassembled Richards and Towers both VMs,4,4,pass,poc/c2-e1/correctness

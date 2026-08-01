@@ -429,6 +429,9 @@ static void inline_free_symbol_map(InlineCloneState *state) {
     state->varg_count = 0;
     state->method_receiver_source_symbol = NULL;
     state->method_receiver_local_symbol = NULL;
+    state->method_receiver_detached_guard_expected = 0;
+    state->method_receiver_detached_guard_materialized = 0;
     state->method_receiver_needs_copyback = 0;
     state->method_receiver_uses_locator_copyback = 0;
+    state->method_receiver_detach_guards = 0;
 }

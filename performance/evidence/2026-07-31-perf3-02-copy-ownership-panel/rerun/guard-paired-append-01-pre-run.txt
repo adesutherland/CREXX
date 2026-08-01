@@ -1,0 +1,13 @@
+PERF3-02 guard paired-append-01 pre-run record
+
+- Trigger: all four unchanged-image guard mean 95% paired intervals crossed zero.
+- The target intervals were already wholly favorable and do not trigger this block.
+- Manifest: four C0/guard balanced pairs, eight cells total.
+- Protocol: one warmup plus 12 recorded rotated rounds.
+- Exact binaries, workload images, work counts and host session are unchanged.
+- Pre-block reference UTC: 2026-07-31T16:04:12Z.
+- Load averages: 2.10 2.40 2.44.
+- AC Power; battery 80%; lowpowermode 0.
+- No thermal, performance or CPU-power warning was recorded.
+- Interactive sessions: adrian console only.
+- No overlapping build, test, compiler, assembler, linker or VM process found.

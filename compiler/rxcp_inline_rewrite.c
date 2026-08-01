@@ -1041,6 +1041,117 @@ static int inline_rewrite_return_nodes(Context *context,
     return result == RXCP_REMAP_APPLIED;
 }
 
+static Symbol *inline_detached_receiver_guard_assignment(ASTNode *node,
+                                                         ASTNode **rhs_out) {
+    ASTNode *lhs;
+    ASTNode *rhs;
+    Symbol *symbol;
+
+    if (rhs_out) *rhs_out = NULL;
+    if (!node || node->node_type != ASSIGN) return NULL;
+    lhs = node->child;
+    rhs = lhs ? lhs->sibling : NULL;
+    if (!lhs || !rhs || rhs->sibling || lhs->node_type != VAR_TARGET || lhs->child ||
+        !lhs->symbolNode || !(symbol = lhs->symbolNode->symbol) || !symbol->name ||
+        strncmp(symbol->name, "__inline_receiver_guard_", 24) != 0) {
+        return NULL;
+    }
+    if (rhs_out) *rhs_out = rhs;
+    return symbol;
+}
+
+static ASTNode *inline_clone_detached_receiver_guard(Context *context,
+                                                     ASTNode *instr_list,
+                                                     ASTNode *source_if,
+                                                     InlineCloneState *clone_state) {
+    ASTNode *temp_ref;
+    ASTNode *cloned_if;
+    ASTNode *cloned_condition;
+    size_t suffix;
+
+    if (!context || !instr_list || !source_if || !clone_state ||
+        !clone_state->method_receiver_detach_guards ||
+        !inline_receiver_guard_if_shape(source_if)) {
+        return NULL;
+    }
+
+    suffix = clone_state->method_receiver_detached_guard_materialized;
+    temp_ref = inline_create_temp_value_ref(context,
+                                            instr_list,
+                                            clone_state->inline_scope,
+                                            source_if->child,
+                                            clone_state,
+                                            "__inline_receiver_guard",
+                                            suffix);
+    if (!temp_ref || temp_ref->node_type != VAR_SYMBOL || temp_ref->child ||
+        temp_ref->value_type != TP_BOOLEAN || temp_ref->value_dims != 0) {
+        return NULL;
+    }
+
+    cloned_if = inline_clone_body_instruction(context, source_if, clone_state);
+    if (!cloned_if || !inline_receiver_guard_if_shape(cloned_if)) return NULL;
+    cloned_condition = cloned_if->child;
+    if (!rxcp_remap_replace_node(cloned_condition, temp_ref)) return NULL;
+
+    clone_state->method_receiver_detached_guard_materialized++;
+    return cloned_if;
+}
+
+static int inline_validate_detached_receiver_guard_clone(ASTNode *instr_list,
+                                                         ASTNode *block_expr,
+                                                         InlineCloneState *clone_state) {
+    ASTNode *statement;
+    size_t guard_count;
+
+    if (!clone_state || !clone_state->method_receiver_detach_guards) return 1;
+    if (!instr_list || instr_list->node_type != INSTRUCTIONS || !block_expr ||
+        clone_state->method_receiver_detached_guard_expected == 0 ||
+        clone_state->method_receiver_detached_guard_materialized !=
+            clone_state->method_receiver_detached_guard_expected) {
+        return 0;
+    }
+
+    statement = instr_list->child;
+    while (statement && !inline_detached_receiver_guard_assignment(statement, NULL)) {
+        statement = statement->sibling;
+    }
+
+    guard_count = 0;
+    while (statement && guard_count < clone_state->method_receiver_detached_guard_expected) {
+        ASTNode *rhs;
+        ASTNode *guard_if;
+        ASTNode *condition;
+        ASTNode *leave;
+        Symbol *guard_symbol;
+        size_t attribute_reads;
+
+        guard_symbol = inline_detached_receiver_guard_assignment(statement, &rhs);
+        guard_if = statement->sibling;
+        condition = guard_if ? guard_if->child : NULL;
+        leave = condition ? condition->sibling : NULL;
+        attribute_reads = 0;
+        if (!guard_symbol || !rhs ||
+            !inline_receiver_guard_condition_walk(rhs, &attribute_reads) ||
+            attribute_reads != 1 || !guard_if || guard_if->node_type != IF ||
+            !condition || condition->node_type != VAR_SYMBOL || condition->child ||
+            condition->value_type != TP_BOOLEAN || condition->value_dims != 0 ||
+            !condition->symbolNode || condition->symbolNode->symbol != guard_symbol ||
+            !leave || leave->node_type != LEAVE_WITH || leave->sibling ||
+            leave->association != block_expr || leave->value_type != TP_BOOLEAN ||
+            leave->value_dims != 0 || !leave->child || leave->child->sibling) {
+            return 0;
+        }
+        guard_count++;
+        statement = guard_if->sibling;
+    }
+
+    return guard_count == clone_state->method_receiver_detached_guard_expected &&
+           statement && statement->node_type == LEAVE_WITH &&
+           statement->association == block_expr && statement->value_type == TP_BOOLEAN &&
+           statement->value_dims == 0 && statement->child &&
+           !statement->child->sibling && !statement->sibling;
+}
+
 static ASTNode *inline_build_block_expr(Context *context,
                                         ASTNode *call_node,
                                         Symbol *proc_sym,
@@ -1107,7 +1218,14 @@ static ASTNode *inline_build_block_expr(Context *context,
     while (proc_instr) {
         ASTNode *cloned_instr;
 
-        cloned_instr = inline_clone_body_instruction(context, proc_instr, &clone_state);
+        if (clone_state.method_receiver_detach_guards && proc_instr->node_type == IF) {
+            cloned_instr = inline_clone_detached_receiver_guard(context,
+                                                                instr_list,
+                                                                proc_instr,
+                                                                &clone_state);
+        } else {
+            cloned_instr = inline_clone_body_instruction(context, proc_instr, &clone_state);
+        }
         if (!cloned_instr) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone callee instruction subtree");
             inline_free_symbol_map(&clone_state);
@@ -1127,6 +1245,17 @@ static ASTNode *inline_build_block_expr(Context *context,
         add_ast(instr_list, cloned_instr);
 
         proc_instr = proc_instr->sibling;
+    }
+
+    if (!inline_validate_detached_receiver_guard_clone(instr_list,
+                                                       block_expr,
+                                                       &clone_state)) {
+        inline_debug_fail_closed(context,
+                                 call_node,
+                                 proc_sym,
+                                 "detached receiver-guard clone failed post-rewrite validation");
+        inline_free_symbol_map(&clone_state);
+        return NULL;
     }
 
     if (allow_dummy_return && proc_sym->type == TP_VOID &&
@@ -2043,10 +2172,14 @@ static InlineEligibilityReject inline_analyse_callable_eligibility(Context *cont
         eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE;
     } else if (eligibility->check.has_unsupported_varg_access) {
         eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS;
+    /* I6 already transports the complete indexed Boolean shape used by the
+     * bounded receiver-guard proof.  Revalidate that exact template on both
+     * export and import instead of opening array attributes generally. */
     } else if (reject_unportable_class_attribute_shape &&
                (inline_callable_is_method(callable) || callable->node_type == FACTORY) &&
                eligibility->check.has_unportable_class_attribute_shape &&
-               eligibility->reference_accessor_kind == INLINE_REFERENCE_ACCESSOR_NONE) {
+               eligibility->reference_accessor_kind == INLINE_REFERENCE_ACCESSOR_NONE &&
+               !inline_receiver_guard_template_shape(callable, NULL)) {
         eligibility->reject = INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE;
     }
 

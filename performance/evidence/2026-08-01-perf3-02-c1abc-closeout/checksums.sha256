@@ -1,0 +1,12 @@
+16b0328b512a2f174cebf2fffdf2fa1a642c00bc7410bf73aa55a7686b044e03  ./COMMANDS.md
+880f10fafbaa50d79d52b8cba5a4791a6138bb67930d7c6ca0aec659cc4c66bc  ./README.md
+192a98b85214b52c142af809f0ca6e71acb14a80d999a1d58c1c811ffee42c40  ./logs/debug-broad-final.log
+be134414c6fea7fe5abb6ec33cc66cee1339799b50398295085a2f16f41ee58a  ./logs/debug-broad-first.log
+a000b55c29931fefa5f9e34b0733f81479b67154fdd4766c9df38e290547da0d  ./logs/debug-build.log
+76553869bbf9de015dc778af3475f7f9b8d71faf3d3231bdcf51ffc719673ede  ./logs/debug-object-pairs.log
+cf685b7888fc70cb9383e1552ca8abe46ff5f635394f205d2565d5d599261bf0  ./logs/release-build.log
+ac77294f28f551469d21082e435668c91a585965653ae84830e6e09da442542d  ./logs/release-focused-ctest.log
+0091d829e3357bfd863146db5a45ac0176b0f997afbcc2cee5162f51dcd9f9f1  ./production-identity.csv
+3d8f91f792ce53246b52bb2a7c3f5b6b0266291d1dccf38596b3236677d7935f  ./production-surface-audit.txt
+8de55fd815c65b916c2eb81dc6d1a3efc32ed9d4508ba427a2852762569a4223  ./source-identity.csv
+a9cdde96f6fc14cb842432acd05f7abecf8f83b66ebf07e0cabcdf478974c929  ./validation.csv

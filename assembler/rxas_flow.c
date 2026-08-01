@@ -36,6 +36,11 @@
 /* Bound global value analysis only for procedures newly admitted by exact
  * indirect-table edges.  Reachability remains linear and unbounded. */
 #define FLOW_MAX_INDIRECT_VALUE_CELLS 1000000
+/* C2-E2 symbolic storage service. The environment has one storage identity per
+ * register slot and program point; keep its maximum retained state explicit so
+ * normal optimisation cost and memory remain bounded before rewrite consumers
+ * are admitted. */
+#define FLOW_MAX_STORAGE_IDENTITY_CELLS 2000000
 
 enum flow_view {
     FLOW_VIEW_INTEGER,
@@ -57,10 +62,23 @@ typedef struct flow_register {
     Assembler_Token *token;
 } flow_register;
 
+typedef enum flow_edge_kind {
+    FLOW_EDGE_NORMAL = 0,
+    FLOW_EDGE_SIGNAL_SKIP,
+    FLOW_EDGE_SIGNAL_RETRY
+} flow_edge_kind;
+
+typedef struct flow_edge {
+    size_t target;
+    flow_edge_kind kind;
+} flow_edge;
+
+typedef struct flow_storage_analysis flow_storage_analysis;
+
 typedef struct flow_node {
     const OpInfo *op;
     RxOpEffects effects;
-    size_t *successors;
+    flow_edge *successors;
     size_t successor_count;
     size_t successor_capacity;
     size_t block;
@@ -92,6 +110,7 @@ typedef struct flow_graph {
     size_t block_count;
     size_t resolved_indirect_branches;
     int complete_control_flow;
+    flow_storage_analysis *storage;
 } flow_graph;
 
 typedef struct flow_stats {
@@ -112,6 +131,48 @@ typedef struct flow_stats {
     size_t rejected_tainted;
     size_t rejected_effect;
 } flow_stats;
+
+typedef struct flow_storage_stats {
+    size_t reachable_nodes;
+    size_t state_cells;
+    size_t exact_cells;
+    size_t unknown_cells;
+    size_t aliased_cells;
+    size_t link_transfers;
+    size_t exact_links;
+    size_t unknown_links;
+    size_t success_only_links;
+    size_t swap_pairs;
+    size_t exact_swap_pairs;
+    size_t unknown_swap_pairs;
+    size_t unlink_transfers;
+    size_t join_nodes;
+    size_t join_unknown_cells;
+    size_t backward_edges;
+    size_t unsupported_mapping_ops;
+    size_t full_copies;
+    size_t exact_full_copies;
+    size_t base_full_copies;
+    size_t tainted_full_copies;
+    size_t exact_tainted_full_copies;
+    size_t base_destination_tainted_full_copies;
+    size_t alias_self_copies;
+    size_t swap_round_trips;
+    size_t round_trip_instructions;
+    size_t normal_edges;
+    size_t signal_skip_edges;
+    size_t signal_retry_edges;
+    size_t signal_handler_entries;
+} flow_storage_stats;
+
+struct flow_storage_analysis {
+    const flow_graph *graph;
+    size_t *in;
+    unsigned char *has_in;
+    unsigned char *queued;
+    size_t *queue;
+    size_t queue_capacity;
+};
 
 static OperandType flow_operand_type(Assembler_Token *token) {
     if (!token) return OP_NONE;
@@ -437,12 +498,13 @@ static int flow_label_index(const flow_graph *graph, Assembler_Token *token) {
 }
 
 static void flow_add_successor(flow_graph *graph, flow_node *node,
-                               size_t successor) {
+                               size_t successor, flow_edge_kind kind) {
     size_t index;
     size_t new_capacity;
-    size_t *new_successors;
+    flow_edge *new_successors;
     for (index = 0; index < node->successor_count; index++)
-        if (node->successors[index] == successor) return;
+        if (node->successors[index].target == successor &&
+            node->successors[index].kind == kind) return;
     if (node->successor_count == node->successor_capacity) {
         new_capacity = node->successor_capacity
                 ? node->successor_capacity * 2 : 4;
@@ -456,7 +518,9 @@ static void flow_add_successor(flow_graph *graph, flow_node *node,
         node->successors = new_successors;
         node->successor_capacity = new_capacity;
     }
-    node->successors[node->successor_count++] = successor;
+    node->successors[node->successor_count].target = successor;
+    node->successors[node->successor_count].kind = kind;
+    node->successor_count++;
 }
 
 static Assembler_Token *flow_jump_table_operand(const flow_node *node,
@@ -497,7 +561,8 @@ static int flow_add_jump_table_successors(flow_graph *graph, flow_node *node,
         label = rxas_jump_table_case_label(graph->context, table, case_index);
         label_index = flow_label_index(graph, label);
         if (label_index < 0) return 0;
-        flow_add_successor(graph, node, (size_t)label_index);
+        flow_add_successor(graph, node, (size_t)label_index,
+                           FLOW_EDGE_NORMAL);
         leaders[label_index] = 1;
     }
     return 1;
@@ -526,7 +591,7 @@ static int flow_build_edges(flow_graph *graph) {
         item = &graph->items[index];
         if (item->instrType != OP_CODE) {
             if (index + 1 < graph->item_count)
-                flow_add_successor(graph, node, index + 1);
+                flow_add_successor(graph, node, index + 1, FLOW_EDGE_NORMAL);
             continue;
         }
         node->op = flow_find_opcode(graph->context, item);
@@ -534,7 +599,7 @@ static int flow_build_edges(flow_graph *graph) {
             graph->complete_control_flow = 0;
             node->unknown_successor = 1;
             if (index + 1 < graph->item_count)
-                flow_add_successor(graph, node, index + 1);
+                flow_add_successor(graph, node, index + 1, FLOW_EDGE_NORMAL);
             continue;
         }
         node->effects = rxop_effects(node->op->opcode);
@@ -548,7 +613,8 @@ static int flow_build_edges(flow_graph *graph) {
                 node->unknown_successor = 1;
             }
             else {
-                flow_add_successor(graph, node, (size_t)label_index);
+                flow_add_successor(graph, node, (size_t)label_index,
+                                   FLOW_EDGE_NORMAL);
                 leaders[label_index] = 1;
             }
         }
@@ -566,9 +632,22 @@ static int flow_build_edges(flow_graph *graph) {
         if (node->op->flow == FLOW_NEXT ||
             (node->op->flow == FLOW_COND && target_count < 2)) {
             if (index + 1 < graph->item_count) {
-                flow_add_successor(graph, node, index + 1);
+                flow_add_successor(graph, node, index + 1, FLOW_EDGE_NORMAL);
                 if (node->op->flow != FLOW_NEXT) leaders[index + 1] = 1;
             }
+        }
+        if ((node->effects.semantics & RXOP_SEM_MAY_THROW) != 0) {
+            /* Action-aware handlers can be inherited from a caller, so every
+             * potentially throwing instruction has logical skip and retry
+             * continuations even when this procedure contains no SIGCALLA.
+             * Skip resumes at the already-advanced sequential address; retry
+             * re-enters the signal point. Legacy rewrite consumers explicitly
+             * continue to use normal edges only in this infrastructure slice. */
+            if (index + 1 < graph->item_count) {
+                flow_add_successor(graph, node, index + 1,
+                                   FLOW_EDGE_SIGNAL_SKIP);
+            }
+            flow_add_successor(graph, node, index, FLOW_EDGE_SIGNAL_RETRY);
         }
         if ((node->op->flow == FLOW_JUMP || node->op->flow == FLOW_COND ||
              node->op->flow == FLOW_TERM) && index + 1 < graph->item_count)
@@ -579,7 +658,12 @@ static int flow_build_edges(flow_graph *graph) {
     for (index = 0; index < graph->item_count; index++) {
         if (leaders[index]) graph->block_count++;
         graph->nodes[index].block = graph->block_count ? graph->block_count - 1 : 0;
-        edge_count += graph->nodes[index].successor_count;
+        for (predecessor_index = 0;
+             predecessor_index < graph->nodes[index].successor_count;
+             predecessor_index++)
+            if (graph->nodes[index].successors[predecessor_index].kind ==
+                FLOW_EDGE_NORMAL)
+                edge_count++;
     }
     free(leaders);
 
@@ -594,7 +678,9 @@ static int flow_build_edges(flow_graph *graph) {
         for (predecessor_index = 0;
              predecessor_index < node->successor_count;
              predecessor_index++)
-            graph->predecessor_offsets[node->successors[predecessor_index] + 1]++;
+            if (node->successors[predecessor_index].kind == FLOW_EDGE_NORMAL)
+                graph->predecessor_offsets[
+                        node->successors[predecessor_index].target + 1]++;
     }
     for (index = 1; index <= graph->item_count; index++)
         graph->predecessor_offsets[index] += graph->predecessor_offsets[index - 1];
@@ -604,7 +690,9 @@ static int flow_build_edges(flow_graph *graph) {
              predecessor_index < node->successor_count;
              predecessor_index++) {
             size_t successor;
-            successor = node->successors[predecessor_index];
+            if (node->successors[predecessor_index].kind != FLOW_EDGE_NORMAL)
+                continue;
+            successor = node->successors[predecessor_index].target;
             graph->predecessors[graph->predecessor_offsets[successor] + fill[successor]++] = index;
         }
     }
@@ -635,7 +723,10 @@ static void flow_mark_reachable(flow_graph *graph) {
                  successor_index < graph->nodes[index].successor_count;
                  successor_index++) {
                 size_t successor;
-                successor = graph->nodes[index].successors[successor_index];
+                if (graph->nodes[index].successors[successor_index].kind !=
+                    FLOW_EDGE_NORMAL)
+                    continue;
+                successor = graph->nodes[index].successors[successor_index].target;
                 if (!graph->nodes[successor].reachable) {
                     graph->nodes[successor].reachable = 1;
                     changed = 1;
@@ -860,8 +951,14 @@ static int flow_build_graph(flow_graph *graph, Assembler_Context *context,
     return 1;
 }
 
+static void flow_storage_free(flow_storage_analysis *analysis);
+
 static void flow_free_graph(flow_graph *graph) {
     size_t index;
+    if (graph->storage) {
+        flow_storage_free(graph->storage);
+        free(graph->storage);
+    }
     for (index = 0; index < graph->item_count; index++)
         free(graph->nodes[index].successors);
     free(graph->nodes);
@@ -894,8 +991,13 @@ static void flow_compute_liveness(flow_graph *graph) {
                 next_out = 0;
                 for (successor_index = 0;
                      successor_index < node->successor_count;
-                     successor_index++)
-                    next_out |= graph->nodes[node->successors[successor_index]].live_in[word];
+                     successor_index++) {
+                    if (node->successors[successor_index].kind !=
+                        FLOW_EDGE_NORMAL)
+                        continue;
+                    next_out |= graph->nodes[
+                            node->successors[successor_index].target].live_in[word];
+                }
                 if (graph->items[reverse_index].instrType == OP_CODE) {
                     for (successor_index = 0;
                          successor_index < graph->async_handler_target_count;
@@ -1017,6 +1119,853 @@ static int flow_node_writes_fact_register(const flow_graph *graph, size_t node_i
     }
     if (node->effects.implicit != RXOP_IMPLICIT_NONE) return 1;
     return 0;
+}
+
+static int flow_is_async_handler_target(const flow_graph *graph,
+                                        size_t node_index);
+
+/* A register number identifies a slot in the current frame's mapping table;
+ * LINK and SWAP change the value* addressed by that slot.  C2-E2 gives each
+ * frame-owned slot a stable base identity (register index + 1) and each
+ * dynamic link definition a procedure-local site identity.  Zero is the
+ * must-analysis top: the addressed storage is not identical on every path.
+ *
+ * Site identities are deliberately not equated across distinct LINKATTR or
+ * LINKREF instructions.  That loses some true aliases, but never invents one.
+ * Non-base identities are also forgotten on a backward edge, preventing one
+ * static link site from being mistaken for the same dynamic storage across
+ * loop iterations. */
+static size_t flow_storage_base_id(int register_index) {
+    return register_index >= 0 ? (size_t)register_index + 1 : 0;
+}
+
+static size_t flow_storage_site_id(const flow_graph *graph, size_t node_index,
+                                   size_t ordinal) {
+    return graph->register_count + node_index * 2 + ordinal + 1;
+}
+
+static int flow_storage_operand_register(const flow_graph *graph,
+                                         instruction_queue *item,
+                                         size_t operand_index) {
+    Assembler_Token *operand;
+    char type;
+    if (!item || operand_index >= item->operandCount) return -1;
+    operand = rxas_queue_operand(item, operand_index);
+    type = flow_register_type(operand);
+    if (!type || !operand || operand->token_value.integer < 0) return -1;
+    return flow_register_index(graph, type,
+            (size_t)operand->token_value.integer);
+}
+
+static void flow_storage_set_all_unknown(size_t *state, size_t width) {
+    memset(state, 0, width * sizeof(*state));
+}
+
+static void flow_storage_forget_nonbase(size_t *state, size_t width) {
+    size_t index;
+    for (index = 0; index < width; index++)
+        if (state[index] > width) state[index] = 0;
+}
+
+static void flow_storage_forget_nonbase_except(size_t *state, size_t width,
+                                               size_t keep) {
+    size_t index;
+    for (index = 0; index < width; index++)
+        if (state[index] > width && state[index] != keep) state[index] = 0;
+}
+
+static void flow_storage_define_site(const flow_graph *graph,
+                                     instruction_queue *item,
+                                     size_t node_index, size_t operand_index,
+                                     size_t ordinal, size_t *state,
+                                     flow_storage_stats *stats) {
+    int destination;
+    destination = flow_storage_operand_register(graph, item, operand_index);
+    if (stats) stats->link_transfers++;
+    if (destination < 0) {
+        if (stats) stats->unknown_links++;
+        return;
+    }
+    state[destination] = flow_storage_site_id(graph, node_index, ordinal);
+    if (stats) stats->exact_links++;
+}
+
+static void flow_storage_define_throwing_site(
+        const flow_graph *graph, instruction_queue *item, size_t node_index,
+        size_t operand_index, size_t ordinal, size_t *state,
+        flow_storage_stats *stats) {
+    flow_storage_define_site(graph, item, node_index, operand_index, ordinal,
+                             state, stats);
+    if (stats) stats->success_only_links++;
+}
+
+static void flow_storage_link_operand(const flow_graph *graph,
+                                      instruction_queue *item,
+                                      size_t destination_operand,
+                                      size_t source_operand, size_t *state,
+                                      flow_storage_stats *stats) {
+    int destination;
+    int source;
+    destination = flow_storage_operand_register(graph, item,
+                                                destination_operand);
+    source = flow_storage_operand_register(graph, item, source_operand);
+    if (stats) stats->link_transfers++;
+    if (destination < 0 || source < 0 || !state[source]) {
+        if (destination >= 0) state[destination] = 0;
+        if (stats) stats->unknown_links++;
+        return;
+    }
+    state[destination] = state[source];
+    if (stats) stats->exact_links++;
+}
+
+static void flow_storage_link_argument(const flow_graph *graph,
+                                       instruction_queue *item,
+                                       size_t node_index, size_t *state,
+                                       flow_storage_stats *stats) {
+    int destination;
+    int argument;
+    destination = flow_storage_operand_register(graph, item, 0);
+    argument = -1;
+    if (item->operandCount > 1 && item->operand2Token &&
+        item->operand2Token->token_type == INT &&
+        item->operand2Token->token_value.integer >= 0)
+        argument = flow_register_index(graph, 'a',
+                (size_t)item->operand2Token->token_value.integer);
+    if (stats) stats->link_transfers++;
+    if (destination < 0) {
+        if (stats) stats->unknown_links++;
+        return;
+    }
+    if (argument >= 0) {
+        state[destination] = flow_storage_base_id(argument);
+        if (stats) stats->exact_links++;
+    }
+    else {
+        state[destination] = flow_storage_site_id(graph, node_index, 0);
+        if (stats) stats->exact_links++;
+    }
+}
+
+static void flow_storage_swap_operands(const flow_graph *graph,
+                                       instruction_queue *item,
+                                       size_t first_operand,
+                                       size_t second_operand, size_t *state,
+                                       flow_storage_stats *stats) {
+    int first;
+    int second;
+    size_t temporary;
+    first = flow_storage_operand_register(graph, item, first_operand);
+    second = flow_storage_operand_register(graph, item, second_operand);
+    if (stats) stats->swap_pairs++;
+    if (first < 0 || second < 0) {
+        if (first >= 0) state[first] = 0;
+        if (second >= 0) state[second] = 0;
+        if (stats) stats->unknown_swap_pairs++;
+        return;
+    }
+    if (stats) {
+        if (state[first] && state[second]) stats->exact_swap_pairs++;
+        else stats->unknown_swap_pairs++;
+    }
+    temporary = state[first];
+    state[first] = state[second];
+    state[second] = temporary;
+}
+
+static void flow_storage_unlink_operand(const flow_graph *graph,
+                                        instruction_queue *item,
+                                        size_t operand_index, size_t *state,
+                                        flow_storage_stats *stats) {
+    int destination;
+    destination = flow_storage_operand_register(graph, item, operand_index);
+    if (stats) stats->unlink_transfers++;
+    if (destination >= 0)
+        state[destination] = flow_storage_base_id(destination);
+}
+
+static int flow_storage_is_pure_swap_opcode(int opcode) {
+    return opcode == OP_SWAP_REG_REG ||
+           opcode == OP_SWAPN_REG_REG_REG_REG ||
+           opcode == OP_SWAPN_REG_REG_REG_REG_REG_REG ||
+           opcode == OP_SWAPN_REG_REG_REG_REG_REG_REG_REG_REG;
+}
+
+static void flow_storage_transfer_normal(const flow_graph *graph,
+                                         size_t node_index,
+                                         const size_t *input, size_t *output,
+                                         flow_storage_stats *stats) {
+    flow_node *node;
+    instruction_queue *item;
+    size_t keep;
+    size_t operand_index;
+    int register_index;
+
+    memcpy(output, input, graph->register_count * sizeof(*output));
+    item = &graph->items[node_index];
+    node = &graph->nodes[node_index];
+    if (item->instrType != OP_CODE) return;
+    if (!node->op || node->effects.state != RXOP_EFFECT_CLASSIFIED) {
+        flow_storage_set_all_unknown(output, graph->register_count);
+        if (stats) stats->unsupported_mapping_ops++;
+        return;
+    }
+
+    switch (node->op->opcode) {
+        case OP_LINK_REG_REG:
+            flow_storage_link_operand(graph, item, 0, 1, output, stats);
+            return;
+
+        case OP_LINKARG_REG_INT:
+            flow_storage_link_argument(graph, item, node_index, output, stats);
+            return;
+
+        case OP_LINKATTR_REG_REG_REG:
+        case OP_LINKATTR_REG_REG_INT:
+        case OP_LINKATTR1_REG_REG_REG:
+        case OP_LINKATTR1_REG_REG_INT:
+        case OP_LINKREF_REG_REG:
+            /* The normal edge completed the link. Signal skip/retry carry a
+             * separately modelled pre-link state. */
+            flow_storage_define_throwing_site(graph, item, node_index, 0, 0,
+                                              output, stats);
+            return;
+
+        case OP_LINKARG_REG_REG_INT:
+        case OP_METALINKPREG_REG_REG:
+            flow_storage_define_site(graph, item, node_index, 0, 0,
+                                     output, stats);
+            return;
+
+        case OP_SETLINKATTR1_REG_REG_INT_REG:
+        case OP_SETLINKATTR1_REG_REG_INT_REG_INT:
+        case OP_MINLINKATTR1_REG_REG_INT:
+        case OP_MINLINKATTR1_REG_REG_REG_INT:
+        case OP_SETLINKILOAD_REG_REG_INT_REG_REG_INT:
+            flow_storage_forget_nonbase(output, graph->register_count);
+            flow_storage_define_throwing_site(graph, item, node_index, 0, 0,
+                                              output, stats);
+            return;
+
+        case OP_LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT:
+            /* On the normal edge op1 names the selected outer attribute and
+             * op5 the selected nested attribute. Partial signal states are
+             * handled separately below. */
+            flow_storage_forget_nonbase(output, graph->register_count);
+            flow_storage_define_throwing_site(graph, item, node_index, 0, 0,
+                                              output, stats);
+            flow_storage_define_throwing_site(graph, item, node_index, 4, 1,
+                                              output, stats);
+            return;
+
+        case OP_SWAP_REG_REG:
+            flow_storage_swap_operands(graph, item, 0, 1, output, stats);
+            return;
+        case OP_SWAPN_REG_REG_REG_REG:
+            flow_storage_swap_operands(graph, item, 0, 1, output, stats);
+            flow_storage_swap_operands(graph, item, 2, 3, output, stats);
+            return;
+        case OP_SWAPN_REG_REG_REG_REG_REG_REG:
+            flow_storage_swap_operands(graph, item, 0, 1, output, stats);
+            flow_storage_swap_operands(graph, item, 2, 3, output, stats);
+            flow_storage_swap_operands(graph, item, 4, 5, output, stats);
+            return;
+        case OP_SWAPN_REG_REG_REG_REG_REG_REG_REG_REG:
+            flow_storage_swap_operands(graph, item, 0, 1, output, stats);
+            flow_storage_swap_operands(graph, item, 2, 3, output, stats);
+            flow_storage_swap_operands(graph, item, 4, 5, output, stats);
+            flow_storage_swap_operands(graph, item, 6, 7, output, stats);
+            return;
+        case OP_SETTPSWAP_REG_INT_REG:
+            flow_storage_swap_operands(graph, item, 0, 2, output, stats);
+            return;
+        case OP_LOADSETTPSWAP_REG_INT_REG_INT_REG:
+            flow_storage_swap_operands(graph, item, 2, 4, output, stats);
+            return;
+        case OP_SWAPSETTP_REG_REG_REG_INT:
+            flow_storage_swap_operands(graph, item, 0, 1, output, stats);
+            return;
+        case OP_SWAPSETTPSWAP_REG_REG_REG_INT_REG:
+            flow_storage_swap_operands(graph, item, 0, 1, output, stats);
+            flow_storage_swap_operands(graph, item, 2, 4, output, stats);
+            return;
+        case OP_SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG:
+            flow_storage_swap_operands(graph, item, 0, 2, output, stats);
+            flow_storage_swap_operands(graph, item, 3, 4, output, stats);
+            return;
+        case OP_SWAPCALL_REG_FUNC_REG_REG_REG:
+            flow_storage_swap_operands(graph, item, 3, 4, output, stats);
+            flow_storage_forget_nonbase(output, graph->register_count);
+            return;
+        case OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG:
+            flow_storage_swap_operands(graph, item, 3, 5, output, stats);
+            flow_storage_forget_nonbase(output, graph->register_count);
+            return;
+
+        case OP_UNLINK_REG:
+            flow_storage_unlink_operand(graph, item, 0, output, stats);
+            return;
+        case OP_UNLINKN_REG_REG:
+            flow_storage_unlink_operand(graph, item, 0, output, stats);
+            flow_storage_unlink_operand(graph, item, 1, output, stats);
+            return;
+        case OP_ISETUNLINK_REG_REG:
+        case OP_ILOADSETUNLINK_REG_INT:
+            flow_storage_unlink_operand(graph, item, 0, output, stats);
+            return;
+        case OP_IGETUNLINK_REG_REG:
+            flow_storage_unlink_operand(graph, item, 1, output, stats);
+            return;
+        case OP_ISETUNLINKN_REG_REG_REG:
+        case OP_ILOADSETUNLINKN_REG_INT_REG:
+            flow_storage_unlink_operand(graph, item, 0, output, stats);
+            flow_storage_unlink_operand(graph, item, 2, output, stats);
+            return;
+        case OP_UNLINKBR_REG_ID:
+            flow_storage_unlink_operand(graph, item, 0, output, stats);
+            return;
+        case OP_ILOADSETUNLINKN_REG_REG_INT_REG:
+            flow_storage_unlink_operand(graph, item, 1, output, stats);
+            flow_storage_unlink_operand(graph, item, 3, output, stats);
+            return;
+        default:
+            break;
+    }
+
+    /* Whole-value/attribute lifetime changes can invalidate storage selected
+     * by an earlier attribute/reference link.  Keep only a known destination
+     * storage itself; nested or unrelated dynamic link identities fail closed. */
+    if (node->op->opcode == OP_COPY_REG_REG ||
+        node->op->opcode == OP_ACOPY_REG_REG ||
+        node->op->opcode == OP_NULL_REG ||
+        (node->effects.semantics &
+         (RXOP_SEM_LIFETIME_END | RXOP_SEM_REFERENCE_RELEASE |
+          RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_CALL |
+          RXOP_SEM_DYNAMIC_CALL | RXOP_SEM_OPAQUE))) {
+        register_index = flow_storage_operand_register(graph, item, 0);
+        keep = register_index >= 0 ? output[register_index] : 0;
+        flow_storage_forget_nonbase_except(output, graph->register_count,
+                                           keep);
+    }
+
+    if (node->effects.semantics &
+        (RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE)) {
+        int changed_mapping;
+        changed_mapping = 0;
+        for (operand_index = 0; operand_index < item->operandCount;
+             operand_index++) {
+            if (!rxop_effect_writes_operand(&node->effects, operand_index))
+                continue;
+            register_index = flow_storage_operand_register(graph, item,
+                                                            operand_index);
+            if (register_index >= 0) output[register_index] = 0;
+            changed_mapping = 1;
+        }
+        if (changed_mapping && stats) stats->unsupported_mapping_ops++;
+    }
+}
+
+/* Mapping state at the point where a potentially throwing instruction raised
+ * a signal. This state feeds both SIGCALLA skip (the sequential successor) and
+ * retry (the instruction itself). Simple attribute/reference links validate
+ * before installing their destination, whereas fused forms may already have
+ * resized attribute storage or installed an earlier link. */
+static void flow_storage_transfer_signal(const flow_graph *graph,
+                                         size_t node_index,
+                                         const size_t *input,
+                                         size_t *output) {
+    flow_node *node;
+    instruction_queue *item;
+    size_t operand_index;
+    int register_index;
+
+    memcpy(output, input, graph->register_count * sizeof(*output));
+    item = &graph->items[node_index];
+    node = &graph->nodes[node_index];
+    if (item->instrType != OP_CODE || !node->op ||
+        node->effects.state != RXOP_EFFECT_CLASSIFIED) {
+        flow_storage_set_all_unknown(output, graph->register_count);
+        return;
+    }
+
+    switch (node->op->opcode) {
+        case OP_LINK_REG_REG:
+        case OP_LINKARG_REG_REG_INT:
+        case OP_METALINKPREG_REG_REG:
+        case OP_UNLINK_REG:
+        case OP_UNLINKN_REG_REG:
+        case OP_ISETUNLINK_REG_REG:
+        case OP_ILOADSETUNLINK_REG_INT:
+        case OP_IGETUNLINK_REG_REG:
+        case OP_ISETUNLINKN_REG_REG_REG:
+        case OP_ILOADSETUNLINKN_REG_INT_REG:
+        case OP_UNLINKBR_REG_ID:
+        case OP_ILOADSETUNLINKN_REG_REG_INT_REG:
+            /* These mapping instructions are conservatively tagged MAY_THROW
+             * in the shared effects inventory, but their VM bodies have no
+             * signal point. Preserve their completed mapping on the typed edge
+             * so the conservative edge inventory does not invent a failure
+             * state that the VM cannot produce. */
+            flow_storage_transfer_normal(graph, node_index, input, output, 0);
+            return;
+
+        case OP_LINKATTR_REG_REG_REG:
+        case OP_LINKATTR_REG_REG_INT:
+        case OP_LINKATTR1_REG_REG_REG:
+        case OP_LINKATTR1_REG_REG_INT:
+        case OP_LINKREF_REG_REG:
+            /* Validation signals before changing the destination mapping. */
+            return;
+
+        case OP_SETLINKATTR1_REG_REG_INT_REG:
+        case OP_SETLINKATTR1_REG_REG_INT_REG_INT:
+        case OP_MINLINKATTR1_REG_REG_INT:
+        case OP_MINLINKATTR1_REG_REG_REG_INT:
+        case OP_SETLINKILOAD_REG_REG_INT_REG_REG_INT:
+            /* Attribute storage may already have been resized, but the link
+             * destination is not installed until after the checked index. */
+            flow_storage_forget_nonbase(output, graph->register_count);
+            return;
+
+        case OP_LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT:
+            /* The first range check can signal before op1 is linked; later
+             * checks can signal after op1 is linked and attributes resized.
+             * Meet those partial states by forgetting op1 and all dynamic
+             * attribute/reference identities. op5 is never linked on failure. */
+            flow_storage_forget_nonbase(output, graph->register_count);
+            register_index = flow_storage_operand_register(graph, item, 0);
+            if (register_index >= 0) output[register_index] = 0;
+            return;
+
+        case OP_SWAPCALL_REG_FUNC_REG_REG_REG:
+            flow_storage_swap_operands(graph, item, 3, 4, output, 0);
+            flow_storage_forget_nonbase(output, graph->register_count);
+            return;
+
+        case OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG:
+            flow_storage_swap_operands(graph, item, 3, 5, output, 0);
+            flow_storage_forget_nonbase(output, graph->register_count);
+            return;
+
+        default:
+            break;
+    }
+
+    if (node->effects.semantics &
+        (RXOP_SEM_LIFETIME_END | RXOP_SEM_REFERENCE_RELEASE |
+         RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_CALL |
+         RXOP_SEM_DYNAMIC_CALL | RXOP_SEM_OPAQUE))
+        flow_storage_forget_nonbase(output, graph->register_count);
+
+    if (node->effects.semantics &
+        (RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE)) {
+        for (operand_index = 0; operand_index < item->operandCount;
+             operand_index++) {
+            if (!rxop_effect_writes_operand(&node->effects, operand_index))
+                continue;
+            register_index = flow_storage_operand_register(graph, item,
+                                                            operand_index);
+            if (register_index >= 0) output[register_index] = 0;
+        }
+    }
+}
+
+static int flow_storage_merge(size_t *destination, const size_t *source,
+                              size_t width) {
+    size_t index;
+    int changed;
+    changed = 0;
+    for (index = 0; index < width; index++) {
+        if (destination[index] && destination[index] != source[index]) {
+            destination[index] = 0;
+            changed = 1;
+        }
+    }
+    return changed;
+}
+
+static void flow_storage_enqueue(flow_storage_analysis *analysis, size_t node,
+                                 size_t *tail) {
+    if (analysis->queued[node]) return;
+    analysis->queue[*tail] = node;
+    *tail = (*tail + 1) % analysis->queue_capacity;
+    analysis->queued[node] = 1;
+}
+
+static int flow_storage_analyse(const flow_graph *graph,
+                                flow_storage_analysis *analysis) {
+    size_t cells;
+    size_t width;
+    size_t index;
+    size_t successor_index;
+    size_t successor;
+    size_t head;
+    size_t tail;
+    size_t node_index;
+    size_t *input;
+    size_t *successor_input;
+    size_t *normal_output;
+    size_t *signal_output;
+    size_t *edge_output;
+    flow_edge edge;
+
+    memset(analysis, 0, sizeof(*analysis));
+    analysis->graph = graph;
+    width = graph->register_count;
+    if (!graph->item_count || !width || !graph->complete_control_flow)
+        return 0;
+    if (graph->item_count > FLOW_MAX_STORAGE_IDENTITY_CELLS / width)
+        return 0;
+    cells = graph->item_count * width;
+    analysis->in = calloc(cells, sizeof(*analysis->in));
+    analysis->has_in = calloc(graph->item_count, 1);
+    analysis->queued = calloc(graph->item_count, 1);
+    analysis->queue_capacity = graph->item_count + 1;
+    analysis->queue = calloc(analysis->queue_capacity,
+                             sizeof(*analysis->queue));
+    normal_output = calloc(width, sizeof(*normal_output));
+    signal_output = calloc(width, sizeof(*signal_output));
+    edge_output = calloc(width, sizeof(*edge_output));
+    if (!analysis->in || !analysis->has_in || !analysis->queued ||
+        !analysis->queue || !normal_output || !signal_output || !edge_output)
+        RX_PANIC_OOM("calloc RXAS symbolic storage analysis",
+                     cells * sizeof(*analysis->in), 0);
+
+    input = analysis->in;
+    for (index = 0; index < width; index++)
+        input[index] = flow_storage_base_id((int)index);
+    analysis->has_in[0] = 1;
+    head = 0;
+    tail = 0;
+    flow_storage_enqueue(analysis, 0, &tail);
+
+    /* A registered same-frame handler may be entered after any executable
+     * instruction, including after a partially completed mapping operation.
+     * Its entry mapping is therefore unknown unless a future exceptional-edge
+     * model proves more. */
+    for (index = 0; index < graph->async_handler_target_count; index++) {
+        node_index = graph->async_handler_targets[index];
+        input = analysis->in + node_index * width;
+        flow_storage_set_all_unknown(input, width);
+        analysis->has_in[node_index] = 1;
+        flow_storage_enqueue(analysis, node_index, &tail);
+    }
+
+    while (head != tail) {
+        node_index = analysis->queue[head];
+        head = (head + 1) % analysis->queue_capacity;
+        analysis->queued[node_index] = 0;
+        input = analysis->in + node_index * width;
+        flow_storage_transfer_normal(graph, node_index, input, normal_output,
+                                     0);
+        flow_storage_transfer_signal(graph, node_index, input, signal_output);
+        for (successor_index = 0;
+             successor_index < graph->nodes[node_index].successor_count;
+             successor_index++) {
+            edge = graph->nodes[node_index].successors[successor_index];
+            successor = edge.target;
+            memcpy(edge_output,
+                   edge.kind == FLOW_EDGE_NORMAL ? normal_output : signal_output,
+                   width * sizeof(*edge_output));
+            /* A normal backedge can execute a static link site in a new loop
+             * iteration, so its dynamic identity cannot be reused. A signal
+             * retry instead resumes the same interrupted execution context and
+             * must retain the exact signal-point mapping. */
+            if (edge.kind == FLOW_EDGE_NORMAL && successor <= node_index)
+                flow_storage_forget_nonbase(edge_output, width);
+            successor_input = analysis->in + successor * width;
+            if (!analysis->has_in[successor]) {
+                memcpy(successor_input, edge_output,
+                       width * sizeof(*successor_input));
+                analysis->has_in[successor] = 1;
+                flow_storage_enqueue(analysis, successor, &tail);
+            }
+            else if (flow_storage_merge(successor_input, edge_output, width))
+                flow_storage_enqueue(analysis, successor, &tail);
+        }
+    }
+
+    free(normal_output);
+    free(signal_output);
+    free(edge_output);
+    return 1;
+}
+
+static int flow_storage_attach(flow_graph *graph) {
+    if (graph->storage) return 1;
+    graph->storage = calloc(1, sizeof(*graph->storage));
+    if (!graph->storage)
+        RX_PANIC_OOM("calloc RXAS graph storage service",
+                     sizeof(*graph->storage), 0);
+    if (flow_storage_analyse(graph, graph->storage)) return 1;
+    free(graph->storage);
+    graph->storage = 0;
+    return 0;
+}
+
+static void flow_storage_free(flow_storage_analysis *analysis) {
+    free(analysis->in);
+    free(analysis->has_in);
+    free(analysis->queued);
+    free(analysis->queue);
+    memset(analysis, 0, sizeof(*analysis));
+}
+
+static int flow_storage_state_equal(const size_t *left, const size_t *right,
+                                    size_t width) {
+    return memcmp(left, right, width * sizeof(*left)) == 0;
+}
+
+static int flow_storage_node_observes_permutation(const flow_graph *graph,
+                                                  size_t node_index,
+                                                  const size_t *checkpoint,
+                                                  const size_t *current) {
+    size_t register_index;
+    size_t view;
+    const flow_node *node;
+    const instruction_queue *item;
+    node = &graph->nodes[node_index];
+    item = &graph->items[node_index];
+    if (item->instrType == OP_CODE) {
+        if (!node->op || node->op->flow != FLOW_NEXT ||
+            node->effects.optimizer_barrier || node->effects.semantics != 0)
+            return 1;
+    }
+    for (register_index = 0; register_index < graph->register_count;
+         register_index++) {
+        if (checkpoint[register_index] == current[register_index]) continue;
+        for (view = 0; view < FLOW_VIEW_COUNT; view++) {
+            size_t bit;
+            bit = register_index * FLOW_VIEW_COUNT + view;
+            if (flow_test_bit(node->uses, bit) || flow_test_bit(node->kills, bit))
+                return 1;
+        }
+    }
+    return 0;
+}
+
+static void flow_storage_count_swap_round_trips(
+        const flow_graph *graph, const flow_storage_analysis *analysis,
+        flow_storage_stats *stats) {
+    size_t index;
+    size_t block;
+    size_t pending_instructions;
+    size_t *checkpoint;
+    size_t *current;
+    size_t *next;
+    flow_node *node;
+    instruction_queue *item;
+    int active;
+
+    checkpoint = calloc(graph->register_count, sizeof(*checkpoint));
+    current = calloc(graph->register_count, sizeof(*current));
+    next = calloc(graph->register_count, sizeof(*next));
+    if (!checkpoint || !current || !next)
+        RX_PANIC_OOM("calloc RXAS swap round-trip proof",
+                     graph->register_count * sizeof(*checkpoint) * 3, 0);
+    block = (size_t)-1;
+    pending_instructions = 0;
+    active = 0;
+    for (index = 0; index < graph->item_count; index++) {
+        node = &graph->nodes[index];
+        item = &graph->items[index];
+        if (!analysis->has_in[index]) continue;
+        if (node->block != block) {
+            block = node->block;
+            memcpy(current, analysis->in + index * graph->register_count,
+                   graph->register_count * sizeof(*current));
+            memcpy(checkpoint, current,
+                   graph->register_count * sizeof(*checkpoint));
+            pending_instructions = 0;
+            active = 0;
+        }
+        if (item->instrType == OP_CODE && node->op &&
+            flow_storage_is_pure_swap_opcode(node->op->opcode)) {
+            if (!active) {
+                memcpy(checkpoint, current,
+                       graph->register_count * sizeof(*checkpoint));
+                pending_instructions = 0;
+                active = 1;
+            }
+            flow_storage_transfer_normal(graph, index, current, next, 0);
+            memcpy(current, next, graph->register_count * sizeof(*current));
+            pending_instructions++;
+            if (pending_instructions >= 2 &&
+                flow_storage_state_equal(checkpoint, current,
+                                         graph->register_count)) {
+                stats->swap_round_trips++;
+                stats->round_trip_instructions += pending_instructions;
+                pending_instructions = 0;
+                active = 0;
+            }
+            continue;
+        }
+        if (active && flow_storage_node_observes_permutation(
+                              graph, index, checkpoint, current)) {
+            active = 0;
+            pending_instructions = 0;
+        }
+        flow_storage_transfer_normal(graph, index, current, next, 0);
+        memcpy(current, next, graph->register_count * sizeof(*current));
+        if (!active) memcpy(checkpoint, current,
+                            graph->register_count * sizeof(*checkpoint));
+    }
+    free(checkpoint);
+    free(current);
+    free(next);
+}
+
+static void flow_storage_collect_stats(const flow_graph *graph,
+                                       const flow_storage_analysis *analysis,
+                                       flow_storage_stats *stats) {
+    size_t index;
+    size_t register_index;
+    size_t predecessor_count;
+    size_t successor_index;
+    size_t *output;
+    size_t *input;
+    instruction_queue *item;
+    flow_node *node;
+    int destination;
+    int source;
+
+    memset(stats, 0, sizeof(*stats));
+    stats->signal_handler_entries = graph->async_handler_target_count;
+    output = calloc(graph->register_count, sizeof(*output));
+    if (!output)
+        RX_PANIC_OOM("calloc RXAS storage statistics",
+                     graph->register_count * sizeof(*output), 0);
+    for (index = 0; index < graph->item_count; index++) {
+        node = &graph->nodes[index];
+        if (!analysis->has_in[index]) continue;
+        input = analysis->in + index * graph->register_count;
+        stats->reachable_nodes++;
+        for (register_index = 0; register_index < graph->register_count;
+             register_index++) {
+            stats->state_cells++;
+            if (input[register_index]) {
+                stats->exact_cells++;
+                if (input[register_index] !=
+                    flow_storage_base_id((int)register_index))
+                    stats->aliased_cells++;
+            }
+            else stats->unknown_cells++;
+        }
+        predecessor_count = graph->predecessor_offsets[index + 1] -
+                            graph->predecessor_offsets[index];
+        if (predecessor_count > 1 || flow_is_async_handler_target(graph, index)) {
+            stats->join_nodes++;
+            for (register_index = 0; register_index < graph->register_count;
+                 register_index++)
+                if (!input[register_index]) stats->join_unknown_cells++;
+        }
+        for (successor_index = 0;
+             successor_index < node->successor_count;
+             successor_index++) {
+            flow_edge edge;
+            edge = node->successors[successor_index];
+            if (edge.kind == FLOW_EDGE_NORMAL) {
+                stats->normal_edges++;
+                if (edge.target <= index) stats->backward_edges++;
+            }
+            else if (edge.kind == FLOW_EDGE_SIGNAL_SKIP)
+                stats->signal_skip_edges++;
+            else if (edge.kind == FLOW_EDGE_SIGNAL_RETRY)
+                stats->signal_retry_edges++;
+        }
+
+        flow_storage_transfer_normal(graph, index, input, output, stats);
+        item = &graph->items[index];
+        if (item->instrType != OP_CODE || !node->op ||
+            node->op->opcode != OP_COPY_REG_REG) continue;
+        destination = flow_storage_operand_register(graph, item, 0);
+        source = flow_storage_operand_register(graph, item, 1);
+        if (destination < 0 || source < 0) continue;
+        stats->full_copies++;
+        if (input[destination] && input[source]) {
+            stats->exact_full_copies++;
+            if (input[destination] == flow_storage_base_id(destination) &&
+                input[source] == flow_storage_base_id(source))
+                stats->base_full_copies++;
+        }
+        if (input[destination] && input[destination] == input[source])
+            stats->alias_self_copies++;
+        if (!graph->tainted_registers[destination]) continue;
+        stats->tainted_full_copies++;
+        if (input[destination] && input[source]) {
+            stats->exact_tainted_full_copies++;
+            if (input[destination] == flow_storage_base_id(destination))
+                stats->base_destination_tainted_full_copies++;
+        }
+    }
+    flow_storage_count_swap_round_trips(graph, analysis, stats);
+    free(output);
+}
+
+static void flow_debug_storage_identity(const flow_graph *graph) {
+    flow_storage_stats stats;
+    size_t cells;
+    if (!graph->context->debug_mode) return;
+    if (!graph->complete_control_flow || !graph->register_count ||
+        graph->item_count >
+            FLOW_MAX_STORAGE_IDENTITY_CELLS / graph->register_count) {
+        cells = graph->register_count &&
+                graph->item_count <= (size_t)-1 / graph->register_count
+                ? graph->item_count * graph->register_count : (size_t)-1;
+        fprintf(stderr,
+                "NR27 identity procedure=%s status=skipped reason=%s "
+                "cells=%llu limit=%llu\n",
+                graph->context->current_proc_name
+                        ? graph->context->current_proc_name : "(directives)",
+                !graph->complete_control_flow ? "incomplete-control-flow" :
+                                                "analysis-bound",
+                (unsigned long long)cells,
+                (unsigned long long)FLOW_MAX_STORAGE_IDENTITY_CELLS);
+        return;
+    }
+    if (!graph->storage) return;
+    flow_storage_collect_stats(graph, graph->storage, &stats);
+    fprintf(stderr,
+            "NR27 identity procedure=%s status=complete nodes=%llu cells=%llu "
+            "exact=%llu unknown=%llu aliased=%llu links=%llu/%llu "
+            "success-only-links=%llu "
+            "swaps=%llu/%llu unlinks=%llu joins=%llu join-unknown=%llu "
+            "backedges=%llu unsupported=%llu full-copy=%llu "
+            "full-copy-exact=%llu full-copy-base=%llu "
+            "tainted-full=%llu tainted-full-exact=%llu "
+            "tainted-full-base=%llu alias-self-copy=%llu "
+            "swap-roundtrip=%llu roundtrip-instructions=%llu "
+            "edges=%llu/%llu/%llu handler-entries=%llu\n",
+            graph->context->current_proc_name
+                    ? graph->context->current_proc_name : "(directives)",
+            (unsigned long long)stats.reachable_nodes,
+            (unsigned long long)stats.state_cells,
+            (unsigned long long)stats.exact_cells,
+            (unsigned long long)stats.unknown_cells,
+            (unsigned long long)stats.aliased_cells,
+            (unsigned long long)stats.exact_links,
+            (unsigned long long)stats.unknown_links,
+            (unsigned long long)stats.success_only_links,
+            (unsigned long long)stats.exact_swap_pairs,
+            (unsigned long long)stats.unknown_swap_pairs,
+            (unsigned long long)stats.unlink_transfers,
+            (unsigned long long)stats.join_nodes,
+            (unsigned long long)stats.join_unknown_cells,
+            (unsigned long long)stats.backward_edges,
+            (unsigned long long)stats.unsupported_mapping_ops,
+            (unsigned long long)stats.full_copies,
+            (unsigned long long)stats.exact_full_copies,
+            (unsigned long long)stats.base_full_copies,
+            (unsigned long long)stats.tainted_full_copies,
+            (unsigned long long)stats.exact_tainted_full_copies,
+            (unsigned long long)stats.base_destination_tainted_full_copies,
+            (unsigned long long)stats.alias_self_copies,
+            (unsigned long long)stats.swap_round_trips,
+            (unsigned long long)stats.round_trip_instructions,
+            (unsigned long long)stats.normal_edges,
+            (unsigned long long)stats.signal_skip_edges,
+            (unsigned long long)stats.signal_retry_edges,
+            (unsigned long long)stats.signal_handler_entries);
 }
 
 static int flow_is_async_handler_target(const flow_graph *graph, size_t node_index) {
@@ -1910,6 +2859,8 @@ void rxas_flow_optimise(Assembler_Context *context,
 
     flow_build_graph(&graph, context, items, item_count);
     after_instructions = flow_instruction_count(items, item_count);
+    flow_storage_attach(&graph);
+    flow_debug_storage_identity(&graph);
     flow_debug_summary(&graph, &stats, before_instructions, after_instructions);
     flow_free_graph(&graph);
 }

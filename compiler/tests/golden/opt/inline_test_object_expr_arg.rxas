@@ -40,7 +40,7 @@ l78bexprend:
    .srcstep 9 9 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"
    ret 0
 
-renameBox() .locals=6
+renameBox() .locals=4
    .meta "inline_test_object_expr_arg.renamebox"="b" ".string" renameBox() "box=.box"
    .srcstep 20 20 17 "inline_test_object_expr_arg.crexx" 7 1 31 "renameBox: procedure = .string"
    numsci 18,1,1
@@ -49,30 +49,27 @@ renameBox() .locals=6
    .srcstep 15 15 17 "inline_test_object_expr_arg.crexx" 9 3 30 "  call box.setName(\"changed\")"
    .srcstep 12 12 33 "inline_test_object_expr_arg.crexx" 9 8 11 "  call box.setName(\"changed\")"
    .traceevent "V" 6 "R" "O" "a" 1 12 12 0 "box" ""
-   copy r1,a1
-   .traceevent "A" 6 "R" "O" "r" 1 12 12 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "a" 1 12 12 0 "§this" ""
    .srcstep 13 13 17 "inline_test_object_expr_arg.crexx" 26 5 17 "    name = value"
-   load r3,"changed"
-   .traceevent "L" 4 "R" "S" "r" 3 13 13 0 "" ""
-   linkattr1 r2,r1,1
-   scopy r2,r3
-   unlink r2
+   load r2,"changed"
+   .traceevent "L" 4 "R" "S" "r" 2 13 13 0 "" ""
+   linkattr1 r1,a1,1
+   scopy r1,r2
+   unlink r1
    .srcstep 14 14 6 "inline_test_object_expr_arg.crexx" 9 8 30 "  call box.setName(\"changed\")"
-   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "§this" ""
-   copy a1,r1
+   .traceevent "V" 6 "R" "O" "a" 1 0 0 0 "§this" ""
    .srcstep 19 19 17 "inline_test_object_expr_arg.crexx" 10 3 21 "  return box.getName()"
    .srcstep 18 18 17 "inline_test_object_expr_arg.crexx" 10 10 13 "  return box.getName()"
    .srcstep 16 16 33 "inline_test_object_expr_arg.crexx" 10 10 13 "  return box.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 16 16 0 "box" ""
-   copy r4,a1
-   .traceevent "A" 6 "R" "O" "r" 4 16 16 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "a" 1 16 16 0 "§this" ""
    .srcstep 17 17 17 "inline_test_object_expr_arg.crexx" 30 5 16 "    return name"
-   linkattr1 r2,r4,1
-   .traceevent "V" 6 "R" "S" "r" 2 19 19 0 "name" ""
-   scopy r5,r2
-   unlinkbr r2,l137bexprend
+   linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "S" "r" 1 19 19 0 "name" ""
+   scopy r3,r1
+   unlinkbr r1,l137bexprend
 l137bexprend:
-   ret r5
+   ret r3
    .meta "inline_test_object_expr_arg.renamebox.box"
 
 §inline_test_object_expr_arg.box.§factory() .locals=3

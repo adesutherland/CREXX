@@ -120,6 +120,7 @@ crexx_add_rxas_optimizer_check(whole_procedure_panel whole_procedure_panel.rxas 
 crexx_add_rxas_optimizer_check(whole_procedure_panel_noopt whole_procedure_panel.rxas whole_procedure_panel_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(nr18_flow_harvest nr18_flow_harvest.rxas nr18_flow_harvest)
 crexx_add_rxas_optimizer_check(nr18_flow_harvest_noopt nr18_flow_harvest.rxas nr18_flow_harvest_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(storage_identity_flow storage_identity_flow.rxas storage_identity_flow RXAS_FLAGS -d)
 
 add_custom_target(whole_procedure_runtime ALL)
 foreach(_nr27_runner IN ITEMS rxvm rxbvm)
@@ -152,6 +153,24 @@ foreach(_nr18_runner IN ITEMS rxvm rxbvm)
     foreach(_nr18_mode IN ITEMS noopt opt)
         set_tests_properties(nr18_flow_runtime_${_nr18_runner}_${_nr18_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "PASS: NR-18 flow runtime"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(storage_identity_runtime ALL)
+foreach(_c2e2_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME storage_identity_runtime_${_c2e2_runner}
+            SOURCE ${RXAS_OPTIMIZER_DIR}/storage_identity_runtime
+            TARGET_GROUP storage_identity_runtime
+            RUNNER ${_c2e2_runner}
+            DEPENDS ${RXAS_OPTIMIZER_DIR}/storage_identity_runtime.rxas rxas ${_c2e2_runner} rxlink
+            TEST_LABELS "rxas;optimizer;runtime"
+    )
+    foreach(_c2e2_mode IN ITEMS noopt opt)
+        set_tests_properties(storage_identity_runtime_${_c2e2_runner}_${_c2e2_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: C2-E2 storage identity runtime"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

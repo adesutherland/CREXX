@@ -1,0 +1,38 @@
+diff --git a/assembler/rxas_flow.c b/assembler/rxas_flow.c
+index 89f60f172..dd02ce23d 100644
+--- a/assembler/rxas_flow.c
++++ b/assembler/rxas_flow.c
+@@ -1271,13 +1271,6 @@ static size_t flow_propagate_one_copy(flow_graph *graph, size_t copy_index,
+         else stats->typed_copies_removed++;
+         return 1;
+     }
+-    if (full_copy) {
+-        flow_debug_copy_rejection(graph, copy_index, copy_index,
+-                                  "full-value-ownership-unproved",
+-                                  FLOW_ALL_VIEWS, FLOW_ALL_VIEWS);
+-        stats->rejected_effect++;
+-        return 0;
+-    }
+     if (graph->tainted_registers[destination_register]) {
+         stats->rejected_tainted++;
+         return 0;
+@@ -1427,7 +1420,8 @@ static size_t flow_propagate_one_copy(flow_graph *graph, size_t copy_index,
+          * rewrite, preserving the fixed-point termination measure. */
+         flow_debug_accept(graph, copy_index, "all-uses-redirected", redirects);
+         copy->instrType = EMPTY;
+-        stats->typed_copies_removed++;
++        if (full_copy) stats->full_copies_removed++;
++        else stats->typed_copies_removed++;
+         stats->compare_preparations_removed += compare_redirects;
+         return 1;
+     }
+@@ -1435,7 +1429,8 @@ static size_t flow_propagate_one_copy(flow_graph *graph, size_t copy_index,
+     if (flow_destination_dead(graph, copy_index, destination_register, views)) {
+         flow_debug_accept(graph, copy_index, "copied-view-dead", 0);
+         copy->instrType = EMPTY;
+-        stats->typed_copies_removed++;
++        if (full_copy) stats->full_copies_removed++;
++        else stats->typed_copies_removed++;
+         stats->compare_preparations_removed += compare_redirects;
+         return 1;
+     }

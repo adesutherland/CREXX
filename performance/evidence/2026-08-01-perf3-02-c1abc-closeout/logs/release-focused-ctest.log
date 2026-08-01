@@ -1,0 +1,37 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/11 Test    #1: linked_opt_runtime_artifacts_build .................   Passed   67.66 sec
+      Start   28: rxc_inline_byvalue_arg_reuse
+      Start 1819: benchmark_awfy_towers_opt
+      Start 1818: benchmark_awfy_towers_noopt
+      Start  575: inline_receiver_detached_guard_opt
+      Start  560: inline_receiver_summary_fallback_binary_opt
+      Start  574: inline_receiver_nested_this_direct_placement_opt
+      Start  577: inline_receiver_reference_alias_opt
+      Start 1827: benchmark_awfy_richards_opt
+      Start 1826: benchmark_awfy_richards_noopt
+      Start  576: inline_receiver_production_ladder_opt
+ 2/11 Test #1826: benchmark_awfy_richards_noopt ......................   Passed    0.07 sec
+ 3/11 Test #1818: benchmark_awfy_towers_noopt ........................   Passed    0.07 sec
+ 4/11 Test #1819: benchmark_awfy_towers_opt ..........................   Passed    0.09 sec
+ 5/11 Test   #28: rxc_inline_byvalue_arg_reuse .......................   Passed    0.23 sec
+ 6/11 Test  #577: inline_receiver_reference_alias_opt ................   Passed    0.23 sec
+ 7/11 Test  #574: inline_receiver_nested_this_direct_placement_opt ...   Passed    0.27 sec
+ 8/11 Test #1827: benchmark_awfy_richards_opt ........................   Passed    0.27 sec
+ 9/11 Test  #560: inline_receiver_summary_fallback_binary_opt ........   Passed    0.40 sec
+10/11 Test  #576: inline_receiver_production_ladder_opt ..............   Passed    0.43 sec
+11/11 Test  #575: inline_receiver_detached_guard_opt .................   Passed    0.58 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Label Time Summary:
+benchmark     =   0.50 sec*proc (4 tests)
+compiler      =   0.23 sec*proc (1 test)
+language      =   0.50 sec*proc (4 tests)
+linked_opt    =   2.27 sec*proc (7 tests)
+receiver      =   1.28 sec*proc (3 tests)
+reference     =   0.23 sec*proc (1 test)
+registers     =   0.23 sec*proc (1 test)
+smoke         =   0.36 sec*proc (2 tests)
+
+Total Test time (real) =  68.27 sec

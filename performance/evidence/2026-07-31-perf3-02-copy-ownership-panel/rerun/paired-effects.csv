@@ -1,0 +1,9 @@
+workload,vm,candidate,role,n,min_percent,q1_percent,median_percent,q3_percent,max_percent,favorable_count,mean_percent,mean_ci95_low_percent,mean_ci95_high_percent,disposition
+Richards,rxvm,c1a-r2,target,22,-12.305547,-9.634331,-9.178933,-8.607986,-6.984756,22,-9.214733,-9.737600,-8.691865,decisive-favorable
+Richards,rxbvm,c1a-r2,target,22,-12.405531,-9.832621,-9.330797,-8.693035,-5.300598,22,-9.233264,-9.935024,-8.531503,decisive-favorable
+Richards,rxvm,c1c-r1,guard,36,-3.209310,-0.948735,-0.163078,0.647085,2.895510,20,-0.151387,-0.631229,0.328456,guard-pass-noisy-zero-crossing-at-cap
+Richards,rxbvm,c1c-r1,guard,36,-3.323829,-0.549402,0.139125,1.223796,4.029860,15,0.278515,-0.278730,0.835759,guard-pass-noisy-zero-crossing-at-cap
+Towers,rxvm,c1c-r1,target,22,-20.745146,-19.999735,-19.424614,-19.254023,-12.147722,22,-19.009978,-19.962310,-18.057646,decisive-favorable
+Towers,rxbvm,c1c-r1,target,12,-23.199180,-19.888224,-19.645181,-18.999936,-15.858739,12,-19.664241,-20.777014,-18.551468,decisive-favorable
+Towers,rxvm,c1a-r2,guard,36,-8.171515,-0.560284,0.122903,0.688902,5.515576,18,-0.136765,-0.856389,0.582858,guard-pass-noisy-zero-crossing-at-cap
+Towers,rxbvm,c1a-r2,guard,36,-6.163523,-0.181667,0.017574,0.327357,1.965239,18,-0.246117,-0.713851,0.221617,guard-pass-noisy-zero-crossing-at-cap

@@ -1,0 +1,16 @@
+utc=2026-07-31T14:43:43Z
+local=2026-07-31T15:43:43+0100
+host=Darwin Adrians-MacBook-Air.local 25.5.0 arm64
+cpu=Apple M5
+physical_cpus=10
+logical_cpus=10
+memory_bytes=25769803776
+power=AC attached; battery 80%; not charging
+low_power_mode_ac=0
+thermal_warning=none recorded
+performance_warning=none recorded
+uptime_load=up 17 days 8:51; load averages 2.54 3.11 3.08
+overlapping_build_test_benchmark_processes=none
+sampling=serial rotated by workload; one warmup plus 12 recorded rounds
+target=Richards 20 repetitions
+guard=Towers 100 repetitions; candidate main RXAS/RXBIN byte-identical to C0

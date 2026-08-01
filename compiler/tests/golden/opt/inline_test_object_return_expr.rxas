@@ -71,7 +71,7 @@ l86bexprend:
    .srcstep 19 19 17 "inline_test_object_return_expr.crexx" 8 3 11 "  return 0"
    ret 0
 
-describeBox() .locals=4
+describeBox() .locals=3
    .meta "inline_test_object_return_expr.describebox"="b" ".string" describeBox() "value=.box"
    .srcstep 34 34 17 "inline_test_object_return_expr.crexx" 15 1 33 "describeBox: procedure = .string"
    numsci 18,1,1
@@ -81,15 +81,14 @@ describeBox() .locals=4
    .srcstep 32 32 17 "inline_test_object_return_expr.crexx" 17 10 15 "  return value.getName()"
    .srcstep 30 30 33 "inline_test_object_return_expr.crexx" 17 10 15 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 30 30 0 "value" ""
-   copy r1,a1
-   .traceevent "A" 6 "R" "O" "r" 1 30 30 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "a" 1 30 30 0 "§this" ""
    .srcstep 31 31 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
-   linkattr1 r2,r1,1
-   .traceevent "V" 6 "R" "S" "r" 2 33 33 0 "name" ""
-   scopy r3,r2
-   unlinkbr r2,l115bexprend
+   linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "S" "r" 1 33 33 0 "name" ""
+   scopy r2,r1
+   unlinkbr r1,l115bexprend
 l115bexprend:
-   ret r3
+   ret r2
    .meta "inline_test_object_return_expr.describebox.value"
 
 §inline_test_object_return_expr.box.§factory() .locals=3
