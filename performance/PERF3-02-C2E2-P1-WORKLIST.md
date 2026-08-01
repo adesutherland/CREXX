@@ -1,7 +1,7 @@
 # PERF3-02-C2E2-P1 core storage identity and signal continuations
 
-Status: **locked and accepted — P1A assembler-cost rework queued; no RXAS
-rewrite consumer selected**
+Status: **locked and accepted — P1A complete; no RXAS rewrite consumer
+selected**
 
 Approved: 2026-07-31
 
@@ -98,8 +98,9 @@ a time, with emitted-image diffs and the mandatory Release gate.
 - [x] Preserve handler targets as explicit conservative continuation entries.
 - [x] Split normal and signal-point mapping transfers, including fused partial
       mapping operations.
-- [x] Attach the bounded storage result to the final flow graph in ordinary
-      and debug builds; diagnostics read the same result.
+- [x] Retain the bounded graph-owned storage service and attach it on demand.
+      The debug identity report is its current consumer; a selected rewrite
+      consumer must attach the same complete service before querying it.
 
 ### Stage C — proof
 
@@ -118,7 +119,10 @@ a time, with emitted-image diffs and the mandatory Release gate.
       focused fixture, Richards and Towers.
 - [x] Measure bounded Release assembly overhead against the preserved baseline;
       this is assembler infrastructure, not a runtime benchmark claim.
-- [ ] Publish separate checksum-closed P1 evidence before final closeout.
+- [x] Publish separate checksum-closed P1 evidence before final closeout. The
+      three-way P1A verdict retains pre-P1, locked-P1 and candidate raw samples,
+      identities and exact diagnostic equivalence in
+      [`2026-08-01-perf3-02-c2e2-p1a-first-release-verdict`](evidence/2026-08-01-perf3-02-c2e2-p1a-first-release-verdict/).
 
 The first verdict found byte-identical output and a bounded assembly-time cost:
 Richards `+5.3%` median and Towers `+0.5%` median (`+2.0%` mean), over 30
@@ -130,3 +134,9 @@ before implementation because Richards and Towers contain no residual round
 trip. C1abc is a compiler-owned recommendation and does not make an RXAS
 storage consumer safe: no rewrite consumer or tactical-rule deletion is yet
 selected.
+
+P1A subsequently retained demand-driven A1 and rejected feature-gated A3 after
+the governed same-session rework panel. Accepted closeout reproduces the A1
+Release binary exactly and passes 24/24 focused plus 1,972/1,972 broad Debug
+tests. The P1 typed-continuation/storage infrastructure remains locked; only
+dead ordinary storage attachment was removed.

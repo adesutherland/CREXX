@@ -1,0 +1,8 @@
+float	c_locale_copy_long	n=12	median_ns_call=184.048	min=181.756	max=185.456
+float	c_locale_copy_short	n=12	median_ns_call=16.715	min=15.315	max=17.798
+float	current_long	n=12	median_ns_call=183.988	min=182.696	max=186.316
+float	current_short	n=12	median_ns_call=17.004	min=15.900	max=17.979
+float	from_chars_long	n=12	median_ns_call=3457.100	min=3450.860	max=3473.000
+float	from_chars_short	n=12	median_ns_call=20.117	min=18.866	max=21.525
+int	bounded	n=12	median_ns_call=5.291	min=5.233	max=5.445
+int	current	n=12	median_ns_call=27.358	min=26.435	max=31.982

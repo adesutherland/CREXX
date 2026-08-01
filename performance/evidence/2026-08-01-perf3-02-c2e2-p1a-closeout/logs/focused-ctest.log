@@ -1,0 +1,59 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/24 Test    #1: linked_opt_runtime_artifacts_build ...................   Passed  165.11 sec
+      Start 1795: storage_identity_runtime_rxbvm_opt
+      Start 1779: rxas_optimizer_whole_procedure_panel
+      Start 1794: storage_identity_runtime_rxbvm_noopt
+      Start 1793: storage_identity_runtime_rxvm_opt
+      Start 1781: rxas_optimizer_nr18_flow_harvest
+      Start 1777: rxas_optimizer_whole_procedure_flow
+      Start 1780: rxas_optimizer_whole_procedure_panel_noopt
+      Start 1782: rxas_optimizer_nr18_flow_harvest_noopt
+      Start 1778: rxas_optimizer_whole_procedure_flow_noopt
+      Start 1774: rxas_optimizer_nr09_class1
+ 2/24 Test #1794: storage_identity_runtime_rxbvm_noopt .................   Passed    0.00 sec
+      Start 1776: rxas_optimizer_nr09_class1_boundaries
+ 3/24 Test #1782: rxas_optimizer_nr18_flow_harvest_noopt ...............   Passed    0.01 sec
+      Start 1775: rxas_optimizer_nr09_class1_noopt
+ 4/24 Test #1778: rxas_optimizer_whole_procedure_flow_noopt ............   Passed    0.01 sec
+      Start 1792: storage_identity_runtime_rxvm_noopt
+ 5/24 Test #1793: storage_identity_runtime_rxvm_opt ....................   Passed    0.02 sec
+      Start 1783: rxas_optimizer_storage_identity_flow
+ 6/24 Test #1781: rxas_optimizer_nr18_flow_harvest .....................   Passed    0.02 sec
+ 7/24 Test #1777: rxas_optimizer_whole_procedure_flow ..................   Passed    0.02 sec
+      Start 1754: rxas_optimizer_duplicate_link_read_trace_unrelated
+      Start 1756: rxas_optimizer_duplicate_linkattr_read
+ 8/24 Test #1774: rxas_optimizer_nr09_class1 ...........................   Passed    0.02 sec
+      Start 1758: rxas_optimizer_duplicate_linkattr_different
+ 9/24 Test #1795: storage_identity_runtime_rxbvm_opt ...................   Passed    0.02 sec
+10/24 Test #1780: rxas_optimizer_whole_procedure_panel_noopt ...........   Passed    0.02 sec
+      Start 1751: rxas_optimizer_duplicate_link_read_meta_relevant
+      Start 1757: rxas_optimizer_duplicate_linkattr_read_bcopy
+11/24 Test #1792: storage_identity_runtime_rxvm_noopt ..................   Passed    0.01 sec
+12/24 Test #1776: rxas_optimizer_nr09_class1_boundaries ................   Passed    0.02 sec
+      Start 1755: rxas_optimizer_duplicate_link_read_bcopy
+      Start 1750: rxas_optimizer_duplicate_link_read
+13/24 Test #1779: rxas_optimizer_whole_procedure_panel .................   Passed    0.03 sec
+      Start 1753: rxas_optimizer_duplicate_link_read_trace_relevant
+14/24 Test #1775: rxas_optimizer_nr09_class1_noopt .....................   Passed    0.01 sec
+      Start 1752: rxas_optimizer_duplicate_link_read_meta_unrelated
+15/24 Test #1754: rxas_optimizer_duplicate_link_read_trace_unrelated ...   Passed    0.01 sec
+16/24 Test #1756: rxas_optimizer_duplicate_linkattr_read ...............   Passed    0.01 sec
+17/24 Test #1783: rxas_optimizer_storage_identity_flow .................   Passed    0.01 sec
+18/24 Test #1757: rxas_optimizer_duplicate_linkattr_read_bcopy .........   Passed    0.01 sec
+19/24 Test #1751: rxas_optimizer_duplicate_link_read_meta_relevant .....   Passed    0.01 sec
+20/24 Test #1755: rxas_optimizer_duplicate_link_read_bcopy .............   Passed    0.01 sec
+21/24 Test #1750: rxas_optimizer_duplicate_link_read ...................   Passed    0.01 sec
+22/24 Test #1758: rxas_optimizer_duplicate_linkattr_different ..........   Passed    0.02 sec
+23/24 Test #1752: rxas_optimizer_duplicate_link_read_meta_unrelated ....   Passed    0.01 sec
+24/24 Test #1753: rxas_optimizer_duplicate_link_read_trace_relevant ....   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Label Time Summary:
+linked_opt    =   0.04 sec*proc (2 tests)
+optimizer     =   0.32 sec*proc (23 tests)
+runtime       =   0.05 sec*proc (4 tests)
+rxas          =   0.32 sec*proc (23 tests)
+
+Total Test time (real) = 165.18 sec

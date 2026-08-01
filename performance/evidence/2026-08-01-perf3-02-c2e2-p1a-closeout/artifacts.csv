@@ -1,0 +1,5 @@
+artifact,sha256,bytes,role
+/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas,7289705511a5422a438506b9c92bcadc8319b2302915a464db681940e8fb5ea8,817096,closeout_debug_rxas
+/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxas,7cec2f1245da24cf24ffd37ec94faba0309dfc41f088d5b94c382522c0e9258d,596776,closeout_release_rxas
+/tmp/crexx-p1a-a3.yaiVu3/rxas-a1-locked,7cec2f1245da24cf24ffd37ec94faba0309dfc41f088d5b94c382522c0e9258d,596776,retained_a1_oracle
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-01-perf3-02-c2e2-p1a-closeout/source.diff,29e73b8eb0304450b5218fae4c42a5ee7f0be4b792a01d2b0018b8fa8ea3c76e,1057,retained_a1_source_diff

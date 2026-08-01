@@ -1,0 +1,39 @@
+utc=2026-08-01T12:31:23Z
+{ 1.44 1.28 1.24 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+20549 /bin/zsh -c perf3_tmp=$(cat /tmp/crexx-perf3-03-active-dir.txt)
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+} > "$perf3_tmp/prefilter3-append-post-state.txt" 2>&1
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --summary-only --measurement timing --manifest "$perf3_tmp/prefilter3-matrix-v1.txt" --output-dir "$perf3_tmp/prefilter3-timing-combined-22" --samples "$perf3_tmp/prefilter3-timing/samples.csv" --samples "$perf3_tmp/prefilter3-timing-append-01/samples.csv" > "$perf3_tmp/prefilter3-combined-runner.stdout.txt" 2> "$perf3_tmp/prefilter3-combined-runner.stderr.txt"
+python3 - <<'PY' "$perf3_tmp/prefilter3-timing/samples.csv" "$perf3_tmp/prefilter3-timing-append-01/samples.csv"
+import csv, math, statistics, sys
+from collections import defaultdict
+g=defaultdict(dict)
+for block,path in enumerate(sys.argv[1:]):
+  with open(path,newline='') as f:
+    for r in csv.DictReader(f):
+      if r['phase']!='recorded' or r['correctness']!='pass': continue
+      g[(r['workload'],r['vm'],block,int(r['round']))][r['variant']]=float(r['benchmark_metric'] or r['elapsed_ns'])
+def q7(xs,p):
+  xs=sorted(xs); h=(len(xs)-1)*p; lo=int(math.floor(h)); hi=int(math.ceil(h)); return xs[lo] if lo==hi else xs[lo]+(xs[hi]-xs[lo])*(h-lo)
+for workload,vm in sorted({(k[0],k[1]) for k in g}):
+  vals=[]
+  for (w,v,b,round_),d in sorted(g.items()):
+    if (w,v)!=(workload,vm): continue
+    c=d['C0-current']; p=d['C4-prefilter-v3']; vals.append((p/c-1)*100 if workload=='RexxCPS' else (c/p-1)*100)
+  n=len(vals); mean=statistics.mean(vals); sd=statistics.stdev(vals); crit={12:2.200985,22:2.079614}[n]; half=crit*sd/math.sqrt(n)
+  print(f'{workload},{vm},n={n},favorable={sum(x>0 for x in vals)},median={statistics.median(vals):.6f}%,q1={q7(vals,.25):.6f}%,q3={q7(vals,.75):.6f}%,mean={mean:.6f}%,ci95_mean=[{mean-half:.6f},{mean+half:.6f}],min={min(vals):.6f}%,max={max(vals):.6f}%')
+PY
+sed -n '1,180p' "$perf3_tmp/prefilter3-timing-combined-22/summary.csv"
+if test -s "$perf3_tmp/prefilter3-append-runner.stderr.txt"; then sed -n '1,60p' "$perf3_tmp/prefilter3-append-runner.stderr.txt"; else echo 'append runner.stderr: empty'; fi
+if test -s "$perf3_tmp/prefilter3-combined-runner.stderr.txt"; then sed -n '1,60p' "$perf3_tmp/prefilter3-combined-runner.stderr.txt"; else echo 'combined runner.stderr: empty'; fi
+sed -n '1,50p' "$perf3_tmp/prefilter3-append-post-state.txt"

@@ -1,0 +1,8 @@
+minimal_static_bytes=981808
+minimal_static_global_run_symbols:
+0000000100003fc4 T _run
+000000010009c078 T _rxvm_call
+000000010009be50 T _rxvm_create
+000000010009be88 T _rxvm_destroy
+000000010009c040 T _rxvm_prepare
+000000010009c710 T _rxvm_run

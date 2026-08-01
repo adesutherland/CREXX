@@ -1,0 +1,22 @@
+utc=2026-08-01T12:45:09Z
+{ 1.23 1.22 1.19 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+22333 /bin/zsh -c perf3_tmp=$(cat /tmp/crexx-perf3-03-active-dir.txt)
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+} > "$perf3_tmp/prefilter3-common-post-state.txt" 2>&1
+echo 'runner stdout:'
+sed -n '1,160p' "$perf3_tmp/prefilter3-common-runner.stdout.txt"
+echo 'runner stderr:'
+sed -n '1,160p' "$perf3_tmp/prefilter3-common-runner.stderr.txt"
+find "$perf3_tmp/prefilter3-common-timing" -maxdepth 1 -type f -print -exec sh -c 'echo FILE "$1"; sed -n "1,80p" "$1"' sh {} \;
+echo 'post-state:'
+sed -n '1,80p' "$perf3_tmp/prefilter3-common-post-state.txt"

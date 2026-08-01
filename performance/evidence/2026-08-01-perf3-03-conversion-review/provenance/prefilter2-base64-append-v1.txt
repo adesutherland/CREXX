@@ -1,0 +1,6 @@
+# PERF3-03 governed ten-pair absolute-noise append for C4 prefilter v2 Base64.
+crexx-cross-runtime-matrix|1
+base64-c0-rxvm|Base64|crexx|rxvm|C0-current|A|no|no|2500|PASS: Base64 Roundtrip||/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm;/tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin;-a;2500
+base64-prefilter2-rxvm|Base64|crexx|rxvm|C4-prefilter-v2|A|no|no|2500|PASS: Base64 Roundtrip||/tmp/crexx-perf3-03.TsP0ej/prefilter2-build/bin/rxvm;/tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin;-a;2500
+base64-c0-rxbvm|Base64|crexx|rxbvm|C0-current|A|no|no|2500|PASS: Base64 Roundtrip||/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm;/tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin;-a;2500
+base64-prefilter2-rxbvm|Base64|crexx|rxbvm|C4-prefilter-v2|A|no|no|2500|PASS: Base64 Roundtrip||/tmp/crexx-perf3-03.TsP0ej/prefilter2-build/bin/rxbvm;/tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin;-a;2500

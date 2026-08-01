@@ -1,0 +1,13 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+permute-c0-rxvm,Permute,crexx,rxvm,C0-current,A,yes,no,5000,normalized_work_per_second,12,2511.063747,2542.716982,2568.716948,2580.857730,2595.575582,16.779592,0.653229,3.290041,no
+permute-prefilter3-rxvm,Permute,crexx,rxvm,C4-prefilter-v3,A,yes,no,5000,normalized_work_per_second,12,2510.030080,2560.391673,2578.592467,2596.286355,2614.671655,19.443092,0.754020,4.058089,no
+permute-c0-rxbvm,Permute,crexx,rxbvm,C0-current,A,yes,no,5000,normalized_work_per_second,12,2182.076857,2191.595969,2195.140404,2202.561010,2223.483184,4.858181,0.221315,1.886272,no
+permute-prefilter3-rxbvm,Permute,crexx,rxbvm,C4-prefilter-v3,A,yes,no,5000,normalized_work_per_second,12,2119.393938,2173.859439,2183.843421,2198.242240,2208.377170,14.306258,0.655095,4.074616,no
+bounce-c0-rxvm,Bounce,crexx,rxvm,C0-current,A,yes,no,4200,normalized_work_per_second,12,3549.155808,3633.714657,3655.406784,3681.371711,3707.856241,21.824156,0.597038,4.341526,no
+bounce-prefilter3-rxvm,Bounce,crexx,rxvm,C4-prefilter-v3,A,yes,no,4200,normalized_work_per_second,12,3530.058448,3646.943103,3692.187189,3739.073830,3770.106111,49.897320,1.351430,6.501503,no
+bounce-c0-rxbvm,Bounce,crexx,rxbvm,C0-current,A,yes,no,4200,normalized_work_per_second,12,2712.172618,2754.523599,2793.441395,2804.224349,2862.536889,32.820119,1.174899,5.382761,no
+bounce-prefilter3-rxbvm,Bounce,crexx,rxbvm,C4-prefilter-v3,A,yes,no,4200,normalized_work_per_second,12,2706.768080,2767.553063,2786.564977,2816.325802,2869.860046,28.000555,1.004841,5.852796,no
+richards-c0-rxvm,Richards,crexx,rxvm,C0-current,A,yes,no,20,normalized_work_per_second,12,6.226421,6.300602,6.323048,6.372242,6.408476,0.045988,0.727312,2.879217,no
+richards-prefilter3-rxvm,Richards,crexx,rxvm,C4-prefilter-v3,A,yes,no,20,normalized_work_per_second,12,6.232360,6.305092,6.377344,6.394257,6.407223,0.018641,0.292304,2.741937,no
+richards-c0-rxbvm,Richards,crexx,rxbvm,C0-current,A,yes,no,20,normalized_work_per_second,12,6.139700,6.204938,6.232921,6.257073,6.285642,0.027097,0.434735,2.341459,no
+richards-prefilter3-rxbvm,Richards,crexx,rxbvm,C4-prefilter-v3,A,yes,no,20,normalized_work_per_second,12,6.129212,6.189227,6.244128,6.282749,6.296212,0.043117,0.690524,2.674510,no

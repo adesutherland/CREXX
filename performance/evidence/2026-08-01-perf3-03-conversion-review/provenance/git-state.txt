@@ -1,0 +1,19 @@
+head=4a3940395980dc40ea45917d71d99caa080e89bb
+branch=develop
+origin_develop=21fdcf529d0e51ea264bf0c92ccfbdc06dea8200
+ M assembler/rxas_flow.c
+ M performance/PERF3-02-C2E2-P1-WORKLIST.md
+ M performance/ROADMAP.md
+?? performance/PERF3-02-C2E2-P1A-WORKLIST.md
+?? performance/PERF3-03-WORKLIST.md
+?? performance/PERF3-05-WORKLIST.md
+?? performance/evidence/2026-07-15-nr-02-portfolio-expansion/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-20-nr-10-formal-baseline/lifecycle-decimal/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-23-nr-16-17-closeout/final-baseline/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-23-perf2-01-current-baseline/04-lifecycle-rss/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-27-perf2-06-07-selection-panel/raw/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-08-01-perf3-02-c2e2-p1a-a3-first-release-verdict/
+?? performance/evidence/2026-08-01-perf3-02-c2e2-p1a-closeout/
+?? performance/evidence/2026-08-01-perf3-02-c2e2-p1a-first-release-verdict/
+?? performance/evidence/2026-08-01-perf3-03-conversion-review/
+?? performance/evidence/2026-08-01-perf3-05-compiler-layout-panel/

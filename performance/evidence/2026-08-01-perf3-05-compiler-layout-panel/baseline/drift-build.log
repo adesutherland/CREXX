@@ -1,0 +1,63 @@
+[0/2] Re-checking globbed directories...
+[1/45] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[2/45] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[3/45] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[4/45] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[5/45] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[6/45] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[7/45] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[8/45] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[9/45] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[10/45] Linking C static library bin/librxvmref.a
+[11/45] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[12/45] Linking C static library bin/libplatform.a
+[13/45] Linking C static library bin/libavl_tree.a
+[14/45] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[15/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/interrupt.c.o
+[16/45] Linking C static library bin/librxvmplugin.a
+[17/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/exitfunc.c.o
+[18/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvml/rxvm_run.c.o
+[19/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmload.c.o
+[20/45] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[21/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxpafuncs.c.o
+[22/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[23/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxcrexxcmd.c.o
+[24/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[25/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxspawn.c.o
+[26/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[27/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[28/45] Building C object interpreter/CMakeFiles/rxvm.dir/rxvmmain.c.o
+[29/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[30/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[31/45] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[32/45] Linking C static library bin/librxpashim.a
+[33/45] Linking C static library bin/librxpa.a
+[34/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[35/45] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[36/45] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[37/45] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[38/45] Linking C static library bin/libdecnumber.a
+[39/45] Linking C static library bin/librxbin.a
+[40/45] Linking C static library bin/rxvm_mc_decimal_manual.a
+[41/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[42/45] Linking C executable bin/rxbvm
+[43/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmintp.c.o
+[44/45] Linking C executable bin/rxvm
+       35.41 real        71.85 user         1.00 sys
+           723664896  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              350517  page reclaims
+                6357  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                  43  signals received
+                 344  voluntary context switches
+                7529  involuntary context switches
+            55258725  instructions retired
+            18490792  cycles elapsed
+             2572696  peak memory footprint

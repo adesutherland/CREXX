@@ -1,0 +1,25 @@
+Test Suite: Logic and Flow Control
+PASS: IEQ
+PASS: INE
+PASS: IGT
+PASS: ILT
+PASS: SEQ
+PASS: SGT
+PASS: REQ numeric text
+PASS: RNE numeric text
+PASS: RGTE numeric text
+PASS: RGT string fallback
+PASS: RLT const string fallback
+PASS: RLTE const numeric text
+PASS: FEQ
+PASS: BR
+PASS: BRT
+PASS: BRF
+PASS: FGT+BRF
+PASS: BEQ
+PASS: BNE
+PASS: BGT
+PASS: BLT
+PASS: FGTBR
+PASS: FLTBR
+PASS: BCT

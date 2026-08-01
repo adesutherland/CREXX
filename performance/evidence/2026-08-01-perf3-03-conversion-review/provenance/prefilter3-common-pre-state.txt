@@ -1,0 +1,26 @@
+utc=2026-08-01T12:39:13Z
+{ 1.44 1.22 1.20 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+22121 /bin/zsh -c perf3_tmp=$(cat /tmp/crexx-perf3-03-active-dir.txt)
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  shasum -a 256 /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm "$perf3_tmp/prefilter3-build/bin/rxvm" "$perf3_tmp/prefilter3-build/bin/rxbvm" "$perf3_tmp/prefilter3-common-zero-v1.txt" /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_awfy_permute_opt.rxbin /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_awfy_richards_opt.rxbin
+} > "$perf3_tmp/prefilter3-common-pre-state.txt" 2>&1
+sed -n '1,70p' "$perf3_tmp/prefilter3-common-pre-state.txt"
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest "$perf3_tmp/prefilter3-common-zero-v1.txt" --output-dir "$perf3_tmp/prefilter3-common-timing" --measurement timing --warmups 1 --runs 12 > "$perf3_tmp/prefilter3-common-runner.stdout.txt" 2> "$perf3_tmp/prefilter3-common-runner.stderr.txt"
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+aa4f9456c65142541f28b8bbdac46a07e056431e4866e7c393e634d15f22cc22  /tmp/crexx-perf3-03.TsP0ej/prefilter3-build/bin/rxvm
+e3713c74145f0d2d5dc659ee90c397bd97fe4fee0e88839e4347a47231bb2365  /tmp/crexx-perf3-03.TsP0ej/prefilter3-build/bin/rxbvm
+021caa18b02cdd64689a19239ace0f788f788f85678e2fefaed56dca11839ccd  /tmp/crexx-perf3-03.TsP0ej/prefilter3-common-zero-v1.txt
+714cd35e4c4353d3d5d6beba170c9437b71d398c21c5f78381092b657d1e5ed0  /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_awfy_permute_opt.rxbin
+ded1ae2832085f61f3ac90e4100a1e35041284642a899ab8f931389bbb552554  /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin
+d046069d8de8d82c41bf994cd5188b0a78dfac00ebb740dd25254b0d5bf5a5b6  /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_awfy_richards_opt.rxbin

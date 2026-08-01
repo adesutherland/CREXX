@@ -1,0 +1,10 @@
+sieve,rxvm,pass,PASS: AWFY Sieve
+sieve,rxbvm,pass,PASS: AWFY Sieve
+base64,rxvm,pass,PASS: Base64 Roundtrip
+base64,rxbvm,pass,PASS: Base64 Roundtrip
+richards,rxvm,pass,PASS: AWFY Richards
+richards,rxbvm,pass,PASS: AWFY Richards
+towers,rxvm,pass,PASS: AWFY Towers
+towers,rxbvm,pass,PASS: AWFY Towers
+rexxcps,rxvm,pass,PASS: RexxCPS 2.2d cREXX port
+rexxcps,rxbvm,pass,PASS: RexxCPS 2.2d cREXX port

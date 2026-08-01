@@ -1,0 +1,12 @@
+candidate product
+CMAKE_BUILD_TYPE:STRING=Release
+CREXX_VM_PROFILING:BOOL=OFF
+e80c75887e940d605d87761269bff0e556fb21c82cb176ff91a3d031b0bd54a5  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxvm
+0015c0843e30d43925b20c9e599461848b49362403f62707535dc95e7e98e04c  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxbvm
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+51e42735d5e3c58ebd80bef48c9b1d52532d809f961e2099094b4f0dd3a42ea8  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin
+/tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxvm 998936 bytes
+/tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxbvm 999144 bytes
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm 998840 bytes
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm 999016 bytes

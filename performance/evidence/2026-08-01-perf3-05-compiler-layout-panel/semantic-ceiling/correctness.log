@@ -1,0 +1,12 @@
+PERF2-04-BASE64-CONTROL variant=current repetitions=2 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PERF2-04-BASE64-CONTROL variant=current repetitions=2 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control
+PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control

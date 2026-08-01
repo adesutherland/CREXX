@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g4a3940395980.dirty 20260801",
+  "source_manifest": "/tmp/crexx-perf3-05.9DY131/hotcold/five-workload-matrix-v1.txt",
+  "measurement": "rss",
+  "warmups": 0,
+  "recorded_runs": 3,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-08-01T11:01:17+0000",
+  "completed_utc": "2026-08-01T11:03:21+0000",
+  "result": "pass"
+}

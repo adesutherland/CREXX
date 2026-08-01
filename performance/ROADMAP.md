@@ -18,9 +18,24 @@ pair favorable. Production closeout passes 11/11 focused Release checks,
 16/16 reviewed object structural/runtime pairs and 1,972/1,972 broad Debug
 tests. The old clean-host C0/C1a/C1c timings remain historical authority. C2
 still lacks ownership/lifetime proof, C3 is immaterial, C4 is met by the
-selected C1 rows and P1A assembler-cost recovery remains separately queued.
-No tactical-rule deletion or public format change was made; commit and push
-remain separate user-authorized actions.
+selected C1 rows. P1A is complete: A1 demand-driven storage attachment is
+retained, A3 is a correct replayable negative, and accepted closeout passes
+24/24 focused plus 1,972/1,972 broad Debug tests.
+PERF3-05 is complete: Adrian accepted retaining the ordinary L0 product,
+rejecting the tested LTO/PGO/no-flatten runtime forms and leaving L4 unopened.
+The separate VM-library link-interface cleanup is queued as PERF3-05-B1.
+Adrian selected and accepted PERF3-03 C4 v3. The narrow private locale-aware
+loose-comparison prefilter passes its 6/6 minimum gate and mandatory first
+ordinary Release verdict: Base64 improves by 4.86%/5.78% on `rxvm`/`rxbvm`;
+RexxCPS is +2.52% on `rxvm` and a guard-clean noisy -0.61% on `rxbvm`.
+Accepted Apple closeout passes 1,972/1,972 full Debug tests, 6/6 focused ASan,
+complete Release build/install and installed VM smoke 2/2. LSan is unavailable
+on this macOS runtime; Windows/MSVC validation is queued before publication.
+Adrian authorized the combined local closeout commit on 2026-08-01; push
+remains a separate user-authorized action.
+No tactical-rule deletion or public format change was made. The complete
+PERF3-02/C1abc slice is committed locally as `4a3940395`; push remains a
+separate user-authorized action.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -32,10 +47,12 @@ Standing measurement, regression and publication rules remain normative in
 [`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md) and
 [`AGENTS.md`](AGENTS.md).
 
-The live local control-plane commit is `e38e514bf611ae3873513368c44742e2ae7332d1`;
-its product-code parent is `3f43a0014be10c930a12b8a636297b60f294c0a6`.
-Local `develop` is two commits ahead of `origin/develop` at
-`21fdcf529d0e51ea264bf0c92ccfbdc06dea8200`.
+The committed baseline for this closeout tranche is
+`4a3940395980dc40ea45917d71d99caa080e89bb`; the PERF3 planning baseline
+remains `e38e514bf611ae3873513368c44742e2ae7332d1`, whose product-code parent is
+`3f43a0014be10c930a12b8a636297b60f294c0a6`. The exact new local tip is kept in
+repository history rather than self-referenced by the commit that contains
+this roadmap. Push remains unauthorized.
 The pre-existing worktree also contains five untracked
 generated `lifecycle_probe.rxbin` files under retained evidence directories;
 they are outside this documentation transition and must not be overwritten or
@@ -143,7 +160,7 @@ the source column so no unfinished item disappears during renumbering.
 | Linux Richards/Towers copy and attribute-trim findings | PERF3-02 | exact C0 attribution and selected C1abc proof complete | Closed for Apple; reuse retained evidence in the later platform-validation gate. |
 | `PERF2-05-F01` | PERF3-02 | evidence-gated | A fresh profile attributes material residual reference-descriptor payload cost after accepted R2a. |
 | `PERF2-03-F01` and `PERF2-03-F02` | PERF3-02 | evidence-gated | Current hot sites prove residual accessor/ownership/escape cost and exact alias/lifetime obligations. |
-| `PERF2-07-C01` | PERF3-03 | queued evidence/design | Conversion allocation/copy and semantic-contract review shows a material current ceiling. |
+| `PERF2-07-C01` | PERF3-03 | Apple closeout complete | The material owner is implicit loose-comparison parsing. Adrian selected and accepted private C4 v3; first verdict and proportional Apple closeout pass. C1/C2/C3/cache/public-span alternatives remain rejected or deferred. Windows/MSVC validation is retained as PERF3-03-W1. |
 | `PERF2-03-F06` | PERF3-04 | queued evidence only | Current profile plus hand-equivalent ceiling selects generic final/concrete scalar access. |
 | `PERF2-06-D01` | PERF3-05 | open accepted debt | Paired Mac zero-work and target controls distinguish native code layout from semantic work. |
 | PERF2-06 compact/hot-cold private stream and PERF2-10 LTO/PGO/layout | PERF3-05 | unstarted, no option selected | A bounded Mac panel identifies a repeatable supported mechanism before production selection. |
@@ -194,13 +211,15 @@ their recorded trigger fires:
 | PERF3-01 | P0 | Current-HEAD Mac evidence and baseline-validity gate | complete | Adrian accepted the current-product evidence boundary and ranked panel on 2026-07-31. No production edit was made. Evidence: [`2026-07-31-perf3-01-current-mac`](evidence/2026-07-31-perf3-01-current-mac/); control: [`PERF3-01-WORKLIST.md`](PERF3-01-WORKLIST.md). |
 | PERF3-02 | P0 | Full-copy, ownership and attribute-storage panel | complete | Adrian selected C1abc. The ordinary compiler emits the exact measured C1ab Richards and C1c Towers programs; 11/11 focused Release and 1,972/1,972 broad Debug tests pass. Broad C1a-R1 remains rejected and replayable; C2 is ownership-deferred and C3 immaterial. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
 | PERF3-02-C1B | P0 | Multi-return receiver-link ownership feasibility | complete — correct and decisively faster | The exact detached scalar receiver-guard rule preserves canonical `23246/9297`, all fail-closed boundaries and link/unlink state. The R1 panel measures 44.28%/44.01% lower Richards elapsed alone and proves clean composition with C1a. The broad no-write route remains rejected. Control: [`PERF3-02-C1B-WORKLIST.md`](PERF3-02-C1B-WORKLIST.md); correctness: [`2026-08-01-perf3-02-c1b-correctness`](evidence/2026-08-01-perf3-02-c1b-correctness/); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/). |
-| PERF3-02-C2E2 | P0 | RXAS symbolic register-storage identity | complete — core-infrastructure candidate | The diagnostic PoC safely follows direct link/swap/unlink identity, recovers exact point state at all 55 globally tainted Richards full-copy sites and 13/56 Towers sites, and proves a consolidated swap-round-trip route. Throwing attribute/reference links require split normal and signal/skip edges before production use. No rewrite or tactical-rule deletion is selected. Control: [`PERF3-02-C2E2-WORKLIST.md`](PERF3-02-C2E2-WORKLIST.md); evidence: [`2026-07-31-perf3-02-c2e2-storage-identity`](evidence/2026-07-31-perf3-02-c2e2-storage-identity/). |
+| PERF3-02-C2E2 | P0 | RXAS symbolic register-storage identity | complete — core-infrastructure candidate | The diagnostic PoC safely follows direct link/swap/unlink identity, recovers exact point state at all 55 globally tainted Richards full-copy sites and 13/56 Towers sites, and proves a consolidated swap-round-trip route. P1 subsequently supplied the required split normal/signal-skip/signal-retry edges; no rewrite or tactical-rule deletion is selected. Control: [`PERF3-02-C2E2-WORKLIST.md`](PERF3-02-C2E2-WORKLIST.md); evidence: [`2026-07-31-perf3-02-c2e2-storage-identity`](evidence/2026-07-31-perf3-02-c2e2-storage-identity/). |
 | PERF3-02-C2E2-P1 | P0 | Core storage identity and signal continuations | locked — infrastructure retained | Typed normal/signal-skip/signal-retry edges and the graph-owned bounded storage service are the frozen R1 foundation. No rewrite consumer or tactical rule is bundled. Control: [`PERF3-02-C2E2-P1-WORKLIST.md`](PERF3-02-C2E2-P1-WORKLIST.md). |
-| PERF3-02-C2E2-P1A | P1 | Recover storage-analysis assembler cost | queued near | Recover the accepted Richards +5.3% median and Towers +0.5% median (+2.0% mean) assembly overhead without weakening typed continuation or point-identity semantics and without changing emitted RXBIN. |
+| PERF3-02-C2E2-P1A | P1 | Recover storage-analysis assembler cost | complete — A1 retained, A3 rejected | Adrian accepted the bounded disposition on 2026-08-01. A1 demand-driven storage attachment is retained; A3 remains a correct, replayable negative and is removed from production. Exact A1 restoration passes 24/24 focused and 1,972/1,972 broad Debug tests. Control: [`PERF3-02-C2E2-P1A-WORKLIST.md`](PERF3-02-C2E2-P1A-WORKLIST.md); A1 verdict: [`2026-08-01 A1 evidence`](evidence/2026-08-01-perf3-02-c2e2-p1a-first-release-verdict/); A3 verdict: [`2026-08-01 A3 evidence`](evidence/2026-08-01-perf3-02-c2e2-p1a-a3-first-release-verdict/); closeout: [`2026-08-01 closeout`](evidence/2026-08-01-perf3-02-c2e2-p1a-closeout/). |
 | PERF3-02-R1 | P0 | Infrastructure-enabled copy/ownership option re-investigation | complete — C1abc selected | All positive, combined and rejected masks remain replayable in retained evidence; correctness and 156/156 formal timing executions pass for eligible rows. Production contains only C1a+C1b+C1c and passes proportional closeout. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); evidence: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
-| PERF3-03 | P1 | Bounded string-to-number conversion review | queued | Current semantics and costs are frozen; no-copy/locale-independent/correct-rounding options are compared without silently changing public behavior. |
+| PERF3-03 | P1 | Bounded string-to-number conversion review | complete on Apple — C4 v3 retained | Adrian selected and accepted the private locale-aware C4 v3 prefilter. Minimum validation, 212/212 first-verdict executions, 1,972/1,972 full Debug tests, 6/6 focused ASan, complete Release build/install and installed VM smoke 2/2 pass. Base64 improves 4.86%/5.78% and RexxCPS is +2.52%/-0.61% on `rxvm`/`rxbvm`; no cell hits the 3% guard. LSan is unsupported locally and Windows is separately queued. Control: [`PERF3-03-WORKLIST.md`](PERF3-03-WORKLIST.md); first verdict: [`2026-08-01-perf3-03-c4-first-release-verdict`](evidence/2026-08-01-perf3-03-c4-first-release-verdict/); closeout: [`2026-08-01-perf3-03-c4-closeout`](evidence/2026-08-01-perf3-03-c4-closeout/). |
+| PERF3-03-W1 | P1 | C4 v3 Windows/MSVC validation | queued pre-publication gate | No Windows cross-toolchain is installed on the accepted Mac host. Before publication, build both VM variants under MSVC, run focused logic/conversion correctness and confirm material Base64/RexxCPS behavior. Do not reopen C4 design without a correctness or guard failure. |
 | PERF3-04 | P1 | Generic final/concrete scalar accessor proof | queued evidence only | A general proof and hand-equivalent ceiling justify a candidate, or the lead is deferred. |
-| PERF3-05 | P1 | Compiler, native layout and private-stream panel | queued | D01, semantic string/copy controls, hot/cold layout, LTO/PGO and compact private representation receive bounded paired dispositions; no flag or stream is preselected. |
+| PERF3-05 | P1 | Compiler, native layout and private-stream panel | complete — retain L0 | Adrian accepted the 2026-08-01 panel. Exact C1abc+A1 baseline/drift products match; effective ThinLTO, merged/per-VM PGO and no-flatten layout fail representative or zero-work guards; L4 remains unopened. No production VM change was made. Control: [`PERF3-05-WORKLIST.md`](PERF3-05-WORKLIST.md); evidence: [`2026-08-01-perf3-05-compiler-layout-panel`](evidence/2026-08-01-perf3-05-compiler-layout-panel/). |
+| PERF3-05-B1 | P2 | VM library link interface and static API granularity | queued build/API hygiene | Current Mac links complete in 61-71 ms, so the reported large delay is not reproduced. Export leakage is real but not causal in the isolated relink. Rework should make `crexxsaa` implementation archives/includes private, publish only the supported header/export surface, split the static phase API if narrow clients are supported, and remeasure on the reporting host. Evidence: [`link diagnostic`](evidence/2026-08-01-perf3-05-compiler-layout-panel/link-diagnostic/). |
 | PERF3-06 | P0 | Qualified-deficit closure and Mac scorecard | queued | Accepted slices are reflected in a formal same-session common-five plus RexxCPS/Towers scorecard; every guard and exclusion is explicit. |
 | PERF3-07 | P2 | Capability and lifecycle side lanes | deferred/independent | Each approved product/capability use case has its own scope and does not distort the common benchmark programme. |
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
@@ -311,7 +330,7 @@ parent remains `3f43a0014`. The resumable control plane is
 evidence/design and isolated C1-C4 PoC comparison, not a production candidate,
 architecture/ISA/ABI change, commit of later evidence or push.
 
-The panel is complete. C1a-R2 removes 4,910,249 total Richards copy operations
+The initial panel completed with C1a-R2 removing 4,910,249 total Richards copy operations
 and authoritative clean-host paired Release elapsed improves 9.18%/9.33% on
 `rxvm`/`rxbvm`. C1c-R1 removes 7,140,440 total Towers copy operations,
 55,158,560 logical bytes and 202,314 attribute blocks, improving 19.42%/19.65%.
@@ -322,8 +341,8 @@ workload image byte-identical; those four guards pass the +3% budget at the
 C1a-R2 remains an independent alternative. The original remote-terminal timing,
 exact products, rejected variants and every clean-host sample are preserved.
 C1a-R1 is correctness-invalid, C2 accepts zero full copies with current facts,
-and C3's zero-byte scalar residual is immaterial. No production candidate is
-selected until Adrian approves one. See the
+and C3's zero-byte scalar residual is immaterial. At that initial gate no
+production candidate was selected. See the
 [`decision summary`](evidence/2026-07-31-perf3-02-copy-ownership-panel/decision-summary.md).
 
 The approved follow-on analysis-only C1b gate is also complete. It proves the
@@ -357,8 +376,9 @@ Towers image. The locked storage service finds 59 remaining exact-base full
 copies in combined Richards and 18 in C1c Towers, but independent ownership,
 destruction, value, lifetime, TRACE and continuation proofs remain absent, so
 C2 installs no rewrite. C3 remains a zero-byte scalar residual and C4 is met
-by the correct C1 paths. The decision gate is now whether to install C1abc as
-one production ladder and remove the disposable replay mask.
+by the correct C1 paths. Adrian subsequently selected C1abc; the ordinary
+compiler now contains that one ladder, the disposable replay mask is removed,
+and the checksum-closed replay source preserves all investigated options.
 
 ### Question
 
@@ -435,6 +455,26 @@ branch/I-cache evidence, startup/preparation, RSS, artifacts and both VM modes.
 A compiler or flag movement without an exact causal mechanism is a control, not
 a candidate. A compact stream requires representative benefit on at least two
 architectures before adoption.
+
+The 2026-08-01 panel retains the ordinary L0 product. ThinLTO changes `__text`
+by roughly -6.3% but fails Sieve and Base64 guards with VM reversals.
+Representative PGO changes `__text` by roughly -25% but over-specializes the
+layout, regressing Sieve 33.7-40.4% and Base64 27.7-48.8%. The isolated
+no-flatten PoC improves focused compile time and build RSS but regresses the
+non-noisy `rxbvm` Sieve guard by 3.639%. These are retained replayable
+negatives, not production candidates. The semantic Base64 controls instead
+show a 2.69-10.69x ceiling in generated work, so L4 is not opened without a
+new mechanism.
+
+The adjacent VM-library link question is separated from runtime layout. The
+Mac build does expose implementation details: `libcrexxsaa` exports 367 globals
+for a 16-symbol intended surface, `crexxsaa` propagates static implementation
+archives and internal include paths as `PUBLIC`, and the static phase-API
+object pulls the monolithic interpreter even for lifecycle-only use. Export
+filtering does not change measured dylib relink time; removing propagated
+archives reduces the downstream test link from a 35.095 ms median to 21.706
+ms. `PERF3-05-B1` therefore owns optional build/API cleanup and must first
+reproduce the reported slow client/host.
 
 ## PERF3-06 — qualified-deficit closure
 
@@ -536,6 +576,65 @@ Adrian approved these five points on 2026-07-31:
 Adrian subsequently accepted the PERF3-01 current-product evidence boundary
 and ranked PERF3-02/03/04/05 panel on 2026-07-31. This closes PERF3-01 and
 opens PERF3-02 for its bounded evidence/design and PoC comparison only.
+
+On 2026-08-01 Adrian approved P1A followed, after its mandatory Release
+verdict, by the bounded PERF3-05 and PERF3-03 evidence/design gates. Each
+production candidate still requires its recorded selection and first-Release
+stop; this approval does not preselect a public format, layout or changed
+conversion contract.
+
+The first P1A A1 verdict was correct but neutral. Adrian authorized the bounded
+A3 rework on 2026-08-01; A1 evidence and binaries remain retained as an oracle,
+and PERF3-05 stays blocked until the repeated A3 Release verdict is accepted.
+
+The repeated A3 verdict is correct but shows no selectable gain at the governed
+36-pair maximum. It remains frozen for Adrian's revert-or-accept decision;
+PERF3-05 has not begun.
+
+Adrian accepted the recommended disposition on 2026-08-01: retain A1, reject
+and remove A3, complete P1A closeout, then open PERF3-05.
+
+P1A closeout is complete and PERF3-05 is open at its bounded Mac
+evidence/design gate. This authorizes isolated comparators, not a production
+architecture edit or default/private-stream selection.
+
+The PERF3-05 bounded panel is complete and stopped at selection on 2026-08-01.
+Its recommendation is to retain the ordinary product, reject LTO, PGO and the
+no-flatten runtime form, and leave L4 unopened. The separately diagnosed VM
+library link-interface cleanup is queued as `PERF3-05-B1`; no CMake/API change
+is bundled into the runtime decision. PERF3-03 has not begun.
+
+Adrian accepted that PERF3-05 disposition on 2026-08-01. PERF3-05 is closed
+with no production VM edit, PERF3-05-B1 remains independently queued, and the
+already approved PERF3-03 bounded evidence/design gate is open.
+
+The PERF3-03 evidence/design gate reached selection on 2026-08-01. The
+recommendation is the private locale-aware C4 v3 loose-comparison prefilter:
+retain the exact current converter on numeric/uncertain spans, add no public
+opcode/API/serialized form, and defer the value cache. C4 v1 is rejected for a
+confirmed Base64 `rxvm` guard regression after lost caller inlining; v2 is
+rejected unchanged for incomplete active-locale proof. No production edit has
+been made at that selection gate. A subsequent governed common-layout guard retained 348/348 correct
+executions. Permute, Bounce and Richards execute zero loose comparisons; their
+six VM cells show four favourable results, one -0.446% small adverse median
+inside guard and one +0.147% neutral median at the 36-pair cap.
+
+Adrian selected C4 v3 on 2026-08-01. The production edit is limited to the
+portable no-inline private rejector and exact current-converter fallback.
+Minimum Debug validation passes 6/6. The mandatory ordinary Release verdict
+retains 212/212 correct executions: Base64 paired medians are +4.859%/+5.780%
+and RexxCPS is +2.517%/-0.609% on `rxvm`/`rxbvm`; the latter is noisy/neutral
+at cap and no cell reaches the -3% guard. The provisional implementation is
+stopped for Adrian's verdict acceptance before broad closeout.
+
+Adrian accepted the first Release verdict on 2026-08-01. Proportional Apple
+closeout then passed 1,972/1,972 full Debug tests, 6/6 focused ASan tests, the
+complete ordinary Release build and 136-file isolated install, plus installed
+VM smoke 2/2. The leak-enabled sanitizer attempt is retained as unsupported on
+this macOS runtime, and no local Windows cross-toolchain is available; real
+MSVC validation is queued as PERF3-03-W1 before publication. PERF3-03 is
+complete on Apple and PERF3-04 remains queued. Adrian subsequently authorized
+the combined local closeout commit; no push is authorized.
 
 ## Authoritative references
 

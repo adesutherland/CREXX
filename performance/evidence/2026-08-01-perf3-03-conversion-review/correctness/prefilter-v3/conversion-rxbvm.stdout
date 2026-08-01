@@ -1,0 +1,24 @@
+Test Suite: Type Conversion & Formatting
+Section A: Standard Conversions
+PASS: ITOS
+PASS: STOI
+PASS: FTOS
+PASS: STOF
+PASS: FTOI
+PASS: ITOB (1)
+PASS: ITOB (0)
+PASS: BTOI (1)
+PASS: BTOI (0)
+Section B: Decimal Conversions
+PASS: ITOD
+PASS: FTOD
+PASS: BTOD
+PASS: DTOI
+PASS: DTOF
+PASS: DTOB (1)
+PASS: DTOB (0)
+Section C: Numeric Formatting
+PASS: SETNUMDGTS 3
+PASS: SETNUMDGTS 5
+PASS: SETNUMFRM Scientific
+PASS: SETNUMFRM Engineering

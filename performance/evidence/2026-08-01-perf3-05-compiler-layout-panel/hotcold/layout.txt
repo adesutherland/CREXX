@@ -1,0 +1,68 @@
+hashes
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+83f61246e08a569db3abda927dc7900d2f828d1cebcfc6c5466eabec3e64d4a8  /tmp/crexx-perf3-05.9DY131/build-noflatten/bin/rxvm
+4a0dc16cbef1fdd670fff3e18ad175fce859567716785085d5395527b6f5dff0  /tmp/crexx-perf3-05.9DY131/build-noflatten/bin/rxbvm
+file-sizes
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm 998840
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm 999016
+/tmp/crexx-perf3-05.9DY131/build-noflatten/bin/rxvm 949000
+/tmp/crexx-perf3-05.9DY131/build-noflatten/bin/rxbvm 949272
+text-sections
+Segment __TEXT: 884736
+	Section __text: 809228
+Segment __TEXT: 884736
+	Section __text: 808244
+Segment __TEXT: 835584
+	Section __text: 767440
+Segment __TEXT: 835584
+	Section __text: 762932
+run-symbols
+0000000100004f78 (__TEXT,__text) external _run
+0000000100004f78 (__TEXT,__text) external _run
+0000000100004bec (__TEXT,__text) external _run
+0000000100004bec (__TEXT,__text) external _run
+candidate-outlined-symbols
+000000010007dec0 (__TEXT,__text) non-external _rxsignal_restore_branch_call_argument_mapping
+000000010007df5c (__TEXT,__text) non-external _rxsignal_unwind_to_frame
+000000010007e13c (__TEXT,__text) non-external _rxsignal_populate_raw_interrupt
+000000010007ebe4 (__TEXT,__text) non-external _rxsignal_ensure_private_interrupt_table
+000000010007ec54 (__TEXT,__text) non-external _rxsignal_read_handler_action
+000000010007ed90 (__TEXT,__text) non-external _rxsignal_handler_payload
+00000001000817f0 (__TEXT,__text) non-external _rxsignal_raise_private_table_oom
+00000001000820b8 (__TEXT,__text) non-external _rxsignal_clear_handler_stack
+00000001000bc860 (__TEXT,__text) non-external _prep_and_link_module.cold.1
+00000001000bc888 (__TEXT,__text) non-external _prep_and_link_module.cold.2
+00000001000bc8b0 (__TEXT,__text) non-external _prep_and_link_module.cold.3
+00000001000bc8d8 (__TEXT,__text) non-external _rxldmodm.cold.1
+00000001000bc90c (__TEXT,__text) non-external _add_module_runtime_procedure_offset.cold.1
+00000001000bc934 (__TEXT,__text) non-external _add_module_runtime_procedure_offset.cold.2
+00000001000bc95c (__TEXT,__text) non-external _redirect_endpoint_payload_copy.cold.1
+00000001000bc9a8 (__TEXT,__text) non-external _main.cold.1
+00000001000bc9bc (__TEXT,__text) non-external _main.cold.2
+00000001000bc9ec (__TEXT,__text) non-external _main.cold.3
+00000001000bca00 (__TEXT,__text) non-external _main.cold.4
+00000001000bca2c (__TEXT,__text) non-external _main.cold.5
+00000001000bca2c (__TEXT,__text) non-external _main.cold.8
+00000001000bca38 (__TEXT,__text) non-external _main.cold.6
+00000001000bca64 (__TEXT,__text) non-external _main.cold.7
+00000001000bca78 (__TEXT,__text) non-external _main.cold.9
+00000001000bca8c (__TEXT,__text) non-external _main.cold.10
+00000001000bca8c (__TEXT,__text) non-external _main.cold.11
+00000001000bcaa8 (__TEXT,__text) non-external _strip_rightmost_extension_if.cold.1
+00000001000bcae8 (__TEXT,__text) non-external _strip_rightmost_extension_if.cold.2
+00000001000bcb1c (__TEXT,__text) non-external _fileexists.cold.1
+00000001000bcb3c (__TEXT,__text) non-external _fileexists.cold.2
+00000001000bcb7c (__TEXT,__text) non-external _fileexists.cold.3
+00000001000bcb9c (__TEXT,__text) non-external _openfile.cold.1
+00000001000bcbbc (__TEXT,__text) non-external _openfile.cold.2
+00000001000bcbfc (__TEXT,__text) non-external _openfile.cold.3
+00000001000bcc1c (__TEXT,__text) non-external _dirfstfl.cold.1
+00000001000bcc50 (__TEXT,__text) non-external _exefqname.cold.1
+00000001000bcc50 (__TEXT,__text) non-external _exepath.cold.1
+00000001000bcc60 (__TEXT,__text) non-external _file_dir.cold.1
+00000001000bcc94 (__TEXT,__text) non-external _file_dir.cold.2
+00000001000d3fc0 (__DATA_CONST,__const) non-external _rxsignal_populate_runtime_signal.runtime_signal_type
+compile-command
+/usr/bin/cc -DNTHREADED=1 -I/tmp/crexx-perf3-05.9DY131/build-noflatten/generated -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/. -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/./rxvmplugin -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/../assembler -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/../binutils/include -I/tmp/crexx-perf3-05.9DY131/hotcold-src/rxpa -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/../platform -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/../avl_tree -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/../utf8 -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/../inc -I/tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber -O3 -DNDEBUG -std=gnu99 -arch arm64 -fPIC -MD -MT interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o -MF interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o.d -o interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o -c /tmp/crexx-perf3-05.9DY131/hotcold-src/interpreter/rxvmintp.c
+: && /opt/homebrew/bin/cmake -E rm -f bin/librxbvml.a && /usr/bin/ar qc bin/librxbvml.a  interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o && /usr/bin/ranlib bin/librxbvml.a && /opt/homebrew/bin/cmake -E touch bin/librxbvml.a && :

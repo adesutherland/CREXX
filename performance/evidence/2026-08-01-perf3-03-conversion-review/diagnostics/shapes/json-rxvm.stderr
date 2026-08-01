@@ -1,0 +1,1 @@
+PERF3_03_LOOSE_COMPARE calls=302288 both_numeric=212520 left_only=46888 right_only=40192 neither=2688 numeric_operands=512120 failed_operands=92456 first_char_rejectable=4588 operand_bytes=738530 len_le_4=598432 len_le_8=0 len_le_16=0 len_le_32=6144 len_gt_32=0

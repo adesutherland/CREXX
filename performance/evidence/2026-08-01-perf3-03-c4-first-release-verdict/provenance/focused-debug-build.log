@@ -1,0 +1,5 @@
+[0/2] Re-checking globbed directories...
+[1/5] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[2/5] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmintp.c.o
+[3/5] Linking C executable bin/rxbvm
+[4/5] Linking C executable bin/rxvm

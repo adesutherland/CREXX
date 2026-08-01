@@ -433,6 +433,24 @@ maintain a validity flag for a cached string representation, so repeated
 conversions still perform the conversion work and the compiler does not rely on
 string-form reuse.
 
+### Loose String Comparison Numeric Prefilter
+
+Loose string comparison first attempts binary64 conversion of both operands;
+when either conversion fails, it performs the existing blank-padded byte
+comparison. `rxvm_loose_string2float()` avoids calling the copied `strtod()`
+path only for an empty span or a leading byte that cannot begin a numeric
+subject. Digits, signs, whitespace, common radix bytes, `inf`/`nan` initials,
+high bytes and the active locale radix initial all fall through to the exact
+existing `string2float()` converter. The helper therefore changes conversion
+ownership and cost, not comparison grammar or results.
+
+Keep the helper private and out of line so `rxvm_loose_compare_text()` remains
+inlineable. The no-inline spelling must cover GCC/Clang and MSVC. Do not extend
+this optimization into a public opcode, serialized RXBIN form, JSON-specific
+path or value cache without a separate design and invalidation/lifecycle proof.
+The selected implementation and governed contract/performance evidence are in
+`performance/PERF3-03-WORKLIST.md`.
+
 ### Decimal Plugin Runtime
 
 `.decimal` values are stored in the `value` decimal slot as plugin-owned byte

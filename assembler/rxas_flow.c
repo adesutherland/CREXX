@@ -2859,8 +2859,15 @@ void rxas_flow_optimise(Assembler_Context *context,
 
     flow_build_graph(&graph, context, items, item_count);
     after_instructions = flow_instruction_count(items, item_count);
-    flow_storage_attach(&graph);
-    flow_debug_storage_identity(&graph);
+    /* The storage service is graph-owned and demand driven.  At present its
+     * only consumer is the debug identity report; ordinary assembly used to
+     * build the complete point environment here and immediately free it.
+     * A future rewrite consumer must attach the same bounded service before
+     * querying it rather than making ordinary diagnostic work eager again. */
+    if (context->debug_mode) {
+        flow_storage_attach(&graph);
+        flow_debug_storage_identity(&graph);
+    }
     flow_debug_summary(&graph, &stats, before_instructions, after_instructions);
     flow_free_graph(&graph);
 }

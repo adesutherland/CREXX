@@ -1,0 +1,261 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-l0-rxvm-warmup-1,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,warmup,1,1,5500,1106457000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-warmup-1,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,warmup,1,2,5500,1087399000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-warmup-1,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,warmup,1,3,5500,1427710000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-warmup-1,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,warmup,1,4,5500,1487844000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-1,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,1,1,5500,1069629000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-1,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,1,2,5500,1089841000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-1,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,1,3,5500,1400447000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-1,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,1,4,5500,1461380000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-2,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,2,1,5500,1098475000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-2,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,2,2,5500,1444962000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-2,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,2,3,5500,1467200000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-2,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,2,4,5500,1078589000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-3,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,3,1,5500,1425643000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-3,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,3,2,5500,1466329000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-3,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,3,3,5500,1072437000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-3,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,3,4,5500,1093658000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-4,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,4,1,5500,1481260000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-4,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,4,2,5500,1071216000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-4,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,4,3,5500,1090958000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-4,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,4,4,5500,1397849000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-5,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,5,1,5500,1089644000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-5,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,5,2,5500,1094869000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-5,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,5,3,5500,1425445000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-5,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,5,4,5500,1466612000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-6,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,6,1,5500,1096460000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-6,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,6,2,5500,1399336000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-6,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,6,3,5500,1504468000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-6,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,6,4,5500,1072501000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-7,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,7,1,5500,1418015000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-7,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,7,2,5500,1478449000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-7,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,7,3,5500,1074411000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-7,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,7,4,5500,1088818000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-8,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,8,1,5500,1460630000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-8,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,8,2,5500,1073142000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-8,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,8,3,5500,1097742000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-8,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,8,4,5500,1436260000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-9,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,9,1,5500,1082183000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-9,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,9,2,5500,1085724000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-9,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,9,3,5500,1409048000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-9,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,9,4,5500,1466617000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-10,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,10,1,5500,1089691000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-10,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,10,2,5500,1408660000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-10,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,10,3,5500,1453684000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-10,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,10,4,5500,1096045000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-11,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,11,1,5500,1438153000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-11,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,11,2,5500,1474469000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-11,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,11,3,5500,1074272000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-11,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,11,4,5500,1098484000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxbvm-recorded-12,timing,Sieve,sieve-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,12,1,5500,1472992000,,0,pass,,
+timing-Sieve-sieve-l0-rxvm-recorded-12,timing,Sieve,sieve-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,12,2,5500,1078742000,,0,pass,,
+timing-Sieve-sieve-noflatten-rxvm-recorded-12,timing,Sieve,sieve-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,12,3,5500,1094883000,,0,pass,,
+timing-Sieve-sieve-l0-rxbvm-recorded-12,timing,Sieve,sieve-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,12,4,5500,1407447000,,0,pass,,
+timing-Base64-base64-l0-rxvm-warmup-1,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,warmup,1,1,2500,1566204000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-warmup-1,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,warmup,1,2,2500,1460899000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-warmup-1,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,warmup,1,3,2500,1482266000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-warmup-1,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,warmup,1,4,2500,1589803000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-1,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,1,1,2500,1347346000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-1,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,1,2,2500,1621772000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-1,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,1,3,2500,1533217000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-1,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,1,4,2500,1514461000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-2,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,2,1,2500,1548975000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-2,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,2,2,2500,1788171000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-2,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,2,3,2500,1754929000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-2,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,2,4,2500,1613768000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-3,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,3,1,2500,1485647000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-3,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,3,2,2500,1429476000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-3,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,3,3,2500,1460353000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-3,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,3,4,2500,1503505000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-4,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,4,1,2500,1405012000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-4,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,4,2,2500,2130673000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-4,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,4,3,2500,1554038000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-4,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,4,4,2500,1684769000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-5,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,5,1,2500,1477402000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-5,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,5,2,2500,1772416000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-5,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,5,3,2500,1477380000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-5,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,5,4,2500,1439388000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-6,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,6,1,2500,1592527000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-6,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,6,2,2500,1773266000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-6,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,6,3,2500,1658748000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-6,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,6,4,2500,1482752000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-7,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,7,1,2500,1507420000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-7,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,7,2,2500,1550810000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-7,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,7,3,2500,1540954000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-7,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,7,4,2500,1468433000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-8,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,8,1,2500,1763295000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-8,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,8,2,2500,1625557000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-8,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,8,3,2500,1629042000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-8,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,8,4,2500,1608693000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-9,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,9,1,2500,1501519000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-9,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,9,2,2500,1801981000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-9,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,9,3,2500,1504037000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-9,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,9,4,2500,1638120000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-10,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,10,1,2500,1405551000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-10,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,10,2,2500,1539315000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-10,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,10,3,2500,1475690000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-10,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,10,4,2500,1428570000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-11,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,11,1,2500,1765329000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-11,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,11,2,2500,1366432000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-11,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,11,3,2500,1503568000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-11,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,11,4,2500,1659548000,,0,pass,,
+timing-Base64-base64-noflatten-rxbvm-recorded-12,timing,Base64,base64-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,12,1,2500,1801894000,,0,pass,,
+timing-Base64-base64-l0-rxvm-recorded-12,timing,Base64,base64-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,12,2,2500,1405413000,,0,pass,,
+timing-Base64-base64-noflatten-rxvm-recorded-12,timing,Base64,base64-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,12,3,2500,1770139000,,0,pass,,
+timing-Base64-base64-l0-rxbvm-recorded-12,timing,Base64,base64-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,12,4,2500,1736741000,,0,pass,,
+timing-Richards-richards-l0-rxvm-warmup-1,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,warmup,1,1,20,3114158000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-warmup-1,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,warmup,1,2,20,3159112000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-warmup-1,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,warmup,1,3,20,3235835000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-warmup-1,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,warmup,1,4,20,3195859000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-1,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,1,1,20,3124720000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-1,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,1,2,20,3140894000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-1,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,1,3,20,3259209000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-1,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,1,4,20,3186171000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-2,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,2,1,20,3139029000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-2,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,2,2,20,3222118000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-2,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,2,3,20,3250782000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-2,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,2,4,20,3168808000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-3,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,3,1,20,3233637000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-3,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,3,2,20,3193140000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-3,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,3,3,20,3123957000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-3,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,3,4,20,3107316000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-4,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,4,1,20,3193928000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-4,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,4,2,20,3134766000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-4,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,4,3,20,3134585000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-4,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,4,4,20,3196929000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-5,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,5,1,20,3119035000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-5,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,5,2,20,3111477000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-5,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,5,3,20,3209738000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-5,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,5,4,20,3208264000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-6,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,6,1,20,3154596000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-6,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,6,2,20,3207391000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-6,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,6,3,20,3184720000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-6,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,6,4,20,3134759000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-7,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,7,1,20,3192176000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-7,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,7,2,20,3220001000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-7,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,7,3,20,3151980000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-7,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,7,4,20,3128700000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-8,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,8,1,20,3249704000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-8,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,8,2,20,3158266000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-8,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,8,3,20,3105900000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-8,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,8,4,20,3205679000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-9,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,9,1,20,3158588000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-9,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,9,2,20,3189360000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-9,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,9,3,20,3221746000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-9,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,9,4,20,3185859000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-10,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,10,1,20,3155276000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-10,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,10,2,20,3224182000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-10,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,10,3,20,3183483000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-10,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,10,4,20,3106921000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-11,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,11,1,20,3215127000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-11,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,11,2,20,3176619000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-11,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,11,3,20,3110985000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-11,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,11,4,20,3146781000,,0,pass,,
+timing-Richards-richards-noflatten-rxbvm-recorded-12,timing,Richards,richards-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,12,1,20,3248865000,,0,pass,,
+timing-Richards-richards-l0-rxvm-recorded-12,timing,Richards,richards-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,12,2,20,3110864000,,0,pass,,
+timing-Richards-richards-noflatten-rxvm-recorded-12,timing,Richards,richards-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,12,3,20,3116781000,,0,pass,,
+timing-Richards-richards-l0-rxbvm-recorded-12,timing,Richards,richards-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,12,4,20,3206530000,,0,pass,,
+timing-Towers-towers-l0-rxvm-warmup-1,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,warmup,1,1,100,2844622000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-warmup-1,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,warmup,1,2,100,2850028000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-warmup-1,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,warmup,1,3,100,2919687000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-warmup-1,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,warmup,1,4,100,2895824000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-1,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,1,1,100,2826741000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-1,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,1,2,100,2829441000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-1,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,1,3,100,2897389000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-1,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,1,4,100,2910905000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-2,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,2,1,100,2838457000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-2,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,2,2,100,2971638000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-2,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,2,3,100,3055537000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-2,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,2,4,100,2868424000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-3,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,3,1,100,2972309000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-3,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,3,2,100,3025283000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-3,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,3,3,100,2902680000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-3,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,3,4,100,2927974000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-4,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,4,1,100,2964910000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-4,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,4,2,100,2906791000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-4,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,4,3,100,2839164000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-4,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,4,4,100,2899054000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-5,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,5,1,100,2839282000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-5,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,5,2,100,2841995000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-5,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,5,3,100,2887384000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-5,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,5,4,100,2891735000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-6,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,6,1,100,2870189000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-6,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,6,2,100,2949249000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-6,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,6,3,100,2920945000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-6,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,6,4,100,2851609000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-7,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,7,1,100,2916832000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-7,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,7,2,100,2897861000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-7,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,7,3,100,2896658000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-7,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,7,4,100,3058338000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-8,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,8,1,100,2919549000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-8,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,8,2,100,2843402000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-8,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,8,3,100,2829039000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-8,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,8,4,100,2963783000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-9,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,9,1,100,2832562000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-9,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,9,2,100,2822166000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-9,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,9,3,100,2886063000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-9,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,9,4,100,2929610000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-10,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,10,1,100,2859600000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-10,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,10,2,100,2890063000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-10,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,10,3,100,2961666000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-10,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,10,4,100,2859569000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-11,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,11,1,100,2894731000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-11,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,11,2,100,2894493000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-11,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,11,3,100,2822881000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-11,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,11,4,100,2900264000,,0,pass,,
+timing-Towers-towers-noflatten-rxbvm-recorded-12,timing,Towers,towers-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,12,1,100,2915752000,,0,pass,,
+timing-Towers-towers-l0-rxvm-recorded-12,timing,Towers,towers-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,12,2,100,2899199000,,0,pass,,
+timing-Towers-towers-noflatten-rxvm-recorded-12,timing,Towers,towers-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,12,3,100,2819798000,,0,pass,,
+timing-Towers-towers-l0-rxbvm-recorded-12,timing,Towers,towers-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,12,4,100,2904697000,,0,pass,,
+timing-RexxCPS-rexxcps-l0-rxvm-warmup-1,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,warmup,1,1,1000-clauses,1304787000,,0,pass,39041073,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-warmup-1,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,warmup,1,2,1000-clauses,1316969000,,0,pass,38697893,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-warmup-1,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,warmup,1,3,1000-clauses,1397358000,,0,pass,36382853,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-warmup-1,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,warmup,1,4,1000-clauses,1388085000,,0,pass,36628896,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-1,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,1,1,1000-clauses,1340495000,,0,pass,38033117,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-1,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,1,2,1000-clauses,1332110000,,0,pass,38333380,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-1,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,1,3,1000-clauses,1408008000,,0,pass,36165025,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-1,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,1,4,1000-clauses,1416224000,,0,pass,35882936,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-2,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,2,1,1000-clauses,1347102000,,0,pass,37845136,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-2,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,2,2,1000-clauses,1411478000,,0,pass,36051561,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-2,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,2,3,1000-clauses,1405550000,,0,pass,36198931,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-2,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,2,4,1000-clauses,1320047000,,0,pass,38597260,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-3,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,3,1,1000-clauses,1369607000,,0,pass,37121420,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-3,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,3,2,1000-clauses,1377098000,,0,pass,37009965,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-3,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,3,3,1000-clauses,1332498000,,0,pass,38235508,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-3,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,3,4,1000-clauses,1324870000,,0,pass,38622117,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-4,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,4,1,1000-clauses,1389108000,,0,pass,36694050,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-4,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,4,2,1000-clauses,1333795000,,0,pass,38240662,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-4,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,4,3,1000-clauses,1317080000,,0,pass,38710327,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-4,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,4,4,1000-clauses,1381631000,,0,pass,36831938,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-5,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,5,1,1000-clauses,1327535000,,0,pass,38363196,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-5,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,5,2,1000-clauses,1327692000,,0,pass,38334225,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-5,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,5,3,1000-clauses,1411319000,,0,pass,36131345,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-5,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,5,4,1000-clauses,1388716000,,0,pass,36662906,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-6,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,6,1,1000-clauses,1319269000,,0,pass,38623385,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-6,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,6,2,1000-clauses,1381851000,,0,pass,36894991,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-6,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,6,3,1000-clauses,1385493000,,0,pass,36756497,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-6,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,6,4,1000-clauses,1331887000,,0,pass,38355912,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-7,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,7,1,1000-clauses,1401322000,,0,pass,36314908,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-7,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,7,2,1000-clauses,1373171000,,0,pass,37041256,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-7,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,7,3,1000-clauses,1322172000,,0,pass,38600128,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-7,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,7,4,1000-clauses,1348503000,,0,pass,38001862,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-8,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,8,1,1000-clauses,1358627000,,0,pass,37441439,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-8,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,8,2,1000-clauses,1355494000,,0,pass,37715319,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-8,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,8,3,1000-clauses,1357060000,,0,pass,37633883,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-8,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,8,4,1000-clauses,1410191000,,0,pass,36032595,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-9,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,9,1,1000-clauses,1353347000,,0,pass,37614242,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-9,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,9,2,1000-clauses,1326796000,,0,pass,38570723,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-9,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,9,3,1000-clauses,1417644000,,0,pass,35900649,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-9,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,9,4,1000-clauses,1403739000,,0,pass,36225354,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-10,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,10,1,1000-clauses,1350592000,,0,pass,37815082,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-10,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,10,2,1000-clauses,1422518000,,0,pass,35870836,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-10,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,10,3,1000-clauses,1404749000,,0,pass,36241437,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-10,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,10,4,1000-clauses,1342230000,,0,pass,37994787,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-11,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,11,1,1000-clauses,1429938000,,0,pass,35623890,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-11,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,11,2,1000-clauses,1412299000,,0,pass,36098574,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-11,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,11,3,1000-clauses,1351043000,,0,pass,37697689,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-11,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,11,4,1000-clauses,1480295000,,0,pass,33754762,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxbvm-recorded-12,timing,RexxCPS,rexxcps-noflatten-rxbvm,crexx,rxbvm,L3-noflatten,A,no,no,recorded,12,1,1000-clauses,1416785000,,0,pass,35967600,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxvm-recorded-12,timing,RexxCPS,rexxcps-l0-rxvm,crexx,rxvm,L0-current,A,no,no,recorded,12,2,1000-clauses,1344009000,,0,pass,37855773,cREXX clauses per second
+timing-RexxCPS-rexxcps-noflatten-rxvm-recorded-12,timing,RexxCPS,rexxcps-noflatten-rxvm,crexx,rxvm,L3-noflatten,A,no,no,recorded,12,3,1000-clauses,1301169000,,0,pass,39134310,cREXX clauses per second
+timing-RexxCPS-rexxcps-l0-rxbvm-recorded-12,timing,RexxCPS,rexxcps-l0-rxbvm,crexx,rxbvm,L0-current,A,no,no,recorded,12,4,1000-clauses,1381898000,,0,pass,36939626,cREXX clauses per second

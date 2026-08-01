@@ -1,0 +1,23 @@
+utc=2026-08-01T08:59:32Z
+ 9:59  up 18 days,  3:07, 1 user, load averages: 2.16 5.00 3.97
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+vm.loadavg: { 2.16 5.00 3.97 }
+  598     1  31.9  0.3 Ss   /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+ 1088  1074   2.1  0.5 S    /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=gpu-process --user-data-dir=/Users/adrian/Library/Application Support/Codex --start-stack-profiler --gpu-preferences=UAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAOAAAAAAAAAADAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAABgAAAAAAAAAGAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --shared-files --metrics-shmem-handle=1752395122,r,10293679119155527867,2615798704996130412,262144 --field-trial-handle=1718379636,r,13939458281266442705,13500631505225940157,262144 --enable-features=OwlAuth,OwlAutofillAndPasswords,OwlDownloads,OwlPermissions,OwlPrinting,OwlWebViewEnhancements --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlHistory,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,10255997598677216281,14299835712959432543,4 --trace-process-track-uuid=3190708988185955192 --seatbelt-client=41
+ 1137  1074   1.0  5.7 S    /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/adrian/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1784082395132553 --launch-time-ticks=755927053520 --shared-files --metrics-shmem-handle=1752395122,r,9229587612005446834,9420012420987103300,2097152 --field-trial-handle=1718379636,r,13939458281266442705,13500631505225940157,262144 --enable-features=OwlAuth,OwlAutofillAndPasswords,OwlDownloads,OwlPermissions,OwlPrinting,OwlWebViewEnhancements --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlHistory,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,10255997598677216281,14299835712959432543,4 --trace-process-track-uuid=3190708990997080739 --seatbelt-client=115
+14673     1   0.8  0.3 S    /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+  528     1   0.7  0.0 Ss   /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+  649     1   0.4 18.6 Ss   /usr/libexec/syspolicyd
+  747     1   0.3  0.2 Ss   /System/Library/DriverExtensions/AppleCentauriAlpha.dext/AppleCentauriAlpha com.apple.driver.AppleCentauriAlpha 0x1000010d8 com.apple.driver.AppleCentauriAlpha
+  553     1   0.2  0.2 Ss   /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds
+86349     1   0.1  1.2 S    /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  753     1   0.1  0.0 Ss   /usr/libexec/sysmond
+  605     1   0.1  0.1 Ss   /usr/libexec/runningboardd
+99817  1113   0.0  0.0 S    /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+99070     1   0.0  0.0 Ss   /System/Library/CoreServices/osanalyticshelper server-init
+98927  1113   0.0  0.0 S    /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+98044     1   0.0  0.0 S    /System/Library/PrivateFrameworks/JetCore.framework/Support/jetpackassetd

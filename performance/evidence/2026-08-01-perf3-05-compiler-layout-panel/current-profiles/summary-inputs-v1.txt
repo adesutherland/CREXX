@@ -1,0 +1,6 @@
+crexx-perf2-profile-inputs|1
+# PERF3-05 exact-current C1abc reconciliation; diagnostic timings excluded.
+Richards|rxvm|richards-c1abc|/tmp/crexx-perf3-05.9DY131/current-profiles/rxvm/richards/profile.csv
+Richards|rxbvm|richards-c1abc|/tmp/crexx-perf3-05.9DY131/current-profiles/rxbvm/richards/profile.csv
+Towers|rxvm|towers-c1abc|/tmp/crexx-perf3-05.9DY131/current-profiles/rxvm/towers/profile.csv
+Towers|rxbvm|towers-c1abc|/tmp/crexx-perf3-05.9DY131/current-profiles/rxbvm/towers/profile.csv

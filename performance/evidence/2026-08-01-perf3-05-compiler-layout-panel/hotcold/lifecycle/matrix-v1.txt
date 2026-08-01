@@ -1,0 +1,7 @@
+# PERF3-05 paired load-to-first-result lifecycle control.
+# The exact same freshly assembled RXBIN is used by both products.
+crexx-cross-runtime-matrix|1
+lifecycle-l0-rxvm|Lifecycle|crexx|rxvm|L0-current|A|no|yes|one-call|PASS: Lifecycle Probe||/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm;/tmp/crexx-perf3-05.9DY131/hotcold/lifecycle/lifecycle_probe.rxbin;-a
+lifecycle-noflatten-rxvm|Lifecycle|crexx|rxvm|L3-noflatten|A|no|yes|one-call|PASS: Lifecycle Probe||/tmp/crexx-perf3-05.9DY131/build-noflatten/bin/rxvm;/tmp/crexx-perf3-05.9DY131/hotcold/lifecycle/lifecycle_probe.rxbin;-a
+lifecycle-l0-rxbvm|Lifecycle|crexx|rxbvm|L0-current|A|no|yes|one-call|PASS: Lifecycle Probe||/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm;/tmp/crexx-perf3-05.9DY131/hotcold/lifecycle/lifecycle_probe.rxbin;-a
+lifecycle-noflatten-rxbvm|Lifecycle|crexx|rxbvm|L3-noflatten|A|no|yes|one-call|PASS: Lifecycle Probe||/tmp/crexx-perf3-05.9DY131/build-noflatten/bin/rxbvm;/tmp/crexx-perf3-05.9DY131/hotcold/lifecycle/lifecycle_probe.rxbin;-a

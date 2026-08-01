@@ -1,0 +1,7 @@
+workload,comparison,n,median_delta_percent,mean_delta_percent,ci95_low_percent,ci95_high_percent,min_delta_percent,max_delta_percent
+richards,locked_p1_vs_pre_p1,30,2.200643,3.972567,-1.259398,9.204531,-18.911290,41.523974
+richards,candidate_vs_pre_p1,30,3.678801,3.603453,-1.779425,8.986330,-18.906429,38.269931
+richards,candidate_vs_locked_p1,30,-0.140703,0.180396,-4.020610,4.381402,-20.352054,27.150379
+towers,locked_p1_vs_pre_p1,30,-0.371112,0.522015,-3.754171,4.798201,-20.076615,34.070582
+towers,candidate_vs_pre_p1,30,-1.724539,-2.895380,-6.039351,0.248590,-22.028556,20.831798
+towers,candidate_vs_locked_p1,30,-0.945106,-2.790906,-6.048272,0.466460,-24.124513,20.977114
