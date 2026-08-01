@@ -1,0 +1,3 @@
+vm,pairs,favourable,median_percent,q1_percent,q3_percent,min_percent,max_percent,mean_percent,mean_ci95_low_percent,mean_ci95_high_percent,samples_removed
+rxvm,22,21,10.376205,9.429462,11.426425,-7.711370,31.247311,10.094233,7.319599,12.868868,0
+rxbvm,12,12,10.611712,9.839207,11.041706,8.313461,14.131512,10.585976,9.683540,11.488412,0

@@ -317,76 +317,14 @@ static void flow_add_numbered_register(flow_graph *graph, char type, size_t numb
 }
 
 static unsigned int flow_read_views(int opcode, size_t operand_index) {
-    if (opcode == OP_COPY_REG_REG && operand_index == 1) return FLOW_ALL_VIEWS;
-    if (opcode == OP_ICOPY_REG_REG && operand_index == 1) return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode == OP_FCOPY_REG_REG && operand_index == 1) return FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-    if (opcode == OP_SCOPY_REG_REG && operand_index == 1) return FLOW_VIEW_BIT(FLOW_VIEW_STRING);
-    if (opcode == OP_DCOPY_REG_REG && operand_index == 1) return FLOW_VIEW_BIT(FLOW_VIEW_DECIMAL);
-    if (opcode == OP_ACOPY_REG_REG && operand_index == 1) return FLOW_VIEW_BIT(FLOW_VIEW_ATTRIBUTES);
-    if (opcode == OP_BCOPY_REG_REG && operand_index == 1) return FLOW_VIEW_BIT(FLOW_VIEW_BINARY);
-
-    if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_ILTE_REG_INT_REG)
-        return operand_index == 0 ? FLOW_ALL_VIEWS : FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode == OP_BRT_ID_REG || opcode == OP_BRF_ID_REG || opcode == OP_BRTF_ID_ID_REG ||
-        opcode == OP_BEQ_ID_REG_REG || opcode == OP_BEQ_ID_REG_INT ||
-        opcode == OP_BNE_ID_REG_REG || opcode == OP_BNE_ID_REG_INT)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if ((opcode == OP_SEQ_REG_REG_REG || opcode == OP_SEQ_REG_REG_STRING ||
-         (opcode >= OP_SNE_REG_REG_REG && opcode <= OP_SLTE_REG_STRING_REG)) &&
-        operand_index != 0)
-        return FLOW_VIEW_BIT(FLOW_VIEW_STRING);
-    if (opcode >= OP_FEQ_REG_REG_REG && opcode <= OP_FLTE_REG_FLOAT_REG)
-        return operand_index == 0 ? FLOW_ALL_VIEWS : FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-    if (opcode >= OP_DEQ_REG_REG_REG && opcode <= OP_DLTE_REG_DECIMAL_REG)
-        return operand_index == 0 ? FLOW_ALL_VIEWS : FLOW_VIEW_BIT(FLOW_VIEW_DECIMAL);
-    if (opcode == OP_BINEQ_REG_REG_REG || opcode == OP_BINEQ_REG_REG_BINARY ||
-        opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
-        return operand_index == 0 ? FLOW_ALL_VIEWS : FLOW_VIEW_BIT(FLOW_VIEW_BINARY);
-    if (opcode == OP_ITOF_REG || opcode == OP_ITOB_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-    if (opcode == OP_ITOF_REG_REG && operand_index == 1)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    return FLOW_ALL_VIEWS;
+    return rxop_component_reads(opcode, operand_index);
 }
 
 /* A zero result means the effects inventory proves a write, but NR-27 does not
  * yet have a component-exact kill for it. This distinction is essential: the
  * canonical kills bit is not a whole multi-view value kill. */
 static unsigned int flow_precise_write_views(int opcode, size_t operand_index) {
-    if (operand_index != 0) return 0;
-    if (opcode == OP_COPY_REG_REG || opcode == OP_NULL_REG) return FLOW_ALL_VIEWS;
-    if (opcode == OP_ICOPY_REG_REG || opcode == OP_LOAD_REG_INT)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode == OP_FCOPY_REG_REG || opcode == OP_LOAD_REG_FLOAT)
-        return FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-    if (opcode == OP_SCOPY_REG_REG || opcode == OP_LOAD_REG_STRING)
-        return FLOW_VIEW_BIT(FLOW_VIEW_STRING);
-    if (opcode == OP_DCOPY_REG_REG || opcode == OP_LOAD_REG_DECIMAL)
-        return FLOW_VIEW_BIT(FLOW_VIEW_DECIMAL);
-    if (opcode == OP_ACOPY_REG_REG) return FLOW_VIEW_BIT(FLOW_VIEW_ATTRIBUTES);
-    if (opcode == OP_BCOPY_REG_REG || opcode == OP_LOAD_REG_BINARY)
-        return FLOW_VIEW_BIT(FLOW_VIEW_BINARY);
-    if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_SLTE_REG_STRING_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode >= OP_FEQ_REG_REG_REG && opcode <= OP_FLTE_REG_FLOAT_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode >= OP_DEQ_REG_REG_REG && opcode <= OP_DLTE_REG_DECIMAL_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode == OP_BINEQ_REG_REG_REG || opcode == OP_BINEQ_REG_REG_BINARY ||
-        opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode == OP_ITOF_REG) return FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-    if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG || opcode == OP_ITOB_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-    if (opcode == OP_ITOF_REG_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER) | FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-    return 0;
+    return rxop_component_writes(opcode, operand_index);
 }
 
 static void flow_set_bit(unsigned long *bits, size_t bit) {
@@ -419,6 +357,24 @@ static void flow_set_all_bits(const flow_graph *graph, unsigned long *bits) {
 static int flow_token_is_string(Assembler_Token *token, const char *text) {
     return token && token->token_type == STRING &&
            strcmp((const char *)token->token_value.string, text) == 0;
+}
+
+static unsigned int flow_trace_event_views(const instruction_queue *item) {
+    char value_type;
+    if (!item || !item->operand3Token ||
+        item->operand3Token->token_type != STRING ||
+        !item->operand3Token->token_value.string[0])
+        return FLOW_ALL_VIEWS;
+    value_type = (char)toupper((unsigned char)
+            item->operand3Token->token_value.string[0]);
+    if (value_type == 'B' || value_type == 'I')
+        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
+    if (value_type == 'F') return FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
+    if (value_type == 'S') return FLOW_VIEW_BIT(FLOW_VIEW_STRING);
+    if (value_type == 'D') return FLOW_VIEW_BIT(FLOW_VIEW_DECIMAL);
+    if (value_type == 'X') return FLOW_VIEW_BIT(FLOW_VIEW_BINARY);
+    if (value_type == 'R') return FLOW_VIEW_BIT(FLOW_VIEW_REFERENCE);
+    return FLOW_ALL_VIEWS;
 }
 
 static void flow_collect_registers(flow_graph *graph) {
@@ -912,7 +868,8 @@ static void flow_build_use_kill_and_taint(flow_graph *graph) {
             register_index = flow_register_index(graph, trace_type,
                     (size_t)item->operand5Token->token_value.integer);
             if (register_index >= 0)
-                flow_set_register_views(graph, node->uses, register_index, FLOW_ALL_VIEWS);
+                flow_set_register_views(graph, node->uses, register_index,
+                                        flow_trace_event_views(item));
         }
     }
 }
@@ -1975,6 +1932,145 @@ static int flow_is_async_handler_target(const flow_graph *graph, size_t node_ind
     return 0;
 }
 
+static size_t flow_storage_identity_at(const flow_graph *graph,
+                                       size_t node_index,
+                                       int register_index) {
+    if (!graph || !graph->storage || register_index < 0 ||
+        node_index >= graph->item_count ||
+        (size_t)register_index >= graph->register_count ||
+        !graph->storage->has_in[node_index])
+        return 0;
+    return graph->storage->in[node_index * graph->register_count +
+                              (size_t)register_index];
+}
+
+static int flow_storage_fact_is_unescaped_at(const flow_graph *graph,
+                                             size_t node_index,
+                                             size_t storage_id) {
+    size_t register_index;
+    if (!storage_id || storage_id > graph->register_count) return 0;
+    if (graph->tainted_registers[storage_id - 1]) return 0;
+    for (register_index = 0; register_index < graph->register_count;
+         register_index++) {
+        if (flow_storage_identity_at(graph, node_index,
+                                     (int)register_index) == storage_id &&
+            graph->tainted_registers[register_index])
+            return 0;
+    }
+    return 1;
+}
+
+static int flow_node_kills_storage_derivation(const flow_graph *graph,
+                                              size_t node_index,
+                                              size_t storage_id,
+                                              unsigned int components,
+                                              unsigned int contexts) {
+    const instruction_queue *item;
+    const flow_node *node;
+    size_t operand_index;
+    int register_index;
+    size_t operand_storage;
+    unsigned int written_components;
+    unsigned int global_barriers;
+
+    item = &graph->items[node_index];
+    node = &graph->nodes[node_index];
+    if (item->instrType != OP_CODE) return 0;
+    if (!node->op || node->effects.state != RXOP_EFFECT_CLASSIFIED) return 1;
+    if (rxop_context_writes(node->op->opcode) & contexts) return 1;
+    if (node->effects.semantics & (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL))
+        return 1;
+
+    /* An indirect/opaque operation cannot reach a base local that never
+     * participates in alias/reference machinery.  Once any register mapping
+     * for this storage is tainted, retain the conservative global barrier. */
+    global_barriers = RXOP_SEM_REFERENCE_CREATE | RXOP_SEM_REFERENCE_READ |
+                      RXOP_SEM_REFERENCE_WRITE | RXOP_SEM_REFERENCE_RELEASE |
+                      RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_OPAQUE;
+    if ((node->effects.semantics & global_barriers) &&
+        !flow_storage_fact_is_unescaped_at(graph, node_index, storage_id))
+        return 1;
+
+    /* These instructions change register-to-storage mappings, not the value
+     * components inside the mapped storage.  Their normal transfer is already
+     * represented by the graph-owned storage service. */
+    if (flow_storage_is_pure_swap_opcode(node->op->opcode) ||
+        (node->effects.semantics &
+         (RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE)))
+        return 0;
+
+    for (operand_index = 0; operand_index < item->operandCount;
+         operand_index++) {
+        if (!rxop_effect_writes_operand(&node->effects, operand_index))
+            continue;
+        register_index = flow_storage_operand_register(
+                graph, (instruction_queue *)item, operand_index);
+        if (register_index < 0) continue;
+        operand_storage = flow_storage_identity_at(graph, node_index,
+                                                   register_index);
+        if (!operand_storage) return 1;
+        if (operand_storage != storage_id) continue;
+        written_components = rxop_component_writes(node->op->opcode,
+                                                   operand_index);
+        if (!written_components || (written_components & components)) return 1;
+    }
+    if (node->effects.implicit != RXOP_IMPLICIT_NONE) return 1;
+    return 0;
+}
+
+static void flow_compute_available_storage_derivation(
+        const flow_graph *graph, size_t generator, size_t storage_id,
+        unsigned int components, unsigned int contexts,
+        unsigned char *available_in, unsigned char *available_out) {
+    size_t index;
+    size_t predecessor;
+    size_t predecessor_start;
+    size_t predecessor_end;
+    int changed;
+    int next_in;
+    int next_out;
+
+    for (index = 0; index < graph->item_count; index++) {
+        if (graph->nodes[index].reachable) {
+            available_in[index] = 1;
+            available_out[index] = 1;
+        }
+    }
+    if (graph->item_count) available_in[0] = 0;
+    do {
+        changed = 0;
+        for (index = 0; index < graph->item_count; index++) {
+            if (!graph->nodes[index].reachable) continue;
+            predecessor_start = graph->predecessor_offsets[index];
+            predecessor_end = graph->predecessor_offsets[index + 1];
+            next_in = predecessor_start < predecessor_end ||
+                      flow_is_async_handler_target(graph, index);
+            for (predecessor = predecessor_start;
+                 predecessor < predecessor_end; predecessor++) {
+                size_t predecessor_node;
+                predecessor_node = graph->predecessors[predecessor];
+                if (graph->nodes[predecessor_node].reachable &&
+                    !available_out[predecessor_node])
+                    next_in = 0;
+            }
+            if (flow_is_async_handler_target(graph, index)) next_in = 0;
+            if (index == 0) next_in = 0;
+            if (index == generator) next_out = 1;
+            else if (flow_node_kills_storage_derivation(
+                             graph, index, storage_id, components, contexts))
+                next_out = 0;
+            else
+                next_out = next_in;
+            if (available_in[index] != (unsigned char)next_in ||
+                available_out[index] != (unsigned char)next_out) {
+                available_in[index] = (unsigned char)next_in;
+                available_out[index] = (unsigned char)next_out;
+                changed = 1;
+            }
+        }
+    } while (changed);
+}
+
 static void flow_compute_available_fact(const flow_graph *graph, size_t generator,
                                         int destination_register, int source_register,
                                         unsigned int views,
@@ -2701,6 +2797,74 @@ static unsigned int flow_redundant_conversion_views(int opcode) {
     return 0;
 }
 
+static size_t flow_remove_redundant_itos(flow_graph *graph,
+                                         flow_stats *stats) {
+    size_t generator;
+    size_t index;
+    int register_index;
+    int candidate_register;
+    size_t storage_id;
+    unsigned char *available_in;
+    unsigned char *available_out;
+    instruction_queue *first;
+    instruction_queue *item;
+    size_t removed;
+
+    removed = 0;
+    for (generator = 0; generator < graph->item_count; generator++) {
+        first = &graph->items[generator];
+        if (first->instrType != OP_CODE || !graph->nodes[generator].reachable ||
+            !graph->nodes[generator].op || first->operandCount != 1 ||
+            graph->nodes[generator].op->opcode != OP_ITOS_REG)
+            continue;
+        if (rxop_value_derivation(OP_ITOS_REG) !=
+                RXOP_DERIVATION_INTEGER_TO_STRING ||
+            rxop_signal_phase(OP_ITOS_REG) != RXOP_SIGNAL_PHASE_NONE)
+            continue;
+        if (!flow_storage_attach(graph)) return removed;
+        register_index = flow_register_index(
+                graph, flow_register_type(first->operand1Token),
+                (size_t)first->operand1Token->token_value.integer);
+        if (register_index < 0) continue;
+        storage_id = flow_storage_identity_at(graph, generator,
+                                              register_index);
+        if (!storage_id) continue;
+        available_in = calloc(graph->item_count, 1);
+        available_out = calloc(graph->item_count, 1);
+        if (!available_in || !available_out)
+            RX_PANIC_OOM("calloc RXAS storage derivation fact",
+                         graph->item_count * 2, 0);
+        flow_compute_available_storage_derivation(
+                graph, generator, storage_id,
+                RXOP_COMPONENT_INTEGER | RXOP_COMPONENT_STRING,
+                rxop_derivation_context_reads(OP_ITOS_REG),
+                available_in, available_out);
+        for (index = generator + 1; index < graph->item_count; index++) {
+            item = &graph->items[index];
+            if (!available_in[index] || item->instrType != OP_CODE ||
+                !graph->nodes[index].op ||
+                graph->nodes[index].op->opcode != OP_ITOS_REG ||
+                item->operandCount != 1)
+                continue;
+            candidate_register = flow_register_index(
+                    graph, flow_register_type(item->operand1Token),
+                    (size_t)item->operand1Token->token_value.integer);
+            if (candidate_register < 0 ||
+                flow_storage_identity_at(graph, index,
+                                         candidate_register) != storage_id)
+                continue;
+            item->instrType = EMPTY;
+            flow_debug_accept(graph, index,
+                              "redundant-storage-component-conversion", 0);
+            removed++;
+            stats->redundant_conversions_removed++;
+        }
+        free(available_in);
+        free(available_out);
+    }
+    return removed;
+}
+
 static size_t flow_remove_redundant_conversions(flow_graph *graph,
                                                 flow_stats *stats) {
     size_t generator;
@@ -2713,7 +2877,7 @@ static size_t flow_remove_redundant_conversions(flow_graph *graph,
     instruction_queue *first;
     instruction_queue *item;
     size_t removed;
-    removed = 0;
+    removed = flow_remove_redundant_itos(graph, stats);
     for (generator = 0; generator < graph->item_count; generator++) {
         first = &graph->items[generator];
         if (first->instrType != OP_CODE || !graph->nodes[generator].reachable ||

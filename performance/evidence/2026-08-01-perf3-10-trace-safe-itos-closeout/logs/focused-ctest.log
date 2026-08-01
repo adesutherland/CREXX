@@ -1,0 +1,135 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/59 Test    #1: linked_opt_runtime_artifacts_build ...........   Passed    0.06 sec
+      Start  969: test_trace_exit_bin_build
+ 2/59 Test  #969: test_trace_exit_bin_build ....................   Passed    0.06 sec
+      Start  972: test_trace_negated_string_bin_build
+ 3/59 Test  #972: test_trace_negated_string_bin_build ..........   Passed    0.06 sec
+      Start  975: test_trace_results_bin_build
+ 4/59 Test  #975: test_trace_results_bin_build .................   Passed    0.06 sec
+      Start 1004: test_trace_namespace_commands_bin_build
+ 5/59 Test #1004: test_trace_namespace_commands_bin_build ......   Passed    0.05 sec
+      Start  981: test_trace_direct_bin_build
+ 6/59 Test  #981: test_trace_direct_bin_build ..................   Passed    0.05 sec
+      Start  978: test_trace_llm_bin_build
+ 7/59 Test  #978: test_trace_llm_bin_build .....................   Passed    0.05 sec
+      Start 1846: benchmark_rexxcps_levelb_noopt
+      Start 1006: test_trace_bad_abbreviation_diagnostic
+      Start 1005: test_trace_unknown_option_diagnostic
+      Start  991: test_trace_env_opt
+      Start  974: test_trace_results_opt
+      Start  990: test_trace_env_noopt
+      Start  973: test_trace_results_noopt
+      Start  998: test_trace_env_ignored_noopt
+      Start  996: test_trace_env_invalid_noopt
+      Start  977: test_trace_llm_opt
+      Start  985: test_trace_file_opt
+      Start  999: test_trace_env_ignored_opt
+      Start 1001: test_trace_source_jump_opt
+      Start  997: test_trace_env_invalid_opt
+      Start 1000: test_trace_source_jump_noopt
+      Start  983: test_trace_stderr_opt
+      Start  982: test_trace_stderr_noopt
+      Start  971: test_trace_negated_string_opt
+      Start  970: test_trace_negated_string_noopt
+      Start 1002: test_trace_namespace_commands_noopt
+      Start 1003: test_trace_namespace_commands_opt
+      Start  980: test_trace_direct_opt
+      Start  979: test_trace_direct_noopt
+      Start  967: test_trace_exit_noopt
+      Start  984: test_trace_file_noopt
+      Start  968: test_trace_exit_opt
+      Start  976: test_trace_llm_noopt
+      Start 1847: benchmark_rexxcps_levelb_opt
+      Start  987: test_trace_normal_quiet_opt
+      Start  986: test_trace_normal_quiet_noopt
+ 8/59 Test  #977: test_trace_llm_opt ...........................   Passed    0.61 sec
+      Start  989: test_trace_normal_command_opt
+ 9/59 Test  #970: test_trace_negated_string_noopt ..............   Passed    0.67 sec
+      Start  988: test_trace_normal_command_noopt
+10/59 Test #1000: test_trace_source_jump_noopt .................   Passed    0.72 sec
+      Start  992: test_trace_event_batch_noopt_rxvm
+11/59 Test #1001: test_trace_source_jump_opt ...................   Passed    0.74 sec
+      Start  993: test_trace_event_batch_noopt_rxbvm
+12/59 Test  #985: test_trace_file_opt ..........................   Passed    0.77 sec
+      Start  994: test_trace_event_batch_opt_rxvm
+13/59 Test  #996: test_trace_env_invalid_noopt .................   Passed    0.77 sec
+      Start  995: test_trace_event_batch_opt_rxbvm
+14/59 Test  #998: test_trace_env_ignored_noopt .................   Passed    0.77 sec
+15/59 Test  #999: test_trace_env_ignored_opt ...................   Passed    0.77 sec
+      Start 1801: storage_identity_runtime_rxbvm_opt
+      Start 1783: rxas_optimizer_whole_procedure_panel
+16/59 Test #1801: storage_identity_runtime_rxbvm_opt ...........   Passed    0.04 sec
+      Start 1799: storage_identity_runtime_rxvm_opt
+17/59 Test  #974: test_trace_results_opt .......................   Passed    0.83 sec
+      Start 1781: rxas_optimizer_whole_procedure_flow
+18/59 Test  #971: test_trace_negated_string_opt ................   Passed    0.83 sec
+      Start 1784: rxas_optimizer_whole_procedure_panel_noopt
+19/59 Test  #997: test_trace_env_invalid_opt ...................   Passed    0.85 sec
+      Start 1800: storage_identity_runtime_rxbvm_noopt
+20/59 Test #1799: storage_identity_runtime_rxvm_opt ............   Passed    0.04 sec
+      Start 1803: redundant_itos_runtime_rxvm_opt
+21/59 Test #1800: storage_identity_runtime_rxbvm_noopt .........   Passed    0.01 sec
+      Start 1782: rxas_optimizer_whole_procedure_flow_noopt
+22/59 Test  #990: test_trace_env_noopt .........................   Passed    0.87 sec
+      Start 1805: redundant_itos_runtime_rxbvm_opt
+23/59 Test #1803: redundant_itos_runtime_rxvm_opt ..............   Passed    0.04 sec
+      Start 1787: rxas_optimizer_storage_identity_flow
+24/59 Test #1002: test_trace_namespace_commands_noopt ..........   Passed    0.88 sec
+      Start 1798: storage_identity_runtime_rxvm_noopt
+25/59 Test #1805: redundant_itos_runtime_rxbvm_opt .............   Passed    0.04 sec
+      Start 1788: rxas_optimizer_redundant_itos_flow
+26/59 Test #1798: storage_identity_runtime_rxvm_noopt ..........   Passed    0.01 sec
+      Start 1789: rxas_optimizer_redundant_itos_flow_noopt
+27/59 Test  #991: test_trace_env_opt ...........................   Passed    0.96 sec
+      Start 1802: redundant_itos_runtime_rxvm_noopt
+28/59 Test #1802: redundant_itos_runtime_rxvm_noopt ............   Passed    0.01 sec
+      Start 1804: redundant_itos_runtime_rxbvm_noopt
+29/59 Test  #983: test_trace_stderr_opt ........................   Passed    0.96 sec
+      Start 1741: rxas_optimizer_metadata
+30/59 Test  #982: test_trace_stderr_noopt ......................   Passed    0.96 sec
+31/59 Test #1804: redundant_itos_runtime_rxbvm_noopt ...........   Passed    0.01 sec
+32/59 Test #1741: rxas_optimizer_metadata ......................   Passed    0.01 sec
+33/59 Test  #973: test_trace_results_noopt .....................   Passed    0.97 sec
+34/59 Test  #986: test_trace_normal_quiet_noopt ................   Passed    0.86 sec
+35/59 Test #1003: test_trace_namespace_commands_opt ............   Passed    0.96 sec
+36/59 Test  #976: test_trace_llm_noopt .........................   Passed    0.89 sec
+37/59 Test  #984: test_trace_file_noopt ........................   Passed    0.89 sec
+38/59 Test  #968: test_trace_exit_opt ..........................   Passed    0.90 sec
+39/59 Test  #967: test_trace_exit_noopt ........................   Passed    0.91 sec
+40/59 Test  #987: test_trace_normal_quiet_opt ..................   Passed    0.89 sec
+41/59 Test #1787: rxas_optimizer_storage_identity_flow .........   Passed    0.33 sec
+42/59 Test #1782: rxas_optimizer_whole_procedure_flow_noopt ....   Passed    0.37 sec
+43/59 Test #1789: rxas_optimizer_redundant_itos_flow_noopt .....   Passed    0.31 sec
+44/59 Test #1781: rxas_optimizer_whole_procedure_flow ..........   Passed    0.40 sec
+45/59 Test #1788: rxas_optimizer_redundant_itos_flow ...........   Passed    0.32 sec
+46/59 Test #1784: rxas_optimizer_whole_procedure_panel_noopt ...   Passed    0.40 sec
+47/59 Test #1783: rxas_optimizer_whole_procedure_panel .........   Passed    0.47 sec
+48/59 Test  #989: test_trace_normal_command_opt ................   Passed    0.74 sec
+49/59 Test  #988: test_trace_normal_command_noopt ..............   Passed    0.72 sec
+50/59 Test  #980: test_trace_direct_opt ........................   Passed    1.39 sec
+51/59 Test  #995: test_trace_event_batch_opt_rxbvm .............   Passed    0.76 sec
+52/59 Test  #979: test_trace_direct_noopt ......................   Passed    1.39 sec
+53/59 Test  #992: test_trace_event_batch_noopt_rxvm ............   Passed    0.81 sec
+54/59 Test  #994: test_trace_event_batch_opt_rxvm ..............   Passed    0.77 sec
+55/59 Test  #993: test_trace_event_batch_noopt_rxbvm ...........   Passed    0.83 sec
+56/59 Test #1847: benchmark_rexxcps_levelb_opt .................   Passed    1.95 sec
+57/59 Test #1846: benchmark_rexxcps_levelb_noopt ...............   Passed    2.36 sec
+58/59 Test #1006: test_trace_bad_abbreviation_diagnostic .......   Passed    2.40 sec
+59/59 Test #1005: test_trace_unknown_option_diagnostic .........   Passed    2.47 sec
+
+100% tests passed, 0 tests failed out of 59
+
+Label Time Summary:
+benchmark        =   4.30 sec*proc (2 tests)
+language         =   4.30 sec*proc (2 tests)
+linked_opt       =   2.11 sec*proc (5 tests)
+metadata         =   0.01 sec*proc (1 test)
+noncanonical     =   4.30 sec*proc (2 tests)
+optimizer        =   2.80 sec*proc (16 tests)
+rexxcps-smoke    =   4.30 sec*proc (2 tests)
+runtime          =   0.19 sec*proc (8 tests)
+rxas             =   2.80 sec*proc (16 tests)
+smoke            =   1.95 sec*proc (1 test)
+
+Total Test time (real) =   2.90 sec

@@ -286,6 +286,16 @@ payload. TRACE handlers map them to presentation prefixes later and may read
 frame-local registers only when `value_source` names a register and `value_ref`
 is non-negative.
 
+Several ordered trace events may share one executable address after compiler
+or assembler optimization. When that address is reached, the trace controller
+collects every visible result event at that exact boundary into an ordered
+pending batch. The generated TRACE exit drains the complete batch before
+execution continues, preserving event count, metadata order and the component
+value named by each record. Delivery does not scan an address range and does
+not infer that skipped, branched-over or signal-bypassed instructions ran.
+Consequently an executable `cnop` or conversion is not required merely to keep
+two metadata events at distinct addresses.
+
 Unstripped images may expose trace-event metadata. `metaloaddata` treats
 optional trace-event strings such as `symbol` and `resolved_name` defensively:
 absent or invalid references are reported as empty strings rather than causing

@@ -33,6 +33,11 @@ complete Release build/install and installed VM smoke 2/2. LSan is unavailable
 on this macOS runtime; Windows/MSVC validation is queued before publication.
 Adrian authorized the combined local closeout commit on 2026-08-01; push
 remains a separate user-authorized action.
+Adrian subsequently accepted PERF3-10: an ordered TRACE result-event batch and
+a storage-identity/component-aware RXAS proof for redundant integer-to-string
+materialization. Its first ordinary Release verdict improves RexxCPS median
+CPS by 10.38% on `rxvm` and 10.61% on `rxbvm`, with 21/22 and 12/12 favourable
+pairs. Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests.
 No tactical-rule deletion or public format change was made. The complete
 PERF3-02/C1abc slice is committed locally as `4a3940395`; push remains a
 separate user-authorized action.
@@ -220,10 +225,13 @@ their recorded trigger fires:
 | PERF3-04 | P1 | Generic final/concrete scalar accessor proof | queued evidence only | A general proof and hand-equivalent ceiling justify a candidate, or the lead is deferred. |
 | PERF3-05 | P1 | Compiler, native layout and private-stream panel | complete — retain L0 | Adrian accepted the 2026-08-01 panel. Exact C1abc+A1 baseline/drift products match; effective ThinLTO, merged/per-VM PGO and no-flatten layout fail representative or zero-work guards; L4 remains unopened. No production VM change was made. Control: [`PERF3-05-WORKLIST.md`](PERF3-05-WORKLIST.md); evidence: [`2026-08-01-perf3-05-compiler-layout-panel`](evidence/2026-08-01-perf3-05-compiler-layout-panel/). |
 | PERF3-05-B1 | P2 | VM library link interface and static API granularity | queued build/API hygiene | Current Mac links complete in 61-71 ms, so the reported large delay is not reproduced. Export leakage is real but not causal in the isolated relink. Rework should make `crexxsaa` implementation archives/includes private, publish only the supported header/export surface, split the static phase API if narrow clients are supported, and remeasure on the reporting host. Evidence: [`link diagnostic`](evidence/2026-08-01-perf3-05-compiler-layout-panel/link-diagnostic/). |
-| PERF3-06 | P0 | Qualified-deficit closure and Mac scorecard | queued | Accepted slices are reflected in a formal same-session common-five plus RexxCPS/Towers scorecard; every guard and exclusion is explicit. |
+| PERF3-06 | P0 | Qualified-deficit closure and Mac scorecard | queued next accounting gate | PERF3-02, PERF3-03 and PERF3-10 now form an accepted tranche. Capture their exact current-product same-session common-five plus RexxCPS/Towers scorecard before another production candidate changes the baseline; every guard and exclusion remains explicit. |
 | PERF3-07 | P2 | Capability and lifecycle side lanes | deferred/independent | Each approved product/capability use case has its own scope and does not distort the common benchmark programme. |
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
+| PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
+| PERF3-11 | P0 | Component-generation flow and proved signal phases | queued design/evidence — highest-value next mechanism | Generalize the accepted C1 fact into a reusable multi-fact storage/component generation lattice, classify pre/post/partial-write signal locations, model loop/backedge availability and measure assembler cost before adding consumers. Retain tactical rules until an equivalent core proof replaces each one. |
+| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
 
@@ -635,6 +643,85 @@ this macOS runtime, and no local Windows cross-toolchain is available; real
 MSVC validation is queued as PERF3-03-W1 before publication. PERF3-03 is
 complete on Apple and PERF3-04 remains queued. Adrian subsequently authorized
 the combined local closeout commit; no push is authorized.
+
+Adrian then approved PERF3-10 on 2026-08-01. The selected C1/T1 candidate is
+ordered TRACE result-event batching plus a reusable storage-identity and
+component-aware RXAS fact for redundant `ITOS`. C0-C4 and T0-T2 remain
+recorded for replay. The candidate must preserve TRACE event count/order/value,
+fail closed across unproved writes, calls and signal phases, and stop after its
+minimum correctness gate and mandatory first ordinary Release runtime verdict.
+
+That stop gate was reached and Adrian accepted C1/T1 on 2026-08-01. The
+ordinary Release comparison passes 72/72 executions. Combined paired median
+CPS changes are +10.376% on `rxvm` (21/22 favourable) and +10.612% on `rxbvm`
+(12/12 favourable). An equal 200 x 100 counts-only diagnostic removes
+1,399,605 total dynamic instructions (2.504%) and 1,400,000 `ITOS` executions
+(55.555%). No sample was removed. The affected Debug product then passes 59/59
+focused and 1,982/1,982 broad tests. Exact C0/C1 artifacts, timing, profiles,
+the reviewed legacy TRACE expectation update and closeout logs are retained in
+the checksum-closed
+[`PERF3-10 evidence bundle`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/).
+T2 and wider conversions remain outside the accepted slice; no push is
+authorized.
+
+## PERF3-11 — component generations and signal-phase flow
+
+PERF3-10 proves the architectural direction but intentionally implements one
+consumer. The reusable metadata now distinguishes register components,
+derivation context and an explicit signal-phase type; the production consumer
+uses storage identity and invalidates an `ITOS` fact when its integer/string
+components or numeric context change. Two limitations are now the entry gate
+for the next mechanism slice:
+
+1. derivation availability is solved separately for each candidate generator,
+   so it should become one worklist-driven multi-fact forward analysis before
+   adding many conversions or paying avoidable assembler cost;
+2. signal phase is currently proved only as `NONE` for the safe `ITOS` case
+   and otherwise fails closed as unknown. Common pre-write, post-write and
+   partial-write locations must be classified against actual VM handlers so
+   normal, skip, retry and handler continuations receive the right component
+   generation.
+
+The proposed fact is `(storage identity, component, value generation,
+derivation, context generation)`. A component write creates a new generation;
+derived string/number views name the source generation they represent. Direct
+link/swap/unlink mapping, joins, loop entries/backedges and typed signal edges
+then operate on the same fact instead of accumulating tactical exceptions.
+
+The current equal-work RexxCPS diagnostic leaves 1,120,006 `ITOS`, 1,660,000
+`STOD` and 2,220,000 `DTOS` executions. These are opportunity counts, not
+authorization to remove them. PERF3-11 first measures assembler processing
+time, attributes the two retained hot-loop `ITOS` sites and proves signal
+locations for the decimal handlers. Only then should it compare remaining
+`ITOS`, decimal/string round trips, compiler loop hoisting and consolidated
+swap/swap cleanup as separate consumers. No public format, ABI or production
+rewrite is selected by this queue entry.
+
+The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
+address-separation concern but does not itself prove that an observed load,
+`null`, `itof`, copy or forwarded producer has the same component value; their
+`flow_has_trace_after()` checks stay until migrated to the new fact. The local
+duplicate-link and swap/call-window rules still transform code while storage
+identity currently only analyses their mappings. The adjacent `cnop` rule is
+not a trace-anchor workaround. PERF3-11 must replace these one consumer at a
+time with structural/runtime equivalence, rather than deleting guards in a
+batch.
+
+## PERF3-12 — current RexxCPS clause-lowering rereview
+
+This is a compiler-facing evidence lane, not a benchmark-specific tuning
+licence. Start from the accepted PERF3-06 current-product scorecard and fresh
+dual-VM profiles. Map each material RexxCPS clause family to compiler RXAS,
+library work and reusable flow facts; include variable/representation hoisting,
+string conversions, PARSE, stem-tail construction, ADDRESS and the inactive
+TRACE path. T1 already supplies the correct anchoring model: a reached trace
+event drains prior ordered events, so `CNOP` or executable conversion work is
+not retained merely to separate metadata.
+
+The deliverable is a ranked general-shape ledger with dynamic ceiling,
+semantic proof owner and guard workload. Compiler lowering, RXAS flow and
+runtime fallback remain separate candidates. Any production edit requires its
+own selected design and mandatory first ordinary Release verdict.
 
 ## Authoritative references
 

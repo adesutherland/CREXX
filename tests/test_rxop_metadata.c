@@ -317,6 +317,20 @@ int main(void) {
     check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
           "integer-to-float conversion must remain non-throwing",
           &op_table[OP_ITOF_REG]);
+    effects = rxop_effects(OP_ITOS_REG);
+    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0 &&
+              rxop_component_reads(OP_ITOS_REG, 0) == RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_ITOS_REG, 0) == RXOP_COMPONENT_STRING &&
+              rxop_value_derivation(OP_ITOS_REG) ==
+                  RXOP_DERIVATION_INTEGER_TO_STRING &&
+              rxop_derivation_context_reads(OP_ITOS_REG) ==
+                  RXOP_CONTEXT_NUMERIC &&
+              rxop_signal_phase(OP_ITOS_REG) == RXOP_SIGNAL_PHASE_NONE,
+          "integer-to-string component/signal metadata regression",
+          &op_table[OP_ITOS_REG]);
+    check(rxop_context_writes(OP_SETNUMCAS_INT) == RXOP_CONTEXT_NUMERIC &&
+              rxop_context_writes(OP_GETNUMCAS_REG) == RXOP_CONTEXT_NONE,
+          "numeric-context component metadata regression", NULL);
     effects = rxop_effects(OP_ITOF_REG_REG);
     check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
           "two-register integer-to-float conversion must remain non-throwing",

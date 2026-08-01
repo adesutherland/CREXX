@@ -137,3 +137,109 @@ int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index) 
     return effects && rxop_effect_has_operand(effects->cursor_writes, NULL,
                                               operand_index);
 }
+
+unsigned int rxop_component_reads(int opcode, size_t operand_index) {
+    if (opcode == OP_COPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ALL;
+    if (opcode == OP_ICOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_FCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_FLOAT;
+    if (opcode == OP_SCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_STRING;
+    if (opcode == OP_DCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_DECIMAL;
+    if (opcode == OP_ACOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ATTRIBUTES;
+    if (opcode == OP_BCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_BINARY;
+
+    if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_ILTE_REG_INT_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_BRT_ID_REG || opcode == OP_BRF_ID_REG ||
+        opcode == OP_BRTF_ID_ID_REG || opcode == OP_BEQ_ID_REG_REG ||
+        opcode == OP_BEQ_ID_REG_INT || opcode == OP_BNE_ID_REG_REG ||
+        opcode == OP_BNE_ID_REG_INT)
+        return RXOP_COMPONENT_INTEGER;
+    if ((opcode == OP_SEQ_REG_REG_REG || opcode == OP_SEQ_REG_REG_STRING ||
+         (opcode >= OP_SNE_REG_REG_REG && opcode <= OP_SLTE_REG_STRING_REG)) &&
+        operand_index != 0)
+        return RXOP_COMPONENT_STRING;
+    if (opcode >= OP_FEQ_REG_REG_REG && opcode <= OP_FLTE_REG_FLOAT_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_FLOAT;
+    if (opcode >= OP_DEQ_REG_REG_REG && opcode <= OP_DLTE_REG_DECIMAL_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_DECIMAL;
+    if (opcode == OP_BINEQ_REG_REG_REG || opcode == OP_BINEQ_REG_REG_BINARY ||
+        opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
+        return operand_index == 0 ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_BINARY;
+    if (opcode == OP_ITOS_REG || opcode == OP_ITOF_REG || opcode == OP_ITOB_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG)
+        return RXOP_COMPONENT_FLOAT;
+    if (opcode == OP_ITOF_REG_REG && operand_index == 1)
+        return RXOP_COMPONENT_INTEGER;
+    return RXOP_COMPONENT_ALL;
+}
+
+/* NONE means the opcode-effects inventory proves a register write but the
+ * component changed by that write is not yet exact. */
+unsigned int rxop_component_writes(int opcode, size_t operand_index) {
+    if (operand_index != 0) return RXOP_COMPONENT_NONE;
+    if (opcode == OP_COPY_REG_REG || opcode == OP_NULL_REG)
+        return RXOP_COMPONENT_ALL;
+    if (opcode == OP_ICOPY_REG_REG || opcode == OP_LOAD_REG_INT)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_FCOPY_REG_REG || opcode == OP_LOAD_REG_FLOAT)
+        return RXOP_COMPONENT_FLOAT;
+    if (opcode == OP_SCOPY_REG_REG || opcode == OP_LOAD_REG_STRING)
+        return RXOP_COMPONENT_STRING;
+    if (opcode == OP_DCOPY_REG_REG || opcode == OP_LOAD_REG_DECIMAL)
+        return RXOP_COMPONENT_DECIMAL;
+    if (opcode == OP_ACOPY_REG_REG) return RXOP_COMPONENT_ATTRIBUTES;
+    if (opcode == OP_BCOPY_REG_REG || opcode == OP_LOAD_REG_BINARY)
+        return RXOP_COMPONENT_BINARY;
+    if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_SLTE_REG_STRING_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode >= OP_FEQ_REG_REG_REG && opcode <= OP_FLTE_REG_FLOAT_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode >= OP_DEQ_REG_REG_REG && opcode <= OP_DLTE_REG_DECIMAL_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_BINEQ_REG_REG_REG || opcode == OP_BINEQ_REG_REG_BINARY ||
+        opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_ITOS_REG) return RXOP_COMPONENT_STRING;
+    if (opcode == OP_ITOF_REG) return RXOP_COMPONENT_FLOAT;
+    if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG || opcode == OP_ITOB_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_ITOF_REG_REG)
+        return RXOP_COMPONENT_INTEGER | RXOP_COMPONENT_FLOAT;
+    return RXOP_COMPONENT_NONE;
+}
+
+RxOpValueDerivation rxop_value_derivation(int opcode) {
+    if (opcode == OP_ITOS_REG) return RXOP_DERIVATION_INTEGER_TO_STRING;
+    if (opcode == OP_ITOF_REG || opcode == OP_ITOF_REG_REG)
+        return RXOP_DERIVATION_INTEGER_TO_FLOAT;
+    return RXOP_DERIVATION_NONE;
+}
+
+unsigned int rxop_derivation_context_reads(int opcode) {
+    return opcode == OP_ITOS_REG ? RXOP_CONTEXT_NUMERIC : RXOP_CONTEXT_NONE;
+}
+
+unsigned int rxop_context_writes(int opcode) {
+    if (opcode == OP_SETNUMDGTS_REG || opcode == OP_SETNUMDGTS_INT ||
+        opcode == OP_SETNUMFUZ_REG || opcode == OP_SETNUMFUZ_INT ||
+        opcode == OP_SETNUMFRM_REG || opcode == OP_SETNUMFRM_INT ||
+        opcode == OP_SETNUMCAS_REG || opcode == OP_SETNUMCAS_INT ||
+        opcode == OP_SETNUMSTD_REG || opcode == OP_SETNUMSTD_INT ||
+        opcode == OP_NUMSCI_INT_INT_INT || opcode == OP_NUMENG_INT_INT_INT)
+        return RXOP_CONTEXT_NUMERIC;
+    return RXOP_CONTEXT_NONE;
+}
+
+RxOpSignalPhase rxop_signal_phase(int opcode) {
+    RxOpEffects effects;
+    effects = rxop_effects(opcode);
+    if (effects.state == RXOP_EFFECT_CLASSIFIED &&
+        (effects.semantics & RXOP_SEM_MAY_THROW) == 0)
+        return RXOP_SIGNAL_PHASE_NONE;
+    return RXOP_SIGNAL_PHASE_UNKNOWN;
+}

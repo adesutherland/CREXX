@@ -121,6 +121,8 @@ crexx_add_rxas_optimizer_check(whole_procedure_panel_noopt whole_procedure_panel
 crexx_add_rxas_optimizer_check(nr18_flow_harvest nr18_flow_harvest.rxas nr18_flow_harvest)
 crexx_add_rxas_optimizer_check(nr18_flow_harvest_noopt nr18_flow_harvest.rxas nr18_flow_harvest_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(storage_identity_flow storage_identity_flow.rxas storage_identity_flow RXAS_FLAGS -d)
+crexx_add_rxas_optimizer_check(redundant_itos_flow redundant_itos_flow.rxas redundant_itos_flow)
+crexx_add_rxas_optimizer_check(redundant_itos_flow_noopt redundant_itos_flow.rxas redundant_itos_flow_noopt RXAS_FLAGS -n)
 
 add_custom_target(whole_procedure_runtime ALL)
 foreach(_nr27_runner IN ITEMS rxvm rxbvm)
@@ -171,6 +173,24 @@ foreach(_c2e2_runner IN ITEMS rxvm rxbvm)
     foreach(_c2e2_mode IN ITEMS noopt opt)
         set_tests_properties(storage_identity_runtime_${_c2e2_runner}_${_c2e2_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "PASS: C2-E2 storage identity runtime"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(redundant_itos_runtime ALL)
+foreach(_perf3_10_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME redundant_itos_runtime_${_perf3_10_runner}
+            SOURCE ${RXAS_OPTIMIZER_DIR}/redundant_itos_runtime
+            TARGET_GROUP redundant_itos_runtime
+            RUNNER ${_perf3_10_runner}
+            DEPENDS ${RXAS_OPTIMIZER_DIR}/redundant_itos_runtime.rxas rxas ${_perf3_10_runner} rxlink
+            TEST_LABELS "rxas;optimizer;runtime"
+    )
+    foreach(_perf3_10_mode IN ITEMS noopt opt)
+        set_tests_properties(redundant_itos_runtime_${_perf3_10_runner}_${_perf3_10_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: PERF3-10 redundant ITOS runtime"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

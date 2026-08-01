@@ -1,0 +1,4 @@
+# PERF3-10 governed ten-pair RXVM noise append.
+crexx-cross-runtime-matrix|1
+rexxcps-c0-rxvm|RexxCPS|crexx|rxvm|C0-current|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/tmp/crexx-perf3-10-baseline.pkyQyD/rxvm;/tmp/crexx-perf3-10-baseline.pkyQyD/rexxcps.rxbin;/tmp/crexx-perf3-10-baseline.pkyQyD/library.rxbin;-a
+rexxcps-c1-rxvm|RexxCPS|crexx|rxvm|C1-storage-component|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin;-a

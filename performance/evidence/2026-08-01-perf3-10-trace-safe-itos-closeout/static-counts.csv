@@ -1,0 +1,3 @@
+scope,c0_source,c0_optimized,c1_optimized,c1_incremental_removed,source_to_c1_removed
+all_itos,24,17,14,3,10
+hot_main_lvar_itos,6,5,2,3,4

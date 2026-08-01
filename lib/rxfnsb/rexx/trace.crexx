@@ -25,7 +25,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_off _trace_set_from_env _trace_set_format _trace_set_output _trace_suppress_namespace _trace_unsuppress_namespace _trace_reset_namespace_filters _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_module _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_off _trace_set_from_env _trace_set_format _trace_set_output _trace_suppress_namespace _trace_unsuppress_namespace _trace_reset_namespace_filters _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_module _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_next_pending_result _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
 
 /**
  * VM register view delivered to breakpoint signal handlers.
@@ -221,6 +221,11 @@ tracecontroller: class
   _pending_register = .int
   _pending_const = .string
   _pending_has_const = .int
+  _pending_event_count = .int
+  _pending_event_cursor = .int
+  _pending_event_prefixes = .string[]
+  _pending_event_types = .string[]
+  _pending_event_registers = .int[]
   _supplied_result = .int
   _supplied_value = .string
 
@@ -242,6 +247,8 @@ tracecontroller: class
     _pending_register = -1
     _pending_const = ""
     _pending_has_const = 0
+    _pending_event_count = 0
+    _pending_event_cursor = 0
     _supplied_result = 0
     _supplied_value = ""
     return
@@ -534,6 +541,12 @@ tracecontroller: class
     return _trace_find_proc(mod_num, name)
 
   clear_pending_result: method = .void
+    _pending_event_count = 0
+    _pending_event_cursor = 0
+    call clear_current_result()
+    return
+
+  clear_current_result: method = .void
     _pending_result = 0
     _pending_module = 0
     _pending_prefix = ">>>"
@@ -570,18 +583,29 @@ tracecontroller: class
           assembler linkattr1 register_type, meta_entry, 5
           assembler linkattr1 reg, meta_entry, 6
           if value_source = 82 & reg >= 0 then do
-            _pending_prefix = _trace_prefix_from_kind(kind)
-            _pending_type = _trace_type_name_from_codes(value_type, register_type)
-            _pending_register = reg
-            _pending_has_const = 0
-            _pending_module = module
-            _pending_result = 1
-            return
+            _pending_event_count = _pending_event_count + 1
+            _pending_event_prefixes[_pending_event_count] = _trace_prefix_from_kind(kind)
+            _pending_event_types[_pending_event_count] = _trace_type_name_from_codes(value_type, register_type)
+            _pending_event_registers[_pending_event_count] = reg
           end
         end
       end
     end
+    call next_pending_result(module)
     return
+
+  next_pending_result: method = .int
+    arg module = .int
+    call clear_current_result()
+    if _pending_event_cursor >= _pending_event_count then return 0
+    _pending_event_cursor = _pending_event_cursor + 1
+    _pending_prefix = _pending_event_prefixes[_pending_event_cursor]
+    _pending_type = _pending_event_types[_pending_event_cursor]
+    _pending_register = _pending_event_registers[_pending_event_cursor]
+    _pending_has_const = 0
+    _pending_module = module
+    _pending_result = 1
+    return 1
 
   pending_result: method = .int
     return _pending_result
@@ -929,6 +953,11 @@ _trace_capture_result_target: procedure = .void expose _trace_runtime_ready _tra
   call _trace_ensure_runtime
   call _trace_controller.capture_result_target(module, addr)
   return
+
+_trace_next_pending_result: procedure = .int expose _trace_runtime_ready _trace_controller
+  arg module = .int
+  call _trace_ensure_runtime
+  return _trace_controller.next_pending_result(module)
 
 _trace_pending_result: procedure = .int expose _trace_runtime_ready _trace_controller
   call _trace_ensure_runtime

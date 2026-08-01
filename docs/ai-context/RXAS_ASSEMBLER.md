@@ -538,6 +538,31 @@ fallthrough are all present in the same retained procedure stream. The flow
 graph then includes every case edge plus the miss edge. Undeclared, malformed,
 cross-procedure, unsupported or off-graph-miss tables remain fail-closed.
 
+Component information is a canonical opcode-metadata service rather than an
+NR-27-local mnemonic switch. `rxop_component_reads()` and
+`rxop_component_writes()` distinguish integer, float, string, decimal, binary,
+attribute and reference components for each explicit operand.
+`rxop_value_derivation()` identifies proved representation relationships;
+`rxop_derivation_context_reads()` and `rxop_context_writes()` make numeric
+context part of those facts. `rxop_signal_phase()` distinguishes no-signal,
+pre-write, post-write, partial-write and unknown phases. Unproved opcodes and
+signal locations remain conservative. A register-backed TRACE event observes
+only the component named by its value type; the event remains present and does
+not automatically observe every representation inside the value.
+
+The graph-owned storage-identity service follows direct `link`, `swap` and
+`unlink` mapping rather than equating raw register numbers. The first
+component consumer uses this identity to remove a later one-register `itos`
+only when an earlier `itos` for the same storage proves both the unchanged
+integer source and unchanged string result under the same numeric context on
+every incoming normal path. Relevant component writes, context changes,
+ambiguous/tainted references, calls, opaque or indirect effects and unproved
+signal phases kill the fact. TRACE records are retained; ordered same-boundary
+delivery lets the producer event survive even when the redundant executable
+conversion is removed. The current derivation solver is deliberately bounded
+to this consumer; general multi-derivation and loop-hoisting work remains a
+separate performance activity.
+
 The admitted first transformation panel is deliberately narrower than the
 fact engine:
 
@@ -550,6 +575,8 @@ fact engine:
   payload, attribute, flag and cleanup proof;
 - repeated identical integer/bitwise-equal float loads, repeated `null`, and
   repeated one-register `itof` are removed only under a must-available fact;
+- a repeated one-register `itos` is removed only under the storage-identity,
+  integer/string-component and numeric-context proof described above;
 - unreachable instructions, TRACE records and source-step records are removed
   only when the entire procedure CFG is complete; and
 - dead-result deletion remains disabled because a nominal numeric destination

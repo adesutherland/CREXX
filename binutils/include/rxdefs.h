@@ -217,6 +217,43 @@ typedef enum {
     RXOP_SEM_OPAQUE = 8192
 } RxOpSemanticFlags;
 
+/* Canonical value components used by flow consumers.  These describe which
+ * representation inside a value is observed or changed; they are deliberately
+ * separate from register-slot reads/writes and from serialized opcodes. */
+typedef enum {
+    RXOP_COMPONENT_NONE = 0,
+    RXOP_COMPONENT_INTEGER = 1,
+    RXOP_COMPONENT_FLOAT = 2,
+    RXOP_COMPONENT_STRING = 4,
+    RXOP_COMPONENT_DECIMAL = 8,
+    RXOP_COMPONENT_BINARY = 16,
+    RXOP_COMPONENT_ATTRIBUTES = 32,
+    RXOP_COMPONENT_REFERENCE = 64,
+    RXOP_COMPONENT_ALL = 127
+} RxOpValueComponentMask;
+
+typedef enum {
+    RXOP_DERIVATION_NONE = 0,
+    RXOP_DERIVATION_INTEGER_TO_FLOAT,
+    RXOP_DERIVATION_INTEGER_TO_STRING
+} RxOpValueDerivation;
+
+typedef enum {
+    RXOP_CONTEXT_NONE = 0,
+    RXOP_CONTEXT_NUMERIC = 1
+} RxOpContextMask;
+
+/* Signal phase is explicit even though only NONE and UNKNOWN are currently
+ * populated.  Consumers must fail closed until an opcode's exact pre-write,
+ * post-write or partial-write signal point is proved. */
+typedef enum {
+    RXOP_SIGNAL_PHASE_NONE = 0,
+    RXOP_SIGNAL_PHASE_BEFORE_WRITES,
+    RXOP_SIGNAL_PHASE_AFTER_WRITES,
+    RXOP_SIGNAL_PHASE_PARTIAL_WRITES,
+    RXOP_SIGNAL_PHASE_UNKNOWN
+} RxOpSignalPhase;
+
 /* Compile-time evaluators are semantic implementations shared by any callable
  * body that uses the instruction; they are not BIF identities.  NONE is the
  * fail-closed default for every instruction not individually proved. */
@@ -295,6 +332,12 @@ int rxop_effect_kills_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
+unsigned int rxop_component_reads(int opcode, size_t operand_index);
+unsigned int rxop_component_writes(int opcode, size_t operand_index);
+RxOpValueDerivation rxop_value_derivation(int opcode);
+unsigned int rxop_derivation_context_reads(int opcode);
+unsigned int rxop_context_writes(int opcode);
+RxOpSignalPhase rxop_signal_phase(int opcode);
 
 void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);
 void *src_instv(const char *name, const OperandType *operands, size_t operand_count);
