@@ -1,0 +1,63 @@
+options levelb comments_dash numeric_classic
+namespace rexxclassicbitfunctions expose rexxclassic_bitop rexxclassic_bit_result_text
+import rexxclassicencoding
+
+rexxclassic_bitop: procedure = .binary
+  arg left = .string, right = .string, pad = .string, operation = .string
+  left_bytes = left as .binary
+  right_bytes = right as .binary
+  pad_bytes = pad as .binary
+
+  left_length = .int
+  right_length = .int
+  pad_length = .int
+  assembler blen left_length,left_bytes
+  assembler blen right_length,right_bytes
+  assembler blen pad_length,pad_bytes
+
+  result_length = left_length
+  if right_length > result_length then result_length = right_length
+  result = .binary
+  assembler bresize result,result_length
+
+  common_length = left_length
+  if right_length < common_length then common_length = right_length
+  pad_supplied = pad <> ""
+  left_byte = .int
+  right_byte = .int
+  result_byte = .int
+  do index = 0 to result_length - 1
+    if pad_supplied | index < common_length then do
+      left_byte = rexxclassic_bitop_byte(left_bytes, left_length, pad_bytes, pad_length, index)
+      right_byte = rexxclassic_bitop_byte(right_bytes, right_length, pad_bytes, pad_length, index)
+      select
+        when operation = "AND" then assembler iand result_byte,left_byte,right_byte
+        when operation = "OR" then assembler ior result_byte,left_byte,right_byte
+        otherwise assembler ixor result_byte,left_byte,right_byte
+      end
+    end
+    else if index < left_length then assembler getbyte result_byte,left_bytes,index
+    else assembler getbyte result_byte,right_bytes,index
+    assembler setbyte result,index,result_byte
+  end
+  return result
+
+rexxclassic_bit_result_text: procedure = .string
+  arg result = .binary
+  if rexxclassic_bytes_are_utf8(result) then return result as .string
+  /* Invalid text bytes must be returned explicitly, never forced through UTF-8. */
+  return rexxclassic_bytes_to_hex(result)
+
+rexxclassic_bitop_byte: procedure = .int
+  arg value = .binary, value_length = .int, pad = .binary, pad_length = .int, index = .int
+  byte = .int
+  if index < value_length then do
+    assembler getbyte byte,value,index
+    return byte
+  end
+  if pad_length <= 0 then return 0
+  pad_offset = index - value_length
+  pad_index = .int
+  assembler imod pad_index,pad_offset,pad_length
+  assembler getbyte byte,pad,pad_index
+  return byte
