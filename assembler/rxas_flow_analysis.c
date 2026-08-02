@@ -8,6 +8,7 @@
 
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_graph_internal.h"
+#include "rxas_flow_signal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -52,12 +53,6 @@ struct RxasFlowStructuralAnalysis {
     RxasFlowLoop *loops;
     size_t *loop_members;
     size_t *innermost_loop;
-};
-
-struct RxasFlowAnalysisManager {
-    unsigned long epoch;
-    size_t budget;
-    RxasFlowStructuralAnalysis *structural;
 };
 
 static int flow_analysis_consume(RxasFlowStructuralAnalysis *analysis,
@@ -1206,7 +1201,7 @@ const RxasFlowStructuralAnalysis *rxas_flow_require_structural_analysis(
         if (manager->structural->metrics.status ==
                 RXAS_FLOW_ANALYSIS_AVAILABLE)
             return manager->structural;
-        if (requested_budget <= manager->budget) return 0;
+        if (requested_budget <= manager->structural_budget) return 0;
         flow_structural_free(manager->structural);
         manager->structural = 0;
     }
@@ -1216,7 +1211,7 @@ const RxasFlowStructuralAnalysis *rxas_flow_require_structural_analysis(
         procedure->analysis_manager = manager;
     }
     manager->epoch = expected_epoch;
-    manager->budget = requested_budget;
+    manager->structural_budget = requested_budget;
     manager->structural = flow_structural_build(
             procedure, expected_epoch, requested_budget);
     if (!manager->structural ||
@@ -1240,6 +1235,7 @@ void rxas_flow_analysis_manager_destroy(RxasFlowProcedure *procedure) {
     struct RxasFlowAnalysisManager *manager;
     if (!procedure || !procedure->analysis_manager) return;
     manager = procedure->analysis_manager;
+    rxas_flow_signal_analysis_destroy(manager->signal);
     flow_structural_free(manager->structural);
     free(manager);
     procedure->analysis_manager = 0;

@@ -301,6 +301,27 @@ typedef enum {
     RXOP_SIGNAL_PROP_ASYNC_ENTRY = 16
 } RxOpSignalProperties;
 
+/* Normal-path handler-policy transfer. Failure phase determines whether this
+ * transfer is visible on skip/retry/handler edges. */
+typedef enum {
+    RXOP_POLICY_EFFECT_NONE = 0,
+    RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_HANDLER,
+    RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_EXISTING,
+    RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE,
+    RXOP_POLICY_EFFECT_IGNORE,
+    RXOP_POLICY_EFFECT_HALT,
+    RXOP_POLICY_EFFECT_SILENT_HALT,
+    RXOP_POLICY_EFFECT_BRANCH,
+    RXOP_POLICY_EFFECT_CALL,
+    RXOP_POLICY_EFFECT_CALL_BRANCH,
+    RXOP_POLICY_EFFECT_RETURN,
+    RXOP_POLICY_EFFECT_CALL_ACTION,
+    RXOP_POLICY_EFFECT_PUSH,
+    RXOP_POLICY_EFFECT_POP,
+    RXOP_POLICY_EFFECT_BRANCH_VALUE,
+    RXOP_POLICY_EFFECT_UNKNOWN
+} RxOpSignalPolicyEffect;
+
 typedef struct {
     int opcode;
     RxOpSignalState state;
@@ -318,6 +339,10 @@ typedef struct {
     unsigned int dependencies;
     unsigned int continuations;
     unsigned int properties;
+    RxOpSignalPolicyEffect policy_effect;
+    RxOpSignalSource policy_source;
+    size_t policy_source_operand;
+    const char *policy_static_name;
 } RxOpSignalContract;
 
 /* Compile-time evaluators are semantic implementations shared by any callable

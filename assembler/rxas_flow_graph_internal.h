@@ -10,7 +10,16 @@ typedef struct RxasFlowLabelSlot {
     size_t record_id;
 } RxasFlowLabelSlot;
 
-struct RxasFlowAnalysisManager;
+struct RxasFlowStructuralAnalysis;
+struct RxasFlowSignalAnalysis;
+
+struct RxasFlowAnalysisManager {
+    unsigned long epoch;
+    size_t structural_budget;
+    struct RxasFlowStructuralAnalysis *structural;
+    size_t signal_budget;
+    struct RxasFlowSignalAnalysis *signal;
+};
 
 struct RxasFlowProcedure {
     unsigned long epoch;

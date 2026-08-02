@@ -1,0 +1,9 @@
+Darwin 25.5.0 arm64
+logical CPUs: 10
+memory bytes: 25769803776
+load average: { 2.14 3.59 2.81 }
+power: AC attached, battery 80%, not charging
+low-power mode: 0
+thermal warning: none recorded
+performance warning: none recorded
+CPU power warning: none recorded

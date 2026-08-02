@@ -85,6 +85,8 @@ static void check_unknown_effects(int opcode) {
               signal.state == RXOP_SIGNAL_STATE_UNKNOWN &&
               signal.phase == RXOP_SIGNAL_PHASE_UNKNOWN &&
               signal.source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
+              signal.policy_effect == RXOP_POLICY_EFFECT_UNKNOWN &&
+              signal.policy_source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
               signal.continuations == RXOP_SIGNAL_CONT_ALL,
           "unknown signal contract must fail closed", NULL);
 }
@@ -252,6 +254,47 @@ int main(void) {
             check(signal.source_operand == SIZE_MAX,
                   "non-operand signal source carries an operand index", op);
         }
+        if (signal.properties & RXOP_SIGNAL_PROP_POLICY_WRITE) {
+            check(signal.policy_effect > RXOP_POLICY_EFFECT_NONE &&
+                      signal.policy_effect < RXOP_POLICY_EFFECT_UNKNOWN,
+                  "policy write lacks an exact normal-path effect", op);
+            check(signal.policy_source == RXOP_SIGNAL_SOURCE_STATIC_NAMES ||
+                      signal.policy_source ==
+                          RXOP_SIGNAL_SOURCE_LITERAL_OPERAND ||
+                      signal.policy_source ==
+                          RXOP_SIGNAL_SOURCE_REGISTER_OPERAND ||
+                      signal.policy_source == RXOP_SIGNAL_SOURCE_UNKNOWN,
+                  "policy write has an invalid name source", op);
+            if (signal.policy_source == RXOP_SIGNAL_SOURCE_STATIC_NAMES) {
+                check(signal.policy_static_name &&
+                          signal.policy_static_name[0] &&
+                          signal.policy_source_operand == SIZE_MAX,
+                      "static policy write lacks its exact name", op);
+            } else if (signal.policy_source ==
+                       RXOP_SIGNAL_SOURCE_LITERAL_OPERAND ||
+                       signal.policy_source ==
+                           RXOP_SIGNAL_SOURCE_REGISTER_OPERAND) {
+                check(signal.policy_static_name == NULL &&
+                          signal.policy_source_operand <
+                              rxop_format_operand_count(op->format),
+                      "operand policy source is out of range", op);
+                if (signal.policy_source_operand <
+                    rxop_format_operand_count(op->format))
+                    check(rxop_format_operand_type(
+                                  op->format,
+                                  signal.policy_source_operand) ==
+                              (signal.policy_source ==
+                                       RXOP_SIGNAL_SOURCE_LITERAL_OPERAND
+                                   ? OP_STRING : OP_REG),
+                          "policy source operand has the wrong type", op);
+            }
+        } else {
+            check(signal.policy_effect == RXOP_POLICY_EFFECT_NONE &&
+                      signal.policy_source == RXOP_SIGNAL_SOURCE_NONE &&
+                      signal.policy_source_operand == SIZE_MAX &&
+                      signal.policy_static_name == NULL,
+                  "non-policy contract carries a policy transfer", op);
+        }
         check(effects.const_evaluator >= RXOP_CONST_EVAL_NONE &&
                   effects.const_evaluator <= RXOP_CONST_EVAL_STRUPPER,
               "constant evaluator id is invalid", op);
@@ -392,6 +435,30 @@ int main(void) {
     check(signal.state == RXOP_SIGNAL_STATE_NONE,
           "decimal copy must remain total over absent payloads",
           &op_table[OP_DCOPY_REG_REG]);
+    signal = rxop_signal_contract(OP_SIGBR_ID_STRING);
+    check((signal.properties & RXOP_SIGNAL_PROP_POLICY_WRITE) &&
+              signal.policy_effect == RXOP_POLICY_EFFECT_BRANCH &&
+              signal.policy_source == RXOP_SIGNAL_SOURCE_LITERAL_OPERAND &&
+              signal.policy_source_operand == 1,
+          "branch-handler policy metadata regression",
+          &op_table[OP_SIGBR_ID_STRING]);
+    signal = rxop_signal_contract(OP_SIGPUSH_STRING);
+    check(signal.policy_effect == RXOP_POLICY_EFFECT_PUSH &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES,
+          "signal-stack policy metadata regression",
+          &op_table[OP_SIGPUSH_STRING]);
+    signal = rxop_signal_contract(OP_BPOFF);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              signal.policy_effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE &&
+              signal.policy_static_name &&
+              strcmp(signal.policy_static_name, "BREAKPOINT") == 0,
+          "breakpoint policy metadata regression", &op_table[OP_BPOFF]);
+    signal = rxop_signal_contract(OP_CALL_FUNC);
+    check(signal.state == RXOP_SIGNAL_STATE_UNKNOWN &&
+              signal.policy_effect == RXOP_POLICY_EFFECT_NONE &&
+              signal.policy_source == RXOP_SIGNAL_SOURCE_NONE,
+          "unknown call signals must not imply a caller-policy write",
+          &op_table[OP_CALL_FUNC]);
     signal = rxop_signal_contract(OP_ITOF_REG);
     check(signal.state == RXOP_SIGNAL_STATE_NONE &&
               (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),

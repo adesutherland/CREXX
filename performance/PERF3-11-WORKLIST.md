@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Stage 3 locked; Stage 4 signal-policy SSA next**
+Status: **in progress — Stage 4 locked; Stage 5 storage/component SSA next**
 
 Architecture approved: 2026-08-02
 
@@ -334,22 +334,39 @@ all below the combined greater-than-5%-and-1-MiB escalation rule. Evidence:
 
 ### Stage 4 — sparse signal-policy and effect SSA
 
-- [ ] Represent procedure-entry handler policy as an explicit parameter,
+- [x] Represent procedure-entry handler policy as an explicit parameter,
       preserving inherited unknown state.
-- [ ] Version policy changes made by handler installation and
+- [x] Version policy changes made by handler installation and
       `sigpush`/`sigpop`; use exact signal entries where statically known and a
       conservative whole-policy clobber for dynamic/unknown names.
-- [ ] Model calls, normal returns and unwind so callee-local policy changes do
+- [x] Model calls, normal returns and unwind so callee-local policy changes do
       not become caller state while inherited handlers remain visible in the
       callee.
-- [ ] Represent call/reference/context/TRACE effects with sparse versions or
+- [x] Represent call/reference/context/TRACE effects with sparse versions or
       summaries rather than one global barrier when a narrower fact is proved.
-- [ ] Bind skip/retry/handler/fail edges to the correct policy and observation
+- [x] Bind skip/retry/handler/fail edges to the correct policy and observation
       versions.
-- [ ] Prove equivalence with all Stage 1 executable signal fixtures.
+- [x] Prove equivalence with all Stage 1 executable signal fixtures.
 
 **Gate 4:** no component-value proof may consume a signal edge until this
 layer returns a valid edge-specific state or explicit unknown.
+
+Gate 4 passed on 2026-08-02. The epoch manager now caches a demand-driven
+sparse signal analysis with an inherited entry-policy parameter, exact static
+policy writes, whole-policy clobbers for unresolved opcodes, cyclic phi
+resolution and edge-specific failure states. Numeric-context, plugin, locale,
+external, reference-visible, TRACE and call effects have separate write-once
+identities. Parallel normal/skip edges remain separate phi inputs even when
+their predecessor block is the same.
+
+Calls preserve caller handler policy because the callee handler table is
+frame-local/copy-on-write, but call/reference effects advance because VM
+arguments point at caller-owned value storage. `sigpush` leaves the active
+handler unchanged; its silent allocation-failure path makes subsequent
+`sigpop` restoration explicitly stack-unknown. Strict GNU90 checks pass, the
+focused matrix passes 113/113, all Gate 0 images are exact and the ordinary
+assembler cost/RSS gate passes. Evidence:
+[`2026-08-02-perf3-11-stage4-signal-policy`](evidence/2026-08-02-perf3-11-stage4-signal-policy/).
 
 ### Stage 5 — symbolic storage and component SSA
 

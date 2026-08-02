@@ -6,6 +6,7 @@
 
 #include "rxas_flow_graph.h"
 #include "rxas_flow_analysis.h"
+#include "rxas_flow_signal.h"
 #include "rxasgrmr.h"
 
 #define FIXTURE_MAX_ITEMS 64
@@ -143,6 +144,23 @@ static int fixture_has_edge(const RxasFlowProcedure *procedure,
     return 0;
 }
 
+static size_t fixture_edge_id(const RxasFlowProcedure *procedure,
+                              unsigned long epoch, size_t source,
+                              size_t target, RxasFlowEdgeKind kind) {
+    const RxasFlowMetrics *metrics;
+    size_t index;
+    metrics = rxas_flow_procedure_metrics(procedure, epoch);
+    if (!metrics) return RXAS_FLOW_ID_NONE;
+    for (index = 0; index < metrics->edges; index++) {
+        const RxasFlowEdge *edge;
+        edge = rxas_flow_procedure_edge(procedure, epoch, index);
+        if (edge && edge->source == source && edge->target == target &&
+            edge->kind == kind)
+            return index;
+    }
+    return RXAS_FLOW_ID_NONE;
+}
+
 static int fixture_path_exists(const RxasFlowProcedure *procedure,
                                unsigned long epoch, size_t source,
                                size_t target) {
@@ -219,6 +237,15 @@ static char *fixture_analysis_dump(
     return fixture_read_stream(stream);
 }
 
+static char *fixture_signal_dump(
+        const RxasFlowSignalAnalysis *analysis, unsigned long epoch) {
+    FILE *stream;
+    stream = tmpfile();
+    if (!stream) exit(2);
+    if (!rxas_flow_signal_dump(analysis, epoch, stream)) exit(2);
+    return fixture_read_stream(stream);
+}
+
 static void test_unreachable_and_mapping(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
@@ -226,6 +253,8 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
     const RxasFlowRecord *record;
     const RxasFlowStructuralAnalysis *analysis;
     const RxasFlowStructuralMetrics *structural_metrics;
+    const RxasFlowSignalAnalysis *signal_analysis;
+    const RxasFlowSignalMetrics *signal_metrics;
     size_t dead_block;
     size_t live_block;
     size_t entry;
@@ -272,6 +301,18 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
         check(rxas_flow_require_structural_analysis(procedure, 1, 0) ==
                     analysis,
               "structural analysis was not cached by epoch");
+        check(rxas_flow_require_signal_analysis(procedure, 1, 1) == 0,
+              "bounded signal analysis did not fail closed");
+        signal_metrics = rxas_flow_last_signal_metrics(procedure, 1);
+        check(signal_metrics && signal_metrics->status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED,
+              "bounded signal analysis did not report budget exhaustion");
+        signal_analysis = rxas_flow_require_signal_analysis(
+                procedure, 1, 0);
+        check(signal_analysis != 0 &&
+              rxas_flow_require_signal_analysis(procedure, 1, 0) ==
+                    signal_analysis,
+              "signal analysis did not recover and cache by epoch");
         record = rxas_flow_procedure_record(procedure, 1, 2);
         check(record && record->emitted_address == 102,
               "dead label emitted-address mapping drifted");
@@ -286,6 +327,9 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
         check(rxas_flow_require_structural_analysis(procedure, 2, 0) == 0 &&
               rxas_flow_structural_metrics(analysis, 2) == 0,
               "stale structural analysis access did not fail closed");
+        check(rxas_flow_require_signal_analysis(procedure, 2, 0) == 0 &&
+              rxas_flow_signal_metrics(signal_analysis, 2) == 0,
+              "stale signal analysis access did not fail closed");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -471,6 +515,21 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
     const RxasFlowStructuralAnalysis *first_analysis;
     const RxasFlowStructuralAnalysis *second_analysis;
     const RxasFlowStructuralMetrics *structural_metrics;
+    const RxasFlowSignalAnalysis *first_signal;
+    const RxasFlowSignalAnalysis *second_signal;
+    const RxasFlowSignalMetrics *signal_metrics;
+    RxasFlowPolicyFact fact;
+    size_t sigbr_block;
+    size_t sigbr_normal_edge;
+    size_t sigbr_skip_edge;
+    size_t inc_handler_edge;
+    size_t sigbr_instruction;
+    size_t inc_instruction;
+    size_t ret_instruction;
+    size_t trace_before;
+    size_t trace_after;
+    char *first_signal_dump;
+    char *second_signal_dump;
     size_t loop_index;
     size_t retry_only_loops;
     memset(&fixture, 0, sizeof(fixture));
@@ -494,8 +553,13 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
     if (first && second) {
         first_analysis = rxas_flow_require_structural_analysis(first, 7, 0);
         second_analysis = rxas_flow_require_structural_analysis(second, 7, 0);
+        first_signal = rxas_flow_require_signal_analysis(first, 7, 0);
+        second_signal = rxas_flow_require_signal_analysis(second, 7, 0);
         check(first_analysis != 0 && second_analysis != 0,
               "signal structural analysis failed");
+        check(first_signal != 0 && second_signal != 0,
+              "signal-policy analysis failed");
+        sigbr_block = fixture_block_for_record(first, 7, 0);
         inc_block = fixture_block_for_record(first, 7, 2);
         ret_block = fixture_block_for_record(first, 7, 4);
         handler_block = fixture_block_for_record(first, 7, 5);
@@ -551,6 +615,62 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
         check(rxas_flow_procedure_record(first, 7, 1)->block_id == inc_block &&
               rxas_flow_procedure_record(first, 7, 3)->block_id == ret_block,
               "source/TRACE records lost their continuation block mapping");
+        sigbr_instruction = rxas_flow_procedure_record(first, 7, 0)->instruction_id;
+        inc_instruction = rxas_flow_procedure_record(first, 7, 2)->instruction_id;
+        ret_instruction = rxas_flow_procedure_record(first, 7, 4)->instruction_id;
+        check(first_signal && rxas_flow_policy_at_instruction(
+                    first_signal, 7, sigbr_instruction, 1,
+                    "OVERFLOW_UNDERFLOW", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_EXACT &&
+              fact.effect == RXOP_POLICY_EFFECT_BRANCH &&
+              fact.defining_instruction == sigbr_instruction,
+              "SIGBR normal transfer did not install an exact policy");
+        sigbr_normal_edge = fixture_edge_id(
+                first, 7, sigbr_block, inc_block, RXAS_FLOW_EDGE_NORMAL);
+        sigbr_skip_edge = fixture_edge_id(
+                first, 7, sigbr_block, inc_block,
+                RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        check(sigbr_normal_edge != RXAS_FLOW_ID_NONE && first_signal &&
+              rxas_flow_policy_on_edge(
+                    first_signal, 7, sigbr_normal_edge,
+                    "OVERFLOW_UNDERFLOW", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_EXACT,
+              "SIGBR normal edge lost its successful policy write");
+        check(sigbr_skip_edge != RXAS_FLOW_ID_NONE && first_signal &&
+              rxas_flow_policy_on_edge(
+                    first_signal, 7, sigbr_skip_edge,
+                    "OVERFLOW_UNDERFLOW", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN,
+              "SIGBR failure edge incorrectly observed a policy write");
+        check(first_signal && rxas_flow_policy_at_instruction(
+                    first_signal, 7, inc_instruction, 0,
+                    "OVERFLOW_UNDERFLOW", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_MERGED_UNKNOWN,
+              "parallel success/skip edges did not retain distinct policy states");
+        inc_handler_edge = fixture_edge_id(
+                first, 7, inc_block, handler_root,
+                RXAS_FLOW_EDGE_HANDLER);
+        check(inc_handler_edge != RXAS_FLOW_ID_NONE && first_signal &&
+              rxas_flow_policy_on_edge(
+                    first_signal, 7, inc_handler_edge,
+                    "OVERFLOW_UNDERFLOW", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_MERGED_UNKNOWN,
+              "handler edge did not preserve the incoming policy merge");
+        trace_before = first_signal ? rxas_flow_effect_at_instruction(
+                first_signal, 7, inc_instruction, 1,
+                RXAS_FLOW_EFFECT_TRACE) : RXAS_FLOW_ID_NONE;
+        trace_after = first_signal ? rxas_flow_effect_at_instruction(
+                first_signal, 7, ret_instruction, 0,
+                RXAS_FLOW_EFFECT_TRACE) : RXAS_FLOW_ID_NONE;
+        check(trace_before != RXAS_FLOW_ID_NONE &&
+              trace_after != RXAS_FLOW_ID_NONE &&
+              trace_before != trace_after,
+              "TRACE event did not advance the independent TRACE effect");
+        signal_metrics = rxas_flow_signal_metrics(first_signal, 7);
+        check(signal_metrics && signal_metrics->policy_writes == 1 &&
+              signal_metrics->policy_phis >= 1 &&
+              signal_metrics->trace_effect_writes == 1,
+              "signal-policy metrics omitted sparse writes or joins");
         first_dump = fixture_dump(first, 7);
         second_dump = fixture_dump(second, 7);
         check(strcmp(first_dump, second_dump) == 0,
@@ -569,12 +689,24 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
               "structural analysis dump omits reusable structure");
         free(first_analysis_dump);
         free(second_analysis_dump);
+        first_signal_dump = fixture_signal_dump(first_signal, 7);
+        second_signal_dump = fixture_signal_dump(second_signal, 7);
+        check(strcmp(first_signal_dump, second_signal_dump) == 0,
+              "signal-policy analysis dump is not deterministic");
+        check(strstr(first_signal_dump,
+                     "PERF3 flow-policy-version") != 0 &&
+              strstr(first_signal_dump, "PERF3 flow-signal-edge") != 0,
+              "signal-policy dump omits reusable versions or edge states");
+        free(first_signal_dump);
+        free(second_signal_dump);
         stale_stream = tmpfile();
         if (!stale_stream) exit(2);
         check(!rxas_flow_procedure_dump(first, 8, stale_stream),
               "stale graph dump did not fail closed");
         check(!rxas_flow_structural_dump(first_analysis, 8, stale_stream),
               "stale structural dump did not fail closed");
+        check(!rxas_flow_signal_dump(first_signal, 8, stale_stream),
+              "stale signal-policy dump did not fail closed");
         fclose(stale_stream);
     }
     rxas_flow_procedure_destroy(first);
@@ -591,6 +723,16 @@ static void test_call_boundary_and_unknown(Assembler_Context *context) {
     size_t following_block;
     size_t unknown_block;
     size_t unknown_following;
+    const RxasFlowSignalAnalysis *signal_analysis;
+    RxasFlowPolicyFact before_policy;
+    RxasFlowPolicyFact after_policy;
+    size_t call_instruction;
+    size_t ret_instruction;
+    size_t call_before;
+    size_t call_after;
+    size_t reference_before;
+    size_t reference_after;
+    size_t return_edge;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_text_token(&fixture, FUNC, "callee");
     fixture_op(&fixture, "call", operands, 1);
@@ -608,6 +750,49 @@ static void test_call_boundary_and_unknown(Assembler_Context *context) {
               fixture_has_edge(procedure, 9, call_block, following_block,
                                RXAS_FLOW_EDGE_NORMAL),
               "call did not terminate its basic block");
+        signal_analysis = rxas_flow_require_signal_analysis(
+                procedure, 9, 0);
+        call_instruction = rxas_flow_procedure_record(
+                procedure, 9, 0)->instruction_id;
+        ret_instruction = rxas_flow_procedure_record(
+                procedure, 9, 2)->instruction_id;
+        call_before = rxas_flow_effect_at_instruction(
+                signal_analysis, 9, call_instruction, 0,
+                RXAS_FLOW_EFFECT_CALL);
+        call_after = rxas_flow_effect_at_instruction(
+                signal_analysis, 9, call_instruction, 1,
+                RXAS_FLOW_EFFECT_CALL);
+        reference_before = rxas_flow_effect_at_instruction(
+                signal_analysis, 9, call_instruction, 0,
+                RXAS_FLOW_EFFECT_REFERENCE);
+        reference_after = rxas_flow_effect_at_instruction(
+                signal_analysis, 9, call_instruction, 1,
+                RXAS_FLOW_EFFECT_REFERENCE);
+        check(signal_analysis && call_before != call_after &&
+              reference_before != reference_after,
+              "call did not version caller-visible reference effects");
+        check(rxas_flow_policy_at_instruction(
+                    signal_analysis, 9, call_instruction, 0,
+                    "FAILURE", &before_policy) &&
+              rxas_flow_policy_at_instruction(
+                    signal_analysis, 9, call_instruction, 1,
+                    "FAILURE", &after_policy) &&
+              before_policy.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN &&
+              after_policy.state == before_policy.state &&
+              after_policy.version_id == before_policy.version_id,
+              "call incorrectly clobbered frame-local handler policy");
+        return_edge = fixture_edge_id(
+                procedure, 9, fixture_block_for_record(procedure, 9, 2),
+                rxas_flow_procedure_normal_exit(procedure, 9),
+                RXAS_FLOW_EDGE_NORMAL);
+        check(return_edge != RXAS_FLOW_ID_NONE &&
+              rxas_flow_policy_on_edge(
+                    signal_analysis, 9, return_edge, "FAILURE",
+                    &after_policy) &&
+              after_policy.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN,
+              "return edge did not restore the frame-entry policy parameter");
+        check(ret_instruction != RXAS_FLOW_ID_NONE,
+              "call fixture RET instruction mapping failed");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -634,6 +819,106 @@ static void test_call_boundary_and_unknown(Assembler_Context *context) {
                                rxas_flow_procedure_unknown_exit(procedure, 10),
                                RXAS_FLOW_EDGE_UNKNOWN),
               "unknown opcode did not retain worst-case continuations");
+        signal_analysis = rxas_flow_require_signal_analysis(
+                procedure, 10, 0);
+        check(signal_analysis != 0,
+              "unknown opcode disabled the fail-closed signal analysis");
+        if (signal_analysis) {
+            size_t unknown_edge;
+            unknown_edge = fixture_edge_id(
+                    procedure, 10, unknown_block,
+                    rxas_flow_procedure_unknown_exit(procedure, 10),
+                    RXAS_FLOW_EDGE_UNKNOWN);
+            check(unknown_edge != RXAS_FLOW_ID_NONE &&
+                  rxas_flow_policy_on_edge(
+                        signal_analysis, 10, unknown_edge, "FAILURE",
+                        &after_policy) &&
+                  after_policy.state == RXAS_FLOW_POLICY_CLOBBERED,
+                  "unknown opcode edge did not clobber policy proofs");
+        }
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_policy_stack_uncertainty(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[1];
+    const RxasFlowSignalAnalysis *analysis;
+    RxasFlowPolicyFact fact;
+    size_t instruction_id;
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_op(&fixture, "bpoff", 0, 0);
+    operands[0] = fixture_string(&fixture, "BREAKPOINT");
+    fixture_op(&fixture, "sigpush", operands, 1);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 11);
+    check(procedure != 0, "SIGPUSH policy fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_signal_analysis(procedure, 11, 0);
+        instruction_id = rxas_flow_procedure_record(
+                procedure, 11, 1)->instruction_id;
+        check(analysis && rxas_flow_policy_at_instruction(
+                    analysis, 11, instruction_id, 1, "BREAKPOINT", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_EXACT &&
+              fact.effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE,
+              "SIGPUSH changed the active handler policy");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_op(&fixture, "bpoff", 0, 0);
+    operands[0] = fixture_string(&fixture, "BREAKPOINT");
+    fixture_op(&fixture, "sigpop", operands, 1);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 12);
+    check(procedure != 0, "SIGPOP policy fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_signal_analysis(procedure, 12, 0);
+        instruction_id = rxas_flow_procedure_record(
+                procedure, 12, 1)->instruction_id;
+        check(analysis && rxas_flow_policy_at_instruction(
+                    analysis, 12, instruction_id, 1, "BREAKPOINT", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_STACK_UNKNOWN,
+              "SIGPOP incorrectly proved a restored handler policy");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_policy_loop_identity(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowSignalAnalysis *analysis;
+    RxasFlowPolicyFact fact;
+    size_t loop_instruction;
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_op(&fixture, "bpoff", 0, 0);
+    fixture_label(&fixture, "loop");
+    operands[0] = fixture_label_ref(&fixture, "done");
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "brt", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "loop");
+    fixture_op(&fixture, "br", operands, 1);
+    fixture_label(&fixture, "done");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 13);
+    check(procedure != 0, "policy-loop fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_signal_analysis(procedure, 13, 0);
+        loop_instruction = rxas_flow_procedure_record(
+                procedure, 13, 2)->instruction_id;
+        check(analysis && rxas_flow_policy_at_instruction(
+                    analysis, 13, loop_instruction, 0, "BREAKPOINT", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_EXACT &&
+              fact.effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE,
+              "loop phi did not preserve an unchanged write-once policy");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -651,6 +936,8 @@ int main(void) {
     test_nested_and_irreducible(&context);
     test_signal_roots_and_determinism(&context);
     test_call_boundary_and_unknown(&context);
+    test_policy_stack_uncertainty(&context);
+    test_policy_loop_identity(&context);
 
     if (failures) {
         fprintf(stderr, "RXAS immutable flow graph failures: %d\n", failures);

@@ -475,7 +475,12 @@ ordered entry for every opcode slot, including reserved and internal slots.
 capability, failure phase, signal-name source, failure-visible writes,
 dependencies, continuations and observability properties. The former coarse
 `RXOP_SEM_MAY_THROW` flag has been retired; generic effects no longer duplicate
-or approximate signal behavior.
+or approximate signal behavior. Handler-policy instructions additionally name
+their normal-path action (`ignore`, halt, branch/call/return, breakpoint,
+push/pop), exact static or literal signal-name source and source operand. An
+unknown signal set is distinct from an unknown policy write: a known call may
+have conservative signal behaviour without changing its caller's handler
+table.
 `binutils/rxopmeta.c` combines both sources through the stable
 `rxop_effects()` and `rxop_signal_contract()` C APIs; their count functions
 expose the mechanically checked inventory sizes.
@@ -584,6 +589,44 @@ SCC, backedge and loop counters. Post-dominance is deliberately deferred until
 a consumer needs a must-execute query. Ordinary assembly does not solve this
 unused analysis: `rxas -d`, tests and future optimizer consumers request it
 explicitly. Stage 3 therefore changes neither queued records nor RXBIN output.
+
+Stage 4 adds `assembler/rxas_flow_signal.c`, a second demand-driven epoch
+cache layered on the structural result. Handler policy is modeled as a sparse
+write-once chain with entry, write, phi and clobber definitions. Procedure
+entry is an explicit inherited-unknown policy parameter. Static/literal
+handler installation produces an exact named action; unresolved opcodes
+clobber the whole policy. Parallel normal and signal-skip edges remain distinct
+phi inputs even when Stage 3 correctly reports one unique predecessor block.
+Cyclic phi queries defer the backedge identity and merge external definitions,
+which preserves an unchanged loop policy without using source order as proof.
+
+Each signal edge selects policy from the instruction's recorded failure phase:
+before-write edges see the incoming policy, after-write edges see the normal
+transfer, and partial/unknown policy writes fail closed. Return and unwind
+edges expose the procedure-entry policy parameter because handler-table
+changes are local to the callee frame. The VM initially shares the caller's
+handler table and copies it on a child-frame write. This frame-local policy
+rule must not be confused with call arguments: call-window argument slots are
+pointers to caller-owned value storage, so callee writes and reference effects
+can remain caller-visible after return.
+
+`sigpush` leaves the active handler unchanged, but the VM may silently fail to
+allocate its saved stack entry. A later `sigpop` therefore yields explicit
+stack-unknown policy unless a future proof establishes a successful matching
+push; the analysis never assumes restoration merely from lexical pairing.
+
+Numeric context, plugin, locale, external state, reference-visible state,
+TRACE and call boundaries use separate sparse effect identities. Calls advance
+the call/reference/external/plugin/locale identities while preserving handler
+policy. TRACE records advance only TRACE identity. Before/after/partial signal
+edges select the corresponding effect versions; an unproved partial effect
+gets an explicit unknown definition rather than one global barrier.
+`rxas_flow_policy_at_instruction()`, `rxas_flow_policy_on_edge()`,
+`rxas_flow_effect_at_instruction()` and `rxas_flow_effect_on_edge()` are the
+initial narrow query surface. A deliberately small budget, stale epoch,
+allocation failure or malformed graph returns no usable result. Ordinary
+assembly does not request the cache; tests, `rxas -d` and future consumers do.
+Stage 4 is output-neutral and preserves exact canonical RXBIN images.
 
 The NR-27 register universe distinguishes local (`r`), argument (`a`) and
 global (`g`) register classes and tracks integer, float, string, decimal,
