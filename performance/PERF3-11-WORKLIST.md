@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **architecture approved; execution awaiting Adrian's authorization**
+Status: **in progress — Stage 0 clean oracle complete; Stage 1 active**
 
 Architecture approved: 2026-08-02
 
@@ -190,23 +190,31 @@ not assumed merely because two textual opcodes and register numbers match.
 
 ### Stage 0 — lock the clean oracle before production edits
 
-- [ ] Reconfirm branch, exact commit and clean status.
-- [ ] Build ordinary profiling-off Debug and Release RXAS products from the
+- [x] Reconfirm branch, exact commit and clean status.
+- [x] Build ordinary profiling-off Debug and Release RXAS products from the
       clean base; retain the Release `rxas` binary and hashes outside the build
       tree.
-- [ ] Generate and hash exact focused signal/storage fixtures plus canonical
+- [x] Generate and hash exact focused signal/storage fixtures plus canonical
       RexxCPS, Richards and Towers RXAS inputs.
-- [ ] Capture emitted RXBIN hashes, existing optimizer diagnostics and both-VM
+- [x] Capture emitted RXBIN hashes, existing optimizer diagnostics and both-VM
       focused outputs as the behaviour oracle.
-- [ ] Capture clean-base RXAS elapsed time, peak RSS and internal size counters
+- [x] Capture clean-base RXAS elapsed time, peak RSS and internal size counters
       for small, large and inlined procedures with the host in the agreed idle
       state.  This is an assembler-cost oracle, not a replacement runtime
       baseline.
-- [ ] Record deterministic procedure metrics: instructions, blocks, edges,
+- [x] Record deterministic procedure metrics: instructions, blocks, edges,
       registers, symbolic storages, definitions, phis and iterations.
 
 **Gate 0:** report the exact oracle and any pre-existing failure.  Do not
 explain away a dirty baseline by changing implementation.
+
+Gate 0 passed on 2026-08-02.  Focused correctness is 61/61; accepted generated
+RXBIN identities match; the idle median assembler oracles are 51.400543 ms
+Richards, 20.090103 ms Towers and 51.542520 ms RexxCPS.  Evidence:
+[`2026-08-02-perf3-11-stage0-oracle`](evidence/2026-08-02-perf3-11-stage0-oracle/).
+The current implementation does not expose definition, phi or fixed-point
+iteration counts; their absence is recorded in the oracle and Stage 3 must add
+them before the replacement scaling verdict.
 
 ### Stage 1 — signal/effect semantic inventory and executable oracle
 
@@ -424,5 +432,5 @@ The infrastructure is accepted only when all of the following hold:
 - [x] Delete only the five explicitly authorized untracked lifecycle binaries.
 - [x] Create the clean dedicated infrastructure branch from the accepted tip.
 - [x] Record the scalable graph/SSA/signal architecture and execution gates.
-- [ ] Receive Adrian's authorization to begin Stage 0 and then execute the
+- [x] Receive Adrian's authorization to begin Stage 0 and then execute the
       staged plan.

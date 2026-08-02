@@ -66,6 +66,7 @@ validation.
 | `performance/evidence/2026-08-01-perf3-02-r1-repanel/` | Locked-infrastructure C0-C4 replay: eight reproducible masks, correctness rejection of both broad-rule builds, exact C2/C3/C4 disposition and governed paired timing that recommends the safe C1abc composition |
 | `performance/evidence/2026-08-01-perf3-02-c1abc-closeout/` | Selected C1abc ordinary-production identity, focused and 1,972-test broad correctness, reviewed golden transition and retained option-replay integrity |
 | `performance/evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/` | Accepted PERF3-10 exact C0/C1 timing, equal-work conversion counts, static proof, ordered TRACE correctness and 1,982-test broad closeout |
+| `performance/evidence/2026-08-02-perf3-11-stage0-oracle/` | Clean pre-refactor RXAS binary/input hashes, 61-test signal/storage oracle, idle assembler elapsed/RSS samples and deterministic procedure scale |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
