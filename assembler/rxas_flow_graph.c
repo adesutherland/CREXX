@@ -318,7 +318,26 @@ static int flow_graph_mark_leaders(RxasFlowProcedure *procedure,
                             procedure, leaders,
                             rxas_jump_table_case_label(context, table,
                                                        case_index));
+                    }
+        }
+        /* A signal retry re-executes this instruction, not preceding records
+         * in the same ordinary basic block.  Make every potentially
+         * signalling instruction an exact CFG leader so retry/skip edges
+         * model the VM continuation address rather than a block approximation. */
+        if (instruction->signal.state != RXOP_SIGNAL_STATE_NONE) {
+            size_t leader;
+            size_t scan;
+            leader = index;
+            scan = index;
+            /* Source/TRACE records between instructions describe the
+             * following instruction and stay in its exact signal block. */
+            while (scan > 0 &&
+                   procedure->records[scan - 1].type != OP_CODE &&
+                   procedure->records[scan - 1].type != ASM_LABEL) {
+                scan--;
+                if (procedure->records[scan].type != EMPTY) leader = scan;
             }
+            leaders[leader] = 1;
         }
         terminates = instruction->op->flow != FLOW_NEXT ||
                      instruction->signal.state != RXOP_SIGNAL_STATE_NONE ||

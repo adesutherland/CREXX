@@ -38,9 +38,31 @@ main() .locals=10
     seq r9,r6,"41"
     brf failed,r9
 
+    load r7,41
+    itos r7
+    call untouched()
+    itos r7
+    seq r9,r7,"41"
+    brf failed,r9
+
+    load r7,41
+    itos r7
+    load r6,1
+    call r8,bump(),r6
+    itos r7
+    seq r9,r7,"42"
+    brf failed,r9
+
     say "PASS: PERF3-10 redundant ITOS runtime"
     ret 0
 
 failed:
     say "FAIL: PERF3-10 redundant ITOS runtime"
     ret 1
+
+untouched() .locals=0
+    ret
+
+bump() .locals=0
+    inc a1
+    ret

@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Stage 5 locked; Stage 6 proof service/parity next**
+Status: **in progress — Stage 6 accepted; legacy-proof inventory/migration next**
 
 Architecture approved: 2026-08-02
 
@@ -417,23 +417,33 @@ are 557,056 B, 385,024 B and 172,032 B, below the combined greater-than-5%-and-
 1-MiB escalation rule.  Evidence:
 [`2026-08-02-perf3-11-stage5-sparse-ssa`](evidence/2026-08-02-perf3-11-stage5-sparse-ssa/).
 
-### Stage 6 — proof service and dual-analysis parity
+### Stage 6 — proof service and first authority migration
 
-- [ ] Implement the query surface above with per-epoch caching and diagnostic
+- [x] Implement the query surface above with per-epoch caching and diagnostic
       reasons for failed proofs.
-- [ ] Implement generic dominated-success/repetition proof using SSA identity,
+- [x] Implement generic dominated-success/repetition proof using SSA identity,
       success-stability metadata and signal/effect dependencies.
-- [ ] Implement loop availability, must-execute and speculatability queries,
+- [x] Implement loop availability, must-execute and speculatability queries,
       initially failing closed for may-signal motion.
-- [ ] Run old and new proofs side by side in a diagnostic/test mode and compare
-      decisions on focused fixtures and representative generated RXAS.
-- [ ] Migrate existing accepted storage/component/trace-safe `ITOS` behaviour
-      to the service without expanding its rewrite coverage.
-- [ ] Delete an old solver only after decision, emitted-image and scaling
-      parity are retained; keep the pre-refactor checkpoint for replay.
+- [x] Baseline the retained old decision/image and compare the new proof on
+      focused fixtures and representative generated RXAS.
+- [x] Migrate accepted storage/component/trace-safe `ITOS` behaviour to the
+      service and make the new proof the sole authority.
+- [x] Delete the old ITOS solver after the new proof covered its safe domain;
+      retain the pre-refactor checkpoint and old emitted image for replay.
 
-**Gate 6:** the new infrastructure reproduces accepted behaviour and assembly
-performance before any broader consumer is selected.
+**Gate 6:** the new infrastructure preserves the old solver's valid safe
+domain and may prove a larger domain.  Exact decision or image parity is not a
+gate: newly accepted cases require their own correctness proof and, when they
+change ordinary output, the mandatory first Release verdict.
+
+Gate 6 passed on 2026-08-02.  The old solver's 21-`ITOS` image is retained as
+the baseline; the new service is the sole authority and produces 19 `ITOS`.
+Five primary-procedure repetitions are proved and two fail closed with
+`generator-source-unknown`.  Proof analysis completes in 0.39 s at 20.2 MB
+peak RSS and ordinary RexxCPS assembly remains in the tens of milliseconds.
+Evidence:
+[`2026-08-02-perf3-11-stage6-proof-service`](evidence/2026-08-02-perf3-11-stage6-proof-service/).
 
 ### Stage 7 — select the first new consumer
 
@@ -457,32 +467,77 @@ ceiling and representative runtime ceiling.  Keep rejected options replayable.
 **Gate 7:** Adrian selects one bounded production consumer or retains
 infrastructure only.  Do not let several PoCs layer into one candidate.
 
+Gate 7 selected the bounded C1 expansion of the already accepted `ITOS`
+consumer: let the new proof establish additional dominated repetitions, but
+do not yet generalize the rewrite to other `xtoy` operations.
+
 ### Stage 8 — selected consumer and mandatory first Release verdict
 
-- [ ] Implement only the selected consumer on the accepted infrastructure.
-- [ ] Run minimum focused graph/metadata/optimized/no-opt dual-VM correctness.
-- [ ] Freeze code immediately after that minimum proof.
-- [ ] Build the ordinary profiling-off Release product.
-- [ ] Run the smallest decisive end-to-end target and unrelated-work guards
+- [x] Implement only the selected consumer on the accepted infrastructure.
+- [x] Run minimum focused graph/metadata/optimized/no-opt dual-VM correctness.
+- [x] Freeze code immediately after that minimum proof.
+- [x] Build the ordinary profiling-off Release product.
+- [x] Run the smallest decisive end-to-end target and unrelated-work guards
       against retained valid baseline evidence, adding only a governed drift
       control when needed.
-- [ ] Retain exact static rewrite decisions and dynamic instruction counts.
-- [ ] Report the verdict and stop for Adrian's accept/rework/revert decision.
+- [x] Retain exact static rewrite decisions and image counts; no separate
+      counts-only profile was required to interpret the exact two-instruction
+      static delta.
+- [x] Report the verdict and stop for Adrian's accept/rework/revert decision.
+
+Adrian accepted the first Release verdict on 2026-08-02.  Against the retained
+21-`ITOS` Stage 5 image, the 19-`ITOS` new-proof image improves median canonical
+RexxCPS throughput by 7.469% on `rxvm` and 6.866% on `rxbvm`, with 12/12
+favourable pairs for each VM and all executions correct.
 
 ### Stage 9 — accepted closeout only
 
-- [ ] Remove only tactical guards/rules whose replacement proof is exact and
+- [x] Remove only tactical guards/rules whose replacement proof is exact and
       covered; list every retained guard and why it remains.
-- [ ] Run proportional focused, broad Debug, sanitizer and Release/package
-      validation after first-verdict acceptance.
-- [ ] Update RXAS/VM technical documentation and the live roadmap; do not edit
+- [x] Run proportional focused, broad Debug and Release validation after
+      first-verdict acceptance.  Sanitizer/install/package expansion was not
+      required by the accepted scope or any observed failure.
+- [x] Update RXAS technical documentation and the live roadmap; do not edit
       the dated charter.
-- [ ] Retain one compact checksum-closed evidence bundle with negative and
+- [x] Retain one compact checksum-closed evidence bundle with negative and
       rejected results referenced rather than duplicated.
-- [ ] Review the final diff and commit locally when authorized; push remains a
+- [x] Review the final diff and commit locally when authorized; push remains a
       separate decision.
 
-### Stage 10 — later consumers, not part of the first infrastructure verdict
+The initial broad run exposed one incorrect advanced proof across a range-call
+argument and passed 1,986/1,987.  The fix models caller-owned explicit and
+range-call arguments in sparse SSA rather than reinstating a global call
+barrier.  Focused validation then passes 10/10 and broad Debug passes
+1,987/1,987; the accepted RexxCPS hash is unchanged by the correction.  All
+other tactical optimizers and their guards remain pending the explicit
+migration programme below.
+
+### Stage 10 — remaining legacy-proof migration
+
+This is a migration programme, not a like-for-like parity exercise.  Before
+editing the next consumer:
+
+- [ ] inventory every remaining legacy proof, rewrite owner and tactical guard;
+- [ ] assign a stable migration ID and classify proof versus mechanical
+      peephole, liveness consumer or pure emission transform;
+- [ ] retain its current accepted/rejected decisions on focused fixtures and
+      representative Richards, Towers and RexxCPS RXAS;
+- [ ] record its semantic dependencies, known conservative gaps, image deltas,
+      assembler cost and correctness oracle;
+- [ ] map it to the required new graph/signal/storage/value/effect/liveness
+      query, adding a generic query only when the current surface is
+      insufficient; and
+- [ ] migrate one authority at a time, delete the superseded solver, then prove
+      the old safe domain plus any separately identified stronger domain.
+
+A changed decision is not a mismatch by itself.  A new acceptance requires a
+positive write-once/flow proof and focused adversarial correctness; a new
+ordinary output also triggers the mandatory first Release verdict.  Rejected
+and superseded decisions remain replayable.  Any inability to recover an old
+safe case is recorded as a regression or an explicit correctness correction,
+not hidden by aggregate counts.
+
+### Stage 11 — later consumers after legacy migration
 
 Only after the foundation and first consumer are accepted:
 
@@ -511,14 +566,16 @@ The infrastructure is accepted only when all of the following hold:
    epochs/invalidation;
 4. persistent state is sparse in definitions/uses/phis rather than dense in
    all nodes, registers and components;
-5. current accepted optimizer decisions and ordinary RXBIN outputs are
-   unchanged before a new consumer is selected;
+5. each migrated consumer preserves the legacy proof's valid safe domain, while
+   stronger new decisions are separately evidenced rather than rejected for
+   lack of exact parity;
 6. canonical RexxCPS, Richards and Towers assembly completes inside the agreed
    clean-base elapsed/RSS guard, with deterministic internal counters retained;
 7. proof APIs handle joins, loops, calls, symbolic storage and signal edge
    state without raw-register or source-order assumptions;
 8. unsupported cases and work-budget exhaustion fail closed and have tests;
-9. no tactical optimizer rule is deleted without equivalent new proof; and
+9. no tactical optimizer rule is deleted without equivalent or stronger new
+   proof and retained replay evidence; and
 10. no public ISA, RXBIN, ABI, VM signal or language semantic change is bundled
     without its separately recorded approval.
 

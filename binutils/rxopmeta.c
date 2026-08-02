@@ -99,12 +99,18 @@ static const RxOpEffectSpec rxop_effect_specs[] = {
     RXOP_SIGNAL_CONT_ALL, RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE | \
         RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE | PROPERTIES, \
     RXOP_POLICY_EFFECT_NONE, RXOP_SIGNAL_SOURCE_NONE, SIZE_MAX, NULL
+#define RXSC_DECIMAL_COMPARE \
+    RXSC_PLUGIN(RXOP_SIGNAL_PHASE_AFTER_WRITES, RXOP_OP_1, \
+                RXOP_COMPONENT_INTEGER, \
+                RXOP_SIGNAL_DEP_NUMERIC_CONTEXT | RXOP_SIGNAL_DEP_PLUGIN, \
+                RXOP_SIGNAL_PROP_SUCCESS_STABLE)
 #define RXOP_SIGNAL(NAME, CONTRACT) { OP_##NAME, CONTRACT },
 static const RxOpSignalContract rxop_signal_contracts[] = {
 #include "rxopsignals.h"
 };
 #undef RXOP_SIGNAL
 #undef RXSC_PLUGIN
+#undef RXSC_DECIMAL_COMPARE
 #undef RXSC_DYNAMIC
 #undef RXSC_STATIC_POLICY
 #undef RXSC_STATIC
@@ -301,6 +307,21 @@ size_t rxop_derivation_source_operand(int opcode) {
     if (rxop_value_derivation(opcode) == RXOP_DERIVATION_NONE)
         return SIZE_MAX;
     return opcode == OP_ITOF_REG_REG ? 1 : 0;
+}
+
+unsigned int rxop_derivation_source_component(int opcode) {
+    switch (rxop_value_derivation(opcode)) {
+        case RXOP_DERIVATION_INTEGER_TO_FLOAT:
+        case RXOP_DERIVATION_INTEGER_TO_STRING:
+            return RXOP_COMPONENT_INTEGER;
+        case RXOP_DERIVATION_FLOAT_TO_STRING:
+            return RXOP_COMPONENT_FLOAT;
+        case RXOP_DERIVATION_DECIMAL_TO_STRING:
+            return RXOP_COMPONENT_DECIMAL;
+        case RXOP_DERIVATION_NONE:
+            break;
+    }
+    return RXOP_COMPONENT_NONE;
 }
 
 unsigned int rxop_derivation_context_reads(int opcode) {

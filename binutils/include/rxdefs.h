@@ -429,6 +429,7 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
 RxOpValueDerivation rxop_value_derivation(int opcode);
 size_t rxop_derivation_source_operand(int opcode);
+unsigned int rxop_derivation_source_component(int opcode);
 unsigned int rxop_derivation_context_reads(int opcode);
 unsigned int rxop_context_writes(int opcode);
 RxOpSignalContract rxop_signal_contract(int opcode);

@@ -42,6 +42,18 @@ No tactical-rule deletion or public format change was made. The complete
 PERF3-02/C1abc slice is committed locally as `4a3940395`; push remains a
 separate user-authorized action.
 
+PERF3-11 Gates 1-6 are now locked.  The reusable per-epoch proof service is
+the sole authority for repeated `ITOS`; its stronger write-once/component SSA
+proof produces a 19-`ITOS` RexxCPS image versus the retained old solver's 21.
+Adrian accepted the mandatory Release verdict: median CPS improves 7.469% on
+`rxvm` and 6.866% on `rxbvm`, with 12/12 favourable pairs on each VM.  A broad
+test failure exposed and drove a precise caller-owned call-window argument
+model; the corrected closeout passes 1,987/1,987 Debug tests.  The next
+PERF3-11 activity is to inventory and baseline every remaining legacy proof,
+then migrate one authority at a time.  Exact old/new parity is not the gate:
+the new service must preserve the old valid safe domain and may prove a larger
+separately validated domain.
+
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
 `NR-*` sweep remains closed in
@@ -230,7 +242,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 5 locked; Stage 6 next | Gates 1-5 are locked. Sparse write-once `StorageId`/`ValueId` state follows links, swaps, unlinks, caller-owned arguments, joins, loops and signal edges without a point-by-register matrix. Absent/null, constants, copies, derivations, phis and unknowns remain distinct; ITOS/FTOS/DTOS and two-register ITOF name actual sources and effect contexts. Canonical RexxCPS proof analysis completes in 0.28 s at 18.7 MB peak RSS, focused tests pass 113/113 and Gate 0 RXBIN hashes are exact. Stage 6 may now expose generic proofs and run old/new parity before replacing a solver. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 5: [`2026-08-02-perf3-11-stage5-sparse-ssa`](evidence/2026-08-02-perf3-11-stage5-sparse-ssa/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 6 accepted; legacy migration next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and the old solver is removed. Its stronger proof reduces retained RexxCPS from 21 to 19 `ITOS`; accepted median CPS improves 7.469%/6.866% on `rxvm`/`rxbvm`, both 12/12 favourable. A discovered range-call unsoundness was fixed by sparse caller-owned argument-window definitions; focused passes 10/10 and broad Debug 1,987/1,987. Remaining legacy proofs will be inventoried, baselined and migrated one at a time, preserving the old valid safe domain while allowing separately validated stronger decisions. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 6: [`2026-08-02-perf3-11-stage6-proof-service`](evidence/2026-08-02-perf3-11-stage6-proof-service/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -768,9 +780,31 @@ The locked generation-marked, derivation-site-demanded form completes canonical
 RexxCPS diagnostics in 0.28 s at 18.7 MB peak RSS.  Adrian explicitly accepted
 a seconds-scale proof-analysis budget rather than requiring the roughly 50 ms
 ordinary baseline.  Focused correctness is 113/113, all Gate 0 images are
-exact, and ordinary RexxCPS assembly remains 54.526 ms (+0.009%).  Stage 6
-proof-service and old/new decision parity is next.  Evidence:
+exact, and ordinary RexxCPS assembly remains 54.526 ms (+0.009%).  Evidence:
 [`Stage 5 sparse SSA`](evidence/2026-08-02-perf3-11-stage5-sparse-ssa/).
+
+Stage 6 closes the first proof-authority gate.  The fourth per-epoch cache
+provides dominated-success repetition, speculatability, loop must-execute and
+component-invariance queries with cached diagnostic reasons.  Value/effect phi
+reduction permits safe proofs through joins without source-order assumptions.
+The private ITOS availability solver is deleted and the service is sole
+authority.  Its 19-`ITOS` RexxCPS image removes two more operations than the
+retained 21-`ITOS` old-solver image; Adrian accepted the resulting +7.469% and
++6.866% median CPS verdict on `rxvm`/`rxbvm`.
+
+The first broad run exposed an unsound proof across a caller-owned range-call
+argument.  Sparse SSA now gives explicit and range-call actual arguments
+unknown component definitions on normal and failure paths, while preserving
+unrelated locals.  Final focused correctness is 10/10, broad Debug is
+1,987/1,987, and the accepted RexxCPS image hash is unchanged by the fix.
+Diagnostic proof analysis completes in 0.39 s at 20.2 MB peak RSS.  Evidence:
+[`Stage 6 proof service`](evidence/2026-08-02-perf3-11-stage6-proof-service/).
+
+The migration principle is basic-to-advanced, not like-for-like parity.  The
+old solver is a retained minimum safe-capability baseline.  Each remaining
+legacy proof must be inventoried and replayed, then replaced one authority at a
+time; a stronger new acceptance is valid only with its own positive proof,
+adversarial correctness and output-changing Release gate.
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed load,

@@ -54,6 +54,7 @@ typedef struct FlowSsaState {
     size_t map_count;
     size_t value_offset;
     size_t value_count;
+    size_t call_range_base_plus_one;
     unsigned int flags;
 } FlowSsaState;
 
@@ -61,6 +62,7 @@ typedef struct FlowSsaState {
 #define FLOW_SSA_MAP_CLOBBER_DYNAMIC 2u
 #define FLOW_SSA_VALUE_CLOBBER_ALL 4u
 #define FLOW_SSA_VALUE_CLOBBER_DYNAMIC 8u
+#define FLOW_SSA_VALUE_CLOBBER_CALL_RANGE 16u
 
 typedef struct FlowStorageVersion {
     RxasFlowStorageKind kind;
@@ -165,6 +167,8 @@ struct RxasFlowSsaAnalysis {
     size_t *storage_dynamic_marks;
     size_t storage_dynamic_mark_capacity;
     size_t storage_dynamic_generation;
+    size_t *storage_walk_stack;
+    size_t storage_walk_capacity;
     size_t *storage_inputs;
     size_t storage_input_count;
     size_t storage_input_capacity;
@@ -563,18 +567,6 @@ static int flow_ssa_append_map_updates(
     return flow_ssa_consume(analysis, count);
 }
 
-static size_t flow_ssa_component_source(
-        RxOpValueDerivation derivation) {
-    if (derivation == RXOP_DERIVATION_INTEGER_TO_FLOAT ||
-        derivation == RXOP_DERIVATION_INTEGER_TO_STRING)
-        return RXOP_COMPONENT_INTEGER;
-    if (derivation == RXOP_DERIVATION_FLOAT_TO_STRING)
-        return RXOP_COMPONENT_FLOAT;
-    if (derivation == RXOP_DERIVATION_DECIMAL_TO_STRING)
-        return RXOP_COMPONENT_DECIMAL;
-    return RXOP_COMPONENT_NONE;
-}
-
 static unsigned int flow_ssa_effect_dependency(
         RxasFlowEffectClass effect_class) {
     if (effect_class == RXAS_FLOW_EFFECT_NUMERIC_CONTEXT)
@@ -735,6 +727,60 @@ static unsigned int flow_component_bits[] = {
     RXOP_COMPONENT_ATTRIBUTES, RXOP_COMPONENT_REFERENCE
 };
 
+static size_t flow_ssa_explicit_call_argument_count(int opcode) {
+    switch (opcode) {
+        case OP_CALL1_REG_FUNC_REG: return 1;
+        case OP_CALL2_REG_FUNC_REG_REG: return 2;
+        case OP_CALL3_REG_FUNC_REG_REG_REG: return 3;
+        case OP_CALL4_REG_FUNC_REG_REG_REG_REG: return 4;
+    }
+    return 0;
+}
+
+static size_t flow_ssa_call_argument_register_count(
+        const RxasFlowInstruction *instruction,
+        const instruction_queue *item) {
+    (void)item;
+    return instruction && instruction->op
+            ? flow_ssa_explicit_call_argument_count(
+                    instruction->op->opcode) : 0;
+}
+
+static int flow_ssa_add_call_argument_clobbers(
+        RxasFlowSsaAnalysis *analysis,
+        const RxasFlowInstruction *instruction,
+        const instruction_queue *item,
+        FlowBuildValueUpdate *values, size_t *value_count,
+        size_t value_capacity) {
+    size_t explicit_count;
+    size_t argument;
+    size_t bit;
+    if (!instruction || !instruction->op ||
+        !(instruction->effects.semantics &
+          (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL)))
+        return 1;
+    explicit_count = flow_ssa_explicit_call_argument_count(
+            instruction->op->opcode);
+    if (explicit_count) {
+        for (argument = 0; argument < explicit_count; argument++) {
+            size_t target;
+            target = flow_ssa_operand_register(
+                    analysis, item, argument + 2);
+            for (bit = 0; bit < 7; bit++)
+                if (!flow_build_value_add(
+                            values, value_count, value_capacity, target,
+                            flow_component_bits[bit],
+                            RXAS_FLOW_VALUE_UNKNOWN,
+                            RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN,
+                            RXAS_FLOW_ID_NONE, RXOP_COMPONENT_NONE,
+                            RXOP_DERIVATION_NONE, 0))
+                    return 0;
+        }
+        return 1;
+    }
+    return 1;
+}
+
 static size_t flow_ssa_build_normal_transfer(
         RxasFlowSsaAnalysis *analysis, const RxasFlowInstruction *instruction,
         size_t input_state) {
@@ -746,6 +792,8 @@ static size_t flow_ssa_build_normal_transfer(
     size_t value_capacity;
     size_t map_count;
     size_t value_count;
+    size_t call_argument_count;
+    size_t call_range_base;
     size_t operand;
     size_t map_offset;
     size_t value_offset;
@@ -758,7 +806,11 @@ static size_t flow_ssa_build_normal_transfer(
     item = record ? record->queue_record : 0;
     if (!item) return input_state;
     map_capacity = item->operandCount * 2 + 8;
-    value_capacity = (item->operandCount + 2) * 7;
+    call_argument_count = flow_ssa_call_argument_register_count(
+            instruction, item);
+    if (call_argument_count > (size_t)-1 - item->operandCount - 2)
+        return RXAS_FLOW_ID_NONE;
+    value_capacity = (item->operandCount + 2 + call_argument_count) * 7;
     map = flow_ssa_calloc(analysis, map_capacity, sizeof(*map));
     values = flow_ssa_calloc(analysis, value_capacity, sizeof(*values));
     if (!map || !values) {
@@ -768,6 +820,7 @@ static size_t flow_ssa_build_normal_transfer(
     }
     map_count = 0;
     value_count = 0;
+    call_range_base = RXAS_FLOW_ID_NONE;
     flags = 0;
     opcode = instruction->op ? instruction->op->opcode : -1;
     if (!instruction->op ||
@@ -1012,8 +1065,7 @@ static size_t flow_ssa_build_normal_transfer(
                             values, &value_count, value_capacity, target,
                             flow_component_bits[bit], kind, presence, source,
                             kind == RXAS_FLOW_VALUE_DERIVED
-                                    ? (unsigned int)flow_ssa_component_source(
-                                            derivation)
+                                    ? rxop_derivation_source_component(opcode)
                                     : flow_component_bits[bit],
                             derivation, constant_token);
                 }
@@ -1084,12 +1136,28 @@ static size_t flow_ssa_build_normal_transfer(
                         RXOP_COMPONENT_NONE, RXOP_DERIVATION_NONE, 0);
                 break;
             case RXOP_IMPLICIT_ARGUMENT_INDEX:
+                break;
             case RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3:
+                call_range_base = flow_ssa_operand_register(
+                        analysis, item, 2);
+                if (call_range_base == RXAS_FLOW_ID_NONE ||
+                    call_range_base >= analysis->register_count ||
+                    analysis->registers[call_range_base].register_class !=
+                            RXAS_FLOW_REGISTER_LOCAL)
+                    flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
+                else flags |= FLOW_SSA_VALUE_CLOBBER_CALL_RANGE;
+                break;
             case RXOP_IMPLICIT_NONE:
                 break;
             default:
                 flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
                 break;
+        }
+        if (!flow_ssa_add_call_argument_clobbers(
+                    analysis, instruction, item,
+                    values, &value_count, value_capacity)) {
+            value_count = 0;
+            flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
         }
     }
     /* A fused opcode may write a value before, between or after its mapping
@@ -1110,6 +1178,8 @@ static size_t flow_ssa_build_normal_transfer(
     state.parent = input_state;
     state.block_id = instruction->block_id;
     state.instruction_id = instruction->id;
+    state.call_range_base_plus_one =
+            call_range_base == RXAS_FLOW_ID_NONE ? 0 : call_range_base + 1;
     state.flags = flags;
     if (!flow_ssa_append_map_updates(
                 analysis, map, map_count, input_state, &map_offset) ||
@@ -1153,6 +1223,8 @@ static size_t flow_ssa_build_failure_transfer(
     size_t map_count;
     size_t value_capacity;
     size_t value_count;
+    size_t call_argument_count;
+    size_t call_range_base;
     size_t operand;
     size_t map_offset;
     size_t value_offset;
@@ -1173,7 +1245,11 @@ static size_t flow_ssa_build_failure_transfer(
     item = record ? record->queue_record : 0;
     if (!item) return before_state;
     map_capacity = item->operandCount * 2 + 4;
-    value_capacity = (item->operandCount + 1) * 7;
+    call_argument_count = flow_ssa_call_argument_register_count(
+            instruction, item);
+    if (call_argument_count > (size_t)-1 - item->operandCount - 1)
+        return RXAS_FLOW_ID_NONE;
+    value_capacity = (item->operandCount + 1 + call_argument_count) * 7;
     map = flow_ssa_calloc(analysis, map_capacity, sizeof(*map));
     values = flow_ssa_calloc(analysis, value_capacity, sizeof(*values));
     if (!map || !values) {
@@ -1183,10 +1259,21 @@ static size_t flow_ssa_build_failure_transfer(
     }
     map_count = 0;
     value_count = 0;
+    call_range_base = RXAS_FLOW_ID_NONE;
     flags = 0;
     if (instruction->signal.phase == RXOP_SIGNAL_PHASE_UNKNOWN)
         flags |= FLOW_SSA_MAP_CLOBBER_DYNAMIC |
                  FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
+    if (instruction->effects.implicit ==
+            RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3) {
+        call_range_base = flow_ssa_operand_register(analysis, item, 2);
+        if (call_range_base == RXAS_FLOW_ID_NONE ||
+            call_range_base >= analysis->register_count ||
+            analysis->registers[call_range_base].register_class !=
+                    RXAS_FLOW_REGISTER_LOCAL)
+            flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
+        else flags |= FLOW_SSA_VALUE_CLOBBER_CALL_RANGE;
+    }
     switch (instruction->op->opcode) {
         case OP_LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT:
             flow_build_map_add(
@@ -1224,6 +1311,12 @@ static size_t flow_ssa_build_failure_transfer(
                         RXAS_FLOW_ID_NONE, RXOP_COMPONENT_NONE,
                         RXOP_DERIVATION_NONE, 0);
     }
+    if (!flow_ssa_add_call_argument_clobbers(
+                analysis, instruction, item,
+                values, &value_count, value_capacity)) {
+        value_count = 0;
+        flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
+    }
     if (map_count && value_count) {
         value_count = 0;
         flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
@@ -1238,6 +1331,8 @@ static size_t flow_ssa_build_failure_transfer(
     state.parent = before_state;
     state.block_id = instruction->block_id;
     state.instruction_id = instruction->id;
+    state.call_range_base_plus_one =
+            call_range_base == RXAS_FLOW_ID_NONE ? 0 : call_range_base + 1;
     state.flags = flags;
     if (!flow_ssa_append_map_updates(
                 analysis, map, map_count, before_state, &map_offset) ||
@@ -1568,12 +1663,6 @@ static size_t flow_ssa_value_cache_add(
     return index;
 }
 
-static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
-                                       size_t state_id, size_t register_id);
-static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
-                                     size_t state_id, size_t storage_id,
-                                     unsigned int component);
-
 static size_t flow_ssa_create_storage_phi(
         RxasFlowSsaAnalysis *analysis, size_t state_id, size_t register_id) {
     FlowStorageVersion version;
@@ -1680,6 +1769,95 @@ static int flow_ssa_storage_is_dynamic(
         analysis->storage_dynamic_generation = 1;
     }
     return flow_ssa_storage_is_dynamic_recursive(analysis, storage_id);
+}
+
+static int flow_ssa_storage_walk_ready(RxasFlowSsaAnalysis *analysis) {
+    size_t old_capacity;
+    if (!flow_ssa_storage_dynamic_marks_ready(analysis)) return 0;
+    if (analysis->storage_walk_capacity >= analysis->storage_version_count)
+        return 1;
+    old_capacity = analysis->storage_walk_capacity;
+    return flow_ssa_grow(
+            analysis, (void **)&analysis->storage_walk_stack,
+            &analysis->storage_walk_capacity, old_capacity,
+            sizeof(*analysis->storage_walk_stack),
+            analysis->storage_version_count - old_capacity);
+}
+
+/* Return the one base StorageId selected by a cyclic phi graph, or zero when
+ * it can select different, dynamic or unknown storage. This is the storage
+ * analogue of write-once phi simplification and is generation-marked so a
+ * large inlined procedure is visited at most once per query. */
+static size_t flow_ssa_storage_unique_base(
+        RxasFlowSsaAnalysis *analysis, size_t storage_id) {
+    size_t head;
+    size_t tail;
+    size_t root;
+    int have_root;
+    if (!flow_ssa_storage_walk_ready(analysis)) return 0;
+    storage_id = flow_ssa_storage_canonical(analysis, storage_id);
+    if (!storage_id || storage_id > analysis->storage_version_count) return 0;
+    analysis->storage_dynamic_generation++;
+    if (!analysis->storage_dynamic_generation) {
+        memset(analysis->storage_dynamic_marks, 0,
+               analysis->storage_dynamic_mark_capacity *
+                       sizeof(*analysis->storage_dynamic_marks));
+        analysis->storage_dynamic_generation = 1;
+    }
+    head = 0;
+    tail = 0;
+    root = 0;
+    have_root = 0;
+    analysis->storage_dynamic_marks[storage_id - 1] =
+            analysis->storage_dynamic_generation;
+    analysis->storage_walk_stack[tail++] = storage_id;
+    while (head < tail) {
+        const FlowStorageVersion *version;
+        size_t input;
+        storage_id = analysis->storage_walk_stack[head++];
+        if (!flow_ssa_consume(analysis, 1)) return 0;
+        version = &analysis->storage_versions[storage_id - 1];
+        if (version->kind == RXAS_FLOW_STORAGE_BASE) {
+            if (!have_root) {
+                root = storage_id;
+                have_root = 1;
+            }
+            else if (root != storage_id) return 0;
+            continue;
+        }
+        if (version->kind != RXAS_FLOW_STORAGE_PHI) return 0;
+        for (input = 0; input < version->input_count; input++) {
+            size_t input_storage;
+            input_storage = flow_ssa_storage_canonical(
+                    analysis,
+                    analysis->storage_inputs[version->input_offset + input]);
+            if (!input_storage ||
+                input_storage > analysis->storage_version_count)
+                return 0;
+            if (analysis->storage_dynamic_marks[input_storage - 1] ==
+                    analysis->storage_dynamic_generation)
+                continue;
+            analysis->storage_dynamic_marks[input_storage - 1] =
+                    analysis->storage_dynamic_generation;
+            if (tail >= analysis->storage_walk_capacity) return 0;
+            analysis->storage_walk_stack[tail++] = input_storage;
+        }
+    }
+    return have_root ? root : 0;
+}
+
+static int flow_ssa_storage_equivalent(
+        RxasFlowSsaAnalysis *analysis, size_t left, size_t right) {
+    size_t left_root;
+    size_t right_root;
+    left = flow_ssa_storage_canonical(analysis, left);
+    right = flow_ssa_storage_canonical(analysis, right);
+    if (!left || !right) return 0;
+    if (left == right) return 1;
+    left_root = flow_ssa_storage_unique_base(analysis, left);
+    if (!left_root) return 0;
+    right_root = flow_ssa_storage_unique_base(analysis, right);
+    return right_root && left_root == right_root;
 }
 
 static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
@@ -1857,10 +2035,86 @@ static size_t flow_ssa_value_canonical(
 
 static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
                                      size_t state_id, size_t storage_id,
+                                     unsigned int component);
+
+/* A range call exposes the storages named by its caller-owned argument
+ * window.  Resolve that window lazily so SSA construction stays sparse and
+ * does not query a partially built analysis.  The count register normally has
+ * a constant integer ValueId; an unavailable count safely opens the range to
+ * every later local register. */
+static int flow_ssa_call_range_clobbers_storage(
+        RxasFlowSsaAnalysis *analysis, const FlowSsaState *state,
+        size_t storage_id) {
+    size_t base_register;
+    size_t base_number;
+    size_t last_number;
+    size_t count_storage;
+    size_t count_value;
+    size_t reg;
+    const FlowValueVersion *count_version;
+    const Assembler_Token *count_token;
+    if (!state || !(state->flags & FLOW_SSA_VALUE_CLOBBER_CALL_RANGE) ||
+        !state->call_range_base_plus_one)
+        return 0;
+    base_register = state->call_range_base_plus_one - 1;
+    if (base_register >= analysis->register_count ||
+        analysis->registers[base_register].register_class !=
+                RXAS_FLOW_REGISTER_LOCAL ||
+        state->parent == RXAS_FLOW_ID_NONE)
+        return 1;
+    base_number = analysis->registers[base_register].number;
+    last_number = (size_t)-1;
+    count_storage = flow_ssa_resolve_storage(
+            analysis, state->parent, base_register);
+    count_value = flow_ssa_resolve_value(
+            analysis, state->parent, count_storage,
+            RXOP_COMPONENT_INTEGER);
+    count_value = flow_ssa_value_canonical(analysis, count_value);
+    if (count_value < analysis->value_version_count) {
+        count_version = &analysis->value_versions[count_value];
+        count_token = count_version->constant_token;
+        if (count_version->kind == RXAS_FLOW_VALUE_CONSTANT && count_token &&
+            count_token->token_type == INT &&
+            count_token->token_value.integer >= 0 &&
+            (size_t)count_token->token_value.integer <=
+                    (size_t)-1 - base_number)
+            last_number = base_number +
+                    (size_t)count_token->token_value.integer;
+    }
+    for (reg = 0; reg < analysis->register_count; reg++) {
+        size_t argument_storage;
+        if (analysis->registers[reg].register_class !=
+                    RXAS_FLOW_REGISTER_LOCAL ||
+            analysis->registers[reg].number <= base_number ||
+            analysis->registers[reg].number > last_number)
+            continue;
+        argument_storage = flow_ssa_resolve_storage(
+                analysis, state->parent, reg);
+        if (!argument_storage || flow_ssa_storage_equivalent(
+                    analysis, argument_storage, storage_id))
+            return 1;
+    }
+    return 0;
+}
+
+static int flow_ssa_state_clobbers_value(
+        RxasFlowSsaAnalysis *analysis, const FlowSsaState *state,
+        size_t storage_id) {
+    if (state->flags & FLOW_SSA_VALUE_CLOBBER_ALL) return 1;
+    if ((state->flags & FLOW_SSA_VALUE_CLOBBER_DYNAMIC) &&
+        flow_ssa_storage_is_dynamic(analysis, storage_id))
+        return 1;
+    return flow_ssa_call_range_clobbers_storage(
+            analysis, state, storage_id);
+}
+
+static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
+                                     size_t state_id, size_t storage_id,
                                      unsigned int component) {
     size_t cache_id;
     FlowSsaState *state;
     size_t result;
+    size_t placeholder_id;
     storage_id = flow_ssa_storage_canonical(analysis, storage_id);
     if (state_id >= analysis->state_count) return RXAS_FLOW_ID_NONE;
     if (!storage_id) return flow_ssa_unmapped_value(analysis, component);
@@ -1886,16 +2140,15 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
                         update->target_register);
                 target_storage = flow_ssa_storage_canonical(
                         analysis, target_storage);
-                if (target_storage == storage_id) {
+                if (flow_ssa_storage_equivalent(
+                            analysis, target_storage, storage_id)) {
                     direct_update = 1;
                     break;
                 }
             }
         }
-        if (!direct_update &&
-            ((state->flags & FLOW_SSA_VALUE_CLOBBER_ALL) ||
-             ((state->flags & FLOW_SSA_VALUE_CLOBBER_DYNAMIC) &&
-              flow_ssa_storage_is_dynamic(analysis, storage_id)))) {
+        if (!direct_update && flow_ssa_state_clobbers_value(
+                    analysis, state, storage_id)) {
             if (result >= analysis->value_version_count ||
                 analysis->value_versions[result].kind !=
                         RXAS_FLOW_VALUE_UNKNOWN) {
@@ -1908,27 +2161,13 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
         return result;
     }
     state = &analysis->states[state_id];
-    result = flow_ssa_create_value_version(
-            analysis,
-            state->kind == FLOW_SSA_STATE_JOIN
-                    ? RXAS_FLOW_VALUE_PHI
-                    : state->kind == FLOW_SSA_STATE_ENTRY &&
-                      storage_id > analysis->register_count
-                            ? RXAS_FLOW_VALUE_UNKNOWN
-                            : RXAS_FLOW_VALUE_ENTRY,
-            RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN, component);
-    if (result == RXAS_FLOW_ID_NONE) return 0;
-    cache_id = flow_ssa_value_cache_add(
-            analysis, state_id, storage_id, component, result);
-    if (cache_id == RXAS_FLOW_ID_NONE) return 0;
-    if (state->kind == FLOW_SSA_STATE_ENTRY) {
-        /* The lazily created entry definition is the result. */
-    }
-    else if (state->kind == FLOW_SSA_STATE_TRANSFER) {
+    if (state->kind == FLOW_SSA_STATE_TRANSFER) {
         size_t update_index;
         int found;
         found = 0;
-        for (update_index = state->value_count; update_index; update_index--) {
+        result = RXAS_FLOW_ID_NONE;
+        for (update_index = state->value_count; update_index;
+             update_index--) {
             FlowValueUpdate *update;
             size_t target_storage;
             update = &analysis->value_updates[
@@ -1939,26 +2178,46 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
                     update->target_register);
             target_storage = flow_ssa_storage_canonical(
                     analysis, target_storage);
-            if (target_storage == storage_id) {
-                result = flow_ssa_value_canonical(
-                        analysis, update->value_id);
-                found = 1;
-                break;
-            }
+            if (!flow_ssa_storage_equivalent(
+                        analysis, target_storage, storage_id))
+                continue;
+            result = flow_ssa_value_canonical(
+                    analysis, update->value_id);
+            found = 1;
+            break;
         }
         if (!found) {
-            if (state->flags & FLOW_SSA_VALUE_CLOBBER_ALL)
-                result = flow_ssa_create_value_version(
-                        analysis, RXAS_FLOW_VALUE_UNKNOWN,
-                        RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN, component);
-            else if ((state->flags & FLOW_SSA_VALUE_CLOBBER_DYNAMIC) &&
-                     flow_ssa_storage_is_dynamic(analysis, storage_id))
+            if (flow_ssa_state_clobbers_value(
+                        analysis, state, storage_id))
                 result = flow_ssa_create_value_version(
                         analysis, RXAS_FLOW_VALUE_UNKNOWN,
                         RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN, component);
             else result = flow_ssa_resolve_value(
                     analysis, state->parent, storage_id, component);
         }
+        if (result == RXAS_FLOW_ID_NONE) return RXAS_FLOW_ID_NONE;
+        cache_id = flow_ssa_value_cache_add(
+                analysis, state_id, storage_id, component, result);
+        if (cache_id == RXAS_FLOW_ID_NONE) return RXAS_FLOW_ID_NONE;
+        analysis->value_cache[cache_id].resolving = 0;
+        return flow_ssa_value_canonical(analysis, result);
+    }
+    result = flow_ssa_create_value_version(
+            analysis,
+            state->kind == FLOW_SSA_STATE_JOIN
+                    ? RXAS_FLOW_VALUE_PHI
+                    : state->kind == FLOW_SSA_STATE_ENTRY &&
+                      storage_id > analysis->register_count
+                            ? RXAS_FLOW_VALUE_UNKNOWN
+                            : RXAS_FLOW_VALUE_ENTRY,
+            RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN, component);
+    if (result == RXAS_FLOW_ID_NONE) return 0;
+    placeholder_id = result;
+    cache_id = flow_ssa_value_cache_add(
+            analysis, state_id, storage_id, component, result);
+    if (cache_id == RXAS_FLOW_ID_NONE) return 0;
+    if (state->kind == FLOW_SSA_STATE_ENTRY) {
+        /* The lazily created entry definition is the result. */
     }
     else {
         size_t phi_id;
@@ -2055,6 +2314,9 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
             analysis->value_versions[phi_id].replacement = result;
     }
     result = flow_ssa_value_canonical(analysis, result);
+    if (placeholder_id != result &&
+        placeholder_id < analysis->value_version_count)
+        analysis->value_versions[placeholder_id].replacement = result;
     cache_id = flow_ssa_value_cache_find(
             analysis, state_id, storage_id, component);
     analysis->value_cache[cache_id].result = result;
@@ -2100,7 +2362,8 @@ static int flow_ssa_materialize_derivations(RxasFlowSsaAnalysis *analysis) {
                 source_reg);
         after_storage = flow_ssa_resolve_storage(
                 analysis, analysis->instruction_after[instruction_id], reg);
-        source_component = (unsigned int)flow_ssa_component_source(derivation);
+        source_component = rxop_derivation_source_component(
+                instruction->op->opcode);
         if (source_component)
             (void)flow_ssa_resolve_value(
                     analysis, analysis->instruction_before[instruction_id],
@@ -2133,6 +2396,8 @@ static void flow_ssa_set_retained_bytes(RxasFlowSsaAnalysis *analysis) {
              sizeof(*analysis->storage_versions);
     bytes += analysis->storage_dynamic_mark_capacity *
              sizeof(*analysis->storage_dynamic_marks);
+    bytes += analysis->storage_walk_capacity *
+             sizeof(*analysis->storage_walk_stack);
     bytes += analysis->storage_input_capacity * sizeof(*analysis->storage_inputs);
     bytes += analysis->value_version_capacity * sizeof(*analysis->value_versions);
     bytes += analysis->value_input_capacity * sizeof(*analysis->value_inputs);
@@ -2160,6 +2425,7 @@ static void flow_ssa_free(RxasFlowSsaAnalysis *analysis) {
     free(analysis->edge_state);
     free(analysis->storage_versions);
     free(analysis->storage_dynamic_marks);
+    free(analysis->storage_walk_stack);
     free(analysis->storage_inputs);
     free(analysis->value_versions);
     free(analysis->value_inputs);
@@ -2365,6 +2631,45 @@ int rxas_flow_storage_on_edge(
                                  analysis->edge_state[edge_id], reg, fact);
 }
 
+size_t rxas_flow_storage_version_count(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch) {
+    if (!flow_ssa_valid(analysis, expected_epoch)) return 0;
+    return analysis->storage_version_count;
+}
+
+int rxas_flow_storage_node(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t storage_id, RxasFlowStorageNode *node) {
+    const FlowStorageVersion *version;
+    if (!node || !flow_ssa_valid(analysis, expected_epoch)) return 0;
+    storage_id = flow_ssa_storage_canonical(analysis, storage_id);
+    if (!storage_id || storage_id > analysis->storage_version_count) return 0;
+    version = &analysis->storage_versions[storage_id - 1];
+    memset(node, 0, sizeof(*node));
+    node->id = storage_id;
+    node->kind = version->kind;
+    node->register_id = version->register_id;
+    node->defining_instruction = version->defining_instruction;
+    node->defining_block = version->defining_block;
+    node->input_count = version->input_count;
+    return 1;
+}
+
+size_t rxas_flow_storage_input(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t storage_id, size_t input_index) {
+    const FlowStorageVersion *version;
+    if (!flow_ssa_valid(analysis, expected_epoch)) return RXAS_FLOW_ID_NONE;
+    storage_id = flow_ssa_storage_canonical(analysis, storage_id);
+    if (!storage_id || storage_id > analysis->storage_version_count)
+        return RXAS_FLOW_ID_NONE;
+    version = &analysis->storage_versions[storage_id - 1];
+    if (input_index >= version->input_count) return RXAS_FLOW_ID_NONE;
+    return flow_ssa_storage_canonical(
+            analysis,
+            analysis->storage_inputs[version->input_offset + input_index]);
+}
+
 static int flow_ssa_component_fact(
         RxasFlowSsaAnalysis *analysis, size_t state_id,
         RxasFlowRegister reg, unsigned int component,
@@ -2485,6 +2790,126 @@ int rxas_flow_component_on_edge(
     return flow_ssa_component_fact(
             (RxasFlowSsaAnalysis *)analysis, analysis->edge_state[edge_id],
             reg, component, RXAS_FLOW_ID_NONE, 0, edge_id, fact);
+}
+
+size_t rxas_flow_value_version_count(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch) {
+    if (!flow_ssa_valid(analysis, expected_epoch)) return 0;
+    return analysis->value_version_count;
+}
+
+int rxas_flow_value_node(
+        const RxasFlowSsaAnalysis *const_analysis,
+        unsigned long expected_epoch, size_t value_id,
+        RxasFlowValueNode *node) {
+    RxasFlowSsaAnalysis *analysis;
+    FlowValueVersion *version;
+    size_t effect;
+    if (!node || !flow_ssa_valid(const_analysis, expected_epoch)) return 0;
+    analysis = (RxasFlowSsaAnalysis *)const_analysis;
+    value_id = flow_ssa_value_canonical(analysis, value_id);
+    if (value_id >= analysis->value_version_count) return 0;
+    version = &analysis->value_versions[value_id];
+    if ((version->kind == RXAS_FLOW_VALUE_COPY ||
+         version->kind == RXAS_FLOW_VALUE_DERIVED) &&
+        version->source_value_id == RXAS_FLOW_ID_NONE &&
+        version->source_state != RXAS_FLOW_ID_NONE &&
+        version->source_register != RXAS_FLOW_ID_NONE) {
+        size_t source_storage;
+        size_t source_value;
+        source_storage = flow_ssa_resolve_storage(
+                analysis, version->source_state,
+                version->source_register);
+        source_value = flow_ssa_resolve_value(
+                analysis, version->source_state,
+                source_storage, version->source_component);
+        version->source_value_id = flow_ssa_value_canonical(
+                analysis, source_value);
+    }
+    memset(node, 0, sizeof(*node));
+    node->id = value_id;
+    node->kind = version->kind;
+    node->presence = version->presence;
+    node->defining_instruction = version->defining_instruction;
+    node->source_value_id = flow_ssa_value_canonical(
+            analysis, version->source_value_id);
+    node->derivation = version->derivation;
+    node->signal_dependencies = version->signal_dependencies;
+    for (effect = 0; effect < RXAS_FLOW_EFFECT_CLASS_COUNT; effect++)
+        node->definition_effects[effect] = version->definition_effects[effect];
+    node->input_count = version->input_count;
+    return 1;
+}
+
+size_t rxas_flow_value_input(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t value_id, size_t input_index) {
+    const FlowValueVersion *version;
+    if (!flow_ssa_valid(analysis, expected_epoch)) return RXAS_FLOW_ID_NONE;
+    value_id = flow_ssa_value_canonical(analysis, value_id);
+    if (value_id >= analysis->value_version_count) return RXAS_FLOW_ID_NONE;
+    version = &analysis->value_versions[value_id];
+    if (input_index >= version->input_count) return RXAS_FLOW_ID_NONE;
+    return flow_ssa_value_canonical(
+            analysis,
+            analysis->value_inputs[version->input_offset + input_index]);
+}
+
+int rxas_flow_storage_aliases_at_instruction(
+        const RxasFlowSsaAnalysis *const_analysis,
+        unsigned long expected_epoch, size_t instruction_id,
+        int after_instruction, size_t storage_id,
+        size_t *alias_count, int *externally_visible) {
+    RxasFlowSsaAnalysis *analysis;
+    size_t state;
+    size_t reg;
+    size_t count;
+    int external;
+    if (!alias_count || !externally_visible ||
+        !flow_ssa_valid(const_analysis, expected_epoch) ||
+        instruction_id >= const_analysis->instruction_count)
+        return 0;
+    analysis = (RxasFlowSsaAnalysis *)const_analysis;
+    storage_id = flow_ssa_storage_canonical(analysis, storage_id);
+    if (!storage_id) return 0;
+    state = after_instruction ? analysis->instruction_after[instruction_id]
+                              : analysis->instruction_before[instruction_id];
+    count = 0;
+    external = 0;
+    for (reg = 0; reg < analysis->register_count; reg++) {
+        size_t named;
+        named = flow_ssa_resolve_storage(analysis, state, reg);
+        named = flow_ssa_storage_canonical(analysis, named);
+        if (!flow_ssa_storage_equivalent(
+                    analysis, named, storage_id))
+            continue;
+        count++;
+        if (analysis->registers[reg].register_class !=
+                RXAS_FLOW_REGISTER_LOCAL)
+            external = 1;
+    }
+    *alias_count = count;
+    *externally_visible = external;
+    return analysis->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE;
+}
+
+int rxas_flow_storage_is_local_base(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t storage_id) {
+    const FlowStorageVersion *version;
+    if (!flow_ssa_valid(analysis, expected_epoch)) return 0;
+    storage_id = flow_ssa_storage_canonical(analysis, storage_id);
+    if (storage_id && storage_id <= analysis->storage_version_count &&
+        analysis->storage_versions[storage_id - 1].kind ==
+                RXAS_FLOW_STORAGE_PHI)
+        storage_id = flow_ssa_storage_unique_base(
+                (RxasFlowSsaAnalysis *)analysis, storage_id);
+    if (!storage_id || storage_id > analysis->storage_version_count) return 0;
+    version = &analysis->storage_versions[storage_id - 1];
+    return version->kind == RXAS_FLOW_STORAGE_BASE &&
+           version->register_id < analysis->register_count &&
+           analysis->registers[version->register_id].register_class ==
+                    RXAS_FLOW_REGISTER_LOCAL;
 }
 
 static const char *flow_ssa_status_name(RxasFlowAnalysisStatus status) {

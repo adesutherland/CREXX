@@ -256,11 +256,13 @@ static unsigned int flow_signal_all_effects(void) {
 static unsigned int flow_signal_instruction_effect_mask(
         const RxasFlowInstruction *instruction) {
     unsigned int mask;
-    unsigned int reference_semantics;
+    unsigned int alias_semantics;
+    unsigned int mutation_semantics;
     if (!instruction || !instruction->op) return flow_signal_all_effects();
-    if (instruction->effects.state == RXOP_EFFECT_CONSERVATIVE ||
-        instruction->signal.state == RXOP_SIGNAL_STATE_UNKNOWN ||
-        (instruction->signal.dependencies & RXOP_SIGNAL_DEP_UNKNOWN))
+    /* Signal-set/dependency uncertainty belongs to exceptional-edge state.
+     * It does not turn a classified normal instruction transfer into a write
+     * of every independent effect class. */
+    if (instruction->effects.state == RXOP_EFFECT_CONSERVATIVE)
         return flow_signal_all_effects();
     mask = 0;
     if (rxop_context_writes(instruction->op->opcode) & RXOP_CONTEXT_NUMERIC)
@@ -276,11 +278,14 @@ static unsigned int flow_signal_instruction_effect_mask(
                 (1u << RXAS_FLOW_EFFECT_PLUGIN) |
                 (1u << RXAS_FLOW_EFFECT_LOCALE);
     }
-    reference_semantics = RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE |
+    alias_semantics = RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE |
             RXOP_SEM_REFERENCE_CREATE | RXOP_SEM_REFERENCE_READ |
-            RXOP_SEM_REFERENCE_WRITE | RXOP_SEM_REFERENCE_RELEASE |
+            RXOP_SEM_REFERENCE_RELEASE;
+    mutation_semantics = RXOP_SEM_REFERENCE_WRITE |
             RXOP_SEM_LIFETIME_END | RXOP_SEM_INDIRECT_WRITE;
-    if (instruction->effects.semantics & reference_semantics)
+    if (instruction->effects.semantics & alias_semantics)
+        mask |= 1u << RXAS_FLOW_EFFECT_ALIAS;
+    if (instruction->effects.semantics & mutation_semantics)
         mask |= 1u << RXAS_FLOW_EFFECT_REFERENCE;
     if (instruction->effects.semantics & RXOP_SEM_OPAQUE)
         mask |= 1u << RXAS_FLOW_EFFECT_EXTERNAL;
@@ -634,8 +639,14 @@ static int flow_signal_set_edge_state(
                      RXOP_SIGNAL_PHASE_AFTER_WRITES)
                 value = analysis->instruction_effect_after[
                         FLOW_EFFECT_INDEX(instruction_id, effect_class)];
+            /* An unknown signal set/phase does not invent a numeric-context
+             * write for an otherwise classified opcode.  Possible context
+             * writes come from rxop_context_writes(); an exact known failure
+             * contract may additionally name failure-only context state. */
             else if ((write_mask & (1u << effect_class)) ||
-                     (effect_class == RXAS_FLOW_EFFECT_NUMERIC_CONTEXT &&
+                     (instruction->signal.state ==
+                              RXOP_SIGNAL_STATE_KNOWN &&
+                      effect_class == RXAS_FLOW_EFFECT_NUMERIC_CONTEXT &&
                       instruction->signal.failure_context_writes &
                               RXOP_CONTEXT_NUMERIC))
                 value = flow_signal_unknown_effect(
@@ -1224,6 +1235,60 @@ size_t rxas_flow_effect_on_edge(
     return analysis->edge_effect[FLOW_EFFECT_INDEX(edge_id, effect_class)];
 }
 
+size_t rxas_flow_effect_version_count(
+        const RxasFlowSignalAnalysis *analysis, unsigned long expected_epoch) {
+    if (!flow_signal_valid(analysis, expected_epoch)) return 0;
+    return analysis->effect_version_count;
+}
+
+int rxas_flow_effect_node(
+        const RxasFlowSignalAnalysis *analysis, unsigned long expected_epoch,
+        size_t effect_id, RxasFlowEffectNode *node) {
+    const FlowEffectVersion *version;
+    size_t input_count;
+    if (!node || !flow_signal_valid(analysis, expected_epoch) ||
+        effect_id >= analysis->effect_version_count)
+        return 0;
+    version = &analysis->effect_versions[effect_id];
+    input_count = 0;
+    if (version->kind == FLOW_EFFECT_PHI &&
+        version->block_id < analysis->block_count)
+        input_count = analysis->incoming_offsets[version->block_id + 1] -
+                      analysis->incoming_offsets[version->block_id];
+    memset(node, 0, sizeof(*node));
+    node->id = effect_id;
+    node->kind = (RxasFlowEffectNodeKind)version->kind;
+    node->effect_class = version->effect_class;
+    node->parent_id = version->parent;
+    node->defining_instruction = version->instruction_id;
+    node->block_id = version->block_id;
+    node->input_count = input_count;
+    return 1;
+}
+
+size_t rxas_flow_effect_input(
+        const RxasFlowSignalAnalysis *analysis, unsigned long expected_epoch,
+        size_t effect_id, size_t input_index) {
+    const FlowEffectVersion *version;
+    size_t incoming_offset;
+    size_t incoming_count;
+    size_t edge_id;
+    if (!flow_signal_valid(analysis, expected_epoch) ||
+        effect_id >= analysis->effect_version_count)
+        return RXAS_FLOW_ID_NONE;
+    version = &analysis->effect_versions[effect_id];
+    if (version->kind != FLOW_EFFECT_PHI ||
+        version->block_id >= analysis->block_count)
+        return RXAS_FLOW_ID_NONE;
+    incoming_offset = analysis->incoming_offsets[version->block_id];
+    incoming_count = analysis->incoming_offsets[version->block_id + 1] -
+                     incoming_offset;
+    if (input_index >= incoming_count) return RXAS_FLOW_ID_NONE;
+    edge_id = analysis->incoming_edges[incoming_offset + input_index];
+    return analysis->edge_effect[
+            FLOW_EFFECT_INDEX(edge_id, version->effect_class)];
+}
+
 static const char *flow_signal_status_name(RxasFlowAnalysisStatus status) {
     switch (status) {
         case RXAS_FLOW_ANALYSIS_AVAILABLE: return "available";
@@ -1297,6 +1362,41 @@ int rxas_flow_signal_dump(const RxasFlowSignalAnalysis *analysis,
             fprintf(stream, "%llu",
                     (unsigned long long)analysis->policy_phi_inputs[
                             version->input_offset + input_index]);
+        }
+        fputc('\n', stream);
+    }
+    for (version_id = 0; version_id < analysis->effect_version_count;
+         version_id++) {
+        const FlowEffectVersion *version;
+        size_t input;
+        size_t input_count;
+        version = &analysis->effect_versions[version_id];
+        input_count = version->kind == FLOW_EFFECT_PHI &&
+                      version->block_id < analysis->block_count
+                ? analysis->incoming_offsets[version->block_id + 1] -
+                  analysis->incoming_offsets[version->block_id]
+                : 0;
+        fprintf(stream,
+                "PERF3 flow-effect-version id=%llu kind=%d class=%d "
+                "parent=",
+                (unsigned long long)version_id, (int)version->kind,
+                (int)version->effect_class);
+        if (version->parent == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        else fprintf(stream, "%llu", (unsigned long long)version->parent);
+        fputs(" instruction=", stream);
+        if (version->instruction_id == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        else fprintf(stream, "%llu",
+                     (unsigned long long)version->instruction_id);
+        fputs(" block=", stream);
+        if (version->block_id == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        else fprintf(stream, "%llu",
+                     (unsigned long long)version->block_id);
+        fputs(" inputs=", stream);
+        for (input = 0; input < input_count; input++) {
+            if (input) fputc(',', stream);
+            fprintf(stream, "%llu", (unsigned long long)
+                    rxas_flow_effect_input(
+                            analysis, expected_epoch, version_id, input));
         }
         fputc('\n', stream);
     }

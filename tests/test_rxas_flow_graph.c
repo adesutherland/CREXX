@@ -6,6 +6,7 @@
 
 #include "rxas_flow_graph.h"
 #include "rxas_flow_analysis.h"
+#include "rxas_flow_proof.h"
 #include "rxas_flow_signal.h"
 #include "rxas_flow_ssa.h"
 #include "rxasgrmr.h"
@@ -1340,6 +1341,7 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
     RxasFlowProcedure *procedure;
     Assembler_Token *operands[3];
     const RxasFlowSsaAnalysis *analysis;
+    const RxasFlowSignalAnalysis *signal_analysis;
     RxasFlowStorageFact before_storage;
     RxasFlowStorageFact normal_storage;
     RxasFlowStorageFact skip_storage;
@@ -1352,6 +1354,11 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
     size_t normal_edge;
     size_t skip_edge;
     size_t call_instruction;
+    size_t call_block;
+    size_t after_call_block;
+    size_t call_skip_edge;
+    size_t numeric_before_call;
+    size_t numeric_on_call_skip;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0);
     operands[1] = fixture_register(&fixture, 1);
@@ -1388,6 +1395,23 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
               "before-write signal edge observed LINKATTR's success mapping");
         call_instruction = rxas_flow_procedure_record(
                 procedure, 18, 1)->instruction_id;
+        call_block = fixture_block_for_record(procedure, 18, 1);
+        after_call_block = fixture_block_for_record(procedure, 18, 2);
+        call_skip_edge = fixture_edge_id(
+                procedure, 18, call_block, after_call_block,
+                RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        signal_analysis = rxas_flow_require_signal_analysis(
+                procedure, 18, 0);
+        numeric_before_call = signal_analysis
+                ? rxas_flow_effect_at_instruction(
+                        signal_analysis, 18, call_instruction, 0,
+                        RXAS_FLOW_EFFECT_NUMERIC_CONTEXT)
+                : RXAS_FLOW_ID_NONE;
+        numeric_on_call_skip = signal_analysis
+                ? rxas_flow_effect_on_edge(
+                        signal_analysis, 18, call_skip_edge,
+                        RXAS_FLOW_EFFECT_NUMERIC_CONTEXT)
+                : RXAS_FLOW_ID_NONE;
         check(rxas_flow_storage_at_instruction(
                     analysis, 18, call_instruction, 0,
                     fixture_local_register(0), &before_call_storage) &&
@@ -1397,6 +1421,9 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
               before_call_storage.kind == RXAS_FLOW_STORAGE_PHI &&
               after_call_storage.kind == RXAS_FLOW_STORAGE_UNKNOWN,
               "call did not invalidate a merged dynamic mapping");
+        check(signal_analysis &&
+              numeric_before_call == numeric_on_call_skip,
+              "unknown call signal poisoned frame-local numeric context");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -1680,6 +1707,237 @@ static void test_fused_failure_mappings(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_proof_service(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[3];
+    const RxasFlowProofService *proof;
+    const RxasFlowProofMetrics *metrics;
+    RxasFlowProofResult result;
+    size_t first_itos;
+    size_t repeated_itos;
+    size_t changed_context_itos;
+    size_t after_reference_itos;
+    size_t before_signal_itos;
+    size_t after_signal_itos;
+    size_t aliased_itos;
+    size_t after_mutation_itos;
+    size_t call_instruction;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 5);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_integer(&fixture, 20);
+    fixture_op(&fixture, "setnumdgts", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 6);
+    operands[1] = fixture_integer(&fixture, 9);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 6);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 2);
+    operands[2] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "stemset", operands, 3);
+    operands[0] = fixture_register(&fixture, 6);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 4);
+    operands[1] = fixture_integer(&fixture, 7);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "itof", operands, 1);
+    operands[0] = fixture_register(&fixture, 5);
+    operands[1] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 2);
+    operands[2] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "stemset", operands, 3);
+    operands[0] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "itof", operands, 1);
+    operands[0] = fixture_text_token(&fixture, FUNC, "callee");
+    fixture_op(&fixture, "call", operands, 1);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 23);
+    check(procedure != 0, "proof-service fixture construction failed");
+    if (procedure) {
+        check(rxas_flow_require_proof_service(procedure, 23, 1) == 0,
+              "bounded proof service did not fail closed");
+        metrics = rxas_flow_last_proof_metrics(procedure, 23);
+        check(metrics && metrics->status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED,
+              "bounded proof service did not report exhaustion");
+        proof = rxas_flow_require_proof_service(procedure, 23, 0);
+        first_itos = rxas_flow_procedure_record(
+                procedure, 23, 1)->instruction_id;
+        repeated_itos = rxas_flow_procedure_record(
+                procedure, 23, 2)->instruction_id;
+        changed_context_itos = rxas_flow_procedure_record(
+                procedure, 23, 4)->instruction_id;
+        after_reference_itos = rxas_flow_procedure_record(
+                procedure, 23, 6)->instruction_id;
+        before_signal_itos = rxas_flow_procedure_record(
+                procedure, 23, 8)->instruction_id;
+        after_signal_itos = rxas_flow_procedure_record(
+                procedure, 23, 10)->instruction_id;
+        aliased_itos = rxas_flow_procedure_record(
+                procedure, 23, 12)->instruction_id;
+        after_mutation_itos = rxas_flow_procedure_record(
+                procedure, 23, 15)->instruction_id;
+        call_instruction = rxas_flow_procedure_record(
+                procedure, 23, 16)->instruction_id;
+        check(proof && rxas_flow_prove_repetition(
+                    proof, 23, first_itos, repeated_itos, &result) &&
+              result.proved && result.reason == RXAS_FLOW_PROOF_PROVED,
+              "proof service rejected an unchanged repeated ITOS");
+        check(rxas_flow_prove_repetition(
+                    proof, 23, first_itos, repeated_itos, &result) &&
+              result.proved &&
+              rxas_flow_proof_metrics(proof, 23)->repetition_cache_hits == 1,
+              "repetition proof was not cached by epoch");
+        check(rxas_flow_prove_repetition(
+                    proof, 23, first_itos, changed_context_itos, &result) &&
+              !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_EFFECT_CHANGED,
+              "opaque numeric-context write did not invalidate the result");
+        check(rxas_flow_prove_repetition(
+                    proof, 23, changed_context_itos,
+                    after_reference_itos, &result) &&
+              result.proved,
+              "unrelated alias topology invalidated a stable value");
+        check(rxas_flow_prove_repetition(
+                    proof, 23, before_signal_itos,
+                    after_signal_itos, &result) &&
+              result.proved && result.reason == RXAS_FLOW_PROOF_PROVED,
+              "pre-write signal continuation poisoned frame-local numeric context");
+        check(rxas_flow_prove_repetition(
+                    proof, 23, aliased_itos,
+                    after_mutation_itos, &result) &&
+              !result.proved && result.reason ==
+                    RXAS_FLOW_PROOF_REFERENCE_EFFECT_CHANGED,
+              "aliased storage crossed a reference-visible mutation");
+        check(rxas_flow_prove_instruction_speculatable(
+                    proof, 23, first_itos, &result) && result.proved,
+              "total context-reading ITOS was not speculatable");
+        check(rxas_flow_prove_instruction_speculatable(
+                    proof, 23, call_instruction, &result) && !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_NOT_SPECULATABLE,
+              "call was incorrectly classified as speculatable");
+        check(rxas_flow_prove_repetition(
+                    proof, 24, first_itos, repeated_itos, &result) &&
+              !result.proved && result.reason ==
+                    RXAS_FLOW_PROOF_STALE_EPOCH,
+              "stale proof service did not fail closed");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_loop_proofs(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[3];
+    const RxasFlowProofService *proof;
+    const RxasFlowStructuralAnalysis *structural;
+    RxasFlowProofResult result;
+    RxasFlowRepetitionKey first_key;
+    RxasFlowRepetitionKey repeated_key;
+    size_t loop_instruction;
+    size_t loop_id;
+    size_t first_itos;
+    size_t repeated_itos;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 3);
+    fixture_op(&fixture, "load", operands, 2);
+    fixture_label(&fixture, "loop");
+    operands[0] = fixture_label_ref(&fixture, "done");
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "brt", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "loop");
+    fixture_op(&fixture, "br", operands, 1);
+    fixture_label(&fixture, "done");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 24);
+    check(procedure != 0, "loop-proof fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 24, 0);
+        structural = rxas_flow_require_structural_analysis(procedure, 24, 0);
+        loop_instruction = rxas_flow_procedure_record(
+                procedure, 24, 2)->instruction_id;
+        loop_id = structural ? rxas_flow_structural_innermost_loop(
+                structural, 24,
+                rxas_flow_procedure_instruction(
+                        procedure, 24, loop_instruction)->block_id)
+                : RXAS_FLOW_ID_NONE;
+        check(proof && loop_id != RXAS_FLOW_ID_NONE &&
+              rxas_flow_prove_must_execute_in_loop(
+                    proof, 24, loop_instruction, loop_id, &result) &&
+              result.proved,
+              "loop header was not proved must-execute");
+        check(rxas_flow_prove_loop_component_invariant(
+                    proof, 24, loop_instruction, loop_id,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &result) && result.proved,
+              "unchanged loop component was not proved invariant");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    fixture_label(&fixture, "repeat");
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 0);
+    operands[2] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "iadd", operands, 3);
+    operands[0] = fixture_label_ref(&fixture, "repeat");
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "brt", operands, 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 25);
+    check(procedure != 0,
+          "loop-carried repetition fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 25, 0);
+        first_itos = rxas_flow_procedure_record(
+                procedure, 25, 2)->instruction_id;
+        repeated_itos = rxas_flow_procedure_record(
+                procedure, 25, 3)->instruction_id;
+        check(proof && rxas_flow_repetition_key(
+                    proof, 25, first_itos, &first_key) &&
+              rxas_flow_repetition_key(
+                    proof, 25, repeated_itos, &repeated_key) &&
+              first_key.storage_id == repeated_key.storage_id,
+              "loop-carried local storage did not retain one proof key");
+        check(rxas_flow_prove_repetition(
+                    proof, 25, first_itos, repeated_itos, &result) &&
+              result.proved && result.reason == RXAS_FLOW_PROOF_PROVED,
+              "same-iteration write-once value was lost in a loop phi");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 int main(void) {
     Assembler_Context context;
     memset(&context, 0, sizeof(context));
@@ -1700,6 +1958,8 @@ int main(void) {
     test_signal_phase_component_edges(&context);
     test_derivation_contexts(&context);
     test_fused_failure_mappings(&context);
+    test_proof_service(&context);
+    test_loop_proofs(&context);
 
     if (failures) {
         fprintf(stderr, "RXAS immutable flow graph failures: %d\n", failures);

@@ -673,13 +673,43 @@ every possible point/component query.  Work-budget exhaustion, allocation
 failure, a stale epoch or invalid control returns no usable analysis.  Ordinary
 consumer-free assembly does not request this cache.
 
+Stage 6 adds `assembler/rxas_flow_proof.c`, a fourth per-epoch cache and the
+only authority for migrated proof consumers.  It exposes bounded queries for
+dominated successful repetition, speculatability, loop must-execute and loop
+component invariance.  Proof keys name symbolic `StorageId`s; result records
+name the generator/candidate `ValueId`s, effect identities and a stable failure
+reason.  Value and effect phis are compared through conservative reduction and
+equivalent leaf sets rather than numeric identity or source order.  Stale
+epochs, invalid control, unsupported signal dependencies, allocation failure
+and work-budget exhaustion return an unavailable or rejected proof and cannot
+enable a rewrite.
+
+The first migrated authority is repeated one-register `itos`.  A deletion
+requires the generator's successful continuation to dominate the candidate,
+the same storage and equivalent integer source/string result, and equivalent
+numeric-context and reference-visible effect dependencies.  The old private
+per-generator availability solver has been removed.  The new service is
+allowed to prove a larger safe domain; the old solver's decisions are a
+retained minimum-capability baseline, not a parity oracle.
+
+Calls model caller-owned argument mutation without becoming a universal local
+barrier.  `call1` through `call4` create unknown component definitions for
+their explicit actual arguments.  A range call records its local call-window
+base and uses a statically constant count when available; an unknown count
+conservatively covers every later local.  Storage outside the argument window
+may remain provably unchanged.  Normal and failure continuations use the same
+argument exposure rule, so signal edges cannot recover a value the callee may
+have changed.
+
 The NR-27 register universe distinguishes local (`r`), argument (`a`) and
 global (`g`) register classes and tracks integer, float, string, decimal,
 binary, attribute and reference views. Explicit and implicit accesses come
 from `rxop_effects()`. Register metadata and register-backed TRACE records are
 observations. Alias/reference/lifetime/indirect/opaque operations taint involved
-registers and invalidate the relevant facts. Calls and other modeled barriers
-kill availability rather than excluding an otherwise independent region.
+registers and invalidate the relevant facts. Legacy consumers still treat
+calls and other modeled barriers conservatively; migrated component-SSA
+consumers may retain facts only for storage proved outside the call argument
+window and unaffected by reference-visible effects.
 Registered branch SIGNAL handlers are conservative asynchronous observation
 targets for every executable instruction in the procedure. An unresolved
 label or unknown opcode makes control flow incomplete and disables all NR-27
@@ -698,9 +728,15 @@ attribute and reference components for each explicit operand.
 context part of those facts. `rxop_signal_contract()` distinguishes proven
 non-signal, known signal and fail-closed unknown behavior and records
 pre-write, post-write, partial-write or unknown failure phases. Unproved
-opcodes and signal locations remain conservative. A register-backed TRACE event observes
-only the component named by its value type; the event remains present and does
-not automatically observe every representation inside the value.
+opcodes and signal locations remain conservative. The contract inventory marks
+the VM `concat`/`sconcat` family non-signalling, stem writes failure-atomic
+before writes, and decimal comparisons plugin-signalling after their integer
+result write. Alias-topology effects are independently versioned from mutation
+observable through an existing reference. An unknown exceptional signal set
+does not invent a normal numeric-context write for an otherwise classified
+opcode. A register-backed TRACE event observes only the component named by its
+value type; the event remains present and does not automatically observe every
+representation inside the value.
 
 The graph-owned storage-identity service follows direct `link`, `swap` and
 `unlink` mapping rather than equating raw register numbers. The first
@@ -708,12 +744,14 @@ component consumer uses this identity to remove a later one-register `itos`
 only when an earlier `itos` for the same storage proves both the unchanged
 integer source and unchanged string result under the same numeric context on
 every incoming normal path. Relevant component writes, context changes,
-ambiguous/tainted references, calls, opaque or indirect effects and unproved
-signal phases kill the fact. TRACE records are retained; ordered same-boundary
-delivery lets the producer event survive even when the redundant executable
-conversion is removed. The current derivation solver is deliberately bounded
-to this consumer; general multi-derivation and loop-hoisting work remains a
-separate performance activity.
+ambiguous/tainted references, caller-owned argument mutation, opaque or
+indirect effects and unproved signal phases reject the proof. An unrelated
+no-argument call does not invent a local-value write. TRACE records are
+retained; ordered same-boundary delivery lets the producer event survive even
+when the redundant executable conversion is removed. The proof service is
+generic, but `itos` remains its first and currently only rewrite authority;
+other legacy consumers and later multi-derivation/loop-hoisting work migrate
+separately.
 
 The admitted first transformation panel is deliberately narrower than the
 fact engine:

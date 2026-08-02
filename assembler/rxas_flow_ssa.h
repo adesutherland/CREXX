@@ -37,6 +37,18 @@ typedef struct RxasFlowStorageFact {
     size_t defining_block;
 } RxasFlowStorageFact;
 
+/* Read-only write-once storage node used by the proof layer. StorageIds are
+ * one-based; phi inputs are exposed separately so loop-carried identity can
+ * be proved without treating a raw register number as the storage. */
+typedef struct RxasFlowStorageNode {
+    size_t id;
+    RxasFlowStorageKind kind;
+    size_t register_id;
+    size_t defining_instruction;
+    size_t defining_block;
+    size_t input_count;
+} RxasFlowStorageNode;
+
 typedef enum RxasFlowComponentPresence {
     RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN = 0,
     RXAS_FLOW_COMPONENT_PRESENT,
@@ -71,6 +83,21 @@ typedef struct RxasFlowComponentFact {
     size_t current_reference_effect;
     const Assembler_Token *constant_token;
 } RxasFlowComponentFact;
+
+/* Read-only write-once value node used by the proof layer. Phi inputs are
+ * exposed separately so cyclic equivalence is independent of construction
+ * order. */
+typedef struct RxasFlowValueNode {
+    size_t id;
+    RxasFlowValueKind kind;
+    RxasFlowComponentPresence presence;
+    size_t defining_instruction;
+    size_t source_value_id;
+    RxOpValueDerivation derivation;
+    unsigned int signal_dependencies;
+    size_t definition_effects[RXAS_FLOW_EFFECT_CLASS_COUNT];
+    size_t input_count;
+} RxasFlowValueNode;
 
 typedef struct RxasFlowSsaMetrics {
     RxasFlowAnalysisStatus status;
@@ -114,6 +141,14 @@ int rxas_flow_storage_on_edge(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t edge_id, RxasFlowRegister register_id,
         RxasFlowStorageFact *fact);
+size_t rxas_flow_storage_version_count(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch);
+int rxas_flow_storage_node(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t storage_id, RxasFlowStorageNode *node);
+size_t rxas_flow_storage_input(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t storage_id, size_t input_index);
 int rxas_flow_component_at_instruction(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t instruction_id, int after_instruction,
@@ -123,6 +158,22 @@ int rxas_flow_component_on_edge(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t edge_id, RxasFlowRegister register_id, unsigned int component,
         RxasFlowComponentFact *fact);
+
+size_t rxas_flow_value_version_count(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch);
+int rxas_flow_value_node(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t value_id, RxasFlowValueNode *node);
+size_t rxas_flow_value_input(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t value_id, size_t input_index);
+int rxas_flow_storage_aliases_at_instruction(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t instruction_id, int after_instruction, size_t storage_id,
+        size_t *alias_count, int *externally_visible);
+int rxas_flow_storage_is_local_base(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t storage_id);
 
 int rxas_flow_ssa_dump(const RxasFlowSsaAnalysis *analysis,
                        unsigned long expected_epoch, FILE *stream);

@@ -27,6 +27,7 @@
 #include "rxasassm.h"
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_graph.h"
+#include "rxas_flow_proof.h"
 #include "rxas_flow_signal.h"
 #include "rxas_flow_ssa.h"
 #include "rxdefs.h"
@@ -128,6 +129,10 @@ typedef struct flow_stats {
     size_t redundant_loads_removed;
     size_t redundant_initializations_removed;
     size_t redundant_conversions_removed;
+    size_t itos_proof_queries;
+    size_t itos_proof_proved;
+    size_t itos_proof_rejected;
+    size_t itos_proof_unavailable;
     size_t producer_destinations_forwarded;
     size_t operands_redirected;
     size_t rejected_live;
@@ -1852,145 +1857,6 @@ static int flow_is_async_handler_target(const flow_graph *graph, size_t node_ind
     return 0;
 }
 
-static size_t flow_storage_identity_at(const flow_graph *graph,
-                                       size_t node_index,
-                                       int register_index) {
-    if (!graph || !graph->storage || register_index < 0 ||
-        node_index >= graph->item_count ||
-        (size_t)register_index >= graph->register_count ||
-        !graph->storage->has_in[node_index])
-        return 0;
-    return graph->storage->in[node_index * graph->register_count +
-                              (size_t)register_index];
-}
-
-static int flow_storage_fact_is_unescaped_at(const flow_graph *graph,
-                                             size_t node_index,
-                                             size_t storage_id) {
-    size_t register_index;
-    if (!storage_id || storage_id > graph->register_count) return 0;
-    if (graph->tainted_registers[storage_id - 1]) return 0;
-    for (register_index = 0; register_index < graph->register_count;
-         register_index++) {
-        if (flow_storage_identity_at(graph, node_index,
-                                     (int)register_index) == storage_id &&
-            graph->tainted_registers[register_index])
-            return 0;
-    }
-    return 1;
-}
-
-static int flow_node_kills_storage_derivation(const flow_graph *graph,
-                                              size_t node_index,
-                                              size_t storage_id,
-                                              unsigned int components,
-                                              unsigned int contexts) {
-    const instruction_queue *item;
-    const flow_node *node;
-    size_t operand_index;
-    int register_index;
-    size_t operand_storage;
-    unsigned int written_components;
-    unsigned int global_barriers;
-
-    item = &graph->items[node_index];
-    node = &graph->nodes[node_index];
-    if (item->instrType != OP_CODE) return 0;
-    if (!node->op || node->effects.state != RXOP_EFFECT_CLASSIFIED) return 1;
-    if (rxop_context_writes(node->op->opcode) & contexts) return 1;
-    if (node->effects.semantics & (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL))
-        return 1;
-
-    /* An indirect/opaque operation cannot reach a base local that never
-     * participates in alias/reference machinery.  Once any register mapping
-     * for this storage is tainted, retain the conservative global barrier. */
-    global_barriers = RXOP_SEM_REFERENCE_CREATE | RXOP_SEM_REFERENCE_READ |
-                      RXOP_SEM_REFERENCE_WRITE | RXOP_SEM_REFERENCE_RELEASE |
-                      RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_OPAQUE;
-    if ((node->effects.semantics & global_barriers) &&
-        !flow_storage_fact_is_unescaped_at(graph, node_index, storage_id))
-        return 1;
-
-    /* These instructions change register-to-storage mappings, not the value
-     * components inside the mapped storage.  Their normal transfer is already
-     * represented by the graph-owned storage service. */
-    if (flow_storage_is_pure_swap_opcode(node->op->opcode) ||
-        (node->effects.semantics &
-         (RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE)))
-        return 0;
-
-    for (operand_index = 0; operand_index < item->operandCount;
-         operand_index++) {
-        if (!rxop_effect_writes_operand(&node->effects, operand_index))
-            continue;
-        register_index = flow_storage_operand_register(
-                graph, (instruction_queue *)item, operand_index);
-        if (register_index < 0) continue;
-        operand_storage = flow_storage_identity_at(graph, node_index,
-                                                   register_index);
-        if (!operand_storage) return 1;
-        if (operand_storage != storage_id) continue;
-        written_components = rxop_component_writes(node->op->opcode,
-                                                   operand_index);
-        if (!written_components || (written_components & components)) return 1;
-    }
-    if (node->effects.implicit != RXOP_IMPLICIT_NONE) return 1;
-    return 0;
-}
-
-static void flow_compute_available_storage_derivation(
-        const flow_graph *graph, size_t generator, size_t storage_id,
-        unsigned int components, unsigned int contexts,
-        unsigned char *available_in, unsigned char *available_out) {
-    size_t index;
-    size_t predecessor;
-    size_t predecessor_start;
-    size_t predecessor_end;
-    int changed;
-    int next_in;
-    int next_out;
-
-    for (index = 0; index < graph->item_count; index++) {
-        if (graph->nodes[index].reachable) {
-            available_in[index] = 1;
-            available_out[index] = 1;
-        }
-    }
-    if (graph->item_count) available_in[0] = 0;
-    do {
-        changed = 0;
-        for (index = 0; index < graph->item_count; index++) {
-            if (!graph->nodes[index].reachable) continue;
-            predecessor_start = graph->predecessor_offsets[index];
-            predecessor_end = graph->predecessor_offsets[index + 1];
-            next_in = predecessor_start < predecessor_end ||
-                      flow_is_async_handler_target(graph, index);
-            for (predecessor = predecessor_start;
-                 predecessor < predecessor_end; predecessor++) {
-                size_t predecessor_node;
-                predecessor_node = graph->predecessors[predecessor];
-                if (graph->nodes[predecessor_node].reachable &&
-                    !available_out[predecessor_node])
-                    next_in = 0;
-            }
-            if (flow_is_async_handler_target(graph, index)) next_in = 0;
-            if (index == 0) next_in = 0;
-            if (index == generator) next_out = 1;
-            else if (flow_node_kills_storage_derivation(
-                             graph, index, storage_id, components, contexts))
-                next_out = 0;
-            else
-                next_out = next_in;
-            if (available_in[index] != (unsigned char)next_in ||
-                available_out[index] != (unsigned char)next_out) {
-                available_in[index] = (unsigned char)next_in;
-                available_out[index] = (unsigned char)next_out;
-                changed = 1;
-            }
-        }
-    } while (changed);
-}
-
 static void flow_compute_available_fact(const flow_graph *graph, size_t generator,
                                         int destination_register, int source_register,
                                         unsigned int views,
@@ -2719,71 +2585,140 @@ static unsigned int flow_redundant_conversion_views(int opcode) {
     return 0;
 }
 
+static RxasFlowProcedure *flow_build_proof_procedure(
+        const flow_graph *graph, unsigned long epoch) {
+    const OpInfo **resolved_ops;
+    RxasFlowProcedure *procedure;
+    size_t index;
+    if (!graph || !graph->item_count) return 0;
+    resolved_ops = malloc(graph->item_count * sizeof(*resolved_ops));
+    if (!resolved_ops) return 0;
+    for (index = 0; index < graph->item_count; index++)
+        resolved_ops[index] = graph->nodes[index].op;
+    procedure = rxas_flow_procedure_build_resolved(
+            graph->context, graph->items, graph->item_count,
+            epoch, resolved_ops);
+    free(resolved_ops);
+    return procedure;
+}
+
+static int flow_proof_reason_unavailable(RxasFlowProofReason reason) {
+    return reason == RXAS_FLOW_PROOF_STALE_EPOCH ||
+           reason == RXAS_FLOW_PROOF_INVALID_GRAPH ||
+           reason == RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE ||
+           reason == RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+}
+
+typedef struct flow_itos_candidate {
+    size_t record_id;
+    size_t instruction_id;
+    size_t storage_id;
+} flow_itos_candidate;
+
 static size_t flow_remove_redundant_itos(flow_graph *graph,
                                          flow_stats *stats) {
-    size_t generator;
     size_t index;
-    int register_index;
-    int candidate_register;
-    size_t storage_id;
-    unsigned char *available_in;
-    unsigned char *available_out;
-    instruction_queue *first;
-    instruction_queue *item;
+    size_t candidate_index;
+    size_t generator_index;
+    RxasFlowProcedure *procedure;
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *record;
+    flow_itos_candidate *candidates;
+    size_t candidate_count;
+    RxasFlowProofResult proof_result;
+    RxasFlowRepetitionKey key;
+    unsigned long epoch;
     size_t removed;
+    int query_available;
 
     removed = 0;
-    for (generator = 0; generator < graph->item_count; generator++) {
-        first = &graph->items[generator];
-        if (first->instrType != OP_CODE || !graph->nodes[generator].reachable ||
-            !graph->nodes[generator].op || first->operandCount != 1 ||
-            graph->nodes[generator].op->opcode != OP_ITOS_REG)
+    epoch = 1ul;
+    candidate_count = 0;
+    for (index = 0; index < graph->item_count; index++)
+        if (graph->items[index].instrType == OP_CODE &&
+            graph->nodes[index].reachable && graph->nodes[index].op &&
+            graph->items[index].operandCount == 1 &&
+            graph->nodes[index].op->opcode == OP_ITOS_REG)
+            candidate_count++;
+    if (candidate_count < 2) return 0;
+    candidates = calloc(graph->item_count, sizeof(*candidates));
+    if (!candidates)
+        RX_PANIC_OOM("calloc RXAS ITOS proof candidates",
+                     graph->item_count * sizeof(*candidates), 0);
+    procedure = flow_build_proof_procedure(graph, epoch);
+    proof = procedure ? rxas_flow_require_proof_service(
+            procedure, epoch, 0) : 0;
+    if (!proof) {
+        stats->itos_proof_unavailable++;
+        goto cleanup;
+    }
+    candidate_count = 0;
+    for (index = 0; index < graph->item_count; index++) {
+        if (graph->items[index].instrType != OP_CODE ||
+            !graph->nodes[index].reachable || !graph->nodes[index].op ||
+            graph->items[index].operandCount != 1 ||
+            graph->nodes[index].op->opcode != OP_ITOS_REG)
             continue;
-        if (rxop_value_derivation(OP_ITOS_REG) !=
-                RXOP_DERIVATION_INTEGER_TO_STRING ||
-            rxop_signal_phase(OP_ITOS_REG) != RXOP_SIGNAL_PHASE_NONE)
+        record = rxas_flow_procedure_record(procedure, epoch, index);
+        if (!record || record->instruction_id == RXAS_FLOW_ID_NONE ||
+            !rxas_flow_repetition_key(
+                    proof, epoch, record->instruction_id, &key) ||
+            key.opcode != OP_ITOS_REG || !key.storage_id)
             continue;
-        if (!flow_storage_attach(graph)) return removed;
-        register_index = flow_register_index(
-                graph, flow_register_type(first->operand1Token),
-                (size_t)first->operand1Token->token_value.integer);
-        if (register_index < 0) continue;
-        storage_id = flow_storage_identity_at(graph, generator,
-                                              register_index);
-        if (!storage_id) continue;
-        available_in = calloc(graph->item_count, 1);
-        available_out = calloc(graph->item_count, 1);
-        if (!available_in || !available_out)
-            RX_PANIC_OOM("calloc RXAS storage derivation fact",
-                         graph->item_count * 2, 0);
-        flow_compute_available_storage_derivation(
-                graph, generator, storage_id,
-                RXOP_COMPONENT_INTEGER | RXOP_COMPONENT_STRING,
-                rxop_derivation_context_reads(OP_ITOS_REG),
-                available_in, available_out);
-        for (index = generator + 1; index < graph->item_count; index++) {
-            item = &graph->items[index];
-            if (!available_in[index] || item->instrType != OP_CODE ||
-                !graph->nodes[index].op ||
-                graph->nodes[index].op->opcode != OP_ITOS_REG ||
-                item->operandCount != 1)
+        candidates[candidate_count].record_id = index;
+        candidates[candidate_count].instruction_id = record->instruction_id;
+        candidates[candidate_count].storage_id = key.storage_id;
+        if (graph->context->debug_mode)
+            fprintf(stderr,
+                    "PERF3 itos-proof-candidate record=%llu "
+                    "instruction=%llu storage=%llu\n",
+                    (unsigned long long)index,
+                    (unsigned long long)record->instruction_id,
+                    (unsigned long long)key.storage_id);
+        candidate_count++;
+    }
+    for (candidate_index = 1; candidate_index < candidate_count;
+         candidate_index++) {
+        flow_itos_candidate *candidate;
+        candidate = &candidates[candidate_index];
+        if (graph->items[candidate->record_id].instrType != OP_CODE) continue;
+        for (generator_index = candidate_index; generator_index; ) {
+            flow_itos_candidate *generator;
+            generator_index--;
+            generator = &candidates[generator_index];
+            if (generator->storage_id != candidate->storage_id ||
+                graph->items[generator->record_id].instrType != OP_CODE)
                 continue;
-            candidate_register = flow_register_index(
-                    graph, flow_register_type(item->operand1Token),
-                    (size_t)item->operand1Token->token_value.integer);
-            if (candidate_register < 0 ||
-                flow_storage_identity_at(graph, index,
-                                         candidate_register) != storage_id)
+            memset(&proof_result, 0, sizeof(proof_result));
+            proof_result.reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+            query_available = rxas_flow_prove_repetition(
+                    proof, epoch, generator->instruction_id,
+                    candidate->instruction_id, &proof_result) &&
+                    !flow_proof_reason_unavailable(proof_result.reason);
+            stats->itos_proof_queries++;
+            if (!query_available) {
+                stats->itos_proof_unavailable++;
+                goto cleanup;
+            }
+            if (!proof_result.proved) {
+                stats->itos_proof_rejected++;
                 continue;
-            item->instrType = EMPTY;
-            flow_debug_accept(graph, index,
-                              "redundant-storage-component-conversion", 0);
+            }
+            graph->items[candidate->record_id].instrType = EMPTY;
+            flow_debug_accept(
+                    graph, candidate->record_id,
+                    "redundant-component-ssa-conversion", 0);
             removed++;
             stats->redundant_conversions_removed++;
+            stats->itos_proof_proved++;
+            break;
         }
-        free(available_in);
-        free(available_out);
     }
+cleanup:
+    if (graph->context->debug_mode && proof)
+        rxas_flow_proof_dump(proof, epoch, stderr);
+    rxas_flow_procedure_destroy(procedure);
+    free(candidates);
     return removed;
 }
 
@@ -2850,6 +2785,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "unreachable=%llu dead=%llu typed-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
             "redundant-conversion=%llu producer-forward=%llu redirects=%llu "
+            "itos-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
             (unsigned long long)graph->block_count,
@@ -2866,6 +2802,10 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->redundant_conversions_removed,
             (unsigned long long)stats->producer_destinations_forwarded,
             (unsigned long long)stats->operands_redirected,
+            (unsigned long long)stats->itos_proof_proved,
+            (unsigned long long)stats->itos_proof_queries,
+            (unsigned long long)stats->itos_proof_rejected,
+            (unsigned long long)stats->itos_proof_unavailable,
             (unsigned long long)stats->rejected_live,
             (unsigned long long)stats->rejected_trace,
             (unsigned long long)stats->rejected_tainted,
@@ -2897,6 +2837,7 @@ void rxas_flow_optimise(Assembler_Context *context,
     const RxasFlowStructuralAnalysis *structural;
     const RxasFlowSignalAnalysis *signal_analysis;
     const RxasFlowSsaAnalysis *ssa_analysis;
+    const RxasFlowProofService *proof_service;
     const OpInfo **resolved_ops;
     size_t before_instructions;
     size_t after_instructions;
@@ -3064,6 +3005,33 @@ void rxas_flow_optimise(Assembler_Context *context,
                         (unsigned long long)(failed_ssa
                                 ? failed_ssa->budget_limit : 0),
                         (unsigned long long)(failed_ssa ? failed_ssa->work : 0));
+            }
+            proof_service = rxas_flow_require_proof_service(
+                    procedure, rxas_flow_procedure_epoch(procedure), 0);
+            if (proof_service)
+                rxas_flow_proof_dump(
+                        proof_service, rxas_flow_procedure_epoch(procedure),
+                        stderr);
+            else {
+                const RxasFlowProofMetrics *failed_proof;
+                failed_proof = rxas_flow_last_proof_metrics(
+                        procedure, rxas_flow_procedure_epoch(procedure));
+                fprintf(stderr,
+                        "PERF3 flow-proof procedure=%s disabled=%s "
+                        "budget=%llu work=%llu\n",
+                        context->current_proc_name ? context->current_proc_name
+                                                   : "(directives)",
+                        failed_proof && failed_proof->status ==
+                                RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                                ? "budget-exhausted"
+                                : failed_proof && failed_proof->status ==
+                                        RXAS_FLOW_ANALYSIS_OUT_OF_MEMORY
+                                        ? "out-of-memory"
+                                        : "invalid-graph",
+                        (unsigned long long)(failed_proof
+                                ? failed_proof->budget_limit : 0),
+                        (unsigned long long)(failed_proof
+                                ? failed_proof->work : 0));
             }
         }
         rxas_flow_procedure_destroy(procedure);
