@@ -1,0 +1,103 @@
+/*
+ * PERF3-11 Stage 1 executable oracle for signal failure phases.
+ *
+ * This records the accepted branch's current behaviour.  It is evidence, not
+ * a permanent product contract: Gate 1 may deliberately select different
+ * semantics for DCOPY, DTOS, checked INC/DEC or SETNUMFUZ_INT.
+ */
+
+.globals=1
+
+main() .locals=10
+    sigcalla phase_skip(),"INVALID_ARGUMENTS"
+    sigcalla phase_skip(),"CONVERSION_ERROR"
+    sigcalla phase_skip(),"UNICODE_ERROR"
+
+    /* DCOPY rejects an absent source before changing the destination. */
+    load r0,12d
+    null r1
+    dcopy r0,r1
+    deq r9,r0,12d
+    brf failed,r9
+
+    /* FTOI materializes the integer before raising CONVERSION_ERROR. */
+    load r2,1.5
+    load r2,99
+    ftoi r2
+    ieq r9,r2,1
+    brf failed,r9
+
+    /* STOI parses into a temporary and leaves the prior integer on failure. */
+    load r3,77
+    load r3,"not-an-integer"
+    stoi r3
+    ieq r9,r3,77
+    brf failed,r9
+
+    /* SETNUMDGTS rejects an invalid setting before updating the context. */
+    setnumdgts 12
+    setnumdgts 0
+    getnumdgts r4
+    ieq r9,r4,12
+    brf failed,r9
+
+    /* The literal SETNUMFUZ form currently updates after queuing its signal. */
+    setnumfuz 0
+    setnumfuz -1
+    getnumfuz r5
+    ieq r9,r5,-1
+    brf failed,r9
+    setnumfuz 0
+
+    /* FREADCDPT exposes a genuine partial failure: a truncated two-byte
+     * sequence changes the string component, but not the integer component. */
+    load r0,"perf3-11-stage1-invalid-utf8.tmp"
+    load r1,"wb"
+    fopen r2,r0,r1
+    load r3,194
+    fwritebyte r2,r3
+    fclose r4,r2
+    load r1,"rb"
+    fopen r2,r0,r1
+    load r5,123
+    load r5,"1"
+    freadcdpt r5,r2
+    fclose r4,r2
+    ieq r9,r5,123
+    brf failed,r9
+    stob r5
+    ieq r9,r5,0
+    brf failed,r9
+
+    /* FTOS is already non-signalling in the VM despite coarse metadata. */
+    load r6,2.5
+    ftos r6
+    seq r9,r6,"2.5"
+    brf failed,r9
+
+    /* The statically linked mc_decimal plugin formats absence as nan. */
+    null r7
+    dtos r7
+    seq r9,r7,"nan"
+    brf failed,r9
+
+    /* Retry re-enters the faulting instruction with edge-specific state. */
+    sigcalla retry_once(),"OTHER"
+    load g0,1
+    signalt "OTHER",g0
+    ieq r9,g0,0
+    brf failed,r9
+
+    say "PASS: PERF3-11 current signal phase oracle"
+    ret 0
+
+failed:
+    say "FAIL: PERF3-11 current signal phase oracle"
+    ret 1
+
+phase_skip() .locals=0
+    ret "__rxsignal_skip"
+
+retry_once() .locals=0
+    load g0,0
+    ret "__rxsignal_retry"

@@ -230,7 +230,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 0 passes; Stage 1 active | The clean oracle passes 61/61 focused tests, exact accepted generated identities and idle assembler scaling capture. Signal/effect contracts are now being derived from VM/plugin behaviour before graph implementation; any instruction signal-semantic change remains a separate approval. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); oracle: [`2026-08-02-perf3-11-stage0-oracle`](evidence/2026-08-02-perf3-11-stage0-oracle/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Gate 1 decision | Stage 0 locks the 61/61 correctness and assembler oracle. Stage 1 proves coarse `MAY_THROW` is both over-inclusive and incomplete, supplies four-way executable phase/action evidence, and stops with a separate aligned signal-contract design plus recommended S1-S5 semantic choices. No VM semantic change has been made. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 1: [`2026-08-02-perf3-11-stage1-signal-contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -670,8 +670,8 @@ Adrian approved the scalable per-procedure graph, dedicated signal-policy and
 sparse component-SSA architecture on 2026-08-02.  The complete staged plan,
 semantic-change boundary, clean-base oracle, scaling gates and mandatory first
 consumer verdict are controlled by
-[`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md).  Production execution remains
-unauthorized until Adrian reviews that plan.
+[`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md).  Production execution is
+authorized subject to its mandatory gates; no push is authorized.
 
 PERF3-10 proves the architectural direction but intentionally implements one
 consumer. The reusable metadata now distinguishes register components,
@@ -703,6 +703,19 @@ locations for the decimal handlers. Only then should it compare remaining
 `ITOS`, decimal/string round trips, compiler loop hoisting and consolidated
 swap/swap cleanup as separate consumers. No public format, ABI or production
 rewrite is selected by this queue entry.
+
+Stage 1 now closes the signal-contract entry gate.  The 650-entry effects
+inventory contains 427 classified `MAY_THROW` opcodes, yet a VM-source audit
+finds 18 direct signal-raising instructions omitted from that set and many
+over-conservative inclusions.  Signal CFG edges will therefore use a separate
+opcode-aligned contract with deliberate unknowns.  The four optimized/no-opt,
+dual-VM current-phase executions pass, including before-, after- and partial-
+write state plus skip/retry; the explicit fail action returns the expected
+signal code 30 in all four executions.  Gate 1 now asks Adrian to select S1-S5:
+metadata correction, total `DCOPY`, non-signalling/plugin-consistent `DTOS`,
+portable pre-write checked `INC`/`DEC`, and pre-write invalid literal
+`SETNUMFUZ`.  No VM semantic change precedes that decision.  Evidence:
+[`Stage 1 signal contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/).
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed load,

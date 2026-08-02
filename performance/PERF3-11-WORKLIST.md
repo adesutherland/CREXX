@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Stage 0 clean oracle complete; Stage 1 active**
+Status: **in progress — Gate 1 signal-contract decision awaiting approval**
 
 Architecture approved: 2026-08-02
 
@@ -13,9 +13,9 @@ code merely by being present.
 
 ## Authority and mandatory stops
 
-Adrian approved the architecture and preparation of this detailed worklist on
-2026-08-02.  Production implementation is not yet authorized.  No push is
-authorized.
+Adrian approved the architecture and this staged implementation plan on
+2026-08-02.  Execution is authorized subject to the mandatory gates below.
+No push is authorized.
 
 Once implementation is authorized, this activity may refactor internal RXAS
 flow construction, split the implementation into coherent internal modules,
@@ -218,26 +218,34 @@ them before the replacement scaling verdict.
 
 ### Stage 1 — signal/effect semantic inventory and executable oracle
 
-- [ ] Inventory every opcode flagged as signalling, every handler-management
+- [x] Inventory every opcode flagged as signalling, every handler-management
       opcode, calls, reference/indirect writes and numeric-context operations.
-- [ ] Derive actual write phase, payload/address and continuation behaviour
+- [x] Derive actual write phase, payload/address and continuation behaviour
       from VM/plugin source; do not infer it from the current optimizer.
-- [ ] Add metadata validation requiring every signalling opcode to have an
-      explicit contract; unknown is allowed but must be deliberate.
-- [ ] Add focused executable fixtures for before-write, after-write and
+- [x] Define opcode-aligned metadata validation requiring every opcode to have
+      an explicit signal contract; unknown is allowed but must be deliberate.
+      Implement the selected table immediately after Gate 1, before Stage 2.
+- [x] Add focused executable fixtures for before-write, after-write and
       partial-write failure; normal/skip/retry; branch and call handlers;
       each action-aware handler result; inherited handlers; `sigpush`/`sigpop`;
       dynamic names; normal return; unwind; asynchronous entry; and observable
       signal/TRACE/source location.
-- [ ] Classify proposed semantic changes separately as: metadata correction to
+- [x] Classify proposed semantic changes separately as: metadata correction to
       existing VM behaviour, compatible totalisation/non-signalling change, or
       incompatible/public contract change.
-- [ ] Produce an instruction-by-instruction decision table for any proposed
+- [x] Produce an instruction-by-instruction decision table for any proposed
       `DCOPY`/`ITOS`/`FTOS`/`DTOS`/other `xtoy` change.
 
 **Gate 1:** Adrian reviews the executable contract.  Any VM/instruction signal
 semantic change requires explicit selection here; the scalable graph can
 proceed with conservative existing semantics if none is selected.
+
+Stage 1 analysis completed on 2026-08-02.  The current-behaviour fixtures pass
+optimized/no-opt on both VMs.  The audit proves that `RXOP_SEM_MAY_THROW` is
+both over-inclusive and incomplete, so the proposed graph uses a separate
+opcode-aligned signal contract.  Gate 1 offers five independently recoverable
+choices, with S1-S5 recommended.  Evidence and the instruction-by-instruction
+table: [`2026-08-02-perf3-11-stage1-signal-contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/).
 
 ### Stage 2 — immutable per-procedure `FlowProcedure`
 
