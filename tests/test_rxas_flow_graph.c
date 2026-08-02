@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "rxas_flow_graph.h"
+#include "rxas_flow_analysis.h"
 #include "rxasgrmr.h"
 
 #define FIXTURE_MAX_ITEMS 64
@@ -184,14 +185,9 @@ static int fixture_path_exists(const RxasFlowProcedure *procedure,
     return found;
 }
 
-static char *fixture_dump(const RxasFlowProcedure *procedure,
-                          unsigned long epoch) {
-    FILE *stream;
+static char *fixture_read_stream(FILE *stream) {
     char *buffer;
     long length;
-    stream = tmpfile();
-    if (!stream) exit(2);
-    if (!rxas_flow_procedure_dump(procedure, epoch, stream)) exit(2);
     fflush(stream);
     if (fseek(stream, 0, SEEK_END) != 0) exit(2);
     length = ftell(stream);
@@ -205,11 +201,31 @@ static char *fixture_dump(const RxasFlowProcedure *procedure,
     return buffer;
 }
 
+static char *fixture_dump(const RxasFlowProcedure *procedure,
+                          unsigned long epoch) {
+    FILE *stream;
+    stream = tmpfile();
+    if (!stream) exit(2);
+    if (!rxas_flow_procedure_dump(procedure, epoch, stream)) exit(2);
+    return fixture_read_stream(stream);
+}
+
+static char *fixture_analysis_dump(
+        const RxasFlowStructuralAnalysis *analysis, unsigned long epoch) {
+    FILE *stream;
+    stream = tmpfile();
+    if (!stream) exit(2);
+    if (!rxas_flow_structural_dump(analysis, epoch, stream)) exit(2);
+    return fixture_read_stream(stream);
+}
+
 static void test_unreachable_and_mapping(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
     Assembler_Token *operands[2];
     const RxasFlowRecord *record;
+    const RxasFlowStructuralAnalysis *analysis;
+    const RxasFlowStructuralMetrics *structural_metrics;
     size_t dead_block;
     size_t live_block;
     size_t entry;
@@ -232,6 +248,16 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
                                           fixture.item_count, 1);
     check(procedure != 0, "unreachable graph construction failed");
     if (procedure) {
+        check(rxas_flow_require_structural_analysis(procedure, 1, 1) == 0,
+              "bounded structural analysis did not fail closed");
+        structural_metrics = rxas_flow_last_structural_metrics(procedure, 1);
+        check(structural_metrics && structural_metrics->status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED,
+              "bounded structural analysis did not report budget exhaustion");
+        analysis = rxas_flow_require_structural_analysis(procedure, 1, 0);
+        check(analysis != 0,
+              "structural analysis did not recover with the default budget");
+        structural_metrics = rxas_flow_structural_metrics(analysis, 1);
         dead_block = fixture_block_for_record(procedure, 1, 2);
         live_block = fixture_block_for_record(procedure, 1, 5);
         entry = rxas_flow_procedure_entry_block(procedure, 1);
@@ -239,6 +265,13 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
               "unreachable block acquired an entry path");
         check(fixture_path_exists(procedure, 1, entry, live_block),
               "branch target is not reachable from entry");
+        check(structural_metrics && structural_metrics->unreachable_blocks >= 1 &&
+              rxas_flow_structural_scc(analysis, 1, dead_block) ==
+                    RXAS_FLOW_ID_NONE,
+              "structural reachability did not preserve unreachable code");
+        check(rxas_flow_require_structural_analysis(procedure, 1, 0) ==
+                    analysis,
+              "structural analysis was not cached by epoch");
         record = rxas_flow_procedure_record(procedure, 1, 2);
         check(record && record->emitted_address == 102,
               "dead label emitted-address mapping drifted");
@@ -250,6 +283,9 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
               rxas_flow_procedure_entry_block(procedure, 2) ==
                     RXAS_FLOW_ID_NONE,
               "stale epoch access did not fail closed");
+        check(rxas_flow_require_structural_analysis(procedure, 2, 0) == 0 &&
+              rxas_flow_structural_metrics(analysis, 2) == 0,
+              "stale structural analysis access did not fail closed");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -263,6 +299,7 @@ static void test_diamond(Assembler_Context *context) {
     size_t right_block;
     size_t left_block;
     size_t join_block;
+    const RxasFlowStructuralAnalysis *analysis;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_label_ref(&fixture, "left");
     operands[1] = fixture_register(&fixture, 0);
@@ -280,6 +317,8 @@ static void test_diamond(Assembler_Context *context) {
                                           fixture.item_count, 2);
     check(procedure != 0, "diamond graph construction failed");
     if (procedure) {
+        analysis = rxas_flow_require_structural_analysis(procedure, 2, 0);
+        check(analysis != 0, "diamond structural analysis failed");
         entry_block = fixture_block_for_record(procedure, 2, 0);
         right_block = fixture_block_for_record(procedure, 2, 1);
         left_block = fixture_block_for_record(procedure, 2, 3);
@@ -294,6 +333,22 @@ static void test_diamond(Assembler_Context *context) {
               fixture_has_edge(procedure, 2, left_block, join_block,
                                RXAS_FLOW_EDGE_BRANCH),
               "diamond join edges are incomplete");
+        check(analysis &&
+              rxas_flow_structural_immediate_dominator(
+                    analysis, 2, join_block) == entry_block &&
+              rxas_flow_structural_dominates(
+                    analysis, 2, entry_block, join_block),
+              "diamond immediate dominator is incorrect");
+        check(analysis &&
+              rxas_flow_structural_frontier_count(
+                    analysis, 2, right_block) == 1 &&
+              rxas_flow_structural_frontier(
+                    analysis, 2, right_block, 0) == join_block &&
+              rxas_flow_structural_frontier_count(
+                    analysis, 2, left_block) == 1 &&
+              rxas_flow_structural_frontier(
+                    analysis, 2, left_block, 0) == join_block,
+              "diamond dominance frontiers are incorrect");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -309,6 +364,10 @@ static void test_nested_and_irreducible(Assembler_Context *context) {
     size_t latch_block;
     size_t a_block;
     size_t b_block;
+    const RxasFlowStructuralAnalysis *analysis;
+    const RxasFlowStructuralMetrics *metrics;
+    size_t loop_index;
+    int found_irreducible;
     memset(&nested, 0, sizeof(nested));
     fixture_label(&nested, "outer");
     operands[0] = fixture_label_ref(&nested, "exit");
@@ -326,6 +385,8 @@ static void test_nested_and_irreducible(Assembler_Context *context) {
                                           nested.item_count, 3);
     check(procedure != 0, "nested-loop graph construction failed");
     if (procedure) {
+        analysis = rxas_flow_require_structural_analysis(procedure, 3, 0);
+        metrics = rxas_flow_structural_metrics(analysis, 3);
         outer_block = fixture_block_for_record(procedure, 3, 0);
         inner_block = fixture_block_for_record(procedure, 3, 2);
         latch_block = fixture_block_for_record(procedure, 3, 4);
@@ -334,6 +395,9 @@ static void test_nested_and_irreducible(Assembler_Context *context) {
               fixture_has_edge(procedure, 3, latch_block, inner_block,
                                RXAS_FLOW_EDGE_BRANCH),
               "nested-loop backedges are incomplete");
+        check(metrics && metrics->backedges >= 2 && metrics->loops >= 2 &&
+              metrics->max_loop_depth >= 2,
+              "nested-loop forest is incomplete");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&nested);
@@ -355,6 +419,8 @@ static void test_nested_and_irreducible(Assembler_Context *context) {
                                           irreducible.item_count, 4);
     check(procedure != 0, "irreducible graph construction failed");
     if (procedure) {
+        analysis = rxas_flow_require_structural_analysis(procedure, 4, 0);
+        metrics = rxas_flow_structural_metrics(analysis, 4);
         b_block = fixture_block_for_record(procedure, 4, 1);
         a_block = fixture_block_for_record(procedure, 4, 3);
         check(fixture_has_edge(procedure, 4, b_block, a_block,
@@ -369,6 +435,18 @@ static void test_nested_and_irreducible(Assembler_Context *context) {
                     procedure, 4,
                     rxas_flow_procedure_entry_block(procedure, 4), b_block),
               "irreducible cycle does not retain both entry paths");
+        found_irreducible = 0;
+        if (metrics) {
+            for (loop_index = 0; loop_index < metrics->loops; loop_index++) {
+                const RxasFlowLoop *loop;
+                loop = rxas_flow_structural_loop(analysis, 4, loop_index);
+                if (loop && (loop->flags & RXAS_FLOW_LOOP_IRREDUCIBLE))
+                    found_irreducible = 1;
+            }
+        }
+        check(metrics && metrics->irreducible_scc_count == 1 &&
+              found_irreducible,
+              "irreducible SCC was not represented in the loop forest");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&irreducible);
@@ -387,7 +465,14 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
     size_t async_root;
     char *first_dump;
     char *second_dump;
+    char *first_analysis_dump;
+    char *second_analysis_dump;
     FILE *stale_stream;
+    const RxasFlowStructuralAnalysis *first_analysis;
+    const RxasFlowStructuralAnalysis *second_analysis;
+    const RxasFlowStructuralMetrics *structural_metrics;
+    size_t loop_index;
+    size_t retry_only_loops;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_label_ref(&fixture, "handler");
     operands[1] = fixture_string(&fixture, "OVERFLOW_UNDERFLOW");
@@ -407,6 +492,10 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
     check(first != 0 && second != 0,
           "signal graph construction failed");
     if (first && second) {
+        first_analysis = rxas_flow_require_structural_analysis(first, 7, 0);
+        second_analysis = rxas_flow_require_structural_analysis(second, 7, 0);
+        check(first_analysis != 0 && second_analysis != 0,
+              "signal structural analysis failed");
         inc_block = fixture_block_for_record(first, 7, 2);
         ret_block = fixture_block_for_record(first, 7, 4);
         handler_block = fixture_block_for_record(first, 7, 5);
@@ -438,6 +527,27 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
               metrics->signal_skip_edges >= 2 &&
               metrics->signal_retry_edges >= 2,
               "signal graph metrics are incomplete");
+        structural_metrics = rxas_flow_structural_metrics(first_analysis, 7);
+        retry_only_loops = 0;
+        if (structural_metrics) {
+            for (loop_index = 0; loop_index < structural_metrics->loops;
+                 loop_index++) {
+                const RxasFlowLoop *loop;
+                loop = rxas_flow_structural_loop(
+                        first_analysis, 7, loop_index);
+                if (loop &&
+                    (loop->flags & RXAS_FLOW_LOOP_SIGNAL_RETRY_ONLY))
+                    retry_only_loops++;
+            }
+        }
+        check(structural_metrics && retry_only_loops >= 2,
+              "signal retry cycles were not distinguished in the loop forest");
+        check(first_analysis &&
+              rxas_flow_structural_predecessor_count(
+                    first_analysis, 7, ret_block) == 1 &&
+              rxas_flow_structural_predecessor(
+                    first_analysis, 7, ret_block, 0) == inc_block,
+              "parallel normal/skip edges did not form a predecessor set");
         check(rxas_flow_procedure_record(first, 7, 1)->block_id == inc_block &&
               rxas_flow_procedure_record(first, 7, 3)->block_id == ret_block,
               "source/TRACE records lost their continuation block mapping");
@@ -450,10 +560,21 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
               "graph dump omits typed signal structure");
         free(first_dump);
         free(second_dump);
+        first_analysis_dump = fixture_analysis_dump(first_analysis, 7);
+        second_analysis_dump = fixture_analysis_dump(second_analysis, 7);
+        check(strcmp(first_analysis_dump, second_analysis_dump) == 0,
+              "structural analysis dump is not deterministic");
+        check(strstr(first_analysis_dump, "irreducible-sccs=") != 0 &&
+              strstr(first_analysis_dump, "PERF3 flow-loop") != 0,
+              "structural analysis dump omits reusable structure");
+        free(first_analysis_dump);
+        free(second_analysis_dump);
         stale_stream = tmpfile();
         if (!stale_stream) exit(2);
         check(!rxas_flow_procedure_dump(first, 8, stale_stream),
               "stale graph dump did not fail closed");
+        check(!rxas_flow_structural_dump(first_analysis, 8, stale_stream),
+              "stale structural dump did not fail closed");
         fclose(stale_stream);
     }
     rxas_flow_procedure_destroy(first);

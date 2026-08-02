@@ -558,6 +558,33 @@ pointer values, so graph identities and typed edge counts can be compared
 mechanically. Allocation or construction failure simply disables this
 consumer-free sidecar and leaves the unchanged emission path available.
 
+Stage 3 layers a demand-driven structural-analysis manager over each immutable
+procedure epoch. `assembler/rxas_flow_analysis.c` retains successor edge IDs
+and unique predecessor block sets in sparse CSR form, then computes reachable
+reverse postorder from a virtual root joining the procedure-entry, registered-
+handler and asynchronous-handler roots. Unreachable blocks remain represented
+by the graph but are excluded from dominance, SCC and loop proofs.
+
+The cached structural result contains Cooper-Harvey-Kennedy immediate
+dominators, dominance-tree intervals, sparse dominance frontiers, iterative
+Kosaraju SCCs, dominance-classified backedges and a loop hierarchy. Natural
+loops with the same header share one region; irreducible SCCs remain explicit
+conservative regions. Loops formed solely by signal-retry continuations carry
+`RXAS_FLOW_LOOP_SIGNAL_RETRY_ONLY`, so a later language-loop transformation
+cannot mistake retry control for source iteration. Source order remains a
+diagnostic mapping and is never treated as dominance evidence.
+
+Every structural query requires the graph epoch. The first successful result
+is cached until graph destruction; a failed deliberately small work budget may
+be retried with a larger budget. Allocation failure, invalid control or budget
+exhaustion leaves the analysis unavailable and cannot enable a rewrite.
+Deterministic `PERF3 flow-analysis*` and `PERF3 flow-loop` diagnostics expose
+work, retained-byte, reachability, predecessor, dominator-iteration, frontier,
+SCC, backedge and loop counters. Post-dominance is deliberately deferred until
+a consumer needs a must-execute query. Ordinary assembly does not solve this
+unused analysis: `rxas -d`, tests and future optimizer consumers request it
+explicitly. Stage 3 therefore changes neither queued records nor RXBIN output.
+
 The NR-27 register universe distinguishes local (`r`), argument (`a`) and
 global (`g`) register classes and tracks integer, float, string, decimal,
 binary, attribute and reference views. Explicit and implicit accesses come

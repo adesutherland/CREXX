@@ -25,6 +25,7 @@
 /* RXAS transient whole-procedure machine-flow analysis. */
 
 #include "rxasassm.h"
+#include "rxas_flow_analysis.h"
 #include "rxas_flow_graph.h"
 #include "rxdefs.h"
 
@@ -2891,6 +2892,7 @@ void rxas_flow_optimise(Assembler_Context *context,
     flow_graph graph;
     flow_stats stats;
     RxasFlowProcedure *procedure;
+    const RxasFlowStructuralAnalysis *structural;
     const OpInfo **resolved_ops;
     size_t before_instructions;
     size_t after_instructions;
@@ -2975,9 +2977,38 @@ void rxas_flow_optimise(Assembler_Context *context,
     }
     else procedure = 0;
     if (procedure) {
-        if (context->debug_mode)
+        if (context->debug_mode) {
+            /* Structural analyses are demand-driven.  Until an optimizer
+             * consumer requests them, ordinary assembly must not retain or
+             * solve facts that only diagnostics use. */
+            structural = rxas_flow_require_structural_analysis(
+                    procedure, rxas_flow_procedure_epoch(procedure), 0);
             rxas_flow_procedure_dump(
                     procedure, rxas_flow_procedure_epoch(procedure), stderr);
+            if (structural)
+                rxas_flow_structural_dump(
+                        structural, rxas_flow_procedure_epoch(procedure),
+                        stderr);
+            else {
+                const RxasFlowStructuralMetrics *failed;
+                failed = rxas_flow_last_structural_metrics(
+                        procedure, rxas_flow_procedure_epoch(procedure));
+                fprintf(stderr,
+                        "PERF3 flow-analysis procedure=%s disabled=%s "
+                        "budget=%llu work=%llu\n",
+                        context->current_proc_name ? context->current_proc_name
+                                                   : "(directives)",
+                        failed && failed->status ==
+                                RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                                ? "budget-exhausted"
+                                : failed && failed->status ==
+                                        RXAS_FLOW_ANALYSIS_OUT_OF_MEMORY
+                                        ? "out-of-memory"
+                                        : "invalid-graph",
+                        (unsigned long long)(failed ? failed->budget_limit : 0),
+                        (unsigned long long)(failed ? failed->work : 0));
+            }
+        }
         rxas_flow_procedure_destroy(procedure);
     }
     else if (context->debug_mode) {

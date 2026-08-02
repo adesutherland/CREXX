@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Stage 3 structural analyses**
+Status: **in progress — Stage 3 locked; Stage 4 signal-policy SSA next**
 
 Architecture approved: 2026-08-02
 
@@ -295,23 +295,42 @@ the greater-than-5%-and-1-MiB escalation rule. Evidence:
 
 ### Stage 3 — reusable structural analyses and analysis manager
 
-- [ ] Compute reachable reverse-postorder once per graph epoch.
-- [ ] Add dominators and dominance frontiers for sparse phi placement.
-- [ ] Add strongly connected components, backedge classification and a loop
+- [x] Compute reachable reverse-postorder once per graph epoch.
+- [x] Add dominators and dominance frontiers for sparse phi placement.
+- [x] Add strongly connected components, backedge classification and a loop
       forest; source order is retained for diagnostics, not used as a proof of
       dominance.
-- [ ] Add post-dominance or an equivalent must-execute query only where the
-      first consumer requires it.
-- [ ] Cache analyses under the owning procedure and declare preservation/
+- [x] Review post-dominance/must-execute scope. No Stage 3 consumer requires
+      it, so it is deliberately not instantiated before the first such query.
+- [x] Cache analyses under the owning procedure and declare preservation/
       invalidation for every pass.
-- [ ] Use priority/worklist traversal for cyclic dataflow and def-use/dominance
-      walks for point proofs; do not rescan complete procedure state for every
-      generator.
-- [ ] Add per-analysis work/memory counters and a configurable internal budget
+- [x] Expose RPO, unique predecessors, dominance and sparse-frontier surfaces
+      for later priority/worklist and point-proof consumers; no per-generator
+      complete-procedure rescan is introduced.
+- [x] Add per-analysis work/memory counters and a configurable internal budget
       whose exhaustion disables optimization safely.
 
 **Gate 3:** structural tests, deterministic dumps and scaling counters pass
 without changing emitted code.
+
+Gate 3 passed on 2026-08-02. The epoch-owned, demand-driven manager caches
+reachable RPO, unique predecessor sets, dominators/tree intervals, sparse
+dominance frontiers, SCCs, backedges and natural/irreducible loop regions.
+Signal-retry-only loops are marked separately. Deliberate low-budget failure,
+larger-budget retry, stale epochs, unreachable blocks, diamonds, nested and
+irreducible loops, parallel signal edges and deterministic dumps are permanent
+contract tests. Final focused correctness passes 113/113 and all three Gate 0
+RXBIN hashes remain exact.
+
+The first ordinary implementation eagerly solved unused analyses and crossed
+the Richards RSS guard by 1,155,072 bytes. It was rejected and retained in the
+evidence. Analysis construction is now demand-driven: diagnostics and future
+consumers request the cache, while ordinary consumer-free assembly pays no
+solver allocation. Thirty balanced/interleaved final rounds versus frozen
+Stage 0 measure elapsed deltas of -7.087% Richards, -1.411% Towers and -0.865%
+RexxCPS. RSS deltas are +499,712, +344,064 and +253,952 bytes respectively,
+all below the combined greater-than-5%-and-1-MiB escalation rule. Evidence:
+[`2026-08-02-perf3-11-stage3-structural-analysis`](evidence/2026-08-02-perf3-11-stage3-structural-analysis/).
 
 ### Stage 4 — sparse signal-policy and effect SSA
 

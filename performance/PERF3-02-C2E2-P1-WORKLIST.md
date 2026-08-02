@@ -37,8 +37,12 @@ production behavior change.
 
 ## VM continuation contract
 
-`RXOP_SEM_MAY_THROW` identifies instructions that can enter signal handling.
-For storage mapping, the reusable flow model distinguishes:
+At this stage, `RXOP_SEM_MAY_THROW` identified instructions that could enter
+signal handling. PERF3-11 Stage 1 subsequently retired that coarse flag;
+`RxOpSignalContract` is now the sole opcode-aligned authority for capability,
+failure phase and continuations. The three continuation classes established by
+this work remain unchanged. For storage mapping, the reusable flow model
+distinguishes:
 
 1. **normal** — the instruction completed and its complete mapping transfer is
    visible;

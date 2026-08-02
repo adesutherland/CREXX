@@ -6,39 +6,13 @@
 
 /* Immutable, per-procedure RXAS control-flow graph construction. */
 
-#include "rxas_flow_graph.h"
+#include "rxas_flow_graph_internal.h"
+#include "rxas_flow_analysis.h"
 #include "rxasassm.h"
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef struct RxasFlowLabelSlot {
-    const char *name;
-    size_t record_id;
-} RxasFlowLabelSlot;
-
-struct RxasFlowProcedure {
-    unsigned long epoch;
-    char *name;
-    const instruction_queue *items;
-    size_t item_count;
-    RxasFlowRecord *records;
-    RxasFlowInstruction *instructions;
-    RxasFlowBlock *blocks;
-    RxasFlowEdge *edges;
-    size_t edge_capacity;
-    RxasFlowLabelSlot *labels;
-    size_t label_capacity;
-    size_t entry_block;
-    size_t handler_root;
-    size_t async_root;
-    size_t normal_exit;
-    size_t unwind_exit;
-    size_t terminal_exit;
-    size_t unknown_exit;
-    RxasFlowMetrics metrics;
-};
 
 static OperandType flow_graph_operand_type(const Assembler_Token *token) {
     if (!token) return OP_NONE;
@@ -791,6 +765,7 @@ RxasFlowProcedure *rxas_flow_procedure_build_resolved(
 
 void rxas_flow_procedure_destroy(RxasFlowProcedure *procedure) {
     if (!procedure) return;
+    rxas_flow_analysis_manager_destroy(procedure);
     free(procedure->name);
     free(procedure->records);
     free(procedure->instructions);

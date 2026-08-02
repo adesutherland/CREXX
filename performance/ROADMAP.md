@@ -230,7 +230,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 3 structural analyses | Gates 1-2 are locked. Explicit signal metadata is the sole signal authority. The consumer-free immutable per-procedure graph now has stable record/instruction/address mappings, typed signal/control edges, synthetic roots/exits, deterministic dumps and fail-closed epochs. Focused tests pass 113/113, Gate 0 RXBIN hashes are exact, and 30-round assembler/RSS guards pass after duplicate opcode parsing was removed. Stage 3 may add cached RPO, predecessor, dominator, dominance-frontier, SCC and loop structure without an optimizer consumer. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 2: [`2026-08-02-perf3-11-stage2-flow-graph`](evidence/2026-08-02-perf3-11-stage2-flow-graph/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 3 locked; Stage 4 next | Gates 1-3 are locked. Explicit signal metadata is the sole signal authority. The immutable per-procedure graph now owns a demand-driven epoch cache for unique predecessors, RPO, dominators/frontiers, SCCs, backedges and natural/irreducible loop regions, with signal-retry-only loops distinct. Focused tests pass 113/113, Gate 0 RXBIN hashes are exact, and final ordinary assembler elapsed/RSS guards pass after unused eager solving was rejected. Stage 4 may build sparse mutable signal-policy/effect versions; no component proof may consume a signal edge before Gate 4. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 3: [`2026-08-02-perf3-11-stage3-structural-analysis`](evidence/2026-08-02-perf3-11-stage3-structural-analysis/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -728,6 +728,17 @@ then constructs the sidecar. Focused correctness is 113/113, all three Gate 0
 images are exact, and final same-session 30-round assembler medians are
 +0.411% Richards, +0.463% Towers and -2.784% RexxCPS with no RSS escalation.
 Evidence: [`Stage 2 flow graph`](evidence/2026-08-02-perf3-11-stage2-flow-graph/).
+
+Stage 3 closes the reusable structural-analysis gate. The procedure epoch now
+owns a demand-driven cached result containing unique predecessor sets,
+multi-root RPO, dominators and sparse frontiers, SCC/backedge classification
+and a loop hierarchy that distinguishes signal-retry cycles from source-loop
+candidates. Work and retained-memory budgets fail closed; deterministic dumps
+make the scale auditable. The first eager integration was rejected after it
+crossed the Richards RSS guard by 1,155,072 bytes. The accepted demand-driven
+form retains identical analysis results under `-d` and future consumers while
+ordinary consumer-free assembly stays guard-clean. Correctness passes 113/113
+and all Gate 0 images remain exact. Stage 4 is the next authorized gate.
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed load,
