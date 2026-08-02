@@ -524,11 +524,12 @@ editing the next consumer:
       representative Richards, Towers and RexxCPS RXAS;
 - [x] record its semantic dependencies, known conservative gaps, image deltas,
       assembler cost and correctness oracle;
-- [ ] map it to the required new graph/signal/storage/value/effect/liveness
-      query, adding a generic query only when the current surface is
-      insufficient; and
-- [ ] migrate one authority at a time, delete the superseded solver, then prove
-      the old safe domain plus any separately identified stronger domain.
+- [x] map M01 to the required new graph/signal/storage/value/effect query;
+      retain the corresponding mapping task for each later migration, adding a
+      generic query only when the current surface is insufficient; and
+- [ ] migrate each remaining authority one at a time, delete the superseded
+      solver, then prove the old safe domain plus any separately identified
+      stronger domain.
 
 A changed decision is not a mismatch by itself.  A new acceptance requires a
 positive write-once/flow proof and focused adversarial correctness; a new
@@ -541,11 +542,16 @@ The locked inventory and one-authority execution ledger are in
 [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md), with its
 retained decision oracle in
 [`2026-08-02-perf3-11-legacy-proof-baseline`](evidence/2026-08-02-perf3-11-legacy-proof-baseline/).
-M01 begins from the one old `ITOF` acceptance but deliberately generalizes the
-consumer to metadata-admitted one-register `XTOY` derivations.  `ITOD` is the
-first new-domain example; each later conversion must independently supply
-exact source/result, context/plugin, failure-phase and success-stability
-metadata before the generic proof may remove it.
+M01 is complete in
+[`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/).
+It recovers the one old `ITOF` acceptance and generalizes the consumer to all
+metadata-admitted one-register `XTOY` derivations.  Exact metadata exists for
+all 20 conversions; the focused corpus proves 12 deletions, including four
+`ITOD` flow shapes, while signal, effect and same-component idempotence gaps
+remain closed.  `ITOD` and `BTOD` now have the coherent total non-signalling
+runtime/plugin contract required by the proof.  Canonical Richards, Towers
+and RexxCPS output is unchanged, focused replay passes 51/51 and broad Debug
+passes 1,989/1,989.  M02 repeated integer/bitwise-float loads are next.
 
 ### Stage 11 — later consumers after legacy migration
 

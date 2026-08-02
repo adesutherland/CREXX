@@ -242,14 +242,20 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_BINEQ_REG_REG_REG || opcode == OP_BINEQ_REG_REG_BINARY ||
         opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
         return operand_index == 0 ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_BINARY;
-    if (opcode == OP_ITOS_REG || opcode == OP_ITOF_REG || opcode == OP_ITOB_REG)
+    if (opcode == OP_BTOI_REG || opcode == OP_BTOD_REG ||
+        opcode == OP_BTOF_REG || opcode == OP_BTOS_REG ||
+        opcode == OP_ITOS_REG || opcode == OP_ITOF_REG ||
+        opcode == OP_ITOB_REG || opcode == OP_ITOD_REG)
         return RXOP_COMPONENT_INTEGER;
-    if (opcode == OP_FTOS_REG)
+    if (opcode == OP_FTOS_REG || opcode == OP_FTOI_REG ||
+        opcode == OP_FTOB_REG || opcode == OP_FTOD_REG)
         return RXOP_COMPONENT_FLOAT;
-    if (opcode == OP_DTOS_REG)
+    if (opcode == OP_STOB_REG || opcode == OP_STOF_REG ||
+        opcode == OP_STOI_REG || opcode == OP_STOD_REG)
+        return RXOP_COMPONENT_STRING;
+    if (opcode == OP_DTOS_REG || opcode == OP_DTOI_REG ||
+        opcode == OP_DTOB_REG || opcode == OP_DTOF_REG)
         return RXOP_COMPONENT_DECIMAL;
-    if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG)
-        return RXOP_COMPONENT_FLOAT;
     if (opcode == OP_ITOF_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_INTEGER;
     return RXOP_COMPONENT_ALL;
@@ -283,11 +289,19 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (opcode == OP_BINEQ_REG_REG_REG || opcode == OP_BINEQ_REG_REG_BINARY ||
         opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
         return RXOP_COMPONENT_INTEGER;
-    if (opcode == OP_ITOS_REG) return RXOP_COMPONENT_STRING;
-    if (opcode == OP_FTOS_REG || opcode == OP_DTOS_REG)
+    if (opcode == OP_BTOS_REG || opcode == OP_ITOS_REG ||
+        opcode == OP_FTOS_REG || opcode == OP_DTOS_REG)
         return RXOP_COMPONENT_STRING;
-    if (opcode == OP_ITOF_REG) return RXOP_COMPONENT_FLOAT;
-    if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG || opcode == OP_ITOB_REG)
+    if (opcode == OP_BTOF_REG || opcode == OP_ITOF_REG ||
+        opcode == OP_STOF_REG || opcode == OP_DTOF_REG)
+        return RXOP_COMPONENT_FLOAT;
+    if (opcode == OP_BTOD_REG || opcode == OP_STOD_REG ||
+        opcode == OP_ITOD_REG || opcode == OP_FTOD_REG)
+        return RXOP_COMPONENT_DECIMAL;
+    if (opcode == OP_BTOI_REG || opcode == OP_FTOI_REG ||
+        opcode == OP_FTOB_REG || opcode == OP_ITOB_REG ||
+        opcode == OP_STOB_REG || opcode == OP_STOI_REG ||
+        opcode == OP_DTOI_REG || opcode == OP_DTOB_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_ITOF_REG_REG)
         return RXOP_COMPONENT_INTEGER | RXOP_COMPONENT_FLOAT;
@@ -295,11 +309,28 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
 }
 
 RxOpValueDerivation rxop_value_derivation(int opcode) {
+    if (opcode == OP_BTOI_REG) return RXOP_DERIVATION_BOOLEAN_TO_INTEGER;
+    if (opcode == OP_BTOD_REG) return RXOP_DERIVATION_BOOLEAN_TO_DECIMAL;
+    if (opcode == OP_BTOF_REG) return RXOP_DERIVATION_BOOLEAN_TO_FLOAT;
+    if (opcode == OP_BTOS_REG) return RXOP_DERIVATION_BOOLEAN_TO_STRING;
     if (opcode == OP_ITOS_REG) return RXOP_DERIVATION_INTEGER_TO_STRING;
     if (opcode == OP_FTOS_REG) return RXOP_DERIVATION_FLOAT_TO_STRING;
     if (opcode == OP_DTOS_REG) return RXOP_DERIVATION_DECIMAL_TO_STRING;
     if (opcode == OP_ITOF_REG || opcode == OP_ITOF_REG_REG)
         return RXOP_DERIVATION_INTEGER_TO_FLOAT;
+    if (opcode == OP_FTOI_REG) return RXOP_DERIVATION_FLOAT_TO_INTEGER;
+    if (opcode == OP_FTOB_REG) return RXOP_DERIVATION_FLOAT_TO_BOOLEAN;
+    if (opcode == OP_ITOB_REG) return RXOP_DERIVATION_INTEGER_TO_BOOLEAN;
+    if (opcode == OP_STOB_REG) return RXOP_DERIVATION_STRING_TO_BOOLEAN;
+    if (opcode == OP_STOF_REG) return RXOP_DERIVATION_STRING_TO_FLOAT;
+    if (opcode == OP_STOI_REG) return RXOP_DERIVATION_STRING_TO_INTEGER;
+    if (opcode == OP_STOD_REG) return RXOP_DERIVATION_STRING_TO_DECIMAL;
+    if (opcode == OP_DTOI_REG) return RXOP_DERIVATION_DECIMAL_TO_INTEGER;
+    if (opcode == OP_DTOB_REG) return RXOP_DERIVATION_DECIMAL_TO_BOOLEAN;
+    if (opcode == OP_ITOD_REG)
+        return RXOP_DERIVATION_INTEGER_TO_DECIMAL;
+    if (opcode == OP_FTOD_REG) return RXOP_DERIVATION_FLOAT_TO_DECIMAL;
+    if (opcode == OP_DTOF_REG) return RXOP_DERIVATION_DECIMAL_TO_FLOAT;
     return RXOP_DERIVATION_NONE;
 }
 
@@ -313,11 +344,28 @@ unsigned int rxop_derivation_source_component(int opcode) {
     switch (rxop_value_derivation(opcode)) {
         case RXOP_DERIVATION_INTEGER_TO_FLOAT:
         case RXOP_DERIVATION_INTEGER_TO_STRING:
+        case RXOP_DERIVATION_INTEGER_TO_DECIMAL:
+        case RXOP_DERIVATION_INTEGER_TO_BOOLEAN:
+        case RXOP_DERIVATION_BOOLEAN_TO_INTEGER:
+        case RXOP_DERIVATION_BOOLEAN_TO_DECIMAL:
+        case RXOP_DERIVATION_BOOLEAN_TO_FLOAT:
+        case RXOP_DERIVATION_BOOLEAN_TO_STRING:
             return RXOP_COMPONENT_INTEGER;
         case RXOP_DERIVATION_FLOAT_TO_STRING:
+        case RXOP_DERIVATION_FLOAT_TO_INTEGER:
+        case RXOP_DERIVATION_FLOAT_TO_BOOLEAN:
+        case RXOP_DERIVATION_FLOAT_TO_DECIMAL:
             return RXOP_COMPONENT_FLOAT;
         case RXOP_DERIVATION_DECIMAL_TO_STRING:
+        case RXOP_DERIVATION_DECIMAL_TO_INTEGER:
+        case RXOP_DERIVATION_DECIMAL_TO_BOOLEAN:
+        case RXOP_DERIVATION_DECIMAL_TO_FLOAT:
             return RXOP_COMPONENT_DECIMAL;
+        case RXOP_DERIVATION_STRING_TO_BOOLEAN:
+        case RXOP_DERIVATION_STRING_TO_FLOAT:
+        case RXOP_DERIVATION_STRING_TO_INTEGER:
+        case RXOP_DERIVATION_STRING_TO_DECIMAL:
+            return RXOP_COMPONENT_STRING;
         case RXOP_DERIVATION_NONE:
             break;
     }
@@ -325,8 +373,12 @@ unsigned int rxop_derivation_source_component(int opcode) {
 }
 
 unsigned int rxop_derivation_context_reads(int opcode) {
-    return opcode == OP_ITOS_REG || opcode == OP_FTOS_REG ||
-           opcode == OP_DTOS_REG ? RXOP_CONTEXT_NUMERIC : RXOP_CONTEXT_NONE;
+    RxOpSignalContract signal;
+    if (rxop_value_derivation(opcode) == RXOP_DERIVATION_NONE)
+        return RXOP_CONTEXT_NONE;
+    signal = rxop_signal_contract(opcode);
+    return signal.dependencies & RXOP_SIGNAL_DEP_NUMERIC_CONTEXT
+            ? RXOP_CONTEXT_NUMERIC : RXOP_CONTEXT_NONE;
 }
 
 unsigned int rxop_context_writes(int opcode) {

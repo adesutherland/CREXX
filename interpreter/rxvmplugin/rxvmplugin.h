@@ -79,7 +79,9 @@ struct decplugin {
     size_t (*getRequiredStringSize)(decplugin *plugin); // Get the required string size for the rxvmplugin context
     void (*decimalFromString)(decplugin *plugin, value *result, const char *input); // Convert a string to a rxvmplugin number
     void (*decimalToString)(decplugin *plugin, const value *input, char *result); // Convert a rxvmplugin number to a string
-    void (*decimalFromInt)(decplugin *plugin, value *result, const rxinteger input); // Convert an int to a rxvmplugin number
+    /* Total for every rxinteger; clears stale plugin diagnostics. Allocation
+     * failure follows the VM panic-on-OOM convention. */
+    void (*decimalFromInt)(decplugin *plugin, value *result, const rxinteger input);
     void (*decimalToInt)(decplugin *plugin, const value *input, rxinteger *result); // Convert a rxvmplugin number to an int
     void (*decimalFromDouble)(decplugin *plugin, value *result, const double input); // Convert a double to a rxvmplugin number
     void (*decimalToDouble)(decplugin *plugin, const value *input, double *result); // Convert a rxvmplugin number to a double

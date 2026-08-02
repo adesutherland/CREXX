@@ -357,11 +357,14 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
 
 /* Convert an int to a rxvmplugin number */
 void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    CLEAR_ERRNO;
     EnsureCapacity(result);
     long double *number = result->decimal_value;
     *number = (long double)value;
     *number = round_decimal(*number, ((dbcontext*)(plugin->base.private_context))->digits);
-    check_signal(plugin, *number);
+    CLEAR_ERRNO;
 }
 
 /* Convert a rxvmplugin number to an int */

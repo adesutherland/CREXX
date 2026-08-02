@@ -6761,9 +6761,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     START_INSTRUCTION(ITOD_REG)
     VM_ADVANCE(1);
     DEBUG("TRACE - ITOD R%lu\n", REG_IDX(1));
-    // Convert
+    /* Integer-to-decimal is total for every rxinteger. The plugin contract
+     * clears stale diagnostics; allocation failure follows the VM OOM panic
+     * convention rather than becoming a language signal. */
     current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value);
-    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert Boolean to Decimal                                     added August 2024 pej
@@ -6772,9 +6773,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     START_INSTRUCTION(BTOD_REG)
     VM_ADVANCE(1);
     DEBUG("TRACE - BTOD R%lu\n", REG_IDX(1));
-    // Convert
+    /* Uses the same total integer-to-decimal plugin contract as ITOD. */
     current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value ? 1 : 0);
-    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH;
     /* ------------------------------------------------------------------------------------
  * Convert Float to Decimal                                       added August 2024 pej

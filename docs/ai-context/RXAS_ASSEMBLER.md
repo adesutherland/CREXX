@@ -684,7 +684,7 @@ epochs, invalid control, unsupported signal dependencies, allocation failure
 and work-budget exhaustion return an unavailable or rejected proof and cannot
 enable a rewrite.
 
-The first migrated authority is repeated one-register `itos`.  A deletion
+The first migrated authority was repeated one-register `itos`.  A deletion
 requires the generator's successful continuation to dominate the candidate,
 the same storage and equivalent integer source/string result, and equivalent
 numeric-context and reference-visible effect dependencies.  The old private
@@ -749,15 +749,23 @@ indirect effects and unproved signal phases reject the proof. An unrelated
 no-argument call does not invent a local-value write. TRACE records are
 retained; ordered same-boundary delivery lets the producer event survive even
 when the redundant executable conversion is removed. The proof service is
-generic, but `itos` remains its first accepted rewrite authority. The next
-migration recovers the old repeated `itof` floor and then selects one-register
-`xtoy` derivations from canonical metadata rather than a consumer-local
-mnemonic list. `itod` is the first intended larger-domain case: its proof also
-requires unchanged numeric/plugin effects and a dominating successful
-continuation. Each further conversion is admitted only after its source/result
-components, derivation, context dependencies, failure-write phase and
-success-stability contract are exact; later loop-hoisting remains a separate
-consumer.
+generic: after `itos`, M01 deleted the old repeated-`itof` authority and made a
+metadata-driven one-register `xtoy` consumer its successor. All 20 such
+conversions now name their exact source component, result component,
+derivation and context dependencies in canonical metadata; the consumer has
+no conversion-mnemonic allow-list. The proof admits only a dominating
+successful repetition with equivalent component values and effects.
+
+The first larger-domain case is `itod`. Both bundled decimal plugins implement
+integer-to-decimal conversion for every integer, with allocation failure
+handled by the VM panic convention. `itod` and the same-function `btod`
+therefore clear stale backend diagnostics and are total non-signalling
+operations; their values still depend on numeric context and plugin identity.
+Signalling conversion families remain rejected where the first successful
+continuation does not dominate the repetition. `btoi` and `itob` remain
+rejected pending a distinct proof that repeating their same-component
+normalization does not change the value. Later loop hoisting remains a
+separate consumer.
 
 The admitted first transformation panel is deliberately narrower than the
 fact engine:

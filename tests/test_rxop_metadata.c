@@ -91,6 +91,23 @@ static void check_unknown_effects(int opcode) {
           "unknown signal contract must fail closed", NULL);
 }
 
+static void check_conversion_metadata(int opcode, unsigned int source,
+                                      unsigned int target,
+                                      RxOpValueDerivation derivation) {
+    check(rxop_component_reads(opcode, 0) == source,
+          "conversion source-component metadata regression",
+          &op_table[opcode]);
+    check(rxop_component_writes(opcode, 0) == target,
+          "conversion target-component metadata regression",
+          &op_table[opcode]);
+    check(rxop_value_derivation(opcode) == derivation,
+          "conversion derivation metadata regression", &op_table[opcode]);
+    check(rxop_derivation_source_operand(opcode) == 0 &&
+              rxop_derivation_source_component(opcode) == source,
+          "conversion derivation-source metadata regression",
+          &op_table[opcode]);
+}
+
 int main(void) {
     int i;
     int source_count;
@@ -122,6 +139,67 @@ int main(void) {
               RXOP_SEM_OPAQUE == 8192,
           "retired MAY_THROW bit or surviving semantic flag values drifted",
           NULL);
+
+    check_conversion_metadata(OP_BTOI_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_BOOLEAN_TO_INTEGER);
+    check_conversion_metadata(OP_BTOD_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_DECIMAL,
+                              RXOP_DERIVATION_BOOLEAN_TO_DECIMAL);
+    check_conversion_metadata(OP_BTOF_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_FLOAT,
+                              RXOP_DERIVATION_BOOLEAN_TO_FLOAT);
+    check_conversion_metadata(OP_BTOS_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_STRING,
+                              RXOP_DERIVATION_BOOLEAN_TO_STRING);
+    check_conversion_metadata(OP_ITOS_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_STRING,
+                              RXOP_DERIVATION_INTEGER_TO_STRING);
+    check_conversion_metadata(OP_FTOS_REG, RXOP_COMPONENT_FLOAT,
+                              RXOP_COMPONENT_STRING,
+                              RXOP_DERIVATION_FLOAT_TO_STRING);
+    check_conversion_metadata(OP_ITOF_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_FLOAT,
+                              RXOP_DERIVATION_INTEGER_TO_FLOAT);
+    check_conversion_metadata(OP_FTOI_REG, RXOP_COMPONENT_FLOAT,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_FLOAT_TO_INTEGER);
+    check_conversion_metadata(OP_FTOB_REG, RXOP_COMPONENT_FLOAT,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_FLOAT_TO_BOOLEAN);
+    check_conversion_metadata(OP_ITOB_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_INTEGER_TO_BOOLEAN);
+    check_conversion_metadata(OP_STOB_REG, RXOP_COMPONENT_STRING,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_STRING_TO_BOOLEAN);
+    check_conversion_metadata(OP_STOF_REG, RXOP_COMPONENT_STRING,
+                              RXOP_COMPONENT_FLOAT,
+                              RXOP_DERIVATION_STRING_TO_FLOAT);
+    check_conversion_metadata(OP_STOI_REG, RXOP_COMPONENT_STRING,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_STRING_TO_INTEGER);
+    check_conversion_metadata(OP_STOD_REG, RXOP_COMPONENT_STRING,
+                              RXOP_COMPONENT_DECIMAL,
+                              RXOP_DERIVATION_STRING_TO_DECIMAL);
+    check_conversion_metadata(OP_DTOS_REG, RXOP_COMPONENT_DECIMAL,
+                              RXOP_COMPONENT_STRING,
+                              RXOP_DERIVATION_DECIMAL_TO_STRING);
+    check_conversion_metadata(OP_DTOI_REG, RXOP_COMPONENT_DECIMAL,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_DECIMAL_TO_INTEGER);
+    check_conversion_metadata(OP_DTOB_REG, RXOP_COMPONENT_DECIMAL,
+                              RXOP_COMPONENT_INTEGER,
+                              RXOP_DERIVATION_DECIMAL_TO_BOOLEAN);
+    check_conversion_metadata(OP_ITOD_REG, RXOP_COMPONENT_INTEGER,
+                              RXOP_COMPONENT_DECIMAL,
+                              RXOP_DERIVATION_INTEGER_TO_DECIMAL);
+    check_conversion_metadata(OP_FTOD_REG, RXOP_COMPONENT_FLOAT,
+                              RXOP_COMPONENT_DECIMAL,
+                              RXOP_DERIVATION_FLOAT_TO_DECIMAL);
+    check_conversion_metadata(OP_DTOF_REG, RXOP_COMPONENT_DECIMAL,
+                              RXOP_COMPONENT_FLOAT,
+                              RXOP_DERIVATION_DECIMAL_TO_FLOAT);
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         size_t operand_index;
@@ -464,6 +542,13 @@ int main(void) {
               (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
           "integer-to-float conversion must remain stable and non-signalling",
           &op_table[OP_ITOF_REG]);
+    signal = rxop_signal_contract(OP_BTOD_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              signal.dependencies ==
+                  (RXOP_SIGNAL_DEP_NUMERIC_CONTEXT | RXOP_SIGNAL_DEP_PLUGIN) &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "boolean-to-decimal conversion must remain total",
+          &op_table[OP_BTOD_REG]);
     signal = rxop_signal_contract(OP_SCONCAT_REG_REG_STRING);
     check(signal.state == RXOP_SIGNAL_STATE_NONE &&
               rxop_signal_contract(OP_CONCAT_REG_REG_REG).state ==
@@ -558,6 +643,25 @@ int main(void) {
               (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
           "decimal-to-string component/signal metadata regression",
           &op_table[OP_DTOS_REG]);
+    signal = rxop_signal_contract(OP_ITOD_REG);
+    check(rxop_component_reads(OP_ITOD_REG, 0) == RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_ITOD_REG, 0) ==
+                  RXOP_COMPONENT_DECIMAL &&
+              rxop_value_derivation(OP_ITOD_REG) ==
+                  RXOP_DERIVATION_INTEGER_TO_DECIMAL &&
+              rxop_derivation_source_operand(OP_ITOD_REG) == 0 &&
+              rxop_derivation_source_component(OP_ITOD_REG) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_derivation_context_reads(OP_ITOD_REG) ==
+                  RXOP_CONTEXT_NUMERIC &&
+              signal.state == RXOP_SIGNAL_STATE_NONE &&
+              signal.phase == RXOP_SIGNAL_PHASE_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              signal.dependencies ==
+                  (RXOP_SIGNAL_DEP_NUMERIC_CONTEXT | RXOP_SIGNAL_DEP_PLUGIN) &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "integer-to-decimal derivation/signal metadata regression",
+          &op_table[OP_ITOD_REG]);
     signal = rxop_signal_contract(OP_INC_REG);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&

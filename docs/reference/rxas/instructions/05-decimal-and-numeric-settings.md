@@ -23,7 +23,9 @@ to decimal one under the current context. Only the decimal payload changes.
 
 ### Signals
 
-Propagates decimal-plugin allocation or conversion signals.
+None. Boolean-to-decimal conversion uses the total integer-to-decimal plugin
+contract and clears stale plugin diagnostics. Allocation failure follows the
+VM panic-on-OOM convention.
 
 ### Example
 
@@ -1376,7 +1378,9 @@ changes; the original integer and other value state remain intact.
 
 ### Signals
 
-Propagates decimal-plugin conversion and allocation conditions.
+None. Integer-to-decimal conversion is total for every `rxinteger` and clears
+stale plugin diagnostics. Allocation failure follows the VM panic-on-OOM
+convention rather than becoming a language signal.
 
 ### Example
 

@@ -291,9 +291,12 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
 /* Convert an int to a rxvmplugin number */
 void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
     decContext *context = (decContext*)(plugin->base.private_context);
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    context->status = 0;
     EnsureCapacity(result, context->digits);
     decNumberFromInt64(result->decimal_value, value);
-    check_signal(plugin);
+    context->status = 0;
 }
 
 /* Convert a rxvmplugin number to an int */

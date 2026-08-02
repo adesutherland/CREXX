@@ -42,6 +42,63 @@ main() .locals=10
     brf failed,r9
     setnumfuz 0
 
+    /* M01 removes only dominated, success-stable repeated derivations. */
+    load r5,3
+    itof r5
+    itof r5
+    feq r9,r5,3.0
+    brf failed,r9
+
+    load r5,1.25
+    ftos r5
+    ftos r5
+    seq r9,r5,"1.25"
+    brf failed,r9
+
+    load r5,12d
+    dtos r5
+    dtos r5
+    seq r9,r5,"12"
+    brf failed,r9
+
+    load r5,12
+    itod r5
+    itod r5
+    dtos r5
+    seq r9,r5,"12"
+    brf failed,r9
+
+    load r5,1
+    btod r5
+    btod r5
+    dtos r5
+    seq r9,r5,"1"
+    brf failed,r9
+
+    load r5,1
+    btof r5
+    btof r5
+    feq r9,r5,1.0
+    brf failed,r9
+
+    load r5,1
+    btos r5
+    btos r5
+    seq r9,r5,"1"
+    brf failed,r9
+
+    load r5,1.25
+    ftob r5
+    ftob r5
+    ieq r9,r5,1
+    brf failed,r9
+
+    load r5,"1"
+    stob r5
+    stob r5
+    ieq r9,r5,1
+    brf failed,r9
+
     /* Generic INC/DEC preserve the prior integer on overflow. */
     load r3,9223372036854775807
     inc r3

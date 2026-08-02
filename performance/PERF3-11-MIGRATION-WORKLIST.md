@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — baseline locked; M01 `XTOY` repetition migration first**
+Status: **in progress — M01 `XTOY` repetition complete; M02 repeated loads next**
 
 Authorized: 2026-08-02
 
@@ -64,8 +64,8 @@ and after the diagnostic prove output neutrality.
 | ID | Current authority | Accepted baseline | New owner | Disposition |
 | --- | --- | --- | --- | --- |
 | M00 | complete-control reachability and dead record cleanup | canonical: Richards 5, Towers 7, RexxCPS 0; focused 4 instructions plus TRACE/source records | immutable graph reachability and rewrite plan | migrate after value consumers; structural, not value proof |
-| M01 | `flow_compute_available_fact()` for repeated one-register `ITOF`, then metadata-admitted `XTOY` derivations | old floor: focused `ITOF` 1, canonical 0; other conversions are new domain | generic dominated-success repetition | **first**; recover the exact old `ITOF` case, then onboard `ITOD` and the wider family by metadata and separate gates |
-| M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | second |
+| M01 | `flow_compute_available_fact()` for repeated one-register `ITOF`, then metadata-admitted `XTOY` derivations | old floor: focused `ITOF` 1, canonical 0; other conversions are new domain | generic dominated-success repetition | **complete**; old authority deleted, all 20 one-register conversions described by metadata, 12 focused deletions proved |
+| M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | **next** |
 | M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | third |
 | M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | migrate with redundant-write queries |
 | M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | requires new reusable use/liveness query |
@@ -107,22 +107,22 @@ separate assembler-processing simplification is selected.
 
 ### Phase A — simple write-once derivation repetition
 
-- [ ] **M01a:** replay the old `ITOF` decisions in diagnostic dual mode.
-- [ ] Extend the generic repetition service only if the current derivation
+- [x] **M01a:** replay the old `ITOF` decisions in diagnostic dual mode.
+- [x] Extend the generic repetition service only if the current derivation
       query cannot express the exact source/result/effect proof.
-- [ ] Make the new service sole `ITOF` authority and delete the old case.
-- [ ] Generalize the rewrite consumer from a named `ITOF`/`ITOS` selector to
+- [x] Make the new service sole `ITOF` authority and delete the old case.
+- [x] Generalize the rewrite consumer from a named `ITOF`/`ITOS` selector to
       metadata-admitted one-register `XTOY` derivations; the proof service,
       not a mnemonic list in the consumer, remains authoritative.
-- [ ] **M01b:** add complete integer-source/decimal-result and numeric/plugin
+- [x] **M01b:** add complete integer-source/decimal-result and numeric/plugin
       dependency metadata for `ITOD`, then validate it as the first newly
       unlocked conversion.
-- [ ] Inventory the rest of the one-register conversion family and admit each
+- [x] Inventory the rest of the one-register conversion family and admit each
       opcode only after its source component, result component, derivation,
       context/plugin dependencies, failure-write phase and success-stability
       contract are exact.  Record each new opcode acceptance separately.
-- [ ] Replay focused opt/no-opt output and Richards/Towers/RexxCPS decisions.
-- [ ] Apply the mandatory Release stop if the stronger proof changes an
+- [x] Replay focused opt/no-opt output and Richards/Towers/RexxCPS decisions.
+- [x] Apply the mandatory Release stop if the stronger proof changes an
       ordinary representative output.
 - [ ] Repeat separately for **M02**, **M03** and **M04**.
 
@@ -160,10 +160,28 @@ separate assembler-processing simplification is selected.
 - [ ] Rebaseline assembler elapsed/RSS and complete proportional broad Debug
       closeout before the final local commit.
 
-## Current stop point
+## M01 result and current stop point
 
-The baseline and diagnostic identity are complete.  Migration begins with M01:
-the accepted repetition service should already recover the old `ITOF` floor,
-then the same metadata-driven consumer expands first to `ITOD` and later to
-other proved `XTOY` derivations.  This is the smallest direct test of the
-basic-to-advanced policy before new liveness infrastructure is added.
+M01 is complete in
+[`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/).
+The generic consumer recovers the old `ITOF` floor and proves 11 additional
+focused deletions: `FTOS`, `DTOS`, `BTOD`, `BTOF`, `BTOS`, `FTOB`, `STOB` and
+four `ITOD` shapes spanning adjacency, installed-handler policy, ordered TRACE
+and linked storage.  Source/effect changes, seven signalling conversion
+families, and same-component `BTOI`/`ITOB` normalizations remain rejected with
+stable proof reasons.
+
+The `ITOD` investigation established that both bundled `decimalFromInt`
+implementations are total for every integer.  `ITOD` and the same-function
+`BTOD` now clear stale backend diagnostics and have a coherent non-signalling
+runtime and metadata contract; OOM remains a VM panic, not a language signal.
+All 20 one-register conversion opcodes now describe their exact source,
+result, derivation and context dependencies in canonical metadata.
+
+Richards, Towers and RexxCPS remain byte-identical to the frozen Stage 6
+assembler, so M01 did not trigger a new runtime verdict.  Focused optimizer
+replay passes 51/51, broad Debug passes 1,989/1,989, and Release RexxCPS
+diagnostic assembly completes in 0.38 s at 22,265,856 bytes peak RSS.  M02 is
+next: replace the repeated integer/bitwise-float load authority with a generic
+component-value/equivalent-constant proof, again treating the old acceptance
+as the floor rather than the ceiling.

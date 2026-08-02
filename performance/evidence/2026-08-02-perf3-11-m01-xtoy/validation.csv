@@ -1,0 +1,11 @@
+gate,result,detail
+strict-gnu90,pass,rxas_flow.c and rxopmeta.c
+opcode-metadata,pass,650 dense opcode contracts and all 20 one-register derivations
+immutable-flow-unit,pass,RXAS immutable flow graph PASS
+focused-optimizer,pass,51/51
+decimal-plugins,pass,mc_decimal_full_tests and db_decimal_tests
+debug-dual-vm,pass,rxvm and rxbvm opt/noopt signal-contract runtime
+release-dual-vm,pass,rxvm and rxbvm opt/noopt signal-contract runtime
+canonical-images,pass,Richards Towers RexxCPS byte-identical
+release-scale,pass,0.38 seconds and 22265856 bytes peak RSS on RexxCPS diagnostic assembly
+broad-debug,pass,1989/1989

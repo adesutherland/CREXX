@@ -129,10 +129,10 @@ typedef struct flow_stats {
     size_t redundant_loads_removed;
     size_t redundant_initializations_removed;
     size_t redundant_conversions_removed;
-    size_t itos_proof_queries;
-    size_t itos_proof_proved;
-    size_t itos_proof_rejected;
-    size_t itos_proof_unavailable;
+    size_t derivation_proof_queries;
+    size_t derivation_proof_proved;
+    size_t derivation_proof_rejected;
+    size_t derivation_proof_unavailable;
     size_t producer_destinations_forwarded;
     size_t operands_redirected;
     size_t rejected_live;
@@ -2578,13 +2578,6 @@ static size_t flow_remove_redundant_initializations(flow_graph *graph,
     return removed;
 }
 
-static unsigned int flow_redundant_conversion_views(int opcode) {
-    if (opcode == OP_ITOF_REG)
-        return FLOW_VIEW_BIT(FLOW_VIEW_INTEGER) |
-               FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-    return 0;
-}
-
 static RxasFlowProcedure *flow_build_proof_procedure(
         const flow_graph *graph, unsigned long epoch) {
     const OpInfo **resolved_ops;
@@ -2609,21 +2602,35 @@ static int flow_proof_reason_unavailable(RxasFlowProofReason reason) {
            reason == RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
 }
 
-typedef struct flow_itos_candidate {
+typedef struct flow_derivation_candidate {
     size_t record_id;
     size_t instruction_id;
     size_t storage_id;
-} flow_itos_candidate;
+    int opcode;
+} flow_derivation_candidate;
 
-static size_t flow_remove_redundant_itos(flow_graph *graph,
-                                         flow_stats *stats) {
+static int flow_is_one_register_derivation(const flow_graph *graph,
+                                           size_t index) {
+    unsigned int component;
+    if (graph->items[index].instrType != OP_CODE ||
+        !graph->nodes[index].reachable || !graph->nodes[index].op ||
+        graph->items[index].operandCount != 1 ||
+        rxop_value_derivation(graph->nodes[index].op->opcode) ==
+                RXOP_DERIVATION_NONE)
+        return 0;
+    component = rxop_component_writes(graph->nodes[index].op->opcode, 0);
+    return component && !(component & (component - 1));
+}
+
+static size_t flow_remove_redundant_derivations(flow_graph *graph,
+                                                flow_stats *stats) {
     size_t index;
     size_t candidate_index;
     size_t generator_index;
     RxasFlowProcedure *procedure;
     const RxasFlowProofService *proof;
     const RxasFlowRecord *record;
-    flow_itos_candidate *candidates;
+    flow_derivation_candidate *candidates;
     size_t candidate_count;
     RxasFlowProofResult proof_result;
     RxasFlowRepetitionKey key;
@@ -2635,43 +2642,39 @@ static size_t flow_remove_redundant_itos(flow_graph *graph,
     epoch = 1ul;
     candidate_count = 0;
     for (index = 0; index < graph->item_count; index++)
-        if (graph->items[index].instrType == OP_CODE &&
-            graph->nodes[index].reachable && graph->nodes[index].op &&
-            graph->items[index].operandCount == 1 &&
-            graph->nodes[index].op->opcode == OP_ITOS_REG)
+        if (flow_is_one_register_derivation(graph, index))
             candidate_count++;
     if (candidate_count < 2) return 0;
     candidates = calloc(graph->item_count, sizeof(*candidates));
     if (!candidates)
-        RX_PANIC_OOM("calloc RXAS ITOS proof candidates",
+        RX_PANIC_OOM("calloc RXAS derivation proof candidates",
                      graph->item_count * sizeof(*candidates), 0);
     procedure = flow_build_proof_procedure(graph, epoch);
     proof = procedure ? rxas_flow_require_proof_service(
             procedure, epoch, 0) : 0;
     if (!proof) {
-        stats->itos_proof_unavailable++;
+        stats->derivation_proof_unavailable++;
         goto cleanup;
     }
     candidate_count = 0;
     for (index = 0; index < graph->item_count; index++) {
-        if (graph->items[index].instrType != OP_CODE ||
-            !graph->nodes[index].reachable || !graph->nodes[index].op ||
-            graph->items[index].operandCount != 1 ||
-            graph->nodes[index].op->opcode != OP_ITOS_REG)
+        if (!flow_is_one_register_derivation(graph, index))
             continue;
         record = rxas_flow_procedure_record(procedure, epoch, index);
         if (!record || record->instruction_id == RXAS_FLOW_ID_NONE ||
             !rxas_flow_repetition_key(
                     proof, epoch, record->instruction_id, &key) ||
-            key.opcode != OP_ITOS_REG || !key.storage_id)
+            key.opcode != graph->nodes[index].op->opcode || !key.storage_id)
             continue;
         candidates[candidate_count].record_id = index;
         candidates[candidate_count].instruction_id = record->instruction_id;
         candidates[candidate_count].storage_id = key.storage_id;
+        candidates[candidate_count].opcode = key.opcode;
         if (graph->context->debug_mode)
             fprintf(stderr,
-                    "PERF3 itos-proof-candidate record=%llu "
+                    "PERF3 derivation-proof-candidate opcode=%s record=%llu "
                     "instruction=%llu storage=%llu\n",
+                    op_table[key.opcode].mnemonic,
                     (unsigned long long)index,
                     (unsigned long long)record->instruction_id,
                     (unsigned long long)key.storage_id);
@@ -2679,14 +2682,15 @@ static size_t flow_remove_redundant_itos(flow_graph *graph,
     }
     for (candidate_index = 1; candidate_index < candidate_count;
          candidate_index++) {
-        flow_itos_candidate *candidate;
+        flow_derivation_candidate *candidate;
         candidate = &candidates[candidate_index];
         if (graph->items[candidate->record_id].instrType != OP_CODE) continue;
         for (generator_index = candidate_index; generator_index; ) {
-            flow_itos_candidate *generator;
+            flow_derivation_candidate *generator;
             generator_index--;
             generator = &candidates[generator_index];
-            if (generator->storage_id != candidate->storage_id ||
+            if (generator->opcode != candidate->opcode ||
+                generator->storage_id != candidate->storage_id ||
                 graph->items[generator->record_id].instrType != OP_CODE)
                 continue;
             memset(&proof_result, 0, sizeof(proof_result));
@@ -2695,13 +2699,13 @@ static size_t flow_remove_redundant_itos(flow_graph *graph,
                     proof, epoch, generator->instruction_id,
                     candidate->instruction_id, &proof_result) &&
                     !flow_proof_reason_unavailable(proof_result.reason);
-            stats->itos_proof_queries++;
+            stats->derivation_proof_queries++;
             if (!query_available) {
-                stats->itos_proof_unavailable++;
+                stats->derivation_proof_unavailable++;
                 goto cleanup;
             }
             if (!proof_result.proved) {
-                stats->itos_proof_rejected++;
+                stats->derivation_proof_rejected++;
                 continue;
             }
             graph->items[candidate->record_id].instrType = EMPTY;
@@ -2710,7 +2714,7 @@ static size_t flow_remove_redundant_itos(flow_graph *graph,
                     "redundant-component-ssa-conversion", 0);
             removed++;
             stats->redundant_conversions_removed++;
-            stats->itos_proof_proved++;
+            stats->derivation_proof_proved++;
             break;
         }
     }
@@ -2724,57 +2728,7 @@ cleanup:
 
 static size_t flow_remove_redundant_conversions(flow_graph *graph,
                                                 flow_stats *stats) {
-    size_t generator;
-    size_t index;
-    int register_index;
-    int opcode;
-    unsigned int views;
-    unsigned char *available_in;
-    unsigned char *available_out;
-    instruction_queue *first;
-    instruction_queue *item;
-    size_t removed;
-    removed = flow_remove_redundant_itos(graph, stats);
-    for (generator = 0; generator < graph->item_count; generator++) {
-        first = &graph->items[generator];
-        if (first->instrType != OP_CODE || !graph->nodes[generator].reachable ||
-            !graph->nodes[generator].op || first->operandCount != 1 ||
-            flow_has_trace_after(graph, generator)) continue;
-        opcode = graph->nodes[generator].op->opcode;
-        views = flow_redundant_conversion_views(opcode);
-        if (!views) continue;
-        register_index = flow_register_index(graph,
-                flow_register_type(first->operand1Token),
-                (size_t)first->operand1Token->token_value.integer);
-        if (register_index < 0 || graph->registers[register_index].type != 'r' ||
-            graph->tainted_registers[register_index]) continue;
-        available_in = calloc(graph->item_count, 1);
-        available_out = calloc(graph->item_count, 1);
-        if (!available_in || !available_out)
-            RX_PANIC_OOM("calloc RXAS available-conversion fact",
-                         graph->item_count * 2, 0);
-        flow_compute_available_fact(graph, generator, register_index,
-                                    register_index, views,
-                                    available_in, available_out);
-        for (index = generator + 1; index < graph->item_count; index++) {
-            item = &graph->items[index];
-            if (!available_in[index] || item->instrType != OP_CODE ||
-                !graph->nodes[index].op ||
-                graph->nodes[index].op->opcode != opcode ||
-                item->operandCount != 1 ||
-                flow_register_index(graph, flow_register_type(item->operand1Token),
-                        (size_t)item->operand1Token->token_value.integer) !=
-                        register_index ||
-                flow_has_trace_after(graph, index)) continue;
-            item->instrType = EMPTY;
-            flow_debug_accept(graph, index, "redundant-context-free-conversion", 0);
-            removed++;
-            stats->redundant_conversions_removed++;
-        }
-        free(available_in);
-        free(available_out);
-    }
-    return removed;
+    return flow_remove_redundant_derivations(graph, stats);
 }
 
 static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
@@ -2785,7 +2739,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "unreachable=%llu dead=%llu typed-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
             "redundant-conversion=%llu producer-forward=%llu redirects=%llu "
-            "itos-proof=%llu/%llu rejected=%llu unavailable=%llu "
+            "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
             (unsigned long long)graph->block_count,
@@ -2802,10 +2756,10 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->redundant_conversions_removed,
             (unsigned long long)stats->producer_destinations_forwarded,
             (unsigned long long)stats->operands_redirected,
-            (unsigned long long)stats->itos_proof_proved,
-            (unsigned long long)stats->itos_proof_queries,
-            (unsigned long long)stats->itos_proof_rejected,
-            (unsigned long long)stats->itos_proof_unavailable,
+            (unsigned long long)stats->derivation_proof_proved,
+            (unsigned long long)stats->derivation_proof_queries,
+            (unsigned long long)stats->derivation_proof_rejected,
+            (unsigned long long)stats->derivation_proof_unavailable,
             (unsigned long long)stats->rejected_live,
             (unsigned long long)stats->rejected_trace,
             (unsigned long long)stats->rejected_tainted,

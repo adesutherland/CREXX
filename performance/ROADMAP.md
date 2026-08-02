@@ -49,13 +49,17 @@ Adrian accepted the mandatory Release verdict: median CPS improves 7.469% on
 `rxvm` and 6.866% on `rxbvm`, with 12/12 favourable pairs on each VM.  A broad
 test failure exposed and drove a precise caller-owned call-window argument
 model; the corrected closeout passes 1,987/1,987 Debug tests.  The remaining
-legacy-proof inventory and stable replay baseline are now locked.  Migration
-starts with the old one-register `ITOF` floor, but its production target is a
-metadata-driven `XTOY` repetition consumer: `ITOD` is the first deliberate
-new-domain example, followed by separately gated conversions whose signal and
-component metadata are complete.  Exact old/new parity is not the gate: the
-new service must preserve the old valid safe domain and may prove a larger
-separately validated domain.
+legacy-proof inventory and stable replay baseline are now locked.  M01 is
+complete: the old one-register `ITOF` authority is deleted and the generic
+metadata-driven `XTOY` consumer covers all 20 one-register conversions.  It
+recovers the old `ITOF` floor and proves 11 additional focused deletions,
+including four `ITOD` flow shapes; signalling and same-component-idempotence
+gaps remain closed.  `ITOD` and `BTOD` now have a coherent total
+non-signalling runtime/plugin contract.  Canonical images remain unchanged,
+focused replay passes 51/51 and broad Debug passes 1,989/1,989.  M02 repeated
+loads are next.  Exact old/new parity is not the gate: the new service must
+preserve the old valid safe domain and may prove a larger separately validated
+domain.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -245,7 +249,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — baseline locked; M01 `XTOY` migration next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and the old solver is removed. Its stronger proof reduces retained RexxCPS from 21 to 19 `ITOS`; accepted median CPS improves 7.469%/6.866% on `rxvm`/`rxbvm`, both 12/12 favourable. A discovered range-call unsoundness was fixed by sparse caller-owned argument-window definitions; focused passes 10/10 and broad Debug 1,987/1,987. The remaining legacy inventory and stable replay baseline are locked. M01 first recovers the old `ITOF` floor, then generalizes the same consumer to metadata-admitted `XTOY` repetitions beginning with `ITOD`; each stronger acceptance is separately validated. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); baseline: [`2026-08-02-perf3-11-legacy-proof-baseline`](evidence/2026-08-02-perf3-11-legacy-proof-baseline/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01 complete; M02 repeated loads next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01 deletes the old repeated-`ITOF` authority and generalizes the consumer to all metadata-admitted one-register `XTOY` derivations. It recovers the old floor and proves 11 stronger focused deletions, including four `ITOD` flow shapes; `ITOD`/`BTOD` now have a total non-signalling runtime/plugin contract. Canonical images remain byte-identical, focused passes 51/51 and broad Debug 1,989/1,989. M02 replaces repeated identical load availability with a generic component-value/equivalent-constant proof. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M01: [`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -809,14 +813,19 @@ legacy proof must be inventoried and replayed, then replaced one authority at a
 time; a stronger new acceptance is valid only with its own positive proof,
 adversarial correctness and output-changing Release gate.
 
-The inventory is now locked in
-[`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md).  M01 uses
-the old repeated `ITOF` decision only as its safety floor.  The rewrite itself
-must select generic one-register `XTOY` derivations from canonical metadata;
-`ITOD` is the first intended expansion because its successful repetition must
-also preserve plugin and numeric-context identity.  Other conversions enter
-one at a time only when their component derivation and complete signal/failure
-contract are proved.
+The inventory is locked in
+[`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md).  M01 is
+complete: the old repeated-`ITOF` authority is deleted and the generic
+one-register `XTOY` consumer selects all 20 conversions from canonical
+metadata.  Twelve focused deletions prove: the old `ITOF` floor plus 11
+stronger cases, including four `ITOD` flow shapes.  `ITOD` and `BTOD` now have
+a coherent total non-signalling plugin/runtime contract; signalling families
+and same-component `BTOI`/`ITOB` normalization remain closed.  Richards,
+Towers and RexxCPS are byte-identical to Stage 6, focused replay passes 51/51,
+broad Debug passes 1,989/1,989, and diagnostic RexxCPS assembly remains within
+the seconds-scale budget. Evidence:
+[`M01 XTOY migration`](evidence/2026-08-02-perf3-11-m01-xtoy/).  M02 repeated
+integer/bitwise-float loads are the next one-authority migration.
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed load,
