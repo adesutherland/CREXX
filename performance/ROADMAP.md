@@ -230,7 +230,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 2 graph construction | Gate 1 is locked: Adrian selected S1-S5 and retirement of coarse `MAY_THROW`. The aligned 650-entry signal contract is now the sole signal authority; permanent dual-VM optimized/no-opt semantics, 68/68 focused tests, Release builds and exact Gate 0 RXBIN parity pass. Stage 2 may now build the immutable per-procedure graph without an optimizer consumer. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); analysis: [`2026-08-02-perf3-11-stage1-signal-contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/); lock: [`2026-08-02-perf3-11-stage1-contract-lock`](evidence/2026-08-02-perf3-11-stage1-contract-lock/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 3 structural analyses | Gates 1-2 are locked. Explicit signal metadata is the sole signal authority. The consumer-free immutable per-procedure graph now has stable record/instruction/address mappings, typed signal/control edges, synthetic roots/exits, deterministic dumps and fail-closed epochs. Focused tests pass 113/113, Gate 0 RXBIN hashes are exact, and 30-round assembler/RSS guards pass after duplicate opcode parsing was removed. Stage 3 may add cached RPO, predecessor, dominator, dominance-frontier, SCC and loop structure without an optimizer consumer. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 2: [`2026-08-02-perf3-11-stage2-flow-graph`](evidence/2026-08-02-perf3-11-stage2-flow-graph/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -716,6 +716,18 @@ Release VMs build, the live decision ledger consumes 650 effect plus 650 signal
 rows, and all three Gate 0 benchmark RXBIN hashes are unchanged. Evidence:
 [`Stage 1 analysis`](evidence/2026-08-02-perf3-11-stage1-signal-contract/) and
 [`Stage 1 lock`](evidence/2026-08-02-perf3-11-stage1-contract-lock/).
+
+Stage 2 closes the immutable graph gate. The new consumer-free sidecar owns
+stable queue-record, instruction, code-block and pre-emission address IDs for
+one epoch, plus typed normal, branch, signal skip/retry, handler, unwind,
+terminal and unknown edges through synthetic roots/exits. Its label index and
+edge construction are expected linear in records plus edges. The first cost
+check exposed and rejected a duplicate opcode-resolution pass; the locked
+orchestration reuses the final legacy `OpInfo` view, frees the legacy graph and
+then constructs the sidecar. Focused correctness is 113/113, all three Gate 0
+images are exact, and final same-session 30-round assembler medians are
++0.411% Richards, +0.463% Towers and -2.784% RexxCPS with no RSS escalation.
+Evidence: [`Stage 2 flow graph`](evidence/2026-08-02-perf3-11-stage2-flow-graph/).
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed load,

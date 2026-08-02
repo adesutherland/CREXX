@@ -25,6 +25,7 @@
 /* RXAS transient whole-procedure machine-flow analysis. */
 
 #include "rxasassm.h"
+#include "rxas_flow_graph.h"
 #include "rxdefs.h"
 
 #include <ctype.h>
@@ -173,71 +174,6 @@ struct flow_storage_analysis {
     size_t *queue;
     size_t queue_capacity;
 };
-
-static OperandType flow_operand_type(Assembler_Token *token) {
-    if (!token) return OP_NONE;
-    switch (token->token_type) {
-        case ID: return OP_ID;
-        case RREG:
-        case GREG:
-        case AREG: return OP_REG;
-        case FUNC: return OP_FUNC;
-        case INT: return OP_INT;
-        case FLOAT: return OP_FLOAT;
-        case CHAR: return OP_CHAR;
-        case STRING: return OP_STRING;
-        case DECIMAL: return OP_DECIMAL;
-        case HEX: return OP_BINARY;
-        default: return OP_NONE;
-    }
-}
-
-static int flow_mnemonic_matches(const char *mnemonic, const char *table_name) {
-    size_t index;
-    if (!mnemonic || !table_name) return 0;
-    index = 0;
-    while (mnemonic[index]) {
-        if (toupper((unsigned char)mnemonic[index]) != table_name[index]) return 0;
-        index++;
-    }
-    return table_name[index] == 0 || table_name[index] == '_';
-}
-
-static const OpInfo *flow_find_opcode(Assembler_Context *context,
-                                      const instruction_queue *item) {
-    const char *mnemonic;
-    size_t operand_index;
-    int table_index;
-    int matches;
-
-    if (!item || item->instrType != OP_CODE || !item->instrToken) return 0;
-    mnemonic = (const char *)item->instrToken->token_value.string;
-    for (table_index = 0; op_table[table_index].mnemonic; table_index++) {
-        if (!rxop_is_source_mnemonic(op_table[table_index].mnemonic)) continue;
-        if (!flow_mnemonic_matches(mnemonic, op_table[table_index].mnemonic)) continue;
-        if (rxop_format_operand_count(op_table[table_index].format) != item->operandCount) continue;
-        matches = 1;
-        for (operand_index = 0; operand_index < item->operandCount; operand_index++) {
-            OperandType expected;
-            OperandType actual;
-            Assembler_Token *operand;
-            size_t jump_table_cases;
-            expected = rxop_format_operand_type(op_table[table_index].format,
-                                                operand_index);
-            operand = rxas_queue_operand(item, operand_index);
-            actual = flow_operand_type(operand);
-            if (expected != actual &&
-                !(expected == OP_BINARY && actual == OP_ID &&
-                  rxas_jump_table_case_count(context, operand,
-                                             &jump_table_cases))) {
-                matches = 0;
-                break;
-            }
-        }
-        if (matches) return &op_table[table_index];
-    }
-    return 0;
-}
 
 static char flow_register_type(Assembler_Token *token) {
     if (!token) return 0;
@@ -400,7 +336,7 @@ static void flow_collect_registers(flow_graph *graph) {
         if (item->instrType == OP_CODE) {
             for (operand_index = 0; operand_index < item->operandCount; operand_index++)
                 flow_add_register(graph, rxas_queue_operand(item, operand_index));
-            op = flow_find_opcode(graph->context, item);
+            op = rxas_flow_resolve_opcode(graph->context, item);
             if (!op) continue;
             effects = rxop_effects(op->opcode);
             if ((effects.implicit == RXOP_IMPLICIT_LOCAL_COPY ||
@@ -550,7 +486,7 @@ static int flow_build_edges(flow_graph *graph) {
                 flow_add_successor(graph, node, index + 1, FLOW_EDGE_NORMAL);
             continue;
         }
-        node->op = flow_find_opcode(graph->context, item);
+        node->op = rxas_flow_resolve_opcode(graph->context, item);
         if (!node->op) {
             graph->complete_control_flow = 0;
             node->unknown_successor = 1;
@@ -2954,6 +2890,8 @@ void rxas_flow_optimise(Assembler_Context *context,
                         size_t item_count) {
     flow_graph graph;
     flow_stats stats;
+    RxasFlowProcedure *procedure;
+    const OpInfo **resolved_ops;
     size_t before_instructions;
     size_t after_instructions;
     size_t changed;
@@ -3016,5 +2954,36 @@ void rxas_flow_optimise(Assembler_Context *context,
         flow_debug_storage_identity(&graph);
     }
     flow_debug_summary(&graph, &stats, before_instructions, after_instructions);
+    /* Stage 2 builds the immutable graph beside the legacy rewrite graph.  It
+     * is intentionally not a rewrite consumer yet; construction therefore
+     * cannot alter the queued records or emitted image. */
+    resolved_ops = malloc(item_count * sizeof(*resolved_ops));
+    if (resolved_ops) {
+        size_t record_index;
+        for (record_index = 0; record_index < item_count; record_index++)
+            resolved_ops[record_index] = graph.nodes[record_index].op;
+    }
+    /* Only OpInfo pointers into the immutable opcode table survive this
+     * point. Do not overlap the legacy graph's dense liveness/storage memory
+     * with the new descriptor graph merely for orchestration convenience. */
     flow_free_graph(&graph);
+    if (resolved_ops) {
+        procedure = rxas_flow_procedure_build_resolved(
+                context, items, item_count,
+                (unsigned long)iterations + 1ul, resolved_ops);
+        free(resolved_ops);
+    }
+    else procedure = 0;
+    if (procedure) {
+        if (context->debug_mode)
+            rxas_flow_procedure_dump(
+                    procedure, rxas_flow_procedure_epoch(procedure), stderr);
+        rxas_flow_procedure_destroy(procedure);
+    }
+    else if (context->debug_mode) {
+        fprintf(stderr,
+                "PERF3 flow-graph procedure=%s disabled=construction-failed\n",
+                context->current_proc_name ? context->current_proc_name
+                                           : "(directives)");
+    }
 }

@@ -527,6 +527,37 @@ facts over the original queue records. Surviving records still pass through the
 same assembler emission functions; RXAS syntax, canonical RXBIN and the public
 ABI do not change.
 
+PERF3-11 now also constructs an immutable `RxasFlowProcedure` sidecar after
+the existing rewrites reach their fixed point. `assembler/rxas_flow_graph.c`
+owns stable record, instruction, basic-block and typed-edge descriptors for one
+procedure epoch. It does not mutate tokens or queued records and no rewrite
+consumer uses it yet. The original queue index remains the record identity;
+every opcode record maps to a stable instruction ID, block ID and exact
+pre-emission RXBIN address. Source-step, TRACE, label and metadata records keep
+their own IDs and map to the block/address at which they are observed.
+
+Code blocks start at procedure entry, labels, branch and handler targets, and
+after calls, signalling instructions and other control terminators. Seven
+stable synthetic blocks represent entry, handler dispatch, asynchronous
+handler entry, normal return, unwind, terminal exit and unresolved control.
+Edges distinguish normal fallthrough, branch, signal skip, signal retry,
+handler, unwind, terminal and explicit fail-closed unknown flow. Signal edges
+come from `RxOpSignalContract.continuations`; handler-policy instructions with
+label operands feed the handler and asynchronous roots rather than inventing a
+normal branch from the registration instruction.
+
+Construction first snapshots record/opcode metadata, builds an open-addressed
+label index, forms blocks, then appends edges. It is expected linear in queued
+records plus emitted edges; it does not rescan all existing edges when adding a
+new one. While the legacy rewrite graph remains, orchestration hands its final
+resolved `OpInfo` pointers to the sidecar before freeing the old graph; this
+avoids a second opcode-table parse and avoids overlapping the two graph memory
+images. Read APIs require the owning epoch and return no descriptor for a
+stale epoch. `rxas -d` prints deterministic `PERF3 flow-*` records without
+pointer values, so graph identities and typed edge counts can be compared
+mechanically. Allocation or construction failure simply disables this
+consumer-free sidecar and leaves the unchanged emission path available.
+
 The NR-27 register universe distinguishes local (`r`), argument (`a`) and
 global (`g`) register classes and tracks integer, float, string, decimal,
 binary, attribute and reference views. Explicit and implicit accesses come

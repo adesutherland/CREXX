@@ -20,6 +20,7 @@ add_custom_command(
 
 # RXAS Library
 add_library(rxaslib STATIC rxastoke.c rxaseror.c ${CMAKE_CURRENT_BINARY_DIR}/rxasscan.c rxas_opt.c rxas_flow.c
+        rxas_flow_graph.c rxas_flow_graph.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.h rxas.h
         rxasassm.h rxasassm.c
         ../avl_tree/rxastree.h

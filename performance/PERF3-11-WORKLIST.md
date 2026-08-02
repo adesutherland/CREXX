@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Stage 2 immutable graph construction**
+Status: **in progress — Stage 3 structural analyses**
 
 Architecture approved: 2026-08-02
 
@@ -262,24 +262,36 @@ Towers and RexxCPS RXBIN hashes remain byte-identical to Gate 0. Evidence:
 
 ### Stage 2 — immutable per-procedure `FlowProcedure`
 
-- [ ] Separate procedure parsing/record ownership from graph construction and
+- [x] Separate procedure parsing/record ownership from graph construction and
       rewrite execution.
-- [ ] Form basic blocks at entry, labels, branches, calls where required,
+- [x] Form basic blocks at entry, labels, branches, calls where required,
       signalling instructions, handler entries and exits.
-- [ ] Add typed normal, branch, signal-skip, signal-retry, handler and
+- [x] Add typed normal, branch, signal-skip, signal-retry, handler and
       terminal/unwind edges plus synthetic roots/exits.
-- [ ] Preserve exact source/TRACE record identity and mapping between queued
+- [x] Preserve exact source/TRACE record identity and mapping between queued
       RXAS records, instructions and emitted addresses.
-- [ ] Add deterministic graph dumps and focused graph-shape tests, including
+- [x] Add deterministic graph dumps and focused graph-shape tests, including
       unreachable blocks, diamonds, nested loops and irreducible control.
-- [ ] Install an explicit graph epoch and make stale-analysis access fail
+- [x] Install an explicit graph epoch and make stale-analysis access fail
       closed.
-- [ ] Run emitted-image and existing optimizer parity before any consumer uses
+- [x] Run emitted-image and existing optimizer parity before any consumer uses
       the new analyses.
 
 **Gate 2:** graph construction must be linear in instructions plus edges,
 produce no ordinary RXBIN change, and remain within the clean-base assembler
 cost guard before adding SSA.
+
+Gate 2 passed on 2026-08-02. The immutable sidecar has stable record,
+instruction, block and emitted-address mappings; typed normal/branch/signal/
+handler/exit edges; seven synthetic roots/exits; deterministic dumps; and
+fail-closed epochs/unknown control. Construction uses a hashed label index and
+append-only edges. The final legacy graph hands over resolved opcode pointers
+before being freed, avoiding duplicate parsing and graph-memory overlap.
+Focused correctness passes 113/113 and all three Gate 0 RXBIN hashes are exact.
+Thirty balanced/interleaved Release rounds put median assembler deltas at
++0.411% Richards, +0.463% Towers and -2.784% RexxCPS; RSS deltas remain below
+the greater-than-5%-and-1-MiB escalation rule. Evidence:
+[`2026-08-02-perf3-11-stage2-flow-graph`](evidence/2026-08-02-perf3-11-stage2-flow-graph/).
 
 ### Stage 3 — reusable structural analyses and analysis manager
 

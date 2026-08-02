@@ -48,6 +48,14 @@ target_include_directories(test_rxop_metadata PRIVATE ../binutils/include)
 add_test(NAME rxas_optimizer_metadata COMMAND test_rxop_metadata)
 set_tests_properties(rxas_optimizer_metadata PROPERTIES LABELS "rxas;optimizer;metadata")
 
+add_executable(test_rxas_flow_graph test_rxas_flow_graph.c)
+target_include_directories(test_rxas_flow_graph PRIVATE
+        ../assembler ../binutils/include ${CMAKE_BINARY_DIR}/assembler)
+target_link_libraries(test_rxas_flow_graph PRIVATE rxaslib avl_tree platform)
+add_test(NAME rxas_flow_graph_contract COMMAND test_rxas_flow_graph)
+set_tests_properties(rxas_flow_graph_contract PROPERTIES
+        LABELS "rxas;optimizer;flow;metadata")
+
 function(crexx_add_rxas_optimizer_check NAME SOURCE CASE)
     set(options)
     set(oneValueArgs)
