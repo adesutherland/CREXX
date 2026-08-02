@@ -230,7 +230,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Component-generation flow and proved signal phases | queued design/evidence — highest-value next mechanism | Generalize the accepted C1 fact into a reusable multi-fact storage/component generation lattice, classify pre/post/partial-write signal locations, model loop/backedge availability and measure assembler cost before adding consumers. Retain tactical rules until an equivalent core proof replaces each one. |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | architecture approved — execution authorization pending | Build one immutable graph/analysis epoch per procedure; model typed signal continuations and handler policy separately from sparse storage/component values; add cached proof walkers and measure assembler scale before selecting a rewrite consumer. Any instruction signal-semantic change remains a separate approval. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -665,6 +665,13 @@ T2 and wider conversions remain outside the accepted slice; no push is
 authorized.
 
 ## PERF3-11 — component generations and signal-phase flow
+
+Adrian approved the scalable per-procedure graph, dedicated signal-policy and
+sparse component-SSA architecture on 2026-08-02.  The complete staged plan,
+semantic-change boundary, clean-base oracle, scaling gates and mandatory first
+consumer verdict are controlled by
+[`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md).  Production execution remains
+unauthorized until Adrian reviews that plan.
 
 PERF3-10 proves the architectural direction but intentionally implements one
 consumer. The reusable metadata now distinguishes register components,

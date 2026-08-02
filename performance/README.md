@@ -29,6 +29,7 @@ validation.
 | `performance/PERF3-02-C2E2-P1-WORKLIST.md` | Locked typed normal/skip/retry continuation and graph-owned storage-identity infrastructure; no rewrite consumer selected and assembler-cost recovery queued separately |
 | `performance/PERF3-02-R1-WORKLIST.md` | Completed infrastructure-enabled option replay and selected C1abc production closeout; rejected variants remain replayable from retained evidence |
 | `performance/PERF3-10-WORKLIST.md` | Accepted ordered TRACE batching and storage/component-proved redundant `ITOS` control, first verdict and proportional closeout |
+| `performance/PERF3-11-WORKLIST.md` | Approved scalable per-procedure RXAS graph, signal-policy and sparse component-SSA plan; implementation awaits separate authorization |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |
