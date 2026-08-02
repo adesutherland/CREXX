@@ -7,6 +7,7 @@
 #include "rxas_flow_graph.h"
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_signal.h"
+#include "rxas_flow_ssa.h"
 #include "rxasgrmr.h"
 
 #define FIXTURE_MAX_ITEMS 64
@@ -64,6 +65,16 @@ static Assembler_Token *fixture_register(FlowFixture *fixture,
 static Assembler_Token *fixture_integer(FlowFixture *fixture,
                                         rxinteger value) {
     return fixture_integer_token(fixture, INT, value);
+}
+
+static Assembler_Token *fixture_float(FlowFixture *fixture, double value) {
+    Assembler_Token *token;
+    token = calloc(1, sizeof(*token));
+    if (!token || fixture->token_count >= FIXTURE_MAX_TOKENS) exit(2);
+    token->token_type = FLOAT;
+    token->token_value.real = value;
+    fixture->tokens[fixture->token_count++] = token;
+    return token;
 }
 
 static Assembler_Token *fixture_string(FlowFixture *fixture,
@@ -243,6 +254,15 @@ static char *fixture_signal_dump(
     stream = tmpfile();
     if (!stream) exit(2);
     if (!rxas_flow_signal_dump(analysis, epoch, stream)) exit(2);
+    return fixture_read_stream(stream);
+}
+
+static char *fixture_ssa_dump(
+        const RxasFlowSsaAnalysis *analysis, unsigned long epoch) {
+    FILE *stream;
+    stream = tmpfile();
+    if (!stream) exit(2);
+    if (!rxas_flow_ssa_dump(analysis, epoch, stream)) exit(2);
     return fixture_read_stream(stream);
 }
 
@@ -924,6 +944,742 @@ static void test_policy_loop_identity(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static RxasFlowRegister fixture_local_register(size_t number) {
+    RxasFlowRegister reg;
+    reg.register_class = RXAS_FLOW_REGISTER_LOCAL;
+    reg.number = number;
+    return reg;
+}
+
+static RxasFlowRegister fixture_argument_register(size_t number) {
+    RxasFlowRegister reg;
+    reg.register_class = RXAS_FLOW_REGISTER_ARGUMENT;
+    reg.number = number;
+    return reg;
+}
+
+static void test_sparse_storage_and_components(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *first;
+    RxasFlowProcedure *second;
+    Assembler_Token *operands[2];
+    const RxasFlowSsaAnalysis *first_analysis;
+    const RxasFlowSsaAnalysis *second_analysis;
+    const RxasFlowSsaMetrics *metrics;
+    RxasFlowStorageFact r0_storage;
+    RxasFlowStorageFact r1_storage;
+    RxasFlowStorageFact r2_storage;
+    RxasFlowStorageFact r2_base;
+    RxasFlowComponentFact integer_fact;
+    RxasFlowComponentFact first_string;
+    RxasFlowComponentFact repeated_string;
+    RxasFlowComponentFact absent_fact;
+    RxasFlowComponentFact absent_decimal;
+    RxasFlowComponentFact copy_fact;
+    RxasFlowComponentFact implicit_source;
+    RxasFlowComponentFact implicit_copy;
+    RxasFlowComponentFact implicit_target;
+    RxasFlowComponentFact implicit_increment_before;
+    RxasFlowComponentFact implicit_increment_after;
+    size_t link_instruction;
+    size_t first_itos_instruction;
+    size_t second_itos_instruction;
+    size_t swap_instruction;
+    size_t unlink_instruction;
+    size_t null_instruction;
+    size_t copy_instruction;
+    size_t implicit_copy_instruction;
+    size_t implicit_target_instruction;
+    size_t implicit_increment_instruction;
+    char *first_dump;
+    char *second_dump;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 7);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "swap", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "unlink", operands, 1);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "dcopy", operands, 2);
+    operands[0] = fixture_integer(&fixture, 1);
+    operands[1] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_integer(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "load", operands, 2);
+    fixture_op(&fixture, "inc0", 0, 0);
+    fixture_op(&fixture, "ret", 0, 0);
+
+    first = rxas_flow_procedure_build(context, fixture.items,
+                                      fixture.item_count, 14);
+    second = rxas_flow_procedure_build(context, fixture.items,
+                                       fixture.item_count, 14);
+    check(first != 0 && second != 0,
+          "sparse storage fixture construction failed");
+    if (first && second) {
+        check(rxas_flow_require_ssa_analysis(first, 14, 1) == 0,
+              "bounded sparse SSA did not fail closed");
+        metrics = rxas_flow_last_ssa_metrics(first, 14);
+        check(metrics && metrics->status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED,
+              "bounded sparse SSA did not report budget exhaustion");
+        first_analysis = rxas_flow_require_ssa_analysis(first, 14, 0);
+        second_analysis = rxas_flow_require_ssa_analysis(second, 14, 0);
+        check(first_analysis != 0 && second_analysis != 0,
+              "sparse storage/component SSA construction failed");
+        check(first_analysis && rxas_flow_require_ssa_analysis(first, 14, 0) ==
+                    first_analysis,
+              "sparse SSA was not cached by epoch");
+        first_dump = fixture_ssa_dump(first_analysis, 14);
+        second_dump = fixture_ssa_dump(second_analysis, 14);
+        check(strcmp(first_dump, second_dump) == 0,
+              "sparse SSA dump is not deterministic");
+        check(strstr(first_dump, "PERF3 flow-storage") != 0 &&
+              strstr(first_dump, "PERF3 flow-ssa-edge") != 0,
+              "sparse SSA dump omits storage versions or edge states");
+        free(first_dump);
+        free(second_dump);
+        link_instruction = rxas_flow_procedure_record(
+                first, 14, 1)->instruction_id;
+        first_itos_instruction = rxas_flow_procedure_record(
+                first, 14, 2)->instruction_id;
+        second_itos_instruction = rxas_flow_procedure_record(
+                first, 14, 3)->instruction_id;
+        swap_instruction = rxas_flow_procedure_record(
+                first, 14, 4)->instruction_id;
+        unlink_instruction = rxas_flow_procedure_record(
+                first, 14, 5)->instruction_id;
+        null_instruction = rxas_flow_procedure_record(
+                first, 14, 6)->instruction_id;
+        copy_instruction = rxas_flow_procedure_record(
+                first, 14, 7)->instruction_id;
+        implicit_copy_instruction = rxas_flow_procedure_record(
+                first, 14, 8)->instruction_id;
+        implicit_target_instruction = rxas_flow_procedure_record(
+                first, 14, 9)->instruction_id;
+        implicit_increment_instruction = rxas_flow_procedure_record(
+                first, 14, 10)->instruction_id;
+        check(first_analysis &&
+              rxas_flow_storage_at_instruction(
+                    first_analysis, 14, link_instruction, 1,
+                    fixture_local_register(0), &r0_storage) &&
+              rxas_flow_storage_at_instruction(
+                    first_analysis, 14, link_instruction, 1,
+                    fixture_local_register(1), &r1_storage) &&
+              r0_storage.storage_id == r1_storage.storage_id &&
+              r0_storage.kind == RXAS_FLOW_STORAGE_BASE,
+              "LINK did not preserve the actual storage identity");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, first_itos_instruction, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &integer_fact) &&
+              rxas_flow_component_at_instruction(
+                    first_analysis, 14, first_itos_instruction, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_STRING,
+                    &first_string) &&
+              integer_fact.kind == RXAS_FLOW_VALUE_CONSTANT &&
+              first_string.kind == RXAS_FLOW_VALUE_DERIVED &&
+              first_string.derivation ==
+                    RXOP_DERIVATION_INTEGER_TO_STRING &&
+              first_string.source_value_id == integer_fact.value_id &&
+              first_string.definition_numeric_context ==
+                    first_string.current_numeric_context,
+              "ITOS did not retain its source ValueId and numeric context");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, second_itos_instruction, 0,
+                    fixture_local_register(1), RXOP_COMPONENT_STRING,
+                    &repeated_string) &&
+              repeated_string.value_id == first_string.value_id &&
+              repeated_string.source_value_id == integer_fact.value_id,
+              "repeated conversion could not see the prior derived value");
+        check(rxas_flow_storage_at_instruction(
+                    first_analysis, 14, swap_instruction, 0,
+                    fixture_local_register(2), &r2_base) &&
+              rxas_flow_storage_at_instruction(
+                    first_analysis, 14, swap_instruction, 1,
+                    fixture_local_register(2), &r2_storage) &&
+              r2_storage.storage_id == r0_storage.storage_id &&
+              rxas_flow_storage_at_instruction(
+                    first_analysis, 14, swap_instruction, 1,
+                    fixture_local_register(1), &r1_storage) &&
+              r1_storage.storage_id == r2_base.storage_id,
+              "SWAP did not follow storage identities");
+        check(rxas_flow_storage_at_instruction(
+                    first_analysis, 14, unlink_instruction, 1,
+                    fixture_local_register(2), &r2_storage) &&
+              r2_storage.storage_id == r2_base.storage_id &&
+              r2_storage.kind == RXAS_FLOW_STORAGE_BASE,
+              "UNLINK did not restore the register's base storage");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, null_instruction, 1,
+                    fixture_local_register(2), RXOP_COMPONENT_STRING,
+                    &absent_fact) &&
+              absent_fact.kind == RXAS_FLOW_VALUE_ABSENT &&
+              absent_fact.presence == RXAS_FLOW_COMPONENT_ABSENT,
+              "NULL was conflated with an unknown component value");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, null_instruction, 1,
+                    fixture_local_register(2), RXOP_COMPONENT_DECIMAL,
+                    &absent_decimal) &&
+              absent_decimal.kind == RXAS_FLOW_VALUE_ABSENT &&
+              absent_decimal.presence == RXAS_FLOW_COMPONENT_ABSENT,
+              "NULL did not clear the decimal component");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, copy_instruction, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_DECIMAL,
+                    &copy_fact) &&
+              copy_fact.kind == RXAS_FLOW_VALUE_COPY &&
+              copy_fact.presence == RXAS_FLOW_COMPONENT_ABSENT &&
+              copy_fact.source_value_id == absent_decimal.value_id,
+              "DCOPY did not preserve the source component's null state");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, implicit_copy_instruction, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &implicit_source) &&
+              rxas_flow_component_at_instruction(
+                    first_analysis, 14, implicit_copy_instruction, 1,
+                    fixture_local_register(1), RXOP_COMPONENT_INTEGER,
+                    &implicit_copy) &&
+              implicit_copy.kind == RXAS_FLOW_VALUE_COPY &&
+              implicit_copy.source_value_id == implicit_source.value_id,
+              "integer-coded local copy did not create component ValueIds");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, implicit_target_instruction, 1,
+                    fixture_local_register(2), RXOP_COMPONENT_INTEGER,
+                    &implicit_target) &&
+              implicit_target.kind == RXAS_FLOW_VALUE_COPY &&
+              implicit_target.source_value_id == implicit_source.value_id,
+              "integer-coded local target did not create component ValueIds");
+        check(rxas_flow_component_at_instruction(
+                    first_analysis, 14, implicit_increment_instruction, 0,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &implicit_increment_before) &&
+              rxas_flow_component_at_instruction(
+                    first_analysis, 14, implicit_increment_instruction, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &implicit_increment_after) &&
+              implicit_increment_after.kind == RXAS_FLOW_VALUE_WRITE &&
+              implicit_increment_before.value_id !=
+                    implicit_increment_after.value_id,
+              "implicit fixed-register write did not advance its ValueId");
+        metrics = rxas_flow_ssa_metrics(first_analysis, 14);
+        check(metrics && metrics->states < 80 && metrics->registers == 3 &&
+              metrics->component_updates < 96,
+              "sparse SSA counters are not definition-scaled on the fixture");
+        check(rxas_flow_require_ssa_analysis(first, 15, 0) == 0 &&
+              rxas_flow_ssa_metrics(first_analysis, 15) == 0,
+              "stale sparse SSA access did not fail closed");
+    }
+    rxas_flow_procedure_destroy(first);
+    rxas_flow_procedure_destroy(second);
+    fixture_destroy(&fixture);
+}
+
+static void test_argument_storage_and_call_effects(
+        Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowSsaAnalysis *analysis;
+    RxasFlowStorageFact argument_storage;
+    RxasFlowStorageFact local_storage;
+    RxasFlowComponentFact argument_value;
+    RxasFlowComponentFact before_call;
+    RxasFlowComponentFact after_call;
+    size_t linkarg_instruction;
+    size_t load_instruction;
+    size_t call_instruction;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "linkarg", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 41);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_text_token(&fixture, FUNC, "callee");
+    fixture_op(&fixture, "call", operands, 1);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 15);
+    check(procedure != 0, "argument-storage fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 15, 0);
+        linkarg_instruction = rxas_flow_procedure_record(
+                procedure, 15, 0)->instruction_id;
+        load_instruction = rxas_flow_procedure_record(
+                procedure, 15, 1)->instruction_id;
+        call_instruction = rxas_flow_procedure_record(
+                procedure, 15, 2)->instruction_id;
+        check(analysis && rxas_flow_storage_at_instruction(
+                    analysis, 15, linkarg_instruction, 0,
+                    fixture_argument_register(0), &argument_storage) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 15, linkarg_instruction, 1,
+                    fixture_local_register(0), &local_storage) &&
+              argument_storage.storage_id == local_storage.storage_id,
+              "LINKARG did not map the local to caller-owned argument storage");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 15, load_instruction, 1,
+                    fixture_argument_register(0), RXOP_COMPONENT_INTEGER,
+                    &argument_value) &&
+              argument_value.kind == RXAS_FLOW_VALUE_CONSTANT,
+              "write through LINKARG did not update argument storage");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 15, call_instruction, 0,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &before_call) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 15, call_instruction, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &after_call) &&
+              before_call.storage_id == after_call.storage_id &&
+              before_call.value_id == after_call.value_id &&
+              before_call.current_reference_effect !=
+                    after_call.current_reference_effect,
+              "call did not separate restored mapping from reference-visible mutation");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_storage_joins_and_loops(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowSsaAnalysis *analysis;
+    RxasFlowStorageFact fact;
+    RxasFlowStorageFact source;
+    RxasFlowComponentFact value;
+    size_t join_instruction;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_label_ref(&fixture, "left");
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "brt", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "join");
+    fixture_op(&fixture, "br", operands, 1);
+    fixture_label(&fixture, "left");
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "link", operands, 2);
+    fixture_label(&fixture, "join");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 16);
+    check(procedure != 0, "storage-join fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 16, 0);
+        join_instruction = rxas_flow_procedure_record(
+                procedure, 16, 6)->instruction_id;
+        check(analysis && rxas_flow_storage_at_instruction(
+                    analysis, 16, join_instruction, 0,
+                    fixture_local_register(1), &fact) &&
+              fact.kind == RXAS_FLOW_STORAGE_PHI,
+              "disagreeing storage paths did not produce a StorageId phi");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 3);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "link", operands, 2);
+    fixture_label(&fixture, "loop");
+    operands[0] = fixture_label_ref(&fixture, "done");
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "brt", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "loop");
+    fixture_op(&fixture, "br", operands, 1);
+    fixture_label(&fixture, "done");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 17);
+    check(procedure != 0, "storage-loop fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 17, 0);
+        join_instruction = rxas_flow_procedure_record(
+                procedure, 17, 3)->instruction_id;
+        check(analysis && rxas_flow_storage_at_instruction(
+                    analysis, 17, join_instruction, 0,
+                    fixture_local_register(0), &source) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 17, join_instruction, 0,
+                    fixture_local_register(1), &fact) &&
+              fact.storage_id == source.storage_id &&
+              rxas_flow_component_at_instruction(
+                    analysis, 17, join_instruction, 0,
+                    fixture_local_register(1), RXOP_COMPONENT_INTEGER,
+                    &value) &&
+              value.kind == RXAS_FLOW_VALUE_CONSTANT,
+              "loop phi did not preserve unchanged storage and ValueIds");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_signal_phase_component_edges(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[3];
+    const RxasFlowSsaAnalysis *analysis;
+    RxasFlowStorageFact before_storage;
+    RxasFlowStorageFact normal_storage;
+    RxasFlowStorageFact skip_storage;
+    RxasFlowStorageFact before_call_storage;
+    RxasFlowStorageFact after_call_storage;
+    RxasFlowComponentFact normal_value;
+    RxasFlowComponentFact skip_value;
+    size_t signal_block;
+    size_t following_block;
+    size_t normal_edge;
+    size_t skip_edge;
+    size_t call_instruction;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "linkattr", operands, 3);
+    operands[0] = fixture_text_token(&fixture, FUNC, "callee");
+    fixture_op(&fixture, "call", operands, 1);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 18);
+    check(procedure != 0, "signal mapping-edge fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 18, 0);
+        signal_block = fixture_block_for_record(procedure, 18, 0);
+        following_block = fixture_block_for_record(procedure, 18, 1);
+        normal_edge = fixture_edge_id(procedure, 18, signal_block,
+                                      following_block, RXAS_FLOW_EDGE_NORMAL);
+        skip_edge = fixture_edge_id(procedure, 18, signal_block,
+                                    following_block,
+                                    RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        check(analysis && rxas_flow_storage_at_instruction(
+                    analysis, 18,
+                    rxas_flow_procedure_record(
+                            procedure, 18, 0)->instruction_id,
+                    0, fixture_local_register(0), &before_storage) &&
+              rxas_flow_storage_on_edge(
+                    analysis, 18, normal_edge,
+                    fixture_local_register(0), &normal_storage) &&
+              rxas_flow_storage_on_edge(
+                    analysis, 18, skip_edge,
+                    fixture_local_register(0), &skip_storage) &&
+              normal_storage.kind == RXAS_FLOW_STORAGE_SITE &&
+              skip_storage.storage_id == before_storage.storage_id,
+              "before-write signal edge observed LINKATTR's success mapping");
+        call_instruction = rxas_flow_procedure_record(
+                procedure, 18, 1)->instruction_id;
+        check(rxas_flow_storage_at_instruction(
+                    analysis, 18, call_instruction, 0,
+                    fixture_local_register(0), &before_call_storage) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 18, call_instruction, 1,
+                    fixture_local_register(0), &after_call_storage) &&
+              before_call_storage.kind == RXAS_FLOW_STORAGE_PHI &&
+              after_call_storage.kind == RXAS_FLOW_STORAGE_UNKNOWN,
+              "call did not invalidate a merged dynamic mapping");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_string(&fixture, "seed");
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "freadcdpt", operands, 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 19);
+    check(procedure != 0, "partial-write edge fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 19, 0);
+        signal_block = fixture_block_for_record(procedure, 19, 1);
+        following_block = fixture_block_for_record(procedure, 19, 2);
+        normal_edge = fixture_edge_id(procedure, 19, signal_block,
+                                      following_block, RXAS_FLOW_EDGE_NORMAL);
+        skip_edge = fixture_edge_id(procedure, 19, signal_block,
+                                    following_block,
+                                    RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        check(analysis && rxas_flow_component_on_edge(
+                    analysis, 19, normal_edge, fixture_local_register(0),
+                    RXOP_COMPONENT_STRING, &normal_value) &&
+              rxas_flow_component_on_edge(
+                    analysis, 19, skip_edge, fixture_local_register(0),
+                    RXOP_COMPONENT_STRING, &skip_value) &&
+              normal_value.kind == RXAS_FLOW_VALUE_WRITE &&
+              skip_value.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              "partial-write signal edge did not invalidate its component");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_derivation_contexts(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowSsaAnalysis *analysis;
+    RxasFlowComponentFact integer_source;
+    RxasFlowComponentFact initial_string;
+    RxasFlowComponentFact stale_string;
+    RxasFlowComponentFact float_source;
+    RxasFlowComponentFact float_string;
+    RxasFlowComponentFact decimal_source;
+    RxasFlowComponentFact decimal_string;
+    RxasFlowComponentFact two_register_source;
+    RxasFlowComponentFact two_register_float;
+    size_t initial_itos;
+    size_t repeated_itos;
+    size_t ftos_instruction;
+    size_t dtos_instruction;
+    size_t two_register_itof;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_float(&fixture, 1.5);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "ftos", operands, 1);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_text_token(&fixture, DECIMAL, "2.5");
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "dtos", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 5);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_integer(&fixture, 20);
+    fixture_op(&fixture, "setnumdgts", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 9);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 4);
+    operands[1] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "itof", operands, 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 20);
+    check(procedure != 0, "derivation-context fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 20, 0);
+        initial_itos = rxas_flow_procedure_record(
+                procedure, 20, 5)->instruction_id;
+        repeated_itos = rxas_flow_procedure_record(
+                procedure, 20, 7)->instruction_id;
+        ftos_instruction = rxas_flow_procedure_record(
+                procedure, 20, 1)->instruction_id;
+        dtos_instruction = rxas_flow_procedure_record(
+                procedure, 20, 3)->instruction_id;
+        two_register_itof = rxas_flow_procedure_record(
+                procedure, 20, 9)->instruction_id;
+        check(analysis && rxas_flow_component_at_instruction(
+                    analysis, 20, initial_itos, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &integer_source) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 20, initial_itos, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_STRING,
+                    &initial_string) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 20, repeated_itos, 0,
+                    fixture_local_register(0), RXOP_COMPONENT_STRING,
+                    &stale_string) &&
+              initial_string.value_id == stale_string.value_id &&
+              initial_string.source_value_id == integer_source.value_id &&
+              initial_string.definition_effects[
+                    RXAS_FLOW_EFFECT_NUMERIC_CONTEXT] ==
+                    initial_string.current_effects[
+                            RXAS_FLOW_EFFECT_NUMERIC_CONTEXT] &&
+              stale_string.definition_effects[
+                    RXAS_FLOW_EFFECT_NUMERIC_CONTEXT] !=
+                    stale_string.current_effects[
+                            RXAS_FLOW_EFFECT_NUMERIC_CONTEXT],
+              "numeric-context write did not stale an available derivation");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 20, ftos_instruction, 1,
+                    fixture_local_register(1), RXOP_COMPONENT_FLOAT,
+                    &float_source) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 20, ftos_instruction, 1,
+                    fixture_local_register(1), RXOP_COMPONENT_STRING,
+                    &float_string) &&
+              float_string.derivation ==
+                    RXOP_DERIVATION_FLOAT_TO_STRING &&
+              float_string.source_value_id == float_source.value_id &&
+              float_string.signal_dependencies ==
+                    RXOP_SIGNAL_DEP_NUMERIC_CONTEXT,
+              "FTOS did not retain its source and derivation context");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 20, dtos_instruction, 1,
+                    fixture_local_register(2), RXOP_COMPONENT_DECIMAL,
+                    &decimal_source) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 20, dtos_instruction, 1,
+                    fixture_local_register(2), RXOP_COMPONENT_STRING,
+                    &decimal_string) &&
+              decimal_string.derivation ==
+                    RXOP_DERIVATION_DECIMAL_TO_STRING &&
+              decimal_string.source_value_id == decimal_source.value_id &&
+              decimal_string.signal_dependencies ==
+                    (RXOP_SIGNAL_DEP_NUMERIC_CONTEXT |
+                     RXOP_SIGNAL_DEP_PLUGIN) &&
+              decimal_string.definition_effects[RXAS_FLOW_EFFECT_PLUGIN] !=
+                    RXAS_FLOW_ID_NONE &&
+              decimal_string.definition_effects[RXAS_FLOW_EFFECT_PLUGIN] ==
+                    decimal_string.current_effects[RXAS_FLOW_EFFECT_PLUGIN],
+              "DTOS did not retain its numeric/plugin derivation contexts");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 20, two_register_itof, 1,
+                    fixture_local_register(3), RXOP_COMPONENT_INTEGER,
+                    &two_register_source) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 20, two_register_itof, 1,
+                    fixture_local_register(4), RXOP_COMPONENT_FLOAT,
+                    &two_register_float) &&
+              two_register_float.derivation ==
+                    RXOP_DERIVATION_INTEGER_TO_FLOAT &&
+              two_register_float.source_value_id ==
+                    two_register_source.value_id,
+              "two-register derivation used the destination as its source");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_fused_failure_mappings(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[7];
+    const RxasFlowSsaAnalysis *analysis;
+    RxasFlowStorageFact before_left;
+    RxasFlowStorageFact before_right;
+    RxasFlowStorageFact failure_left;
+    RxasFlowStorageFact failure_right;
+    RxasFlowStorageFact normal_link;
+    RxasFlowStorageFact failure_link;
+    RxasFlowComponentFact joined_component;
+    RxasFlowComponentFact fused_value;
+    size_t instruction_id;
+    size_t instruction_block;
+    size_t following_block;
+    size_t normal_edge;
+    size_t skip_edge;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_text_token(&fixture, FUNC, "callee");
+    operands[2] = fixture_register(&fixture, 1);
+    operands[3] = fixture_register(&fixture, 2);
+    operands[4] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "swapcall", operands, 5);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 21);
+    check(procedure != 0, "swap-call failure fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 21, 0);
+        instruction_id = rxas_flow_procedure_record(
+                procedure, 21, 0)->instruction_id;
+        instruction_block = fixture_block_for_record(procedure, 21, 0);
+        following_block = fixture_block_for_record(procedure, 21, 1);
+        skip_edge = fixture_edge_id(
+                procedure, 21, instruction_block, following_block,
+                RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        check(analysis && rxas_flow_storage_at_instruction(
+                    analysis, 21, instruction_id, 0,
+                    fixture_local_register(2), &before_left) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 21, instruction_id, 0,
+                    fixture_local_register(3), &before_right) &&
+              rxas_flow_storage_on_edge(
+                    analysis, 21, skip_edge,
+                    fixture_local_register(2), &failure_left) &&
+              rxas_flow_storage_on_edge(
+                    analysis, 21, skip_edge,
+                    fixture_local_register(3), &failure_right) &&
+              failure_left.storage_id == before_right.storage_id &&
+              failure_right.storage_id == before_left.storage_id,
+              "swap-call failure edge did not retain its pre-call swap");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 21, instruction_id, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &fused_value) &&
+              fused_value.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              "fused remap/value opcode invented an intra-instruction order");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_integer(&fixture, 0);
+    operands[3] = fixture_integer(&fixture, 0);
+    operands[4] = fixture_register(&fixture, 2);
+    operands[5] = fixture_register(&fixture, 3);
+    operands[6] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "linksetattrslinkadd", operands, 7);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 22);
+    check(procedure != 0, "fused-link failure fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 22, 0);
+        instruction_block = fixture_block_for_record(procedure, 22, 0);
+        following_block = fixture_block_for_record(procedure, 22, 1);
+        normal_edge = fixture_edge_id(
+                procedure, 22, instruction_block, following_block,
+                RXAS_FLOW_EDGE_NORMAL);
+        skip_edge = fixture_edge_id(
+                procedure, 22, instruction_block, following_block,
+                RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        check(analysis && rxas_flow_storage_on_edge(
+                    analysis, 22, normal_edge,
+                    fixture_local_register(0), &normal_link) &&
+              rxas_flow_storage_on_edge(
+                    analysis, 22, skip_edge,
+                    fixture_local_register(0), &failure_link) &&
+              normal_link.kind == RXAS_FLOW_STORAGE_SITE &&
+              failure_link.kind == RXAS_FLOW_STORAGE_UNKNOWN,
+              "fused-link partial failure did not meet its mapping to unknown");
+        instruction_id = rxas_flow_procedure_record(
+                procedure, 22, 1)->instruction_id;
+        check(rxas_flow_component_at_instruction(
+                    analysis, 22, instruction_id, 0,
+                    fixture_local_register(0), RXOP_COMPONENT_STRING,
+                    &joined_component) &&
+              joined_component.kind == RXAS_FLOW_VALUE_PHI &&
+              joined_component.presence ==
+                    RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN,
+              "unknown mapping input was conflated with ValueId zero");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 int main(void) {
     Assembler_Context context;
     memset(&context, 0, sizeof(context));
@@ -938,6 +1694,12 @@ int main(void) {
     test_call_boundary_and_unknown(&context);
     test_policy_stack_uncertainty(&context);
     test_policy_loop_identity(&context);
+    test_sparse_storage_and_components(&context);
+    test_argument_storage_and_call_effects(&context);
+    test_storage_joins_and_loops(&context);
+    test_signal_phase_component_edges(&context);
+    test_derivation_contexts(&context);
+    test_fused_failure_mappings(&context);
 
     if (failures) {
         fprintf(stderr, "RXAS immutable flow graph failures: %d\n", failures);

@@ -9,6 +9,7 @@
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_graph_internal.h"
 #include "rxas_flow_signal.h"
+#include "rxas_flow_ssa.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -1235,6 +1236,7 @@ void rxas_flow_analysis_manager_destroy(RxasFlowProcedure *procedure) {
     struct RxasFlowAnalysisManager *manager;
     if (!procedure || !procedure->analysis_manager) return;
     manager = procedure->analysis_manager;
+    rxas_flow_ssa_analysis_destroy(manager->ssa);
     rxas_flow_signal_analysis_destroy(manager->signal);
     flow_structural_free(manager->structural);
     free(manager);

@@ -238,6 +238,10 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
         return operand_index == 0 ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_BINARY;
     if (opcode == OP_ITOS_REG || opcode == OP_ITOF_REG || opcode == OP_ITOB_REG)
         return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_FTOS_REG)
+        return RXOP_COMPONENT_FLOAT;
+    if (opcode == OP_DTOS_REG)
+        return RXOP_COMPONENT_DECIMAL;
     if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG)
         return RXOP_COMPONENT_FLOAT;
     if (opcode == OP_ITOF_REG_REG && operand_index == 1)
@@ -274,6 +278,8 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
         return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_ITOS_REG) return RXOP_COMPONENT_STRING;
+    if (opcode == OP_FTOS_REG || opcode == OP_DTOS_REG)
+        return RXOP_COMPONENT_STRING;
     if (opcode == OP_ITOF_REG) return RXOP_COMPONENT_FLOAT;
     if (opcode == OP_FTOI_REG || opcode == OP_FTOB_REG || opcode == OP_ITOB_REG)
         return RXOP_COMPONENT_INTEGER;
@@ -284,13 +290,22 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
 
 RxOpValueDerivation rxop_value_derivation(int opcode) {
     if (opcode == OP_ITOS_REG) return RXOP_DERIVATION_INTEGER_TO_STRING;
+    if (opcode == OP_FTOS_REG) return RXOP_DERIVATION_FLOAT_TO_STRING;
+    if (opcode == OP_DTOS_REG) return RXOP_DERIVATION_DECIMAL_TO_STRING;
     if (opcode == OP_ITOF_REG || opcode == OP_ITOF_REG_REG)
         return RXOP_DERIVATION_INTEGER_TO_FLOAT;
     return RXOP_DERIVATION_NONE;
 }
 
+size_t rxop_derivation_source_operand(int opcode) {
+    if (rxop_value_derivation(opcode) == RXOP_DERIVATION_NONE)
+        return SIZE_MAX;
+    return opcode == OP_ITOF_REG_REG ? 1 : 0;
+}
+
 unsigned int rxop_derivation_context_reads(int opcode) {
-    return opcode == OP_ITOS_REG ? RXOP_CONTEXT_NUMERIC : RXOP_CONTEXT_NONE;
+    return opcode == OP_ITOS_REG || opcode == OP_FTOS_REG ||
+           opcode == OP_DTOS_REG ? RXOP_CONTEXT_NUMERIC : RXOP_CONTEXT_NONE;
 }
 
 unsigned int rxop_context_writes(int opcode) {

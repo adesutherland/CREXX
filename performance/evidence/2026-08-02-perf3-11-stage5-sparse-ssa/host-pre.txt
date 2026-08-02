@@ -1,0 +1,13 @@
+utc=2026-08-02T16:40:10Z
+Darwin 25.5.0 arm64
+Apple M5
+10
+25769803776
+{ 7.24 9.69 6.86 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+ lowpowermode         0
+ lowpowermode         0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded

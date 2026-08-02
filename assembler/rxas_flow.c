@@ -28,6 +28,7 @@
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_graph.h"
 #include "rxas_flow_signal.h"
+#include "rxas_flow_ssa.h"
 #include "rxdefs.h"
 
 #include <ctype.h>
@@ -2895,6 +2896,7 @@ void rxas_flow_optimise(Assembler_Context *context,
     RxasFlowProcedure *procedure;
     const RxasFlowStructuralAnalysis *structural;
     const RxasFlowSignalAnalysis *signal_analysis;
+    const RxasFlowSsaAnalysis *ssa_analysis;
     const OpInfo **resolved_ops;
     size_t before_instructions;
     size_t after_instructions;
@@ -3036,6 +3038,32 @@ void rxas_flow_optimise(Assembler_Context *context,
                                 ? failed_signal->budget_limit : 0),
                         (unsigned long long)(failed_signal
                                 ? failed_signal->work : 0));
+            }
+            ssa_analysis = rxas_flow_require_ssa_analysis(
+                    procedure, rxas_flow_procedure_epoch(procedure), 0);
+            if (ssa_analysis)
+                rxas_flow_ssa_dump(
+                        ssa_analysis, rxas_flow_procedure_epoch(procedure),
+                        stderr);
+            else {
+                const RxasFlowSsaMetrics *failed_ssa;
+                failed_ssa = rxas_flow_last_ssa_metrics(
+                        procedure, rxas_flow_procedure_epoch(procedure));
+                fprintf(stderr,
+                        "PERF3 flow-ssa-analysis procedure=%s disabled=%s "
+                        "budget=%llu work=%llu\n",
+                        context->current_proc_name ? context->current_proc_name
+                                                   : "(directives)",
+                        failed_ssa && failed_ssa->status ==
+                                RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                                ? "budget-exhausted"
+                                : failed_ssa && failed_ssa->status ==
+                                        RXAS_FLOW_ANALYSIS_OUT_OF_MEMORY
+                                        ? "out-of-memory"
+                                        : "invalid-graph",
+                        (unsigned long long)(failed_ssa
+                                ? failed_ssa->budget_limit : 0),
+                        (unsigned long long)(failed_ssa ? failed_ssa->work : 0));
             }
         }
         rxas_flow_procedure_destroy(procedure);

@@ -12,6 +12,7 @@ typedef struct RxasFlowLabelSlot {
 
 struct RxasFlowStructuralAnalysis;
 struct RxasFlowSignalAnalysis;
+struct RxasFlowSsaAnalysis;
 
 struct RxasFlowAnalysisManager {
     unsigned long epoch;
@@ -19,6 +20,8 @@ struct RxasFlowAnalysisManager {
     struct RxasFlowStructuralAnalysis *structural;
     size_t signal_budget;
     struct RxasFlowSignalAnalysis *signal;
+    size_t ssa_budget;
+    struct RxasFlowSsaAnalysis *ssa;
 };
 
 struct RxasFlowProcedure {
@@ -26,6 +29,8 @@ struct RxasFlowProcedure {
     char *name;
     const instruction_queue *items;
     size_t item_count;
+    size_t local_count;
+    size_t global_count;
     RxasFlowRecord *records;
     RxasFlowInstruction *instructions;
     RxasFlowBlock *blocks;

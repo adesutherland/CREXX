@@ -724,6 +724,10 @@ static RxasFlowProcedure *flow_graph_build_procedure(
     procedure->epoch = epoch;
     procedure->items = items;
     procedure->item_count = item_count;
+    procedure->local_count = context->current_locals > 0
+            ? (size_t)context->current_locals : 0;
+    procedure->global_count = context->binary.globals > 0
+            ? (size_t)context->binary.globals : 0;
     procedure->metrics.complete_control_flow = 1;
     procedure->name = flow_graph_copy_string(context->current_proc_name);
     if (!procedure->name ||

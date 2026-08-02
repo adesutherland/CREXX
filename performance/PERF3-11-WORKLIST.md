@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Stage 4 locked; Stage 5 storage/component SSA next**
+Status: **in progress — Stage 5 locked; Stage 6 proof service/parity next**
 
 Architecture approved: 2026-08-02
 
@@ -370,25 +370,52 @@ assembler cost/RSS gate passes. Evidence:
 
 ### Stage 5 — symbolic storage and component SSA
 
-- [ ] Replace dense point-by-register environments with immutable `StorageId`
+- [x] Replace dense point-by-register environments with immutable `StorageId`
       definitions and sparse register-to-storage mapping through `LINK`,
       `SWAP`, `UNLINK`, calls and references.
-- [ ] Give each storage component write a write-once `ValueId`; place pruned
+- [x] Give each storage component write a write-once `ValueId`; place pruned
       phis only for live/relevant components at joins.
-- [ ] Represent known present, known absent, constant, derived and unknown
+- [x] Represent known present, known absent, constant, derived and unknown
       values without conflating absent/null with an unavailable proof.
-- [ ] Version numeric and other derivation contexts and name them in derived
+- [x] Version numeric and other derivation contexts and name them in derived
       facts.
-- [ ] Apply instruction writes separately for normal, skip and retry edges
+- [x] Apply instruction writes separately for normal, skip and retry edges
       according to the Stage 1 contract.
-- [ ] Add call/alias summaries conservatively; unsupported indirect mutation
+- [x] Add call/alias summaries conservatively; unsupported indirect mutation
       invalidates only what cannot be proved unaffected.
-- [ ] Match the retained P1 storage-identity results and current accepted
+- [x] Match the retained P1 storage-identity results and current accepted
       component facts before replacing their implementation.
 
 **Gate 5:** memory must scale with relevant definitions, uses and phis rather
 than `nodes x registers x components`; the canonical inlined RexxCPS procedure
 must complete within the agreed assembler guard.
+
+Gate 5 passed on 2026-08-02 under Adrian's explicit allowance that proof
+analysis may take seconds rather than the roughly 50 ms ordinary-assembly
+baseline.  The accepted cache uses persistent mapping/value definitions and
+lazy point queries; `rxas -d` materializes actual derivation sites, not every
+point/register/component combination.  Canonical diagnostic elapsed/peak RSS
+is 0.21 s/10,911,744 B Richards, 0.07 s/6,406,144 B Towers and
+0.28 s/18,710,528 B RexxCPS.  RexxCPS retains 13,538,512 B across five
+per-procedure analyses and no procedure exhausts its work budget.
+
+Two rejected implementations remain recorded: recursive dynamic-storage
+classification reached 82.51 s before termination, and eager materialization
+completed in 0.78 s but peaked at about 305 MB.  Generation-marked traversal
+and derivation-site demand are the locked replacements.  Unknown storage is
+distinct from valid zero-based `ValueId 0`; implicit integer-coded local
+writes are definitions; two-register derivations name their actual source;
+and fused mapping/value instructions fail component proofs closed until
+intra-instruction ordering becomes canonical metadata.
+
+Strict GNU90 checks pass, the focused matrix passes 113/113 and all Gate 0
+RXBIN hashes are exact.  Ordinary median Release assembly is 61.113 ms
+Richards (+5.895%, +3.402 ms), 19.939 ms Towers (+0.093%) and 54.526 ms
+RexxCPS (+0.009%).  The Richards increase is disclosed rather than hidden;
+all three remain far inside the agreed proof-analysis budget.  RSS increases
+are 557,056 B, 385,024 B and 172,032 B, below the combined greater-than-5%-and-
+1-MiB escalation rule.  Evidence:
+[`2026-08-02-perf3-11-stage5-sparse-ssa`](evidence/2026-08-02-perf3-11-stage5-sparse-ssa/).
 
 ### Stage 6 — proof service and dual-analysis parity
 

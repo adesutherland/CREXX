@@ -235,7 +235,9 @@ typedef enum {
 typedef enum {
     RXOP_DERIVATION_NONE = 0,
     RXOP_DERIVATION_INTEGER_TO_FLOAT,
-    RXOP_DERIVATION_INTEGER_TO_STRING
+    RXOP_DERIVATION_INTEGER_TO_STRING,
+    RXOP_DERIVATION_FLOAT_TO_STRING,
+    RXOP_DERIVATION_DECIMAL_TO_STRING
 } RxOpValueDerivation;
 
 typedef enum {
@@ -426,6 +428,7 @@ int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
 unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
 RxOpValueDerivation rxop_value_derivation(int opcode);
+size_t rxop_derivation_source_operand(int opcode);
 unsigned int rxop_derivation_context_reads(int opcode);
 unsigned int rxop_context_writes(int opcode);
 RxOpSignalContract rxop_signal_contract(int opcode);

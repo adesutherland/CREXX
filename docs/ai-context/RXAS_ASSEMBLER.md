@@ -628,6 +628,51 @@ allocation failure or malformed graph returns no usable result. Ordinary
 assembly does not request the cache; tests, `rxas -d` and future consumers do.
 Stage 4 is output-neutral and preserves exact canonical RXBIN images.
 
+Stage 5 adds `assembler/rxas_flow_ssa.c`, a third demand-driven epoch cache
+over the same immutable procedure.  It separates a register name from the
+storage currently named by that register.  Local, argument and global
+registers begin with distinct base `StorageId` definitions; `link`, `linkarg`,
+attribute/reference links, `swap`, their fused forms and `unlink` then create,
+move or restore symbolic storage identities.  In particular, `linkarg` names
+caller-owned argument storage rather than inventing callee-local value state.
+Unknown aliases and unsupported indirect mutation remain explicit unknowns.
+Calls preserve mappings that are structurally unchanged but advance the Stage
+4 reference/effect identities needed to prevent a false unchanged-value proof.
+For a fused opcode that both remaps registers and writes values, the mapping is
+retained but component values fail closed until canonical metadata describes
+the order of its intra-instruction sub-events; the analysis does not guess
+whether the write named the pre- or post-remap storage.
+
+Each storage component is represented by a write-once `ValueId`.  Values
+distinguish procedure-entry, direct write, constant, copy, derived, known
+absent, phi and unknown definitions; a null/absent value is not the same as an
+unavailable proof.  Copy propagation therefore carries presence as well as
+the source identity, including a `dcopy` of a null decimal.  Join values and
+storage mappings are materialized lazily and cyclic phis canonicalize an
+unchanged loop identity without using source order.  An unknown storage input
+has a separate value identity and cannot collide with a valid zero-based
+`ValueId` or simplify a join into a false proof.
+
+Normal instruction states consume the canonical component read/write and
+derivation metadata.  Signal skip, retry, handler and unwind edges instead
+select the Stage 1 failure-visible writes and the Stage 4 edge state.  Derived
+`itos`, `ftos` and `dtos` string values name their integer, float or decimal
+source `ValueId` and the exact numeric/plugin/effect identities on which the
+operation depends.  Derivation metadata also names the source operand, so a
+two-register conversion such as `itof rTarget,rSource` does not accidentally
+use the destination's old value as its proof source.  This is
+storage/component infrastructure only: no Stage 5 consumer changes queued
+records or emitted RXBIN.
+
+Persistent states retain only mapping and component definitions.  Point
+queries walk and cache the required storage/value chain; they do not allocate
+a `nodes x registers x components` table.  `rxas -d` deliberately materializes
+only actual derivation sites and prints deterministic `PERF3 flow-ssa*`
+counters, so diagnostics exercise the first proof candidates without forcing
+every possible point/component query.  Work-budget exhaustion, allocation
+failure, a stale epoch or invalid control returns no usable analysis.  Ordinary
+consumer-free assembly does not request this cache.
+
 The NR-27 register universe distinguishes local (`r`), argument (`a`) and
 global (`g`) register classes and tracks integer, float, string, decimal,
 binary, attribute and reference views. Explicit and implicit accesses come

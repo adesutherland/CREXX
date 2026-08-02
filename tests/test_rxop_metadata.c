@@ -481,25 +481,44 @@ int main(void) {
               rxop_context_writes(OP_GETNUMCAS_REG) == RXOP_CONTEXT_NONE,
           "numeric-context component metadata regression", NULL);
     signal = rxop_signal_contract(OP_ITOF_REG_REG);
-    check(signal.state == RXOP_SIGNAL_STATE_NONE,
-          "two-register integer-to-float conversion must remain non-signalling",
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              rxop_value_derivation(OP_ITOF_REG_REG) ==
+                    RXOP_DERIVATION_INTEGER_TO_FLOAT &&
+              rxop_derivation_source_operand(OP_ITOF_REG_REG) == 1 &&
+              rxop_derivation_source_operand(OP_ITOF_REG) == 0 &&
+              rxop_derivation_source_operand(OP_LOAD_REG_INT) == SIZE_MAX,
+          "two-register conversion source metadata regression",
           &op_table[OP_ITOF_REG_REG]);
     signal = rxop_signal_contract(OP_FEQ_REG_REG_FLOAT);
     check(signal.state == RXOP_SIGNAL_STATE_NONE,
           "float comparison must remain non-signalling",
           &op_table[OP_FEQ_REG_REG_FLOAT]);
     signal = rxop_signal_contract(OP_FTOS_REG);
-    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+    check(rxop_component_reads(OP_FTOS_REG, 0) == RXOP_COMPONENT_FLOAT &&
+              rxop_component_writes(OP_FTOS_REG, 0) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_value_derivation(OP_FTOS_REG) ==
+                  RXOP_DERIVATION_FLOAT_TO_STRING &&
+              rxop_derivation_context_reads(OP_FTOS_REG) ==
+                  RXOP_CONTEXT_NUMERIC &&
+              signal.state == RXOP_SIGNAL_STATE_NONE &&
               signal.dependencies == RXOP_SIGNAL_DEP_NUMERIC_CONTEXT &&
               (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
-          "float-to-string signal metadata regression",
+          "float-to-string component/signal metadata regression",
           &op_table[OP_FTOS_REG]);
     signal = rxop_signal_contract(OP_DTOS_REG);
-    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+    check(rxop_component_reads(OP_DTOS_REG, 0) == RXOP_COMPONENT_DECIMAL &&
+              rxop_component_writes(OP_DTOS_REG, 0) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_value_derivation(OP_DTOS_REG) ==
+                  RXOP_DERIVATION_DECIMAL_TO_STRING &&
+              rxop_derivation_context_reads(OP_DTOS_REG) ==
+                  RXOP_CONTEXT_NUMERIC &&
+              signal.state == RXOP_SIGNAL_STATE_NONE &&
               signal.dependencies ==
                   (RXOP_SIGNAL_DEP_NUMERIC_CONTEXT | RXOP_SIGNAL_DEP_PLUGIN) &&
               (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
-          "decimal-to-string total signal metadata regression",
+          "decimal-to-string component/signal metadata regression",
           &op_table[OP_DTOS_REG]);
     signal = rxop_signal_contract(OP_INC_REG);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&

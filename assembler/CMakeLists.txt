@@ -23,6 +23,7 @@ add_library(rxaslib STATIC rxastoke.c rxaseror.c ${CMAKE_CURRENT_BINARY_DIR}/rxa
         rxas_flow_graph.c rxas_flow_graph.h
         rxas_flow_graph_internal.h rxas_flow_analysis.c rxas_flow_analysis.h
         rxas_flow_signal.c rxas_flow_signal.h
+        rxas_flow_ssa.c rxas_flow_ssa.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.h rxas.h
         rxasassm.h rxasassm.c
         ../avl_tree/rxastree.h

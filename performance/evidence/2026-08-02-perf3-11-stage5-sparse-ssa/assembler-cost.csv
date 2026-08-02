@@ -1,0 +1,7 @@
+workload,variant,elapsed_median_s,elapsed_samples,rss_median_bytes,rss_samples
+Richards,frozen,0.057711482,30,8519680,10
+Richards,stage5,0.061113476,30,9076736,10
+Towers,frozen,0.019920468,30,4669440,10
+Towers,stage5,0.019938945,30,5054464,10
+RexxCPS,frozen,0.054520964,30,9740288,10
+RexxCPS,stage5,0.054525971,30,9912320,10

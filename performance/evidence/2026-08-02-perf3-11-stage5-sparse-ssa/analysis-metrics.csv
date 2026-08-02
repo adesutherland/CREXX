@@ -1,0 +1,4 @@
+workload,elapsed_s,max_rss_bytes,procedures,work,budget,retained_bytes,registers,states,joins,map_updates,map_clobbers,storages,sites,storage_phis,component_updates,values,value_phis,absent,constants,derived,unknown_values,edge_states
+Richards,0.21,10911744,24,32835,27373568,3394256,427,3142,1121,1412,1170,1451,649,375,6935,7464,159,0,1012,5,5128,4972
+Towers,0.07,6406144,13,11707,8814592,1349416,184,997,387,127,339,527,64,279,3045,3115,22,49,764,3,1650,1437
+RexxCPS,0.28,18710528,5,320100,19679232,13538512,219,2317,885,116,701,22872,17,22636,10424,17389,2379,28,810,29,6157,3405

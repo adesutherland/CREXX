@@ -230,7 +230,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 4 locked; Stage 5 next | Gates 1-4 are locked. The immutable per-procedure graph owns demand-driven structural and signal caches. Handler policy has inherited/write/phi/clobber/stack-unknown identities; normal/skip/retry/handler/unwind edges select explicit states. Calls preserve frame-local policy but advance caller-visible reference/effect identities because argument slots are by reference. Focused tests pass 113/113, Gate 0 RXBIN hashes are exact, and ordinary assembler elapsed/RSS guards pass. Stage 5 may now layer symbolic storage/component SSA through the Gate 4 edge-state APIs. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 4: [`2026-08-02-perf3-11-stage4-signal-policy`](evidence/2026-08-02-perf3-11-stage4-signal-policy/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 5 locked; Stage 6 next | Gates 1-5 are locked. Sparse write-once `StorageId`/`ValueId` state follows links, swaps, unlinks, caller-owned arguments, joins, loops and signal edges without a point-by-register matrix. Absent/null, constants, copies, derivations, phis and unknowns remain distinct; ITOS/FTOS/DTOS and two-register ITOF name actual sources and effect contexts. Canonical RexxCPS proof analysis completes in 0.28 s at 18.7 MB peak RSS, focused tests pass 113/113 and Gate 0 RXBIN hashes are exact. Stage 6 may now expose generic proofs and run old/new parity before replacing a solver. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 5: [`2026-08-02-perf3-11-stage5-sparse-ssa`](evidence/2026-08-02-perf3-11-stage5-sparse-ssa/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -749,8 +749,28 @@ argument slots point at caller-owned values. TRACE and numeric-context effects
 remain independently versioned. Silent `sigpush` allocation failure prevents
 an invented exact `sigpop` restoration. Strict GNU90 checks pass, focused
 correctness is 113/113, all Gate 0 images are exact and the ordinary assembler
-cost/RSS guard passes. Stage 5 symbolic storage/component SSA is next.
+cost/RSS guard passes. Stage 5 now consumes these edge-state APIs.
 Evidence: [`Stage 4 signal policy`](evidence/2026-08-02-perf3-11-stage4-signal-policy/).
+
+Stage 5 closes the symbolic storage/component gate.  The third demand-driven
+epoch cache uses sparse persistent mapping/value definitions and lazy phis;
+local, argument and global registers are names for `StorageId`s rather than
+the identity itself.  Link/swap/unlink and fused failure edges preserve exact
+mapping state, caller arguments remain caller-owned, and reference/effect
+versions prevent calls or indirect writes from becoming false unchanged-value
+proofs.  Null/absent is distinct from unknown, copies retain presence, and
+ITOS/FTOS/DTOS plus two-register ITOF name their actual source `ValueId` and
+effect dependencies.
+
+The initial recursive dynamic-storage query was rejected at 82.51 s and the
+first eager component materialization was rejected at about 305 MB peak RSS.
+The locked generation-marked, derivation-site-demanded form completes canonical
+RexxCPS diagnostics in 0.28 s at 18.7 MB peak RSS.  Adrian explicitly accepted
+a seconds-scale proof-analysis budget rather than requiring the roughly 50 ms
+ordinary baseline.  Focused correctness is 113/113, all Gate 0 images are
+exact, and ordinary RexxCPS assembly remains 54.526 ms (+0.009%).  Stage 6
+proof-service and old/new decision parity is next.  Evidence:
+[`Stage 5 sparse SSA`](evidence/2026-08-02-perf3-11-stage5-sparse-ssa/).
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed load,
