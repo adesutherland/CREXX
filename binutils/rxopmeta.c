@@ -44,6 +44,58 @@ static const RxOpEffectSpec rxop_effect_specs[] = {
 #undef RXEV
 #undef RXE
 
+#define RXSC_NONE \
+    RXOP_SIGNAL_STATE_NONE, RXOP_SIGNAL_PHASE_NONE, RXOP_SIGNAL_SOURCE_NONE, \
+    SIZE_MAX, NULL, RXOP_OP_NONE, NULL, RXOP_COMPONENT_NONE, \
+    RXOP_CONTEXT_NONE, RXOP_SIGNAL_DEP_NONE, RXOP_SIGNAL_CONT_NORMAL, \
+    RXOP_SIGNAL_PROP_NONE
+#define RXSC_NONE_STABLE(DEPENDENCIES) \
+    RXOP_SIGNAL_STATE_NONE, RXOP_SIGNAL_PHASE_NONE, RXOP_SIGNAL_SOURCE_NONE, \
+    SIZE_MAX, NULL, RXOP_OP_NONE, NULL, RXOP_COMPONENT_NONE, \
+    RXOP_CONTEXT_NONE, DEPENDENCIES, RXOP_SIGNAL_CONT_NORMAL, \
+    RXOP_SIGNAL_PROP_SUCCESS_STABLE
+#define RXSC_NONE_POLICY \
+    RXOP_SIGNAL_STATE_NONE, RXOP_SIGNAL_PHASE_NONE, RXOP_SIGNAL_SOURCE_NONE, \
+    SIZE_MAX, NULL, RXOP_OP_NONE, NULL, RXOP_COMPONENT_NONE, \
+    RXOP_CONTEXT_NONE, RXOP_SIGNAL_DEP_HANDLER_POLICY, \
+    RXOP_SIGNAL_CONT_NORMAL, RXOP_SIGNAL_PROP_POLICY_WRITE
+#define RXSC_UNKNOWN \
+    RXOP_SIGNAL_STATE_UNKNOWN, RXOP_SIGNAL_PHASE_UNKNOWN, \
+    RXOP_SIGNAL_SOURCE_UNKNOWN, SIZE_MAX, NULL, RXOP_OP_ALL, NULL, \
+    RXOP_COMPONENT_ALL, RXOP_CONTEXT_NUMERIC, RXOP_SIGNAL_DEP_UNKNOWN, \
+    RXOP_SIGNAL_CONT_ALL, \
+    RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE | RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE
+#define RXSC_STATIC(PHASE, NAMES, FAILURE_WRITES, FAILURE_COMPONENTS, \
+                    FAILURE_CONTEXT, DEPENDENCIES, PROPERTIES) \
+    RXOP_SIGNAL_STATE_KNOWN, PHASE, RXOP_SIGNAL_SOURCE_STATIC_NAMES, SIZE_MAX, \
+    NAMES, FAILURE_WRITES, NULL, FAILURE_COMPONENTS, FAILURE_CONTEXT, \
+    DEPENDENCIES, RXOP_SIGNAL_CONT_ALL, \
+    RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE | \
+        RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE | PROPERTIES
+#define RXSC_DYNAMIC(PHASE, SOURCE, SOURCE_OPERAND, DEPENDENCIES, PROPERTIES) \
+    RXOP_SIGNAL_STATE_KNOWN, PHASE, SOURCE, SOURCE_OPERAND, NULL, \
+    RXOP_OP_NONE, NULL, RXOP_COMPONENT_NONE, RXOP_CONTEXT_NONE, DEPENDENCIES, \
+    RXOP_SIGNAL_CONT_ALL, RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE | \
+        RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE | PROPERTIES
+#define RXSC_PLUGIN(PHASE, FAILURE_WRITES, FAILURE_COMPONENTS, DEPENDENCIES, \
+                    PROPERTIES) \
+    RXOP_SIGNAL_STATE_KNOWN, PHASE, RXOP_SIGNAL_SOURCE_PLUGIN, SIZE_MAX, NULL, \
+    FAILURE_WRITES, NULL, FAILURE_COMPONENTS, RXOP_CONTEXT_NONE, DEPENDENCIES, \
+    RXOP_SIGNAL_CONT_ALL, RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE | \
+        RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE | PROPERTIES
+#define RXOP_SIGNAL(NAME, CONTRACT) { OP_##NAME, CONTRACT },
+static const RxOpSignalContract rxop_signal_contracts[] = {
+#include "rxopsignals.h"
+};
+#undef RXOP_SIGNAL
+#undef RXSC_PLUGIN
+#undef RXSC_DYNAMIC
+#undef RXSC_STATIC
+#undef RXSC_UNKNOWN
+#undef RXSC_NONE_POLICY
+#undef RXSC_NONE_STABLE
+#undef RXSC_NONE
+
 RxOpEffects rxop_effects(int opcode) {
     RxOpEffects effects;
     const RxOpEffectSpec *spec;
@@ -59,7 +111,7 @@ RxOpEffects rxop_effects(int opcode) {
     effects.kills_signature = NULL;
     effects.branch_targets_signature = NULL;
     effects.implicit = RXOP_IMPLICIT_NONE;
-    effects.semantics = RXOP_SEM_MAY_THROW | RXOP_SEM_OPAQUE;
+    effects.semantics = RXOP_SEM_OPAQUE;
     effects.cursor_reads = RXOP_OP_ALL;
     effects.cursor_writes = RXOP_OP_ALL;
     effects.const_evaluator = RXOP_CONST_EVAL_NONE;
@@ -235,11 +287,46 @@ unsigned int rxop_context_writes(int opcode) {
     return RXOP_CONTEXT_NONE;
 }
 
+RxOpSignalContract rxop_signal_contract(int opcode) {
+    RxOpSignalContract contract;
+
+    contract.opcode = opcode;
+    contract.state = RXOP_SIGNAL_STATE_UNKNOWN;
+    contract.phase = RXOP_SIGNAL_PHASE_UNKNOWN;
+    contract.source = RXOP_SIGNAL_SOURCE_UNKNOWN;
+    contract.source_operand = SIZE_MAX;
+    contract.static_names = NULL;
+    contract.failure_writes = RXOP_OP_ALL;
+    contract.failure_writes_signature = NULL;
+    contract.failure_component_writes = RXOP_COMPONENT_ALL;
+    contract.failure_context_writes = RXOP_CONTEXT_NUMERIC;
+    contract.dependencies = RXOP_SIGNAL_DEP_UNKNOWN;
+    contract.continuations = RXOP_SIGNAL_CONT_ALL;
+    contract.properties = RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE |
+                          RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE;
+
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return contract;
+    if ((size_t)opcode >= rxop_signal_contract_count()) return contract;
+    if (rxop_signal_contracts[opcode].opcode != opcode) return contract;
+    return rxop_signal_contracts[opcode];
+}
+
+size_t rxop_signal_contract_count(void) {
+    return sizeof(rxop_signal_contracts) / sizeof(rxop_signal_contracts[0]);
+}
+
+int rxop_can_signal(int opcode) {
+    return rxop_signal_contract(opcode).state != RXOP_SIGNAL_STATE_NONE;
+}
+
+int rxop_signal_failure_writes_operand(const RxOpSignalContract *contract,
+                                       size_t operand_index) {
+    if (!contract) return 1;
+    return rxop_effect_has_operand(contract->failure_writes,
+                                   contract->failure_writes_signature,
+                                   operand_index);
+}
+
 RxOpSignalPhase rxop_signal_phase(int opcode) {
-    RxOpEffects effects;
-    effects = rxop_effects(opcode);
-    if (effects.state == RXOP_EFFECT_CLASSIFIED &&
-        (effects.semantics & RXOP_SEM_MAY_THROW) == 0)
-        return RXOP_SIGNAL_PHASE_NONE;
-    return RXOP_SIGNAL_PHASE_UNKNOWN;
+    return rxop_signal_contract(opcode).phase;
 }

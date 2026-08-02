@@ -466,14 +466,19 @@ effects are not represented as normal operands. For example, `inc0`, `dec0`,
 as using the corresponding fixed local register when checking whether an
 intervening instruction is relevant to a rule.
 
-The opcode-effects inventory is split deliberately without duplicating facts.
+The opcode metadata inventory is split deliberately without duplicating facts.
 `rxops.h` remains authoritative for the dense opcode list, operand format,
 control flow, opcode flags and source-mnemonic status.
 `binutils/include/rxopeffects.h` is the one-to-one semantic sidecar: it has one
 ordered entry for every opcode slot, including reserved and internal slots.
+`binutils/include/rxopsignals.h` is a second one-to-one sidecar for signal
+capability, failure phase, signal-name source, failure-visible writes,
+dependencies, continuations and observability properties. The former coarse
+`RXOP_SEM_MAY_THROW` flag has been retired; generic effects no longer duplicate
+or approximate signal behavior.
 `binutils/rxopmeta.c` combines both sources through the stable
-`rxop_effects()` C API; `rxop_effect_count()` exposes the mechanically checked
-inventory size.
+`rxop_effects()` and `rxop_signal_contract()` C APIs; their count functions
+expose the mechanically checked inventory sizes.
 
 `RxOpEffects` uses the following guarantees:
 
@@ -495,17 +500,17 @@ inventory size.
 - `branch_targets` identifies explicit label operands through the same generic
   query representation. Packed jump-table
   instructions instead carry `RXOP_SEM_INDIRECT_BRANCH`.
-- `semantics` covers possible signal/error transfer, direct and dynamic call
-  boundaries, returns, alias creation/release, reference creation/read/write/
-  release, storage-lifetime end, indirect writes, indirect branches and opaque
-  side effects.
+- `semantics` covers direct and dynamic call boundaries, returns, alias
+  creation/release, reference creation/read/write/release, storage-lifetime
+  end, indirect writes, indirect branches and opaque side effects. Signal
+  behavior comes only from `RxOpSignalContract`.
 - `flow` and `optimizer_barrier` are returned in the same object but are
   derived from the canonical `rxops.h` flow/flags. A non-classified state also
   forces the returned barrier bit.
 
-The current inventory has 641 entries: 582 source opcodes (576 classified and
-six explicitly conservative process/redirect operations), 56 reserved slots
-and three internal handlers. Coverage is not inferred from an instruction name
+The current inventories each have 650 entries: 591 source opcodes (585
+classified and six explicitly conservative process/redirect operations), 56
+reserved slots and three internal handlers. Coverage is not inferred from an instruction name
 or format. The audit used the VM handlers between `START_OF_INSTRUCTIONS` and
 `END_OF_INSTRUCTIONS`, the assembler/compiler behavior described here, and
 focused semantic tests. The tests mechanically validate table alignment,
@@ -544,9 +549,10 @@ NR-27-local mnemonic switch. `rxop_component_reads()` and
 attribute and reference components for each explicit operand.
 `rxop_value_derivation()` identifies proved representation relationships;
 `rxop_derivation_context_reads()` and `rxop_context_writes()` make numeric
-context part of those facts. `rxop_signal_phase()` distinguishes no-signal,
-pre-write, post-write, partial-write and unknown phases. Unproved opcodes and
-signal locations remain conservative. A register-backed TRACE event observes
+context part of those facts. `rxop_signal_contract()` distinguishes proven
+non-signal, known signal and fail-closed unknown behavior and records
+pre-write, post-write, partial-write or unknown failure phases. Unproved
+opcodes and signal locations remain conservative. A register-backed TRACE event observes
 only the component named by its value type; the event remains present and does
 not automatically observe every representation inside the value.
 
@@ -569,7 +575,8 @@ fact engine:
 - `icopy`, `fcopy` and strict-comparison uses of `scopy` may be redirected only
   when the typed source view is unchanged on every path and every may-reaching
   destination observation can be redirected atomically; decimal copy remains
-  excluded because it can allocate and signal;
+  excluded from that established consumer pending decimal-lifetime proof,
+  although `dcopy` itself is now a proven total non-signalling operation;
 - an exact self `copy` is removed because the VM handler is explicitly a
   no-op, while nonidentity full-value copies remain excluded pending ownership,
   payload, attribute, flag and cleanup proof;
@@ -613,11 +620,11 @@ indirect tables retain the established NR-27 behavior without that bound.
 The older compare/branch rule still reads explicit read/kill and implicit
 register facts through `rxop_effects()` inside the bounded local queue. NR-27
 does not change that rule's selection boundary. `test_rxop_metadata` is
-generated from `op_table` and the complete effects sidecar so instructions
-cannot be added without a mechanically aligned entry. The NR-27 effects audit
-also records that decimal literal load and decimal copy may signal, while
-one- and two-register integer-to-float conversion and float comparison are
-non-signalling in the current VM handlers.
+generated from `op_table` and both complete sidecars so instructions cannot be
+added without mechanically aligned effect and signal entries. The signal
+sidecar records decimal literal load as plugin-signalling and decimal copy as
+total/non-signalling, while one- and two-register integer-to-float conversion
+and float comparison are also non-signalling in the current VM handlers.
 
 Attribute/register-view cleanup is also a keyhole concern. A full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately

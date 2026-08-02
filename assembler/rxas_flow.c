@@ -592,7 +592,7 @@ static int flow_build_edges(flow_graph *graph) {
                 if (node->op->flow != FLOW_NEXT) leaders[index + 1] = 1;
             }
         }
-        if ((node->effects.semantics & RXOP_SEM_MAY_THROW) != 0) {
+        if (rxop_can_signal(node->op->opcode)) {
             /* Action-aware handlers can be inherited from a caller, so every
              * potentially throwing instruction has logical skip and retry
              * continuations even when this procedure contains no SIGCALLA.
@@ -1422,7 +1422,7 @@ static void flow_storage_transfer_normal(const flow_graph *graph,
     }
 }
 
-/* Mapping state at the point where a potentially throwing instruction raised
+/* Mapping state at the point where a signalling instruction raised
  * a signal. This state feeds both SIGCALLA skip (the sequential successor) and
  * retry (the instruction itself). Simple attribute/reference links validate
  * before installing their destination, whereas fused forms may already have
@@ -1446,26 +1446,6 @@ static void flow_storage_transfer_signal(const flow_graph *graph,
     }
 
     switch (node->op->opcode) {
-        case OP_LINK_REG_REG:
-        case OP_LINKARG_REG_REG_INT:
-        case OP_METALINKPREG_REG_REG:
-        case OP_UNLINK_REG:
-        case OP_UNLINKN_REG_REG:
-        case OP_ISETUNLINK_REG_REG:
-        case OP_ILOADSETUNLINK_REG_INT:
-        case OP_IGETUNLINK_REG_REG:
-        case OP_ISETUNLINKN_REG_REG_REG:
-        case OP_ILOADSETUNLINKN_REG_INT_REG:
-        case OP_UNLINKBR_REG_ID:
-        case OP_ILOADSETUNLINKN_REG_REG_INT_REG:
-            /* These mapping instructions are conservatively tagged MAY_THROW
-             * in the shared effects inventory, but their VM bodies have no
-             * signal point. Preserve their completed mapping on the typed edge
-             * so the conservative edge inventory does not invent a failure
-             * state that the VM cannot produce. */
-            flow_storage_transfer_normal(graph, node_index, input, output, 0);
-            return;
-
         case OP_LINKATTR_REG_REG_REG:
         case OP_LINKATTR_REG_REG_INT:
         case OP_LINKATTR1_REG_REG_REG:
@@ -1685,7 +1665,8 @@ static int flow_storage_node_observes_permutation(const flow_graph *graph,
     item = &graph->items[node_index];
     if (item->instrType == OP_CODE) {
         if (!node->op || node->op->flow != FLOW_NEXT ||
-            node->effects.optimizer_barrier || node->effects.semantics != 0)
+            node->effects.optimizer_barrier || node->effects.semantics != 0 ||
+            rxop_can_signal(node->op->opcode))
             return 1;
     }
     for (register_index = 0; register_index < graph->register_count;
@@ -2585,6 +2566,7 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
             producer_node->effects.optimizer_barrier ||
             producer_node->effects.implicit != RXOP_IMPLICIT_NONE ||
             producer_node->effects.semantics != RXOP_SEM_NONE ||
+            rxop_can_signal(producer_node->op->opcode) ||
             producer->operandCount == 0 || copy->operandCount != 2)
             continue;
 
@@ -2599,7 +2581,8 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
                 continue;
         }
         if (copy_node->effects.state != RXOP_EFFECT_CLASSIFIED ||
-            copy_node->effects.semantics != RXOP_SEM_NONE)
+            copy_node->effects.semantics != RXOP_SEM_NONE ||
+            rxop_can_signal(copy_node->op->opcode))
             continue;
 
         temporary = rxas_queue_operand(producer, 0);

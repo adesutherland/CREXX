@@ -230,7 +230,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Gate 1 decision | Stage 0 locks the 61/61 correctness and assembler oracle. Stage 1 proves coarse `MAY_THROW` is both over-inclusive and incomplete, supplies four-way executable phase/action evidence, and stops with a separate aligned signal-contract design plus recommended S1-S5 semantic choices. No VM semantic change has been made. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); Stage 1: [`2026-08-02-perf3-11-stage1-signal-contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — Stage 2 graph construction | Gate 1 is locked: Adrian selected S1-S5 and retirement of coarse `MAY_THROW`. The aligned 650-entry signal contract is now the sole signal authority; permanent dual-VM optimized/no-opt semantics, 68/68 focused tests, Release builds and exact Gate 0 RXBIN parity pass. Stage 2 may now build the immutable per-procedure graph without an optimizer consumer. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); analysis: [`2026-08-02-perf3-11-stage1-signal-contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/); lock: [`2026-08-02-perf3-11-stage1-contract-lock`](evidence/2026-08-02-perf3-11-stage1-contract-lock/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -704,18 +704,18 @@ locations for the decimal handlers. Only then should it compare remaining
 swap/swap cleanup as separate consumers. No public format, ABI or production
 rewrite is selected by this queue entry.
 
-Stage 1 now closes the signal-contract entry gate.  The 650-entry effects
-inventory contains 427 classified `MAY_THROW` opcodes, yet a VM-source audit
-finds 18 direct signal-raising instructions omitted from that set and many
-over-conservative inclusions.  Signal CFG edges will therefore use a separate
-opcode-aligned contract with deliberate unknowns.  The four optimized/no-opt,
-dual-VM current-phase executions pass, including before-, after- and partial-
-write state plus skip/retry; the explicit fail action returns the expected
-signal code 30 in all four executions.  Gate 1 now asks Adrian to select S1-S5:
-metadata correction, total `DCOPY`, non-signalling/plugin-consistent `DTOS`,
-portable pre-write checked `INC`/`DEC`, and pre-write invalid literal
-`SETNUMFUZ`.  No VM semantic change precedes that decision.  Evidence:
-[`Stage 1 signal contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/).
+Stage 1 closes the signal-contract entry gate. Adrian selected S1-S5 and
+retirement of `RXOP_SEM_MAY_THROW` on 2026-08-02. Generic effect flags now
+describe only call/alias/reference/indirect/opaque behavior and retain their
+existing numeric values; the separate aligned signal inventory is authoritative
+for capability, phase, source, dependencies and continuations. The selected
+total `DCOPY`, non-signalling/plugin-consistent `DTOS`, portable pre-write
+checked `INC`/`DEC`, and pre-write invalid literal `SETNUMFUZ` contracts pass a
+permanent four-way runtime matrix. Focused correctness is 68/68, both ordinary
+Release VMs build, the live decision ledger consumes 650 effect plus 650 signal
+rows, and all three Gate 0 benchmark RXBIN hashes are unchanged. Evidence:
+[`Stage 1 analysis`](evidence/2026-08-02-perf3-11-stage1-signal-contract/) and
+[`Stage 1 lock`](evidence/2026-08-02-perf3-11-stage1-contract-lock/).
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed load,

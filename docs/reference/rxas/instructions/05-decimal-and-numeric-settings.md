@@ -133,13 +133,15 @@ Copy only a decimal payload between registers.
 ### Operands And Semantics
 
 The destination decimal buffer is allocated or enlarged as necessary and
-receives the exact encoded decimal. Other payloads, cursors, attributes, type
-metadata, and flags remain intact. Self-copy is a no-op; the source is unchanged.
+receives the exact encoded decimal. An absent or logically empty source clears
+the destination's logical decimal length while retaining reusable backing
+storage. Other payloads, cursors, attributes, type metadata, and flags remain
+intact. Self-copy is a no-op; the source is unchanged.
 
 ### Signals
 
-Raises `INVALID_ARGUMENTS` when the source has no decimal payload. Allocation
-failure is not translated into a VM signal.
+This instruction does not signal. Allocation failure remains fatal rather than
+being translated into a VM signal.
 
 ### Example
 
@@ -212,7 +214,8 @@ not decimal arithmetic. Only the integer payload changes.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger` without wrapping.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger` without wrapping or changing
+the prior integer payload.
 
 ### Example
 
@@ -247,7 +250,8 @@ that register. This is not a decimal operation.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`; the prior `r0.int` is
+preserved on that path.
 
 ### Example
 
@@ -282,7 +286,8 @@ that register. This is not a decimal operation.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`; the prior `r1.int` is
+preserved on that path.
 
 ### Example
 
@@ -317,7 +322,8 @@ that register. This is not a decimal operation.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`; the prior `r2.int` is
+preserved on that path.
 
 ### Example
 
@@ -1128,13 +1134,14 @@ Format a decimal payload as a string in place.
 
 The current digits, form, case, fuzz, and standard settings govern formatting.
 The string buffer is replaced with the NUL-terminated result; the decimal
-payload remains unchanged. The implementation does not explicitly reset the
-existing string cursor after changing the length.
+payload remains unchanged. Decimal absence formats as `nan`. The completed
+ASCII write resets string byte/codepoint cursors and validity metadata.
 
 ### Signals
 
-Propagates decimal-plugin formatting conditions; buffer allocation failure is
-not separately translated.
+This instruction does not signal. Decimal-plugin formatting diagnostics are
+cleared at this total conversion boundary; buffer allocation failure remains
+fatal rather than being translated into a VM signal.
 
 ### Example
 
@@ -1581,15 +1588,13 @@ Set numeric fuzz and synchronize the decimal plugin.
 ### Operands And Semantics
 
 Nonnegative values are the supported domain. Success updates the current frame
-and synchronizes the plugin; a register operand is unchanged. The literal form
-currently assigns and synchronizes even after detecting a negative value,
-before the queued signal is dispatched; the register form does not mutate on
-that error.
+and synchronizes the plugin; a register operand is unchanged. Both forms
+validate before changing or synchronizing the current numeric context.
 
 ### Signals
 
-Raises `INVALID_ARGUMENTS` for a negative value, with the mutation distinction
-above.
+Raises `INVALID_ARGUMENTS` for a negative value. The prior fuzz setting is
+preserved on that path.
 
 ### Example
 

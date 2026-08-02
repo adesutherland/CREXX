@@ -160,7 +160,7 @@ static void apply_assembler_operand_effects(ASTNode *node,
     effects = rxop_effects(instruction->opcode);
     if (effects.state != RXOP_EFFECT_CLASSIFIED ||
         effects.implicit != RXOP_IMPLICIT_NONE ||
-        (effects.semantics & ~RXOP_SEM_MAY_THROW) != 0) {
+        effects.semantics != RXOP_SEM_NONE) {
         return;
     }
 

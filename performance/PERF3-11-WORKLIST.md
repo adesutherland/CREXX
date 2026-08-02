@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Gate 1 signal-contract decision awaiting approval**
+Status: **in progress — Stage 2 immutable graph construction**
 
 Architecture approved: 2026-08-02
 
@@ -30,6 +30,12 @@ changing skip/retry behaviour is a separate semantic decision.  PERF3-11 may
 measure and propose such a change, but must stop with an instruction-by-
 instruction contract and compatibility impact for Adrian's approval before
 editing the VM or declaring the new contract in RXAS metadata.
+
+Gate 1 passed on 2026-08-02. Adrian selected S1-S5 and additionally required
+the coarse `RXOP_SEM_MAY_THROW` flag to be corrected or retired coherently with
+the new metadata. The implementation retires it: generic effects retain their
+existing non-signal bit values, while the separate 650-entry signal sidecar is
+the sole signal-capability and failure-phase authority.
 
 The first optimizer consumer that changes ordinary emitted code triggers the
 mandatory first profiling-off Release runtime verdict in
@@ -246,6 +252,13 @@ both over-inclusive and incomplete, so the proposed graph uses a separate
 opcode-aligned signal contract.  Gate 1 offers five independently recoverable
 choices, with S1-S5 recommended.  Evidence and the instruction-by-instruction
 table: [`2026-08-02-perf3-11-stage1-signal-contract`](evidence/2026-08-02-perf3-11-stage1-signal-contract/).
+
+Gate 1 implementation locked on 2026-08-02. The selected S1-S5 contracts,
+permanent dual-VM optimized/no-opt fixture, plugin unit tests, aligned metadata
+validation, live ledger migration and documentation are complete. Focused
+correctness passes 68/68; ordinary profiling-off Release builds pass; Richards,
+Towers and RexxCPS RXBIN hashes remain byte-identical to Gate 0. Evidence:
+[`2026-08-02-perf3-11-stage1-contract-lock`](evidence/2026-08-02-perf3-11-stage1-contract-lock/).
 
 ### Stage 2 — immutable per-procedure `FlowProcedure`
 

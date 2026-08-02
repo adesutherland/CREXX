@@ -61,6 +61,7 @@ static int valid_effect_signature(const char *signature, size_t operand_count) {
 
 static void check_unknown_effects(int opcode) {
     RxOpEffects effects;
+    RxOpSignalContract signal;
 
     effects = rxop_effects(opcode);
     check(effects.opcode == opcode, "unknown effect preserves queried opcode", NULL);
@@ -77,9 +78,15 @@ static void check_unknown_effects(int opcode) {
           "unknown effect must expose worst-case branch operands", NULL);
     check(effects.flow == FLOW_TERM && effects.optimizer_barrier,
           "unknown effect must stop flow and optimization", NULL);
-    check((effects.semantics & (RXOP_SEM_MAY_THROW | RXOP_SEM_OPAQUE)) ==
-              (RXOP_SEM_MAY_THROW | RXOP_SEM_OPAQUE),
-          "unknown effect must expose exceptional opaque behavior", NULL);
+    check(effects.semantics == RXOP_SEM_OPAQUE,
+          "unknown effect must expose opaque behavior", NULL);
+    signal = rxop_signal_contract(opcode);
+    check(signal.opcode == opcode &&
+              signal.state == RXOP_SIGNAL_STATE_UNKNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_UNKNOWN &&
+              signal.source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
+              signal.continuations == RXOP_SIGNAL_CONT_ALL,
+          "unknown signal contract must fail closed", NULL);
 }
 
 int main(void) {
@@ -93,6 +100,7 @@ int main(void) {
     unsigned int legal_labels;
     unsigned int legal_semantics;
     RxOpEffects effects;
+    RxOpSignalContract signal;
     const OpInfo *op;
 
     failures = 0;
@@ -101,24 +109,31 @@ int main(void) {
     conservative_count = 0;
     reserved_count = 0;
     internal_count = 0;
-    legal_semantics = RXOP_SEM_MAY_THROW | RXOP_SEM_CALL |
-        RXOP_SEM_DYNAMIC_CALL | RXOP_SEM_RETURN | RXOP_SEM_ALIAS_CREATE |
+    legal_semantics = RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL |
+        RXOP_SEM_RETURN | RXOP_SEM_ALIAS_CREATE |
         RXOP_SEM_ALIAS_RELEASE | RXOP_SEM_REFERENCE_CREATE |
         RXOP_SEM_REFERENCE_READ | RXOP_SEM_REFERENCE_WRITE |
         RXOP_SEM_REFERENCE_RELEASE | RXOP_SEM_LIFETIME_END |
         RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_INDIRECT_BRANCH |
         RXOP_SEM_OPAQUE;
+    check((legal_semantics & 1u) == 0 && RXOP_SEM_CALL == 2 &&
+              RXOP_SEM_OPAQUE == 8192,
+          "retired MAY_THROW bit or surviving semantic flag values drifted",
+          NULL);
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         size_t operand_index;
         op = &op_table[i];
         effects = rxop_effects(op->opcode);
+        signal = rxop_signal_contract(op->opcode);
         legal_registers = format_register_mask(op->format);
         legal_labels = format_label_mask(op->format);
 
         check(op->opcode == i, "opcode table is not dense and index-aligned", op);
         check(effects.opcode == op->opcode,
               "effects table is not dense and index-aligned", op);
+        check(signal.opcode == op->opcode,
+              "signal table is not dense and index-aligned", op);
         check(effects.flow == op->flow,
               "effect flow disagrees with canonical opcode flow", op);
         check((effects.reads & ~legal_registers) == 0,
@@ -137,6 +152,17 @@ int main(void) {
               "branch-target mask names a non-label operand", op);
         check((effects.semantics & ~legal_semantics) == 0,
               "effect has unknown semantic flags", op);
+        if (signal.state != RXOP_SIGNAL_STATE_UNKNOWN) {
+            check((signal.failure_writes & ~legal_registers) == 0,
+                  "signal failure-write mask names a non-register operand", op);
+            check(valid_effect_signature(signal.failure_writes_signature,
+                                         rxop_format_operand_count(op->format)),
+                  "signal failure-write signature length or bit is invalid", op);
+            check(!signal.failure_writes_signature ||
+                      signal.failure_writes == RXOP_OP_NONE,
+                  "wide signal failure-write signature also carries a legacy mask",
+                  op);
+        }
         check(valid_effect_signature(effects.reads_signature,
                                      rxop_format_operand_count(op->format)) &&
               valid_effect_signature(effects.writes_signature,
@@ -162,6 +188,8 @@ int main(void) {
             int branch = rxop_effect_branch_target_operand(&effects, operand_index);
             int cursor_reads = rxop_effect_reads_cursor(&effects, operand_index);
             int cursor_writes = rxop_effect_writes_cursor(&effects, operand_index);
+            int failure_writes =
+                rxop_signal_failure_writes_operand(&signal, operand_index);
             check(!reads || type == OP_REG,
                   "read effect names a non-register operand", op);
             check(!writes || type == OP_REG,
@@ -176,6 +204,53 @@ int main(void) {
                   "cursor-read effect names a non-register operand", op);
             check(!cursor_writes || type == OP_REG,
                   "cursor-write effect names a non-register operand", op);
+            check(signal.state == RXOP_SIGNAL_STATE_UNKNOWN ||
+                      !failure_writes || type == OP_REG,
+                  "signal failure write names a non-register operand", op);
+        }
+        check(signal.state >= RXOP_SIGNAL_STATE_NONE &&
+                  signal.state <= RXOP_SIGNAL_STATE_UNKNOWN,
+              "invalid signal contract state", op);
+        if (signal.state == RXOP_SIGNAL_STATE_NONE) {
+            check(signal.phase == RXOP_SIGNAL_PHASE_NONE &&
+                      signal.source == RXOP_SIGNAL_SOURCE_NONE &&
+                      signal.failure_writes == RXOP_OP_NONE &&
+                      signal.failure_writes_signature == NULL &&
+                      signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+                      signal.failure_context_writes == RXOP_CONTEXT_NONE &&
+                      signal.continuations == RXOP_SIGNAL_CONT_NORMAL,
+                  "non-signalling contract carries signal state", op);
+        } else if (signal.state == RXOP_SIGNAL_STATE_KNOWN) {
+            check(signal.phase != RXOP_SIGNAL_PHASE_NONE &&
+                      signal.phase != RXOP_SIGNAL_PHASE_UNKNOWN,
+                  "known signal contract lacks an exact phase", op);
+            check(signal.source != RXOP_SIGNAL_SOURCE_NONE &&
+                      signal.source != RXOP_SIGNAL_SOURCE_UNKNOWN,
+                  "known signal contract lacks a signal source", op);
+        } else {
+            check(signal.phase == RXOP_SIGNAL_PHASE_UNKNOWN &&
+                      signal.source == RXOP_SIGNAL_SOURCE_UNKNOWN,
+                  "unknown signal contract is not explicitly fail closed", op);
+        }
+        if (signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES)
+            check(signal.static_names && signal.static_names[0],
+                  "static signal contract lacks names", op);
+        else
+            check(signal.static_names == NULL,
+                  "non-static signal contract carries static names", op);
+        if (signal.source == RXOP_SIGNAL_SOURCE_LITERAL_OPERAND ||
+            signal.source == RXOP_SIGNAL_SOURCE_REGISTER_OPERAND) {
+            check(signal.source_operand < rxop_format_operand_count(op->format),
+                  "dynamic signal source operand is out of range", op);
+            if (signal.source_operand < rxop_format_operand_count(op->format))
+                check(rxop_format_operand_type(op->format,
+                                               signal.source_operand) ==
+                          (signal.source == RXOP_SIGNAL_SOURCE_LITERAL_OPERAND
+                               ? OP_STRING : OP_REG),
+                      "dynamic signal source operand has the wrong type", op);
+        } else {
+            check(signal.source_operand == SIZE_MAX,
+                  "non-operand signal source carries an operand index", op);
         }
         check(effects.const_evaluator >= RXOP_CONST_EVAL_NONE &&
                   effects.const_evaluator <= RXOP_CONST_EVAL_STRUPPER,
@@ -254,6 +329,8 @@ int main(void) {
           "opcode table size does not match opcode enum", NULL);
     check(rxop_effect_count() == (size_t)OP_MAX_INSTRUCTIONS,
           "effects inventory size does not match opcode enum", NULL);
+    check(rxop_signal_contract_count() == (size_t)OP_MAX_INSTRUCTIONS,
+          "signal inventory size does not match opcode enum", NULL);
     check(source_count == classified_count + conservative_count,
           "source effects coverage count does not close", NULL);
     check(i == classified_count + conservative_count + reserved_count + internal_count,
@@ -305,40 +382,77 @@ int main(void) {
     effects = rxop_effects(OP_NULL_REG);
     check(effects.reads == RXOP_OP_NONE && effects.kills == RXOP_OP_1,
           "NULL kill effects regression", &op_table[OP_NULL_REG]);
-    effects = rxop_effects(OP_LOAD_REG_DECIMAL);
-    check((effects.semantics & RXOP_SEM_MAY_THROW) != 0,
-          "decimal literal load must expose plugin failure",
+    signal = rxop_signal_contract(OP_LOAD_REG_DECIMAL);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.source == RXOP_SIGNAL_SOURCE_PLUGIN &&
+              signal.phase == RXOP_SIGNAL_PHASE_PARTIAL_WRITES,
+          "decimal literal load must expose plugin-partial failure",
           &op_table[OP_LOAD_REG_DECIMAL]);
-    effects = rxop_effects(OP_DCOPY_REG_REG);
-    check((effects.semantics & RXOP_SEM_MAY_THROW) != 0,
-          "decimal copy must expose missing-source failure",
+    signal = rxop_signal_contract(OP_DCOPY_REG_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE,
+          "decimal copy must remain total over absent payloads",
           &op_table[OP_DCOPY_REG_REG]);
-    effects = rxop_effects(OP_ITOF_REG);
-    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
-          "integer-to-float conversion must remain non-throwing",
+    signal = rxop_signal_contract(OP_ITOF_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "integer-to-float conversion must remain stable and non-signalling",
           &op_table[OP_ITOF_REG]);
     effects = rxop_effects(OP_ITOS_REG);
-    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0 &&
-              rxop_component_reads(OP_ITOS_REG, 0) == RXOP_COMPONENT_INTEGER &&
+    signal = rxop_signal_contract(OP_ITOS_REG);
+    check(rxop_component_reads(OP_ITOS_REG, 0) == RXOP_COMPONENT_INTEGER &&
               rxop_component_writes(OP_ITOS_REG, 0) == RXOP_COMPONENT_STRING &&
               rxop_value_derivation(OP_ITOS_REG) ==
                   RXOP_DERIVATION_INTEGER_TO_STRING &&
               rxop_derivation_context_reads(OP_ITOS_REG) ==
                   RXOP_CONTEXT_NUMERIC &&
-              rxop_signal_phase(OP_ITOS_REG) == RXOP_SIGNAL_PHASE_NONE,
+              signal.state == RXOP_SIGNAL_STATE_NONE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_NUMERIC_CONTEXT &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
           "integer-to-string component/signal metadata regression",
           &op_table[OP_ITOS_REG]);
     check(rxop_context_writes(OP_SETNUMCAS_INT) == RXOP_CONTEXT_NUMERIC &&
               rxop_context_writes(OP_GETNUMCAS_REG) == RXOP_CONTEXT_NONE,
           "numeric-context component metadata regression", NULL);
-    effects = rxop_effects(OP_ITOF_REG_REG);
-    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
-          "two-register integer-to-float conversion must remain non-throwing",
+    signal = rxop_signal_contract(OP_ITOF_REG_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE,
+          "two-register integer-to-float conversion must remain non-signalling",
           &op_table[OP_ITOF_REG_REG]);
-    effects = rxop_effects(OP_FEQ_REG_REG_FLOAT);
-    check((effects.semantics & RXOP_SEM_MAY_THROW) == 0,
-          "float comparison must remain non-throwing",
+    signal = rxop_signal_contract(OP_FEQ_REG_REG_FLOAT);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE,
+          "float comparison must remain non-signalling",
           &op_table[OP_FEQ_REG_REG_FLOAT]);
+    signal = rxop_signal_contract(OP_FTOS_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_NUMERIC_CONTEXT &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "float-to-string signal metadata regression",
+          &op_table[OP_FTOS_REG]);
+    signal = rxop_signal_contract(OP_DTOS_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              signal.dependencies ==
+                  (RXOP_SIGNAL_DEP_NUMERIC_CONTEXT | RXOP_SIGNAL_DEP_PLUGIN) &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "decimal-to-string total signal metadata regression",
+          &op_table[OP_DTOS_REG]);
+    signal = rxop_signal_contract(OP_INC_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              strcmp(signal.static_names, "OVERFLOW_UNDERFLOW") == 0,
+          "checked increment signal metadata regression",
+          &op_table[OP_INC_REG]);
+    signal = rxop_signal_contract(OP_SETNUMFUZ_INT);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE,
+          "numeric fuzz signal phase regression",
+          &op_table[OP_SETNUMFUZ_INT]);
+    signal = rxop_signal_contract(OP_FREADCDPT_REG_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_PARTIAL_WRITES &&
+              signal.failure_writes == RXOP_OP_1 &&
+              signal.failure_component_writes == RXOP_COMPONENT_STRING,
+          "partial UTF-8 read signal metadata regression",
+          &op_table[OP_FREADCDPT_REG_REG]);
     effects = rxop_effects(OP_ENDLIFE_REG);
     check(effects.reads == RXOP_OP_1 && effects.writes == RXOP_OP_1 &&
               effects.kills == RXOP_OP_NONE &&
@@ -423,9 +537,11 @@ int main(void) {
           "deprecated TRIMR must read before mutating operand 1",
           &op_table[OP_TRIMR_REG_REG]);
     effects = rxop_effects(OP_SIGNAL_STRING);
-    check((effects.semantics & (RXOP_SEM_MAY_THROW | RXOP_SEM_OPAQUE)) ==
-              (RXOP_SEM_MAY_THROW | RXOP_SEM_OPAQUE) &&
-              effects.optimizer_barrier,
+    signal = rxop_signal_contract(OP_SIGNAL_STRING);
+    check(effects.semantics == RXOP_SEM_OPAQUE && effects.optimizer_barrier &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.source == RXOP_SIGNAL_SOURCE_LITERAL_OPERAND &&
+              signal.source_operand == 0,
           "signal/barrier effects regression", &op_table[OP_SIGNAL_STRING]);
     effects = rxop_effects(OP_JUMPS_REG_BINARY);
     check(effects.flow == FLOW_COND && effects.branch_targets == RXOP_OP_NONE &&

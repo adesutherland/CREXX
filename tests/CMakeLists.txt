@@ -196,6 +196,24 @@ foreach(_perf3_10_runner IN ITEMS rxvm rxbvm)
     endforeach()
 endforeach()
 
+add_custom_target(signal_contract_runtime ALL)
+foreach(_perf3_11_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME signal_contract_runtime_${_perf3_11_runner}
+            SOURCE ${RXAS_OPTIMIZER_DIR}/signal_contract_runtime
+            TARGET_GROUP signal_contract_runtime
+            RUNNER ${_perf3_11_runner}
+            DEPENDS ${RXAS_OPTIMIZER_DIR}/signal_contract_runtime.rxas rxas ${_perf3_11_runner} rxlink
+            TEST_LABELS "rxas;optimizer;runtime;signal"
+    )
+    foreach(_perf3_11_mode IN ITEMS noopt opt)
+        set_tests_properties(signal_contract_runtime_${_perf3_11_runner}_${_perf3_11_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: PERF3-11 signal contract runtime"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
 crexx_label_smoke_tests(rxas_optimizer_copy_acopy_opt)
 
 add_custom_target(linked_opt_sweep

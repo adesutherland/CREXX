@@ -6525,6 +6525,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMFUZ %d\n", (int)op1I);
     if (op1I < 0) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
+        DISPATCH;
     }
     current_frame->num_context.fuzz = op1I;
     // Sync the numeric context of the decimal plugin
@@ -7206,11 +7207,6 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     START_INSTRUCTION(DCOPY_REG_REG) // label not yet defined
     VM_ADVANCE(2);
     DEBUG("TRACE - DCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-    if (op2R->decimal_value == NULL) {
-        // Signal error
-        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "No Source Decimal Value")
-        DISPATCH;
-    }
     if (op1R == op2R) {
         // NOP
         DISPATCH;
@@ -7219,6 +7215,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
             RXVM_PROFILE_VALUE_DECIMAL_COPY,
             RXVM_PROFILE_VALUE_DECIMAL,
             op2R->decimal_value_length);
+    /* A zero logical length is decimal absence even when lazy backing storage
+     * remains allocated.  Typed copy propagates that absence without changing
+     * any unrelated component of the destination. */
+    if (op2R->decimal_value == NULL || op2R->decimal_value_length == 0) {
+        op1R->decimal_value_length = 0;
+        DISPATCH;
+    }
     if (op1R->decimal_value == NULL) {
         // Allocate storage for the decimal
         op1R->decimal_value = malloc(op2R->decimal_value_length);
@@ -8621,11 +8624,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(DEC0) VM_ADVANCE(0);
             /* TODO This is really idec0 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC0\n");
-            if (!rxinteger_checked_sub(current_locals[0]->int_value, 1,
-                                       &current_locals[0]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(current_locals[0]->int_value, 1,
+                                           &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[0]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
             /* ------------------------------------------------------------------------------------
          *  DEC1   R1--                                                       pej 7. April 2021
@@ -8634,11 +8641,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(DEC1) VM_ADVANCE(0);
             /* TODO This is really idec1 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC1\n");
-            if (!rxinteger_checked_sub(current_locals[1]->int_value, 1,
-                                       &current_locals[1]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(current_locals[1]->int_value, 1,
+                                           &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[1]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
             /* ------------------------------------------------------------------------------------
             *  DEC2   op2R--                                                       pej 7. April 2021
@@ -8647,20 +8658,28 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(DEC2) VM_ADVANCE(0);
             /* TODO This is really idec2 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC2\n");
-            if (!rxinteger_checked_sub(current_locals[2]->int_value, 1,
-                                       &current_locals[2]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(current_locals[2]->int_value, 1,
+                                           &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[2]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
         START_INSTRUCTION(DEC_REG) VM_ADVANCE(1);
             /* TODO This is really idec reg - i.e. it does not prime the int */
             DEBUG("TRACE - DEC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_sub(current_locals[REG_IDX(1)]->int_value, 1,
-                                       &current_locals[REG_IDX(1)]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(
+                        current_locals[REG_IDX(1)]->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[REG_IDX(1)]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
         START_INSTRUCTION(BR_ID)
             DEBUG("TRACE - BR 0x%x\n", (unsigned int)REG_IDX(1));
@@ -9123,10 +9142,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC0) VM_ADVANCE(0);
             DEBUG("TRACE - INC0\n");
-            if (!rxinteger_checked_add(REG_VAL(0)->int_value, 1, &REG_VAL(0)->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(REG_VAL(0)->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else REG_VAL(0)->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC1   R1++                                                       pej 7. April 2021
@@ -9134,10 +9157,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC1) VM_ADVANCE(0);
             DEBUG("TRACE - INC1\n");
-            if (!rxinteger_checked_add(REG_VAL(1)->int_value, 1, &REG_VAL(1)->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(REG_VAL(1)->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else REG_VAL(1)->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC2   op2R++                                                       pej 7. April 2021
@@ -9145,10 +9172,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC2) VM_ADVANCE(0);
             DEBUG("TRACE - INC2\n");
-            if (!rxinteger_checked_add(REG_VAL(2)->int_value, 1, &REG_VAL(2)->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(REG_VAL(2)->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else REG_VAL(2)->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
  *  -----------------------------------------------------------------------------------
@@ -9845,11 +9876,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_add(current_locals[REG_IDX(1)]->int_value, 1,
-                                       &current_locals[REG_IDX(1)]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(
+                        current_locals[REG_IDX(1)]->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[REG_IDX(1)]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021

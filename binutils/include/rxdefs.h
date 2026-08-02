@@ -201,7 +201,7 @@ typedef enum {
 
 typedef enum {
     RXOP_SEM_NONE = 0,
-    RXOP_SEM_MAY_THROW = 1,
+    /* Value 1 was the retired RXOP_SEM_MAY_THROW bit. */
     RXOP_SEM_CALL = 2,
     RXOP_SEM_DYNAMIC_CALL = 4,
     RXOP_SEM_RETURN = 8,
@@ -243,9 +243,8 @@ typedef enum {
     RXOP_CONTEXT_NUMERIC = 1
 } RxOpContextMask;
 
-/* Signal phase is explicit even though only NONE and UNKNOWN are currently
- * populated.  Consumers must fail closed until an opcode's exact pre-write,
- * post-write or partial-write signal point is proved. */
+/* Signal phase is an explicit contract. Consumers must fail closed on UNKNOWN;
+ * known opcodes distinguish pre-write, post-write and named partial state. */
 typedef enum {
     RXOP_SIGNAL_PHASE_NONE = 0,
     RXOP_SIGNAL_PHASE_BEFORE_WRITES,
@@ -253,6 +252,73 @@ typedef enum {
     RXOP_SIGNAL_PHASE_PARTIAL_WRITES,
     RXOP_SIGNAL_PHASE_UNKNOWN
 } RxOpSignalPhase;
+
+typedef enum {
+    RXOP_SIGNAL_STATE_NONE = 0,
+    RXOP_SIGNAL_STATE_KNOWN,
+    RXOP_SIGNAL_STATE_UNKNOWN
+} RxOpSignalState;
+
+/* Where the signal name is obtained.  STATIC_NAMES uses the contract's
+ * canonical '|' separated name set.  Literal and register operands are
+ * zero-based RXAS operand positions resolved for each instruction instance. */
+typedef enum {
+    RXOP_SIGNAL_SOURCE_NONE = 0,
+    RXOP_SIGNAL_SOURCE_STATIC_NAMES,
+    RXOP_SIGNAL_SOURCE_LITERAL_OPERAND,
+    RXOP_SIGNAL_SOURCE_REGISTER_OPERAND,
+    RXOP_SIGNAL_SOURCE_PLUGIN,
+    RXOP_SIGNAL_SOURCE_UNKNOWN
+} RxOpSignalSource;
+
+typedef enum {
+    RXOP_SIGNAL_CONT_NONE = 0,
+    RXOP_SIGNAL_CONT_NORMAL = 1,
+    RXOP_SIGNAL_CONT_SKIP = 2,
+    RXOP_SIGNAL_CONT_RETRY = 4,
+    RXOP_SIGNAL_CONT_HANDLER = 8,
+    RXOP_SIGNAL_CONT_UNWIND = 16,
+    RXOP_SIGNAL_CONT_TERMINAL = 32,
+    RXOP_SIGNAL_CONT_ALL = 63
+} RxOpSignalContinuations;
+
+typedef enum {
+    RXOP_SIGNAL_DEP_NONE = 0,
+    RXOP_SIGNAL_DEP_NUMERIC_CONTEXT = 1,
+    RXOP_SIGNAL_DEP_HANDLER_POLICY = 2,
+    RXOP_SIGNAL_DEP_PLUGIN = 4,
+    RXOP_SIGNAL_DEP_LOCALE = 8,
+    RXOP_SIGNAL_DEP_EXTERNAL_STATE = 16,
+    RXOP_SIGNAL_DEP_UNKNOWN = 32
+} RxOpSignalDependencies;
+
+typedef enum {
+    RXOP_SIGNAL_PROP_NONE = 0,
+    RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE = 1,
+    RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE = 2,
+    RXOP_SIGNAL_PROP_SUCCESS_STABLE = 4,
+    RXOP_SIGNAL_PROP_POLICY_WRITE = 8,
+    RXOP_SIGNAL_PROP_ASYNC_ENTRY = 16
+} RxOpSignalProperties;
+
+typedef struct {
+    int opcode;
+    RxOpSignalState state;
+    RxOpSignalPhase phase;
+    RxOpSignalSource source;
+    /* SIZE_MAX when the name does not come from an RXAS operand. */
+    size_t source_operand;
+    const char *static_names;
+    /* Register operands whose state may be visible on failure. */
+    unsigned int failure_writes;
+    const char *failure_writes_signature;
+    /* Aggregate component mask for the failure-visible register writes. */
+    unsigned int failure_component_writes;
+    unsigned int failure_context_writes;
+    unsigned int dependencies;
+    unsigned int continuations;
+    unsigned int properties;
+} RxOpSignalContract;
 
 /* Compile-time evaluators are semantic implementations shared by any callable
  * body that uses the instruction; they are not BIF identities.  NONE is the
@@ -337,6 +403,11 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index);
 RxOpValueDerivation rxop_value_derivation(int opcode);
 unsigned int rxop_derivation_context_reads(int opcode);
 unsigned int rxop_context_writes(int opcode);
+RxOpSignalContract rxop_signal_contract(int opcode);
+size_t rxop_signal_contract_count(void);
+int rxop_can_signal(int opcode);
+int rxop_signal_failure_writes_operand(const RxOpSignalContract *contract,
+                                       size_t operand_index);
 RxOpSignalPhase rxop_signal_phase(int opcode);
 
 void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);

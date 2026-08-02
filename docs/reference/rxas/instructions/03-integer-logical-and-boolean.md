@@ -689,7 +689,9 @@ attributes, type metadata, and flags remain intact.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger` without wrapping.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger` without wrapping or changing
+the prior integer payload. A skip or retry handler therefore observes the
+pre-increment value.
 
 ### Example
 
@@ -724,7 +726,8 @@ frame to provide register zero.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`; the prior `r0.int` is
+preserved on that path.
 
 ### Example
 
@@ -758,7 +761,8 @@ Only `r1`'s integer payload changes. The frame must provide register one.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`; the prior `r1.int` is
+preserved on that path.
 
 ### Example
 
@@ -792,7 +796,8 @@ Only `r2`'s integer payload changes. The frame must provide register two.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`; the prior `r2.int` is
+preserved on that path.
 
 ### Example
 

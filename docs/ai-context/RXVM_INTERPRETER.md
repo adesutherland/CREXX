@@ -435,6 +435,15 @@ survive. The PERF2-07 V3 regression covers `DCOPY; DTOS; STRLEN`, Unicode and
 typed-null destinations, a live reference alias and sibling numeric writers
 on both VMs and both optimization modes.
 
+`DCOPY` treats decimal absence as a total copy of decimal absence: it clears
+the destination's logical decimal length, preserves reusable backing storage
+and unrelated value components, and does not signal. `DTOS` is likewise total:
+decimal absence formats as `nan`, plugin diagnostics are cleared at the
+conversion boundary, and the completed ASCII write refreshes string cursors
+and validity metadata. Checked `INC`/`DEC` forms and both `SETNUMFUZ` forms
+validate into temporary state and signal before mutating the observed integer
+or numeric context.
+
 The `xtos` family of scalar-to-string conversions is allowed to mutate the
 destination value to materialize its string representation. This is acceptable
 for linked values, including object attributes, as representation
