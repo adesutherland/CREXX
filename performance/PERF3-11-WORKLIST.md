@@ -517,12 +517,12 @@ migration programme below.
 This is a migration programme, not a like-for-like parity exercise.  Before
 editing the next consumer:
 
-- [ ] inventory every remaining legacy proof, rewrite owner and tactical guard;
-- [ ] assign a stable migration ID and classify proof versus mechanical
+- [x] inventory every remaining legacy proof, rewrite owner and tactical guard;
+- [x] assign a stable migration ID and classify proof versus mechanical
       peephole, liveness consumer or pure emission transform;
-- [ ] retain its current accepted/rejected decisions on focused fixtures and
+- [x] retain its current accepted/rejected decisions on focused fixtures and
       representative Richards, Towers and RexxCPS RXAS;
-- [ ] record its semantic dependencies, known conservative gaps, image deltas,
+- [x] record its semantic dependencies, known conservative gaps, image deltas,
       assembler cost and correctness oracle;
 - [ ] map it to the required new graph/signal/storage/value/effect/liveness
       query, adding a generic query only when the current surface is
@@ -536,6 +536,16 @@ ordinary output also triggers the mandatory first Release verdict.  Rejected
 and superseded decisions remain replayable.  Any inability to recover an old
 safe case is recorded as a regression or an explicit correctness correction,
 not hidden by aggregate counts.
+
+The locked inventory and one-authority execution ledger are in
+[`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md), with its
+retained decision oracle in
+[`2026-08-02-perf3-11-legacy-proof-baseline`](evidence/2026-08-02-perf3-11-legacy-proof-baseline/).
+M01 begins from the one old `ITOF` acceptance but deliberately generalizes the
+consumer to metadata-admitted one-register `XTOY` derivations.  `ITOD` is the
+first new-domain example; each later conversion must independently supply
+exact source/result, context/plugin, failure-phase and success-stability
+metadata before the generic proof may remove it.
 
 ### Stage 11 — later consumers after legacy migration
 

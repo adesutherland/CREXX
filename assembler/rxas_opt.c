@@ -984,6 +984,82 @@ rule rules[] =
             {END_OF_RULE}
         };
 
+/* The rule array predates stable diagnostic identities.  Hash the complete
+ * input/output shape of one rule set so a retained baseline can identify the
+ * same tactical rule even after unrelated rules are migrated or reordered.
+ * This is diagnostic identity only; it never participates in matching. */
+static unsigned int rule_signature_uint(unsigned int hash,
+                                        unsigned int value) {
+    size_t byte_index;
+    for (byte_index = 0; byte_index < 4; byte_index++) {
+        hash ^= (value >> (byte_index * 8)) & 0xffu;
+        hash *= 16777619u;
+    }
+    return hash;
+}
+
+static unsigned int rule_signature_text(unsigned int hash,
+                                        const char *text) {
+    if (!text) return rule_signature_uint(hash, 0u);
+    while (*text) {
+        hash ^= (unsigned char)*text++;
+        hash *= 16777619u;
+    }
+    return rule_signature_uint(hash, 0xffu);
+}
+
+static unsigned int rule_signature_pattern(
+        unsigned int hash, const instruction_pattern *pattern) {
+    size_t operand_index;
+    size_t operand_count;
+    hash = rule_signature_uint(hash, (unsigned int)pattern->inst_type);
+    hash = rule_signature_text(hash, pattern->instruction);
+    operand_count = pattern_operand_count(pattern);
+    hash = rule_signature_uint(hash, (unsigned int)operand_count);
+    for (operand_index = 0; operand_index < operand_count; operand_index++) {
+        operand_pattern operand;
+        operand = pattern_operand(pattern, operand_index);
+        hash = rule_signature_uint(hash, (unsigned int)(unsigned char)operand.type);
+        hash = rule_signature_uint(hash, (unsigned int)operand.number);
+    }
+    return hash;
+}
+
+static unsigned int rule_signature(const rule *start) {
+    const rule *entry;
+    unsigned int hash;
+    hash = 2166136261u;
+    for (entry = start; ; entry++) {
+        hash = rule_signature_uint(hash, (unsigned int)entry->flag);
+        if (entry->flag == END_OF_RULE) break;
+        hash = rule_signature_pattern(hash, &entry->in);
+        hash = rule_signature_pattern(hash, &entry->out);
+        hash = rule_signature_pattern(hash, &entry->out2);
+    }
+    return hash;
+}
+
+static void debug_rule_accept(Assembler_Context *context, const op_map *map,
+                              const rule *start) {
+    size_t index;
+    int first;
+    if (!context || !context->debug_mode || !map || !start) return;
+    fprintf(stderr,
+            "PERF3 legacy-rule procedure=%s signature=%08x first=%s records=",
+            context->current_proc_name ? context->current_proc_name
+                                       : "(directives)",
+            rule_signature(start),
+            start->in.instruction ? start->in.instruction : "label");
+    first = 1;
+    for (index = 0; index < context->optimiser_queue_items; index++) {
+        if (!map->inst_mapped[index]) continue;
+        if (!first) fputc(',', stderr);
+        fprintf(stderr, "%llu", (unsigned long long)index);
+        first = 0;
+    }
+    fputc('\n', stderr);
+}
+
 /* Assembler_Token to reg type */
 static char reg_type(Assembler_Token *opToken) {
     switch(opToken->token_type) {
@@ -2087,6 +2163,9 @@ static Assembler_Token **mapped_pattern_tokens(Assembler_Context *context,
  * returns 1 if the rule was successfully applied */
 static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int inst_no) {
     int inst_no2;
+    rule *start_rule;
+
+    start_rule = r;
 
     /* Clear Map */
     op_map_reset(map);
@@ -2136,6 +2215,8 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
 
     if (r->flag == END_OF_RULE) {
         if (!compare_branch_result_is_dead(context, map)) return 0;
+
+        debug_rule_accept(context, map, start_rule);
 
         /* A match! We need to apply the output rule */
         /* Make sure inst_no is in range */

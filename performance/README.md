@@ -30,6 +30,7 @@ validation.
 | `performance/PERF3-02-R1-WORKLIST.md` | Completed infrastructure-enabled option replay and selected C1abc production closeout; rejected variants remain replayable from retained evidence |
 | `performance/PERF3-10-WORKLIST.md` | Accepted ordered TRACE batching and storage/component-proved redundant `ITOS` control, first verdict and proportional closeout |
 | `performance/PERF3-11-WORKLIST.md` | Active scalable RXAS graph/signal/component-SSA programme; Stage 6 proof service and first ITOS authority are accepted, with remaining legacy-proof migration next |
+| `performance/PERF3-11-MIGRATION-WORKLIST.md` | Locked remaining-proof inventory and resumable one-authority migration ledger; M01 expands the old ITOF floor into metadata-driven XTOY repetition beginning with ITOD |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |
@@ -68,6 +69,7 @@ validation.
 | `performance/evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/` | Accepted PERF3-10 exact C0/C1 timing, equal-work conversion counts, static proof, ordered TRACE correctness and 1,982-test broad closeout |
 | `performance/evidence/2026-08-02-perf3-11-stage0-oracle/` | Clean pre-refactor RXAS binary/input hashes, 61-test signal/storage oracle, idle assembler elapsed/RSS samples and deterministic procedure scale |
 | `performance/evidence/2026-08-02-perf3-11-stage6-proof-service/` | Accepted reusable proof service and sole ITOS authority: retained 21-to-19 instruction delta, +7.469%/+6.866% RexxCPS verdict, call-window correctness discovery and 1,987-test closeout |
+| `performance/evidence/2026-08-02-perf3-11-legacy-proof-baseline/` | Stable remaining legacy-proof inventory, exact focused acceptance floor, canonical keyhole identities, output-neutral diagnostic and 49/49 focused replay |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |

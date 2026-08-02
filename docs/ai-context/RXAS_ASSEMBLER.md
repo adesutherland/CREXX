@@ -749,9 +749,15 @@ indirect effects and unproved signal phases reject the proof. An unrelated
 no-argument call does not invent a local-value write. TRACE records are
 retained; ordered same-boundary delivery lets the producer event survive even
 when the redundant executable conversion is removed. The proof service is
-generic, but `itos` remains its first and currently only rewrite authority;
-other legacy consumers and later multi-derivation/loop-hoisting work migrate
-separately.
+generic, but `itos` remains its first accepted rewrite authority. The next
+migration recovers the old repeated `itof` floor and then selects one-register
+`xtoy` derivations from canonical metadata rather than a consumer-local
+mnemonic list. `itod` is the first intended larger-domain case: its proof also
+requires unchanged numeric/plugin effects and a dominating successful
+continuation. Each further conversion is admitted only after its source/result
+components, derivation, context dependencies, failure-write phase and
+success-stability contract are exact; later loop-hoisting remains a separate
+consumer.
 
 The admitted first transformation panel is deliberately narrower than the
 fact engine:
