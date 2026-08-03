@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "rxas_flow_graph.h"
+#include "rxas_flow_pass.h"
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_proof.h"
 #include "rxas_flow_signal.h"
@@ -2871,6 +2872,63 @@ static void test_loop_proofs(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_optimisation_routing(Assembler_Context *context) {
+    FlowFixture fixture;
+    Assembler_Token *operands[3];
+    RxasOptimisationCensus census;
+    const RxasOptimisationPassDescriptor *descriptor;
+    size_t index;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_label_ref(&fixture, "done");
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "brt", operands, 2);
+    fixture_label(&fixture, "done");
+    fixture_op(&fixture, "ret", 0, 0);
+
+    check(rxas_optimisation_pass_count() == RXAS_PASS_COUNT,
+          "optimisation route ledger is incomplete");
+    for (index = 0; index < RXAS_PASS_COUNT; index++) {
+        descriptor = rxas_optimisation_pass_descriptor(
+                (RxasOptimisationPassId)index);
+        check(descriptor && descriptor->id == (RxasOptimisationPassId)index &&
+              descriptor->name && descriptor->capabilities &&
+              descriptor->owner >= RXAS_OPT_OWNER_LOCAL &&
+              descriptor->owner <= RXAS_OPT_OWNER_DIAGNOSTIC,
+              "optimisation route descriptor is incomplete");
+    }
+    check(rxas_optimisation_census(
+                  context, fixture.items, fixture.item_count, &census),
+          "optimisation candidate census failed");
+    check(census.instructions == 4,
+          "optimisation census instruction count is wrong");
+    check(census.candidates[RXAS_PASS_M00_REACHABILITY] == 4,
+          "M00 structural candidate census is wrong");
+    check(census.candidates[RXAS_PASS_M01_DERIVATION] == 1,
+          "M01 derivation candidate census is wrong");
+    check(census.candidates[RXAS_PASS_M02_CONSTANT] == 1,
+          "M02 constant candidate census is wrong");
+    check(census.candidates[RXAS_PASS_K05_BRANCH_THREAD] == 1,
+          "K05 CFG candidate census is wrong");
+    descriptor = rxas_optimisation_pass_descriptor(
+            RXAS_PASS_K05_BRANCH_THREAD);
+    check(descriptor && descriptor->owner == RXAS_OPT_OWNER_CFG &&
+          descriptor->capabilities == RXAS_FLOW_CAP_CFG,
+          "K05 requested a non-CFG capability");
+    descriptor = rxas_optimisation_pass_descriptor(
+            RXAS_PASS_K06_STATUS_COPY);
+    check(descriptor && descriptor->owner == RXAS_OPT_OWNER_LOCAL &&
+          descriptor->capabilities == RXAS_FLOW_CAP_LOCAL_SCAN,
+          "K06 was not classified as local mechanical algebra");
+    check((census.requested_capabilities & RXAS_FLOW_CAP_LOOPS) == 0,
+          "current candidates requested dormant loop analysis");
+    fixture_destroy(&fixture);
+}
+
 int main(void) {
     Assembler_Context context;
     memset(&context, 0, sizeof(context));
@@ -2901,6 +2959,7 @@ int main(void) {
     test_sparse_use_and_liveness(&context);
     test_typed_copy_redirect_proof(&context);
     test_loop_proofs(&context);
+    test_optimisation_routing(&context);
 
     if (failures) {
         fprintf(stderr, "RXAS immutable flow graph failures: %d\n", failures);

@@ -523,6 +523,17 @@ operand-mask legality, flow/branch/call/implicit consistency, source coverage,
 reserved/internal treatment and fail-closed unknown queries; they do not claim
 to parse arbitrary C handler bodies formally.
 
+RXAS optimisation routing is explicit in `assembler/rxas_flow_pass.c`. Every
+current rule family has one stable owner—local mechanical scan, immutable CFG,
+component SSA/use proof or diagnostic-only—and a capability mask over local
+scan, CFG, dominance, signal, storage, value, use and loop facts. One linear
+opcode/metadata census conservatively identifies potential consumers before
+whole-procedure analysis. A zero candidate count may avoid a consumer, but the
+census is never a correctness proof and is deliberately allowed to overselect.
+K05 branch threading and M00 reachability request CFG only; exact K06 copy/
+status subsumption remains local; M01-M06 and K01-K04 retain their component
+proof ownership. No current production consumer requests loop analysis.
+
 NR-27 adds a transient whole-procedure machine-flow layer after the unchanged
 20-item local peephole and before ordinary RXBIN emission. Stable peephole
 output is moved, with its token ownership, into a growable procedure stream.

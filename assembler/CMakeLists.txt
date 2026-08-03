@@ -20,6 +20,7 @@ add_custom_command(
 
 # RXAS Library
 add_library(rxaslib STATIC rxastoke.c rxaseror.c ${CMAKE_CURRENT_BINARY_DIR}/rxasscan.c rxas_opt.c rxas_flow.c
+        rxas_flow_pass.c rxas_flow_pass.h
         rxas_flow_graph.c rxas_flow_graph.h
         rxas_flow_graph_internal.h rxas_flow_analysis.c rxas_flow_analysis.h
         rxas_flow_signal.c rxas_flow_signal.h

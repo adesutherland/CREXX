@@ -563,6 +563,48 @@ RexxCPS images are byte-identical to frozen K04 at SHA-256 `92cda4c0`,
 `11b14061` and `96bc599b`. The canonical K02/K03 census is zero, so runtime
 timing is not warranted.
 
+### Phase D0 — scalable routing, consolidation and consumer migration
+
+Adrian approved D0.1 through D0.5 on 2026-08-03, with each infrastructure
+stage required to migrate its affected production consumers, pass a
+proportional validation gate and land as a separate local commit before the
+next stage starts. The trigger is an unsupported scale boundary on generated
+`Parse.rxas`: committed K06 requires approximately 1.87 GB peak RSS with
+optimisation enabled versus approximately 26 MB with `-n`; the provisional
+batched K05 path reaches approximately 2.47 GB. These are assembler-process
+measurements, not benchmark runtime evidence.
+
+The routing rule is now executable rather than an informal convention:
+
+| Route | Current owners | Permitted facts |
+| --- | --- | --- |
+| local mechanical scan | fixed `INC`/`DEC`, `CNOP`, adjacent `SWAPN`/call/`NULLN` collection, in-place concat, K06 and adjacent loop branch packing | exact opcode, operand and bounded local metadata only |
+| immutable CFG | M00 and K05 | records, blocks, typed edges, reachability and exact branch algebra |
+| component SSA | M01-M04 | dominance, signal/effect, storage and component value identity |
+| component SSA plus sparse use index | M05, M06 and K01-K04 | the preceding facts plus exact uses, observations and liveness |
+| diagnostic-only | M07 until D0.2 | requested only by explicit diagnostics; never an ordinary-production reason to build analysis |
+
+- [x] **D0.1 routing ledger and capability census:** give every current
+      optimisation family a stable owner and explicit `LOCAL`, `CFG`,
+      `DOMINANCE`, `SIGNAL`, `STORAGE`, `VALUE`, `USE` or `LOOPS` requirement;
+      run one conservative opcode/metadata census before whole-procedure
+      optimisation; gate each legacy consumer on its declared candidate
+      family; and keep loop analysis dormant because no current production
+      consumer requests it.
+- [ ] **D0.2 one graph and structural consumers:** migrate M00 and K05 onto
+      the immutable graph, express the M07 oracle through sparse SSA and delete
+      the legacy graph/dense use-kill storage.
+- [ ] **D0.3 capability-lazy semantic consumers:** migrate M01-M06 and K01-K04
+      so each query requests only its declared structural, signal, storage,
+      value and use capabilities.
+- [ ] **D0.4 batched pass manager:** collect compatible typed rewrite plans
+      from one immutable epoch, apply one validated batch and rebuild only
+      after the batch.
+- [ ] **D0.5 full scale verdict:** run the complete proportional correctness,
+      elapsed and peak-RSS review. The `Parse.rxas` design target is at most
+      256 MB and the hard rejection boundary is 512 MB; retain exact canonical
+      image and accepted K05 VM-instruction evidence.
+
 ### Phase D — remove superseded infrastructure
 
 - [ ] Express the M07 storage-identity oracle against sparse SSA and delete the

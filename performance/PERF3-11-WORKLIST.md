@@ -831,6 +831,14 @@ The infrastructure is accepted only when all of the following hold:
 10. no public ISA, RXBIN, ABI, VM signal or language semantic change is bundled
     without its separately recorded approval.
 
+The D0 scale consolidation adds a routing invariant: a consumer may request
+only the capabilities declared in `rxas_flow_pass.c`. Exact local algebra does
+not construct a graph; M00/K05 construct CFG state only; current component
+consumers request SSA/use facts explicitly; loop/SCC/frontier work remains
+dormant until a production hoisting or PRE consumer is selected. A conservative
+candidate census may overselect, but may never suppress an otherwise eligible
+proof query.
+
 ## Preparation completed
 
 - [x] Preserve all provisional work and evidence on a local checkpoint branch.

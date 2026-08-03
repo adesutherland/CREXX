@@ -27,6 +27,7 @@
 #include "rxasassm.h"
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_graph.h"
+#include "rxas_flow_pass.h"
 #include "rxas_flow_proof.h"
 #include "rxas_flow_signal.h"
 #include "rxas_flow_ssa.h"
@@ -3553,10 +3554,15 @@ void rxas_flow_optimise(Assembler_Context *context,
     size_t after_instructions;
     size_t changed;
     size_t iterations;
+    RxasOptimisationCensus census;
     flow_proof_session proof_session;
 
     if (!context || !items || !item_count || !context->current_proc_name) return;
     memset(&stats, 0, sizeof(stats));
+    if (!rxas_optimisation_census(context, items, item_count, &census)) return;
+    if (context->debug_mode)
+        rxas_optimisation_census_dump(
+                &census, context->current_proc_name, stderr);
     before_instructions = flow_instruction_count(items, item_count);
     iterations = 0;
     do {
@@ -3576,28 +3582,47 @@ void rxas_flow_optimise(Assembler_Context *context,
             changed = 0;
         }
         else {
-            changed = flow_remove_unreachable(&graph, &stats);
+            changed = rxas_optimisation_has_candidates(
+                    &census, RXAS_PASS_M00_REACHABILITY)
+                    ? flow_remove_unreachable(&graph, &stats) : 0;
             /* K01 is a sparse, independently budgeted proof and must not be
              * coupled to the legacy dense typed-value cell limit. */
-            if (!changed)
+            if (!changed && rxas_optimisation_has_candidates(
+                    &census, RXAS_PASS_K01_STORAGE_PERMUTATION))
                 changed += flow_remove_swap_round_trips(
                         &graph, &stats, &proof_session);
             if (!changed && flow_value_analysis_within_bound(&graph)) {
-                if (!changed) changed += flow_remove_redundant_self_copies(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_M04_SELF_COPY))
+                    changed += flow_remove_redundant_self_copies(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_reuse_duplicate_linked_read(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_K02_K03_LINKED_READ))
+                    changed += flow_reuse_duplicate_linked_read(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_propagate_copies(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_M05_TYPED_COPY))
+                    changed += flow_propagate_copies(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_forward_producer_destination(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_M06_PRODUCER_FORWARD))
+                    changed += flow_forward_producer_destination(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_fuse_compare_branches(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_K04_COMPARE_BRANCH))
+                    changed += flow_fuse_compare_branches(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_remove_redundant_loads(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_M02_CONSTANT))
+                    changed += flow_remove_redundant_loads(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_remove_redundant_initializations(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_M03_ABSENT))
+                    changed += flow_remove_redundant_initializations(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_remove_redundant_conversions(
+                if (!changed && rxas_optimisation_has_candidates(
+                        &census, RXAS_PASS_M01_DERIVATION))
+                    changed += flow_remove_redundant_conversions(
                         &graph, &stats, &proof_session);
             }
             else if (!changed && context->debug_mode) {
