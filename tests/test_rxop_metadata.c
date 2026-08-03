@@ -225,9 +225,19 @@ int main(void) {
               rxop_component_clears(OP_LOAD_REG_FLOAT, 0) ==
                   (RXOP_COMPONENT_REFERENCE |
                    RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_IEQ_REG_REG_INT, 0) ==
+                  (RXOP_COMPONENT_REFERENCE |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_FEQ_REG_REG_FLOAT, 0) ==
+                  (RXOP_COMPONENT_REFERENCE |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_ICOPY_REG_REG, 0) ==
+                  RXOP_COMPONENT_NONE &&
+              rxop_component_clears(OP_FCOPY_REG_REG, 0) ==
+                  RXOP_COMPONENT_NONE &&
               rxop_component_clears(OP_LOAD_REG_INT, 1) ==
                   RXOP_COMPONENT_NONE,
-          "scalar load cleanup-component metadata regression", NULL);
+          "scalar producer cleanup-component metadata regression", NULL);
     check(rxop_component_reads(OP_BCOPY_REG_REG, 1) ==
                   (RXOP_COMPONENT_BINARY |
                    RXOP_COMPONENT_NATIVE_PAYLOAD) &&

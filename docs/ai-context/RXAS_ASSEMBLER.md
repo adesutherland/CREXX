@@ -862,20 +862,28 @@ count. `rxas -d` prints per-candidate accept/reject reasons and a per-procedure
 summary. `-n` bypasses both the local and whole-procedure optimizers.
 
 NR-18 adds one reverse direction for surviving `icopy`/`fcopy` records. For an
-immediately adjacent, classified, nonthrowing, single-kill producer, the pass
-may retarget operand 1 from a disposable local temporary to the copy's final
-local and delete the copy. The written typed view must be exact; the final view
-must be dead at the producer boundary; the temporary view must be dead after
-the copy; the producer must not read the final; and TRACE/source-step, implicit,
-alias/reference/lifetime, opaque, ownership and asynchronous-handler
-observations reject the candidate. These conditions make the original and
-retargeted states equal at every observable edge while reducing the executable
-count by one.
+immediately adjacent, metadata-classified, non-signalling, context-neutral,
+single-component producer, the proof service may return an immutable plan that
+retargets operand 1 from a disposable local temporary to the copy's final local
+and deletes the copy. The exact producer result must have only the typed copy
+as a sparse direct or dependent use. Both storages must be local, known and
+unaliased; the producer must not read the final storage through another
+register mapping; and TRACE/register metadata, calls, opaque uses, asynchronous
+handlers and source-address observations reject the candidate.
+
+Scalar producers such as `load` and integer comparisons release reference and
+native-payload state, whereas `icopy`/`fcopy` write only their typed component.
+Producer forwarding therefore also proves that every component cleared by the
+producer is already absent in both the discarded temporary and the final
+destination. Fresh local entry storage supplies a known empty state;
+arguments, globals, aliases and unknown or previously populated storage fail
+closed. This hidden-cleanup condition is part of opcode metadata and prevents
+typed liveness alone from changing lifetime behaviour.
 
 Copy rewrites proved from one graph may be applied in the same iteration only
 when their complete physical source/destination register pairs are disjoint.
-Their substitutions then commute and cannot invalidate one another's liveness
-or availability facts. Procedures newly admitted through exact jump-table
+Their substitutions then commute and cannot invalidate one another's SSA/use
+proof. Procedures newly admitted through exact jump-table
 edges always receive reachability cleanup. Global typed-value analysis is
 additionally bounded to one million `queue-item x liveness-word` cells for
 those procedures; above the bound, `rxas -d` reports `scope=reachability-only`.

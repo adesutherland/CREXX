@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — M01-M05 complete; M06 producer forwarding next**
+Status: **in progress — M01-M06 complete; K04 compare fusion next**
 
 Architecture approved: 2026-08-02
 
@@ -596,7 +596,26 @@ are recovered; `copy_before_endlife` is one stronger acceptance because the
 unrelated exceptional ENDLIFE does not observe the copied value. Richards,
 Towers and RexxCPS remain byte-identical to M04. Adrian accepted the bounded
 ordinary Release scale of 0.16-0.17 s and 102.8 MB peak RSS for RexxCPS, and
-broad Debug passes 1,995/1,995. M06 producer forwarding is next.
+broad Debug passes 1,995/1,995.
+
+M06 is complete in
+[2026-08-03-perf3-11-m06-producer-forwarding](evidence/2026-08-03-perf3-11-m06-producer-forwarding/).
+One immutable producer-forward proof now follows `StorageId`, the producer's
+exact component `ValueId`, and sparse direct/dependent uses before retargeting
+an adjacent `ICOPY`/`FCOPY` producer and deleting the copy. All eleven current
+M05-boundary accepts are recovered; the historical twelfth is already owned by
+M05. The proof newly requires every producer-cleared reference/native payload
+to be absent in both storages, closing a correctness gap in the old typed-view
+liveness test. The old dense M06 solver and the last M08 semantic liveness/
+availability/may-reach authority are deleted; only mechanical use/kill and
+taint bitsets with live diagnostic/keyhole consumers remain.
+
+Adrian accepted the first Release verdict on 2026-08-03. Focused and canonical
+images are byte-identical to frozen M05. Paired RexxCPS assembly medians remain
+0.18 s; median peak RSS rises 1.05% to 104,103,936 bytes. Focused Debug and
+Release pass 8/8, and broad Debug passes 1,995/1,995 in 291.22 seconds after a
+stale NR-09 expectation was updated for the intended direct-destination form.
+K04 compare/branch fusion is next.
 
 ### Stage 11 — later consumers after legacy migration
 

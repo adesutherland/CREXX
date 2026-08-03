@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01-M05 complete; M06 producer forwarding next**
+Status: **in progress — M01-M06 complete; K04 compare fusion next**
 
 Authorized: 2026-08-02
 
@@ -69,9 +69,9 @@ and after the diagnostic prove output neutrality.
 | M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | **complete**; old authority deleted, old floor plus equal-phi, linked-storage and TRACE cases proved |
 | M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | **complete**; old authority deleted, all seven copy families use conditional same-storage metadata and the proof service |
 | M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | **complete**; old dense solver deleted, ten-case floor plus one stronger case proved |
-| M06 | adjacent producer-destination forwarding | focused 12; canonical 0 | exact producer result, destination/temporary liveness and observation equivalence | migrate after M05 infrastructure |
+| M06 | adjacent producer-destination forwarding | focused 11 at the M05 boundary; historical 12 before `copy_before_endlife` moved to M05; canonical 0 | exact producer result, destination/temporary liveness and observation equivalence | **complete**; SSA/use proof is sole authority, old dense liveness solver deleted, hidden cleanup proved |
 | M07 | dense legacy register-storage must-analysis | diagnostic-only; 13 storage-identity fixtures | sparse SSA storage queries and proof diagnostics | retire after its oracle is expressed against new SSA |
-| M08 | raw-register liveness/availability/may-reach substrate | shared by M03-M06 | graph use index plus component/storage liveness | retire after last consumer |
+| M08 | raw-register liveness/availability/may-reach substrate | shared by M03-M06 | graph use index plus component/storage liveness | **complete**; dense semantic authority deleted after M06; mechanical use/kill classification remains for diagnostics and legacy keyholes |
 
 The representative canonical set currently exercises no remaining M01-M06
 acceptance.  That does not make the migrations irrelevant: these solvers are
@@ -155,7 +155,7 @@ storage while its same-storage VM path returns before allocation or signal.
 
 ### Phase B — reusable use graph and component liveness
 
-- [ ] Add a sparse per-procedure use index keyed by storage/component
+- [x] Add a sparse per-procedure use index keyed by storage/component
       `ValueId`; do not reconstruct a nodes-by-register matrix.
 - [x] Expose edge-aware `value_live`, `all_uses_redirectable`,
       `destination_unobserved` and atomic rewrite-plan queries.
@@ -164,7 +164,7 @@ storage while its same-storage VM path returns before allocation or signal.
 - [x] Prove scaling on the inlined RexxCPS procedure before selecting a
       consumer.
 - [x] Migrate **M05** and delete its old solver after its gate.
-- [ ] Migrate **M06** separately and delete its old solver only after its gate.
+- [x] Migrate **M06** separately and delete its old solver only after its gate.
 
 #### M05 retained floor and design selection
 
@@ -210,6 +210,50 @@ but proof ownership is more precise.  String-copy deletion additionally
 requires destination cursor state to be unobserved, because `SCOPY` writes both
 the string value and its cursor.
 
+#### M06 retained floor and design selection
+
+The frozen M05 assembler is
+`fc6def299f67df91d0b6828f78ebfd3ae9bc60e99c719acb38531256da92ea55`
+(`crexx-1.0.0-beta.3+local.gbe20340f99af`). It accepts exactly eleven current
+M06 cases with reason `producer-destination-forwarded`: eight in
+`nr18_flow_harvest`, two in `whole_procedure_flow` and one in
+`whole_procedure_panel`. Richards, Towers and RexxCPS have zero M06 accepts.
+The historical twelfth case, `copy_before_endlife`, is not lost: M05 now
+removes that typed copy through its stronger sparse use proof before M06 runs.
+
+M06's machine-level ceiling is the producer writing the final local directly
+and the immediately following typed copy disappearing. It adds no runtime
+helper or instruction. Three implementation shapes were considered:
+
+1. **Retain the legacy raw-register liveness solver.** This preserves the old
+   shapes but allocates dense per-record register/view state, does not follow
+   `StorageId`/`ValueId`, and leaves M08 alive solely for M06. It is rejected.
+2. **Selected: an atomic producer-forward plan from the existing SSA/use proof
+   service.** The plan names the adjacent producer and copy, their exact
+   component result, local unaliased temporary/final storage, the sole
+   temporary-result use, exceptional/metadata/call observations, and the
+   expected producer operand rewrite. The optimizer validates the immutable
+   plan before retargeting the producer and deleting the copy.
+3. **Fold producer forwarding into M05 operand redirection.** M05 redirects
+   uses of an existing copied `ValueId`; M06 moves the defining operation to a
+   different storage and removes the temporary definition. Combining them
+   would obscure different destination, cleanup, signal and address
+   obligations, so the authorities remain separate.
+
+The new proof deliberately strengthens correctness beyond the old typed-view
+liveness test. VM scalar producers such as `LOAD` and integer comparisons use
+`set_int`/`set_float`, which release reference and native payloads, while
+`ICOPY`/`FCOPY` write only the scalar field. Retargeting is therefore allowed
+only when every producer-cleared payload is already absent in both the
+discarded temporary and final destination. A fresh local entry is an empty VM
+value, but argument/global, aliased, previously populated or unknown storage
+fails closed. The temporary result must have only the exact copy as a sparse
+direct/dependent use; call windows, TRACE/register metadata, opaque uses and
+registered asynchronous handlers remain observations. The producer must be a
+classified, non-signalling, context-neutral single exact kill which does not
+read the final storage through any register mapping. Source/TRACE records
+immediately after the deleted copy retain the old address-observation guard.
+
 ### Phase C — keyhole semantic authorities
 
 - [ ] Migrate **K04** first because it has nine current canonical RexxCPS hits
@@ -224,7 +268,9 @@ the string value and its cursor.
 
 - [ ] Express the M07 storage-identity oracle against sparse SSA and delete the
       dense legacy storage analysis.
-- [ ] Delete M08 availability/may-reach/liveness code after its last consumer.
+- [x] Delete M08 availability/may-reach/liveness authority after its last
+      consumer. Retain the raw use/kill and taint bitsets still consumed by
+      storage diagnostics, bounded-analysis accounting and legacy keyholes.
 - [ ] Move M00 reachability cleanup to the immutable graph rewrite plan.
 - [ ] Remove the legacy whole-procedure graph once no consumer or diagnostic
       owns it; keep only the small mechanical keyhole engine if still useful.
@@ -319,4 +365,28 @@ rounds put ordinary RexxCPS assembly at 0.16-0.17 s and 102.8 MB peak RSS versus
 0.05-0.06 s and 29.9 MB for frozen M04; this material but bounded cost is inside
 the agreed seconds-scale budget. Focused Debug and Release pass 6/6, strict
 GNU90 passes with one pre-existing warning, and broad Debug passes 1,995/1,995
-in 231.94 seconds. M06 producer forwarding is next.
+in 231.94 seconds.
+
+M06 is complete in
+[`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/).
+The proof service now owns adjacent `ICOPY`/`FCOPY` producer forwarding through
+one immutable `StorageId`/`ValueId` plan. It recovers all eleven current M05
+boundary accepts with reason `producer-destination-forwarded-ssa`; the
+historical twelfth case remains owned by M05. The old dense register/view
+liveness solver is deleted.
+
+Two new adversarial cases prove the correctness gap found during migration:
+scalar producers clear reference/native payloads that typed copies preserve,
+so forwarding requires those cleanup components already absent in both the
+temporary and final storage. Temporary liveness, producer signalling or view
+mismatch, destination reads, source-address observation, calls, metadata,
+opaque use and asynchronous-handler observations also remain closed.
+
+Adrian accepted the first Release verdict on 2026-08-03. Frozen M05 and M06
+produce byte-identical focused and canonical Richards, Towers and RexxCPS
+images. Three serial paired RexxCPS assembly rounds have equal 0.18 s medians;
+median peak RSS moves from 103,022,592 to 104,103,936 bytes (+1.05%). Focused
+Debug and Release pass 8/8. Strict GNU90 passes with one pre-existing warning;
+the full Debug build and corrected broad suite pass 1,995/1,995 in 291.22
+seconds. Broad closeout corrected one stale NR-09 oracle to expect M06's direct
+destination load; no production change was required. K04 is next.

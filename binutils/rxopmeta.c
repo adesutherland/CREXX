@@ -329,9 +329,21 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
 unsigned int rxop_component_clears(int opcode, size_t operand_index) {
     if (operand_index != 0) return RXOP_COMPONENT_NONE;
     /* set_int() and set_float() release a reference payload and finalize any
-     * host-owned native payload before assigning the scalar field.  Ordinary
-     * binary data is intentionally a separate component and is not cleared. */
-    if (opcode == OP_LOAD_REG_INT || opcode == OP_LOAD_REG_FLOAT)
+     * host-owned native payload before assigning the scalar field.  All
+     * comparison handlers use set_int() for their result; typed ICOPY/FCOPY
+     * deliberately do not. Ordinary binary data is a separate component and
+     * is not cleared. */
+    if (opcode == OP_LOAD_REG_INT || opcode == OP_LOAD_REG_FLOAT ||
+        (opcode >= OP_IEQ_REG_REG_REG &&
+         opcode <= OP_SLTE_REG_STRING_REG) ||
+        (opcode >= OP_FEQ_REG_REG_REG &&
+         opcode <= OP_FLTE_REG_FLOAT_REG) ||
+        (opcode >= OP_DEQ_REG_REG_REG &&
+         opcode <= OP_DLTE_REG_DECIMAL_REG) ||
+        opcode == OP_BINEQ_REG_REG_REG ||
+        opcode == OP_BINEQ_REG_REG_BINARY ||
+        opcode == OP_BINNE_REG_REG_REG ||
+        opcode == OP_BINNE_REG_REG_BINARY)
         return RXOP_COMPONENT_REFERENCE |
                RXOP_COMPONENT_NATIVE_PAYLOAD;
     return RXOP_COMPONENT_NONE;

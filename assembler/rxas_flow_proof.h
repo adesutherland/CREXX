@@ -51,6 +51,10 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_CURSOR_OBSERVED,
     RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED,
     RXAS_FLOW_PROOF_NO_REDIRECTS,
+    RXAS_FLOW_PROOF_NOT_EXACT_PRODUCER_FORWARD,
+    RXAS_FLOW_PROOF_NOT_ADJACENT_COPY,
+    RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE,
+    RXAS_FLOW_PROOF_ADDRESS_OBSERVED,
     RXAS_FLOW_PROOF_NOT_IN_LOOP,
     RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP,
     RXAS_FLOW_PROOF_NOT_MUST_EXECUTE,
@@ -101,6 +105,9 @@ typedef struct RxasFlowProofMetrics {
     size_t typed_copy_redirect_proved;
     size_t typed_copy_redirect_rejected;
     size_t typed_copy_operand_rewrites;
+    size_t producer_forward_queries;
+    size_t producer_forward_proved;
+    size_t producer_forward_rejected;
     size_t success_edge_queries;
     size_t loop_queries;
 } RxasFlowProofMetrics;
@@ -130,6 +137,22 @@ typedef struct RxasFlowTypedCopyPlan {
     size_t rewrite_offset;
     size_t rewrite_count;
 } RxasFlowTypedCopyPlan;
+
+typedef struct RxasFlowProducerDestinationPlan {
+    int proved;
+    RxasFlowProofReason reason;
+    size_t producer_instruction;
+    size_t copy_instruction;
+    size_t producer_record_id;
+    size_t copy_record_id;
+    unsigned int component;
+    unsigned int cleanup_components;
+    size_t temporary_storage_id;
+    size_t destination_storage_id;
+    size_t temporary_result_value_id;
+    size_t copy_result_value_id;
+    RxasFlowOperandRewrite producer_rewrite;
+} RxasFlowProducerDestinationPlan;
 
 typedef struct RxasFlowProofService RxasFlowProofService;
 
@@ -164,6 +187,10 @@ int rxas_flow_typed_copy_plan_rewrite(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         const RxasFlowTypedCopyPlan *plan, size_t rewrite_index,
         RxasFlowOperandRewrite *rewrite);
+int rxas_flow_prove_producer_destination_forward(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t producer_instruction, size_t copy_instruction,
+        RxasFlowProducerDestinationPlan *plan);
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result);

@@ -92,8 +92,6 @@ typedef struct flow_node {
     int reachable;
     unsigned long *uses;
     unsigned long *kills;
-    unsigned long *live_in;
-    unsigned long *live_out;
 } flow_node;
 
 typedef struct flow_graph {
@@ -146,6 +144,10 @@ typedef struct flow_stats {
     size_t derivation_proof_proved;
     size_t derivation_proof_rejected;
     size_t derivation_proof_unavailable;
+    size_t producer_proof_queries;
+    size_t producer_proof_proved;
+    size_t producer_proof_rejected;
+    size_t producer_proof_unavailable;
     size_t producer_destinations_forwarded;
     size_t operands_redirected;
     size_t rejected_live;
@@ -846,17 +848,15 @@ static int flow_build_graph(flow_graph *graph, Assembler_Context *context,
     if (!graph->word_count) graph->word_count = 1;
     graph->nodes = calloc(item_count, sizeof(*graph->nodes));
     stride = item_count * graph->word_count;
-    graph->bit_storage = calloc(stride * 4, sizeof(unsigned long));
+    graph->bit_storage = calloc(stride * 2, sizeof(unsigned long));
     graph->tainted_registers = calloc(graph->register_count ? graph->register_count : 1, 1);
     if (!graph->nodes || !graph->bit_storage || !graph->tainted_registers)
         RX_PANIC_OOM("calloc RXAS whole-procedure flow graph",
-                     item_count * sizeof(*graph->nodes) + stride * 4 * sizeof(unsigned long),
+                     item_count * sizeof(*graph->nodes) + stride * 2 * sizeof(unsigned long),
                      context && context->file_name ? context->file_name : 0);
     for (index = 0; index < item_count; index++) {
         graph->nodes[index].uses = graph->bit_storage + index * graph->word_count;
         graph->nodes[index].kills = graph->bit_storage + stride + index * graph->word_count;
-        graph->nodes[index].live_in = graph->bit_storage + stride * 2 + index * graph->word_count;
-        graph->nodes[index].live_out = graph->bit_storage + stride * 3 + index * graph->word_count;
     }
     flow_build_edges(graph);
     flow_mark_reachable(graph);
@@ -883,77 +883,6 @@ static void flow_free_graph(flow_graph *graph) {
     free(graph->async_handler_targets);
     free(graph->tainted_registers);
     memset(graph, 0, sizeof(*graph));
-}
-
-static void flow_compute_liveness(flow_graph *graph) {
-    size_t reverse_index;
-    size_t word;
-    size_t successor_index;
-    unsigned long next_out;
-    unsigned long next_in;
-    int changed;
-
-    do {
-        changed = 0;
-        reverse_index = graph->item_count;
-        while (reverse_index) {
-            flow_node *node;
-            reverse_index--;
-            node = &graph->nodes[reverse_index];
-            if (!node->reachable) continue;
-            for (word = 0; word < graph->word_count; word++) {
-                next_out = 0;
-                for (successor_index = 0;
-                     successor_index < node->successor_count;
-                     successor_index++) {
-                    if (node->successors[successor_index].kind !=
-                        FLOW_EDGE_NORMAL)
-                        continue;
-                    next_out |= graph->nodes[
-                            node->successors[successor_index].target].live_in[word];
-                }
-                if (graph->items[reverse_index].instrType == OP_CODE) {
-                    for (successor_index = 0;
-                         successor_index < graph->async_handler_target_count;
-                         successor_index++)
-                        next_out |= graph->nodes[
-                                graph->async_handler_targets[successor_index]].live_in[word];
-                }
-                if (node->unknown_successor) next_out = ~0ul;
-                next_in = node->uses[word] | (next_out & ~node->kills[word]);
-                if (node->live_out[word] != next_out || node->live_in[word] != next_in) {
-                    node->live_out[word] = next_out;
-                    node->live_in[word] = next_in;
-                    changed = 1;
-                }
-            }
-        }
-    } while (changed);
-}
-
-static int flow_has_address_observation_after(const flow_graph *graph,
-                                              size_t item_index) {
-    size_t index;
-    for (index = item_index + 1; index < graph->item_count; index++) {
-        if (graph->items[index].instrType == OP_CODE) return 0;
-        if (graph->items[index].instrType == TRACE_EVENT ||
-            graph->items[index].instrType == SRC_STEP)
-            return 1;
-    }
-    return 0;
-}
-
-static int flow_destination_dead(const flow_graph *graph, size_t node_index,
-                                 int register_index, unsigned int views) {
-    size_t view;
-    if (register_index < 0) return 0;
-    for (view = 0; view < FLOW_VIEW_COUNT; view++) {
-        if ((views & FLOW_VIEW_BIT(view)) &&
-            flow_test_bit(graph->nodes[node_index].live_out,
-                          (size_t)register_index * FLOW_VIEW_COUNT + view))
-            return 0;
-    }
-    return 1;
 }
 
 static size_t flow_remove_unreachable(flow_graph *graph, flow_stats *stats) {
@@ -2035,31 +1964,30 @@ static size_t flow_propagate_copies(
     return removed;
 }
 
-/* Retarget a single, component-exact, nonthrowing producer into the destination
- * of its immediately following typed copy.  At the producer boundary the old
- * destination component must be dead; after the copy the temporary component
- * must be dead.  Those two liveness facts, including the conservative async
- * handler edges, prove the two streams observationally equivalent while the
- * immediate adjacency prevents any intervening observation. */
+/* M06 is an immutable proof-plan consumer. The proof service owns component,
+ * storage, cleanup, signal and observation policy; this queue-facing layer
+ * only demand-filters adjacent typed copies, validates the complete plan and
+ * applies disjoint producer/copy substitutions atomically. */
 static size_t flow_forward_producer_destination(flow_graph *graph,
-                                                flow_stats *stats) {
+                                                flow_stats *stats,
+                                                flow_proof_session *session) {
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *producer_record;
+    const RxasFlowRecord *copy_record;
+    RxasFlowProducerDestinationPlan plan;
     size_t producer_index;
-    size_t operand_index;
-    size_t write_count;
+    size_t producer_instruction;
+    size_t copy_instruction;
+    size_t forwarded;
     instruction_queue *producer;
     instruction_queue *copy;
-    flow_node *producer_node;
-    flow_node *copy_node;
     Assembler_Token *temporary;
     Assembler_Token *destination;
-    Assembler_Token *operand;
+    Assembler_Token *copy_source;
     int temporary_register;
     int destination_register;
-    unsigned int views;
     unsigned char *claimed_registers;
-    size_t forwarded;
 
-    flow_compute_liveness(graph);
     claimed_registers = calloc(graph->register_count ? graph->register_count : 1, 1);
     if (!claimed_registers)
         RX_PANIC_OOM("calloc RXAS producer-forward batch",
@@ -2069,39 +1997,22 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
          producer_index++) {
         producer = &graph->items[producer_index];
         copy = &graph->items[producer_index + 1];
-        producer_node = &graph->nodes[producer_index];
-        copy_node = &graph->nodes[producer_index + 1];
-        if (!producer_node->reachable || !copy_node->reachable ||
+        if (!graph->nodes[producer_index].reachable ||
+            !graph->nodes[producer_index + 1].reachable ||
             producer->instrType != OP_CODE || copy->instrType != OP_CODE ||
-            !producer_node->op || !copy_node->op ||
-            producer_node->effects.state != RXOP_EFFECT_CLASSIFIED ||
-            producer_node->op->flow != FLOW_NEXT ||
-            producer_node->effects.optimizer_barrier ||
-            producer_node->effects.implicit != RXOP_IMPLICIT_NONE ||
-            producer_node->effects.semantics != RXOP_SEM_NONE ||
-            rxop_can_signal(producer_node->op->opcode) ||
-            producer->operandCount == 0 || copy->operandCount != 2)
+            !graph->nodes[producer_index].op ||
+            !graph->nodes[producer_index + 1].op ||
+            producer->operandCount == 0 || copy->operandCount != 2 ||
+            (graph->nodes[producer_index + 1].op->opcode !=
+                    OP_ICOPY_REG_REG &&
+             graph->nodes[producer_index + 1].op->opcode !=
+                    OP_FCOPY_REG_REG))
             continue;
-
-        switch (copy_node->op->opcode) {
-            case OP_ICOPY_REG_REG:
-                views = FLOW_VIEW_BIT(FLOW_VIEW_INTEGER);
-                break;
-            case OP_FCOPY_REG_REG:
-                views = FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-                break;
-            default:
-                continue;
-        }
-        if (copy_node->effects.state != RXOP_EFFECT_CLASSIFIED ||
-            copy_node->effects.semantics != RXOP_SEM_NONE ||
-            rxop_can_signal(copy_node->op->opcode))
-            continue;
-
         temporary = rxas_queue_operand(producer, 0);
         destination = rxas_queue_operand(copy, 0);
+        copy_source = rxas_queue_operand(copy, 1);
         if (flow_register_type(temporary) != 'r' ||
-            flow_register_type(rxas_queue_operand(copy, 1)) != 'r' ||
+            flow_register_type(copy_source) != 'r' ||
             flow_register_type(destination) != 'r')
             continue;
         temporary_register = flow_register_index(graph, 'r',
@@ -2109,58 +2020,76 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
         destination_register = flow_register_index(graph, 'r',
                 (size_t)destination->token_value.integer);
         if (temporary_register < 0 || destination_register < 0 ||
-            temporary_register == destination_register ||
-            flow_register_index(graph, 'r',
-                    (size_t)rxas_queue_operand(copy, 1)->token_value.integer) !=
-                    temporary_register)
+            temporary_register == destination_register)
             continue;
         if (claimed_registers[temporary_register] ||
             claimed_registers[destination_register])
             continue;
-        if (graph->tainted_registers[temporary_register] ||
-            graph->tainted_registers[destination_register]) {
-            stats->rejected_tainted++;
-            continue;
-        }
-
-        write_count = 0;
-        for (operand_index = 0; operand_index < producer->operandCount;
-             operand_index++) {
-            operand = rxas_queue_operand(producer, operand_index);
-            if (rxop_effect_writes_operand(&producer_node->effects,
-                                           operand_index)) {
-                write_count++;
-                if (operand_index != 0) write_count = producer->operandCount + 1;
-            }
-            if (operand_index > 0 && flow_register_type(operand) == 'r' &&
-                flow_register_index(graph, 'r',
-                        (size_t)operand->token_value.integer) ==
-                        destination_register)
-                write_count = producer->operandCount + 1;
-        }
-        if (write_count != 1 ||
-            rxop_effect_reads_operand(&producer_node->effects, 0) ||
-            !rxop_effect_kills_operand(&producer_node->effects, 0) ||
-            flow_precise_write_views(producer_node->op->opcode, 0) != views) {
+        proof = flow_proof_session_require(session, graph);
+        producer_record = session->procedure ? rxas_flow_procedure_record(
+                session->procedure, session->epoch, producer_index) : 0;
+        copy_record = session->procedure ? rxas_flow_procedure_record(
+                session->procedure, session->epoch, producer_index + 1) : 0;
+        producer_instruction = producer_record
+                ? producer_record->instruction_id : RXAS_FLOW_ID_NONE;
+        copy_instruction = copy_record
+                ? copy_record->instruction_id : RXAS_FLOW_ID_NONE;
+        if (!proof || producer_instruction == RXAS_FLOW_ID_NONE ||
+            copy_instruction == RXAS_FLOW_ID_NONE ||
+            !rxas_flow_prove_producer_destination_forward(
+                    proof, session->epoch, producer_instruction,
+                    copy_instruction, &plan)) {
+            stats->producer_proof_unavailable++;
             stats->rejected_effect++;
             continue;
         }
-        if (flow_has_address_observation_after(graph, producer_index + 1)) {
-            stats->rejected_trace++;
+        stats->producer_proof_queries++;
+        if (!plan.proved) {
+            if (graph->context->debug_mode)
+                fprintf(stderr,
+                        "PERF3 producer-forward-proof procedure=%s "
+                        "candidate=%llu:%s proved=0 reason=%s\n",
+                        graph->context->current_proc_name
+                                ? graph->context->current_proc_name
+                                : "(directives)",
+                        (unsigned long long)producer_index,
+                        graph->nodes[producer_index].op->mnemonic,
+                        rxas_flow_proof_reason_name(plan.reason));
+            if (flow_proof_reason_unavailable(plan.reason)) {
+                stats->producer_proof_unavailable++;
+                stats->rejected_effect++;
+            }
+            else {
+                stats->producer_proof_rejected++;
+                if (plan.reason == RXAS_FLOW_PROOF_ADDRESS_OBSERVED)
+                    stats->rejected_trace++;
+                else stats->rejected_live++;
+            }
             continue;
         }
-        if (!flow_destination_dead(graph, producer_index,
-                                   destination_register, views) ||
-            !flow_destination_dead(graph, producer_index + 1,
-                                   temporary_register, views)) {
-            stats->rejected_live++;
+        if (plan.producer_record_id != producer_index ||
+            plan.copy_record_id != producer_index + 1 ||
+            plan.producer_rewrite.record_id != producer_index ||
+            plan.producer_rewrite.instruction_id != producer_instruction ||
+            plan.producer_rewrite.operand_index != 0 ||
+            !flow_operand_matches_proof_register(
+                    temporary,
+                    plan.producer_rewrite.expected_register) ||
+            !flow_operand_matches_proof_register(
+                    destination,
+                    plan.producer_rewrite.replacement_register) ||
+            !flow_operand_matches_proof_register(
+                    copy_source,
+                    plan.producer_rewrite.expected_register)) {
+            stats->producer_proof_unavailable++;
+            stats->rejected_effect++;
             continue;
         }
-
         flow_set_operand(producer, 0, destination);
         copy->instrType = EMPTY;
         flow_debug_accept(graph, producer_index,
-                          "producer-destination-forwarded", 1);
+                          "producer-destination-forwarded-ssa", 1);
+        stats->producer_proof_proved++;
         stats->producer_destinations_forwarded++;
         stats->typed_copies_removed++;
         claimed_registers[temporary_register] = 1;
@@ -2841,6 +2770,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "absent-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "self-copy-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
+            "producer-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
             (unsigned long long)graph->block_count,
@@ -2873,6 +2803,10 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->derivation_proof_queries,
             (unsigned long long)stats->derivation_proof_rejected,
             (unsigned long long)stats->derivation_proof_unavailable,
+            (unsigned long long)stats->producer_proof_proved,
+            (unsigned long long)stats->producer_proof_queries,
+            (unsigned long long)stats->producer_proof_rejected,
+            (unsigned long long)stats->producer_proof_unavailable,
             (unsigned long long)stats->rejected_live,
             (unsigned long long)stats->rejected_trace,
             (unsigned long long)stats->rejected_tainted,
@@ -2940,7 +2874,8 @@ void rxas_flow_optimise(Assembler_Context *context,
                         &graph, &stats, &proof_session);
                 if (!changed) changed += flow_propagate_copies(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_forward_producer_destination(&graph, &stats);
+                if (!changed) changed += flow_forward_producer_destination(
+                        &graph, &stats, &proof_session);
                 if (!changed) changed += flow_remove_redundant_loads(
                         &graph, &stats, &proof_session);
                 if (!changed) changed += flow_remove_redundant_initializations(

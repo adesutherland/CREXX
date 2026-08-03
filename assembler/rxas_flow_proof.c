@@ -2661,6 +2661,539 @@ int rxas_flow_typed_copy_plan_rewrite(
     return 1;
 }
 
+static void flow_proof_producer_plan_init(
+        RxasFlowProducerDestinationPlan *plan,
+        size_t producer_instruction, size_t copy_instruction) {
+    memset(plan, 0, sizeof(*plan));
+    plan->reason = RXAS_FLOW_PROOF_STALE_EPOCH;
+    plan->producer_instruction = producer_instruction;
+    plan->copy_instruction = copy_instruction;
+    plan->producer_record_id = RXAS_FLOW_ID_NONE;
+    plan->copy_record_id = RXAS_FLOW_ID_NONE;
+    plan->temporary_result_value_id = RXAS_FLOW_ID_NONE;
+    plan->copy_result_value_id = RXAS_FLOW_ID_NONE;
+    plan->producer_rewrite.record_id = RXAS_FLOW_ID_NONE;
+    plan->producer_rewrite.instruction_id = RXAS_FLOW_ID_NONE;
+    plan->producer_rewrite.operand_index = RXAS_FLOW_ID_NONE;
+}
+
+static int flow_proof_same_register(RxasFlowRegister left,
+                                    RxasFlowRegister right) {
+    return left.register_class == right.register_class &&
+           left.number == right.number;
+}
+
+static int flow_proof_address_observed_after_copy(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t copy_record_id) {
+    const RxasFlowMetrics *metrics;
+    size_t record_id;
+    metrics = rxas_flow_procedure_metrics(service->procedure, expected_epoch);
+    if (!metrics || copy_record_id >= metrics->records) return -1;
+    for (record_id = copy_record_id + 1;
+         record_id < metrics->records; record_id++) {
+        const RxasFlowRecord *record;
+        record = rxas_flow_procedure_record(
+                service->procedure, expected_epoch, record_id);
+        if (!record) return -1;
+        if (record->instruction_id != RXAS_FLOW_ID_NONE) return 0;
+        if (record->type == TRACE_EVENT || record->type == SRC_STEP) return 1;
+    }
+    return 0;
+}
+
+static int flow_proof_local_component_absent(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowComponentFact *fact, size_t local_storage_id) {
+    FlowProofValueWalkResult walk;
+    if (!fact || !local_storage_id || fact->storage_id != local_storage_id)
+        return 0;
+    if (fact->kind == RXAS_FLOW_VALUE_ENTRY &&
+        rxas_flow_storage_is_local_base(
+                service->ssa, expected_epoch, local_storage_id))
+        return 1;
+    walk = flow_proof_value_leaves_match(service, fact->value_id, 0, 1);
+    return walk == FLOW_PROOF_VALUE_UNIQUE;
+}
+
+static int flow_proof_mark_value_dependents(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t root_value_id, size_t *marked_count) {
+    RxasFlowValueNode root;
+    size_t head;
+    size_t tail;
+    if (marked_count) *marked_count = 0;
+    if (!marked_count || !flow_proof_prepare_value_walk(service) ||
+        !rxas_flow_value_node(
+                service->ssa, expected_epoch, root_value_id, &root) ||
+        root.id >= service->value_capacity)
+        return 0;
+    service->value_generation++;
+    if (!service->value_generation) {
+        memset(service->value_marks, 0,
+               service->value_capacity * sizeof(*service->value_marks));
+        service->value_generation = 1;
+    }
+    head = 0;
+    tail = 0;
+    service->value_marks[root.id] = service->value_generation;
+    service->value_stack[tail++] = root.id;
+    while (head < tail) {
+        size_t value_id;
+        size_t dependent_count;
+        size_t dependent_index;
+        value_id = service->value_stack[head++];
+        if (!flow_proof_consume(service, 1)) return 0;
+        dependent_count = rxas_flow_value_dependent_count(
+                service->use, expected_epoch, value_id);
+        for (dependent_index = 0; dependent_index < dependent_count;
+             dependent_index++) {
+            RxasFlowValueNode dependent_node;
+            size_t dependent;
+            dependent = rxas_flow_value_dependent(
+                    service->use, expected_epoch,
+                    value_id, dependent_index);
+            if (dependent == RXAS_FLOW_ID_NONE ||
+                !rxas_flow_value_node(
+                        service->ssa, expected_epoch,
+                        dependent, &dependent_node) ||
+                dependent_node.id >= service->value_capacity)
+                return 0;
+            if (service->value_marks[dependent_node.id] ==
+                    service->value_generation)
+                continue;
+            if (tail >= service->value_capacity) return 0;
+            service->value_marks[dependent_node.id] =
+                    service->value_generation;
+            service->value_stack[tail++] = dependent_node.id;
+        }
+    }
+    *marked_count = tail;
+    return 1;
+}
+
+static int flow_proof_value_dependent_is_marked(
+        const RxasFlowProofService *service, size_t value_id) {
+    return value_id != RXAS_FLOW_ID_NONE &&
+           value_id < service->value_capacity &&
+           service->value_marks[value_id] == service->value_generation;
+}
+
+int rxas_flow_prove_producer_destination_forward(
+        const RxasFlowProofService *const_service,
+        unsigned long expected_epoch, size_t producer_instruction,
+        size_t copy_instruction, RxasFlowProducerDestinationPlan *plan) {
+    RxasFlowProofService *service;
+    const RxasFlowInstruction *producer;
+    const RxasFlowInstruction *copy;
+    const RxasFlowRecord *producer_record;
+    const RxasFlowRecord *copy_record;
+    const instruction_queue *producer_item;
+    const instruction_queue *copy_item;
+    const RxasFlowUseMetrics *use_metrics;
+    RxasFlowRegister temporary;
+    RxasFlowRegister copy_source;
+    RxasFlowRegister destination;
+    RxasFlowStorageFact temporary_before;
+    RxasFlowStorageFact temporary_after;
+    RxasFlowStorageFact source_before;
+    RxasFlowStorageFact destination_at_producer;
+    RxasFlowStorageFact destination_before;
+    RxasFlowStorageFact destination_after;
+    RxasFlowComponentFact temporary_result;
+    RxasFlowComponentFact copy_source_value;
+    RxasFlowComponentFact copy_result;
+    RxasFlowValueNode equivalent;
+    FlowProofValueWalkResult walk;
+    size_t equivalent_id;
+    size_t operand_index;
+    size_t write_count;
+    size_t alias_count;
+    size_t use_count;
+    size_t use_index;
+    size_t all_use_count;
+    size_t all_use_index;
+    size_t copy_reads;
+    size_t marked_count;
+    size_t marked_index;
+    size_t cleanup_index;
+    int externally_visible;
+    int address_observed;
+    unsigned int component;
+    unsigned int cleanup_components;
+    static const unsigned int cleanup_bits[] = {
+        RXOP_COMPONENT_INTEGER,
+        RXOP_COMPONENT_FLOAT,
+        RXOP_COMPONENT_STRING,
+        RXOP_COMPONENT_DECIMAL,
+        RXOP_COMPONENT_BINARY,
+        RXOP_COMPONENT_ATTRIBUTES,
+        RXOP_COMPONENT_REFERENCE,
+        RXOP_COMPONENT_NATIVE_PAYLOAD
+    };
+    if (!plan) return 0;
+    flow_proof_producer_plan_init(
+            plan, producer_instruction, copy_instruction);
+    if (!const_service || !expected_epoch ||
+        const_service->metrics.epoch != expected_epoch ||
+        !rxas_flow_procedure_epoch_matches(
+                const_service->procedure, expected_epoch))
+        return 1;
+    if (const_service->metrics.status ==
+            RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED) {
+        plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        return 1;
+    }
+    if (const_service->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
+    service = (RxasFlowProofService *)const_service;
+    service->metrics.producer_forward_queries++;
+    if (!flow_proof_consume(service, 8)) {
+        plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        goto complete;
+    }
+    producer = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, producer_instruction);
+    copy = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, copy_instruction);
+    producer_record = producer ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, producer->record_id) : 0;
+    copy_record = copy ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, copy->record_id) : 0;
+    producer_item = producer_record ? producer_record->queue_record : 0;
+    copy_item = copy_record ? copy_record->queue_record : 0;
+    if (!producer || !copy || !producer_record || !copy_record ||
+        !producer_item || !copy_item) {
+        plan->reason = RXAS_FLOW_PROOF_INVALID_INSTRUCTION;
+        goto complete;
+    }
+    plan->producer_record_id = producer->record_id;
+    plan->copy_record_id = copy->record_id;
+    if (producer->record_id >= copy->record_id ||
+        producer->record_id + 1 != copy->record_id) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_ADJACENT_COPY;
+        goto complete;
+    }
+    component = copy->op && copy->op->opcode == OP_ICOPY_REG_REG
+            ? RXOP_COMPONENT_INTEGER
+            : copy->op && copy->op->opcode == OP_FCOPY_REG_REG
+                    ? RXOP_COMPONENT_FLOAT : RXOP_COMPONENT_NONE;
+    plan->component = component;
+    if (!component || copy_item->operandCount != 2 ||
+        copy->effects.state != RXOP_EFFECT_CLASSIFIED ||
+        copy->effects.reads != RXOP_OP_2 ||
+        copy->effects.writes != RXOP_OP_1 ||
+        copy->effects.kills != RXOP_OP_1 ||
+        copy->effects.branch_targets != RXOP_OP_NONE ||
+        copy->effects.implicit != RXOP_IMPLICIT_NONE ||
+        copy->effects.semantics != RXOP_SEM_NONE ||
+        copy->effects.cursor_reads != RXOP_OP_NONE ||
+        copy->effects.cursor_writes != RXOP_OP_NONE ||
+        copy->effects.flow != FLOW_NEXT ||
+        copy->effects.optimizer_barrier ||
+        copy->signal.state != RXOP_SIGNAL_STATE_NONE ||
+        rxop_context_writes(copy->op->opcode) != RXOP_CONTEXT_NONE ||
+        rxop_component_reads(copy->op->opcode, 1) != component ||
+        rxop_component_writes(copy->op->opcode, 0) != component ||
+        !flow_proof_register(
+                flow_proof_operand(copy_item, 0), &destination) ||
+        !flow_proof_register(
+                flow_proof_operand(copy_item, 1), &copy_source) ||
+        destination.register_class != RXAS_FLOW_REGISTER_LOCAL ||
+        copy_source.register_class != RXAS_FLOW_REGISTER_LOCAL) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_EXACT_PRODUCER_FORWARD;
+        goto complete;
+    }
+    cleanup_components = producer->op
+            ? rxop_component_clears(producer->op->opcode, 0)
+            : RXOP_COMPONENT_NONE;
+    plan->cleanup_components = cleanup_components;
+    write_count = 0;
+    if (!producer->op || !producer_item->operandCount ||
+        producer->effects.state != RXOP_EFFECT_CLASSIFIED ||
+        producer->effects.flow != FLOW_NEXT ||
+        producer->effects.optimizer_barrier ||
+        producer->effects.implicit != RXOP_IMPLICIT_NONE ||
+        producer->effects.semantics != RXOP_SEM_NONE ||
+        producer->effects.branch_targets != RXOP_OP_NONE ||
+        producer->effects.cursor_reads != RXOP_OP_NONE ||
+        producer->effects.cursor_writes != RXOP_OP_NONE ||
+        producer->signal.state != RXOP_SIGNAL_STATE_NONE ||
+        rxop_context_writes(producer->op->opcode) != RXOP_CONTEXT_NONE ||
+        rxop_component_writes(producer->op->opcode, 0) != component ||
+        rxop_effect_reads_operand(&producer->effects, 0) ||
+        !rxop_effect_kills_operand(&producer->effects, 0) ||
+        !flow_proof_register(
+                flow_proof_operand(producer_item, 0), &temporary) ||
+        temporary.register_class != RXAS_FLOW_REGISTER_LOCAL) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_EXACT_PRODUCER_FORWARD;
+        goto complete;
+    }
+    for (operand_index = 0; operand_index < producer_item->operandCount;
+         operand_index++) {
+        if (!rxop_effect_writes_operand(
+                    &producer->effects, operand_index))
+            continue;
+        write_count++;
+        if (operand_index != 0)
+            write_count = producer_item->operandCount + 1;
+    }
+    if (write_count != 1 || flow_proof_same_register(temporary, destination)) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_EXACT_PRODUCER_FORWARD;
+        goto complete;
+    }
+    if (!rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, producer_instruction, 0,
+                temporary, &temporary_before) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, producer_instruction, 1,
+                temporary, &temporary_after) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, copy_instruction, 0,
+                copy_source, &source_before) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, producer_instruction, 0,
+                destination, &destination_at_producer) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, copy_instruction, 0,
+                destination, &destination_before) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, copy_instruction, 1,
+                destination, &destination_after) ||
+        !temporary_before.storage_id ||
+        temporary_before.storage_id != temporary_after.storage_id ||
+        temporary_after.storage_id != source_before.storage_id ||
+        !destination_at_producer.storage_id ||
+        destination_at_producer.storage_id != destination_before.storage_id ||
+        destination_before.storage_id != destination_after.storage_id ||
+        temporary_after.storage_id == destination_before.storage_id) {
+        plan->reason = RXAS_FLOW_PROOF_STORAGE_CHANGED;
+        goto complete;
+    }
+    plan->temporary_storage_id = temporary_after.storage_id;
+    plan->destination_storage_id = destination_after.storage_id;
+    if (!rxas_flow_storage_is_local_base(
+                service->ssa, expected_epoch,
+                temporary_after.storage_id) ||
+        !rxas_flow_storage_is_local_base(
+                service->ssa, expected_epoch,
+                destination_after.storage_id)) {
+        plan->reason = RXAS_FLOW_PROOF_DESTINATION_NOT_LOCAL;
+        goto complete;
+    }
+    alias_count = 0;
+    externally_visible = 1;
+    if (!rxas_flow_storage_aliases_at_instruction(
+                service->ssa, expected_epoch, producer_instruction, 0,
+                temporary_before.storage_id, &alias_count,
+                &externally_visible) || alias_count != 1 ||
+        externally_visible) {
+        plan->reason = RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE;
+        goto complete;
+    }
+    alias_count = 0;
+    externally_visible = 1;
+    if (!rxas_flow_storage_aliases_at_instruction(
+                service->ssa, expected_epoch, producer_instruction, 0,
+                destination_at_producer.storage_id, &alias_count,
+                &externally_visible) || alias_count != 1 ||
+        externally_visible) {
+        plan->reason = RXAS_FLOW_PROOF_DESTINATION_OBSERVABLE;
+        goto complete;
+    }
+    for (operand_index = 0; operand_index < producer_item->operandCount;
+         operand_index++) {
+        RxasFlowRegister input;
+        RxasFlowStorageFact input_storage;
+        if (!rxop_effect_reads_operand(&producer->effects, operand_index))
+            continue;
+        if (!flow_proof_register(
+                    flow_proof_operand(producer_item, operand_index), &input) ||
+            !rxas_flow_storage_at_instruction(
+                    service->ssa, expected_epoch, producer_instruction, 0,
+                    input, &input_storage) || !input_storage.storage_id ||
+            input_storage.storage_id == destination_at_producer.storage_id) {
+            plan->reason = RXAS_FLOW_PROOF_DESTINATION_OBSERVABLE;
+            goto complete;
+        }
+    }
+    if (!rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, producer_instruction, 1,
+                temporary, component, &temporary_result) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, copy_instruction, 0,
+                copy_source, component, &copy_source_value) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, copy_instruction, 1,
+                destination, component, &copy_result) ||
+        temporary_result.value_id == RXAS_FLOW_ID_NONE ||
+        temporary_result.defining_instruction != producer_instruction ||
+        copy_source_value.value_id == RXAS_FLOW_ID_NONE ||
+        copy_result.value_id == RXAS_FLOW_ID_NONE ||
+        copy_result.kind != RXAS_FLOW_VALUE_COPY ||
+        copy_result.defining_instruction != copy_instruction) {
+        plan->reason = RXAS_FLOW_PROOF_RESULT_UNAVAILABLE;
+        goto complete;
+    }
+    walk = flow_proof_equivalent_value(
+            service, temporary_result.value_id,
+            copy_source_value.value_id, &equivalent_id, &equivalent);
+    if (walk != FLOW_PROOF_VALUE_UNIQUE) {
+        plan->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_SOURCE_NOT_EQUIVALENT;
+        goto complete;
+    }
+    walk = flow_proof_equivalent_value(
+            service, temporary_result.value_id,
+            copy_result.source_value_id, &equivalent_id, &equivalent);
+    if (walk != FLOW_PROOF_VALUE_UNIQUE) {
+        plan->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_SOURCE_NOT_EQUIVALENT;
+        goto complete;
+    }
+    plan->temporary_result_value_id = temporary_result.value_id;
+    plan->copy_result_value_id = copy_result.value_id;
+    for (cleanup_index = 0;
+         cleanup_index < sizeof(cleanup_bits) / sizeof(cleanup_bits[0]);
+         cleanup_index++) {
+        RxasFlowComponentFact temporary_cleanup;
+        RxasFlowComponentFact destination_cleanup;
+        if (!(cleanup_components & cleanup_bits[cleanup_index])) continue;
+        if (!rxas_flow_component_at_instruction(
+                    service->ssa, expected_epoch, producer_instruction, 0,
+                    temporary, cleanup_bits[cleanup_index],
+                    &temporary_cleanup) ||
+            !rxas_flow_component_at_instruction(
+                    service->ssa, expected_epoch, producer_instruction, 0,
+                    destination, cleanup_bits[cleanup_index],
+                    &destination_cleanup) ||
+            !flow_proof_local_component_absent(
+                    service, expected_epoch, &temporary_cleanup,
+                    temporary_before.storage_id) ||
+            !flow_proof_local_component_absent(
+                    service, expected_epoch, &destination_cleanup,
+                    destination_at_producer.storage_id)) {
+            plan->reason = service->metrics.status ==
+                        RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                    ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                    : RXAS_FLOW_PROOF_CLEANUP_REQUIRED;
+            goto complete;
+        }
+    }
+    address_observed = flow_proof_address_observed_after_copy(
+            service, expected_epoch, copy->record_id);
+    if (address_observed < 0) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        goto complete;
+    }
+    if (address_observed) {
+        plan->reason = RXAS_FLOW_PROOF_ADDRESS_OBSERVED;
+        goto complete;
+    }
+    service->use = rxas_flow_require_use_analysis(
+            service->procedure, expected_epoch, 0);
+    use_metrics = service->use ? rxas_flow_use_metrics(
+            service->use, expected_epoch) : 0;
+    if (!service->use || !use_metrics) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        goto complete;
+    }
+    if (use_metrics->opaque_observations) {
+        plan->reason = RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE;
+        goto complete;
+    }
+    all_use_count = rxas_flow_use_count(service->use, expected_epoch);
+    for (all_use_index = 0; all_use_index < all_use_count; all_use_index++) {
+        const RxasFlowUse *use;
+        use = rxas_flow_use(service->use, expected_epoch, all_use_index);
+        if (!use || use->value_id != RXAS_FLOW_ID_NONE ||
+            use->component != component)
+            continue;
+        if (flow_proof_same_register(use->register_id, temporary) ||
+            flow_proof_same_register(use->register_id, destination)) {
+            plan->reason = RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE;
+            goto complete;
+        }
+    }
+    if (!flow_proof_mark_value_dependents(
+                service, expected_epoch, temporary_result.value_id,
+                &marked_count)) {
+        plan->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        goto complete;
+    }
+    copy_reads = 0;
+    for (marked_index = 0; marked_index < marked_count; marked_index++) {
+        equivalent_id = service->value_stack[marked_index];
+        use_count = rxas_flow_value_direct_use_count(
+                service->use, expected_epoch, equivalent_id);
+        for (use_index = 0; use_index < use_count; use_index++) {
+            const RxasFlowUse *use;
+            use = rxas_flow_value_direct_use(
+                    service->use, expected_epoch,
+                    equivalent_id, use_index);
+            if (use && use->instruction_id == copy_instruction &&
+                use->operand_index == 1 &&
+                use->kind == RXAS_FLOW_USE_EXPLICIT_READ &&
+                use->component == component &&
+                use->read_components == component &&
+                flow_proof_same_register(use->register_id, copy_source)) {
+                copy_reads++;
+                continue;
+            }
+            plan->reason = RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE;
+            goto complete;
+        }
+    }
+    if (copy_reads != 1) {
+        plan->reason = RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE;
+        goto complete;
+    }
+    if (use_metrics->call_window_reads) {
+        for (all_use_index = 0; all_use_index < all_use_count;
+             all_use_index++) {
+            const RxasFlowUse *use;
+            RxasFlowComponentFact at_call;
+            use = rxas_flow_use(
+                    service->use, expected_epoch, all_use_index);
+            if (!use || use->kind != RXAS_FLOW_USE_CALL_WINDOW_READ ||
+                use->instruction_id == RXAS_FLOW_ID_NONE ||
+                use->register_id.number == RXAS_FLOW_ID_NONE ||
+                temporary.number <= use->register_id.number)
+                continue;
+            if (!rxas_flow_component_at_instruction(
+                        service->ssa, expected_epoch,
+                        use->instruction_id, 0,
+                        temporary, component, &at_call) ||
+                flow_proof_value_dependent_is_marked(
+                        service, at_call.value_id)) {
+                plan->reason = RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED;
+                goto complete;
+            }
+        }
+    }
+    plan->producer_rewrite.record_id = producer->record_id;
+    plan->producer_rewrite.instruction_id = producer_instruction;
+    plan->producer_rewrite.operand_index = 0;
+    plan->producer_rewrite.expected_register = temporary;
+    plan->producer_rewrite.replacement_register = destination;
+    plan->proved = 1;
+    plan->reason = RXAS_FLOW_PROOF_PROVED;
+
+complete:
+    if (plan->proved) service->metrics.producer_forward_proved++;
+    else service->metrics.producer_forward_rejected++;
+    return 1;
+}
+
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result) {
@@ -2932,6 +3465,14 @@ const char *rxas_flow_proof_reason_name(RxasFlowProofReason reason) {
         case RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED:
             return "call-window-observed";
         case RXAS_FLOW_PROOF_NO_REDIRECTS: return "no-redirects";
+        case RXAS_FLOW_PROOF_NOT_EXACT_PRODUCER_FORWARD:
+            return "not-exact-producer-forward";
+        case RXAS_FLOW_PROOF_NOT_ADJACENT_COPY:
+            return "not-adjacent-copy";
+        case RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE:
+            return "temporary-observable";
+        case RXAS_FLOW_PROOF_ADDRESS_OBSERVED:
+            return "address-observed";
         case RXAS_FLOW_PROOF_NOT_IN_LOOP: return "not-in-loop";
         case RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP: return "irreducible-loop";
         case RXAS_FLOW_PROOF_NOT_MUST_EXECUTE: return "not-must-execute";
@@ -3028,6 +3569,7 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             "redundant-absent=%llu/%llu rejected=%llu "
             "redundant-self-copy=%llu/%llu rejected=%llu "
             "typed-copy=%llu/%llu rejected=%llu rewrites=%llu "
+            "producer-forward=%llu/%llu rejected=%llu "
             "success-edge=%llu loop=%llu ssa-bytes=%llu ssa-values=%llu "
             "ssa-storages=%llu\n",
             service->metrics.epoch,
@@ -3051,6 +3593,9 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             (unsigned long long)service->metrics.typed_copy_redirect_queries,
             (unsigned long long)service->metrics.typed_copy_redirect_rejected,
             (unsigned long long)service->metrics.typed_copy_operand_rewrites,
+            (unsigned long long)service->metrics.producer_forward_proved,
+            (unsigned long long)service->metrics.producer_forward_queries,
+            (unsigned long long)service->metrics.producer_forward_rejected,
             (unsigned long long)service->metrics.success_edge_queries,
             (unsigned long long)service->metrics.loop_queries,
             (unsigned long long)(ssa_metrics

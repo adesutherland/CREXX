@@ -72,8 +72,13 @@ complete: a cached sparse use/dependency index and atomic typed-copy rewrite
 plan replace the old dense availability/may-reach solver. The ten-case floor is
 preserved and one stronger unrelated-ENDLIFE case is proved. Canonical images
 remain byte-identical, Adrian accepted the 0.16-0.17 s/102.8 MB RexxCPS
-assembly boundary, and broad Debug passes 1,995/1,995. M06 producer forwarding
-is next.
+assembly boundary, and broad Debug passes 1,995/1,995. M06 is complete: its
+atomic SSA/use plan recovers all eleven current producer-forwarding cases,
+deletes the last dense M08 semantic liveness authority and adds the missing
+hidden-cleanup proof for producer-cleared reference/native payloads. Adrian
+accepted the byte-identical first Release verdict; paired RexxCPS assembly
+medians remain 0.18 s and median RSS rises 1.05% to 104,103,936 bytes. Focused
+Debug/Release pass 8/8 and broad Debug passes 1,995/1,995. K04 is next.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -263,7 +268,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01-M05 complete; M06 producer forwarding next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01-M05 migrate XTOY repetition, constants, all-component absence, exact same-storage copies and typed-copy operand redirection. M05 replaces the dense per-candidate solver with one sparse use/dependency index and atomic plans; canonical images remain byte-identical and broad Debug passes 1,995/1,995. The future ledger includes an ordered RXC-to-RXAS ownership and inlining redesign programme after M05/M06 and K04 maturity. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M05: [`2026-08-03-perf3-11-m05-sparse-use-liveness`](evidence/2026-08-03-perf3-11-m05-sparse-use-liveness/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01-M06 complete; K04 compare fusion next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01-M06 migrate XTOY repetition, constants, all-component absence, exact same-storage copies, typed-copy operand redirection and producer forwarding. M06 removes the last dense M08 semantic liveness authority, recovers all eleven current cases and adds hidden-cleanup proof; canonical images remain byte-identical and broad Debug passes 1,995/1,995. The future ledger includes an ordered RXC-to-RXAS ownership and inlining redesign programme after K04 maturity. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -870,14 +875,25 @@ the unrelated-ENDLIFE case is one stronger acceptance, while metadata, TRACE,
 mixed-entry, cursor, caller-window and handler observations remain closed.
 Canonical images are unchanged. Adrian accepted the ordinary RexxCPS assembly
 boundary of 0.16-0.17 seconds and 102.8 MB peak RSS, and broad Debug passes
-1,995/1,995. M06 producer forwarding is next.
+1,995/1,995.
+
+M06 is complete in
+[`M06 producer forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/).
+Its immutable proof follows exact storage/component identities and sparse uses,
+recovers all eleven current accepts and deletes the old dense liveness solver.
+Hidden producer cleanup is now explicit: every reference/native payload
+cleared by the retargeted scalar producer must already be absent in both
+storages. Frozen M05 and M06 focused/canonical images are byte-identical.
+Adrian accepted the 0.18 s equal RexxCPS assembly median and +1.05% median RSS
+verdict; focused Debug/Release pass 8/8 and broad Debug passes 1,995/1,995.
+K04 compare/branch fusion is next.
 
 The PERF3-10 closeout also audited surviving tactical guards. Loads,
 one-register XTOY repetition, same-storage copies and typed-copy redirection
 now use the proof service; their superseded TRACE/barrier scans were deleted
-with the corresponding authority. Producer forwarding remains M06 and keeps
-its address-observation and liveness guards until its own atomic proof is
-accepted. The local duplicate-link and swap/call-window rules still transform
+with the corresponding authority. Producer forwarding now uses M06's atomic
+SSA/use, hidden-cleanup and address-observation proof. The local duplicate-link
+and swap/call-window rules still transform
 code while storage identity currently only analyses their mappings. The
 adjacent `cnop` rule is not a trace-anchor workaround. PERF3-11 replaces these
 one consumer at a time with structural/runtime equivalence, rather than

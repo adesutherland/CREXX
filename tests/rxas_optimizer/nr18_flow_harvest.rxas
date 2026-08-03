@@ -70,6 +70,21 @@ destination_read_by_producer() .locals=34
     icopy r32,r31
     ret r32
 
+temporary_cleanup_required() .locals=46
+    load r43,1
+    mkref r44,r43
+    load r44,5
+    icopy r45,r44
+    ret r45
+
+destination_cleanup_required() .locals=50
+    load r46,1
+    mkref r47,r46
+    load r48,6
+    icopy r47,r48
+    refvalid r49,r47
+    ret r49
+
 jump_table_enables_local_flow() .locals=42
     .jtable nr18_words linear
     load r17,"miss"

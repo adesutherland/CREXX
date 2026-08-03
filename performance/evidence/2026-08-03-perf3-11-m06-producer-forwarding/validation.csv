@@ -1,0 +1,18 @@
+check,result,detail
+strict-gnu90,pass,one pre-existing unused-parameter warning
+focused-debug,pass,8/8
+focused-release,pass,8/8
+producer-forward-floor,pass,11/11 current M05-boundary accepts recovered
+hidden-cleanup-negatives,pass,2/2 rejected cleanup-required
+canonical-richards,pass,byte-identical M05/M06
+canonical-towers,pass,byte-identical M05/M06
+canonical-rexxcps,pass,byte-identical M05/M06 and zero M06 accepts
+focused-flow,pass,byte-identical M05/M06
+focused-panel,pass,byte-identical M05/M06
+focused-nr18,pass,byte-identical M05/M06
+paired-rexxcps-scale,accepted,equal 0.18 s medians; median RSS +1.05%
+full-debug-build,pass,complete
+initial-broad-debug,expected-oracle-update,1994/1995; stale nr09 direct-destination expectation
+nr09-focused-rerun,pass,1/1 after oracle update
+broad-debug-rerun,pass,1995/1995 in 291.22 seconds
+diff-check,pass,no whitespace errors
