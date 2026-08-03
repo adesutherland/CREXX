@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — Stage 6 accepted; legacy-proof inventory/migration next**
+Status: **in progress — M01-M03 complete; M04 exact self-copy next**
 
 Architecture approved: 2026-08-02
 
@@ -566,7 +566,17 @@ integer/float writes may be deleted only when both reference and native payload
 are already absent.  Adrian accepted the output-neutral Release verdict and
 procedure-local 30.1 MB peak-RSS boundary on 2026-08-03.  Focused replay passes
 53/53, Release hidden-cleanup execution passes 4/4, canonical output is exact
-and broad Debug passes 1,991/1,991.  M03 repeated `NULL` is next.
+and broad Debug passes 1,991/1,991.
+
+M03 is complete in
+[`2026-08-03-perf3-11-m03-absent-write`](evidence/2026-08-03-perf3-11-m03-absent-write/).
+The proof service is sole authority for repeated `NULL`: known target storage
+and all eight component leaves must already be absent.  It recovers the old
+floor and adds equal-phi, linked-storage and ordered-TRACE deletions while
+retaining scalar, reference and native-payload cleanup.  Adrian accepted the
+output-neutral Release verdict on 2026-08-03.  Canonical images are
+byte-identical and broad Debug passes 1,993/1,993.  M04 exact self-copy is
+next.
 
 ### Stage 11 — later consumers after legacy migration
 
@@ -584,6 +594,21 @@ Only after the foundation and first consumer are accepted:
 
 Register compaction must never be used to mask an analysis scalability
 failure.  PERF3-11 first makes RXAS scale with the current register space.
+
+#### Future capability ledger
+
+These IDs organize already-approved future directions; they are not authority
+to combine consumers or bypass each consumer's correctness and Release gate.
+
+| ID | Capability | Required proof owner | Route |
+| --- | --- | --- | --- |
+| FC01 | sparse storage/component use index and edge-aware liveness | immutable CFG, SSA and signal continuations | PERF3-11 Phase B; unlocks M05/M06/K04 |
+| FC02 | further XTOY, GVN and partial-redundancy elimination | value/effect equivalence | PERF3-11 after legacy migration |
+| FC03 | loop-invariant code motion and representation hoisting | loop membership, must-execute, invariance and signal observation | PERF3-11 one consumer at a time |
+| FC04 | direct destination/materialisation and temporary elimination | destination unobserved plus atomic use redirect | PERF3-11 M05/M06 infrastructure |
+| FC05 | final register-number compaction | preserved windows, links, unwind, TRACE and `.locals` | PERF3-11 after all rewrites |
+| FC06 | register reuse/allocation | interference and component/storage liveness | PERF3-11 after scalable liveness |
+| FC07 | compiler clause and variable/representation hoisting | RXC lowering audit separated from RXAS proof | PERF3-12 |
 
 ## Acceptance criteria for the infrastructure
 

@@ -133,6 +133,10 @@ typedef struct flow_stats {
     size_t constant_proof_proved;
     size_t constant_proof_rejected;
     size_t constant_proof_unavailable;
+    size_t absent_proof_queries;
+    size_t absent_proof_proved;
+    size_t absent_proof_rejected;
+    size_t absent_proof_unavailable;
     size_t derivation_proof_queries;
     size_t derivation_proof_proved;
     size_t derivation_proof_rejected;
@@ -2669,54 +2673,144 @@ static size_t flow_remove_redundant_loads(flow_graph *graph, flow_stats *stats,
     return removed;
 }
 
-static size_t flow_remove_redundant_initializations(flow_graph *graph,
-                                                    flow_stats *stats) {
-    size_t generator;
+/* This is a demand filter, never a proof.  One linear, path-insensitive pass
+ * marks registers that may denote storage already cleared by an earlier NULL
+ * and propagates that possibility across explicit mapping instructions.  It
+ * may overselect at joins, but only the component-SSA query can authorize a
+ * deletion. */
+static size_t flow_mark_null_repeat_candidates(
+        const flow_graph *graph, unsigned char *candidates) {
+    unsigned char *may_be_absent;
     size_t index;
-    int destination_register;
-    unsigned char *available_in;
-    unsigned char *available_out;
-    instruction_queue *first;
-    instruction_queue *item;
+    size_t count;
+    if (!graph || !candidates || !graph->register_count) return 0;
+    may_be_absent = calloc(graph->register_count, 1);
+    if (!may_be_absent)
+        RX_PANIC_OOM("calloc RXAS NULL repeat demand filter",
+                     graph->register_count, 0);
+    count = 0;
+    for (index = 0; index < graph->item_count; index++) {
+        const instruction_queue *item;
+        size_t operand;
+        int touches_absent;
+        if (graph->items[index].instrType != OP_CODE ||
+            !graph->nodes[index].reachable || !graph->nodes[index].op)
+            continue;
+        item = &graph->items[index];
+        if (flow_opcode_may_remap_storage(&graph->nodes[index])) {
+            touches_absent = 0;
+            for (operand = 0; operand < item->operandCount; operand++) {
+                const Assembler_Token *token;
+                int register_index;
+                token = rxas_queue_operand(item, operand);
+                if (!token || !flow_register_type(token)) continue;
+                register_index = flow_register_index(
+                        graph, flow_register_type(token),
+                        (size_t)token->token_value.integer);
+                if (register_index >= 0 && may_be_absent[register_index]) {
+                    touches_absent = 1;
+                    break;
+                }
+            }
+            if (touches_absent) {
+                for (operand = 0; operand < item->operandCount; operand++) {
+                    const Assembler_Token *token;
+                    int register_index;
+                    token = rxas_queue_operand(item, operand);
+                    if (!token || !flow_register_type(token)) continue;
+                    register_index = flow_register_index(
+                            graph, flow_register_type(token),
+                            (size_t)token->token_value.integer);
+                    if (register_index >= 0)
+                        may_be_absent[register_index] = 1;
+                }
+            }
+        }
+        if (graph->nodes[index].op->opcode == OP_NULL_REG) {
+            const Assembler_Token *target;
+            int register_index;
+            target = rxas_queue_operand(item, 0);
+            register_index = target ? flow_register_index(
+                    graph, flow_register_type(target),
+                    (size_t)target->token_value.integer) : -1;
+            if (register_index >= 0) {
+                if (may_be_absent[register_index]) {
+                    candidates[index] = 1;
+                    count++;
+                }
+                may_be_absent[register_index] = 1;
+            }
+        }
+    }
+    free(may_be_absent);
+    return count;
+}
+
+static size_t flow_remove_redundant_initializations(
+        flow_graph *graph, flow_stats *stats, flow_proof_session *session) {
+    size_t index;
+    size_t candidate_count;
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *record;
+    RxasFlowProofResult proof_result;
+    int query_available;
+    unsigned char *candidates;
     size_t removed;
     removed = 0;
-    for (generator = 0; generator < graph->item_count; generator++) {
-        first = &graph->items[generator];
-        if (first->instrType != OP_CODE || !graph->nodes[generator].reachable ||
-            !graph->nodes[generator].op ||
-            graph->nodes[generator].op->opcode != OP_NULL_REG ||
-            flow_has_trace_after(graph, generator)) continue;
-        destination_register = flow_register_index(graph,
-                flow_register_type(first->operand1Token),
-                (size_t)first->operand1Token->token_value.integer);
-        if (destination_register < 0 ||
-            graph->registers[destination_register].type != 'r' ||
-            graph->tainted_registers[destination_register]) continue;
-        available_in = calloc(graph->item_count, 1);
-        available_out = calloc(graph->item_count, 1);
-        if (!available_in || !available_out)
-            RX_PANIC_OOM("calloc RXAS available-initialization fact",
-                         graph->item_count * 2, 0);
-        flow_compute_available_fact(graph, generator, destination_register,
-                                    destination_register, FLOW_ALL_VIEWS,
-                                    available_in, available_out);
-        for (index = generator + 1; index < graph->item_count; index++) {
-            item = &graph->items[index];
-            if (!available_in[index] || item->instrType != OP_CODE ||
-                !graph->nodes[index].op ||
-                graph->nodes[index].op->opcode != OP_NULL_REG ||
-                flow_register_index(graph, flow_register_type(item->operand1Token),
-                        (size_t)item->operand1Token->token_value.integer) !=
-                        destination_register ||
-                flow_has_trace_after(graph, index)) continue;
-            item->instrType = EMPTY;
-            flow_debug_accept(graph, index, "redundant-null", 0);
-            removed++;
-            stats->redundant_initializations_removed++;
-        }
-        free(available_in);
-        free(available_out);
+    candidates = calloc(graph->item_count, 1);
+    if (!candidates)
+        RX_PANIC_OOM("calloc RXAS NULL proof candidates",
+                     graph->item_count, 0);
+    candidate_count = flow_mark_null_repeat_candidates(graph, candidates);
+    if (!candidate_count) {
+        free(candidates);
+        return 0;
     }
+    proof = flow_proof_session_require(session, graph);
+    if (!proof) {
+        stats->absent_proof_unavailable++;
+        free(candidates);
+        return 0;
+    }
+    for (index = 0; index < graph->item_count; index++) {
+        if (!candidates[index]) continue;
+        record = rxas_flow_procedure_record(
+                session->procedure, session->epoch, index);
+        if (!record || record->instruction_id == RXAS_FLOW_ID_NONE) continue;
+        memset(&proof_result, 0, sizeof(proof_result));
+        query_available = rxas_flow_prove_redundant_absent_write(
+                proof, session->epoch, record->instruction_id, &proof_result) &&
+                !flow_proof_reason_unavailable(proof_result.reason);
+        stats->absent_proof_queries++;
+        if (graph->context->debug_mode)
+            fprintf(stderr,
+                    "PERF3 absent-proof-candidate opcode=%s record=%llu "
+                    "instruction=%llu proved=%d reason=%s storage=%llu "
+                    "before=%llu\n",
+                    graph->nodes[index].op->mnemonic,
+                    (unsigned long long)index,
+                    (unsigned long long)record->instruction_id,
+                    proof_result.proved,
+                    rxas_flow_proof_reason_name(proof_result.reason),
+                    (unsigned long long)proof_result.storage_id,
+                    (unsigned long long)proof_result.source_value_id);
+        if (!query_available) {
+            stats->absent_proof_unavailable++;
+            free(candidates);
+            return removed;
+        }
+        if (!proof_result.proved) {
+            stats->absent_proof_rejected++;
+            continue;
+        }
+        graph->items[index].instrType = EMPTY;
+        flow_debug_accept(graph, index,
+                          "redundant-component-ssa-absent", 0);
+        removed++;
+        stats->redundant_initializations_removed++;
+        stats->absent_proof_proved++;
+    }
+    free(candidates);
     return removed;
 }
 
@@ -2900,6 +2994,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
             "redundant-conversion=%llu producer-forward=%llu redirects=%llu "
             "constant-proof=%llu/%llu rejected=%llu unavailable=%llu "
+            "absent-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
@@ -2921,6 +3016,10 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->constant_proof_queries,
             (unsigned long long)stats->constant_proof_rejected,
             (unsigned long long)stats->constant_proof_unavailable,
+            (unsigned long long)stats->absent_proof_proved,
+            (unsigned long long)stats->absent_proof_queries,
+            (unsigned long long)stats->absent_proof_rejected,
+            (unsigned long long)stats->absent_proof_unavailable,
             (unsigned long long)stats->derivation_proof_proved,
             (unsigned long long)stats->derivation_proof_queries,
             (unsigned long long)stats->derivation_proof_rejected,
@@ -2991,7 +3090,8 @@ void rxas_flow_optimise(Assembler_Context *context,
                 if (!changed) changed += flow_forward_producer_destination(&graph, &stats);
                 if (!changed) changed += flow_remove_redundant_loads(
                         &graph, &stats, &proof_session);
-                if (!changed) changed += flow_remove_redundant_initializations(&graph, &stats);
+                if (!changed) changed += flow_remove_redundant_initializations(
+                        &graph, &stats, &proof_session);
                 if (!changed) changed += flow_remove_redundant_conversions(
                         &graph, &stats, &proof_session);
             }

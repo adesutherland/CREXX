@@ -787,6 +787,18 @@ service and never authorizes deletion.  Migrated consumers share one immutable
 proof session per fixed-point epoch, and retained-byte metrics are refreshed
 after lazy query materialization.
 
+M03 migrates repeated `NULL`.  The legacy raw-register all-view availability
+solver and its blanket TRACE guards are deleted.  A candidate must be an exact
+classified non-signalling `NULL`, its pre-instruction target must resolve to a
+known `StorageId`, and every reaching leaf of all eight tracked components
+must already be `ABSENT`.  This proves that deletion skips no scalar/payload
+destruction, reference release or native-payload finalization.  Distinct
+write-once absent leaves may agree through a phi, direct aliases follow
+storage identity, and explicit TRACE records remain ordered observations.
+An intervening component write or unknown storage/value leaf fails closed.
+The proof deliberately uses pre-instruction storage: VM `NULL` clears the
+value reached by a register but does not change the register's link topology.
+
 The admitted first transformation panel is deliberately narrower than the
 fact engine:
 
@@ -799,8 +811,8 @@ fact engine:
   no-op, while nonidentity full-value copies remain excluded pending ownership,
   payload, attribute, flag and cleanup proof;
 - repeated integer/bitwise-equal float constants use the M02 storage/value and
-  hidden-cleanup proof; repeated `null` still uses the legacy all-view
-  must-available fact pending M03;
+  hidden-cleanup proof; repeated `null` uses the M03 known-storage and
+  all-component-absence proof;
 - repeated metadata-admitted one-register XTOY derivations use the generic
   dominated-success repetition proof;
 - a repeated one-register `itos` is removed only under the storage-identity,

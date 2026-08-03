@@ -2033,6 +2033,112 @@ complete:
     return 1;
 }
 
+int rxas_flow_prove_redundant_absent_write(
+        const RxasFlowProofService *const_service,
+        unsigned long expected_epoch, size_t candidate_instruction,
+        RxasFlowProofResult *result) {
+    RxasFlowProofService *service;
+    const RxasFlowInstruction *instruction;
+    const RxasFlowRecord *record;
+    const instruction_queue *item;
+    RxasFlowRegister target;
+    RxasFlowStorageFact storage;
+    RxasFlowComponentFact before;
+    FlowProofValueWalkResult walk;
+    unsigned int component;
+    size_t component_index;
+    static const unsigned int components[] = {
+        RXOP_COMPONENT_INTEGER,
+        RXOP_COMPONENT_FLOAT,
+        RXOP_COMPONENT_STRING,
+        RXOP_COMPONENT_DECIMAL,
+        RXOP_COMPONENT_BINARY,
+        RXOP_COMPONENT_ATTRIBUTES,
+        RXOP_COMPONENT_REFERENCE,
+        RXOP_COMPONENT_NATIVE_PAYLOAD
+    };
+    if (!result) return 0;
+    flow_proof_result_init(result, RXAS_FLOW_PROOF_STALE_EPOCH);
+    result->candidate_instruction = candidate_instruction;
+    if (!flow_proof_query_available(
+                const_service, expected_epoch, result)) return 1;
+    service = (RxasFlowProofService *)const_service;
+    service->metrics.redundant_absent_queries++;
+    if (!flow_proof_consume(service, 2 + sizeof(components) /
+                                     sizeof(components[0]))) {
+        result->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        goto complete;
+    }
+    instruction = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, candidate_instruction);
+    record = instruction ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, instruction->record_id) : 0;
+    item = record ? record->queue_record : 0;
+    component = instruction && instruction->op
+            ? rxop_component_writes(instruction->op->opcode, 0)
+            : RXOP_COMPONENT_NONE;
+    if (!instruction || !instruction->op || !item ||
+        item->operandCount != 1 ||
+        instruction->op->opcode != OP_NULL_REG ||
+        instruction->effects.state != RXOP_EFFECT_CLASSIFIED ||
+        instruction->effects.reads != RXOP_OP_NONE ||
+        instruction->effects.writes != RXOP_OP_1 ||
+        instruction->effects.kills != RXOP_OP_1 ||
+        instruction->effects.branch_targets != RXOP_OP_NONE ||
+        instruction->effects.implicit != RXOP_IMPLICIT_NONE ||
+        instruction->effects.semantics != RXOP_SEM_NONE ||
+        instruction->effects.cursor_reads != RXOP_OP_NONE ||
+        instruction->effects.cursor_writes != RXOP_OP_NONE ||
+        instruction->effects.flow != FLOW_NEXT ||
+        instruction->effects.optimizer_barrier ||
+        instruction->signal.state != RXOP_SIGNAL_STATE_NONE ||
+        rxop_context_writes(instruction->op->opcode) != RXOP_CONTEXT_NONE ||
+        component != RXOP_COMPONENT_ALL ||
+        !flow_proof_register(flow_proof_operand(item, 0), &target)) {
+        result->reason = RXAS_FLOW_PROOF_NOT_EXACT_ABSENT_WRITE;
+        goto complete;
+    }
+    if (!rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, candidate_instruction, 0,
+                target, &storage) || !storage.storage_id) {
+        result->reason = RXAS_FLOW_PROOF_STORAGE_UNKNOWN;
+        goto complete;
+    }
+    result->storage_id = storage.storage_id;
+    for (component_index = 0;
+         component_index < sizeof(components) / sizeof(components[0]);
+         component_index++) {
+        if (!rxas_flow_component_at_instruction(
+                    service->ssa, expected_epoch, candidate_instruction, 0,
+                    target, components[component_index], &before)) {
+            result->reason = RXAS_FLOW_PROOF_ABSENCE_UNKNOWN;
+            goto complete;
+        }
+        if (!component_index) {
+            result->source_value_id = before.value_id;
+            result->source_kind = before.kind;
+        }
+        walk = flow_proof_value_leaves_match(
+                service, before.value_id, 0, 1);
+        if (walk != FLOW_PROOF_VALUE_UNIQUE) {
+            result->reason = service->metrics.status ==
+                        RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                    ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                    : walk == FLOW_PROOF_VALUE_MULTIPLE
+                            ? RXAS_FLOW_PROOF_COMPONENT_PRESENT
+                            : RXAS_FLOW_PROOF_ABSENCE_UNKNOWN;
+            goto complete;
+        }
+    }
+    result->proved = 1;
+    result->reason = RXAS_FLOW_PROOF_PROVED;
+
+complete:
+    if (result->proved) service->metrics.redundant_absent_proved++;
+    else service->metrics.redundant_absent_rejected++;
+    return 1;
+}
+
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result) {
@@ -2281,6 +2387,10 @@ const char *rxas_flow_proof_reason_name(RxasFlowProofReason reason) {
         case RXAS_FLOW_PROOF_CONSTANT_UNKNOWN: return "constant-unknown";
         case RXAS_FLOW_PROOF_CONSTANT_CHANGED: return "constant-changed";
         case RXAS_FLOW_PROOF_CLEANUP_REQUIRED: return "cleanup-required";
+        case RXAS_FLOW_PROOF_NOT_EXACT_ABSENT_WRITE:
+            return "not-exact-absent-write";
+        case RXAS_FLOW_PROOF_COMPONENT_PRESENT: return "component-present";
+        case RXAS_FLOW_PROOF_ABSENCE_UNKNOWN: return "absence-unknown";
         case RXAS_FLOW_PROOF_NOT_IN_LOOP: return "not-in-loop";
         case RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP: return "irreducible-loop";
         case RXAS_FLOW_PROOF_NOT_MUST_EXECUTE: return "not-must-execute";
@@ -2374,6 +2484,7 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             "PERF3 flow-proof epoch=%lu status=available budget=%llu work=%llu "
             "bytes=%llu repetition=%llu cache-hits=%llu proved=%llu "
             "rejected=%llu redundant-constant=%llu/%llu rejected=%llu "
+            "redundant-absent=%llu/%llu rejected=%llu "
             "success-edge=%llu loop=%llu ssa-bytes=%llu ssa-values=%llu "
             "ssa-storages=%llu\n",
             service->metrics.epoch,
@@ -2387,6 +2498,9 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             (unsigned long long)service->metrics.redundant_constant_proved,
             (unsigned long long)service->metrics.redundant_constant_queries,
             (unsigned long long)service->metrics.redundant_constant_rejected,
+            (unsigned long long)service->metrics.redundant_absent_proved,
+            (unsigned long long)service->metrics.redundant_absent_queries,
+            (unsigned long long)service->metrics.redundant_absent_rejected,
             (unsigned long long)service->metrics.success_edge_queries,
             (unsigned long long)service->metrics.loop_queries,
             (unsigned long long)(ssa_metrics

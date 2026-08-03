@@ -1953,6 +1953,92 @@ static void test_redundant_constant_proof(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_redundant_absent_proof(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowProofService *proof;
+    RxasFlowProofResult result;
+    size_t repeated_null;
+    size_t changed_null;
+    size_t linked_null;
+    size_t reference_cleanup_null;
+    size_t native_cleanup_null;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 4);
+    operands[1] = fixture_register(&fixture, 5);
+    fixture_op(&fixture, "mkref", operands, 2);
+    operands[0] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 6);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[0] = fixture_register(&fixture, 6);
+    operands[1] = fixture_register(&fixture, 7);
+    fixture_op(&fixture, "bcopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 6);
+    fixture_op(&fixture, "null", operands, 1);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 27);
+    check(procedure != 0,
+          "redundant-absent proof fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 27, 0);
+        repeated_null = rxas_flow_procedure_record(
+                procedure, 27, 1)->instruction_id;
+        changed_null = rxas_flow_procedure_record(
+                procedure, 27, 4)->instruction_id;
+        linked_null = rxas_flow_procedure_record(
+                procedure, 27, 7)->instruction_id;
+        reference_cleanup_null = rxas_flow_procedure_record(
+                procedure, 27, 10)->instruction_id;
+        native_cleanup_null = rxas_flow_procedure_record(
+                procedure, 27, 13)->instruction_id;
+        check(proof && rxas_flow_prove_redundant_absent_write(
+                    proof, 27, repeated_null, &result) && result.proved,
+              "repeated all-component absence was not proved redundant");
+        check(rxas_flow_prove_redundant_absent_write(
+                    proof, 27, changed_null, &result) && !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_COMPONENT_PRESENT,
+              "present scalar component was incorrectly treated as absent");
+        check(rxas_flow_prove_redundant_absent_write(
+                    proof, 27, linked_null, &result) && result.proved,
+              "linked all-component absence was not proved redundant");
+        check(rxas_flow_prove_redundant_absent_write(
+                    proof, 27, reference_cleanup_null, &result) &&
+              !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_COMPONENT_PRESENT,
+              "reference cleanup NULL was incorrectly deleted");
+        check(rxas_flow_prove_redundant_absent_write(
+                    proof, 27, native_cleanup_null, &result) &&
+              !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_COMPONENT_PRESENT,
+              "native-payload cleanup NULL was incorrectly deleted");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static void test_loop_proofs(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
@@ -2069,6 +2155,7 @@ int main(void) {
     test_fused_failure_mappings(&context);
     test_proof_service(&context);
     test_redundant_constant_proof(&context);
+    test_redundant_absent_proof(&context);
     test_loop_proofs(&context);
 
     if (failures) {

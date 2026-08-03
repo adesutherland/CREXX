@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01 and M02 complete; M03 repeated `NULL` next**
+Status: **in progress — M01, M02 and M03 complete; M04 exact self-copy next**
 
 Authorized: 2026-08-02
 
@@ -66,8 +66,8 @@ and after the diagnostic prove output neutrality.
 | M00 | complete-control reachability and dead record cleanup | canonical: Richards 5, Towers 7, RexxCPS 0; focused 4 instructions plus TRACE/source records | immutable graph reachability and rewrite plan | migrate after value consumers; structural, not value proof |
 | M01 | `flow_compute_available_fact()` for repeated one-register `ITOF`, then metadata-admitted `XTOY` derivations | old floor: focused `ITOF` 1, canonical 0; other conversions are new domain | generic dominated-success repetition | **complete**; old authority deleted, all 20 one-register conversions described by metadata, 12 focused deletions proved |
 | M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | **complete**; old authority deleted, old floor plus four stronger focused deletions proved |
-| M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | **next** |
-| M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | migrate with redundant-write queries |
+| M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | **complete**; old authority deleted, old floor plus equal-phi, linked-storage and TRACE cases proved |
+| M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | **next**; migrate with redundant-write queries |
 | M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | requires new reusable use/liveness query |
 | M06 | adjacent producer-destination forwarding | focused 12; canonical 0 | exact producer result, destination/temporary liveness and observation equivalence | migrate after M05 infrastructure |
 | M07 | dense legacy register-storage must-analysis | diagnostic-only; 13 storage-identity fixtures | sparse SSA storage queries and proof diagnostics | retire after its oracle is expressed against new SSA |
@@ -125,7 +125,8 @@ separate assembler-processing simplification is selected.
 - [x] Apply the mandatory Release stop if the stronger proof changes an
       ordinary representative output.
 - [x] Repeat separately for **M02**.
-- [ ] Repeat separately for **M03** and **M04**.
+- [x] Repeat separately for **M03**.
+- [ ] Repeat separately for **M04**.
 
 ### Phase B — reusable use graph and component liveness
 
@@ -161,7 +162,7 @@ separate assembler-processing simplification is selected.
 - [ ] Rebaseline assembler elapsed/RSS and complete proportional broad Debug
       closeout before the final local commit.
 
-## M01-M02 results and current stop point
+## M01-M03 results and current stop point
 
 M01 is complete in
 [`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/).
@@ -204,6 +205,14 @@ Adrian accepted that first Release verdict on 2026-08-03.  Canonical images are
 unchanged, focused optimizer replay is 53/53, Release hidden-cleanup execution
 is 4/4, and broad Debug passes 1,991/1,991.
 
-M03 is next: replace repeated `NULL` all-view availability with a proof of
-storage presence plus equivalence of every component, including the hidden
-native payload.
+M03 is complete in
+[`2026-08-03-perf3-11-m03-absent-write`](evidence/2026-08-03-perf3-11-m03-absent-write/).
+The old repeated-`NULL` solver is deleted.  Its replacement requires known
+pre-instruction storage and proves every reaching leaf of all eight components
+already absent.  It recovers the old floor and additionally removes equal-phi,
+linked-storage and ordered-TRACE repetitions.  Different phis, scalar writes,
+reference cleanup and native-payload cleanup remain closed.  Adrian accepted
+the output-neutral Release verdict on 2026-08-03; canonical images are
+byte-identical and broad Debug passes 1,993/1,993.
+
+M04 exact full/typed self-copy deletion is next.
