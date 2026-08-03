@@ -84,6 +84,7 @@ set(BIFS
 		value
 		verify
 		version
+		sourceinfo
 		word
 		words
 		wordindex

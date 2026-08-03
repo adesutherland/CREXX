@@ -60,6 +60,7 @@ set(REXXBINS
         ts_upper.rxbin
         ts_upper_lower.rxbin
         ts_version.rxbin
+        ts_sourceinfo.rxbin
         ts_value.rxbin
         ts_verify.rxbin
         ts_wordlength.rxbin
@@ -381,6 +382,8 @@ set_tests_properties(ts_trace_noopt ts_trace_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: trace helpers")
 set_tests_properties(ts_version_noopt ts_version_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version")
+set_tests_properties(ts_sourceinfo_noopt ts_sourceinfo_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: sourceinfo")
 set_tests_properties(ts_binary_noopt ts_binary_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: binary helpers")
 set_tests_properties(ts_fileio_chars_noopt ts_fileio_chars_opt
