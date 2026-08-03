@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — D0.3 complete; D0.4 batched pass manager next**
+Status: **in progress — D0.4 complete; D0.5 full scale verdict next**
 
 Architecture approved: 2026-08-02
 
@@ -748,8 +748,15 @@ also complete: M01-M06 and K01-K04 now request only their declared semantic
 capabilities from one monotonic per-epoch proof service, loop analysis remains
 dormant, and an explicit diagnostic route preserves `-d` evidence. Focused
 Debug/Release and dual-VM runtime panels pass and accepted K05 hashes remain
-exact. The Parse diagnostic remains approximately 2.46 GB, so D0.4 batched
-semantic rewrites is next.
+exact. D0.4 now migrates compatible M01-M06 and K02-K04 semantic use cases to
+a sparse validated transaction while leaving K01 and CFG-changing K05 in
+separate epochs. Its transaction and multi-family proofs pass, the final
+Debug/Release optimizer and migrated-runtime panel passes 107/107, and
+accepted canonical images remain exact. Generated `Parse.rxas` applies 63
+semantic plans in 12 batches but still peaks at approximately 2.56 GB:
+batching reduces rebuilds while longer capability co-retention increases the
+unsupported peak. D0.5 full scale review and capability-lifetime split or
+compaction is next.
 
 ### Stage 11 — later consumers after legacy migration
 

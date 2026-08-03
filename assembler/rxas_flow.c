@@ -26,6 +26,7 @@
 
 #include "rxasassm.h"
 #include "rxas_flow_analysis.h"
+#include "rxas_flow_batch.h"
 #include "rxas_flow_graph.h"
 #include "rxas_flow_pass.h"
 #include "rxas_flow_proof.h"
@@ -66,6 +67,7 @@ typedef struct flow_graph {
     size_t item_count;
     RxasFlowProcedure *procedure;
     unsigned long epoch;
+    RxasFlowQueueBatch *queue_batch;
     flow_node *nodes;
     flow_register *registers;
     size_t register_count;
@@ -126,6 +128,12 @@ typedef struct flow_stats {
     size_t branch_thread_rejected;
     size_t branch_threads_applied;
     size_t branch_thread_batches_applied;
+    size_t semantic_batches_applied;
+    size_t semantic_batches_rejected;
+    size_t semantic_records_changed;
+    size_t semantic_records_deleted;
+    size_t semantic_opcodes_replaced;
+    size_t semantic_operand_records_rewritten;
     size_t operands_redirected;
     size_t rejected_live;
     size_t rejected_trace;
@@ -388,6 +396,37 @@ static void flow_set_operand(instruction_queue *item, size_t operand_index,
         case 9: item->operand10Token = token; break;
         default: break;
     }
+}
+
+static int flow_record_matches_epoch(const flow_graph *graph,
+                                     size_t record_id) {
+    if (!graph || record_id >= graph->item_count) return 0;
+    if (!graph->queue_batch) return 1;
+    return rxas_flow_queue_batch_record_matches_epoch(
+            graph->queue_batch, record_id);
+}
+
+static instruction_queue *flow_edit_record(flow_graph *graph,
+                                           size_t record_id) {
+    const instruction_queue *epoch_item;
+    instruction_queue *item;
+    if (!graph || record_id >= graph->item_count) return 0;
+    if (!graph->queue_batch) return &graph->items[record_id];
+    item = rxas_flow_queue_batch_edit(
+            graph->queue_batch, record_id, &epoch_item);
+    if (!item ||
+        !rxas_flow_procedure_pin_queue_record(
+                graph->procedure, graph->epoch, record_id, epoch_item))
+        return 0;
+    return item;
+}
+
+static int flow_delete_record(flow_graph *graph, size_t record_id) {
+    instruction_queue *item;
+    item = flow_edit_record(graph, record_id);
+    if (!item) return 0;
+    item->instrType = EMPTY;
+    return 1;
 }
 
 static int flow_is_compare_opcode(int opcode) {
@@ -770,6 +809,7 @@ static size_t flow_propagate_one_copy_ssa(
     size_t rewrite_index;
     size_t compare_redirects;
     if (!graph || !stats || !session || copy_index >= graph->item_count ||
+        !flow_record_matches_epoch(graph, copy_index) ||
         graph->items[copy_index].instrType != OP_CODE ||
         !graph->nodes[copy_index].op ||
         (graph->nodes[copy_index].op->opcode != OP_ICOPY_REG_REG &&
@@ -832,12 +872,26 @@ static size_t flow_propagate_one_copy_ssa(
             return 0;
         }
     }
+    for (rewrite_index = 0; rewrite_index < plan.rewrite_count;
+         rewrite_index++) {
+        rxas_flow_typed_copy_plan_rewrite(
+                proof, session->epoch, &plan, rewrite_index, &rewrite);
+        if (!flow_edit_record(graph, rewrite.record_id)) {
+            stats->rejected_effect++;
+            return 0;
+        }
+    }
+    copy = flow_edit_record(graph, copy_index);
+    if (!copy) {
+        stats->rejected_effect++;
+        return 0;
+    }
     compare_redirects = 0;
     for (rewrite_index = 0; rewrite_index < plan.rewrite_count;
          rewrite_index++) {
         rxas_flow_typed_copy_plan_rewrite(
                 proof, session->epoch, &plan, rewrite_index, &rewrite);
-        flow_set_operand(&graph->items[rewrite.record_id],
+        flow_set_operand(flow_edit_record(graph, rewrite.record_id),
                          rewrite.operand_index, source);
         stats->operands_redirected++;
         if (graph->nodes[rewrite.record_id].op &&
@@ -1014,6 +1068,8 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
         }
         if (plan.producer_record_id != producer_index ||
             plan.copy_record_id != producer_index + 1 ||
+            !flow_record_matches_epoch(graph, producer_index) ||
+            !flow_record_matches_epoch(graph, producer_index + 1) ||
             plan.producer_rewrite.record_id != producer_index ||
             plan.producer_rewrite.instruction_id != producer_instruction ||
             plan.producer_rewrite.operand_index != 0 ||
@@ -1026,6 +1082,13 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
             !flow_operand_matches_proof_register(
                     copy_source,
                     plan.producer_rewrite.expected_register)) {
+            stats->producer_proof_unavailable++;
+            stats->rejected_effect++;
+            continue;
+        }
+        producer = flow_edit_record(graph, producer_index);
+        copy = flow_edit_record(graph, producer_index + 1);
+        if (!producer || !copy) {
             stats->producer_proof_unavailable++;
             stats->rejected_effect++;
             continue;
@@ -1204,6 +1267,18 @@ static size_t flow_reuse_duplicate_linked_read(
                         candidates[second_index].link_opcode ||
                 plan.expected_copy_opcode !=
                         candidates[second_index].copy_opcode ||
+                !flow_record_matches_epoch(
+                        graph, plan.first_link_record_id) ||
+                !flow_record_matches_epoch(
+                        graph, plan.first_copy_record_id) ||
+                !flow_record_matches_epoch(
+                        graph, plan.first_unlink_record_id) ||
+                !flow_record_matches_epoch(
+                        graph, plan.second_link_record_id) ||
+                !flow_record_matches_epoch(
+                        graph, plan.second_copy_record_id) ||
+                !flow_record_matches_epoch(
+                        graph, plan.second_unlink_record_id) ||
                 !flow_operand_matches_proof_register(
                         rxas_queue_operand(first_copy, 0),
                         plan.first_detached) ||
@@ -1221,6 +1296,16 @@ static size_t flow_reuse_duplicate_linked_read(
             }
             replacement_operands[0] = rxas_queue_operand(second_copy, 0);
             replacement_operands[1] = rxas_queue_operand(first_copy, 0);
+            second_link = flow_edit_record(
+                    graph, plan.second_link_record_id);
+            second_copy = flow_edit_record(
+                    graph, plan.second_copy_record_id);
+            second_unlink = flow_edit_record(
+                    graph, plan.second_unlink_record_id);
+            if (!second_link || !second_copy || !second_unlink) {
+                stats->rejected_effect++;
+                continue;
+            }
             second_link->instrToken = rxas_tid(
                     graph->context, second_link->instrToken,
                     (char *)op_table[plan.expected_copy_opcode].mnemonic);
@@ -1351,6 +1436,8 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
         branch_result = rxas_queue_operand(branch, 1);
         if (plan.compare_record_id != compare_index ||
             plan.branch_record_id != branch_index ||
+            !flow_record_matches_epoch(graph, compare_index) ||
+            !flow_record_matches_epoch(graph, branch_index) ||
             plan.expected_compare_opcode !=
                     graph->nodes[compare_index].op->opcode ||
             plan.expected_branch_opcode !=
@@ -1383,9 +1470,29 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
                 trace_deletion.record_id >= branch_index ||
                 trace_deletion.value_id != plan.result_value_id ||
                 trace_deletion.record_id >= graph->item_count ||
+                !flow_record_matches_epoch(
+                        graph, trace_deletion.record_id) ||
                 !flow_trace_event_matches_deletion(
                         &graph->items[trace_deletion.record_id],
                         &trace_deletion)) {
+                stats->rejected_effect++;
+                break;
+            }
+        }
+        if (trace_deletion_index != plan.trace_deletion_count) continue;
+        compare = flow_edit_record(graph, compare_index);
+        branch = flow_edit_record(graph, branch_index);
+        if (!compare || !branch) {
+            stats->rejected_effect++;
+            continue;
+        }
+        for (trace_deletion_index = 0;
+             trace_deletion_index < plan.trace_deletion_count;
+             trace_deletion_index++) {
+            rxas_flow_compare_branch_plan_trace_deletion(
+                    proof, session->epoch, &plan,
+                    trace_deletion_index, &trace_deletion);
+            if (!flow_edit_record(graph, trace_deletion.record_id)) {
                 stats->rejected_effect++;
                 break;
             }
@@ -1403,8 +1510,10 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
             rxas_flow_compare_branch_plan_trace_deletion(
                     proof, session->epoch, &plan,
                     trace_deletion_index, &trace_deletion);
-            graph->items[trace_deletion.record_id].instrType = EMPTY;
+            if (!flow_delete_record(graph, trace_deletion.record_id))
+                break;
         }
+        if (trace_deletion_index != plan.trace_deletion_count) continue;
         stats->compare_branch_proved++;
         stats->compare_branches_fused++;
         stats->compare_trace_events_removed += plan.trace_deletion_count;
@@ -1565,6 +1674,7 @@ static size_t flow_remove_redundant_loads(flow_graph *graph, flow_stats *stats,
     }
     for (index = 0; index < graph->item_count; index++) {
         if (!flow_scalar_constant_may_repeat(graph, index)) continue;
+        if (!flow_record_matches_epoch(graph, index)) continue;
         record = rxas_flow_procedure_record(
                 session->procedure, session->epoch, index);
         if (!record || record->instruction_id == RXAS_FLOW_ID_NONE) continue;
@@ -1594,7 +1704,7 @@ static size_t flow_remove_redundant_loads(flow_graph *graph, flow_stats *stats,
             stats->constant_proof_rejected++;
             continue;
         }
-        graph->items[index].instrType = EMPTY;
+        if (!flow_delete_record(graph, index)) continue;
         flow_debug_accept(graph, index,
                           "redundant-component-ssa-constant", 0);
         removed++;
@@ -1706,6 +1816,7 @@ static size_t flow_remove_redundant_initializations(
     }
     for (index = 0; index < graph->item_count; index++) {
         if (!candidates[index]) continue;
+        if (!flow_record_matches_epoch(graph, index)) continue;
         record = rxas_flow_procedure_record(
                 session->procedure, session->epoch, index);
         if (!record || record->instruction_id == RXAS_FLOW_ID_NONE) continue;
@@ -1735,7 +1846,7 @@ static size_t flow_remove_redundant_initializations(
             stats->absent_proof_rejected++;
             continue;
         }
-        graph->items[index].instrType = EMPTY;
+        if (!flow_delete_record(graph, index)) continue;
         flow_debug_accept(graph, index,
                           "redundant-component-ssa-absent", 0);
         removed++;
@@ -1909,6 +2020,7 @@ static size_t flow_remove_redundant_self_copies(
     removed = 0;
     for (index = 0; index < graph->item_count; index++) {
         if (!candidates[index]) continue;
+        if (!flow_record_matches_epoch(graph, index)) continue;
         record = rxas_flow_procedure_record(
                 session->procedure, session->epoch, index);
         if (!record || record->instruction_id == RXAS_FLOW_ID_NONE) continue;
@@ -1937,7 +2049,7 @@ static size_t flow_remove_redundant_self_copies(
             stats->self_copy_proof_rejected++;
             continue;
         }
-        graph->items[index].instrType = EMPTY;
+        if (!flow_delete_record(graph, index)) continue;
         flow_debug_accept(graph, index,
                           "redundant-component-ssa-self-copy", 0);
         removed++;
@@ -2005,6 +2117,7 @@ static size_t flow_remove_redundant_derivations(
     for (index = 0; index < graph->item_count; index++) {
         if (!flow_is_one_register_derivation(graph, index))
             continue;
+        if (!flow_record_matches_epoch(graph, index)) continue;
         record = rxas_flow_procedure_record(
                 session->procedure, session->epoch, index);
         if (!record || record->instruction_id == RXAS_FLOW_ID_NONE ||
@@ -2037,6 +2150,10 @@ static size_t flow_remove_redundant_derivations(
             generator = &candidates[generator_index];
             if (generator->opcode != candidate->opcode ||
                 generator->storage_id != candidate->storage_id ||
+                !flow_record_matches_epoch(
+                        graph, candidate->record_id) ||
+                !flow_record_matches_epoch(
+                        graph, generator->record_id) ||
                 graph->items[generator->record_id].instrType != OP_CODE)
                 continue;
             memset(&proof_result, 0, sizeof(proof_result));
@@ -2054,7 +2171,8 @@ static size_t flow_remove_redundant_derivations(
                 stats->derivation_proof_rejected++;
                 continue;
             }
-            graph->items[candidate->record_id].instrType = EMPTY;
+            if (!flow_delete_record(graph, candidate->record_id))
+                continue;
             flow_debug_accept(
                     graph, candidate->record_id,
                     "redundant-component-ssa-conversion", 0);
@@ -2096,6 +2214,8 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "storage-permutation-proof=%llu/%llu rejected=%llu "
             "compare-branch-proof=%llu/%llu rejected=%llu "
             "branch-thread=%llu/%llu rejected=%llu applied=%llu batches=%llu "
+            "semantic-batch=%llu rejected=%llu records=%llu deleted=%llu "
+            "opcodes=%llu operand-records=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
             (unsigned long long)graph->block_count,
@@ -2150,6 +2270,12 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->branch_thread_rejected,
             (unsigned long long)stats->branch_threads_applied,
             (unsigned long long)stats->branch_thread_batches_applied,
+            (unsigned long long)stats->semantic_batches_applied,
+            (unsigned long long)stats->semantic_batches_rejected,
+            (unsigned long long)stats->semantic_records_changed,
+            (unsigned long long)stats->semantic_records_deleted,
+            (unsigned long long)stats->semantic_opcodes_replaced,
+            (unsigned long long)stats->semantic_operand_records_rewritten,
             (unsigned long long)stats->rejected_live,
             (unsigned long long)stats->rejected_trace,
             (unsigned long long)stats->rejected_tainted,
@@ -2305,6 +2431,130 @@ static size_t flow_apply_branch_thread_epoch(flow_graph *graph,
     return applied;
 }
 
+static int flow_has_semantic_candidates(
+        const RxasOptimisationCensus *census) {
+    return rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_M04_SELF_COPY) ||
+           rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_K02_K03_LINKED_READ) ||
+           rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_M05_TYPED_COPY) ||
+           rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_M06_PRODUCER_FORWARD) ||
+           rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_K04_COMPARE_BRANCH) ||
+           rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_M02_CONSTANT) ||
+           rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_M03_ABSENT) ||
+           rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_M01_DERIVATION);
+}
+
+/* D0.4 keeps proof facts immutable while compatible semantic consumers edit a
+ * private queue overlay in their established priority order.  Every consumer
+ * still validates its typed plan; delete-only consumers additionally require
+ * their target record to match the epoch.  The live queue changes only after
+ * complete batch validation, and K05 remains a later CFG-only epoch. */
+static size_t flow_apply_semantic_epoch(
+        flow_graph *graph, flow_stats *stats, flow_proof_session *session,
+        const RxasOptimisationCensus *census) {
+    RxasFlowQueueBatch batch;
+    RxasFlowQueueBatchMetrics metrics;
+    instruction_queue *original_items;
+    size_t planned;
+
+    if (!flow_has_semantic_candidates(census)) return 0;
+    memset(&batch, 0, sizeof(batch));
+    memset(&metrics, 0, sizeof(metrics));
+    original_items = graph->items;
+    if (!rxas_flow_queue_batch_begin(
+                &batch, graph->context, original_items,
+                graph->item_count))
+        return 0;
+    graph->queue_batch = &batch;
+    planned = 0;
+
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_M04_SELF_COPY))
+        planned += flow_remove_redundant_self_copies(
+                graph, stats, session);
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_K02_K03_LINKED_READ))
+        planned += flow_reuse_duplicate_linked_read(
+                graph, stats, session);
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_M05_TYPED_COPY))
+        planned += flow_propagate_copies(graph, stats, session);
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_M06_PRODUCER_FORWARD))
+        planned += flow_forward_producer_destination(
+                graph, stats, session);
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_K04_COMPARE_BRANCH))
+        planned += flow_fuse_compare_branches(graph, stats, session);
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_M02_CONSTANT))
+        planned += flow_remove_redundant_loads(graph, stats, session);
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_M03_ABSENT))
+        planned += flow_remove_redundant_initializations(
+                graph, stats, session);
+    if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_M01_DERIVATION))
+        planned += flow_remove_redundant_conversions(
+                graph, stats, session);
+
+    if (!rxas_flow_procedure_rebind_queue_records(
+                graph->procedure, graph->epoch,
+                original_items, graph->item_count)) {
+        graph->queue_batch = 0;
+        rxas_flow_queue_batch_destroy(&batch);
+        if (planned) stats->semantic_batches_rejected++;
+        return 0;
+    }
+    graph->queue_batch = 0;
+    if (planned &&
+        rxas_flow_queue_batch_commit(&batch, &metrics) &&
+        metrics.records_changed) {
+        stats->semantic_batches_applied++;
+        stats->semantic_records_changed += metrics.records_changed;
+        stats->semantic_records_deleted += metrics.records_deleted;
+        stats->semantic_opcodes_replaced += metrics.opcodes_replaced;
+        stats->semantic_operand_records_rewritten +=
+                metrics.operand_records_rewritten;
+        if (graph->context->debug_mode)
+            fprintf(stderr,
+                    "PERF3 semantic-batch procedure=%s epoch=%lu "
+                    "plans=%llu records=%llu deleted=%llu opcodes=%llu "
+                    "operand-records=%llu status=applied\n",
+                    graph->context->current_proc_name
+                            ? graph->context->current_proc_name
+                            : "(directives)",
+                    graph->epoch,
+                    (unsigned long long)planned,
+                    (unsigned long long)metrics.records_changed,
+                    (unsigned long long)metrics.records_deleted,
+                    (unsigned long long)metrics.opcodes_replaced,
+                    (unsigned long long)
+                            metrics.operand_records_rewritten);
+    }
+    else if (planned) {
+        stats->semantic_batches_rejected++;
+        metrics.records_changed = 0;
+        if (graph->context->debug_mode)
+            fprintf(stderr,
+                    "PERF3 semantic-batch procedure=%s epoch=%lu "
+                    "plans=%llu status=rejected\n",
+                    graph->context->current_proc_name
+                            ? graph->context->current_proc_name
+                            : "(directives)",
+                    graph->epoch, (unsigned long long)planned);
+    }
+    rxas_flow_queue_batch_destroy(&batch);
+    return metrics.records_changed;
+}
+
 void rxas_flow_optimise(Assembler_Context *context) {
     flow_graph graph;
     flow_stats stats;
@@ -2359,8 +2609,9 @@ void rxas_flow_optimise(Assembler_Context *context) {
         stats.procedures = 1;
         stats.blocks = graph.block_count;
         /* Every structural and semantic consumer shares this one immutable
-         * graph for the epoch. A mutation ends the epoch before any later
-         * consumer can observe stale block, signal, storage or value facts. */
+         * graph for the epoch. Structural mutation ends the epoch. Compatible
+         * semantic edits pin proof-facing records to their originals until
+         * the sparse transaction commits and then rebuild once. */
         if (!graph.complete_control_flow) {
             if (context->debug_mode)
                 fprintf(stderr,
@@ -2379,40 +2630,9 @@ void rxas_flow_optimise(Assembler_Context *context) {
                     &census, RXAS_PASS_K01_STORAGE_PERMUTATION))
                 changed += flow_remove_swap_round_trips(
                         &graph, &stats, &proof_session);
-            if (!changed && flow_value_analysis_within_bound(&graph)) {
-                if (rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_M04_SELF_COPY))
-                    changed += flow_remove_redundant_self_copies(
-                            &graph, &stats, &proof_session);
-                if (!changed && rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_K02_K03_LINKED_READ))
-                    changed += flow_reuse_duplicate_linked_read(
-                            &graph, &stats, &proof_session);
-                if (!changed && rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_M05_TYPED_COPY))
-                    changed += flow_propagate_copies(
-                            &graph, &stats, &proof_session);
-                if (!changed && rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_M06_PRODUCER_FORWARD))
-                    changed += flow_forward_producer_destination(
-                            &graph, &stats, &proof_session);
-                if (!changed && rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_K04_COMPARE_BRANCH))
-                    changed += flow_fuse_compare_branches(
-                            &graph, &stats, &proof_session);
-                if (!changed && rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_M02_CONSTANT))
-                    changed += flow_remove_redundant_loads(
-                            &graph, &stats, &proof_session);
-                if (!changed && rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_M03_ABSENT))
-                    changed += flow_remove_redundant_initializations(
-                            &graph, &stats, &proof_session);
-                if (!changed && rxas_optimisation_has_candidates(
-                        &census, RXAS_PASS_M01_DERIVATION))
-                    changed += flow_remove_redundant_conversions(
-                            &graph, &stats, &proof_session);
-            }
+            if (!changed && flow_value_analysis_within_bound(&graph))
+                changed = flow_apply_semantic_epoch(
+                        &graph, &stats, &proof_session, &census);
             else if (!changed && context->debug_mode) {
                 fprintf(stderr,
                         "NR27 bound procedure=%s scope=reachability-only "

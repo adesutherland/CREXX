@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — D0.3 complete; D0.4 batched pass manager next**
+Status: **in progress — D0.4 complete; D0.5 full scale verdict next**
 
 Authorized: 2026-08-02
 
@@ -671,7 +671,7 @@ The routing rule is now executable rather than an informal convention:
 - [x] **D0.3 capability-lazy semantic consumers:** migrate M01-M06 and K01-K04
       so each query requests only its declared structural, signal, storage,
       value and use capabilities.
-- [ ] **D0.4 batched pass manager:** collect compatible typed rewrite plans
+- [x] **D0.4 batched pass manager:** collect compatible typed rewrite plans
       from one immutable epoch, apply one validated batch and rebuild only
       after the batch.
 - [ ] **D0.5 full scale verdict:** run the complete proportional correctness,
@@ -734,6 +734,41 @@ The battery-host diagnostic `Parse.rxas` probe took 8.21 seconds and peaked at
 real use-index candidates. This is not a formal elapsed comparison. D0.4 is
 therefore next: collect compatible semantic rewrites from one epoch and apply
 one batch before rebuilding.
+
+#### D0.4 result
+
+D0.4 is complete as infrastructure plus migration of the compatible semantic
+use cases. A sparse copy-on-write transaction now serves M04, K02/K03, M05,
+M06, K04, M02, M03 and M01 in their established priority order. Only edited
+queue records are snapshotted; proof-facing records remain pinned to the
+immutable originals until the full transaction validates. Direct conflicts
+and delete-only targets already changed in the batch defer to the next epoch,
+and a failed validation restores every registered edit. K01 remains its own
+storage-permutation epoch and K05 remains a later CFG-only batch because a
+topology rewrite needs a different compatibility proof.
+
+The new `semantic_batch_flow` regression proves independent M05 and K04 plans
+commit together: two plans change four records, delete two instructions,
+replace one opcode and rewrite two operand-bearing records in one epoch. The
+transaction contract separately proves that an invalid later edit rolls back
+an earlier provisional deletion. The final optimizer/migrated-runtime panel
+passes 107/107 in both Debug and Release. Fresh same-input comparisons with
+the frozen D0.2/D0.3 assembler keep Richards, Towers and RexxCPS byte-identical
+at `e855a569`, `0b3169f0` and `e0cf1283`.
+
+Generated `Parse.rxas` demonstrates that batching is active: 63 semantic
+plans are applied in 12 transactions, seven of them multi-plan, while all 261
+accepted K05 branch threads remain in their separate structural batch. The
+result retains the D0.3 image hash `eb8af2c3`. The final sparse transaction
+probe took 8.94 seconds and peaked at 2,560,196,608 bytes without diagnostics;
+the `-d` evidence run took 15.31 seconds and peaked at 2,974,924,800 bytes.
+The host remained on battery, so elapsed is diagnostic rather than a formal
+comparison. The approximately 105 MB increase over D0.3 persists after
+removing the procedure-sized overlay, isolating it to longer co-retention of
+proof capabilities within a batched epoch. D0.4 therefore improves rebuild
+behavior but does not pass the scale gate. D0.5 must split or compact the
+capability lifetimes and re-run the complete elapsed/RSS verdict; the 512 MB
+hard rejection boundary remains unchanged.
 
 ### Phase D — remove superseded infrastructure
 

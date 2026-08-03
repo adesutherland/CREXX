@@ -95,6 +95,7 @@ crexx_add_rxas_optimizer_check(copy_acopy_opt copy_acopy.rxas copy_acopy_opt RXA
 crexx_add_rxas_optimizer_check(copy_acopy_noopt copy_acopy.rxas copy_acopy_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(compare_branch compare_branch.rxas compare_branch RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(compare_branch_noopt compare_branch.rxas compare_branch_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(semantic_batch_flow semantic_batch_flow.rxas semantic_batch_flow RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(branch_thread_flow branch_thread_flow.rxas branch_thread_flow RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(branch_thread_flow_noopt branch_thread_flow.rxas branch_thread_flow_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(unreachable_metadata_epoch unreachable_metadata_epoch.rxas unreachable_metadata_epoch RXAS_FLAGS -d)

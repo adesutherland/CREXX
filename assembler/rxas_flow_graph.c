@@ -923,6 +923,28 @@ const RxasFlowRecord *rxas_flow_procedure_record(
     return &procedure->records[record_id];
 }
 
+int rxas_flow_procedure_pin_queue_record(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t record_id, const instruction_queue *epoch_item) {
+    if (!procedure || procedure->epoch != expected_epoch || !epoch_item ||
+        record_id >= procedure->item_count)
+        return 0;
+    procedure->records[record_id].queue_record = epoch_item;
+    return 1;
+}
+
+int rxas_flow_procedure_rebind_queue_records(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        const instruction_queue *items, size_t item_count) {
+    size_t record_id;
+    if (!procedure || procedure->epoch != expected_epoch || !items ||
+        item_count != procedure->item_count)
+        return 0;
+    for (record_id = 0; record_id < item_count; record_id++)
+        procedure->records[record_id].queue_record = &items[record_id];
+    return 1;
+}
+
 size_t rxas_flow_procedure_label_record(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch,
         const Assembler_Token *label) {

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "rxas_flow_graph.h"
+#include "rxas_flow_batch.h"
 #include "rxas_flow_pass.h"
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_proof.h"
@@ -3218,6 +3219,55 @@ static void test_branch_thread_plans(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_semantic_queue_batch(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowQueueBatch batch;
+    RxasFlowQueueBatchMetrics metrics;
+    instruction_queue *planned;
+    const instruction_queue *epoch_item;
+
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_op(&fixture, "ret", 0, 0);
+    context->procedure_queue = fixture.items;
+    context->procedure_queue_items = fixture.item_count;
+    check(rxas_flow_queue_batch_begin(
+                  &batch, context, fixture.items, fixture.item_count),
+          "semantic queue batch construction failed");
+    check(rxas_flow_queue_batch_record_matches_epoch(&batch, 0),
+          "semantic queue batch did not retain its epoch snapshot");
+    planned = rxas_flow_queue_batch_edit(&batch, 0, &epoch_item);
+    check(planned != 0 && epoch_item != 0 &&
+          epoch_item->instrType == OP_CODE,
+          "semantic queue batch did not snapshot an edited record");
+    if (planned) planned->instrType = EMPTY;
+    planned = rxas_flow_queue_batch_edit(&batch, 1, &epoch_item);
+    if (planned) planned->instrType = ASM_LABEL;
+    check(!rxas_flow_queue_batch_record_matches_epoch(&batch, 0),
+          "semantic queue batch missed a planned record change");
+    check(!rxas_flow_queue_batch_commit(&batch, &metrics) &&
+          fixture.items[0].instrType == OP_CODE &&
+          fixture.items[1].instrType == OP_CODE,
+          "rejected semantic queue batch partially changed the live queue");
+    rxas_flow_queue_batch_destroy(&batch);
+
+    check(rxas_flow_queue_batch_begin(
+                  &batch, context, fixture.items, fixture.item_count),
+          "second semantic queue batch construction failed");
+    planned = rxas_flow_queue_batch_edit(&batch, 0, &epoch_item);
+    if (planned) planned->instrType = EMPTY;
+    check(rxas_flow_queue_batch_commit(&batch, &metrics) &&
+          metrics.records_changed == 1 &&
+          metrics.records_deleted == 1 &&
+          fixture.items[0].instrType == EMPTY &&
+          fixture.items[1].instrType == OP_CODE,
+          "validated semantic queue batch did not commit atomically");
+    rxas_flow_queue_batch_destroy(&batch);
+    context->procedure_queue = 0;
+    context->procedure_queue_items = 0;
+    fixture_destroy(&fixture);
+}
+
 int main(void) {
     Assembler_Context context;
     memset(&context, 0, sizeof(context));
@@ -3250,6 +3300,7 @@ int main(void) {
     test_loop_proofs(&context);
     test_optimisation_routing(&context);
     test_branch_thread_plans(&context);
+    test_semantic_queue_batch(&context);
 
     if (failures) {
         fprintf(stderr, "RXAS immutable flow graph failures: %d\n", failures);

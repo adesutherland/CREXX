@@ -121,6 +121,15 @@ const RxasFlowMetrics *rxas_flow_procedure_metrics(
 const RxasFlowRecord *rxas_flow_procedure_record(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch,
         size_t record_id);
+/* Sparse queue transactions pin only edited records to their immutable epoch
+ * snapshots while later consumers inspect provisional queue state.  Rebind
+ * restores the ordinary live-queue view before the transaction is destroyed. */
+int rxas_flow_procedure_pin_queue_record(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t record_id, const instruction_queue *epoch_item);
+int rxas_flow_procedure_rebind_queue_records(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        const instruction_queue *items, size_t item_count);
 /* Resolve an ID/LABEL token to its immutable queued label record. */
 size_t rxas_flow_procedure_label_record(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch,

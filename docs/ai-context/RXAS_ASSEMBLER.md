@@ -550,7 +550,9 @@ its entry/same-frame/asynchronous-root reachability to remove dead opcode,
 TRACE and source-step records. Existing semantic consumers share its lazy
 proof manager, and K05 collects a complete compatible branch-thread batch from
 the same CFG only after those consumers decline the epoch. Any mutation ends
-the epoch and rebuilds the graph. The original queue index remains the record
+the epoch and rebuilds the graph, except that compatible semantic edits are
+one validated transaction whose proof-facing records remain pinned to the
+epoch originals. The original queue index remains the record
 identity;
 every opcode record maps to a stable instruction ID, block ID and exact
 pre-emission RXBIN address. Source-step, TRACE, label and metadata records keep
@@ -715,6 +717,20 @@ acquired lower-capability facts: that route rejects, while later base
 consumers remain safe and available. Loop queries likewise require the
 separate loop capability. The compatibility constructor still requests the
 complete service for tests and external callers that explicitly need it.
+
+Compatible semantic rewrites are committed through the sparse transactional
+manager in `assembler/rxas_flow_batch.c`. M04, K02/K03, M05, M06, K04, M02,
+M03 and M01 retain their established priority, but disjoint typed plans may be
+collected from one immutable epoch before one rebuild. Only records actually
+edited are snapshotted. Proof-facing `RxasFlowRecord` pointers are pinned to
+those originals while later consumers inspect the provisional queue; complete
+validation either commits the registered records together or restores all of
+them. A delete-only consumer additionally requires its target to remain
+unchanged from the epoch. K01 remains a separately budgeted storage-
+permutation epoch, and K05 remains a later CFG-only batch because topology-
+changing rewrites require a different compatibility proof from semantic SSA
+rewrites. Deterministic `PERF3 semantic-batch` diagnostics report plans,
+changed/deleted records, opcode replacements and operand rewrites.
 
 An immediate one-based `linkattr1` can additionally name an interned attribute
 path.  Its identity contains the owner `StorageId`, exact attribute-count
