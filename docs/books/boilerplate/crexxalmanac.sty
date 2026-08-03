@@ -1,13 +1,14 @@
 %% crexxalmanac.sty -- cRexx Almanac inspired compact API reference layout
-%% 2026/08/03 v0.3.1
+%% 2026/08/03 v0.4
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{crexxalmanac}[2026/08/03 v0.3.1 Almanac-style API reference]
+\ProvidesPackage{crexxalmanac}[2026/08/03 v0.4 Almanac-style API reference]
 
 \RequirePackage{xcolor}
 \RequirePackage{array}
 \RequirePackage{amssymb}
 \RequirePackage{xparse}
 \RequirePackage{tikz}
+\RequirePackage{changepage}
 \usetikzlibrary{calc}
 
 \definecolor{apiDark}{HTML}{424641}
@@ -133,6 +134,32 @@
   \IfBlankF{#6}{\ {\color{apiMid}= #6}}%
   \\[-0.05ex]
 }
+
+
+% --------------------------------------------------------------------------
+% Chapter-wide API layout
+%
+% This widens only the chapter body; page size, headers, footers, and the
+% document's normal geometry remain untouched.  The starred adjustwidth
+% environment interprets the two values as inner and outer margins in a
+% two-sided document.
+% --------------------------------------------------------------------------
+
+\newlength\APIChapterInnerExpansion
+\newlength\APIChapterOuterExpansion
+\setlength\APIChapterInnerExpansion{10mm}
+\setlength\APIChapterOuterExpansion{10mm}
+
+\NewDocumentCommand{\APISetChapterExpansion}{m m}{%
+  \setlength\APIChapterInnerExpansion{#1}%
+  \setlength\APIChapterOuterExpansion{#2}%
+}
+
+% Place this after \chapter and end it before the next \chapter.
+% Negative margins enlarge the available line width.
+\NewDocumentEnvironment{APIWideChapter}{}
+  {\begin{adjustwidth*}{-\APIChapterInnerExpansion}{-\APIChapterOuterExpansion}}
+  {\end{adjustwidth*}}
 
 \NewDocumentEnvironment{APIClass}{m m}
   {\APIClassHeading{#1}{#2}}
