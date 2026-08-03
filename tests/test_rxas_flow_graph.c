@@ -8,13 +8,14 @@
 #include "rxas_flow_pass.h"
 #include "rxas_flow_analysis.h"
 #include "rxas_flow_proof.h"
+#include "rxas_flow_rewrite.h"
 #include "rxas_flow_signal.h"
 #include "rxas_flow_ssa.h"
 #include "rxas_flow_use.h"
 #include "rxasgrmr.h"
 
-#define FIXTURE_MAX_ITEMS 64
-#define FIXTURE_MAX_TOKENS 160
+#define FIXTURE_MAX_ITEMS 256
+#define FIXTURE_MAX_TOKENS 512
 
 typedef struct FlowFixture {
     instruction_queue items[FIXTURE_MAX_ITEMS];
@@ -362,6 +363,13 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
               "unreachable block acquired an entry path");
         check(fixture_path_exists(procedure, 1, entry, live_block),
               "branch target is not reachable from entry");
+        check(!rxas_flow_procedure_block_reachable(
+                    procedure, 1, dead_block) &&
+              !rxas_flow_procedure_record_reachable(procedure, 1, 3) &&
+              rxas_flow_procedure_block_reachable(
+                    procedure, 1, live_block) &&
+              rxas_flow_procedure_record_reachable(procedure, 1, 6),
+              "immutable CFG reachability query disagrees with entry paths");
         check(structural_metrics && structural_metrics->unreachable_blocks >= 1 &&
               rxas_flow_structural_scc(analysis, 1, dead_block) ==
                     RXAS_FLOW_ID_NONE,
@@ -390,7 +398,8 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
         check(rxas_flow_procedure_metrics(procedure, 2) == 0 &&
               rxas_flow_procedure_record(procedure, 2, 0) == 0 &&
               rxas_flow_procedure_entry_block(procedure, 2) ==
-                    RXAS_FLOW_ID_NONE,
+                    RXAS_FLOW_ID_NONE &&
+              !rxas_flow_procedure_record_reachable(procedure, 2, 6),
               "stale epoch access did not fail closed");
         check(rxas_flow_require_structural_analysis(procedure, 2, 0) == 0 &&
               rxas_flow_structural_metrics(analysis, 2) == 0,
@@ -2929,6 +2938,214 @@ static void test_optimisation_routing(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void fixture_branch_thread_source(FlowFixture *fixture,
+                                         const char *mnemonic,
+                                         rxinteger condition) {
+    Assembler_Token *operands[2];
+    operands[0] = fixture_label_ref(fixture, "target");
+    if (strcmp(mnemonic, "br") == 0)
+        fixture_op(fixture, mnemonic, operands, 1);
+    else {
+        operands[1] = fixture_register(fixture, condition);
+        fixture_op(fixture, mnemonic, operands, 2);
+    }
+}
+
+static void fixture_branch_thread_target(FlowFixture *fixture,
+                                         const char *mnemonic,
+                                         rxinteger condition) {
+    Assembler_Token *operands[3];
+    operands[0] = fixture_label_ref(fixture, "true_exit");
+    if (strcmp(mnemonic, "brtf") == 0) {
+        operands[1] = fixture_label_ref(fixture, "false_exit");
+        operands[2] = fixture_register(fixture, condition);
+        fixture_op(fixture, mnemonic, operands, 3);
+    }
+    else {
+        operands[1] = fixture_register(fixture, condition);
+        fixture_op(fixture, mnemonic, operands, 2);
+    }
+}
+
+static void fixture_branch_thread_named_case(FlowFixture *fixture,
+                                             size_t case_index) {
+    Assembler_Token *operands[2];
+    char entry_name[32];
+    char target_name[32];
+    char true_name[32];
+    snprintf(entry_name, sizeof(entry_name), "batch_entry_%lu",
+             (unsigned long)case_index);
+    snprintf(target_name, sizeof(target_name), "batch_target_%lu",
+             (unsigned long)case_index);
+    snprintf(true_name, sizeof(true_name), "batch_true_%lu",
+             (unsigned long)case_index);
+    fixture_label(fixture, entry_name);
+    operands[0] = fixture_label_ref(fixture, target_name);
+    fixture_op(fixture, "br", operands, 1);
+    fixture_op(fixture, "ret", 0, 0);
+    fixture_label(fixture, target_name);
+    operands[0] = fixture_label_ref(fixture, true_name);
+    operands[1] = fixture_register(fixture, (rxinteger)case_index);
+    fixture_op(fixture, "brt", operands, 2);
+    fixture_op(fixture, "ret", 0, 0);
+    fixture_label(fixture, true_name);
+    fixture_op(fixture, "ret", 0, 0);
+}
+
+static void check_branch_thread_case(
+        Assembler_Context *context, const char *source_mnemonic,
+        const char *target_mnemonic, RxasFlowBranchThreadKind expected_kind) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    RxasFlowBranchThreadPlan plan;
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_label(&fixture, "entry");
+    fixture_branch_thread_source(&fixture, source_mnemonic, 4);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "target");
+    fixture_record(&fixture, SRC_STEP);
+    fixture_record(&fixture, TRACE_EVENT);
+    fixture_branch_thread_target(&fixture, target_mnemonic, 4);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "true_exit");
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "false_exit");
+    fixture_op(&fixture, "ret", 0, 0);
+
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 31);
+    check(procedure != 0, "branch-thread graph construction failed");
+    if (procedure) {
+        check(rxas_flow_plan_branch_thread(procedure, 31, &plan) &&
+              plan.kind == expected_kind &&
+              plan.source_record_id == 1 && plan.target_record_id == 6,
+              "branch-thread plan did not preserve an inherited rule shape");
+        check(!rxas_flow_plan_branch_thread(procedure, 32, &plan),
+              "branch-thread planner accepted a stale epoch");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_branch_thread_plans(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    RxasFlowBranchThreadPlan plan;
+    RxasFlowBranchThreadBatch batch;
+    size_t index;
+
+    check_branch_thread_case(context, "br", "brt",
+                             RXAS_FLOW_BRANCH_THREAD_BR_BRT);
+    check_branch_thread_case(context, "br", "brf",
+                             RXAS_FLOW_BRANCH_THREAD_BR_BRF);
+    check_branch_thread_case(context, "br", "brtf",
+                             RXAS_FLOW_BRANCH_THREAD_BR_BRTF);
+    check_branch_thread_case(context, "brt", "brt",
+                             RXAS_FLOW_BRANCH_THREAD_BRT_BRT);
+    check_branch_thread_case(context, "brf", "brf",
+                             RXAS_FLOW_BRANCH_THREAD_BRF_BRF);
+    check_branch_thread_case(context, "brt", "brf",
+                             RXAS_FLOW_BRANCH_THREAD_BRT_BRF);
+    check_branch_thread_case(context, "brf", "brt",
+                             RXAS_FLOW_BRANCH_THREAD_BRF_BRT);
+
+    /* One immutable epoch collects an independent large branch set instead
+     * of forcing one complete-procedure rebuild per source. */
+    memset(&fixture, 0, sizeof(fixture));
+    for (index = 0; index < 24; index++)
+        fixture_branch_thread_named_case(&fixture, index);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 37);
+    memset(&batch, 0, sizeof(batch));
+    check(procedure && rxas_flow_plan_branch_threads(
+                  procedure, 37, &batch) && batch.plan_count == 24,
+          "branch-thread planner did not batch all independent candidates");
+    rxas_flow_branch_thread_batch_destroy(&batch);
+    if (procedure) {
+        check(!rxas_flow_plan_branch_threads(procedure, 38, &batch),
+              "branch-thread batch planner accepted a stale epoch");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    rxas_flow_branch_thread_batch_destroy(&batch);
+    fixture_destroy(&fixture);
+
+    /* A target behind more than the old twenty-record queue remains visible. */
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_label(&fixture, "entry");
+    fixture_branch_thread_source(&fixture, "br", 2);
+    for (index = 0; index < 25; index++) fixture_record(&fixture, SRC_STEP);
+    fixture_label(&fixture, "target");
+    fixture_branch_thread_target(&fixture, "brt", 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "true_exit");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 33);
+    check(procedure && rxas_flow_plan_branch_thread(procedure, 33, &plan) &&
+          plan.kind == RXAS_FLOW_BRANCH_THREAD_BR_BRT,
+          "branch-thread planner retained the old queue-distance bound");
+    if (procedure) rxas_flow_procedure_destroy(procedure);
+    fixture_destroy(&fixture);
+
+    /* Backward edges use the same label index and are not a special case. */
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_label(&fixture, "target");
+    fixture_branch_thread_target(&fixture, "brt", 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "entry");
+    fixture_branch_thread_source(&fixture, "br", 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "true_exit");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 34);
+    check(procedure && rxas_flow_plan_branch_thread(procedure, 34, &plan) &&
+          plan.kind == RXAS_FLOW_BRANCH_THREAD_BR_BRT &&
+          plan.target_record_id < plan.source_record_id,
+          "branch-thread planner rejected a backward target");
+    if (procedure) rxas_flow_procedure_destroy(procedure);
+    fixture_destroy(&fixture);
+
+    /* Different physical conditions do not prove a conditional redirect. */
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_label(&fixture, "entry");
+    fixture_branch_thread_source(&fixture, "brt", 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "target");
+    fixture_branch_thread_target(&fixture, "brt", 3);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "true_exit");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 35);
+    check(procedure && !rxas_flow_plan_branch_thread(procedure, 35, &plan),
+          "branch-thread planner ignored different condition registers");
+    if (procedure) rxas_flow_procedure_destroy(procedure);
+    fixture_destroy(&fixture);
+
+    /* The conditional must be the target block's first executable record. */
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_label(&fixture, "entry");
+    fixture_branch_thread_source(&fixture, "br", 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "target");
+    {
+        Assembler_Token *operands[1];
+        operands[0] = fixture_register(&fixture, 9);
+        fixture_op(&fixture, "null", operands, 1);
+    }
+    fixture_branch_thread_target(&fixture, "brt", 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    fixture_label(&fixture, "true_exit");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 36);
+    check(procedure && !rxas_flow_plan_branch_thread(procedure, 36, &plan),
+          "branch-thread planner skipped a target executable instruction");
+    if (procedure) rxas_flow_procedure_destroy(procedure);
+    fixture_destroy(&fixture);
+}
+
 int main(void) {
     Assembler_Context context;
     memset(&context, 0, sizeof(context));
@@ -2960,6 +3177,7 @@ int main(void) {
     test_typed_copy_redirect_proof(&context);
     test_loop_proofs(&context);
     test_optimisation_routing(&context);
+    test_branch_thread_plans(&context);
 
     if (failures) {
         fprintf(stderr, "RXAS immutable flow graph failures: %d\n", failures);

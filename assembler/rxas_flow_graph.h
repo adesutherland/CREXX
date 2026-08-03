@@ -121,6 +121,10 @@ const RxasFlowMetrics *rxas_flow_procedure_metrics(
 const RxasFlowRecord *rxas_flow_procedure_record(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch,
         size_t record_id);
+/* Resolve an ID/LABEL token to its immutable queued label record. */
+size_t rxas_flow_procedure_label_record(
+        const RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        const Assembler_Token *label);
 const RxasFlowInstruction *rxas_flow_procedure_instruction(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch,
         size_t instruction_id);
@@ -130,6 +134,15 @@ const RxasFlowBlock *rxas_flow_procedure_block(
 const RxasFlowEdge *rxas_flow_procedure_edge(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch,
         size_t edge_id);
+/* Reachability is rooted at normal entry and at the same-frame/asynchronous
+ * signal roots. It is computed once with the immutable CFG and is therefore
+ * safe for structural rewrite planning within the epoch. */
+int rxas_flow_procedure_block_reachable(
+        const RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t block_id);
+int rxas_flow_procedure_record_reachable(
+        const RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t record_id);
 
 size_t rxas_flow_procedure_entry_block(const RxasFlowProcedure *procedure,
                                        unsigned long expected_epoch);

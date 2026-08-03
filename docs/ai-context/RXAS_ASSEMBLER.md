@@ -537,17 +537,18 @@ proof ownership. No current production consumer requests loop analysis.
 NR-27 adds a transient whole-procedure machine-flow layer after the unchanged
 20-item local peephole and before ordinary RXBIN emission. Stable peephole
 output is moved, with its token ownership, into a growable procedure stream.
-The assembler then builds resolved label successors/predecessors, reachability,
-typed-view liveness and transformation-specific must-availability/may-reach
-facts over the original queue records. Surviving records still pass through the
-same assembler emission functions; RXAS syntax, canonical RXBIN and the public
-ABI do not change.
+One immutable `RxasFlowProcedure` is then built for each rewrite epoch;
+surviving records still pass through the same assembler emission functions, so
+RXAS syntax, canonical RXBIN and the public ABI do not change.
 
-PERF3-11 now also constructs an immutable `RxasFlowProcedure` sidecar after
-the existing rewrites reach their fixed point. `assembler/rxas_flow_graph.c`
-owns stable record, instruction, basic-block and typed-edge descriptors for one
-procedure epoch. It does not mutate tokens or queued records and no rewrite
-consumer uses it yet. The original queue index remains the record identity;
+`assembler/rxas_flow_graph.c` is the sole owner of stable record, instruction,
+basic-block, typed-edge and reachability descriptors for that epoch. M00 uses
+its entry/same-frame/asynchronous-root reachability to remove dead opcode,
+TRACE and source-step records. Existing semantic consumers share its lazy
+proof manager, and K05 collects a complete compatible branch-thread batch from
+the same CFG only after those consumers decline the epoch. Any mutation ends
+the epoch and rebuilds the graph. The original queue index remains the record
+identity;
 every opcode record maps to a stable instruction ID, block ID and exact
 pre-emission RXBIN address. Source-step, TRACE, label and metadata records keep
 their own IDs and map to the block/address at which they are observed.
@@ -562,17 +563,15 @@ come from `RxOpSignalContract.continuations`; handler-policy instructions with
 label operands feed the handler and asynchronous roots rather than inventing a
 normal branch from the registration instruction.
 
-Construction first snapshots record/opcode metadata, builds an open-addressed
-label index, forms blocks, then appends edges. It is expected linear in queued
-records plus emitted edges; it does not rescan all existing edges when adding a
-new one. While the legacy rewrite graph remains, orchestration hands its final
-resolved `OpInfo` pointers to the sidecar before freeing the old graph; this
-avoids a second opcode-table parse and avoids overlapping the two graph memory
-images. Read APIs require the owning epoch and return no descriptor for a
-stale epoch. `rxas -d` prints deterministic `PERF3 flow-*` records without
-pointer values, so graph identities and typed edge counts can be compared
-mechanically. Allocation or construction failure simply disables this
-consumer-free sidecar and leaves the unchanged emission path available.
+Construction snapshots record/opcode metadata, builds an open-addressed label
+index, forms blocks, appends edges and computes compact rooted reachability. It
+is expected linear in queued records plus emitted edges. There is no parallel
+legacy edge graph, dense record-by-register use/kill allocation or dense M07
+storage environment. M07 is a debug-only executable oracle over sparse SSA
+storage nodes and queries. Read APIs require the owning epoch and return no
+descriptor for a stale epoch. `rxas -d` prints deterministic `PERF3 flow-*`
+and `PERF3 sparse-storage-oracle` records without pointer values, so graph,
+edge and retained-analysis identities can be compared mechanically.
 
 Stage 3 layers a demand-driven structural-analysis manager over each immutable
 procedure epoch. `assembler/rxas_flow_analysis.c` retains successor edge IDs

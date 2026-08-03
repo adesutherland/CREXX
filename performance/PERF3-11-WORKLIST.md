@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — M01-M06 and K01-K04/K06 complete; K05 migration next**
+Status: **in progress — D0.2 complete; D0.3 capability-lazy semantic consumers next**
 
 Architecture approved: 2026-08-02
 
@@ -741,9 +741,12 @@ unchanged, its original optimized/no-opt outputs are byte-identical, the
 expanded metadata/optimizer panel passes 3/3 in Debug and Release, and all
 three canonical images retain zero accepts and exact hashes. Runtime timing
 and broad CTest are not warranted because no production code or ordinary
-output changed. K05 is next: migrate branch-to-conditional/dual-branch
-threading from queue-local label search to immutable CFG edge rewrites and
-reachability.
+output changed. K05 and the D0.2 structural consolidation are now complete:
+M00 and all seven K05 forms share the sole immutable CFG, M07 diagnostics use
+sparse SSA, and the legacy graph/dense storage matrices are deleted. D0.3 is
+next: make M01-M06 and K01-K04 request only their declared semantic
+capabilities so structural-only procedures do not pay for component SSA/use
+analysis.
 
 ### Stage 11 — later consumers after legacy migration
 

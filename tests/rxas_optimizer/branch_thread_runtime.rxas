@@ -1,0 +1,178 @@
+* K05 optimized/no-opt branch-thread equivalence for both Boolean outcomes.
+
+main() .locals=1
+    call r0,br_brt_true()
+    brf failed,r0
+    call r0,br_brt_false()
+    brf failed,r0
+    call r0,br_brf_true()
+    brf failed,r0
+    call r0,br_brf_false()
+    brf failed,r0
+    call r0,br_brtf_true()
+    brf failed,r0
+    call r0,br_brtf_false()
+    brf failed,r0
+    call r0,brt_brt_true()
+    brf failed,r0
+    call r0,brt_brt_false()
+    brf failed,r0
+    call r0,brf_brf_true()
+    brf failed,r0
+    call r0,brf_brf_false()
+    brf failed,r0
+    call r0,brt_brf_true()
+    brf failed,r0
+    call r0,brt_brf_false()
+    brf failed,r0
+    call r0,brf_brt_true()
+    brf failed,r0
+    call r0,brf_brt_false()
+    brf failed,r0
+    say "PASS: K05 branch-thread runtime"
+    ret 0
+failed:
+    say "FAIL: K05 branch-thread runtime"
+    ret 1
+
+br_brt_true() .locals=1
+    load r0,1
+    br br_brt_true_target
+    ret 0
+br_brt_true_target:
+    brt br_brt_true_good,r0
+    ret 0
+br_brt_true_good:
+    ret 1
+
+br_brt_false() .locals=1
+    load r0,0
+    br br_brt_false_target
+    ret 0
+br_brt_false_target:
+    brt br_brt_false_bad,r0
+    ret 1
+br_brt_false_bad:
+    ret 0
+
+br_brf_true() .locals=1
+    load r0,1
+    br br_brf_true_target
+    ret 0
+br_brf_true_target:
+    brf br_brf_true_bad,r0
+    ret 1
+br_brf_true_bad:
+    ret 0
+
+br_brf_false() .locals=1
+    load r0,0
+    br br_brf_false_target
+    ret 0
+br_brf_false_target:
+    brf br_brf_false_good,r0
+    ret 0
+br_brf_false_good:
+    ret 1
+
+br_brtf_true() .locals=1
+    load r0,1
+    br br_brtf_true_target
+    ret 0
+br_brtf_true_target:
+    brtf br_brtf_true_good,br_brtf_true_bad,r0
+br_brtf_true_good:
+    ret 1
+br_brtf_true_bad:
+    ret 0
+
+br_brtf_false() .locals=1
+    load r0,0
+    br br_brtf_false_target
+    ret 0
+br_brtf_false_target:
+    brtf br_brtf_false_bad,br_brtf_false_good,r0
+br_brtf_false_bad:
+    ret 0
+br_brtf_false_good:
+    ret 1
+
+brt_brt_true() .locals=1
+    load r0,1
+    brt brt_brt_true_target,r0
+    ret 0
+brt_brt_true_target:
+    brt brt_brt_true_good,r0
+    ret 0
+brt_brt_true_good:
+    ret 1
+
+brt_brt_false() .locals=1
+    load r0,0
+    brt brt_brt_false_target,r0
+    ret 1
+brt_brt_false_target:
+    brt brt_brt_false_bad,r0
+    ret 1
+brt_brt_false_bad:
+    ret 0
+
+brf_brf_true() .locals=1
+    load r0,1
+    brf brf_brf_true_target,r0
+    ret 1
+brf_brf_true_target:
+    brf brf_brf_true_bad,r0
+    ret 1
+brf_brf_true_bad:
+    ret 0
+
+brf_brf_false() .locals=1
+    load r0,0
+    brf brf_brf_false_target,r0
+    ret 0
+brf_brf_false_target:
+    brf brf_brf_false_good,r0
+    ret 0
+brf_brf_false_good:
+    ret 1
+
+brt_brf_true() .locals=1
+    load r0,1
+    brt brt_brf_true_target,r0
+    ret 0
+brt_brf_true_target:
+    brf brt_brf_true_bad,r0
+    ret 1
+brt_brf_true_bad:
+    ret 0
+
+brt_brf_false() .locals=1
+    load r0,0
+    brt brt_brf_false_target,r0
+    ret 1
+brt_brf_false_target:
+    brf brt_brf_false_bad,r0
+    ret 1
+brt_brf_false_bad:
+    ret 0
+
+brf_brt_true() .locals=1
+    load r0,1
+    brf brf_brt_true_target,r0
+    ret 1
+brf_brt_true_target:
+    brt brf_brt_true_bad,r0
+    ret 1
+brf_brt_true_bad:
+    ret 0
+
+brf_brt_false() .locals=1
+    load r0,0
+    brf brf_brt_false_target,r0
+    ret 0
+brf_brt_false_target:
+    brt brf_brt_false_bad,r0
+    ret 1
+brf_brt_false_bad:
+    ret 0

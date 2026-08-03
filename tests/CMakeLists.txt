@@ -95,6 +95,9 @@ crexx_add_rxas_optimizer_check(copy_acopy_opt copy_acopy.rxas copy_acopy_opt RXA
 crexx_add_rxas_optimizer_check(copy_acopy_noopt copy_acopy.rxas copy_acopy_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(compare_branch compare_branch.rxas compare_branch RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(compare_branch_noopt compare_branch.rxas compare_branch_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(branch_thread_flow branch_thread_flow.rxas branch_thread_flow RXAS_FLAGS -d)
+crexx_add_rxas_optimizer_check(branch_thread_flow_noopt branch_thread_flow.rxas branch_thread_flow_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(unreachable_metadata_epoch unreachable_metadata_epoch.rxas unreachable_metadata_epoch RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(duplicate_link_read duplicate_link_read.rxas duplicate_link_read)
 crexx_add_rxas_optimizer_check(duplicate_link_read_meta_relevant duplicate_link_read_meta_relevant.rxas duplicate_link_read_meta_relevant)
 crexx_add_rxas_optimizer_check(duplicate_link_read_meta_unrelated duplicate_link_read_meta_unrelated.rxas duplicate_link_read_meta_unrelated)
@@ -239,6 +242,24 @@ foreach(_perf3_11_runner IN ITEMS rxvm rxbvm)
     foreach(_perf3_11_mode IN ITEMS noopt opt)
         set_tests_properties(signal_contract_runtime_${_perf3_11_runner}_${_perf3_11_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "PASS: PERF3-11 signal contract runtime"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(branch_thread_runtime ALL)
+foreach(_k05_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME branch_thread_runtime_${_k05_runner}
+            SOURCE ${RXAS_OPTIMIZER_DIR}/branch_thread_runtime
+            TARGET_GROUP branch_thread_runtime
+            RUNNER ${_k05_runner}
+            DEPENDS ${RXAS_OPTIMIZER_DIR}/branch_thread_runtime.rxas rxas ${_k05_runner} rxlink
+            TEST_LABELS "rxas;optimizer;runtime;flow"
+    )
+    foreach(_k05_mode IN ITEMS noopt opt)
+        set_tests_properties(branch_thread_runtime_${_k05_runner}_${_k05_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: K05 branch-thread runtime"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

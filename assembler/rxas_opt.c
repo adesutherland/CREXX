@@ -607,74 +607,6 @@ rule rules[] =
                         OP_CODE,"append", 'r', 0, 'r', 1, 0, 0},
             {END_OF_RULE},
 
-            /* Integer compare followed by branch: materialise no boolean temp. */
-            /* Unconditional branch to branch true mapped to brtf*/
-            {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
-                        OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0},
-            {ANY_GAP,   ASM_LABEL,0,     'l', 0,  0,  0,  0,  0,
-                        ASM_LABEL,0,     'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    OP_CODE,"brt", 'b', 1, 'r', 0,  0,  0,
-                        OP_CODE,"brt", 'b', 1, 'r', 0,  0,  0,
-                        ASM_LABEL,0,     'l', 2,  0,  0,  0,  0},
-            {END_OF_RULE},
-
-            /* Unconditional branch to branch false mapped to brtf*/
-            {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
-                        OP_CODE,"brtf",'b', 2, 'b', 1, 'r', 0},
-            {ANY_GAP,   ASM_LABEL,0,     'l', 0,  0,  0,  0,  0,
-                        ASM_LABEL,0,     'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    OP_CODE,"brf", 'b', 1, 'r', 0,  0,  0,
-                        OP_CODE,"brf", 'b', 1, 'r', 0,  0,  0,
-                        ASM_LABEL,0,     'l', 2,  0,  0,  0,  0},
-            {END_OF_RULE},
-
-            /* Unconditional branch to branch true false to brtf*/
-            {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
-                        OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0},
-            {ANY_GAP,   ASM_LABEL,0,     'l', 0,  0,  0,  0,  0,
-                        ASM_LABEL,0,     'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0,
-                        OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0},
-            {END_OF_RULE},
-
-            /* brt to brt with same condition */
-            {ANY_GAP,   OP_CODE,"brt",  'b', 0, 'r', 0,  0,  0,
-                        OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0},
-            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
-                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
-                        OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0},
-            {END_OF_RULE},
-
-            /* brf to brf with same condition */
-            {ANY_GAP,   OP_CODE,"brf",  'b', 0, 'r', 0,  0,  0,
-                        OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0},
-            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
-                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0,
-                        OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0},
-            {END_OF_RULE},
-
-            /* brt to brf with same condition */
-            {ANY_GAP,   OP_CODE,"brt",  'b', 0, 'r', 0,  0,  0,
-                        OP_CODE,"brt",  'b', 2, 'r', 0,  0,  0},
-            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
-                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0,
-                        OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0,
-                        ASM_LABEL,0,      'l', 2,  0,  0,  0,  0},
-            {END_OF_RULE},
-
-            /* brf to brt with same condition */
-            {ANY_GAP,   OP_CODE,"brf",  'b', 0, 'r', 0,  0,  0,
-                        OP_CODE,"brf",  'b', 2, 'r', 0,  0,  0},
-            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
-                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
-                        OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
-                        ASM_LABEL,0,      'l', 2,  0,  0,  0,  0},
-            {END_OF_RULE},
-
                 /*  do loop increase ctr+1 and branch to start   inc rx; br dostart */
             {NO_GAP,   OP_CODE, "inc",   'r', 1, 0, 0, 0, 0},
             {NO_GAP,   OP_CODE, "br",   'b', 2, 0, 0,  0,  0,
@@ -1886,7 +1818,7 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
     }
 }
 
-static void reserve_procedure_queue(Assembler_Context *context, size_t required) {
+void rxas_reserve_procedure_queue(Assembler_Context *context, size_t required) {
     size_t new_capacity;
     instruction_queue *new_queue;
 
@@ -1913,7 +1845,7 @@ static void retire_oldest_queue_item(Assembler_Context *context) {
     instruction_queue *destination;
 
     if (!context->optimiser_queue_items) return;
-    reserve_procedure_queue(context, context->procedure_queue_items + 1);
+    rxas_reserve_procedure_queue(context, context->procedure_queue_items + 1);
     destination = &context->procedure_queue[context->procedure_queue_items++];
     *destination = context->optimiser_queue[0];
 
@@ -2190,9 +2122,7 @@ void flushopt(Assembler_Context *context) {
             retire_oldest_queue_item(context);
         }
 
-        rxas_flow_optimise(context,
-                           context->procedure_queue,
-                           context->procedure_queue_items);
+        rxas_flow_optimise(context);
 
         /* Emit the analysed stream through the unchanged assembler path.
          * EMPTY records are deliberate whole-procedure removals. */

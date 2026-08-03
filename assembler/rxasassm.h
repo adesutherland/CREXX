@@ -82,9 +82,11 @@ void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 void flushopt(Assembler_Context *context);
 
 /* Run the transient whole-procedure machine-flow pass before emission. */
-void rxas_flow_optimise(Assembler_Context *context,
-                        instruction_queue *items,
-                        size_t item_count);
+void rxas_flow_optimise(Assembler_Context *context);
+
+/* Grow the mutable whole-procedure stream without invalidating queue records
+ * until the caller is ready to refresh its pointers. */
+void rxas_reserve_procedure_queue(Assembler_Context *context, size_t required);
 
 /* Generate code for an instructions */
 void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,

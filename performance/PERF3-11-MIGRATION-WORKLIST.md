@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01-M06 and K01-K04/K06 complete; K05 is next**
+Status: **in progress — D0.2 complete; D0.3 capability-lazy semantic consumers next**
 
 Authorized: 2026-08-02
 
@@ -63,15 +63,15 @@ and after the diagnostic prove output neutrality.
 
 | ID | Current authority | Accepted baseline | New owner | Disposition |
 | --- | --- | --- | --- | --- |
-| M00 | complete-control reachability and dead record cleanup | canonical: Richards 5, Towers 7, RexxCPS 0; focused 4 instructions plus TRACE/source records | immutable graph reachability and rewrite plan | migrate after value consumers; structural, not value proof |
+| M00 | complete-control reachability and dead record cleanup | canonical: Richards 5, Towers 7, RexxCPS 0; focused 4 instructions plus TRACE/source records | immutable graph reachability and rewrite plan | **complete**; immutable rooted reachability is the sole authority and metadata-only cleanup invalidates the epoch |
 | M01 | `flow_compute_available_fact()` for repeated one-register `ITOF`, then metadata-admitted `XTOY` derivations | old floor: focused `ITOF` 1, canonical 0; other conversions are new domain | generic dominated-success repetition | **complete**; old authority deleted, all 20 one-register conversions described by metadata, 12 focused deletions proved |
 | M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | **complete**; old authority deleted, old floor plus four stronger focused deletions proved |
 | M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | **complete**; old authority deleted, old floor plus equal-phi, linked-storage and TRACE cases proved |
 | M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | **complete**; old authority deleted, all seven copy families use conditional same-storage metadata and the proof service |
 | M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | **complete**; old dense solver deleted, ten-case floor plus one stronger case proved |
 | M06 | adjacent producer-destination forwarding | focused 11 at the M05 boundary; historical 12 before `copy_before_endlife` moved to M05; canonical 0 | exact producer result, destination/temporary liveness and observation equivalence | **complete**; SSA/use proof is sole authority, old dense liveness solver deleted, hidden cleanup proved |
-| M07 | dense legacy register-storage must-analysis | diagnostic-only; 13 storage-identity fixtures | sparse SSA storage queries and proof diagnostics | retire after its oracle is expressed against new SSA |
-| M08 | raw-register liveness/availability/may-reach substrate | shared by M03-M06 | graph use index plus component/storage liveness | **complete**; dense semantic authority deleted after M06; mechanical use/kill classification remains for diagnostics and legacy keyholes |
+| M07 | dense legacy register-storage must-analysis | diagnostic-only; 13 storage-identity fixtures | sparse SSA storage queries and proof diagnostics | **complete**; the diagnostic oracle uses sparse SSA storage nodes/queries and the dense matrix is deleted |
+| M08 | raw-register liveness/availability/may-reach substrate | shared by M03-M06 | graph use index plus component/storage liveness | **complete**; dense semantic authority was deleted after M06 and D0.2 deleted the final mechanical use/kill/taint matrices |
 
 The representative canonical set currently exercises no remaining M01-M06
 acceptance.  That does not make the migrations irrelevant: these solvers are
@@ -86,7 +86,7 @@ focused fixtures preserve their exact safety floor.
 | K02 | duplicate `LINK`/typed-copy/`UNLINK` read | focused string/binary positives and metadata/TRACE negatives; canonical 0 | syntax shape and raw-register hazard scan | **complete**; storage/component proof and atomic rewrite replace all six direct-read keyholes |
 | K03 | duplicate `LINKATTR1` read for same owner/slot | focused string/binary positives and different-slot negative; canonical 0 | syntax shape; no generic attribute identity | **complete**; interned attribute path plus component/count/signal proof replace all six attribute-read keyholes |
 | K04 | integer compare plus conditional branch | legacy focused 16 includes one result-TRACE deletion; canonical RexxCPS 9 require storage/lifetime reaudit | bespoke bounded path solver for boolean-result death | **complete and accepted**; atomic event deletion, exact call windows and approved retry retirement unlock all five residual canonical false positives; focused Debug/Release passes 14/14, the runtime verdict is neutral, and broad Debug passes 1,998/1,998 |
-| K05 | branch-to-conditional/dual-branch threading | canonical Richards 4, Towers 7, RexxCPS 0 | queue-local label search | immutable CFG edge rewrite and reachability |
+| K05 | branch-to-conditional/dual-branch threading | canonical Richards 4, Towers 7, RexxCPS 0 | queue-local label search | **complete and accepted**; one immutable-CFG batch covers all seven forms and all seven queue rules are deleted |
 | K06 | full `COPY` followed by same-pair `ACOPY` | focused 1; canonical 0 | adjacent mnemonic rule | **complete**; metadata and VM handlers prove exact local component subsumption, so the declarative rule is retained as mechanical |
 
 K04 and K05 remain exercised by the representative canonical inputs. The nine
@@ -395,8 +395,22 @@ immediately after the deleted copy retain the old address-observation guard.
       against `78bd7f6f5`; time only if an ordinary representative image changes.
 - [x] **K06-4 closeout:** retain the classification evidence, document K06 as a
       mechanical adjacent encoding and remove it from the semantic-proof queue.
-- [ ] Migrate **K05** when rewrite orchestration can edit immutable-CFG-derived
-      plans without relying on a 20-item queue.
+- [x] **K05-0 retained baseline:** freeze committed K06 closeout `6651bf6c6`,
+      canonical hashes and the exact signature-`e5795815` census of four
+      Richards, seven Towers and zero RexxCPS accepts.
+- [x] **K05-1 design selection:** use a structural-only immutable-CFG plan,
+      one revalidated batch per epoch and growable procedure-queue insertion;
+      do not construct SSA/signal proofs for total branch-edge algebra.
+- [x] **K05-2 structural plan:** cover all seven old `BR`/`BRT`/`BRF` target
+      forms, exact true/false/fallthrough edges and optional synthetic label.
+- [x] **K05-3 authority migration:** apply the plan after value rewrites,
+      rebuild after every accepted batch and delete all seven queue-local rules.
+- [x] **K05-4 safety floor:** cover every inherited form, long-distance and
+      backward targets, source/TRACE metadata, different conditions,
+      non-leading target instructions and exact runtime equivalence.
+- [x] **K05-5 mandatory verdict:** compare retained focused/canonical Release
+      images; if an ordinary representative image changes beyond the recovered
+      floor, run the smallest decisive paired dual-VM cells and stop for Adrian.
 
 #### K01 retained floor and design selection
 
@@ -493,6 +507,66 @@ unchanged at SHA-256 `a1c0e1ef`; Richards, Towers and RexxCPS retain exact
 hashes and zero K06 accepts. No production code or ordinary output changed, so
 runtime timing and broad CTest are not warranted.
 
+#### K05 retained floor and design selection
+
+The committed K05 baseline is K06 closeout `6651bf6c6`. Debug and ordinary
+Release `rxas` SHA-256 values are `a81d9e83` and `a1c0e1ef`. Canonical
+Richards, Towers and RexxCPS hashes are `92cda4c0`, `11b14061` and `96bc599b`.
+Only the first of seven legacy rule shapes is exercised by those inputs:
+unconditional `BR` to a block whose first executable instruction is `BRT`.
+Its stable signature `e5795815` appears four times in Richards, seven in Towers
+and zero in RexxCPS. The other `BR` to `BRF`/`BRTF` and same-condition
+`BRT`/`BRF` combinations remain part of the migration floor even though the
+representative set does not exercise them.
+
+The machine-level ceiling bypasses the intermediate conditional block with one
+rewritten source branch. A `BR` becomes a two-target `BRTF`; a conditional
+source redirects only its taken edge because reaching the target already
+proves the condition truth value. Where the target conditional has an implicit
+fallthrough, an exact synthetic label is inserted immediately after it. No
+runtime helper, copied condition or extra executable instruction is required.
+
+Three implementation shapes were considered:
+
+1. **Retain the seven queue rules and call a graph predicate.** This preserves
+   the bounded forward label search as a second authority and cannot admit
+   distant or backward edges. It is rejected.
+2. **Selected: structural immutable-CFG plan plus growable queue mutation.** A
+   planner resolves the source branch operand to its target block, requires the
+   target conditional to be the block's first executable instruction, proves
+   exact total branch opcodes and same physical condition where required, and
+   records the complete replacement and optional fallthrough-label insertion.
+   The consumer revalidates the complete batch, mutates all accepted
+   sources once per epoch and rebuilds.
+   It uses graph structure only, so it remains linear and does not request SSA,
+   component, liveness or signal-policy analyses.
+3. **Regenerate a canonical CFG instruction stream wholesale.** Re-emitting all
+   labels/branches could subsume K05 but would churn source/TRACE anchors and
+   stable output identities far beyond the seven rules. It is rejected for
+   this migration; broader CFG canonicalisation remains separately selectable.
+
+Branches involved in K05 are total and non-signalling. Source and TRACE records
+before the target conditional are observations whose optimized execution may
+change when that block is bypassed, consistent with the documented optimized-
+TRACE contract; they do not mutate the condition. Unknown targets, indirect
+control, a non-leading executable target, different condition registers,
+unsupported opcodes and no-op rewrites reject locally.
+
+K05 is accepted through D0.2. One immutable procedure graph supplies exact
+targets, fallthroughs and rooted reachability to one revalidated rewrite batch
+per epoch; all seven queue-local implementations are deleted. The focused
+panel covers all inherited shapes and adversarial targets, and optimized and
+no-opt branch fixtures are equivalent on both `rxvm` and `rxbvm`. The final
+ordinary Release images exactly match the accepted K05 candidate at SHA-256
+`e855a569d738a462d7c9d9263888acf9647abeccdd5765f841fd4bc2c9572b2d`
+(Richards),
+`0b3169f071cfab5691673e2f8ad08ec37f731a51ea5afd04ab84069d0526ae10`
+(Towers) and
+`e0cf1283899255b8277fffbf71cb94ad0a533389adde74a2db7e42114b549a27`
+(RexxCPS). The accepted VM-instruction reductions remain Richards 3 static and
+2,296,420 dynamic instructions, Towers 1 static and 273,700 dynamic
+instructions, and RexxCPS neutral, identically in both VM modes.
+
 #### K02/K03 retained floor and design selection
 
 The frozen K04 assembler has twelve syntax-expanded rules: six copy families
@@ -582,7 +656,7 @@ The routing rule is now executable rather than an informal convention:
 | immutable CFG | M00 and K05 | records, blocks, typed edges, reachability and exact branch algebra |
 | component SSA | M01-M04 | dominance, signal/effect, storage and component value identity |
 | component SSA plus sparse use index | M05, M06 and K01-K04 | the preceding facts plus exact uses, observations and liveness |
-| diagnostic-only | M07 until D0.2 | requested only by explicit diagnostics; never an ordinary-production reason to build analysis |
+| diagnostic-only | M07 sparse oracle | requested only by explicit diagnostics; never an ordinary-production reason to build analysis |
 
 - [x] **D0.1 routing ledger and capability census:** give every current
       optimisation family a stable owner and explicit `LOCAL`, `CFG`,
@@ -591,7 +665,7 @@ The routing rule is now executable rather than an informal convention:
       optimisation; gate each legacy consumer on its declared candidate
       family; and keep loop analysis dormant because no current production
       consumer requests it.
-- [ ] **D0.2 one graph and structural consumers:** migrate M00 and K05 onto
+- [x] **D0.2 one graph and structural consumers:** migrate M00 and K05 onto
       the immutable graph, express the M07 oracle through sparse SSA and delete
       the legacy graph/dense use-kill storage.
 - [ ] **D0.3 capability-lazy semantic consumers:** migrate M01-M06 and K01-K04
@@ -605,15 +679,42 @@ The routing rule is now executable rather than an informal convention:
       256 MB and the hard rejection boundary is 512 MB; retain exact canonical
       image and accepted K05 VM-instruction evidence.
 
+#### D0.2 result
+
+D0.2 is complete as infrastructure plus the M00, M07 and K05 use-case
+migrations. Every epoch now has one immutable graph owner. M00 consumes its
+rooted reachability, K05 applies one revalidated branch batch after semantic
+consumers decline, and M07's diagnostic oracle uses sparse SSA storage
+nodes/queries. The legacy CFG, dense point-by-register use/kill/taint state,
+dense storage matrix and all seven K05 queue-local rules are deleted.
+
+The focused optimizer/metadata/graph panel passes 75/75 in Debug and Release;
+the whole-procedure, NR-18, storage and K05 runtime panel passes 17/17 across
+optimized/no-opt `rxvm` and `rxbvm`; and broad Debug passes 2,019/2,019 in
+524.25 seconds including regenerated Debug artifacts. A focused regression
+locks the requirement that metadata-only
+M00 cleanup ends the graph epoch before a later semantic proof, and the
+NR-18 jump-table negative locks the mandatory local miss edge and fail-closed
+off-graph behavior. Fresh Release Richards, Towers and RexxCPS images are
+byte-identical to the accepted K05 candidate hashes recorded above.
+
+This stage does not claim that scale is solved. An intermediate generated
+`Parse.rxas` Release probe took 8.55 seconds and peaked at 2,456,027,136 bytes;
+the remaining allocation is in semantic proof capabilities retained by every
+candidate epoch. The host was on battery, so this is a memory/diagnostic probe,
+not a formal elapsed comparison. D0.3 is therefore next and must make those
+capabilities lazy; D0.4 then batches compatible semantic rewrites before the
+final D0.5 elapsed and RSS verdict on the controlled host.
+
 ### Phase D — remove superseded infrastructure
 
-- [ ] Express the M07 storage-identity oracle against sparse SSA and delete the
+- [x] Express the M07 storage-identity oracle against sparse SSA and delete the
       dense legacy storage analysis.
 - [x] Delete M08 availability/may-reach/liveness authority after its last
-      consumer. Retain the raw use/kill and taint bitsets still consumed by
-      storage diagnostics, bounded-analysis accounting and legacy keyholes.
-- [ ] Move M00 reachability cleanup to the immutable graph rewrite plan.
-- [ ] Remove the legacy whole-procedure graph once no consumer or diagnostic
+      consumer. D0.2 also deletes the raw per-point/per-register use, kill and
+      taint bitsets after migrating their final structural and diagnostic uses.
+- [x] Move M00 reachability cleanup to the immutable graph rewrite plan.
+- [x] Remove the legacy whole-procedure graph once no consumer or diagnostic
       owns it; keep only the small mechanical keyhole engine if still useful.
 - [ ] Rebaseline assembler elapsed/RSS and complete proportional broad Debug
       closeout before the final local commit.

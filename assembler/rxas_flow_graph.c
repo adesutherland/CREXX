@@ -503,6 +503,7 @@ static int flow_graph_add_instruction_edges(
     size_t operand_index;
     size_t target_count;
     int handler_registration;
+    int indirect_branch;
     int add_fallthrough;
 
     item = &procedure->items[instruction->record_id];
@@ -530,6 +531,8 @@ static int flow_graph_add_instruction_edges(
     }
     continuations = instruction->signal.continuations;
     target_count = 0;
+    indirect_branch =
+            (instruction->effects.semantics & RXOP_SEM_INDIRECT_BRANCH) != 0;
     handler_registration =
             (instruction->signal.properties & RXOP_SIGNAL_PROP_POLICY_WRITE) != 0;
     for (operand_index = 0; operand_index < item->operandCount;
@@ -555,8 +558,7 @@ static int flow_graph_add_instruction_edges(
                 return 0;
         }
     }
-    if ((instruction->effects.semantics & RXOP_SEM_INDIRECT_BRANCH) &&
-        (continuations & RXOP_SIGNAL_CONT_NORMAL)) {
+    if (indirect_branch && (continuations & RXOP_SIGNAL_CONT_NORMAL)) {
         Assembler_Token *table;
         size_t case_count;
         size_t case_index;
@@ -578,11 +580,29 @@ static int flow_graph_add_instruction_edges(
                         RXAS_FLOW_EDGE_BRANCH, 0, 0, 0))
                     return 0;
             }
+            /* Packed jump-table dispatch always has a miss continuation.  It
+             * is safe to model only when the following code block is still
+             * inside this procedure; falling off the retained stream is an
+             * incomplete target, not a normal procedure return. */
+            if (next_block < procedure->metrics.code_blocks) {
+                if (!flow_graph_add_edge(procedure, block_id, next_block,
+                                         RXAS_FLOW_EDGE_NORMAL))
+                    return 0;
+            }
+            else {
+                procedure->metrics.unresolved_targets++;
+                procedure->metrics.complete_control_flow = 0;
+                if (!flow_graph_add_edge(procedure, block_id,
+                                         procedure->unknown_exit,
+                                         RXAS_FLOW_EDGE_UNKNOWN))
+                    return 0;
+            }
         }
     }
 
-    add_fallthrough = op->flow == FLOW_NEXT ||
-                      (op->flow == FLOW_COND && target_count < 2);
+    add_fallthrough = !indirect_branch &&
+                      (op->flow == FLOW_NEXT ||
+                       (op->flow == FLOW_COND && target_count < 2));
     if ((continuations & RXOP_SIGNAL_CONT_NORMAL) && add_fallthrough) {
         if (!flow_graph_add_edge(procedure, block_id, next_block,
                                  RXAS_FLOW_EDGE_NORMAL))
@@ -639,6 +659,94 @@ static void flow_graph_count_edges(RxasFlowProcedure *procedure) {
             case RXAS_FLOW_EDGE_UNKNOWN: procedure->metrics.unknown_edges++; break;
         }
     }
+}
+
+static int flow_graph_mark_reachable(RxasFlowProcedure *procedure) {
+    size_t *outgoing_counts;
+    size_t *outgoing_offsets;
+    size_t *outgoing_targets;
+    size_t *queue;
+    size_t head;
+    size_t tail;
+    size_t roots[3];
+    size_t root_index;
+    size_t edge_index;
+    if (!procedure || !procedure->metrics.blocks) return 1;
+    procedure->reachable_blocks = calloc(procedure->metrics.blocks, 1);
+    outgoing_counts = calloc(procedure->metrics.blocks,
+                             sizeof(*outgoing_counts));
+    outgoing_offsets = malloc((procedure->metrics.blocks + 1) *
+                              sizeof(*outgoing_offsets));
+    outgoing_targets = malloc((procedure->metrics.edges
+                               ? procedure->metrics.edges : 1) *
+                              sizeof(*outgoing_targets));
+    queue = malloc(procedure->metrics.blocks * sizeof(*queue));
+    if (!procedure->reachable_blocks || !outgoing_counts ||
+        !outgoing_offsets || !outgoing_targets || !queue) {
+        free(outgoing_counts);
+        free(outgoing_offsets);
+        free(outgoing_targets);
+        free(queue);
+        return 0;
+    }
+    for (edge_index = 0; edge_index < procedure->metrics.edges;
+         edge_index++) {
+        const RxasFlowEdge *edge;
+        edge = &procedure->edges[edge_index];
+        if (edge->source < procedure->metrics.blocks &&
+            edge->target < procedure->metrics.blocks)
+            outgoing_counts[edge->source]++;
+    }
+    outgoing_offsets[0] = 0;
+    for (root_index = 0; root_index < procedure->metrics.blocks;
+         root_index++)
+        outgoing_offsets[root_index + 1] = outgoing_offsets[root_index] +
+                                            outgoing_counts[root_index];
+    memset(outgoing_counts, 0,
+           procedure->metrics.blocks * sizeof(*outgoing_counts));
+    for (edge_index = 0; edge_index < procedure->metrics.edges;
+         edge_index++) {
+        const RxasFlowEdge *edge;
+        edge = &procedure->edges[edge_index];
+        if (edge->source < procedure->metrics.blocks &&
+            edge->target < procedure->metrics.blocks)
+            outgoing_targets[outgoing_offsets[edge->source] +
+                             outgoing_counts[edge->source]++] = edge->target;
+    }
+    roots[0] = procedure->entry_block;
+    roots[1] = procedure->handler_root;
+    roots[2] = procedure->async_root;
+    head = 0;
+    tail = 0;
+    for (root_index = 0; root_index < 3; root_index++) {
+        size_t root;
+        root = roots[root_index];
+        if (root >= procedure->metrics.blocks ||
+            procedure->reachable_blocks[root])
+            continue;
+        procedure->reachable_blocks[root] = 1;
+        queue[tail++] = root;
+    }
+    while (head < tail) {
+        size_t source;
+        size_t outgoing_index;
+        source = queue[head++];
+        for (outgoing_index = outgoing_offsets[source];
+             outgoing_index < outgoing_offsets[source + 1];
+             outgoing_index++) {
+            size_t target;
+            target = outgoing_targets[outgoing_index];
+            if (procedure->reachable_blocks[target])
+                continue;
+            procedure->reachable_blocks[target] = 1;
+            queue[tail++] = target;
+        }
+    }
+    free(outgoing_counts);
+    free(outgoing_offsets);
+    free(outgoing_targets);
+    free(queue);
+    return 1;
 }
 
 static int flow_graph_build_edges(RxasFlowProcedure *procedure,
@@ -751,7 +859,8 @@ static RxasFlowProcedure *flow_graph_build_procedure(
     }
     if (!flow_graph_mark_leaders(procedure, context, leaders) ||
         !flow_graph_form_blocks(procedure, leaders) ||
-        !flow_graph_build_edges(procedure, context)) {
+        !flow_graph_build_edges(procedure, context) ||
+        !flow_graph_mark_reachable(procedure)) {
         free(leaders);
         rxas_flow_procedure_destroy(procedure);
         return 0;
@@ -784,6 +893,7 @@ void rxas_flow_procedure_destroy(RxasFlowProcedure *procedure) {
     free(procedure->instructions);
     free(procedure->blocks);
     free(procedure->edges);
+    free(procedure->reachable_blocks);
     free(procedure->labels);
     memset(procedure, 0, sizeof(*procedure));
     free(procedure);
@@ -813,6 +923,14 @@ const RxasFlowRecord *rxas_flow_procedure_record(
     return &procedure->records[record_id];
 }
 
+size_t rxas_flow_procedure_label_record(
+        const RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        const Assembler_Token *label) {
+    if (!rxas_flow_procedure_epoch_matches(procedure, expected_epoch))
+        return RXAS_FLOW_ID_NONE;
+    return flow_graph_find_label(procedure, label);
+}
+
 const RxasFlowInstruction *rxas_flow_procedure_instruction(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch,
         size_t instruction_id) {
@@ -838,6 +956,25 @@ const RxasFlowEdge *rxas_flow_procedure_edge(
         edge_id >= procedure->metrics.edges)
         return 0;
     return &procedure->edges[edge_id];
+}
+
+int rxas_flow_procedure_block_reachable(
+        const RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t block_id) {
+    return rxas_flow_procedure_epoch_matches(procedure, expected_epoch) &&
+           procedure->reachable_blocks && block_id < procedure->metrics.blocks &&
+           procedure->reachable_blocks[block_id] != 0;
+}
+
+int rxas_flow_procedure_record_reachable(
+        const RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t record_id) {
+    const RxasFlowRecord *record;
+    record = rxas_flow_procedure_record(
+            procedure, expected_epoch, record_id);
+    return record && record->block_id != RXAS_FLOW_ID_NONE &&
+           rxas_flow_procedure_block_reachable(
+                   procedure, expected_epoch, record->block_id);
 }
 
 #define RXAS_FLOW_SPECIAL_ACCESSOR(NAME, FIELD) \

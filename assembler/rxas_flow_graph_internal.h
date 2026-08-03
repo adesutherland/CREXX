@@ -42,6 +42,7 @@ struct RxasFlowProcedure {
     RxasFlowBlock *blocks;
     RxasFlowEdge *edges;
     size_t edge_capacity;
+    unsigned char *reachable_blocks;
     RxasFlowLabelSlot *labels;
     size_t label_capacity;
     size_t entry_block;
