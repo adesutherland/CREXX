@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — D0.4 complete; D0.5 full scale verdict next**
+Status: **complete — D0.5 scale verdict passed**
 
 Architecture approved: 2026-08-02
 
@@ -536,7 +536,7 @@ editing the next consumer:
 - [x] migrate M02 repeated integer/bitwise-float loads to the generic
       component-value/equivalent-constant query, including hidden reference and
       native-payload cleanup proof; and
-- [ ] migrate each remaining authority one at a time, delete the superseded
+- [x] migrate each remaining authority one at a time, delete the superseded
       solver, then prove the old safe domain plus any separately identified
       stronger domain.
 
@@ -753,10 +753,16 @@ a sparse validated transaction while leaving K01 and CFG-changing K05 in
 separate epochs. Its transaction and multi-family proofs pass, the final
 Debug/Release optimizer and migrated-runtime panel passes 107/107, and
 accepted canonical images remain exact. Generated `Parse.rxas` applies 63
-semantic plans in 12 batches but still peaks at approximately 2.56 GB:
-batching reduces rebuilds while longer capability co-retention increases the
-unsupported peak. D0.5 full scale review and capability-lifetime split or
-compaction is next.
+semantic plans in 12 batches at D0.4. D0.5 closes the scale failure by
+eliding redundant storage phis, adding a linear write-once/single-use local
+typed-copy route, and bounding whole-procedure SSA at 262,144
+block-by-register join cells. Over-bound procedures retain local and CFG
+consumers while semantic analysis and diagnostic SSA/use dumps fail closed.
+Generated `Parse.rxas` now peaks at 142.7-142.9 MB in ordinary Release versus
+2.56 GB at D0.4, retains all 261 K05 rewrites, and explicitly retains six M05
+copies whose reused raw registers need a future candidate-sliced/region proof.
+The final Debug/Release optimizer/runtime panel passes 108/108, broad Debug
+passes 2,021/2,021, and the three canonical same-input images remain exact.
 
 ### Stage 11 — later consumers after legacy migration
 
@@ -789,6 +795,7 @@ to combine consumers or bypass each consumer's correctness and Release gate.
 | FC05 | final register-number compaction | preserved windows, links, unwind, TRACE and `.locals` | PERF3-11 after all rewrites |
 | FC06 | register reuse/allocation | interference and component/storage liveness | PERF3-11 after scalable liveness |
 | FC07 | compiler clause and variable/representation hoisting | RXC lowering audit separated from RXAS proof | PERF3-12 |
+| FC08 | candidate-sliced or region SSA for over-bound procedures | exact candidate boundary, signal continuations, storage/value/use closure and bounded work | PERF3 follow-on only when deferred advanced cases have material value |
 
 #### RXC-to-RXAS architecture-transfer ledger
 

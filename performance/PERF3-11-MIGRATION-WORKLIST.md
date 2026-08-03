@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — D0.4 complete; D0.5 full scale verdict next**
+Status: **complete — D0.5 scale verdict passed**
 
 Authorized: 2026-08-02
 
@@ -652,7 +652,7 @@ The routing rule is now executable rather than an informal convention:
 
 | Route | Current owners | Permitted facts |
 | --- | --- | --- |
-| local mechanical scan | fixed `INC`/`DEC`, `CNOP`, adjacent `SWAPN`/call/`NULLN` collection, in-place concat, K06 and adjacent loop branch packing | exact opcode, operand and bounded local metadata only |
+| local mechanical scan | fixed `INC`/`DEC`, `CNOP`, adjacent `SWAPN`/call/`NULLN` collection, in-place concat, K06, adjacent loop branch packing and write-once/single-use typed copies | exact opcode, operand and bounded local metadata only |
 | immutable CFG | M00 and K05 | records, blocks, typed edges, reachability and exact branch algebra |
 | component SSA | M01-M04 | dominance, signal/effect, storage and component value identity |
 | component SSA plus sparse use index | M05, M06 and K01-K04 | the preceding facts plus exact uses, observations and liveness |
@@ -674,7 +674,7 @@ The routing rule is now executable rather than an informal convention:
 - [x] **D0.4 batched pass manager:** collect compatible typed rewrite plans
       from one immutable epoch, apply one validated batch and rebuild only
       after the batch.
-- [ ] **D0.5 full scale verdict:** run the complete proportional correctness,
+- [x] **D0.5 full scale verdict:** run the complete proportional correctness,
       elapsed and peak-RSS review. The `Parse.rxas` design target is at most
       256 MB and the hard rejection boundary is 512 MB; retain exact canonical
       image and accepted K05 VM-instruction evidence.
@@ -770,6 +770,48 @@ behavior but does not pass the scale gate. D0.5 must split or compact the
 capability lifetimes and re-run the complete elapsed/RSS verdict; the 512 MB
 hard rejection boundary remains unchanged.
 
+#### D0.5 result
+
+D0.5 is complete as both infrastructure and use-case migration. Sparse
+storage SSA now creates a provisional phi only for a recursive cycle or
+genuinely different predecessor storages; an equal acyclic join resolves
+directly to its common `StorageId`. Retained diagnostics expose phi elisions,
+input counts and cache populations. A separate linear raw-register census
+migrates the exact write-once/single-use typed-copy case to the mechanical
+route: the destination must occur only as the copy destination and one
+immediately adjacent non-signalling component read, with no metadata, TRACE,
+implicit-call-window or dynamic observation. All remaining component proofs
+continue to use SSA.
+
+Whole-procedure semantic analysis is now admitted only when both the existing
+indirect-value work bound and a 262,144 block-by-register join bound pass.
+Larger procedures still run local mechanical rewrites, M00 reachability and
+the complete K05 immutable-CFG batch, but SSA consumers and diagnostic SSA/use
+dumps fail closed. This is a routing boundary, not a silent proof-budget
+increase. Candidate-sliced or region SSA remains a named future route for
+recovering worthwhile advanced cases in over-bound procedures.
+
+On the 10-logical-CPU Apple ARM64 host on AC power, three ordinary Release
+`Parse.rxas` runs take 0.30-0.31 seconds and peak at 142,704,640-142,852,096
+bytes. The D0.4 ordinary peak was 2,560,196,608 bytes, so D0.5 reduces peak RSS
+by 94.42% (17.93x) and passes both the 256 MB design target and 512 MB hard
+boundary. Three `-n` controls remain stable at 0.04 seconds and 26,968,064
+bytes. The bounded Debug diagnostic run takes 1.46 seconds and peaks at
+168,017,920 bytes versus D0.4's 2,974,924,800-byte diagnostic peak.
+
+The output delta is explicit. `Parse.rxas` grows from 7,619 to 7,625 VM
+instructions and from code size `0x617d` to `0x618f`: exactly six `ICOPY`
+instructions previously removed by M05 are retained because their raw
+destinations have earlier lifetimes and branch-joined observations, so they do
+not satisfy the mechanical write-once proof. Its new SHA-256 is
+`b7e48721c3a5ea98527a1df2e98cea7d27b5b4913fef27dc51efe40004c0f96c`.
+All 261 accepted K05 branch threads remain. Fresh same-input comparison with
+the frozen D0.2/D0.4 assembler keeps Richards, Towers and RexxCPS byte-exact at
+`e855a569`, `0b3169f0` and `e0cf1283`. The final optimizer and migrated-runtime
+panel passes 108/108 in Debug and Release, and broad Debug passes 2,021/2,021
+in 249.23 seconds. This is an accepted conservative optimization-domain
+reduction, not a functional regression.
+
 ### Phase D — remove superseded infrastructure
 
 - [x] Express the M07 storage-identity oracle against sparse SSA and delete the
@@ -780,7 +822,7 @@ hard rejection boundary remains unchanged.
 - [x] Move M00 reachability cleanup to the immutable graph rewrite plan.
 - [x] Remove the legacy whole-procedure graph once no consumer or diagnostic
       owns it; keep only the small mechanical keyhole engine if still useful.
-- [ ] Rebaseline assembler elapsed/RSS and complete proportional broad Debug
+- [x] Rebaseline assembler elapsed/RSS and complete proportional broad Debug
       closeout before the final local commit.
 
 ## M01-M04 results and current stop point

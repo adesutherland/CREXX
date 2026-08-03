@@ -120,9 +120,14 @@ typedef struct RxasFlowSsaMetrics {
     size_t storage_sites;
     size_t storage_attribute_paths;
     size_t storage_phis;
+    size_t storage_phi_elisions;
+    size_t storage_inputs;
+    size_t storage_cache_entries;
     size_t component_updates;
     size_t value_versions;
     size_t value_phis;
+    size_t value_inputs;
+    size_t value_cache_entries;
     size_t absent_values;
     size_t constant_values;
     size_t derived_values;

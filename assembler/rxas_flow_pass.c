@@ -26,6 +26,7 @@ static const RxasOptimisationPassDescriptor pass_descriptors[] = {
     {RXAS_PASS_LOCAL_CONCAT, "local-concat", RXAS_OPT_OWNER_LOCAL, RXAS_FLOW_CAP_LOCAL_SCAN},
     {RXAS_PASS_K06_STATUS_COPY, "K06-status-copy", RXAS_OPT_OWNER_LOCAL, RXAS_FLOW_CAP_LOCAL_SCAN},
     {RXAS_PASS_LOCAL_LOOP_BRANCH, "local-loop-branch", RXAS_OPT_OWNER_LOCAL, RXAS_FLOW_CAP_LOCAL_SCAN},
+    {RXAS_PASS_LOCAL_SINGLE_USE_COPY, "local-single-use-copy", RXAS_OPT_OWNER_LOCAL, RXAS_FLOW_CAP_LOCAL_SCAN},
     {RXAS_PASS_M00_REACHABILITY, "M00-reachability", RXAS_OPT_OWNER_CFG, RXAS_FLOW_CAP_CFG},
     {RXAS_PASS_M01_DERIVATION, "M01-derivation", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_BASE},
     {RXAS_PASS_M02_CONSTANT, "M02-constant", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_BASE},
@@ -150,8 +151,10 @@ int rxas_optimisation_census(Assembler_Context *context,
             pass_add_candidate(census, RXAS_PASS_M03_ABSENT);
         if (rxop_same_storage_copy_is_noop(opcode))
             pass_add_candidate(census, RXAS_PASS_M04_SELF_COPY);
-        if (pass_is_copy_candidate(opcode))
+        if (pass_is_copy_candidate(opcode)) {
+            pass_add_candidate(census, RXAS_PASS_LOCAL_SINGLE_USE_COPY);
             pass_add_candidate(census, RXAS_PASS_M05_TYPED_COPY);
+        }
         if (opcode == OP_ICOPY_REG_REG || opcode == OP_FCOPY_REG_REG)
             pass_add_candidate(census, RXAS_PASS_M06_PRODUCER_FORWARD);
         if (context && context->debug_mode) {

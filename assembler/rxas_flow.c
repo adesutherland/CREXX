@@ -44,6 +44,11 @@
 /* Bound global value analysis only for procedures newly admitted by exact
  * indirect-table edges.  Reachability remains linear and unbounded. */
 #define FLOW_MAX_INDIRECT_VALUE_CELLS 1000000
+/* A whole-procedure semantic epoch can retain one sparse state entry for a
+ * queried register at each join. Keep that cross product comfortably inside
+ * the 256 MB Parse design target; larger procedures stay on local/CFG routes
+ * until candidate-sliced SSA is implemented. */
+#define FLOW_MAX_SEMANTIC_JOIN_REGISTER_CELLS 262144
 
 typedef struct flow_register {
     char type;
@@ -84,6 +89,7 @@ typedef struct flow_stats {
     size_t unreachable_removed;
     size_t dead_results_removed;
     size_t typed_copies_removed;
+    size_t local_single_use_copies_removed;
     size_t compare_preparations_removed;
     size_t full_copies_removed;
     size_t redundant_loads_removed;
@@ -1599,6 +1605,311 @@ static int flow_opcode_may_remap_storage(const flow_node *node) {
            opcode == OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG;
 }
 
+static int flow_token_matches_local_register(
+        const Assembler_Token *token, size_t number) {
+    return token && token->token_type == RREG &&
+           token->token_value.integer >= 0 &&
+           (size_t)token->token_value.integer == number;
+}
+
+typedef struct flow_local_register_summary {
+    size_t local_count;
+    size_t *explicit_occurrences;
+    unsigned char *observed;
+    size_t lowest_observed_range_base;
+    int observes_all;
+} flow_local_register_summary;
+
+static void flow_local_summary_mark(
+        flow_local_register_summary *summary, size_t number) {
+    if (summary && number < summary->local_count)
+        summary->observed[number] = 1;
+}
+
+static int flow_build_local_register_summary(
+        const flow_graph *graph, flow_local_register_summary *summary) {
+    size_t record;
+    if (!graph || !summary) return 0;
+    memset(summary, 0, sizeof(*summary));
+    summary->local_count = graph->context->current_locals > 0
+            ? (size_t)graph->context->current_locals : 0;
+    summary->lowest_observed_range_base = RXAS_FLOW_ID_NONE;
+    if (!summary->local_count) return 1;
+    summary->explicit_occurrences = calloc(
+            summary->local_count, sizeof(*summary->explicit_occurrences));
+    summary->observed = calloc(
+            summary->local_count, sizeof(*summary->observed));
+    if (!summary->explicit_occurrences || !summary->observed) {
+        free(summary->explicit_occurrences);
+        free(summary->observed);
+        memset(summary, 0, sizeof(*summary));
+        return 0;
+    }
+    for (record = 0; record < graph->item_count; record++) {
+        const instruction_queue *item;
+        const flow_node *node;
+        size_t operand;
+        size_t implicit_number;
+        item = &graph->items[record];
+        node = &graph->nodes[record];
+        if (item->instrType == REG_META && item->operand3Token &&
+            item->operand3Token->token_type == RREG &&
+            item->operand3Token->token_value.integer >= 0) {
+            flow_local_summary_mark(
+                    summary,
+                    (size_t)item->operand3Token->token_value.integer);
+            continue;
+        }
+        if (item->instrType == TRACE_EVENT) {
+            if (item->operand2Token &&
+                item->operand2Token->token_type == STRING &&
+                !strcmp((const char *)
+                        item->operand2Token->token_value.string, "R") &&
+                item->operand4Token &&
+                item->operand4Token->token_type == STRING &&
+                item->operand4Token->token_value.string[0] &&
+                tolower((unsigned char)
+                        item->operand4Token->token_value.string[0]) == 'r' &&
+                item->operand5Token &&
+                item->operand5Token->token_type == INT &&
+                item->operand5Token->token_value.integer >= 0)
+                flow_local_summary_mark(
+                        summary,
+                        (size_t)item->operand5Token->token_value.integer);
+            continue;
+        }
+        if (item->instrType != OP_CODE) continue;
+        for (operand = 0; operand < item->operandCount; operand++) {
+            const Assembler_Token *token;
+            token = rxas_queue_operand(item, operand);
+            if (token && token->token_type == RREG &&
+                token->token_value.integer >= 0 &&
+                (size_t)token->token_value.integer < summary->local_count)
+                summary->explicit_occurrences[
+                        (size_t)token->token_value.integer]++;
+        }
+        if (!node->op ||
+            node->effects.state != RXOP_EFFECT_CLASSIFIED) {
+            summary->observes_all = 1;
+            continue;
+        }
+        switch (node->effects.implicit) {
+            case RXOP_IMPLICIT_LOCAL_R0_READ_WRITE:
+            case RXOP_IMPLICIT_LOCAL_R1_READ_WRITE:
+            case RXOP_IMPLICIT_LOCAL_R2_READ_WRITE:
+                implicit_number = node->effects.implicit ==
+                                RXOP_IMPLICIT_LOCAL_R0_READ_WRITE ? 0 :
+                        node->effects.implicit ==
+                                RXOP_IMPLICIT_LOCAL_R1_READ_WRITE ? 1 : 2;
+                flow_local_summary_mark(summary, implicit_number);
+                break;
+            case RXOP_IMPLICIT_LOCAL_COPY:
+                if (!item->operand1Token ||
+                    item->operand1Token->token_type != INT ||
+                    item->operand1Token->token_value.integer < 0 ||
+                    !item->operand2Token ||
+                    item->operand2Token->token_type != INT ||
+                    item->operand2Token->token_value.integer < 0) {
+                    summary->observes_all = 1;
+                    break;
+                }
+                flow_local_summary_mark(
+                        summary,
+                        (size_t)item->operand1Token->token_value.integer);
+                flow_local_summary_mark(
+                        summary,
+                        (size_t)item->operand2Token->token_value.integer);
+                break;
+            case RXOP_IMPLICIT_LOCAL_TARGET:
+                summary->observes_all = 1;
+                break;
+            case RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3:
+                if (!item->operand3Token ||
+                    item->operand3Token->token_type != RREG ||
+                    item->operand3Token->token_value.integer < 0) {
+                    summary->observes_all = 1;
+                    break;
+                }
+                implicit_number =
+                        (size_t)item->operand3Token->token_value.integer;
+                if (summary->lowest_observed_range_base ==
+                            RXAS_FLOW_ID_NONE ||
+                    implicit_number < summary->lowest_observed_range_base)
+                    summary->lowest_observed_range_base = implicit_number;
+                break;
+            case RXOP_IMPLICIT_ARGUMENT_INDEX:
+            case RXOP_IMPLICIT_NONE:
+                break;
+            default:
+                summary->observes_all = 1;
+                break;
+        }
+        if ((node->effects.semantics &
+             (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL)) &&
+            node->effects.implicit != RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3)
+            summary->observes_all = 1;
+    }
+    return 1;
+}
+
+static void flow_free_local_register_summary(
+        flow_local_register_summary *summary) {
+    if (!summary) return;
+    free(summary->explicit_occurrences);
+    free(summary->observed);
+    memset(summary, 0, sizeof(*summary));
+}
+
+static int flow_local_summary_observes(
+        const flow_local_register_summary *summary, size_t number) {
+    return !summary || number >= summary->local_count ||
+           summary->observes_all || summary->observed[number] ||
+           (summary->lowest_observed_range_base != RXAS_FLOW_ID_NONE &&
+            number > summary->lowest_observed_range_base);
+}
+
+/* The common compiler-temporary form does not need whole-procedure SSA: an
+ * exact local typed copy followed immediately by its sole raw read can be
+ * substituted when the destination was never remapped, is not observed by
+ * metadata or an implicit call window, and never appears again. This is a
+ * deliberately strict write-once proof; all other copies remain SSA cases. */
+static int flow_plan_local_single_use_copy(
+        const flow_graph *graph,
+        const flow_local_register_summary *summary, size_t copy_record,
+        size_t *use_record, size_t *use_operand) {
+    const instruction_queue *copy;
+    const instruction_queue *use;
+    const Assembler_Token *destination;
+    const Assembler_Token *source;
+    unsigned int component;
+    size_t destination_number;
+    size_t operand;
+    size_t matched_operand;
+    size_t matches;
+    if (!graph || !use_record || !use_operand ||
+        copy_record + 1 >= graph->item_count ||
+        !graph->nodes[copy_record].reachable ||
+        graph->items[copy_record].instrType != OP_CODE ||
+        !graph->nodes[copy_record].op)
+        return 0;
+    copy = &graph->items[copy_record];
+    if (copy->operandCount != 2) return 0;
+    component = graph->nodes[copy_record].op->opcode == OP_ICOPY_REG_REG
+            ? RXOP_COMPONENT_INTEGER :
+            graph->nodes[copy_record].op->opcode == OP_FCOPY_REG_REG
+            ? RXOP_COMPONENT_FLOAT :
+            graph->nodes[copy_record].op->opcode == OP_SCOPY_REG_REG
+            ? RXOP_COMPONENT_STRING : RXOP_COMPONENT_NONE;
+    destination = rxas_queue_operand(copy, 0);
+    source = rxas_queue_operand(copy, 1);
+    if (!component || !destination || destination->token_type != RREG ||
+        destination->token_value.integer < 0 ||
+        !source || !flow_register_type(source) ||
+        (flow_register_type(source) == 'r' &&
+         source->token_value.integer == destination->token_value.integer) ||
+        graph->nodes[copy_record].effects.state != RXOP_EFFECT_CLASSIFIED ||
+        graph->nodes[copy_record].effects.flow != FLOW_NEXT ||
+        graph->nodes[copy_record].effects.optimizer_barrier ||
+        graph->nodes[copy_record].effects.reads != RXOP_OP_2 ||
+        graph->nodes[copy_record].effects.writes != RXOP_OP_1 ||
+        graph->nodes[copy_record].effects.branch_targets != RXOP_OP_NONE ||
+        graph->nodes[copy_record].effects.implicit != RXOP_IMPLICIT_NONE ||
+        graph->nodes[copy_record].effects.semantics != RXOP_SEM_NONE ||
+        graph->nodes[copy_record].effects.cursor_reads != RXOP_OP_NONE ||
+        graph->nodes[copy_record].effects.cursor_writes != RXOP_OP_NONE ||
+        rxop_signal_contract(graph->nodes[copy_record].op->opcode).state !=
+                RXOP_SIGNAL_STATE_NONE ||
+        rxop_context_writes(graph->nodes[copy_record].op->opcode) !=
+                RXOP_CONTEXT_NONE ||
+        rxop_component_reads(graph->nodes[copy_record].op->opcode, 1) !=
+                component ||
+        rxop_component_writes(graph->nodes[copy_record].op->opcode, 0) !=
+                component)
+        return 0;
+    destination_number = (size_t)destination->token_value.integer;
+    if (flow_local_summary_observes(summary, destination_number) ||
+        summary->explicit_occurrences[destination_number] != 2)
+        return 0;
+
+    use = &graph->items[copy_record + 1];
+    if (!graph->nodes[copy_record + 1].reachable ||
+        use->instrType != OP_CODE || !graph->nodes[copy_record + 1].op ||
+        graph->nodes[copy_record + 1].effects.state !=
+                RXOP_EFFECT_CLASSIFIED ||
+        graph->nodes[copy_record + 1].effects.optimizer_barrier ||
+        rxop_signal_contract(
+                graph->nodes[copy_record + 1].op->opcode).state !=
+                RXOP_SIGNAL_STATE_NONE ||
+        rxop_context_writes(
+                graph->nodes[copy_record + 1].op->opcode) !=
+                RXOP_CONTEXT_NONE)
+        return 0;
+
+    matches = 0;
+    matched_operand = RXAS_FLOW_ID_NONE;
+    for (operand = 0; operand < use->operandCount; operand++) {
+        const flow_node *node;
+        node = &graph->nodes[copy_record + 1];
+        if (!flow_token_matches_local_register(
+                    rxas_queue_operand(use, operand), destination_number))
+            continue;
+        if (matches ||
+            !rxop_effect_reads_operand(&node->effects, operand) ||
+            rxop_effect_writes_operand(&node->effects, operand) ||
+            rxop_component_reads(node->op->opcode, operand) != component ||
+            rxop_effect_reads_cursor(&node->effects, operand) ||
+            rxop_effect_writes_cursor(&node->effects, operand))
+            return 0;
+        matched_operand = operand;
+        matches++;
+    }
+    if (matches != 1 || matched_operand == RXAS_FLOW_ID_NONE) return 0;
+    *use_record = copy_record + 1;
+    *use_operand = matched_operand;
+    return 1;
+}
+
+static size_t flow_apply_local_single_use_copies(
+        flow_graph *graph, flow_stats *stats) {
+    flow_local_register_summary summary;
+    size_t copy_record;
+    size_t use_record;
+    size_t use_operand;
+    size_t removed;
+    removed = 0;
+    if (!flow_build_local_register_summary(graph, &summary))
+        RX_PANIC_OOM("calloc local register summary",
+                     (size_t)(graph->context->current_locals > 0
+                             ? graph->context->current_locals : 0) *
+                             (sizeof(size_t) + 1), 0);
+    for (copy_record = 0; copy_record < graph->item_count; copy_record++) {
+        instruction_queue *copy;
+        instruction_queue *use;
+        Assembler_Token *source;
+        if (!flow_record_matches_epoch(graph, copy_record) ||
+            !flow_plan_local_single_use_copy(
+                    graph, &summary, copy_record,
+                    &use_record, &use_operand) ||
+            !flow_record_matches_epoch(graph, use_record))
+            continue;
+        copy = &graph->items[copy_record];
+        source = rxas_queue_operand(copy, 1);
+        use = flow_edit_record(graph, use_record);
+        copy = flow_edit_record(graph, copy_record);
+        if (!use || !copy) continue;
+        flow_set_operand(use, use_operand, source);
+        copy->instrType = EMPTY;
+        stats->typed_copies_removed++;
+        stats->local_single_use_copies_removed++;
+        stats->operands_redirected++;
+        removed++;
+        flow_debug_accept(graph, copy_record,
+                          "single-use-local-copy", 1);
+    }
+    flow_free_local_register_summary(&summary);
+    return removed;
+}
+
 static int flow_storage_remap_connects_candidates(
         const flow_graph *graph, size_t left, size_t right) {
     const Assembler_Token *left_target;
@@ -2200,7 +2511,8 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
     if (!graph->context->debug_mode) return;
     fprintf(stderr,
             "NR27 flow procedure=%s blocks=%llu registers=%llu instructions=%llu->%llu "
-            "unreachable=%llu dead=%llu typed-copy=%llu compare-prep=%llu "
+            "unreachable=%llu dead=%llu typed-copy=%llu "
+            "local-single-use-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
             "redundant-conversion=%llu producer-forward=%llu "
             "swap-roundtrip=%llu "
@@ -2225,6 +2537,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->unreachable_removed,
             (unsigned long long)stats->dead_results_removed,
             (unsigned long long)stats->typed_copies_removed,
+            (unsigned long long)stats->local_single_use_copies_removed,
             (unsigned long long)stats->compare_preparations_removed,
             (unsigned long long)stats->full_copies_removed,
             (unsigned long long)stats->redundant_loads_removed,
@@ -2296,6 +2609,13 @@ static int flow_value_analysis_within_bound(const flow_graph *graph) {
     if (!graph->word_count) return 1;
     return graph->item_count <=
            FLOW_MAX_INDIRECT_VALUE_CELLS / graph->word_count;
+}
+
+static int flow_semantic_analysis_within_bound(const flow_graph *graph) {
+    if (!graph || !flow_value_analysis_within_bound(graph)) return 0;
+    if (!graph->register_count) return 1;
+    return graph->block_count <=
+           FLOW_MAX_SEMANTIC_JOIN_REGISTER_CELLS / graph->register_count;
 }
 
 /* M07 is an executable diagnostic oracle, not an optimisation owner. Query
@@ -2434,6 +2754,8 @@ static size_t flow_apply_branch_thread_epoch(flow_graph *graph,
 static int flow_has_semantic_candidates(
         const RxasOptimisationCensus *census) {
     return rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_LOCAL_SINGLE_USE_COPY) ||
+           rxas_optimisation_has_candidates(
                    census, RXAS_PASS_M04_SELF_COPY) ||
            rxas_optimisation_has_candidates(
                    census, RXAS_PASS_K02_K03_LINKED_READ) ||
@@ -2458,7 +2780,7 @@ static int flow_has_semantic_candidates(
  * complete batch validation, and K05 remains a later CFG-only epoch. */
 static size_t flow_apply_semantic_epoch(
         flow_graph *graph, flow_stats *stats, flow_proof_session *session,
-        const RxasOptimisationCensus *census) {
+        const RxasOptimisationCensus *census, int allow_ssa) {
     RxasFlowQueueBatch batch;
     RxasFlowQueueBatchMetrics metrics;
     instruction_queue *original_items;
@@ -2476,31 +2798,34 @@ static size_t flow_apply_semantic_epoch(
     planned = 0;
 
     if (rxas_optimisation_has_candidates(
+            census, RXAS_PASS_LOCAL_SINGLE_USE_COPY))
+        planned += flow_apply_local_single_use_copies(graph, stats);
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M04_SELF_COPY))
         planned += flow_remove_redundant_self_copies(
                 graph, stats, session);
-    if (rxas_optimisation_has_candidates(
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_K02_K03_LINKED_READ))
         planned += flow_reuse_duplicate_linked_read(
                 graph, stats, session);
-    if (rxas_optimisation_has_candidates(
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M05_TYPED_COPY))
         planned += flow_propagate_copies(graph, stats, session);
-    if (rxas_optimisation_has_candidates(
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M06_PRODUCER_FORWARD))
         planned += flow_forward_producer_destination(
                 graph, stats, session);
-    if (rxas_optimisation_has_candidates(
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_K04_COMPARE_BRANCH))
         planned += flow_fuse_compare_branches(graph, stats, session);
-    if (rxas_optimisation_has_candidates(
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M02_CONSTANT))
         planned += flow_remove_redundant_loads(graph, stats, session);
-    if (rxas_optimisation_has_candidates(
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M03_ABSENT))
         planned += flow_remove_redundant_initializations(
                 graph, stats, session);
-    if (rxas_optimisation_has_candidates(
+    if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M01_DERIVATION))
         planned += flow_remove_redundant_conversions(
                 graph, stats, session);
@@ -2571,6 +2896,7 @@ void rxas_flow_optimise(Assembler_Context *context) {
     size_t changed;
     size_t iterations;
     int graph_built;
+    int semantic_admitted;
     unsigned int semantic_capabilities;
     unsigned int diagnostic_capabilities;
     unsigned int analysis_capabilities;
@@ -2621,26 +2947,36 @@ void rxas_flow_optimise(Assembler_Context *context) {
             changed = 0;
         }
         else {
+            semantic_admitted =
+                    flow_semantic_analysis_within_bound(&graph);
             changed = rxas_optimisation_has_candidates(
                     &census, RXAS_PASS_M00_REACHABILITY)
                     ? flow_remove_unreachable(&graph, &stats) : 0;
-            /* K01 is a sparse, independently budgeted proof and must not be
-             * coupled to the temporary indirect-value admission bound. */
-            if (!changed && rxas_optimisation_has_candidates(
+            /* Every SSA consumer shares the same scale admission. Mechanical
+             * local rewrites and CFG-only consumers remain available when a
+             * procedure exceeds it. */
+            if (!changed && semantic_admitted &&
+                rxas_optimisation_has_candidates(
                     &census, RXAS_PASS_K01_STORAGE_PERMUTATION))
                 changed += flow_remove_swap_round_trips(
                         &graph, &stats, &proof_session);
-            if (!changed && flow_value_analysis_within_bound(&graph))
+            if (!changed)
                 changed = flow_apply_semantic_epoch(
-                        &graph, &stats, &proof_session, &census);
-            else if (!changed && context->debug_mode) {
+                        &graph, &stats, &proof_session, &census,
+                        semantic_admitted);
+            if (!changed && !semantic_admitted && context->debug_mode) {
                 fprintf(stderr,
-                        "NR27 bound procedure=%s scope=reachability-only "
-                        "value-cells=%llu limit=%llu\\n",
+                        "NR27 bound procedure=%s scope=local-cfg "
+                        "value-cells=%llu value-limit=%llu "
+                        "join-register-cells=%llu semantic-limit=%llu\n",
                         context->current_proc_name,
                         (unsigned long long)
                                 (graph.item_count * graph.word_count),
-                        (unsigned long long)FLOW_MAX_INDIRECT_VALUE_CELLS);
+                        (unsigned long long)FLOW_MAX_INDIRECT_VALUE_CELLS,
+                        (unsigned long long)
+                                (graph.block_count * graph.register_count),
+                        (unsigned long long)
+                                FLOW_MAX_SEMANTIC_JOIN_REGISTER_CELLS);
             }
             /* K05 plans every compatible branch thread against the same CFG
              * and applies the batch only after all semantic consumers decline
@@ -2686,6 +3022,19 @@ void rxas_flow_optimise(Assembler_Context *context) {
                             &census, RXAS_OPT_OWNER_DIAGNOSTIC);
             analysis_capabilities = semantic_capabilities |
                                     diagnostic_capabilities;
+            if (!flow_semantic_analysis_within_bound(&graph)) {
+                analysis_capabilities &= RXAS_FLOW_CAP_CFG;
+                fprintf(stderr,
+                        "PERF3 flow-diagnostic procedure=%s "
+                        "disabled=semantic-scale-bound "
+                        "join-register-cells=%llu limit=%llu\n",
+                        context->current_proc_name ? context->current_proc_name
+                                                   : "(directives)",
+                        (unsigned long long)
+                                (graph.block_count * graph.register_count),
+                        (unsigned long long)
+                                FLOW_MAX_SEMANTIC_JOIN_REGISTER_CELLS);
+            }
             /* Structural analyses are demand-driven.  Until an optimizer
              * consumer requests them, ordinary assembly must not retain or
              * solve facts that only diagnostics use. */

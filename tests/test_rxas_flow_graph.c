@@ -1575,6 +1575,39 @@ static void test_storage_joins_and_loops(Assembler_Context *context) {
     fixture_destroy(&fixture);
 
     memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_integer(&fixture, 7);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "left");
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "brt", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "join");
+    fixture_op(&fixture, "br", operands, 1);
+    fixture_label(&fixture, "left");
+    fixture_label(&fixture, "join");
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 33);
+    check(procedure != 0, "equal-storage join fixture construction failed");
+    if (procedure) {
+        const RxasFlowSsaMetrics *metrics;
+        analysis = rxas_flow_require_ssa_analysis(procedure, 33, 0);
+        join_instruction = rxas_flow_procedure_record(
+                procedure, 33, 5)->instruction_id;
+        check(analysis && rxas_flow_storage_at_instruction(
+                    analysis, 33, join_instruction, 0,
+                    fixture_local_register(1), &fact) &&
+              fact.kind == RXAS_FLOW_STORAGE_BASE,
+              "equal acyclic storage paths did not retain the base StorageId");
+        metrics = analysis ? rxas_flow_ssa_metrics(analysis, 33) : 0;
+        check(metrics && metrics->storage_phis == 0 &&
+              metrics->storage_phi_elisions > 0,
+              "equal acyclic storage paths retained a redundant phi");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0);
     operands[1] = fixture_integer(&fixture, 3);
     fixture_op(&fixture, "load", operands, 2);

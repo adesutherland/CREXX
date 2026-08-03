@@ -1,0 +1,17 @@
+* D0.5: an exact adjacent single-use component temporary is mechanical; a
+* later TRACE observation keeps the same shape on the semantic proof route.
+
+local_single_use_copy() .locals=6
+    load r0,7
+    icopy r1,r0
+    brt local_copy_true,r1
+    load r2,0
+    br local_copy_join
+local_copy_true:
+    load r2,1
+local_copy_join:
+    load r3,9
+    icopy r4,r3
+    iadd r5,r4,1
+    .traceevent "V" 6 "R" "I" "r" 4 1 1 0 "observed-copy" ""
+    ret r2

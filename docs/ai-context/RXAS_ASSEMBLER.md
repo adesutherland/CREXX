@@ -537,6 +537,15 @@ K01-K04 additionally request the sparse use index. The established `-d` flow
 dump has its own explicit diagnostic route. No current production consumer
 requests loop analysis.
 
+D0.5 adds an exact linear write-once/single-use typed-copy route. One local-
+register census records explicit occurrences plus metadata, TRACE, implicit
+register and call-window observations. `ICOPY`, `FCOPY` or `SCOPY` may bypass
+SSA only when its destination occurs exactly as that copy destination and one
+immediately adjacent, non-signalling component read; the read is redirected
+and the copy is deleted in the same sparse transaction. Reused registers,
+mapping operations, calls, TRACE/meta observations, signalling consumers and
+all non-adjacent uses remain on the SSA route.
+
 NR-27 adds a transient whole-procedure machine-flow layer after the unchanged
 20-item local peephole and before ordinary RXBIN emission. Stable peephole
 output is moved, with its token ownership, into a growable procedure stream.
@@ -717,6 +726,17 @@ acquired lower-capability facts: that route rejects, while later base
 consumers remain safe and available. Loop queries likewise require the
 separate loop capability. The compatibility constructor still requests the
 complete service for tests and external callers that explicitly need it.
+
+Storage resolution creates a provisional phi only when recursive lookup of a
+join requires a cycle placeholder or when predecessor storages genuinely
+differ. Equal acyclic predecessors resolve directly to their common
+`StorageId`; diagnostics report the elided phi, retained input and cache
+counts. Whole-procedure semantic consumers are admitted only when the
+indirect-value work bound and the 262,144 block-by-register join bound both
+pass. An over-bound procedure continues through local mechanical rewrites,
+M00 and K05, but SSA consumers and diagnostic SSA/use materialization fail
+closed. Future recovery of valuable advanced cases must use an explicitly
+bounded candidate-sliced or region proof rather than raising this limit.
 
 Compatible semantic rewrites are committed through the sparse transactional
 manager in `assembler/rxas_flow_batch.c`. M04, K02/K03, M05, M06, K04, M02,

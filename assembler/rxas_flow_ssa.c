@@ -2248,9 +2248,22 @@ static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
     cache_id = flow_ssa_storage_cache_find(analysis, state_id, register_id);
     if (cache_id != RXAS_FLOW_ID_NONE) {
         int preserve_dynamic;
+        state = &analysis->states[state_id];
+        /* A join starts with an unresolved cache entry.  Only a recursive
+         * lookup can require a provisional phi; acyclic joins can resolve
+         * their inputs first and avoid retaining a phi that immediately
+         * collapses to one storage. */
+        if (analysis->storage_cache[cache_id].resolving &&
+            !analysis->storage_cache[cache_id].result &&
+            state->kind == FLOW_SSA_STATE_JOIN) {
+            result = flow_ssa_create_storage_phi(
+                    analysis, state_id, register_id);
+            if (result == RXAS_FLOW_ID_NONE) return 0;
+            analysis->storage_cache[cache_id].result = result;
+            return result;
+        }
         result = flow_ssa_storage_canonical(
                 analysis, analysis->storage_cache[cache_id].result);
-        state = &analysis->states[state_id];
         preserve_dynamic = 0;
         if (state->kind == FLOW_SSA_STATE_TRANSFER) {
             size_t update_index;
@@ -2276,10 +2289,7 @@ static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
         return result;
     }
     state = &analysis->states[state_id];
-    result = state->kind == FLOW_SSA_STATE_JOIN
-            ? flow_ssa_create_storage_phi(analysis, state_id, register_id)
-            : register_id + 1;
-    if (result == RXAS_FLOW_ID_NONE) return 0;
+    result = state->kind == FLOW_SSA_STATE_JOIN ? 0 : register_id + 1;
     cache_id = flow_ssa_storage_cache_add(
             analysis, state_id, register_id, result);
     if (cache_id == RXAS_FLOW_ID_NONE) return 0;
@@ -2334,16 +2344,12 @@ static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
         }
     }
     else {
-        size_t phi_index;
         size_t phi_storage_id;
-        size_t phi_input_offset;
         size_t input;
         size_t same;
         int have_same;
         int different;
-        phi_storage_id = result;
-        phi_index = phi_storage_id - 1;
-        phi_input_offset = analysis->storage_versions[phi_index].input_offset;
+        phi_storage_id = 0;
         same = 0;
         have_same = 0;
         different = 0;
@@ -2353,10 +2359,12 @@ static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
                     analysis,
                     analysis->state_inputs[state->input_offset + input],
                     register_id);
-            analysis->storage_inputs[phi_input_offset + input] = input_storage;
+            /* A recursive lookup may have materialized the provisional phi
+             * into this join's cache entry. */
+            phi_storage_id = analysis->storage_cache[cache_id].result;
             input_storage = flow_ssa_storage_canonical(
                     analysis, input_storage);
-            if (input_storage == phi_storage_id) continue;
+            if (phi_storage_id && input_storage == phi_storage_id) continue;
             if (!have_same) {
                 same = input_storage;
                 have_same = 1;
@@ -2365,8 +2373,32 @@ static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
         }
         if (have_same && !different) result = same;
         else if (!have_same) result = 0;
-        if (result != phi_storage_id)
-            analysis->storage_versions[phi_index].replacement = result;
+        else {
+            if (!phi_storage_id) {
+                phi_storage_id = flow_ssa_create_storage_phi(
+                        analysis, state_id, register_id);
+                if (phi_storage_id == RXAS_FLOW_ID_NONE) return 0;
+                analysis->storage_cache[cache_id].result = phi_storage_id;
+            }
+            result = phi_storage_id;
+        }
+        if (phi_storage_id) {
+            size_t phi_index;
+            size_t phi_input_offset;
+            phi_index = phi_storage_id - 1;
+            phi_input_offset =
+                    analysis->storage_versions[phi_index].input_offset;
+            for (input = 0; input < state->input_count; input++)
+                analysis->storage_inputs[phi_input_offset + input] =
+                        flow_ssa_resolve_storage(
+                                analysis,
+                                analysis->state_inputs[
+                                        state->input_offset + input],
+                                register_id);
+            if (result != phi_storage_id)
+                analysis->storage_versions[phi_index].replacement = result;
+        }
+        else analysis->metrics.storage_phi_elisions++;
     }
     result = flow_ssa_storage_canonical(analysis, result);
     cache_id = flow_ssa_storage_cache_find(analysis, state_id, register_id);
@@ -2809,6 +2841,10 @@ static int flow_ssa_materialize_derivations(RxasFlowSsaAnalysis *analysis) {
 
 static void flow_ssa_set_retained_bytes(RxasFlowSsaAnalysis *analysis) {
     size_t bytes;
+    analysis->metrics.storage_inputs = analysis->storage_input_count;
+    analysis->metrics.storage_cache_entries = analysis->storage_cache_count;
+    analysis->metrics.value_inputs = analysis->value_input_count;
+    analysis->metrics.value_cache_entries = analysis->value_cache_count;
     bytes = sizeof(*analysis);
     bytes += analysis->register_capacity * sizeof(*analysis->registers);
     bytes += analysis->state_capacity * sizeof(*analysis->states);
@@ -3460,8 +3496,10 @@ int rxas_flow_ssa_dump(const RxasFlowSsaAnalysis *analysis,
             "bytes=%llu registers=%llu states=%llu joins=%llu "
             "map-updates=%llu map-clobbers=%llu storages=%llu sites=%llu "
             "attribute-paths=%llu storage-phis=%llu "
+            "phi-elisions=%llu storage-inputs=%llu storage-cache=%llu "
             "component-updates=%llu values=%llu "
-            "value-phis=%llu absent=%llu constants=%llu derived=%llu "
+            "value-phis=%llu value-inputs=%llu value-cache=%llu "
+            "absent=%llu constants=%llu derived=%llu "
             "unknown-values=%llu edge-states=%llu\n",
             analysis->metrics.epoch,
             flow_ssa_status_name(analysis->metrics.status),
@@ -3477,9 +3515,14 @@ int rxas_flow_ssa_dump(const RxasFlowSsaAnalysis *analysis,
             (unsigned long long)analysis->metrics.storage_sites,
             (unsigned long long)analysis->metrics.storage_attribute_paths,
             (unsigned long long)analysis->metrics.storage_phis,
+            (unsigned long long)analysis->metrics.storage_phi_elisions,
+            (unsigned long long)analysis->metrics.storage_inputs,
+            (unsigned long long)analysis->metrics.storage_cache_entries,
             (unsigned long long)analysis->metrics.component_updates,
             (unsigned long long)analysis->metrics.value_versions,
             (unsigned long long)analysis->metrics.value_phis,
+            (unsigned long long)analysis->metrics.value_inputs,
+            (unsigned long long)analysis->metrics.value_cache_entries,
             (unsigned long long)analysis->metrics.absent_values,
             (unsigned long long)analysis->metrics.constant_values,
             (unsigned long long)analysis->metrics.derived_values,
