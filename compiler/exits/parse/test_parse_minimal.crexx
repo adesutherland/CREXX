@@ -1,0 +1,49 @@
+/*------------------------------------------------------------*/
+/* PARSE VERSION / PARSE SOURCE Example                       */
+/*------------------------------------------------------------*/
+
+options levelb
+import rxfnsb
+
+say "=== PARSE VERSION ==="
+say
+
+say "VERSION()  :" version()
+say
+
+parse version version
+say "1 variable :"
+say "  Version  = '"version"'"
+say
+
+parse version version level
+say "2 variables:"
+say "  Version  = '"version"'"
+say "  Level    = '"level"'"
+say
+
+parse version version level build
+say "3 variables:"
+say "  Version  = '"version"'"
+say "  Level    = '"level"'"
+say "  Build    = '"build"'"
+say
+
+parse version version level build platform
+say "4 variables:"
+say "  Version  = '"version"'"
+say "  Level    = '"level"'"
+say "  Build    = '"build"'"
+say "  Platform = '"platform"'"
+
+say
+say "=== PARSE SOURCE ==="
+say
+
+parse source environment command filename
+
+say "Environment = '"environment"'"
+say "Command     = '"command"'"
+say "Source      = '"filename"'"
+
+exit 0
