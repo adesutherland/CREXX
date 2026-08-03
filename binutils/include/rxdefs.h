@@ -229,7 +229,10 @@ typedef enum {
     RXOP_COMPONENT_BINARY = 16,
     RXOP_COMPONENT_ATTRIBUTES = 32,
     RXOP_COMPONENT_REFERENCE = 64,
-    RXOP_COMPONENT_ALL = 127
+    /* Host-owned binary payloads have lifetime/finalizer semantics distinct
+     * from an ordinary RXAS binary value. */
+    RXOP_COMPONENT_NATIVE_PAYLOAD = 128,
+    RXOP_COMPONENT_ALL = 255
 } RxOpValueComponentMask;
 
 typedef enum {
@@ -443,6 +446,10 @@ int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
 unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
+/* Components proved absent after a successful operand write.  This is kept
+ * separate from writes because one opcode may assign a scalar component while
+ * clearing reference or native-payload lifetime state. */
+unsigned int rxop_component_clears(int opcode, size_t operand_index);
 RxOpValueDerivation rxop_value_derivation(int opcode);
 size_t rxop_derivation_source_operand(int opcode);
 unsigned int rxop_derivation_source_component(int opcode);

@@ -1,0 +1,10 @@
+case,m01_count,m02_count,noopt_count,decision
+old_integer_floor,1,1,2,old safe floor recovered
+same_constant_phi,3,2,3,new equal-value phi proof
+different_constant_phi,3,3,3,rejected constant changed
+repeated_float_bits,2,1,2,new bitwise-exact float proof
+different_zero_bits,2,2,2,rejected negative and positive zero differ by bits
+linked_constant_storage,2,1,2,new linked StorageId proof
+trace_equivalent_constant,2,1,2,new equal observed value proof
+reference_cleanup_required,2,2,2,rejected reference cleanup required
+native_cleanup_required,2,2,2,rejected native payload cleanup required

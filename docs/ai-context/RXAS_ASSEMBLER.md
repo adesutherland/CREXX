@@ -643,7 +643,9 @@ retained but component values fail closed until canonical metadata describes
 the order of its intra-instruction sub-events; the analysis does not guess
 whether the write named the pre- or post-remap storage.
 
-Each storage component is represented by a write-once `ValueId`.  Values
+Each storage component is represented by a write-once `ValueId`.  The tracked
+set is integer, float, string, decimal, binary, attributes, reference and
+host-owned native payload.  Values
 distinguish procedure-entry, direct write, constant, copy, derived, known
 absent, phi and unknown definitions; a null/absent value is not the same as an
 unavailable proof.  Copy propagation therefore carries presence as well as
@@ -675,8 +677,9 @@ consumer-free assembly does not request this cache.
 
 Stage 6 adds `assembler/rxas_flow_proof.c`, a fourth per-epoch cache and the
 only authority for migrated proof consumers.  It exposes bounded queries for
-dominated successful repetition, speculatability, loop must-execute and loop
-component invariance.  Proof keys name symbolic `StorageId`s; result records
+dominated successful repetition, equivalent scalar-constant writes,
+speculatability, loop must-execute and loop component invariance.  Proof keys
+name symbolic `StorageId`s; result records
 name the generator/candidate `ValueId`s, effect identities and a stable failure
 reason.  Value and effect phis are compared through conservative reduction and
 equivalent leaf sets rather than numeric identity or source order.  Stale
@@ -722,7 +725,10 @@ cross-procedure, unsupported or off-graph-miss tables remain fail-closed.
 Component information is a canonical opcode-metadata service rather than an
 NR-27-local mnemonic switch. `rxop_component_reads()` and
 `rxop_component_writes()` distinguish integer, float, string, decimal, binary,
-attribute and reference components for each explicit operand.
+attribute, reference and native-payload components for each explicit operand.
+`rxop_component_clears()` records components made provably absent by a write.
+For example, integer and float constant loads clear both reference and native
+payloads; `bcopy` carries binary and native payload together.
 `rxop_value_derivation()` identifies proved representation relationships;
 `rxop_derivation_context_reads()` and `rxop_context_writes()` make numeric
 context part of those facts. `rxop_signal_contract()` distinguishes proven
@@ -767,6 +773,20 @@ rejected pending a distinct proof that repeating their same-component
 normalization does not change the value. Later loop hoisting remains a
 separate consumer.
 
+M02 migrates repeated integer and exact-bit float constant writes.  The legacy
+raw-register availability solver is deleted.  A candidate is removable only
+when its before/after `StorageId` is unchanged, every reachable scalar
+`ValueId` leaf equals the candidate constant, and reference/native-payload
+components are already absent on every path.  This last condition preserves
+the VM assignment side effects that release a reference and finalize
+host-owned binary state.  Equal-value phis, direct link/swap mappings and
+ordered TRACE paths can therefore prove even though raw register or source
+order differs; different phis, signed-zero bit changes and hidden cleanup fail
+closed.  A cheap syntactic demand filter only decides whether to ask the proof
+service and never authorizes deletion.  Migrated consumers share one immutable
+proof session per fixed-point epoch, and retained-byte metrics are refreshed
+after lazy query materialization.
+
 The admitted first transformation panel is deliberately narrower than the
 fact engine:
 
@@ -778,8 +798,11 @@ fact engine:
 - an exact self `copy` is removed because the VM handler is explicitly a
   no-op, while nonidentity full-value copies remain excluded pending ownership,
   payload, attribute, flag and cleanup proof;
-- repeated identical integer/bitwise-equal float loads, repeated `null`, and
-  repeated one-register `itof` are removed only under a must-available fact;
+- repeated integer/bitwise-equal float constants use the M02 storage/value and
+  hidden-cleanup proof; repeated `null` still uses the legacy all-view
+  must-available fact pending M03;
+- repeated metadata-admitted one-register XTOY derivations use the generic
+  dominated-success repetition proof;
 - a repeated one-register `itos` is removed only under the storage-identity,
   integer/string-component and numeric-context proof described above;
 - unreachable instructions, TRACE records and source-step records are removed

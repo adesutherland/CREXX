@@ -96,6 +96,7 @@ typedef struct RxasFlowValueNode {
     RxOpValueDerivation derivation;
     unsigned int signal_dependencies;
     size_t definition_effects[RXAS_FLOW_EFFECT_CLASS_COUNT];
+    const Assembler_Token *constant_token;
     size_t input_count;
 } RxasFlowValueNode;
 

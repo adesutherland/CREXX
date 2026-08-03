@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01 `XTOY` repetition complete; M02 repeated loads next**
+Status: **in progress — M01 and M02 complete; M03 repeated `NULL` next**
 
 Authorized: 2026-08-02
 
@@ -65,13 +65,13 @@ and after the diagnostic prove output neutrality.
 | --- | --- | --- | --- | --- |
 | M00 | complete-control reachability and dead record cleanup | canonical: Richards 5, Towers 7, RexxCPS 0; focused 4 instructions plus TRACE/source records | immutable graph reachability and rewrite plan | migrate after value consumers; structural, not value proof |
 | M01 | `flow_compute_available_fact()` for repeated one-register `ITOF`, then metadata-admitted `XTOY` derivations | old floor: focused `ITOF` 1, canonical 0; other conversions are new domain | generic dominated-success repetition | **complete**; old authority deleted, all 20 one-register conversions described by metadata, 12 focused deletions proved |
-| M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | **next** |
-| M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | third |
+| M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | **complete**; old authority deleted, old floor plus four stronger focused deletions proved |
+| M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | **next** |
 | M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | migrate with redundant-write queries |
 | M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | requires new reusable use/liveness query |
 | M06 | adjacent producer-destination forwarding | focused 12; canonical 0 | exact producer result, destination/temporary liveness and observation equivalence | migrate after M05 infrastructure |
 | M07 | dense legacy register-storage must-analysis | diagnostic-only; 13 storage-identity fixtures | sparse SSA storage queries and proof diagnostics | retire after its oracle is expressed against new SSA |
-| M08 | raw-register liveness/availability/may-reach substrate | shared by M02-M06 | graph use index plus component/storage liveness | retire after last consumer |
+| M08 | raw-register liveness/availability/may-reach substrate | shared by M03-M06 | graph use index plus component/storage liveness | retire after last consumer |
 
 The representative canonical set currently exercises no remaining M01-M06
 acceptance.  That does not make the migrations irrelevant: these solvers are
@@ -124,7 +124,8 @@ separate assembler-processing simplification is selected.
 - [x] Replay focused opt/no-opt output and Richards/Towers/RexxCPS decisions.
 - [x] Apply the mandatory Release stop if the stronger proof changes an
       ordinary representative output.
-- [ ] Repeat separately for **M02**, **M03** and **M04**.
+- [x] Repeat separately for **M02**.
+- [ ] Repeat separately for **M03** and **M04**.
 
 ### Phase B — reusable use graph and component liveness
 
@@ -160,7 +161,7 @@ separate assembler-processing simplification is selected.
 - [ ] Rebaseline assembler elapsed/RSS and complete proportional broad Debug
       closeout before the final local commit.
 
-## M01 result and current stop point
+## M01-M02 results and current stop point
 
 M01 is complete in
 [`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/).
@@ -181,7 +182,28 @@ result, derivation and context dependencies in canonical metadata.
 Richards, Towers and RexxCPS remain byte-identical to the frozen Stage 6
 assembler, so M01 did not trigger a new runtime verdict.  Focused optimizer
 replay passes 51/51, broad Debug passes 1,989/1,989, and Release RexxCPS
-diagnostic assembly completes in 0.38 s at 22,265,856 bytes peak RSS.  M02 is
-next: replace the repeated integer/bitwise-float load authority with a generic
-component-value/equivalent-constant proof, again treating the old acceptance
-as the floor rather than the ceiling.
+diagnostic assembly completes in 0.38 s at 22,265,856 bytes peak RSS.
+
+M02 is complete in
+[`2026-08-03-perf3-11-m02-constant-write`](evidence/2026-08-03-perf3-11-m02-constant-write/).
+The old raw-register repeated-load solver is deleted.  The proof service now
+requires equal `StorageId`, equal integer value or exact float bits across all
+reaching `ValueId` leaves, and already-absent reference/native payloads before
+removing an exact total scalar constant write.  It recovers the one old floor
+and proves four stronger deletions: equal-value phi, exact float, linked storage
+and ordered TRACE.  Different phis, signed zero and hidden cleanup remain
+closed.
+
+M02 adds native payload as an eighth component because VM scalar assignment
+can finalize host-owned binary state as well as release references.  All
+migrated consumers share one proof session per fixed-point epoch, and lazy SSA
+memory accounting now includes query-materialized state.  Ordinary RexxCPS
+assembly retains a 0.05 s median; median RSS rises from 22,134,784 to 30,081,024
+bytes and remains procedure-local inside the accepted seconds-scale budget.
+Adrian accepted that first Release verdict on 2026-08-03.  Canonical images are
+unchanged, focused optimizer replay is 53/53, Release hidden-cleanup execution
+is 4/4, and broad Debug passes 1,991/1,991.
+
+M03 is next: replace repeated `NULL` all-view availability with a proof of
+storage presence plus equivalence of every component, including the hidden
+native payload.

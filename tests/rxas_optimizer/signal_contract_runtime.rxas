@@ -99,6 +99,14 @@ main() .locals=10
     ieq r9,r5,1
     brf failed,r9
 
+    /* A repeated scalar load is removable only after hidden payload cleanup
+     * is already proved absent. */
+    load r5,0
+    mkref r5,r6
+    load r5,0
+    refvalid r9,r5
+    brt failed,r9
+
     /* Generic INC/DEC preserve the prior integer on overflow. */
     load r3,9223372036854775807
     inc r3

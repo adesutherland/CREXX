@@ -526,7 +526,10 @@ editing the next consumer:
       assembler cost and correctness oracle;
 - [x] map M01 to the required new graph/signal/storage/value/effect query;
       retain the corresponding mapping task for each later migration, adding a
-      generic query only when the current surface is insufficient; and
+      generic query only when the current surface is insufficient;
+- [x] migrate M02 repeated integer/bitwise-float loads to the generic
+      component-value/equivalent-constant query, including hidden reference and
+      native-payload cleanup proof; and
 - [ ] migrate each remaining authority one at a time, delete the superseded
       solver, then prove the old safe domain plus any separately identified
       stronger domain.
@@ -551,7 +554,19 @@ all 20 conversions; the focused corpus proves 12 deletions, including four
 remain closed.  `ITOD` and `BTOD` now have the coherent total non-signalling
 runtime/plugin contract required by the proof.  Canonical Richards, Towers
 and RexxCPS output is unchanged, focused replay passes 51/51 and broad Debug
-passes 1,989/1,989.  M02 repeated integer/bitwise-float loads are next.
+passes 1,989/1,989.
+
+M02 is complete in
+[`2026-08-03-perf3-11-m02-constant-write`](evidence/2026-08-03-perf3-11-m02-constant-write/).
+The proof service is now sole authority for repeated exact scalar constants.
+It recovers the old floor and proves equal-value phi, exact-float,
+linked-storage and ordered-TRACE cases while retaining different phis, signed
+zero and hidden cleanup.  Native payload is an explicit eighth component;
+integer/float writes may be deleted only when both reference and native payload
+are already absent.  Adrian accepted the output-neutral Release verdict and
+procedure-local 30.1 MB peak-RSS boundary on 2026-08-03.  Focused replay passes
+53/53, Release hidden-cleanup execution passes 4/4, canonical output is exact
+and broad Debug passes 1,991/1,991.  M03 repeated `NULL` is next.
 
 ### Stage 11 — later consumers after legacy migration
 

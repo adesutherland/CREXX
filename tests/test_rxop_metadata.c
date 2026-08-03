@@ -200,6 +200,24 @@ int main(void) {
     check_conversion_metadata(OP_DTOF_REG, RXOP_COMPONENT_DECIMAL,
                               RXOP_COMPONENT_FLOAT,
                               RXOP_DERIVATION_DECIMAL_TO_FLOAT);
+    check((RXOP_COMPONENT_ALL & RXOP_COMPONENT_NATIVE_PAYLOAD) != 0 &&
+              rxop_component_clears(OP_LOAD_REG_INT, 0) ==
+                  (RXOP_COMPONENT_REFERENCE |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_LOAD_REG_FLOAT, 0) ==
+                  (RXOP_COMPONENT_REFERENCE |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_LOAD_REG_INT, 1) ==
+                  RXOP_COMPONENT_NONE,
+          "scalar load cleanup-component metadata regression", NULL);
+    check(rxop_component_reads(OP_BCOPY_REG_REG, 1) ==
+                  (RXOP_COMPONENT_BINARY |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_writes(OP_BCOPY_REG_REG, 0) ==
+                  (RXOP_COMPONENT_BINARY |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD),
+          "binary copy native-payload metadata regression",
+          &op_table[OP_BCOPY_REG_REG]);
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         size_t operand_index;

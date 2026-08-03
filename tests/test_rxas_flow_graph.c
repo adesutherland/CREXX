@@ -1844,6 +1844,115 @@ static void test_proof_service(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_redundant_constant_proof(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowProofService *proof;
+    const RxasFlowSsaAnalysis *ssa;
+    RxasFlowProofResult result;
+    RxasFlowComponentFact cleanup;
+    size_t repeated_integer;
+    size_t changed_integer;
+    size_t first_float;
+    size_t repeated_float;
+    size_t first_reference_load;
+    size_t cleanup_load;
+    size_t native_cleanup_load;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 5);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 5);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 6);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_float(&fixture, 1.5);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_float(&fixture, 1.5);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "mkref", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "bcopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "load", operands, 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 26);
+    check(procedure != 0,
+          "redundant-constant proof fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 26, 0);
+        ssa = rxas_flow_require_ssa_analysis(procedure, 26, 0);
+        repeated_integer = rxas_flow_procedure_record(
+                procedure, 26, 1)->instruction_id;
+        changed_integer = rxas_flow_procedure_record(
+                procedure, 26, 2)->instruction_id;
+        first_float = rxas_flow_procedure_record(
+                procedure, 26, 3)->instruction_id;
+        repeated_float = rxas_flow_procedure_record(
+                procedure, 26, 4)->instruction_id;
+        first_reference_load = rxas_flow_procedure_record(
+                procedure, 26, 5)->instruction_id;
+        cleanup_load = rxas_flow_procedure_record(
+                procedure, 26, 7)->instruction_id;
+        native_cleanup_load = rxas_flow_procedure_record(
+                procedure, 26, 10)->instruction_id;
+        check(proof && rxas_flow_prove_redundant_constant_write(
+                    proof, 26, repeated_integer, &result) && result.proved,
+              "repeated integer constant was not proved redundant");
+        check(rxas_flow_prove_redundant_constant_write(
+                    proof, 26, changed_integer, &result) && !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_CONSTANT_CHANGED,
+              "changed integer constant was incorrectly proved redundant");
+        check(rxas_flow_prove_redundant_constant_write(
+                    proof, 26, first_float, &result) && !result.proved,
+              "first float write was incorrectly proved redundant");
+        check(rxas_flow_prove_redundant_constant_write(
+                    proof, 26, repeated_float, &result) && result.proved,
+              "bitwise-identical float constant was not proved redundant");
+        check(ssa && rxas_flow_component_at_instruction(
+                    ssa, 26, first_reference_load, 1,
+                    fixture_local_register(2), RXOP_COMPONENT_REFERENCE,
+                    &cleanup) &&
+              cleanup.kind == RXAS_FLOW_VALUE_ABSENT &&
+              cleanup.presence == RXAS_FLOW_COMPONENT_ABSENT &&
+              rxas_flow_component_at_instruction(
+                    ssa, 26, first_reference_load, 1,
+                    fixture_local_register(2),
+                    RXOP_COMPONENT_NATIVE_PAYLOAD, &cleanup) &&
+              cleanup.kind == RXAS_FLOW_VALUE_ABSENT,
+              "scalar load did not record hidden cleanup as absent");
+        check(rxas_flow_prove_redundant_constant_write(
+                    proof, 26, cleanup_load, &result) && !result.proved,
+              "reference-payload cleanup was incorrectly deleted");
+        check(rxas_flow_prove_redundant_constant_write(
+                    proof, 26, native_cleanup_load, &result) &&
+              !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_CLEANUP_REQUIRED,
+              "native-payload cleanup was not proved necessary");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static void test_loop_proofs(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
@@ -1959,6 +2068,7 @@ int main(void) {
     test_derivation_contexts(&context);
     test_fused_failure_mappings(&context);
     test_proof_service(&context);
+    test_redundant_constant_proof(&context);
     test_loop_proofs(&context);
 
     if (failures) {

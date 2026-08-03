@@ -133,6 +133,8 @@ crexx_add_rxas_optimizer_check(redundant_itos_flow redundant_itos_flow.rxas redu
 crexx_add_rxas_optimizer_check(redundant_itos_flow_noopt redundant_itos_flow.rxas redundant_itos_flow_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(redundant_xtoy_flow redundant_xtoy_flow.rxas redundant_xtoy_flow RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(redundant_xtoy_flow_noopt redundant_xtoy_flow.rxas redundant_xtoy_flow_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(redundant_constant_flow redundant_constant_flow.rxas redundant_constant_flow RXAS_FLAGS -d)
+crexx_add_rxas_optimizer_check(redundant_constant_flow_noopt redundant_constant_flow.rxas redundant_constant_flow_noopt RXAS_FLAGS -n)
 
 add_custom_target(whole_procedure_runtime ALL)
 foreach(_nr27_runner IN ITEMS rxvm rxbvm)

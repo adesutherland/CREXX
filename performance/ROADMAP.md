@@ -55,11 +55,16 @@ metadata-driven `XTOY` consumer covers all 20 one-register conversions.  It
 recovers the old `ITOF` floor and proves 11 additional focused deletions,
 including four `ITOD` flow shapes; signalling and same-component-idempotence
 gaps remain closed.  `ITOD` and `BTOD` now have a coherent total
-non-signalling runtime/plugin contract.  Canonical images remain unchanged,
-focused replay passes 51/51 and broad Debug passes 1,989/1,989.  M02 repeated
-loads are next.  Exact old/new parity is not the gate: the new service must
-preserve the old valid safe domain and may prove a larger separately validated
-domain.
+non-signalling runtime/plugin contract.  M02 is also complete: repeated scalar
+constants now require write-once value equivalence and already-absent reference
+and native payloads.  It recovers the old floor and proves four stronger
+focused deletions through equal phis, exact float bits, linked storage and
+ordered TRACE.  Adrian accepted its output-neutral Release verdict and bounded
+procedure-local 30.1 MB peak RSS on 2026-08-03.  Canonical images remain
+unchanged, focused replay passes 53/53 and broad Debug passes 1,991/1,991.  M03
+repeated `NULL` is next.  Exact old/new parity is not the gate: the new service
+must preserve the old valid safe domain and may prove a larger separately
+validated domain.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -249,7 +254,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01 complete; M02 repeated loads next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01 deletes the old repeated-`ITOF` authority and generalizes the consumer to all metadata-admitted one-register `XTOY` derivations. It recovers the old floor and proves 11 stronger focused deletions, including four `ITOD` flow shapes; `ITOD`/`BTOD` now have a total non-signalling runtime/plugin contract. Canonical images remain byte-identical, focused passes 51/51 and broad Debug 1,989/1,989. M02 replaces repeated identical load availability with a generic component-value/equivalent-constant proof. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M01: [`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01/M02 complete; M03 repeated `NULL` next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01 generalizes the old `ITOF` floor to all metadata-admitted one-register `XTOY` derivations, including four `ITOD` flow shapes and a total `ITOD`/`BTOD` contract. M02 deletes the old repeated-load solver and proves equivalent scalar constants through phis, linked storage and ordered TRACE while requiring absent reference/native payloads. Adrian accepted M02's output-neutral Release and scale verdict. Canonical images remain byte-identical, focused passes 53/53 and broad Debug 1,991/1,991. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M01: [`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/); M02: [`2026-08-03-perf3-11-m02-constant-write`](evidence/2026-08-03-perf3-11-m02-constant-write/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -824,13 +829,25 @@ and same-component `BTOI`/`ITOB` normalization remain closed.  Richards,
 Towers and RexxCPS are byte-identical to Stage 6, focused replay passes 51/51,
 broad Debug passes 1,989/1,989, and diagnostic RexxCPS assembly remains within
 the seconds-scale budget. Evidence:
-[`M01 XTOY migration`](evidence/2026-08-02-perf3-11-m01-xtoy/).  M02 repeated
-integer/bitwise-float loads are the next one-authority migration.
+[`M01 XTOY migration`](evidence/2026-08-02-perf3-11-m01-xtoy/).
+
+M02 is complete.  The old repeated integer/bitwise-float load availability
+solver is deleted and the proof service now requires equal storage, equal
+write-once scalar leaves and already-absent reference/native payloads.  The
+focused image recovers the old floor and adds equal-phi, exact-float,
+linked-storage and ordered-TRACE deletions; different phis, signed zero and
+hidden cleanup remain closed.  Canonical images are byte-identical, ordinary
+RexxCPS assembly retains a 0.05 s median, and the accepted procedure-local peak
+is 30.1 MB.  Focused replay passes 53/53, Release hidden-cleanup execution is
+4/4 and broad Debug passes 1,991/1,991.  Evidence:
+[`M02 equivalent constants`](evidence/2026-08-03-perf3-11-m02-constant-write/).
+M03 repeated `NULL` is the next one-authority migration.
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
-address-separation concern but does not itself prove that an observed load,
-`null`, `itof`, copy or forwarded producer has the same component value; their
-`flow_has_trace_after()` checks stay until migrated to the new fact. The local
+address-separation concern but does not itself prove that an observed `null`,
+copy or forwarded producer has the same component value; their
+`flow_has_trace_after()` checks stay until migrated to the new fact. Loads and
+one-register XTOY repetition now use the proof service. The local
 duplicate-link and swap/call-window rules still transform code while storage
 identity currently only analyses their mappings. The adjacent `cnop` rule is
 not a trace-anchor workaround. PERF3-11 must replace these one consumer at a

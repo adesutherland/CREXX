@@ -220,7 +220,8 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_SCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_STRING;
     if (opcode == OP_DCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_DECIMAL;
     if (opcode == OP_ACOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ATTRIBUTES;
-    if (opcode == OP_BCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_BINARY;
+    if (opcode == OP_BCOPY_REG_REG && operand_index == 1)
+        return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
 
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;
@@ -276,7 +277,9 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (opcode == OP_DCOPY_REG_REG || opcode == OP_LOAD_REG_DECIMAL)
         return RXOP_COMPONENT_DECIMAL;
     if (opcode == OP_ACOPY_REG_REG) return RXOP_COMPONENT_ATTRIBUTES;
-    if (opcode == OP_BCOPY_REG_REG || opcode == OP_LOAD_REG_BINARY)
+    if (opcode == OP_BCOPY_REG_REG)
+        return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
+    if (opcode == OP_LOAD_REG_BINARY)
         return RXOP_COMPONENT_BINARY;
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;
@@ -305,6 +308,17 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_ITOF_REG_REG)
         return RXOP_COMPONENT_INTEGER | RXOP_COMPONENT_FLOAT;
+    return RXOP_COMPONENT_NONE;
+}
+
+unsigned int rxop_component_clears(int opcode, size_t operand_index) {
+    if (operand_index != 0) return RXOP_COMPONENT_NONE;
+    /* set_int() and set_float() release a reference payload and finalize any
+     * host-owned native payload before assigning the scalar field.  Ordinary
+     * binary data is intentionally a separate component and is not cleared. */
+    if (opcode == OP_LOAD_REG_INT || opcode == OP_LOAD_REG_FLOAT)
+        return RXOP_COMPONENT_REFERENCE |
+               RXOP_COMPONENT_NATIVE_PAYLOAD;
     return RXOP_COMPONENT_NONE;
 }
 

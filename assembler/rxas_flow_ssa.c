@@ -63,6 +63,7 @@ typedef struct FlowSsaState {
 #define FLOW_SSA_VALUE_CLOBBER_ALL 4u
 #define FLOW_SSA_VALUE_CLOBBER_DYNAMIC 8u
 #define FLOW_SSA_VALUE_CLOBBER_CALL_RANGE 16u
+#define FLOW_SSA_COMPONENT_COUNT 8u
 
 typedef struct FlowStorageVersion {
     RxasFlowStorageKind kind;
@@ -188,7 +189,7 @@ struct RxasFlowSsaAnalysis {
     FlowValueCacheEntry *value_cache;
     size_t value_cache_count;
     size_t value_cache_capacity;
-    size_t unmapped_value_plus_one[7];
+    size_t unmapped_value_plus_one[FLOW_SSA_COMPONENT_COUNT];
     size_t entry_state;
     size_t unknown_state;
 };
@@ -724,7 +725,8 @@ static void flow_ssa_add_swap(const RxasFlowSsaAnalysis *analysis,
 static unsigned int flow_component_bits[] = {
     RXOP_COMPONENT_INTEGER, RXOP_COMPONENT_FLOAT, RXOP_COMPONENT_STRING,
     RXOP_COMPONENT_DECIMAL, RXOP_COMPONENT_BINARY,
-    RXOP_COMPONENT_ATTRIBUTES, RXOP_COMPONENT_REFERENCE
+    RXOP_COMPONENT_ATTRIBUTES, RXOP_COMPONENT_REFERENCE,
+    RXOP_COMPONENT_NATIVE_PAYLOAD
 };
 
 static size_t flow_ssa_explicit_call_argument_count(int opcode) {
@@ -766,7 +768,7 @@ static int flow_ssa_add_call_argument_clobbers(
             size_t target;
             target = flow_ssa_operand_register(
                     analysis, item, argument + 2);
-            for (bit = 0; bit < 7; bit++)
+            for (bit = 0; bit < FLOW_SSA_COMPONENT_COUNT; bit++)
                 if (!flow_build_value_add(
                             values, value_count, value_capacity, target,
                             flow_component_bits[bit],
@@ -810,7 +812,8 @@ static size_t flow_ssa_build_normal_transfer(
             instruction, item);
     if (call_argument_count > (size_t)-1 - item->operandCount - 2)
         return RXAS_FLOW_ID_NONE;
-    value_capacity = (item->operandCount + 2 + call_argument_count) * 7;
+    value_capacity = (item->operandCount + 2 + call_argument_count) *
+            FLOW_SSA_COMPONENT_COUNT;
     map = flow_ssa_calloc(analysis, map_capacity, sizeof(*map));
     values = flow_ssa_calloc(analysis, value_capacity, sizeof(*values));
     if (!map || !values) {
@@ -1015,6 +1018,7 @@ static size_t flow_ssa_build_normal_transfer(
                 size_t target;
                 size_t source;
                 unsigned int components;
+                unsigned int cleared_components;
                 size_t bit;
                 RxasFlowValueKind kind;
                 RxasFlowComponentPresence presence;
@@ -1026,6 +1030,7 @@ static size_t flow_ssa_build_normal_transfer(
                 if (target == RXAS_FLOW_ID_NONE) continue;
                 components = rxop_component_writes(opcode, operand);
                 if (!components) components = RXOP_COMPONENT_ALL;
+                cleared_components = rxop_component_clears(opcode, operand);
                 derivation = rxop_value_derivation(opcode);
                 source = RXAS_FLOW_ID_NONE;
                 kind = RXAS_FLOW_VALUE_WRITE;
@@ -1059,7 +1064,7 @@ static size_t flow_ssa_build_normal_transfer(
                     kind = RXAS_FLOW_VALUE_CONSTANT;
                     constant_token = flow_ssa_operand(item, 1);
                 }
-                for (bit = 0; bit < 7; bit++) {
+                for (bit = 0; bit < FLOW_SSA_COMPONENT_COUNT; bit++) {
                     if (!(components & flow_component_bits[bit])) continue;
                     flow_build_value_add(
                             values, &value_count, value_capacity, target,
@@ -1068,6 +1073,15 @@ static size_t flow_ssa_build_normal_transfer(
                                     ? rxop_derivation_source_component(opcode)
                                     : flow_component_bits[bit],
                             derivation, constant_token);
+                }
+                for (bit = 0; bit < FLOW_SSA_COMPONENT_COUNT; bit++) {
+                    if (!(cleared_components & flow_component_bits[bit]))
+                        continue;
+                    flow_build_value_add(
+                            values, &value_count, value_capacity, target,
+                            flow_component_bits[bit], RXAS_FLOW_VALUE_ABSENT,
+                            RXAS_FLOW_COMPONENT_ABSENT, RXAS_FLOW_ID_NONE,
+                            RXOP_COMPONENT_NONE, RXOP_DERIVATION_NONE, 0);
                 }
             }
         }
@@ -1086,7 +1100,7 @@ static size_t flow_ssa_build_normal_transfer(
                 }
                 flags |= FLOW_SSA_MAP_CLOBBER_DYNAMIC |
                          FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
-                for (operand = 0; operand < 7; operand++)
+                for (operand = 0; operand < FLOW_SSA_COMPONENT_COUNT; operand++)
                     flow_build_value_add(
                             values, &value_count, value_capacity, first,
                             flow_component_bits[operand], RXAS_FLOW_VALUE_COPY,
@@ -1106,7 +1120,7 @@ static size_t flow_ssa_build_normal_transfer(
                 }
                 flags |= FLOW_SSA_MAP_CLOBBER_DYNAMIC |
                          FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
-                for (operand = 0; operand < 7; operand++)
+                for (operand = 0; operand < FLOW_SSA_COMPONENT_COUNT; operand++)
                     flow_build_value_add(
                             values, &value_count, value_capacity, first,
                             flow_component_bits[operand], RXAS_FLOW_VALUE_COPY,
@@ -1249,7 +1263,8 @@ static size_t flow_ssa_build_failure_transfer(
             instruction, item);
     if (call_argument_count > (size_t)-1 - item->operandCount - 1)
         return RXAS_FLOW_ID_NONE;
-    value_capacity = (item->operandCount + 1 + call_argument_count) * 7;
+    value_capacity = (item->operandCount + 1 + call_argument_count) *
+            FLOW_SSA_COMPONENT_COUNT;
     map = flow_ssa_calloc(analysis, map_capacity, sizeof(*map));
     values = flow_ssa_calloc(analysis, value_capacity, sizeof(*values));
     if (!map || !values) {
@@ -1302,7 +1317,7 @@ static size_t flow_ssa_build_failure_transfer(
         target = flow_ssa_operand_register(analysis, item, operand);
         components = instruction->signal.failure_component_writes;
         if (!components) components = RXOP_COMPONENT_ALL;
-        for (bit = 0; bit < 7; bit++)
+        for (bit = 0; bit < FLOW_SSA_COMPONENT_COUNT; bit++)
             if (components & flow_component_bits[bit])
                 flow_build_value_add(
                         values, &value_count, value_capacity, target,
@@ -2005,7 +2020,7 @@ static size_t flow_ssa_unmapped_value(RxasFlowSsaAnalysis *analysis,
                                       unsigned int component) {
     size_t bit;
     size_t value_id;
-    for (bit = 0; bit < 7; bit++) {
+    for (bit = 0; bit < FLOW_SSA_COMPONENT_COUNT; bit++) {
         if (flow_component_bits[bit] != component) continue;
         if (analysis->unmapped_value_plus_one[bit])
             return analysis->unmapped_value_plus_one[bit] - 1;
@@ -2369,7 +2384,7 @@ static int flow_ssa_materialize_derivations(RxasFlowSsaAnalysis *analysis) {
                     analysis, analysis->instruction_before[instruction_id],
                     source_storage, source_component);
         components = rxop_component_writes(instruction->op->opcode, 0);
-        for (bit = 0; bit < 7; bit++) {
+        for (bit = 0; bit < FLOW_SSA_COMPONENT_COUNT; bit++) {
             if (!(components & flow_component_bits[bit])) continue;
             (void)flow_ssa_resolve_value(
                     analysis, analysis->instruction_before[instruction_id],
@@ -2579,6 +2594,7 @@ static int flow_ssa_valid(const RxasFlowSsaAnalysis *analysis,
 const RxasFlowSsaMetrics *rxas_flow_ssa_metrics(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch) {
     if (!flow_ssa_valid(analysis, expected_epoch)) return 0;
+    flow_ssa_set_retained_bytes((RxasFlowSsaAnalysis *)analysis);
     return &analysis->metrics;
 }
 
@@ -2837,6 +2853,7 @@ int rxas_flow_value_node(
     node->signal_dependencies = version->signal_dependencies;
     for (effect = 0; effect < RXAS_FLOW_EFFECT_CLASS_COUNT; effect++)
         node->definition_effects[effect] = version->definition_effects[effect];
+    node->constant_token = version->constant_token;
     node->input_count = version->input_count;
     return 1;
 }

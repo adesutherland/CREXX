@@ -129,6 +129,10 @@ typedef struct flow_stats {
     size_t redundant_loads_removed;
     size_t redundant_initializations_removed;
     size_t redundant_conversions_removed;
+    size_t constant_proof_queries;
+    size_t constant_proof_proved;
+    size_t constant_proof_rejected;
+    size_t constant_proof_unavailable;
     size_t derivation_proof_queries;
     size_t derivation_proof_proved;
     size_t derivation_proof_rejected;
@@ -183,7 +187,7 @@ struct flow_storage_analysis {
     size_t queue_capacity;
 };
 
-static char flow_register_type(Assembler_Token *token) {
+static char flow_register_type(const Assembler_Token *token) {
     if (!token) return 0;
     switch (token->token_type) {
         case RREG: return 'r';
@@ -2463,66 +2467,204 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
     return forwarded;
 }
 
-static int flow_same_literal(const Assembler_Token *left,
-                             const Assembler_Token *right) {
-    if (!left || !right || left->token_type != right->token_type) return 0;
-    if (left->token_type == INT) return left->token_value.integer == right->token_value.integer;
-    if (left->token_type == FLOAT)
-        return memcmp(&left->token_value.real, &right->token_value.real,
-                      sizeof(left->token_value.real)) == 0;
+static RxasFlowProcedure *flow_build_proof_procedure(
+        const flow_graph *graph, unsigned long epoch);
+static int flow_proof_reason_unavailable(RxasFlowProofReason reason);
+
+typedef struct flow_proof_session {
+    RxasFlowProcedure *procedure;
+    const RxasFlowProofService *proof;
+    unsigned long epoch;
+    int attempted;
+} flow_proof_session;
+
+static const RxasFlowProofService *flow_proof_session_require(
+        flow_proof_session *session, const flow_graph *graph);
+static void flow_proof_session_destroy(flow_proof_session *session);
+
+static int flow_is_scalar_constant_candidate(const flow_graph *graph,
+                                             size_t index) {
+    unsigned int component;
+    const Assembler_Token *constant;
+    if (graph->items[index].instrType != OP_CODE ||
+        !graph->nodes[index].reachable || !graph->nodes[index].op ||
+        graph->items[index].operandCount != 2)
+        return 0;
+    component = rxop_component_writes(
+            graph->nodes[index].op->opcode, 0);
+    constant = rxas_queue_operand(&graph->items[index], 1);
+    return constant &&
+           ((component == RXOP_COMPONENT_INTEGER &&
+             constant->token_type == INT) ||
+            (component == RXOP_COMPONENT_FLOAT &&
+            constant->token_type == FLOAT));
+}
+
+static int flow_same_scalar_constant(const flow_graph *graph,
+                                     size_t left, size_t right) {
+    const Assembler_Token *left_constant;
+    const Assembler_Token *right_constant;
+    unsigned int left_component;
+    unsigned int right_component;
+    left_component = rxop_component_writes(
+            graph->nodes[left].op->opcode, 0);
+    right_component = rxop_component_writes(
+            graph->nodes[right].op->opcode, 0);
+    if (left_component != right_component) return 0;
+    left_constant = rxas_queue_operand(&graph->items[left], 1);
+    right_constant = rxas_queue_operand(&graph->items[right], 1);
+    if (!left_constant || !right_constant ||
+        left_constant->token_type != right_constant->token_type)
+        return 0;
+    if (left_constant->token_type == INT)
+        return left_constant->token_value.integer ==
+               right_constant->token_value.integer;
+    if (left_constant->token_type == FLOAT)
+        return memcmp(&left_constant->token_value.real,
+                      &right_constant->token_value.real,
+                      sizeof(left_constant->token_value.real)) == 0;
     return 0;
 }
 
-static size_t flow_remove_redundant_loads(flow_graph *graph, flow_stats *stats) {
-    size_t generator;
+static int flow_same_raw_destination(const flow_graph *graph,
+                                     size_t left, size_t right) {
+    const Assembler_Token *left_target;
+    const Assembler_Token *right_target;
+    left_target = rxas_queue_operand(&graph->items[left], 0);
+    right_target = rxas_queue_operand(&graph->items[right], 0);
+    return left_target && right_target &&
+           flow_register_type(left_target) == flow_register_type(right_target) &&
+           left_target->token_value.integer == right_target->token_value.integer;
+}
+
+static int flow_opcode_may_remap_storage(const flow_node *node) {
+    int opcode;
+    if (!node || !node->op ||
+        node->effects.state != RXOP_EFFECT_CLASSIFIED)
+        return 0;
+    if (node->effects.semantics &
+        (RXOP_SEM_ALIAS_CREATE | RXOP_SEM_ALIAS_RELEASE))
+        return 1;
+    opcode = node->op->opcode;
+    return flow_storage_is_pure_swap_opcode(opcode) ||
+           opcode == OP_SETTPSWAP_REG_INT_REG ||
+           opcode == OP_LOADSETTPSWAP_REG_INT_REG_INT_REG ||
+           opcode == OP_SWAPSETTP_REG_REG_REG_INT ||
+           opcode == OP_SWAPSETTPSWAP_REG_REG_REG_INT_REG ||
+           opcode == OP_SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG ||
+           opcode == OP_SWAPCALL_REG_FUNC_REG_REG_REG ||
+           opcode == OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG;
+}
+
+static int flow_storage_remap_connects_candidates(
+        const flow_graph *graph, size_t left, size_t right) {
+    const Assembler_Token *left_target;
+    const Assembler_Token *right_target;
     size_t index;
-    int destination_register;
-    unsigned int views;
-    unsigned char *available_in;
-    unsigned char *available_out;
-    instruction_queue *first;
-    instruction_queue *item;
-    flow_node *node;
+    left_target = rxas_queue_operand(&graph->items[left], 0);
+    right_target = rxas_queue_operand(&graph->items[right], 0);
+    if (!left_target || !right_target) return 0;
+    for (index = left + 1; index < right; index++) {
+        const instruction_queue *item;
+        size_t operand;
+        int touches_left;
+        int touches_right;
+        if (!flow_opcode_may_remap_storage(&graph->nodes[index])) continue;
+        item = &graph->items[index];
+        touches_left = 0;
+        touches_right = 0;
+        for (operand = 0; operand < item->operandCount; operand++) {
+            const Assembler_Token *token;
+            token = rxas_queue_operand(item, operand);
+            if (!token || !flow_register_type(token)) continue;
+            if (flow_register_type(token) == flow_register_type(left_target) &&
+                token->token_value.integer == left_target->token_value.integer)
+                touches_left = 1;
+            if (flow_register_type(token) == flow_register_type(right_target) &&
+                token->token_value.integer == right_target->token_value.integer)
+                touches_right = 1;
+        }
+        if (touches_left && touches_right) return 1;
+    }
+    return 0;
+}
+
+/* This is a demand filter, never a proof.  It avoids constructing hidden
+ * component phis for the first occurrence of a scalar literal while retaining
+ * same-register, phi and explicitly connected link/swap opportunities. */
+static int flow_scalar_constant_may_repeat(const flow_graph *graph,
+                                           size_t candidate) {
+    size_t earlier;
+    if (!flow_is_scalar_constant_candidate(graph, candidate)) return 0;
+    for (earlier = 0; earlier < candidate; earlier++) {
+        if (!flow_is_scalar_constant_candidate(graph, earlier) ||
+            !flow_same_scalar_constant(graph, earlier, candidate))
+            continue;
+        if (flow_same_raw_destination(graph, earlier, candidate) ||
+            flow_storage_remap_connects_candidates(
+                    graph, earlier, candidate))
+            return 1;
+    }
+    return 0;
+}
+
+static size_t flow_remove_redundant_loads(flow_graph *graph, flow_stats *stats,
+                                          flow_proof_session *session) {
+    size_t index;
+    size_t candidate_count;
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *record;
+    RxasFlowProofResult proof_result;
+    int query_available;
     size_t removed;
     removed = 0;
-    for (generator = 0; generator < graph->item_count; generator++) {
-        first = &graph->items[generator];
-        node = &graph->nodes[generator];
-        if (first->instrType != OP_CODE || !node->reachable || !node->op ||
-            (node->op->opcode != OP_LOAD_REG_INT &&
-             node->op->opcode != OP_LOAD_REG_FLOAT)) continue;
-        if (flow_has_trace_after(graph, generator)) continue;
-        destination_register = flow_register_index(graph,
-                flow_register_type(first->operand1Token),
-                (size_t)first->operand1Token->token_value.integer);
-        if (destination_register < 0 ||
-            graph->registers[destination_register].type != 'r' ||
-            graph->tainted_registers[destination_register]) continue;
-        views = node->op->opcode == OP_LOAD_REG_INT
-                ? FLOW_VIEW_BIT(FLOW_VIEW_INTEGER) : FLOW_VIEW_BIT(FLOW_VIEW_FLOAT);
-        available_in = calloc(graph->item_count, 1);
-        available_out = calloc(graph->item_count, 1);
-        if (!available_in || !available_out)
-            RX_PANIC_OOM("calloc RXAS available-load fact", graph->item_count * 2, 0);
-        flow_compute_available_fact(graph, generator, destination_register,
-                                    destination_register, views,
-                                    available_in, available_out);
-        for (index = generator + 1; index < graph->item_count; index++) {
-            item = &graph->items[index];
-            if (!available_in[index] || item->instrType != OP_CODE ||
-                !graph->nodes[index].op ||
-                graph->nodes[index].op->opcode != node->op->opcode ||
-                flow_register_index(graph, flow_register_type(item->operand1Token),
-                        (size_t)item->operand1Token->token_value.integer) != destination_register ||
-                !flow_same_literal(first->operand2Token, item->operand2Token) ||
-                flow_has_trace_after(graph, index)) continue;
-            item->instrType = EMPTY;
-            flow_debug_accept(graph, index, "redundant-identical-load", 0);
-            removed++;
-            stats->redundant_loads_removed++;
+    candidate_count = 0;
+    for (index = 0; index < graph->item_count; index++)
+        if (flow_scalar_constant_may_repeat(graph, index))
+            candidate_count++;
+    if (!candidate_count) return 0;
+    proof = flow_proof_session_require(session, graph);
+    if (!proof) {
+        stats->constant_proof_unavailable++;
+        return 0;
+    }
+    for (index = 0; index < graph->item_count; index++) {
+        if (!flow_scalar_constant_may_repeat(graph, index)) continue;
+        record = rxas_flow_procedure_record(
+                session->procedure, session->epoch, index);
+        if (!record || record->instruction_id == RXAS_FLOW_ID_NONE) continue;
+        memset(&proof_result, 0, sizeof(proof_result));
+        query_available = rxas_flow_prove_redundant_constant_write(
+                proof, session->epoch, record->instruction_id, &proof_result) &&
+                !flow_proof_reason_unavailable(proof_result.reason);
+        stats->constant_proof_queries++;
+        if (graph->context->debug_mode)
+            fprintf(stderr,
+                    "PERF3 constant-proof-candidate opcode=%s record=%llu "
+                    "instruction=%llu proved=%d reason=%s storage=%llu "
+                    "before=%llu after=%llu\n",
+                    graph->nodes[index].op->mnemonic,
+                    (unsigned long long)index,
+                    (unsigned long long)record->instruction_id,
+                    proof_result.proved,
+                    rxas_flow_proof_reason_name(proof_result.reason),
+                    (unsigned long long)proof_result.storage_id,
+                    (unsigned long long)proof_result.source_value_id,
+                    (unsigned long long)proof_result.result_value_id);
+        if (!query_available) {
+            stats->constant_proof_unavailable++;
+            return removed;
         }
-        free(available_in);
-        free(available_out);
+        if (!proof_result.proved) {
+            stats->constant_proof_rejected++;
+            continue;
+        }
+        graph->items[index].instrType = EMPTY;
+        flow_debug_accept(graph, index,
+                          "redundant-component-ssa-constant", 0);
+        removed++;
+        stats->redundant_loads_removed++;
+        stats->constant_proof_proved++;
     }
     return removed;
 }
@@ -2595,6 +2737,28 @@ static RxasFlowProcedure *flow_build_proof_procedure(
     return procedure;
 }
 
+/* One immutable proof graph serves every migrated consumer in a fixed-point
+ * epoch.  Rebuilding it per query family needlessly multiplies peak allocator
+ * pages on large inlined procedures and defeats the analysis-manager design. */
+static const RxasFlowProofService *flow_proof_session_require(
+        flow_proof_session *session, const flow_graph *graph) {
+    if (!session || !graph) return 0;
+    if (session->attempted) return session->proof;
+    session->attempted = 1;
+    session->epoch = 1ul;
+    session->procedure = flow_build_proof_procedure(graph, session->epoch);
+    session->proof = session->procedure ? rxas_flow_require_proof_service(
+            session->procedure, session->epoch, 0) : 0;
+    return session->proof;
+}
+
+static void flow_proof_session_destroy(flow_proof_session *session) {
+    if (!session) return;
+    if (session->procedure)
+        rxas_flow_procedure_destroy(session->procedure);
+    memset(session, 0, sizeof(*session));
+}
+
 static int flow_proof_reason_unavailable(RxasFlowProofReason reason) {
     return reason == RXAS_FLOW_PROOF_STALE_EPOCH ||
            reason == RXAS_FLOW_PROOF_INVALID_GRAPH ||
@@ -2622,24 +2786,21 @@ static int flow_is_one_register_derivation(const flow_graph *graph,
     return component && !(component & (component - 1));
 }
 
-static size_t flow_remove_redundant_derivations(flow_graph *graph,
-                                                flow_stats *stats) {
+static size_t flow_remove_redundant_derivations(
+        flow_graph *graph, flow_stats *stats, flow_proof_session *session) {
     size_t index;
     size_t candidate_index;
     size_t generator_index;
-    RxasFlowProcedure *procedure;
     const RxasFlowProofService *proof;
     const RxasFlowRecord *record;
     flow_derivation_candidate *candidates;
     size_t candidate_count;
     RxasFlowProofResult proof_result;
     RxasFlowRepetitionKey key;
-    unsigned long epoch;
     size_t removed;
     int query_available;
 
     removed = 0;
-    epoch = 1ul;
     candidate_count = 0;
     for (index = 0; index < graph->item_count; index++)
         if (flow_is_one_register_derivation(graph, index))
@@ -2649,9 +2810,7 @@ static size_t flow_remove_redundant_derivations(flow_graph *graph,
     if (!candidates)
         RX_PANIC_OOM("calloc RXAS derivation proof candidates",
                      graph->item_count * sizeof(*candidates), 0);
-    procedure = flow_build_proof_procedure(graph, epoch);
-    proof = procedure ? rxas_flow_require_proof_service(
-            procedure, epoch, 0) : 0;
+    proof = flow_proof_session_require(session, graph);
     if (!proof) {
         stats->derivation_proof_unavailable++;
         goto cleanup;
@@ -2660,10 +2819,11 @@ static size_t flow_remove_redundant_derivations(flow_graph *graph,
     for (index = 0; index < graph->item_count; index++) {
         if (!flow_is_one_register_derivation(graph, index))
             continue;
-        record = rxas_flow_procedure_record(procedure, epoch, index);
+        record = rxas_flow_procedure_record(
+                session->procedure, session->epoch, index);
         if (!record || record->instruction_id == RXAS_FLOW_ID_NONE ||
             !rxas_flow_repetition_key(
-                    proof, epoch, record->instruction_id, &key) ||
+                    proof, session->epoch, record->instruction_id, &key) ||
             key.opcode != graph->nodes[index].op->opcode || !key.storage_id)
             continue;
         candidates[candidate_count].record_id = index;
@@ -2696,7 +2856,7 @@ static size_t flow_remove_redundant_derivations(flow_graph *graph,
             memset(&proof_result, 0, sizeof(proof_result));
             proof_result.reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
             query_available = rxas_flow_prove_repetition(
-                    proof, epoch, generator->instruction_id,
+                    proof, session->epoch, generator->instruction_id,
                     candidate->instruction_id, &proof_result) &&
                     !flow_proof_reason_unavailable(proof_result.reason);
             stats->derivation_proof_queries++;
@@ -2720,15 +2880,15 @@ static size_t flow_remove_redundant_derivations(flow_graph *graph,
     }
 cleanup:
     if (graph->context->debug_mode && proof)
-        rxas_flow_proof_dump(proof, epoch, stderr);
-    rxas_flow_procedure_destroy(procedure);
+        rxas_flow_proof_dump(proof, session->epoch, stderr);
     free(candidates);
     return removed;
 }
 
 static size_t flow_remove_redundant_conversions(flow_graph *graph,
-                                                flow_stats *stats) {
-    return flow_remove_redundant_derivations(graph, stats);
+                                                flow_stats *stats,
+                                                flow_proof_session *session) {
+    return flow_remove_redundant_derivations(graph, stats, session);
 }
 
 static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
@@ -2739,6 +2899,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "unreachable=%llu dead=%llu typed-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
             "redundant-conversion=%llu producer-forward=%llu redirects=%llu "
+            "constant-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
@@ -2756,6 +2917,10 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->redundant_conversions_removed,
             (unsigned long long)stats->producer_destinations_forwarded,
             (unsigned long long)stats->operands_redirected,
+            (unsigned long long)stats->constant_proof_proved,
+            (unsigned long long)stats->constant_proof_queries,
+            (unsigned long long)stats->constant_proof_rejected,
+            (unsigned long long)stats->constant_proof_unavailable,
             (unsigned long long)stats->derivation_proof_proved,
             (unsigned long long)stats->derivation_proof_queries,
             (unsigned long long)stats->derivation_proof_rejected,
@@ -2797,12 +2962,14 @@ void rxas_flow_optimise(Assembler_Context *context,
     size_t after_instructions;
     size_t changed;
     size_t iterations;
+    flow_proof_session proof_session;
 
     if (!context || !items || !item_count || !context->current_proc_name) return;
     memset(&stats, 0, sizeof(stats));
     before_instructions = flow_instruction_count(items, item_count);
     iterations = 0;
     do {
+        memset(&proof_session, 0, sizeof(proof_session));
         flow_build_graph(&graph, context, items, item_count);
         stats.procedures = 1;
         stats.blocks = graph.block_count;
@@ -2822,9 +2989,11 @@ void rxas_flow_optimise(Assembler_Context *context,
             if (!changed && flow_value_analysis_within_bound(&graph)) {
                 changed += flow_propagate_copies(&graph, &stats);
                 if (!changed) changed += flow_forward_producer_destination(&graph, &stats);
-                if (!changed) changed += flow_remove_redundant_loads(&graph, &stats);
+                if (!changed) changed += flow_remove_redundant_loads(
+                        &graph, &stats, &proof_session);
                 if (!changed) changed += flow_remove_redundant_initializations(&graph, &stats);
-                if (!changed) changed += flow_remove_redundant_conversions(&graph, &stats);
+                if (!changed) changed += flow_remove_redundant_conversions(
+                        &graph, &stats, &proof_session);
             }
             else if (!changed && context->debug_mode) {
                 fprintf(stderr,
@@ -2839,6 +3008,7 @@ void rxas_flow_optimise(Assembler_Context *context,
              * payload state; numeric liveness alone cannot prove that effect
              * unobservable. */
         }
+        flow_proof_session_destroy(&proof_session);
         flow_free_graph(&graph);
         iterations++;
     } while (changed && iterations <= before_instructions + 1);

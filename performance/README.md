@@ -29,8 +29,8 @@ validation.
 | `performance/PERF3-02-C2E2-P1-WORKLIST.md` | Locked typed normal/skip/retry continuation and graph-owned storage-identity infrastructure; no rewrite consumer selected and assembler-cost recovery queued separately |
 | `performance/PERF3-02-R1-WORKLIST.md` | Completed infrastructure-enabled option replay and selected C1abc production closeout; rejected variants remain replayable from retained evidence |
 | `performance/PERF3-10-WORKLIST.md` | Accepted ordered TRACE batching and storage/component-proved redundant `ITOS` control, first verdict and proportional closeout |
-| `performance/PERF3-11-WORKLIST.md` | Active scalable RXAS graph/signal/component-SSA programme; Stage 6 and generic XTOY migration M01 are complete, with repeated-load M02 next |
-| `performance/PERF3-11-MIGRATION-WORKLIST.md` | Locked remaining-proof inventory and resumable one-authority migration ledger; M01 expands the old ITOF floor into metadata-driven XTOY repetition including ITOD, and M02 is next |
+| `performance/PERF3-11-WORKLIST.md` | Active scalable RXAS graph/signal/component-SSA programme; Stage 6 plus XTOY M01 and equivalent-constant M02 are complete, with repeated-NULL M03 next |
+| `performance/PERF3-11-MIGRATION-WORKLIST.md` | Locked remaining-proof inventory and resumable one-authority migration ledger; M01 expands ITOF to metadata-driven XTOY including ITOD, M02 proves scalar constants and hidden cleanup, and M03 is next |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |
