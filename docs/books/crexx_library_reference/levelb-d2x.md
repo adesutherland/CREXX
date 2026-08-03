@@ -1,4 +1,4 @@
-## `d2x` (Level B)
+## d2x
 
 ```rexx
 d2x(number = .int [, output_length = .int]) = .string

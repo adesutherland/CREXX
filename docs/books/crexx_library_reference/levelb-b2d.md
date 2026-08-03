@@ -1,4 +1,4 @@
-## `b2d` (Level B)
+## b2d
 
 ```rexx
 b2d(binary = .string) = .int

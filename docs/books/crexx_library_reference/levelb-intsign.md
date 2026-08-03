@@ -1,4 +1,4 @@
-## Level B `intsign`
+## intsign
 
 ```rexx
 intsign(number = .int) = .int

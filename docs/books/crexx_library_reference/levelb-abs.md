@@ -1,4 +1,4 @@
-## Level B `abs`
+## abs
 
 The native Level B `abs` function returns a non-negative decimal value:
 

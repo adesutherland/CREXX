@@ -1,4 +1,4 @@
-## Level B `floatabs`
+## floatabs
 
 ```rexx
 floatabs(number = .float) = .float

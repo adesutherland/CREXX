@@ -1,9 +1,9 @@
-%% crexxalmanac.sty -- Java Almanac inspired compact API reference layout
-%% 2026/08/03 v0.3
+%% crexxalmanac.sty -- cRexx Almanac inspired compact API reference layout
+%% 2026/08/03 v0.3.1
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{crexxalmanac}[2026/08/03 v0.3 Almanac-style API reference]
+\ProvidesPackage{crexxalmanac}[2026/08/03 v0.3.1 Almanac-style API reference]
 
-\RequirePackage[table]{xcolor}
+\RequirePackage{xcolor}
 \RequirePackage{array}
 \RequirePackage{amssymb}
 \RequirePackage{xparse}
@@ -21,7 +21,6 @@
 \newlength\APIHeadingInset
 \newlength\APITypeWidth
 \newlength\APIDeclarationWidth
-\newlength\APISideTabOffset
 \newlength\APITypeDeclarationGap
 
 \setlength\APIHeadingHeight{7.8mm}
@@ -30,102 +29,12 @@
 \setlength\APITypeWidth{7.4em}
 \setlength\APIDeclarationWidth{0.60\linewidth}
 \setlength\APITypeDeclarationGap{0.55em}
-\setlength\APISideTabOffset{-54mm}
 
 \NewDocumentCommand{\APISetHeadingSplit}{m}{\setlength\APIHeadingSplit{#1}}
 \NewDocumentCommand{\APISetHeadingHeight}{m}{\setlength\APIHeadingHeight{#1}}
 \NewDocumentCommand{\APISetTypeWidth}{m}{\setlength\APITypeWidth{#1}}
 \NewDocumentCommand{\APISetDeclarationWidth}{m}{\setlength\APIDeclarationWidth{#1}}
 \NewDocumentCommand{\APISetTypeDeclarationGap}{m}{\setlength\APITypeDeclarationGap{#1}}
-\NewDocumentCommand{\APISetSideTabOffset}{m}{\setlength\APISideTabOffset{#1}}
-
-% Right-hand section tab. The optional argument moves the tab vertically.
-% --------------------------------------------------------------------------
-% Persistent chapter side tab
-% --------------------------------------------------------------------------
-
-\newif\ifAPIChapterTabActive
-\APIChapterTabActivefalse
-
-\newcommand{\APIChapterTabText}{}
-
-\newlength{\APIChapterTabWidth}
-\newlength{\APIChapterTabHeight}
-\newlength{\APIChapterTabOffset}
-
-\setlength{\APIChapterTabWidth}{8mm}
-\setlength{\APIChapterTabHeight}{42mm}
-\setlength{\APIChapterTabOffset}{0mm}
-
-% Start or change the tab.
-%
-% Optional argument: vertical displacement from the centre of the page.
-%
-% Examples:
-%   \APIChapterTab{Classes}
-%   \APIChapterTab[-20mm]{Classes}
-%
-\NewDocumentCommand{\APIChapterTab}{O{0mm}m}{%
-  \gdef\APIChapterTabText{#2}%
-  \global\setlength{\APIChapterTabOffset}{#1}%
-  \global\APIChapterTabActivetrue
-}
-
-% Stop printing the tab.
-\NewDocumentCommand{\ClearAPIChapterTab}{}{%
-  \global\APIChapterTabActivefalse
-  \gdef\APIChapterTabText{}%
-}
-
-% Backwards-compatible name.
-\NewDocumentCommand{\APISideTab}{O{0mm}m}{%
-  \APIChapterTab[#1]{#2}%
-}
-
-% Draw the tab on every shipped-out page.
-\newcommand{\API@DrawChapterTab}{%
-  \begin{tikzpicture}[remember picture,overlay]
-    \ifodd\value{page}
-      % Recto page: tab on the outer right edge.
-      \node[
-        anchor=east,
-        rotate=90,
-        fill=apiDark,
-        text=white,
-        font=\sffamily\bfseries,
-        inner sep=0pt,
-        minimum width=\APIChapterTabHeight,
-        minimum height=\APIChapterTabWidth
-      ] at (
-        [yshift=\APIChapterTabOffset]
-        current page.east
-      ) {\APIChapterTabText};
-    \else
-      % Verso page: tab on the outer left edge.
-      \node[
-        anchor=west,
-        rotate=-90,
-        fill=apiDark,
-        text=white,
-        font=\sffamily\bfseries,
-        inner sep=0pt,
-        minimum width=\APIChapterTabHeight,
-        minimum height=\APIChapterTabWidth
-      ] at (
-        [yshift=\APIChapterTabOffset]
-        current page.west
-      ) {\APIChapterTabText};
-    \fi
-  \end{tikzpicture}%
-}
-
-\AddToHook{shipout/foreground}{%
-  \ifAPIChapterTabActive
-    \API@DrawChapterTab
-  \fi
-}
-
-
 
 % Shallower banner with both labels vertically centred.
 \NewDocumentCommand{\APIClassHeading}{m m}{%
@@ -225,7 +134,7 @@
   \\[-0.05ex]
 }
 
-\NewDocumentEnvironment{CrexxClass}{m m}
+\NewDocumentEnvironment{APIClass}{m m}
   {\APIClassHeading{#1}{#2}}
   {\par}
 

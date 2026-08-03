@@ -1,4 +1,4 @@
-## Level B `arraysort`
+## arraysort
 
 `arraysort` sorts a one-based Level B string array in place:
 

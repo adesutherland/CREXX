@@ -1,4 +1,4 @@
-## Level B `insert`
+## insert
 
 `insert` adds formatted text after a character position in a target string:
 

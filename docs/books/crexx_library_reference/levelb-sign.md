@@ -1,4 +1,4 @@
-## Level B `sign`
+## sign
 
 The native Level B function returns the sign of a decimal value:
 

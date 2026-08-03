@@ -1,4 +1,4 @@
-## `objectarrayprepend` (Level B)
+## objectarrayprepend
 
 ```rexx
 objectarrayprepend(array = .object[] expose,

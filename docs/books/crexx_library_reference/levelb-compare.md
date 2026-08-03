@@ -1,4 +1,4 @@
-## Level B `compare`
+## compare
 
 `compare` returns the first 1-based character position at which two strings
 differ after the shorter string is virtually padded:

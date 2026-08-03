@@ -1,4 +1,4 @@
-## Level B `qsplit`
+## qsplit
 
 `qsplit(text=.string, separator=.string) = .string[]` splits only outside
 quotes. The separator must be non-empty. Results preserve source whitespace,

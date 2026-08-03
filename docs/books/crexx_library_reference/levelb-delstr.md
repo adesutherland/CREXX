@@ -1,4 +1,4 @@
-## Level B `delstr`
+## delstr
 
 `delstr` removes a character range from a string:
 

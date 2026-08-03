@@ -1,4 +1,4 @@
-## Level B `qsplitsafe`
+## qsplitsafe
 
 `qsplitsafe(text=.string, separator=.string [,start=.int [,pairs=.string]]) =
 .string[]` additionally suppresses splits inside nested one-codepoint delimiter

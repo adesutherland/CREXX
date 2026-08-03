@@ -1,4 +1,4 @@
-## Level B numeric-context accessors
+## numeric-context accessors
 
 The `numeric` selector exports five zero-argument Level B functions:
 

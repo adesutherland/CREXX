@@ -1,4 +1,4 @@
-## Level B `value`
+## value
 
 `value(name)` is a Level B caller-frame introspection helper. It is distinct
 from the assigning Classic `VALUE` built-in function.

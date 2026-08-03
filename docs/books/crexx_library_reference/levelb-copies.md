@@ -1,4 +1,4 @@
-## Level B `copies`
+## copies
 
 `copies` concatenates a string a non-negative number of times:
 

@@ -1,4 +1,4 @@
-## Level B `arrayjoin`
+## arrayjoin
 
 `arrayjoin` combines a one-based Level B string array without modifying it:
 

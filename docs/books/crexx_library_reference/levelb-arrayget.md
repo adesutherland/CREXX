@@ -1,4 +1,4 @@
-## `arrayget` (Level B)
+## arrayget
 
 ```rexx
 arrayget(array = .string[], index = .int [, default = .string]) = .string

@@ -1,4 +1,4 @@
-## Level B `centre`
+## centre
 
 `centre` is the British-spelling Level B entry for exact-width centring and
 central truncation:

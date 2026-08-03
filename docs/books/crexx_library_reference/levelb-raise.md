@@ -1,4 +1,4 @@
-## Level B `raise`
+## raise
 
 `raise` is the internal `_rxsysb` helper used by Level B runtime code to raise
 one of the VM's canonical signals with a diagnostic message.

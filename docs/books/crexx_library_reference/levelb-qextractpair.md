@@ -1,4 +1,4 @@
-## Level B `qextractpair`
+## qextractpair
 
 `qextractpair(open=.string, close=.string, text=.string [,start=.int
 [,mode=.string]]) = .string` returns the first balanced top-level span. `X`/`E`
