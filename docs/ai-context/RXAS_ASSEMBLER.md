@@ -950,6 +950,16 @@ Attribute/register-view cleanup also retains one small mechanical keyhole. A
 full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately
 by `acopy rA,rB` is reduced to the full copy for hand-written or legacy RXAS.
+This is the closed K06 classification, not a proof-service consumer. Opcode
+metadata records full `COPY` as reading/writing every component and `ACOPY` as
+reading/writing only `RXOP_COMPONENT_ATTRIBUTES`; both are non-signalling. The
+VM handlers confirm `copy_value()` assigns `status.all_type_flags` before
+`ACOPY` would repeat that exact assignment. The declarative rule captures the
+same source/destination pair and permits no intervening executable instruction.
+`test_rxop_metadata` locks the subset/non-signalling invariant, while the
+focused optimizer fixture locks different-source, different-target and
+executable-gap negatives. Moving this exact local algebra into CFG/SSA would
+add analysis cost without adding a correctness fact.
 Compiler-generated RXAS should not emit that pair for typed payload access. A
 future explicit flag-copy operation would use `acopy`, but there is no current
 compiler use case. Typed payload copies are `icopy`, `fcopy`, `scopy`, `dcopy`,

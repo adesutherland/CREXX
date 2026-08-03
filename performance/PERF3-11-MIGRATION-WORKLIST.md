@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01-M06 and K01-K04 complete; K06 is the next classification gate**
+Status: **in progress — M01-M06 and K01-K04/K06 complete; K05 is next**
 
 Authorized: 2026-08-02
 
@@ -78,7 +78,7 @@ acceptance.  That does not make the migrations irrelevant: these solvers are
 the bounded basic cases that the new proof is expected to generalize, and the
 focused fixtures preserve their exact safety floor.
 
-## Inventory: proof-bearing keyhole rules
+## Inventory: keyhole proof migration and classification gates
 
 | ID | Rule family | Accepted baseline | Current proof weakness | New owner |
 | --- | --- | --- | --- | --- |
@@ -87,7 +87,7 @@ focused fixtures preserve their exact safety floor.
 | K03 | duplicate `LINKATTR1` read for same owner/slot | focused string/binary positives and different-slot negative; canonical 0 | syntax shape; no generic attribute identity | **complete**; interned attribute path plus component/count/signal proof replace all six attribute-read keyholes |
 | K04 | integer compare plus conditional branch | legacy focused 16 includes one result-TRACE deletion; canonical RexxCPS 9 require storage/lifetime reaudit | bespoke bounded path solver for boolean-result death | **complete and accepted**; atomic event deletion, exact call windows and approved retry retirement unlock all five residual canonical false positives; focused Debug/Release passes 14/14, the runtime verdict is neutral, and broad Debug passes 1,998/1,998 |
 | K05 | branch-to-conditional/dual-branch threading | canonical Richards 4, Towers 7, RexxCPS 0 | queue-local label search | immutable CFG edge rewrite and reachability |
-| K06 | full `COPY` followed by same-pair `ACOPY` | focused 1; canonical 0 | adjacent mnemonic rule | component-write subset/equivalence proof or retained mechanical rule |
+| K06 | full `COPY` followed by same-pair `ACOPY` | focused 1; canonical 0 | adjacent mnemonic rule | **complete**; metadata and VM handlers prove exact local component subsumption, so the declarative rule is retained as mechanical |
 
 K04 and K05 remain exercised by the representative canonical inputs. The nine
 historical RexxCPS K04 fusions all discarded the matching trace event for the
@@ -101,8 +101,9 @@ eleven branch-threading rewrites across Richards/Towers.
 The following are local encodings, not independent flow solvers: fixed-register
 `INC`/`DEC` specialization; adjacent wide-`CNOP` cleanup; adjacent `SWAPN`,
 call-window and `NULLN` superinstruction collection; in-place
-`CONCAT`/`SCONCAT` lowering; and adjacent `INC`/branch or compare/branch
-superinstruction selection after liveness is supplied.  They remain in the
+`CONCAT`/`SCONCAT` lowering; full `COPY` plus same-pair `ACOPY` component
+subsumption; and adjacent `INC`/branch or compare/branch superinstruction
+selection after liveness is supplied.  They remain in the
 keyhole engine unless migration removes their surrounding proof need or a
 separate assembler-processing simplification is selected.
 
@@ -380,7 +381,20 @@ immediately after the deleted copy retain the old address-observation guard.
       runtime timing is not warranted.
 - [x] **K01-5 closeout:** retain the evidence bundle and pass the complete
       2,012/2,012 broad Debug gate in 368.43 seconds.
-- [ ] Reclassify or migrate **K06** after the generic component proof exists.
+- [x] **K06-0 retained baseline:** freeze committed K01 closeout `78bd7f6f5`,
+      replay signature `d132e98f`, preserve the focused optimized/no-opt hashes
+      and confirm zero K06 accepts in Richards, Towers and RexxCPS.
+- [x] **K06-1 classification:** prove from opcode metadata and VM handlers that
+      full `COPY` includes the complete status component written by `ACOPY`,
+      both instructions are total, and the existing rule requires an identical
+      source/destination pair with no intervening executable instruction.
+- [x] **K06-2 contract floor:** lock the component-subset/non-signalling
+      invariant in metadata tests and add different-target, different-source
+      and executable-gap negatives to the focused optimizer fixture.
+- [x] **K06-3 verdict:** compare focused and canonical ordinary Release output
+      against `78bd7f6f5`; time only if an ordinary representative image changes.
+- [x] **K06-4 closeout:** retain the classification evidence, document K06 as a
+      mechanical adjacent encoding and remove it from the semantic-proof queue.
 - [ ] Migrate **K05** when rewrite orchestration can edit immutable-CFG-derived
       plans without relying on a 20-item queue.
 
@@ -431,6 +445,53 @@ pair by permutation composition. K01 also corrected sparse SSA to compose all
 overlapping `SWAPN` pairs in operand order; the direct contract covers both a
 three-register overlap and the self-cancelling form. General larger
 permutation rewriting remains deferred rather than being inferred from K01.
+
+#### K06 retained floor and design selection
+
+The committed K06 baseline is K01 closeout `78bd7f6f5`. Its focused optimized
+and no-opt RXBIN SHA-256 values are `ef28be93` and `5ef002b9`; the optimized
+decision retains legacy signature `d132e98f`. Richards, Towers and RexxCPS have
+zero K06 accepts and retain hashes `92cda4c0`, `11b14061` and `96bc599b`.
+
+The machine-level ceiling is deletion of the second adjacent `ACOPY`, with no
+replacement instruction or runtime helper. The metadata and VM handlers make
+the equivalence local and exact: full `COPY` reads and writes
+`RXOP_COMPONENT_ALL`, including `RXOP_COMPONENT_ATTRIBUTES`, while `ACOPY`
+only reads and writes that status component. `copy_value()` assigns
+`status.all_type_flags`; the `ACOPY` handler immediately repeats the same
+assignment. Both opcodes are non-signalling, and the rule-table captures
+require the same physical source and destination on both instructions with no
+intervening executable instruction.
+
+Three dispositions were considered:
+
+1. **Selected: retain the declarative adjacent rule as mechanical.** Add a
+   metadata contract assertion and exact negative fixture rows, but keep the
+   production rule unchanged. No CFG, SSA, storage identity, liveness or
+   signal-continuation query can strengthen the proof for this exact adjacency.
+2. **Move the pair into the immutable proof service.** This would build and
+   query procedure analysis to rediscover an operand-equality and component-
+   subset fact already fixed by instruction metadata. It is rejected as an
+   unnecessary semantic authority and assembler-cost regression risk.
+3. **Generalize to every adjacent narrower copy subsumed by full `COPY`.** This
+   may be valid, but it expands beyond the retained K06 floor into typed payload
+   and native/reference lifetime cases. It remains a separately evidenced
+   future mechanical capability rather than being inferred from `ACOPY`.
+
+Because the selected disposition changes no production rule or ordinary
+output, K06 does not trigger a runtime-performance verdict. Any future opcode
+metadata or handler change that breaks the locked subset/non-signalling
+contract must fail the metadata test and reopen the classification.
+
+K06 closeout is retained in
+[2026-08-03-perf3-11-k06-mechanical-classification](evidence/2026-08-03-perf3-11-k06-mechanical-classification/).
+The metadata/optimizer panel passes 3/3 in Debug and Release. Replaying the
+original focused source with its exact relative path is byte-identical in
+optimized and no-opt modes, and the expanded fixture preserves the sole
+`d132e98f` acceptance while locking three negative shapes. Release `rxas` is
+unchanged at SHA-256 `a1c0e1ef`; Richards, Towers and RexxCPS retain exact
+hashes and zero K06 accepts. No production code or ordinary output changed, so
+runtime timing and broad CTest are not warranted.
 
 #### K02/K03 retained floor and design selection
 

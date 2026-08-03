@@ -194,6 +194,23 @@ int main(void) {
     check_same_storage_copy_metadata(OP_DCOPY_REG_REG);
     check_same_storage_copy_metadata(OP_ACOPY_REG_REG);
     check_same_storage_copy_metadata(OP_BCOPY_REG_REG);
+    check(rxop_component_reads(OP_COPY_REG_REG, 1) ==
+                  RXOP_COMPONENT_ALL &&
+              rxop_component_writes(OP_COPY_REG_REG, 0) ==
+                  RXOP_COMPONENT_ALL &&
+              rxop_component_reads(OP_ACOPY_REG_REG, 1) ==
+                  RXOP_COMPONENT_ATTRIBUTES &&
+              rxop_component_writes(OP_ACOPY_REG_REG, 0) ==
+                  RXOP_COMPONENT_ATTRIBUTES &&
+              (rxop_component_writes(OP_COPY_REG_REG, 0) &
+               rxop_component_writes(OP_ACOPY_REG_REG, 0)) ==
+                  rxop_component_writes(OP_ACOPY_REG_REG, 0) &&
+              rxop_signal_contract(OP_COPY_REG_REG).state ==
+                  RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_ACOPY_REG_REG).state ==
+                  RXOP_SIGNAL_STATE_NONE,
+          "full copy must subsume adjacent same-pair status copy",
+          &op_table[OP_COPY_REG_REG]);
     check(!rxop_same_storage_copy_is_noop(OP_LINK_REG_REG),
           "non-copy opcode gained same-storage no-op contract",
           &op_table[OP_LINK_REG_REG]);

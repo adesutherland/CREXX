@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — M01-M06 and K01-K04 complete; K06 classification next**
+Status: **in progress — M01-M06 and K01-K04/K06 complete; K05 migration next**
 
 Architecture approved: 2026-08-02
 
@@ -729,8 +729,21 @@ inherited floor and both legacy orientations are byte-identical, the stronger
 optimized/no-opt panel passes 9/9 in Debug and Release, the shared proof panel
 passes 37/37 in both builds, and broad Debug passes 2,012/2,012 in 368.43
 seconds. Canonical Richards, Towers and RexxCPS have zero K01 accepts and
-byte-identical images, so runtime timing is not warranted. K06 is next:
-classify or replace the adjacent `COPY` plus same-pair `ACOPY` subsumption rule.
+byte-identical images, so runtime timing is not warranted.
+
+K06 is complete in
+[2026-08-03-perf3-11-k06-mechanical-classification](evidence/2026-08-03-perf3-11-k06-mechanical-classification/).
+Full `COPY` writes the exact status component immediately repeated by
+same-pair `ACOPY`; both opcodes are non-signalling and the existing rule admits
+no intervening executable instruction. K06 is therefore a metadata-proved
+mechanical encoding, not a semantic proof consumer. The production rule is
+unchanged, its original optimized/no-opt outputs are byte-identical, the
+expanded metadata/optimizer panel passes 3/3 in Debug and Release, and all
+three canonical images retain zero accepts and exact hashes. Runtime timing
+and broad CTest are not warranted because no production code or ordinary
+output changed. K05 is next: migrate branch-to-conditional/dual-branch
+threading from queue-local label search to immutable CFG edge rewrites and
+reachability.
 
 ### Stage 11 — later consumers after legacy migration
 
