@@ -1,0 +1,89 @@
+\documentclass[10pt]{article}
+
+\usepackage[a4paper,left=15mm,right=18mm,top=13mm,bottom=15mm]{geometry}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{microtype}
+\usepackage{javaalmanac}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\renewcommand{\arraystretch}{0.98}
+
+\begin{document}
+
+% Optional right-edge section tab. The optional argument adjusts its height:
+% \APISideTab[20mm]{Classes}
+\APISideTab{Classes}
+
+\begin{JavaClass}{Byte}{java.lang}
+  \begin{APIHierarchy}
+    \APIHierarchyLine[\APIOpen]{0}{Object}
+    \APIHierarchyLine{1}{\APIHierarchyBranch\ Number
+      \hfill\textit{java.io.Serializable}}
+    \APIHierarchyLine{2}{\APIHierarchyBranch\ Byte
+      \hfill\textit{Comparable}}
+  \end{APIHierarchy}
+
+  \begin{APIMembers}
+    \APIConstructor{\APINew}{}{public}{Byte}{(byte value)}{}
+    \APIConstructor{\APINew}{}{public}{Byte}{(String s)}
+      {throws NumberFormatException}
+    \APIMember{}{2}{public}{byte}{byteValue}{()}{}
+    \APIMember{}{1.2}{public}{int}{compareTo}{(Byte anotherByte)}{}
+    \APIMember{}{1.2}{public}{int}{compareTo}{(Object o)}{}
+    \APIMember{\APIChanged}{}{public static}{Byte}{decode}{(String nm)}
+      {throws NumberFormatException}
+    \APIMember{}{2}{public}{double}{doubleValue}{()}{}
+    \APIMember{}{1}{public}{boolean}{equals}{(Object obj)}{}
+    \APIMember{}{2}{public}{float}{floatValue}{()}{}
+    \APIMember{}{1}{public}{int}{hashCode}{()}{}
+    \APIMember{}{2}{public}{int}{intValue}{()}{}
+    \APIMember{}{2}{public}{long}{longValue}{()}{}
+    \APIConstant{\APIField}{}{public static final}{byte}{MAX\_VALUE}{127}
+    \APIConstant{\APIField}{}{public static final}{byte}{MIN\_VALUE}{-128}
+    \APIMember{\APIChanged}{}{public static}{byte}{parseByte}{(String s)}
+      {throws NumberFormatException}
+    \APIMember{\APIChanged}{}{public static}{byte}{parseByte}
+      {(String s, int radix)}{throws NumberFormatException}
+    \APIMember{}{2}{public}{short}{shortValue}{()}{}
+    \APIMember{}{1}{public}{String}{toString}{()}{}
+    \APIMember{\APIChanged}{}{public static}{String}{toString}{(byte b)}{}
+    \APIConstant{\APIField}{}{public static final}{Class}{TYPE}{}
+    \APIMember{\APIChanged}{}{public static}{Byte}{valueOf}{(String s)}
+      {throws NumberFormatException}
+    \APIMember{\APIChanged}{}{public static}{Byte}{valueOf}
+      {(String s, int radix)}{throws NumberFormatException}
+  \end{APIMembers}
+\end{JavaClass}
+
+\vspace{10pt}
+
+\begin{JavaClass}{ByteArrayInputStream}{java.io}
+  \begin{APIHierarchy}
+    \APIHierarchyLine[\APIOpen]{0}{Object}
+    \APIHierarchyLine{1}{\APIHierarchyBranch\ InputStream}
+    \APIHierarchyLine{2}{\APIHierarchyBranch\ ByteArrayInputStream}
+  \end{APIHierarchy}
+
+  \begin{APIMembers}
+    \APIMember{}{1}{public synchronized}{int}{available}{()}{}
+    \APIMember{}{}{protected}{byte[]}{buf}{}{}
+    \APIConstructor{\APINew}{}{public}{ByteArrayInputStream}{(byte[] buf)}{}
+    \APIConstructor{\APINew}{}{public}{ByteArrayInputStream}
+      {(byte[] buf, int offset, int length)}{}
+    \APIMember{}{1}{public synchronized}{void}{close}{()}{throws IOException}
+    \APIMember{}{}{protected}{int}{count}{}{}
+    \APIMember{}{1.1}{protected}{int}{mark}{}{}
+    \APIMember{}{1}{public}{void}{mark}{(int readAheadLimit)}{}
+    \APIMember{}{1}{public}{boolean}{markSupported}{()}{}
+    \APIMember{}{}{protected}{int}{pos}{}{}
+    \APIMember{}{1}{public synchronized}{int}{read}{()}{}
+    \APIMember{}{1}{public synchronized}{int}{read}{(byte[] b)}
+      {throws IOException}
+    \APIMember{}{1}{public synchronized}{int}{read}
+      {(byte[] b, int off, int len)}{}
+    \APIMember{}{1}{public synchronized}{void}{reset}{()}{}
+  \end{APIMembers}
+\end{JavaClass}
+
+\end{document}

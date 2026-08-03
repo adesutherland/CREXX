@@ -1,0 +1,232 @@
+%% crexxalmanac.sty -- Java Almanac inspired compact API reference layout
+%% 2026/08/03 v0.3
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{crexxalmanac}[2026/08/03 v0.3 Almanac-style API reference]
+
+\RequirePackage[table]{xcolor}
+\RequirePackage{array}
+\RequirePackage{amssymb}
+\RequirePackage{xparse}
+\RequirePackage{tikz}
+\usetikzlibrary{calc}
+
+\definecolor{apiDark}{HTML}{424641}
+\definecolor{apiMid}{HTML}{777B76}
+\definecolor{apiLight}{HTML}{ECEDE9}
+\definecolor{apiRule}{HTML}{8C908B}
+\definecolor{apiText}{HTML}{343733}
+
+\newlength\APIHeadingHeight
+\newlength\APIHeadingSplit
+\newlength\APIHeadingInset
+\newlength\APITypeWidth
+\newlength\APIDeclarationWidth
+\newlength\APISideTabOffset
+\newlength\APITypeDeclarationGap
+
+\setlength\APIHeadingHeight{7.8mm}
+\setlength\APIHeadingSplit{0.73\linewidth}
+\setlength\APIHeadingInset{2.2mm}
+\setlength\APITypeWidth{7.4em}
+\setlength\APIDeclarationWidth{0.60\linewidth}
+\setlength\APITypeDeclarationGap{0.55em}
+\setlength\APISideTabOffset{-54mm}
+
+\NewDocumentCommand{\APISetHeadingSplit}{m}{\setlength\APIHeadingSplit{#1}}
+\NewDocumentCommand{\APISetHeadingHeight}{m}{\setlength\APIHeadingHeight{#1}}
+\NewDocumentCommand{\APISetTypeWidth}{m}{\setlength\APITypeWidth{#1}}
+\NewDocumentCommand{\APISetDeclarationWidth}{m}{\setlength\APIDeclarationWidth{#1}}
+\NewDocumentCommand{\APISetTypeDeclarationGap}{m}{\setlength\APITypeDeclarationGap{#1}}
+\NewDocumentCommand{\APISetSideTabOffset}{m}{\setlength\APISideTabOffset{#1}}
+
+% Right-hand section tab. The optional argument moves the tab vertically.
+% --------------------------------------------------------------------------
+% Persistent chapter side tab
+% --------------------------------------------------------------------------
+
+\newif\ifAPIChapterTabActive
+\APIChapterTabActivefalse
+
+\newcommand{\APIChapterTabText}{}
+
+\newlength{\APIChapterTabWidth}
+\newlength{\APIChapterTabHeight}
+\newlength{\APIChapterTabOffset}
+
+\setlength{\APIChapterTabWidth}{8mm}
+\setlength{\APIChapterTabHeight}{42mm}
+\setlength{\APIChapterTabOffset}{0mm}
+
+% Start or change the tab.
+%
+% Optional argument: vertical displacement from the centre of the page.
+%
+% Examples:
+%   \APIChapterTab{Classes}
+%   \APIChapterTab[-20mm]{Classes}
+%
+\NewDocumentCommand{\APIChapterTab}{O{0mm}m}{%
+  \gdef\APIChapterTabText{#2}%
+  \global\setlength{\APIChapterTabOffset}{#1}%
+  \global\APIChapterTabActivetrue
+}
+
+% Stop printing the tab.
+\NewDocumentCommand{\ClearAPIChapterTab}{}{%
+  \global\APIChapterTabActivefalse
+  \gdef\APIChapterTabText{}%
+}
+
+% Backwards-compatible name.
+\NewDocumentCommand{\APISideTab}{O{0mm}m}{%
+  \APIChapterTab[#1]{#2}%
+}
+
+% Draw the tab on every shipped-out page.
+\newcommand{\API@DrawChapterTab}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \ifodd\value{page}
+      % Recto page: tab on the outer right edge.
+      \node[
+        anchor=east,
+        rotate=90,
+        fill=apiDark,
+        text=white,
+        font=\sffamily\bfseries,
+        inner sep=0pt,
+        minimum width=\APIChapterTabHeight,
+        minimum height=\APIChapterTabWidth
+      ] at (
+        [yshift=\APIChapterTabOffset]
+        current page.east
+      ) {\APIChapterTabText};
+    \else
+      % Verso page: tab on the outer left edge.
+      \node[
+        anchor=west,
+        rotate=-90,
+        fill=apiDark,
+        text=white,
+        font=\sffamily\bfseries,
+        inner sep=0pt,
+        minimum width=\APIChapterTabHeight,
+        minimum height=\APIChapterTabWidth
+      ] at (
+        [yshift=\APIChapterTabOffset]
+        current page.west
+      ) {\APIChapterTabText};
+    \fi
+  \end{tikzpicture}%
+}
+
+\AddToHook{shipout/foreground}{%
+  \ifAPIChapterTabActive
+    \API@DrawChapterTab
+  \fi
+}
+
+
+
+% Shallower banner with both labels vertically centred.
+\NewDocumentCommand{\APIClassHeading}{m m}{%
+  \par\noindent
+  \begin{tikzpicture}
+    \useasboundingbox (0,0) rectangle (\linewidth,\APIHeadingHeight);
+    \fill[apiDark]
+      (0,0) rectangle (\APIHeadingSplit,\APIHeadingHeight);
+    \fill[apiLight]
+      (\APIHeadingSplit,0) rectangle (\linewidth,\APIHeadingHeight);
+
+    \node[
+      anchor=west,
+      inner sep=0pt,
+      text=white,
+      font=\sffamily\bfseries\Large
+    ] at (\APIHeadingInset,{0.5\APIHeadingHeight}) {#1};
+
+    \node[
+      anchor=east,
+      inner sep=0pt,
+      text=apiText,
+      font=\sffamily\large
+    ] at ({\linewidth-\APIHeadingInset},{0.5\APIHeadingHeight}) {#2};
+  \end{tikzpicture}%
+  \par\vspace{2.5pt}%
+}
+
+\NewDocumentEnvironment{APIHierarchy}{}
+  {\begingroup\small\sffamily\color{apiText}\setlength{\parskip}{0pt}}
+  {\par\vspace{2pt}{\color{apiRule}\hrule height 0.3pt}\vspace{4pt}\endgroup}
+
+\NewDocumentCommand{\APIHierarchyLine}{O{} m m}{%
+  \noindent
+  \makebox[1.45em][l]{\scriptsize #1}%
+  \hspace*{\dimexpr #2em\relax}%
+  #3\par
+}
+
+\NewDocumentCommand{\APIHierarchyBranch}{}{\ensuremath{\llcorner}}
+
+\NewDocumentCommand{\APINew}{}{\textasteriskcentered}
+\NewDocumentCommand{\APIChanged}{}{\ensuremath{\triangle}}
+\NewDocumentCommand{\APIField}{}{\ensuremath{\blacktriangle}}
+\NewDocumentCommand{\APIOpen}{}{\ensuremath{\circ}}
+
+% Widely spaced leader dots, extending to a small gap before the return type.
+\NewDocumentCommand{\APILeaderFill}{}{%
+  \nobreak\leaders\hbox{\kern0.22em\raisebox{0.34ex}{\scriptsize.}\kern0.22em}\hfill
+  \kern0.35em
+}
+
+% The modifier column is elastic. Consequently its leaders finish immediately
+% before the fixed-width return-type column.
+\NewDocumentEnvironment{APIMembers}{}
+  {\begingroup\small\sffamily\color{apiText}%
+   \setlength{\tabcolsep}{0pt}%
+   \begin{tabular}{@{}
+      >{\raggedleft\arraybackslash}p{1.45em}
+      >{\raggedleft\arraybackslash}p{2.05em}
+      >{\raggedright\arraybackslash}p{\dimexpr\linewidth-3.5em-\APITypeWidth-\APITypeDeclarationGap-\APIDeclarationWidth\relax}
+      >{\raggedleft\arraybackslash}p{\APITypeWidth}
+      @{\hspace{\APITypeDeclarationGap}}
+      >{\raggedright\arraybackslash}p{\APIDeclarationWidth}@{}}}
+  {\end{tabular}\par\endgroup}
+
+% marker, version, modifiers, return type, name, arguments, trailing clause
+\NewDocumentCommand{\APIMember}{m m m m m m m}{%
+  {\scriptsize #1} &
+  {\scriptsize #2} &
+  {\color{apiMid}#3\APILeaderFill} &
+  {\bfseries #4} &
+  {\bfseries #5}{#6}%
+  \IfBlankF{#7}{\ {\color{apiMid}#7}}%
+  \\[-0.05ex]
+}
+
+% marker, version, modifiers, class name, arguments, trailing clause
+\NewDocumentCommand{\APIConstructor}{m m m m m m}{%
+  {\scriptsize #1} &
+  {\scriptsize #2} &
+  {\color{apiMid}#3\APILeaderFill} &
+  {} &
+  {\bfseries #4}{#5}%
+  \IfBlankF{#6}{\ {\color{apiMid}#6}}%
+  \\[-0.05ex]
+}
+
+% marker, version, modifiers, type, name, value
+\NewDocumentCommand{\APIConstant}{m m m m m m}{%
+  {\scriptsize #1} &
+  {\scriptsize #2} &
+  {\color{apiMid}#3\APILeaderFill} &
+  {\bfseries #4} &
+  {\bfseries #5}%
+  \IfBlankF{#6}{\ {\color{apiMid}= #6}}%
+  \\[-0.05ex]
+}
+
+\NewDocumentEnvironment{CrexxClass}{m m}
+  {\APIClassHeading{#1}{#2}}
+  {\par}
+
+\endinput
