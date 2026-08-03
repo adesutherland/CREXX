@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — M01-M04 complete; M05 sparse use/liveness next**
+Status: **in progress — M01-M05 complete; M06 producer forwarding next**
 
 Architecture approved: 2026-08-02
 
@@ -584,8 +584,19 @@ SCOPY, DCOPY, ACOPY and BCOPY. It recovers the four old raw-register cases and
 adds raw decimal/attribute/binary, LINK, agreeing-phi and TRACE-safe
 deletions, while divergent and different storage remain closed. Adrian
 accepted the output-neutral Release verdict on 2026-08-03; canonical images
-are byte-identical and broad Debug passes 1,995/1,995. M05's sparse use index
-and edge-aware liveness service is next.
+are byte-identical and broad Debug passes 1,995/1,995.
+
+M05 is complete in
+[2026-08-03-perf3-11-m05-sparse-use-liveness](evidence/2026-08-03-perf3-11-m05-sparse-use-liveness/).
+One cached per-epoch use/dependency index now owns direct component uses,
+storage/cursor observations, reverse phi dependencies and edge-aware liveness.
+The proof service returns atomic typed-copy operand-rewrite plans and the old
+dense availability/may-reach authority is deleted. All ten old safe accepts
+are recovered; `copy_before_endlife` is one stronger acceptance because the
+unrelated exceptional ENDLIFE does not observe the copied value. Richards,
+Towers and RexxCPS remain byte-identical to M04. Adrian accepted the bounded
+ordinary Release scale of 0.16-0.17 s and 102.8 MB peak RSS for RexxCPS, and
+broad Debug passes 1,995/1,995. M06 producer forwarding is next.
 
 ### Stage 11 — later consumers after legacy migration
 

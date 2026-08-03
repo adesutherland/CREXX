@@ -2553,8 +2553,17 @@ const RxasFlowSsaAnalysis *rxas_flow_require_ssa_analysis(
                             : flow_ssa_default_budget(metrics, procedure);
     manager = procedure->analysis_manager;
     if (manager && manager->epoch == expected_epoch && manager->ssa) {
-        if (manager->ssa->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE)
+        if (manager->ssa->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE) {
+            /* Sparse analyses materialize additional cached facts lazily.
+             * A later consumer may reserve more work without rebuilding the
+             * write-once graph or invalidating pointers held by an existing
+             * proof service. */
+            if (requested > manager->ssa_budget) {
+                manager->ssa_budget = requested;
+                manager->ssa->metrics.budget_limit = requested;
+            }
             return manager->ssa;
+        }
         if (requested <= manager->ssa_budget) return 0;
         flow_ssa_free(manager->ssa);
         manager->ssa = 0;
@@ -2589,6 +2598,43 @@ static int flow_ssa_valid(const RxasFlowSsaAnalysis *analysis,
     return analysis && epoch && analysis->metrics.epoch == epoch &&
            analysis->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE &&
            rxas_flow_procedure_epoch_matches(analysis->procedure, epoch);
+}
+
+/* Non-instruction records observe the state at their exact queue position.
+ * The immutable graph keeps them inside a code block, so the state is the
+ * preceding instruction's after-state or the block entry state when the
+ * record precedes the first instruction. */
+static size_t flow_ssa_state_at_record(
+        const RxasFlowSsaAnalysis *analysis, size_t record_id) {
+    const RxasFlowRecord *record;
+    const RxasFlowBlock *block;
+    size_t previous;
+    if (!analysis || record_id >= analysis->record_count)
+        return RXAS_FLOW_ID_NONE;
+    record = rxas_flow_procedure_record(
+            analysis->procedure, analysis->metrics.epoch, record_id);
+    if (!record || record->block_id >= analysis->block_count)
+        return RXAS_FLOW_ID_NONE;
+    if (record->instruction_id != RXAS_FLOW_ID_NONE) {
+        if (record->instruction_id >= analysis->instruction_count)
+            return RXAS_FLOW_ID_NONE;
+        return analysis->instruction_before[record->instruction_id];
+    }
+    block = rxas_flow_procedure_block(
+            analysis->procedure, analysis->metrics.epoch, record->block_id);
+    if (!block) return RXAS_FLOW_ID_NONE;
+    previous = record_id;
+    while (previous > block->first_record) {
+        const RxasFlowRecord *candidate;
+        previous--;
+        candidate = rxas_flow_procedure_record(
+                analysis->procedure, analysis->metrics.epoch, previous);
+        if (candidate && candidate->block_id == record->block_id &&
+            candidate->instruction_id != RXAS_FLOW_ID_NONE &&
+            candidate->instruction_id < analysis->instruction_count)
+            return analysis->instruction_after[candidate->instruction_id];
+    }
+    return analysis->block_state[record->block_id];
 }
 
 const RxasFlowSsaMetrics *rxas_flow_ssa_metrics(
@@ -2634,6 +2680,18 @@ int rxas_flow_storage_at_instruction(
         return 0;
     state = after_instruction ? analysis->instruction_after[instruction_id]
                               : analysis->instruction_before[instruction_id];
+    return flow_ssa_storage_fact(
+            (RxasFlowSsaAnalysis *)analysis, state, reg, fact);
+}
+
+int rxas_flow_storage_at_record(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t record_id, RxasFlowRegister reg,
+        RxasFlowStorageFact *fact) {
+    size_t state;
+    if (!flow_ssa_valid(analysis, expected_epoch)) return 0;
+    state = flow_ssa_state_at_record(analysis, record_id);
+    if (state == RXAS_FLOW_ID_NONE) return 0;
     return flow_ssa_storage_fact(
             (RxasFlowSsaAnalysis *)analysis, state, reg, fact);
 }
@@ -2768,7 +2826,7 @@ static int flow_ssa_component_fact(
                             instruction_id, after_instruction,
                             (RxasFlowEffectClass)effect);
     }
-    else {
+    else if (edge_id != RXAS_FLOW_ID_NONE) {
         for (effect = 0; effect < RXAS_FLOW_EFFECT_CLASS_COUNT; effect++)
             fact->current_effects[effect] = rxas_flow_effect_on_edge(
                     analysis->signal, analysis->metrics.epoch, edge_id,
@@ -2795,6 +2853,19 @@ int rxas_flow_component_at_instruction(
     return flow_ssa_component_fact(
             (RxasFlowSsaAnalysis *)analysis, state, reg, component,
             instruction_id, after_instruction, RXAS_FLOW_ID_NONE, fact);
+}
+
+int rxas_flow_component_at_record(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t record_id, RxasFlowRegister reg,
+        unsigned int component, RxasFlowComponentFact *fact) {
+    size_t state;
+    if (!flow_ssa_valid(analysis, expected_epoch)) return 0;
+    state = flow_ssa_state_at_record(analysis, record_id);
+    if (state == RXAS_FLOW_ID_NONE) return 0;
+    return flow_ssa_component_fact(
+            (RxasFlowSsaAnalysis *)analysis, state, reg, component,
+            RXAS_FLOW_ID_NONE, 0, RXAS_FLOW_ID_NONE, fact);
 }
 
 int rxas_flow_component_on_edge(

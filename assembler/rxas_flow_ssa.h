@@ -138,6 +138,10 @@ int rxas_flow_storage_at_instruction(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t instruction_id, int after_instruction,
         RxasFlowRegister register_id, RxasFlowStorageFact *fact);
+int rxas_flow_storage_at_record(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t record_id, RxasFlowRegister register_id,
+        RxasFlowStorageFact *fact);
 int rxas_flow_storage_on_edge(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t edge_id, RxasFlowRegister register_id,
@@ -155,6 +159,10 @@ int rxas_flow_component_at_instruction(
         size_t instruction_id, int after_instruction,
         RxasFlowRegister register_id, unsigned int component,
         RxasFlowComponentFact *fact);
+int rxas_flow_component_at_record(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t record_id, RxasFlowRegister register_id,
+        unsigned int component, RxasFlowComponentFact *fact);
 int rxas_flow_component_on_edge(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t edge_id, RxasFlowRegister register_id, unsigned int component,

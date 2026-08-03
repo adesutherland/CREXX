@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "rxas_flow_ssa.h"
+#include "rxas_flow_use.h"
 
 typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_PROVED = 0,
@@ -43,6 +43,14 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_ABSENCE_UNKNOWN,
     RXAS_FLOW_PROOF_NOT_EXACT_SELF_COPY,
     RXAS_FLOW_PROOF_STORAGE_NOT_IDENTICAL,
+    RXAS_FLOW_PROOF_NOT_EXACT_TYPED_COPY,
+    RXAS_FLOW_PROOF_DESTINATION_NOT_LOCAL,
+    RXAS_FLOW_PROOF_DESTINATION_OBSERVABLE,
+    RXAS_FLOW_PROOF_USE_NOT_REDIRECTABLE,
+    RXAS_FLOW_PROOF_SOURCE_NOT_EQUIVALENT,
+    RXAS_FLOW_PROOF_CURSOR_OBSERVED,
+    RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED,
+    RXAS_FLOW_PROOF_NO_REDIRECTS,
     RXAS_FLOW_PROOF_NOT_IN_LOOP,
     RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP,
     RXAS_FLOW_PROOF_NOT_MUST_EXECUTE,
@@ -89,6 +97,10 @@ typedef struct RxasFlowProofMetrics {
     size_t redundant_self_copy_queries;
     size_t redundant_self_copy_proved;
     size_t redundant_self_copy_rejected;
+    size_t typed_copy_redirect_queries;
+    size_t typed_copy_redirect_proved;
+    size_t typed_copy_redirect_rejected;
+    size_t typed_copy_operand_rewrites;
     size_t success_edge_queries;
     size_t loop_queries;
 } RxasFlowProofMetrics;
@@ -98,6 +110,26 @@ typedef struct RxasFlowRepetitionKey {
     RxOpValueDerivation derivation;
     size_t storage_id;
 } RxasFlowRepetitionKey;
+
+typedef struct RxasFlowOperandRewrite {
+    size_t record_id;
+    size_t instruction_id;
+    size_t operand_index;
+    RxasFlowRegister expected_register;
+    RxasFlowRegister replacement_register;
+} RxasFlowOperandRewrite;
+
+typedef struct RxasFlowTypedCopyPlan {
+    int proved;
+    RxasFlowProofReason reason;
+    size_t candidate_instruction;
+    unsigned int component;
+    size_t destination_storage_id;
+    size_t source_value_id;
+    size_t result_value_id;
+    size_t rewrite_offset;
+    size_t rewrite_count;
+} RxasFlowTypedCopyPlan;
 
 typedef struct RxasFlowProofService RxasFlowProofService;
 
@@ -125,6 +157,13 @@ int rxas_flow_prove_redundant_absent_write(
 int rxas_flow_prove_redundant_self_copy(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t candidate_instruction, RxasFlowProofResult *result);
+int rxas_flow_prove_typed_copy_redirect(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t candidate_instruction, RxasFlowTypedCopyPlan *plan);
+int rxas_flow_typed_copy_plan_rewrite(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowTypedCopyPlan *plan, size_t rewrite_index,
+        RxasFlowOperandRewrite *rewrite);
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result);

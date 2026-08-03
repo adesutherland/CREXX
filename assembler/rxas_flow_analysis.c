@@ -11,6 +11,7 @@
 #include "rxas_flow_proof.h"
 #include "rxas_flow_signal.h"
 #include "rxas_flow_ssa.h"
+#include "rxas_flow_use.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -1238,6 +1239,7 @@ void rxas_flow_analysis_manager_destroy(RxasFlowProcedure *procedure) {
     if (!procedure || !procedure->analysis_manager) return;
     manager = procedure->analysis_manager;
     rxas_flow_proof_service_destroy(manager->proof);
+    rxas_flow_use_analysis_destroy(manager->use);
     rxas_flow_ssa_analysis_destroy(manager->ssa);
     rxas_flow_signal_analysis_destroy(manager->signal);
     flow_structural_free(manager->structural);

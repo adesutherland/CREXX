@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01-M04 complete; M05 sparse use/liveness next**
+Status: **in progress — M01-M05 complete; M06 producer forwarding next**
 
 Authorized: 2026-08-02
 
@@ -68,7 +68,7 @@ and after the diagnostic prove output neutrality.
 | M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | **complete**; old authority deleted, old floor plus four stronger focused deletions proved |
 | M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | **complete**; old authority deleted, old floor plus equal-phi, linked-storage and TRACE cases proved |
 | M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | **complete**; old authority deleted, all seven copy families use conditional same-storage metadata and the proof service |
-| M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | requires new reusable use/liveness query |
+| M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | **complete**; old dense solver deleted, ten-case floor plus one stronger case proved |
 | M06 | adjacent producer-destination forwarding | focused 12; canonical 0 | exact producer result, destination/temporary liveness and observation equivalence | migrate after M05 infrastructure |
 | M07 | dense legacy register-storage must-analysis | diagnostic-only; 13 storage-identity fixtures | sparse SSA storage queries and proof diagnostics | retire after its oracle is expressed against new SSA |
 | M08 | raw-register liveness/availability/may-reach substrate | shared by M03-M06 | graph use index plus component/storage liveness | retire after last consumer |
@@ -157,14 +157,58 @@ storage while its same-storage VM path returns before allocation or signal.
 
 - [ ] Add a sparse per-procedure use index keyed by storage/component
       `ValueId`; do not reconstruct a nodes-by-register matrix.
-- [ ] Expose edge-aware `value_live`, `all_uses_redirectable`,
+- [x] Expose edge-aware `value_live`, `all_uses_redirectable`,
       `destination_unobserved` and atomic rewrite-plan queries.
-- [ ] Include TRACE/source/register metadata, async handlers, signal
+- [x] Include TRACE/source/register metadata, async handlers, signal
       continuations, call windows and hidden lifetime/reference effects.
-- [ ] Prove scaling on the inlined RexxCPS procedure before selecting a
+- [x] Prove scaling on the inlined RexxCPS procedure before selecting a
       consumer.
-- [ ] Migrate **M05** and **M06** separately, deleting their old solvers only
-      after each gate.
+- [x] Migrate **M05** and delete its old solver after its gate.
+- [ ] Migrate **M06** separately and delete its old solver only after its gate.
+
+#### M05 retained floor and design selection
+
+The frozen M04 assembler accepts ten M05 typed-copy cases, all with reason
+`all-uses-redirected`: `typed_copy_compare`, `typed_copy_join`, the first
+independent copy in `complex_independent_region`, and the seven
+`whole_procedure_panel` cases `typed_float_compare`, `typed_string_compare`,
+`copy_loop_dominated`, `endlife_then_independent`,
+`unrelated_register_metadata`, `copy_across_unobserved_throw` and
+`indirect_control_flow_fail_closed`.  `typed_copy_other_view_live`,
+`typed_copy_live_across_call`, `copy_loop_mixed_entry`, `copy_before_endlife`,
+`relevant_register_metadata` and `copy_observed_by_throw_handler` retain the
+adjacent negative floor.  M06 producer forwarding and the typed
+`nr18_flow_harvest` cases are not M05 input.
+
+Three implementation shapes were considered:
+
+1. **Retain the dense per-candidate solver.**  This allocates four arrays over
+   every record and repeatedly scans every operand for each candidate.  It is
+   the scaling problem Phase B exists to remove and is rejected.
+2. **Selected: one cached SSA use/dependency index per procedure epoch.**
+   Explicit component and cursor reads, implicit reads, metadata/TRACE reads
+   and observation boundaries are indexed once against write-once
+   `ValueId`/`StorageId` facts.  Phi/copy dependency edges let a query visit
+   only values which can contain the candidate result.  The proof service,
+   rather than the index, decides equivalence and produces an immutable,
+   all-or-nothing operand rewrite plan.
+3. **Embed another graph walk in the M05 consumer.**  This could recover the
+   old floor with less initial code but would duplicate traversal, signal and
+   observation policy for M06, K04 and future liveness proofs.  It is rejected.
+
+The service is deliberately split into an output-neutral infrastructure gate
+and an M05 authority gate.  Its first public surface exposes indexed direct
+uses and value dependencies, edge-aware value liveness, retained-memory/work
+metrics and epoch validation.  Candidate-specific redirectability remains a
+proof query.  M05 must recover the ten-case floor and records any stronger
+acceptance separately; copied-view-dead deletion and producer forwarding
+remain M06 work.  The first stronger case is `copy_before_endlife`: the sparse
+proof distinguishes an unrelated exceptional `ENDLIFE` observation and safely
+redirects the typed-copy consumer, where the old M05 blanket boundary rejected
+the case and M06 later retargeted the producer.  Instruction count is unchanged
+but proof ownership is more precise.  String-copy deletion additionally
+requires destination cursor state to be unobserved, because `SCOPY` writes both
+the string value and its cursor.
 
 ### Phase C — keyhole semantic authorities
 
@@ -251,6 +295,28 @@ blanket forward TRACE veto are deleted.
 
 Adrian accepted the output-neutral first Release verdict on 2026-08-03.
 Richards, Towers and RexxCPS are byte-identical to frozen M03. The final broad
-Debug run passes 1,995/1,995. M05 is next, beginning with the reusable sparse
-use index and edge-aware component/storage liveness service rather than an
-M05-specific rewrite.
+Debug run passes 1,995/1,995.
+
+M05 is complete in
+[`2026-08-03-perf3-11-m05-sparse-use-liveness`](evidence/2026-08-03-perf3-11-m05-sparse-use-liveness/).
+The cached use service indexes explicit, read/write, metadata, TRACE, cursor,
+call-window and opaque observations against `ValueId`/`StorageId`, plus reverse
+phi dependencies and sparse liveness. The proof service produces one immutable
+all-or-nothing operand plan for exact `ICOPY`/`FCOPY`/strict-`SCOPY`; the old
+per-candidate availability/may-reach arrays and repeated operand scans are
+deleted.
+
+All ten old safe M05 decisions are recovered. The separately evidenced
+`copy_before_endlife` case is stronger: M05 now proves the unrelated exceptional
+ENDLIFE does not observe the candidate and redirects the compare to the source;
+the old product instead rejected in M05 and reached the same instruction count
+through M06 producer forwarding. Metadata, TRACE, mixed-entry, other-component,
+cursor, caller-window and handler-observed controls remain closed.
+
+Adrian accepted the first ordinary Release verdict on 2026-08-03. Richards,
+Towers and RexxCPS remain byte-identical to M04. Three paired scale-screen
+rounds put ordinary RexxCPS assembly at 0.16-0.17 s and 102.8 MB peak RSS versus
+0.05-0.06 s and 29.9 MB for frozen M04; this material but bounded cost is inside
+the agreed seconds-scale budget. Focused Debug and Release pass 6/6, strict
+GNU90 passes with one pre-existing warning, and broad Debug passes 1,995/1,995
+in 231.94 seconds. M06 producer forwarding is next.

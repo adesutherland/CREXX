@@ -9,6 +9,7 @@
 #include "rxas_flow_proof.h"
 #include "rxas_flow_signal.h"
 #include "rxas_flow_ssa.h"
+#include "rxas_flow_use.h"
 #include "rxasgrmr.h"
 
 #define FIXTURE_MAX_ITEMS 64
@@ -265,6 +266,51 @@ static char *fixture_ssa_dump(
     if (!stream) exit(2);
     if (!rxas_flow_ssa_dump(analysis, epoch, stream)) exit(2);
     return fixture_read_stream(stream);
+}
+
+static char *fixture_use_dump(
+        const RxasFlowUseAnalysis *analysis, unsigned long epoch) {
+    FILE *stream;
+    stream = tmpfile();
+    if (!stream) exit(2);
+    if (!rxas_flow_use_dump(analysis, epoch, stream)) exit(2);
+    return fixture_read_stream(stream);
+}
+
+static int fixture_value_reaches_value(
+        const RxasFlowUseAnalysis *analysis, unsigned long epoch,
+        size_t source_value, size_t target_value) {
+    size_t stack[FIXTURE_MAX_TOKENS * 4];
+    size_t seen[FIXTURE_MAX_TOKENS * 4];
+    size_t stack_count;
+    size_t seen_count;
+    size_t index;
+    stack_count = 0;
+    seen_count = 0;
+    stack[stack_count++] = source_value;
+    while (stack_count) {
+        size_t value;
+        size_t dependent_count;
+        value = stack[--stack_count];
+        if (value == target_value) return 1;
+        for (index = 0; index < seen_count; index++)
+            if (seen[index] == value) break;
+        if (index < seen_count) continue;
+        if (seen_count >= sizeof(seen) / sizeof(seen[0])) return 0;
+        seen[seen_count++] = value;
+        dependent_count = rxas_flow_value_dependent_count(
+                analysis, epoch, value);
+        for (index = 0; index < dependent_count; index++) {
+            size_t dependent;
+            dependent = rxas_flow_value_dependent(
+                    analysis, epoch, value, index);
+            if (dependent == RXAS_FLOW_ID_NONE ||
+                stack_count >= sizeof(stack) / sizeof(stack[0]))
+                return 0;
+            stack[stack_count++] = dependent;
+        }
+    }
+    return 0;
 }
 
 static void test_unreachable_and_mapping(Assembler_Context *context) {
@@ -2098,6 +2144,319 @@ static void test_redundant_self_copy_proof(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_sparse_use_and_liveness(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[3];
+    instruction_queue *metadata;
+    instruction_queue *trace;
+    const RxasFlowSsaAnalysis *ssa;
+    const RxasFlowUseAnalysis *uses;
+    const RxasFlowUseMetrics *metrics;
+    RxasFlowComponentFact fact;
+    RxasFlowStorageFact storage;
+    const RxasFlowUse *use;
+    char *dump;
+    size_t copy_instruction;
+    size_t candidate_value;
+    size_t index;
+    int saw_explicit;
+    int saw_metadata;
+    int saw_trace;
+    int saw_cursor;
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "icopy", operands, 2);
+    fixture_record(&fixture, REG_META);
+    metadata = &fixture.items[fixture.item_count - 1];
+    metadata->operand3Token = fixture_register(&fixture, 1);
+    fixture_record(&fixture, TRACE_EVENT);
+    trace = &fixture.items[fixture.item_count - 1];
+    trace->operand2Token = fixture_string(&fixture, "R");
+    trace->operand3Token = fixture_string(&fixture, "I");
+    trace->operand4Token = fixture_string(&fixture, "r");
+    trace->operand5Token = fixture_integer(&fixture, 1);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "iadd", operands, 3);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 29);
+    check(procedure != 0, "sparse-use fixture construction failed");
+    if (procedure) {
+        ssa = rxas_flow_require_ssa_analysis(procedure, 29, 0);
+        copy_instruction = rxas_flow_procedure_record(
+                procedure, 29, 1)->instruction_id;
+        check(ssa && rxas_flow_component_at_instruction(
+                    ssa, 29, copy_instruction, 1,
+                    fixture_local_register(1), RXOP_COMPONENT_INTEGER,
+                    &fact),
+              "typed-copy result ValueId was unavailable");
+        candidate_value = fact.value_id;
+        check(rxas_flow_require_use_analysis(procedure, 29, 1) == 0,
+              "bounded use analysis did not fail closed");
+        metrics = rxas_flow_last_use_metrics(procedure, 29);
+        check(metrics && metrics->status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED,
+              "bounded use analysis did not report budget exhaustion");
+        uses = rxas_flow_require_use_analysis(procedure, 29, 0);
+        metrics = rxas_flow_use_metrics(uses, 29);
+        check(uses && metrics &&
+              rxas_flow_require_use_analysis(procedure, 29, 0) == uses,
+              "use analysis did not recover and cache by epoch");
+        check(uses && rxas_flow_value_is_live(uses, 29, candidate_value),
+              "typed-copy value did not retain sparse liveness");
+        saw_explicit = 0;
+        saw_metadata = 0;
+        saw_trace = 0;
+        for (index = 0; uses && index <
+                    rxas_flow_use_count(uses, 29); index++) {
+            use = rxas_flow_use(uses, 29, index);
+            if (!use || !fixture_value_reaches_value(
+                                uses, 29, candidate_value, use->value_id))
+                continue;
+            if (use && use->kind == RXAS_FLOW_USE_EXPLICIT_READ)
+                saw_explicit = 1;
+            if (use && use->kind == RXAS_FLOW_USE_METADATA_READ)
+                saw_metadata = 1;
+            if (use && use->kind == RXAS_FLOW_USE_TRACE_READ)
+                saw_trace = 1;
+        }
+        check(saw_explicit && saw_metadata && saw_trace,
+              "use index lost an explicit, metadata or TRACE observation");
+        check(metrics && metrics->metadata_reads >= 8 &&
+              metrics->trace_reads == 1 &&
+              metrics->retained_bytes > 0,
+              "use metrics did not classify retained observations");
+        dump = uses ? fixture_use_dump(uses, 29) : 0;
+        check(dump && strstr(dump, "PERF3 flow-use epoch=29") &&
+              strstr(dump, "kind=metadata-read") &&
+              strstr(dump, "kind=trace-read"),
+              "use dump omitted stable observation diagnostics");
+        free(dump);
+        check(rxas_flow_use_metrics(uses, 30) == 0 &&
+              rxas_flow_value_direct_use_count(
+                    uses, 30, candidate_value) == 0,
+              "stale use-analysis access did not fail closed");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "icopy", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "left");
+    operands[1] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "brt", operands, 2);
+    fixture_label(&fixture, "right");
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_integer(&fixture, 9);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_label_ref(&fixture, "join");
+    fixture_op(&fixture, "br", operands, 1);
+    fixture_label(&fixture, "left");
+    fixture_label(&fixture, "join");
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "iadd", operands, 3);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 30);
+    check(procedure != 0, "phi-use fixture construction failed");
+    if (procedure) {
+        ssa = rxas_flow_require_ssa_analysis(procedure, 30, 0);
+        copy_instruction = rxas_flow_procedure_record(
+                procedure, 30, 1)->instruction_id;
+        check(ssa && rxas_flow_component_at_instruction(
+                    ssa, 30, copy_instruction, 1,
+                    fixture_local_register(1), RXOP_COMPONENT_INTEGER,
+                    &fact),
+              "phi-use copy result was unavailable");
+        candidate_value = fact.value_id;
+        uses = rxas_flow_require_use_analysis(procedure, 30, 0);
+        saw_explicit = 0;
+        for (index = 0; uses && index <
+                    rxas_flow_use_count(uses, 30); index++) {
+            use = rxas_flow_use(uses, 30, index);
+            if (use && use->kind == RXAS_FLOW_USE_EXPLICIT_READ &&
+                fixture_value_reaches_value(
+                        uses, 30, candidate_value, use->value_id))
+                saw_explicit = 1;
+        }
+        check(uses && rxas_flow_value_dependent_count(
+                    uses, 30, candidate_value) >= 1 &&
+              saw_explicit &&
+              rxas_flow_value_is_live(uses, 30, candidate_value),
+              "phi dependency did not carry liveness to its input value");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "scopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "getstrpos", operands, 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 31);
+    check(procedure != 0, "cursor-use fixture construction failed");
+    if (procedure) {
+        ssa = rxas_flow_require_ssa_analysis(procedure, 31, 0);
+        copy_instruction = rxas_flow_procedure_record(
+                procedure, 31, 0)->instruction_id;
+        check(ssa && rxas_flow_storage_at_instruction(
+                    ssa, 31, copy_instruction, 1,
+                    fixture_local_register(1), &storage),
+              "SCOPY destination storage was unavailable");
+        uses = rxas_flow_require_use_analysis(procedure, 31, 0);
+        saw_cursor = 0;
+        for (index = 0; uses && index < rxas_flow_storage_use_count(
+                    uses, 31, storage.storage_id); index++) {
+            use = rxas_flow_storage_use(
+                    uses, 31, storage.storage_id, index);
+            if (use && use->kind == RXAS_FLOW_USE_CURSOR_READ)
+                saw_cursor = 1;
+        }
+        check(saw_cursor,
+              "SCOPY destination cursor observation was not indexed");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_typed_copy_redirect_proof(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[3];
+    instruction_queue *metadata;
+    const RxasFlowProofService *proof;
+    RxasFlowTypedCopyPlan plan;
+    RxasFlowOperandRewrite rewrite;
+    size_t candidate;
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "icopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "ieq", operands, 3);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "ret", operands, 1);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 32);
+    check(procedure != 0,
+          "typed-copy redirect proof fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 32, 0);
+        candidate = rxas_flow_procedure_record(
+                procedure, 32, 1)->instruction_id;
+        check(proof && rxas_flow_prove_typed_copy_redirect(
+                    proof, 32, candidate, &plan) && plan.proved &&
+              plan.reason == RXAS_FLOW_PROOF_PROVED &&
+              plan.component == RXOP_COMPONENT_INTEGER &&
+              plan.rewrite_count == 1,
+              "exact typed-copy use was not proved atomically redirectable");
+        check(rxas_flow_typed_copy_plan_rewrite(
+                    proof, 32, &plan, 0, &rewrite) &&
+              rewrite.instruction_id ==
+                    rxas_flow_procedure_record(
+                            procedure, 32, 2)->instruction_id &&
+              rewrite.operand_index == 1 &&
+              rewrite.expected_register.register_class ==
+                    RXAS_FLOW_REGISTER_LOCAL &&
+              rewrite.expected_register.number == 1 &&
+              rewrite.replacement_register.register_class ==
+                    RXAS_FLOW_REGISTER_LOCAL &&
+              rewrite.replacement_register.number == 0,
+              "typed-copy proof did not return the exact immutable rewrite");
+        check(!rxas_flow_typed_copy_plan_rewrite(
+                    proof, 33, &plan, 0, &rewrite),
+              "stale typed-copy rewrite plan did not fail closed");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "icopy", operands, 2);
+    fixture_record(&fixture, REG_META);
+    metadata = &fixture.items[fixture.item_count - 1];
+    metadata->operand3Token = fixture_register(&fixture, 1);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "ieq", operands, 3);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "ret", operands, 1);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 33);
+    check(procedure != 0,
+          "metadata-observed typed-copy fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 33, 0);
+        candidate = rxas_flow_procedure_record(
+                procedure, 33, 1)->instruction_id;
+        check(proof && rxas_flow_prove_typed_copy_redirect(
+                    proof, 33, candidate, &plan) && !plan.proved &&
+              plan.reason == RXAS_FLOW_PROOF_USE_NOT_REDIRECTABLE &&
+              plan.rewrite_count == 0,
+              "metadata-observed typed copy was not rejected atomically");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_string(&fixture, "abc");
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "scopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "getstrpos", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "ret", operands, 1);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 34);
+    check(procedure != 0,
+          "cursor-observed typed-copy fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 34, 0);
+        candidate = rxas_flow_procedure_record(
+                procedure, 34, 1)->instruction_id;
+        check(proof && rxas_flow_prove_typed_copy_redirect(
+                    proof, 34, candidate, &plan) && !plan.proved &&
+              plan.reason == RXAS_FLOW_PROOF_CURSOR_OBSERVED,
+              "SCOPY cursor observation did not block typed-copy deletion");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static void test_loop_proofs(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
@@ -2216,6 +2575,8 @@ int main(void) {
     test_redundant_constant_proof(&context);
     test_redundant_absent_proof(&context);
     test_redundant_self_copy_proof(&context);
+    test_sparse_use_and_liveness(&context);
+    test_typed_copy_redirect_proof(&context);
     test_loop_proofs(&context);
 
     if (failures) {

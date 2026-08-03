@@ -13,6 +13,7 @@ typedef struct RxasFlowLabelSlot {
 struct RxasFlowStructuralAnalysis;
 struct RxasFlowSignalAnalysis;
 struct RxasFlowSsaAnalysis;
+struct RxasFlowUseAnalysis;
 struct RxasFlowProofService;
 
 struct RxasFlowAnalysisManager {
@@ -23,6 +24,8 @@ struct RxasFlowAnalysisManager {
     struct RxasFlowSignalAnalysis *signal;
     size_t ssa_budget;
     struct RxasFlowSsaAnalysis *ssa;
+    size_t use_budget;
+    struct RxasFlowUseAnalysis *use;
     size_t proof_budget;
     struct RxasFlowProofService *proof;
 };

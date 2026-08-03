@@ -687,6 +687,26 @@ epochs, invalid control, unsupported signal dependencies, allocation failure
 and work-budget exhaustion return an unavailable or rejected proof and cannot
 enable a rewrite.
 
+The M05 migration adds `assembler/rxas_flow_use.c`, a fifth demand-driven
+per-epoch cache over component SSA.  It indexes direct `ValueId` uses,
+storage/cursor observations and reverse phi dependencies once per procedure;
+edge-aware liveness then propagates only through those sparse dependencies.
+Explicit operands, read/write operands, metadata, register-backed TRACE,
+implicit reads, cursor reads, call windows and opaque observations remain
+distinct use kinds.  A range call is retained as one bounded call-window
+observation rather than expanded across every local/component pair.
+
+The first use-index consumer replaces the dense per-candidate typed-copy
+solver.  Exact `icopy`, `fcopy` and strict `scopy` deletion requires a local,
+unaliased destination, the copy's write-once result `ValueId`, an equivalent
+source value at every redirected use, no metadata/TRACE/read-write/cursor or
+live call-window observation, and at least one exact component-only operand
+rewrite.  The proof service returns an immutable all-or-nothing rewrite plan;
+the optimizer validates the complete plan before changing any operand or
+deleting the copy.  Budget exhaustion, stale epochs and incomplete use facts
+reject the whole plan.  The old availability/may-reach solver and its repeated
+dense register scans have been removed.
+
 The first migrated authority was repeated one-register `itos`.  A deletion
 requires the generator's successful continuation to dominate the candidate,
 the same storage and equivalent integer source/string result, and equivalent
