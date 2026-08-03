@@ -320,6 +320,18 @@ rexxscriptcoreevaluator: class
        output_lines[output_count] = '@.tail@'eval_value
        return 1
     end
+    if _starts_keyword(text, ".SECTION") = 1 then do
+       section=strip(word(text, 2))
+       expr = strip(subword(text, 3))
+       if section == "" then return _set_error("missing_section_name", "missing .SECTION name", stmtno, 1)
+       if expr == "" then return _set_error("missing_expression", "missing .SECTION expression", stmtno, 1)
+       expr=_modify_var_symbol(expr)
+       if _eval_expression(expr, stmtno) = 0 then return 0
+       output_count = output_count + 1
+       output_lines[output_count] = '@.section@'section'@'eval_value
+       return 1
+    end
+
     if _starts_keyword(text, "##MEND") = 1 then return 1
 
     if _starts_keyword(text, "IF") = 1 then do
