@@ -10,6 +10,17 @@ ordinary compiled code while preserving every ordered TRACE value event.  The
 first target is the canonical RexxCPS hot path; the design must be reusable
 and must fail closed outside the proved component, storage and signal model.
 
+This event-preservation goal is a property of the selected C1/T1 redundant-
+conversion rewrite, where the same proved value remains available and ordered
+batching makes retention cheap. It is not a universal TRACE correctness rule.
+As documented in
+[`CREXX_TRACE_REQUIREMENTS.md`](../docs/ai-context/CREXX_TRACE_REQUIREMENTS.md),
+optimised code may omit, combine or relocate events for eliminated or moved
+values; source-correspondent tracing requires compiler and assembler
+optimisation to be disabled. Multiple retained events may share one reached
+instruction boundary, so an executable `CNOP` is not needed merely to keep
+those events separate.
+
 ## Authority and boundary
 
 Adrian approved a production proof of the algorithm and, if the proof is

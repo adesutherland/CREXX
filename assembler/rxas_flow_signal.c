@@ -591,7 +591,6 @@ static int flow_signal_set_edge_state(
                     instruction_id);
     policy = block_policy;
     failure_edge = edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP ||
-                   edge->kind == RXAS_FLOW_EDGE_SIGNAL_RETRY ||
                    edge->kind == RXAS_FLOW_EDGE_HANDLER ||
                    edge->kind == RXAS_FLOW_EDGE_UNWIND ||
                    edge->kind == RXAS_FLOW_EDGE_TERMINAL;

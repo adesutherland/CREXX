@@ -228,12 +228,16 @@ five-attribute interrupt object as `sigcall`, but the handler's return string
 is interpreted as a VM action marker:
 
 - `__rxsignal_skip`: resume after the signal point
-- `__rxsignal_retry`: resume at the recorded interrupted address
 - `__rxsignal_fail` or any missing/unknown action: fall through to the default
   panic path, including the closest preceding source location
 
 The Level B `SIGNAL` compiler exit hides those internal marker strings behind
-`.signalaction.skip()`, `.signalaction.retry()`, and `.signalaction.fail()`.
+`.signalaction.skip()` and `.signalaction.fail()`. Instruction-level retry was
+retired on 2026-08-03: it is not a standard REXX trap continuation, had no
+production users, and cannot safely repeat instructions with partial writes or
+external side effects. A legacy `__rxsignal_retry` return is unknown and
+therefore follows the fail path. Source code that needs retry uses an explicit
+loop or wrapper procedure.
 
 Pending signals are held in the global `interrupts` bitset. `DISPATCH` checks
 that bitset after each instruction when the current frame is not already inside
@@ -295,6 +299,12 @@ value named by each record. Delivery does not scan an address range and does
 not infer that skipped, branched-over or signal-bypassed instructions ran.
 Consequently an executable `cnop` or conversion is not required merely to keep
 two metadata events at distinct addresses.
+
+This guarantee applies to the events retained in the optimised image; it does
+not require the optimiser to preserve an event for an operation or value that
+it removes or moves. Optimised TRACE may therefore differ from the no-opt
+event stream, while every retained event must remain safe and ordered. Use
+compiler and assembler no-opt mode for source-correspondent tracing.
 
 Unstripped images may expose trace-event metadata. `metaloaddata` treats
 optional trace-event strings such as `symbol` and `resolved_name` defensively:

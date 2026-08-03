@@ -1,0 +1,36 @@
+* New proof coverage for full, integer, float, and decimal linked reads.
+
+main() .locals=20
+    load r0,"payload"
+    link r1,r0
+    copy r2,r1
+    unlink r1
+    link r3,r0
+    copy r4,r3
+    unlink r3
+
+    load r5,17
+    link r6,r5
+    icopy r7,r6
+    unlink r6
+    link r8,r5
+    icopy r9,r8
+    unlink r8
+
+    load r10,2.5
+    link r11,r10
+    fcopy r12,r11
+    unlink r11
+    link r13,r10
+    fcopy r14,r13
+    unlink r13
+
+    load r15,19d
+    link r16,r15
+    dcopy r17,r16
+    unlink r16
+    link r18,r15
+    dcopy r19,r18
+    unlink r18
+
+    ret

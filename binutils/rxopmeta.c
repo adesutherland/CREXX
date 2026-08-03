@@ -6,6 +6,8 @@
 
 #include "rxdefs.h"
 
+#include <string.h>
+
 typedef struct {
     int opcode;
     RxOpEffectState state;
@@ -99,6 +101,14 @@ static const RxOpEffectSpec rxop_effect_specs[] = {
     RXOP_SIGNAL_CONT_ALL, RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE | \
         RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE | PROPERTIES, \
     RXOP_POLICY_EFFECT_NONE, RXOP_SIGNAL_SOURCE_NONE, SIZE_MAX, NULL
+#define RXSC_CALL(FAILURE_WRITES, FAILURE_SIGNATURE, FAILURE_COMPONENTS) \
+    RXOP_SIGNAL_STATE_KNOWN, RXOP_SIGNAL_PHASE_PARTIAL_WRITES, \
+    RXOP_SIGNAL_SOURCE_PROPAGATED_CALL, SIZE_MAX, NULL, FAILURE_WRITES, \
+    FAILURE_SIGNATURE, FAILURE_COMPONENTS, RXOP_CONTEXT_NONE, \
+    RXOP_SIGNAL_DEP_UNKNOWN, RXOP_SIGNAL_CONT_ALL, \
+    RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE | \
+        RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE, \
+    RXOP_POLICY_EFFECT_NONE, RXOP_SIGNAL_SOURCE_NONE, SIZE_MAX, NULL
 #define RXSC_DECIMAL_COMPARE \
     RXSC_PLUGIN(RXOP_SIGNAL_PHASE_AFTER_WRITES, RXOP_OP_1, \
                 RXOP_COMPONENT_INTEGER, \
@@ -110,6 +120,7 @@ static const RxOpSignalContract rxop_signal_contracts[] = {
 };
 #undef RXOP_SIGNAL
 #undef RXSC_PLUGIN
+#undef RXSC_CALL
 #undef RXSC_DECIMAL_COMPARE
 #undef RXSC_DYNAMIC
 #undef RXSC_STATIC_POLICY
@@ -223,6 +234,32 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_BCOPY_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
 
+    if (opcode == OP_GETATTRS_REG_REG ||
+        opcode == OP_GETATTRS_REG_REG_INT)
+        return operand_index == 1 ? RXOP_COMPONENT_ATTRIBUTE_COUNT
+                                  : RXOP_COMPONENT_ALL;
+    if (opcode == OP_SETATTRS_REG_REG ||
+        opcode == OP_SETATTRS_REG_REG_INT)
+        return operand_index == 0 ? RXOP_COMPONENT_ATTRIBUTE_COUNT
+                                  : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_SETATTRS_REG_INT ||
+        opcode == OP_SETATTRS_REG_INT_INT)
+        return RXOP_COMPONENT_ATTRIBUTE_COUNT;
+    if (opcode == OP_MINATTRS_REG_REG ||
+        opcode == OP_MINATTRS_REG_REG_INT)
+        return operand_index == 0 ? RXOP_COMPONENT_ATTRIBUTE_COUNT
+                                  : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_MINATTRS_REG_INT ||
+        opcode == OP_MINATTRS_REG_INT_INT)
+        return RXOP_COMPONENT_ATTRIBUTE_COUNT;
+    if (opcode == OP_LINKATTR_REG_REG_REG ||
+        opcode == OP_LINKATTR1_REG_REG_REG)
+        return operand_index == 1 ? RXOP_COMPONENT_ATTRIBUTE_COUNT
+                                  : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_LINKATTR_REG_REG_INT ||
+        opcode == OP_LINKATTR1_REG_REG_INT)
+        return RXOP_COMPONENT_ATTRIBUTE_COUNT;
+
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_ILTE_REG_INT_REG)
@@ -230,7 +267,11 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_BRT_ID_REG || opcode == OP_BRF_ID_REG ||
         opcode == OP_BRTF_ID_ID_REG || opcode == OP_BEQ_ID_REG_REG ||
         opcode == OP_BEQ_ID_REG_INT || opcode == OP_BNE_ID_REG_REG ||
-        opcode == OP_BNE_ID_REG_INT)
+        opcode == OP_BNE_ID_REG_INT || opcode == OP_BGT_ID_REG_REG ||
+        opcode == OP_BGT_ID_REG_INT || opcode == OP_BGE_ID_REG_REG ||
+        opcode == OP_BGE_ID_REG_INT || opcode == OP_BLT_ID_REG_REG ||
+        opcode == OP_BLT_ID_REG_INT || opcode == OP_BLE_ID_REG_REG ||
+        opcode == OP_BLE_ID_REG_INT)
         return RXOP_COMPONENT_INTEGER;
     if ((opcode == OP_SEQ_REG_REG_REG || opcode == OP_SEQ_REG_REG_STRING ||
          (opcode >= OP_SNE_REG_REG_REG && opcode <= OP_SLTE_REG_STRING_REG)) &&
@@ -260,6 +301,120 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_ITOF_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_INTEGER;
     return RXOP_COMPONENT_ALL;
+}
+
+typedef enum RxOpIntegerRelation {
+    RXOP_INT_RELATION_NONE = 0,
+    RXOP_INT_RELATION_EQ,
+    RXOP_INT_RELATION_NE,
+    RXOP_INT_RELATION_GT,
+    RXOP_INT_RELATION_GE,
+    RXOP_INT_RELATION_LT,
+    RXOP_INT_RELATION_LE
+} RxOpIntegerRelation;
+
+static RxOpIntegerRelation rxop_integer_relation_complement(
+        RxOpIntegerRelation relation) {
+    switch (relation) {
+        case RXOP_INT_RELATION_EQ: return RXOP_INT_RELATION_NE;
+        case RXOP_INT_RELATION_NE: return RXOP_INT_RELATION_EQ;
+        case RXOP_INT_RELATION_GT: return RXOP_INT_RELATION_LE;
+        case RXOP_INT_RELATION_GE: return RXOP_INT_RELATION_LT;
+        case RXOP_INT_RELATION_LT: return RXOP_INT_RELATION_GE;
+        case RXOP_INT_RELATION_LE: return RXOP_INT_RELATION_GT;
+        default: return RXOP_INT_RELATION_NONE;
+    }
+}
+
+static RxOpIntegerRelation rxop_integer_relation_reverse(
+        RxOpIntegerRelation relation) {
+    switch (relation) {
+        case RXOP_INT_RELATION_EQ:
+        case RXOP_INT_RELATION_NE:
+            return relation;
+        case RXOP_INT_RELATION_GT: return RXOP_INT_RELATION_LT;
+        case RXOP_INT_RELATION_GE: return RXOP_INT_RELATION_LE;
+        case RXOP_INT_RELATION_LT: return RXOP_INT_RELATION_GT;
+        case RXOP_INT_RELATION_LE: return RXOP_INT_RELATION_GE;
+        default: return RXOP_INT_RELATION_NONE;
+    }
+}
+
+static int rxop_integer_fused_branch(RxOpIntegerRelation relation,
+                                     int immediate) {
+    switch (relation) {
+        case RXOP_INT_RELATION_EQ:
+            return immediate ? OP_BEQ_ID_REG_INT : OP_BEQ_ID_REG_REG;
+        case RXOP_INT_RELATION_NE:
+            return immediate ? OP_BNE_ID_REG_INT : OP_BNE_ID_REG_REG;
+        case RXOP_INT_RELATION_GT:
+            return immediate ? OP_BGT_ID_REG_INT : OP_BGT_ID_REG_REG;
+        case RXOP_INT_RELATION_GE:
+            return immediate ? OP_BGE_ID_REG_INT : OP_BGE_ID_REG_REG;
+        case RXOP_INT_RELATION_LT:
+            return immediate ? OP_BLT_ID_REG_INT : OP_BLT_ID_REG_REG;
+        case RXOP_INT_RELATION_LE:
+            return immediate ? OP_BLE_ID_REG_INT : OP_BLE_ID_REG_REG;
+        default:
+            return -1;
+    }
+}
+
+int rxop_compare_branch_fusion(int compare_opcode, int branch_opcode,
+                               RxOpCompareBranchFusion *fusion) {
+    RxOpCompareBranchFusion local_fusion;
+    RxOpIntegerRelation relation;
+    int immediate;
+    int reverse;
+    int fused_opcode;
+    if (!fusion) fusion = &local_fusion;
+    memset(fusion, 0, sizeof(*fusion));
+    relation = RXOP_INT_RELATION_NONE;
+    immediate = 0;
+    reverse = 0;
+    switch (compare_opcode) {
+        case OP_IEQ_REG_REG_REG: relation = RXOP_INT_RELATION_EQ; break;
+        case OP_IEQ_REG_REG_INT:
+            relation = RXOP_INT_RELATION_EQ; immediate = 1; break;
+        case OP_INE_REG_REG_REG: relation = RXOP_INT_RELATION_NE; break;
+        case OP_INE_REG_REG_INT:
+            relation = RXOP_INT_RELATION_NE; immediate = 1; break;
+        case OP_IGT_REG_REG_REG: relation = RXOP_INT_RELATION_GT; break;
+        case OP_IGT_REG_REG_INT:
+            relation = RXOP_INT_RELATION_GT; immediate = 1; break;
+        case OP_IGT_REG_INT_REG:
+            relation = RXOP_INT_RELATION_GT; immediate = 1; reverse = 1; break;
+        case OP_IGTE_REG_REG_REG: relation = RXOP_INT_RELATION_GE; break;
+        case OP_IGTE_REG_REG_INT:
+            relation = RXOP_INT_RELATION_GE; immediate = 1; break;
+        case OP_IGTE_REG_INT_REG:
+            relation = RXOP_INT_RELATION_GE; immediate = 1; reverse = 1; break;
+        case OP_ILT_REG_REG_REG: relation = RXOP_INT_RELATION_LT; break;
+        case OP_ILT_REG_REG_INT:
+            relation = RXOP_INT_RELATION_LT; immediate = 1; break;
+        case OP_ILT_REG_INT_REG:
+            relation = RXOP_INT_RELATION_LT; immediate = 1; reverse = 1; break;
+        case OP_ILTE_REG_REG_REG: relation = RXOP_INT_RELATION_LE; break;
+        case OP_ILTE_REG_REG_INT:
+            relation = RXOP_INT_RELATION_LE; immediate = 1; break;
+        case OP_ILTE_REG_INT_REG:
+            relation = RXOP_INT_RELATION_LE; immediate = 1; reverse = 1; break;
+        default:
+            return 0;
+    }
+    if (branch_opcode == OP_BRF_ID_REG)
+        relation = rxop_integer_relation_complement(relation);
+    else if (branch_opcode != OP_BRT_ID_REG)
+        return 0;
+    if (reverse) relation = rxop_integer_relation_reverse(relation);
+    fused_opcode = rxop_integer_fused_branch(relation, immediate);
+    if (fused_opcode < 0) return 0;
+    fusion->compare_opcode = compare_opcode;
+    fusion->branch_opcode = branch_opcode;
+    fusion->fused_opcode = fused_opcode;
+    fusion->left_source_operand = reverse ? 2 : 1;
+    fusion->right_source_operand = reverse ? 1 : 2;
+    return 1;
 }
 
 int rxop_same_storage_copy_is_noop(int opcode) {
@@ -294,6 +449,15 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (opcode == OP_ACOPY_REG_REG) return RXOP_COMPONENT_ATTRIBUTES;
     if (opcode == OP_BCOPY_REG_REG)
         return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
+    if (opcode == OP_SETATTRS_REG_REG ||
+        opcode == OP_SETATTRS_REG_INT ||
+        opcode == OP_SETATTRS_REG_REG_INT ||
+        opcode == OP_SETATTRS_REG_INT_INT ||
+        opcode == OP_MINATTRS_REG_REG ||
+        opcode == OP_MINATTRS_REG_INT ||
+        opcode == OP_MINATTRS_REG_REG_INT ||
+        opcode == OP_MINATTRS_REG_INT_INT)
+        return RXOP_COMPONENT_ATTRIBUTE_COUNT;
     if (opcode == OP_LOAD_REG_BINARY)
         return RXOP_COMPONENT_BINARY;
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)

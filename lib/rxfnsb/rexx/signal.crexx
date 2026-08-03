@@ -184,7 +184,6 @@ runtime_signal: class implements .signal
 
 /** Explicit action returned by an action-aware signal handler. */
 signalaction: interface
-  retry: factory
   skip: factory
   fail: factory
   kind: method = .string
@@ -192,10 +191,6 @@ signalaction: interface
 /** Standard immutable-by-convention implementation of `.signalaction`. */
 standard_signalaction: class implements .signalaction
   _kind = .string
-
-  retry: factory
-    _kind = "retry"
-    return
 
   skip: factory
     _kind = "skip"

@@ -70,8 +70,7 @@ typedef struct flow_register {
 
 typedef enum flow_edge_kind {
     FLOW_EDGE_NORMAL = 0,
-    FLOW_EDGE_SIGNAL_SKIP,
-    FLOW_EDGE_SIGNAL_RETRY
+    FLOW_EDGE_SIGNAL_SKIP
 } flow_edge_kind;
 
 typedef struct flow_edge {
@@ -149,6 +148,15 @@ typedef struct flow_stats {
     size_t producer_proof_rejected;
     size_t producer_proof_unavailable;
     size_t producer_destinations_forwarded;
+    size_t compare_branch_queries;
+    size_t compare_branch_proved;
+    size_t compare_branch_rejected;
+    size_t compare_branches_fused;
+    size_t compare_trace_events_removed;
+    size_t duplicate_linked_read_queries;
+    size_t duplicate_linked_read_proved;
+    size_t duplicate_linked_read_rejected;
+    size_t duplicate_linked_reads_reused;
     size_t operands_redirected;
     size_t rejected_live;
     size_t rejected_trace;
@@ -185,7 +193,6 @@ typedef struct flow_storage_stats {
     size_t round_trip_instructions;
     size_t normal_edges;
     size_t signal_skip_edges;
-    size_t signal_retry_edges;
     size_t signal_handler_entries;
 } flow_storage_stats;
 
@@ -553,16 +560,15 @@ static int flow_build_edges(flow_graph *graph) {
         }
         if (rxop_can_signal(node->op->opcode)) {
             /* Action-aware handlers can be inherited from a caller, so every
-             * potentially throwing instruction has logical skip and retry
-             * continuations even when this procedure contains no SIGCALLA.
-             * Skip resumes at the already-advanced sequential address; retry
-             * re-enters the signal point. Legacy rewrite consumers explicitly
-             * continue to use normal edges only in this infrastructure slice. */
+             * potentially throwing instruction has a logical skip
+             * continuation even when this procedure contains no SIGCALLA.
+             * Skip resumes at the already-advanced sequential address. Legacy
+             * rewrite consumers explicitly continue to use normal edges only
+             * in this infrastructure slice. */
             if (index + 1 < graph->item_count) {
                 flow_add_successor(graph, node, index + 1,
                                    FLOW_EDGE_SIGNAL_SKIP);
             }
-            flow_add_successor(graph, node, index, FLOW_EDGE_SIGNAL_RETRY);
         }
         if ((node->op->flow == FLOW_JUMP || node->op->flow == FLOW_COND ||
              node->op->flow == FLOW_TERM) && index + 1 < graph->item_count)
@@ -1113,7 +1119,7 @@ static void flow_storage_transfer_normal(const flow_graph *graph,
         case OP_LINKATTR1_REG_REG_REG:
         case OP_LINKATTR1_REG_REG_INT:
         case OP_LINKREF_REG_REG:
-            /* The normal edge completed the link. Signal skip/retry carry a
+            /* The normal edge completed the link. Signal skip carries a
              * separately modelled pre-link state. */
             flow_storage_define_throwing_site(graph, item, node_index, 0, 0,
                                               output, stats);
@@ -1253,11 +1259,11 @@ static void flow_storage_transfer_normal(const flow_graph *graph,
     }
 }
 
-/* Mapping state at the point where a signalling instruction raised
- * a signal. This state feeds both SIGCALLA skip (the sequential successor) and
- * retry (the instruction itself). Simple attribute/reference links validate
- * before installing their destination, whereas fused forms may already have
- * resized attribute storage or installed an earlier link. */
+/* Mapping state at the point where a signalling instruction raised a signal.
+ * This state feeds SIGCALLA skip at the sequential successor. Simple
+ * attribute/reference links validate before installing their destination,
+ * whereas fused forms may already have resized attribute storage or installed
+ * an earlier link. */
 static void flow_storage_transfer_signal(const flow_graph *graph,
                                          size_t node_index,
                                          const size_t *input,
@@ -1436,9 +1442,7 @@ static int flow_storage_analyse(const flow_graph *graph,
                    edge.kind == FLOW_EDGE_NORMAL ? normal_output : signal_output,
                    width * sizeof(*edge_output));
             /* A normal backedge can execute a static link site in a new loop
-             * iteration, so its dynamic identity cannot be reused. A signal
-             * retry instead resumes the same interrupted execution context and
-             * must retain the exact signal-point mapping. */
+             * iteration, so its dynamic identity cannot be reused. */
             if (edge.kind == FLOW_EDGE_NORMAL && successor <= node_index)
                 flow_storage_forget_nonbase(edge_output, width);
             successor_input = analysis->in + successor * width;
@@ -1639,8 +1643,6 @@ static void flow_storage_collect_stats(const flow_graph *graph,
             }
             else if (edge.kind == FLOW_EDGE_SIGNAL_SKIP)
                 stats->signal_skip_edges++;
-            else if (edge.kind == FLOW_EDGE_SIGNAL_RETRY)
-                stats->signal_retry_edges++;
         }
 
         flow_storage_transfer_normal(graph, index, input, output, stats);
@@ -1704,7 +1706,7 @@ static void flow_debug_storage_identity(const flow_graph *graph) {
             "tainted-full=%llu tainted-full-exact=%llu "
             "tainted-full-base=%llu alias-self-copy=%llu "
             "swap-roundtrip=%llu roundtrip-instructions=%llu "
-            "edges=%llu/%llu/%llu handler-entries=%llu\n",
+            "edges=%llu/%llu handler-entries=%llu\n",
             graph->context->current_proc_name
                     ? graph->context->current_proc_name : "(directives)",
             (unsigned long long)stats.reachable_nodes,
@@ -1733,7 +1735,6 @@ static void flow_debug_storage_identity(const flow_graph *graph) {
             (unsigned long long)stats.round_trip_instructions,
             (unsigned long long)stats.normal_edges,
             (unsigned long long)stats.signal_skip_edges,
-            (unsigned long long)stats.signal_retry_edges,
             (unsigned long long)stats.signal_handler_entries);
 }
 
@@ -1812,6 +1813,34 @@ static int flow_operand_matches_proof_register(
                     flow_proof_register_type(reg) &&
            token->token_value.integer >= 0 &&
            (size_t)token->token_value.integer == reg.number;
+}
+
+static int flow_trace_event_matches_deletion(
+        const instruction_queue *item,
+        const RxasFlowTraceDeletion *deletion) {
+    char register_type;
+    char value_type;
+    if (!item || !deletion || item->instrType != TRACE_EVENT ||
+        deletion->component != RXOP_COMPONENT_INTEGER ||
+        !flow_token_is_string(item->operand2Token, "R") ||
+        !item->operand3Token || item->operand3Token->token_type != STRING ||
+        !item->operand3Token->token_value.string[0] ||
+        item->operand3Token->token_value.string[1] ||
+        !item->operand4Token || item->operand4Token->token_type != STRING ||
+        !item->operand4Token->token_value.string[0] ||
+        item->operand4Token->token_value.string[1] ||
+        !item->operand5Token || item->operand5Token->token_type != INT ||
+        item->operand5Token->token_value.integer < 0)
+        return 0;
+    value_type = (char)toupper((unsigned char)
+            item->operand3Token->token_value.string[0]);
+    if (value_type != 'B' && value_type != 'I') return 0;
+    register_type = (char)tolower((unsigned char)
+            item->operand4Token->token_value.string[0]);
+    return register_type == flow_proof_register_type(
+                                    deletion->expected_register) &&
+           (size_t)item->operand5Token->token_value.integer ==
+                    deletion->expected_register.number;
 }
 
 static size_t flow_propagate_one_copy_ssa(
@@ -2098,6 +2127,375 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
     }
     free(claimed_registers);
     return forwarded;
+}
+
+typedef struct flow_duplicate_linked_read_candidate {
+    size_t record_id;
+    size_t instruction_id;
+    int link_opcode;
+    int copy_opcode;
+} flow_duplicate_linked_read_candidate;
+
+static int flow_duplicate_linked_read_copy_opcode(int opcode) {
+    return opcode == OP_COPY_REG_REG || opcode == OP_BCOPY_REG_REG ||
+           opcode == OP_ICOPY_REG_REG || opcode == OP_SCOPY_REG_REG ||
+           opcode == OP_FCOPY_REG_REG || opcode == OP_DCOPY_REG_REG;
+}
+
+/* K02/K03 selection is a linear demand filter. The immutable proof owns the
+ * two exact triples, storage/path identity, component/cursor equivalence and
+ * LINKATTR1 range safety. Apply one plan per epoch, then rebuild before
+ * considering an overlapping repeated-read chain. */
+static size_t flow_reuse_duplicate_linked_read(
+        flow_graph *graph, flow_stats *stats, flow_proof_session *session) {
+    flow_duplicate_linked_read_candidate *candidates;
+    size_t candidate_count;
+    size_t record_id;
+    size_t second_index;
+    const RxasFlowProofService *proof;
+    candidate_count = 0;
+    candidates = calloc(graph->item_count, sizeof(*candidates));
+    if (!candidates)
+        RX_PANIC_OOM("calloc duplicate linked-read candidates",
+                     graph->item_count * sizeof(*candidates), 0);
+    for (record_id = 0; record_id + 2 < graph->item_count; record_id++) {
+        int link_opcode;
+        int copy_opcode;
+        if (!graph->nodes[record_id].reachable ||
+            !graph->nodes[record_id + 1].reachable ||
+            !graph->nodes[record_id + 2].reachable ||
+            graph->items[record_id].instrType != OP_CODE ||
+            graph->items[record_id + 1].instrType != OP_CODE ||
+            graph->items[record_id + 2].instrType != OP_CODE ||
+            !graph->nodes[record_id].op ||
+            !graph->nodes[record_id + 1].op ||
+            !graph->nodes[record_id + 2].op)
+            continue;
+        link_opcode = graph->nodes[record_id].op->opcode;
+        copy_opcode = graph->nodes[record_id + 1].op->opcode;
+        if ((link_opcode != OP_LINK_REG_REG &&
+             link_opcode != OP_LINKATTR1_REG_REG_INT) ||
+            !flow_duplicate_linked_read_copy_opcode(copy_opcode) ||
+            graph->nodes[record_id + 2].op->opcode != OP_UNLINK_REG)
+            continue;
+        candidates[candidate_count].record_id = record_id;
+        candidates[candidate_count].link_opcode = link_opcode;
+        candidates[candidate_count].copy_opcode = copy_opcode;
+        candidate_count++;
+    }
+    if (candidate_count < 2) {
+        free(candidates);
+        return 0;
+    }
+    proof = flow_proof_session_require(session, graph);
+    if (!proof) {
+        free(candidates);
+        stats->rejected_effect++;
+        return 0;
+    }
+    for (record_id = 0; record_id < candidate_count; record_id++) {
+        const RxasFlowRecord *record;
+        record = rxas_flow_procedure_record(
+                session->procedure, session->epoch,
+                candidates[record_id].record_id);
+        candidates[record_id].instruction_id = record
+                ? record->instruction_id : RXAS_FLOW_ID_NONE;
+    }
+    for (second_index = 1; second_index < candidate_count; second_index++) {
+        size_t first_index;
+        for (first_index = second_index; first_index; ) {
+            RxasFlowDuplicateLinkedReadPlan plan;
+            instruction_queue *first_copy;
+            instruction_queue *second_link;
+            instruction_queue *second_copy;
+            instruction_queue *second_unlink;
+            Assembler_Token *replacement_operands[2];
+            first_index--;
+            if (candidates[first_index].link_opcode !=
+                        candidates[second_index].link_opcode ||
+                candidates[first_index].copy_opcode !=
+                        candidates[second_index].copy_opcode ||
+                candidates[first_index].instruction_id ==
+                        RXAS_FLOW_ID_NONE ||
+                candidates[second_index].instruction_id ==
+                        RXAS_FLOW_ID_NONE)
+                continue;
+            memset(&plan, 0, sizeof(plan));
+            if (!rxas_flow_prove_duplicate_linked_read(
+                        proof, session->epoch,
+                        candidates[first_index].instruction_id,
+                        candidates[second_index].instruction_id, &plan)) {
+                stats->rejected_effect++;
+                continue;
+            }
+            stats->duplicate_linked_read_queries++;
+            if (!plan.proved) {
+                stats->duplicate_linked_read_rejected++;
+                if (graph->context->debug_mode)
+                    fprintf(stderr,
+                            "PERF3 duplicate-linked-read-proof procedure=%s "
+                            "first=%llu second=%llu link=%s copy=%s "
+                            "proved=0 reason=%s storage=%llu/%llu "
+                            "owner=%llu/%llu count=%llu/%llu ref=%llu/%llu "
+                            "component=0x%x value=%llu/%llu\n",
+                            graph->context->current_proc_name
+                                    ? graph->context->current_proc_name
+                                    : "(directives)",
+                            (unsigned long long)
+                                    candidates[first_index].record_id,
+                            (unsigned long long)
+                                    candidates[second_index].record_id,
+                            graph->nodes[candidates[second_index].record_id]
+                                    .op->mnemonic,
+                            graph->nodes[candidates[second_index].record_id + 1]
+                                    .op->mnemonic,
+                            rxas_flow_proof_reason_name(plan.reason),
+                            (unsigned long long)plan.linked_storage_id,
+                            (unsigned long long)
+                                    plan.candidate_linked_storage_id,
+                            (unsigned long long)plan.owner_storage_id,
+                            (unsigned long long)
+                                    plan.candidate_owner_storage_id,
+                            (unsigned long long)plan.attribute_count_value_id,
+                            (unsigned long long)
+                                    plan.candidate_attribute_count_value_id,
+                            (unsigned long long)plan.reference_effect_id,
+                            (unsigned long long)
+                                    plan.candidate_reference_effect_id,
+                            plan.rejected_component,
+                            (unsigned long long)plan.first_value_id,
+                            (unsigned long long)plan.candidate_value_id);
+                continue;
+            }
+            first_copy = &graph->items[plan.first_copy_record_id];
+            second_link = &graph->items[plan.second_link_record_id];
+            second_copy = &graph->items[plan.second_copy_record_id];
+            second_unlink = &graph->items[plan.second_unlink_record_id];
+            if (plan.first_link_record_id !=
+                        candidates[first_index].record_id ||
+                plan.second_link_record_id !=
+                        candidates[second_index].record_id ||
+                plan.first_copy_record_id !=
+                        plan.first_link_record_id + 1 ||
+                plan.first_unlink_record_id !=
+                        plan.first_link_record_id + 2 ||
+                plan.second_copy_record_id !=
+                        plan.second_link_record_id + 1 ||
+                plan.second_unlink_record_id !=
+                        plan.second_link_record_id + 2 ||
+                plan.expected_link_opcode !=
+                        candidates[second_index].link_opcode ||
+                plan.expected_copy_opcode !=
+                        candidates[second_index].copy_opcode ||
+                !flow_operand_matches_proof_register(
+                        rxas_queue_operand(first_copy, 0),
+                        plan.first_detached) ||
+                !flow_operand_matches_proof_register(
+                        rxas_queue_operand(second_copy, 0),
+                        plan.second_destination) ||
+                !flow_operand_matches_proof_register(
+                        rxas_queue_operand(second_copy, 1),
+                        plan.second_temporary) ||
+                !flow_operand_matches_proof_register(
+                        rxas_queue_operand(second_unlink, 0),
+                        plan.second_temporary)) {
+                stats->rejected_effect++;
+                continue;
+            }
+            replacement_operands[0] = rxas_queue_operand(second_copy, 0);
+            replacement_operands[1] = rxas_queue_operand(first_copy, 0);
+            second_link->instrToken = rxas_tid(
+                    graph->context, second_link->instrToken,
+                    (char *)op_table[plan.expected_copy_opcode].mnemonic);
+            rxas_set_queue_operands(
+                    graph->context, second_link, replacement_operands, 2);
+            second_copy->instrType = EMPTY;
+            second_unlink->instrType = EMPTY;
+            stats->duplicate_linked_read_proved++;
+            stats->duplicate_linked_reads_reused++;
+            if (graph->context->debug_mode)
+                fprintf(stderr,
+                        "PERF3 duplicate-linked-read-proof procedure=%s "
+                        "first=%llu second=%llu link=%s copy=%s proved=1 "
+                        "reason=proved storage=%llu owner=%llu count=%llu "
+                        "ref=%llu components=0x%x\n",
+                        graph->context->current_proc_name
+                                ? graph->context->current_proc_name
+                                : "(directives)",
+                        (unsigned long long)plan.first_link_record_id,
+                        (unsigned long long)plan.second_link_record_id,
+                        graph->nodes[plan.second_link_record_id].op->mnemonic,
+                        graph->nodes[plan.second_copy_record_id].op->mnemonic,
+                        (unsigned long long)plan.linked_storage_id,
+                        (unsigned long long)plan.owner_storage_id,
+                        (unsigned long long)plan.attribute_count_value_id,
+                        (unsigned long long)plan.reference_effect_id,
+                        plan.read_components);
+            flow_debug_accept(
+                    graph, plan.second_link_record_id,
+                    plan.expected_link_opcode == OP_LINK_REG_REG
+                            ? "duplicate-link-read-reused-ssa"
+                            : "duplicate-linkattr-read-reused-ssa",
+                    2);
+            free(candidates);
+            return 1;
+        }
+    }
+    free(candidates);
+    return 0;
+}
+
+/* K04 is selected from the whole procedure, not from the retiring keyhole
+ * queue.  The linear scan is only a demand filter; the immutable proof plan
+ * owns opcode equivalence, CFG adjacency, storage, component cleanup, sparse
+ * uses, call windows and exact matching TRACE-event deletion. */
+static size_t flow_fuse_compare_branches(flow_graph *graph,
+                                         flow_stats *stats,
+                                         flow_proof_session *session) {
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *compare_record;
+    const RxasFlowRecord *branch_record;
+    RxasFlowCompareBranchPlan plan;
+    RxasFlowTraceDeletion trace_deletion;
+    size_t compare_index;
+    size_t branch_index;
+    size_t compare_instruction;
+    size_t branch_instruction;
+    size_t trace_deletion_index;
+    size_t fused;
+    instruction_queue *compare;
+    instruction_queue *branch;
+    Assembler_Token *result;
+    Assembler_Token *branch_result;
+    Assembler_Token *replacement_operands[3];
+
+    fused = 0;
+    for (compare_index = 0; compare_index < graph->item_count;
+         compare_index++) {
+        if (!graph->nodes[compare_index].reachable ||
+            graph->items[compare_index].instrType != OP_CODE ||
+            !graph->nodes[compare_index].op)
+            continue;
+        branch_index = compare_index + 1;
+        while (branch_index < graph->item_count &&
+               graph->items[branch_index].instrType != OP_CODE)
+            branch_index++;
+        if (branch_index >= graph->item_count ||
+            !graph->nodes[branch_index].reachable ||
+            !graph->nodes[branch_index].op ||
+            !rxop_compare_branch_fusion(
+                    graph->nodes[compare_index].op->opcode,
+                    graph->nodes[branch_index].op->opcode, 0))
+            continue;
+        proof = flow_proof_session_require(session, graph);
+        compare_record = session->procedure ? rxas_flow_procedure_record(
+                session->procedure, session->epoch, compare_index) : 0;
+        branch_record = session->procedure ? rxas_flow_procedure_record(
+                session->procedure, session->epoch, branch_index) : 0;
+        compare_instruction = compare_record
+                ? compare_record->instruction_id : RXAS_FLOW_ID_NONE;
+        branch_instruction = branch_record
+                ? branch_record->instruction_id : RXAS_FLOW_ID_NONE;
+        if (!proof || compare_instruction == RXAS_FLOW_ID_NONE ||
+            branch_instruction == RXAS_FLOW_ID_NONE ||
+            !rxas_flow_prove_compare_branch_fusion(
+                    proof, session->epoch, compare_instruction,
+                    branch_instruction, &plan)) {
+            stats->rejected_effect++;
+            continue;
+        }
+        stats->compare_branch_queries++;
+        if (!plan.proved) {
+            stats->compare_branch_rejected++;
+            if (graph->context->debug_mode)
+                fprintf(stderr,
+                        "PERF3 compare-branch-proof procedure=%s "
+                        "candidate=%llu:%s branch=%llu:%s proved=0 "
+                        "reason=%s\n",
+                        graph->context->current_proc_name
+                                ? graph->context->current_proc_name
+                                : "(directives)",
+                        (unsigned long long)compare_index,
+                        graph->nodes[compare_index].op->mnemonic,
+                        (unsigned long long)branch_index,
+                        graph->nodes[branch_index].op->mnemonic,
+                        rxas_flow_proof_reason_name(plan.reason));
+            if (flow_proof_reason_unavailable(plan.reason))
+                stats->rejected_effect++;
+            else if (plan.reason == RXAS_FLOW_PROOF_TRACE_OBSERVED)
+                stats->rejected_trace++;
+            else stats->rejected_live++;
+            continue;
+        }
+        compare = &graph->items[compare_index];
+        branch = &graph->items[branch_index];
+        result = rxas_queue_operand(compare, 0);
+        branch_result = rxas_queue_operand(branch, 1);
+        if (plan.compare_record_id != compare_index ||
+            plan.branch_record_id != branch_index ||
+            plan.expected_compare_opcode !=
+                    graph->nodes[compare_index].op->opcode ||
+            plan.expected_branch_opcode !=
+                    graph->nodes[branch_index].op->opcode ||
+            plan.fused_opcode < 0 ||
+            plan.fused_opcode >= OP_MAX_INSTRUCTIONS ||
+            plan.left_source_operand >= compare->operandCount ||
+            plan.right_source_operand >= compare->operandCount ||
+            !flow_operand_matches_proof_register(
+                    result, plan.result_register) ||
+            !flow_operand_matches_proof_register(
+                    branch_result, plan.result_register) ||
+            branch->operandCount != 2 ||
+            !rxas_queue_operand(branch, 0)) {
+            stats->rejected_effect++;
+            continue;
+        }
+        replacement_operands[0] = rxas_queue_operand(branch, 0);
+        replacement_operands[1] = rxas_queue_operand(
+                compare, plan.left_source_operand);
+        replacement_operands[2] = rxas_queue_operand(
+                compare, plan.right_source_operand);
+        for (trace_deletion_index = 0;
+             trace_deletion_index < plan.trace_deletion_count;
+             trace_deletion_index++) {
+            if (!rxas_flow_compare_branch_plan_trace_deletion(
+                        proof, session->epoch, &plan,
+                        trace_deletion_index, &trace_deletion) ||
+                trace_deletion.record_id <= compare_index ||
+                trace_deletion.record_id >= branch_index ||
+                trace_deletion.value_id != plan.result_value_id ||
+                trace_deletion.record_id >= graph->item_count ||
+                !flow_trace_event_matches_deletion(
+                        &graph->items[trace_deletion.record_id],
+                        &trace_deletion)) {
+                stats->rejected_effect++;
+                break;
+            }
+        }
+        if (trace_deletion_index != plan.trace_deletion_count) continue;
+        branch->instrToken = rxas_tid(
+                graph->context, branch->instrToken,
+                (char *)op_table[plan.fused_opcode].mnemonic);
+        rxas_set_queue_operands(
+                graph->context, branch, replacement_operands, 3);
+        compare->instrType = EMPTY;
+        for (trace_deletion_index = 0;
+             trace_deletion_index < plan.trace_deletion_count;
+             trace_deletion_index++) {
+            rxas_flow_compare_branch_plan_trace_deletion(
+                    proof, session->epoch, &plan,
+                    trace_deletion_index, &trace_deletion);
+            graph->items[trace_deletion.record_id].instrType = EMPTY;
+        }
+        stats->compare_branch_proved++;
+        stats->compare_branches_fused++;
+        stats->compare_trace_events_removed += plan.trace_deletion_count;
+        flow_debug_accept(graph, compare_index,
+                          "compare-branch-fused-ssa",
+                          plan.trace_deletion_count + 1);
+        fused++;
+    }
+    return fused;
 }
 
 static int flow_is_scalar_constant_candidate(const flow_graph *graph,
@@ -2765,12 +3163,15 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "NR27 flow procedure=%s blocks=%llu registers=%llu instructions=%llu->%llu "
             "unreachable=%llu dead=%llu typed-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
-            "redundant-conversion=%llu producer-forward=%llu redirects=%llu "
+            "redundant-conversion=%llu producer-forward=%llu "
+            "compare-branch=%llu trace-delete=%llu redirects=%llu "
             "constant-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "absent-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "self-copy-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "producer-proof=%llu/%llu rejected=%llu unavailable=%llu "
+            "duplicate-linked-read-proof=%llu/%llu rejected=%llu reused=%llu "
+            "compare-branch-proof=%llu/%llu rejected=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
             (unsigned long long)graph->block_count,
@@ -2786,6 +3187,8 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->redundant_initializations_removed,
             (unsigned long long)stats->redundant_conversions_removed,
             (unsigned long long)stats->producer_destinations_forwarded,
+            (unsigned long long)stats->compare_branches_fused,
+            (unsigned long long)stats->compare_trace_events_removed,
             (unsigned long long)stats->operands_redirected,
             (unsigned long long)stats->constant_proof_proved,
             (unsigned long long)stats->constant_proof_queries,
@@ -2807,6 +3210,13 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->producer_proof_queries,
             (unsigned long long)stats->producer_proof_rejected,
             (unsigned long long)stats->producer_proof_unavailable,
+            (unsigned long long)stats->duplicate_linked_read_proved,
+            (unsigned long long)stats->duplicate_linked_read_queries,
+            (unsigned long long)stats->duplicate_linked_read_rejected,
+            (unsigned long long)stats->duplicate_linked_reads_reused,
+            (unsigned long long)stats->compare_branch_proved,
+            (unsigned long long)stats->compare_branch_queries,
+            (unsigned long long)stats->compare_branch_rejected,
             (unsigned long long)stats->rejected_live,
             (unsigned long long)stats->rejected_trace,
             (unsigned long long)stats->rejected_tainted,
@@ -2872,9 +3282,13 @@ void rxas_flow_optimise(Assembler_Context *context,
             if (!changed && flow_value_analysis_within_bound(&graph)) {
                 changed += flow_remove_redundant_self_copies(
                         &graph, &stats, &proof_session);
+                if (!changed) changed += flow_reuse_duplicate_linked_read(
+                        &graph, &stats, &proof_session);
                 if (!changed) changed += flow_propagate_copies(
                         &graph, &stats, &proof_session);
                 if (!changed) changed += flow_forward_producer_destination(
+                        &graph, &stats, &proof_session);
+                if (!changed) changed += flow_fuse_compare_branches(
                         &graph, &stats, &proof_session);
                 if (!changed) changed += flow_remove_redundant_loads(
                         &graph, &stats, &proof_session);

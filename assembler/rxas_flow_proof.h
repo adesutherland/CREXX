@@ -55,6 +55,13 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_NOT_ADJACENT_COPY,
     RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE,
     RXAS_FLOW_PROOF_ADDRESS_OBSERVED,
+    RXAS_FLOW_PROOF_NOT_EXACT_COMPARE_BRANCH_FUSION,
+    RXAS_FLOW_PROOF_NOT_EXACT_DUPLICATE_LINKED_READ,
+    RXAS_FLOW_PROOF_ATTRIBUTE_RANGE_UNKNOWN,
+    RXAS_FLOW_PROOF_ATTRIBUTE_PATH_CHANGED,
+    RXAS_FLOW_PROOF_NOT_ADJACENT_BRANCH,
+    RXAS_FLOW_PROOF_COMPARE_RESULT_OBSERVED,
+    RXAS_FLOW_PROOF_TRACE_OBSERVED,
     RXAS_FLOW_PROOF_NOT_IN_LOOP,
     RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP,
     RXAS_FLOW_PROOF_NOT_MUST_EXECUTE,
@@ -108,6 +115,13 @@ typedef struct RxasFlowProofMetrics {
     size_t producer_forward_queries;
     size_t producer_forward_proved;
     size_t producer_forward_rejected;
+    size_t compare_branch_queries;
+    size_t compare_branch_proved;
+    size_t compare_branch_rejected;
+    size_t compare_branch_trace_deletions;
+    size_t duplicate_linked_read_queries;
+    size_t duplicate_linked_read_proved;
+    size_t duplicate_linked_read_rejected;
     size_t success_edge_queries;
     size_t loop_queries;
 } RxasFlowProofMetrics;
@@ -125,6 +139,13 @@ typedef struct RxasFlowOperandRewrite {
     RxasFlowRegister expected_register;
     RxasFlowRegister replacement_register;
 } RxasFlowOperandRewrite;
+
+typedef struct RxasFlowTraceDeletion {
+    size_t record_id;
+    size_t value_id;
+    unsigned int component;
+    RxasFlowRegister expected_register;
+} RxasFlowTraceDeletion;
 
 typedef struct RxasFlowTypedCopyPlan {
     int proved;
@@ -153,6 +174,56 @@ typedef struct RxasFlowProducerDestinationPlan {
     size_t copy_result_value_id;
     RxasFlowOperandRewrite producer_rewrite;
 } RxasFlowProducerDestinationPlan;
+
+typedef struct RxasFlowCompareBranchPlan {
+    int proved;
+    RxasFlowProofReason reason;
+    size_t compare_instruction;
+    size_t branch_instruction;
+    size_t compare_record_id;
+    size_t branch_record_id;
+    int expected_compare_opcode;
+    int expected_branch_opcode;
+    int fused_opcode;
+    size_t left_source_operand;
+    size_t right_source_operand;
+    size_t result_storage_id;
+    size_t result_value_id;
+    size_t trace_deletion_offset;
+    size_t trace_deletion_count;
+    RxasFlowRegister result_register;
+} RxasFlowCompareBranchPlan;
+
+typedef struct RxasFlowDuplicateLinkedReadPlan {
+    int proved;
+    RxasFlowProofReason reason;
+    size_t first_link_instruction;
+    size_t second_link_instruction;
+    size_t first_link_record_id;
+    size_t first_copy_record_id;
+    size_t first_unlink_record_id;
+    size_t second_link_record_id;
+    size_t second_copy_record_id;
+    size_t second_unlink_record_id;
+    int expected_link_opcode;
+    int expected_copy_opcode;
+    unsigned int read_components;
+    size_t linked_storage_id;
+    size_t candidate_linked_storage_id;
+    size_t owner_storage_id;
+    size_t candidate_owner_storage_id;
+    size_t attribute_count_value_id;
+    size_t candidate_attribute_count_value_id;
+    size_t reference_effect_id;
+    size_t candidate_reference_effect_id;
+    unsigned int rejected_component;
+    size_t first_value_id;
+    size_t candidate_value_id;
+    RxasFlowRegister first_temporary;
+    RxasFlowRegister first_detached;
+    RxasFlowRegister second_temporary;
+    RxasFlowRegister second_destination;
+} RxasFlowDuplicateLinkedReadPlan;
 
 typedef struct RxasFlowProofService RxasFlowProofService;
 
@@ -191,6 +262,18 @@ int rxas_flow_prove_producer_destination_forward(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t producer_instruction, size_t copy_instruction,
         RxasFlowProducerDestinationPlan *plan);
+int rxas_flow_prove_compare_branch_fusion(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t compare_instruction, size_t branch_instruction,
+        RxasFlowCompareBranchPlan *plan);
+int rxas_flow_prove_duplicate_linked_read(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t first_link_instruction, size_t second_link_instruction,
+        RxasFlowDuplicateLinkedReadPlan *plan);
+int rxas_flow_compare_branch_plan_trace_deletion(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowCompareBranchPlan *plan, size_t deletion_index,
+        RxasFlowTraceDeletion *deletion);
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result);

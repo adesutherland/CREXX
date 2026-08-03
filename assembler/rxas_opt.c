@@ -73,10 +73,10 @@ static void set_named_opcode_operands(instruction_queue *item) {
     item->operand10Token = rxas_queue_operand(item, 9);
 }
 
-static void set_opcode_operands(Assembler_Context *context,
-                                instruction_queue *item,
-                                Assembler_Token *const *operandTokens,
-                                size_t operandCount) {
+void rxas_set_queue_operands(Assembler_Context *context,
+                             instruction_queue *item,
+                             Assembler_Token *const *operandTokens,
+                             size_t operandCount) {
     rxas_free_queue_item(item);
     if (operandCount) {
         item->operandTokens = malloc(operandCount * sizeof(*item->operandTokens));
@@ -528,24 +528,6 @@ static void op_map_free(op_map *map) {
  * disassembly lp1 may be removed if it is not used by anu other code)
  *
  */
-#define INT_CMP_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
-            {ANY_GAP, OP_CODE, CMP, 'r', 4, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM}, \
-            {NO_GAP, OP_CODE, BR, 'b', 3, 'r', 4, 0, 0, \
-                        OP_CODE, OUT, 'b', 3, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM}, \
-            {END_OF_RULE},
-
-#define INT_CMP_TRACE_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
-            {ANY_GAP, OP_CODE, CMP, 'r', 4, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM}, \
-            {NO_GAP, TRACE_EVENT, 0, 'r', 4, 0, 0, 0, 0, \
-                         0}, \
-            {NO_GAP, OP_CODE, BR, 'b', 3, 'r', 4, 0, 0, \
-                        OP_CODE, OUT, 'b', 3, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM}, \
-            {END_OF_RULE},
-
-#define INT_CMP_BRANCH_RULES(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
-            INT_CMP_TRACE_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
-            INT_CMP_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM)
-
 rule rules[] =
 
         {
@@ -673,180 +655,6 @@ rule rules[] =
                          0},
             {END_OF_RULE},
 
-            /* Duplicate linked register read: reuse the first detached copy if
-             * no barrier or relevant register use intervenes. */
-            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
-                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
-            {NO_GAP, OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
-                        OP_CODE,"copy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"copy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
-                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
-            {NO_GAP, OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
-                        OP_CODE,"bcopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"bcopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
-                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
-            {NO_GAP, OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
-                        OP_CODE,"icopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"icopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
-                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
-            {NO_GAP, OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
-                        OP_CODE,"scopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"scopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
-                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
-            {NO_GAP, OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
-                        OP_CODE,"fcopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"fcopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
-                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
-            {NO_GAP, OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
-                        OP_CODE,"dcopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"dcopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            /* Same duplicate-read optimisation for one-based attribute links.
-             * The integer operand is the one-based attribute slot and must
-             * match; two attributes on the same object are independent values.
-             */
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
-                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
-            {NO_GAP, OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
-                        OP_CODE,"copy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"copy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
-                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
-            {NO_GAP, OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
-                        OP_CODE,"bcopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"bcopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
-                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
-            {NO_GAP, OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
-                        OP_CODE,"icopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"icopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
-                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
-            {NO_GAP, OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
-                        OP_CODE,"scopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"scopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
-                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
-            {NO_GAP, OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
-                        OP_CODE,"fcopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"fcopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
-                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
-            {NO_GAP, OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0,
-                        OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
-                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
-            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
-                        OP_CODE,"dcopy", 'r', 4, 'r', 2, 0, 0},
-            {NO_GAP, OP_CODE,"dcopy", 'r', 4, 'r', 3, 0, 0,
-                         0},
-            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
-                         0},
-            {END_OF_RULE},
-
             /* sconcat to sappend: sconcat r0,r0,r1 to sappend r0,r1 */
             {NO_HAZARD, OP_CODE,"sconcat", 'r', 0, 'r', 0, 'r', 1,
                         OP_CODE,"sappend", 'r', 0, 'r', 1, 0, 0},
@@ -858,41 +666,6 @@ rule rules[] =
             {END_OF_RULE},
 
             /* Integer compare followed by branch: materialise no boolean temp. */
-            INT_CMP_BRANCH_RULES("ieq", "brt", "beq", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("ieq", "brf", "bne", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("ine", "brt", "bne", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("ine", "brf", "beq", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("ilt", "brt", "blt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("ilt", "brf", "bge", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("ilte", "brt", "ble", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("ilte", "brf", "bgt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("igt", "brt", "bgt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("igt", "brf", "ble", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("igte", "brt", "bge", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-            INT_CMP_BRANCH_RULES("igte", "brf", "blt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
-
-            INT_CMP_BRANCH_RULES("ieq", "brt", "beq", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("ieq", "brf", "bne", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("ine", "brt", "bne", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("ine", "brf", "beq", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("ilt", "brt", "blt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("ilt", "brf", "bge", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("ilte", "brt", "ble", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("ilte", "brf", "bgt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("igt", "brt", "bgt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("igt", "brf", "ble", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("igte", "brt", "bge", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-            INT_CMP_BRANCH_RULES("igte", "brf", "blt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
-
-            INT_CMP_BRANCH_RULES("ilt", "brt", "bgt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-            INT_CMP_BRANCH_RULES("ilt", "brf", "ble", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-            INT_CMP_BRANCH_RULES("ilte", "brt", "bge", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-            INT_CMP_BRANCH_RULES("ilte", "brf", "blt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-            INT_CMP_BRANCH_RULES("igt", "brt", "blt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-            INT_CMP_BRANCH_RULES("igt", "brf", "bge", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-            INT_CMP_BRANCH_RULES("igte", "brt", "ble", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-            INT_CMP_BRANCH_RULES("igte", "brf", "bgt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
-
             /* Unconditional branch to branch true mapped to brtf*/
             {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
                         OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0},
@@ -958,18 +731,6 @@ rule rules[] =
             {NO_GAP,    OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
                         OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
                         ASM_LABEL,0,      'l', 2,  0,  0,  0,  0},
-            {END_OF_RULE},
-
-            /* do loop improvement: replace igt/brt check by igtbr instruction:     igt r0,r3,r4; brt label,r0 => igtbr label,r3,r4  */
-              {ANY_GAP,   OP_CODE, "igt",   'r', 4, 'r', 1, 'r', 2},
-            {NO_GAP,   OP_CODE, "brt",   'b', 3, 'r', 4,  0,  0,
-                                OP_CODE, "igtbr", 'b', 3, 'r', 1, 'r', 2},
-            {END_OF_RULE},
-
-            /* replace fgt/brt by fgtbr instruction:     fgt r0,r3,r4; brt label,r0 => fgtbr label,r3,r4  */
-            {ANY_GAP,   OP_CODE, "fgt",   'r', 4, 'r', 1, 'r', 2},
-            {NO_GAP,   OP_CODE, "brt",   'b', 3, 'r', 4,  0,  0,
-                    OP_CODE, "fgtbr", 'b', 3, 'r', 1, 'r', 2},
             {END_OF_RULE},
 
                 /*  do loop increase ctr+1 and branch to start   inc rx; br dostart */
@@ -1390,263 +1151,6 @@ static int instruction_is_relevant(op_map *map, instruction_queue *instruction) 
                                       instruction->operand1Token,
                                       instruction->operand2Token,
                                       instruction->operand3Token);
-}
-
-static int int_compare_branch_mnemonic(const char *mnemonic) {
-    return mnemonic &&
-           (!strcmp(mnemonic, "beq") ||
-            !strcmp(mnemonic, "bne") ||
-            !strcmp(mnemonic, "blt") ||
-            !strcmp(mnemonic, "ble") ||
-            !strcmp(mnemonic, "bgt") ||
-            !strcmp(mnemonic, "bge") ||
-            !strcmp(mnemonic, "igtbr") ||
-            !strcmp(mnemonic, "fgtbr"));
-}
-
-static int token_matches_register(Assembler_Token *token, char register_type, size_t register_number) {
-    char token_register_type;
-
-    if (!token) return 0;
-    token_register_type = reg_type(token);
-    return token_register_type == register_type &&
-           (size_t)token->token_value.integer == register_number;
-}
-
-static int int_token_matches_register_number(Assembler_Token *token, size_t register_number) {
-    return token &&
-           token->token_type == INT &&
-           token->token_value.integer >= 0 &&
-           (size_t)token->token_value.integer == register_number;
-}
-
-static int instruction_reads_register_before_kill(instruction_queue *instruction,
-                                                  const OpInfo *op_info,
-                                                  char register_type,
-                                                  size_t register_number) {
-    RxOpEffects effects;
-    char range_type;
-    size_t range_base;
-    size_t i;
-
-    if (instruction->instrType != OP_CODE) return 0;
-    if (!op_info) return 1;
-    effects = rxop_effects(op_info->opcode);
-    if (effects.state != RXOP_EFFECT_CLASSIFIED) return 1;
-
-    for (i = 0; i < instruction->operandCount; i++) {
-        if (rxop_effect_reads_operand(&effects, i) &&
-            token_matches_register(rxas_queue_operand(instruction, i),
-                                   register_type, register_number)) {
-            return 1;
-        }
-    }
-
-    if (effects.implicit != RXOP_IMPLICIT_NONE) {
-        switch (effects.implicit) {
-            case RXOP_IMPLICIT_LOCAL_TARGET:
-                if (token_matches_register(instruction->operand2Token, register_type, register_number)) return 1;
-                break;
-            case RXOP_IMPLICIT_LOCAL_COPY:
-                if (register_type == 'r' &&
-                    int_token_matches_register_number(instruction->operand2Token, register_number)) return 1;
-                break;
-            case RXOP_IMPLICIT_LOCAL_R0_READ_WRITE:
-                if (register_type == 'r' && register_number == 0) return 1;
-                break;
-            case RXOP_IMPLICIT_LOCAL_R1_READ_WRITE:
-                if (register_type == 'r' && register_number == 1) return 1;
-                break;
-            case RXOP_IMPLICIT_LOCAL_R2_READ_WRITE:
-                if (register_type == 'r' && register_number == 2) return 1;
-                break;
-            case RXOP_IMPLICIT_ARGUMENT_INDEX:
-                if (register_type == 'a' &&
-                    int_token_matches_register_number(instruction->operand2Token, register_number)) return 1;
-                break;
-            case RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3:
-                range_type = reg_type(instruction->operand3Token);
-                if (range_type &&
-                    range_type == register_type &&
-                    instruction->operand3Token->token_value.integer >= 0) {
-                    range_base = (size_t)instruction->operand3Token->token_value.integer;
-                    if (register_number > range_base) return 1;
-                }
-                break;
-            case RXOP_IMPLICIT_NONE:
-            default:
-                return 1;
-        }
-    }
-
-    return 0;
-}
-
-static int instruction_kills_register(instruction_queue *instruction,
-                                      const OpInfo *op_info,
-                                      char register_type,
-                                      size_t register_number) {
-    RxOpEffects effects;
-    size_t i;
-
-    if (instruction->instrType != OP_CODE || !op_info) return 0;
-    effects = rxop_effects(op_info->opcode);
-    if (effects.state != RXOP_EFFECT_CLASSIFIED) return 0;
-
-    for (i = 0; i < instruction->operandCount; i++) {
-        if (rxop_effect_kills_operand(&effects, i) &&
-            token_matches_register(rxas_queue_operand(instruction, i),
-                                   register_type, register_number)) {
-            return 1;
-        }
-    }
-
-    if ((effects.implicit == RXOP_IMPLICIT_LOCAL_COPY ||
-         effects.implicit == RXOP_IMPLICIT_LOCAL_TARGET) &&
-        register_type == 'r' &&
-        int_token_matches_register_number(instruction->operand1Token, register_number)) {
-        return 1;
-    }
-
-    return 0;
-}
-
-static int find_label_index(Assembler_Context *context, Assembler_Token *branch_token) {
-    size_t i;
-
-    if (!branch_token || branch_token->token_type != ID) return -1;
-
-    for (i = 0; i < context->optimiser_queue_items; i++) {
-        if (context->optimiser_queue[i].instrType == ASM_LABEL &&
-            context->optimiser_queue[i].instrToken &&
-            context->optimiser_queue[i].instrToken->token_type == LABEL &&
-            strcmp((char *)context->optimiser_queue[i].instrToken->token_value.string,
-                   (char *)branch_token->token_value.string) == 0) {
-            return (int)i;
-        }
-    }
-
-    return -1;
-}
-
-static int path_uses_register_before_kill(Assembler_Context *context,
-                                          int start_index,
-                                          char register_type,
-                                          size_t register_number,
-                                          unsigned char *visited,
-                                          int depth) {
-    int index;
-    int branch_index;
-    int alternate_index;
-    const OpInfo *op_info;
-    instruction_queue *instruction;
-
-    if (depth > OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE) return 1;
-
-    for (index = start_index; index < (int)context->optimiser_queue_items; index++) {
-        if (index < 0) return 1;
-        if (visited[index]) return 1;
-        visited[index] = 1;
-
-        instruction = &context->optimiser_queue[index];
-        if (instruction->instrType != OP_CODE) continue;
-
-        op_info = find_optimiser_opcode(instruction);
-
-        if (instruction_reads_register_before_kill(instruction, op_info, register_type, register_number)) {
-            return 1;
-        }
-
-        if (!op_info || rxop_effects(op_info->opcode).optimizer_barrier) return 1;
-
-        if (instruction_kills_register(instruction, op_info, register_type, register_number)) {
-            return 0;
-        }
-
-        if (op_info->flow == FLOW_TERM) return 0;
-
-        if (op_info->flow == FLOW_JUMP) {
-            branch_index = find_label_index(context, instruction->operand1Token);
-            if (branch_index < 0) return 1;
-            return path_uses_register_before_kill(context,
-                                                  branch_index + 1,
-                                                  register_type,
-                                                  register_number,
-                                                  visited,
-                                                  depth + 1);
-        }
-
-        if (op_info->flow == FLOW_COND) {
-            branch_index = find_label_index(context, instruction->operand1Token);
-            if (branch_index < 0) return 1;
-            if (path_uses_register_before_kill(context,
-                                               branch_index + 1,
-                                               register_type,
-                                               register_number,
-                                               visited,
-                                               depth + 1)) {
-                return 1;
-            }
-
-            if (strcmp(op_info->format, FMT_L_L_R) == 0) {
-                alternate_index = find_label_index(context, instruction->operand2Token);
-                if (alternate_index < 0) return 1;
-                return path_uses_register_before_kill(context,
-                                                      alternate_index + 1,
-                                                      register_type,
-                                                      register_number,
-                                                      visited,
-                                                      depth + 1);
-            }
-        }
-    }
-
-    return 1;
-}
-
-static int compare_branch_result_is_dead(Assembler_Context *context, op_map *map) {
-    int branch_index;
-    int target_index;
-    size_t i;
-    unsigned char visited[OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE];
-    op_capture *result_capture;
-    op_capture *branch_capture;
-
-    branch_index = -1;
-    for (i = 0; i < context->optimiser_queue_items; i++) {
-        if (map->inst_mapped[i] &&
-            map->inst_mapped[i]->out.inst_type == OP_CODE &&
-            int_compare_branch_mnemonic(map->inst_mapped[i]->out.instruction)) {
-            branch_index = (int)i;
-            break;
-        }
-    }
-
-    if (branch_index < 0) return 1;
-    result_capture = op_map_capture(map, 4);
-    branch_capture = op_map_capture(map, 3);
-    if (!result_capture->reg_token || !branch_capture->branch_token) return 0;
-
-    memset(visited, 0, sizeof(visited));
-    if (path_uses_register_before_kill(context,
-                                       branch_index + 1,
-                                       result_capture->regtp,
-                                       result_capture->reg,
-                                       visited,
-                                       0)) {
-        return 0;
-    }
-
-    target_index = find_label_index(context, branch_capture->branch_token);
-    if (target_index < 0) return 0;
-
-    memset(visited, 0, sizeof(visited));
-    return !path_uses_register_before_kill(context,
-                                           target_index + 1,
-                                           result_capture->regtp,
-                                           result_capture->reg,
-                                           visited,
-                                           0);
 }
 
 static int trace_event_matches_mapped_register(op_map *map,
@@ -2214,8 +1718,6 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
     }
 
     if (r->flag == END_OF_RULE) {
-        if (!compare_branch_result_is_dead(context, map)) return 0;
-
         debug_rule_accept(context, map, start_rule);
 
         /* A match! We need to apply the output rule */
@@ -2241,8 +1743,10 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                                          r->out.instruction);
                         replacementOperands = mapped_pattern_tokens(
                                 context, map, &r->out, &replacementOperandCount);
-                        set_opcode_operands(context, &context->optimiser_queue[inst_no],
-                                            replacementOperands, replacementOperandCount);
+                        rxas_set_queue_operands(context,
+                                                &context->optimiser_queue[inst_no],
+                                                replacementOperands,
+                                                replacementOperandCount);
                         free(replacementOperands);
                         break;
                     }
@@ -2296,8 +1800,10 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                                 rxas_tid(context, baseToken, r->out2.instruction);
                         replacementOperands = mapped_pattern_tokens(
                                 context, map, &r->out2, &replacementOperandCount);
-                        set_opcode_operands(context, &context->optimiser_queue[inst_no2],
-                                            replacementOperands, replacementOperandCount);
+                        rxas_set_queue_operands(context,
+                                                &context->optimiser_queue[inst_no2],
+                                                replacementOperands,
+                                                replacementOperandCount);
                         free(replacementOperands);
                         break;
                     }
@@ -2527,7 +2033,7 @@ static void queue_opcode(Assembler_Context *context,
     memset(item, 0, sizeof(*item));
     item->instrType = OP_CODE;
     item->instrToken = instrToken;
-    set_opcode_operands(context, item, operandTokens, operandCount);
+    rxas_set_queue_operands(context, item, operandTokens, operandCount);
     optimise(context);
 }
 

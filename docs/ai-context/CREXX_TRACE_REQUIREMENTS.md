@@ -190,6 +190,29 @@ cREXX models that by attaching trace-event metadata at the VM address where the
 value is available, then letting the generated signal helper read only the
 named frame-local register before continuing.
 
+### Optimisation and trace fidelity
+
+TRACE describes the executable program that was produced, not an immutable
+pre-optimisation event stream.  With compiler or assembler optimisation
+enabled, folding, dead-value elimination, fusion, inlining and future code
+motion or loop hoisting may omit, combine or relocate source-derived trace
+events.  This is permitted even when the resulting TRACE output differs in
+event count, order or location from an unoptimised build.  Users who need the
+closest source-to-execution correspondence for tracing or optimiser diagnosis
+must disable both compiler and assembler optimisation (`rxc -n` and `rxas -n`,
+or the equivalent `crexx --nooptimise` driver option).  The documented beta
+coverage limits still apply in that mode.
+
+Optimised TRACE remains subject to strict safety rules.  An optimisation must
+not fabricate an event or value, leave metadata reading a deleted, stale or
+wrongly typed value, or change ordinary program results, signals, side effects
+or control flow.  A retained register-backed event may be moved only to a
+reached boundary where the same proved component value is available.  Retained
+events at a shared boundary are delivered in their metadata order.  Ordered
+event batching therefore prevents loss of retained events; it is not a
+requirement to retain every event for an operation or value removed by
+optimisation.
+
 ## Beta Health Warnings
 
 The current implementation is suitable for beta use, but not yet a faithful

@@ -21,8 +21,7 @@ typedef enum RxasFlowAnalysisStatus {
 
 typedef enum RxasFlowLoopFlags {
     RXAS_FLOW_LOOP_NATURAL = 1,
-    RXAS_FLOW_LOOP_IRREDUCIBLE = 2,
-    RXAS_FLOW_LOOP_SIGNAL_RETRY_ONLY = 4
+    RXAS_FLOW_LOOP_IRREDUCIBLE = 2
 } RxasFlowLoopFlags;
 
 typedef struct RxasFlowLoop {

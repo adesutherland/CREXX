@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01-M06 complete; K04 compare fusion next**
+Status: **in progress — M01-M06 and K02/K03 complete; K04 accepted and closed; K01 next**
 
 Authorized: 2026-08-02
 
@@ -44,7 +44,7 @@ and after the diagnostic prove output neutrality.
    that deletion.
 4. **Stronger results are explicit.** Record new acceptances separately from
    recovered old cases, with exact proof reasons and emitted-image delta.
-5. **Signals and observations are first-class.** Normal, skip, retry, handler
+5. **Signals and observations are first-class.** Normal, skip, handler
    and unwind state; TRACE/source events; payload/address observation; and
    caller-owned arguments are proof inputs, not blanket mnemonic guards.
 6. **Write-once identities, not register numbers.** Proofs follow `StorageId`,
@@ -83,14 +83,17 @@ focused fixtures preserve their exact safety floor.
 | ID | Rule family | Accepted baseline | Current proof weakness | New owner |
 | --- | --- | --- | --- | --- |
 | K01 | two `SWAP`s cancel with no relevant intervening use | focused positive plus implicit-register/barrier negatives; canonical 0 | raw-register relevance and bounded queue | storage permutation plus observation equivalence |
-| K02 | duplicate `LINK`/typed-copy/`UNLINK` read | focused string/binary positives and metadata/TRACE negatives; canonical 0 | syntax shape and raw-register hazard scan | storage/component availability and atomic use redirect |
-| K03 | duplicate `LINKATTR1` read for same owner/slot | focused string/binary positives and different-slot negative; canonical 0 | syntax shape; no generic attribute identity | storage path/attribute identity plus component value proof |
-| K04 | integer compare plus conditional branch, including ordered TRACE form | focused 16 positive shapes and live-result/call-window negatives; canonical RexxCPS 9 | bespoke bounded path solver for boolean-result death | CFG use/liveness, signal/TRACE observation and fused-op equivalence |
+| K02 | duplicate `LINK`/typed-copy/`UNLINK` read | focused string/binary positives and metadata/TRACE negatives; canonical 0 | syntax shape and raw-register hazard scan | **complete**; storage/component proof and atomic rewrite replace all six direct-read keyholes |
+| K03 | duplicate `LINKATTR1` read for same owner/slot | focused string/binary positives and different-slot negative; canonical 0 | syntax shape; no generic attribute identity | **complete**; interned attribute path plus component/count/signal proof replace all six attribute-read keyholes |
+| K04 | integer compare plus conditional branch | legacy focused 16 includes one result-TRACE deletion; canonical RexxCPS 9 require storage/lifetime reaudit | bespoke bounded path solver for boolean-result death | **complete and accepted**; atomic event deletion, exact call windows and approved retry retirement unlock all five residual canonical false positives; focused Debug/Release passes 14/14, the runtime verdict is neutral, and broad Debug passes 1,998/1,998 |
 | K05 | branch-to-conditional/dual-branch threading | canonical Richards 4, Towers 7, RexxCPS 0 | queue-local label search | immutable CFG edge rewrite and reachability |
 | K06 | full `COPY` followed by same-pair `ACOPY` | focused 1; canonical 0 | adjacent mnemonic rule | component-write subset/equivalence proof or retained mechanical rule |
 
-K04 and K05 are the only remaining proof-bearing keyhole families exercised by
-the three representative canonical inputs: nine compare fusions in RexxCPS and
+K04 and K05 remain exercised by the representative canonical inputs. The nine
+historical RexxCPS K04 fusions all discarded the matching trace event for the
+eliminated Boolean. That is permitted in an optimised image under the canonical
+TRACE contract, but it does not by itself prove the storage cleanup and
+lifetime obligations; each case remains subject to the new proof. K05 retains
 eleven branch-threading rewrites across Richards/Towers.
 
 ## Mechanical rules retained outside proof migration
@@ -165,6 +168,54 @@ storage while its same-storage VM path returns before allocation or signal.
       consumer.
 - [x] Migrate **M05** and delete its old solver after its gate.
 - [x] Migrate **M06** separately and delete its old solver only after its gate.
+
+#### K04 retained floor and design selection
+
+The frozen M06 assembler accepted 16 focused integer compare/branch shapes and
+nine RexxCPS shapes. One focused case and all nine RexxCPS cases placed an
+ordered TRACE event on the materialized Boolean, then the old keyhole rule
+deleted both the value and its event. The initial K04 audit incorrectly treated
+event-count preservation as a universal correctness obligation. The canonical
+TRACE contract instead permits an optimised transform to remove the matching
+event when the Boolean no longer exists; compiler and assembler no-opt mode
+retain the source-correspondent operation and event. This correction does not
+waive ordinary storage, cleanup, alias, liveness or control-flow proofs, so the
+nine canonical cases must be re-evaluated rather than presumed safe. A new
+unrelated-TRACE case remains a useful proof that fusion does not delete an
+event belonging to another value.
+
+Three implementation shapes were considered:
+
+1. **Keep keyhole selection and call a whole-procedure proof.** The keyhole
+   runs before the immutable procedure exists, so this would retain a bounded
+   second authority or require an additional graph. It is rejected.
+2. **Selected foundation: canonical equivalence metadata plus one immutable
+   proof plan.**
+   A linear whole-procedure demand filter identifies consecutive executable
+   compare/branch pairs. The proof service owns opcode/signal equivalence, CFG
+   block adjacency, exact source/result components, local unaliased storage,
+   source/destination separation, hidden reference/native cleanup, sparse
+   direct/dependent uses, caller windows and TRACE observation. K04a identifies
+   any number of exact result events by `ValueId`, storage, register, component
+   and record position, then includes their deletion in the same revalidated
+   plan as compare deletion and branch replacement. An unrelated event remains
+   present and can share the fused branch boundary without a `CNOP`.
+3. **Materialize the Boolean solely for optimised TRACE.** A new result-
+   producing fused opcode could do this, but it defeats the selected
+   optimisation and is unnecessary for the project trace contract. It remains
+   unselected; users requiring source-correspondent tracing use no-opt mode.
+
+The approved signal correction marks the eight register/register and
+register/immediate `BGT`/`BGE`/`BLT`/`BLE` forms total and non-signalling, in
+line with their direct scalar VM handlers. `BEQ`/`BNE` and all source integer
+comparisons were already non-signalling. The older `IGT`/`BRT` keyhole rule is
+subsumed by canonical `BGT`; the shared `FGT`/`BRT` rule is retired pending an
+explicit `FGTBR` signal contract and a float-component proof. Adversarial
+focused cases must retain compare materialization for caller-window exposure,
+later live uses, source/destination overlap, linked storage and previously
+populated reference cleanup. A precisely matching result event may be removed
+only with the compare; unrelated events remain. The recursive 20-record path
+solver and all compare/branch keyhole rules are deleted.
 
 #### M05 retained floor and design selection
 
@@ -256,13 +307,135 @@ immediately after the deleted copy retain the old address-observation guard.
 
 ### Phase C — keyhole semantic authorities
 
-- [ ] Migrate **K04** first because it has nine current canonical RexxCPS hits
-      and exercises the reusable liveness service.
-- [ ] Migrate **K02** and **K03** to storage/component identities.
+- [x] **K04a:** atomically delete only exact matching optimized-away Boolean
+      events. Focused Debug/Release pass 5/5; canonical output is semantically
+      identical to strict K04, so runtime timing is not yet warranted.
+- [x] **K04b:** replace the procedure-global numeric call-window veto with an
+      edge-aware query which rejects only when the compare-result `ValueId` or
+      one of its dependent phis is actually visible in that call window.
+      Accepted as neutral migration/consolidation after focused 5/5 Debug and
+      Release and byte-identical canonical output.
+- [x] **K04c:** attribute the five residual canonical rejections. Both calls
+      have exact source window `r1`, while compare results are `r2`/`r6`; the
+      current unknown CALL signal contract alone widens retry state to
+      `r1..r69`. VM retry semantics confirm the count operand is preserved
+      except through already-modelled argument-storage aliasing.
+- [x] **K04d1:** retire the unused, non-standard instruction-level
+      retry factory, VM continuation, CFG self-edge and retry-only loop
+      machinery. Keep the coherent propagated-call partial-state contract for
+      skip/handler/unwind paths and preserve exact argument-window, alias and
+      destination effects.
+- [x] **K04d2:** pass the same 14 focused language, bytecode, CALL, alias,
+      optimizer and signal-lifecycle checks in Debug and ordinary Release.
+- [x] **K04d3 first verdict:** retain one warmup and 12 balanced/interleaved
+      RexxCPS rounds per VM. Median CPS is neutral at +0.021% on both VMs;
+      pair directions are mixed and the `rxvm` candidate contains one retained
+      low sample which triggers the formal rerun recommendation.
+- [x] **K04d disposition:** Adrian accepted the neutral semantic/infrastructure
+      cleanup without a noisy-cell append on 2026-08-03.
+- [x] **K04d4 closeout:** complete Debug build and 1,998/1,998 broad Debug tests
+      pass; the retirement audit finds no obsolete production retry machinery.
+- [x] **K02/K03-0 retained baseline:** preserve the focused Debug/Release
+      9/9 floor before migration. The frozen legacy decision signatures are
+      K02 `scopy=a00a9575`, K02 `bcopy=998fd3d5`, K03
+      `scopy=8ab441ee`, and K03 `bcopy=3bd65c72`; the representative Release
+      Richards/Towers/RexxCPS set has zero K02/K03 accepts.
+- [x] **K02/K03-1 metadata and path SSA:** distinguish attribute count from
+      value status flags, correct the proven-total `SETATTRS` and `BCOPY`
+      signal contracts, and intern one-based attribute paths by owner
+      `StorageId`, count `ValueId`, reference-effect generation and slot.
+      Dynamic slots and unknown/merged counts fail closed.
+- [x] **K02/K03-2 proof and atomic rewrite:** replace the twelve duplicate
+      `LINK`/`LINKATTR1` keyholes with one immutable plan which validates both
+      exact link/copy/unlink triples, proves component equivalence for the
+      complete typed-copy read mask, proves any removed `LINKATTR1` in range,
+      rewrites the second link record to the copy and deletes its original
+      copy/unlink only after the whole plan is revalidated.
+- [x] **K02/K03-3 safety panel:** retain different owner/slot, changed count,
+      changed source/detached value, calls/aliases, branch/phi and signal-skip
+      negatives; record metadata/TRACE reads that remain semantically valid as
+      stronger SSA acceptances rather than weakening the old floor.
+- [x] **K02/K03-4 verdict:** compare focused signatures and RXBIN hashes,
+      rerun the canonical diagnostic census, and apply the mandatory first
+      Release verdict only if an ordinary representative output changes.
+- [x] **K02/K03-5 closeout:** distinguish value observations from sparse pure
+      writes for every migrated proof consumer, restore the M05/M06 and K04
+      floors, pass the 28-test shared panel in Debug and Release, and pass
+      2,010/2,010 broad Debug tests in 678.89 seconds.
 - [ ] Migrate **K01** to permutation/observation equivalence.
 - [ ] Reclassify or migrate **K06** after the generic component proof exists.
 - [ ] Migrate **K05** when rewrite orchestration can edit immutable-CFG-derived
       plans without relying on a 20-item queue.
+
+#### K02/K03 retained floor and design selection
+
+The frozen K04 assembler has twelve syntax-expanded rules: six copy families
+for a repeated direct `LINK` read and the same six for an immediate one-based
+`LINKATTR1` read. They cover `COPY`, `BCOPY`, `ICOPY`, `SCOPY`, `FCOPY` and
+`DCOPY`; `ACOPY` has no duplicate-read rule. The old engine accepts or rejects
+by captured raw register numbers plus a bounded hazard scan. Its focused
+Debug/Release floor is 9/9 and the frozen RXBIN hashes are:
+
+- K02 string `bfa4420`, binary `a8c522f`, metadata relevant `a5b459d`,
+  metadata unrelated `0f6e61b`, TRACE relevant `2fb62e9`, and TRACE unrelated
+  `37f8e3e`;
+- K03 different-slot `f44907a`, string `97d3092`, and binary `a482b7c`.
+
+Three implementation shapes were considered:
+
+1. **Retain the keyholes and add proof callbacks.** This leaves syntax shape
+   and queue traversal as a second semantic authority and cannot give future
+   consumers a reusable attribute address identity. It is rejected.
+2. **Selected: memory-path SSA plus one duplicate-read proof plan.** A direct
+   link names its source `StorageId`. An immediate `LINKATTR1` names an
+   interned child path keyed by owner storage, exact attribute-count value,
+   reference-effect generation and slot. The proof compares write-once
+   component values, not register numbers, and separately proves that removing
+   a candidate attribute validation cannot suppress a signal. The linear
+   consumer is only a demand filter; all mutation is atomic and epoch checked.
+3. **Model only the current `SETATTRS`/`LINKATTR1` syntax pair.** This recovers
+   the focused fixture but creates another tactical special case and cannot
+   survive owner aliases, intervening writes or future attribute-path users.
+   It is rejected.
+
+The VM handlers for `SETATTRS` and two-register `BCOPY` do not raise language
+signals; allocation failure aborts rather than entering the signal mechanism.
+Their fail-closed unknown sidecars therefore obscure real normal-flow facts and
+are corrected to non-signalling metadata without changing VM behavior. K03
+does not infer safety from ordinary dominance of an earlier `LINKATTR1`: the
+candidate link itself must have an exact positive slot and an exact known
+attribute count at least that large. Any count/reference generation change or
+merged unknown path rejects the rewrite.
+
+#### K02/K03 result
+
+Evidence is retained in
+[2026-08-03-perf3-11-k02-k03-linked-reads](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/).
+
+The storage/component proof service is now the sole authority for all twelve
+former direct/attribute duplicate-read rules. The original string/binary and
+different-slot outputs remain byte-identical to frozen K04. The formerly
+guarded relevant metadata and TRACE cases are stronger safe acceptances:
+their retained events still read the unchanged first detached value while the
+second executable read is removed. All six copy families are covered for both
+direct and attribute paths. Owner aliases resolve by `StorageId`; different
+owners or slots, changed count/source/detached value/cursor, aliased calls,
+divergent phis and unproved signal paths reject.
+
+The first canonical comparison exposed an integration regression rather than
+a K02/K03 acceptance: newly indexed writes were represented as opaque
+observations, disabling all fourteen accepted K04 RexxCPS compare/branch
+fusions. The first broad gate then exposed the same conceptual boundary in
+M05/M06: explicit pure writes with no `ValueId` were mistaken for unknown
+reads, disabling four retained optimizer expectations. The use service now
+distinguishes observations, read/write uses and pure explicit/opaque/cursor
+writes once for every proof consumer. Writes remain sparse barriers for
+component-interval proofs without pretending to observe the overwritten
+value. The combined 28-test proof panel passes in Debug and Release, and broad
+Debug passes 2,010/2,010 in 678.89 seconds. The final Richards, Towers and
+RexxCPS images are byte-identical to frozen K04 at SHA-256 `92cda4c0`,
+`11b14061` and `96bc599b`. The canonical K02/K03 census is zero, so runtime
+timing is not warranted.
 
 ### Phase D — remove superseded infrastructure
 
@@ -389,4 +562,22 @@ median peak RSS moves from 103,022,592 to 104,103,936 bytes (+1.05%). Focused
 Debug and Release pass 8/8. Strict GNU90 passes with one pre-existing warning;
 the full Debug build and corrected broad suite pass 1,995/1,995 in 291.22
 seconds. Broad closeout corrected one stale NR-09 oracle to expect M06's direct
-destination load; no production change was required. K04 is next.
+destination load; no production change was required. K04a then completed exact
+atomic result-TRACE deletion and focused Debug/Release passed 5/5. Canonical
+RexxCPS remains semantically identical to strict K04: its five newly admitted
+TRACE observations all stop at the next procedure-global call-window guard.
+K04b then replaced the procedure-global numeric call-window veto with exact or
+conservative bounds plus dependent-`ValueId` visibility. Focused Debug and
+Release pass 5/5 and canonical output remains byte-identical, so Adrian
+accepted the output-neutral consolidation without runtime timing. K04c proved
+all five residual canonical rejections are CALL signal-contract false
+positives: both actual windows are only `r1`, but retry-edge count phis widen
+them to `r1..r69`. Strict GNU90 passes with one pre-existing warning, the full
+Debug build passes and broad Debug passes 1,995/1,995 in 376.48 seconds. K04d
+review then found no production retry caller and exposed an existing fused-call
+retry mapping defect. Adrian approved K04d1 retirement on 2026-08-03; the
+propagated-call partial-state metadata remains for non-retry failure paths.
+K04d2 passes focused Debug/Release 14/14. K04d3's first Release verdict is
+runtime-neutral at +0.021% median CPS on both VMs, with mixed pair directions;
+one retained low `rxvm` candidate sample triggers the formal rerun
+recommendation. Adrian disposition is required before migration continues.

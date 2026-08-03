@@ -1,13 +1,13 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — M01-M06 complete; K04 compare fusion next**
+Status: **in progress — M01-M06 and K02/K03 complete; K04 accepted and closed; K01 next**
 
 Architecture approved: 2026-08-02
 
 Purpose: replace the growing collection of candidate-by-candidate RXAS flow
 solvers with one scalable, per-procedure analysis foundation.  The foundation
 must model symbolic storage, component values, calls, mutable signal policy and
-normal/skip/retry/unwind continuations accurately enough to support reusable
+normal/skip/handler/unwind continuations accurately enough to support reusable
 proofs, loop analysis and later register allocation without changing emitted
 code merely by being present.
 
@@ -26,7 +26,7 @@ fail-closed coverage.
 
 Changing an instruction from signalling to non-signalling, changing the point
 at which its writes become visible, changing its signal payload/address, or
-changing skip/retry behaviour is a separate semantic decision.  PERF3-11 may
+changing continuation behaviour is a separate semantic decision.  PERF3-11 may
 measure and propose such a change, but must stop with an instruction-by-
 instruction contract and compatibility impact for Adrian's approval before
 editing the VM or declaring the new contract in RXAS metadata.
@@ -93,9 +93,14 @@ No fresh build or test result is claimed by this planning checkpoint.
 7. **Metadata drives generic transfer.** Opcode-specific semantics live in
    validated metadata or narrowly reviewed transfer helpers.  Consumer code
    must not accumulate independent opcode switch statements.
-8. **Observable ordering is preserved.** TRACE/source events, signal payload,
-   interrupted address, handler order and call/unwind state constrain code
-   motion and deletion.
+8. **Program observations remain exact; optimised TRACE follows its documented
+   profile.** Signal payload, interrupted address, handler order, call/unwind
+   state and ordinary side effects constrain code motion and deletion.
+   Optimised TRACE events may be omitted, combined or relocated when their
+   producing work is removed or moved; every retained event must read the
+   proved value at a reached boundary and retained same-boundary events remain
+   ordered without requiring `CNOP` separators. Compiler and assembler no-opt
+   mode owns source-correspondent trace.
 9. **Bounded failure is safe.** Allocation failure, unsupported metadata,
    irreducible control, dynamic signal uncertainty or a proof-work budget
    exhaustion disables the candidate proof; it cannot miscompile the input.
@@ -137,9 +142,9 @@ least:
 
 - statically known signal set or explicit dynamic/unknown signal;
 - write phase: before writes, after writes, named partial writes or unknown;
-- component/storage/context reads and writes on normal, skip and retry paths;
+- component/storage/context reads and writes on normal and failure paths;
 - signal payload and interrupted-address observability;
-- permitted continuation classes: normal, skip, retry, branch/call handler,
+- permitted continuation classes: normal, skip, branch/call handler,
   fail/unwind and terminal;
 - signal-policy and other effect dependencies;
 - whether successful completion refines a value/domain fact; and
@@ -159,8 +164,6 @@ states are edge-specific:
 - **normal** applies all successful writes and any success-refinement fact;
 - **skip** applies exactly the writes visible at the recorded signal phase and
   resumes after the instruction;
-- **retry** applies the failure-phase state and returns to the instruction
-  without inventing a successful result;
 - **handler** exposes the signal value, payload and interrupted address;
 - **fail/unwind** reaches an explicit exit/super-exit and restores caller-owned
   state according to the VM contract.
@@ -232,10 +235,11 @@ them before the replacement scaling verdict.
       an explicit signal contract; unknown is allowed but must be deliberate.
       Implement the selected table immediately after Gate 1, before Stage 2.
 - [x] Add focused executable fixtures for before-write, after-write and
-      partial-write failure; normal/skip/retry; branch and call handlers;
-      each action-aware handler result; inherited handlers; `sigpush`/`sigpop`;
-      dynamic names; normal return; unwind; asynchronous entry; and observable
-      signal/TRACE/source location.
+      partial-write failure; normal/skip; branch and call handlers; each
+      retained action-aware handler result; safe failure of the retired legacy
+      retry marker; inherited handlers; `sigpush`/`sigpop`; dynamic names;
+      normal return; unwind; asynchronous entry; and observable signal/TRACE/
+      source location.
 - [x] Classify proposed semantic changes separately as: metadata correction to
       existing VM behaviour, compatible totalisation/non-signalling change, or
       incompatible/public contract change.
@@ -266,7 +270,7 @@ Towers and RexxCPS RXBIN hashes remain byte-identical to Gate 0. Evidence:
       rewrite execution.
 - [x] Form basic blocks at entry, labels, branches, calls where required,
       signalling instructions, handler entries and exits.
-- [x] Add typed normal, branch, signal-skip, signal-retry, handler and
+- [x] Add typed normal, branch, signal-skip, handler and
       terminal/unwind edges plus synthetic roots/exits.
 - [x] Preserve exact source/TRACE record identity and mapping between queued
       RXAS records, instructions and emitted addresses.
@@ -316,8 +320,10 @@ without changing emitted code.
 Gate 3 passed on 2026-08-02. The epoch-owned, demand-driven manager caches
 reachable RPO, unique predecessor sets, dominators/tree intervals, sparse
 dominance frontiers, SCCs, backedges and natural/irreducible loop regions.
-Signal-retry-only loops are marked separately. Deliberate low-budget failure,
-larger-budget retry, stale epochs, unreachable blocks, diamonds, nested and
+The original graph marked signal-retry-only loops separately; K04d1 removes
+those synthetic cycles after the approved retirement. Deliberate low-budget
+failure, larger-budget analysis retry, stale epochs, unreachable blocks,
+diamonds, nested and
 irreducible loops, parallel signal edges and deterministic dumps are permanent
 contract tests. Final focused correctness passes 113/113 and all three Gate 0
 RXBIN hashes remain exact.
@@ -344,7 +350,7 @@ all below the combined greater-than-5%-and-1-MiB escalation rule. Evidence:
       callee.
 - [x] Represent call/reference/context/TRACE effects with sparse versions or
       summaries rather than one global barrier when a narrower fact is proved.
-- [x] Bind skip/retry/handler/fail edges to the correct policy and observation
+- [x] Bind skip/handler/fail edges to the correct policy and observation
       versions.
 - [x] Prove equivalence with all Stage 1 executable signal fixtures.
 
@@ -379,7 +385,7 @@ assembler cost/RSS gate passes. Evidence:
       values without conflating absent/null with an unavailable proof.
 - [x] Version numeric and other derivation contexts and name them in derived
       facts.
-- [x] Apply instruction writes separately for normal, skip and retry edges
+- [x] Apply instruction writes separately for normal and skip/failure edges
       according to the Stage 1 contract.
 - [x] Add call/alias summaries conservatively; unsupported indirect mutation
       invalidates only what cannot be proved unaffected.
@@ -615,7 +621,102 @@ images are byte-identical to frozen M05. Paired RexxCPS assembly medians remain
 0.18 s; median peak RSS rises 1.05% to 104,103,936 bytes. Focused Debug and
 Release pass 8/8, and broad Debug passes 1,995/1,995 in 291.22 seconds after a
 stale NR-09 expectation was updated for the intended direct-destination form.
-K04 compare/branch fusion is next.
+K04a now makes matching Boolean TRACE deletion scalable and atomic. The proof
+records any number of exact result `ValueId` observations between compare and
+branch, revalidates their record/register/component identity, deletes them with
+the compare and retains unrelated events at the fused branch boundary. A later
+result event still rejects; all nine focused no-opt events remain. Focused
+Debug and ordinary Release pass 5/5, and strict GNU90 passes with the one
+pre-existing unused-parameter warning.
+
+The canonical audit proves K04a alone unlocks zero RexxCPS fusions. Its five
+former `trace-observed` candidates now reach the next conservative guard and
+reject as `call-window-observed`; other historical cases fail earlier storage,
+alias or cleanup proofs. K04a is semantically identical to the strict K04 image
+at 1,250 VM instructions and 1,261 trace events, still nine instructions and
+nine events above frozen M06. Runtime timing was therefore correctly skipped.
+
+K04b replaces the procedure-global numeric range veto with a reusable
+edge-aware call-window query. A constant count gives exact bounds; an
+unavailable count safely reaches the highest local. The compare proof follows
+the exact result `ValueId` through copy/derived values and lazily materialized
+phis and rejects only when that value is visible in the resulting window or a
+query fails closed. Focused positive, mixed-phi, LINK, SWAP and no-opt cases
+pass 5/5 in Debug and Release. Its ordinary Release `rxas` has SHA-256
+`8a42d71e630672b37312a0728490160ea252ae13645c00ec924d2a8f8769ce11`.
+Canonical output remains byte-identical to K04a, so Adrian accepted K04b as a
+neutral migration/consolidation result on 2026-08-03; no runtime timing was
+warranted.
+
+K04c attributes all five residual RexxCPS rejections. The two relevant counted
+calls are each immediately preceded by `load r0,1`, so their real argument
+window is exactly `r1`; the rejected compare results are in `r2` or `r6`.
+Unknown CALL signal metadata nevertheless turns the retry-edge count into a
+phi and widens the analysis window to `r1..r69`. Three candidates then find the
+old result through `r2`; two fail closed while querying unrelated unknown `r43`.
+None is an actual caller-window observation. VM source confirms that an
+action-aware signal handler runs in its own frame and `retry` resumes at the
+recorded call instruction. The count operand is reread but is not exposed to
+that handler; caller-owned argument values may change by reference and remain
+covered by the existing storage-identity range clobber. K04c is analysis-only
+and its diagnostics were removed after capture. Strict GNU90 passes with the
+one pre-existing warning, the complete Debug build passes and broad Debug
+passes 1,995/1,995 in 376.48 seconds.
+
+K04d0 reviewed instruction-level retry before locking that design. Repository
+search found no production caller, standard REXX resumes a `CALL ON` trap after
+the clause rather than re-executing the faulting instruction, and the first
+end-to-end native retry fixture exposed an existing fused-call mapping defect.
+Retry also creates a self-loop and failure-state phi at every potentially
+signalling instruction and cannot safely repeat arbitrary partial writes,
+by-reference mutation or external side effects. Adrian approved retirement on
+2026-08-03. K04d1 removes the public factory, VM continuation, CFG edge and
+retry-only loop machinery; a legacy internal marker fails safely. The coherent
+propagated-call partial-state contract remains for skip, handler and unwind
+analysis. Focused language, bytecode, CALL, alias and signal-lifecycle proof is
+required before the first Release runtime verdict.
+
+K04d2 passes the same 14 focused checks in Debug and ordinary profiling-off
+Release. K04d3 then compared the retained M06 runtime image with the frozen
+candidate using one warmup and 12 balanced/interleaved recorded rounds per VM.
+The candidate is structurally smaller at 1,222 VM instructions and 1,249 TRACE
+events versus M06 at 1,241/1,252, but this does not produce a material runtime
+gain: median RexxCPS is +0.021% on both `rxvm` and `rxbvm`, with mixed pair
+directions of 6/12 and 5/12. One retained `rxvm` candidate sample is 13% below
+its pair, so that cell is formally noisy and rerun-recommended; no sample was
+removed. Adrian accepted K04d1 as a neutral semantic/infrastructure improvement
+on 2026-08-03 without a noisy-cell append. K04d4 closeout passes the complete
+Debug build and 1,998/1,998 broad Debug tests in 297.92 seconds. The production
+retirement audit finds no remaining retry enum, continuation, CFG edge, loop
+classification or factory; only the deliberate negative/legacy-marker
+fixtures, current retirement documentation and historical provenance remain.
+K04 is closed.
+
+K02/K03 evidence is retained in
+[2026-08-03-perf3-11-k02-k03-linked-reads](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/).
+The migration replaces the twelve syntax-expanded duplicate direct/attribute
+linked-read rules with one storage/component/path proof and atomic rewrite plan. The
+new attribute-count component and interned one-based attribute path follow
+owner aliases by `StorageId` while count/reference generations, signals and
+dynamic or invalid slots fail closed. A sparse write index covers storage-phi
+leaves, cursor state and opaque-write barriers without misclassifying writes
+as observations. All six copy families are covered on direct and attribute
+paths; the safety panel includes changed values/count/cursor, different
+owners/slots, aliased calls, divergent phis and signal skips.
+
+The migration found and fixed two manifestations of one cross-consumer
+integration error: opaque writes initially disabled the fourteen accepted K04
+RexxCPS fusions, and explicit pure writes initially disabled four retained
+M05/M06 expectations in the first broad gate. The proof service now classifies
+pure writes once and never treats their absent `ValueId` as an unknown read.
+Focused K02/K03 passes 21/21 in Debug and Release; the combined
+flow/K02/K03/K04/M04/M05/M06 panel passes 28/28 in both builds; and broad Debug
+passes 2,010/2,010 in 678.89 seconds. Frozen/basic focused outputs are
+byte-identical; the two relevant metadata/TRACE rows are documented stronger
+acceptances.
+Canonical Richards, Towers and RexxCPS have zero K02/K03 accepts and remain
+byte-identical to frozen K04, so no runtime timing is warranted. K01 is next:
+migrate cancelling `SWAP` pairs to permutation and observation equivalence.
 
 ### Stage 11 — later consumers after legacy migration
 
@@ -684,7 +785,7 @@ The infrastructure is accepted only when all of the following hold:
 
 1. every signalling opcode has a validated explicit contract or a deliberate
    fail-closed unknown classification;
-2. focused signal lifecycle tests demonstrate normal, skip, retry, handler and
+2. focused signal lifecycle tests demonstrate normal, skip, handler and
    unwind state against both VM modes where applicable;
 3. the graph and analyses are owned and cached per procedure with explicit
    epochs/invalidation;

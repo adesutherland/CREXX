@@ -289,7 +289,6 @@ makeSignalHelper: procedure = .helperplan
     call helper.add_line("  call __rxsignal_condition.set_raw(__rxsignal_raw)")
     call helper.add_line("  __rxsignal_action = .signalaction")
     call helper.add_line("  __rxsignal_action = {" || handler_token_index || "}(__rxsignal_condition)")
-    call helper.add_line("  if __rxsignal_action.kind() = ""retry"" then return ""__rxsignal_retry""")
     call helper.add_line("  if __rxsignal_action.kind() = ""skip"" then return ""__rxsignal_skip""")
     call helper.add_line("  return ""__rxsignal_fail""")
     return helper

@@ -227,12 +227,16 @@ typedef enum {
     RXOP_COMPONENT_STRING = 4,
     RXOP_COMPONENT_DECIMAL = 8,
     RXOP_COMPONENT_BINARY = 16,
+    /* VM value status/type flags copied by ACOPY. */
     RXOP_COMPONENT_ATTRIBUTES = 32,
     RXOP_COMPONENT_REFERENCE = 64,
     /* Host-owned binary payloads have lifetime/finalizer semantics distinct
      * from an ordinary RXAS binary value. */
     RXOP_COMPONENT_NATIVE_PAYLOAD = 128,
-    RXOP_COMPONENT_ALL = 255
+    /* Logical child-count state used by SETATTRS/GETATTRS and checked by
+     * attribute-addressing instructions. It is distinct from ACOPY status. */
+    RXOP_COMPONENT_ATTRIBUTE_COUNT = 256,
+    RXOP_COMPONENT_ALL = 511
 } RxOpValueComponentMask;
 
 typedef enum {
@@ -289,18 +293,20 @@ typedef enum {
     RXOP_SIGNAL_SOURCE_LITERAL_OPERAND,
     RXOP_SIGNAL_SOURCE_REGISTER_OPERAND,
     RXOP_SIGNAL_SOURCE_PLUGIN,
-    RXOP_SIGNAL_SOURCE_UNKNOWN
+    RXOP_SIGNAL_SOURCE_UNKNOWN,
+    /* Signal propagated by a direct, dynamic or fused CALL.  The exact name
+     * is callee/plugin supplied, but the caller-side failure phase is known. */
+    RXOP_SIGNAL_SOURCE_PROPAGATED_CALL
 } RxOpSignalSource;
 
 typedef enum {
     RXOP_SIGNAL_CONT_NONE = 0,
     RXOP_SIGNAL_CONT_NORMAL = 1,
     RXOP_SIGNAL_CONT_SKIP = 2,
-    RXOP_SIGNAL_CONT_RETRY = 4,
-    RXOP_SIGNAL_CONT_HANDLER = 8,
-    RXOP_SIGNAL_CONT_UNWIND = 16,
-    RXOP_SIGNAL_CONT_TERMINAL = 32,
-    RXOP_SIGNAL_CONT_ALL = 63
+    RXOP_SIGNAL_CONT_HANDLER = 4,
+    RXOP_SIGNAL_CONT_UNWIND = 8,
+    RXOP_SIGNAL_CONT_TERMINAL = 16,
+    RXOP_SIGNAL_CONT_ALL = 31
 } RxOpSignalContinuations;
 
 typedef enum {
@@ -323,7 +329,7 @@ typedef enum {
 } RxOpSignalProperties;
 
 /* Normal-path handler-policy transfer. Failure phase determines whether this
- * transfer is visible on skip/retry/handler edges. */
+ * transfer is visible on skip/handler/failure edges. */
 typedef enum {
     RXOP_POLICY_EFFECT_NONE = 0,
     RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_HANDLER,
@@ -436,6 +442,18 @@ typedef enum {
 } Opcode;
 #undef X
 
+/* Canonical equivalence between a materialized integer comparison followed by
+ * BRT/BRF and the corresponding non-materializing conditional branch.  Source
+ * operands name indices in the comparison instruction; int/register forms may
+ * therefore be normalized by swapping them. */
+typedef struct RxOpCompareBranchFusion {
+    int compare_opcode;
+    int branch_opcode;
+    int fused_opcode;
+    size_t left_source_operand;
+    size_t right_source_operand;
+} RxOpCompareBranchFusion;
+
 RxOpEffects rxop_effects(int opcode);
 size_t rxop_effect_count(void);
 int rxop_effect_reads_operand(const RxOpEffects *effects, size_t operand_index);
@@ -446,6 +464,8 @@ int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
 unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
+int rxop_compare_branch_fusion(int compare_opcode, int branch_opcode,
+                               RxOpCompareBranchFusion *fusion);
 /* True when a two-register copy is guaranteed to perform no work, signal, or
  * observable cursor/effect update if both operands denote the same physical
  * register storage. */

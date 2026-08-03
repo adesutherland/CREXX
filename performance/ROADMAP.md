@@ -78,7 +78,34 @@ deletes the last dense M08 semantic liveness authority and adds the missing
 hidden-cleanup proof for producer-cleared reference/native payloads. Adrian
 accepted the byte-identical first Release verdict; paired RexxCPS assembly
 medians remain 0.18 s and median RSS rises 1.05% to 104,103,936 bytes. Focused
-Debug/Release pass 8/8 and broad Debug passes 1,995/1,995. K04 is next.
+Debug/Release pass 8/8 and broad Debug passes 1,995/1,995. K04a completes
+scalable atomic deletion of exact optimized-away Boolean TRACE events. K04b
+replaces the procedure-global call-window veto with reusable exact/dependent-
+`ValueId` visibility and is accepted as a neutral consolidation: focused
+Debug/Release pass 5/5 and canonical output remains byte-identical. K04c proves
+all five residual RexxCPS rejections are false positives from unknown CALL
+retry metadata: each real argument window is only `r1`, while retry count phis
+widen it to `r1..r69`. Broad Debug passes 1,995/1,995. K04d0 then found no
+production retry caller and an existing fused-call retry mapping defect.
+Adrian approved K04d1 retirement on 2026-08-03; propagated-call partial-state
+metadata remains for skip/handler/unwind analysis. K04d1 is now implemented and
+documented. The same 14 focused language, VM, metadata, flow, optimizer and
+native-unwind checks pass in Debug and ordinary profiling-off Release. The
+canonical candidate is 1,222 VM instructions and 1,249 TRACE events versus
+frozen M06 at 1,241/1,252. The clean-host K04d3 verdict is runtime-neutral:
+median RexxCPS changes by +0.021% on both VMs, with mixed 6/12 `rxvm` and 5/12
+`rxbvm` pair directions. One retained `rxvm` candidate sample is 13% below its
+pair and triggers the formal rerun recommendation. No sample was removed.
+Adrian accepted K04d1 as a neutral semantic/infrastructure improvement without
+a noisy-cell append on 2026-08-03. K04d4 then passed the complete Debug build
+and 1,998/1,998 broad Debug tests in 297.92 seconds. The retirement audit finds
+no obsolete production retry machinery. K04 is closed. K02/K03 are also
+complete: one storage/component/path proof replaces all twelve duplicate
+linked-read rules, focused K02/K03 passes 21/21 in Debug and Release, and
+canonical Richards, Towers and RexxCPS remain byte-identical to frozen K04.
+The final shared proof panel passes 28/28 in both builds and broad Debug passes
+2,010/2,010 in 678.89 seconds.
+K01 cancelling-SWAP permutation/observation equivalence is next.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -254,8 +281,8 @@ their recorded trigger fires:
 | PERF3-01 | P0 | Current-HEAD Mac evidence and baseline-validity gate | complete | Adrian accepted the current-product evidence boundary and ranked panel on 2026-07-31. No production edit was made. Evidence: [`2026-07-31-perf3-01-current-mac`](evidence/2026-07-31-perf3-01-current-mac/); control: [`PERF3-01-WORKLIST.md`](PERF3-01-WORKLIST.md). |
 | PERF3-02 | P0 | Full-copy, ownership and attribute-storage panel | complete | Adrian selected C1abc. The ordinary compiler emits the exact measured C1ab Richards and C1c Towers programs; 11/11 focused Release and 1,972/1,972 broad Debug tests pass. Broad C1a-R1 remains rejected and replayable; C2 is ownership-deferred and C3 immaterial. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
 | PERF3-02-C1B | P0 | Multi-return receiver-link ownership feasibility | complete — correct and decisively faster | The exact detached scalar receiver-guard rule preserves canonical `23246/9297`, all fail-closed boundaries and link/unlink state. The R1 panel measures 44.28%/44.01% lower Richards elapsed alone and proves clean composition with C1a. The broad no-write route remains rejected. Control: [`PERF3-02-C1B-WORKLIST.md`](PERF3-02-C1B-WORKLIST.md); correctness: [`2026-08-01-perf3-02-c1b-correctness`](evidence/2026-08-01-perf3-02-c1b-correctness/); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/). |
-| PERF3-02-C2E2 | P0 | RXAS symbolic register-storage identity | complete — core-infrastructure candidate | The diagnostic PoC safely follows direct link/swap/unlink identity, recovers exact point state at all 55 globally tainted Richards full-copy sites and 13/56 Towers sites, and proves a consolidated swap-round-trip route. P1 subsequently supplied the required split normal/signal-skip/signal-retry edges; no rewrite or tactical-rule deletion is selected. Control: [`PERF3-02-C2E2-WORKLIST.md`](PERF3-02-C2E2-WORKLIST.md); evidence: [`2026-07-31-perf3-02-c2e2-storage-identity`](evidence/2026-07-31-perf3-02-c2e2-storage-identity/). |
-| PERF3-02-C2E2-P1 | P0 | Core storage identity and signal continuations | locked — infrastructure retained | Typed normal/signal-skip/signal-retry edges and the graph-owned bounded storage service are the frozen R1 foundation. No rewrite consumer or tactical rule is bundled. Control: [`PERF3-02-C2E2-P1-WORKLIST.md`](PERF3-02-C2E2-P1-WORKLIST.md). |
+| PERF3-02-C2E2 | P0 | RXAS symbolic register-storage identity | complete — core-infrastructure candidate | The diagnostic PoC safely follows direct link/swap/unlink identity, recovers exact point state at all 55 globally tainted Richards full-copy sites and 13/56 Towers sites, and proves a consolidated swap-round-trip route. P1 supplied split normal/signal failure edges; its original retry edge was later retired by approved K04d1. No rewrite or tactical-rule deletion is selected. Control: [`PERF3-02-C2E2-WORKLIST.md`](PERF3-02-C2E2-WORKLIST.md); evidence: [`2026-07-31-perf3-02-c2e2-storage-identity`](evidence/2026-07-31-perf3-02-c2e2-storage-identity/). |
+| PERF3-02-C2E2-P1 | P0 | Core storage identity and signal continuations | locked — infrastructure retained, retry superseded | Typed normal/signal-skip edges and the graph-owned bounded storage service remain the R1 foundation. The original signal-retry edge is superseded by Adrian's approved K04d1 retirement; retained P1 evidence remains historical provenance. Control: [`PERF3-02-C2E2-P1-WORKLIST.md`](PERF3-02-C2E2-P1-WORKLIST.md). |
 | PERF3-02-C2E2-P1A | P1 | Recover storage-analysis assembler cost | complete — A1 retained, A3 rejected | Adrian accepted the bounded disposition on 2026-08-01. A1 demand-driven storage attachment is retained; A3 remains a correct, replayable negative and is removed from production. Exact A1 restoration passes 24/24 focused and 1,972/1,972 broad Debug tests. Control: [`PERF3-02-C2E2-P1A-WORKLIST.md`](PERF3-02-C2E2-P1A-WORKLIST.md); A1 verdict: [`2026-08-01 A1 evidence`](evidence/2026-08-01-perf3-02-c2e2-p1a-first-release-verdict/); A3 verdict: [`2026-08-01 A3 evidence`](evidence/2026-08-01-perf3-02-c2e2-p1a-a3-first-release-verdict/); closeout: [`2026-08-01 closeout`](evidence/2026-08-01-perf3-02-c2e2-p1a-closeout/). |
 | PERF3-02-R1 | P0 | Infrastructure-enabled copy/ownership option re-investigation | complete — C1abc selected | All positive, combined and rejected masks remain replayable in retained evidence; correctness and 156/156 formal timing executions pass for eligible rows. Production contains only C1a+C1b+C1c and passes proportional closeout. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); evidence: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
 | PERF3-03 | P1 | Bounded string-to-number conversion review | complete on Apple — C4 v3 retained | Adrian selected and accepted the private locale-aware C4 v3 prefilter. Minimum validation, 212/212 first-verdict executions, 1,972/1,972 full Debug tests, 6/6 focused ASan, complete Release build/install and installed VM smoke 2/2 pass. Base64 improves 4.86%/5.78% and RexxCPS is +2.52%/-0.61% on `rxvm`/`rxbvm`; no cell hits the 3% guard. LSan is unsupported locally and Windows is separately queued. Control: [`PERF3-03-WORKLIST.md`](PERF3-03-WORKLIST.md); first verdict: [`2026-08-01-perf3-03-c4-first-release-verdict`](evidence/2026-08-01-perf3-03-c4-first-release-verdict/); closeout: [`2026-08-01-perf3-03-c4-closeout`](evidence/2026-08-01-perf3-03-c4-closeout/). |
@@ -268,7 +295,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01-M06 complete; K04 compare fusion next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01-M06 migrate XTOY repetition, constants, all-component absence, exact same-storage copies, typed-copy operand redirection and producer forwarding. M06 removes the last dense M08 semantic liveness authority, recovers all eleven current cases and adds hidden-cleanup proof; canonical images remain byte-identical and broad Debug passes 1,995/1,995. The future ledger includes an ordered RXC-to-RXAS ownership and inlining redesign programme after K04 maturity. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — K04 and K02/K03 complete; K01 next | Gates 1-6 and M01-M06 are locked. K04 owns compare/branch fusion, exact Boolean-event deletion and call-window proof; unused instruction retry is retired while propagated-call partial state remains for skip/handler/unwind paths. K02/K03 add the distinct attribute-count component, interned owner/count/reference/slot paths and sparse component/cursor write indexing. One immutable duplicate-read plan replaces all twelve direct/attribute keyholes across six copy families; aliases, calls, divergent phis, signals and cursor/count/value changes are correctness-gated. Focused K02/K03 passes 21/21 in Debug and Release. The migration exposed and fixed one shared use-index distinction in K04 and M05/M06: pure writes are sparse component barriers, not unknown reads of overwritten values. The combined flow/K02/K03/K04/M04/M05/M06 panel passes 28/28 in both builds and broad Debug passes 2,010/2,010 in 678.89 seconds. Canonical Richards, Towers and RexxCPS have zero K02/K03 accepts and remain byte-identical to frozen K04, so timing was not warranted. K01 cancelling-SWAP permutation/observation equivalence is next; the future ledger retains RXC-to-RXAS ownership and inlining redesign after sufficient proof-service maturity. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); K02/K03: [`2026-08-03-perf3-11-k02-k03-linked-reads`](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/); K04: [`2026-08-03-perf3-11-k04-call-window`](evidence/2026-08-03-perf3-11-k04-call-window/); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -685,8 +712,10 @@ the combined local closeout commit; no push is authorized.
 Adrian then approved PERF3-10 on 2026-08-01. The selected C1/T1 candidate is
 ordered TRACE result-event batching plus a reusable storage-identity and
 component-aware RXAS fact for redundant `ITOS`. C0-C4 and T0-T2 remain
-recorded for replay. The candidate must preserve TRACE event count/order/value,
-fail closed across unproved writes, calls and signal phases, and stop after its
+recorded for replay. This candidate preserves TRACE event count/order/value
+because the same proved value remains available; that is its selected local
+quality property, not a universal restriction on optimisation. It must fail
+closed across unproved writes, calls and signal phases, and stop after its
 minimum correctness gate and mandatory first ordinary Release runtime verdict.
 
 That stop gate was reached and Adrian accepted C1/T1 on 2026-08-01. The
@@ -724,7 +753,7 @@ for the next mechanism slice:
 2. signal phase is currently proved only as `NONE` for the safe `ITOS` case
    and otherwise fails closed as unknown. Common pre-write, post-write and
    partial-write locations must be classified against actual VM handlers so
-   normal, skip, retry and handler continuations receive the right component
+   normal, skip and handler continuations receive the right component
    generation.
 
 The proposed fact is `(storage identity, component, value generation,
@@ -757,7 +786,7 @@ rows, and all three Gate 0 benchmark RXBIN hashes are unchanged. Evidence:
 
 Stage 2 closes the immutable graph gate. The new consumer-free sidecar owns
 stable queue-record, instruction, code-block and pre-emission address IDs for
-one epoch, plus typed normal, branch, signal skip/retry, handler, unwind,
+one epoch, plus typed normal, branch, signal skip, handler, unwind,
 terminal and unknown edges through synthetic roots/exits. Its label index and
 edge construction are expected linear in records plus edges. The first cost
 check exposed and rejected a duplicate opcode-resolution pass; the locked
@@ -770,8 +799,9 @@ Evidence: [`Stage 2 flow graph`](evidence/2026-08-02-perf3-11-stage2-flow-graph/
 Stage 3 closes the reusable structural-analysis gate. The procedure epoch now
 owns a demand-driven cached result containing unique predecessor sets,
 multi-root RPO, dominators and sparse frontiers, SCC/backedge classification
-and a loop hierarchy that distinguishes signal-retry cycles from source-loop
-candidates. Work and retained-memory budgets fail closed; deterministic dumps
+and a loop hierarchy for source/control-flow candidates. K04d1 later removes
+the now-retired synthetic signal-retry cycles. Work and retained-memory budgets
+fail closed; deterministic dumps
 make the scale auditable. The first eager integration was rejected after it
 crossed the Richards RSS guard by 1,155,072 bytes. The accepted demand-driven
 form retains identical analysis results under `-d` and future consumers while
@@ -780,7 +810,7 @@ and all Gate 0 images remain exact.
 
 Stage 4 closes the signal-policy/effect gate. Handler policy is an inherited
 procedure parameter with sparse writes and edge-multiset phis; normal, skip,
-retry, handler and exit edges select policy versions using the authoritative
+handler and exit edges select policy versions using the authoritative
 failure phase. Calls do not leak callee-local copy-on-write handler changes,
 but do advance call/reference/external/plugin/locale identities because VM
 argument slots point at caller-owned values. TRACE and numeric-context effects
@@ -886,7 +916,18 @@ cleared by the retargeted scalar producer must already be absent in both
 storages. Frozen M05 and M06 focused/canonical images are byte-identical.
 Adrian accepted the 0.18 s equal RexxCPS assembly median and +1.05% median RSS
 verdict; focused Debug/Release pass 8/8 and broad Debug passes 1,995/1,995.
-K04 compare/branch fusion is next.
+K04a compare/branch fusion owns atomic exact result-event deletion. K04b now
+uses exact/dependent-`ValueId` call-window visibility and is accepted as a
+neutral consolidation. K04c proves all five remaining canonical rejections are
+unknown CALL retry-metadata false positives, not actual argument observations.
+K04d0 found no production retry user and exposed an existing fused-call retry
+mapping defect. K04d1 is implemented with propagated-call partial-state
+metadata retained for non-retry failure paths, and K04d2 focused Debug/Release
+passes 14/14. K04d3's revised first Release verdict is neutral at +0.021%
+median RexxCPS on both VMs; mixed pair directions and one retained low `rxvm`
+sample are retained. Adrian accepted the neutral semantic/infrastructure result
+without an append, and K04d4 passes the complete Debug build plus 1,998/1,998
+broad Debug tests. K04 is closed.
 
 The PERF3-10 closeout also audited surviving tactical guards. Loads,
 one-register XTOY repetition, same-storage copies and typed-copy redirection
@@ -908,7 +949,9 @@ library work and reusable flow facts; include variable/representation hoisting,
 string conversions, PARSE, stem-tail construction, ADDRESS and the inactive
 TRACE path. T1 already supplies the correct anchoring model: a reached trace
 event drains prior ordered events, so `CNOP` or executable conversion work is
-not retained merely to separate metadata.
+not retained merely to separate metadata. This batching guarantee applies to
+retained events; it does not require preserving an event for work or a value
+removed by optimisation.
 
 The deliverable is a ranked general-shape ledger with dynamic ceiling,
 semantic proof owner and guard workload. Compiler lowering, RXAS flow and

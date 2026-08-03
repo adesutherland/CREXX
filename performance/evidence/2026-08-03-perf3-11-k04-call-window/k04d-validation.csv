@@ -1,0 +1,9 @@
+gate,build,result,detail
+strict_gnu90,debug,pass,one_pre_existing_unused_parameter_warning
+focused_correctness,debug,pass,14_of_14
+focused_correctness,release,pass,14_of_14
+canonical_runtime,release,pass,52_of_52_executions_correct
+complete_build,debug,pass,all_targets
+broad_ctest,debug,pass,1998_of_1998_in_297.92_seconds
+retirement_audit,source,pass,no_production_retry_machinery
+diff_check,source,pass,no_whitespace_errors

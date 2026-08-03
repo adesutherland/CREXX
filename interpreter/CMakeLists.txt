@@ -883,6 +883,17 @@ crexx_add_rxas_vm_binary(tests_signal_actions "action-aware signal handlers")
 crexx_add_vm_dual_test(NAME rxassignalactionskiptests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after.*action-dynamic-after")
 crexx_add_vm_dual_test(NAME rxassignalactiondynamictests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload.*action-dynamic-after")
 
+crexx_add_rxas_vm_binary(tests_signal_retry_retired "retired signal retry marker")
+crexx_add_vm_dual_test(
+        NAME rxassignalretryretiredtests
+        RXVM_ARGS tests_signal_retry_retired
+        EXPECTED_EXIT_CODE 30
+        EXPECTED_FAILURE_DESCRIPTION "retired signal retry marker fails safely"
+        REQUIRED_OUTPUT_REGEX
+            "PANIC: retired retry marker \\(SIGNAL OTHER\\)"
+        FORBIDDEN_OUTPUT_REGEX
+            "FAIL: retired retry marker resumed execution")
+
 crexx_add_rxas_vm_binary(tests_signal_pushpop "signal handler push/pop scope")
 crexx_add_vm_dual_test(NAME rxassignalpushpoprestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore.*pushpop-after-restored-ignore")
 crexx_add_vm_dual_test(NAME rxassignalpushpopbranchtests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit.*pushpop-after-restored-ignore")

@@ -526,8 +526,9 @@ handle_conversion: procedure = .signalaction
 ```
 
 The handler procedure receives one `.signal` argument and returns a
-`.signalaction`: `.signalaction.skip()`, `.signalaction.retry()`, or
-`.signalaction.fail()`.
+`.signalaction`: `.signalaction.skip()` or `.signalaction.fail()`. Retrying
+work requires an explicit source-level loop; instruction-level retry is not a
+handler action.
 
 Block-scoped handlers use `ON SIGNAL` clauses on a simple `DO ... END` group:
 
@@ -633,6 +634,15 @@ assignment results from source text. Result coverage is still deliberately
 partial: optimized-away or folded values may have no trace event, and some
 compound-variable details such as final resolved-name reporting remain a
 compiler/ runtime coverage task.
+
+TRACE reports the executable program after optimisation. Folding, fusion,
+inlining, elimination and code motion or loop hoisting can therefore change,
+remove or relocate trace events. This does not affect ordinary program
+semantics, and retained events must still read the correct available value, but
+optimised trace output is not required to match the unoptimised event stream.
+For the closest correspondence to authored execution, use
+`crexx --nooptimise`, or disable both stages explicitly with `rxc -n` and
+`rxas -n`. The beta coverage limits above still apply.
 
 `TRACE LLM` is a cRexx extension that emits one JSON-lines-style trace record
 per event. It is intended for debugger automation and for validating emitted

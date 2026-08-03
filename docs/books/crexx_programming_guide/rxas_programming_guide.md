@@ -69,6 +69,11 @@ Procedure names are identifiers for routines in the program. Procedure `main()` 
 
 `rxas` is an optimising assembler[^optim] which can rearrange instructions or eliminate them entirely. This optimisation can be switched off when in doubt. This will cause loss of performance, but will make debugging of the code more straightforward, because there is a more direct correspondence between the sourcelines and the generated assembly code.
 
+TRACE output likewise describes the optimised executable: eliminated, fused,
+inlined or moved work may have fewer, combined or relocated trace events. Use
+an unoptimised compiler and assembler when source-correspondent tracing is more
+important than performance.
+
 
 [^label]: it will not hurt, however, if it does not start in column one. It must be the first word of the line, though.
 [^optim]: optimization is default but can be switched off, for example when debugging.

@@ -325,14 +325,16 @@ Install an action-aware procedure call as a signal handler.
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x021d` | `sigcalla handler(),"NAME"` | Let `handler` choose skip, retry, or fail. |
+| `0x021d` | `sigcalla handler(),"NAME"` | Let `handler` choose skip or fail. |
 
 ### Operands And Semantics
 
 The handler receives the same five-attribute raw object as `sigcall`. Its return
 string is interpreted as `__rxsignal_skip` (resume after the signal point),
-`__rxsignal_retry` (retry the recorded instruction), or `__rxsignal_fail`
-(default panic). A missing or unknown return action also selects the panic path.
+or `__rxsignal_fail` (default panic). A missing or unknown return action,
+including the retired legacy `__rxsignal_retry` marker, also selects the panic
+path. Retrying work is expressed with an explicit source-level loop so partial
+writes and side effects remain visible.
 
 ### Signals
 

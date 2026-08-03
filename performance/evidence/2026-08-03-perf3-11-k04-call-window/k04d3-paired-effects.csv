@@ -1,0 +1,3 @@
+vm,baseline_median_cps,candidate_median_cps,median_delta_percent,favourable_pairs,total_pairs,rerun_recommended,interpretation
+rxvm,46221991.5,46231723.5,0.021055,6,12,yes,neutral_noisy
+rxbvm,45149051.0,45158611.5,0.021175,5,12,no,neutral

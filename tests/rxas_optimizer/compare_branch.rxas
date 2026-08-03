@@ -3,10 +3,45 @@
 
 case_ieq_brt_rr() .locals=5
     ieq r0,r1,r2
-    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "result-delete" ""
     brt hit_ieq_brt_rr,r0
     ret
 hit_ieq_brt_rr:
+    ret
+
+case_ieq_brt_unrelated_trace() .locals=5
+    ieq r0,r1,r2
+    .traceevent "O" 4 "R" "B" "r" 4 0 0 0 "unrelated-keep" ""
+    brt hit_ieq_brt_unrelated_trace,r0
+    ret
+hit_ieq_brt_unrelated_trace:
+    ret
+
+case_ieq_brt_multiple_result_trace() .locals=5
+    ieq r0,r1,r2
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "multi-delete-a" ""
+    .traceevent "O" 4 "R" "I" "r" 0 0 0 0 "multi-delete-b" ""
+    brt hit_ieq_brt_multiple_result_trace,r0
+    ret
+hit_ieq_brt_multiple_result_trace:
+    ret
+
+case_ieq_brt_mixed_trace() .locals=5
+    ieq r0,r1,r2
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "mixed-delete" ""
+    .traceevent "O" 4 "R" "B" "r" 4 0 0 0 "mixed-unrelated-keep-a" ""
+    .traceevent "O" 4 "R" "I" "r" 3 0 0 0 "mixed-unrelated-keep-b" ""
+    brt hit_ieq_brt_mixed_trace,r0
+    ret
+hit_ieq_brt_mixed_trace:
+    ret
+
+case_ieq_brt_late_result_trace() .locals=5
+    ieq r0,r1,r2
+    brt hit_ieq_brt_late_result_trace,r0
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "late-result-keep" ""
+    ret
+hit_ieq_brt_late_result_trace:
     ret
 
 case_ieq_brf_rr() .locals=5
@@ -116,7 +151,7 @@ hit_ilte_brf_ir:
 
 case_live_bool_target() .locals=5
     ieq r0,r1,32
-    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "live-result-keep" ""
     brt preserve_bool,r0
     load r0,0
 preserve_bool:
@@ -152,6 +187,130 @@ case_live_bool_call_argument() .locals=7
 preserve_call_bool:
     load r3,2
     call r6,consume_bool(),r3
+    ret
+
+* Both paths replace the comparison ValueId before r5 enters the call window.
+case_call_window_killed_on_all_paths() .locals=9
+    ieq r5,r1,37
+    brt replace_true_call_value,r5
+    load r5,0
+    br join_replaced_call_value
+replace_true_call_value:
+    load r5,1
+join_replaced_call_value:
+    load r3,2
+    call r8,consume_bool(),r3
+    ret
+
+* One incoming phi value still is the comparison result, so the call can
+* observe it and fusion must remain blocked.
+case_call_window_phi_observes_result() .locals=9
+    ieq r5,r1,38
+    brt retain_phi_call_value,r5
+    load r5,0
+    br join_retained_call_value
+retain_phi_call_value:
+    load r4,0
+join_retained_call_value:
+    load r3,2
+    call r8,consume_bool(),r3
+    ret
+
+* On the false path SWAP moves the result into the one-register window r4.
+case_call_window_swap_observes_result() .locals=9
+    ieq r5,r1,39
+    brt retain_unswapped_call_value,r5
+    swap r4,r5
+retain_unswapped_call_value:
+    load r3,1
+    call r8,consume_bool(),r3
+    ret
+
+* LINK aliases r4 to the result storage before the one-register call window.
+case_call_window_link_observes_result() .locals=9
+    ieq r5,r1,40
+    brt link_result_for_call,r5
+link_result_for_call:
+    link r4,r5
+    load r3,1
+    call r8,consume_bool(),r3
+    ret
+
+* With instruction-level retry retired, the count is read once at the CALL.
+* The exact one-register window is r4, so r5 is not observed.
+case_call_count_exact_window() .locals=9
+    ieq r5,r1,41
+    brt call_count_preserved,r5
+call_count_preserved:
+    load r3,1
+    call r8,consume_bool(),r3
+    ret
+
+* An argument may alias the count storage, but the count is consumed before
+* the call can write through r4.  With no retry the exact window remains r4.
+case_call_count_argument_alias() .locals=9
+    ieq r5,r1,42
+    brt call_count_argument_alias,r5
+call_count_argument_alias:
+    link r3,r4
+    load r3,1
+    call r8,consume_bool(),r3
+    ret
+
+* A native call may partially write its result before signalling.  The call
+* has already consumed the count, so result/count aliasing cannot widen the
+* argument window when there is no instruction-level retry.
+case_call_count_result_alias() .locals=9
+    ieq r5,r1,43
+    brt call_count_result_alias,r5
+call_count_result_alias:
+    load r3,1
+    call r3,consume_bool(),r3
+    ret
+
+* An unresolved write target is an opaque write barrier for component proofs,
+* but it does not observe an unrelated comparison result ValueId.
+case_compare_unrelated_opaque_writes() .locals=6
+    ieq r0,r1,r2
+    brt opaque_write_true,r0
+    linksetattrslinkadd r4,r3,1,1,r5,r3,1
+    load r4,5
+    unlink r4
+    ret
+opaque_write_true:
+    linksetattrslinkadd r4,r3,1,1,r5,r3,1
+    load r4,6
+    unlink r4
+    ret
+
+case_compare_destination_source_overlap() .locals=5
+    ieq r0,r0,r1
+    brt preserve_overlap,r0
+    ret
+preserve_overlap:
+    ret
+
+case_compare_hidden_reference_cleanup() .locals=5
+    mkref r0,r3
+    ieq r0,r1,r2
+    brt preserve_reference_cleanup,r0
+    ret
+preserve_reference_cleanup:
+    ret
+
+case_compare_linked_destination() .locals=5
+    link r0,r3
+    ieq r0,r1,r2
+    brt preserve_linked_destination,r0
+    ret
+preserve_linked_destination:
+    ret
+
+case_fgt_brt_deferred() .locals=5
+    fgt r0,r1,r2
+    brt preserve_float_compare,r0
+    ret
+preserve_float_compare:
     ret
 
 consume_bool() .locals=0

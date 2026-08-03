@@ -25,6 +25,7 @@ typedef enum FlowMapUpdateKind {
     FLOW_MAP_SET_BASE = 0,
     FLOW_MAP_SET_SITE,
     FLOW_MAP_COPY_REGISTER,
+    FLOW_MAP_ATTRIBUTE_PATH,
     FLOW_MAP_UNKNOWN
 } FlowMapUpdateKind;
 
@@ -34,6 +35,8 @@ typedef struct FlowMapUpdate {
     size_t source_state;
     size_t source_register;
     size_t storage_id;
+    size_t reference_effect_id;
+    size_t attribute_slot;
 } FlowMapUpdate;
 
 typedef struct FlowValueUpdate {
@@ -63,7 +66,7 @@ typedef struct FlowSsaState {
 #define FLOW_SSA_VALUE_CLOBBER_ALL 4u
 #define FLOW_SSA_VALUE_CLOBBER_DYNAMIC 8u
 #define FLOW_SSA_VALUE_CLOBBER_CALL_RANGE 16u
-#define FLOW_SSA_COMPONENT_COUNT 8u
+#define FLOW_SSA_COMPONENT_COUNT 9u
 
 typedef struct FlowStorageVersion {
     RxasFlowStorageKind kind;
@@ -74,6 +77,10 @@ typedef struct FlowStorageVersion {
     size_t join_state;
     size_t input_offset;
     size_t input_count;
+    size_t owner_storage_id;
+    size_t attribute_count_value_id;
+    size_t reference_effect_id;
+    size_t attribute_slot;
 } FlowStorageVersion;
 
 typedef struct FlowValueVersion {
@@ -112,11 +119,22 @@ typedef struct FlowValueCacheEntry {
     unsigned char resolving;
 } FlowValueCacheEntry;
 
+typedef struct FlowAttributePathEntry {
+    size_t owner_storage_id;
+    size_t attribute_count_value_id;
+    size_t reference_effect_id;
+    size_t attribute_slot;
+    size_t storage_id;
+    size_t next;
+} FlowAttributePathEntry;
+
 typedef struct FlowBuildMapUpdate {
     size_t destination;
     FlowMapUpdateKind kind;
     size_t source_register;
     size_t storage_id;
+    size_t reference_effect_id;
+    size_t attribute_slot;
 } FlowBuildMapUpdate;
 
 typedef struct FlowBuildValueUpdate {
@@ -189,10 +207,24 @@ struct RxasFlowSsaAnalysis {
     FlowValueCacheEntry *value_cache;
     size_t value_cache_count;
     size_t value_cache_capacity;
+    size_t *attribute_path_buckets;
+    size_t attribute_path_bucket_count;
+    FlowAttributePathEntry *attribute_paths;
+    size_t attribute_path_count;
+    size_t attribute_path_capacity;
+    size_t *effect_leaf_cache;
+    size_t *effect_walk_marks;
+    size_t *effect_walk_stack;
+    size_t effect_walk_capacity;
+    size_t effect_walk_generation;
     size_t unmapped_value_plus_one[FLOW_SSA_COMPONENT_COUNT];
     size_t entry_state;
     size_t unknown_state;
 };
+
+static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
+                                     size_t state_id, size_t storage_id,
+                                     unsigned int component);
 
 static int flow_ssa_consume(RxasFlowSsaAnalysis *analysis, size_t amount) {
     size_t remaining;
@@ -459,6 +491,8 @@ static size_t flow_ssa_add_storage_version(
     analysis->metrics.storage_versions++;
     if (version.kind == RXAS_FLOW_STORAGE_SITE)
         analysis->metrics.storage_sites++;
+    if (version.kind == RXAS_FLOW_STORAGE_ATTRIBUTE_PATH)
+        analysis->metrics.storage_attribute_paths++;
     if (version.kind == RXAS_FLOW_STORAGE_PHI)
         analysis->metrics.storage_phis++;
     return id;
@@ -563,6 +597,8 @@ static int flow_ssa_append_map_updates(
         target->source_state = source_state;
         target->source_register = updates[index].source_register;
         target->storage_id = updates[index].storage_id;
+        target->reference_effect_id = updates[index].reference_effect_id;
+        target->attribute_slot = updates[index].attribute_slot;
     }
     analysis->metrics.mapping_updates += count;
     return flow_ssa_consume(analysis, count);
@@ -650,7 +686,21 @@ static int flow_build_map_add(FlowBuildMapUpdate *updates, size_t *count,
     updates[*count].kind = kind;
     updates[*count].source_register = source;
     updates[*count].storage_id = storage;
+    updates[*count].reference_effect_id = RXAS_FLOW_ID_NONE;
+    updates[*count].attribute_slot = 0;
     (*count)++;
+    return 1;
+}
+
+static int flow_build_map_add_attribute_path(
+        FlowBuildMapUpdate *updates, size_t *count, size_t capacity,
+        size_t destination, size_t source, size_t reference_effect_id,
+        size_t attribute_slot) {
+    if (!flow_build_map_add(updates, count, capacity, destination,
+                            FLOW_MAP_ATTRIBUTE_PATH, source, 0))
+        return 0;
+    updates[*count - 1].reference_effect_id = reference_effect_id;
+    updates[*count - 1].attribute_slot = attribute_slot;
     return 1;
 }
 
@@ -692,7 +742,7 @@ static size_t flow_ssa_create_site(RxasFlowSsaAnalysis *analysis,
     return index == RXAS_FLOW_ID_NONE ? RXAS_FLOW_ID_NONE : index + 1;
 }
 
-static int flow_ssa_is_plain_mapping_opcode(int opcode) {
+int rxas_flow_opcode_is_plain_mapping(int opcode) {
     return opcode == OP_LINK_REG_REG || opcode == OP_LINKARG_REG_INT ||
            opcode == OP_LINKARG_REG_REG_INT ||
            opcode == OP_METALINKPREG_REG_REG ||
@@ -726,7 +776,7 @@ static unsigned int flow_component_bits[] = {
     RXOP_COMPONENT_INTEGER, RXOP_COMPONENT_FLOAT, RXOP_COMPONENT_STRING,
     RXOP_COMPONENT_DECIMAL, RXOP_COMPONENT_BINARY,
     RXOP_COMPONENT_ATTRIBUTES, RXOP_COMPONENT_REFERENCE,
-    RXOP_COMPONENT_NATIVE_PAYLOAD
+    RXOP_COMPONENT_NATIVE_PAYLOAD, RXOP_COMPONENT_ATTRIBUTE_COUNT
 };
 
 static size_t flow_ssa_explicit_call_argument_count(int opcode) {
@@ -746,6 +796,34 @@ static size_t flow_ssa_call_argument_register_count(
     return instruction && instruction->op
             ? flow_ssa_explicit_call_argument_count(
                     instruction->op->opcode) : 0;
+}
+
+static int flow_ssa_same_register_operands(
+        RxasFlowSsaAnalysis *analysis, const instruction_queue *item,
+        size_t left_operand, size_t right_operand) {
+    size_t left;
+    size_t right;
+    left = flow_ssa_operand_register(analysis, item, left_operand);
+    right = flow_ssa_operand_register(analysis, item, right_operand);
+    return left != RXAS_FLOW_ID_NONE && left == right;
+}
+
+/* These fused calls permute registers before reading the count operand.  A
+ * hand-written instruction may repeat a physical register operand; in that
+ * case the pre-call count ValueId is not the value actually consumed and an
+ * exact range must fail closed. */
+static int flow_ssa_fused_call_swaps_count(
+        RxasFlowSsaAnalysis *analysis, const RxasFlowInstruction *instruction,
+        const instruction_queue *item) {
+    if (!instruction || !instruction->op) return 0;
+    if (instruction->op->opcode == OP_SWAPCALL_REG_FUNC_REG_REG_REG)
+        return flow_ssa_same_register_operands(analysis, item, 2, 3) ||
+               flow_ssa_same_register_operands(analysis, item, 2, 4);
+    if (instruction->op->opcode ==
+            OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG)
+        return flow_ssa_same_register_operands(analysis, item, 2, 3) ||
+               flow_ssa_same_register_operands(analysis, item, 2, 5);
+    return 0;
 }
 
 static int flow_ssa_add_call_argument_clobbers(
@@ -863,7 +941,6 @@ static size_t flow_ssa_build_normal_transfer(
             case OP_LINKATTR_REG_REG_REG:
             case OP_LINKATTR_REG_REG_INT:
             case OP_LINKATTR1_REG_REG_REG:
-            case OP_LINKATTR1_REG_REG_INT:
             case OP_LINKREF_REG_REG:
             case OP_LINKARG_REG_REG_INT:
             case OP_METALINKPREG_REG_REG:
@@ -872,6 +949,29 @@ static size_t flow_ssa_build_normal_transfer(
                                             instruction->block_id, first);
                 flow_build_map_add(map, &map_count, map_capacity, first,
                                    FLOW_MAP_SET_SITE, 0, site);
+                break;
+            case OP_LINKATTR1_REG_REG_INT:
+                first = flow_ssa_operand_register(analysis, item, 0);
+                second = flow_ssa_operand_register(analysis, item, 1);
+                if (second != RXAS_FLOW_ID_NONE && item->operand3Token &&
+                    item->operand3Token->token_type == INT &&
+                    item->operand3Token->token_value.integer > 0) {
+                    size_t reference_effect_id;
+                    reference_effect_id = rxas_flow_effect_at_instruction(
+                            analysis->signal, analysis->metrics.epoch,
+                            instruction->id, 0, RXAS_FLOW_EFFECT_REFERENCE);
+                    flow_build_map_add_attribute_path(
+                            map, &map_count, map_capacity, first, second,
+                            reference_effect_id,
+                            (size_t)item->operand3Token->token_value.integer);
+                }
+                else {
+                    site = flow_ssa_create_site(
+                            analysis, instruction->id,
+                            instruction->block_id, first);
+                    flow_build_map_add(map, &map_count, map_capacity, first,
+                                       FLOW_MAP_SET_SITE, 0, site);
+                }
                 break;
             case OP_SETLINKATTR1_REG_REG_INT_REG:
             case OP_SETLINKATTR1_REG_REG_INT_REG_INT:
@@ -944,14 +1044,12 @@ static size_t flow_ssa_build_normal_transfer(
             case OP_SWAPCALL_REG_FUNC_REG_REG_REG:
                 flow_ssa_add_swap(analysis, item, map, &map_count,
                                   map_capacity, 3, 4);
-                flags |= FLOW_SSA_MAP_CLOBBER_DYNAMIC |
-                         FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
+                flags |= FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
                 break;
             case OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG:
                 flow_ssa_add_swap(analysis, item, map, &map_count,
                                   map_capacity, 3, 5);
-                flags |= FLOW_SSA_MAP_CLOBBER_DYNAMIC |
-                         FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
+                flags |= FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
                 break;
             case OP_UNLINK_REG:
             case OP_UNLINKBR_REG_ID:
@@ -995,12 +1093,14 @@ static size_t flow_ssa_build_normal_transfer(
             default:
                 break;
         }
-        if (opcode == OP_COPY_REG_REG || opcode == OP_ACOPY_REG_REG ||
+        if (instruction->effects.semantics &
+                (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL))
+            flags |= FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
+        else if (opcode == OP_COPY_REG_REG || opcode == OP_ACOPY_REG_REG ||
             opcode == OP_NULL_REG ||
             (instruction->effects.semantics &
              (RXOP_SEM_LIFETIME_END | RXOP_SEM_REFERENCE_RELEASE |
-              RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_CALL |
-              RXOP_SEM_DYNAMIC_CALL | RXOP_SEM_OPAQUE)))
+              RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_OPAQUE)))
             flags |= FLOW_SSA_MAP_CLOBBER_DYNAMIC |
                      FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
         if ((instruction->effects.semantics &
@@ -1013,7 +1113,7 @@ static size_t flow_ssa_build_normal_transfer(
                                    FLOW_MAP_UNKNOWN, 0, 0);
             }
         }
-        if (!flow_ssa_is_plain_mapping_opcode(opcode)) {
+        if (!rxas_flow_opcode_is_plain_mapping(opcode)) {
             for (operand = 0; operand < item->operandCount; operand++) {
                 size_t target;
                 size_t source;
@@ -1154,7 +1254,9 @@ static size_t flow_ssa_build_normal_transfer(
             case RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3:
                 call_range_base = flow_ssa_operand_register(
                         analysis, item, 2);
-                if (call_range_base == RXAS_FLOW_ID_NONE ||
+                if (flow_ssa_fused_call_swaps_count(
+                            analysis, instruction, item) ||
+                    call_range_base == RXAS_FLOW_ID_NONE ||
                     call_range_base >= analysis->register_count ||
                     analysis->registers[call_range_base].register_class !=
                             RXAS_FLOW_REGISTER_LOCAL)
@@ -1279,10 +1381,15 @@ static size_t flow_ssa_build_failure_transfer(
     if (instruction->signal.phase == RXOP_SIGNAL_PHASE_UNKNOWN)
         flags |= FLOW_SSA_MAP_CLOBBER_DYNAMIC |
                  FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
+    else if (instruction->signal.source ==
+             RXOP_SIGNAL_SOURCE_PROPAGATED_CALL)
+        flags |= FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
     if (instruction->effects.implicit ==
             RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3) {
         call_range_base = flow_ssa_operand_register(analysis, item, 2);
-        if (call_range_base == RXAS_FLOW_ID_NONE ||
+        if (flow_ssa_fused_call_swaps_count(
+                    analysis, instruction, item) ||
+            call_range_base == RXAS_FLOW_ID_NONE ||
             call_range_base >= analysis->register_count ||
             analysis->registers[call_range_base].register_class !=
                     RXAS_FLOW_REGISTER_LOCAL)
@@ -1454,7 +1561,6 @@ static int flow_ssa_set_edges(RxasFlowSsaAnalysis *analysis,
                 analysis->procedure, analysis->metrics.epoch, edge_id);
         state_id = after_last;
         if (edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP ||
-            edge->kind == RXAS_FLOW_EDGE_SIGNAL_RETRY ||
             edge->kind == RXAS_FLOW_EDGE_HANDLER ||
             edge->kind == RXAS_FLOW_EDGE_UNWIND ||
             edge->kind == RXAS_FLOW_EDGE_TERMINAL)
@@ -1537,11 +1643,216 @@ static size_t flow_hash_pair(size_t left, size_t right) {
 static int flow_ssa_cache_init(RxasFlowSsaAnalysis *analysis) {
     analysis->storage_bucket_count = 1024;
     analysis->value_bucket_count = 1024;
+    analysis->attribute_path_bucket_count = 1024;
     analysis->storage_buckets = flow_ssa_calloc(
             analysis, analysis->storage_bucket_count, sizeof(size_t));
     analysis->value_buckets = flow_ssa_calloc(
             analysis, analysis->value_bucket_count, sizeof(size_t));
-    return analysis->storage_buckets && analysis->value_buckets;
+    analysis->attribute_path_buckets = flow_ssa_calloc(
+            analysis, analysis->attribute_path_bucket_count, sizeof(size_t));
+    return analysis->storage_buckets && analysis->value_buckets &&
+           analysis->attribute_path_buckets;
+}
+
+static size_t flow_ssa_attribute_path_hash(
+        size_t owner_storage_id, size_t attribute_count_value_id,
+        size_t reference_effect_id, size_t attribute_slot) {
+    return flow_hash_pair(
+            flow_hash_pair(owner_storage_id, attribute_count_value_id),
+            flow_hash_pair(reference_effect_id, attribute_slot));
+}
+
+/* Canonicalize a write-once effect phi to its one entry/write leaf. Cached
+ * child results collapse chains such as phi(phi(write,write),same) in work
+ * proportional to the newly encountered nodes rather than path depth per
+ * attribute link. A genuinely merged or unknown effect has no canonical
+ * leaf and therefore makes the path unavailable. */
+static size_t flow_ssa_effect_unique_leaf(
+        RxasFlowSsaAnalysis *analysis, size_t effect_id) {
+    size_t effect_count;
+    size_t head;
+    size_t tail;
+    size_t leaf;
+    int have_leaf;
+    effect_count = rxas_flow_effect_version_count(
+            analysis->signal, analysis->metrics.epoch);
+    if (effect_id == RXAS_FLOW_ID_NONE || effect_id >= effect_count)
+        return RXAS_FLOW_ID_NONE;
+    if (!analysis->effect_leaf_cache) {
+        analysis->effect_leaf_cache = flow_ssa_calloc(
+                analysis, effect_count, sizeof(*analysis->effect_leaf_cache));
+        analysis->effect_walk_marks = flow_ssa_calloc(
+                analysis, effect_count, sizeof(*analysis->effect_walk_marks));
+        analysis->effect_walk_stack = flow_ssa_calloc(
+                analysis, effect_count, sizeof(*analysis->effect_walk_stack));
+        if (!analysis->effect_leaf_cache || !analysis->effect_walk_marks ||
+            !analysis->effect_walk_stack)
+            return RXAS_FLOW_ID_NONE;
+        analysis->effect_walk_capacity = effect_count;
+    }
+    if (analysis->effect_leaf_cache[effect_id])
+        return analysis->effect_leaf_cache[effect_id] == RXAS_FLOW_ID_NONE
+                ? RXAS_FLOW_ID_NONE
+                : analysis->effect_leaf_cache[effect_id] - 1;
+    analysis->effect_walk_generation++;
+    if (!analysis->effect_walk_generation) {
+        memset(analysis->effect_walk_marks, 0,
+               analysis->effect_walk_capacity *
+                       sizeof(*analysis->effect_walk_marks));
+        analysis->effect_walk_generation = 1;
+    }
+    head = 0;
+    tail = 0;
+    leaf = RXAS_FLOW_ID_NONE;
+    have_leaf = 0;
+    analysis->effect_walk_marks[effect_id] =
+            analysis->effect_walk_generation;
+    analysis->effect_walk_stack[tail++] = effect_id;
+    while (head < tail) {
+        RxasFlowEffectNode node;
+        size_t input;
+        size_t cached;
+        size_t current;
+        current = analysis->effect_walk_stack[head++];
+        if (!flow_ssa_consume(analysis, 1) ||
+            !rxas_flow_effect_node(
+                    analysis->signal, analysis->metrics.epoch,
+                    current, &node))
+            goto unavailable;
+        cached = analysis->effect_leaf_cache[current];
+        if (current != effect_id && cached) {
+            if (cached == RXAS_FLOW_ID_NONE) goto unavailable;
+            cached--;
+            if (!have_leaf) {
+                leaf = cached;
+                have_leaf = 1;
+            }
+            else if (leaf != cached) goto unavailable;
+            continue;
+        }
+        if (node.kind == RXAS_FLOW_EFFECT_NODE_PHI) {
+            if (!node.input_count) goto unavailable;
+            for (input = 0; input < node.input_count; input++) {
+                size_t input_id;
+                input_id = rxas_flow_effect_input(
+                        analysis->signal, analysis->metrics.epoch,
+                        current, input);
+                if (input_id == RXAS_FLOW_ID_NONE ||
+                    input_id >= analysis->effect_walk_capacity)
+                    goto unavailable;
+                if (analysis->effect_walk_marks[input_id] ==
+                        analysis->effect_walk_generation)
+                    continue;
+                analysis->effect_walk_marks[input_id] =
+                        analysis->effect_walk_generation;
+                analysis->effect_walk_stack[tail++] = input_id;
+            }
+            continue;
+        }
+        if (node.kind == RXAS_FLOW_EFFECT_NODE_UNKNOWN) goto unavailable;
+        if (!have_leaf) {
+            leaf = node.id;
+            have_leaf = 1;
+        }
+        else if (leaf != node.id) goto unavailable;
+    }
+    if (!have_leaf) goto unavailable;
+    analysis->effect_leaf_cache[effect_id] = leaf + 1;
+    return leaf;
+
+unavailable:
+    analysis->effect_leaf_cache[effect_id] = RXAS_FLOW_ID_NONE;
+    return RXAS_FLOW_ID_NONE;
+}
+
+static int flow_ssa_attribute_path_rehash(RxasFlowSsaAnalysis *analysis) {
+    size_t new_count;
+    size_t *buckets;
+    size_t index;
+    new_count = analysis->attribute_path_bucket_count * 2;
+    buckets = flow_ssa_calloc(analysis, new_count, sizeof(size_t));
+    if (!buckets) return 0;
+    for (index = 0; index < analysis->attribute_path_count; index++) {
+        FlowAttributePathEntry *entry;
+        size_t bucket;
+        entry = &analysis->attribute_paths[index];
+        bucket = flow_ssa_attribute_path_hash(
+                entry->owner_storage_id, entry->attribute_count_value_id,
+                entry->reference_effect_id, entry->attribute_slot) &
+                 (new_count - 1);
+        entry->next = buckets[bucket];
+        buckets[bucket] = index + 1;
+    }
+    free(analysis->attribute_path_buckets);
+    analysis->attribute_path_buckets = buckets;
+    analysis->attribute_path_bucket_count = new_count;
+    return 1;
+}
+
+static size_t flow_ssa_intern_attribute_path(
+        RxasFlowSsaAnalysis *analysis, size_t owner_storage_id,
+        size_t attribute_count_value_id, size_t reference_effect_id,
+        size_t attribute_slot) {
+    size_t bucket;
+    size_t link;
+    size_t index;
+    FlowAttributePathEntry *entry;
+    FlowStorageVersion version;
+    if (!owner_storage_id ||
+        attribute_count_value_id == RXAS_FLOW_ID_NONE ||
+        reference_effect_id == RXAS_FLOW_ID_NONE || !attribute_slot)
+        return 0;
+    bucket = flow_ssa_attribute_path_hash(
+            owner_storage_id, attribute_count_value_id,
+            reference_effect_id, attribute_slot) &
+             (analysis->attribute_path_bucket_count - 1);
+    link = analysis->attribute_path_buckets[bucket];
+    while (link) {
+        entry = &analysis->attribute_paths[link - 1];
+        if (entry->owner_storage_id == owner_storage_id &&
+            entry->attribute_count_value_id == attribute_count_value_id &&
+            entry->reference_effect_id == reference_effect_id &&
+            entry->attribute_slot == attribute_slot)
+            return entry->storage_id;
+        link = entry->next;
+    }
+    if (analysis->attribute_path_count * 2 >=
+                analysis->attribute_path_bucket_count &&
+        !flow_ssa_attribute_path_rehash(analysis))
+        return 0;
+    if (!flow_ssa_grow(analysis, (void **)&analysis->attribute_paths,
+                       &analysis->attribute_path_capacity,
+                       analysis->attribute_path_count,
+                       sizeof(*analysis->attribute_paths), 1))
+        return 0;
+    memset(&version, 0, sizeof(version));
+    version.kind = RXAS_FLOW_STORAGE_ATTRIBUTE_PATH;
+    version.replacement = RXAS_FLOW_ID_NONE;
+    version.register_id = RXAS_FLOW_ID_NONE;
+    version.defining_instruction = RXAS_FLOW_ID_NONE;
+    version.defining_block = RXAS_FLOW_ID_NONE;
+    version.join_state = RXAS_FLOW_ID_NONE;
+    version.owner_storage_id = owner_storage_id;
+    version.attribute_count_value_id = attribute_count_value_id;
+    version.reference_effect_id = reference_effect_id;
+    version.attribute_slot = attribute_slot;
+    index = flow_ssa_add_storage_version(analysis, version);
+    if (index == RXAS_FLOW_ID_NONE) return 0;
+    entry = &analysis->attribute_paths[analysis->attribute_path_count++];
+    memset(entry, 0, sizeof(*entry));
+    entry->owner_storage_id = owner_storage_id;
+    entry->attribute_count_value_id = attribute_count_value_id;
+    entry->reference_effect_id = reference_effect_id;
+    entry->attribute_slot = attribute_slot;
+    entry->storage_id = index + 1;
+    bucket = flow_ssa_attribute_path_hash(
+            owner_storage_id, attribute_count_value_id,
+            reference_effect_id, attribute_slot) &
+             (analysis->attribute_path_bucket_count - 1);
+    entry->next = analysis->attribute_path_buckets[bucket];
+    analysis->attribute_path_buckets[bucket] =
+            analysis->attribute_path_count;
+    return entry->storage_id;
 }
 
 static int flow_ssa_storage_cache_rehash(RxasFlowSsaAnalysis *analysis) {
@@ -1759,6 +2070,7 @@ static int flow_ssa_storage_is_dynamic_recursive(
     version = &analysis->storage_versions[storage_id - 1];
     if (version->kind == RXAS_FLOW_STORAGE_BASE) return 0;
     if (version->kind == RXAS_FLOW_STORAGE_SITE ||
+        version->kind == RXAS_FLOW_STORAGE_ATTRIBUTE_PATH ||
         version->kind == RXAS_FLOW_STORAGE_UNKNOWN)
         return 1;
     for (input = 0; input < version->input_count; input++) {
@@ -1899,7 +2211,8 @@ static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
                         state->map_offset + update_index - 1];
                 if (update->destination != register_id) continue;
                 preserve_dynamic = update->kind == FLOW_MAP_SET_BASE ||
-                                   update->kind == FLOW_MAP_SET_SITE;
+                                   update->kind == FLOW_MAP_SET_SITE ||
+                                   update->kind == FLOW_MAP_ATTRIBUTE_PATH;
                 break;
             }
         }
@@ -1938,6 +2251,22 @@ static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
                 result = flow_ssa_resolve_storage(
                         analysis, update->source_state,
                         update->source_register);
+            else if (update->kind == FLOW_MAP_ATTRIBUTE_PATH) {
+                size_t owner_storage_id;
+                size_t attribute_count_value_id;
+                owner_storage_id = flow_ssa_resolve_storage(
+                        analysis, update->source_state,
+                        update->source_register);
+                attribute_count_value_id = flow_ssa_resolve_value(
+                        analysis, update->source_state, owner_storage_id,
+                        RXOP_COMPONENT_ATTRIBUTE_COUNT);
+                result = flow_ssa_intern_attribute_path(
+                        analysis, owner_storage_id,
+                        attribute_count_value_id,
+                        flow_ssa_effect_unique_leaf(
+                                analysis, update->reference_effect_id),
+                        update->attribute_slot);
+            }
             else result = 0;
             if ((state->flags & FLOW_SSA_MAP_CLOBBER_DYNAMIC) &&
                 update->kind == FLOW_MAP_COPY_REGISTER &&
@@ -2052,6 +2381,63 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
                                      size_t state_id, size_t storage_id,
                                      unsigned int component);
 
+/* Return the local-register bounds observed by one range call.  A known count
+ * gives base+count; an unknown count conservatively reaches the highest local
+ * in this procedure.  The base register itself contains the count and is not
+ * part of the argument window. */
+static int flow_ssa_call_range_bounds(
+        RxasFlowSsaAnalysis *analysis, const FlowSsaState *state,
+        size_t *base_number, size_t *last_number) {
+    size_t base_register;
+    size_t count_storage;
+    size_t count_value;
+    size_t reg;
+    size_t highest_local;
+    const FlowValueVersion *count_version;
+    const Assembler_Token *count_token;
+    if (!analysis || !state || !base_number || !last_number ||
+        !(state->flags & FLOW_SSA_VALUE_CLOBBER_CALL_RANGE) ||
+        !state->call_range_base_plus_one)
+        return 0;
+    base_register = state->call_range_base_plus_one - 1;
+    if (base_register >= analysis->register_count ||
+        analysis->registers[base_register].register_class !=
+                RXAS_FLOW_REGISTER_LOCAL ||
+        state->parent == RXAS_FLOW_ID_NONE)
+        return -1;
+    *base_number = analysis->registers[base_register].number;
+    highest_local = *base_number;
+    for (reg = 0; reg < analysis->register_count; reg++) {
+        if (analysis->registers[reg].register_class ==
+                    RXAS_FLOW_REGISTER_LOCAL &&
+            analysis->registers[reg].number > highest_local)
+            highest_local = analysis->registers[reg].number;
+    }
+    *last_number = highest_local;
+    count_storage = flow_ssa_resolve_storage(
+            analysis, state->parent, base_register);
+    count_value = flow_ssa_resolve_value(
+            analysis, state->parent, count_storage,
+            RXOP_COMPONENT_INTEGER);
+    count_value = flow_ssa_value_canonical(analysis, count_value);
+    if (count_value < analysis->value_version_count) {
+        size_t bounded_last;
+        count_version = &analysis->value_versions[count_value];
+        count_token = count_version->constant_token;
+        if (count_version->kind == RXAS_FLOW_VALUE_CONSTANT && count_token &&
+            count_token->token_type == INT &&
+            count_token->token_value.integer >= 0 &&
+            (size_t)count_token->token_value.integer <=
+                    (size_t)-1 - *base_number) {
+            bounded_last = *base_number +
+                    (size_t)count_token->token_value.integer;
+            *last_number = bounded_last < highest_local
+                    ? bounded_last : highest_local;
+        }
+    }
+    return 1;
+}
+
 /* A range call exposes the storages named by its caller-owned argument
  * window.  Resolve that window lazily so SSA construction stays sparse and
  * does not query a partially built analysis.  The count register normally has
@@ -2060,42 +2446,16 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
 static int flow_ssa_call_range_clobbers_storage(
         RxasFlowSsaAnalysis *analysis, const FlowSsaState *state,
         size_t storage_id) {
-    size_t base_register;
     size_t base_number;
     size_t last_number;
-    size_t count_storage;
-    size_t count_value;
     size_t reg;
-    const FlowValueVersion *count_version;
-    const Assembler_Token *count_token;
+    int bounds;
     if (!state || !(state->flags & FLOW_SSA_VALUE_CLOBBER_CALL_RANGE) ||
         !state->call_range_base_plus_one)
         return 0;
-    base_register = state->call_range_base_plus_one - 1;
-    if (base_register >= analysis->register_count ||
-        analysis->registers[base_register].register_class !=
-                RXAS_FLOW_REGISTER_LOCAL ||
-        state->parent == RXAS_FLOW_ID_NONE)
-        return 1;
-    base_number = analysis->registers[base_register].number;
-    last_number = (size_t)-1;
-    count_storage = flow_ssa_resolve_storage(
-            analysis, state->parent, base_register);
-    count_value = flow_ssa_resolve_value(
-            analysis, state->parent, count_storage,
-            RXOP_COMPONENT_INTEGER);
-    count_value = flow_ssa_value_canonical(analysis, count_value);
-    if (count_value < analysis->value_version_count) {
-        count_version = &analysis->value_versions[count_value];
-        count_token = count_version->constant_token;
-        if (count_version->kind == RXAS_FLOW_VALUE_CONSTANT && count_token &&
-            count_token->token_type == INT &&
-            count_token->token_value.integer >= 0 &&
-            (size_t)count_token->token_value.integer <=
-                    (size_t)-1 - base_number)
-            last_number = base_number +
-                    (size_t)count_token->token_value.integer;
-    }
+    bounds = flow_ssa_call_range_bounds(
+            analysis, state, &base_number, &last_number);
+    if (bounds <= 0) return bounds < 0;
     for (reg = 0; reg < analysis->register_count; reg++) {
         size_t argument_storage;
         if (analysis->registers[reg].register_class !=
@@ -2420,6 +2780,10 @@ static void flow_ssa_set_retained_bytes(RxasFlowSsaAnalysis *analysis) {
     bytes += analysis->storage_cache_capacity * sizeof(*analysis->storage_cache);
     bytes += analysis->value_bucket_count * sizeof(size_t);
     bytes += analysis->value_cache_capacity * sizeof(*analysis->value_cache);
+    bytes += analysis->attribute_path_bucket_count * sizeof(size_t);
+    bytes += analysis->attribute_path_capacity *
+             sizeof(*analysis->attribute_paths);
+    bytes += analysis->effect_walk_capacity * sizeof(size_t) * 3;
     analysis->metrics.retained_bytes = bytes;
 }
 
@@ -2448,6 +2812,11 @@ static void flow_ssa_free(RxasFlowSsaAnalysis *analysis) {
     free(analysis->storage_cache);
     free(analysis->value_buckets);
     free(analysis->value_cache);
+    free(analysis->attribute_path_buckets);
+    free(analysis->attribute_paths);
+    free(analysis->effect_leaf_cache);
+    free(analysis->effect_walk_marks);
+    free(analysis->effect_walk_stack);
     free(analysis);
 }
 
@@ -2726,6 +3095,10 @@ int rxas_flow_storage_node(
     node->defining_instruction = version->defining_instruction;
     node->defining_block = version->defining_block;
     node->input_count = version->input_count;
+    node->owner_storage_id = version->owner_storage_id;
+    node->attribute_count_value_id = version->attribute_count_value_id;
+    node->reference_effect_id = version->reference_effect_id;
+    node->attribute_slot = version->attribute_slot;
     return 1;
 }
 
@@ -2879,6 +3252,24 @@ int rxas_flow_component_on_edge(
             reg, component, RXAS_FLOW_ID_NONE, 0, edge_id, fact);
 }
 
+int rxas_flow_call_window_bounds_at_instruction(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t instruction_id, size_t *base_register,
+        size_t *last_register) {
+    size_t state_id;
+    int result;
+    if (!base_register || !last_register ||
+        !flow_ssa_valid(analysis, expected_epoch) ||
+        instruction_id >= analysis->instruction_count)
+        return 0;
+    state_id = analysis->instruction_after[instruction_id];
+    if (state_id >= analysis->state_count) return 0;
+    result = flow_ssa_call_range_bounds(
+            (RxasFlowSsaAnalysis *)analysis,
+            &analysis->states[state_id], base_register, last_register);
+    return result > 0;
+}
+
 size_t rxas_flow_value_version_count(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch) {
     if (!flow_ssa_valid(analysis, expected_epoch)) return 0;
@@ -3018,7 +3409,8 @@ int rxas_flow_ssa_dump(const RxasFlowSsaAnalysis *analysis,
             "PERF3 flow-ssa epoch=%lu status=%s budget=%llu work=%llu "
             "bytes=%llu registers=%llu states=%llu joins=%llu "
             "map-updates=%llu map-clobbers=%llu storages=%llu sites=%llu "
-            "storage-phis=%llu component-updates=%llu values=%llu "
+            "attribute-paths=%llu storage-phis=%llu "
+            "component-updates=%llu values=%llu "
             "value-phis=%llu absent=%llu constants=%llu derived=%llu "
             "unknown-values=%llu edge-states=%llu\n",
             analysis->metrics.epoch,
@@ -3033,6 +3425,7 @@ int rxas_flow_ssa_dump(const RxasFlowSsaAnalysis *analysis,
             (unsigned long long)analysis->metrics.mapping_clobbers,
             (unsigned long long)analysis->metrics.storage_versions,
             (unsigned long long)analysis->metrics.storage_sites,
+            (unsigned long long)analysis->metrics.storage_attribute_paths,
             (unsigned long long)analysis->metrics.storage_phis,
             (unsigned long long)analysis->metrics.component_updates,
             (unsigned long long)analysis->metrics.value_versions,
@@ -3063,7 +3456,12 @@ int rxas_flow_ssa_dump(const RxasFlowSsaAnalysis *analysis,
         fprintf(stream, " block=");
         if (version->defining_block == RXAS_FLOW_ID_NONE) fputc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)version->defining_block);
-        fputc('\n', stream);
+        fprintf(stream,
+                " owner=%llu count=%llu reference=%llu slot=%llu\n",
+                (unsigned long long)version->owner_storage_id,
+                (unsigned long long)version->attribute_count_value_id,
+                (unsigned long long)version->reference_effect_id,
+                (unsigned long long)version->attribute_slot);
     }
     for (index = 0; index < analysis->edge_count; index++)
         fprintf(stream, "PERF3 flow-ssa-edge id=%llu state=%llu\n",

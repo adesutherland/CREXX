@@ -1,0 +1,21 @@
+* An unproved LINKATTR1 range must retain both possible signal events.
+
+main() .locals=5
+    sigcalla skip_out_of_range(),"OUT_OF_RANGE"
+    setattrs r0,0
+    load r1,"first-base"
+    load r3,"second-base"
+
+    linkattr1 r1,r0,1
+    scopy r2,r1
+    unlink r1
+
+    linkattr1 r3,r0,1
+    scopy r4,r3
+    unlink r3
+
+    say r4
+    ret
+
+skip_out_of_range() .locals=0
+    ret "__rxsignal_skip"

@@ -53,8 +53,6 @@ main: procedure = .int expose handled failures stripped
   failures = failures + check_code("BREAKPOINT", 31)
   failures = failures + check_code("not-a-signal", 13)
 
-  action = .signalaction.retry()
-  failures = failures + check(action.kind() = "retry", "retry action")
   action = .signalaction.skip()
   failures = failures + check(action.kind() = "skip", "skip action")
   action = .signalaction.fail()

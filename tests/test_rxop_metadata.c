@@ -116,6 +116,23 @@ static void check_same_storage_copy_metadata(int opcode) {
           "same-storage copy component metadata regression", &op_table[opcode]);
 }
 
+static void check_propagated_call_metadata(int opcode, int writes_result) {
+    RxOpSignalContract signal;
+    signal = rxop_signal_contract(opcode);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_PARTIAL_WRITES &&
+              signal.source == RXOP_SIGNAL_SOURCE_PROPAGATED_CALL &&
+              signal.source_operand == SIZE_MAX &&
+              signal.dependencies == RXOP_SIGNAL_DEP_UNKNOWN &&
+              signal.continuations == RXOP_SIGNAL_CONT_ALL &&
+              signal.policy_effect == RXOP_POLICY_EFFECT_NONE &&
+              signal.policy_source == RXOP_SIGNAL_SOURCE_NONE,
+          "propagated call signal contract regression", &op_table[opcode]);
+    check(rxop_signal_failure_writes_operand(&signal, 0) == writes_result,
+          "propagated call result failure phase regression",
+          &op_table[opcode]);
+}
+
 int main(void) {
     int i;
     int source_count;
@@ -128,9 +145,48 @@ int main(void) {
     unsigned int legal_semantics;
     RxOpEffects effects;
     RxOpSignalContract signal;
+    RxOpCompareBranchFusion fusion;
     const OpInfo *op;
 
     failures = 0;
+    check(rxop_compare_branch_fusion(
+                  OP_IEQ_REG_REG_REG, OP_BRT_ID_REG, &fusion) &&
+              fusion.fused_opcode == OP_BEQ_ID_REG_REG &&
+              fusion.left_source_operand == 1 &&
+              fusion.right_source_operand == 2,
+          "integer equality branch-fusion metadata regression", NULL);
+    check(rxop_compare_branch_fusion(
+                  OP_IGT_REG_INT_REG, OP_BRF_ID_REG, &fusion) &&
+              fusion.fused_opcode == OP_BGE_ID_REG_INT &&
+              fusion.left_source_operand == 2 &&
+              fusion.right_source_operand == 1,
+          "reversed integer branch-fusion metadata regression", NULL);
+    check(!rxop_compare_branch_fusion(
+                  OP_FEQ_REG_REG_REG, OP_BRT_ID_REG, &fusion),
+          "non-integer comparison must not acquire integer fusion metadata",
+          NULL);
+    signal = rxop_signal_contract(OP_BGT_ID_REG_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BGT_ID_REG_INT).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BGE_ID_REG_REG).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BGE_ID_REG_INT).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BLT_ID_REG_REG).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BLT_ID_REG_INT).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BLE_ID_REG_REG).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BLE_ID_REG_INT).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_component_reads(OP_BGT_ID_REG_REG, 1) ==
+                    RXOP_COMPONENT_INTEGER &&
+              rxop_component_reads(OP_BGT_ID_REG_REG, 2) ==
+                    RXOP_COMPONENT_INTEGER,
+          "fused integer branches must be exact and non-signalling",
+          &op_table[OP_BGT_ID_REG_REG]);
     check_same_storage_copy_metadata(OP_COPY_REG_REG);
     check_same_storage_copy_metadata(OP_ICOPY_REG_REG);
     check_same_storage_copy_metadata(OP_FCOPY_REG_REG);
@@ -219,6 +275,7 @@ int main(void) {
                               RXOP_COMPONENT_FLOAT,
                               RXOP_DERIVATION_DECIMAL_TO_FLOAT);
     check((RXOP_COMPONENT_ALL & RXOP_COMPONENT_NATIVE_PAYLOAD) != 0 &&
+              (RXOP_COMPONENT_ALL & RXOP_COMPONENT_ATTRIBUTE_COUNT) != 0 &&
               rxop_component_clears(OP_LOAD_REG_INT, 0) ==
                   (RXOP_COMPONENT_REFERENCE |
                    RXOP_COMPONENT_NATIVE_PAYLOAD) &&
@@ -246,6 +303,20 @@ int main(void) {
                    RXOP_COMPONENT_NATIVE_PAYLOAD),
           "binary copy native-payload metadata regression",
           &op_table[OP_BCOPY_REG_REG]);
+    check(rxop_component_writes(OP_SETATTRS_REG_INT, 0) ==
+                  RXOP_COMPONENT_ATTRIBUTE_COUNT &&
+              rxop_component_reads(OP_LINKATTR1_REG_REG_INT, 1) ==
+                  RXOP_COMPONENT_ATTRIBUTE_COUNT &&
+              rxop_component_reads(OP_GETATTRS_REG_REG, 1) ==
+                  RXOP_COMPONENT_ATTRIBUTE_COUNT,
+          "attribute-count component metadata regression",
+          &op_table[OP_SETATTRS_REG_INT]);
+    check(rxop_signal_contract(OP_SETATTRS_REG_INT).state ==
+                  RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_BCOPY_REG_REG).state ==
+                  RXOP_SIGNAL_STATE_NONE,
+          "total SETATTRS/BCOPY signal metadata regression",
+          &op_table[OP_SETATTRS_REG_INT]);
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         size_t operand_index;
@@ -577,12 +648,33 @@ int main(void) {
               signal.policy_static_name &&
               strcmp(signal.policy_static_name, "BREAKPOINT") == 0,
           "breakpoint policy metadata regression", &op_table[OP_BPOFF]);
-    signal = rxop_signal_contract(OP_CALL_FUNC);
-    check(signal.state == RXOP_SIGNAL_STATE_UNKNOWN &&
-              signal.policy_effect == RXOP_POLICY_EFFECT_NONE &&
-              signal.policy_source == RXOP_SIGNAL_SOURCE_NONE,
-          "unknown call signals must not imply a caller-policy write",
-          &op_table[OP_CALL_FUNC]);
+    check_propagated_call_metadata(OP_CALL_FUNC, 0);
+    check_propagated_call_metadata(OP_CALL_REG_FUNC, 1);
+    check_propagated_call_metadata(OP_CALL_REG_FUNC_REG, 1);
+    check_propagated_call_metadata(OP_DCALL_REG_REG_REG, 1);
+    check_propagated_call_metadata(OP_SWAPCALL_REG_FUNC_REG_REG_REG, 1);
+    check_propagated_call_metadata(
+            OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG, 1);
+    check_propagated_call_metadata(
+            OP_SETTPCALL_REG_FUNC_REG_REG_INT, 1);
+    check_propagated_call_metadata(OP_CALL1_REG_FUNC_REG, 1);
+    check_propagated_call_metadata(OP_CALL2_REG_FUNC_REG_REG, 1);
+    check_propagated_call_metadata(OP_CALL3_REG_FUNC_REG_REG_REG, 1);
+    check_propagated_call_metadata(OP_CALL4_REG_FUNC_REG_REG_REG_REG, 1);
+    signal = rxop_signal_contract(OP_CALL_REG_FUNC_REG);
+    check(!rxop_signal_failure_writes_operand(&signal, 2),
+          "counted CALL may not claim to write its count on failure",
+          &op_table[OP_CALL_REG_FUNC_REG]);
+    signal = rxop_signal_contract(OP_DCALL_REG_REG_REG);
+    check(!rxop_signal_failure_writes_operand(&signal, 1) &&
+              !rxop_signal_failure_writes_operand(&signal, 2),
+          "dynamic CALL may not claim to write its target/count on failure",
+          &op_table[OP_DCALL_REG_REG_REG]);
+    signal = rxop_signal_contract(OP_SETTPCALL_REG_FUNC_REG_REG_INT);
+    check(!rxop_signal_failure_writes_operand(&signal, 2) &&
+              rxop_signal_failure_writes_operand(&signal, 3),
+          "SETTPCALL count/set-type failure phase regression",
+          &op_table[OP_SETTPCALL_REG_FUNC_REG_REG_INT]);
     signal = rxop_signal_contract(OP_ITOF_REG);
     check(signal.state == RXOP_SIGNAL_STATE_NONE &&
               (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
@@ -774,6 +866,26 @@ int main(void) {
               effects.const_evaluator == RXOP_CONST_EVAL_GETSTRPOS,
           "GETSTRPOS cursor/evaluator regression",
           &op_table[OP_GETSTRPOS_REG_REG]);
+    effects = rxop_effects(OP_COPY_REG_REG);
+    check(effects.cursor_reads == RXOP_OP_2 &&
+              effects.cursor_writes == RXOP_OP_1,
+          "COPY must preserve the binary cursor",
+          &op_table[OP_COPY_REG_REG]);
+    effects = rxop_effects(OP_BCOPY_REG_REG);
+    check(effects.cursor_reads == RXOP_OP_2 &&
+              effects.cursor_writes == RXOP_OP_1,
+          "BCOPY must preserve the binary cursor",
+          &op_table[OP_BCOPY_REG_REG]);
+    effects = rxop_effects(OP_SETBINPOS_REG_REG);
+    check(effects.cursor_reads == RXOP_OP_NONE &&
+              effects.cursor_writes == RXOP_OP_1,
+          "SETBINPOS cursor-write regression",
+          &op_table[OP_SETBINPOS_REG_REG]);
+    effects = rxop_effects(OP_GETBINPOS_REG_REG);
+    check(effects.cursor_reads == RXOP_OP_2 &&
+              effects.cursor_writes == RXOP_OP_NONE,
+          "GETBINPOS cursor-read regression",
+          &op_table[OP_GETBINPOS_REG_REG]);
     effects = rxop_effects(OP_STRCHAR_REG_REG_REG);
     check(effects.cursor_writes == RXOP_OP_2 &&
               effects.const_evaluator == RXOP_CONST_EVAL_STRCHAR_AT,

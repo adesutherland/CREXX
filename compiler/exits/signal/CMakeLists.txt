@@ -104,3 +104,9 @@ crexx_add_signal_compile_fail_test(
         test_signal_block_counted_bad.crexx
         "#SYNTAX_ERROR, \"on\""
 )
+
+crexx_add_signal_compile_fail_test(
+        test_signal_retry_removed_diagnostic
+        test_signal_retry_removed.crexx
+        "Error in test_signal_retry_removed\\.crexx @ 3:10 - #CLASS_NOT_FOUND, \"\\.signalaction\\.retry\""
+)

@@ -320,10 +320,9 @@ static int flow_graph_mark_leaders(RxasFlowProcedure *procedure,
                                                        case_index));
                     }
         }
-        /* A signal retry re-executes this instruction, not preceding records
-         * in the same ordinary basic block.  Make every potentially
-         * signalling instruction an exact CFG leader so retry/skip edges
-         * model the VM continuation address rather than a block approximation. */
+        /* Make every potentially signalling instruction an exact CFG leader
+         * so its failure-phase state and skip address are modelled at the
+         * instruction rather than approximated at a larger block boundary. */
         if (instruction->signal.state != RXOP_SIGNAL_STATE_NONE) {
             size_t leader;
             size_t scan;
@@ -514,8 +513,6 @@ static int flow_graph_add_instruction_edges(
                                  RXAS_FLOW_EDGE_NORMAL) ||
             !flow_graph_add_edge(procedure, block_id, next_block,
                                  RXAS_FLOW_EDGE_SIGNAL_SKIP) ||
-            !flow_graph_add_edge(procedure, block_id, block_id,
-                                 RXAS_FLOW_EDGE_SIGNAL_RETRY) ||
             !flow_graph_add_edge(procedure, block_id,
                                  procedure->handler_root,
                                  RXAS_FLOW_EDGE_HANDLER) ||
@@ -608,10 +605,6 @@ static int flow_graph_add_instruction_edges(
             !flow_graph_add_edge(procedure, block_id, next_block,
                                  RXAS_FLOW_EDGE_SIGNAL_SKIP))
             return 0;
-        if ((continuations & RXOP_SIGNAL_CONT_RETRY) &&
-            !flow_graph_add_edge(procedure, block_id, block_id,
-                                 RXAS_FLOW_EDGE_SIGNAL_RETRY))
-            return 0;
         if ((continuations & RXOP_SIGNAL_CONT_HANDLER) &&
             !flow_graph_add_edge(procedure, block_id,
                                  procedure->handler_root,
@@ -639,9 +632,6 @@ static void flow_graph_count_edges(RxasFlowProcedure *procedure) {
             case RXAS_FLOW_EDGE_BRANCH: procedure->metrics.branch_edges++; break;
             case RXAS_FLOW_EDGE_SIGNAL_SKIP:
                 procedure->metrics.signal_skip_edges++;
-                break;
-            case RXAS_FLOW_EDGE_SIGNAL_RETRY:
-                procedure->metrics.signal_retry_edges++;
                 break;
             case RXAS_FLOW_EDGE_HANDLER: procedure->metrics.handler_edges++; break;
             case RXAS_FLOW_EDGE_TERMINAL: procedure->metrics.terminal_edges++; break;
@@ -886,7 +876,6 @@ static const char *flow_graph_edge_kind_name(RxasFlowEdgeKind kind) {
         case RXAS_FLOW_EDGE_NORMAL: return "normal";
         case RXAS_FLOW_EDGE_BRANCH: return "branch";
         case RXAS_FLOW_EDGE_SIGNAL_SKIP: return "signal-skip";
-        case RXAS_FLOW_EDGE_SIGNAL_RETRY: return "signal-retry";
         case RXAS_FLOW_EDGE_HANDLER: return "handler";
         case RXAS_FLOW_EDGE_TERMINAL: return "terminal";
         case RXAS_FLOW_EDGE_UNWIND: return "unwind";
@@ -931,7 +920,7 @@ int rxas_flow_procedure_dump(const RxasFlowProcedure *procedure,
     fprintf(stream,
             "PERF3 flow-graph procedure=%s epoch=%lu records=%llu "
             "instructions=%llu code-blocks=%llu blocks=%llu edges=%llu "
-            "normal=%llu branch=%llu skip=%llu retry=%llu handler=%llu "
+            "normal=%llu branch=%llu skip=%llu handler=%llu "
             "terminal=%llu unwind=%llu unknown=%llu complete=%d\n",
             procedure->name, procedure->epoch,
             (unsigned long long)procedure->metrics.records,
@@ -942,7 +931,6 @@ int rxas_flow_procedure_dump(const RxasFlowProcedure *procedure,
             (unsigned long long)procedure->metrics.normal_edges,
             (unsigned long long)procedure->metrics.branch_edges,
             (unsigned long long)procedure->metrics.signal_skip_edges,
-            (unsigned long long)procedure->metrics.signal_retry_edges,
             (unsigned long long)procedure->metrics.handler_edges,
             (unsigned long long)procedure->metrics.terminal_edges,
             (unsigned long long)procedure->metrics.unwind_edges,

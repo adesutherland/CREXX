@@ -4014,8 +4014,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
 typedef enum rxsignal_handler_action {
     RXSIGNAL_HANDLER_ACTION_NONE = 0,
     RXSIGNAL_HANDLER_ACTION_SKIP,
-    RXSIGNAL_HANDLER_ACTION_FAIL,
-    RXSIGNAL_HANDLER_ACTION_RETRY
+    RXSIGNAL_HANDLER_ACTION_FAIL
 } rxsignal_handler_action;
 
 static rxsignal_handler_action rxsignal_read_handler_action(value *action) {
@@ -4024,7 +4023,6 @@ static rxsignal_handler_action rxsignal_read_handler_action(value *action) {
     null_terminate_string_buffer(action);
     if (strcmp(action->string_value, "__rxsignal_skip") == 0) return RXSIGNAL_HANDLER_ACTION_SKIP;
     if (strcmp(action->string_value, "__rxsignal_fail") == 0) return RXSIGNAL_HANDLER_ACTION_FAIL;
-    if (strcmp(action->string_value, "__rxsignal_retry") == 0) return RXSIGNAL_HANDLER_ACTION_RETRY;
     return RXSIGNAL_HANDLER_ACTION_NONE;
 }
 
@@ -4829,11 +4827,7 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
 #define HANDLE_INTERRUPT_ACTION_RETURN() \
 if (is_interrupt && temp_frame->is_interrupt_action) { \
     rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
-    if (action__ == RXSIGNAL_HANDLER_ACTION_RETRY) { \
-        if (current_frame && current_frame->procedure && current_frame->procedure->binarySpace) { \
-            next_pc = VM_EXECUTION_POINTER(last_interrupted_address[is_interrupt]); \
-        } \
-    } else if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
+    if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
         value *payload__ = rxsignal_handler_payload(temp_frame); \
         if (payload__ && payload__->string_length) { \
             fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \

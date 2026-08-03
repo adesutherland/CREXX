@@ -1,0 +1,16 @@
+* A changed source component invalidates detached-copy reuse.
+
+main() .locals=5
+    load r0,"first"
+
+    link r1,r0
+    scopy r2,r1
+    unlink r1
+
+    load r0,"second"
+    link r3,r0
+    scopy r4,r3
+    unlink r3
+
+    say r4
+    ret

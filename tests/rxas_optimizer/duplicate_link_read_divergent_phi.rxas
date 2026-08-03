@@ -1,0 +1,20 @@
+* A branch which changes the source on one path produces a divergent phi.
+
+main() .locals=9
+    load r0,"first"
+
+    link r1,r0
+    scopy r2,r1
+    unlink r1
+
+    brt change_source,r7
+    br source_join
+change_source:
+    load r0,"second"
+source_join:
+    link r5,r0
+    scopy r6,r5
+    unlink r5
+
+    say r6
+    ret

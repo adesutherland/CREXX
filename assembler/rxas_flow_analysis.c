@@ -890,8 +890,7 @@ static int flow_analysis_build_loops(RxasFlowStructuralAnalysis *analysis) {
             if (!flow_analysis_add_loop(
                     analysis, &loop_build, &loop_count, &loop_capacity,
                     edge->target, analysis->scc[edge->target],
-                    RXAS_FLOW_LOOP_NATURAL |
-                    RXAS_FLOW_LOOP_SIGNAL_RETRY_ONLY)) {
+                    RXAS_FLOW_LOOP_NATURAL)) {
                 flow_loop_build_free(loop_build, loop_count);
                 free(header_loop);
                 free(seen);
@@ -901,9 +900,6 @@ static int flow_analysis_build_loops(RxasFlowStructuralAnalysis *analysis) {
             current_loop = loop_count - 1;
             header_loop[edge->target] = current_loop;
         }
-        if (edge->kind != RXAS_FLOW_EDGE_SIGNAL_RETRY)
-            loop_build[current_loop].flags &=
-                    ~(unsigned int)RXAS_FLOW_LOOP_SIGNAL_RETRY_ONLY;
         if (!flow_vector_add(analysis,
                              &loop_build[current_loop].latches,
                              edge->source)) {

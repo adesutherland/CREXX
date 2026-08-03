@@ -5,6 +5,13 @@ selected**
 
 Approved: 2026-07-31
 
+Superseded continuation note: this worklist preserves the accepted 2026-07-31
+state and its historical retry evidence. After K04c exposed the optimisation
+cost and the first end-to-end native fixture exposed an existing mapping flaw,
+Adrian approved K04d1 retirement of instruction-level retry on 2026-08-03.
+Current RXAS infrastructure retains normal/signal-skip/handler/unwind state but
+no retry edge or retry-only loop.
+
 Purpose: promote the successful C2E2 symbolic storage-identity PoC into
 reusable RXAS flow infrastructure and explicitly represent normal,
 signal-skip and signal-retry continuations. Preserve every existing rewrite

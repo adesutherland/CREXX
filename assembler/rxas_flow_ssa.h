@@ -26,6 +26,7 @@ typedef struct RxasFlowRegister {
 typedef enum RxasFlowStorageKind {
     RXAS_FLOW_STORAGE_BASE = 0,
     RXAS_FLOW_STORAGE_SITE,
+    RXAS_FLOW_STORAGE_ATTRIBUTE_PATH,
     RXAS_FLOW_STORAGE_PHI,
     RXAS_FLOW_STORAGE_UNKNOWN
 } RxasFlowStorageKind;
@@ -47,6 +48,10 @@ typedef struct RxasFlowStorageNode {
     size_t defining_instruction;
     size_t defining_block;
     size_t input_count;
+    size_t owner_storage_id;
+    size_t attribute_count_value_id;
+    size_t reference_effect_id;
+    size_t attribute_slot;
 } RxasFlowStorageNode;
 
 typedef enum RxasFlowComponentPresence {
@@ -113,6 +118,7 @@ typedef struct RxasFlowSsaMetrics {
     size_t mapping_clobbers;
     size_t storage_versions;
     size_t storage_sites;
+    size_t storage_attribute_paths;
     size_t storage_phis;
     size_t component_updates;
     size_t value_versions;
@@ -125,6 +131,10 @@ typedef struct RxasFlowSsaMetrics {
 } RxasFlowSsaMetrics;
 
 typedef struct RxasFlowSsaAnalysis RxasFlowSsaAnalysis;
+
+/* Shared internal classification for mapping-only opcodes. These update the
+ * register-to-storage map but do not write value components. */
+int rxas_flow_opcode_is_plain_mapping(int opcode);
 
 const RxasFlowSsaAnalysis *rxas_flow_require_ssa_analysis(
         RxasFlowProcedure *procedure, unsigned long expected_epoch,
@@ -167,6 +177,10 @@ int rxas_flow_component_on_edge(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t edge_id, RxasFlowRegister register_id, unsigned int component,
         RxasFlowComponentFact *fact);
+int rxas_flow_call_window_bounds_at_instruction(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t instruction_id, size_t *base_register,
+        size_t *last_register);
 
 size_t rxas_flow_value_version_count(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch);

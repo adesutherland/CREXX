@@ -597,8 +597,6 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
     size_t trace_after;
     char *first_signal_dump;
     char *second_signal_dump;
-    size_t loop_index;
-    size_t retry_only_loops;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_label_ref(&fixture, "handler");
     operands[1] = fixture_string(&fixture, "OVERFLOW_UNDERFLOW");
@@ -635,10 +633,8 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
         check(fixture_has_edge(first, 7, inc_block, ret_block,
                                RXAS_FLOW_EDGE_NORMAL) &&
               fixture_has_edge(first, 7, inc_block, ret_block,
-                               RXAS_FLOW_EDGE_SIGNAL_SKIP) &&
-              fixture_has_edge(first, 7, inc_block, inc_block,
-                               RXAS_FLOW_EDGE_SIGNAL_RETRY),
-              "signal normal/skip/retry continuations are incomplete");
+                               RXAS_FLOW_EDGE_SIGNAL_SKIP),
+              "signal normal/skip continuations are incomplete");
         check(fixture_has_edge(first, 7, inc_block, handler_root,
                                RXAS_FLOW_EDGE_HANDLER) &&
               fixture_has_edge(first, 7, inc_block,
@@ -655,24 +651,8 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
               "handler and asynchronous roots do not reach the handler");
         metrics = rxas_flow_procedure_metrics(first, 7);
         check(metrics && metrics->complete_control_flow &&
-              metrics->signal_skip_edges >= 2 &&
-              metrics->signal_retry_edges >= 2,
+              metrics->signal_skip_edges >= 2,
               "signal graph metrics are incomplete");
-        structural_metrics = rxas_flow_structural_metrics(first_analysis, 7);
-        retry_only_loops = 0;
-        if (structural_metrics) {
-            for (loop_index = 0; loop_index < structural_metrics->loops;
-                 loop_index++) {
-                const RxasFlowLoop *loop;
-                loop = rxas_flow_structural_loop(
-                        first_analysis, 7, loop_index);
-                if (loop &&
-                    (loop->flags & RXAS_FLOW_LOOP_SIGNAL_RETRY_ONLY))
-                    retry_only_loops++;
-            }
-        }
-        check(structural_metrics && retry_only_loops >= 2,
-              "signal retry cycles were not distinguished in the loop forest");
         check(first_analysis &&
               rxas_flow_structural_predecessor_count(
                     first_analysis, 7, ret_block) == 1 &&
@@ -742,7 +722,7 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
         second_dump = fixture_dump(second, 7);
         check(strcmp(first_dump, second_dump) == 0,
               "graph dump is not deterministic");
-        check(strstr(first_dump, "kind=signal-retry") != 0 &&
+        check(strstr(first_dump, "kind=signal-skip") != 0 &&
               strstr(first_dump, "kind=async-root") != 0,
               "graph dump omits typed signal structure");
         free(first_dump);
@@ -751,8 +731,7 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
         second_analysis_dump = fixture_analysis_dump(second_analysis, 7);
         check(strcmp(first_analysis_dump, second_analysis_dump) == 0,
               "structural analysis dump is not deterministic");
-        check(strstr(first_analysis_dump, "irreducible-sccs=") != 0 &&
-              strstr(first_analysis_dump, "PERF3 flow-loop") != 0,
+        check(strstr(first_analysis_dump, "irreducible-sccs=") != 0,
               "structural analysis dump omits reusable structure");
         free(first_analysis_dump);
         free(second_analysis_dump);
@@ -880,8 +859,6 @@ static void test_call_boundary_and_unknown(Assembler_Context *context) {
         check(fixture_has_edge(procedure, 10, unknown_block,
                                unknown_following,
                                RXAS_FLOW_EDGE_SIGNAL_SKIP) &&
-              fixture_has_edge(procedure, 10, unknown_block, unknown_block,
-                               RXAS_FLOW_EDGE_SIGNAL_RETRY) &&
               fixture_has_edge(procedure, 10, unknown_block,
                                rxas_flow_procedure_unknown_exit(procedure, 10),
                                RXAS_FLOW_EDGE_UNKNOWN),
@@ -1235,6 +1212,106 @@ static void test_sparse_storage_and_components(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_attribute_path_storage(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[3];
+    const RxasFlowSsaAnalysis *analysis;
+    const RxasFlowSsaMetrics *metrics;
+    RxasFlowStorageFact first_path;
+    RxasFlowStorageFact repeated_path;
+    RxasFlowStorageFact changed_count_path;
+    RxasFlowStorageNode first_node;
+    RxasFlowStorageNode repeated_node;
+    RxasFlowStorageNode changed_count_node;
+    size_t first_instruction;
+    size_t repeated_instruction;
+    size_t changed_count_instruction;
+    memset(&fixture, 0, sizeof(fixture));
+
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 2);
+    fixture_op(&fixture, "setattrs", operands, 2);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_register(&fixture, 0);
+    operands[2] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "linkattr1", operands, 3);
+    operands[0] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "unlink", operands, 1);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 0);
+    operands[2] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "linkattr1", operands, 3);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "unlink", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 3);
+    fixture_op(&fixture, "setattrs", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_register(&fixture, 0);
+    operands[2] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "linkattr1", operands, 3);
+    fixture_op(&fixture, "ret", 0, 0);
+
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                           fixture.item_count, 32);
+    check(procedure != 0, "attribute-path fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 32, 0);
+        first_instruction = rxas_flow_procedure_record(
+                procedure, 32, 1)->instruction_id;
+        repeated_instruction = rxas_flow_procedure_record(
+                procedure, 32, 3)->instruction_id;
+        changed_count_instruction = rxas_flow_procedure_record(
+                procedure, 32, 6)->instruction_id;
+        check(analysis &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 32, first_instruction, 1,
+                    fixture_local_register(1), &first_path) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 32, repeated_instruction, 1,
+                    fixture_local_register(2), &repeated_path) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 32, changed_count_instruction, 1,
+                    fixture_local_register(3), &changed_count_path),
+              "attribute paths were unavailable from storage SSA");
+        check(analysis &&
+              rxas_flow_storage_node(
+                    analysis, 32, first_path.storage_id, &first_node) &&
+              rxas_flow_storage_node(
+                    analysis, 32, repeated_path.storage_id,
+                    &repeated_node) &&
+              rxas_flow_storage_node(
+                    analysis, 32, changed_count_path.storage_id,
+                    &changed_count_node),
+              "attribute-path storage nodes were unavailable");
+        check(first_node.kind == RXAS_FLOW_STORAGE_ATTRIBUTE_PATH &&
+              repeated_node.kind == RXAS_FLOW_STORAGE_ATTRIBUTE_PATH &&
+              first_path.storage_id == repeated_path.storage_id &&
+              first_node.owner_storage_id == repeated_node.owner_storage_id &&
+              first_node.attribute_count_value_id ==
+                    repeated_node.attribute_count_value_id &&
+              first_node.reference_effect_id ==
+                    repeated_node.reference_effect_id &&
+              first_node.attribute_slot == 1,
+              "identical attribute paths did not intern to one StorageId");
+        check(changed_count_node.kind ==
+                    RXAS_FLOW_STORAGE_ATTRIBUTE_PATH &&
+              changed_count_path.storage_id != first_path.storage_id &&
+              changed_count_node.owner_storage_id ==
+                    first_node.owner_storage_id &&
+              changed_count_node.attribute_count_value_id !=
+                    first_node.attribute_count_value_id &&
+              changed_count_node.attribute_slot == first_node.attribute_slot,
+              "attribute-count generation did not distinguish the path");
+        metrics = rxas_flow_ssa_metrics(analysis, 32);
+        check(metrics && metrics->storage_attribute_paths >= 2,
+              "attribute-path storage metric was not populated");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static void test_argument_storage_and_call_effects(
         Assembler_Context *context) {
     FlowFixture fixture;
@@ -1297,6 +1374,143 @@ static void test_argument_storage_and_call_effects(
               before_call.current_reference_effect !=
                     after_call.current_reference_effect,
               "call did not separate restored mapping from reference-visible mutation");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_propagated_call_failure_state(
+        Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[3];
+    const RxasFlowSsaAnalysis *analysis;
+    RxasFlowComponentFact count_before;
+    RxasFlowComponentFact count_failure;
+    RxasFlowComponentFact argument_before;
+    RxasFlowComponentFact argument_failure;
+    RxasFlowComponentFact unrelated_before;
+    RxasFlowComponentFact unrelated_failure;
+    RxasFlowComponentFact result_failure;
+    size_t call_instruction;
+    size_t call_block;
+    size_t following_block;
+    size_t failure_edge;
+    size_t base_register;
+    size_t last_register;
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 4);
+    operands[1] = fixture_integer(&fixture, 17);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 5);
+    operands[1] = fixture_integer(&fixture, 23);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 8);
+    operands[1] = fixture_text_token(&fixture, FUNC, "callee");
+    operands[2] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "call", operands, 3);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 26);
+    check(procedure != 0,
+          "propagated counted-call fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 26, 0);
+        call_instruction = rxas_flow_procedure_record(
+                procedure, 26, 3)->instruction_id;
+        call_block = fixture_block_for_record(procedure, 26, 3);
+        following_block = fixture_block_for_record(procedure, 26, 4);
+        failure_edge = fixture_edge_id(
+                procedure, 26, call_block, following_block,
+                RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        check(analysis && failure_edge != RXAS_FLOW_ID_NONE &&
+              rxas_flow_call_window_bounds_at_instruction(
+                    analysis, 26, call_instruction,
+                    &base_register, &last_register) &&
+              base_register == 3 && last_register == 4,
+              "counted CALL did not retain its exact argument window");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 26, call_instruction, 0,
+                    fixture_local_register(3), RXOP_COMPONENT_INTEGER,
+                    &count_before) &&
+              rxas_flow_component_on_edge(
+                    analysis, 26, failure_edge,
+                    fixture_local_register(3), RXOP_COMPONENT_INTEGER,
+                    &count_failure) &&
+              count_failure.value_id == count_before.value_id,
+              "counted CALL failure clobbered its unaffected count ValueId");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 26, call_instruction, 0,
+                    fixture_local_register(4), RXOP_COMPONENT_INTEGER,
+                    &argument_before) &&
+              rxas_flow_component_on_edge(
+                    analysis, 26, failure_edge,
+                    fixture_local_register(4), RXOP_COMPONENT_INTEGER,
+                    &argument_failure) &&
+              argument_failure.value_id != argument_before.value_id &&
+              argument_failure.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              "counted CALL failure preserved caller-owned argument state");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 26, call_instruction, 0,
+                    fixture_local_register(5), RXOP_COMPONENT_INTEGER,
+                    &unrelated_before) &&
+              rxas_flow_component_on_edge(
+                    analysis, 26, failure_edge,
+                    fixture_local_register(5), RXOP_COMPONENT_INTEGER,
+                    &unrelated_failure) &&
+              unrelated_failure.value_id == unrelated_before.value_id,
+              "counted CALL failure clobbered an unrelated local ValueId");
+        check(rxas_flow_component_on_edge(
+                    analysis, 26, failure_edge,
+                    fixture_local_register(8), RXOP_COMPONENT_INTEGER,
+                    &result_failure) &&
+              result_failure.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              "counted CALL failure omitted a possible partial result write");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 8);
+    operands[1] = fixture_text_token(&fixture, FUNC, "callee");
+    operands[2] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "call", operands, 3);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 27);
+    check(procedure != 0,
+          "count/argument alias fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 27, 0);
+        call_instruction = rxas_flow_procedure_record(
+                procedure, 27, 2)->instruction_id;
+        call_block = fixture_block_for_record(procedure, 27, 2);
+        following_block = fixture_block_for_record(procedure, 27, 3);
+        failure_edge = fixture_edge_id(
+                procedure, 27, call_block, following_block,
+                RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        check(analysis && failure_edge != RXAS_FLOW_ID_NONE &&
+              rxas_flow_component_at_instruction(
+                    analysis, 27, call_instruction, 0,
+                    fixture_local_register(3), RXOP_COMPONENT_INTEGER,
+                    &count_before) &&
+              rxas_flow_component_on_edge(
+                    analysis, 27, failure_edge,
+                    fixture_local_register(3), RXOP_COMPONENT_INTEGER,
+                    &count_failure) &&
+              count_failure.value_id != count_before.value_id &&
+              count_failure.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              "argument alias did not invalidate the failure count ValueId");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -1395,6 +1609,8 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
     RxasFlowStorageFact after_call_storage;
     RxasFlowComponentFact normal_value;
     RxasFlowComponentFact skip_value;
+    RxasFlowComponentFact before_call_value;
+    RxasFlowComponentFact after_call_value;
     size_t signal_block;
     size_t following_block;
     size_t normal_edge;
@@ -1465,8 +1681,21 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
                     analysis, 18, call_instruction, 1,
                     fixture_local_register(0), &after_call_storage) &&
               before_call_storage.kind == RXAS_FLOW_STORAGE_PHI &&
-              after_call_storage.kind == RXAS_FLOW_STORAGE_UNKNOWN,
-              "call did not invalidate a merged dynamic mapping");
+              after_call_storage.storage_id ==
+                    before_call_storage.storage_id &&
+              after_call_storage.kind == RXAS_FLOW_STORAGE_PHI,
+              "call did not preserve a caller register-to-storage mapping");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 18, call_instruction, 0,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &before_call_value) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 18, call_instruction, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &after_call_value) &&
+              after_call_value.value_id != before_call_value.value_id &&
+              after_call_value.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              "call preserved a possibly externally mutable component");
         check(signal_analysis &&
               numeric_before_call == numeric_on_call_skip,
               "unknown call signal poisoned frame-local numeric context");
@@ -2566,7 +2795,9 @@ int main(void) {
     test_policy_stack_uncertainty(&context);
     test_policy_loop_identity(&context);
     test_sparse_storage_and_components(&context);
+    test_attribute_path_storage(&context);
     test_argument_storage_and_call_effects(&context);
+    test_propagated_call_failure_state(&context);
     test_storage_joins_and_loops(&context);
     test_signal_phase_component_edges(&context);
     test_derivation_contexts(&context);

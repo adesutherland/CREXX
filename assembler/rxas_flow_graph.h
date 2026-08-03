@@ -23,7 +23,6 @@ typedef enum RxasFlowEdgeKind {
     RXAS_FLOW_EDGE_NORMAL = 0,
     RXAS_FLOW_EDGE_BRANCH,
     RXAS_FLOW_EDGE_SIGNAL_SKIP,
-    RXAS_FLOW_EDGE_SIGNAL_RETRY,
     RXAS_FLOW_EDGE_HANDLER,
     RXAS_FLOW_EDGE_TERMINAL,
     RXAS_FLOW_EDGE_UNWIND,
@@ -88,7 +87,6 @@ typedef struct RxasFlowMetrics {
     size_t normal_edges;
     size_t branch_edges;
     size_t signal_skip_edges;
-    size_t signal_retry_edges;
     size_t handler_edges;
     size_t terminal_edges;
     size_t unwind_edges;
