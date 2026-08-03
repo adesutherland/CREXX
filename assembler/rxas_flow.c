@@ -417,11 +417,11 @@ typedef struct flow_proof_session {
     RxasFlowProcedure *procedure;
     const RxasFlowProofService *proof;
     unsigned long epoch;
-    int attempted;
 } flow_proof_session;
 
 static const RxasFlowProofService *flow_proof_session_require(
-        flow_proof_session *session, const flow_graph *graph);
+        flow_proof_session *session, const flow_graph *graph,
+        RxasOptimisationPassId pass_id);
 static void flow_proof_session_destroy(flow_proof_session *session);
 
 
@@ -645,7 +645,8 @@ static size_t flow_remove_swap_round_trips(
             left_number == encoded_left_number &&
             right_type == encoded_right_type &&
             right_number == encoded_right_number) {
-            proof = flow_proof_session_require(session, graph);
+            proof = flow_proof_session_require(
+                    session, graph, RXAS_PASS_K01_STORAGE_PERMUTATION);
             first_record = session->procedure ? rxas_flow_procedure_record(
                     session->procedure, session->epoch, index) : 0;
             first_instruction = first_record
@@ -701,7 +702,8 @@ static size_t flow_remove_swap_round_trips(
             slot->record_id = index;
             continue;
         }
-        proof = flow_proof_session_require(session, graph);
+        proof = flow_proof_session_require(
+                session, graph, RXAS_PASS_K01_STORAGE_PERMUTATION);
         first_record = session->procedure ? rxas_flow_procedure_record(
                 session->procedure, session->epoch, slot->record_id) : 0;
         second_record = session->procedure ? rxas_flow_procedure_record(
@@ -776,7 +778,8 @@ static size_t flow_propagate_one_copy_ssa(
         return 0;
     copy = &graph->items[copy_index];
     source = rxas_queue_operand(copy, 1);
-    proof = flow_proof_session_require(session, graph);
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_M05_TYPED_COPY);
     record = session->procedure ? rxas_flow_procedure_record(
             session->procedure, session->epoch, copy_index) : 0;
     instruction_id = record ? record->instruction_id : RXAS_FLOW_ID_NONE;
@@ -966,7 +969,8 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
         if (claimed_registers[temporary_register] ||
             claimed_registers[destination_register])
             continue;
-        proof = flow_proof_session_require(session, graph);
+        proof = flow_proof_session_require(
+                session, graph, RXAS_PASS_M06_PRODUCER_FORWARD);
         producer_record = session->procedure ? rxas_flow_procedure_record(
                 session->procedure, session->epoch, producer_index) : 0;
         copy_record = session->procedure ? rxas_flow_procedure_record(
@@ -1099,7 +1103,8 @@ static size_t flow_reuse_duplicate_linked_read(
         free(candidates);
         return 0;
     }
-    proof = flow_proof_session_require(session, graph);
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_K02_K03_LINKED_READ);
     if (!proof) {
         free(candidates);
         stats->rejected_effect++;
@@ -1299,7 +1304,8 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
                     graph->nodes[compare_index].op->opcode,
                     graph->nodes[branch_index].op->opcode, 0))
             continue;
-        proof = flow_proof_session_require(session, graph);
+        proof = flow_proof_session_require(
+                session, graph, RXAS_PASS_K04_COMPARE_BRANCH);
         compare_record = session->procedure ? rxas_flow_procedure_record(
                 session->procedure, session->epoch, compare_index) : 0;
         branch_record = session->procedure ? rxas_flow_procedure_record(
@@ -1551,7 +1557,8 @@ static size_t flow_remove_redundant_loads(flow_graph *graph, flow_stats *stats,
         if (flow_scalar_constant_may_repeat(graph, index))
             candidate_count++;
     if (!candidate_count) return 0;
-    proof = flow_proof_session_require(session, graph);
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_M02_CONSTANT);
     if (!proof) {
         stats->constant_proof_unavailable++;
         return 0;
@@ -1690,7 +1697,8 @@ static size_t flow_remove_redundant_initializations(
         free(candidates);
         return 0;
     }
-    proof = flow_proof_session_require(session, graph);
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_M03_ABSENT);
     if (!proof) {
         stats->absent_proof_unavailable++;
         free(candidates);
@@ -1742,14 +1750,32 @@ static size_t flow_remove_redundant_initializations(
  * epoch.  Rebuilding it per query family needlessly multiplies peak allocator
  * pages on large inlined procedures and defeats the analysis-manager design. */
 static const RxasFlowProofService *flow_proof_session_require(
-        flow_proof_session *session, const flow_graph *graph) {
+        flow_proof_session *session, const flow_graph *graph,
+        RxasOptimisationPassId pass_id) {
+    const RxasOptimisationPassDescriptor *descriptor;
+    unsigned int acquired;
     if (!session || !graph) return 0;
-    if (session->attempted) return session->proof;
-    session->attempted = 1;
-    session->epoch = graph->epoch;
-    session->procedure = graph->procedure;
-    session->proof = session->procedure ? rxas_flow_require_proof_service(
-            session->procedure, session->epoch, 0) : 0;
+    descriptor = rxas_optimisation_pass_descriptor(pass_id);
+    if (!descriptor || descriptor->owner != RXAS_OPT_OWNER_SSA ||
+        !descriptor->capabilities ||
+        (descriptor->capabilities & RXAS_FLOW_CAP_LOCAL_SCAN))
+        return 0;
+    if (!session->procedure) {
+        session->epoch = graph->epoch;
+        session->procedure = graph->procedure;
+    }
+    if (session->procedure != graph->procedure ||
+        session->epoch != graph->epoch)
+        return 0;
+    session->proof = session->procedure
+            ? rxas_flow_require_proof_capabilities(
+                    session->procedure, session->epoch,
+                    descriptor->capabilities, 0)
+            : 0;
+    acquired = rxas_flow_proof_capabilities(
+            session->proof, session->epoch);
+    if ((acquired & descriptor->capabilities) != descriptor->capabilities)
+        session->proof = 0;
     return session->proof;
 }
 
@@ -1873,7 +1899,8 @@ static size_t flow_remove_redundant_self_copies(
         free(candidates);
         return 0;
     }
-    proof = flow_proof_session_require(session, graph);
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_M04_SELF_COPY);
     if (!proof) {
         stats->self_copy_proof_unavailable++;
         free(candidates);
@@ -1968,7 +1995,8 @@ static size_t flow_remove_redundant_derivations(
     if (!candidates)
         RX_PANIC_OOM("calloc RXAS derivation proof candidates",
                      graph->item_count * sizeof(*candidates), 0);
-    proof = flow_proof_session_require(session, graph);
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_M01_DERIVATION);
     if (!proof) {
         stats->derivation_proof_unavailable++;
         goto cleanup;
@@ -2293,6 +2321,9 @@ void rxas_flow_optimise(Assembler_Context *context) {
     size_t changed;
     size_t iterations;
     int graph_built;
+    unsigned int semantic_capabilities;
+    unsigned int diagnostic_capabilities;
+    unsigned int analysis_capabilities;
     RxasOptimisationCensus census;
     flow_proof_session proof_session;
 
@@ -2427,18 +2458,38 @@ void rxas_flow_optimise(Assembler_Context *context) {
     procedure = graph.procedure;
     if (procedure) {
         if (context->debug_mode) {
+            semantic_capabilities =
+                    rxas_optimisation_capabilities_for_owner(
+                            &census, RXAS_OPT_OWNER_SSA);
+            diagnostic_capabilities =
+                    rxas_optimisation_capabilities_for_owner(
+                            &census, RXAS_OPT_OWNER_DIAGNOSTIC);
+            analysis_capabilities = semantic_capabilities |
+                                    diagnostic_capabilities;
             /* Structural analyses are demand-driven.  Until an optimizer
              * consumer requests them, ordinary assembly must not retain or
              * solve facts that only diagnostics use. */
-            structural = rxas_flow_require_structural_analysis(
-                    procedure, rxas_flow_procedure_epoch(procedure), 0);
+            structural = (analysis_capabilities & RXAS_FLOW_CAP_LOOPS)
+                    ? rxas_flow_require_loop_analysis(
+                            procedure, rxas_flow_procedure_epoch(procedure), 0)
+                    : (analysis_capabilities &
+                       (RXAS_FLOW_CAP_DOMINANCE | RXAS_FLOW_CAP_SIGNAL |
+                        RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE |
+                        RXAS_FLOW_CAP_USE))
+                            ? rxas_flow_require_structural_analysis(
+                                    procedure,
+                                    rxas_flow_procedure_epoch(procedure), 0)
+                            : 0;
             rxas_flow_procedure_dump(
                     procedure, rxas_flow_procedure_epoch(procedure), stderr);
             if (structural)
                 rxas_flow_structural_dump(
                         structural, rxas_flow_procedure_epoch(procedure),
                         stderr);
-            else {
+            else if (analysis_capabilities &
+                     (RXAS_FLOW_CAP_DOMINANCE | RXAS_FLOW_CAP_SIGNAL |
+                      RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE |
+                      RXAS_FLOW_CAP_USE | RXAS_FLOW_CAP_LOOPS)) {
                 const RxasFlowStructuralMetrics *failed;
                 failed = rxas_flow_last_structural_metrics(
                         procedure, rxas_flow_procedure_epoch(procedure));
@@ -2457,13 +2508,20 @@ void rxas_flow_optimise(Assembler_Context *context) {
                         (unsigned long long)(failed ? failed->budget_limit : 0),
                         (unsigned long long)(failed ? failed->work : 0));
             }
-            signal_analysis = rxas_flow_require_signal_analysis(
-                    procedure, rxas_flow_procedure_epoch(procedure), 0);
+            signal_analysis = (analysis_capabilities &
+                               (RXAS_FLOW_CAP_SIGNAL |
+                                RXAS_FLOW_CAP_STORAGE |
+                                RXAS_FLOW_CAP_VALUE | RXAS_FLOW_CAP_USE))
+                    ? rxas_flow_require_signal_analysis(
+                            procedure, rxas_flow_procedure_epoch(procedure), 0)
+                    : 0;
             if (signal_analysis)
                 rxas_flow_signal_dump(
                         signal_analysis, rxas_flow_procedure_epoch(procedure),
                         stderr);
-            else {
+            else if (analysis_capabilities &
+                     (RXAS_FLOW_CAP_SIGNAL | RXAS_FLOW_CAP_STORAGE |
+                      RXAS_FLOW_CAP_VALUE | RXAS_FLOW_CAP_USE)) {
                 const RxasFlowSignalMetrics *failed_signal;
                 failed_signal = rxas_flow_last_signal_metrics(
                         procedure, rxas_flow_procedure_epoch(procedure));
@@ -2484,15 +2542,21 @@ void rxas_flow_optimise(Assembler_Context *context) {
                         (unsigned long long)(failed_signal
                                 ? failed_signal->work : 0));
             }
-            ssa_analysis = rxas_flow_require_ssa_analysis(
-                    procedure, rxas_flow_procedure_epoch(procedure), 0);
+            ssa_analysis = (analysis_capabilities &
+                            (RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE |
+                             RXAS_FLOW_CAP_USE))
+                    ? rxas_flow_require_ssa_analysis(
+                            procedure, rxas_flow_procedure_epoch(procedure), 0)
+                    : 0;
             if (ssa_analysis) {
                 rxas_flow_ssa_dump(
                         ssa_analysis, rxas_flow_procedure_epoch(procedure),
                         stderr);
                 flow_debug_sparse_storage_oracle(&graph, ssa_analysis);
             }
-            else {
+            else if (analysis_capabilities &
+                     (RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE |
+                      RXAS_FLOW_CAP_USE)) {
                 const RxasFlowSsaMetrics *failed_ssa;
                 failed_ssa = rxas_flow_last_ssa_metrics(
                         procedure, rxas_flow_procedure_epoch(procedure));
@@ -2512,13 +2576,16 @@ void rxas_flow_optimise(Assembler_Context *context) {
                                 ? failed_ssa->budget_limit : 0),
                         (unsigned long long)(failed_ssa ? failed_ssa->work : 0));
             }
-            proof_service = rxas_flow_require_proof_service(
-                    procedure, rxas_flow_procedure_epoch(procedure), 0);
+            proof_service = analysis_capabilities
+                    ? rxas_flow_require_proof_capabilities(
+                            procedure, rxas_flow_procedure_epoch(procedure),
+                            analysis_capabilities, 0)
+                    : 0;
             if (proof_service)
                 rxas_flow_proof_dump(
                         proof_service, rxas_flow_procedure_epoch(procedure),
                         stderr);
-            else {
+            else if (analysis_capabilities) {
                 const RxasFlowProofMetrics *failed_proof;
                 failed_proof = rxas_flow_last_proof_metrics(
                         procedure, rxas_flow_procedure_epoch(procedure));
@@ -2539,13 +2606,15 @@ void rxas_flow_optimise(Assembler_Context *context) {
                         (unsigned long long)(failed_proof
                                 ? failed_proof->work : 0));
             }
-            use_analysis = rxas_flow_require_use_analysis(
-                    procedure, rxas_flow_procedure_epoch(procedure), 0);
+            use_analysis = (analysis_capabilities & RXAS_FLOW_CAP_USE)
+                    ? rxas_flow_require_use_analysis(
+                            procedure, rxas_flow_procedure_epoch(procedure), 0)
+                    : 0;
             if (use_analysis)
                 rxas_flow_use_dump(
                         use_analysis, rxas_flow_procedure_epoch(procedure),
                         stderr);
-            else {
+            else if (analysis_capabilities & RXAS_FLOW_CAP_USE) {
                 const RxasFlowUseMetrics *failed_use;
                 failed_use = rxas_flow_last_use_metrics(
                         procedure, rxas_flow_procedure_epoch(procedure));

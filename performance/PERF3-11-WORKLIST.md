@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — D0.2 complete; D0.3 capability-lazy semantic consumers next**
+Status: **in progress — D0.3 complete; D0.4 batched pass manager next**
 
 Architecture approved: 2026-08-02
 
@@ -741,12 +741,15 @@ unchanged, its original optimized/no-opt outputs are byte-identical, the
 expanded metadata/optimizer panel passes 3/3 in Debug and Release, and all
 three canonical images retain zero accepts and exact hashes. Runtime timing
 and broad CTest are not warranted because no production code or ordinary
-output changed. K05 and the D0.2 structural consolidation are now complete:
-M00 and all seven K05 forms share the sole immutable CFG, M07 diagnostics use
+output changed. K05 and the D0.2 structural consolidation are complete: M00
+and all seven K05 forms share the sole immutable CFG, M07 diagnostics use
 sparse SSA, and the legacy graph/dense storage matrices are deleted. D0.3 is
-next: make M01-M06 and K01-K04 request only their declared semantic
-capabilities so structural-only procedures do not pay for component SSA/use
-analysis.
+also complete: M01-M06 and K01-K04 now request only their declared semantic
+capabilities from one monotonic per-epoch proof service, loop analysis remains
+dormant, and an explicit diagnostic route preserves `-d` evidence. Focused
+Debug/Release and dual-VM runtime panels pass and accepted K05 hashes remain
+exact. The Parse diagnostic remains approximately 2.46 GB, so D0.4 batched
+semantic rewrites is next.
 
 ### Stage 11 — later consumers after legacy migration
 

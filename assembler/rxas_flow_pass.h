@@ -32,6 +32,7 @@ typedef enum RxasOptimisationPassId {
     RXAS_PASS_M05_TYPED_COPY,
     RXAS_PASS_M06_PRODUCER_FORWARD,
     RXAS_PASS_M07_STORAGE_DIAGNOSTIC,
+    RXAS_PASS_DIAGNOSTIC_FLOW_DUMP,
     RXAS_PASS_K01_STORAGE_PERMUTATION,
     RXAS_PASS_K02_K03_LINKED_READ,
     RXAS_PASS_K04_COMPARE_BRANCH,
@@ -81,6 +82,8 @@ int rxas_optimisation_census(Assembler_Context *context,
                              RxasOptimisationCensus *census);
 int rxas_optimisation_has_candidates(const RxasOptimisationCensus *census,
                                      RxasOptimisationPassId id);
+unsigned int rxas_optimisation_capabilities_for_owner(
+        const RxasOptimisationCensus *census, RxasOptimisationOwner owner);
 void rxas_optimisation_census_dump(const RxasOptimisationCensus *census,
                                    const char *procedure_name,
                                    FILE *stream);

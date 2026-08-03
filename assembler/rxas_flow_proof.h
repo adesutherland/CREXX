@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "rxas_flow_pass.h"
 #include "rxas_flow_use.h"
 
 typedef enum RxasFlowProofReason {
@@ -99,6 +100,8 @@ typedef struct RxasFlowProofMetrics {
     size_t budget_limit;
     size_t work;
     size_t retained_bytes;
+    unsigned int requested_capabilities;
+    unsigned int acquired_capabilities;
     size_t repetition_queries;
     size_t repetition_cache_hits;
     size_t repetition_proved;
@@ -255,6 +258,14 @@ typedef struct RxasFlowProofService RxasFlowProofService;
 const RxasFlowProofService *rxas_flow_require_proof_service(
         RxasFlowProcedure *procedure, unsigned long expected_epoch,
         size_t work_budget);
+/* Production consumers request the exact capability mask declared by their
+ * optimisation route. Capabilities are acquired monotonically and cached for
+ * the immutable procedure epoch. */
+const RxasFlowProofService *rxas_flow_require_proof_capabilities(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        unsigned int capabilities, size_t work_budget);
+unsigned int rxas_flow_proof_capabilities(
+        const RxasFlowProofService *service, unsigned long expected_epoch);
 const RxasFlowProofMetrics *rxas_flow_last_proof_metrics(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch);
 const RxasFlowProofMetrics *rxas_flow_proof_metrics(

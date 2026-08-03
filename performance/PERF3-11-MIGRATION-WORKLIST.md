@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — D0.2 complete; D0.3 capability-lazy semantic consumers next**
+Status: **in progress — D0.3 complete; D0.4 batched pass manager next**
 
 Authorized: 2026-08-02
 
@@ -668,7 +668,7 @@ The routing rule is now executable rather than an informal convention:
 - [x] **D0.2 one graph and structural consumers:** migrate M00 and K05 onto
       the immutable graph, express the M07 oracle through sparse SSA and delete
       the legacy graph/dense use-kill storage.
-- [ ] **D0.3 capability-lazy semantic consumers:** migrate M01-M06 and K01-K04
+- [x] **D0.3 capability-lazy semantic consumers:** migrate M01-M06 and K01-K04
       so each query requests only its declared structural, signal, storage,
       value and use capabilities.
 - [ ] **D0.4 batched pass manager:** collect compatible typed rewrite plans
@@ -702,9 +702,38 @@ This stage does not claim that scale is solved. An intermediate generated
 `Parse.rxas` Release probe took 8.55 seconds and peaked at 2,456,027,136 bytes;
 the remaining allocation is in semantic proof capabilities retained by every
 candidate epoch. The host was on battery, so this is a memory/diagnostic probe,
-not a formal elapsed comparison. D0.3 is therefore next and must make those
-capabilities lazy; D0.4 then batches compatible semantic rewrites before the
-final D0.5 elapsed and RSS verdict on the controlled host.
+not a formal elapsed comparison. At D0.2 close, D0.3 was therefore next to
+make those capabilities lazy; D0.4 would then batch compatible semantic
+rewrites before the final D0.5 elapsed and RSS verdict on the controlled host.
+
+#### D0.3 result
+
+D0.3 is complete as infrastructure plus the M01-M06 and K01-K04 consumer
+migration. Every production proof call now presents its stable route ID. The
+per-epoch proof service acquires declared capabilities monotonically: M01-M04
+stop at component value/storage facts, M05, M06 and K01-K04 add the sparse use
+index, and undeclared use or loop queries fail closed. SCC, backedge and loop-
+forest construction is now a separately requested extension of the cached
+structural result, so the currently unused production loop capability remains
+dormant. `rxas -d` retains its established proof/use evidence through a
+separate explicit diagnostic route.
+
+The canonical gate found and corrected an important composition case. A
+stronger use-index request can exhaust its own analysis budget on a large
+epoch; that route must reject without poisoning already valid component facts
+needed by later M02/M01 consumers. With that boundary locked, the focused
+optimizer/metadata/graph panel passes 75/75 in Debug and Release, and the
+whole-procedure, NR-18, storage and K05 runtime panel passes 17/17 in both
+builds; broad Debug passes 2,019/2,019 in 228.29 seconds after its generated-
+product rebuild. Fresh Richards, Towers and RexxCPS outputs exactly retain the
+accepted K05 hashes `e855a569`, `0b3169f0` and `e0cf1283`.
+
+Capability routing alone does not solve the large-procedure scale boundary.
+The battery-host diagnostic `Parse.rxas` probe took 8.21 seconds and peaked at
+2,455,453,696 bytes, effectively unchanged from D0.2 because the procedure has
+real use-index candidates. This is not a formal elapsed comparison. D0.4 is
+therefore next: collect compatible semantic rewrites from one epoch and apply
+one batch before rebuilding.
 
 ### Phase D — remove superseded infrastructure
 

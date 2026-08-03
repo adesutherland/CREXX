@@ -64,6 +64,12 @@ typedef struct RxasFlowStructuralAnalysis RxasFlowStructuralAnalysis;
 const RxasFlowStructuralAnalysis *rxas_flow_require_structural_analysis(
         RxasFlowProcedure *procedure, unsigned long expected_epoch,
         size_t work_budget);
+/* SCC, backedge and loop-forest construction is a separate capability.  It
+ * extends the cached structural analysis only when an explicit loop consumer
+ * requests it. */
+const RxasFlowStructuralAnalysis *rxas_flow_require_loop_analysis(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t work_budget);
 const RxasFlowStructuralMetrics *rxas_flow_last_structural_metrics(
         const RxasFlowProcedure *procedure, unsigned long expected_epoch);
 

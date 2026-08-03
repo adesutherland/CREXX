@@ -56,6 +56,7 @@ struct RxasFlowStructuralAnalysis {
     RxasFlowLoop *loops;
     size_t *loop_members;
     size_t *innermost_loop;
+    int loops_ready;
 };
 
 static int flow_analysis_consume(RxasFlowStructuralAnalysis *analysis,
@@ -1135,17 +1136,20 @@ static void flow_analysis_set_retained_bytes(
         RxasFlowStructuralAnalysis *analysis) {
     size_t blocks;
     size_t edges;
+    size_t retained;
     blocks = analysis->block_count;
     edges = analysis->edge_count;
-    analysis->metrics.retained_bytes = sizeof(*analysis) +
-            sizeof(struct RxasFlowAnalysisManager) +
-            (blocks + 1) * sizeof(size_t) * 7 +
-            edges * sizeof(size_t) * 2 +
-            blocks * sizeof(size_t) * 5 +
-            (analysis->metrics.dominance_frontier_entries +
-             analysis->metrics.loop_memberships) * sizeof(size_t) +
-            edges + blocks * 2 +
-            analysis->metrics.loops * sizeof(RxasFlowLoop);
+    retained = sizeof(*analysis) + sizeof(struct RxasFlowAnalysisManager) +
+            (blocks + 1) * sizeof(size_t) * 3 +
+            (edges + analysis->metrics.predecessor_entries +
+             analysis->metrics.rpo_blocks + blocks * 4 +
+             analysis->metrics.dominance_frontier_entries) * sizeof(size_t);
+    if (analysis->loops_ready)
+        retained += (blocks * 4 + analysis->metrics.loop_memberships) *
+                            sizeof(size_t) +
+                    blocks * 2 + edges +
+                    analysis->metrics.loops * sizeof(RxasFlowLoop);
+    analysis->metrics.retained_bytes = retained;
 }
 
 static RxasFlowStructuralAnalysis *flow_structural_build(
@@ -1175,10 +1179,7 @@ static RxasFlowStructuralAnalysis *flow_structural_build(
     if (!flow_analysis_build_rpo(analysis, roots, root_count) ||
         !flow_analysis_build_dominators(analysis, roots, root_count) ||
         !flow_analysis_build_dom_intervals(analysis) ||
-        !flow_analysis_build_frontiers(analysis, roots, root_count) ||
-        !flow_analysis_build_sccs(analysis, roots, root_count) ||
-        !flow_analysis_build_backedges(analysis) ||
-        !flow_analysis_build_loops(analysis))
+        !flow_analysis_build_frontiers(analysis, roots, root_count))
         return analysis;
     flow_analysis_set_retained_bytes(analysis);
     return analysis;
@@ -1217,6 +1218,31 @@ const RxasFlowStructuralAnalysis *rxas_flow_require_structural_analysis(
         manager->structural->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE)
         return 0;
     return manager->structural;
+}
+
+const RxasFlowStructuralAnalysis *rxas_flow_require_loop_analysis(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t work_budget) {
+    RxasFlowStructuralAnalysis *analysis;
+    const RxasFlowStructuralAnalysis *base;
+    size_t roots[3];
+    size_t root_count;
+    base = rxas_flow_require_structural_analysis(
+            procedure, expected_epoch, work_budget);
+    if (!base) return 0;
+    analysis = (RxasFlowStructuralAnalysis *)base;
+    if (analysis->loops_ready) return analysis;
+    if (work_budget > analysis->metrics.budget_limit)
+        analysis->metrics.budget_limit = work_budget;
+    root_count = flow_analysis_root_count(analysis, roots);
+    if (!root_count ||
+        !flow_analysis_build_sccs(analysis, roots, root_count) ||
+        !flow_analysis_build_backedges(analysis) ||
+        !flow_analysis_build_loops(analysis))
+        return 0;
+    analysis->loops_ready = 1;
+    flow_analysis_set_retained_bytes(analysis);
+    return analysis;
 }
 
 const RxasFlowStructuralMetrics *rxas_flow_last_structural_metrics(
@@ -1348,6 +1374,7 @@ size_t rxas_flow_structural_scc(
         const RxasFlowStructuralAnalysis *analysis,
         unsigned long expected_epoch, size_t block_id) {
     if (!flow_structural_valid(analysis, expected_epoch) ||
+        !analysis->loops_ready ||
         block_id >= analysis->block_count ||
         analysis->rpo_index[block_id] == RXAS_FLOW_ID_NONE)
         return RXAS_FLOW_ID_NONE;
@@ -1358,6 +1385,7 @@ int rxas_flow_structural_edge_is_backedge(
         const RxasFlowStructuralAnalysis *analysis,
         unsigned long expected_epoch, size_t edge_id) {
     if (!flow_structural_valid(analysis, expected_epoch) ||
+        !analysis->loops_ready ||
         edge_id >= analysis->edge_count)
         return 0;
     return analysis->edge_backedge[edge_id] != 0;
@@ -1366,7 +1394,8 @@ int rxas_flow_structural_edge_is_backedge(
 size_t rxas_flow_structural_loop_count(
         const RxasFlowStructuralAnalysis *analysis,
         unsigned long expected_epoch) {
-    if (!flow_structural_valid(analysis, expected_epoch)) return 0;
+    if (!flow_structural_valid(analysis, expected_epoch) ||
+        !analysis->loops_ready) return 0;
     return analysis->metrics.loops;
 }
 
@@ -1374,6 +1403,7 @@ const RxasFlowLoop *rxas_flow_structural_loop(
         const RxasFlowStructuralAnalysis *analysis,
         unsigned long expected_epoch, size_t loop_id) {
     if (!flow_structural_valid(analysis, expected_epoch) ||
+        !analysis->loops_ready ||
         loop_id >= analysis->metrics.loops)
         return 0;
     return &analysis->loops[loop_id];
@@ -1393,6 +1423,7 @@ size_t rxas_flow_structural_innermost_loop(
         const RxasFlowStructuralAnalysis *analysis,
         unsigned long expected_epoch, size_t block_id) {
     if (!flow_structural_valid(analysis, expected_epoch) ||
+        !analysis->loops_ready ||
         block_id >= analysis->block_count)
         return RXAS_FLOW_ID_NONE;
     return analysis->innermost_loop[block_id];
@@ -1443,14 +1474,17 @@ int rxas_flow_structural_dump(
         size_t loop;
         block = analysis->rpo[index];
         idom = analysis->idom[block];
-        loop = analysis->innermost_loop[block];
+        loop = analysis->loops_ready
+                ? analysis->innermost_loop[block] : RXAS_FLOW_ID_NONE;
         fprintf(stream,
                 "PERF3 flow-analysis-block id=%llu rpo=%llu idom=",
                 (unsigned long long)block, (unsigned long long)index);
         if (idom == analysis->virtual_root) fputc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)idom);
-        fprintf(stream, " scc=%llu loop=",
-                (unsigned long long)analysis->scc[block]);
+        if (analysis->loops_ready)
+            fprintf(stream, " scc=%llu loop=",
+                    (unsigned long long)analysis->scc[block]);
+        else fputs(" scc=- loop=", stream);
         if (loop == RXAS_FLOW_ID_NONE) fputc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)loop);
         fprintf(stream, " predecessors=%llu frontier=%llu\n",

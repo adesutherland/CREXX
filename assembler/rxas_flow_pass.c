@@ -36,6 +36,8 @@ static const RxasOptimisationPassDescriptor pass_descriptors[] = {
     {RXAS_PASS_M07_STORAGE_DIAGNOSTIC, "M07-storage-diagnostic",
      RXAS_OPT_OWNER_DIAGNOSTIC,
      RXAS_FLOW_CAP_CFG | RXAS_FLOW_CAP_SIGNAL | RXAS_FLOW_CAP_STORAGE},
+    {RXAS_PASS_DIAGNOSTIC_FLOW_DUMP, "diagnostic-flow-dump",
+     RXAS_OPT_OWNER_DIAGNOSTIC, CAP_SEMANTIC_USE},
     {RXAS_PASS_K01_STORAGE_PERMUTATION, "K01-storage-permutation", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
     {RXAS_PASS_K02_K03_LINKED_READ, "K02-K03-linked-read", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
     {RXAS_PASS_K04_COMPARE_BRANCH, "K04-compare-branch", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
@@ -152,8 +154,10 @@ int rxas_optimisation_census(Assembler_Context *context,
             pass_add_candidate(census, RXAS_PASS_M05_TYPED_COPY);
         if (opcode == OP_ICOPY_REG_REG || opcode == OP_FCOPY_REG_REG)
             pass_add_candidate(census, RXAS_PASS_M06_PRODUCER_FORWARD);
-        if (context && context->debug_mode)
+        if (context && context->debug_mode) {
             pass_add_candidate(census, RXAS_PASS_M07_STORAGE_DIAGNOSTIC);
+            pass_add_candidate(census, RXAS_PASS_DIAGNOSTIC_FLOW_DUMP);
+        }
         if (opcode == OP_SWAP_REG_REG ||
             opcode == OP_SWAPN_REG_REG_REG_REG)
             pass_add_candidate(census, RXAS_PASS_K01_STORAGE_PERMUTATION);
@@ -171,6 +175,21 @@ int rxas_optimisation_has_candidates(const RxasOptimisationCensus *census,
                                      RxasOptimisationPassId id) {
     return census && id >= 0 && id < RXAS_PASS_COUNT &&
            census->candidates[id] != 0;
+}
+
+unsigned int rxas_optimisation_capabilities_for_owner(
+        const RxasOptimisationCensus *census, RxasOptimisationOwner owner) {
+    unsigned int capabilities;
+    size_t index;
+    if (!census || owner < RXAS_OPT_OWNER_LOCAL ||
+        owner > RXAS_OPT_OWNER_DIAGNOSTIC)
+        return 0;
+    capabilities = 0;
+    for (index = 0; index < rxas_optimisation_pass_count(); index++)
+        if (pass_descriptors[index].owner == owner &&
+            census->candidates[index])
+            capabilities |= pass_descriptors[index].capabilities;
+    return capabilities;
 }
 
 void rxas_optimisation_census_dump(const RxasOptimisationCensus *census,

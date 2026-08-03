@@ -532,7 +532,10 @@ whole-procedure analysis. A zero candidate count may avoid a consumer, but the
 census is never a correctness proof and is deliberately allowed to overselect.
 K05 branch threading and M00 reachability request CFG only; exact K06 copy/
 status subsumption remains local; M01-M06 and K01-K04 retain their component
-proof ownership. No current production consumer requests loop analysis.
+proof ownership. M01-M04 request the component base, while M05, M06 and
+K01-K04 additionally request the sparse use index. The established `-d` flow
+dump has its own explicit diagnostic route. No current production consumer
+requests loop analysis.
 
 NR-27 adds a transient whole-procedure machine-flow layer after the unchanged
 20-item local peephole and before ordinary RXBIN emission. Stable peephole
@@ -580,14 +583,16 @@ reverse postorder from a virtual root joining the procedure-entry, registered-
 handler and asynchronous-handler roots. Unreachable blocks remain represented
 by the graph but are excluded from dominance, SCC and loop proofs.
 
-The cached structural result contains Cooper-Harvey-Kennedy immediate
-dominators, dominance-tree intervals, sparse dominance frontiers, iterative
-Kosaraju SCCs, dominance-classified backedges and a loop hierarchy. Natural
-loops with the same header share one region; irreducible SCCs remain explicit
-conservative regions. Instruction-level signal retry was retired on 2026-08-03,
-so backedges and loop regions now represent source/control flow rather than
-synthetic retry cycles. Source order remains a diagnostic mapping and is never
-treated as dominance evidence.
+The cached base structural result contains Cooper-Harvey-Kennedy immediate
+dominators, dominance-tree intervals and sparse dominance frontiers. SCC,
+backedge and loop-forest construction is a separate monotonic capability on
+the same cached object. When explicitly requested it adds iterative Kosaraju
+SCCs, dominance-classified backedges and a loop hierarchy. Natural loops with
+the same header share one region; irreducible SCCs remain explicit conservative
+regions. Instruction-level signal retry was retired on 2026-08-03, so
+backedges and loop regions represent source/control flow rather than synthetic
+retry cycles. Source order remains a diagnostic mapping and is never treated
+as dominance evidence.
 
 Every structural query requires the graph epoch. The first successful result
 is cached until graph destruction; a failed deliberately small work budget may
@@ -595,10 +600,11 @@ be retried with a larger budget. Allocation failure, invalid control or budget
 exhaustion leaves the analysis unavailable and cannot enable a rewrite.
 Deterministic `PERF3 flow-analysis*` and `PERF3 flow-loop` diagnostics expose
 work, retained-byte, reachability, predecessor, dominator-iteration, frontier,
-SCC, backedge and loop counters. Post-dominance is deliberately deferred until
-a consumer needs a must-execute query. Ordinary assembly does not solve this
-unused analysis: `rxas -d`, tests and future optimizer consumers request it
-explicitly. Stage 3 therefore changes neither queued records nor RXBIN output.
+SCC, backedge and loop counters; dormant loop facts print as unavailable rather
+than being inferred. Post-dominance is deliberately deferred until a consumer
+needs a must-execute query. Ordinary assembly does not solve unused loop
+analysis: tests and future optimizer consumers request it explicitly. Stage 3
+therefore changes neither queued records nor RXBIN output.
 
 Stage 4 adds `assembler/rxas_flow_signal.c`, a second demand-driven epoch
 cache layered on the structural result. Handler policy is modeled as a sparse
@@ -698,6 +704,17 @@ equivalent leaf sets rather than numeric identity or source order.  Stale
 epochs, invalid control, unsupported signal dependencies, allocation failure
 and work-budget exhaustion return an unavailable or rejected proof and cannot
 enable a rewrite.
+
+The proof cache is a capability-lazy service rather than an eager bundle.
+Every M01-M06 and K01-K04 call site presents its stable routing ID; the service
+acquires the route's CFG, dominance, signal, storage, value and optional use
+facts monotonically for the immutable epoch. Public query entry points reject
+when their required capability was not declared, so a query cannot silently
+expand analysis. A failed stronger capability does not invalidate already
+acquired lower-capability facts: that route rejects, while later base
+consumers remain safe and available. Loop queries likewise require the
+separate loop capability. The compatibility constructor still requests the
+complete service for tests and external callers that explicitly need it.
 
 An immediate one-based `linkattr1` can additionally name an interned attribute
 path.  Its identity contains the owner `StorageId`, exact attribute-count

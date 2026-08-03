@@ -63,6 +63,21 @@ struct RxasFlowProofService {
     size_t trace_deletion_capacity;
 };
 
+#define FLOW_PROOF_ALLOWED_CAPABILITIES \
+    (RXAS_FLOW_CAP_CFG | RXAS_FLOW_CAP_DOMINANCE | RXAS_FLOW_CAP_SIGNAL | \
+     RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE | RXAS_FLOW_CAP_USE | \
+     RXAS_FLOW_CAP_LOOPS)
+
+#define FLOW_PROOF_BASE_CAPABILITIES \
+    (RXAS_FLOW_CAP_CFG | RXAS_FLOW_CAP_DOMINANCE | RXAS_FLOW_CAP_SIGNAL | \
+     RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE)
+
+#define FLOW_PROOF_USE_CAPABILITIES \
+    (FLOW_PROOF_BASE_CAPABILITIES | RXAS_FLOW_CAP_USE)
+
+#define FLOW_PROOF_LOOP_CAPABILITIES \
+    (FLOW_PROOF_BASE_CAPABILITIES | RXAS_FLOW_CAP_LOOPS)
+
 static int flow_proof_consume(RxasFlowProofService *service, size_t amount) {
     size_t remaining;
     if (!service || service->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE)
@@ -208,11 +223,106 @@ static int flow_proof_build_adjacency(RxasFlowProofService *service) {
     return flow_proof_consume(service, service->edge_count * 2);
 }
 
+static void flow_proof_set_retained_bytes(RxasFlowProofService *service) {
+    if (!service) return;
+    service->metrics.retained_bytes = sizeof(*service) +
+            (service->outgoing_offsets ? service->block_count + 1 : 0) *
+                    sizeof(size_t) +
+            (service->outgoing_edges ? service->edge_count : 0) *
+                    sizeof(size_t) +
+            (service->visit_marks ? service->block_count : 0) *
+                    sizeof(size_t) +
+            (service->visit_queue ? service->block_count : 0) *
+                    sizeof(size_t) +
+            service->value_capacity * 4 * sizeof(size_t) +
+            service->storage_capacity * 2 * sizeof(size_t) +
+            service->effect_capacity * 3 * sizeof(size_t) +
+            service->cache_capacity * sizeof(*service->cache) +
+            service->rewrite_capacity * sizeof(*service->rewrites) +
+            service->trace_deletion_capacity *
+                    sizeof(*service->trace_deletions);
+}
+
+static unsigned int flow_proof_expand_capabilities(
+        unsigned int capabilities) {
+    if (capabilities & RXAS_FLOW_CAP_USE)
+        capabilities |= RXAS_FLOW_CAP_VALUE | RXAS_FLOW_CAP_STORAGE |
+                        RXAS_FLOW_CAP_SIGNAL | RXAS_FLOW_CAP_DOMINANCE;
+    if (capabilities & (RXAS_FLOW_CAP_VALUE | RXAS_FLOW_CAP_STORAGE))
+        capabilities |= RXAS_FLOW_CAP_VALUE | RXAS_FLOW_CAP_STORAGE |
+                        RXAS_FLOW_CAP_SIGNAL | RXAS_FLOW_CAP_DOMINANCE;
+    if (capabilities & RXAS_FLOW_CAP_SIGNAL)
+        capabilities |= RXAS_FLOW_CAP_DOMINANCE;
+    if (capabilities & RXAS_FLOW_CAP_LOOPS)
+        capabilities |= RXAS_FLOW_CAP_DOMINANCE;
+    if (capabilities & (RXAS_FLOW_CAP_DOMINANCE | RXAS_FLOW_CAP_SIGNAL |
+                        RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE |
+                        RXAS_FLOW_CAP_USE | RXAS_FLOW_CAP_LOOPS))
+        capabilities |= RXAS_FLOW_CAP_CFG;
+    return capabilities;
+}
+
+static int flow_proof_acquire_capabilities(
+        RxasFlowProofService *service, unsigned int requested) {
+    unsigned int capabilities;
+    unsigned long epoch;
+    if (!service || !requested ||
+        (requested & ~FLOW_PROOF_ALLOWED_CAPABILITIES))
+        return 0;
+    capabilities = flow_proof_expand_capabilities(requested);
+    service->metrics.requested_capabilities |= requested;
+    if ((service->metrics.acquired_capabilities & capabilities) ==
+            capabilities)
+        return 1;
+    epoch = service->metrics.epoch;
+    if ((capabilities & RXAS_FLOW_CAP_DOMINANCE) && !service->structural)
+        service->structural = rxas_flow_require_structural_analysis(
+                service->procedure, epoch, 0);
+    if ((capabilities & RXAS_FLOW_CAP_LOOPS))
+        service->structural = rxas_flow_require_loop_analysis(
+                service->procedure, epoch, 0);
+    if ((capabilities & RXAS_FLOW_CAP_SIGNAL) && !service->signal)
+        service->signal = rxas_flow_require_signal_analysis(
+                service->procedure, epoch, 0);
+    if ((capabilities & (RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE)) &&
+        !service->ssa)
+        service->ssa = rxas_flow_require_ssa_analysis(
+                service->procedure, epoch, 0);
+    if ((capabilities & RXAS_FLOW_CAP_USE) && !service->use)
+        service->use = rxas_flow_require_use_analysis(
+                service->procedure, epoch, 0);
+    if ((capabilities & RXAS_FLOW_CAP_CFG) && !service->outgoing_offsets &&
+        !flow_proof_build_adjacency(service))
+        return 0;
+    if (((capabilities & RXAS_FLOW_CAP_DOMINANCE) && !service->structural) ||
+        ((capabilities & RXAS_FLOW_CAP_LOOPS) && !service->structural) ||
+        ((capabilities & RXAS_FLOW_CAP_SIGNAL) && !service->signal) ||
+        ((capabilities & (RXAS_FLOW_CAP_STORAGE | RXAS_FLOW_CAP_VALUE)) &&
+         !service->ssa) ||
+        ((capabilities & RXAS_FLOW_CAP_USE) && !service->use)) {
+        /* A stronger capability may exhaust its own analysis budget while
+         * the already-acquired facts remain sound.  Reject that route without
+         * poisoning later lower-capability consumers in the same epoch. */
+        return 0;
+    }
+    service->metrics.acquired_capabilities |= capabilities;
+    flow_proof_set_retained_bytes(service);
+    return 1;
+}
+
 static int flow_proof_valid(const RxasFlowProofService *service,
                             unsigned long epoch) {
     return service && epoch && service->metrics.epoch == epoch &&
            service->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE &&
            rxas_flow_procedure_epoch_matches(service->procedure, epoch);
+}
+
+static int flow_proof_has_capabilities(
+        const RxasFlowProofService *service, unsigned int capabilities) {
+    unsigned int required;
+    if (!service) return 0;
+    required = flow_proof_expand_capabilities(capabilities);
+    return (service->metrics.acquired_capabilities & required) == required;
 }
 
 static int flow_proof_query_available(
@@ -228,6 +338,11 @@ static int flow_proof_query_available(
         return 0;
     }
     if (service->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE) {
+        result->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 0;
+    }
+    if (!flow_proof_has_capabilities(
+                service, FLOW_PROOF_BASE_CAPABILITIES)) {
         result->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
         return 0;
     }
@@ -1833,26 +1948,7 @@ static RxasFlowProofService *flow_proof_build(
     }
     service->block_count = metrics->blocks;
     service->edge_count = metrics->edges;
-    service->structural = rxas_flow_require_structural_analysis(
-            procedure, epoch, 0);
-    service->signal = rxas_flow_require_signal_analysis(procedure, epoch, 0);
-    service->ssa = rxas_flow_require_ssa_analysis(procedure, epoch, 0);
-    if (!service->structural || !service->signal || !service->ssa ||
-        !flow_proof_build_adjacency(service)) {
-        if (service->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE)
-            service->metrics.status = RXAS_FLOW_ANALYSIS_INVALID_GRAPH;
-        return service;
-    }
-    service->metrics.retained_bytes = sizeof(*service) +
-            (service->block_count * 3 + service->edge_count + 1) *
-                    sizeof(size_t) +
-            service->value_capacity * 4 * sizeof(size_t) +
-            service->storage_capacity * 2 * sizeof(size_t) +
-            service->effect_capacity * 3 * sizeof(size_t) +
-            service->cache_capacity * sizeof(*service->cache) +
-            service->rewrite_capacity * sizeof(*service->rewrites) +
-            service->trace_deletion_capacity *
-                    sizeof(*service->trace_deletions);
+    flow_proof_set_retained_bytes(service);
     return service;
 }
 
@@ -1877,20 +1973,29 @@ void rxas_flow_proof_service_destroy(struct RxasFlowProofService *service) {
     free(service);
 }
 
-const RxasFlowProofService *rxas_flow_require_proof_service(
+const RxasFlowProofService *rxas_flow_require_proof_capabilities(
         RxasFlowProcedure *procedure, unsigned long expected_epoch,
-        size_t work_budget) {
+        unsigned int capabilities, size_t work_budget) {
     struct RxasFlowAnalysisManager *manager;
     const RxasFlowMetrics *metrics;
     size_t requested;
-    if (!rxas_flow_procedure_epoch_matches(procedure, expected_epoch)) return 0;
+    if (!rxas_flow_procedure_epoch_matches(procedure, expected_epoch) ||
+        !capabilities ||
+        (capabilities & ~FLOW_PROOF_ALLOWED_CAPABILITIES))
+        return 0;
     metrics = rxas_flow_procedure_metrics(procedure, expected_epoch);
     if (!metrics) return 0;
     requested = work_budget ? work_budget : flow_proof_default_budget(metrics);
     manager = procedure->analysis_manager;
     if (manager && manager->epoch == expected_epoch && manager->proof) {
-        if (manager->proof->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE)
-            return manager->proof;
+        if (manager->proof->metrics.status == RXAS_FLOW_ANALYSIS_AVAILABLE) {
+            if (requested > manager->proof_budget) {
+                manager->proof_budget = requested;
+                manager->proof->metrics.budget_limit = requested;
+            }
+            return flow_proof_acquire_capabilities(
+                    manager->proof, capabilities) ? manager->proof : 0;
+        }
         if (requested <= manager->proof_budget) return 0;
         rxas_flow_proof_service_destroy(manager->proof);
         manager->proof = 0;
@@ -1904,9 +2009,24 @@ const RxasFlowProofService *rxas_flow_require_proof_service(
     manager->proof_budget = requested;
     manager->proof = flow_proof_build(procedure, expected_epoch, requested);
     if (!manager->proof ||
-        manager->proof->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE)
+        manager->proof->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE ||
+        !flow_proof_acquire_capabilities(manager->proof, capabilities))
         return 0;
     return manager->proof;
+}
+
+const RxasFlowProofService *rxas_flow_require_proof_service(
+        RxasFlowProcedure *procedure, unsigned long expected_epoch,
+        size_t work_budget) {
+    return rxas_flow_require_proof_capabilities(
+            procedure, expected_epoch, FLOW_PROOF_ALLOWED_CAPABILITIES,
+            work_budget);
+}
+
+unsigned int rxas_flow_proof_capabilities(
+        const RxasFlowProofService *service, unsigned long expected_epoch) {
+    if (!flow_proof_valid(service, expected_epoch)) return 0;
+    return service->metrics.acquired_capabilities;
 }
 
 const RxasFlowProofMetrics *rxas_flow_last_proof_metrics(
@@ -1979,7 +2099,10 @@ int rxas_flow_repetition_key(
     if (!key) return 0;
     memset(key, 0, sizeof(*key));
     key->opcode = -1;
-    if (!flow_proof_valid(service, expected_epoch)) return 0;
+    if (!flow_proof_valid(service, expected_epoch) ||
+        !flow_proof_has_capabilities(
+                service, FLOW_PROOF_BASE_CAPABILITIES))
+        return 0;
     instruction = rxas_flow_procedure_instruction(
             service->procedure, expected_epoch, instruction_id);
     record = instruction ? rxas_flow_procedure_record(
@@ -2401,6 +2524,11 @@ int rxas_flow_prove_typed_copy_redirect(
         return 1;
     }
     if (const_service->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
+    if (!flow_proof_has_capabilities(
+                const_service, FLOW_PROOF_USE_CAPABILITIES)) {
         plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
         return 1;
     }
@@ -3013,6 +3141,11 @@ int rxas_flow_prove_producer_destination_forward(
         plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
         return 1;
     }
+    if (!flow_proof_has_capabilities(
+                const_service, FLOW_PROOF_USE_CAPABILITIES)) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
     service = (RxasFlowProofService *)const_service;
     service->metrics.producer_forward_queries++;
     if (!flow_proof_consume(service, 8)) {
@@ -3439,6 +3572,11 @@ int rxas_flow_prove_compare_branch_fusion(
         return 1;
     }
     if (const_service->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
+    if (!flow_proof_has_capabilities(
+                const_service, FLOW_PROOF_USE_CAPABILITIES)) {
         plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
         return 1;
     }
@@ -4046,6 +4184,11 @@ int rxas_flow_prove_duplicate_linked_read(
         plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
         return 1;
     }
+    if (!flow_proof_has_capabilities(
+                const_service, FLOW_PROOF_USE_CAPABILITIES)) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
     service = (RxasFlowProofService *)const_service;
     service->metrics.duplicate_linked_read_queries++;
     if (!flow_proof_consume(service, 18)) {
@@ -4535,6 +4678,11 @@ int rxas_flow_prove_storage_permutation_round_trip(
         plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
         return 1;
     }
+    if (!flow_proof_has_capabilities(
+                const_service, FLOW_PROOF_USE_CAPABILITIES)) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
     service = (RxasFlowProofService *)const_service;
     service->metrics.storage_permutation_queries++;
     if (!flow_proof_consume(service, 10)) {
@@ -4790,6 +4938,11 @@ int rxas_flow_prove_must_execute_in_loop(
     result->candidate_instruction = instruction_id;
     result->loop_id = loop_id;
     if (!flow_proof_query_available(service, expected_epoch, result)) return 1;
+    if (!flow_proof_has_capabilities(
+                service, FLOW_PROOF_LOOP_CAPABILITIES)) {
+        result->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
     if (!flow_proof_consume((RxasFlowProofService *)service,
                             loop_id == RXAS_FLOW_ID_NONE ? 1 :
                             service->edge_count + 1)) {
@@ -4877,6 +5030,11 @@ int rxas_flow_prove_loop_component_invariant(
     result->candidate_instruction = instruction_id;
     result->loop_id = loop_id;
     if (!flow_proof_query_available(service, expected_epoch, result)) return 1;
+    if (!flow_proof_has_capabilities(
+                service, FLOW_PROOF_LOOP_CAPABILITIES)) {
+        result->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
     if (!flow_proof_consume((RxasFlowProofService *)service,
                             loop_id == RXAS_FLOW_ID_NONE ? 1 :
                             service->edge_count + 2)) {
@@ -5119,7 +5277,8 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
     ssa_metrics = rxas_flow_ssa_metrics(service->ssa, expected_epoch);
     fprintf(stream,
             "PERF3 flow-proof epoch=%lu status=available budget=%llu work=%llu "
-            "bytes=%llu repetition=%llu cache-hits=%llu proved=%llu "
+            "bytes=%llu requested=0x%x acquired=0x%x "
+            "repetition=%llu cache-hits=%llu proved=%llu "
             "rejected=%llu redundant-constant=%llu/%llu rejected=%llu "
             "redundant-absent=%llu/%llu rejected=%llu "
             "redundant-self-copy=%llu/%llu rejected=%llu "
@@ -5134,6 +5293,8 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             (unsigned long long)service->metrics.budget_limit,
             (unsigned long long)service->metrics.work,
             (unsigned long long)service->metrics.retained_bytes,
+            service->metrics.requested_capabilities,
+            service->metrics.acquired_capabilities,
             (unsigned long long)service->metrics.repetition_queries,
             (unsigned long long)service->metrics.repetition_cache_hits,
             (unsigned long long)service->metrics.repetition_proved,

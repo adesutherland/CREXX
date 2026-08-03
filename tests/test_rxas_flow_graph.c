@@ -370,9 +370,10 @@ static void test_unreachable_and_mapping(Assembler_Context *context) {
                     procedure, 1, live_block) &&
               rxas_flow_procedure_record_reachable(procedure, 1, 6),
               "immutable CFG reachability query disagrees with entry paths");
-        check(structural_metrics && structural_metrics->unreachable_blocks >= 1 &&
-              rxas_flow_structural_scc(analysis, 1, dead_block) ==
-                    RXAS_FLOW_ID_NONE,
+        check(structural_metrics &&
+              structural_metrics->unreachable_blocks >= 1 &&
+              structural_metrics->scc_count == 0 &&
+              structural_metrics->loops == 0,
               "structural reachability did not preserve unreachable code");
         check(rxas_flow_require_structural_analysis(procedure, 1, 0) ==
                     analysis,
@@ -508,6 +509,12 @@ static void test_nested_and_irreducible(Assembler_Context *context) {
     if (procedure) {
         analysis = rxas_flow_require_structural_analysis(procedure, 3, 0);
         metrics = rxas_flow_structural_metrics(analysis, 3);
+        check(analysis && metrics && metrics->scc_count == 0 &&
+              metrics->backedges == 0 && metrics->loops == 0,
+              "dormant loop capability was built with dominance");
+        check(rxas_flow_require_loop_analysis(procedure, 3, 0) == analysis,
+              "loop capability did not extend the cached structural graph");
+        metrics = rxas_flow_structural_metrics(analysis, 3);
         outer_block = fixture_block_for_record(procedure, 3, 0);
         inner_block = fixture_block_for_record(procedure, 3, 2);
         latch_block = fixture_block_for_record(procedure, 3, 4);
@@ -540,7 +547,7 @@ static void test_nested_and_irreducible(Assembler_Context *context) {
                                           irreducible.item_count, 4);
     check(procedure != 0, "irreducible graph construction failed");
     if (procedure) {
-        analysis = rxas_flow_require_structural_analysis(procedure, 4, 0);
+        analysis = rxas_flow_require_loop_analysis(procedure, 4, 0);
         metrics = rxas_flow_structural_metrics(analysis, 4);
         b_block = fixture_block_for_record(procedure, 4, 1);
         a_block = fixture_block_for_record(procedure, 4, 3);
@@ -2817,7 +2824,7 @@ static void test_loop_proofs(Assembler_Context *context) {
     check(procedure != 0, "loop-proof fixture construction failed");
     if (procedure) {
         proof = rxas_flow_require_proof_service(procedure, 24, 0);
-        structural = rxas_flow_require_structural_analysis(procedure, 24, 0);
+        structural = rxas_flow_require_loop_analysis(procedure, 24, 0);
         loop_instruction = rxas_flow_procedure_record(
                 procedure, 24, 2)->instruction_id;
         loop_id = structural ? rxas_flow_structural_innermost_loop(
@@ -2886,6 +2893,14 @@ static void test_optimisation_routing(Assembler_Context *context) {
     Assembler_Token *operands[3];
     RxasOptimisationCensus census;
     const RxasOptimisationPassDescriptor *descriptor;
+    const RxasOptimisationPassDescriptor *base_descriptor;
+    const RxasOptimisationPassDescriptor *use_descriptor;
+    RxasFlowProcedure *procedure;
+    const RxasFlowProofService *base_proof;
+    const RxasFlowProofService *use_proof;
+    RxasFlowProofResult result;
+    RxasFlowTypedCopyPlan typed_plan;
+    unsigned int capabilities;
     size_t index;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0);
@@ -2933,8 +2948,65 @@ static void test_optimisation_routing(Assembler_Context *context) {
     check(descriptor && descriptor->owner == RXAS_OPT_OWNER_LOCAL &&
           descriptor->capabilities == RXAS_FLOW_CAP_LOCAL_SCAN,
           "K06 was not classified as local mechanical algebra");
+    descriptor = rxas_optimisation_pass_descriptor(
+            RXAS_PASS_DIAGNOSTIC_FLOW_DUMP);
+    check(descriptor && descriptor->owner == RXAS_OPT_OWNER_DIAGNOSTIC &&
+          (descriptor->capabilities & RXAS_FLOW_CAP_USE) != 0 &&
+          (descriptor->capabilities & RXAS_FLOW_CAP_LOOPS) == 0,
+          "explicit flow diagnostics do not declare their use facts");
     check((census.requested_capabilities & RXAS_FLOW_CAP_LOOPS) == 0,
           "current candidates requested dormant loop analysis");
+    capabilities = rxas_optimisation_capabilities_for_owner(
+            &census, RXAS_OPT_OWNER_SSA);
+    check((capabilities & RXAS_FLOW_CAP_VALUE) != 0 &&
+          (capabilities & RXAS_FLOW_CAP_USE) == 0 &&
+          (capabilities & RXAS_FLOW_CAP_LOOPS) == 0,
+          "SSA owner capability union is not candidate-lazy");
+
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 41);
+    base_descriptor = rxas_optimisation_pass_descriptor(
+            RXAS_PASS_M01_DERIVATION);
+    use_descriptor = rxas_optimisation_pass_descriptor(
+            RXAS_PASS_K04_COMPARE_BRANCH);
+    base_proof = procedure && base_descriptor
+            ? rxas_flow_require_proof_capabilities(
+                    procedure, 41, base_descriptor->capabilities, 0)
+            : 0;
+    capabilities = rxas_flow_proof_capabilities(base_proof, 41);
+    check(base_proof &&
+          (capabilities & base_descriptor->capabilities) ==
+                  base_descriptor->capabilities &&
+          (capabilities & (RXAS_FLOW_CAP_USE | RXAS_FLOW_CAP_LOOPS)) == 0,
+          "base semantic consumer acquired undeclared use/loop facts");
+    check(base_proof && rxas_flow_prove_typed_copy_redirect(
+                  base_proof, 41, 0, &typed_plan) &&
+          !typed_plan.proved &&
+          typed_plan.reason == RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE &&
+          (rxas_flow_proof_capabilities(base_proof, 41) &
+                   RXAS_FLOW_CAP_USE) == 0,
+          "undeclared use query did not fail closed");
+    check(base_proof && rxas_flow_prove_must_execute_in_loop(
+                  base_proof, 41, 0, RXAS_FLOW_ID_NONE, &result) &&
+          !result.proved &&
+          result.reason == RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE &&
+          (rxas_flow_proof_capabilities(base_proof, 41) &
+                   RXAS_FLOW_CAP_LOOPS) == 0,
+          "undeclared loop query did not fail closed");
+    use_proof = procedure && use_descriptor
+            ? rxas_flow_require_proof_capabilities(
+                    procedure, 41, use_descriptor->capabilities, 0)
+            : 0;
+    capabilities = rxas_flow_proof_capabilities(use_proof, 41);
+    check(use_proof == base_proof &&
+          (capabilities & use_descriptor->capabilities) ==
+                  use_descriptor->capabilities &&
+          (capabilities & RXAS_FLOW_CAP_LOOPS) == 0,
+          "use consumer did not monotonically extend the epoch service");
+    check(!rxas_flow_require_proof_capabilities(
+                  procedure, 41, RXAS_FLOW_CAP_LOCAL_SCAN, 0),
+          "proof service accepted a local-only capability");
+    if (procedure) rxas_flow_procedure_destroy(procedure);
     fixture_destroy(&fixture);
 }
 
