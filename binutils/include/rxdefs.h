@@ -446,6 +446,10 @@ int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
 unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
+/* True when a two-register copy is guaranteed to perform no work, signal, or
+ * observable cursor/effect update if both operands denote the same physical
+ * register storage. */
+int rxop_same_storage_copy_is_noop(int opcode);
 /* Components proved absent after a successful operand write.  This is kept
  * separate from writes because one opcode may assign a scalar component while
  * clearing reference or native-payload lifetime state. */

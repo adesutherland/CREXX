@@ -2039,6 +2039,65 @@ static void test_redundant_absent_proof(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_redundant_self_copy_proof(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowProofService *proof;
+    RxasFlowProofResult result;
+    size_t raw_copy;
+    size_t raw_binary_copy;
+    size_t linked_copy;
+    size_t different_copy;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "copy", operands, 2);
+    operands[0] = fixture_register(&fixture, 5);
+    operands[1] = fixture_register(&fixture, 5);
+    fixture_op(&fixture, "bcopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "dcopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_register(&fixture, 4);
+    fixture_op(&fixture, "copy", operands, 2);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 28);
+    check(procedure != 0,
+          "redundant-self-copy proof fixture construction failed");
+    if (procedure) {
+        proof = rxas_flow_require_proof_service(procedure, 28, 0);
+        raw_copy = rxas_flow_procedure_record(
+                procedure, 28, 0)->instruction_id;
+        raw_binary_copy = rxas_flow_procedure_record(
+                procedure, 28, 1)->instruction_id;
+        linked_copy = rxas_flow_procedure_record(
+                procedure, 28, 3)->instruction_id;
+        different_copy = rxas_flow_procedure_record(
+                procedure, 28, 4)->instruction_id;
+        check(proof && rxas_flow_prove_redundant_self_copy(
+                    proof, 28, raw_copy, &result) && result.proved,
+              "raw full self-copy was not proved redundant");
+        check(rxas_flow_prove_redundant_self_copy(
+                    proof, 28, raw_binary_copy, &result) && result.proved,
+              "raw BCOPY self-copy was blocked by its general signal contract");
+        check(rxas_flow_prove_redundant_self_copy(
+                    proof, 28, linked_copy, &result) && result.proved,
+              "linked typed copy did not follow physical storage identity");
+        check(rxas_flow_prove_redundant_self_copy(
+                    proof, 28, different_copy, &result) && !result.proved &&
+              result.reason == RXAS_FLOW_PROOF_STORAGE_NOT_IDENTICAL,
+              "different storage was incorrectly proved as a self-copy");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static void test_loop_proofs(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
@@ -2156,6 +2215,7 @@ int main(void) {
     test_proof_service(&context);
     test_redundant_constant_proof(&context);
     test_redundant_absent_proof(&context);
+    test_redundant_self_copy_proof(&context);
     test_loop_proofs(&context);
 
     if (failures) {

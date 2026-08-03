@@ -63,12 +63,14 @@ ordered TRACE.  Adrian accepted its output-neutral Release verdict and bounded
 procedure-local 30.1 MB peak RSS on 2026-08-03.  Canonical images remain
 unchanged, focused replay passes 53/53 and broad Debug passes 1,991/1,991.
 M03 is also complete: repeated `NULL` now requires known storage and all eight
-component leaves already absent.  It recovers the old floor and adds equal-phi,
-linked-storage and ordered-TRACE cases while preserving scalar, reference and
-native cleanup.  Adrian accepted the output-neutral verdict; broad Debug
-passes 1,993/1,993.  M04 exact self-copy is next.  Exact old/new parity is not
-the gate: the new service must preserve the old valid safe domain and may
-prove a larger separately validated domain.
+component leaves already absent. M04 is complete: canonical conditional
+same-storage metadata and the proof service now own all seven full/typed copy
+families, preserving the old floor and adding linked, agreeing-phi and
+TRACE-safe deletions. Adrian accepted both output-neutral verdicts; canonical
+images remain byte-identical and M04 broad Debug passes 1,995/1,995. M05's
+sparse use/liveness service is next. Exact old/new parity is not the gate: the
+new service must preserve the old valid safe domain and may prove a larger
+separately validated domain.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -258,7 +260,7 @@ their recorded trigger fires:
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
-| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01-M03 complete; M04 exact self-copy next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01 generalizes the old `ITOF` floor to metadata-driven `XTOY`; M02 proves equivalent scalar constants plus hidden-cleanup absence; M03 proves repeated all-component absence for known storage and deletes the old repeated-`NULL` authority. Adrian accepted each output-neutral migration verdict. M03 adds equal-phi, linked-storage and ordered-TRACE deletions while retaining scalar/reference/native cleanup; canonical images remain byte-identical and broad Debug passes 1,993/1,993. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M01: [`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/); M02: [`2026-08-03-perf3-11-m02-constant-write`](evidence/2026-08-03-perf3-11-m02-constant-write/); M03: [`2026-08-03-perf3-11-m03-absent-write`](evidence/2026-08-03-perf3-11-m03-absent-write/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | in progress — M01-M04 complete; M05 sparse use/liveness next | Gates 1-6 are locked. The per-epoch proof service is the sole repeated-`ITOS` authority and its accepted Release verdict improves RexxCPS 7.469%/6.866% on `rxvm`/`rxbvm`. M01-M04 migrate XTOY repetition, constants, all-component absence and exact same-storage copies. M04 covers all seven copy families, follows LINK/agreeing phis, retains TRACE events and fails divergent storage closed. Canonical images remain byte-identical and broad Debug passes 1,995/1,995. The future ledger now includes an ordered RXC-to-RXAS ownership and inlining redesign programme after M05/M06 and K04 maturity. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); M04: [`2026-08-03-perf3-11-m04-self-copy`](evidence/2026-08-03-perf3-11-m04-self-copy/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
@@ -850,7 +852,13 @@ M03 is complete in
 Its known-storage/all-component proof recovers the old repeated-`NULL` floor
 and adds equal-phi, linked-storage and ordered-TRACE cases while preserving
 cleanup.  Canonical images are unchanged and broad Debug passes 1,993/1,993.
-M04 exact full/typed self-copy is the next one-authority migration.
+M04 is complete in
+[`M04 exact same-storage copy`](evidence/2026-08-03-perf3-11-m04-self-copy/).
+Its conditional opcode metadata and StorageId proof recover the old raw-copy
+floor and add decimal/attribute/binary, LINK, agreeing-phi and TRACE-safe
+deletions. Divergent and different storage remain closed. Canonical images are
+unchanged and broad Debug passes 1,995/1,995. M05's sparse use index and
+edge-aware liveness service is the next one-authority migration foundation.
 
 The PERF3-10 closeout also audited surviving tactical guards. T1 removes the
 address-separation concern but does not itself prove that an observed `null`,

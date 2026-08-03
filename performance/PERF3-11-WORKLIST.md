@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — M01-M03 complete; M04 exact self-copy next**
+Status: **in progress — M01-M04 complete; M05 sparse use/liveness next**
 
 Architecture approved: 2026-08-02
 
@@ -575,8 +575,17 @@ and all eight component leaves must already be absent.  It recovers the old
 floor and adds equal-phi, linked-storage and ordered-TRACE deletions while
 retaining scalar, reference and native-payload cleanup.  Adrian accepted the
 output-neutral Release verdict on 2026-08-03.  Canonical images are
-byte-identical and broad Debug passes 1,993/1,993.  M04 exact self-copy is
-next.
+byte-identical and broad Debug passes 1,993/1,993.
+
+M04 is complete in
+[2026-08-03-perf3-11-m04-self-copy](evidence/2026-08-03-perf3-11-m04-self-copy/).
+The proof service is sole authority for exact same-storage COPY, ICOPY, FCOPY,
+SCOPY, DCOPY, ACOPY and BCOPY. It recovers the four old raw-register cases and
+adds raw decimal/attribute/binary, LINK, agreeing-phi and TRACE-safe
+deletions, while divergent and different storage remain closed. Adrian
+accepted the output-neutral Release verdict on 2026-08-03; canonical images
+are byte-identical and broad Debug passes 1,995/1,995. M05's sparse use index
+and edge-aware liveness service is next.
 
 ### Stage 11 — later consumers after legacy migration
 
@@ -609,6 +618,35 @@ to combine consumers or bypass each consumer's correctness and Release gate.
 | FC05 | final register-number compaction | preserved windows, links, unwind, TRACE and `.locals` | PERF3-11 after all rewrites |
 | FC06 | register reuse/allocation | interference and component/storage liveness | PERF3-11 after scalable liveness |
 | FC07 | compiler clause and variable/representation hoisting | RXC lowering audit separated from RXAS proof | PERF3-12 |
+
+#### RXC-to-RXAS architecture-transfer ledger
+
+These are architecture activities rather than individual optimizer
+capabilities. The objective is a simpler RXC that remains authoritative for
+language semantics and type-correct lowering, while increasingly mature RXAS
+proofs own machine-flow selection. Analysis may begin after M05 is locked, but
+production ownership does not move until M05/M06 and K04 have exercised the
+new use/liveness service on representative code.
+
+| ID | Activity | Gate and ordering |
+| --- | --- | --- |
+| AT01 | classify every RXC optimization as semantic lowering, representation choice or machine-flow rewrite | analysis after M05; retain emitted-image and runtime oracles |
+| AT02 | define intent/provenance metadata RXC must preserve for later RXAS decisions | after M05/M06 query design; no public format change without approval |
+| AT03 | migrate eligible tactical RXC rewrites to RXAS one authority at a time | after M01-M06 plus K04 prove value, use, signal and call-window coverage |
+| AT04 | redesign inlining ownership and cost model | PoC after M05 scale proof; select only after AT02 and K04 |
+| AT05 | simplify RXC emitters and delete superseded optimizer state | only after each corresponding RXAS migration is accepted |
+| AT06 | consolidate the compiler/assembler boundary and rebaseline compile, assemble, image-size and runtime costs | after staged migrations; before declaring the simplified architecture complete |
+
+AT04 must compare at least the current early RXC inliner, late RXAS inlining,
+and a hybrid in which RXC proves semantic eligibility while RXAS chooses and
+lowers from actual instruction, register, signal and call-window costs. It
+must also decide whether analysis runs before inlining, after inlining, or in
+two bounded epochs. No inlining ownership change is selected by this ledger.
+
+The provisional order is FC01/M05-M06, K04, AT01-AT02, the AT04 PoC/selection,
+then staged AT03/AT05 migrations. Broader GVN/PRE and LICM (FC02-FC03) should
+be designed against the selected inlining boundary; register compaction and
+reuse (FC05-FC06) remain later consumers.
 
 ## Acceptance criteria for the infrastructure
 

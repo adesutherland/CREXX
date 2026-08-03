@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01, M02 and M03 complete; M04 exact self-copy next**
+Status: **in progress — M01-M04 complete; M05 sparse use/liveness next**
 
 Authorized: 2026-08-02
 
@@ -67,7 +67,7 @@ and after the diagnostic prove output neutrality.
 | M01 | `flow_compute_available_fact()` for repeated one-register `ITOF`, then metadata-admitted `XTOY` derivations | old floor: focused `ITOF` 1, canonical 0; other conversions are new domain | generic dominated-success repetition | **complete**; old authority deleted, all 20 one-register conversions described by metadata, 12 focused deletions proved |
 | M02 | repeated identical integer/bitwise-float load availability | focused 1; canonical 0 | component value/equivalent constant proof | **complete**; old authority deleted, old floor plus four stronger focused deletions proved |
 | M03 | repeated `NULL` all-view availability | focused 1; canonical 0 | storage presence plus all-component equivalence | **complete**; old authority deleted, old floor plus equal-phi, linked-storage and TRACE cases proved |
-| M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | **next**; migrate with redundant-write queries |
+| M04 | exact full/typed self-copy deletion with address-observation scan | focused full-copy 1; canonical 0 | storage/value identity plus observation equivalence | **complete**; old authority deleted, all seven copy families use conditional same-storage metadata and the proof service |
 | M05 | typed `ICOPY`/`FCOPY`/strict-`SCOPY` availability, may-reach and operand redirection | focused 10; canonical 0 | SSA use graph, edge-aware liveness and atomic rewrite plan | requires new reusable use/liveness query |
 | M06 | adjacent producer-destination forwarding | focused 12; canonical 0 | exact producer result, destination/temporary liveness and observation equivalence | migrate after M05 infrastructure |
 | M07 | dense legacy register-storage must-analysis | diagnostic-only; 13 storage-identity fixtures | sparse SSA storage queries and proof diagnostics | retire after its oracle is expressed against new SSA |
@@ -126,7 +126,32 @@ separate assembler-processing simplification is selected.
       ordinary representative output.
 - [x] Repeat separately for **M02**.
 - [x] Repeat separately for **M03**.
-- [ ] Repeat separately for **M04**.
+- [x] Repeat separately for **M04**.
+
+#### M04 design selection
+
+M04's machine-level runtime ceiling is deletion of an instruction whose VM
+success path is already an address-equality no-op.  The assembler-side ceiling
+is one bounded proof query for each demand-filtered candidate; there is no
+runtime helper, allocation or added instruction.
+
+1. **Retain the legacy raw-register identity plus forward TRACE scan.** This
+   preserves the old floor but cannot follow LINK/SWAP storage, and treats a
+   later trace event as if the no-op copy itself were observable.
+2. **Selected: canonical same-storage copy metadata plus a write-once
+   `StorageId` proof.** Identical physical operands prove the old floor even
+   when entry storage is unknown; otherwise equal IDs or equal unique storage
+   leaves prove linked and agreeing-phi aliases.  The proof service is sole
+   authority and the old identity branch is deleted.
+3. **Defer M04 into the M05 use/liveness rewrite service.** That service is
+   needed for nonidentity typed-copy redirection, but is unnecessary for an
+   instruction whose conditional VM path performs no write or signal.  It
+   would also delay removal of the incorrect blanket TRACE guard.
+
+The selected conditional metadata covers `COPY`, `ICOPY`, `FCOPY`, `SCOPY`,
+`DCOPY`, `ACOPY` and `BCOPY`.  It is deliberately stronger than each opcode's
+general signal contract: notably `BCOPY` remains conservative for different
+storage while its same-storage VM path returns before allocation or signal.
 
 ### Phase B — reusable use graph and component liveness
 
@@ -162,7 +187,7 @@ separate assembler-processing simplification is selected.
 - [ ] Rebaseline assembler elapsed/RSS and complete proportional broad Debug
       closeout before the final local commit.
 
-## M01-M03 results and current stop point
+## M01-M04 results and current stop point
 
 M01 is complete in
 [`2026-08-02-perf3-11-m01-xtoy`](evidence/2026-08-02-perf3-11-m01-xtoy/).
@@ -215,4 +240,17 @@ reference cleanup and native-payload cleanup remain closed.  Adrian accepted
 the output-neutral Release verdict on 2026-08-03; canonical images are
 byte-identical and broad Debug passes 1,993/1,993.
 
-M04 exact full/typed self-copy deletion is next.
+M04 is complete in
+[2026-08-03-perf3-11-m04-self-copy](evidence/2026-08-03-perf3-11-m04-self-copy/).
+Canonical same-storage no-op metadata covers all seven full/typed copy
+families. The proof service preserves the old raw COPY/ICOPY/FCOPY/SCOPY floor
+and adds seven focused deletions: raw DCOPY/ACOPY/BCOPY, linked full/binary,
+TRACE-anchored full copy and agreeing-phi decimal copy. Divergent-phi and
+different-storage copies remain rejected. The old identity branch and its
+blanket forward TRACE veto are deleted.
+
+Adrian accepted the output-neutral first Release verdict on 2026-08-03.
+Richards, Towers and RexxCPS are byte-identical to frozen M03. The final broad
+Debug run passes 1,995/1,995. M05 is next, beginning with the reusable sparse
+use index and edge-aware component/storage liveness service rather than an
+M05-specific rewrite.

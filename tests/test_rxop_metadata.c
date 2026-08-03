@@ -108,6 +108,14 @@ static void check_conversion_metadata(int opcode, unsigned int source,
           &op_table[opcode]);
 }
 
+static void check_same_storage_copy_metadata(int opcode) {
+    check(rxop_same_storage_copy_is_noop(opcode),
+          "same-storage copy no-op metadata regression", &op_table[opcode]);
+    check(rxop_component_reads(opcode, 1) != RXOP_COMPONENT_NONE &&
+              rxop_component_writes(opcode, 0) != RXOP_COMPONENT_NONE,
+          "same-storage copy component metadata regression", &op_table[opcode]);
+}
+
 int main(void) {
     int i;
     int source_count;
@@ -123,6 +131,16 @@ int main(void) {
     const OpInfo *op;
 
     failures = 0;
+    check_same_storage_copy_metadata(OP_COPY_REG_REG);
+    check_same_storage_copy_metadata(OP_ICOPY_REG_REG);
+    check_same_storage_copy_metadata(OP_FCOPY_REG_REG);
+    check_same_storage_copy_metadata(OP_SCOPY_REG_REG);
+    check_same_storage_copy_metadata(OP_DCOPY_REG_REG);
+    check_same_storage_copy_metadata(OP_ACOPY_REG_REG);
+    check_same_storage_copy_metadata(OP_BCOPY_REG_REG);
+    check(!rxop_same_storage_copy_is_noop(OP_LINK_REG_REG),
+          "non-copy opcode gained same-storage no-op contract",
+          &op_table[OP_LINK_REG_REG]);
     source_count = 0;
     classified_count = 0;
     conservative_count = 0;

@@ -41,6 +41,8 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_NOT_EXACT_ABSENT_WRITE,
     RXAS_FLOW_PROOF_COMPONENT_PRESENT,
     RXAS_FLOW_PROOF_ABSENCE_UNKNOWN,
+    RXAS_FLOW_PROOF_NOT_EXACT_SELF_COPY,
+    RXAS_FLOW_PROOF_STORAGE_NOT_IDENTICAL,
     RXAS_FLOW_PROOF_NOT_IN_LOOP,
     RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP,
     RXAS_FLOW_PROOF_NOT_MUST_EXECUTE,
@@ -84,6 +86,9 @@ typedef struct RxasFlowProofMetrics {
     size_t redundant_absent_queries;
     size_t redundant_absent_proved;
     size_t redundant_absent_rejected;
+    size_t redundant_self_copy_queries;
+    size_t redundant_self_copy_proved;
+    size_t redundant_self_copy_rejected;
     size_t success_edge_queries;
     size_t loop_queries;
 } RxasFlowProofMetrics;
@@ -115,6 +120,9 @@ int rxas_flow_prove_redundant_constant_write(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t candidate_instruction, RxasFlowProofResult *result);
 int rxas_flow_prove_redundant_absent_write(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t candidate_instruction, RxasFlowProofResult *result);
+int rxas_flow_prove_redundant_self_copy(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t candidate_instruction, RxasFlowProofResult *result);
 int rxas_flow_prove_instruction_speculatable(

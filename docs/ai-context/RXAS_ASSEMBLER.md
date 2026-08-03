@@ -799,6 +799,19 @@ An intervening component write or unknown storage/value leaf fails closed.
 The proof deliberately uses pre-instruction storage: VM `NULL` clears the
 value reached by a register but does not change the register's link topology.
 
+M04 migrates exact same-storage copies. The canonical
+`rxop_same_storage_copy_is_noop()` contract covers `copy`, `icopy`,
+`fcopy`, `scopy`, `dcopy`, `acopy` and `bcopy`: when both operands
+denote the same physical value storage, the VM path performs no write,
+allocation, signal or cursor/effect update. This conditional contract is more
+exact than the opcode's general signal contract; different-storage `bcopy`
+remains conservative. Identical physical register operands prove the old floor
+directly. Distinct registers require equal pre-instruction `StorageId`, or
+storage phis with the same unique write-once leaf. LINK-established and
+agreeing-phi aliases can therefore prove, while divergent, different or unknown
+storage fails closed. Explicit TRACE records remain; an event after a
+semantically empty copy does not make that copy observable.
+
 The admitted first transformation panel is deliberately narrower than the
 fact engine:
 
@@ -807,9 +820,9 @@ fact engine:
   destination observation can be redirected atomically; decimal copy remains
   excluded from that established consumer pending decimal-lifetime proof,
   although `dcopy` itself is now a proven total non-signalling operation;
-- an exact self `copy` is removed because the VM handler is explicitly a
-  no-op, while nonidentity full-value copies remain excluded pending ownership,
-  payload, attribute, flag and cleanup proof;
+- all seven exact same-storage copy families use the M04 conditional metadata
+  and StorageId proof, while nonidentity full-value copies remain excluded
+  pending ownership, payload, attribute, flag and cleanup proof;
 - repeated integer/bitwise-equal float constants use the M02 storage/value and
   hidden-cleanup proof; repeated `null` uses the M03 known-storage and
   all-component-absence proof;

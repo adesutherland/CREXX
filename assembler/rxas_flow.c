@@ -137,6 +137,10 @@ typedef struct flow_stats {
     size_t absent_proof_proved;
     size_t absent_proof_rejected;
     size_t absent_proof_unavailable;
+    size_t self_copy_proof_queries;
+    size_t self_copy_proof_proved;
+    size_t self_copy_proof_rejected;
+    size_t self_copy_proof_unavailable;
     size_t derivation_proof_queries;
     size_t derivation_proof_proved;
     size_t derivation_proof_rejected;
@@ -2103,13 +2107,6 @@ static size_t flow_propagate_one_copy(flow_graph *graph, size_t copy_index,
         stats->rejected_trace++;
         return 0;
     }
-    if (destination_register == source_register) {
-        flow_debug_accept(graph, copy_index, "identity-copy", 0);
-        copy->instrType = EMPTY;
-        if (full_copy) stats->full_copies_removed++;
-        else stats->typed_copies_removed++;
-        return 1;
-    }
     if (full_copy) {
         flow_debug_copy_rejection(graph, copy_index, copy_index,
                                   "full-value-ownership-unproved",
@@ -2860,6 +2857,165 @@ static int flow_proof_reason_unavailable(RxasFlowProofReason reason) {
            reason == RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
 }
 
+static int flow_same_raw_copy_operands(const flow_graph *graph,
+                                       size_t index) {
+    const Assembler_Token *destination;
+    const Assembler_Token *source;
+    if (!graph || index >= graph->item_count ||
+        graph->items[index].operandCount != 2)
+        return 0;
+    destination = rxas_queue_operand(&graph->items[index], 0);
+    source = rxas_queue_operand(&graph->items[index], 1);
+    return destination && source && flow_register_type(destination) &&
+           flow_register_type(destination) == flow_register_type(source) &&
+           destination->token_value.integer == source->token_value.integer;
+}
+
+/* This linear pass is only a demand filter.  Exact raw self-copies preserve
+ * the old optimization floor; copies involving a register touched by a link,
+ * swap, or other mapping operation are sent to component SSA so actual
+ * storage identity (including agreeing phis) can be proved. */
+static size_t flow_mark_self_copy_candidates(
+        const flow_graph *graph, unsigned char *candidates) {
+    unsigned char *mapping_touched;
+    size_t index;
+    size_t count;
+    if (!graph || !candidates || !graph->register_count) return 0;
+    mapping_touched = calloc(graph->register_count, 1);
+    if (!mapping_touched)
+        RX_PANIC_OOM("calloc RXAS self-copy demand filter",
+                     graph->register_count, 0);
+    count = 0;
+    for (index = 0; index < graph->item_count; index++) {
+        const instruction_queue *item;
+        size_t operand_index;
+        int destination_register;
+        int source_register;
+        if (graph->items[index].instrType != OP_CODE ||
+            !graph->nodes[index].reachable || !graph->nodes[index].op)
+            continue;
+        item = &graph->items[index];
+        if (flow_opcode_may_remap_storage(&graph->nodes[index])) {
+            for (operand_index = 0; operand_index < item->operandCount;
+                 operand_index++) {
+                const Assembler_Token *operand;
+                int register_index;
+                operand = rxas_queue_operand(item, operand_index);
+                register_index = operand && flow_register_type(operand)
+                        ? flow_register_index(
+                                graph, flow_register_type(operand),
+                                (size_t)operand->token_value.integer)
+                        : -1;
+                if (register_index >= 0)
+                    mapping_touched[register_index] = 1;
+            }
+        }
+        if (item->operandCount != 2 ||
+            !rxop_same_storage_copy_is_noop(graph->nodes[index].op->opcode))
+            continue;
+        if (flow_same_raw_copy_operands(graph, index)) {
+            candidates[index] = 1;
+            count++;
+            continue;
+        }
+        {
+            const Assembler_Token *destination;
+            const Assembler_Token *source;
+            destination = rxas_queue_operand(item, 0);
+            source = rxas_queue_operand(item, 1);
+            destination_register = destination &&
+                    flow_register_type(destination)
+                    ? flow_register_index(
+                            graph, flow_register_type(destination),
+                            (size_t)destination->token_value.integer)
+                    : -1;
+            source_register = source && flow_register_type(source)
+                    ? flow_register_index(
+                            graph, flow_register_type(source),
+                            (size_t)source->token_value.integer)
+                    : -1;
+        }
+        if ((destination_register >= 0 &&
+             mapping_touched[destination_register]) ||
+            (source_register >= 0 && mapping_touched[source_register])) {
+            candidates[index] = 1;
+            count++;
+        }
+    }
+    free(mapping_touched);
+    return count;
+}
+
+static size_t flow_remove_redundant_self_copies(
+        flow_graph *graph, flow_stats *stats, flow_proof_session *session) {
+    unsigned char *candidates;
+    size_t candidate_count;
+    size_t index;
+    size_t removed;
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *record;
+    RxasFlowProofResult proof_result;
+    int query_available;
+    candidates = calloc(graph->item_count, 1);
+    if (!candidates)
+        RX_PANIC_OOM("calloc RXAS self-copy proof candidates",
+                     graph->item_count, 0);
+    candidate_count = flow_mark_self_copy_candidates(graph, candidates);
+    if (!candidate_count) {
+        free(candidates);
+        return 0;
+    }
+    proof = flow_proof_session_require(session, graph);
+    if (!proof) {
+        stats->self_copy_proof_unavailable++;
+        free(candidates);
+        return 0;
+    }
+    removed = 0;
+    for (index = 0; index < graph->item_count; index++) {
+        if (!candidates[index]) continue;
+        record = rxas_flow_procedure_record(
+                session->procedure, session->epoch, index);
+        if (!record || record->instruction_id == RXAS_FLOW_ID_NONE) continue;
+        memset(&proof_result, 0, sizeof(proof_result));
+        query_available = rxas_flow_prove_redundant_self_copy(
+                proof, session->epoch, record->instruction_id,
+                &proof_result) &&
+                !flow_proof_reason_unavailable(proof_result.reason);
+        stats->self_copy_proof_queries++;
+        if (graph->context->debug_mode)
+            fprintf(stderr,
+                    "PERF3 self-copy-proof-candidate opcode=%s record=%llu "
+                    "instruction=%llu proved=%d reason=%s storage=%llu\n",
+                    graph->nodes[index].op->mnemonic,
+                    (unsigned long long)index,
+                    (unsigned long long)record->instruction_id,
+                    proof_result.proved,
+                    rxas_flow_proof_reason_name(proof_result.reason),
+                    (unsigned long long)proof_result.storage_id);
+        if (!query_available) {
+            stats->self_copy_proof_unavailable++;
+            free(candidates);
+            return removed;
+        }
+        if (!proof_result.proved) {
+            stats->self_copy_proof_rejected++;
+            continue;
+        }
+        graph->items[index].instrType = EMPTY;
+        flow_debug_accept(graph, index,
+                          "redundant-component-ssa-self-copy", 0);
+        removed++;
+        stats->self_copy_proof_proved++;
+        if (graph->nodes[index].op->opcode == OP_COPY_REG_REG)
+            stats->full_copies_removed++;
+        else
+            stats->typed_copies_removed++;
+    }
+    free(candidates);
+    return removed;
+}
+
 typedef struct flow_derivation_candidate {
     size_t record_id;
     size_t instruction_id;
@@ -2995,6 +3151,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "redundant-conversion=%llu producer-forward=%llu redirects=%llu "
             "constant-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "absent-proof=%llu/%llu rejected=%llu unavailable=%llu "
+            "self-copy-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
@@ -3020,6 +3177,10 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->absent_proof_queries,
             (unsigned long long)stats->absent_proof_rejected,
             (unsigned long long)stats->absent_proof_unavailable,
+            (unsigned long long)stats->self_copy_proof_proved,
+            (unsigned long long)stats->self_copy_proof_queries,
+            (unsigned long long)stats->self_copy_proof_rejected,
+            (unsigned long long)stats->self_copy_proof_unavailable,
             (unsigned long long)stats->derivation_proof_proved,
             (unsigned long long)stats->derivation_proof_queries,
             (unsigned long long)stats->derivation_proof_rejected,
@@ -3086,7 +3247,9 @@ void rxas_flow_optimise(Assembler_Context *context,
         else {
             changed = flow_remove_unreachable(&graph, &stats);
             if (!changed && flow_value_analysis_within_bound(&graph)) {
-                changed += flow_propagate_copies(&graph, &stats);
+                changed += flow_remove_redundant_self_copies(
+                        &graph, &stats, &proof_session);
+                if (!changed) changed += flow_propagate_copies(&graph, &stats);
                 if (!changed) changed += flow_forward_producer_destination(&graph, &stats);
                 if (!changed) changed += flow_remove_redundant_loads(
                         &graph, &stats, &proof_session);

@@ -2139,6 +2139,107 @@ complete:
     return 1;
 }
 
+int rxas_flow_prove_redundant_self_copy(
+        const RxasFlowProofService *const_service,
+        unsigned long expected_epoch, size_t candidate_instruction,
+        RxasFlowProofResult *result) {
+    RxasFlowProofService *service;
+    const RxasFlowInstruction *instruction;
+    const RxasFlowRecord *record;
+    const instruction_queue *item;
+    RxasFlowRegister destination;
+    RxasFlowRegister source;
+    RxasFlowStorageFact destination_storage;
+    RxasFlowStorageFact source_storage;
+    RxasFlowStorageNode destination_leaf;
+    RxasFlowStorageNode source_leaf;
+    size_t destination_root;
+    size_t source_root;
+    FlowProofStorageWalkResult walk;
+    if (!result) return 0;
+    flow_proof_result_init(result, RXAS_FLOW_PROOF_STALE_EPOCH);
+    result->candidate_instruction = candidate_instruction;
+    if (!flow_proof_query_available(
+                const_service, expected_epoch, result)) return 1;
+    service = (RxasFlowProofService *)const_service;
+    service->metrics.redundant_self_copy_queries++;
+    if (!flow_proof_consume(service, 2)) {
+        result->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        goto complete;
+    }
+    instruction = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, candidate_instruction);
+    record = instruction ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, instruction->record_id) : 0;
+    item = record ? record->queue_record : 0;
+    if (!instruction || !instruction->op || !item ||
+        item->operandCount != 2 ||
+        !rxop_same_storage_copy_is_noop(instruction->op->opcode) ||
+        !flow_proof_register(flow_proof_operand(item, 0), &destination) ||
+        !flow_proof_register(flow_proof_operand(item, 1), &source)) {
+        result->reason = RXAS_FLOW_PROOF_NOT_EXACT_SELF_COPY;
+        goto complete;
+    }
+
+    /* Identical register operands are intrinsically the same address.  This
+     * preserves the old optimization floor even if an entry mapping is
+     * deliberately unknown to component SSA. */
+    if (destination.register_class == source.register_class &&
+        destination.number == source.number) {
+        result->proved = 1;
+        result->reason = RXAS_FLOW_PROOF_PROVED;
+        goto complete;
+    }
+    if (!rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, candidate_instruction, 0,
+                destination, &destination_storage) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, candidate_instruction, 0,
+                source, &source_storage) ||
+        !destination_storage.storage_id || !source_storage.storage_id) {
+        result->reason = RXAS_FLOW_PROOF_STORAGE_UNKNOWN;
+        goto complete;
+    }
+    result->storage_id = destination_storage.storage_id;
+    destination_root = destination_storage.storage_id;
+    source_root = source_storage.storage_id;
+    if (destination_root == source_root) {
+        result->proved = 1;
+        result->reason = RXAS_FLOW_PROOF_PROVED;
+        goto complete;
+    }
+    walk = flow_proof_unique_storage_leaf(
+            service, destination_root, &destination_root, &destination_leaf);
+    if (walk != FLOW_PROOF_STORAGE_UNIQUE) {
+        result->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_STORAGE_NOT_IDENTICAL;
+        goto complete;
+    }
+    walk = flow_proof_unique_storage_leaf(
+            service, source_root, &source_root, &source_leaf);
+    if (walk != FLOW_PROOF_STORAGE_UNIQUE) {
+        result->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_STORAGE_NOT_IDENTICAL;
+        goto complete;
+    }
+    if (destination_root != source_root) {
+        result->reason = RXAS_FLOW_PROOF_STORAGE_NOT_IDENTICAL;
+        goto complete;
+    }
+    result->storage_id = destination_root;
+    result->proved = 1;
+    result->reason = RXAS_FLOW_PROOF_PROVED;
+
+complete:
+    if (result->proved) service->metrics.redundant_self_copy_proved++;
+    else service->metrics.redundant_self_copy_rejected++;
+    return 1;
+}
+
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result) {
@@ -2391,6 +2492,10 @@ const char *rxas_flow_proof_reason_name(RxasFlowProofReason reason) {
             return "not-exact-absent-write";
         case RXAS_FLOW_PROOF_COMPONENT_PRESENT: return "component-present";
         case RXAS_FLOW_PROOF_ABSENCE_UNKNOWN: return "absence-unknown";
+        case RXAS_FLOW_PROOF_NOT_EXACT_SELF_COPY:
+            return "not-exact-self-copy";
+        case RXAS_FLOW_PROOF_STORAGE_NOT_IDENTICAL:
+            return "storage-not-identical";
         case RXAS_FLOW_PROOF_NOT_IN_LOOP: return "not-in-loop";
         case RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP: return "irreducible-loop";
         case RXAS_FLOW_PROOF_NOT_MUST_EXECUTE: return "not-must-execute";
@@ -2485,6 +2590,7 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             "bytes=%llu repetition=%llu cache-hits=%llu proved=%llu "
             "rejected=%llu redundant-constant=%llu/%llu rejected=%llu "
             "redundant-absent=%llu/%llu rejected=%llu "
+            "redundant-self-copy=%llu/%llu rejected=%llu "
             "success-edge=%llu loop=%llu ssa-bytes=%llu ssa-values=%llu "
             "ssa-storages=%llu\n",
             service->metrics.epoch,
@@ -2501,6 +2607,9 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             (unsigned long long)service->metrics.redundant_absent_proved,
             (unsigned long long)service->metrics.redundant_absent_queries,
             (unsigned long long)service->metrics.redundant_absent_rejected,
+            (unsigned long long)service->metrics.redundant_self_copy_proved,
+            (unsigned long long)service->metrics.redundant_self_copy_queries,
+            (unsigned long long)service->metrics.redundant_self_copy_rejected,
             (unsigned long long)service->metrics.success_edge_queries,
             (unsigned long long)service->metrics.loop_queries,
             (unsigned long long)(ssa_metrics

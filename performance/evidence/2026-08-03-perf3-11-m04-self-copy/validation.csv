@@ -1,0 +1,11 @@
+check,result,detail
+strict-gnu90,pass,one pre-existing unused-parameter warning
+focused-debug,pass,6/6
+focused-release,pass,6/6
+canonical-richards,pass,byte-identical M03/M04
+canonical-towers,pass,byte-identical M03/M04
+canonical-rexxcps,pass,byte-identical M03/M04
+first-broad-debug,diagnostic-update,1994/1995; stale dense identity assertion after proved deletion
+focused-diagnostic-rerun,pass,1/1
+final-broad-debug,pass,1995/1995 in 185.18 seconds
+diff-check,pass,no whitespace errors

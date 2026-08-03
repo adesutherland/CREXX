@@ -262,6 +262,21 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     return RXOP_COMPONENT_ALL;
 }
 
+int rxop_same_storage_copy_is_noop(int opcode) {
+    switch (opcode) {
+        case OP_COPY_REG_REG:
+        case OP_ICOPY_REG_REG:
+        case OP_FCOPY_REG_REG:
+        case OP_SCOPY_REG_REG:
+        case OP_DCOPY_REG_REG:
+        case OP_ACOPY_REG_REG:
+        case OP_BCOPY_REG_REG:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 /* NONE means the opcode-effects inventory proves a register write but the
  * component changed by that write is not yet exact. */
 unsigned int rxop_component_writes(int opcode, size_t operand_index) {
