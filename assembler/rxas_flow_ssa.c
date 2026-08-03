@@ -758,18 +758,68 @@ int rxas_flow_opcode_is_plain_mapping(int opcode) {
            opcode == OP_UNLINKBR_REG_ID;
 }
 
+static int flow_ssa_swap_source(
+        const FlowBuildMapUpdate *updates, size_t count, size_t reg,
+        size_t *source) {
+    size_t index;
+    if (!updates || !source || reg == RXAS_FLOW_ID_NONE) return 0;
+    for (index = count; index; index--) {
+        const FlowBuildMapUpdate *update;
+        update = &updates[index - 1];
+        if (update->destination != reg) continue;
+        if (update->kind != FLOW_MAP_COPY_REGISTER) return 0;
+        *source = update->source_register;
+        return *source != RXAS_FLOW_ID_NONE;
+    }
+    *source = reg;
+    return 1;
+}
+
+static void flow_ssa_set_swap_source(
+        FlowBuildMapUpdate *updates, size_t *count, size_t capacity,
+        size_t destination, size_t source, int exact) {
+    size_t index;
+    if (!updates || !count || destination == RXAS_FLOW_ID_NONE) return;
+    for (index = *count; index; index--) {
+        FlowBuildMapUpdate *update;
+        update = &updates[index - 1];
+        if (update->destination != destination) continue;
+        update->kind = exact ? FLOW_MAP_COPY_REGISTER : FLOW_MAP_UNKNOWN;
+        update->source_register = exact ? source : RXAS_FLOW_ID_NONE;
+        update->storage_id = 0;
+        update->reference_effect_id = RXAS_FLOW_ID_NONE;
+        update->attribute_slot = 0;
+        return;
+    }
+    flow_build_map_add(
+            updates, count, capacity, destination,
+            exact ? FLOW_MAP_COPY_REGISTER : FLOW_MAP_UNKNOWN,
+            exact ? source : RXAS_FLOW_ID_NONE, 0);
+}
+
+/* SWAPN executes each operand pair in order.  Compose every pair against the
+ * mapping already accumulated for this instruction, then retain one final
+ * input-state source per touched destination.  Disjoint pairs are unchanged;
+ * overlapping pairs no longer become an incorrect parallel assignment. */
 static void flow_ssa_add_swap(const RxasFlowSsaAnalysis *analysis,
                               const instruction_queue *item,
                               FlowBuildMapUpdate *updates, size_t *count,
                               size_t capacity, size_t left, size_t right) {
     size_t lreg;
     size_t rreg;
+    size_t lsource;
+    size_t rsource;
+    int exact;
+    lsource = RXAS_FLOW_ID_NONE;
+    rsource = RXAS_FLOW_ID_NONE;
     lreg = flow_ssa_operand_register(analysis, item, left);
     rreg = flow_ssa_operand_register(analysis, item, right);
-    flow_build_map_add(updates, count, capacity, lreg,
-                       FLOW_MAP_COPY_REGISTER, rreg, 0);
-    flow_build_map_add(updates, count, capacity, rreg,
-                       FLOW_MAP_COPY_REGISTER, lreg, 0);
+    exact = flow_ssa_swap_source(updates, *count, lreg, &lsource) &&
+            flow_ssa_swap_source(updates, *count, rreg, &rsource);
+    flow_ssa_set_swap_source(
+            updates, count, capacity, lreg, rsource, exact);
+    flow_ssa_set_swap_source(
+            updates, count, capacity, rreg, lsource, exact);
 }
 
 static unsigned int flow_component_bits[] = {

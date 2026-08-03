@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **in progress — M01-M06 and K02/K03 complete; K04 accepted and closed; K01 next**
+Status: **in progress — M01-M06 and K01-K04 complete; K06 classification next**
 
 Architecture approved: 2026-08-02
 
@@ -715,8 +715,22 @@ passes 2,010/2,010 in 678.89 seconds. Frozen/basic focused outputs are
 byte-identical; the two relevant metadata/TRACE rows are documented stronger
 acceptances.
 Canonical Richards, Towers and RexxCPS have zero K02/K03 accepts and remain
-byte-identical to frozen K04, so no runtime timing is warranted. K01 is next:
-migrate cancelling `SWAP` pairs to permutation and observation equivalence.
+byte-identical to frozen K04, so no runtime timing is warranted.
+
+K01 is complete in
+[2026-08-03-perf3-11-k01-storage-permutation](evidence/2026-08-03-perf3-11-k01-storage-permutation/).
+The sparse storage-permutation proof is now the sole authority for exact
+cancelling `SWAP` pairs and exact self-cancelling ordered `SWAPN`; the two old
+raw-register keyholes are deleted. The proof removes its bounded queue limit,
+models signal continuations and rejects relevant observations, writes, call
+windows, asynchronous handlers and control splits. The migration also corrects
+overlapping `SWAPN` SSA transfer to compose pairs in instruction order. The
+inherited floor and both legacy orientations are byte-identical, the stronger
+optimized/no-opt panel passes 9/9 in Debug and Release, the shared proof panel
+passes 37/37 in both builds, and broad Debug passes 2,012/2,012 in 368.43
+seconds. Canonical Richards, Towers and RexxCPS have zero K01 accepts and
+byte-identical images, so runtime timing is not warranted. K06 is next:
+classify or replace the adjacent `COPY` plus same-pair `ACOPY` subsumption rule.
 
 ### Stage 11 — later consumers after legacy migration
 

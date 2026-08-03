@@ -59,6 +59,10 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_NOT_EXACT_DUPLICATE_LINKED_READ,
     RXAS_FLOW_PROOF_ATTRIBUTE_RANGE_UNKNOWN,
     RXAS_FLOW_PROOF_ATTRIBUTE_PATH_CHANGED,
+    RXAS_FLOW_PROOF_NOT_EXACT_STORAGE_PERMUTATION,
+    RXAS_FLOW_PROOF_PERMUTATION_NOT_RESTORED,
+    RXAS_FLOW_PROOF_PERMUTATION_OBSERVED,
+    RXAS_FLOW_PROOF_PERMUTATION_SIGNAL_EXIT,
     RXAS_FLOW_PROOF_NOT_ADJACENT_BRANCH,
     RXAS_FLOW_PROOF_COMPARE_RESULT_OBSERVED,
     RXAS_FLOW_PROOF_TRACE_OBSERVED,
@@ -122,6 +126,9 @@ typedef struct RxasFlowProofMetrics {
     size_t duplicate_linked_read_queries;
     size_t duplicate_linked_read_proved;
     size_t duplicate_linked_read_rejected;
+    size_t storage_permutation_queries;
+    size_t storage_permutation_proved;
+    size_t storage_permutation_rejected;
     size_t success_edge_queries;
     size_t loop_queries;
 } RxasFlowProofMetrics;
@@ -225,6 +232,24 @@ typedef struct RxasFlowDuplicateLinkedReadPlan {
     RxasFlowRegister second_destination;
 } RxasFlowDuplicateLinkedReadPlan;
 
+typedef struct RxasFlowStoragePermutationPlan {
+    int proved;
+    RxasFlowProofReason reason;
+    size_t first_instruction;
+    size_t second_instruction;
+    size_t first_record_id;
+    size_t second_record_id;
+    size_t deletion_count;
+    int expected_first_opcode;
+    int expected_second_opcode;
+    size_t left_storage_id;
+    size_t right_storage_id;
+    RxasFlowRegister first_left;
+    RxasFlowRegister first_right;
+    RxasFlowRegister second_left;
+    RxasFlowRegister second_right;
+} RxasFlowStoragePermutationPlan;
+
 typedef struct RxasFlowProofService RxasFlowProofService;
 
 const RxasFlowProofService *rxas_flow_require_proof_service(
@@ -270,6 +295,10 @@ int rxas_flow_prove_duplicate_linked_read(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t first_link_instruction, size_t second_link_instruction,
         RxasFlowDuplicateLinkedReadPlan *plan);
+int rxas_flow_prove_storage_permutation_round_trip(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t first_instruction, size_t second_instruction,
+        RxasFlowStoragePermutationPlan *plan);
 int rxas_flow_compare_branch_plan_trace_deletion(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         const RxasFlowCompareBranchPlan *plan, size_t deletion_index,

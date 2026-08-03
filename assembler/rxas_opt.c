@@ -387,55 +387,11 @@ static void op_map_free(op_map *map) {
  *
  * Annotated Examples (see after this comment block for the actual rule declarations)
  *
- * 1. Rule for two swaps cancelling out: swap r0,r1; swap r0,r1
+ * Cancelling SWAP pairs are no longer a rule-table authority. K01 sends the
+ * complete procedure to the immutable storage-permutation proof service, which
+ * verifies restored bindings plus every intervening observation and write.
  *
- *          *  flag type   type      inst   op1     op2     op3
- * input    *  {NO_HAZARD, OP_CODE, "swap", 'r', 0, 'r', 1, 0, 0,
- * output 1 *               0},
- * output 2 *
- * input    *  {NO_HAZARD, OP_CODE, "swap", 'r', 0, 'r', 1, 0, 0,
- * output 1 *               0},
- * output 2 *
- * input    *  {END_OF_RULE},
- *
- * This rule helps the situation where there are two consecutive calls to procedures
- * and the compiler swaps back a register after the first call only to swap
- * it back for the next call. Note that a second ruleset is needed for the case
- * where the register numbers are reversed in the second swap (see the rules after
- * this comment block)
- *
- * NO_HAZARD is used as a branch in or out, or use of a relevant register would
- * invalidate the rule logic
- *
- * Example 1.1
- *   swap r4,r8
- *   swap r4,r8
- *
- * Rule matches - rule r0 maps to register r4, and rule r1 maps to register r8
- * No output - the swaps are removed
- *
- * Example 1.2
- *   swap r4,r8
- *   iadd r2,r3,r5
- *   swap r4,r8
- *
- * Rule matches - rule r0 maps to register r4, and rule r1 maps to register r8
- * The iadd instruction is 'irrelevant' as it doesn't use r4 or r8
- * Output - the swaps are removed
- *   iadd r2,r3,r5
- *
- * Example 1.3
- *   swap r4,r8
- *   say r4
- *   swap r4,r8
- *
- * Rule does not match - although rule r0 maps to register r4, and rule r1 maps
- * to register r8 the say instruction uses r4. So no match, the swaps cannot be
- * removed
- * Output same as input - no change
- *
- *
- * 2. Rule for converting a concat to a faster append
+ * 1. Rule for converting a concat to a faster append
  *    concat r0,r0,r1 to append r0,r1
  *
  *          *  flag type   type     inst      op1     op2     op3
@@ -453,7 +409,7 @@ static void op_map_free(op_map *map) {
  *   append r4,r8
  *
  *
- * 3. Rule for optimising an unconditional branch (br) to a branch true (brt),
+ * 2. Rule for optimising an unconditional branch (br) to a branch true (brt),
  *    converting this to a brtf, and reducing the number of branches program flow
  *    needs to go through
  *
@@ -557,20 +513,6 @@ rule rules[] =
                      OP_CODE,"cnop", EXTENDED_PATTERN, EXT_WIDE_CNOP, 0, 0, 0, 0},
             {NO_GAP, OP_CODE,"cnop", 0, 0, 0, 0, 0, 0,
                      0},
-            {END_OF_RULE},
-
-            /* Two swaps cancelling out: swap r0,r1; swap r0,r1 */
-            {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
-                         0},
-            {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
-                         0},
-            {END_OF_RULE},
-
-            /* Two swaps cancelling out: swap r0,r1; swap r1,r0 */
-            {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
-                         0},
-            {NO_HAZARD, OP_CODE,"swap", 'r', 1, 'r', 0, 0, 0,
-                         0},
             {END_OF_RULE},
 
             /* NR-09 Class 1: collect adjacent independent swaps. */

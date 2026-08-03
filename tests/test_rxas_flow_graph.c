@@ -1737,6 +1737,97 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_ordered_swapn_mappings(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[4];
+    const RxasFlowSsaAnalysis *analysis;
+    RxasFlowStorageFact before0;
+    RxasFlowStorageFact before1;
+    RxasFlowStorageFact before2;
+    RxasFlowStorageFact after0;
+    RxasFlowStorageFact after1;
+    RxasFlowStorageFact after2;
+    size_t instruction;
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_register(&fixture, 1);
+    operands[3] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "swapn", operands, 4);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 35);
+    check(procedure != 0,
+          "ordered overlapping SWAPN fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 35, 0);
+        instruction = rxas_flow_procedure_record(
+                procedure, 35, 0)->instruction_id;
+        check(analysis &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 35, instruction, 0,
+                    fixture_local_register(0), &before0) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 35, instruction, 0,
+                    fixture_local_register(1), &before1) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 35, instruction, 0,
+                    fixture_local_register(2), &before2) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 35, instruction, 1,
+                    fixture_local_register(0), &after0) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 35, instruction, 1,
+                    fixture_local_register(1), &after1) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 35, instruction, 1,
+                    fixture_local_register(2), &after2) &&
+              after0.storage_id == before1.storage_id &&
+              after1.storage_id == before2.storage_id &&
+              after2.storage_id == before0.storage_id,
+              "overlapping SWAPN pairs were not composed in operand order");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    operands[2] = fixture_register(&fixture, 0);
+    operands[3] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "swapn", operands, 4);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 36);
+    check(procedure != 0,
+          "self-cancelling SWAPN fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 36, 0);
+        instruction = rxas_flow_procedure_record(
+                procedure, 36, 0)->instruction_id;
+        check(analysis &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 36, instruction, 0,
+                    fixture_local_register(0), &before0) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 36, instruction, 0,
+                    fixture_local_register(1), &before1) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 36, instruction, 1,
+                    fixture_local_register(0), &after0) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 36, instruction, 1,
+                    fixture_local_register(1), &after1) &&
+              after0.storage_id == before0.storage_id &&
+              after1.storage_id == before1.storage_id,
+              "repeated SWAPN pair did not restore its input mapping");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static void test_derivation_contexts(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
@@ -2800,6 +2891,7 @@ int main(void) {
     test_propagated_call_failure_state(&context);
     test_storage_joins_and_loops(&context);
     test_signal_phase_component_edges(&context);
+    test_ordered_swapn_mappings(&context);
     test_derivation_contexts(&context);
     test_fused_failure_mappings(&context);
     test_proof_service(&context);

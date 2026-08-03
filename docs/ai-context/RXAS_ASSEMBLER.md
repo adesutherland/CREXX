@@ -969,6 +969,35 @@ Register metadata and TRACE reads of the unchanged first detached value may
 remain ordered while the redundant second executable read is removed. The
 twelve former syntax-expanded rules have been deleted.
 
+Cancelling `swap` pairs are likewise owned by the proof service rather than
+the legacy bounded `NO_HAZARD` keyholes. A pair-key demand filter only asks
+the question. The immutable proof verifies the exact physical operands,
+dominance, restored pre-first/post-second `StorageId` bindings and every
+intervening raw-register use from the shared use index; relevant component or
+cursor reads/writes, register metadata, TRACE, call windows and opaque state
+reject. Different registers that already name the same storage are an exact
+identity case, while a disjoint intervening permutation or unrelated external
+effect need not block deletion. The consumer has no source-queue distance
+limit and revalidates the complete plan before deleting either instruction.
+
+Potential signals remain explicit CFG edges. A source-linear normal/skip
+spine may cross a known static signal when its handler policy is still the
+inherited entry policy: resumption reaches the restoring swap, while branch,
+return, unwind and terminal actions leave the current frame's temporary
+mapping. A handler installed, merged or clobbered in the procedure rejects.
+Uses reachable from the asynchronous-handler root also reject even when their
+records lie outside the lexical interval. Ordinary control splits and unknown
+signal-name sets remain closed. This is narrower than treating signals as
+invisible and more capable than requiring one basic block.
+
+NR-09 may encode two adjacent or metadata-separated swaps as one ordered
+four-operand `swapn`. Repeating the same unordered physical pair composes to
+identity algebraically for every input mapping and is deleted by the same K01
+proof. Component SSA independently composes all overlapping `swapn` pairs in
+operand order into final input-state sources; it does not interpret them as a
+parallel assignment. Larger arbitrary permutation simplification remains a
+separate future rewrite consumer.
+
 Signal support adds action-aware and dynamic-name forms:
 
 - `sigcalla proc(),"NAME"` installs a handler that returns an internal action

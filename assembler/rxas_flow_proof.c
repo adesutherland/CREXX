@@ -4351,6 +4351,385 @@ complete:
     return 1;
 }
 
+static void flow_proof_storage_permutation_plan_init(
+        RxasFlowStoragePermutationPlan *plan, size_t first_instruction,
+        size_t second_instruction) {
+    memset(plan, 0, sizeof(*plan));
+    plan->reason = RXAS_FLOW_PROOF_STALE_EPOCH;
+    plan->first_instruction = first_instruction;
+    plan->second_instruction = second_instruction;
+    plan->first_record_id = RXAS_FLOW_ID_NONE;
+    plan->second_record_id = RXAS_FLOW_ID_NONE;
+    plan->expected_first_opcode = -1;
+    plan->expected_second_opcode = -1;
+}
+
+static int flow_proof_exact_mapping_instruction(
+        const RxasFlowInstruction *instruction,
+        const instruction_queue *item, int opcode, size_t operand_count) {
+    return instruction && instruction->op && item &&
+           instruction->op->opcode == opcode &&
+           item->operandCount == operand_count &&
+           instruction->effects.state == RXOP_EFFECT_CLASSIFIED &&
+           instruction->effects.flow == FLOW_NEXT &&
+           instruction->effects.branch_targets == RXOP_OP_NONE &&
+           instruction->effects.implicit == RXOP_IMPLICIT_NONE &&
+           instruction->effects.semantics == RXOP_SEM_NONE &&
+           instruction->effects.cursor_reads == RXOP_OP_NONE &&
+           instruction->effects.cursor_writes == RXOP_OP_NONE &&
+           !instruction->effects.optimizer_barrier &&
+           instruction->signal.state == RXOP_SIGNAL_STATE_NONE &&
+           rxop_context_writes(opcode) == RXOP_CONTEXT_NONE &&
+           rxas_flow_opcode_is_plain_mapping(opcode);
+}
+
+static int flow_proof_same_unordered_register_pair(
+        RxasFlowRegister first_left, RxasFlowRegister first_right,
+        RxasFlowRegister second_left, RxasFlowRegister second_right) {
+    return (flow_proof_same_register(first_left, second_left) &&
+            flow_proof_same_register(first_right, second_right)) ||
+           (flow_proof_same_register(first_left, second_right) &&
+            flow_proof_same_register(first_right, second_left));
+}
+
+static int flow_proof_call_window_observes_permutation(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowUse *use, RxasFlowRegister left,
+        RxasFlowRegister right) {
+    size_t base_register;
+    size_t last_register;
+    if (left.register_class != RXAS_FLOW_REGISTER_LOCAL &&
+        right.register_class != RXAS_FLOW_REGISTER_LOCAL)
+        return 0;
+    if (!use || use->instruction_id == RXAS_FLOW_ID_NONE ||
+        use->register_id.register_class != RXAS_FLOW_REGISTER_LOCAL ||
+        use->register_id.number == RXAS_FLOW_ID_NONE ||
+        !rxas_flow_call_window_bounds_at_instruction(
+                service->ssa, expected_epoch, use->instruction_id,
+                &base_register, &last_register) ||
+        base_register != use->register_id.number ||
+        last_register < base_register)
+        return 1;
+    if (left.register_class == RXAS_FLOW_REGISTER_LOCAL &&
+        left.number > base_register && left.number <= last_register)
+        return 1;
+    return right.register_class == RXAS_FLOW_REGISTER_LOCAL &&
+           right.number > base_register && right.number <= last_register;
+}
+
+/* A known signal may split an otherwise linear interval without exposing the
+ * current frame's temporary register mapping.  An inherited action either
+ * resumes at the following instruction or leaves/unwinds the current frame;
+ * a handler installed or merged in this procedure may branch back into the
+ * frame and is therefore deliberately rejected.  Only canonical static-name
+ * contracts can establish this for every signal raised by the instruction. */
+static int flow_proof_signal_exits_discard_permutation(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowInstruction *instruction) {
+    const char *start;
+    const char *end;
+    if (!service || !instruction) return 0;
+    if (instruction->signal.state == RXOP_SIGNAL_STATE_NONE) return 1;
+    if (instruction->signal.state != RXOP_SIGNAL_STATE_KNOWN ||
+        instruction->signal.source != RXOP_SIGNAL_SOURCE_STATIC_NAMES ||
+        !instruction->signal.static_names ||
+        !instruction->signal.static_names[0] ||
+        (instruction->signal.properties &
+                RXOP_SIGNAL_PROP_POLICY_WRITE))
+        return 0;
+    start = instruction->signal.static_names;
+    while (*start) {
+        char *name;
+        size_t length;
+        RxasFlowPolicyFact policy;
+        end = strchr(start, '|');
+        if (!end) end = start + strlen(start);
+        length = (size_t)(end - start);
+        if (!length) return 0;
+        name = malloc(length + 1);
+        if (!name) return 0;
+        memcpy(name, start, length);
+        name[length] = '\0';
+        if (!rxas_flow_policy_at_instruction(
+                    service->signal, expected_epoch, instruction->id, 0,
+                    name, &policy) ||
+            policy.state != RXAS_FLOW_POLICY_INHERITED_UNKNOWN) {
+            free(name);
+            return 0;
+        }
+        free(name);
+        if (!*end) break;
+        start = end + 1;
+    }
+    return 1;
+}
+
+static int flow_proof_mark_reachable_from_root(
+        RxasFlowProofService *service, size_t root) {
+    size_t head;
+    size_t tail;
+    if (!service || root >= service->block_count) return 0;
+    service->visit_generation++;
+    if (!service->visit_generation) {
+        memset(service->visit_marks, 0,
+               service->block_count * sizeof(*service->visit_marks));
+        service->visit_generation = 1;
+    }
+    head = 0;
+    tail = 0;
+    if (!flow_proof_mark_root(service, root, &tail)) return 0;
+    while (head < tail) {
+        size_t block;
+        size_t offset;
+        block = service->visit_queue[head++];
+        if (!flow_proof_consume(service, 1)) return 0;
+        for (offset = service->outgoing_offsets[block];
+             offset < service->outgoing_offsets[block + 1]; offset++) {
+            const RxasFlowEdge *edge;
+            edge = rxas_flow_procedure_edge(
+                    service->procedure, service->metrics.epoch,
+                    service->outgoing_edges[offset]);
+            if (!edge || !flow_proof_mark_root(
+                            service, edge->target, &tail))
+                return 0;
+        }
+    }
+    return 1;
+}
+
+int rxas_flow_prove_storage_permutation_round_trip(
+        const RxasFlowProofService *const_service,
+        unsigned long expected_epoch, size_t first_instruction,
+        size_t second_instruction, RxasFlowStoragePermutationPlan *plan) {
+    RxasFlowProofService *service;
+    const RxasFlowInstruction *first;
+    const RxasFlowInstruction *second;
+    const RxasFlowRecord *first_record;
+    const RxasFlowRecord *second_record;
+    const instruction_queue *first_item;
+    const instruction_queue *second_item;
+    RxasFlowStorageFact before_left;
+    RxasFlowStorageFact before_right;
+    RxasFlowStorageFact after_first_left;
+    RxasFlowStorageFact after_first_right;
+    RxasFlowStorageFact after_second_left;
+    RxasFlowStorageFact after_second_right;
+    size_t record_id;
+    size_t use_count;
+    size_t use_index;
+    int encoded_round_trip;
+    if (!plan) return 0;
+    flow_proof_storage_permutation_plan_init(
+            plan, first_instruction, second_instruction);
+    if (!const_service || !expected_epoch ||
+        const_service->metrics.epoch != expected_epoch ||
+        !rxas_flow_procedure_epoch_matches(
+                const_service->procedure, expected_epoch))
+        return 1;
+    if (const_service->metrics.status ==
+            RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED) {
+        plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        return 1;
+    }
+    if (const_service->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
+    service = (RxasFlowProofService *)const_service;
+    service->metrics.storage_permutation_queries++;
+    if (!flow_proof_consume(service, 10)) {
+        plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        goto complete;
+    }
+    first = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, first_instruction);
+    second = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, second_instruction);
+    first_record = first ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, first->record_id) : 0;
+    second_record = second ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, second->record_id) : 0;
+    first_item = first_record ? first_record->queue_record : 0;
+    second_item = second_record ? second_record->queue_record : 0;
+    encoded_round_trip = first_instruction == second_instruction;
+    if (!first || !second || !first_record || !second_record ||
+        !first_item || !second_item ||
+        !(encoded_round_trip
+                ? flow_proof_exact_mapping_instruction(
+                        first, first_item,
+                        OP_SWAPN_REG_REG_REG_REG, 4)
+                : flow_proof_exact_mapping_instruction(
+                        first, first_item, OP_SWAP_REG_REG, 2) &&
+                  flow_proof_exact_mapping_instruction(
+                        second, second_item, OP_SWAP_REG_REG, 2))) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_EXACT_STORAGE_PERMUTATION;
+        goto complete;
+    }
+    plan->first_record_id = first->record_id;
+    plan->second_record_id = second->record_id;
+    plan->expected_first_opcode = first->op->opcode;
+    plan->expected_second_opcode = second->op->opcode;
+    plan->deletion_count = encoded_round_trip ? 1 : 2;
+    if (!flow_proof_register(flow_proof_operand(first_item, 0),
+                             &plan->first_left) ||
+        !flow_proof_register(flow_proof_operand(first_item, 1),
+                             &plan->first_right) ||
+        !flow_proof_register(
+                flow_proof_operand(second_item, encoded_round_trip ? 2 : 0),
+                &plan->second_left) ||
+        !flow_proof_register(
+                flow_proof_operand(second_item, encoded_round_trip ? 3 : 1),
+                &plan->second_right) ||
+        flow_proof_same_register(plan->first_left, plan->first_right) ||
+        !flow_proof_same_unordered_register_pair(
+                plan->first_left, plan->first_right,
+                plan->second_left, plan->second_right)) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_EXACT_STORAGE_PERMUTATION;
+        goto complete;
+    }
+    if (!encoded_round_trip &&
+        (first->record_id >= second->record_id ||
+         !flow_proof_instruction_dominates(service, first, second))) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_DOMINATED;
+        goto complete;
+    }
+    /* SWAPN executes its pairs in operand order.  The exact four-operand form
+     * admitted above repeats one unordered physical pair, so its two
+     * transpositions compose to identity for every possible starting
+     * mapping, including an otherwise unknown or aliased StorageId. */
+    if (encoded_round_trip) goto proved;
+    if (!rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, first_instruction, 0,
+                plan->first_left, &before_left) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, first_instruction, 0,
+                plan->first_right, &before_right) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, first_instruction, 1,
+                plan->first_left, &after_first_left) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, first_instruction, 1,
+                plan->first_right, &after_first_right) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, second_instruction, 1,
+                plan->first_left, &after_second_left) ||
+        !rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, second_instruction, 1,
+                plan->first_right, &after_second_right) ||
+        !before_left.storage_id || !before_right.storage_id ||
+        before_left.kind == RXAS_FLOW_STORAGE_UNKNOWN ||
+        before_right.kind == RXAS_FLOW_STORAGE_UNKNOWN) {
+        plan->reason = RXAS_FLOW_PROOF_STORAGE_UNKNOWN;
+        goto complete;
+    }
+    plan->left_storage_id = before_left.storage_id;
+    plan->right_storage_id = before_right.storage_id;
+    if (after_first_left.storage_id != before_right.storage_id ||
+        after_first_right.storage_id != before_left.storage_id ||
+        after_second_left.storage_id != before_left.storage_id ||
+        after_second_right.storage_id != before_right.storage_id) {
+        plan->reason = RXAS_FLOW_PROOF_PERMUTATION_NOT_RESTORED;
+        goto complete;
+    }
+    if (before_left.storage_id == before_right.storage_id)
+        goto proved;
+    for (record_id = first->record_id + 1;
+         record_id < second->record_id; record_id++) {
+        const RxasFlowRecord *record;
+        const RxasFlowInstruction *instruction;
+        if (!flow_proof_consume(service, 1)) {
+            plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+            goto complete;
+        }
+        record = rxas_flow_procedure_record(
+                service->procedure, expected_epoch, record_id);
+        if (!record) {
+            plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+            goto complete;
+        }
+        if (record->instruction_id == RXAS_FLOW_ID_NONE) continue;
+        instruction = rxas_flow_procedure_instruction(
+                service->procedure, expected_epoch,
+                record->instruction_id);
+        if (!instruction ||
+            instruction->effects.state != RXOP_EFFECT_CLASSIFIED ||
+            instruction->effects.flow != FLOW_NEXT ||
+            instruction->effects.branch_targets != RXOP_OP_NONE ||
+            instruction->effects.optimizer_barrier) {
+            plan->reason = RXAS_FLOW_PROOF_PERMUTATION_OBSERVED;
+            goto complete;
+        }
+        if (!flow_proof_signal_exits_discard_permutation(
+                    service, expected_epoch, instruction)) {
+            plan->reason = RXAS_FLOW_PROOF_PERMUTATION_SIGNAL_EXIT;
+            goto complete;
+        }
+    }
+    service->use = rxas_flow_require_use_analysis(
+            service->procedure, expected_epoch, 0);
+    if (!service->use) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        goto complete;
+    }
+    if (!flow_proof_mark_reachable_from_root(
+                service, rxas_flow_procedure_async_root(
+                        service->procedure, expected_epoch))) {
+        plan->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        goto complete;
+    }
+    use_count = rxas_flow_use_count(service->use, expected_epoch);
+    for (use_index = 0; use_index < use_count; use_index++) {
+        const RxasFlowUse *use;
+        const RxasFlowRecord *use_record;
+        int relevant;
+        if (!flow_proof_consume(service, 1)) {
+            plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+            goto complete;
+        }
+        use = rxas_flow_use(service->use, expected_epoch, use_index);
+        if (!use) continue;
+        relevant = use->kind == RXAS_FLOW_USE_OPAQUE_OBSERVATION ||
+                   use->kind == RXAS_FLOW_USE_OPAQUE_WRITE ||
+                   flow_proof_same_register(
+                           use->register_id, plan->first_left) ||
+                   flow_proof_same_register(
+                           use->register_id, plan->first_right) ||
+                   (use->kind == RXAS_FLOW_USE_CALL_WINDOW_READ &&
+                    flow_proof_call_window_observes_permutation(
+                            service, expected_epoch, use,
+                            plan->first_left, plan->first_right));
+        if (!relevant) continue;
+        use_record = rxas_flow_procedure_record(
+                service->procedure, expected_epoch, use->record_id);
+        if (!use_record) {
+            plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+            goto complete;
+        }
+        if ((use_record->block_id < service->block_count &&
+             service->visit_marks[use_record->block_id] ==
+                    service->visit_generation) ||
+            (use->record_id > first->record_id &&
+             use->record_id < second->record_id)) {
+            plan->reason = use->kind == RXAS_FLOW_USE_CALL_WINDOW_READ
+                    ? RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED
+                    : RXAS_FLOW_PROOF_PERMUTATION_OBSERVED;
+            goto complete;
+        }
+    }
+
+proved:
+    plan->proved = 1;
+    plan->reason = RXAS_FLOW_PROOF_PROVED;
+
+complete:
+    if (plan->proved) service->metrics.storage_permutation_proved++;
+    else service->metrics.storage_permutation_rejected++;
+    return 1;
+}
+
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result) {
@@ -4636,6 +5015,14 @@ const char *rxas_flow_proof_reason_name(RxasFlowProofReason reason) {
             return "attribute-range-unknown";
         case RXAS_FLOW_PROOF_ATTRIBUTE_PATH_CHANGED:
             return "attribute-path-changed";
+        case RXAS_FLOW_PROOF_NOT_EXACT_STORAGE_PERMUTATION:
+            return "not-exact-storage-permutation";
+        case RXAS_FLOW_PROOF_PERMUTATION_NOT_RESTORED:
+            return "permutation-not-restored";
+        case RXAS_FLOW_PROOF_PERMUTATION_OBSERVED:
+            return "permutation-observed";
+        case RXAS_FLOW_PROOF_PERMUTATION_SIGNAL_EXIT:
+            return "permutation-signal-exit";
         case RXAS_FLOW_PROOF_NOT_ADJACENT_BRANCH:
             return "not-adjacent-branch";
         case RXAS_FLOW_PROOF_COMPARE_RESULT_OBSERVED:
@@ -4739,6 +5126,7 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             "typed-copy=%llu/%llu rejected=%llu rewrites=%llu "
             "producer-forward=%llu/%llu rejected=%llu "
             "duplicate-linked-read=%llu/%llu rejected=%llu "
+            "storage-permutation=%llu/%llu rejected=%llu "
             "compare-branch=%llu/%llu rejected=%llu trace-deletions=%llu "
             "success-edge=%llu loop=%llu ssa-bytes=%llu ssa-values=%llu "
             "ssa-storages=%llu\n",
@@ -4772,6 +5160,12 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
                     service->metrics.duplicate_linked_read_queries,
             (unsigned long long)
                     service->metrics.duplicate_linked_read_rejected,
+            (unsigned long long)
+                    service->metrics.storage_permutation_proved,
+            (unsigned long long)
+                    service->metrics.storage_permutation_queries,
+            (unsigned long long)
+                    service->metrics.storage_permutation_rejected,
             (unsigned long long)service->metrics.compare_branch_proved,
             (unsigned long long)service->metrics.compare_branch_queries,
             (unsigned long long)service->metrics.compare_branch_rejected,

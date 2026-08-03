@@ -1,0 +1,11 @@
+gate,build,result,detail
+strict_gnu90_syntax,Debug,pass,"one pre-existing unused graph parameter warning"
+flow_graph_contract,Debug,pass,"1/1"
+flow_graph_contract,Release,pass,"1/1"
+k01_focused_panel,Debug,pass,"9/9"
+k01_focused_panel,Release,pass,"9/9"
+shared_proof_consumer_panel,Debug,pass,"37/37"
+shared_proof_consumer_panel,Release,pass,"37/37"
+canonical_exact_comparison,Release,pass,"3/3 byte-identical; zero K01 accepts"
+broad_ctest,Debug,pass,"2012/2012; 368.43 seconds"
+git_diff_check,worktree,pass,"no whitespace errors"

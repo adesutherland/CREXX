@@ -157,6 +157,10 @@ typedef struct flow_stats {
     size_t duplicate_linked_read_proved;
     size_t duplicate_linked_read_rejected;
     size_t duplicate_linked_reads_reused;
+    size_t storage_permutation_queries;
+    size_t storage_permutation_proved;
+    size_t storage_permutation_rejected;
+    size_t swap_round_trip_instructions_removed;
     size_t operands_redirected;
     size_t rejected_live;
     size_t rejected_trace;
@@ -1843,6 +1847,294 @@ static int flow_trace_event_matches_deletion(
                     deletion->expected_register.number;
 }
 
+typedef struct flow_swap_pair_slot {
+    int occupied;
+    char left_type;
+    char right_type;
+    size_t left_number;
+    size_t right_number;
+    size_t record_id;
+} flow_swap_pair_slot;
+
+static int flow_swap_pair_from_operands(
+        const instruction_queue *item, size_t first_operand,
+        char *left_type, size_t *left_number,
+        char *right_type, size_t *right_number) {
+    const Assembler_Token *left;
+    const Assembler_Token *right;
+    char temporary_type;
+    size_t temporary_number;
+    if (!item || !left_type || !left_number || !right_type ||
+        !right_number || first_operand + 1 >= item->operandCount)
+        return 0;
+    left = rxas_queue_operand(item, first_operand);
+    right = rxas_queue_operand(item, first_operand + 1);
+    *left_type = flow_register_type(left);
+    *right_type = flow_register_type(right);
+    if (!*left_type || !*right_type ||
+        left->token_value.integer < 0 || right->token_value.integer < 0)
+        return 0;
+    *left_number = (size_t)left->token_value.integer;
+    *right_number = (size_t)right->token_value.integer;
+    if (*left_type > *right_type ||
+        (*left_type == *right_type && *left_number > *right_number)) {
+        temporary_type = *left_type;
+        *left_type = *right_type;
+        *right_type = temporary_type;
+        temporary_number = *left_number;
+        *left_number = *right_number;
+        *right_number = temporary_number;
+    }
+    return *left_type != *right_type || *left_number != *right_number;
+}
+
+static size_t flow_swap_pair_hash(char left_type, size_t left_number,
+                                  char right_type, size_t right_number) {
+    size_t hash;
+    hash = (size_t)(unsigned char)left_type;
+    hash = hash * 131 + left_number;
+    hash = hash * 131 + (size_t)(unsigned char)right_type;
+    return hash * 131 + right_number;
+}
+
+static flow_swap_pair_slot *flow_swap_pair_find_slot(
+        flow_swap_pair_slot *slots, size_t capacity,
+        char left_type, size_t left_number,
+        char right_type, size_t right_number) {
+    size_t index;
+    size_t start;
+    if (!slots || !capacity) return 0;
+    index = flow_swap_pair_hash(
+            left_type, left_number, right_type, right_number) &
+            (capacity - 1);
+    start = index;
+    do {
+        if (!slots[index].occupied ||
+            (slots[index].left_type == left_type &&
+             slots[index].left_number == left_number &&
+             slots[index].right_type == right_type &&
+             slots[index].right_number == right_number))
+            return &slots[index];
+        index = (index + 1) & (capacity - 1);
+    } while (index != start);
+    return 0;
+}
+
+static int flow_storage_permutation_plan_matches(
+        const flow_graph *graph,
+        const RxasFlowStoragePermutationPlan *plan) {
+    const instruction_queue *first;
+    const instruction_queue *second;
+    if (!graph || !plan || !plan->proved ||
+        plan->first_record_id >= graph->item_count ||
+        plan->second_record_id >= graph->item_count)
+        return 0;
+    first = &graph->items[plan->first_record_id];
+    second = &graph->items[plan->second_record_id];
+    if (first->instrType != OP_CODE || second->instrType != OP_CODE ||
+        !graph->nodes[plan->first_record_id].op ||
+        !graph->nodes[plan->second_record_id].op ||
+        graph->nodes[plan->first_record_id].op->opcode !=
+                plan->expected_first_opcode ||
+        graph->nodes[plan->second_record_id].op->opcode !=
+                plan->expected_second_opcode ||
+        !flow_operand_matches_proof_register(
+                rxas_queue_operand(first, 0), plan->first_left) ||
+        !flow_operand_matches_proof_register(
+                rxas_queue_operand(first, 1), plan->first_right))
+        return 0;
+    if (plan->deletion_count == 1)
+        return plan->first_record_id == plan->second_record_id &&
+               first->operandCount == 4 &&
+               flow_operand_matches_proof_register(
+                    rxas_queue_operand(first, 2), plan->second_left) &&
+               flow_operand_matches_proof_register(
+                    rxas_queue_operand(first, 3), plan->second_right);
+    return plan->deletion_count == 2 &&
+           plan->first_record_id < plan->second_record_id &&
+           second->operandCount == 2 &&
+           flow_operand_matches_proof_register(
+                rxas_queue_operand(second, 0), plan->second_left) &&
+           flow_operand_matches_proof_register(
+                rxas_queue_operand(second, 1), plan->second_right);
+}
+
+/* K01 demand-filters exact repeated physical register pairs. The immutable
+ * proof owns storage restoration, signals and every intervening observation
+ * or write. One accepted plan is applied per epoch, then the graph is rebuilt. */
+static size_t flow_remove_swap_round_trips(
+        flow_graph *graph, flow_stats *stats,
+        flow_proof_session *session) {
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *first_record;
+    const RxasFlowRecord *second_record;
+    RxasFlowStoragePermutationPlan plan;
+    flow_swap_pair_slot *slots;
+    flow_swap_pair_slot *slot;
+    size_t capacity;
+    size_t required_capacity;
+    size_t swap_count;
+    size_t index;
+    size_t first_instruction;
+    size_t second_instruction;
+    char left_type;
+    char right_type;
+    char encoded_left_type;
+    char encoded_right_type;
+    size_t left_number;
+    size_t right_number;
+    size_t encoded_left_number;
+    size_t encoded_right_number;
+    swap_count = 0;
+    for (index = 0; index < graph->item_count; index++)
+        if (graph->items[index].instrType == OP_CODE &&
+            graph->nodes[index].reachable && graph->nodes[index].op &&
+            (graph->nodes[index].op->opcode == OP_SWAP_REG_REG ||
+             graph->nodes[index].op->opcode ==
+                    OP_SWAPN_REG_REG_REG_REG))
+            swap_count++;
+    if (!swap_count) return 0;
+    if (swap_count > ((size_t)-1 - 1) / 2) return 0;
+    required_capacity = swap_count * 2 + 1;
+    capacity = 8;
+    while (capacity < required_capacity) {
+        if (capacity > (size_t)-1 / 2) return 0;
+        capacity *= 2;
+    }
+    if (capacity > (size_t)-1 / sizeof(*slots)) return 0;
+    slots = calloc(capacity, sizeof(*slots));
+    if (!slots)
+        RX_PANIC_OOM("calloc RXAS swap-pair candidates",
+                     capacity * sizeof(*slots), 0);
+    proof = 0;
+    for (index = 0; index < graph->item_count; index++) {
+        if (graph->items[index].instrType != OP_CODE ||
+            !graph->nodes[index].reachable || !graph->nodes[index].op)
+            continue;
+        if (graph->nodes[index].op->opcode ==
+                OP_SWAPN_REG_REG_REG_REG &&
+            flow_swap_pair_from_operands(
+                    &graph->items[index], 0,
+                    &left_type, &left_number,
+                    &right_type, &right_number) &&
+            flow_swap_pair_from_operands(
+                    &graph->items[index], 2,
+                    &encoded_left_type, &encoded_left_number,
+                    &encoded_right_type, &encoded_right_number) &&
+            left_type == encoded_left_type &&
+            left_number == encoded_left_number &&
+            right_type == encoded_right_type &&
+            right_number == encoded_right_number) {
+            proof = flow_proof_session_require(session, graph);
+            first_record = session->procedure ? rxas_flow_procedure_record(
+                    session->procedure, session->epoch, index) : 0;
+            first_instruction = first_record
+                    ? first_record->instruction_id : RXAS_FLOW_ID_NONE;
+            if (!proof || first_instruction == RXAS_FLOW_ID_NONE ||
+                !rxas_flow_prove_storage_permutation_round_trip(
+                        proof, session->epoch, first_instruction,
+                        first_instruction, &plan)) {
+                stats->storage_permutation_rejected++;
+                continue;
+            }
+            stats->storage_permutation_queries++;
+            if (plan.proved &&
+                flow_storage_permutation_plan_matches(graph, &plan)) {
+                graph->items[index].instrType = EMPTY;
+                stats->storage_permutation_proved++;
+                stats->swap_round_trip_instructions_removed++;
+                flow_debug_accept(
+                        graph, index, "storage-permutation-round-trip", 0);
+                free(slots);
+                return 1;
+            }
+            stats->storage_permutation_rejected++;
+            if (graph->context->debug_mode)
+                fprintf(stderr,
+                        "PERF3 storage-permutation-proof procedure=%s "
+                        "first=%llu:swapn second=%llu:swapn proved=0 "
+                        "reason=%s\n",
+                        graph->context->current_proc_name
+                                ? graph->context->current_proc_name
+                                : "(directives)",
+                        (unsigned long long)index,
+                        (unsigned long long)index,
+                        rxas_flow_proof_reason_name(plan.reason));
+            continue;
+        }
+        if (graph->nodes[index].op->opcode != OP_SWAP_REG_REG ||
+            !flow_swap_pair_from_operands(
+                    &graph->items[index], 0,
+                    &left_type, &left_number,
+                    &right_type, &right_number))
+            continue;
+        slot = flow_swap_pair_find_slot(
+                slots, capacity, left_type, left_number,
+                right_type, right_number);
+        if (!slot) continue;
+        if (!slot->occupied) {
+            slot->occupied = 1;
+            slot->left_type = left_type;
+            slot->left_number = left_number;
+            slot->right_type = right_type;
+            slot->right_number = right_number;
+            slot->record_id = index;
+            continue;
+        }
+        proof = flow_proof_session_require(session, graph);
+        first_record = session->procedure ? rxas_flow_procedure_record(
+                session->procedure, session->epoch, slot->record_id) : 0;
+        second_record = session->procedure ? rxas_flow_procedure_record(
+                session->procedure, session->epoch, index) : 0;
+        first_instruction = first_record
+                ? first_record->instruction_id : RXAS_FLOW_ID_NONE;
+        second_instruction = second_record
+                ? second_record->instruction_id : RXAS_FLOW_ID_NONE;
+        if (!proof || first_instruction == RXAS_FLOW_ID_NONE ||
+            second_instruction == RXAS_FLOW_ID_NONE ||
+            !rxas_flow_prove_storage_permutation_round_trip(
+                    proof, session->epoch, first_instruction,
+                    second_instruction, &plan)) {
+            stats->storage_permutation_rejected++;
+            slot->record_id = index;
+            continue;
+        }
+        stats->storage_permutation_queries++;
+        if (!plan.proved) {
+            stats->storage_permutation_rejected++;
+            if (graph->context->debug_mode)
+                fprintf(stderr,
+                        "PERF3 storage-permutation-proof procedure=%s "
+                        "first=%llu:swap second=%llu:swap proved=0 "
+                        "reason=%s\n",
+                        graph->context->current_proc_name
+                                ? graph->context->current_proc_name
+                                : "(directives)",
+                        (unsigned long long)slot->record_id,
+                        (unsigned long long)index,
+                        rxas_flow_proof_reason_name(plan.reason));
+            slot->record_id = index;
+            continue;
+        }
+        if (!flow_storage_permutation_plan_matches(graph, &plan)) {
+            stats->storage_permutation_rejected++;
+            slot->record_id = index;
+            continue;
+        }
+        graph->items[plan.first_record_id].instrType = EMPTY;
+        graph->items[plan.second_record_id].instrType = EMPTY;
+        stats->storage_permutation_proved++;
+        stats->swap_round_trip_instructions_removed += 2;
+        flow_debug_accept(
+                graph, plan.second_record_id,
+                "storage-permutation-round-trip", 0);
+        free(slots);
+        return 2;
+    }
+    free(slots);
+    return 0;
+}
+
 static size_t flow_propagate_one_copy_ssa(
         flow_graph *graph, size_t copy_index, flow_stats *stats,
         flow_proof_session *session) {
@@ -3164,6 +3456,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "unreachable=%llu dead=%llu typed-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
             "redundant-conversion=%llu producer-forward=%llu "
+            "swap-roundtrip=%llu "
             "compare-branch=%llu trace-delete=%llu redirects=%llu "
             "constant-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "absent-proof=%llu/%llu rejected=%llu unavailable=%llu "
@@ -3171,6 +3464,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "producer-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "duplicate-linked-read-proof=%llu/%llu rejected=%llu reused=%llu "
+            "storage-permutation-proof=%llu/%llu rejected=%llu "
             "compare-branch-proof=%llu/%llu rejected=%llu "
             "reject-live=%llu reject-trace=%llu reject-tainted=%llu reject-effect=%llu\n",
             graph->context->current_proc_name ? graph->context->current_proc_name : "(directives)",
@@ -3187,6 +3481,7 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->redundant_initializations_removed,
             (unsigned long long)stats->redundant_conversions_removed,
             (unsigned long long)stats->producer_destinations_forwarded,
+            (unsigned long long)stats->swap_round_trip_instructions_removed,
             (unsigned long long)stats->compare_branches_fused,
             (unsigned long long)stats->compare_trace_events_removed,
             (unsigned long long)stats->operands_redirected,
@@ -3214,6 +3509,9 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->duplicate_linked_read_queries,
             (unsigned long long)stats->duplicate_linked_read_rejected,
             (unsigned long long)stats->duplicate_linked_reads_reused,
+            (unsigned long long)stats->storage_permutation_proved,
+            (unsigned long long)stats->storage_permutation_queries,
+            (unsigned long long)stats->storage_permutation_rejected,
             (unsigned long long)stats->compare_branch_proved,
             (unsigned long long)stats->compare_branch_queries,
             (unsigned long long)stats->compare_branch_rejected,
@@ -3279,8 +3577,13 @@ void rxas_flow_optimise(Assembler_Context *context,
         }
         else {
             changed = flow_remove_unreachable(&graph, &stats);
+            /* K01 is a sparse, independently budgeted proof and must not be
+             * coupled to the legacy dense typed-value cell limit. */
+            if (!changed)
+                changed += flow_remove_swap_round_trips(
+                        &graph, &stats, &proof_session);
             if (!changed && flow_value_analysis_within_bound(&graph)) {
-                changed += flow_remove_redundant_self_copies(
+                if (!changed) changed += flow_remove_redundant_self_copies(
                         &graph, &stats, &proof_session);
                 if (!changed) changed += flow_reuse_duplicate_linked_read(
                         &graph, &stats, &proof_session);

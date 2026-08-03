@@ -1,6 +1,6 @@
 # PERF3-11 remaining RXAS proof migration
 
-Status: **in progress — M01-M06 and K02/K03 complete; K04 accepted and closed; K01 next**
+Status: **in progress — M01-M06 and K01-K04 complete; K06 is the next classification gate**
 
 Authorized: 2026-08-02
 
@@ -82,7 +82,7 @@ focused fixtures preserve their exact safety floor.
 
 | ID | Rule family | Accepted baseline | Current proof weakness | New owner |
 | --- | --- | --- | --- | --- |
-| K01 | two `SWAP`s cancel with no relevant intervening use | focused positive plus implicit-register/barrier negatives; canonical 0 | raw-register relevance and bounded queue | storage permutation plus observation equivalence |
+| K01 | two `SWAP`s cancel with no relevant intervening use | focused positive plus implicit-register/barrier negatives; canonical 0 | raw-register relevance and bounded queue | **complete**; sparse storage-permutation/observation proof is sole authority and ordered overlapping `SWAPN` transfer is exact |
 | K02 | duplicate `LINK`/typed-copy/`UNLINK` read | focused string/binary positives and metadata/TRACE negatives; canonical 0 | syntax shape and raw-register hazard scan | **complete**; storage/component proof and atomic rewrite replace all six direct-read keyholes |
 | K03 | duplicate `LINKATTR1` read for same owner/slot | focused string/binary positives and different-slot negative; canonical 0 | syntax shape; no generic attribute identity | **complete**; interned attribute path plus component/count/signal proof replace all six attribute-read keyholes |
 | K04 | integer compare plus conditional branch | legacy focused 16 includes one result-TRACE deletion; canonical RexxCPS 9 require storage/lifetime reaudit | bespoke bounded path solver for boolean-result death | **complete and accepted**; atomic event deletion, exact call windows and approved retry retirement unlock all five residual canonical false positives; focused Debug/Release passes 14/14, the runtime verdict is neutral, and broad Debug passes 1,998/1,998 |
@@ -362,10 +362,75 @@ immediately after the deleted copy retain the old address-observation guard.
       writes for every migrated proof consumer, restore the M05/M06 and K04
       floors, pass the 28-test shared panel in Debug and Release, and pass
       2,010/2,010 broad Debug tests in 678.89 seconds.
-- [ ] Migrate **K01** to permutation/observation equivalence.
+- [x] **K01-0 retained baseline:** freeze the accepted baseline at `45e027685`,
+      preserve both legacy decision signatures and replay the six focused
+      implicit-use/barrier cases in Debug and Release.
+- [x] **K01-1 sparse permutation proof:** prove an exact two-`SWAP` round trip
+      from restored `StorageId` bindings plus an observation/write-free
+      source-linear normal/skip spine; locally installed and asynchronous
+      handler observations remain closed.
+- [x] **K01-2 authority migration:** make the proof plan the sole deletion
+      authority and delete the two raw-register `NO_HAZARD` rules.
+- [x] **K01-3 stronger safety panel:** add reversed operands, an interval beyond
+      the old queue bound, explicit writes, register metadata/TRACE, opaque
+      effects, call windows, mapping changes and signal/control negatives.
+- [x] **K01-4 verdict:** the six inherited cases and both orientations are
+      byte-identical to committed baseline `45e027685`; canonical Richards,
+      Towers and RexxCPS have zero K01 accepts and byte-identical images, so
+      runtime timing is not warranted.
+- [x] **K01-5 closeout:** retain the evidence bundle and pass the complete
+      2,012/2,012 broad Debug gate in 368.43 seconds.
 - [ ] Reclassify or migrate **K06** after the generic component proof exists.
 - [ ] Migrate **K05** when rewrite orchestration can edit immutable-CFG-derived
       plans without relying on a 20-item queue.
+
+#### K01 retained floor and design selection
+
+The accepted local baseline is commit `45e027685` with Debug/Release `rxas`
+SHA-256 `9be497a4` and `11ea6e9b`. The inherited focused floor passes 6/6 in
+both builds: relevant implicit `INC0`, numeric-register `LOAD` and `LINKARG`
+uses preserve both swaps, while the corresponding unrelated-register cases
+remove them. The same-order and reversed-order legacy decision signatures are
+`f9d23da9` and `c82e3aa9`. Richards, Towers and RexxCPS have zero K01 accepts.
+
+The machine-level ceiling is exact deletion of both mapping-only `SWAP`
+instructions with no replacement instruction or runtime helper. Three
+implementation shapes were considered:
+
+1. **Retain the two `NO_HAZARD` keyholes and add a proof callback.** This keeps
+   the 20-record streaming queue, raw-register relevance and syntax matching as
+   a second semantic authority. It is rejected.
+2. **Selected: pair-key demand filter plus an immutable sparse permutation
+   plan.** The proof names both exact swaps and their physical registers,
+   verifies dominance and pre-first/post-second `StorageId` agreement, and
+   scans the shared use index for every affected-register read, write, cursor
+   access, register metadata, TRACE event, call-window or opaque
+   observation/effect. Only a fully revalidated plan deletes both records.
+   The consumer has no queue-distance limit, so it safely recovers equivalent
+   cases beyond the old window.
+3. **Promote the dense M07 swap-roundtrip diagnostic or immediately delete
+   arbitrary `SWAPN` permutations.** The diagnostic allocates a complete
+   record-by-register matrix and is itself queued for retirement. General
+   multi-permutation rewriting also overlaps NR-09 swap collection. Both are
+   deferred; K01 establishes a reusable sparse proof surface with the exact
+   two-`SWAP` migration as its first consumer.
+
+Signal modelling remains explicit. A known static signal may split a
+source-linear normal/skip spine when policy is still inherited from the caller:
+resumption reaches the restoring swap, while other actions discard the current
+frame mapping. Locally installed/merged handlers, asynchronous-handler uses,
+unknown signals and ordinary control splits reject. Register-backed
+observations and all writes through either permuted physical register reject
+even when the component is otherwise dead. Access through a different
+register already aliasing the same storage remains valid because that alias
+names the same storage with or without the temporary physical permutation.
+
+NR-09 may first consolidate adjacent or metadata-separated source swaps into
+one ordered four-operand `SWAPN`. The same proof deletes an exact repeated
+pair by permutation composition. K01 also corrected sparse SSA to compose all
+overlapping `SWAPN` pairs in operand order; the direct contract covers both a
+three-register overlap and the self-cancelling form. General larger
+permutation rewriting remains deferred rather than being inferred from K01.
 
 #### K02/K03 retained floor and design selection
 
