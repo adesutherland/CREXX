@@ -13,7 +13,7 @@ parse version vr
 say "CREXX Version: "vr
 
 parse source source_system source_invocation source_file
-call assert_equal '143a', 'windows', source_system, ccod
+## call assert_equal '143a', 'windows', source_system, ccod   /* no test, because it's not always windows */
 call assert_equal '143b', 'COMMAND', source_invocation, ccod
 call assert_equal '143c', 'test_parse.crexx', source_file, ccod
 
