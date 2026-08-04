@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **complete — D0.6 bounded peephole-first boundary accepted**
+Status: **complete — K04e in-place compare/branch parity accepted**
 
 Architecture approved: 2026-08-02
 
@@ -817,6 +817,122 @@ approximately 10 ms absolute assembler-cost tradeoff, not evidence of a
 current graph-sparsity benefit.  Adrian accepted the approximately 10 ms
 absolute tradeoff on 2026-08-04.  The complete Debug build and broad
 2,021/2,021 test sweep pass in 284.69 seconds; D0.6 is closed.
+
+### K04e — in-place integer compare/branch parity repair
+
+The post-migration RexxCPS audit found one hot comparison that the former
+tactical rule fused but K04 retained:
+
+```text
+ilt r72,17,r72
+.traceevent "O" ... r72 ...
+brf target,r72
+```
+
+The generic fusion table already maps this to the equivalent inverted direct
+branch.  K04 rejects it earlier because a source `StorageId` equals the result
+storage, even though the fused instruction reads the same register's pre-write
+integer and the Boolean result is otherwise consumed only by the branch and an
+exact deletable optimized TRACE event.  The lost fusion adds 560,000 `ILT`
+dispatches to the equal-work RexxCPS profile.
+
+#### Design selection
+
+1. **Restore the former tactical raw-register peephole.** Rejected: its local
+   shape does not prove aliases, hidden component cleanup, later Boolean uses,
+   call windows or TRACE observation and would recreate a second authority.
+2. **Selected: extend the generic K04 SSA proof.** Record the in-place source's
+   pre-instruction integer `ValueId`; require that the source token is the
+   result register, the storage is a single non-external local base, cleared
+   components are already absent, and the produced Boolean has exactly the
+   branch plus atomically deletable optimized TRACE uses.  Existing call-window
+   and opaque-observation rejection remains unchanged.
+3. **Add an `ILT`/`BRF` RexxCPS special case.** Rejected: the legality is shared
+   by all metadata-declared integer compare/branch pairs and both source
+   positions.  A workload/register-specific exception would lose the purpose
+   of the proof service.
+
+#### K04e gates
+
+- [x] Add the positive in-place `ILT`/`BRF` plus exact TRACE fixture.
+- [x] Preserve negative live-result, linked/aliased destination and hidden
+      cleanup cases.
+- [x] Prove the source from the pre-write `ValueId`, not its register number.
+- [x] Pass focused Debug and profiling-off Release optimizer/runtime checks.
+- [x] Confirm one fewer static RexxCPS instruction and 560,000 fewer equal-work
+      dispatches with canonical correctness unchanged.
+- [x] Run the mandatory paired profiling-off Release RexxCPS verdict and stop
+      for Adrian before closeout, Mac scorecard or clause rereview.
+
+#### K04e metadata-contract checkpoint — approved and applied
+
+The detached exact-input probe reaches and fuses the hot candidate only after
+the following runtime-source-derived facts replace conservative metadata.  No
+VM handler or bytecode semantic changes are proposed:
+
+1. `STRLEN_REG_REG` reads the source string and, on success, writes only the
+   destination integer field.  It preserves every other destination component.
+   Invalid UTF-8 raises `UNICODE_ERROR` before any destination write, with no
+   failure-side component or context write; success is stable.
+2. All three integer-subtract forms read integer operands and use `set_int()`
+   on success, writing the destination integer and clearing reference/native
+   payloads.  Overflow raises `OVERFLOW_UNDERFLOW` before any destination
+   write, with no failure-side component or context write; success is stable.
+3. The `REQ`/`RNE`/`RGT`/`RGTE`/`RLT`/`RLTE` three-form loose-compare family
+   reads only string fields from register sources and uses `set_int()` for the
+   result, writing integer and clearing reference/native payloads.  These
+   handlers do not signal.
+4. Classified fixed-arity and zero-argument calls expose their complete caller
+   interface through explicit operands.  Only range-call forms have an
+   implicit base/count caller-local window.  Fixed arguments remain
+   by-reference observations of the named registers; the change removes only
+   the invented all-local window from calls with no such range.  K04 checks
+   only call instructions reachable after the compare, while retaining every
+   reachable explicit/range observation.
+
+The detached combination proves exactly one of 13 main-procedure K04
+candidates and atomically deletes its optimized TRACE event.  The retained
+guards then reject the other 12.  Compatibility risk is optimizer-only: the
+facts match the current VM handlers but may unlock other valid transformations,
+so the first ordinary profiling-off Release RexxCPS verdict remains mandatory
+before broad validation or scorecard work.
+
+Adrian approved these four handler/component/call-window contracts on
+2026-08-04. The production metadata now describes the existing VM handlers;
+there is no VM, RXBIN, ISA, ABI or language semantic change. The fixed-call
+contract also unlocks the stronger existing M06 result: a zero-argument call
+does not invent an all-local observation, so an otherwise unobserved copied
+value may remain in its original register. Range calls retain their exact
+implicit base/count window and explicit fixed arguments remain by-reference
+observations.
+
+#### K04e accepted verdict and closeout
+
+The exact generated RexxCPS input is unchanged at SHA-256
+`b575305ab154f60f378f8cdbd3a44811e66368daa894d8b4add934066726707f`.
+Against the retained D0.6 assembler, K04e changes only the intended hot shape:
+`ILT` plus `BRF` and its matching optimized TRACE event become one `BLE`.
+The image moves from 1,222 to 1,221 VM instructions, 1,249 to 1,248 TRACE
+events and 68,609 to 68,601 bytes. Equal-work schema-5 counts prove the site
+executes 560,000 times under both VMs, reducing its dispatches from 1,120,000
+to 560,000 with both results correct.
+
+The governed ordinary profiling-off Release verdict reached the 36-pair limit
+without removing a sample. `rxvm` records a +0.336% paired median and
+20/36 favourable pairs; `rxbvm` records +0.757% and 22/36. The mean 95%
+intervals are -0.819% to +1.925% and -0.755% to +2.617%, respectively, so
+runtime remains noisy/inconclusive with no 3% regression guard hit. All 144
+canonical recorded executions pass with zero stderr. Adrian accepted the
+functionally equivalent exact dispatch reduction and neutral/inconclusive
+runtime verdict on 2026-08-04.
+
+Focused Debug and ordinary Release checks pass 4/4. The first broad Debug run
+passed 2,020/2,021 and exposed one stale M06 golden that expected the former
+invented all-local zero-argument call window. The corrected contract fixture
+passes its focused rerun; the final closeout panel passes 5/5 in both Debug and
+Release. The unqualified final broad Debug rerun passes 2,021/2,021 in 201.24
+seconds and closes K04e. Evidence:
+[`2026-08-04-perf3-11-k04e-first-release-verdict`](evidence/2026-08-04-perf3-11-k04e-first-release-verdict/).
 
 ### Stage 11 — later consumers after legacy migration
 

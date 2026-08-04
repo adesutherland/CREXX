@@ -545,13 +545,10 @@ static int flow_use_collect_instruction(
     }
     implicit_complete = flow_use_add_implicit(analysis, instruction, item);
     if (!implicit_complete) return 0;
-    if ((instruction->effects.semantics &
-         (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL)) &&
-        instruction->effects.implicit !=
-                RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3)
-        return flow_use_add_call_window(
-                analysis, record->id, instruction->id,
-                RXAS_FLOW_ID_NONE);
+    /* Classified fixed-arity and zero-argument calls expose their complete
+     * caller interface through explicit operands.  Range calls are handled
+     * by RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3 above; no classified call form
+     * has an additional unknown caller-local window. */
     return 1;
 }
 

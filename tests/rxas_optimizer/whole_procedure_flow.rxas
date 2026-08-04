@@ -50,6 +50,9 @@ complex_independent_region() .locals=4
     ret r2
 
 typed_copy_live_across_call() .locals=7
+    * A fixed zero-argument call has no implicit caller-local window. The
+    * original value may therefore remain in r4 when no explicit operand
+    * observes it.
     load r4,17
     icopy r5,r4
     call helper()

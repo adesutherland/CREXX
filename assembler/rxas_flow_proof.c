@@ -349,6 +349,9 @@ static int flow_proof_query_available(
     return 1;
 }
 
+static int flow_proof_mark_root(RxasFlowProofService *service, size_t root,
+                                size_t *tail);
+
 static int flow_proof_instruction_dominates(
         const RxasFlowProofService *service,
         const RxasFlowInstruction *generator,
@@ -358,6 +361,61 @@ static int flow_proof_instruction_dominates(
     return rxas_flow_structural_dominates(
             service->structural, service->metrics.epoch,
             generator->block_id, candidate->block_id);
+}
+
+/* Return whether execution can reach `candidate` after `generator`.  A
+ * same-block candidate is reachable directly only when it is later in the
+ * record stream; an edge returning to that block still establishes a looped
+ * path to an earlier record.  Keep unavailable/budget-exhausted distinct from
+ * a proved absence of a path. */
+static int flow_proof_instruction_reachable_after(
+        RxasFlowProofService *service,
+        const RxasFlowInstruction *generator,
+        const RxasFlowInstruction *candidate) {
+    size_t head;
+    size_t tail;
+    size_t offset;
+    if (!service || !generator || !candidate) return -1;
+    if (generator->block_id == candidate->block_id &&
+        generator->record_id < candidate->record_id)
+        return 1;
+    service->visit_generation++;
+    if (!service->visit_generation) {
+        memset(service->visit_marks, 0,
+               service->block_count * sizeof(*service->visit_marks));
+        service->visit_generation = 1;
+    }
+    head = 0;
+    tail = 0;
+    service->visit_marks[generator->block_id] = service->visit_generation;
+    for (offset = service->outgoing_offsets[generator->block_id];
+         offset < service->outgoing_offsets[generator->block_id + 1];
+         offset++) {
+        const RxasFlowEdge *edge;
+        edge = rxas_flow_procedure_edge(
+                service->procedure, service->metrics.epoch,
+                service->outgoing_edges[offset]);
+        if (!edge) return -1;
+        if (edge->target == candidate->block_id) return 1;
+        if (!flow_proof_mark_root(service, edge->target, &tail)) return -1;
+    }
+    while (head < tail) {
+        size_t block;
+        block = service->visit_queue[head++];
+        if (!flow_proof_consume(service, 1)) return -1;
+        for (offset = service->outgoing_offsets[block];
+             offset < service->outgoing_offsets[block + 1]; offset++) {
+            const RxasFlowEdge *edge;
+            edge = rxas_flow_procedure_edge(
+                    service->procedure, service->metrics.epoch,
+                    service->outgoing_edges[offset]);
+            if (!edge) return -1;
+            if (edge->target == candidate->block_id) return 1;
+            if (!flow_proof_mark_root(service, edge->target, &tail))
+                return -1;
+        }
+    }
+    return 0;
 }
 
 static int flow_proof_mark_root(RxasFlowProofService *service, size_t root,
@@ -1177,7 +1235,8 @@ static FlowProofValueWalkResult flow_proof_unique_value_leaf(
  * same lack of lifetime-bearing state. */
 static FlowProofValueWalkResult flow_proof_value_leaves_match(
         RxasFlowProofService *service, size_t value_id,
-        const Assembler_Token *constant, int require_absent) {
+        const Assembler_Token *constant, int require_absent,
+        RxasFlowValueNode *rejected_leaf) {
     size_t head;
     size_t tail;
     size_t leaf_count;
@@ -1252,14 +1311,18 @@ static FlowProofValueWalkResult flow_proof_value_leaves_match(
         leaf_count++;
         if (require_absent) {
             if (node.kind != RXAS_FLOW_VALUE_ABSENT ||
-                node.presence != RXAS_FLOW_COMPONENT_ABSENT)
+                node.presence != RXAS_FLOW_COMPONENT_ABSENT) {
+                if (rejected_leaf) *rejected_leaf = node;
                 return FLOW_PROOF_VALUE_MULTIPLE;
+            }
         }
         else if (node.kind != RXAS_FLOW_VALUE_CONSTANT ||
                  node.presence != RXAS_FLOW_COMPONENT_PRESENT ||
                  !flow_proof_same_scalar_constant(
-                        node.constant_token, constant))
+                        node.constant_token, constant)) {
+            if (rejected_leaf) *rejected_leaf = node;
             return FLOW_PROOF_VALUE_MULTIPLE;
+        }
     }
     return leaf_count ? FLOW_PROOF_VALUE_UNIQUE
                       : FLOW_PROOF_VALUE_UNAVAILABLE;
@@ -2237,7 +2300,7 @@ int rxas_flow_prove_redundant_constant_write(
             goto complete;
         }
         walk = flow_proof_value_leaves_match(
-                service, cleanup.value_id, 0, 1);
+                service, cleanup.value_id, 0, 1, 0);
         if (walk != FLOW_PROOF_VALUE_UNIQUE) {
             result->reason = service->metrics.status ==
                         RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
@@ -2247,7 +2310,7 @@ int rxas_flow_prove_redundant_constant_write(
         }
     }
     walk = flow_proof_value_leaves_match(
-            service, before.value_id, constant, 0);
+            service, before.value_id, constant, 0, 0);
     if (walk != FLOW_PROOF_VALUE_UNIQUE) {
         result->reason = service->metrics.status ==
                     RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
@@ -2353,7 +2416,7 @@ int rxas_flow_prove_redundant_absent_write(
             result->source_kind = before.kind;
         }
         walk = flow_proof_value_leaves_match(
-                service, before.value_id, 0, 1);
+                service, before.value_id, 0, 1, 0);
         if (walk != FLOW_PROOF_VALUE_UNIQUE) {
             result->reason = service->metrics.status ==
                         RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
@@ -2901,7 +2964,8 @@ static int flow_proof_address_observed_after_copy(
 
 static int flow_proof_local_component_absent(
         RxasFlowProofService *service, unsigned long expected_epoch,
-        const RxasFlowComponentFact *fact, size_t local_storage_id) {
+        const RxasFlowComponentFact *fact, size_t local_storage_id,
+        RxasFlowValueNode *rejected_leaf) {
     FlowProofValueWalkResult walk;
     if (!fact || !local_storage_id || fact->storage_id != local_storage_id)
         return 0;
@@ -2909,7 +2973,8 @@ static int flow_proof_local_component_absent(
         rxas_flow_storage_is_local_base(
                 service->ssa, expected_epoch, local_storage_id))
         return 1;
-    walk = flow_proof_value_leaves_match(service, fact->value_id, 0, 1);
+    walk = flow_proof_value_leaves_match(
+            service, fact->value_id, 0, 1, rejected_leaf);
     return walk == FLOW_PROOF_VALUE_UNIQUE;
 }
 
@@ -3373,10 +3438,10 @@ int rxas_flow_prove_producer_destination_forward(
                     &destination_cleanup) ||
             !flow_proof_local_component_absent(
                     service, expected_epoch, &temporary_cleanup,
-                    temporary_before.storage_id) ||
+                    temporary_before.storage_id, 0) ||
             !flow_proof_local_component_absent(
                     service, expected_epoch, &destination_cleanup,
-                    destination_at_producer.storage_id)) {
+                    destination_at_producer.storage_id, 0)) {
             plan->reason = service->metrics.status ==
                         RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
                     ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
@@ -3509,6 +3574,15 @@ static void flow_proof_compare_branch_plan_init(
     plan->left_source_operand = RXAS_FLOW_ID_NONE;
     plan->right_source_operand = RXAS_FLOW_ID_NONE;
     plan->result_value_id = RXAS_FLOW_ID_NONE;
+    plan->result_source_value_ids[0] = RXAS_FLOW_ID_NONE;
+    plan->result_source_value_ids[1] = RXAS_FLOW_ID_NONE;
+    plan->rejected_component_value_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_leaf_value_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_leaf_defining_instruction = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_record_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_instruction_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_operand_index = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_value_id = RXAS_FLOW_ID_NONE;
     plan->trace_deletion_offset = RXAS_FLOW_ID_NONE;
     plan->result_register.number = RXAS_FLOW_ID_NONE;
 }
@@ -3682,12 +3756,20 @@ int rxas_flow_prove_compare_branch_fusion(
         goto complete;
     }
     plan->result_register = result_register;
+    if (!rxas_flow_storage_at_instruction(
+                service->ssa, expected_epoch, compare_instruction, 0,
+                result_register, &result_before) ||
+        !result_before.storage_id) {
+        plan->reason = RXAS_FLOW_PROOF_STORAGE_UNKNOWN;
+        goto complete;
+    }
     for (use_index = 0; use_index < 2; use_index++) {
         size_t source_operand;
         Assembler_Token *source_token;
         OperandType expected_type;
         RxasFlowRegister source_register;
         RxasFlowStorageFact source_storage;
+        RxasFlowComponentFact source_value;
         source_operand = use_index ? fusion.right_source_operand
                                    : fusion.left_source_operand;
         source_token = flow_proof_operand(compare_item, source_operand);
@@ -3710,18 +3792,33 @@ int rxas_flow_prove_compare_branch_fusion(
             plan->reason = RXAS_FLOW_PROOF_STORAGE_UNKNOWN;
             goto complete;
         }
-        if (!rxas_flow_storage_at_instruction(
-                    service->ssa, expected_epoch, compare_instruction, 0,
-                    result_register, &result_before) ||
-            source_storage.storage_id == result_before.storage_id) {
-            plan->reason = RXAS_FLOW_PROOF_DESTINATION_OBSERVABLE;
-            goto complete;
+        if (source_storage.storage_id == result_before.storage_id) {
+            /* The compare reads every source from the pre-write state.  A
+             * fused branch can therefore read the same local register's
+             * incoming integer directly, but only after the remaining proof
+             * establishes that the produced Boolean and component cleanup
+             * are unobservable.  Record the actual incoming ValueId rather
+             * than treating the raw register number as the value. */
+            if (!flow_proof_same_register(
+                        source_register, result_register)) {
+                plan->reason = RXAS_FLOW_PROOF_DESTINATION_OBSERVABLE;
+                goto complete;
+            }
+            if (!rxas_flow_component_at_instruction(
+                        service->ssa, expected_epoch, compare_instruction, 0,
+                        source_register, RXOP_COMPONENT_INTEGER,
+                        &source_value) ||
+                source_value.storage_id != result_before.storage_id ||
+                source_value.value_id == RXAS_FLOW_ID_NONE ||
+                source_value.defining_instruction == compare_instruction) {
+                plan->reason = RXAS_FLOW_PROOF_SOURCE_UNKNOWN;
+                goto complete;
+            }
+            plan->result_source_operands |= 1u << use_index;
+            plan->result_source_value_ids[use_index] = source_value.value_id;
         }
     }
     if (!rxas_flow_storage_at_instruction(
-                service->ssa, expected_epoch, compare_instruction, 0,
-                result_register, &result_before) ||
-        !rxas_flow_storage_at_instruction(
                 service->ssa, expected_epoch, compare_instruction, 1,
                 result_register, &result_after) ||
         !rxas_flow_storage_at_instruction(
@@ -3750,16 +3847,31 @@ int rxas_flow_prove_compare_branch_fusion(
     }
     cleanup_components = rxop_component_clears(compare->op->opcode, 0);
     for (cleanup_index = 0;
-         cleanup_index < sizeof(cleanup_bits) / sizeof(cleanup_bits[0]);
+        cleanup_index < sizeof(cleanup_bits) / sizeof(cleanup_bits[0]);
          cleanup_index++) {
         RxasFlowComponentFact cleanup;
+        RxasFlowValueNode rejected_leaf;
         if (!(cleanup_components & cleanup_bits[cleanup_index])) continue;
+        memset(&cleanup, 0, sizeof(cleanup));
+        cleanup.value_id = RXAS_FLOW_ID_NONE;
+        memset(&rejected_leaf, 0, sizeof(rejected_leaf));
+        rejected_leaf.id = RXAS_FLOW_ID_NONE;
+        rejected_leaf.defining_instruction = RXAS_FLOW_ID_NONE;
         if (!rxas_flow_component_at_instruction(
                     service->ssa, expected_epoch, compare_instruction, 0,
                     result_register, cleanup_bits[cleanup_index], &cleanup) ||
             !flow_proof_local_component_absent(
                     service, expected_epoch, &cleanup,
-                    result_before.storage_id)) {
+                    result_before.storage_id, &rejected_leaf)) {
+            plan->rejected_component = cleanup_bits[cleanup_index];
+            plan->rejected_component_kind = cleanup.kind;
+            plan->rejected_component_presence = cleanup.presence;
+            plan->rejected_component_value_id = cleanup.value_id;
+            plan->rejected_leaf_kind = rejected_leaf.kind;
+            plan->rejected_leaf_presence = rejected_leaf.presence;
+            plan->rejected_leaf_value_id = rejected_leaf.id;
+            plan->rejected_leaf_defining_instruction =
+                    rejected_leaf.defining_instruction;
             plan->reason = service->metrics.status ==
                         RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
                     ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
@@ -3845,6 +3957,13 @@ int rxas_flow_prove_compare_branch_fusion(
             plan->reason = use && use->kind == RXAS_FLOW_USE_TRACE_READ
                     ? RXAS_FLOW_PROOF_TRACE_OBSERVED
                     : RXAS_FLOW_PROOF_COMPARE_RESULT_OBSERVED;
+            if (use) {
+                plan->rejected_use_kind = use->kind;
+                plan->rejected_use_record_id = use->record_id;
+                plan->rejected_use_instruction_id = use->instruction_id;
+                plan->rejected_use_operand_index = use->operand_index;
+                plan->rejected_use_value_id = use->value_id;
+            }
             goto complete;
         }
     }
@@ -3864,15 +3983,37 @@ int rxas_flow_prove_compare_branch_fusion(
             !flow_proof_use_is_pure_write(use) &&
             use->kind != RXAS_FLOW_USE_CALL_WINDOW_READ &&
             flow_proof_same_register(use->register_id, result_register)) {
+            plan->rejected_use_kind = use->kind;
+            plan->rejected_use_record_id = use->record_id;
+            plan->rejected_use_instruction_id = use->instruction_id;
+            plan->rejected_use_operand_index = use->operand_index;
+            plan->rejected_use_value_id = use->value_id;
             plan->reason = RXAS_FLOW_PROOF_COMPARE_RESULT_OBSERVED;
             goto complete;
         }
         if (use->kind == RXAS_FLOW_USE_CALL_WINDOW_READ) {
+            const RxasFlowInstruction *call_instruction;
             RxasFlowRegister window_register;
             size_t base_register;
             size_t last_register;
             size_t register_number;
             int observed;
+            int reachable;
+            call_instruction = use->instruction_id == RXAS_FLOW_ID_NONE
+                    ? 0 : rxas_flow_procedure_instruction(
+                            service->procedure, expected_epoch,
+                            use->instruction_id);
+            reachable = call_instruction
+                    ? flow_proof_instruction_reachable_after(
+                            service, compare, call_instruction) : -1;
+            if (reachable < 0) {
+                plan->reason = service->metrics.status ==
+                            RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                        ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                        : RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+                goto complete;
+            }
+            if (!reachable) continue;
             if (use->instruction_id == RXAS_FLOW_ID_NONE ||
                 use->register_id.register_class !=
                         RXAS_FLOW_REGISTER_LOCAL ||
@@ -3883,6 +4024,11 @@ int rxas_flow_prove_compare_branch_fusion(
                         &base_register, &last_register) ||
                 base_register != use->register_id.number ||
                 last_register < base_register) {
+                plan->rejected_use_kind = use->kind;
+                plan->rejected_use_record_id = use->record_id;
+                plan->rejected_use_instruction_id = use->instruction_id;
+                plan->rejected_use_operand_index = use->operand_index;
+                plan->rejected_use_value_id = use->value_id;
                 plan->reason = RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED;
                 goto complete;
             }
@@ -3911,6 +4057,11 @@ int rxas_flow_prove_compare_branch_fusion(
                 }
             }
             if (observed) {
+                plan->rejected_use_kind = use->kind;
+                plan->rejected_use_record_id = use->record_id;
+                plan->rejected_use_instruction_id = use->instruction_id;
+                plan->rejected_use_operand_index = use->operand_index;
+                plan->rejected_use_value_id = use->value_id;
                 plan->reason = service->metrics.status ==
                             RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
                         ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED

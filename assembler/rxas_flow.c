@@ -1369,6 +1369,7 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
     size_t branch_index;
     size_t compare_instruction;
     size_t branch_instruction;
+    size_t source_index;
     size_t trace_deletion_index;
     size_t fused;
     instruction_queue *compare;
@@ -1420,7 +1421,11 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
                 fprintf(stderr,
                         "PERF3 compare-branch-proof procedure=%s "
                         "candidate=%llu:%s branch=%llu:%s proved=0 "
-                        "reason=%s\n",
+                        "reason=%s component=0x%x kind=%d presence=%d "
+                        "value=%llu leaf=%llu leaf-kind=%d "
+                        "leaf-presence=%d leaf-def=%llu use-kind=%d "
+                        "use-record=%llu use-instruction=%llu "
+                        "use-operand=%llu use-value=%llu\n",
                         graph->context->current_proc_name
                                 ? graph->context->current_proc_name
                                 : "(directives)",
@@ -1428,7 +1433,23 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
                         graph->nodes[compare_index].op->mnemonic,
                         (unsigned long long)branch_index,
                         graph->nodes[branch_index].op->mnemonic,
-                        rxas_flow_proof_reason_name(plan.reason));
+                        rxas_flow_proof_reason_name(plan.reason),
+                        plan.rejected_component,
+                        (int)plan.rejected_component_kind,
+                        (int)plan.rejected_component_presence,
+                        (unsigned long long)
+                                plan.rejected_component_value_id,
+                        (unsigned long long)plan.rejected_leaf_value_id,
+                        (int)plan.rejected_leaf_kind,
+                        (int)plan.rejected_leaf_presence,
+                        (unsigned long long)
+                                plan.rejected_leaf_defining_instruction,
+                        (int)plan.rejected_use_kind,
+                        (unsigned long long)plan.rejected_use_record_id,
+                        (unsigned long long)
+                                plan.rejected_use_instruction_id,
+                        (unsigned long long)plan.rejected_use_operand_index,
+                        (unsigned long long)plan.rejected_use_value_id);
             if (flow_proof_reason_unavailable(plan.reason))
                 stats->rejected_effect++;
             else if (plan.reason == RXAS_FLOW_PROOF_TRACE_OBSERVED)
@@ -1452,12 +1473,31 @@ static size_t flow_fuse_compare_branches(flow_graph *graph,
             plan.fused_opcode >= OP_MAX_INSTRUCTIONS ||
             plan.left_source_operand >= compare->operandCount ||
             plan.right_source_operand >= compare->operandCount ||
+            (plan.result_source_operands & ~3u) != 0 ||
             !flow_operand_matches_proof_register(
                     result, plan.result_register) ||
             !flow_operand_matches_proof_register(
                     branch_result, plan.result_register) ||
             branch->operandCount != 2 ||
             !rxas_queue_operand(branch, 0)) {
+            stats->rejected_effect++;
+            continue;
+        }
+        for (source_index = 0; source_index < 2; source_index++) {
+            size_t source_operand;
+            if (!(plan.result_source_operands & (1u << source_index)))
+                continue;
+            source_operand = source_index ? plan.right_source_operand
+                                          : plan.left_source_operand;
+            if (plan.result_source_value_ids[source_index] ==
+                        RXAS_FLOW_ID_NONE ||
+                source_operand >= compare->operandCount ||
+                !flow_operand_matches_proof_register(
+                        rxas_queue_operand(compare, source_operand),
+                        plan.result_register))
+                break;
+        }
+        if (source_index != 2) {
             stats->rejected_effect++;
             continue;
         }

@@ -260,6 +260,9 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
         opcode == OP_LINKATTR1_REG_REG_INT)
         return RXOP_COMPONENT_ATTRIBUTE_COUNT;
 
+    if (opcode == OP_STRLEN_REG_REG && operand_index == 1)
+        return RXOP_COMPONENT_STRING;
+
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_ILTE_REG_INT_REG)
@@ -276,6 +279,9 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if ((opcode == OP_SEQ_REG_REG_REG || opcode == OP_SEQ_REG_REG_STRING ||
          (opcode >= OP_SNE_REG_REG_REG && opcode <= OP_SLTE_REG_STRING_REG)) &&
         operand_index != 0)
+        return RXOP_COMPONENT_STRING;
+    if (opcode >= OP_REQ_REG_REG_REG &&
+        opcode <= OP_RLTE_REG_STRING_REG && operand_index != 0)
         return RXOP_COMPONENT_STRING;
     if (opcode >= OP_FEQ_REG_REG_REG && opcode <= OP_FLTE_REG_FLOAT_REG)
         return operand_index == 0 ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_FLOAT;
@@ -438,7 +444,8 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (operand_index != 0) return RXOP_COMPONENT_NONE;
     if (opcode == OP_COPY_REG_REG || opcode == OP_NULL_REG)
         return RXOP_COMPONENT_ALL;
-    if (opcode == OP_ICOPY_REG_REG || opcode == OP_LOAD_REG_INT)
+    if (opcode == OP_ICOPY_REG_REG || opcode == OP_LOAD_REG_INT ||
+        opcode == OP_STRLEN_REG_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_FCOPY_REG_REG || opcode == OP_LOAD_REG_FLOAT)
         return RXOP_COMPONENT_FLOAT;
@@ -471,6 +478,8 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (opcode == OP_BINEQ_REG_REG_REG || opcode == OP_BINEQ_REG_REG_BINARY ||
         opcode == OP_BINNE_REG_REG_REG || opcode == OP_BINNE_REG_REG_BINARY)
         return RXOP_COMPONENT_INTEGER;
+    if (opcode >= OP_REQ_REG_REG_REG && opcode <= OP_RLTE_REG_STRING_REG)
+        return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_BTOS_REG || opcode == OP_ITOS_REG ||
         opcode == OP_FTOS_REG || opcode == OP_DTOS_REG)
         return RXOP_COMPONENT_STRING;
@@ -498,6 +507,9 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
      * deliberately do not. Ordinary binary data is a separate component and
      * is not cleared. */
     if (opcode == OP_LOAD_REG_INT || opcode == OP_LOAD_REG_FLOAT ||
+        opcode == OP_ISUB_REG_REG_REG ||
+        opcode == OP_ISUB_REG_REG_INT ||
+        opcode == OP_ISUB_REG_INT_REG ||
         (opcode >= OP_IEQ_REG_REG_REG &&
          opcode <= OP_SLTE_REG_STRING_REG) ||
         (opcode >= OP_FEQ_REG_REG_REG &&
@@ -507,7 +519,9 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
         opcode == OP_BINEQ_REG_REG_REG ||
         opcode == OP_BINEQ_REG_REG_BINARY ||
         opcode == OP_BINNE_REG_REG_REG ||
-        opcode == OP_BINNE_REG_REG_BINARY)
+        opcode == OP_BINNE_REG_REG_BINARY ||
+        (opcode >= OP_REQ_REG_REG_REG &&
+         opcode <= OP_RLTE_REG_STRING_REG))
         return RXOP_COMPONENT_REFERENCE |
                RXOP_COMPONENT_NATIVE_PAYLOAD;
     return RXOP_COMPONENT_NONE;

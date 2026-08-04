@@ -320,6 +320,73 @@ int main(void) {
                    RXOP_COMPONENT_NATIVE_PAYLOAD),
           "binary copy native-payload metadata regression",
           &op_table[OP_BCOPY_REG_REG]);
+    signal = rxop_signal_contract(OP_STRLEN_REG_REG);
+    check(rxop_component_reads(OP_STRLEN_REG_REG, 1) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_STRLEN_REG_REG, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_clears(OP_STRLEN_REG_REG, 0) ==
+                  RXOP_COMPONENT_NONE &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "UNICODE_ERROR") == 0 &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_NONE &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "strlen component/failure-atomic signal metadata regression",
+          &op_table[OP_STRLEN_REG_REG]);
+    signal = rxop_signal_contract(OP_ISUB_REG_REG_INT);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OVERFLOW_UNDERFLOW") == 0 &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_NONE &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE) &&
+              rxop_signal_contract(OP_ISUB_REG_REG_REG).phase ==
+                    RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              rxop_signal_contract(OP_ISUB_REG_INT_REG).phase ==
+                    RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              rxop_component_clears(OP_ISUB_REG_REG_REG, 0) ==
+                    (RXOP_COMPONENT_REFERENCE |
+                     RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_ISUB_REG_REG_INT, 0) ==
+                    (RXOP_COMPONENT_REFERENCE |
+                     RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_ISUB_REG_INT_REG, 0) ==
+                    (RXOP_COMPONENT_REFERENCE |
+                     RXOP_COMPONENT_NATIVE_PAYLOAD),
+          "integer subtract component/failure-atomic signal metadata regression",
+          &op_table[OP_ISUB_REG_REG_INT]);
+    check(rxop_component_reads(OP_REQ_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_REQ_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_RLTE_REG_STRING_REG, 2) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_REQ_REG_REG_STRING, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_RLTE_REG_STRING_REG, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_clears(OP_REQ_REG_REG_STRING, 0) ==
+                    (RXOP_COMPONENT_REFERENCE |
+                     RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_component_clears(OP_RLTE_REG_STRING_REG, 0) ==
+                    (RXOP_COMPONENT_REFERENCE |
+                     RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              rxop_signal_contract(OP_REQ_REG_REG_STRING).state ==
+                    RXOP_SIGNAL_STATE_NONE &&
+              rxop_signal_contract(OP_RLTE_REG_STRING_REG).state ==
+                    RXOP_SIGNAL_STATE_NONE,
+          "loose string comparison component/signal metadata regression",
+          &op_table[OP_REQ_REG_REG_STRING]);
     check(rxop_component_writes(OP_SETATTRS_REG_INT, 0) ==
                   RXOP_COMPONENT_ATTRIBUTE_COUNT &&
               rxop_component_reads(OP_LINKATTR1_REG_REG_INT, 1) ==

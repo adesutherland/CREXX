@@ -290,9 +290,45 @@ case_compare_destination_source_overlap() .locals=5
 preserve_overlap:
     ret
 
+* The source is the result register's pre-write integer ValueId.  The Boolean
+* result TRACE event and branch are its only observations, and both paths then
+* replace the raw register.
+case_ilt_brf_destination_source_overlap() .locals=5
+    ilt r0,17,r0
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "in-place-result-delete" ""
+    brf preserve_in_place,r0
+    load r0,0
+    ret
+preserve_in_place:
+    load r0,1
+    ret
+
+* A later backedge write may seed the incoming phi, but the dominating scalar
+* load kills the hidden reference/native components before every comparison.
+case_ilt_brf_destination_source_loop_kill() .locals=5
+in_place_loop:
+    load r0,0
+    ilt r0,17,r0
+    brf leave_in_place_loop,r0
+    call r4,consume_no_args()
+    mkref r0,r3
+    br in_place_loop
+leave_in_place_loop:
+    load r0,1
+    ret
+
+* The in-place Boolean remains observable on one successor and must not fuse.
+case_compare_destination_source_overlap_live() .locals=5
+    ieq r0,r0,r1
+    brt preserve_live_overlap,r0
+    say r0
+    ret
+preserve_live_overlap:
+    ret
+
 case_compare_hidden_reference_cleanup() .locals=5
     mkref r0,r3
-    ieq r0,r1,r2
+    ieq r0,r0,r2
     brt preserve_reference_cleanup,r0
     ret
 preserve_reference_cleanup:
@@ -300,7 +336,7 @@ preserve_reference_cleanup:
 
 case_compare_linked_destination() .locals=5
     link r0,r3
-    ieq r0,r1,r2
+    ieq r0,r0,r2
     brt preserve_linked_destination,r0
     ret
 preserve_linked_destination:
@@ -314,4 +350,7 @@ preserve_float_compare:
     ret
 
 consume_bool() .locals=0
+    ret
+
+consume_no_args() .locals=0
     ret

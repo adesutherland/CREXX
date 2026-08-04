@@ -485,6 +485,15 @@ table.
 `rxop_effects()` and `rxop_signal_contract()` C APIs; their count functions
 expose the mechanically checked inventory sizes.
 
+The K04e handler audit records `STRLEN` as a string read with
+failure-atomic `UNICODE_ERROR` before its integer write, all three `ISUB`
+forms as failure-atomic `OVERFLOW_UNDERFLOW` before their integer write, and
+the three-form loose `REQ` through `RLTE` family as non-signalling string
+reads with an integer result. Integer subtract and loose comparison use the VM
+integer setter and therefore clear reference/native payload components;
+`STRLEN` preserves other destination components. These entries describe the
+existing handlers and do not change VM or RXBIN semantics.
+
 `RxOpEffects` uses the following guarantees:
 
 - `state` is `CLASSIFIED`, `CONSERVATIVE`, `RESERVED`, or `INTERNAL`.
@@ -992,16 +1001,22 @@ Canonical opcode metadata maps each `IEQ`/`INE`/`IGT`/`IGTE`/`ILT`/`ILTE` plus
 immediate/register operand order. The immutable plan requires the compare and
 branch to be consecutive executable instructions in one CFG block, all three
 opcodes to be total and context-neutral, and the local result storage to be
-unaliased and distinct from both register sources. Every reference/native
-payload cleared by materializing the Boolean must already be absent. The exact
-integer `ValueId` may have only the branch read and, under the selected TRACE
+unaliased. A source may share that storage only when it is the same physical
+result register and component SSA supplies the exact pre-write integer
+`ValueId`; the fused branch then reads that incoming value rather than the
+materialized Boolean. Every reference/native payload cleared by materializing
+the Boolean must already be absent. The result integer `ValueId` may have only
+the branch read and, under the selected TRACE
 policy, any number of precisely matching result events between compare and
 branch. The immutable plan records and revalidates those events, deletes them
 atomically with the compare, and leaves unrelated same-boundary events present.
 Live non-trace uses, metadata and caller windows reject fusion; unrelated TRACE
 events remain. Call-window handling now resolves the exact local bounds when
 the count has a constant integer `ValueId`, otherwise conservatively extends to
-the highest local. It follows the compare result through copy/derived values
+the highest local. Classified fixed-arity and zero-argument calls expose their
+complete caller interface through explicit operands; only range-call forms
+add an implicit base/count local window. The proof follows the compare result
+through copy/derived values
 and phis and rejects only when that identity is visible in the resolved window
 or the query fails closed. Counted CALLs had deliberately unknown signal
 contracts in the K04c baseline. Their former retry edge turned an otherwise
