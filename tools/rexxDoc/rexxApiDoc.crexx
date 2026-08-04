@@ -1,4 +1,377 @@
+/* REXX */
+
 options levelb comments_dash
+import rxfnsb
+
+main: procedure
+   /*
+    * Usage:
+    *   rxvm rexxDoc source.crexx [extra-interface]
+    *
+    * The generated LaTeX is written to stdout, so a complete directory can
+    * be processed repeatably from a shell script and redirected to one file.
+    *
+    * Example:
+    *   rxvm rexxDoc lib/classlib/StringTreeMap.crexx Map > StringTreeMap.tex
+    */
+   arg sourcea=.string[]
+
+   source = .string
+   extraInterface = .string
+
+   source = sourcea.1
+   if sourcea[0] >= 2 then extraInterface = sourcea.2
+   else extraInterface = ''
+
+   call emitAlmanacClass source, extraInterface
+   return
+
+
+/* ------------------------------------------------------------------
+ *  Function:  EMITALMANACCLASS
+ *  Purpose:   Extract one cRexx class declaration and its public factories
+ *             and methods, and emit crexxalmanac.sty markup.
+ *
+ *  Scope:
+ *      - namespace_ ... expose ...
+ *      - Name: class [extends Base] [implements I1 I2 ...]
+ *      - *: factory
+ *      - name: method = .returnType
+ *      - the first following arg statement
+ *
+ *  Notes:
+ *      - Method bodies are not parsed.
+ *      - Class fields are deliberately omitted from the public API.
+ *      - An optional documentation-only interface can be supplied as the
+ *        second command-line argument (for example Map for StringTreeMap).
+ *  ------------------------------------------------------------------ */
+emitAlmanacClass: procedure
+   arg file=.string, extraInterface=.string
+
+   content = loadText(file)
+   lines = splitLines(content)
+
+   namespace_ = ''
+   className = ''
+   baseClass = 'Object'
+   interfaces = .string[]
+
+   memberKind = .string[]
+   memberName = .string[]
+   memberType = .string[]
+   memberArgs = .string[]
+
+   do i = 1 to lines[0]
+      line = strip(lines[i])
+      low  = lower(line)
+
+      if left(low,10) = 'namespace ' then do
+         parse var line . namespace_ .
+         namespace_ = strip(namespace_)
+         iterate
+      end
+
+      pclass = pos(': class', low)
+      if pclass > 0 then do
+         className = strip(left(line,pclass-1))
+         tail = strip(substr(line,pclass+7))
+         call parseClassTail tail, baseClass, interfaces
+         iterate
+      end
+
+      pfactory = pos(': factory', low)
+      if pfactory > 0 then do
+         name = strip(left(line,pfactory-1))
+         if name = '*' then name = className
+
+         memberKind[memberKind[0]+1] = 'factory'
+         n = memberKind[0]
+         memberName[n] = name
+         memberType[n] = ''
+         memberArgs[n] = findArguments(lines,i+1)
+         iterate
+      end
+
+      pmethod = pos(': method', low)
+      if pmethod > 0 then do
+         name = strip(left(line,pmethod-1))
+         tail = strip(substr(line,pmethod+8))
+         rtype = ''
+         peq = pos('=',tail)
+         if peq > 0 then rtype = strip(substr(tail,peq+1))
+
+         memberKind[memberKind[0]+1] = 'method'
+         n = memberKind[0]
+         memberName[n] = name
+         memberType[n] = rtype
+         memberArgs[n] = findArguments(lines,i+1)
+      end
+   end
+
+   if className = '' then do
+      say '% rexxDoc: no class declaration found in 'latexEscape(file)
+      return
+   end
+
+   if strip(extraInterface) \= '' then
+      call appendUnique interfaces, extraInterface
+
+   say '\begin{CrexxClass}{'latexEscape(className)'}{'latexEscape(namespace_)'}'
+   say
+   say '  \begin{Hierarchy}'
+   say '    \HierarchyLine[\APIOpen]{0}{'latexEscape(baseClass)'}'
+
+   hierarchyTail = ''
+   if interfaces[0] > 0 then do
+      hierarchyTail = ' \hfill\textit{'
+      do j = 1 to interfaces[0]
+         if j > 1 then hierarchyTail = hierarchyTail || ', '
+         hierarchyTail = hierarchyTail || latexEscape(stripLeadingDot(interfaces[j]))
+      end
+      hierarchyTail = hierarchyTail || '}'
+   end
+
+   say '    \HierarchyLine{1}{\APIHierarchyBranch\ 'latexEscape(className)hierarchyTail'}'
+   say '  \end{Hierarchy}'
+   say
+   say '  \begin{Members}'
+   say
+
+   do i = 1 to memberKind[0]
+      if memberKind[i] = 'factory' then do
+         say '    \Factory'
+         say '      {public}'
+         say '      {'latexEscape(memberName[i])'}'
+         say '      {'renderArgumentList(memberArgs[i])'}'
+      end
+      else do
+         say '    \Method'
+         say '      {public}'
+         say '      {'latexEscape(memberType[i])'}'
+         say '      {'latexEscape(memberName[i])'}'
+         say '      {'renderArgumentList(memberArgs[i])'}'
+      end
+      say
+   end
+
+   say '  \end{Members}'
+   say '\end{CrexxClass}'
+return
+
+
+/* Split text into a one-based .string[] array. */
+splitLines: procedure=.string[]
+   arg text=.string
+   result = .string[]
+   nl = '0a'x
+   line = .string
+   
+   do while text \= ''
+      p = pos(nl,text)
+      if p = 0 then do
+         line = text
+         text = ''
+      end
+      else do
+         line = left(text,p-1)
+         text = substr(text,p+1)
+      end
+      if right(line,1) = '0d'x then line = left(line,length(line)-1)
+      result[result[0]+1] = line
+   end
+return result
+
+
+/* Parse "extends" and "implements" from the class-header tail. */
+parseClassTail: procedure
+   arg tail=.string, expose baseClass=.string, expose interfaces=.string[]
+
+   wordCount = words(tail)
+   mode = ''
+   do i = 1 to wordCount
+      word = word(tail,i)
+      low = lower(word)
+      select
+         when low = 'extends' then mode = 'extends'
+         when low = 'implements' then mode = 'implements'
+         when mode = 'extends' then do
+            baseClass = stripLeadingDot(word)
+            mode = ''
+         end
+         when mode = 'implements' then call appendUnique interfaces, word
+         otherwise nop
+      end
+   end
+return
+
+
+/* Find the argument declaration belonging to a factory or method.
+ *
+ * A cRexx callable may put PROCEDURE [EXPOSE ...] before ARG.  The earlier
+ * implementation stopped at PROCEDURE and consequently emitted () for those
+ * methods.  This version skips declaration scaffolding and preserves the
+ * complete ARG signature.
+ */
+findArguments: procedure=.string
+   arg lines=.string[], start=.int
+
+   collecting = 0
+   result = ''
+
+   do i = start to lines[0]
+      s = strip(lines[i])
+      low = lower(s)
+
+      if s = '' then do
+         if collecting then leave
+         iterate
+      end
+
+      /* Skip block, JavaDoc, and dash comments. */
+      if left(s,2) = '/*' | left(s,1) = '*' | left(s,2) = '*/' |,
+         left(s,2) = '--' then iterate
+
+      /* PROCEDURE and EXPOSE are part of the callable declaration. */
+      if left(low,9) = 'procedure' then iterate
+      if left(low,7) = 'expose ' then iterate
+
+      if left(low,4) = 'arg ' then do
+         result = strip(substr(s,5))
+         collecting = 1
+
+         /* A trailing comma means that the ARG declaration continues. */
+         do while right(strip(result),1) = ',' & i < lines[0]
+            i = i + 1
+            continuation = strip(lines[i])
+            if continuation = '' then leave
+            result = result || ' ' || continuation
+         end
+         leave
+      end
+
+      /* No ARG before the first executable/declaration statement. */
+      leave
+   end
+return normalizeSignature(result)
+
+
+/* Normalize spacing to the cRexx documentation convention:
+ *     key=.string, value=.string
+ */
+normalizeSignature: procedure=.string
+   arg signature=.string
+
+   item = .string
+   signature = strip(signature)
+   if signature = '' then return ''
+
+   out = ''
+   rest = signature
+   first = 1
+
+   do while rest \= ''
+      p = pos(',',rest)
+      if p = 0 then do
+         item = strip(rest)
+         rest = ''
+      end
+      else do
+         item = strip(left(rest,p-1))
+         rest = substr(rest,p+1)
+      end
+
+      peq = pos('=',item)
+      if peq > 0 then
+         item = strip(left(item,peq-1)) || '=' || strip(substr(item,peq+1))
+
+      if \first then out = out || ', '
+      out = out || item
+      first = 0
+   end
+return out
+
+
+/* Render "key=.string, value=.string" using the package's Param helper. */
+renderArgumentList: procedure=.string
+   arg args=.string
+
+   item = .string
+   pname = .string
+   ptype = .string
+   rendered = .string
+   out = .string
+   rest = .string
+   p = .int
+   peq = .int
+   first = .int
+
+   args = strip(args)
+   if args = '' then return '()'
+
+   out = '('
+   rest = args
+   first = 1
+
+   do while rest \= ''
+      p = pos(',',rest)
+      if p = 0 then do
+         item = strip(rest)
+         rest = ''
+      end
+      else do
+         item = strip(left(rest,p-1))
+         rest = substr(rest,p+1)
+      end
+
+      peq = pos('=',item)
+      if peq > 0 then do
+         pname = strip(left(item,peq-1))
+         ptype = strip(substr(item,peq+1))
+         rendered = '\Param{'latexEscape(pname)'}{'latexEscape(ptype)'}'
+      end
+      else rendered = latexEscape(item)
+
+      if \first then out = out || ', '
+      out = out || rendered
+      first = 0
+   end
+
+   out = out || ')'
+return out
+
+
+appendUnique: procedure
+   arg expose values=.string[], value=.string
+   value = strip(value)
+   if value = '' then return
+
+   do i = 1 to values[0]
+      if lower(values[i]) = lower(value) then return
+   end
+   values[values[0]+1] = value
+return
+
+
+stripLeadingDot: procedure=.string
+   arg value=.string
+   value = strip(value)
+   if left(value,1) = '.' then value = substr(value,2)
+return value
+
+
+/* Escape the subset of LaTeX metacharacters likely in cRexx identifiers. */
+latexEscape: procedure=.string
+   arg s=.string
+   s = changestr('\',s,'\textbackslash{}')
+   s = changestr('&',s,'\&')
+   s = changestr('%',s,'\%')
+   s = changestr('#',s,'\#')
+   s = changestr('_',s,'\_')
+   s = changestr('{',s,'\{')
+   s = changestr('}',s,'\}')
+return s
+
+
 /* ------------------------------------------------------------------
  *  Program:   RexxDoc JavaDoc Extractor
  *
