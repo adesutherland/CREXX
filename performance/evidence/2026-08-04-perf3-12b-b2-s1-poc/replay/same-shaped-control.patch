@@ -1,0 +1,7 @@
+--- benchmark_rexxcps_levelb_opt.rxas
++++ perf3-12b-s1-poc-control.rxas
+@@ -10 +10 @@
+-main() .locals=103
++main() .locals=104
+@@ -412,0 +413 @@
++   load r103,"Failed1"

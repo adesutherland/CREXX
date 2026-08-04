@@ -1,6 +1,6 @@
 # PERF3-12B compound-tail representation and reuse
 
-Status: in progress — B2 isolated S1 segmented-route PoC
+Status: in progress — B2 S1 PoC complete; B3 awaiting approval
 
 Started: 2026-08-04
 
@@ -190,16 +190,40 @@ and H1 results show a residual material target and define an unambiguous owner.
 
 ### B2 — isolated segmented-route PoC
 
-- [ ] Build a replayable S1 candidate in an isolated tree/patch with no change
+- [x] Build a replayable S1 candidate in an isolated tree/patch with no change
   to canonical benchmark source.
-- [ ] Prove exact concat/stem pairing, segment provenance, individual UTF-8
+- [x] Prove exact concat/stem pairing, segment provenance, individual UTF-8
   validity, complete joined-result uses, signal/write equivalence and TRACE
   disposition.
-- [ ] Measure stable-left setup cost and `.locals`; reject any design whose hot
+- [x] Measure stable-left setup cost and `.locals`; reject any design whose hot
   path merely trades `CONCAT` for another per-use setup instruction.
-- [ ] Run focused native-stem positives/negatives and opt/no-opt dual-VM
+- [x] Run focused native-stem positives/negatives and opt/no-opt dual-VM
   equivalence, then capture exact static/dynamic work, buffer/copy/allocation
   effects and assembler scale.
+
+Retained B2 outcome:
+
+- isolated commit `888fa94eb` on `codex/perf3-12b-s1-poc` proves four of five
+  generated sites and rewrites them to three `STEMGET2` plus one `STEMSET2`;
+- source line 159 correctly fails closed because a later failure-atomic
+  `STEMGET` signal-skip can preserve the old joined register for user-visible
+  TRACE;
+- 1,960,000 CONCAT dispatches are removed at a 280,000 LOAD cost for the
+  currently missing stable-left register: 1,680,000 net, `.locals` 103 -> 104;
+- relative to the latest accepted X1 fixed-work total, with B1 hot-work
+  neutral, the derived S1 total is 51,159,051 under either VM (-3.179467%);
+- the exact payload calculation avoids 16,380,000 net temporary bytes, while
+  heap allocations are expected neutral and remain a B4 counts-product check;
+- focused proof/metadata tests pass 2/2, the full native-stem selector passes
+  16/16, and six opt/control/no-opt dual-VM smoke cells pass with zero stderr;
+- matched ordinary/diagnostic assembly has identical first-epoch SSA retained
+  bytes and no elapsed/RSS scale regression at one-sample resolution; and
+- exact CONCAT string-component metadata independently enables one existing
+  X01 rewrite. This common F1 foundation is excluded from S1 counts and must
+  be shared or separately factored in B3/B4.
+
+Evidence:
+[`2026-08-04-perf3-12b-b2-s1-poc`](evidence/2026-08-04-perf3-12b-b2-s1-poc/).
 
 ### B3 — isolated loop-reuse PoC
 
@@ -245,6 +269,8 @@ and H1 results show a residual material target and define an unambiguous owner.
 
 ## Immediate next step
 
-`B2 — isolated S1 segmented-route PoC`: implement replayable exact `CONCAT` to
-`STEMGET2`/`STEMSET2` selection and measure stable-left setup, UTF-8, signal,
-storage and TRACE costs without layering the H1 loop-reuse route.
+`B3 — isolated H1 loop-scoped joined-key reuse PoC`: from the accepted B1 base,
+build a separately replayable capability-lazy reuse route; compare lazy
+first-use with only proved-safe preheader placement, exercise loop/storage/
+reference/call/signal/TRACE negatives, and capture exact work plus assembler
+scale without layering S1. Await Adrian's approval before starting.
