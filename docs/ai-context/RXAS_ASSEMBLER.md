@@ -546,12 +546,22 @@ and the copy is deleted in the same sparse transaction. Reused registers,
 mapping operations, calls, TRACE/meta observations, signalling consumers and
 all non-adjacent uses remain on the SSA route.
 
-NR-27 adds a transient whole-procedure machine-flow layer after the unchanged
-20-item local peephole and before ordinary RXBIN emission. Stable peephole
+NR-27 adds a transient whole-procedure machine-flow layer after the bounded
+100-item local peephole and before ordinary RXBIN emission. Stable peephole
 output is moved, with its token ownership, into a growable procedure stream.
 One immutable `RxasFlowProcedure` is then built for each rewrite epoch;
 surviving records still pass through the same assembler emission functions, so
 RXAS syntax, canonical RXBIN and the public ABI do not change.
+
+The peephole is a permanent preprocessing owner, not legacy code scheduled for
+removal. Exact local rewrites belong there when opcode metadata proves complete
+equivalence without procedure-wide liveness, alias/storage, signal-path,
+hidden-cleanup or TRACE-observation reasoning. Adjacent non-signalling algebra
+and mechanical encoding selection are the normal cases. CFG/SSA remains the
+owner when any of those wider facts are required. Increasing the bound must be
+measured against the same input for pre-graph census, graph/SSA size, emitted
+image, assembler time and peak memory; the bound is not a substitute for a
+procedure analysis.
 
 `assembler/rxas_flow_graph.c` is the sole owner of stable record, instruction,
 basic-block, typed-edge and reachability descriptors for that epoch. M00 uses

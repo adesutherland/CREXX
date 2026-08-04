@@ -1,6 +1,6 @@
 # PERF3-11 scalable RXAS flow and signal-proof infrastructure
 
-Status: **complete — D0.5 scale verdict passed**
+Status: **complete — D0.6 bounded peephole-first boundary accepted**
 
 Architecture approved: 2026-08-02
 
@@ -763,6 +763,60 @@ Generated `Parse.rxas` now peaks at 142.7-142.9 MB in ordinary Release versus
 copies whose reused raw registers need a future candidate-sliced/region proof.
 The final Debug/Release optimizer/runtime panel passes 108/108, broad Debug
 passes 2,021/2,021, and the three canonical same-input images remain exact.
+
+### D0.6 — bounded peephole-first preprocessing boundary
+
+Adrian selected D0.6 on 2026-08-04 after the K04 migration audit exposed one
+lost in-place integer compare/branch fusion.  The governing objective is not
+to remove the cheap peephole: it is to keep exact local normalisation ahead of
+CFG/SSA so later graphs are no larger than necessary, while leaving semantic
+proofs with their coherent procedure-level owner.
+
+#### Design selection
+
+1. **Status quo, 20-record fixed-point peephole.**  This is the exact control.
+   It is cheap and already precedes the transient procedure stream, but the
+   historical bound is conservative rather than evidence-selected.
+2. **Selected, 100-record fixed-point peephole.**  Keep the same rule engine and
+   semantics, increase only the bounded lookahead, and compare the same
+   RexxCPS input for emitted image, records/instructions entering CFG, graph and
+   SSA/use size, ordinary Release assembly time and peak RSS.
+3. **Rejected as the production default, procedure-length/4,000-5,000 window.**
+   The retained 5,000-record analysis-only probe doubled RexxCPS assembly time
+   from 0.29 s to 0.58 s with byte-identical output and no material RSS change.
+   D0.6 will inspect the pre-SSA census before making the stronger sparsity
+   conclusion, but an unbounded matcher is not selected.
+4. **Deferred until an actual rule requires it, a separate linear procedure
+   normaliser.**  Do not add an empty pass.  A future exact transformation may
+   justify an O(records) pre-CFG scan, but it must beat the bounded rule or
+   demonstrate a graph-size benefit.
+
+The permanent ownership rule is now explicit in `performance/AGENTS.md`.
+Peephole eligibility requires exact metadata-proved local equivalence and no
+need for liveness, aliases/storage identity, signal continuations, hidden
+cleanup or TRACE observation.  K04e therefore remains an SSA proof: its
+in-place `ILT`/`BRF` legality depends on those facts even though the emitted
+replacement is a local fused branch.
+
+#### D0.6 gates
+
+- [x] Select 100 as the bounded production queue and keep the bound auditable.
+- [x] Compare 20 and 100 on the exact same generated RexxCPS RXAS.
+- [x] Retain the pre-SSA census plus CFG/SSA/use sizes for both candidates.
+- [x] Require exact optimized RXBIN equality before K04e.
+- [x] Run the smallest profiling-off Release assembler time/RSS verdict and
+      stop for Adrian before closeout or K04e.
+
+The D0.6 verdict is retained in
+[`2026-08-04-perf3-11-d06-pre-ssa-boundary`](evidence/2026-08-04-perf3-11-d06-pre-ssa-boundary/).
+Queue 20 and 100 feed byte-identical census/CFG/SSA/use facts into the current
+RexxCPS procedure and emit exact ordinary images.  The candidate has neutral
+median RSS but a repeatable `/usr/bin/time` increase from 0.27 s to 0.28 s in
+0/12 favourable pairs.  At the available 10 ms timer resolution this is an
+approximately 10 ms absolute assembler-cost tradeoff, not evidence of a
+current graph-sparsity benefit.  Adrian accepted the approximately 10 ms
+absolute tradeoff on 2026-08-04.  The complete Debug build and broad
+2,021/2,021 test sweep pass in 284.69 seconds; D0.6 is closed.
 
 ### Stage 11 — later consumers after legacy migration
 

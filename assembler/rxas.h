@@ -35,9 +35,13 @@ typedef struct Assembler_Token Assembler_Token;
 typedef struct Assembler_Error Assembler_Error;
 struct avl_tree_node;
 
-/* Keyhole Optimiser */
-/* We are aiming for 20 instructions in the keyhole */
-#define OPTIMISER_TARGET_MAX_QUEUE_SIZE 20
+/* Keyhole Optimiser
+ *
+ * Keep a deliberately bounded local fixed-point stage ahead of procedure
+ * CFG/SSA construction.  One hundred records gives locally provable rules
+ * generous lookahead without turning the rule matcher into a procedure-wide
+ * flow solver. */
+#define OPTIMISER_TARGET_MAX_QUEUE_SIZE 100
 /* We add 40 slots for any instruction growth caused by rules */
 #define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
 
