@@ -157,8 +157,10 @@ Richards and noisy Base64 remain below parity and the 1.50x per-cell band.
 RexxCPS reaches ooRexx parity at 1.151301x/1.133307x but remains below its
 separate 1.50x band; Towers remains a qualified separate deficit at
 0.390842x/0.389933x. OoRexx Bounce and both cREXX Base64 cells remain
-noise-labelled after the single permitted append. PERF3-12 is the next
-evidence gate: current RexxCPS clause-lowering rereview.
+noise-labelled after the single permitted append. PERF3-12 is complete as an
+analysis-only current RexxCPS clause-lowering evidence gate. It recommends
+copied-XTOY component placement as the first separately approved implementation
+slice; no product code changed in the gate.
 
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
@@ -350,7 +352,7 @@ their recorded trigger fires:
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
 | PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | complete — D0.5 scale verdict passed | Gates 1-6, M01-M06 and K01-K06 are locked. D0.1-D0.4 provide explicit routes, one immutable graph, capability-lazy proofs and sparse transactional rewrites. D0.5 adds lazy equal-join phi elision, migrates exact write-once/single-use typed copies to a linear mechanical route, and bounds whole-procedure SSA while retaining local/M00/K05 processing. Ordinary Release `Parse.rxas` peak falls from 2.56 GB to 142.7-142.9 MB; all 261 K05 rewrites remain, while six non-write-once M05 copies are explicitly deferred to future candidate-sliced/region SSA. Debug/Release optimizer/runtime checks pass 108/108, broad Debug passes 2,021/2,021, and canonical images remain exact. The future ledger retains RXC-to-RXAS ownership, inlining redesign, hoisting, register work and the bounded region-proof follow-on. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); K06: [`2026-08-03-perf3-11-k06-mechanical-classification`](evidence/2026-08-03-perf3-11-k06-mechanical-classification/); K01: [`2026-08-03-perf3-11-k01-storage-permutation`](evidence/2026-08-03-perf3-11-k01-storage-permutation/); K02/K03: [`2026-08-03-perf3-11-k02-k03-linked-reads`](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/); K04: [`2026-08-03-perf3-11-k04-call-window`](evidence/2026-08-03-perf3-11-k04-call-window/); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
-| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued next evidence gate | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
+| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — implementation queue retained | Fixed-count schema-5 profiles are checksum-valid under both VMs. The largest ceiling is transactional PARSE placement at 9.24M dispatches; compound-tail routes expose 1.96M-2.24M concats; copied XTOY exposes 2.22M `DCOPY` plus 97.68 MB and is recommended first because existing component SSA can own it without an ISA change. TRACE is guard-only and ADDRESS is zero-runtime here. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md); evidence: [`2026-08-04-perf3-12-rexxcps-clause-rereview`](evidence/2026-08-04-perf3-12-rexxcps-clause-rereview/). |
 
 ## Approved execution order
 
@@ -1007,21 +1009,44 @@ deleting guards in a batch.
 
 ## PERF3-12 — current RexxCPS clause-lowering rereview
 
-This is a compiler-facing evidence lane, not a benchmark-specific tuning
-licence. Start from the accepted PERF3-06 current-product scorecard and fresh
-dual-VM profiles. Map each material RexxCPS clause family to compiler RXAS,
-library work and reusable flow facts; include variable/representation hoisting,
-string conversions, PARSE, stem-tail construction, ADDRESS and the inactive
-TRACE path. T1 already supplies the correct anchoring model: a reached trace
-event drains prior ordered events, so `CNOP` or executable conversion work is
-not retained merely to separate metadata. This batching guarantee applies to
-retained events; it does not require preserving an event for work or a value
-removed by optimisation.
+This compiler-facing evidence lane completed on 2026-08-04 without a product
+edit. Fixed `200 x 100` schema-5 profiles use the exact accepted optimized and
+no-opt images. No-opt is exactly 148,701,541 instructions under both VMs;
+optimized is 54,221,210/54,221,182 under `rxvm`/`rxbvm`, with only 28
+low-frequency final formatting/control instructions differing between the
+otherwise matching optimized profiles. These are diagnostic counts; the
+profiling-off PERF3-06 scorecard remains runtime authority.
 
-The deliverable is a ranked general-shape ledger with dynamic ceiling,
-semantic proof owner and guard workload. Compiler lowering, RXAS flow and
-runtime fallback remain separate candidates. Any production edit requires its
-own selected design and mandatory first ordinary Release verdict.
+The ranked mechanism evidence is:
+
+1. `R12-P01` PARSE direct-destination transactions derive a maximum 7.28M
+   PARSE-only `SCOPY` plus 1.96M grouped-null removals, a 9.24M-dispatch
+   ceiling. The frozen PARSE opcodes first need exact conditional signal and
+   failure-write metadata because source/result alias snapshot allocation can
+   signal before current user-variable assignments.
+2. `R12-S01/H01` maps 2.24M exact `"Key Bee." || lvar` constructions. Existing
+   `STEMGET2`/`STEMSET2` selection can remove up to 2.24M concat dispatches;
+   loop-scoped reuse can remove 1.96M. They require a comparative PoC rather
+   than an assumed combination.
+3. `R12-C01` observes exactly 2.22M `DCOPY`/`DTOS` pairs and 97.68 MB of
+   decimal-copy traffic. Existing multi-component values and metadata permit
+   an atomic RXAS plan that materializes the string component on the source,
+   redirects string-only uses and deletes `DCOPY`; no two-register opcode,
+   runtime flag or RXC semantic optimizer is required.
+4. `R12-I01/R01` defers inlining and final register work until these consumers
+   reduce the body and temporaries. Inactive `R12-T01` TRACE has only 100-200
+   setup/teardown calls and no hot-loop procedure call; `R12-A01` emits no
+   runtime work.
+
+The opportunity ranking puts PARSE first, but the implementation queue starts
+with `PERF3-12A / R12-C01` because it is a bounded consumer of already accepted
+component SSA/use facts. `PERF3-12B` compares segmented stems with loop-scoped
+reuse; `PERF3-12C` installs the PARSE contract and multi-result transaction;
+`PERF3-12D` later revisits late/hybrid inlining and register finalization. Each
+requires separate approval and its own mandatory first ordinary Release
+verdict. T1 remains the trace principle: a reached event drains prior ordered
+events, optimized trace output may differ, and users disable optimization for
+source-accurate tracing.
 
 ## Authoritative references
 
