@@ -1,0 +1,148 @@
+/* PERF3-12B B4 absolute benchmark-rate summary across retained sample files. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] < 2 then do
+  say "Usage: summarize_absolute OUTPUT_SUMMARY SAMPLES [SAMPLES ...]"
+  return 2
+end
+
+output_path = argv[1]
+keys = .string[]
+workloads = .string[]
+runtimes = .string[]
+vms = .string[]
+variants = .string[]
+values = .float[]
+counts = .int[]
+group_count = 0
+
+do input_number = 2 to argv[0]
+  input_path = argv[input_number]
+  line_number = 0
+  do while lines(input_path)
+    line = linein(input_path)
+    line_number = line_number + 1
+    if line_number = 1 then iterate
+    fields = split_delimited(line, ",")
+    if fields[0] <> 20 then return fail("unexpected sample row width")
+    if fields[11] <> "recorded" then iterate
+    if fields[18] <> "pass" then return fail("non-passing recorded sample")
+    if fields[3] <> "RexxCPS" then return fail("unexpected workload")
+    group = find_name(keys, fields[4])
+    if group = 0 then do
+      group_count = group_count + 1
+      group = group_count
+      keys[group] = fields[4]
+      workloads[group] = fields[3]
+      runtimes[group] = fields[5]
+      vms[group] = fields[6]
+      variants[group] = fields[7]
+    end
+    counts[group] = counts[group] + 1
+    values[group * 100 + counts[group]] = fields[19]
+  end
+  call linein input_path
+end
+
+call remove_output output_path
+header = "cell_id,workload,runtime,vm,variant,metric,n,min,q1,median,q3,max," || ,
+    "mad,relative_mad_percent,span_percent,rerun_recommended"
+if lineout(output_path, header) <> 0 then return fail("could not create summary")
+
+do group = 1 to group_count
+  samples = .float[]
+  do sample = 1 to counts[group]
+    samples[sample] = values[group * 100 + sample]
+  end
+  call sort_floats samples
+  median = sample_quantile(samples, 1, 2)
+  deviations = .float[]
+  do sample = 1 to samples[0]
+    deviations[sample] = floatabs(samples[sample] - median)
+  end
+  call sort_floats deviations
+  mad = sample_quantile(deviations, 1, 2)
+  relative_mad = 0.0
+  span_percent = 0.0
+  if median <> 0.0 then do
+    relative_mad = mad * 100.0 / median
+    span_percent = (samples[samples[0]] - samples[1]) * 100.0 / median
+  end
+  rerun = "no"
+  if relative_mad > 3.0 | span_percent > 10.0 then rerun = "yes"
+  row = keys[group] || "," || workloads[group] || "," || runtimes[group] || ,
+      "," || vms[group] || "," || variants[group] || ",benchmark_rate," || ,
+      samples[0] || "," || float_text(samples[1]) || "," || ,
+      float_text(sample_quantile(samples, 1, 4)) || "," || float_text(median) || ,
+      "," || float_text(sample_quantile(samples, 3, 4)) || "," || ,
+      float_text(samples[samples[0]]) || "," || float_text(mad) || "," || ,
+      float_text(relative_mad) || "," || float_text(span_percent) || "," || rerun
+  if lineout(output_path, row) <> 0 then return fail("could not append summary")
+end
+call lineout output_path
+
+say "PASS: PERF3-12B B4 absolute summary retained at" output_path
+return 0
+
+find_name: procedure = .int
+  arg names = .string[], wanted = .string
+  do index = 1 to names[0]
+    if names[index] = wanted then return index
+  end
+  return 0
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

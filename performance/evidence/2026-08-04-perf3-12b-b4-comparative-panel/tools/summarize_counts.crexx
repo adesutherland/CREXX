@@ -1,0 +1,114 @@
+/* PERF3-12B B4 exact counts-only profile summary. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 7 then do
+  say "Usage: summarize_counts OUTPUT S0_RXVM S1_RXVM H1_RXVM S0_RXBVM S1_RXBVM H1_RXBVM"
+  return 2
+end
+
+output_path = argv[1]
+routes = .string[]
+routes[1] = "s0"
+routes[2] = "s1"
+routes[3] = "h1"
+vm_names = .string[]
+vm_names[1] = "rxvm"
+vm_names[2] = "rxbvm"
+
+call remove_output output_path
+header = "route,vm,total_instructions,load_reg_string,concat_total,sconcat_total," || ,
+    "string_buffer_allocations,string_buffer_bytes,copy_operations,copy_bytes," || ,
+    "profile_status"
+if lineout(output_path, header) <> 0 then return fail("could not create summary")
+
+do input_number = 2 to argv[0]
+  path = argv[input_number]
+  zero_index = input_number - 2
+  route_index = (zero_index <mod> 3) + 1
+  vm_index = (zero_index <idiv> 3) + 1
+  total_instructions = 0
+  load_reg_string = 0
+  concat_total = 0
+  sconcat_total = 0
+  string_buffers = 0
+  string_buffer_bytes = 0
+  copy_operations = 0
+  copy_bytes = 0
+  complete_status = 0
+  status_rows = 0
+  result_ok = 0
+  line_number = 0
+  do while lines(path)
+    line = linein(path)
+    line_number = line_number + 1
+    if line_number = 1 then iterate
+    fields = split_delimited(line, ",")
+    if fields[1] <> "summary" & fields[1] <> "status" & ,
+        fields[1] <> "instruction" & fields[1] <> "allocation" & ,
+        fields[1] <> "value_operation" then iterate
+    if fields[0] <> 24 then return fail("unexpected profile row width")
+    if fields[1] = "summary" & fields[2] = "result" & fields[3] = "0" then
+      result_ok = 1
+    if fields[1] = "status" then do
+      status_rows = status_rows + 1
+      if fields[24] = '"complete"' then complete_status = complete_status + 1
+    end
+    if fields[1] = "instruction" then do
+      total_instructions = total_instructions + fields[5]
+      if fields[2] = "LOAD_REG_STRING" then load_reg_string = fields[5]
+      if pos("CONCAT_", fields[2]) = 1 then concat_total = concat_total + fields[5]
+      if pos("SCONCAT_", fields[2]) = 1 then sconcat_total = sconcat_total + fields[5]
+    end
+    if fields[1] = "allocation" & fields[2] = "string_buffers" then do
+      string_buffers = fields[5]
+      string_buffer_bytes = fields[21]
+    end
+    if fields[1] = "value_operation" & pos("copy", fields[2]) > 0 then do
+      copy_operations = copy_operations + fields[5]
+      copy_bytes = copy_bytes + fields[21]
+    end
+  end
+  call linein path
+  profile_status = "complete"
+  if result_ok = 0 | status_rows = 0 | complete_status <> status_rows then
+    profile_status = "incomplete"
+  row = routes[route_index] || "," || vm_names[vm_index] || "," || ,
+      total_instructions || "," || load_reg_string || "," || concat_total || ,
+      "," || sconcat_total || "," || string_buffers || "," || ,
+      string_buffer_bytes || "," || copy_operations || "," || copy_bytes || ,
+      "," || profile_status
+  if lineout(output_path, row) <> 0 then return fail("could not append summary")
+end
+call lineout output_path
+
+say "PASS: PERF3-12B B4 counts summary retained at" output_path
+return 0
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

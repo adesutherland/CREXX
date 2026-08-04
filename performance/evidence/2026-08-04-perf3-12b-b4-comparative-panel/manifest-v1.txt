@@ -1,0 +1,9 @@
+# PERF3-12B B4 S0/S1/H1 canonical-default RexxCPS panel.
+# One warmup and 12 serial rotated recorded rounds over six route/VM cells.
+crexx-cross-runtime-matrix|1
+rexxcps-s0-rxvm|RexxCPS|crexx-s0|rxvm|common-f1-control|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/tmp/perf3-12b-b4.zzOY6L/s0/rexxcps.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+rexxcps-s1-rxvm|RexxCPS|crexx-s1|rxvm|segmented-stem|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/tmp/perf3-12b-b4.zzOY6L/s1/rexxcps.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+rexxcps-h1-rxvm|RexxCPS|crexx-h1|rxvm|lazy-joined-key-reuse|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/tmp/perf3-12b-b4.zzOY6L/h1/rexxcps.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+rexxcps-s0-rxbvm|RexxCPS|crexx-s0|rxbvm|common-f1-control|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/tmp/perf3-12b-b4.zzOY6L/s0/rexxcps.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+rexxcps-s1-rxbvm|RexxCPS|crexx-s1|rxbvm|segmented-stem|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/tmp/perf3-12b-b4.zzOY6L/s1/rexxcps.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+rexxcps-h1-rxbvm|RexxCPS|crexx-h1|rxbvm|lazy-joined-key-reuse|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/tmp/perf3-12b-b4.zzOY6L/h1/rexxcps.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin

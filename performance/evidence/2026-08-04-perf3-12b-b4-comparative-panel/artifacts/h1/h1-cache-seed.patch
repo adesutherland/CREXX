@@ -1,0 +1,13 @@
+--- benchmark_rexxcps_levelb_opt.rxas
++++ perf3-12b-h1-input.rxas
+@@ -10 +10 @@
+-main() .locals=103
++main() .locals=104
+@@ -494,2 +494,2 @@
+-   concat r67,"Key Bee.",r51
+-   .traceevent "C" 4 "R" "S" "r" 67 108 108 0 "acompound" ""
++   concat r103,"Key Bee.",r51
++   .traceevent "C" 4 "R" "S" "r" 103 108 108 0 "acompound" ""
+@@ -498 +498 @@
+-   stemset r4,r67,r68
++   stemset r4,r103,r68

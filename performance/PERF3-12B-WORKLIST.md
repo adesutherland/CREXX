@@ -1,6 +1,6 @@
 # PERF3-12B compound-tail representation and reuse
 
-Status: in progress — B3 H1 PoC complete; B4 awaiting approval
+Status: in progress — B4 comparative panel complete; route-selection stop
 
 Started: 2026-08-04
 
@@ -264,16 +264,45 @@ Evidence:
 
 ### B4 — comparative Release panel and selection stop
 
-- [ ] Build ordinary profiling-off Release S0, S1 and H1 products from exact
+- [x] Build ordinary profiling-off Release S0, S1 and H1 products from exact
   recorded sources with both VM modes and no profiling instrumentation.
-- [ ] Run the smallest decisive balanced/interleaved RexxCPS comparison plus
+- [x] Run the smallest decisive balanced/interleaved RexxCPS comparison plus
   native-stem and no-candidate guards. Keep raw outputs and negative results.
-- [ ] Compare correctness, instruction/copy/allocation removal, runtime, RSS,
+- [x] Compare correctness, instruction/copy/allocation removal, runtime, RSS,
   image/register growth and assembler scale without summing overlapping
   ceilings.
-- [ ] Retain replay material for both candidates and report S0/S1/H1 to Adrian.
+- [x] Retain replay material for both candidates and report S0/S1/H1 to Adrian.
 - [ ] **Stop for route selection. Do not combine or install a production
   candidate before approval.**
+
+Retained B4 outcome:
+
+- after an explicitly superseded zero-sample attempt while other applications
+  were being closed, the complete AC block restarted every warmup and round;
+- governance extended the balanced panel from 12 to 24 and then 36 pairs
+  because S1/rxvm crossed zero, and retained two low S0/rxbvm observations plus
+  the required stable 10-sample serial control append;
+- H1 is clear favorable at the cap: paired median +3.075212% on `rxvm` with
+  mean 95% interval +2.517267%..+3.704893%, and +4.274944% on `rxbvm` with
+  +3.898184%..+6.267461%; 35/36 and 36/36 pairs are favorable;
+- S1 remains noisy/inconclusive on `rxvm` at +0.673386% paired median and
+  -0.450322%..+0.942436% interval; `rxbvm` is clear but small at +0.523554%;
+- exact counts confirm both routes remove 1,960,000 CONCAT dispatches, while
+  S1 adds about 280,000 LOADs and H1 adds no hot setup instruction;
+- all six count cells retain exactly 280,022 string-buffer allocations and
+  8,961,920 requested bytes; copy traffic and three-sample process RSS are
+  neutral;
+- H1 emits main `380 -> 365`, `.locals=104`, a 68,377-byte image and unchanged
+  first-epoch SSA retention of 83,902,504 bytes. Three ordinary assemblies
+  remain 0.33 s median at 133,054,464 bytes maximum RSS, scale-neutral to S0;
+- native selector suites pass 16/16 per candidate, graph/metadata pairs pass
+  2/2, six exact route/VM smoke cells pass, and the Sieve negative selects or
+  reuses zero with byte-identical S1/H1 images; and
+- B4 recommends H1. S0 remains the control and S1 remains a replayable rejected
+  fallback until Adrian selects the route.
+
+Evidence:
+[`2026-08-04-perf3-12b-b4-comparative-panel`](evidence/2026-08-04-perf3-12b-b4-comparative-panel/).
 
 ### B5 — selected production route and mandatory first Release verdict
 
@@ -295,8 +324,9 @@ Evidence:
 
 ## Immediate next step
 
-`B4 — comparative Release panel and route-selection stop`: on AC with the
-remote terminal absent, build exact retained S0, S1 and H1 profiling-off Release
-products, run the balanced/interleaved RexxCPS panel under both VMs, compare
-counts/RSS/image/register/assembler effects without summing overlapping work,
-and stop for route selection. Await Adrian's approval before starting.
+`B4 — route-selection stop`: choose S0, S1 or H1 from the retained comparative
+panel. H1 is recommended because it is clearly favorable on both VMs, removes
+the full 1.96M hot dispatches without S1's 0.28M setup LOAD and remains neutral
+for allocation, RSS and assembler scale. If H1 is selected, the next item is
+`B5 — clean production H1 reimplementation and mandatory first ordinary
+Release verdict`; stop again at that verdict before B6 closeout.

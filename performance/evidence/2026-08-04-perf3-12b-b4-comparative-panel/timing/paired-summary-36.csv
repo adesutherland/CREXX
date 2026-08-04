@@ -1,0 +1,5 @@
+candidate,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total
+segmented-stem,rxvm,benchmark_rate,36,45615173.000000,45906186.000000,-6.973283,-0.608126,0.673386,1.081590,4.503596,0.246057,-0.450322,0.942436,noisy_inconclusive,24,36
+lazy-joined-key-reuse,rxvm,benchmark_rate,36,45615173.000000,47084651.000000,-2.892751,2.122091,3.075212,4.132877,6.829958,3.111080,2.517267,3.704893,clear_favorable,35,36
+segmented-stem,rxbvm,benchmark_rate,36,45500731.500000,45806401.000000,-2.298843,-0.163173,0.523554,1.513279,11.766803,1.466404,0.336964,2.595843,clear_favorable,22,36
+lazy-joined-key-reuse,rxbvm,benchmark_rate,36,45500731.500000,47335875.000000,1.200173,3.249445,4.274944,4.951977,16.467835,5.082823,3.898184,6.267461,clear_favorable,36,36
