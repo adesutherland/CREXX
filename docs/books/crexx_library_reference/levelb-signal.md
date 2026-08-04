@@ -47,13 +47,13 @@ views must remain aligned with `rxsignal_populate_raw_interrupt()` in the VM.
 Action-aware handlers return one of:
 
 ```rexx
-return .signalaction.retry()
 return .signalaction.skip()
 return .signalaction.fail()
 ```
 
-`kind()` returns `retry`, `skip`, or `fail`. Retry repeats the faulting
-instruction, skip resumes after it, and fail propagates the condition.
+`kind()` returns `skip` or `fail`. Skip resumes after the faulting instruction
+and fail propagates the condition. Instruction-level retry is deliberately not
+provided; use an explicit source-level loop for retryable work.
 
 ## Coverage and performance
 

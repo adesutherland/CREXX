@@ -88,12 +88,12 @@ static int inline_assembler_has_unsupported_effect(ASTNode *node) {
      * assembler operand is validated directly at the caller site and array
      * actuals are rejected there.
      *
-     * Stateful scalar string helpers are intentionally not rejected here:
+     * Mutating scalar string helpers are intentionally not rejected here:
      * assembler operands are marked read/write by symbol validation, so
      * writable by-value formals are materialised through the same copy
-     * semantics as normal calls. SCOPY resets copied string cursor state, which
-     * preserves the call prologue boundary for setstrpos/substcut/dropchar
-     * style helpers.
+     * semantics as normal calls. Pure indexed operations such as STRCHAR and
+     * SUBSTRING read their source without requiring a defensive SCOPY;
+     * content-mutating helpers such as SUBSTCUT and DROPCHAR still do.
      */
     for (child = node->child; child; child = child->sibling) {
         if (inline_node_has_array_shape(child)) return 1;

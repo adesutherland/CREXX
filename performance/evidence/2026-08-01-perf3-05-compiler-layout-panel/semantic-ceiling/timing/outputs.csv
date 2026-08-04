@@ -1,0 +1,169 @@
+sample_id,stream,line_number,text
+timing-PERF3-05-Base64-control-base64-current-rxvm-warmup-1,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-warmup-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-warmup-1,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-warmup-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-warmup-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-warmup-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-warmup-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-warmup-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-warmup-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-warmup-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-warmup-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-warmup-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-warmup-2,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-warmup-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-warmup-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-warmup-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-warmup-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-warmup-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-warmup-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-warmup-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-warmup-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-warmup-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-warmup-2,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-warmup-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-1,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-1,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-1,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-1,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-2,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-2,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-2,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-2,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-3,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-3,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-3,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-3,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-3,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-3,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-3,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-3,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-3,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-3,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-3,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-3,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-4,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-4,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-4,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-4,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-4,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-4,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-4,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-4,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-4,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-4,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-4,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-4,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-5,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-5,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-5,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-5,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-5,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-5,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-5,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-5,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-5,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-5,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-5,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-5,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-6,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-6,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-6,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-6,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-6,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-6,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-6,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-6,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-6,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-6,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-6,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-6,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-7,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-7,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-7,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-7,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-7,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-7,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-7,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-7,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-7,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-7,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-7,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-7,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-8,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-8,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-8,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-8,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-8,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-8,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-8,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-8,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-8,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-8,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-8,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-8,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-9,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-9,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-9,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-9,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-9,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-9,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-9,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-9,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-9,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-9,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-9,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-9,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-10,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-10,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-10,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-10,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-10,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-10,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-10,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-10,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-10,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-10,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-10,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-10,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-11,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-11,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-11,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-11,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-11,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-11,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-11,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-11,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-11,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-11,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-11,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-11,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-12,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxbvm-recorded-12,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-12,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxvm-recorded-12,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-12,stdout,1,PERF2-04-BASE64-CONTROL variant=current repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-current-rxbvm-recorded-12,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-12,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxvm-recorded-12,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-12,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-poschar repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-poschar-rxbvm-recorded-12,stdout,2,PASS: PERF2-04 Base64 control
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-12,stdout,1,PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF3-05-Base64-control-base64-arithmetic-rxvm-recorded-12,stdout,2,PASS: PERF2-04 Base64 control

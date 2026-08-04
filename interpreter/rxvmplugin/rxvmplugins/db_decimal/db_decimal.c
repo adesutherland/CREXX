@@ -310,6 +310,14 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
 /* The string must be allocated by the caller and should be at least
  * getRequiredStringSize() bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
+    /* Match mc_decimal's total DTOS contract, including logical absence when
+     * lazy backing storage remains allocated with a zero payload length. */
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    if (!number->decimal_value || number->decimal_value_length == 0) {
+        strcpy(string, "nan");
+        return;
+    }
     long double value = *(long double*)number->decimal_value;
 #if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__)) 
     int digits = (int)((dbcontext*)(plugin->base.private_context))->digits;
@@ -343,15 +351,20 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
     sprintf(string, "%.*LG", plugin->num_context->digits, value);
 #endif    
 
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
 }
 
 /* Convert an int to a rxvmplugin number */
 void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    CLEAR_ERRNO;
     EnsureCapacity(result);
     long double *number = result->decimal_value;
     *number = (long double)value;
     *number = round_decimal(*number, ((dbcontext*)(plugin->base.private_context))->digits);
-    check_signal(plugin, *number);
+    CLEAR_ERRNO;
 }
 
 /* Convert a rxvmplugin number to an int */

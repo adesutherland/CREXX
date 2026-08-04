@@ -1,0 +1,7 @@
+PASS: compact cross-runtime timing matrix retained under timing/initial
+initial stderr bytes: 0
+PASS: compact cross-runtime timing matrix retained under timing/append
+append stderr bytes: 0
+PASS: compact cross-runtime timing summary refreshed under timing
+merge stderr bytes: 0
+PASS: inventoried 7 workload artifact sets in static/perf3-11-k04e-artifact-summary.csv

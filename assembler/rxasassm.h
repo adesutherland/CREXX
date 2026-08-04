@@ -43,6 +43,11 @@ void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler
               Assembler_Token *operand2Token);
 void rxasque3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token);
+/* Replace the owned operand-vector view of an already queued opcode. */
+void rxas_set_queue_operands(Assembler_Context *context,
+                             instruction_queue *item,
+                             Assembler_Token *const *operandTokens,
+                             size_t operandCount);
 void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken);
 /* Source Step */
 void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
@@ -77,9 +82,11 @@ void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 void flushopt(Assembler_Context *context);
 
 /* Run the transient whole-procedure machine-flow pass before emission. */
-void rxas_flow_optimise(Assembler_Context *context,
-                        instruction_queue *items,
-                        size_t item_count);
+void rxas_flow_optimise(Assembler_Context *context);
+
+/* Grow the mutable whole-procedure stream without invalidating queue records
+ * until the caller is ready to refresh its pointers. */
+void rxas_reserve_procedure_queue(Assembler_Context *context, size_t required);
 
 /* Generate code for an instructions */
 void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,

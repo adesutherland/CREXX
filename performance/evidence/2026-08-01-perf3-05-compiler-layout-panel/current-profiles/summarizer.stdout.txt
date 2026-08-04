@@ -1,0 +1,1 @@
+PASS: summarized 4 PERF2 profile cells under /tmp/crexx-perf3-05.9DY131/current-profiles/summary

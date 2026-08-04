@@ -1,0 +1,13 @@
+role,path,bytes,sha256
+common-rxvm,/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxvm,998840,8330e6c4818b809291f1f9bce88d0aeb0513671a13a713736e5d8cea8fbaf13e
+common-rxbvm,/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxbvm,999016,4563326c3f295fc91f49a7c71d1e13f9e66ecd86c243b60afb783745f5ee6931
+common-library,/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/library.rxbin,935917,66cc67b42886ead14c79c3740d78cf14e73ac4fba69a88a3814fcb78ff0ca3bb
+matrix-runner,/private/tmp/crexx-perf3-01.jetu7C/build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin,461933,afbedd97fb6c8ec48e7fa3d6524aeb2dc3c39e6737ac3fa9f3e89a5c2d3b556b
+richards-c0,/tmp/crexx-perf3-02-r1-variants.TW15T0/mask-0/images/opt/benchmark_awfy_richards_opt.rxbin,78798,a89f012fb66dc2edf97853f46b4d9f854d1d58c93686737b648bec9652add457
+richards-c1a,/tmp/crexx-perf3-02-r1-variants.TW15T0/mask-1/images/opt/benchmark_awfy_richards_opt.rxbin,78686,92bf343547b14bf4e922df7ff2378479c69dfa823f7bf95e8182559a30ebb8c8
+richards-c1b,/tmp/crexx-perf3-02-r1-variants.TW15T0/mask-2/images/opt/benchmark_awfy_richards_opt.rxbin,79334,e6044860d5136ad1b194ec23c26388db5ecf65bea05f7fce845746740d587d78
+richards-c1ab,/tmp/crexx-perf3-02-r1-variants.TW15T0/mask-3/images/opt/benchmark_awfy_richards_opt.rxbin,79198,856a80efc34770c72efeba7a308d9b503339a72c5b23e9e683c7d1c6c2be5677
+towers-c0,/tmp/crexx-perf3-02-r1-variants.TW15T0/mask-0/images/opt/benchmark_awfy_towers_opt.rxbin,28750,38c2c831496c696a390834855611f62cbd342b48e747640b8bca3125d256e189
+towers-c1c,/tmp/crexx-perf3-02-r1-variants.TW15T0/mask-4/images/opt/benchmark_awfy_towers_opt.rxbin,28710,9d0f712050ef3c7c813e59e0b25b9893804fab64d79a803db424928746f58e85
+locked-p1-rxas,/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxas,,09ea8e49c54dfc839833a1fa40dfa5809467aa53c730dc050ae0a2b95f73669e
+compiler-option-source-diff,compiler-option-source.diff,,7bf1f32e61b1fb40bbdae6d1f12cd9fb36ca2825c48270a51fabee289252fdbf

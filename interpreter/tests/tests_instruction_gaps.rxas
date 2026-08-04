@@ -265,9 +265,8 @@ test_string_misc() .locals=30
 
     load r1,"abcdef"
     load r2,2
-    setstrpos r1,r2
     load r3,3
-    substring r4,r1,r3
+    substring r4,r1,r2,r3
     seq r0,r4,"cde"
     brf string_fail, r0
 

@@ -63,8 +63,7 @@ changestr: procedure = .string
     segment_length = found - position
     if segment_length > 0 then do
       segment_start = position - 1
-      assembler setstrpos haystack,segment_start
-      assembler substring segment,haystack,segment_length
+      assembler substring segment,haystack,segment_start,segment_length
       assembler append result,segment
     end
     assembler append result,replacement
@@ -74,8 +73,7 @@ changestr: procedure = .string
   if position <= haystack_length then do
     segment_start = position - 1
     segment_length = haystack_length - position + 1
-    assembler setstrpos haystack,segment_start
-    assembler substring segment,haystack,segment_length
+    assembler substring segment,haystack,segment_start,segment_length
     assembler append result,segment
   end
   return result

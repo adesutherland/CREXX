@@ -1,0 +1,4 @@
+rxvm noopt: PASS: PERF3-12A X1 component placement runtime
+rxvm opt: PASS: PERF3-12A X1 component placement runtime
+rxbvm noopt: PASS: PERF3-12A X1 component placement runtime
+rxbvm opt: PASS: PERF3-12A X1 component placement runtime

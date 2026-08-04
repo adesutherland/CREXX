@@ -1,0 +1,34 @@
+utc=2026-08-01T12:03:47Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+{ 1.22 1.22 1.21 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+15556 /bin/zsh -c perf3_tmp=$(cat /tmp/crexx-perf3-03-active-dir.txt)
+ls -l "$perf3_tmp/prefilter-matrix-append-v1.txt"
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n machdep.cpu.brand_string
+  sysctl -n hw.logicalcpu
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  shasum -a 256 /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm "$perf3_tmp/prefilter-build/bin/rxvm" "$perf3_tmp/prefilter-build/bin/rxbvm" /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin /tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin performance/tools/run_cross_runtime_matrix.crexx "$perf3_tmp/prefilter-matrix-append-v1.txt"
+} > "$perf3_tmp/prefilter-append-pre-state.txt" 2>&1
+sed -n '1,80p' "$perf3_tmp/prefilter-append-pre-state.txt"
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest "$perf3_tmp/prefilter-matrix-append-v1.txt" --output-dir "$perf3_tmp/prefilter-timing-append-01" --measurement timing --warmups 0 --runs 10 > "$perf3_tmp/prefilter-append-runner.stdout.txt" 2> "$perf3_tmp/prefilter-append-runner.stderr.txt"
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+ff349d213fc2682d606f4c1d9583507debfc2de7d3922c2ee7601b789b8ae591  /tmp/crexx-perf3-03.TsP0ej/prefilter-build/bin/rxvm
+0fd1def418c8b850860b9570458b674a262eadf4b1c239c0d6122341c0b7bac7  /tmp/crexx-perf3-03.TsP0ej/prefilter-build/bin/rxbvm
+f0d86b2a1da359f6e15b2f1f7c7d6b392d7ed74b5dd99ef364bd5c4e4f02c3d6  /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin
+d85192dab1d74e54a71029f530992396b8f073b75624a10e4eac85dc96a4d1c7  /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+51e42735d5e3c58ebd80bef48c9b1d52532d809f961e2099094b4f0dd3a42ea8  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin
+efb194ec8194bfed5c26bd2fd98fb225f219c16a29fd710e9428fd331dc2a06c  performance/tools/run_cross_runtime_matrix.crexx
+b66592052033eda8cb56466a19b74e47a10bb0160965b2d9df92ecbf3380cdf6  /tmp/crexx-perf3-03.TsP0ej/prefilter-matrix-append-v1.txt

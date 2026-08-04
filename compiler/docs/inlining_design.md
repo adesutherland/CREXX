@@ -79,7 +79,7 @@ More precisely:
 - Arguments and return values must stay within the currently implemented safe slice: scalars, object values, binary values, optional/default formals, and array-shaped formals/returns are now supported across local procedure and local class-call inlining.
 - The callee must satisfy the existing safety checks: small body, no recursion cycle, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
 - Procedure-level `expose` clauses are not inlineable yet. This is separate from `arg expose` / by-reference formals: a procedure-level expose changes global binding semantics and must stay as a real call until the clone/bind core models that environment explicitly.
-- Callable bodies containing raw assembler aliasing statements such as `link`, `linkattr*`, `linktoattr*`, or `unlink` are not inlineable yet. Stateful string-register assembler helpers such as `setstrpos`, `substcut`, and `dropchar` are inlineable when they operate through ordinary formal/local symbol bindings: assembler operands are marked read/write, writable by-value formals are copied like a normal call prologue, and `SCOPY` resets the destination cursor.
+- Callable bodies containing raw assembler aliasing statements such as `link`, `linkattr*`, `linktoattr*`, or `unlink` are not inlineable yet. Pure indexed string helpers such as `strchar` and `substring` read their source directly and require no hidden-state isolation. Content-mutating helpers such as `substcut` and `dropchar` are inlineable when they operate through ordinary formal/local symbol bindings: assembler operands are marked read/write and writable by-value formals are copied like a normal call prologue.
 - Method and factory inlining evaluate and capture by-value actual arguments that read caller attributes before introducing the callee instance scope. When a method needs such captures, the receiver is captured first in the caller scope and then bound to inline `§this`; a factory initializes `§factory` with `setattrs` and `setobjtype` after the actual captures. Formal binding reads from the captured actual values. This preserves ordinary call semantics when an actual expression reads the caller's receiver attributes and the callee has same-named attributes on its receiver or new object.
 - Method inlining binds the receiver once into the callee's internal `§this`
   object. Statement-owned rewrites copy a direct, non-attribute receiver symbol
@@ -322,6 +322,28 @@ Implemented behaviour:
 - Method bodies get an inline-scope `§this` binding and class attribute reads/writes resolve against that inlined receiver.
 - Direct-receiver mutating method calls in statement position and simple whole-RHS assignment position copy the receiver object back after the cloned method body.
 - Direct-receiver mutating method calls in supported single-consumer expression position copy the receiver object back before each generated `LEAVE_WITH`, so the returned value and receiver mutation are both preserved.
+- A nested-`§this`, multi-return method may share the direct receiver when its
+  body is call-free and never reads or writes a receiver attribute. This exact
+  unused-receiver proof creates no receiver-owned link and therefore has no
+  per-exit receiver cleanup to bypass.
+- A nested-`§this`, multi-return method may share a direct receiver only for
+  the bounded attribute-reading detached-guard shape: one or more top-level `IF` statements whose
+  Boolean conditions each contain exactly one indexed scalar Boolean receiver
+  attribute read and whose bodies immediately return a scalar Boolean,
+  followed by a final scalar Boolean return. Each condition is first evaluated
+  into compiler-owned scalar storage, so its receiver-derived alias cleanup is
+  complete before the following branch or `LEAVE_WITH`.
+- The detached-guard path rejects calls, writes, non-guard receiver reads,
+  loops, references, nested-return blocks, assembler, callee-local signal
+  constructs and same-caller-frame signal continuations. The cloned
+  assignment/`IF`/`LEAVE_WITH` sequence and attribute-read count are validated
+  again before the rewrite commits. `I6` may transport only this exact
+  otherwise-unportable indexed Boolean attribute shape, and the reader repeats
+  the same structural proof; the summary schema and runtime ABI are unchanged.
+- An already-bound, non-reference scalar object formal may serve directly as a
+  nested method receiver. Generated/captured storage, inline value aliases,
+  array-shaped values, references and flow-substituted symbols remain excluded;
+  their existing materialisation/copyback paths are unchanged.
 - Simple whole-RHS assignment of a value-returning mutating method can copy
   back through a computed variable-like receiver such as
   `saved = items[pickIndex()].setAndReport("changed")`. The receiver locator
@@ -1012,7 +1034,7 @@ Reason classes:
 | `W3` | Writer/export policy | Callable must be namespace-exposed to carry `.inline` metadata | policy | Still present, mostly in Level B helper-heavy modules. | Mostly deliberate. Private helpers should not be exported individually just to improve metadata counts. If an exposed procedure locally inlines a private helper, the helper's final AST is already folded into the exposed export. | Leave closed for standalone export. Revisit only with a dependency-table design or if tooling wants non-inline AST payloads distinct from inline-consumable bodies. |
 | `W4` | Structural/export | Body cutoff: `INLINE_MAX_NODES` is 300 for the release slice | profitability | Still the largest raw structural/export signal, especially in Level B and classlib. | Valuable but not a semantic proof issue. The cutoff is intentionally a profitability/metadata-size policy, not a safety proof. Raising it admitted the near-threshold BIFs while leaving very large helpers closed. | For post-release work, consider call-site-sensitive profitability, loop-sensitive thresholds, or a library-only export threshold rather than treating 300 as semantically special. |
 | `W5` | Structural/export | Procedure-level `expose` clauses are not inlineable/exportable | semantic dependency | Still concentrated in runtime-state helpers. | Semantically real. `arg expose` is already modelled; procedure-level `expose` changes global/caller environment binding. | Leave closed until inline scope cloning explicitly models procedure expose. Good candidate for a design note before code. |
-| `W6` | Structural/export | Raw assembler aliasing through `link`, `linkattr*`, `linktoattr*`, `unlink`; non-aliasing stateful helpers rely on call-prologue-equivalent copy isolation | semantic dependency | Still a major Level B structural signal. Stateful string helpers are covered by `SCOPY` cursor reset and formal read/write binding tests. | Aliasing remains correctly closed because it creates storage identity not represented in normal AST symbol links. Stateful string helpers are no longer closed as a class: `setstrpos`, `substcut`, and `dropchar` may inline when their operands are ordinary formals/locals and no aliasing instruction is present. | Keep aliasing closed until assembler instruction effects can be modelled per operand and locally proved. |
+| `W6` | Structural/export | Raw assembler aliasing through `link`, `linkattr*`, `linktoattr*`, `unlink`; mutating non-aliasing helpers rely on call-prologue-equivalent copy isolation | semantic dependency | Still a major Level B structural signal. Explicit-position string reads have no hidden cursor dimension; content writes remain covered by formal read/write binding tests. | Aliasing remains correctly closed because it creates storage identity not represented in normal AST symbol links. Pure `strchar`/`substring` helpers can read formals directly, while `substcut` and `dropchar` may inline when writable operands are ordinary formals/locals and no aliasing instruction is present. | Keep aliasing closed until assembler instruction effects can be modelled per operand and locally proved. |
 | `W7` | Writer/export codec | Decimal/numeric-control AST nodes such as `DEC_STANDARD`, `DEC_FUZZ`, `DEC_FORM`, `DEC_DIGITS`, `DEC_CASE` are not transported | codec/transport | Low current signal. | Likely low-risk codec work, but only useful for the few numeric-control helpers. | Candidate for a small later slice if numeric BIF coverage matters. Add focused transport tests first. |
 | `W8` | Writer/export codec | Unsupported scope/symbol/node families outside the current whitelist | codec/transport | Low signal beyond the named gates. | Keep whitelist-based. Expanding the codec is cheap only when the downstream imported template can still be validated and emitted. | Add one node family at a time with source/RXAS/RXDAS/binary tests. |
 | `C1` | Caller/call-site | Composed-expression `BLOCK_EXPR` inlining | mixed: complete for proven parent shapes, semantic dependency for the remaining expression parents | Raw diagnostics still show dedicated-statement contexts and a smaller set of direct-consumer gaps. | Opened for the local proven slice: arithmetic, unary operators, comparisons, concatenation, type operators, short-circuit operands, and call-like argument positions. Raw residual counts must be reviewed by parent shape because fixed-point revisits inflate them and some contexts are intentionally handled by separate rewrites. Receiver-position expressions remain separate. | Keep covered through the composed-expression runtime tests; add one no-opt/opt runtime test for each new composed bucket. |
@@ -1160,8 +1182,8 @@ The current unsafe classes are:
 - instructions that make one register an alias of storage owned by another
   register or object, especially `link`, `linkattr*`, `linktoattr*`, and
   `unlink`
-- instructions with hidden state effects whose operands are not ordinary
-  formals/locals protected by copy semantics
+- instructions that mutate value contents through operands not protected by
+  ordinary formal/local copy semantics
 
 The issue is register/effect mapping, not assembler text in general. The
 clone/remap core must be able to answer:
@@ -1174,36 +1196,18 @@ clone/remap core must be able to answer:
   the same order as a real call
 - whether the linked register can be represented as an ordinary symbol/locator
   in the current inline machinery
-- for stateful instructions, whether the destination is caller-owned,
-  callee-local, or an isolated by-value copy, and whether hidden state can leak
-  across sibling expressions or repeated helper calls
+- for mutating instructions, whether the destination is caller-owned,
+  callee-local, or an isolated by-value copy
 
-The string cursor failure mode is broader than `setstrpos` itself. The VM
-stores cursor state on the string value, `substring` reads from that cursor,
-and helpers such as `substcut` / `dropchar` can mutate string contents. Real
-calls get a frame boundary and argument binding semantics; inlining must
-preserve that boundary either by proving the affected register is callee-local
-or by explicitly materialising/restoring the caller-visible state. The current
-proof for ordinary by-value string formals is the same as the normal call
-prologue: assembler operands are marked read/write, writable formals are copied,
-and `SCOPY` resets the destination cursor so the copied formal starts in normal
-string state. Return handling is state-preserving: the VM moves true local
-return values and copies potentially aliased return values, but both paths carry
-string cursor metadata along with the string contents.
-
-Two future implementation paths are worth keeping open:
-
-- assembler assists: add pure or effect-explicit VM instructions for common
-  helper patterns, for example substring-at-position or copy/truncate forms
-  that do not mutate the source cursor/content
-- post-inline cleanup/restoration: allow the inliner to attach a cleanup node
-  to symbols whose eventual register should have hidden state restored or
-  normalised by the emitter after register allocation
-
-The cleanup route is only valid for hidden state where restore/normalise is
-semantics-preserving. It does not by itself make destructive content mutation
-safe; that still needs an isolated copy, copyback semantics, or a pure
-assembler assist.
+String position is now explicit in indexed `strchar` and four-operand
+`substring`; no cursor is stored as logical value state. These pure reads can
+therefore survive inlining without a defensive source copy. Helpers such as
+`substcut` / `dropchar` still mutate string contents. Real calls get a frame
+boundary and argument binding semantics, so inlining those writes must preserve
+the boundary by proving the affected register is callee-local or by
+materialising the ordinary by-value copy. Return handling remains unchanged:
+the VM moves true local return values and copies potentially aliased return
+values, carrying logical contents but no hidden cursor metadata.
 
 Getter/setter-style methods that do not use these aliasing instructions should
 remain inlineable. Cross-file inlining should inherit the same rule: do not

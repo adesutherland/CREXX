@@ -1,0 +1,6 @@
+variant	n	median_ms	min_ms	max_ms
+dylib_export_filtered	15	37.439	36.258	38.361
+dylib_unrestricted	15	37.392	35.177	38.381
+saa_dynamic_only	15	21.706	20.659	24.143
+saa_public_expanded	15	35.095	33.421	36.067
+static_create_destroy	15	37.690	36.576	39.002

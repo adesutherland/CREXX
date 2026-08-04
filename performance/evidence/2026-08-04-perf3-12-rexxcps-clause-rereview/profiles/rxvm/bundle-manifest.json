@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g5fbe36049e26 20260804",
+  "result": "pass",
+  "started_utc": "2026-08-04T06:43:38+0000",
+  "completed_utc": "2026-08-04T06:44:06+0000",
+  "repository": {"branch":"codex/perf3-rxas-flow-infrastructure","commit":"209206f0f0f07cd709dcdd04665489756e0b433e","dirty_scope":[" M performance/ROADMAP.md","?? performance/PERF3-12-WORKLIST.md","?? performance/tools/run_evidence_bundle.rxas"]},
+  "host": {"os":"Darwin 25.5.0 arm64","cpu":"Apple M5"},
+  "driver_arguments": ["--manifest","/private/tmp/crexx-perf3-12.9cGqDj/rexxcps-profile-fixed200-manifest-v1.txt","--release-build","/private/tmp/crexx-perf3-06.yHwy0b/build-release","--profile-build","/private/tmp/crexx-perf3-12.9cGqDj/build-profile","--output-dir","/private/tmp/crexx-perf3-12.9cGqDj/rxvm-fixed200","--vm","rxvm","--profile-mode","counts","--force"],
+  "input_manifest": {"path":"/private/tmp/crexx-perf3-12.9cGqDj/rexxcps-profile-fixed200-manifest-v1.txt","sha256":"3ef1a9ed9688fc3ee06a34ee623ddfe6111d5dae1920f3510cdcce57eed063d3"},
+  "ordinary_release": {"build":"/private/tmp/crexx-perf3-06.yHwy0b/build-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxvm","vm_version":"crexx-1.0.0-beta.3+local.g5fbe36049e26 (Threaded Mode)","vm_sha256":"5a4641a60a81c8679773b37b6397bd9080f97417090878dd4d99c997c503b409"},
+  "profile_release": {"build":"/private/tmp/crexx-perf3-12.9cGqDj/build-profile","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxvm","profile_mode":"counts","vm_version":"crexx-1.0.0-beta.3+local.g5fbe36049e26 (Threaded Mode)","vm_sha256":"bfb0b4d4034d783769f376e40e994f932b65e478cd0c918f092154a75bdbebdb","rxseq_sha256":"479c58243ee20bbb7337845ffd76dd064a8c7290368d74657a353f035bb00242"},
+  "toolchain": {"cmake":"cmake version 4.3.2","compiler_path":"/usr/bin/cc","compiler":"Apple clang version 21.0.0 (clang-2100.1.1.101)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/private/tmp/crexx-perf3-12.9cGqDj/rxvm-fixed200"
+}

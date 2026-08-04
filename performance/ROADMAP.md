@@ -1,1793 +1,1141 @@
-# cREXX performance roadmap
+# cREXX PERF3 performance roadmap
 
-Last updated: 2026-07-29
+Approved: 2026-07-31
 
-Status: live planning register for the second performance programme.
-Production work requires the explicit decision gates recorded in each activity;
-PERF2-02 contains the first accepted production slice.
+Status: **approved live control plane for PERF3**. Adrian approved the roadmap
+and transfer boundary on 2026-07-31, then accepted the PERF3-01 current-product
+evidence boundary and ranked panel on 2026-07-31. PERF3-02's clean-host panel,
+C1b detached-guard proof, C2E2 storage-identity infrastructure and
+infrastructure-enabled R1 repanel are complete. Adrian selected the composed
+C1abc production ladder on 2026-08-01. The disposable option mask and broad
+correctness-negative branch are removed from the ordinary compiler while the
+checksum-closed replay source preserves every investigated option.
 
-The initial sweep is closed and preserved, without rewriting its accepted or
-rejected history, in
+C1abc emits the exact measured C1a+C1b Richards program and C1c Towers
+program. The accepted R1 paired medians are 53.55%/52.57% lower Richards
+elapsed and 18.92%/18.97% lower Towers elapsed on `rxvm`/`rxbvm`, with every
+pair favorable. Production closeout passes 11/11 focused Release checks,
+16/16 reviewed object structural/runtime pairs and 1,972/1,972 broad Debug
+tests. The old clean-host C0/C1a/C1c timings remain historical authority. C2
+still lacks ownership/lifetime proof, C3 is immaterial, C4 is met by the
+selected C1 rows. P1A is complete: A1 demand-driven storage attachment is
+retained, A3 is a correct replayable negative, and accepted closeout passes
+24/24 focused plus 1,972/1,972 broad Debug tests.
+PERF3-05 is complete: Adrian accepted retaining the ordinary L0 product,
+rejecting the tested LTO/PGO/no-flatten runtime forms and leaving L4 unopened.
+The separate VM-library link-interface cleanup is queued as PERF3-05-B1.
+Adrian selected and accepted PERF3-03 C4 v3. The narrow private locale-aware
+loose-comparison prefilter passes its 6/6 minimum gate and mandatory first
+ordinary Release verdict: Base64 improves by 4.86%/5.78% on `rxvm`/`rxbvm`;
+RexxCPS is +2.52% on `rxvm` and a guard-clean noisy -0.61% on `rxbvm`.
+Accepted Apple closeout passes 1,972/1,972 full Debug tests, 6/6 focused ASan,
+complete Release build/install and installed VM smoke 2/2. LSan is unavailable
+on this macOS runtime; Windows/MSVC validation is queued before publication.
+Adrian authorized the combined local closeout commit on 2026-08-01; push
+remains a separate user-authorized action.
+Adrian subsequently accepted PERF3-10: an ordered TRACE result-event batch and
+a storage-identity/component-aware RXAS proof for redundant integer-to-string
+materialization. Its first ordinary Release verdict improves RexxCPS median
+CPS by 10.38% on `rxvm` and 10.61% on `rxbvm`, with 21/22 and 12/12 favourable
+pairs. Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests.
+No tactical-rule deletion or public format change was made. The complete
+PERF3-02/C1abc slice is committed locally as `4a3940395`; push remains a
+separate user-authorized action.
+
+PERF3-11 Gates 1-6 are now locked.  The reusable per-epoch proof service is
+the sole authority for repeated `ITOS`; its stronger write-once/component SSA
+proof produces a 19-`ITOS` RexxCPS image versus the retained old solver's 21.
+Adrian accepted the mandatory Release verdict: median CPS improves 7.469% on
+`rxvm` and 6.866% on `rxbvm`, with 12/12 favourable pairs on each VM.  A broad
+test failure exposed and drove a precise caller-owned call-window argument
+model; the corrected closeout passes 1,987/1,987 Debug tests.  The remaining
+legacy-proof inventory and stable replay baseline are now locked.  M01 is
+complete: the old one-register `ITOF` authority is deleted and the generic
+metadata-driven `XTOY` consumer covers all 20 one-register conversions.  It
+recovers the old `ITOF` floor and proves 11 additional focused deletions,
+including four `ITOD` flow shapes; signalling and same-component-idempotence
+gaps remain closed.  `ITOD` and `BTOD` now have a coherent total
+non-signalling runtime/plugin contract.  M02 is also complete: repeated scalar
+constants now require write-once value equivalence and already-absent reference
+and native payloads.  It recovers the old floor and proves four stronger
+focused deletions through equal phis, exact float bits, linked storage and
+ordered TRACE.  Adrian accepted its output-neutral Release verdict and bounded
+procedure-local 30.1 MB peak RSS on 2026-08-03.  Canonical images remain
+unchanged, focused replay passes 53/53 and broad Debug passes 1,991/1,991.
+M03 is also complete: repeated `NULL` now requires known storage and all eight
+component leaves already absent. M04 is complete: canonical conditional
+same-storage metadata and the proof service now own all seven full/typed copy
+families, preserving the old floor and adding linked, agreeing-phi and
+TRACE-safe deletions. Adrian accepted both output-neutral verdicts; canonical
+images remain byte-identical and M04 broad Debug passes 1,995/1,995. M05 is
+complete: a cached sparse use/dependency index and atomic typed-copy rewrite
+plan replace the old dense availability/may-reach solver. The ten-case floor is
+preserved and one stronger unrelated-ENDLIFE case is proved. Canonical images
+remain byte-identical, Adrian accepted the 0.16-0.17 s/102.8 MB RexxCPS
+assembly boundary, and broad Debug passes 1,995/1,995. M06 is complete: its
+atomic SSA/use plan recovers all eleven current producer-forwarding cases,
+deletes the last dense M08 semantic liveness authority and adds the missing
+hidden-cleanup proof for producer-cleared reference/native payloads. Adrian
+accepted the byte-identical first Release verdict; paired RexxCPS assembly
+medians remain 0.18 s and median RSS rises 1.05% to 104,103,936 bytes. Focused
+Debug/Release pass 8/8 and broad Debug passes 1,995/1,995. K04a completes
+scalable atomic deletion of exact optimized-away Boolean TRACE events. K04b
+replaces the procedure-global call-window veto with reusable exact/dependent-
+`ValueId` visibility and is accepted as a neutral consolidation: focused
+Debug/Release pass 5/5 and canonical output remains byte-identical. K04c proves
+all five residual RexxCPS rejections are false positives from unknown CALL
+retry metadata: each real argument window is only `r1`, while retry count phis
+widen it to `r1..r69`. Broad Debug passes 1,995/1,995. K04d0 then found no
+production retry caller and an existing fused-call retry mapping defect.
+Adrian approved K04d1 retirement on 2026-08-03; propagated-call partial-state
+metadata remains for skip/handler/unwind analysis. K04d1 is now implemented and
+documented. The same 14 focused language, VM, metadata, flow, optimizer and
+native-unwind checks pass in Debug and ordinary profiling-off Release. The
+canonical candidate is 1,222 VM instructions and 1,249 TRACE events versus
+frozen M06 at 1,241/1,252. The clean-host K04d3 verdict is runtime-neutral:
+median RexxCPS changes by +0.021% on both VMs, with mixed 6/12 `rxvm` and 5/12
+`rxbvm` pair directions. One retained `rxvm` candidate sample is 13% below its
+pair and triggers the formal rerun recommendation. No sample was removed.
+Adrian accepted K04d1 as a neutral semantic/infrastructure improvement without
+a noisy-cell append on 2026-08-03. K04d4 then passed the complete Debug build
+and 1,998/1,998 broad Debug tests in 297.92 seconds. The retirement audit finds
+no obsolete production retry machinery. K04 is closed. K02/K03 are also
+complete: one storage/component/path proof replaces all twelve duplicate
+linked-read rules, focused K02/K03 passes 21/21 in Debug and Release, and
+canonical Richards, Towers and RexxCPS remain byte-identical to frozen K04.
+The final K02/K03 shared proof panel passes 28/28 in both builds and broad
+Debug passes 2,010/2,010 in 678.89 seconds. K01 is also complete from committed
+baseline `45e027685`: sparse storage-permutation and observation equivalence is
+the sole authority for exact cancelling `SWAP` pairs and exact self-cancelling
+ordered `SWAPN`. The inherited floor is byte-identical, the expanded focused
+panel passes 9/9 and the shared proof panel passes 37/37 in Debug and Release,
+and broad Debug passes 2,012/2,012 in 368.43 seconds. Canonical Richards,
+Towers and RexxCPS have zero K01 accepts and byte-identical images, so runtime
+timing was not warranted. K06 is also complete from committed K01 closeout
+`78bd7f6f5`: metadata and VM handlers prove adjacent full `COPY` subsumes the
+same-pair `ACOPY`, so the unchanged declarative rule is retained as mechanical
+rather than moved into CFG/SSA. The metadata/optimizer panel passes 3/3 in
+Debug and Release, the original focused outputs are byte-identical, and all
+three canonical images remain exact with zero K06 accepts. No production code
+or output changed, so timing and broad CTest were not warranted. K05 immutable
+CFG branch threading exposed an unsupported assembler scale boundary rather
+than a correctness failure. Committed K06 already requires approximately
+1.87 GB peak RSS for generated `Parse.rxas` while `-n` requires approximately
+26 MB; provisional batched K05 reaches approximately 2.47 GB. Adrian approved
+D0.1-D0.5 as separately validated/committed infrastructure and consumer-
+migration stages before K05 closeout. D0.1 is complete: every current local,
+CFG, SSA/use and diagnostic optimisation has a stable executable route and
+conservative pre-analysis candidate census. D0.2 is complete and gives one
+immutable graph epoch to M00, every semantic proof and the batched K05 plan;
+the seven queue-local K05 rules and the legacy graph/dense M07 matrices are
+deleted. Focused Debug/Release proof checks, dual-VM flow fixtures and exact
+accepted K05 canonical images pass. D0.3 is also complete: M01-M06 and K01-K04
+request exact monotonic capabilities, undeclared use/loop queries fail closed,
+loop analysis remains dormant, and explicit diagnostics retain their own
+route. Its focused Debug/Release and dual-VM gates pass with exact K05 images.
+The D0.3 diagnostic Parse probe remained approximately 2.46 GB because real
+use-index candidates still trigger semantic analysis. D0.4 is now complete: a
+sparse transactional manager batches compatible semantic plans, the final
+Debug/Release optimizer and migrated-runtime panel passes 107/107, and
+canonical images remain exact. Parse applies 63 semantic plans in 12 batches
+but peaks at approximately 2.56 GB because longer epochs co-retain proof
+capabilities. D0.5 is now complete: redundant storage phis collapse lazily,
+an exact linear write-once/single-use typed-copy route handles mechanical
+temporaries, and whole-procedure semantic analysis is bounded while local and
+CFG consumers continue. Ordinary Release `Parse.rxas` now peaks at
+142.7-142.9 MB versus 2.56 GB at D0.4, with all 261 K05 rewrites retained.
+Six advanced M05 copies are conservatively retained and recorded for a future
+candidate-sliced/region proof. Debug/Release optimizer/runtime checks pass
+108/108, broad Debug passes 2,021/2,021, and canonical images remain exact.
+D0.6 is complete: Adrian selected a permanent 100-record bounded
+peephole-first stage and a standing rule that exact metadata-proved local
+normalisations remain there rather than moving into CFG/SSA for consolidation.
+The 20-record product is the control; procedure-length windows remain a
+retained negative unless pre-SSA sparsity repays their measured scan cost.
+The exact RexxCPS census/CFG/SSA/use facts and emitted images are unchanged at
+100, while paired ordinary assembly moves from a 0.27 s to 0.28 s median with
+0/12 favourable pairs and neutral RSS.  Adrian accepted the approximately
+10 ms absolute cost on 2026-08-04; broad Debug passes 2,021/2,021.
+K04e is complete and accepted.  It restores the one hot in-place
+`ILT`/`BRF` comparison through the source's pre-write `ValueId` plus the
+existing alias, cleanup, use and TRACE guards; the old raw-register rule does
+not return.  Runtime-source-derived `STRLEN`, integer-subtract and loose-string
+compare metadata plus exact fixed/range call ownership describe the existing
+handlers without a VM/RXBIN semantic change.  RexxCPS moves from 1,222 to 1,221
+static instructions and removes exactly 560,000 equal-work dispatches.
+Thirty-six paired ordinary Release rounds remain noisy/inconclusive but have
+positive point estimates and no 3% guard hit; Adrian accepted that verdict.
+Broad Debug passes 2,021/2,021.
+
+The authorized clean-product Mac refresh at `c44706350` passes `348/348`
+initial plus `30/30` governed-append executions. Current common-five means are
+`2.465740x/2.316900x` versus ooRexx and `0.894608x/0.840606x` versus decimal
+NetRexx for `rxvm`/`rxbvm`; the high-level ranking is unchanged. Both VMs clear
+the 2.00x ooRexx aggregate target, Richards and noisy Base64 remain common
+deficits, Towers remains separate, and RexxCPS is above ooRexx parity but below
+1.50x. No sample was removed; noisy `permute-netrexx` and both cREXX Base64
+cells received the sole permitted append and remain labelled. Evidence:
+[`2026-08-04-perf3-11-k04e-mac-scorecard`](evidence/2026-08-04-perf3-11-k04e-mac-scorecard/).
+
+The subsequent fixed-work PERF3-12 reassessment records current optimized
+RexxCPS totals of 53,660,581/53,660,552. K04e accounts for the exact 560,000
+hot-site reduction, while every ranked clause opportunity retains its original
+count. The queue therefore remains copied-XTOY component placement first,
+compound-tail comparison second, PARSE transaction third and late inlining/
+register finalization fourth. Evidence:
+[`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/).
+
+PERF3-06 is complete from accepted product `5fbe36049`. Its formal Apple M5
+scorecard passes 348/348 initial plus 30/30 governed-append executions with no
+sample removed. The common-five geometric means are 2.453066x/2.285744x
+versus ooRexx and 0.912280x/0.850054x versus decimal NetRexx for
+`rxvm`/`rxbvm`. Both VMs now clear the 2.00x ooRexx aggregate band, while
+Richards and noisy Base64 remain below parity and the 1.50x per-cell band.
+RexxCPS reaches ooRexx parity at 1.151301x/1.133307x but remains below its
+separate 1.50x band; Towers remains a qualified separate deficit at
+0.390842x/0.389933x. OoRexx Bounce and both cREXX Base64 cells remain
+noise-labelled after the single permitted append. PERF3-12 is complete as an
+analysis-only current RexxCPS clause-lowering evidence gate. It recommends
+copied-XTOY component placement as the first separately approved implementation
+slice; no product code changed in the gate.
+
+PERF2 is closed and preserved in
+[`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
+`NR-*` sweep remains closed in
 [`ROADMAP-INITIAL-SWEEP-2026-07-23.md`](ROADMAP-INITIAL-SWEEP-2026-07-23.md).
-The original dated charter remains
+The original dated charter remains a historical snapshot in
 [`performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
-This file is now the live control plane.
-
-Status values are `queued`, `in progress`, `decision required`, `blocked`,
-`deferred`, `complete`, `rejected` and `superseded`. `Complete` means the
-stated exit gate and retained evidence both exist; it never means merely that a
-prototype ran.
-
-## North star
-
-cREXX should become a materially faster Rexx implementation than ooRexx while
-preserving the language, portability, debugging, linking and embeddability
-advantages of the current architecture.
-
-The programme has an intermediate threshold and a final outcome:
-
-1. **Parity checkpoint, not completion:** on a clean exact commit and one
-   governed same-host session,
-   the selected default cREXX VM must be clearly faster than ooRexx on every
-   qualified equal-work common Tier A workload, and the governed disclosed
-   cREXX RexxCPS 2.2d diagnostic must beat same-session canonical Classic
-   ooRexx RexxCPS. “Clearly” means the median is above parity and the governed
-   sampling/interval disposition is favorable rather than noisy or
-   inconclusive. There must be zero correctness failures and no unresolved
-   regression guard.
-2. **Unquestionable-superiority exit:** the selected default VM must reach at
-   least 1.50x ooRexx median throughput on every qualified comparable cell and
-   at least 2.00x on the common-workload geometric mean. The separately
-   governed RexxCPS diagnostic must also reach at least 1.50x ooRexx. The
-   alternate/non-default VM must itself be clearly faster than ooRexx on every
-   qualified cell, not merely remain within a cREXX regression budget.
-
-The numerical bands are the roadmap's working definition of “unquestionable”:
-large enough that normal noise, one favorable workload or a marginal aggregate
-cannot reverse the conclusion. They can be raised by Adrian, but ordinary
-parity cannot be substituted for programme completion.
-
-The product/architecture conclusion must be equally clear. The winning results
-must survive the supported host/compiler matrix, retain both VM modes and the
-portable canonical RXBIN, and demonstrate that new Rexx semantics can be
-placed at compile, RXAS, link/load or guarded-runtime specialization without a
-benchmark shortcut or a mandatory public-ISA fork. ooRexx is the comparator,
-not the performance ceiling; cREXX should be the no-brainer foundation for
-future Rexx enhancement work.
-
-These thresholds apply only to semantically qualified cells. They cannot be
-met by dropping a hard benchmark, changing its timed work, exploiting its
-correctness check or treating a disclosed adaptation as equivalent. Every Tier
-A row must finish either as a governed common comparison or with a named
-capability/equivalence activity that explains what must change before it can
-join the score.
-
-Performance is not the only release dimension. Correctness, lifecycle, peak
-RSS, installed/native use, artifact size, applicable RXBIN/ABI compatibility
-and feature-gating, TRACE/source identity and both VM modes remain separate
-gates under
+Standing measurement, regression and publication rules remain normative in
 [`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md) and
 [`AGENTS.md`](AGENTS.md).
 
-## Strategic conclusion
+The accepted product baseline for the PERF3-06 scorecard is
+`5fbe36049e26ee73ea0cf1720a7fc416f33d0fe2`; the earlier closeout tranche is
+`4a3940395980dc40ea45917d71d99caa080e89bb`. The PERF3 planning baseline
+remains `e38e514bf611ae3873513368c44742e2ae7332d1`, whose product-code parent is
+`3f43a0014be10c930a12b8a636297b60f294c0a6`. The exact new local tip is kept in
+repository history rather than self-referenced by the commit that contains
+this roadmap. Push remains unauthorized.
+The pre-existing worktree also contains five untracked
+generated `lifecycle_probe.rxbin` files under retained evidence directories;
+they are outside this documentation transition and must not be overwritten or
+deleted casually. This is a planning baseline, not a benchmark baseline.
 
-The cross-runtime RexxCPS review does **not** reduce to “hoist variables.”
-Regina, ooRexx and NetRexx repeatedly apply a broader rule:
+Status values are `queued`, `in progress`, `decision required`, `blocked`,
+`deferred`, `complete`, `rejected` and `superseded`. `Complete` means the
+activity's stated exit criterion and retained evidence both exist. A useful
+prototype or a closed predecessor programme does not make an unresolved
+mechanism complete.
 
-> Resolve, prove or compile a semantic decision at the earliest phase where it
-> is stable, retain the result close to the execution representation, and keep
-> a complete dynamic fallback.
+## PERF3 mission
 
-cREXX already gives typed locals direct register/index placement. The larger
-remaining opportunity is to hoist **semantic work**: call and BIF identity,
-validation, parse/scan plans, type and representation decisions, loop
-invariants, frame setup, conversions and repeated sequence selection.
+PERF3 turns the accepted PERF2 Mac, Linux x86-64 and Windows evidence into a
+small number of evidence-selected, independently revertible product decisions
+on the faster Apple ARM64 development host. It does not repeat PERF2 wholesale,
+resume every historical idea or treat platform-dependent compiler movement as
+a production mechanism.
 
-The ownership rule for the new programme is:
+The approved operating rule is:
 
-| Facts become stable at | Preferred owner | Typical result |
+> Re-establish exact current-product truth, remove the largest proved semantic
+> or ownership cost at its earliest safe owner, and escalate to VM layout or a
+> new execution architecture only when the remaining evidence requires it.
+
+The PERF2 north star is retained as a programme target, not as permission to
+change semantics or benchmark work:
+
+1. the selected default VM should reach at least 1.50x ooRexx median throughput
+   on every qualified equal-work common cell;
+2. the common-five geometric mean should reach at least 2.00x ooRexx;
+3. the separately governed cREXX RexxCPS 2.2d diagnostic should reach at least
+   1.50x same-session canonical Classic ooRexx RexxCPS; and
+4. the alternate VM should itself be clearly faster than ooRexx on every
+   qualified cell.
+
+Only semantically qualified, correctness-passing, same-session results count.
+`rxvm` and `rxbvm`, throughput, lifecycle, RSS and artifacts remain separate.
+
+## What PERF2 established
+
+### Accepted product and evidence foundation
+
+- The initial sweep, current-product profiling schema, governance, repeatable
+  evidence tools and common-five comparison contract are complete.
+- PERF2-01 through PERF2-05 are closed with accepted compiler, inlining, BIF,
+  private execution-image and reference-path work.
+- The Apple PERF2-06/07 slice is closed: V3-R01 corrected stale string-length
+  state and V1R01-R1 removed the proved receiver-copy explosion.
+- PERF2-08/09 closed the Mac qualification and same-session scorecard. The
+  common aggregate is exactly Sieve, Permute, Bounce, Richards and Base64;
+  RexxCPS remains a separately governed diagnostic.
+- The initial Linux x86-64 GCC/Clang correctness, sanitizer, formal baseline,
+  schema-5 and native-PMU campaign is checksum-closed and sufficient for
+  mechanism selection.
+- The supported Windows x86-64 baseline and bounded GCC, Clang and MSVC
+  controls are retained. They selected no compiler, CRT, VM or production
+  optimization.
+- CAP-01's indexed `rxjson` document and accepted numeric projection work are
+  closed. Their general residual mechanisms were extracted below rather than
+  left hidden inside the capability activity.
+
+### Current accepted Mac outcome snapshot
+
+The 2026-07-27 PERF2-09 Mac scorecard at `d5f0827ca` is the last formal
+same-session Apple comparison, not an automatic current-HEAD baseline.
+Product-affecting compiler, VM and library work has landed since its source
+snapshot.
+
+| Workload | Qualification | `rxvm / ooRexx` | `rxbvm / ooRexx` | PERF3 meaning |
+| --- | --- | ---: | ---: | --- |
+| Sieve | common | 7.214291x | 5.338790x | Established win and zero-work/code-layout guard. |
+| Permute | common | 8.005043x | 7.015322x | Established win; guard accepted call/value placement. |
+| Bounce | common | 3.902513x | 2.963270x | Established win; do not reopen reference work without a new exact reduction. |
+| Richards | common | 0.267262x | 0.264171x | Largest qualified common deficit and strongest current copy/value lead. |
+| Base64 | common | 0.719817x | 0.724922x | Deficit remains noisy; require exact work reduction and stable same-session evidence. |
+| RexxCPS | separate diagnostic | 0.995754x | 0.933193x | Near Mac parity but below the separate 1.50x band. |
+| Towers | qualified separate lane | 0.328060x | 0.321343x | Large object/allocation deficit; not part of the common aggregate. |
+
+The exact PERF2 Mac common-five geometric means were 2.125260x/1.842840x
+versus ooRexx and 0.742985x/0.644251x versus decimal NetRexx for
+`rxvm`/`rxbvm`. These remain historical observations until PERF3-01 decides
+what current-HEAD refresh is required.
+
+### Mechanisms selected by retained cross-platform evidence
+
+| Evidence | Observation | Planning consequence |
 | --- | --- | --- |
-| Compile time | `rxc`, typed flow analysis and inlining | direct binding, invariant motion, result placement, dead scaffold removal |
-| RXAS assembly time | RXAS whole-procedure effects/flow | destination forwarding, machine-level cleanup, coherent semantic instruction selection |
-| Link time | `rxlink` | provider/member/procedure identity and immutable graph facts |
-| Load/preparation time | private process execution image | decoded operands, runtime pointers, eagerly prepared process facts |
-| First or repeated execution | guarded quickening/site cache | type- or target-stable private form with invalidation |
-| Unstable or exceptional path | canonical fallback | late load, mutation, TRACE/debug, signals, unusual types and full semantics |
+| Linux Richards | 56.9 million copy operations and 451.7 MB copied in the bounded profile; `copy_value` accounts for roughly 55-57% of GCC and 77% of Clang sampled cycles, with Clang also exposing attribute-storage trimming. | Make full-copy elimination/ownership the first planned Mac design panel. Do not assume the VM handler is the right owner. |
+| Linux Towers | 26.8 million copies, 31.3 million clear/reset/destroy operations and 5.86 GB of allocation requests; front-end and indirect-branch pressure are also visible. | Separate exact copy/clear/attribute shapes from allocator or global-value-layout hypotheses. |
+| Linux Base64 | 46.7 million VM instructions; `SCOPY_REG_REG` is the third-ranked opcode and 92-96% of sampled cycles remain in `run`. | Compare a semantic string/copy ceiling with code-layout alternatives before selecting either. |
+| Linux RexxCPS | Decimal conversion/formatting and string movement remain visible; the GCC `rxvm` native cell is 42% front-end bound. | Keep conversion and layout as separate hypotheses; do not infer a single cause. |
+| CRI-13 residual | The retained projection executes 6,144 full-source copies totalling 359,294,976 logical bytes; RXAS currently reports `full-value-ownership-unproved`. | Carry the byte-weighted proof question into PERF3-02. |
+| Concrete scalar access | Current final/concrete wrapper reads are 4.56x-5.10x raw access and writes are 2.41x-3.67x across both VMs. | Preserve a generic accessor-proof lead, not JSON/vector-specific opcodes. |
+| Apple/Linux/Windows compiler controls | Compiler direction reverses by workload; zero-work Apple controls moved with code layout, Clang helps some Linux/Windows cells and hurts others, and MSVC `/MT` improves one Windows control without closing the gap. | Treat compiler, CRT and layout results as qualified leads only. Require paired candidate evidence and semantic zero-work guards. |
 
-The earliest safe, fastest end-to-end placement wins. Runtime quickening is a
-priority because the process-local execution image and recent semantic
-fast-path work make it timely, not because runtime specialization should absorb
-facts already provable by the compiler or RXAS.
+## PERF2 to PERF3 transfer register
 
-Three further boundaries are fixed:
+The following items are deliberately transferred. The old stable ID remains in
+the source column so no unfinished item disappears during renumbering.
 
-- Core Level B BIF work is **inlining first**. A small number of general RXAS
-  or VM assists may support the irreducible semantic kernels; blanket native
-  conversion is not the plan.
-- More-than-three-operand RXAS support is already complete across assembler,
-  RXBIN, linker, disassembler, metadata, compiler and both VMs. Width is an
-  available design tool, not evidence that a wide instruction is profitable.
-- Opcode operand width and procedure-call arity remain separate questions.
-  `CALL1` through `CALL4` are already complete and historical evidence placed
-  90.997% of calls at arity 0–4; PERF2-01 must refresh the residual census
-  before any `CALL5+` or higher-arity frame work is proposed.
-- VM work is first-class. Dispatch, execution-image layout, frames, values,
-  conversions, interrupt state, code layout and lifecycle all receive current
-  measurement rather than being treated as a residual implementation detail.
-- RexxCPS is first-class in sampling as well as in the programme exit. Every
-  multi-workload representative benchmark, profile, native-PMU,
-  compiler/layout and candidate-verdict set carries its separately governed
-  cREXX 2.2d lane. Its disclosed adaptation status keeps it outside the
-  common-five aggregate; it does not justify omitting it from the evidence set.
+| PERF2 source | PERF3 owner | Closing disposition carried forward | PERF3 entry condition |
+| --- | --- | --- | --- |
+| `PERF2-07-B02` | PERF3-02 | C1abc selected and Apple closeout complete | Closed by the selected C1a+C1b Richards and C1c Towers production ladder; retain timing and replay evidence. |
+| Linux Richards/Towers copy and attribute-trim findings | PERF3-02 | exact C0 attribution and selected C1abc proof complete | Closed for Apple; reuse retained evidence in the later platform-validation gate. |
+| `PERF2-05-F01` | PERF3-02 | evidence-gated | A fresh profile attributes material residual reference-descriptor payload cost after accepted R2a. |
+| `PERF2-03-F01` and `PERF2-03-F02` | PERF3-02 | evidence-gated | Current hot sites prove residual accessor/ownership/escape cost and exact alias/lifetime obligations. |
+| `PERF2-07-C01` | PERF3-03 | Apple closeout complete | The material owner is implicit loose-comparison parsing. Adrian selected and accepted private C4 v3; first verdict and proportional Apple closeout pass. C1/C2/C3/cache/public-span alternatives remain rejected or deferred. Windows/MSVC validation is retained as PERF3-03-W1. |
+| `PERF2-03-F06` | PERF3-04 | queued evidence only | Current profile plus hand-equivalent ceiling selects generic final/concrete scalar access. |
+| `PERF2-06-D01` | PERF3-05 | open accepted debt | Paired Mac zero-work and target controls distinguish native code layout from semantic work. |
+| PERF2-06 compact/hot-cold private stream and PERF2-10 LTO/PGO/layout | PERF3-05 | unstarted, no option selected | A bounded Mac panel identifies a repeatable supported mechanism before production selection. |
+| PERF2-09 qualified gaps | PERF3-06 | outcome lane | An accepted product slice exists or PERF3-01 changes the ranking. |
+| `CAP-02`, `CAP-03` and `CAP-04` | PERF3-07 | deferred or independent product/evidence tracks | Separate capability/API/use-case approval; they do not block qualified common cells. |
+| PERF2-11 Gate E and final VM recommendation | PERF3-08 | incomplete late gate | A Mac-selected candidate is accepted and ready for batched platform validation. |
+| PERF2-12 JIT/AOT/native backend | PERF3-09 | deferred | The accepted non-JIT programme cannot meet the target economically and Adrian approves a separate architecture decision. |
 
-The detailed competitor evidence is retained in
-[`rexxcps-runtime-source-review-2026-07-22.md`](rexxcps-runtime-source-review-2026-07-22.md).
-Its mechanism findings remain useful; its pre-NR-15/16/17 gap sizes and
-priority order are historical.
+### Preserved conditional triggers, not queued work
 
-## Initial-sweep closeout
+These points remain discoverable but do not consume PERF3 capacity unless
+their recorded trigger fires:
 
-The closed register contains 29 activity rows plus an architecture gate:
-
-| Closing disposition | Count | Activities |
-| --- | ---: | --- |
-| Complete | 21 | NR-01 through NR-06, NUMERIC-01, NR-08 through NR-11, NR-13 through NR-18, NR-21, NR-26 and NR-27 |
-| Rejected | 1 | NR-07 |
-| Deferred | 1 | NR-12 |
-| Queued | 6 | NR-19, NR-20, NR-22, NR-23, NR-24 and NR-25 |
-| Unstarted gate | 1 | architecture selection |
-
-This closes the **initial sweep**, not the underlying open questions. Their
-transfer is explicit:
-
-| Initial item | Successor |
+| Source | Preserved disposition |
 | --- | --- |
-| NR-12 by-value/return cleanup | PERF2-03 flow-aware inlining and result/copy cleanup |
-| NR-19 LTO/PGO/code layout | PERF2-10 toolchain, layout and lifecycle |
-| NR-20 and NR-25 allocation/value ideas | PERF2-07 value, frame, representation and allocation work |
-| NR-22 compact execution stream | PERF2-06 VM execution-engine programme |
-| NR-23 quickening | PERF2-02 semantic quickening priority programme |
-| NR-24 selected fusion | PERF2-02, PERF2-05 and PERF2-06 placement comparison |
-| old architecture-selection footer | PERF2-11 explicit cross-platform architecture gates |
+| `PERF2-03-F03` | Admit remaining inline-exit/result/temporary cleanup only as a bounded companion to a currently selected hot site. |
+| `PERF2-03-F04` | Reopen dynamic vararg/association/effect reconstruction only with a measured multi-site deficit. |
+| `PERF2-03-F05` | Standing producer/consumer consistency requirement owned by any change that consumes new summary facts. |
+| `PERF2-05-F02` | Reopen result forwarding only with mathematical equivalence and stable multi-workload dual-VM benefit. |
+| `PERF2-06-C2R02` | Deferred; rejected reset evidence gives no reason to advance quickened clearing. |
+| `PERF2-06-C2R03` | Analysis-only architecture candidate; it must first pass a current payload-capacity/high-water entrance gate. |
+| Higher-arity call/frame forms | No `CALL5+` or embedded-argument work without a refreshed dynamic residual census after accepted inlining. |
+| Legacy `FDIVSUB`, `ILOADSETUNLINKN` and frequency-only fusion ideas | Archive-only unless a current exact profile selects the mechanism. |
+| Windows MSVC `/MT` | Experimental validation lead only; plugin/API allocator ownership must be proved before any product selection. |
+| RexxCPS timer cross-check | Cheap cross-OS validation lead for a later platform campaign, not a Mac optimization. |
 
-Ideas already proved complete, rejected, superseded or subsumed remain in the
-archive. Deferred `FDIVSUB`, compact TRACE-correct `ILOADSETUNLINKN`, broader
-copy/propagation and metadata ideas may enter a new panel only if current
-profiles give them a mechanism footprint; they are not silently re-queued.
+### Closed or rejected work that PERF3 must not silently repeat
 
-This roadmap was written against clean `develop` at
-`d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6`. PERF2-01 must freeze and record
-its own exact execution baseline and upstream state rather than inheriting that
-snapshot by assumption.
+- Do not retry C2-A/B, fixed-core reset R1/R2, exact reset lists, quickened
+  clearing, C3R01 numeric synchronization or cleanup-only flattened-interpreter
+  reshaping without materially different ownership evidence and zero-work
+  controls.
+- Do not reopen selector caches: accepted profiles observed zero attempts.
+- Do not add a public RXAS/RXBIN form merely because a private or compiler
+  form has a useful ceiling.
+- Do not rerun Linux x86-64 or Windows baselines for questions answerable from
+  the retained immutable products, profiles, samples or small external
+  harnesses.
+- Do not reopen CAP-01's accepted API or benchmark-local class probe while
+  investigating the extracted generic copy, conversion or accessor questions.
+- Do not edit the dated charter or either closed roadmap to reflect PERF3.
 
-## Current same-session Mac closure
+## Activity register
 
-The 2026-07-27 PERF2-09 bundle is the current accepted-product same-session
-Apple baseline. Its competitor cells, work arguments and ordinary
-profiling-off Release products were frozen and captured together. It supersedes
-the July 20/23 cross-session orientation for Mac candidate ranking but is not a
-cross-platform or final-superiority claim.
-
-| Workload | Qualification | `rxvm / ooRexx` | `rxbvm / ooRexx` | Approximate gain needed to pass ooRexx | Programme disposition |
-| --- | --- | ---: | ---: | ---: | --- |
-| Sieve | common | 7.214291x | 5.338790x | already ahead | Guard the win; `rxbvm` remains 1.400305x NetRexx. |
-| Permute | common | 8.005043x | 7.015322x | already ahead | Guard accepted direct placement; current deficit is only to NetRexx. |
-| Bounce | common | 3.902513x | 2.963270x | already ahead | Guard; only `rxbvm` misses the 1.50 NetRexx band. |
-| Richards | common | 0.267262x | 0.264171x | 3.74x / 3.79x | Largest qualified common deficit; re-attribute residual accepted-product work before selecting a mechanism. |
-| Base64 | common | 0.719817x | 0.724922x | 1.39x / 1.38x | Both cREXX series remain noisy after the governed append; require exact materialization reduction. |
-| RexxCPS | governed disclosed diagnostic, not common | 0.995754x | 0.933193x | 1.004x / 1.072x | Near-parity guard; still 1.506x/1.607x from the separate strong band. |
-| Mandelbrot | approved exclusion | — | — | ooRexx checksum invalid | No ratio; ordinary decimal modes do not reproduce the binary64 contract. |
-| Towers | qualified separate object lane | 0.328060x | 0.321343x | 3.05x / 3.11x | Re-attribution required before any allocation/value candidate. |
-| Storage | diagnostic exclusion | — | — | cREXX container mismatch | CAP-02 deferred to an explicit post-Release 1 Level G decision. |
-| List | diagnostic exclusion | — | — | ownership adaptation | cREXX's weak-reference arena is material extra work. |
-| JSON | diagnostic exclusion | — | — | representation/API mismatch | CAP-01 deferred; no common ratio. |
-
-The exact common-five geometric means are 2.125260/1.842840 versus ooRexx and
-0.742985/0.644251 versus decimal NetRexx (`rxvm`/`rxbvm`). Richards is the
-largest qualified common deficit. The accepted product is ahead of ooRexx in
-aggregate but does not yet meet the per-benchmark or NetRexx exit criteria.
-
-Source:
-[`2026-07-27 PERF2-09 Mac closure`](evidence/2026-07-27-perf2-09-mac-closure/).
-
-## Live activity register
-
-| ID | Priority | Activity | Status | Dependency / next gate |
+| ID | Priority | Activity | Status | Exit / next gate |
 | --- | --- | --- | --- | --- |
-| PERF2-00 | P0 | Close and archive the initial sweep | complete | Historical register retained; successor mappings recorded here. |
-| PERF2-01 | P0 | Clean same-session baseline and complete current attribution refresh | complete | Gate A accepted 2026-07-23; refreshed selection baseline frozen. No production change authorized. |
-| PERF2-02 | P0 | Stable-site semantic quickening architecture and PoC panel | complete | Adrian accepted the favorable zero-state Q3b verdict on 2026-07-24. Broad Debug, Release, ASan, isolated-install and retained-RXBIN compatibility gates pass. |
-| PERF2-03 | P0 | Flow-aware inlining 2.0 and post-inline cleanup | complete | Architecture H and all five approved slices are accepted. Final production commit `d1c5245d4`; Debug QA 1,915/1,915; decisive List gain 52.818%/53.212%. Residual proof opportunities are routed below and do not keep PERF2-03 open. |
-| PERF2-04 | P0 | Inlining-first core Level B BIF campaign | complete | Accepted ladder production commit `f8f34092e`; focused QA 24/24 and broad Debug QA 1,919/1,919; retained closeout checksum-closed. No push authorized. |
-| PERF2-05 | P1 | Profile-selected RXAS semantic assists and instruction improvement | complete | P05-CF1, R2a and R1a are accepted and closed green. R1a broad Debug/Release QA is 1,924/1,924. R2b and neutral B1 are evidence-gated future points, not queued work. |
-| PERF2-06 | P0/P1 | VM execution-image, dispatch, stream, call and lifecycle audit | Apple tactical frame tuning and initial Intel Linux attribution complete | Linux selects copy/value/storage and workload-sensitive compiler layout as PoC questions, not a production candidate. `PERF2-06-D01`, compact/hot-cold stream selection and the final VM recommendation remain unstarted and return to the faster Mac for bounded design work. |
-| PERF2-07 | P1 | Value/frame/copy/representation/allocation programme | CRI-02 B01 complete; B02 residual payload-copy census and C01 bounded numeric-conversion review queued, neither active | `PERF2-07-B01` passed its mandatory first Release verdict and 34-pair order/per-variant adjudication. The apparent `rxvm` adjacent-path guard hit was fixed-order warm-state coupling: isolated control medians are -2.93%/-1.15%, their RXAS is byte-identical, and dual-VM RSS is -0.56%/-0.37%. Adrian accepted frozen V1 on 2026-07-30. Proportional closeout passes focused 8/8, affected ASan 3/3, and complete Debug 1934/1934; the imported summary regression locks read-only mask `400` and writable-isolated mask `416`. CRI-13 R1 exposed a separate non-local-attribute/post-inline residual: 6,144 full-source copies and 359,294,976 logical bytes per projection. `PERF2-07-B02` will census byte-weighted shapes and compare `rxc` semantic proof with bounded RXAS full-copy projection; RXAS already has CFG/liveness/effects and currently reports `full-value-ownership-unproved`. `PERF2-07-C01` will independently review the allocation, locale, grammar and range contracts of the existing string-to-number conversions and bounded no-copy alternatives. Both items are evidence only while CRI-13 is stopped. Evidence/control: [`CRI-02 worklist`](CRI02-BINARY-BYVALUE-WORKLIST.md), [`CRI-13 RXAS trace`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R1-RXAS-TRACE.md), [`CRI-13 bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md), [`V1R01-R1 first verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/) and [`Apple closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/). |
-| PERF2-08 | P1 | Benchmark capability/equivalence and Level B/G decision lane | Mac gate complete; dispositions approved | Common `N=5`; Towers and RexxCPS qualified separately; Mandelbrot, Storage, List and JSON have explicit no-ratio dispositions; CAP-01 through CAP-04 remain under their recorded future owners. Evidence: [`qualification`](evidence/2026-07-27-perf2-08-qualification/) and [`worklist`](PERF2-08-09-WORKLIST.md). |
-| PERF2-09 | P0 | Per-benchmark ooRexx closure campaign | Mac closure complete | Current same-session Apple scorecard is checksum-closed. Richards is the largest qualified common deficit. No next candidate is selected. Evidence: [`Mac closure`](evidence/2026-07-27-perf2-09-mac-closure/). |
-| PERF2-10 | P2 | LTO/PGO/code layout, build and lifecycle options | Initial Intel Linux baseline/attribution complete; no option selected | GCC/Clang ordinary-product, sanitizer, schema-5 and native-PMU evidence is retained under [`PERF2-10-11-INTEL-LINUX-WORKLIST.md`](PERF2-10-11-INTEL-LINUX-WORKLIST.md). Rebuild-heavy PoCs return to macOS; LTO/PGO/layout selection remains unstarted. |
-| PERF2-11 | P1 | Cross-platform architecture selection and final scorecard | Linux x86-64 evidence retained; Gate E incomplete | PERF2-09 Mac and the initial GCC/Clang Linux x86-64 lanes are frozen. A selected candidate, supported Linux ARM64, same-hardware Windows and final VM/default selection remain open. |
-| PERF2-12 | P3 | JIT/AOT/native-backend architecture decision | deferred | Revisit only if the non-JIT programme cannot meet the unquestionable-superiority exit. |
-| HIGHLIGHT-01 | P0 | Parser-mode UTF-8 projection and missing-token scalability | complete; Release verdict accepted 2026-07-28 | The selected DSLSH position index and cREXX projected-token lookup reduced the formerly timing-out large parser path to a roughly 0.36-second median. THE then removed per-request profile/render compilation, per-span variable-pool traffic and quadratic rendering; the 1,942-line end-user wrapper median is 0.61 seconds. Cross-project Release/Debug suites are green; evidence and boundaries are in [`HIGHLIGHT-01-WORKLIST.md`](HIGHLIGHT-01-WORKLIST.md). |
+| PERF3-00 | P0 | Archive PERF2 and approve the transfer boundary | complete | Adrian approved the roadmap and transfer boundary on 2026-07-31; no production work was bundled with approval. |
+| PERF3-01 | P0 | Current-HEAD Mac evidence and baseline-validity gate | complete | Adrian accepted the current-product evidence boundary and ranked panel on 2026-07-31. No production edit was made. Evidence: [`2026-07-31-perf3-01-current-mac`](evidence/2026-07-31-perf3-01-current-mac/); control: [`PERF3-01-WORKLIST.md`](PERF3-01-WORKLIST.md). |
+| PERF3-02 | P0 | Full-copy, ownership and attribute-storage panel | complete | Adrian selected C1abc. The ordinary compiler emits the exact measured C1ab Richards and C1c Towers programs; 11/11 focused Release and 1,972/1,972 broad Debug tests pass. Broad C1a-R1 remains rejected and replayable; C2 is ownership-deferred and C3 immaterial. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
+| PERF3-02-C1B | P0 | Multi-return receiver-link ownership feasibility | complete — correct and decisively faster | The exact detached scalar receiver-guard rule preserves canonical `23246/9297`, all fail-closed boundaries and link/unlink state. The R1 panel measures 44.28%/44.01% lower Richards elapsed alone and proves clean composition with C1a. The broad no-write route remains rejected. Control: [`PERF3-02-C1B-WORKLIST.md`](PERF3-02-C1B-WORKLIST.md); correctness: [`2026-08-01-perf3-02-c1b-correctness`](evidence/2026-08-01-perf3-02-c1b-correctness/); timing: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/). |
+| PERF3-02-C2E2 | P0 | RXAS symbolic register-storage identity | complete — core-infrastructure candidate | The diagnostic PoC safely follows direct link/swap/unlink identity, recovers exact point state at all 55 globally tainted Richards full-copy sites and 13/56 Towers sites, and proves a consolidated swap-round-trip route. P1 supplied split normal/signal failure edges; its original retry edge was later retired by approved K04d1. No rewrite or tactical-rule deletion is selected. Control: [`PERF3-02-C2E2-WORKLIST.md`](PERF3-02-C2E2-WORKLIST.md); evidence: [`2026-07-31-perf3-02-c2e2-storage-identity`](evidence/2026-07-31-perf3-02-c2e2-storage-identity/). |
+| PERF3-02-C2E2-P1 | P0 | Core storage identity and signal continuations | locked — infrastructure retained, retry superseded | Typed normal/signal-skip edges and the graph-owned bounded storage service remain the R1 foundation. The original signal-retry edge is superseded by Adrian's approved K04d1 retirement; retained P1 evidence remains historical provenance. Control: [`PERF3-02-C2E2-P1-WORKLIST.md`](PERF3-02-C2E2-P1-WORKLIST.md). |
+| PERF3-02-C2E2-P1A | P1 | Recover storage-analysis assembler cost | complete — A1 retained, A3 rejected | Adrian accepted the bounded disposition on 2026-08-01. A1 demand-driven storage attachment is retained; A3 remains a correct, replayable negative and is removed from production. Exact A1 restoration passes 24/24 focused and 1,972/1,972 broad Debug tests. Control: [`PERF3-02-C2E2-P1A-WORKLIST.md`](PERF3-02-C2E2-P1A-WORKLIST.md); A1 verdict: [`2026-08-01 A1 evidence`](evidence/2026-08-01-perf3-02-c2e2-p1a-first-release-verdict/); A3 verdict: [`2026-08-01 A3 evidence`](evidence/2026-08-01-perf3-02-c2e2-p1a-a3-first-release-verdict/); closeout: [`2026-08-01 closeout`](evidence/2026-08-01-perf3-02-c2e2-p1a-closeout/). |
+| PERF3-02-R1 | P0 | Infrastructure-enabled copy/ownership option re-investigation | complete — C1abc selected | All positive, combined and rejected masks remain replayable in retained evidence; correctness and 156/156 formal timing executions pass for eligible rows. Production contains only C1a+C1b+C1c and passes proportional closeout. Control: [`PERF3-02-R1-WORKLIST.md`](PERF3-02-R1-WORKLIST.md); evidence: [`2026-08-01-perf3-02-r1-repanel`](evidence/2026-08-01-perf3-02-r1-repanel/); closeout: [`2026-08-01-perf3-02-c1abc-closeout`](evidence/2026-08-01-perf3-02-c1abc-closeout/). |
+| PERF3-03 | P1 | Bounded string-to-number conversion review | complete on Apple — C4 v3 retained | Adrian selected and accepted the private locale-aware C4 v3 prefilter. Minimum validation, 212/212 first-verdict executions, 1,972/1,972 full Debug tests, 6/6 focused ASan, complete Release build/install and installed VM smoke 2/2 pass. Base64 improves 4.86%/5.78% and RexxCPS is +2.52%/-0.61% on `rxvm`/`rxbvm`; no cell hits the 3% guard. LSan is unsupported locally and Windows is separately queued. Control: [`PERF3-03-WORKLIST.md`](PERF3-03-WORKLIST.md); first verdict: [`2026-08-01-perf3-03-c4-first-release-verdict`](evidence/2026-08-01-perf3-03-c4-first-release-verdict/); closeout: [`2026-08-01-perf3-03-c4-closeout`](evidence/2026-08-01-perf3-03-c4-closeout/). |
+| PERF3-03-W1 | P1 | C4 v3 Windows/MSVC validation | queued pre-publication gate | No Windows cross-toolchain is installed on the accepted Mac host. Before publication, build both VM variants under MSVC, run focused logic/conversion correctness and confirm material Base64/RexxCPS behavior. Do not reopen C4 design without a correctness or guard failure. |
+| PERF3-04 | P1 | Generic final/concrete scalar accessor proof | queued evidence only | A general proof and hand-equivalent ceiling justify a candidate, or the lead is deferred. |
+| PERF3-05 | P1 | Compiler, native layout and private-stream panel | complete — retain L0 | Adrian accepted the 2026-08-01 panel. Exact C1abc+A1 baseline/drift products match; effective ThinLTO, merged/per-VM PGO and no-flatten layout fail representative or zero-work guards; L4 remains unopened. No production VM change was made. Control: [`PERF3-05-WORKLIST.md`](PERF3-05-WORKLIST.md); evidence: [`2026-08-01-perf3-05-compiler-layout-panel`](evidence/2026-08-01-perf3-05-compiler-layout-panel/). |
+| PERF3-05-B1 | P2 | VM library link interface and static API granularity | queued build/API hygiene | Current Mac links complete in 61-71 ms, so the reported large delay is not reproduced. Export leakage is real but not causal in the isolated relink. Rework should make `crexxsaa` implementation archives/includes private, publish only the supported header/export surface, split the static phase API if narrow clients are supported, and remeasure on the reporting host. Evidence: [`link diagnostic`](evidence/2026-08-01-perf3-05-compiler-layout-panel/link-diagnostic/). |
+| PERF3-06 | P0 | Qualified-deficit closure and Mac scorecard | complete — accepted product scorecard retained | The formal Apple refresh passes 348/348 initial plus 30/30 append executions. Common-five means are 2.453066x/2.285744x versus ooRexx and 0.912280x/0.850054x versus NetRexx. Richards and noisy Base64 remain common deficits; RexxCPS clears parity but not 1.50x, and Towers remains a separate deficit. Control: [`PERF3-06-WORKLIST.md`](PERF3-06-WORKLIST.md); evidence: [`2026-08-04-perf3-06-mac-scorecard`](evidence/2026-08-04-perf3-06-mac-scorecard/). |
+| PERF3-07 | P2 | Capability and lifecycle side lanes | deferred/independent | Each approved product/capability use case has its own scope and does not distort the common benchmark programme. |
+| PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
+| PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
+| PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
+| PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | complete — K04e accepted | Gates 1-6, M01-M06 and K01-K06 are locked. D0.1-D0.5 provide explicit routes, one immutable graph, capability-lazy proofs, sparse transactional rewrites and a 142.7-142.9 MB Parse boundary. D0.6 retains the peephole as the permanent cheap pre-SSA stage and records a standing ownership rule for exact local metadata-proved transformations. Its accepted 100-record bound leaves the exact RexxCPS analysis and image unchanged versus 20 at an approximately 10 ms ordinary assembly cost. K04e restores the hot in-place integer compare/branch fusion through the source's pre-write ValueId and existing SSA-owned liveness, alias, cleanup and TRACE proof, without restoring the tactical rule. It removes one static instruction and exactly 560,000 equal-work dispatches; the 36-pair runtime verdict is noisy/inconclusive with positive point estimates and no guard hit. Broad Debug passes 2,021/2,021. Procedure-length windows remain a retained negative unless sparsity repays scan cost. The future ledger retains RXC-to-RXAS ownership, inlining redesign, hoisting, register work and the bounded region-proof follow-on. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); K04e verdict: [`2026-08-04-perf3-11-k04e-first-release-verdict`](evidence/2026-08-04-perf3-11-k04e-first-release-verdict/); D0.6 verdict: [`2026-08-04-perf3-11-d06-pre-ssa-boundary`](evidence/2026-08-04-perf3-11-d06-pre-ssa-boundary/); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); K06: [`2026-08-03-perf3-11-k06-mechanical-classification`](evidence/2026-08-03-perf3-11-k06-mechanical-classification/); K01: [`2026-08-03-perf3-11-k01-storage-permutation`](evidence/2026-08-03-perf3-11-k01-storage-permutation/); K02/K03: [`2026-08-03-perf3-11-k02-k03-linked-reads`](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/); K04: [`2026-08-03-perf3-11-k04-call-window`](evidence/2026-08-03-perf3-11-k04-call-window/); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
+| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — cursorless RXAS and X1 accepted | Cursorless RXAS is committed locally at `afc0b274f`; all optimizer-visible cursor boundaries are gone, leaving only parser/iterator and VM-private UTF-cache cursors. X1 adds a capability-lazy immutable component-placement proof and atomically removes two of five generated `DCOPY`/`DTOS` sites. Focused RXAS validation passes 78/78 and the opt/no-opt runtime oracle, ordinary Release RexxCPS, Sieve and Base64 pass under both VMs. Fixed-work optimized RexxCPS falls from 53,659,088/53,659,041 to 52,839,051 under `rxvm`/`rxbvm`: -820,037/-819,990 (-1.528235%/-1.528149%). Both VMs remove exactly 820,000 `DCOPY` and 36,080,000 copied bytes while retaining all 2,220,000 `DTOS`; full assembly remains sparse at 0.51 s/134.7 MB. Closeout adds negative/allocation slice coverage and a fail-closed `MKREF` storage-observation guard. Broad Debug passes 2,033/2,034 at parallel 30; the sole 120-second host-load timeout passes isolated in 12.11 seconds, giving 2,034/2,034 functional outcomes. The disturbed-host wall-clock panel remains queued; no push is made. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md), [`PERF3-12A-WORKLIST.md`](PERF3-12A-WORKLIST.md); X1 verdict: [`2026-08-04-perf3-12a-x1-first-release-verdict`](evidence/2026-08-04-perf3-12a-x1-first-release-verdict/); cursorless verdict: [`2026-08-04-perf3-12a-cursorless-first-release-verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/); clause reassessment: [`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/). |
 
-## Execution order
+## Approved execution order
 
-The programme is deliberately evidence-first but not analysis-only:
-
-1. **Batch 0 — closeout:** preserve the initial sweep, establish this register
-   and make no product change. This batch is complete.
-2. **Batch 1 — current truth:** execute PERF2-01, accept the same-session gap
-   ledger and freeze the first candidate panel. No production optimization is
-   selected from July 20/23 cross-session orientation alone.
-3. **Batch 2 — competing PoCs:** time-box quickening, inline cleanup/BIF and the
-   highest-profile VM/value alternative. Compare placement at compiler, RXAS,
-   load and runtime rather than assuming one layer.
-4. **Batch 3 — production slices:** take one accepted mechanism at a time
-   through the mandatory first profiling-off Release verdict. Stop after each
-   verdict for Adrian's direction; do not bury a regression inside a broad
-   batch.
-5. **Batch 4 — benchmark closure:** rerun the full scorecard after accepted
-   slices, select the next largest qualified deficit and guard every existing
-   win.
-6. **Batch 5 — architecture selection:** complete cross-platform VM and build
-   evidence, decide the default execution architecture, and publish the final
-   ooRexx comparison.
+1. **Approve the control plane.** Review PERF3-00 and amend scope, priorities,
+   target bands or transfer dispositions before activity work begins.
+2. **Establish current Mac truth.** PERF3-01 audits every product-affecting
+   change since the accepted Mac scorecard, replays the evidence manifests
+   actually used, and decides exactly which current-HEAD timing/profile cells
+   must be refreshed. It stops with a ranked panel and no production edit.
+3. **Lead with proved work, not subsystem preference.** Unless PERF3-01
+   overturns the retained evidence, PERF3-02 is the first design/PoC activity.
+   It compares compiler, RXAS and runtime ownership for exact copy/value shapes.
+4. **Keep orthogonal risks separate.** PERF3-03 conversion semantics,
+   PERF3-04 accessor proof and PERF3-05 native layout/stream work do not ride
+   inside a copy candidate. Each receives its own entry criterion and stop.
+5. **Apply the mandatory first Release verdict.** After Adrian selects one
+   production candidate, run only the minimum focused correctness needed,
+   freeze implementation, build the ordinary profiling-off Release product,
+   run the smallest decisive paired target plus guards, report and stop.
+6. **Close accepted slices proportionally.** Broad QA, sanitizer,
+   install/package, compatibility and documentation follow only after the
+   first verdict is accepted and in proportion to the changed surface.
+7. **Refresh outcomes deliberately.** PERF3-06 runs the formal Mac scorecard
+   after an accepted group of slices or when a ranking decision requires it,
+   not after every small edit.
+8. **Validate, then select architecture.** PERF3-08 reuses retained Linux and
+   Windows evidence, adds the selected candidate and still-required supported
+   Linux ARM64 lane, and only then recommends the default VM/private stream.
 
 The dependency shape is:
 
 ```text
-PERF2-01 current profiles and same-session comparisons
-├── stable-site census ───────────────> PERF2-02 quickening
-├── inline/call/BIF census ───────────> PERF2-03 ──> PERF2-04
-├── RXSEQ/effects/native profiles ────> PERF2-05 and PERF2-06
-├── copy/frame/conversion counters ───> PERF2-07
-└── capability/equivalence ledger ───> PERF2-08
+PERF3-00 roadmap approval
+└── PERF3-01 current Mac truth and accepted ranking
+    ├── PERF3-02 copy / ownership / attribute storage
+    ├── PERF3-03 conversion contract and ceiling
+    ├── PERF3-04 concrete scalar accessor proof
+    └── PERF3-05 compiler / layout / private stream
 
-PERF2-02 through PERF2-08 accepted slices
-└── PERF2-09 per-benchmark closure ──> PERF2-11 architecture/final scorecard
+accepted independently gated production slices
+└── PERF3-06 formal Mac outcome scorecard
+    └── PERF3-08 Linux x86-64 -> Linux ARM64 -> Windows validation
+        └── default VM / private execution recommendation
+
+PERF3-07 capability lanes remain independent.
+PERF3-09 remains deferred unless the non-JIT economic gate fires.
 ```
 
-### Approved remaining platform sequence — 2026-07-27
+## PERF3-01 — current-HEAD Mac truth gate
 
-Adrian selected a Mac-first completion sequence followed by one physical Intel
-x86-64 machine running Linux and then Windows. The operational order is:
+Started 2026-07-31 at local `develop` commit `3f43a0014`. The resumable
+evidence-only control plane is
+[`PERF3-01-WORKLIST.md`](PERF3-01-WORKLIST.md). No production edit or candidate
+selection is authorized in this activity.
 
-1. **Mac combined PERF2-06/07 slice.** Finish current value/reference,
-   copy/move/clear/conversion/allocation ownership and only the VM/frame questions
-   that those results genuinely require. Do not retry rejected C2/C3 or
-   cleanup-only interpreter shapes. The resumable control plane is
-   [`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md).
-2. **Mac PERF2-08 gate.** Resolve equivalence/capability status before claiming a
-   complete PERF2-09 scorecard. This gate may end in an explicit approved
-   exclusion; it need not manufacture new language work.
-3. **Mac PERF2-09+ first pass.** Run per-benchmark closure, bounded PERF2-10
-   Apple controls and the PERF2-11 Apple pre-handover scorecard. Freeze exact
-   source/product/workload hashes and the remaining deficit/debt ledger.
-4. **Intel Linux handover.** The initial GCC/Clang correctness, sanitizer,
-   baseline, schema-5 and native-counter campaign is complete. Its build cost
-   makes this host a validation authority rather than the primary iteration
-   machine. Use macOS for bounded design/PoCs and rebuild-heavy candidate
-   selection, then return here only for a batched selected candidate,
-   Linux-specific PMU/sanitizer questions or final validation. D01 closes only
-   after retained Apple and later Linux ARM64/Windows lanes reconcile.
-5. **Linux ARM64 coverage.** Gate E still requires supported Linux ARM64
-   correctness/timing evidence. Apple ARM64 is not a substitute. This may be a
-   separate supported host/runner and is a validation lane, not the principal
-   tuning machine.
-6. **Same-machine Windows finish.** Freeze the Linux-selected candidate, boot
-   the same x86-64 hardware into the supported Windows toolchain, and run the
-   final dual-VM correctness, timing, lifecycle, RSS and artifact matrix. A
-   Windows guard failure reopens the cross-platform decision; it does not
-   authorize a Windows-only shortcut.
-
-PERF2-12 remains deferred until the accepted non-JIT programme and final
-cross-platform scorecard show it is economically necessary.
-
-### Intel Linux handback — 2026-07-29
-
-The initial Linux x86-64 campaign meets its explicit sufficiency gate. GCC and
-Clang ordinary Debug/Release pass 1,925/1,925; supported GCC ASan/LSan and the
-bounded exploratory Clang UBSan inventory also pass 1,925/1,925. Formal
-timing/RSS/lifecycle/artifact evidence, full dual-VM GCC schema-5 profiles, a
-bounded dual-VM Clang profile control, 154 non-multiplexed PMU captures and 16
-focused cycle profiles are retained in
-[`2026-07-28-perf2-10-11-intel-linux`](evidence/2026-07-28-perf2-10-11-intel-linux/).
-
-### Windows baseline completion - 2026-07-29
-
-The supported CLion MinGW Windows x86-64 Release product now passes
-1,926/1,926 tests after correcting UTF-8 decoding in six CMake-script tests
-and isolating nine driver/native tests from an inherited stale `CREXX_HOME`.
-No compiler, VM, RXAS or language behavior changed.
-
-The formal same-session Windows scorecard retains dual-VM timing, a governed
-variability append, native child-process peak working set, 20-sample lifecycle
-phases, artifact hashes/sizes and exact ooRexx 5.1.0, Regina 3.9.7, NetRexx
-5.10-GA and Temurin 26.0.1+8 identities. The common-five geometric means are
-2.363219x/1.984737x versus ooRexx and 0.749453x/0.629424x versus decimal
-NetRexx for `rxvm`/`rxbvm`. Richards, Base64, Towers and the separately
-disclosed RexxCPS row remain below ooRexx, so no final superiority or default
-VM claim is made. Evidence:
-[`2026-07-29-perf2-11-windows-x86-64`](evidence/2026-07-29-perf2-11-windows-x86-64/).
-
-No profiling, tuning candidate or rebuild-heavy analysis was performed on the
-Windows host. Gate E remains open for supported Linux ARM64 coverage and the
-later whole-scorecard architecture decision.
-
-### Windows compiler and RexxCPS follow-up - 2026-07-30
-
-A bounded same-session Windows experiment compared MinGW GCC 15.2 and portable
-Clang 22.1.8 `rxvm`/`rxbvm` products at Release `-O3 -DNDEBUG`, profiling off,
-with identical GCC-generated RXBIN/library inputs. The common-five Clang/GCC
-geometric means are 0.989609x for threaded `rxvm` and 1.178044x for switch
-`rxbvm`; RexxCPS itself is 0.968556x/1.029856x. Compiler choice therefore does
-not explain the 31-34% Windows/Linux cREXX RexxCPS rate difference.
-
-The cross-platform review also ran the exact retained macOS/Linux Java 8
-NetRexx class and identical runtime JAR on Windows. It reaches 19,032,852.5
-clauses/s versus 7,980,203.5 in the retained Linux GCC session, excluding the
-Windows ECJ versus Unix `javac` class-generation difference as the main cause.
-The remaining comparator difference belongs to the Windows JVM/OS lane.
-
-No production compiler, VM or optimization was selected and no Windows
-profiling was performed. Clang's workload-specific `rxbvm` gains are a future
-code-layout/dispatch lead for a faster profiling host; Linux remains the
-tuning-control report. Evidence:
-[`2026-07-30-perf2-11-windows-compiler-comparison`](evidence/2026-07-30-perf2-11-windows-compiler-comparison/).
-
-A subsequent target-only MSVC control made `rxbvm` portable under MSVC 19.44
-and reused the exact retained RXBIN/library inputs. In the stable cooldown
-RexxCPS block MSVC is 1.148026x GCC and 1.134453x Clang, but only 0.648559x
-ooRexx. Compiler choice therefore explains part of the Windows ratio without
-closing the comparator or cross-platform gap. The initial post-build block was
-machine-wide noisy, all samples remain retained, and no production MSVC lane
-was selected. Evidence:
-[`2026-07-30-perf2-11-windows-msvc-rxbvm`](evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/).
-
-A supplementary static-CRT (`/MT`) control then improved MSVC `rxbvm` by
-4.9-6.0% over the DLL CRT (`/MD`) across three randomized blocks. The exact
-clean block moved cREXX from 0.645731x to 0.677584x ooRexx and closed only 8.99%
-of the absolute gap. `/MT` remains experimental pending plugin/API allocator
-ownership validation.
-
-No production optimization or compiler/layout option is selected. Richards
-selects general value copying and attribute-storage trimming; Towers selects
-copy/clear/reset/allocation work plus front-end/indirect-branch pressure;
-Base64 selects the large dispatch function and string-copy path. Clang/GCC
-direction reverses by workload, so a future compiler/layout decision requires
-a paired same-session candidate experiment rather than comparing the two
-formal lanes directly. RexxCPS is now present in the Clang schema, native-PMU
-and cycle-sampling controls as well as formal timing; its samples add
-front-end, decimal conversion/formatting and string-movement pressure.
-
-The GCC profile build is the practical stop signal for iteration on this host:
-two concurrent `rxvmintp.c` compiles caused a kernel OOM kill, while the serial
-completion took 1:01:49 and peaked at 15.95 GiB RSS. Retain every build tree and
-profile as an immutable asset. Next perform disposable mechanism ceilings and
-candidate ranking on macOS, batch any selected production edit, apply the
-mandatory first ordinary Release verdict there, and return to Linux only after
-Adrian accepts that verdict.
-
-## PERF2-01 — current baseline and attribution refresh
+Evidence collection is complete and Adrian accepted it on 2026-07-31. Clean current
+Release timing records a common-five `2.139811x/1.818954x` versus ooRexx and
+`0.779920x/0.662974x` versus decimal NetRexx for `rxvm`/`rxbvm`. Richards
+remains the dominant common deficit; current deterministic counts plus retained
+Linux native attribution keep PERF3-02 first. The evidence panel ranks
+PERF3-05 second, PERF3-03 third and keeps PERF3-04 evidence-gated. See the
+[`decision summary`](evidence/2026-07-31-perf3-01-current-mac/decision-summary.md).
 
 ### Question
 
-After NR-14 through NR-27, what actually consumes time and machine work in
-each benchmark at current HEAD, and what is the exact same-session gap to
-ooRexx?
-
-Older profiles remain valuable historical controls, but the accepted parse,
-stem, TRACE/ADDRESS, direct-call and flow changes are large enough that they
-cannot rank the next production work.
-
-### Capture plan
-
-1. Freeze a clean exact commit and exact compiler, library, RXBIN and VM hashes.
-2. Build an ordinary profiling-off Release product for timing authority and a
-   separate optimized profiling build. Record compiler flags and confirm that
-   `CREXX_VM_PROFILING=OFF` is real, not a runtime-disabled instrumented build.
-3. Run all 11 optimized Tier A steady-state workloads in both `rxvm` and
-   `rxbvm`, serially, with the existing correctness, warmup, recorded-sample,
-   rotation, append and noise rules. Retain lifecycle and RSS as separate
-   results.
-4. In the same session, rerun all five qualified common cells for cREXX,
-   ooRexx and decimal NetRexx. Capture canonical Classic RexxCPS for ooRexx,
-   Regina and NetRexx, and report cREXX's disclosed 2.2d adaptation separately.
-   RexxCPS never enters the common aggregate. Retain qualified lifecycle, RSS
-   and artifact-size lanes separately, and record runtime versions rather than
-   inheriting the July 20 labels.
-5. Capture optimized diagnostic profiles for all 11 workloads in both VM
-   modes. Use no-opt only as attribution: all 11 if affordable, otherwise at
-   minimum RexxCPS, Bounce, Richards, Base64 and one already-winning control.
-6. Capture RXSEQ N=2/3/4 from exact images and module sets in both VM modes.
-   Treat straight-line windows as candidate evidence, not as loop- or
-   semantic-unit truth; calls and taken branches terminate current windows.
-7. Run native system sampling/counters on the uninstrumented product: cycles,
-   retired instructions, branches/misses, instruction-cache/iTLB evidence and
-   sampled/annotated hot stacks where the host supports them. Cover the full
-   portfolio once and repeat the largest gaps and noisy hotspots.
-8. Produce one dossier per workload and one cross-workload mechanism census.
-
-### Required telemetry
-
-Schema 4 already provides opcode, transition, procedure, call, frame,
-allocation and RXSEQ evidence. The refresh must also provide deterministic,
-counts-first attribution for the missing domains below. Extend profiling only
-where existing data cannot answer the question, and keep instrumentation edits
-separate from product optimization.
-
-| Domain | Required observation |
-| --- | --- |
-| Values | copy, typed copy, move, clear, reset and destroy counts by payload shape and bytes |
-| Representations | string/numeric/decimal conversion, materialization, normalization and retained-cache hit/miss counts |
-| Calls/frames | fresh/reused frame, local reset work, argument/result copies, interrupt-state inheritance and numeric-context synchronization |
-| Sites | static site identity, observed types/targets, cache hits/misses, generation and invalidation |
-| Control | branch taken/fallthrough, loop-backedge counts and exceptional exits |
-| Strings/binary | scan/slice/append/access counts and bytes, including native temporary conversion buffers where observable |
-| Loader | link/bind, execution-image copy/preparation, plugin initialization, first execution and teardown phases |
-| Compiler artifacts | static instructions, operands/cells, RXAS/RXBIN bytes, locals/register ceiling, inline sites and rejection reasons |
-
-A counts-only profile mode is preferred for full-portfolio census. Per-opcode
-clock reads and profile elapsed time remain diagnostic; ordinary Release timing
-is authoritative.
-
-The added fields require a versioned profiling-schema revision (schema 5 or an
-explicit equivalent), stable row/field definitions, per-domain
-overflow/degraded status, backward handling of schema 4, updated evidence
-summarizers and profiling documentation, and focused CTest coverage. Prove that
-the ordinary `CREXX_VM_PROFILING=OFF` generated path remains compile-time
-empty. Counts-only output never becomes product timing evidence.
-
-For Bounce, Richards, Storage and any selected allocation outlier, complement
-VM request counters with targeted system heap/allocation profiles: alloc/free
-counts, retained and high-water bytes, size classes, reuse and allocator call
-stacks. Keep system lifetime evidence distinct from VM allocation-request
-counters and RSS.
-
-### RexxCPS family controls
-
-Retain cREXX 2.2d's disclosed 100 × 100 adaptation as the published cREXX
-diagnostic score; ooRexx, Regina and NetRexx retain the canonical Classic
-external workload where qualified. Add exact-hash cREXX diagnostic variants
-that remove or replace one timed family at a time—BIFs, internal
-calls/argument parsing, TRACE/ADDRESS, stems, decimal/string loops and PARSE—to
-estimate attributable ceilings. These controls must preserve nominal
-clause-accounting provenance and never replace either published form.
-
-### Deliverables and exit
-
-- a checksum-closed evidence bundle;
-- an updated
-  [`benchmark-median-summary.md`](evidence/benchmark-median-summary.md) that
-  includes the current checkpoint and same-session external run;
-- a per-benchmark gap ledger with cREXX/ooRexx ratio and gain-to-target;
-- top procedure/opcode/transition/native-stack tables;
-- call/frame, copy/conversion, allocation/RSS, BIF and site-stability tables;
-- an explicit mechanism footprint and owner decision for every candidate that
-  enters Batch 2; and
-- no degraded/overflowed profile accepted without a named limitation.
-
-PERF2-01 completes only when Adrian accepts the refreshed ledger as the
-selection baseline. It does not itself authorize a production change.
-
-Gate A was accepted by Adrian on 2026-07-23. The accepted selection baseline is
-`performance/evidence/2026-07-23-perf2-01-current-baseline/`; that acceptance
-does not authorize a PERF2-02 implementation or any other production change.
-
-## PERF2-02 — stable-site semantic quickening
-
-Started and completed its bounded design/PoC exit on 2026-07-23. Adrian
-approved the exact Q3b production slice, then accepted its favorable mandatory
-first Release verdict on 2026-07-24. Broad QA and closeout are complete. The
-resumable control plane is
-[`PERF2-02-WORKLIST.md`](PERF2-02-WORKLIST.md), and the pre-implementation
-semantic/design comparison is
-[`PERF2-02-ARCHITECTURE.md`](PERF2-02-ARCHITECTURE.md). No stateful quickener
-was selected; the accepted direct reference path retains no learned site state,
-public format change or invalidation lifecycle.
-
-### Bounded PoC result
-
-The final identical-guard control makes runtime site state unnecessary. The
-zero-state canonical-handler Q3b reduces Bounce elapsed time by
-80.261%/78.503% (`rxvm`/`rxbvm`), beats eager Q4 by 7.584% in `rxvm`, and is
-tied with it in `rxbvm`. Q7 is tied on Bounce, neutral on Richards, adds
-56,264/62,536 requested state bytes and retains lifecycle gaps. The one
-PERF2-02 recommendation is **direct value/reference helper work belongs first
-in PERF2-07/PERF2-06**. Richards' separate Q1 control reduces elapsed by about
-24% and assigns its removable receiver capture to the compiler/inliner.
-
-The smallest proposed slice is the exact A-LOCAL/A-ATTR guard in canonical
-`MKREF_REG_REG`, with no persistent state or public change. Adrian approved
-that slice on 2026-07-24. The first production verdict retains 12 `rxvm` pairs
-and 22 `rxbvm` pairs after the required noise append: paired elapsed medians are
--80.596%/-78.464%, every pair is favorable and both mean 95% intervals are
-wholly favorable. Full Debug, ordinary Release and supported macOS ASan CTest
-each pass 1907/1907, and the isolated installed tree passes native compilation
-plus retained pre-change RXBIN execution in both VMs.
-
-### Priority and scope
-
-Quickening is the first architecture priority after PERF2-01. Here it means a
-guarded private execution form that remembers a semantic decision stable at a
-particular site. It does not mean merely joining adjacent opcodes or replacing
-computed-goto dispatch.
-
-cREXX has unusually good substrate for this work:
-
-- canonical RXBIN remains immutable and re-linkable;
-- both VM modes already own a process-local execution-image copy;
-- stable direct calls already bind process-local `proc_runtime *` operands;
-- graph/member/provider generations and existing method/factory site caches
-  supply relevant invalidation experience; and
-- late-load refresh, source metadata, profiling and two execution modes already
-  provide the boundary conditions a quickener must respect.
-
-### Candidate selection
-
-PERF2-01 must identify the sites. Candidate families, in likely evaluation
-order, are:
-
-1. residual stable BIF or small-helper sites that cannot be removed statically,
-   selected only after the relevant PERF2-03/04 cleaned-inline ceiling;
-2. generic type/conversion operations with a strongly stable observed shape;
-3. dynamic selector, member, factory or call sites not already closed by direct
-   binding or the existing site caches;
-4. validation or prepared-plan objects whose process representation is cheaper
-   than repeating the semantic setup; and
-5. profile-selected semantic sequences whose decisive fact is not known to the
-   compiler, assembler or linker.
-
-Indexed local-variable access, direct static calls and already-frozen PARSE do
-not become quickening work merely because competitors cache them; cREXX has
-already moved those facts earlier.
-
-### PoC panel
-
-For each candidate semantic unit compare the same exact workload and fallback:
-
-| Variant | Placement | Purpose |
-| --- | --- | --- |
-| Q0 | current canonical path | baseline and full semantic fallback |
-| Q1 | compiler-owned result-only lowering | machine ceiling when compiler proof makes intermediate temporaries unobservable |
-| Q2 | assembler-visible static RXAS lowering/rule | public authored-sequence control with every observable intermediate effect |
-| Q3 | canonical runtime-only bytecode form | test a stable portable VM form without automatically exposing authored RXAS syntax |
-| Q4 | eager load/preparation specialization | cost/benefit when process facts are known before execution |
-| Q5 | lazy first-hit specialization | avoid preparing cold sites and measure first-hit cost |
-| Q6 | guarded threshold/tiered specialization | test whether observed stability/hotness justifies mutation |
-
-Private quickened forms should be prototyped before assigning canonical opcode
-numbers. Placement decisions distinguish a private form, compiler-owned
-result-only lowering, a canonical runtime-only bytecode form and an
-assembler-visible public RXAS instruction. Authored RXAS fusion must preserve
-observable intermediate effects; a compiler-owned result-only form may omit an
-intermediate temporary only when compiler proof makes it unobservable. Public
-RXAS is considered only when authored assembly benefits and the static form
-beats private specialization without losing compatibility.
-
-### Architectural requirements
-
-- Quickened state belongs to the process-local image or an explicit
-  process-owned side table, never serialized handler pointers or mutated
-  canonical RXBIN.
-- The guard must encode the smallest fact that proves the fast path: type,
-  target, generation, representation or context. A miss executes the complete
-  semantic fallback and updates, replaces or disables the site according to a
-  documented state machine.
-- Preparation and mutation must be safe for the actual VM/process concurrency
-  model; do not assume a single writer without proof.
-- Dequickening or refresh must cover late load/provider generation change,
-  dynamic mutation, TRACE/debug/source stepping, signals/unwind, plugin/native
-  boundaries and any semantic context used by the specialization.
-- Cold `prepare_only`/`rxvm_prepare()` must not learn execution-only facts.
-  Quickened state must be proved valid or reset across a later `run()`, repeated
-  runs on one context, embedded/RXVML entry and changes of TRACE, debug or
-  profiling mode. Cover prepare-only, re-entry and late-load fixtures in both
-  VM modes.
-- `rxvm` quickening must preserve the computed-goto label-owner invariant:
-  `run()` currently owns the threaded labels through `RXVM_LABEL_OWNER`
-  (`noinline`/`noclone`). Keep that single stable owner or prove an equivalent,
-  and test prepared handler addresses under every supported compiler/configuration.
-- A fused private form must preserve every canonical exception, retirement,
-  interrupt-poll, TRACE/breakpoint and profiler boundary. If equivalence at an
-  intermediate boundary cannot be proved, dequick/de-fuse before execution;
-  fusion must not silently reduce delivery or observation points.
-- Profiling and RXSEQ must retain canonical opcode/site identity while also
-  exposing quickened state, hits, misses, replacements and invalidations.
-- `rxvm` and `rxbvm` must implement the same semantics. Different private
-  layouts are allowed only when the evidence explains the difference.
-- Startup, load-first-result, RSS, private-image size and cold-site preparation
-  are measured alongside steady-state throughput.
-
-### Adoption and exit
-
-A quickened candidate advances only when:
-
-1. PERF2-01 shows a repeated semantic cost and site stability;
-2. the variant beats the current path in an ordinary profiling-off Release
-   comparison; it also beats the best safe static form when one exists, or
-   documents why no static form can consume the runtime fact;
-3. the complete-product result is clearly favorable on a target workload or
-   the common aggregate, with no unexplained portfolio guard;
-4. invalidation, fallback, TRACE/source, signal, late-load and dual-VM fixtures
-   pass; and
-5. the code/image/RSS/startup trade-off is explicit.
-
-The first PERF2-02 deliverable is an approved quickening design and a bounded
-PoC panel, not a broad opcode family. The first production slice then follows
-the mandatory first Release verdict and remains provisional until Adrian
-accepts it. BIF/helper quickening additionally waits for the PERF2-03/04 cleaned
-static ceiling so it cannot pre-empt the inlining-first policy.
-
-## PERF2-03 — flow-aware inlining 2.0
-
-Status: **complete** — closed 2026-07-25 after the accepted Slice 5 production
-commit `d1c5245d4` and documentation closeout.
-
-Adrian approved H and production slices 1-4 with QA and an independent commit
-after each, then authorized slice 5 on 2026-07-24. Slice 1's receiver
-transaction and slice 3's gated scalar/result cleanup are favorable; slice 2's
-gate infrastructure is byte-identical parity. Slice 4 adds body-reconstructed
-I6 callable summaries and opens the proved imported read-only scalar binding
-case while retaining missing/old/contradictory evidence on the normal call
-path. Its Richards program image is exactly slice-3-identical and its timing
-verdict is neutral, so the accepted slice-3 gain remains cumulative without an
-additive slice-4 claim. Slice 5 adds mathematically proved same-register
-receiver placement and exact reference-attribute accessors while every
-unproved alias, lifetime or cleanup case retains the existing materialized
-path. Removing the 3,820,600 dynamic List `next()` calls reduces profiling-off
-Release median elapsed by 52.818%/53.212% on `rxvm`/`rxbvm`; all other guarded
-workloads and the linked library are byte-identical to the immediate baseline.
-Final slice-5 Debug QA is 1,915/1,915. See `PERF2-03-WORKLIST.md` and the
-retained `production/slice-5.md` evidence.
-
-### Current evidence
-
-Inlining still runs before the whole-program typed flow pass, so that pass sees
-the expanded tree. Architecture H now supplies versioned local/imported
-pre-inline summaries and a detached per-candidate profitability/fallback gate.
-I6 readers reconstruct formal read/write/escape, result/context and cost facts
-from the transported body, compare the result with the independently parsed
-declaration, and fail closed on missing, old, malformed or contradictory
-evidence. Candidate-local cleanup can coalesce the currently proved scalar and
-result cases. Slice 5 also admits only fully proved direct local receiver
-placement and exact reference-attribute getters/setters. Broader
-reference/object ownership/last-use and block-expression equivalence remain
-explicit fail-closed proof boundaries.
-
-The retained NR-12/21 comparison found a small helper at 16 instructions after
-inlining versus 13 in the hand-equivalent lowering, with two extra copies, one
-extra branch/register and 412 extra RXAS bytes. A literal case remained nine
-instructions versus three manually. This is concrete evidence that frame
-removal and semantic inlining are not enough without cleanup.
-
-### Stage A — current inline census and cost model
-
-For every hot or size-significant inline site, record:
-
-- callee identity, imported/local body, call arity and execution count;
-- eligibility/rejection reason and structural node size;
-- call versus inline versus hand-equivalent dynamic instructions;
-- formal/default/result copies, branches, temporaries and initialization;
-- maximum locals/registers, temporary footprint and call-window effect;
-- RXAS, standalone RXBIN and linked-image bytes; and
-- complete-product timing contribution where measurable.
-
-The output is a ranked panel with explicit `inline`, `do not inline` and
-`cleanup required` cases. Code size and register pressure are part of the cost
-model, not after-the-fact caveats.
-
-### Stage B — analysis architecture
-
-Compare a small set of coherent designs:
-
-1. lightweight pre-inline callee summaries for mutability, escape, return and
-   block-result behavior, followed by the existing post-inline full analysis;
-2. clone first, then extend NR-26 facts over formal bindings, block results,
-   compiler temporaries and inline exits before final lowering; and
-3. a bounded fixed point in which accepted cleanup exposes constants/dead
-   paths, without repeatedly cloning or destabilizing source identity.
-
-The design should make analysis facts explicit rather than matching one AST
-shape. Handwritten RXAS remains RXAS's responsibility; no compiler-only
-annotation is required for ordinary machine cleanup. Every structural rewrite
-must either preserve a declared set of flow facts or invalidate and rebuild the
-CFG/def-use overlay before another transform or final emission. Because current
-inlining is destructive, make the profitability decision before irreversible
-cloning or retain an untouched original call tree that can be emitted when the
-cleaned inline loses.
-
-### Initial transformation panel
-
-- direct formal binding for proved read-only actual/formal pairs;
-- dead formal/default initialization removal;
-- constant propagation through formal bindings and inline block results;
-- formal-to-result or return-result placement only with separate block-result
-  equivalence, no harmful aliasing and exact return/cleanup ownership proof;
-- dead inline-exit, block-result, branch and temporary removal;
-- join-safe copy propagation and last-use moves where ownership is proved; and
-- one final profitability check after cleanup, with a non-inline fallback when
-  expansion still loses.
-
-### Correctness boundaries
-
-The fixture matrix must cover writable by-value isolation, `.ref`, optional
-and default arguments, omitted/status arguments, repeated actuals, aliasing,
-returns, joins, zero-trip loops, recursion, signals/unwind, inherited numeric
-context, TRACE/source identity, imported inline metadata and optimized/no-opt
-behavior. Register lifetime must be verified from the final typed instruction
-stream.
-
-### Exit
-
-PERF2-03 completes when accepted inline fixtures contain no avoidable
-formal/result copy, initialization, branch or compiler temporary; the output
-approaches the hand-equivalent instruction/register/image footprint; a measured
-profitability policy rejects losing sites; and a target workload confirms value
-beyond static instruction reduction in the smallest decisive profiling-off
-Release verdict. Report that verdict and stop for Adrian's acceptance before a
-full-portfolio Release refresh.
-
-That exit is satisfied. Architecture H supplies the detached fallback and
-profitability decision, the accepted slices remove the proved receiver/formal/
-result overhead, and Slice 5 supplies the decisive end-to-end target result.
-The broad Debug closeout is green and the retained evidence is checksum-closed.
-No full-portfolio Release refresh is required to close PERF2-03; later portfolio
-campaigns apply the standing governance rules to the cumulative accepted
-product.
-
-### Successor proof ledger
-
-These are future evidence routes, not incomplete PERF2-03 deliverables. Each
-candidate site continues on the ordinary proven path until the named evidence
-exists; no construct family is permanently excluded.
-
-| ID | Future point | Evidence required to reopen | Route / disposition |
-| --- | --- | --- | --- |
-| PERF2-03-F01 | Residual scaffold around exact reference-attribute accessors, including the observed seven additional static general copies | A current profile must show that scaffold or image pressure is material after the accepted greater-than-52% List win, plus an exact direct-attribute semantic ceiling | Route reference/value ownership to PERF2-07; do not reopen solely to make the RXAS shorter. |
-| PERF2-03-F02 | Broader reference/object ownership, escape and last-use placement | Per-site alias, lifetime, cleanup, unwind and observation proof with positive and negative CTests | Route to PERF2-07 or a later compiler-analysis successor selected by evidence. |
-| PERF2-03-F03 | Remaining formal, block-result, inline-exit or temporary cleanup | A current hot candidate whose cleaned RXAS still loses materially to its hand-equivalent ceiling | Admit as a bounded companion to the selecting activity, especially PERF2-04; do not restart blanket inliner cleanup. |
-| PERF2-03-F04 | Dynamic vararg indexing, generated association transport and assembler alias/effect facts | Exact locator/liveness/effect reconstruction and a measured multi-site deficit | Route compiler facts to a later analysis slice and semantic instruction work to PERF2-05. |
-| PERF2-03-F05 | Future I6 summary fields or newly trusted body facts | Independent declaration/body reconstruction, exact producer/consumer comparison and a review-derived contradictory-evidence CTest | Standing requirement owned by the change that consumes the new fact. |
-| PERF2-03-F06 | Statically resolved concrete/final scalar accessors retain direct calls, receiver initialization and attribute link/unlink instead of approaching direct typed-memory cost | CRI-13 C measures f32/i64 wrapper reads at 4.56x--5.10x raw B and writes at 2.41x--3.67x across both VMs. Reopen only with a generic semantic proof covering initialization, receiver identity, writable ownership, signals, source/debug identity and a hand-equivalent ceiling. | **Queued evidence only; not active.** Do not add JSON/vector-specific opcodes or members. Evidence: [`CRI-13 C verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-C-CLASS-RELEASE-VERDICT.md). |
-
-## PERF2-04 — inlining-first core Level B BIF campaign
-
-Status: **complete — accepted ladder closed 2026-07-26**. The exact-current
-census, semantic/machine panel and bounded
-controls are complete from documentation-only closeout HEAD `6567f0ba2`, whose
-exact accepted production parent is `d1c5245d4`. The resumable control plane
-and full decision package are [`PERF2-04-WORKLIST.md`](PERF2-04-WORKLIST.md).
-Older PERF2-01 profiles remain orientation evidence and do not replace the
-current BIF ranking.
-
-Adrian approved the compiler ladder on 2026-07-25: P04-CAS1 (`UPPER` through
-general classified assembler-effect/read-only-exposed binding and constant
-result), P04-SLC1 (general certified-call evaluation, initially `UPPER` and
-proved-domain `SUBSTR`), the P04-CEX1 certificate expansion (`LENGTH`, `LEFT`,
-`RIGHT`, `LOWER`), then P04-WRD1 (`WORD` certified constant evaluation plus
-ordinary consumer folding). The original three timed families' combined
-exact-site ceiling improves RexxCPS by 32.878%/34.400% and removes 46.52% of
-normalized instructions. LEN-H1 is neutral; the Base64 algorithm result routes
-to CAP-03.
-
-P04-CAS1, P04-SLC1 and P04-CEX1 have favorable accepted first verdicts.
-P04-WRD1's frozen provisional first ordinary Release verdict is also
-favorable: the exact timed word path disappears, executable RXAS falls by 68,
-and RexxCPS improves by 7.650234%/8.812155% on `rxvm`/`rxbvm`. All 18
-invocations pass, relative MAD is 0.881617%/0.547875%, and neither cell requests
-a rerun. Adrian accepted this verdict on 2026-07-26. The complete accepted
-ladder is production commit `f8f34092e`; focused affected-surface QA is 24/24
-and final broad Debug QA is 1,919/1,919. The retained bundle is checksum-closed.
-No full formal portfolio or push was performed.
-
-### Objective
-
-Make the hot, bootstrap-safe Level B BIF surface execute as the simplest
-semantic machine path while retaining the maintainable Level B source as the
-complete fallback and documentation of behavior.
-
-The component catalogue identifies a measured Level B bootstrap closure rather
-than “make every function native.” PERF2-04's completed exact library
-callable/module inventory is ranked by current product calls, phase and machine
-work. Known RexxCPS timed controls are `LENGTH`, `SUBSTR` and `WORD`;
-formatting BIFs outside its timed kernel are not RexxCPS causes.
-
-### Per-BIF ladder
-
-Every candidate moves through the same ladder:
-
-1. **Clean source inline:** compile the current Level B body with PERF2-03
-   cleanup and existing primitives.
-2. **Hand-equivalent ceiling:** express the simplest known semantically correct
-   lowering to quantify remaining scaffold/scan/copy cost.
-3. **Best Level B algorithm:** remove repeated scans, materialization or other
-   avoidable source-algorithm work while keeping the complete semantic body.
-4. **Compiler lowering/composition:** use existing primitives when proved call,
-   value, range or consumer facts can reach the machine ceiling.
-5. **General assist control:** prototype one narrow RXAS/VM semantic kernel only
-   if cleaned source cannot reach the ceiling.
-6. **Native/intrinsic control:** use a direct runtime implementation to bound
-   overhead, not as the automatic production answer.
-7. **Placement decision:** choose Level B inline, compiler lowering, public
-   RXAS assist or private quickening using the shared PERF2-02/05 gate.
-
-### Seed panel
-
-| BIF/family | First question | Possible assist only after cleanup evidence |
-| --- | --- | --- |
-| `LENGTH` | Can result initialization/copy scaffolding around existing `strlen` disappear completely? | None initially. |
-| `SUBSTR`, `LEFT`, `RIGHT` | What remains after validation, optional/padding and result cleanup? | Non-mutating codepoint slice/span operation. |
-| `WORD`, `WORDS`, `WORDPOS` | Is repeated scanning/cursor/slice setup dominant across workloads? | General word-span/count/extract plan or assist. |
-| `POS` and related search | Does the current primitive already dominate, or does wrapper/setup remain? | General codepoint search only if reused. |
-| typed conversion BIFs | Are representation crossings still material after NUMERIC-01? | Representation-preserving conversion path, preferably private until stable. |
-
-The final panel is selected from current profiles, not frozen by this seed.
-
-### Semantic and adoption gates
-
-Preserve validation and signals, Unicode/codepoint behavior, 1-based indexing,
-padding, optional/default/status semantics, numeric context, empty/boundary
-cases, references and TRACE/source behavior. Test direct, imported inline,
-unoptimized and both-VM forms.
-
-A new assist advances only if it is general beyond one benchmark, occurs at
-multiple static/product sites, beats the fully cleaned inline form, reduces
-machine work, and is demonstrably better as public RXAS than a compiler-owned
-combination or private quickened form. A BIF may complete with no new opcode.
-
-## PERF2-05 — RXAS semantic assists and instruction improvement
-
-Status: **complete — accepted production ladder closed 2026-07-26**.
-Adrian accepted P05-CF1's favorable first ordinary Release verdict on
-2026-07-26 because the body-driven design optimizes ordinary user-written and
-future functions without a BIF registry. `LENGTH`, `SUBSTR` and `WORD` all
-reach their constant ceilings from unregistered Level B bodies; existing
-PERF2-04 selected output remains RXAS-identical. The completed slice adds
-bounded body evaluation plus exact opcode cursor/evaluator metadata without a
-public RXAS/RXBIN/ABI or VM-semantic change. Review-derived scalar-result,
-callable-scope and procedure-level `EXPOSE` fences are installed; final Debug
-QA is 1,920/1,920, focused Release QA is 6/6 plus metadata, and the final
-generated decision cell is byte-identical to the accepted timed candidate.
-Closeout evidence is retained under
-[`2026-07-26-perf2-05-generic-partial-evaluation/`](evidence/2026-07-26-perf2-05-generic-partial-evaluation/).
-The resumable control plane is
-[`PERF2-05-WORKLIST.md`](PERF2-05-WORKLIST.md). Adrian approved the bounded
-order on 2026-07-26: prove generic evaluation with `LENGTH`, prove useful
-composition with `SUBSTR`, audit and lock cursor/effect contracts, then require
-certified and equivalent user-written `WORD` bodies as the acceptance case.
-The design objective is that user-written and future functions receive the
-optimization without adding BIF-specific evaluator cases. The existing
-PERF2-04 evaluator remains the comparison oracle until equivalence is proved;
-no public RXAS/RXBIN or legacy cursor-semantic change is selected by this
-approval.
-
-The post-P05 P05-SA1 refresh is retained under
-[`2026-07-26-perf2-05-semantic-assist-panel/`](evidence/2026-07-26-perf2-05-semantic-assist-panel/).
-It confirms that the List benchmark's weak/arena-owned references permit a
-narrow **descriptor** materialization without materializing or owning the
-target object. The direct descriptor-copy ceiling improves the selected List
-cell by 6.173%/6.154% on `rxvm`/`rxbvm`; exact relink independently improves it
-by 2.253%/1.623%. Both pass focused dual-VM semantics and exact instruction
-reduction. Their combined ceiling is favorable, but the recommended production
-rungs remain separate. The scalar `ICOPY; BR` control is neutral because its
-timing is noisy and VM-dependent.
-
-The placement recommendation was compiler/RXAS proof for eligibility, TRACE
-and fallback, with private execution only where needed and canonical RXBIN
-unchanged. At that selection stop no public opcode or production edit had been
-selected; Adrian's subsequent decision is recorded below.
-
-Adrian accepted recommendations 1-4 on 2026-07-26: R2a first, R1a second as a
-separate rung, exact canonical-sequence eligibility with private execution, and
-no public RXAS/RXBIN change. The mandatory R2a first Release verdict is
-favorable: work-100 List improves by a paired median 2.731%/1.745% on
-`rxvm`/`rxbvm`, with wholly favorable mean 95% intervals and no absolute-cell
-noise rerun. Focused dual-VM and compiler/import/no-opt correctness pass.
-R2b is deferred because both the scratch ceiling and R2a retain canonical
-`copy_value`; the remaining ceiling gap does not isolate payload-copy cost.
-Evidence is retained under
-[`2026-07-26-perf2-05-r2a-first-release-verdict/`](evidence/2026-07-26-perf2-05-r2a-first-release-verdict/).
-Adrian accepted R2a on 2026-07-26. Its full Debug and ordinary profiling-off
-Release products build, and both broad CTest configurations pass 1,922/1,922.
-R2a is closed green. R2b remains deferred because it lacks separate cost
-attribution and shape/lifetime proof; it was not selected or implemented. At
-that closeout, R1a remained the next independently revertable rung and had not
-started, so the broader PERF2-05 activity remained in progress.
-
-Adrian authorized the separate R1a production slice on 2026-07-26. It targets
-only exact adjacent `UNLINK destination; LINKREF destination,source` shapes,
-preserves unlink-before-validation failure state, and keeps public RXAS plus
-canonical RXBIN unchanged through a process-local private execution form. The
-accepted R2a ordinary Release product is preserved as the comparison baseline.
-R1a must stop after focused correctness and its own smallest decisive first
-Release verdict; broad QA, closeout, R2b and B1 remain outside that gate.
-
-The corrected R1a product passes 12/12 focused core/reference/TRACE checks,
-49/49 compiler/import/optimized/no-opt checks and its fresh Release dual-VM
-guard 2/2. Its exact-input List verdict reached the governed 36-pair cap:
-`rxvm` is `-1.151991%` paired median with 32/36 favorable pairs and a
-`[-2.337441%, -0.187062%]` mean 95% interval; `rxbvm` is `-3.022743%` with
-36/36 favorable and a `[-3.204016%, -2.814217%]` interval. Both are clear
-favorable, so the recommendation is to accept R1a for closeout. Evidence is
-retained under
-`performance/evidence/2026-07-26-perf2-05-r1a-first-release-verdict/`.
-Adrian accepted R1a on 2026-07-26. The full Debug and ordinary profiling-off
-Release products rebuild, the 12-test core/reference/TRACE and 49-test
-compiler/import/optimized/no-opt sets pass in each configuration, and broad
-CTest passes 1,924/1,924 in both configurations. R1a is closed green. In line
-with the bounded closeout path, sanitizer, install/package, cross-platform,
-expanded-portfolio and repeated-baseline work were not added.
-
-Accepted P05-CF1, R2a and R1a complete PERF2-05. The final production result
-uses compiler composition plus exact private execution-image forms; it adds no
-public RXAS instruction and changes no canonical RXBIN or ABI contract. The
-neutral and deferred opportunities remain explicitly governed below and do
-not keep the activity open.
-
-| ID | Future point | Evidence required to reopen | Route / disposition |
-| --- | --- | --- | --- |
-| PERF2-05-F01 | R2b payload-only reference-descriptor copy | A fresh post-R2a profile must attribute material residual cost to canonical `copy_value`, followed by mechanical destination-cleanup, cell retain/release, identity, representation and invalidation proof | Route ownership/value work to PERF2-07; do not infer benefit from the older public ceiling gap. |
-| PERF2-05-F02 | Neutral `ICOPY; BR`/B1 result forwarding | A compiler-owned result-forwarding PoC must be mathematically equivalent, reduce work and show stable benefit on multiple workloads in both VMs | Route to the selecting compiler/flow activity; do not reopen as frequency-only fusion. |
-
-Final R1a evidence is retained under
-[`2026-07-26-perf2-05-r1a-first-release-verdict/`](evidence/2026-07-26-perf2-05-r1a-first-release-verdict/).
-
-### Starting point
-
-NR-09 and NR-18/27 established the machinery: arbitrary operand signatures,
-opcode effects, compiler exact-template combination, RXAS local and
-whole-procedure flow, dual-VM support and RXSEQ evidence. The broad NR-09 batch
-also showed the risk: many legal wide forms were neutral or were withdrawn,
-while the accepted complete product gained only about 1.4%/2.9% RexxCPS.
-
-The next RXAS programme therefore targets **semantic units**, not operand
-count or mnemonic volume.
-
-### Candidate generation and placement
-
-1. Refresh N=2/3/4 RXSEQ across all current images and both VMs.
-2. Rank sequences using dynamic executions, static sites, distinct modules,
-   retired-instruction reduction and native profile footprint. Do not add
-   overlapping sequence counts as though they were independent savings.
-3. Prove effects, liveness, alias/reference behavior, intermediate-write
-   observability, signal/throw order, TRACE anchors and register pressure.
-4. Compare distinct owners/forms: compiler-owned result-only lowering, RXAS
-   effect-clean authored rule, canonical runtime-only bytecode, private
-   quickened form and assembler-visible public RXAS instruction.
-5. Prototype candidates as a bounded panel with exact mathematical correctness
-   and instruction-reduction gates before formal timing.
-
-Likely sources are PERF2-04 string/word kernels, PERF2-03 result placement,
-PERF2-07 payload-aware copy/conversion work and PERF2-02 stable private forms.
-Legacy `FDIVSUB`, `ILOADSETUNLINKN` and deferred propagation ideas remain
-inspection candidates only when the new profile selects them.
-
-### Public-form gate
-
-A canonical instruction must:
-
-- have a coherent, documented semantic contract independent of one compiler
-  template;
-- preserve all intermediate effects that language/RXAS authors can observe
-  when the form is assembler-visible; compiler-owned result-only and
-  runtime-only forms require their separately proved contract;
-- reduce exact machine work in representative linked products with no
-  instruction growth elsewhere;
-- win ordinary Release time clearly in the selected/default VM and remain
-  within accepted regression guards in the other, without unacceptable image,
-  handler or instruction-cache growth;
-- have complete mechanical opcode effects, assembler/linker/disassembler
-  round-trip where public, profiling/RXSEQ visibility and an explicit
-  public-source versus runtime-only classification;
-- retain old-RXBIN execution and new-feature gating as required; and
-- receive Adrian's explicit ISA/RXBIN approval before production assignment.
-
-Otherwise retain the optimization in the earliest private layer that owns the
-facts, or reject it with evidence.
-
-## PERF2-06 — VM execution-engine programme
-
-Activity start (2026-07-26): exact `develop` HEAD `e7090198e` was verified six
-commits ahead of `origin/develop` with a clean worktree. The five accepted
-PERF2-01/02/05 evidence manifests actually used replayed successfully. The
-resumable control plane is [`PERF2-06-WORKLIST.md`](PERF2-06-WORKLIST.md).
-Production installation remains blocked until the complete attribution and
-bounded PoC panel is presented to Adrian.
-
-First mandatory stop (2026-07-26): the complete package is retained at
-[`evidence/2026-07-26-perf2-06-vm-audit/`](evidence/2026-07-26-perf2-06-vm-audit/).
-Exact current profiles show 432,950/572,500 optimized Permute/List bytecode
-calls but only 7/44 fresh frames; allocation is already amortized, while each
-child call still copies the 1,280-byte interrupt table and recycled entry
-relinks 9,957,712/13,312,071 local pointers. Native List samples put the table
-`memmove` at 7.4% in both VMs. The bounded COW control removes it and passes
-65/65 focused tests, but its repeated cold-failure shape grows `run()` by
-10,700/6,268 bytes and is clearly adverse on Base64 and Sieve `rxbvm`; that
-exact patch is rejected. The recommendation is a call/frame direction:
-VM-C1b centralizes shared interrupt-policy mutation off the hot path, while
-Adrian's VM-C2 non-moving segmented value arena plus compact control stack is a
-first-class broader architecture PoC whose decisive issue is eliminating
-pointer-map relinks without taxing every operand. No production edit, broad
-closeout, commit or push is authorized before Adrian selects the direction.
-
-Approval (2026-07-26): Adrian selected the recommended VM-C1b-first sequence.
-The production slice may centralize shared/COW interrupt-policy mutation and
-remove eager child-table copying, then must stop at the mandatory first
-profiling-off Release verdict. The retained COW PoC shape remains rejected;
-VM-C2, broad QA, closeout, commit and push are not authorized by this approval.
-
-First Release verdict and acceptance (2026-07-26): the checksum-closed package is retained at
-[`evidence/2026-07-26-perf2-06-vm-c1b-first-release-verdict/`](evidence/2026-07-26-perf2-06-vm-c1b-first-release-verdict/).
-VM-C1b removes the 1,280-byte child copy, reduces `stack_frame` by 1,264 bytes
-and shrinks `run()` by 5,660/796 bytes in `rxvm`/`rxbvm`.  Twelve balanced
-pairs are clear favorable for List `rxvm` and both Permute modes, but Sieve
-`rxbvm` is clear adverse: paired mean `+5.368694%`, 95% interval
-`[+4.720473%, +6.016915%]`, 0/12 favorable. Adrian explicitly accepted that
-trade-off after diagnosis because the call-heavy gains and faster `rxvm` Sieve
-justify retaining the slice. Full Debug and ordinary profiling-off Release QA
-both pass 1,924/1,924. `PERF2-06-D01` retains the unresolved Apple-Clang global
-code-layout/register-allocation debt and requires a supported Intel x86-64
-GCC/Clang matrix before final architecture selection. The implementation
-commit is `a39608426e2c1bb84d5fc0c4f767f4c9492339a9`. VM-C2 is authorized as the
-next separate clean-base PoC; no push is authorized.
-
-VM-C2 first PoC result and reset follow-on (2026-07-26/27): C2-A's segmented
-allocator retained the full pointer map and did not win; C2-B removed
-97.31-100% of reuse relink stores but replaced them with 8.02/8.93 million
-mapping-mark attempts on List/Permute and 2.11 million attempts on Sieve despite
-zero frame reuse. C2-B is rejected: no future variant may add bookkeeping to
-ordinary mapping writes or operand reads. Adrian approved the bounded
-`PERF2-06-C2R01` follow-on: compare one fixed-core reset for locals/globals,
-with `a0` still restored and reinitialized separately and `a1...aN` remaining
-a call-bound variable tail, then a conservative
-preparation-time per-procedure `may_rebind_core` flag. `CALL1...CALL4` are the
-future embedded-argument fast path. Exact static reset lists and new quickened
-link/use/unlink forms were deferred pending this verdict. The resumable
-isolated control plane is
-[`PERF2-06-VM-C2-RESET-WORKLIST.md`](PERF2-06-VM-C2-RESET-WORKLIST.md).
-
-VM-C2 reset verdict (2026-07-27): the retained package is
-[`evidence/2026-07-27-perf2-06-vm-c2-reset-poc/`](evidence/2026-07-27-perf2-06-vm-c2-reset-poc/).
-R1 replaces the fixed local/global reset loops with one copy; R2 guards that
-copy with a canonical, fail-closed procedure-static proof. Both pass 143/143
-focused tests per variant and preserve exact instruction/call/branch/value
-operation rows. R2 skips every Base64 reuse reset, no Permute reset and only
-3,099/572,457 List reuse resets. Thirty-four balanced pairs reject both
-variants: List is adverse in both VMs, and `rxbvm` Sieve is adverse by
-`+1.801135%` for R1 and `+2.284914%` for R2 despite zero frame reuse. The
-R1 control has no classifier and therefore exposes native
-code-layout/register-allocation sensitivity, not residual reset cost. R2 scans
-55,104 Sieve instructions at startup, so its result combines possible
-classifier and layout effects, but likewise cannot be reset work. The R1
-absolute cell is span-flagged while its paired interval remains wholly adverse.
-This strengthens `PERF2-06-D01` and its supported Intel x86-64 GCC/Clang
-requirement. The isolated reset implementation was discarded and the earlier
-C2 source was restored after the final review; retained patches and evidence
-remain the result authority. Exact reset lists and quickened clearing do not
-advance from this result.
-
-Final tactical review (2026-07-27): after restoring every rejected C2 source
-change, the accepted frame implementation was reviewed once more for a bounded
-current-design win. Allocation is already amortized, mapping reset alternatives
-are exhausted by the C2 controls, and reference-lifetime release is already
-guarded by `has_reference_lifetimes`. The only remaining measured local
-candidate was C3R01: rebind the decimal plugin's context pointer but omit the
-redundant child-entry synchronization after an exact context copy, then
-synchronize on return only when the effective context or backend differs.
-Twelve balanced profiling-off Release pairs were all inconclusive. Means were
-`-0.384474%`/`-0.204769%` for Permute, `-0.835582%`/`+0.613827%` for List and
-`+1.440812%`/`+0.936526%` for Sieve in `rxvm`/`rxbvm`. Optimized Sieve performs
-zero bytecode calls, so its adverse movement cannot be numeric-context work and
-again exposes global native-code layout sensitivity. C3R01 was discarded; its
-compact raw record is retained at
-[`evidence/2026-07-27-perf2-06-vm-c3-tactical-rejection/`](evidence/2026-07-27-perf2-06-vm-c3-tactical-rejection/).
-
-Do not repeat C2-A/B, C2R01, an exact reset list, quickened clearing, C3R01 or
-cleanup-only reshaping of the flattened interpreter on the current Apple
-product. Reopening requires a materially different ownership/representation
-contract or cross-platform counter evidence that identifies a stable mechanism
-and includes zero-work drift controls. Source tidiness or smaller text alone is
-not evidence of a faster VM.
-
-Mac continuation boundary (2026-07-27): PERF2-06 no longer runs as a separate
-Apple tuning campaign. Its relevant value/reference-helper ownership,
-payload/frame coupling and future-hardware manifest work join PERF2-07 in
-[`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md). `PERF2-06-D01`, native
-compact/hot-cold stream selection and the final VM recommendation stay open for
-the Intel/Linux, Linux ARM64 and Windows matrix. C2R03 may enter the combined
-panel only if current payload-capacity/high-water evidence creates a materially
-different mechanism; its earlier pointer-map and reset forms remain rejected.
-
-Combined selection panel (2026-07-27): the fresh dual-VM Apple attribution
-selects compiler/inliner ownership before another VM/frame intervention.
-Optimized Richards performs 73,307,574 recursive copies and moves 582,076,729
-copy bytes per profiled run in both VMs; optimized Permute performs
-10,259,602/74,012,810. Native stacks and retired-instruction controls agree
-that `copy_value` is the Richards mechanism. Adrian selected
-`PERF2-06-07-V1R01`. Its rejected first form accidentally disabled the accepted
-ordinary receiver path in Bounce; that exact +1,000,000-copy failure remains
-retained. Adrian then approved a proof-wide rework. V1R01-R1 restores the
-ordinary path and directly places nested `§this` through arbitrary branches and
-calls when the reconstructed result has at most one explicit return, including
-fallthrough. Already-proved receiver aliases survive later inline cloning;
-multiple explicit returns retain materialisation because per-exit receiver-link
-balance is not yet proved. Exact Bounce work returns to status quo. At the
-36-pair cap Richards is -21.224%/-21.076%, Permute -58.019%/-56.466%, common
-aggregates are 1.244352x/1.242301x and no workload, aggregate or artifact-size
-guard hits. Adrian accepted the candidate. Proportional closeout passes broad
-Debug/Release 1,925/1,925, focused ASan 10/10, lifecycle/RSS, 12/12 retained
-RXBIN cells and the isolated install; Apple LSan is unsupported and recorded as
-such. C2R03 still fails its current payload-capacity/high-water entrance gate,
-and V6 remains a supported-platform architecture decision. Panel evidence:
-[`2026-07-27-perf2-06-07-selection-panel`](evidence/2026-07-27-perf2-06-07-selection-panel/).
-Rejected first-form evidence:
-[`2026-07-27-perf2-06-07-v1r01-first-release-verdict`](evidence/2026-07-27-perf2-06-07-v1r01-first-release-verdict/).
-Reworked first Release evidence:
-[`2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict`](evidence/2026-07-27-perf2-06-07-v1r01-r1-first-release-verdict/).
-Accepted Apple closeout:
-[`2026-07-27-perf2-06-07-v1r01-r1-closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/).
-
-| Stable ID | Hypothesis and surface | Semantic/evidence gate | Disposition |
-| --- | --- | --- | --- |
-| PERF2-06-C2R01 | One contiguous fixed-core reset, then a procedure-static `may_rebind_core` flag, can reduce recycled frame-entry work without touching mapping writes/reads; arguments remain a separately rebound tail. | Exact coverage of `LOAD`/`SWAP`/`LINK*`/private mapping effects, recursion, fixed/count calls, refs, signals, TRACE, late load, both VMs, Release time and text. | rejected: correct but adverse and code-layout-sensitive at 34 pairs |
-| PERF2-06-C2R02 | Private quickening may remove exact nonescaping `LINK/LINKATTR; use; UNLINK` mappings rather than accelerating their cleanup. | No activation pointer/state in the shared image; exact debug/signal/reference/failure/resume fallback and independent code-layout verdict. | deferred; C2R01 provides no reason to advance clearing work |
-| PERF2-06-C2R03 | A linear segmented control stack can point to procedure-affine non-moving value slabs, preserving same-procedure/register payload capacity without retaining the full frame/control design. | Compare strict LIFO value slices; exact reference/native/object/decimal teardown and signal unwind; context/thread ownership; high-water memory; fixed-call embedded arguments; no hot per-register transfer ledger. | post-verdict architecture candidate; control/mapping split remains PERF2-06, payload-capacity policy routes to PERF2-07; analysis only, not approved |
-| PERF2-06-C3R01 | Skip decimal-backend synchronization when child entry copies the already-active effective numeric context; on return always rebind the pointer and synchronize only for a changed context/backend. | Exact five-field context equality and plugin ownership; decimal modes and nested context changes; both VMs; call-heavy Release cells plus zero-call Sieve drift control. | rejected: all 12-pair intervals inconclusive; Sieve moved adversely despite zero calls, so no stable mechanism beat code-layout noise |
-
-### Objective
-
-Determine and remove the remaining VM-owned cost after compiler, BIF and RXAS
-work are attributed. This includes private instruction representation,
-dispatch/fetch, calls and frames, values, context/interrupt maintenance,
-runtime helpers, code layout and preparation. It is not a mandate to rewrite
-the dispatcher.
-
-### Current substrate and constraints
-
-- `rxvm` uses computed-goto dispatch; `rxbvm` uses switch dispatch.
-- Both modes now prepare an owned process-local execution image. `rxvm` stores
-  handler cells and both modes can hold process-local bound function operands.
-- Canonical RXBIN code cells remain immutable and portable.
-- Each opcode and operand in the current runtime image occupies an eight-byte
-  cell; wide forms can reduce dispatch while increasing fetch/image footprint.
-- The VM polls for interrupts at every retired instruction and preserves
-  signals, TRACE, numeric context, references, native/plugin calls and late
-  load. These are language/runtime semantics, not optional benchmark overhead.
-
-Documentation that still says `rxbvm` executes only the canonical stream must
-be reconciled with current code as part of the activity.
-
-### VM-A — native current-HEAD attribution
-
-PERF2-01 must identify, per workload and per VM:
-
-- top C handlers/helpers and their caller stacks;
-- retired native instructions, branch/mispredict and instruction-cache costs;
-- dispatch versus handler/helper/body proportion;
-- runtime-image bytes/cells touched and hot code/text footprint;
-- call/frame entry and return subphase costs;
-- value copy/move/clear/conversion bytes; and
-- interrupt, TRACE, numeric-context, allocation and loader/preparation costs.
-
-Only these results rank the following PoCs.
-
-### VM-B — execution stream and fetch layout
-
-Compare, without changing canonical RXBIN:
-
-1. current wide-cell private image;
-2. a compact switch-oriented stream or compact operand overlay;
-3. decoded hot/cold forms that keep rare metadata away from the hot fetch path;
-4. PERF2-02 quickened private forms; and
-5. only RXSEQ-selected fused semantic units.
-
-Measure decode/preparation time, steady-state cycles, branch and i-cache data,
-private-image/RSS size, source/profile mapping and both VM modes. A compact
-stream is adopted only with representative portfolio evidence on at least two
-architectures; code density alone is not a speed result.
-
-### VM-C — residual call and frame path
-
-Run this after PERF2-03/04 removes avoidable small calls. Frame recycling
-already exists, but remaining bytecode calls reset local mappings, inherit the
-interrupt table, copy/synchronize numeric context and later restore context.
-Higher-arity fixed calls are not assumed: refresh their dynamic callee/cost
-population after inlining and quickening, and distinguish product use from the
-deliberately high-arity JSON fallback control.
-
-Profile and compare:
-
-- shared or copy-on-write inherited interrupt state with a per-frame overlay;
-- numeric-context activation only when the effective context changes;
-- proved-leaf/lightweight frame activation;
-- argument/result placement coordinated with compiler flow; and
-- targeted frame pooling or reset specialization by frame shape.
-
-Gates include recursion, repeated calls, all defined signal codes,
-reserved-code bounds and the `RXSIGNAL_MAX` sentinel, handler push/pop,
-branch-handler ownership, signal call/unwind, writable inputs,
-references/aliases, plugin/native calls, decimal-plugin modes, TRACE and late
-load. Measure the inherited 32-entry table copy separately.
-
-### VM-D — interrupt, TRACE and cold path separation
-
-Do not remove per-instruction interrupt semantics. First measure individual
-poll components and hot/cold code layout. A split synchronous/asynchronous poll
-or cold outline is a design candidate only if it preserves observable delivery
-and handler behavior, proves the remaining hot test, and wins outside a single
-microbenchmark.
-
-Inactive TRACE should remain near-zero-cost, but source coordinates and
-debug/profiler identity must survive quickening/fusion. Signals, unwind and
-late-load repair paths may be cold-outlined only after complete coverage.
-
-### VM-E — cross-platform dispatch completion
-
-The previous dispatch investigation remains useful negative evidence but did
-not complete native Linux x86-64 counters and Windows x86-64 timing. Re-run the
-current product on:
-
-- Apple ARM64 with Apple clang and native counters/sampling available on the
-  host;
-- Linux ARM64 release-build/correctness/timing coverage, with native counters
-  where available;
-- Linux x86-64 with native branch/cache/perf evidence under supported GCC and
-  Clang versions where available; and
-- Windows x86-64 timing and code/artifact evidence under the supported Windows
-  toolchain.
-
-Preserve early next-target resolution and compare the actual modern
-execution-image implementation, not stale pre-NR-16/17 prose. Record exact
-compiler versions, `run()` text size and branch/instruction-cache counters;
-dispatch layout is compiler-dependent.
-
-### VM-F — lifecycle and preparation
-
-Establish the CAP-04 load-only boundary before optimizing it. Attribute
-canonical image verification/copy, semantic graph rebuild, function binding,
-quickening preparation, plugin initialization, first frame and teardown.
-Current load-first-result is around 2.7 ms on the July 23 host, so this remains
-below the large steady-state deficits unless refreshed lifecycle or embedded
-use evidence changes the ranking.
-
-### Explicit non-candidates unless new evidence overturns them
-
-| Prior idea | Current disposition |
-| --- | --- |
-| Remove interrupt polling | Rejected as a semantic break; the measured ceiling was only about 1–5%. |
-| Lockstep dispatch cursor | Rejected after prior 15–30% regressions. |
-| Force globally separate computed-goto dispatch sites | Deprioritized: mixed results with substantial code growth. |
-| Serialize handler pointers or mutate canonical RXBIN | Rejected by portability, process ownership and compatibility. |
-| Replace the dispatcher as the first-order answer | Unsupported by competitor evidence and current architecture. |
-| Add broad superinstruction families from raw RXSEQ counts | Rejected without effects, overlap, footprint and complete-product proof. |
-| Remove `RX_FLATTEN` | Rejected: it reduced text but was neutral/slower. |
-| Mark the interrupt path globally `unlikely` | Rejected after severe Apple-clang layout regressions. |
-| Retry fixed-core reset, reset-needed flags, exact reset lists or quickened clearing | Rejected by C2R01 and its zero-reuse Sieve control; no retry without a materially different mapping contract and new profile selection. |
-| Changed-only numeric/plugin synchronization in the current frame model | Rejected as C3R01: call-heavy movement was inconclusive and zero-call Sieve moved adversely. |
-| Cleanup-only reshaping of the flattened interpreter | Not a performance candidate: repeated zero-work controls demonstrate global compiler/layout sensitivity. Require an independently measured mechanism and drift controls. |
-
-Opcode-indexed/switch dispatch remains a safe portable comparison and fallback,
-not a rejected design.
-
-### Exit
-
-PERF2-06 completes with accepted/rejected VM PoCs, a cross-platform
-recommendation, current documentation, dual-VM correctness and ordinary
-Release evidence that any selected VM change improves real product workloads
-without hiding startup, RSS, image or compatibility costs. PERF2-11 Gate E
-owns the final default/private execution-architecture decision.
-
-## PERF2-07 — value, frame, representation and allocation work
-
-The Mac execution of PERF2-07 is combined with the still-relevant PERF2-06
-value/reference/VM ownership boundary. The approved plan is
-[`PERF2-06-07-WORKLIST.md`](PERF2-06-07-WORKLIST.md); its completed execution
-prompt is preserved in
-[`PERF2-06-07-HANDOVER-PROMPT.md`](PERF2-06-07-HANDOVER-PROMPT.md), and the
-successor hardware protocol is in the accepted closeout evidence. This does
-not pull `PERF2-06-D01` or final stream/default selection onto the Mac; those
-remain in the hardware handover matrix.
+Which retained PERF2 baseline and attribution conclusions remain valid for
+exact current HEAD, and which mechanism should receive the first PERF3 design
+panel?
+
+### Required work
+
+1. Freeze branch, exact commit, dirty scope, host/power/toolchain and ordinary
+   profiling-off Release product identity.
+2. Audit product-affecting changes since the 2026-07-27 Mac scorecard. Compare
+   compiler, VM, library, workload, tool and manifest hashes before deciding a
+   retained cell is reusable.
+3. Replay only the retained checksum manifests actually used for decisions.
+   Preserve and reconcile the untracked generated lifecycle files as a named
+   repository-state issue; do not normalize, delete or regenerate evidence
+   casually.
+4. If the old Mac scorecard is not valid for current-product ranking, capture
+   the smallest governed refresh that restores authority. A representative
+   multi-workload set includes RexxCPS; common aggregate claims require all
+   five common workloads.
+5. Refresh diagnostic counts/native samples only where existing Linux and Mac
+   artifacts cannot distinguish the candidate owners. The expected focused
+   set is Richards, Towers, Base64, RexxCPS and Sieve as a zero-work/layout
+   guard, in both VMs; this is the expected set, not an automatic requirement
+   to rerun every profile.
+6. Produce a current gap/mechanism ledger with exact operation counts, bytes,
+   native footprint, machine ceiling, semantic risk and earliest safe owner.
+
+### Exit and stop
+
+Adrian accepts the current-product evidence boundary and a ranked PERF3-02/03/
+04/05 panel. No performance production source is edited, no candidate is
+silently selected and no broad platform rerun occurs in PERF3-01.
+
+## PERF3-02 — full-copy, ownership and attribute-storage panel
+
+Started 2026-07-31 at local `develop` commit `e38e514bf`; its product-code
+parent remains `3f43a0014`. The resumable control plane is
+[`PERF3-02-WORKLIST.md`](PERF3-02-WORKLIST.md). Adrian authorized the bounded
+evidence/design and isolated C1-C4 PoC comparison, not a production candidate,
+architecture/ISA/ABI change, commit of later evidence or push.
+
+The initial panel completed with C1a-R2 removing 4,910,249 total Richards copy operations
+and authoritative clean-host paired Release elapsed improves 9.18%/9.33% on
+`rxvm`/`rxbvm`. C1c-R1 removes 7,140,440 total Towers copy operations,
+55,158,560 logical bytes and 202,314 attribute blocks, improving 19.42%/19.65%.
+Every target pair is favorable and all target mean intervals exclude zero.
+Both pass the focused optimized/no-opt dual-VM matrix and keep their opposite
+workload image byte-identical; those four guards pass the +3% budget at the
+36-pair cap while remaining noisy around zero. C1c-R1 is recommended first;
+C1a-R2 remains an independent alternative. The original remote-terminal timing,
+exact products, rejected variants and every clean-host sample are preserved.
+C1a-R1 is correctness-invalid, C2 accepts zero full copies with current facts,
+and C3's zero-byte scalar residual is immaterial. At that initial gate no
+production candidate was selected. See the
+[`decision summary`](evidence/2026-07-31-perf3-02-copy-ownership-panel/decision-summary.md).
+
+The approved follow-on analysis-only C1b gate is also complete. It proves the
+C1a-R1 failure is caused by four taken Boolean-guard returns bypassing
+receiver-derived `unlinkn` cleanup; later register reuse writes through stale
+aliases into the scheduler object. Common-exit normalization is already
+present and insufficient, while retaining private storage with per-exit
+copyback removes no target copy. A narrow candidate-local rewrite that first
+snapshots every receiver-derived scalar guard, then directly binds the
+receiver only under a fail-closed structural and same-frame-signal gate, is a
+bounded isolated PoC candidate. Its ceiling is two static/172,394 dynamic full
+receiver copies, 25,341,738 recursive operations and 201,354,752 bytes, with
+small scalar snapshot/cleanup work retained. Adrian approved the isolated
+correctness PoC on 2026-08-01. Its exact structural recognizer and post-clone
+validation preserve canonical `23246/9297` on `rxvm` and `rxbvm` with
+optimization on and off, reduce the total static copy count by two with both
+target receiver copies absent, retain six scalar snapshots, and leave Towers
+plus the class-method control
+byte-identical. The independent P1 storage proof keeps exact link/unlink
+balance, removes one full-copy event from each target procedure and reduces
+unknown join state to zero. That correctness-only gate performed no timing;
+the later R1 repanel measures C1b alone at 44.28%/44.01% lower Richards elapsed
+and the safe C1a+C1b composition at 53.55%/52.57%, with 12/12 favorable pairs
+in both VMs. See the
+[`C1b analysis`](evidence/2026-07-31-perf3-02-c1b-analysis/analysis.md) and
+[`R1 evidence`](evidence/2026-08-01-perf3-02-r1-repanel/README.md).
+
+The R1 replay retains eight build masks and rejects the broad rule both alone
+and in combination. C1abc emits the exact C1ab Richards image and exact C1c
+Towers image. The locked storage service finds 59 remaining exact-base full
+copies in combined Richards and 18 in C1c Towers, but independent ownership,
+destruction, value, lifetime, TRACE and continuation proofs remain absent, so
+C2 installs no rewrite. C3 remains a zero-byte scalar residual and C4 is met
+by the correct C1 paths. Adrian subsequently selected C1abc; the ordinary
+compiler now contains that one ladder, the disposable replay mask is removed,
+and the checksum-closed replay source preserves all investigated options.
 
 ### Question
 
-Which parts of cREXX's general `value` and frame semantics still create repeated
-copy, conversion, reset, cache or allocation work, and what is the smallest
-safe intervention?
+Can cREXX remove or narrow the current high-cost full-value copies before they
+reach `copy_value`, while preserving by-value isolation, reference identity,
+recursive attributes, native payloads, unwind and observable intermediate
+state?
 
-The current `value` is approximately 248 bytes and can carry scalar, decimal,
-string, binary/native, reference, type and object-attribute state. Whole-value
-copy can recursively duplicate populated representations/attributes, while
-move transfers ownership after clearing the destination. Those facts make
-both avoidable copies and a premature global layout rewrite risky.
+### Required comparison
 
-### Required order
-
-1. Verify current sizes/layouts on each target ABI; do not inherit historical
-   Linux or pre-NR-15 profiles.
-2. Count operations and bytes by payload shape, caller, procedure and
-   benchmark, including conversions/materializations and cache hits.
-3. Use compiler/RXAS flow first to eliminate the operation or choose a typed
-   copy/move when ownership is proved.
-4. Compare payload-shape fast paths and retained representation validity.
-5. Only then test frame/value pooling or hot/cold representation changes.
-
-### Candidate ladder
-
-| Level | Candidate | Principal risk |
+| Variant | Owner | Question |
 | --- | --- | --- |
-| V1 | eliminate dead/full copies; direct result placement; typed copy/move | aliases, hidden payload release, join/exception ownership |
-| V2 | payload-shape fast copy/clear/reset | stale type/attribute/native state |
-| V3 | retain validated string/numeric/decimal representations | mutation invalidation, numeric-context semantics, memory growth |
-| V4 | share inherited frame state and reset only live slots | signal/context ownership and recursion |
-| V5 | size/shape-targeted frame/value pools | teardown, plugins, sanitizer visibility, memory retention |
-| V6 | hot/cold `value` split | ABI/layout breadth, cache trade-off, widespread code complexity |
-
-### Proved entry cases
-
-| ID | Evidence and exact failure | Required distinguishing regression | Boundary |
-| --- | --- | --- | --- |
-| PERF2-07-V3-R01 | PERF2-04's valid Level B sequence initializes a string to `""`, initializes a decimal from `"2.2"`, assigns that decimal to the same string using `as .string`, then executes `strlen`. Both VMs and both optimization modes preserved `2.2` but returned stale codepoint length `0`. `DCOPY` retained the old trusted zero count and `DTOS` changed bytes/byte length without completing VM-private UTF validity. | The maintained regression preserves `dcopy; dtos; strlen` and covers empty, non-empty Unicode, typed-null, live reference alias, numeric siblings and `DEXTR` on optimized/no-opt `rxvm` and `rxbvm`. All four retained reproducer cells and the related focused group pass. | Correctness fixed with one explicit in-place string-write completion contract; no performance claim, language, public RXAS/RXBIN or ABI change. Broad selective cache retention remains deferred because the current mechanism count is zero. Evidence: [`CORRECTNESS.md`](evidence/2026-07-27-perf2-06-07-selection-panel/CORRECTNESS.md). |
-| PERF2-07-B01 | The reproduced optimized inversion came from 614,400 defensive 12,288-byte copies (7,549,747,200 logical bytes). Frozen V1 removes the copy for a proved read-only local alias while failing closed for writable/escaping/exposed/reference cases. | First Release target gains are 92.72%/92.65% on `rxvm`/`rxbvm`. The 34-pair `rxvm` order/per-variant adjudication proves the adjacent-control hit followed baseline copy-loop preconditioning, not changed control code; isolated RXAS is byte-identical. Dual-VM RSS changes -0.56%/-0.37%. Final focused/ASan/Debug QA is 8/8, 3/3, and 1934/1934; imported summary masks `400`/`416` lock direct-read versus isolated-write behavior. | **Complete.** Adrian accepted frozen V1 on 2026-07-30 and proportional closeout passed. Preserve `.binary` value semantics and public RXAS/RXBIN/ABI. Evidence: [`CRI02-BINARY-BYVALUE-WORKLIST.md`](CRI02-BINARY-BYVALUE-WORKLIST.md). |
-| PERF2-07-C01 | `rx_string_to_double` copies a bounded string to a NUL-terminated local or heap buffer before `strtod`, rejects every `ERANGE`, and inherits the C library's locale and accepted grammar. `string2integer` likewise allocates a temporary NUL-terminated buffer. CRI-13 proved the resulting floating edge signal can be translated correctly without changing those generic contracts. | Compare retained current behavior with bounded no-copy, locale-independent and correctly rounded candidates across signed zero, halfway rounding, normal/subnormal and finite/overflow boundaries, long inputs, whitespace/sign/`inf`/`nan` compatibility, locale changes, allocation/copy counts and both VMs. | **Queued evidence/design only; not active and not a CRI-13 blocker.** No RXAS/RXBIN operation, ABI, language surface or general conversion-semantic change is selected. Any public instruction or contract requires its own decision and first Release gate. Evidence: [`CRI-13 bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md). |
-
-Mutable object/string copy-on-write and a general allocator replacement do not
-enter the first panel. They require explicit alias/reference proof and current
-evidence that narrower work cannot close the cost.
-
-### Exit
-
-Each accepted slice must reduce exact operations/bytes or demonstrated native
-cost, pass sanitizer and ownership/lifecycle fixtures proportional to the
-changed ownership surface, and improve a target
-workload without breaching the common-portfolio guard. PERF2-07 closes only
-after all high-cost shapes have an accepted optimization or an evidence-backed
-defer/reject decision. Pooling decisions additionally require the targeted
-alloc/free lifetime, retained/high-water, size-class, reuse and allocator-stack
-evidence defined by PERF2-01; request counts and RSS alone are insufficient.
-
-Apple closeout (2026-07-27): Adrian accepted V1R01-R1. The prerequisite V3-R01
-fix and proof-wide compiler placement are installed; all other panel rows retain
-their explicit defer/reject/architecture-owner dispositions. The accepted Mac
-slice passes broad Debug and profiling-off Release 1,925/1,925, focused ASan
-10/10, lifecycle/RSS guards, retained-RXBIN compatibility 12/12 and isolated
-install smoke in both VMs. The bundle is
-[`2026-07-27-perf2-06-07-v1r01-r1-closeout`](evidence/2026-07-27-perf2-06-07-v1r01-r1-closeout/).
-This is not a cross-platform claim and does not close `PERF2-06-D01`, Gate E or
-the final VM/default decision.
-
-## PERF2-08 — capability, equivalence and Level B/G decision lane
-
-Performance comparisons have exposed missing capabilities as well as slow
-paths. These require separate treatment so a language design is neither
-smuggled into an optimization nor blocked by an optimizer-only worklist.
-
-### Existing capability gaps
-
-| Gap | Performance relevance | Default route | Decision boundary |
-| --- | --- | --- | --- |
-| CAP-01 JSON parse-once/indexed document | Current JSON cells build/use different result models. | Option B approved 2026-07-30: one pure-Level-B immutable indexed `rxjson` document plus strict traversal and noisy-container framing. Active as `CAP-01-J01`. | Packed numeric serialization, schema/repair policy, public C ABI, RXAS/RXBIN, or language changes remain separate decisions. |
-| CAP-02 owned heterogeneous/nested containers | cREXX Storage performs materially different allocation/object work. | Specify ownership, nested references and lifecycle; build an equivalent control. Post-Release 1 Level G is the default source-language route. | A Level B source surface requires a separate explicit scope decision after proving a library/runtime solution insufficient; Adrian approval required. |
-| CAP-03 standard Base64 surface | Base64 is a valid common cell but lacks one standard portable cREXX product API. | Keep the current common codec-loop benchmark unchanged. Develop a pure Level B API as a separate product track; measure before native/SIMD. | A new API benchmark is separate unless every runtime receives an equivalent workload. Native/SIMD is an optional backend/control, not the semantic API. |
-| CAP-04 load-only lifecycle boundary | Current public CLIs combine load and first result. | Measurement/runtime lifecycle boundary. | Promote to public API only with a product use case and API approval. |
-
-### Level B performance closure
-
-Re-audit the provisional selector/module inventory against current HEAD and
-identify the bootstrap-critical scalar text, word/parse, arrays, binary
-conversion, call/link, classlib collection and runtime-control surface. For
-each hot selector choose and document one of:
-
-- clean inline Level B;
-- inline plus a general RXAS/VM assist;
-- native/runtime intrinsic with a portable Level B fallback;
-- cold/not selected; or
-- blocked by a named capability/language decision.
-
-Strict read versus grow-on-write and indexed attribute-array access are design
-questions only if current semantics prevent an efficient common path. Do not
-invent new syntax when flow or a runtime assist can prove the same operation.
-
-### Level G boundary
-
-The planned object/interface collection lowering and nested collection model
-remain post-Release 1 Level G work. Interface-led collection contracts,
-equality/hash/order and owned heterogeneous containers may ultimately improve
-expressiveness and comparable benchmark forms, but they are not near-term
-speed patches. Existing `arraydrop` and `objectarraydrop` remain Release 1
-compatibility surfaces.
-
-Any syntax, type-system, ownership, collection or public ABI change pauses at
-`decision required` with an options paper and explicit Adrian approval before
-implementation.
-
-### Equivalence closure
-
-The Apple gate completed on 2026-07-27. Towers now has a qualified
-object/allocation-equivalent ooRexx port. Mandelbrot is an approved exclusion
-because ordinary ooRexx decimal modes cannot satisfy the binary64 checksums.
-Storage, List and JSON are approved diagnostic exclusions under their exact
-ownership/result-model mismatches. CAP-01's independently approved Level-B
-library surface is active under `CAP-01-J01`; CAP-02 remains deferred to a
-separately approved library/runtime or post-Release 1 Level G decision; CAP-03 does not
-block the qualified Base64 benchmark; CAP-04 retains honestly named lifecycle
-phases and excludes an unavailable pure-load comparison.
-
-## PERF2-09 — per-benchmark ooRexx closure campaign
-
-PERF2-09 is the outcome lane. It consumes general mechanisms from PERF2-02
-through PERF2-08; it does not authorize benchmark-specific shortcuts.
-
-The first complete closure run is on the Mac after PERF2-06/07 and the PERF2-08
-qualification gate. It is the source of the exact handover scorecard, not the
-final cross-platform claim. Repeat the frozen portfolio on Intel Linux and
-Windows after any accepted Linux tuning; do not compare unmatched Mac/Linux/
-Windows sessions as before/after results.
-
-Each dossier contains exact source/image/runtime hashes, comparability status,
-same-session cREXX/ooRexx throughput, gain to parity and strong band, optimized
-and diagnostic static/dynamic work, top native/procedure/opcode/call paths,
-copies/conversions/allocations/RSS, selected mechanism, machine ceiling and
-accepted/rejected verdicts.
-
-### CAP-01-J01 — approved indexed `rxjson` document
-
-Status: complete. Option B, A2 and B1 were approved and frozen A2 was accepted
-on 2026-07-30. Option B was approved
-exactly as specified on 2026-07-30; frozen V1 is correct and wins retained
-access but failed its compatibility guard. Adrian approved recommended
-countermeasure Option 1 on 2026-07-30. Frozen V2 passes correctness and removes
-the scanner pathology but still fails the one-shot compatibility guard.
-
-The implementation keeps one strict parser in `rxjson`, preserves existing
-functional selectors through ephemeral documents, and adds an immutable
-document with path compatibility, document-local node traversal, arbitrary-key
-lookup, strict typed getters, stable parse diagnostics, and
-`jsonscancontainer`. Alternatives retained in the decision packet are the
-status quo, promotion of the duplicate-parser incubation, and a native opaque
-handle. Semantic risks are Unicode byte/character positions, malformed
-surrogates, duplicate-key first-match compatibility, numeric range handling,
-document-local node lifetime, and structural framing in noisy text.
-
-Predeclared first Release gate: focused correctness must pass; retained-document
-construction plus 30 indexed accesses must be no more than 50% of the pre-edit
-30-call repeated-parse workload on both optimized VMs; neither VM may show an
-optimizer-induced inversion; existing one-shot compatibility-operation medians
-must remain within 25% of the retained pre-edit product; and noisy extraction
-must replace the reproduced 4,161-parser loop with a structural scan plus one
-strict parse of the returned document. Freeze after minimum correctness, run
-the ordinary profiling-off Release comparison, report the verdict, and stop
-before broad validation.
-
-Frozen V1 verdict (2026-07-30): focused correctness passes 11/11. Document
-construction plus 30 indexed path gets is 79.14%/79.67% faster than the paired
-legacy repeated-parse baseline on `rxvm`/`rxbvm`, with no material optimizer
-inversion. Eight of ten one-shot compatibility cells are 36.96--53.39% slower,
-however, and the adversarial scanner takes 639,531/688,135.5 us because it
-restarts at 64 invalid openers. V1 is rejected by the guard and frozen pending
-the recommended single-parser/result-sink countermeasure decision. Evidence:
-[`CRI09 first Release verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-FIRST-RELEASE-VERDICT.md).
-
-V2 approval keeps the public Option B API fixed and changes only private result
-routing: one strict grammar/parser/Unicode/error core will drive a full index
-for retained documents, an allocation-free legacy query/validation result, and
-a fail-fast recoverable consumed-boundary result for noisy scanning. Frozen V1
-and the pre-edit product remain comparators. Stop again at the V2 ordinary
-Release verdict before broad validation.
-
-Frozen V2 verdict (2026-07-30): focused correctness passes 11/11. The
-hand-written streaming lexer uses a 256-byte class table and number DFA without
-a token list. Retained path access is 75.56%/78.64% faster than pre-edit
-repeated access, scanner time improves 99.92%/99.90% to 413/523 us, and there
-is no material optimizer inversion. Seven of ten legacy cells remain
-26.92--40.23% slower than pre-edit, so the unchanged guard rejects V2. The
-successful scanner slice is boundary-validated and then indexed, requiring two
-grammar passes but only one owned slice/index. Recommended next decisions are a
-lean hybrid streaming hot core and separate acceptance of the measured
-two-pass successful scanner construction. Evidence:
-[`CRI09 V2 Release verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-V2-RELEASE-VERDICT.md).
-
-Adrian approved A2 and B1 on 2026-07-30, sequencing the A2 implementation and
-mandatory Release comparison before B1 documentation/closure. A2 keeps one
-recursive grammar and the handwritten streaming tokenizer while moving tables
-to token boundaries, restoring tight string/number inner loops, scalar hot
-sink fields, binary path segments and zero-copy unescaped-key matching. Stop at
-the A2 verdict before B1 or broad closeout. B1 accepts one allocation-free
-boundary-validation pass plus one indexing pass for the successful slice; it
-does not introduce another tokenizer implementation.
-
-Frozen A2 verdict (2026-07-30): **pass**. Focused correctness passes 11/11;
-all ten legacy cells meet the 25% guard; retained path use is 76.25%/79.05%
-faster than repeated parsing; scanner medians are 394.5/480.5 us; and no
-material optimizer inversion is present. Adrian accepted frozen A2. B1's
-allocation-free boundary-validation pass plus successful-slice indexing pass
-is documented, focused Debug and macOS ASan pass 11/11, and complete Debug
-passes 1,943/1,943 with zero failures or skips. Evidence:
-[`CRI09 A2 Release verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-A2-RELEASE-VERDICT.md).
-[`CRI09 closeout`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI09-CLOSEOUT.md).
-
-### CAP-01-J02 — JSON numeric materialization and packed entities
-
-Status: **complete for CRI-13 on 2026-07-30**; accepted B is closed and no
-performance item is active. Frozen R1 passed its retained
-focused matrix but was
-20.47x--22.01x the prototype projection ceiling and reaches 25.38% of retained
-current total on optimized `rxbvm`. The exact RXAS/VM trace proves the private
-classifier is already fully inlined. Its dominant regression is two
-whole-source copies per element: 6,144 copies and 359,294,976 logical bytes for
-the retained workload. One scratch local snapshot removes the loop copies and
-improves projection to 1.311/1.755 ms, yet remains about 5.07x/6.59x the
-prototype ceiling because roughly 1.28 million interpreted instructions and
-61,441 strict byte reads remain. The recommended CRI-13 R2 computes nonzero and
-binary64-safe flags during the parser's existing number scan and stores them
-in the existing private unused u32 node field; no public API, index size, ABI
-or serialized format changes. A later Option C class comparison remains
-deferred. The systemic residual-copy issue is queued separately as
-`PERF2-07-B02`, including a bounded RXAS full-copy proof, and does not reopen
-the accepted `CAP-01-J01` surface. Evidence:
-[`R1 verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-B-R1-RELEASE-VERDICT.md)
-and [`RXAS trace`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R1-RXAS-TRACE.md).
-After Adrian approved R2 D, a pre-edit conversion audit proved that `1e-320`,
-`1e-324`, and `1.8e308` escape the public projection method as
-`CONVERSION_ERROR` on both VMs instead of returning documented status `-6`.
-The approved adjusted-exponent flags would retain that boundary flaw. D is
-paused before production edit. The recommended independently revertible next
-rung is a non-throwing bounded binary span-to-binary64 operation backed by an
-allocation-free, locale-independent, correctly rounded converter, measured
-against a repaired f32-specific D fallback. This is an explicit public
-RXAS/RXBIN architecture decision. Evidence:
-[`bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md).
-
-Adrian observed that the conversion signal can be caught. R2 therefore keeps
-parse-time classification and places one handler around the entire projection
-loop. Focused Debug and Release pass 5/5, the broader Debug JSON slice passes
-17/17, and formal Release passes 40/40 numeric plus 24/24 parser samples.
-Optimized projection is 295/326 us, 1.14x/1.22x the same-cell prototype, and
-the production total is 9.60%/11.03% of retained current. Every rule passes;
-Adrian accepted frozen R2 on 2026-07-30. Proportional closeout passes complete
-Debug 1,963/1,963 and affected ASan 17/17. The approved benchmark-local Option
-C comparison then passed focused 5/5 and formal Release 40/40, but optimized
-typed reads are 5.01x/4.71x raw B and writes are 3.67x/3.19x on
-`rxvm`/`rxbvm`. Optimized RXAS retains exact direct method calls plus receiver
-initialization and attribute link/unlink; it does not copy the complete binary
-per element and does not inline the concrete methods. The recommendation is B
-only for Release 1, with C deferred until a separately governed generic
-concrete/final method-access countermeasure is proved. Adrian accepted that
-disposition; the benchmark-local C probe was removed and the maintained
-benchmark and Release images exactly match frozen R2. The generic bounded
-conversion/helper review is queued, not active, as `PERF2-07-C01`. Evidence:
-[`R2 verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R2-RELEASE-VERDICT.md).
-[`R2 closeout`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R2-CLOSEOUT.md).
-[`C verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-C-CLASS-RELEASE-VERDICT.md).
-[`CRI-13 closeout`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-CLOSEOUT.md).
-
-Hypothesis: the current immutable document can traverse large numeric arrays
-once and support both ordinary typed-array materialization and explicit
-canonical-little-endian `.binary` packing without reparsing. Packed storage may
-reduce footprint and improve repeated hot scans, but adopting a public wrapper,
-envelope, width, metadata or serialization contract is a separate API/format
-decision.
-
-Semantic risks are exact signed-integer validation; binary64-to-binary32 range
-and rounding; JSON null/missing/non-number distinctions; expected dimensions;
-normalization metadata; empty/nested containers; byte order; corrupt/truncated
-payload validation; `.binary` copy boundaries; and confusing a JSON numeric
-array with a mathematical vector. The diagnostic benchmark must report first
-parse, repeated node traversal, ordinary typed materialization/copy, raw packed
-f32 and i64 conversion, JSON encoding, direct packed scans, total time and
-per-process peak RSS. It must run optimized and non-optimized on both VMs with
-exact checksums. Its raw packed controls are existing binary-memory operations,
-not a selected public format.
-
-The current-surface and renamed-prototype measurements are retained. The
-recommended API is explicit `node_f32_array`/`node_i64_array` projection to
-owning, headerless canonical-little-endian `.binary`, with no wrapper,
-normalization metadata, inference, cache or envelope. Exact alternatives and
-the predeclared first Release gate are in
-[`CRI13-PACKED-NUMERIC-DECISION.md`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-PACKED-NUMERIC-DECISION.md).
-Option B is approved. Do not add a wrapper class, envelope, codec name, flags,
-inference rule or serialization promise before the mandatory B Release stop.
-
-The current Mac closure routing is:
-
-| Workload | Current planning hypothesis | Candidate owners | Closure gate |
-| --- | --- | --- | --- |
-| Sieve | Large current cREXX win; no selected hot value/reference mechanism. | Guard only; compiler/VM regression control. | Preserve both-VM ooRexx win and the NetRexx bands. |
-| Permute | Accepted direct placement removed the proved receiver-copy explosion; current product remains far ahead of ooRexx but behind NetRexx. | Guard accepted V1R01-R1; re-attribute before any residual call/value candidate. | Preserve ooRexx win and image size; do not infer a mechanism from the NetRexx gap alone. |
-| Bounce | Current cREXX is ahead of ooRexx; reference traffic remains visible without one proved redundant owner operation. | Residual PERF2-06/07 proof only if a new exact nonzero reduction appears. | Guard both VMs; bytecode VM remains below the NetRexx strong band. |
-| Richards | Largest qualified common deficit after accepted direct placement; residual copy/value work remains large. | Re-attribute accepted-product caller/copy shapes; no rejected reset/ledger/slab/layout retry. | Select only an exact general mechanism with a material current ceiling; preserve semantics and guards. |
-| Base64 | Current deficit and post-append timing noise; string copy/length materialization remains visible. | PERF2-04/05/07 evidence only; CAP-03 API remains separate. | Require exact reduced work and a stable decisive cell before a candidate. |
-| RexxCPS | Near ooRexx parity, but below the separate 1.50 band; conversions remain visible. | Later general representation/BIF evidence, not a selected slice. | Preserve disclosed 2.2d semantics and reach 1.50x canonical Classic ooRexx. |
-| Mandelbrot | Approved not-comparable result: ooRexx decimal checksums differ. | No current performance owner. | No ratio unless an honest same-numeric-contract port exists. |
-| Towers | Qualified object/allocation port is 3.05–3.11x from ooRexx parity. | Current payload/lifetime/high-water attribution before any PERF2-06/07 candidate. | No pooling, slab or broad layout inference without the required proof/decision. |
-| Storage | Approved diagnostic exclusion under CAP-02. | Explicit post-Release 1 Level G ownership/container decision. | Equivalent ownership/allocation contract before any ratio. |
-| List | Approved diagnostic exclusion because the weak-reference arena is material extra work. | Future ownership architecture only if separately selected. | No common ratio under the current forms. |
-| JSON | Approved diagnostic exclusion under CAP-01. | Independently approved parse-once/result-access design. | Common contract before any ratio. |
-
-After every accepted production slice, run the smallest decisive target and
-guard comparison first, report it and stop. A full portfolio refresh follows
-only after the verdict is accepted. The next slice is selected by the largest
-qualified remaining deficit with an attributable general mechanism, not by
-which benchmark is easiest to improve.
-
-## PERF2-10 — toolchain, code layout, build and lifecycle
-
-This is a bounded optional lane, not a substitute for semantic work.
-
-Sequence: screen coherent options on Apple ARM64 only to bound them, then do
-decision/tuning work on the Intel Linux machine under both GCC and Clang. Freeze
-the selected source/flags before the same-machine Windows run. An Apple-only or
-Linux-only win is retained as a control unless the required platform matrix
-accepts it.
-
-### Experiments
-
-- C/C++ link-time optimization and interprocedural optimization;
-- profile-guided optimization using a disclosed representative training set;
-- hot/cold handler/helper outlining and source layout;
-- compiler-specific flags only where supported and maintainable;
-- shared VM-core build impact and text duplication;
-- eager versus lazy execution-image preparation after CAP-04 attribution; and
-- package/install/native artifact and startup consequences.
-
-The VM interpreter is a very large translation unit built in threaded and
-switch variants. Record build time/memory, binary text/data size, i-cache and
-branch effects, startup, steady state and both VM modes on Apple ARM64, Linux
-x86-64, Linux ARM64 and Windows. Keep all supported release architectures in
-scope. Never select a flag/layout from one host or from instrumented-profile
-elapsed time.
-
-Adopt only repeatable supported-platform improvements with reproducible build
-inputs and no benchmark-specific PGO training claim. Otherwise retain the
-result as rejected/deferred evidence.
-
-## PERF2-11 — architecture and release gates
-
-The old unstarted architecture footer is replaced by explicit gates.
-
-### Gate A — refreshed truth
-
-PERF2-01 evidence is checksum-closed, same-session comparison is accepted,
-comparability labels are current, and every Batch 2 candidate has a measured
-mechanism footprint.
-
-### Gate B — placement selection
-
-For each semantic family, compare compiler/inliner, RXAS, link/load and runtime
-quickening placement. Record the selected and rejected variants, machine
-ceiling, code/image/RSS/startup trade-off and why later-phase knowledge is
-required if an earlier owner is not selected.
-
-### Gate C — language, ISA and ABI decisions
-
-Any new syntax/type/ownership rule, public RXAS opcode/RXBIN feature or public
-runtime ABI change has an options paper and explicit Adrian approval. Private
-PoCs do not create a de facto public contract.
-
-### Gate D — mandatory first Release verdict
-
-After the minimum focused correctness checks pass, freeze the production edit,
-build the ordinary profiling-off Release product and run the smallest decisive
-exact-hash end-to-end comparison against a retained valid baseline. Report and
-stop for direction. The implementation remains provisional/revertable until
-accepted. Broad QA, sanitizer, packaging and documentation closeout follow the
-decision, not precede it.
-
-The existing formal guards remain: no unexplained worse-than-3% individual
-workload and no worse-than-1% common aggregate without explicit acceptance.
-Instruction reduction, profile time and microbenchmarks do not replace the
-complete-product verdict.
-
-After acceptance, select broad QA, sanitizer, install/package,
-RXBIN/ABI/feature-gating and documentation closeout in proportion to the
-changed surface, observed failures and Adrian's direction. They follow the
-first verdict; the roadmap does not mandate every broad lane for every slice.
-
-### Gate E — cross-platform/default VM
-
-Before default-architecture selection, retain ordinary product evidence from
-at least Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows timing,
-with both VM modes, code/artifact size and relevant native counters. Keep all
-supported release architectures in the regression matrix. Include exact
-supported compiler/version coverage: Apple clang on ARM64, GCC and Clang on
-native Linux x86-64 where supported/available, and the supported Windows
-toolchain. Select the default/private stream using the whole scorecard rather
-than one dispatch microbenchmark.
-
-The approved collection order is Apple ARM64 pre-handover, Intel x86-64 Linux
-GCC/Clang tuning and decision, supported Linux ARM64 validation, then the same
-Intel x86-64 hardware under the supported Windows toolchain. Gate E is not met
-by Apple plus Intel/Windows alone: Linux ARM64 remains a required supported
-release-architecture lane.
-
-The 2026-07-29 Windows x86-64 baseline is retained under
-[`2026-07-29-perf2-11-windows-x86-64`](evidence/2026-07-29-perf2-11-windows-x86-64/).
-It completes the requested Windows scorecard lane but does not close Gate E:
-supported Linux ARM64 and a selected cross-platform/default-VM decision remain
-outstanding.
-
-### Gate F — final external claim
-
-- zero correctness failures;
-- every Tier A cell qualified or explicitly resolved under PERF2-08;
-- selected default VM reaches at least 1.50x ooRexx on every qualified common
-  cell and the separately disclosed cREXX RexxCPS 2.2d diagnostic reaches at
-  least 1.50x same-session canonical Classic ooRexx RexxCPS;
-- common-workload geometric mean reaches at least 2.00x ooRexx;
-- alternate/non-default VM is clearly faster than ooRexx on every qualified
-  cell;
-- both VMs, lifecycle, RSS and artifact results shown separately;
-- runtime/compiler/source versions and exact hashes published; and
-- no common/aggregate claim based on a cross-session ratio, adapted cell or
-  excluded diagnostic. cREXX 2.2d versus canonical Classic ooRexx RexxCPS
-  remains a separately disclosed, governed diagnostic comparison rather than a
-  common cell.
-
-## PERF2-12 — JIT/AOT decision
-
-NetRexx demonstrates the ceiling available when a hot semantic graph reaches a
-mature optimizing VM, but it does not prove that a cREXX JIT yields its exact
-ratio. A JIT, trace compiler, native AOT backend or external optimizer is a
-separate architecture programme.
-
-Keep PERF2-12 deferred until the accepted non-JIT programme and current
-cross-platform scorecard show that the unquestionable-superiority exit cannot
-be reached economically. Reopening it requires:
-
-- the residual gaps and hot semantic graph after PERF2-02 through PERF2-10;
-- a comparison of native AOT, baseline JIT, tracing/quickening and existing VM
-  maintenance cost;
-- debugger/TRACE, signals, dynamic loading, plugins, portability, packaging,
-  sandboxing and deterministic-build requirements; and
-- an explicit architecture decision from Adrian.
+| C0 | current product | Exact caller, payload-shape, byte and lifetime baseline. |
+| C1 | `rxc` semantic proof | Can typed flow/inline facts eliminate the copy or directly place the result? |
+| C2 | RXAS whole-procedure proof | Can existing CFG/liveness/effects prove a full-copy projection without compiler-only knowledge? |
+| C3 | narrow typed/payload operation | Can a proved scalar, binary or no-payload shape avoid general recursive copy work? |
+| C4 | runtime machine ceiling | What is the exact direct operation cost after every eligible semantic decision is preproved? |
+
+Richards, Towers and the CRI-13 residual are evidence sources, not permission
+for benchmark-specific handling. Compare `rxvm` and `rxbvm`; include existing
+Sieve/Permute/Bounce wins as appropriate guards. Keep copy elimination,
+attribute-storage trimming and teardown independently attributable.
+
+Before any production edit, create a resumable PERF3-02 worklist with at least
+two viable production approaches, exact semantic obligations, machine-level
+ceilings and a declared first Release stop. Present the PoC panel to Adrian for
+selection; do not install a production ladder automatically.
+
+## PERF3-03 — bounded conversion review
+
+Freeze the current `rx_string_to_double` and `string2integer` allocation,
+grammar, whitespace/sign, locale, range, exception and rounding contracts.
+Compare the existing temporary NUL-terminated copy with bounded no-copy,
+locale-independent and correctly rounded controls across signed zero, halfway
+rounding, normal/subnormal, finite/overflow, long input and `inf`/`nan`
+compatibility.
+
+This activity starts as evidence/design only. A public RXAS operation, changed
+conversion signal, ABI or language contract is a separate decision. It may
+advance only if PERF3-01 confirms material current cost and the candidate is
+general beyond CRI-13 or RexxCPS.
+
+## PERF3-04 — generic final/concrete scalar access
+
+Test whether statically resolved final/concrete scalar getters and setters can
+approach direct typed-memory cost using generic compiler proof. Cover receiver
+initialization and identity, writable ownership, signals, source/debug
+identity, imports, optimized/no-opt output and both VMs. The hand-equivalent
+ceiling precedes any production form.
+
+Do not add JSON-, vector- or numeric-width-specific methods/opcodes. Missing
+proof rejects only the affected candidate site; the ordinary call and
+materialized path remain valid.
+
+## PERF3-05 — compiler, layout and private-stream panel
+
+This activity owns `PERF2-06-D01`, the unstarted PERF2-10 options and the
+compact/hot-cold private execution question. It does not own semantic copy or
+conversion work that can be removed earlier.
+
+The bounded Mac panel may compare:
+
+- current source/product as a zero-work drift control;
+- semantic Base64 string/copy ceilings before native layout changes;
+- hot/cold handler/helper outlining and source ordering;
+- supported LTO/interprocedural and representative PGO controls;
+- private compact operand/stream or decoded hot/cold representations while
+  canonical RXBIN remains unchanged; and
+- `rxvm` and `rxbvm`-specific forms only when a common semantic fallback and
+  maintenance boundary are explicit.
+
+Record build time/memory, `run()` text/data, retired instructions, front-end,
+branch/I-cache evidence, startup/preparation, RSS, artifacts and both VM modes.
+A compiler or flag movement without an exact causal mechanism is a control, not
+a candidate. A compact stream requires representative benefit on at least two
+architectures before adoption.
+
+The 2026-08-01 panel retains the ordinary L0 product. ThinLTO changes `__text`
+by roughly -6.3% but fails Sieve and Base64 guards with VM reversals.
+Representative PGO changes `__text` by roughly -25% but over-specializes the
+layout, regressing Sieve 33.7-40.4% and Base64 27.7-48.8%. The isolated
+no-flatten PoC improves focused compile time and build RSS but regresses the
+non-noisy `rxbvm` Sieve guard by 3.639%. These are retained replayable
+negatives, not production candidates. The semantic Base64 controls instead
+show a 2.69-10.69x ceiling in generated work, so L4 is not opened without a
+new mechanism.
+
+The adjacent VM-library link question is separated from runtime layout. The
+Mac build does expose implementation details: `libcrexxsaa` exports 367 globals
+for a 16-symbol intended surface, `crexxsaa` propagates static implementation
+archives and internal include paths as `PUBLIC`, and the static phase-API
+object pulls the monolithic interpreter even for lifecycle-only use. Export
+filtering does not change measured dylib relink time; removing propagated
+archives reduces the downstream test link from a 35.095 ms median to 21.706
+ms. `PERF3-05-B1` therefore owns optional build/API cleanup and must first
+reproduce the reported slow client/host.
+
+## PERF3-06 — qualified-deficit closure
+
+Track each accepted product slice against the qualified score rather than one
+headline benchmark:
+
+- guard Sieve, Permute and Bounce;
+- close Richards and Base64 only with general mechanisms;
+- keep RexxCPS separate and first-class in sampling;
+- keep Towers as a qualified separate object/allocation lane; and
+- retain Mandelbrot, Storage, List and JSON under their approved explicit
+  no-ratio dispositions unless a separately approved equivalence decision
+  changes them.
+
+The formal Mac refresh uses the ordinary profiling-off Release product, exact
+current sources/images, two warmups and ten serial recorded observations per
+absolute cell. A before/after verdict uses at least one warmup and twelve
+balanced/interleaved pairs, with governance append rules. No unmatched
+historical ratio becomes a regression claim.
+
+Completed 2026-08-04 at clean accepted product `5fbe36049`. The initial
+29-cell matrix passes `348/348`; the governed ooRexx Bounce and dual-VM Base64
+append passes `30/30`. All three appended cells remain noise-labelled, no
+sample is removed and no second append is taken. The exact common-five means
+are `2.453066x/2.285744x` versus ooRexx and `0.912280x/0.850054x` versus
+decimal NetRexx for `rxvm`/`rxbvm`. Richards remains the largest qualified
+common deficit; Base64 remains noisy and below parity. RexxCPS clears parity
+at `1.151301x/1.133307x` but not its 1.50x band, while Towers remains a
+separate qualified deficit at `0.390842x/0.389933x`. Evidence:
+[`2026-08-04-perf3-06-mac-scorecard`](evidence/2026-08-04-perf3-06-mac-scorecard/).
+
+## PERF3-07 — capability and lifecycle side lanes
+
+- `CAP-02` owned heterogeneous/nested containers remains a separate
+  post-Release 1 Level G or explicitly approved library/runtime decision.
+- `CAP-03` a standard Base64 API remains a separate pure-Level-B product track;
+  it does not replace the qualified common codec-loop benchmark.
+- `CAP-04` pure-load lifecycle remains a measurement/API-use-case question and
+  enters public API work only with an approved product need.
+- `CAP-05` explicit RXBIN module initialization is logged for a separate
+  lifecycle design. The linker would record declared module initializers and
+  VM prepare would invoke each exactly once after linking and before the
+  application `main`. Selection must define ordering, idempotency, signals and
+  failure, re-entrant calls, late-loaded modules and optional teardown. A bare
+  `_init` name scan and a library-owned wrapper `main` are not selected; the
+  current `rxvm_prepare()` only prepares execution images, so libraries must
+  continue to initialize shared cREXX state lazily meanwhile.
+
+These lanes can proceed under their own authority but do not borrow PERF3
+performance approval or alter benchmark equivalence silently.
+
+## PERF3-08 — platform validation and architecture selection
+
+The approved order is:
+
+1. Apple ARM64 design, PoC and mandatory first Release verdict;
+2. retained Linux x86-64 evidence audit, followed by a batched selected
+   candidate run only when required;
+3. supported Linux ARM64 correctness, timing and relevant counter coverage;
+4. supported Windows x86-64 correctness, scorecard and artifact validation;
+5. whole-scorecard default VM/private representation decision.
+
+The existing Windows GCC/Clang/MSVC and `/MT` results remain controls. A static
+CRT cannot become the default until allocator ownership across executables,
+DLLs, plugins and public APIs is proved. A later cross-OS RexxCPS validation
+should compare the benchmark-reported timer with an external monotonic timer.
+
+The final decision must state whether `rxvm`, `rxbvm` or a platform-specific
+choice is the default; which private execution representation is selected;
+which supported compilers/options are normative; and which deficits remain.
+Canonical RXBIN portability, public ABI, TRACE/source/debug identity, late
+load, plugins, lifecycle, RSS and artifacts remain hard dimensions.
+
+## PERF3-09 — JIT/AOT/native-backend decision
+
+Keep this deferred. Reopening requires current residual gaps after accepted
+PERF3 non-JIT work, a comparison of native AOT, baseline JIT, tracing,
+quickening and existing-VM maintenance, and explicit treatment of debugger/
+TRACE, signals, dynamic loading, plugins, portability, packaging, sandboxing
+and reproducible builds. Adrian must approve a separate architecture programme
+before implementation.
 
 ## Worklist and evidence contract
 
-Before the first production edit in any activity, create a resumable worklist
-that records:
+Before the first production edit in any PERF3 activity, create a resumable
+worklist recording:
 
-1. exact clean baseline commit, branch state and artifact hashes;
-2. one falsifiable performance hypothesis and named mechanism footprint;
-3. candidate variants, static/runtime ownership and machine ceiling;
-4. semantic risks and focused correctness matrix;
-5. exact profiling-off Release comparison and regression guards;
-6. first Release verdict stop point;
-7. proportional broad QA, sanitizer, install/package,
-   RXBIN/ABI/feature-gating and documentation closeout after acceptance and
-   Adrian's direction;
-8. retained accepted, rejected and neutral evidence; and
-9. status/update links back to this register.
+1. exact baseline commit, branch/upstream/dirty state and artifact hashes;
+2. one falsifiable hypothesis and named current mechanism footprint;
+3. status quo plus at least two plausible implementation owners/forms when
+   two exist, or a recorded reason why only one is viable;
+4. machine-level ceiling and exact semantic proof obligations;
+5. focused correctness and regression-guard matrix;
+6. ordinary profiling-off Release comparison and hard first-verdict stop;
+7. proportional closeout only after Adrian accepts the verdict;
+8. accepted, rejected, neutral and invalidated evidence; and
+9. dated status links back to this roadmap.
 
-Target-only builds and focused PoC loops come first. Formal baselines use the
-ordinary product and existing governance. All new performance orchestration is
-Level B cREXX under `performance/tools/`; temporary host-side analysis may be
-used for investigation but does not become the maintained control plane.
+All maintained performance orchestration remains cREXX Level B under
+`performance/tools/`. Temporary host-side analysis may be used outside the
+repository, but it does not become the maintained control plane.
+
+## Approval record
+
+Adrian approved these five points on 2026-07-31:
+
+1. PERF2 is closed at its recorded state and this file is the live PERF3
+   control plane.
+2. PERF3-01 is the only authorized next activity, with no production edit and
+   a hard evidence/ranking stop.
+3. Full-copy/ownership is the provisional first design panel unless PERF3-01
+   current-product evidence overturns it.
+4. Conversion, accessor, layout/stream, capability and JIT/AOT work remain
+   behind their separate entry and decision gates.
+5. Mac iteration is followed by selected Linux x86-64, required Linux ARM64
+   and Windows validation before the default-VM/final architecture decision.
+
+Adrian subsequently accepted the PERF3-01 current-product evidence boundary
+and ranked PERF3-02/03/04/05 panel on 2026-07-31. This closes PERF3-01 and
+opens PERF3-02 for its bounded evidence/design and PoC comparison only.
+
+On 2026-08-01 Adrian approved P1A followed, after its mandatory Release
+verdict, by the bounded PERF3-05 and PERF3-03 evidence/design gates. Each
+production candidate still requires its recorded selection and first-Release
+stop; this approval does not preselect a public format, layout or changed
+conversion contract.
+
+The first P1A A1 verdict was correct but neutral. Adrian authorized the bounded
+A3 rework on 2026-08-01; A1 evidence and binaries remain retained as an oracle,
+and PERF3-05 stays blocked until the repeated A3 Release verdict is accepted.
+
+The repeated A3 verdict is correct but shows no selectable gain at the governed
+36-pair maximum. It remains frozen for Adrian's revert-or-accept decision;
+PERF3-05 has not begun.
+
+Adrian accepted the recommended disposition on 2026-08-01: retain A1, reject
+and remove A3, complete P1A closeout, then open PERF3-05.
+
+P1A closeout is complete and PERF3-05 is open at its bounded Mac
+evidence/design gate. This authorizes isolated comparators, not a production
+architecture edit or default/private-stream selection.
+
+The PERF3-05 bounded panel is complete and stopped at selection on 2026-08-01.
+Its recommendation is to retain the ordinary product, reject LTO, PGO and the
+no-flatten runtime form, and leave L4 unopened. The separately diagnosed VM
+library link-interface cleanup is queued as `PERF3-05-B1`; no CMake/API change
+is bundled into the runtime decision. PERF3-03 has not begun.
+
+Adrian accepted that PERF3-05 disposition on 2026-08-01. PERF3-05 is closed
+with no production VM edit, PERF3-05-B1 remains independently queued, and the
+already approved PERF3-03 bounded evidence/design gate is open.
+
+The PERF3-03 evidence/design gate reached selection on 2026-08-01. The
+recommendation is the private locale-aware C4 v3 loose-comparison prefilter:
+retain the exact current converter on numeric/uncertain spans, add no public
+opcode/API/serialized form, and defer the value cache. C4 v1 is rejected for a
+confirmed Base64 `rxvm` guard regression after lost caller inlining; v2 is
+rejected unchanged for incomplete active-locale proof. No production edit has
+been made at that selection gate. A subsequent governed common-layout guard retained 348/348 correct
+executions. Permute, Bounce and Richards execute zero loose comparisons; their
+six VM cells show four favourable results, one -0.446% small adverse median
+inside guard and one +0.147% neutral median at the 36-pair cap.
+
+Adrian selected C4 v3 on 2026-08-01. The production edit is limited to the
+portable no-inline private rejector and exact current-converter fallback.
+Minimum Debug validation passes 6/6. The mandatory ordinary Release verdict
+retains 212/212 correct executions: Base64 paired medians are +4.859%/+5.780%
+and RexxCPS is +2.517%/-0.609% on `rxvm`/`rxbvm`; the latter is noisy/neutral
+at cap and no cell reaches the -3% guard. The provisional implementation is
+stopped for Adrian's verdict acceptance before broad closeout.
+
+Adrian accepted the first Release verdict on 2026-08-01. Proportional Apple
+closeout then passed 1,972/1,972 full Debug tests, 6/6 focused ASan tests, the
+complete ordinary Release build and 136-file isolated install, plus installed
+VM smoke 2/2. The leak-enabled sanitizer attempt is retained as unsupported on
+this macOS runtime, and no local Windows cross-toolchain is available; real
+MSVC validation is queued as PERF3-03-W1 before publication. PERF3-03 is
+complete on Apple and PERF3-04 remains queued. Adrian subsequently authorized
+the combined local closeout commit; no push is authorized.
+
+Adrian then approved PERF3-10 on 2026-08-01. The selected C1/T1 candidate is
+ordered TRACE result-event batching plus a reusable storage-identity and
+component-aware RXAS fact for redundant `ITOS`. C0-C4 and T0-T2 remain
+recorded for replay. This candidate preserves TRACE event count/order/value
+because the same proved value remains available; that is its selected local
+quality property, not a universal restriction on optimisation. It must fail
+closed across unproved writes, calls and signal phases, and stop after its
+minimum correctness gate and mandatory first ordinary Release runtime verdict.
+
+That stop gate was reached and Adrian accepted C1/T1 on 2026-08-01. The
+ordinary Release comparison passes 72/72 executions. Combined paired median
+CPS changes are +10.376% on `rxvm` (21/22 favourable) and +10.612% on `rxbvm`
+(12/12 favourable). An equal 200 x 100 counts-only diagnostic removes
+1,399,605 total dynamic instructions (2.504%) and 1,400,000 `ITOS` executions
+(55.555%). No sample was removed. The affected Debug product then passes 59/59
+focused and 1,982/1,982 broad tests. Exact C0/C1 artifacts, timing, profiles,
+the reviewed legacy TRACE expectation update and closeout logs are retained in
+the checksum-closed
+[`PERF3-10 evidence bundle`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/).
+T2 and wider conversions remain outside the accepted slice; no push is
+authorized.
+
+## PERF3-11 — component generations and signal-phase flow
+
+Adrian approved the scalable per-procedure graph, dedicated signal-policy and
+sparse component-SSA architecture on 2026-08-02.  The complete staged plan,
+semantic-change boundary, clean-base oracle, scaling gates and mandatory first
+consumer verdict are controlled by
+[`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md).  Production execution is
+authorized subject to its mandatory gates; no push is authorized.
+
+PERF3-10 proves the architectural direction but intentionally implements one
+consumer. The reusable metadata now distinguishes register components,
+derivation context and an explicit signal-phase type; the production consumer
+uses storage identity and invalidates an `ITOS` fact when its integer/string
+components or numeric context change. Two limitations are now the entry gate
+for the next mechanism slice:
+
+1. derivation availability is solved separately for each candidate generator,
+   so it should become one worklist-driven multi-fact forward analysis before
+   adding many conversions or paying avoidable assembler cost;
+2. signal phase is currently proved only as `NONE` for the safe `ITOS` case
+   and otherwise fails closed as unknown. Common pre-write, post-write and
+   partial-write locations must be classified against actual VM handlers so
+   normal, skip and handler continuations receive the right component
+   generation.
+
+The proposed fact is `(storage identity, component, value generation,
+derivation, context generation)`. A component write creates a new generation;
+derived string/number views name the source generation they represent. Direct
+link/swap/unlink mapping, joins, loop entries/backedges and typed signal edges
+then operate on the same fact instead of accumulating tactical exceptions.
+
+The current equal-work RexxCPS diagnostic leaves 1,120,006 `ITOS`, 1,660,000
+`STOD` and 2,220,000 `DTOS` executions. These are opportunity counts, not
+authorization to remove them. PERF3-11 first measures assembler processing
+time, attributes the two retained hot-loop `ITOS` sites and proves signal
+locations for the decimal handlers. Only then should it compare remaining
+`ITOS`, decimal/string round trips, compiler loop hoisting and consolidated
+swap/swap cleanup as separate consumers. No public format, ABI or production
+rewrite is selected by this queue entry.
+
+Stage 1 closes the signal-contract entry gate. Adrian selected S1-S5 and
+retirement of `RXOP_SEM_MAY_THROW` on 2026-08-02. Generic effect flags now
+describe only call/alias/reference/indirect/opaque behavior and retain their
+existing numeric values; the separate aligned signal inventory is authoritative
+for capability, phase, source, dependencies and continuations. The selected
+total `DCOPY`, non-signalling/plugin-consistent `DTOS`, portable pre-write
+checked `INC`/`DEC`, and pre-write invalid literal `SETNUMFUZ` contracts pass a
+permanent four-way runtime matrix. Focused correctness is 68/68, both ordinary
+Release VMs build, the live decision ledger consumes 650 effect plus 650 signal
+rows, and all three Gate 0 benchmark RXBIN hashes are unchanged. Evidence:
+[`Stage 1 analysis`](evidence/2026-08-02-perf3-11-stage1-signal-contract/) and
+[`Stage 1 lock`](evidence/2026-08-02-perf3-11-stage1-contract-lock/).
+
+Stage 2 closes the immutable graph gate. The new consumer-free sidecar owns
+stable queue-record, instruction, code-block and pre-emission address IDs for
+one epoch, plus typed normal, branch, signal skip, handler, unwind,
+terminal and unknown edges through synthetic roots/exits. Its label index and
+edge construction are expected linear in records plus edges. The first cost
+check exposed and rejected a duplicate opcode-resolution pass; the locked
+orchestration reuses the final legacy `OpInfo` view, frees the legacy graph and
+then constructs the sidecar. Focused correctness is 113/113, all three Gate 0
+images are exact, and final same-session 30-round assembler medians are
++0.411% Richards, +0.463% Towers and -2.784% RexxCPS with no RSS escalation.
+Evidence: [`Stage 2 flow graph`](evidence/2026-08-02-perf3-11-stage2-flow-graph/).
+
+Stage 3 closes the reusable structural-analysis gate. The procedure epoch now
+owns a demand-driven cached result containing unique predecessor sets,
+multi-root RPO, dominators and sparse frontiers, SCC/backedge classification
+and a loop hierarchy for source/control-flow candidates. K04d1 later removes
+the now-retired synthetic signal-retry cycles. Work and retained-memory budgets
+fail closed; deterministic dumps
+make the scale auditable. The first eager integration was rejected after it
+crossed the Richards RSS guard by 1,155,072 bytes. The accepted demand-driven
+form retains identical analysis results under `-d` and future consumers while
+ordinary consumer-free assembly stays guard-clean. Correctness passes 113/113
+and all Gate 0 images remain exact.
+
+Stage 4 closes the signal-policy/effect gate. Handler policy is an inherited
+procedure parameter with sparse writes and edge-multiset phis; normal, skip,
+handler and exit edges select policy versions using the authoritative
+failure phase. Calls do not leak callee-local copy-on-write handler changes,
+but do advance call/reference/external/plugin/locale identities because VM
+argument slots point at caller-owned values. TRACE and numeric-context effects
+remain independently versioned. Silent `sigpush` allocation failure prevents
+an invented exact `sigpop` restoration. Strict GNU90 checks pass, focused
+correctness is 113/113, all Gate 0 images are exact and the ordinary assembler
+cost/RSS guard passes. Stage 5 now consumes these edge-state APIs.
+Evidence: [`Stage 4 signal policy`](evidence/2026-08-02-perf3-11-stage4-signal-policy/).
+
+Stage 5 closes the symbolic storage/component gate.  The third demand-driven
+epoch cache uses sparse persistent mapping/value definitions and lazy phis;
+local, argument and global registers are names for `StorageId`s rather than
+the identity itself.  Link/swap/unlink and fused failure edges preserve exact
+mapping state, caller arguments remain caller-owned, and reference/effect
+versions prevent calls or indirect writes from becoming false unchanged-value
+proofs.  Null/absent is distinct from unknown, copies retain presence, and
+ITOS/FTOS/DTOS plus two-register ITOF name their actual source `ValueId` and
+effect dependencies.
+
+The initial recursive dynamic-storage query was rejected at 82.51 s and the
+first eager component materialization was rejected at about 305 MB peak RSS.
+The locked generation-marked, derivation-site-demanded form completes canonical
+RexxCPS diagnostics in 0.28 s at 18.7 MB peak RSS.  Adrian explicitly accepted
+a seconds-scale proof-analysis budget rather than requiring the roughly 50 ms
+ordinary baseline.  Focused correctness is 113/113, all Gate 0 images are
+exact, and ordinary RexxCPS assembly remains 54.526 ms (+0.009%).  Evidence:
+[`Stage 5 sparse SSA`](evidence/2026-08-02-perf3-11-stage5-sparse-ssa/).
+
+Stage 6 closes the first proof-authority gate.  The fourth per-epoch cache
+provides dominated-success repetition, speculatability, loop must-execute and
+component-invariance queries with cached diagnostic reasons.  Value/effect phi
+reduction permits safe proofs through joins without source-order assumptions.
+The private ITOS availability solver is deleted and the service is sole
+authority.  Its 19-`ITOS` RexxCPS image removes two more operations than the
+retained 21-`ITOS` old-solver image; Adrian accepted the resulting +7.469% and
++6.866% median CPS verdict on `rxvm`/`rxbvm`.
+
+The first broad run exposed an unsound proof across a caller-owned range-call
+argument.  Sparse SSA now gives explicit and range-call actual arguments
+unknown component definitions on normal and failure paths, while preserving
+unrelated locals.  Final focused correctness is 10/10, broad Debug is
+1,987/1,987, and the accepted RexxCPS image hash is unchanged by the fix.
+Diagnostic proof analysis completes in 0.39 s at 20.2 MB peak RSS.  Evidence:
+[`Stage 6 proof service`](evidence/2026-08-02-perf3-11-stage6-proof-service/).
+
+The migration principle is basic-to-advanced, not like-for-like parity.  The
+old solver is a retained minimum safe-capability baseline.  Each remaining
+legacy proof must be inventoried and replayed, then replaced one authority at a
+time; a stronger new acceptance is valid only with its own positive proof,
+adversarial correctness and output-changing Release gate.
+
+The inventory is locked in
+[`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md).  M01 is
+complete: the old repeated-`ITOF` authority is deleted and the generic
+one-register `XTOY` consumer selects all 20 conversions from canonical
+metadata.  Twelve focused deletions prove: the old `ITOF` floor plus 11
+stronger cases, including four `ITOD` flow shapes.  `ITOD` and `BTOD` now have
+a coherent total non-signalling plugin/runtime contract; signalling families
+and same-component `BTOI`/`ITOB` normalization remain closed.  Richards,
+Towers and RexxCPS are byte-identical to Stage 6, focused replay passes 51/51,
+broad Debug passes 1,989/1,989, and diagnostic RexxCPS assembly remains within
+the seconds-scale budget. Evidence:
+[`M01 XTOY migration`](evidence/2026-08-02-perf3-11-m01-xtoy/).
+
+M02 is complete.  The old repeated integer/bitwise-float load availability
+solver is deleted and the proof service now requires equal storage, equal
+write-once scalar leaves and already-absent reference/native payloads.  The
+focused image recovers the old floor and adds equal-phi, exact-float,
+linked-storage and ordered-TRACE deletions; different phis, signed zero and
+hidden cleanup remain closed.  Canonical images are byte-identical, ordinary
+RexxCPS assembly retains a 0.05 s median, and the accepted procedure-local peak
+is 30.1 MB.  Focused replay passes 53/53, Release hidden-cleanup execution is
+4/4 and broad Debug passes 1,991/1,991.  Evidence:
+[`M02 equivalent constants`](evidence/2026-08-03-perf3-11-m02-constant-write/).
+M03 is complete in
+[`M03 repeated absence`](evidence/2026-08-03-perf3-11-m03-absent-write/).
+Its known-storage/all-component proof recovers the old repeated-`NULL` floor
+and adds equal-phi, linked-storage and ordered-TRACE cases while preserving
+cleanup.  Canonical images are unchanged and broad Debug passes 1,993/1,993.
+M04 is complete in
+[`M04 exact same-storage copy`](evidence/2026-08-03-perf3-11-m04-self-copy/).
+Its conditional opcode metadata and StorageId proof recover the old raw-copy
+floor and add decimal/attribute/binary, LINK, agreeing-phi and TRACE-safe
+deletions. Divergent and different storage remain closed. Canonical images are
+unchanged and broad Debug passes 1,995/1,995.
+
+M05 is complete in
+[`M05 sparse use/liveness`](evidence/2026-08-03-perf3-11-m05-sparse-use-liveness/).
+One per-epoch use/dependency index replaces repeated dense candidate scans and
+feeds immutable typed-copy rewrite plans. The ten old accepts are recovered;
+the unrelated-ENDLIFE case is one stronger acceptance, while metadata, TRACE,
+mixed-entry, cursor, caller-window and handler observations remain closed.
+Canonical images are unchanged. Adrian accepted the ordinary RexxCPS assembly
+boundary of 0.16-0.17 seconds and 102.8 MB peak RSS, and broad Debug passes
+1,995/1,995.
+
+M06 is complete in
+[`M06 producer forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/).
+Its immutable proof follows exact storage/component identities and sparse uses,
+recovers all eleven current accepts and deletes the old dense liveness solver.
+Hidden producer cleanup is now explicit: every reference/native payload
+cleared by the retargeted scalar producer must already be absent in both
+storages. Frozen M05 and M06 focused/canonical images are byte-identical.
+Adrian accepted the 0.18 s equal RexxCPS assembly median and +1.05% median RSS
+verdict; focused Debug/Release pass 8/8 and broad Debug passes 1,995/1,995.
+K04a compare/branch fusion owns atomic exact result-event deletion. K04b now
+uses exact/dependent-`ValueId` call-window visibility and is accepted as a
+neutral consolidation. K04c proves all five remaining canonical rejections are
+unknown CALL retry-metadata false positives, not actual argument observations.
+K04d0 found no production retry user and exposed an existing fused-call retry
+mapping defect. K04d1 is implemented with propagated-call partial-state
+metadata retained for non-retry failure paths, and K04d2 focused Debug/Release
+passes 14/14. K04d3's revised first Release verdict is neutral at +0.021%
+median RexxCPS on both VMs; mixed pair directions and one retained low `rxvm`
+sample are retained. Adrian accepted the neutral semantic/infrastructure result
+without an append, and K04d4 passes the complete Debug build plus 1,998/1,998
+broad Debug tests. K04 is closed.
+
+The PERF3-10 closeout also audited surviving tactical guards. Loads,
+one-register XTOY repetition, same-storage copies and typed-copy redirection
+now use the proof service; their superseded TRACE/barrier scans were deleted
+with the corresponding authority. Producer forwarding now uses M06's atomic
+SSA/use, hidden-cleanup and address-observation proof. The local duplicate-link
+and swap/call-window rules still transform
+code while storage identity currently only analyses their mappings. The
+adjacent `cnop` rule is not a trace-anchor workaround. PERF3-11 replaces these
+one consumer at a time with structural/runtime equivalence, rather than
+deleting guards in a batch.
+
+## PERF3-12 — current RexxCPS clause-lowering rereview
+
+This compiler-facing evidence lane completed on 2026-08-04 without a product
+edit. Fixed `200 x 100` schema-5 profiles use the exact accepted optimized and
+no-opt images. No-opt is exactly 148,701,541 instructions under both VMs;
+optimized is 54,221,210/54,221,182 under `rxvm`/`rxbvm`, with only 28
+low-frequency final formatting/control instructions differing between the
+otherwise matching optimized profiles. These are diagnostic counts; the
+profiling-off PERF3-06 scorecard remains runtime authority.
+
+The ranked mechanism evidence is:
+
+1. `R12-P01` PARSE direct-destination transactions derive a maximum 7.28M
+   PARSE-only `SCOPY` plus 1.96M grouped-null removals, a 9.24M-dispatch
+   ceiling. The frozen PARSE opcodes first need exact conditional signal and
+   failure-write metadata because source/result alias snapshot allocation can
+   signal before current user-variable assignments.
+2. `R12-S01/H01` maps 2.24M exact `"Key Bee." || lvar` constructions. Existing
+   `STEMGET2`/`STEMSET2` selection can remove up to 2.24M concat dispatches;
+   loop-scoped reuse can remove 1.96M. They require a comparative PoC rather
+   than an assumed combination.
+3. `R12-C01` observes exactly 2.22M `DCOPY`/`DTOS` pairs and 97.68 MB of
+   decimal-copy traffic. Existing multi-component values and metadata permit
+   an atomic RXAS plan that materializes the string component on the source,
+   redirects string-only uses and deletes `DCOPY`; no two-register opcode,
+   runtime flag or RXC semantic optimizer is required.
+4. `R12-I01/R01` defers inlining and final register work until these consumers
+   reduce the body and temporaries. Inactive `R12-T01` TRACE has only 100-200
+   setup/teardown calls and no hot-loop procedure call; `R12-A01` emits no
+   runtime work.
+
+The opportunity ranking puts PARSE first, but the implementation queue starts
+with `PERF3-12A / R12-C01` because it is a bounded consumer of already accepted
+component SSA/use facts. `PERF3-12B` compares segmented stems with loop-scoped
+reuse; `PERF3-12C` installs the PARSE contract and multi-result transaction;
+`PERF3-12D` later revisits late/hybrid inlining and register finalization. Each
+requires separate approval and its own mandatory first ordinary Release
+verdict. T1 remains the trace principle: a reached event drains prior ordered
+events, optimized trace output may differ, and users disable optimization for
+source-accurate tracing.
+
+PERF3-12A was approved on 2026-08-04 and is controlled by
+[`PERF3-12A-WORKLIST.md`](PERF3-12A-WORKLIST.md). Adrian subsequently selected
+a breaking cursorless string/binary RXAS prerequisite: explicit-position slice
+operations replace public cursor state, old assembler/bytecode compatibility
+is not required, and removal of the cursor fields from the VM value structure
+is an intentional compile-time cross-check for missed instructions. The
+cross-check found and removed all production dependencies plus one stale
+current register diagram and obsolete generated operation assets. The
+cursorless first verdict was accepted: fixed-work RexxCPS removes 5,601,469
+no-opt instructions per VM plus 1,493/1,511 optimized instructions under
+`rxvm`/`rxbvm`, and all former setter dispatches are zero. Adrian then accepted
+X1 copied-XTOY placement. It removes exactly 820,000 optimized `DCOPY`
+dispatches and 36,080,000 copied bytes while retaining all 2,220,000 `DTOS`, a
+further 1.528235%/1.528149% optimized instruction reduction. Combined closeout
+adds exact negative and injected-allocation slice coverage and rejects
+component placement when `MKREF` exposes either storage without a second
+register mapping. Broad Debug has 2,034/2,034 functional outcomes: 2,033 pass
+in the parallel-30 run and its only host-load timeout passes isolated in 12.11
+seconds. Old build/worktree RXBIN files must be deleted or rebuilt because
+compatibility was deliberately broken. Wall-clock claims remain deferred until
+the remote terminal is absent. Evidence:
+[`cursorless first verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/)
+and
+[`X1 first verdict`](evidence/2026-08-04-perf3-12a-x1-first-release-verdict/).
 
 ## Authoritative references
 
-- programme rules: [`AGENTS.md`](AGENTS.md) and
+- standing instructions and governance:
+  [`AGENTS.md`](AGENTS.md) and
   [`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md)
-- initial closed register:
+- closed PERF2 register:
+  [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md)
+- closed initial register:
   [`ROADMAP-INITIAL-SWEEP-2026-07-23.md`](ROADMAP-INITIAL-SWEEP-2026-07-23.md)
-- dated charter:
-  [`performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md)
-- cross-runtime mechanisms:
-  [`rexxcps-runtime-source-review-2026-07-22.md`](rexxcps-runtime-source-review-2026-07-22.md)
-- latest current-product checkpoint:
-  [`2026-07-23 NR-16/NR-17 closeout`](evidence/2026-07-23-nr-16-17-closeout/README.md)
-- capability ledger: [`capability-gaps.md`](capability-gaps.md)
-- compiler and VM architecture:
-  [`CREXX_ARCHITECTURE.md`](../docs/ai-context/CREXX_ARCHITECTURE.md),
-  [`RXAS_ASSEMBLER.md`](../docs/ai-context/RXAS_ASSEMBLER.md) and
-  [`RXVM_INTERPRETER.md`](../docs/ai-context/RXVM_INTERPRETER.md)
-- inlining and flow evidence:
-  [`NR-12-21-WORKLIST.md`](NR-12-21-WORKLIST.md),
-  [`NR-26-WORKLIST.md`](NR-26-WORKLIST.md) and
-  [`NR-27-WORKLIST.md`](NR-27-WORKLIST.md)
-- language/capability planning:
-  historical/working
-  [`levelb-language-improvement-backlog.md`](../docs/planning/beta-3/notes/levelb-language-improvement-backlog.md)
-  (reconcile completed items before reuse),
-  [`array-statements.md`](../docs/planning/beta-3/notes/array-statements.md) and
-  [`cross-cutting-conclusions.md`](../docs/planning/release-1/component-catalogue/cross-cutting-conclusions.md)
-- VM investigation history:
-  [`vm-dispatch-performance-investigation.md`](../docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md)
+- retained Mac scorecard:
+  [`2026-07-27-perf2-09-mac-closure`](evidence/2026-07-27-perf2-09-mac-closure/)
+- retained Linux x86-64 attribution:
+  [`2026-07-28-perf2-10-11-intel-linux`](evidence/2026-07-28-perf2-10-11-intel-linux/)
+- retained Windows baseline and controls:
+  [`2026-07-29-perf2-11-windows-x86-64`](evidence/2026-07-29-perf2-11-windows-x86-64/),
+  [`2026-07-30 compiler comparison`](evidence/2026-07-30-perf2-11-windows-compiler-comparison/) and
+  [`2026-07-30 MSVC rxbvm`](evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/)
+- extracted copy/conversion/accessor evidence:
+  [`CRI-13 RXAS trace`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R1-RXAS-TRACE.md),
+  [`bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md) and
+  [`class-access verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-C-CLASS-RELEASE-VERDICT.md)

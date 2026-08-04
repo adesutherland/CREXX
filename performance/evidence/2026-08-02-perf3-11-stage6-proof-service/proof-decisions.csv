@@ -1,0 +1,8 @@
+procedure,generator_instruction,candidate_instruction,storage_id,decision,reason,source_value,result_value
+rexxcps_levelb.main,148,152,52,proved,proved,2608,995
+rexxcps_levelb.main,148,163,52,proved,proved,2608,995
+rexxcps_levelb.main,148,186,52,proved,proved,2608,995
+rexxcps_levelb.main,148,188,52,proved,proved,2608,995
+rexxcps_levelb.main,148,203,52,proved,proved,2608,995
+rexxcps_levelb.main,68,350,24,rejected,generator-source-unknown,2596,425
+rexxcps_levelb.main,333,353,16020,rejected,generator-source-unknown,3440,2210

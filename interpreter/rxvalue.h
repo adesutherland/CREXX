@@ -154,14 +154,14 @@ struct value {
     char *string_value;
     size_t string_length;
     size_t string_buffer_length;
-    size_t string_pos;
 #ifndef NUTF8
     size_t string_chars;
-    size_t string_char_pos;
+    /* VM-private UTF-8 character lookup cache; never an RXAS-visible cursor. */
+    size_t string_cache_byte_pos;
+    size_t string_cache_char_pos;
 #endif
     char *binary_value; // Must be malloced
     size_t binary_length; // binary_value length
-    size_t binary_pos; // byte cursor for binary operations
     size_t binary_buffer_length; // binary_value buffer length
     const rxvm_native_payload_ops *native_payload_ops; // Shared native payload operations, or NULL
     unsigned int native_payload_flags;

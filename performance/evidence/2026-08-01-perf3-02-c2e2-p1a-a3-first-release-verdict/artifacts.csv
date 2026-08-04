@@ -1,0 +1,11 @@
+artifact,sha256,bytes,role
+/tmp/crexx-p1a-a3.yaiVu3/rxas-pre-p1,af80b2c9f664a2ed1b7ec7a4cca5a419718f2f5384e3cfb880f86c7a06ad7422,596824,pre_p1_timing_oracle
+/tmp/crexx-p1a-a3.yaiVu3/rxas-p1-locked,09ea8e49c54dfc839833a1fa40dfa5809467aa53c730dc050ae0a2b95f73669e,596776,locked_p1_timing_oracle
+/tmp/crexx-p1a-a3.yaiVu3/rxas-a1-locked,7cec2f1245da24cf24ffd37ec94faba0309dfc41f088d5b94c382522c0e9258d,596776,a1_timing_oracle
+/tmp/crexx-p1a-a3.yaiVu3/rxas-a3-candidate,9c212eea663e5e5f663c698723471a9f7adda30c816b5ee46c5d46a6dbbdb14f,596776,a3_candidate
+/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxas,ac1737cc7d6d7ba59a1a3771d1c6d977b974f5d5c23fa5f10c032f0d00c259d9,256519,richards_input
+/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxas,35ead6d2a0313e64986370c803bf960cc20a73bf5b1813d9c0e8d2ac2a7c3e4e,81002,towers_input
+/Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/storage_identity_flow.rxas,39b5f2f633d223f0b5a450544c2787aa28e291d56c6d8676c018ede5188b7650,2003,focused_fixture
+/tmp/crexx-p1a-a3.yaiVu3/identity/rxbin/richards-a3.rxbin,bb7832ff6e936655a821af9d9dffe1de590957da39678a21188b57cebea1dab5,79214,richards_output_oracle
+/tmp/crexx-p1a-a3.yaiVu3/identity/rxbin/towers-a3.rxbin,c29785fa1cd37c258434ec014592319057c6623daa5170d2e4e9fac0a3e90feb,28726,towers_output_oracle
+/tmp/crexx-p1a-a3.yaiVu3/identity/rxbin/storage_identity_flow-a3.rxbin,a2a0ea003769b1a33f31bad6c44d7cda9567fc9b79e1bd2ed4f9e55b8d573045,1469,fixture_output_oracle

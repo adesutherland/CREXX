@@ -1,0 +1,7 @@
+# PERF3-11 K04e Apple formal timing cells selected mechanically by the
+# relative-MAD/min-max-span rule. No initial sample is removed. Aggregate is no
+# in this capture-only manifest; the merged summary uses the full v1 manifest.
+crexx-cross-runtime-matrix|1
+permute-netrexx|Permute|netrexx|netrexx|decimal-rexx-port|A|no|no|5000|PASS: AWFY Permute NetRexx decimal port||/usr/bin/java;-cp;/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-27-perf2-09-mac-closure/generated/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;awfy_permute;5000
+base64-rxvm|Base64|crexx|rxvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/bin/rxvm;/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/bin/library.rxbin;-a;2500
+base64-rxbvm|Base64|crexx|rxbvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/bin/rxbvm;/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/bin/library.rxbin;-a;2500

@@ -42,21 +42,21 @@ import rxfnsb
 
 namespace rxfnsb expose push queue pull queued
 
-_queue = .string[]
-
 /*------------------------------------------------------------*/
 /* Insert a string at the front of the queue (LIFO).          */
 /*------------------------------------------------------------*/
-push: procedure = .void expose _queue
+push: procedure = .void expose _queue _queue_ready
   arg value = .string
+  call _ensure_queue
   call arrayprepend _queue, value
 return
 
 /*------------------------------------------------------------*/
 /* Append a string to the end of the queue (FIFO).            */
 /*------------------------------------------------------------*/
-queue: procedure = .void expose _queue
+queue: procedure = .void expose _queue _queue_ready
   arg value = .string
+  call _ensure_queue
   call arrayappend _queue, value
 return
 
@@ -65,7 +65,8 @@ return
 /*                                                            */
 /* Returns an empty string when the queue is empty.           */
 /*------------------------------------------------------------*/
-pull: procedure = .string expose _queue
+pull: procedure = .string expose _queue _queue_ready
+  call _ensure_queue
   if _queue[0] = 0 then return ""
 
   value = _queue[1]
@@ -75,5 +76,17 @@ return value
 /*------------------------------------------------------------*/
 /* Return the current number of queued entries.               */
 /*------------------------------------------------------------*/
-queued: procedure = .int expose _queue
+queued: procedure = .int expose _queue _queue_ready
+  call _ensure_queue
   return _queue[0]
+
+/*------------------------------------------------------------*/
+/* Initialize private queue state without executable top-level */
+/* code in the linked library module.                          */
+/*------------------------------------------------------------*/
+_ensure_queue: procedure = .void expose _queue _queue_ready
+  if _queue_ready <> 1 then do
+    _queue = .string[]
+    _queue_ready = 1
+  end
+return

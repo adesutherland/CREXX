@@ -35,18 +35,18 @@ main() .locals=5
    .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "needle" ""
    seq r3,r2,""
    .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
-   brt l360orend,r3
+   brt l356orend,r3
    .traceevent "V" 6 "R" "S" "r" 1 13 13 0 "haystack" ""
    seq r3,r1,""
    .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
-l360orend:
+l356orend:
    .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
-   brf l359iffalse,r3
+   brf l355iffalse,r3
    .srcstep 8 8 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
    load r4,0
    .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
-   br l338bexprend
-l359iffalse:
+   br l334bexprend
+l355iffalse:
    .srcstep 9 9 25 "pos.crexx" 50 3 25 "  found_position = start"
    load r0,1
    .traceevent "L" 4 "R" "I" "r" 0 9 9 0 "" ""
@@ -59,8 +59,8 @@ l359iffalse:
    .srcstep 11 11 25 "pos.crexx" 52 3 24 "  return found_position"
    .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "found_position" ""
    icopy r4,r0
-   br l338bexprend
-l338bexprend:
+   br l334bexprend
+l334bexprend:
    .meta "basic_strings.main.found_position"
    itos r4
    say r4

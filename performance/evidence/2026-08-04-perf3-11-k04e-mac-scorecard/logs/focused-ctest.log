@@ -1,0 +1,13 @@
+Test project /private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release
+linked_opt_runtime_artifacts_build: Passed
+benchmark_awfy_sieve_opt: Passed
+benchmark_awfy_permute_opt: Passed
+benchmark_awfy_towers_opt: Passed
+benchmark_awfy_bounce_opt: Passed
+benchmark_awfy_richards_opt: Passed
+benchmark_base64_roundtrip_opt: Passed
+benchmark_rexxcps_levelb_opt: Passed
+nr10_cross_runtime_matrix_selftest_noopt: Passed
+nr10_cross_runtime_matrix_selftest_opt: Passed
+100% tests passed, 0 tests failed out of 10
+Total Test time (real) = 1.51 sec

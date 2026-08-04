@@ -1,0 +1,1476 @@
+[0/2] Re-checking globbed directories...
+[1/1472] Copying bootstrap src/options/parse_opts.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[2/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[3/1472] Copying bootstrap src/parse/conf_lexer.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[4/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[5/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[6/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[7/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[8/1472] Copying bootstrap src/parse/lexer.cc and src/parse/lexer.h, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[9/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[10/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[11/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[12/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[13/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[14/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[15/1472] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[16/1472] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[17/1472] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[18/1472] Generating doc/re2c.1
+[19/1472] Copying bootstrap src/msg/ver_to_vernum.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[20/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/dslsyntax_log.c.o
+[21/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/thread_utils.c.o
+[22/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/diff.c.o
+[23/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/serialization.c.o
+[24/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/comms.c.o
+[25/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/dslsyntax_common.c.o
+[26/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/code_buffer.c.o
+[27/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/emergency_parse.c.o
+[28/1472] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+[29/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/dslsyntax_parser.c.o
+[30/1472] Building CXX object re2c/CMakeFiles/re2c_objects_autogen_ver_to_vernum.dir/src/msg/ver_to_vernum.cc.o
+[31/1472] Linking C static library dslsyntax-codebuffer/libdslsyntax_parser.a
+[32/1472] Building C object lib/rxfnsb/tests_functional/CMakeFiles/address_argv_fixture.dir/address_argv_fixture.c.o
+[33/1472] Building C object cpacker/CMakeFiles/rxcpack.dir/rxcpack.c.o
+[34/1472] Linking C executable bin/address_argv_fixture
+[35/1472] Linking C executable bin/rxcpack
+[36/1472] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess.dir/keyaccess.c.o
+[37/1472] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/parser.cc.o
+[38/1472] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_parser.cc.o
+[39/1472] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[40/1472] Building C object lib/plugins/id/CMakeFiles/_id.dir/id.c.o
+[41/1472] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/options/parse_opts.cc.o
+[42/1472] Building C object lib/plugins/system/CMakeFiles/_system.dir/system.c.o
+[43/1472] Linking C shared module bin/rx_keyaccess.rxplugin
+[44/1472] Building C object linker/CMakeFiles/rxlink.dir/rxlinkmain.c.o
+[45/1472] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dynamic.dir/mc_decimal.c.o
+[46/1472] Linking C shared module bin/rx_id.rxplugin
+[47/1472] Building C object preprocessor/CMakeFiles/precomp_static.dir/precomp.c.o
+[48/1472] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[49/1472] Building C object preprocessor/CMakeFiles/precomp.dir/precomp.c.o
+[50/1472] Linking C executable bin/rxlink
+[51/1472] Linking C shared module bin/rx_system.rxplugin
+[52/1472] Stage rxpp macro support files ...
+[53/1472] Linking C shared module bin/rxvm_mc_decimal.rxvmplugin
+[54/1472] Linking C shared module bin/rxprecomp.rxplugin
+[55/1472] Linking C static library bin/rxprecomp_static.a
+[56/1472] Linking C static library bin/librxbvml.a
+[57/1472] Building C object linker/CMakeFiles/rxlink_concat_files.dir/tests/concat_files.c.o
+[58/1472] Building C object disassembler/CMakeFiles/rxdas.dir/rxdamain.c.o
+[59/1472] Building C object lib/plugins/system/CMakeFiles/_system_static.dir/system.c.o
+[60/1472] Building C object interpreter/CMakeFiles/mutate_jtable_rxbin.dir/tests/mutate_jtable_rxbin.c.o
+[61/1472] Linking C executable linker/rxlink_concat_files
+[62/1472] Linking C static library bin/rx_system_static.a
+[63/1472] Building C object tests/rxpa/CMakeFiles/_rxpalink_decl.dir/rxpa_staticlink.c.o
+[64/1472] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/lexer.cc.o
+[65/1472] Building C object tests/rxpa/CMakeFiles/_testfuncs_static.dir/rxpa_functests.c.o
+[66/1472] Building C object lib/plugins/map/CMakeFiles/_map.dir/map.c.o
+[67/1472] Building C object lemon/CMakeFiles/lemon.dir/lemon.c.o
+[68/1472] Building C object lib/plugins/treemap/CMakeFiles/_treemap.dir/treemap.c.o
+[69/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/dslsyntax_log.c.o
+[70/1472] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+[71/1472] Building C object lib/plugins/recv390/CMakeFiles/_recv390.dir/recv390.c.o
+[72/1472] Linking C executable lemon/lemon
+[73/1472] Building C object disassembler/CMakeFiles/rxdas.dir/rxdadism.c.o
+[74/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/code_buffer.c.o
+[75/1472] Linking C static library bin/librxvml.a
+[76/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/thread_utils.c.o
+[77/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/comms.c.o
+[78/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/diff.c.o
+[79/1472] Building C object disassembler/CMakeFiles/mutate_graph_rxbin.dir/tests/mutate_graph_rxbin.c.o
+[80/1472] Linking C executable bin/rxdas
+[81/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/serialization.c.o
+[82/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/dslsyntax_common.c.o
+[83/1472] Linking C executable interpreter/mutate_jtable_rxbin
+[84/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/dslsyntax_editor.c.o
+[85/1472] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal.dir/mc_decimal.c.o
+[86/1472] Building C object lib/plugins/rxmath/CMakeFiles/_rxmath.dir/rxmath.c.o
+[87/1472] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_manual.dir/db_decimal.c.o
+[88/1472] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_dynamic.dir/db_decimal.c.o
+[89/1472] Building C object lib/plugins/cipher/CMakeFiles/_cipher.dir/cipher.c.o
+[90/1472] Building C object lib/plugins/stack/CMakeFiles/_stack.dir/stack.c.o
+[91/1472] Building C object lib/plugins/getpi/CMakeFiles/_getpi.dir/getpi.c.o
+[92/1472] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_lexer.cc.o
+[93/1472] Generating src/msg/help_re2c.cc
+[94/1472] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_editor.dir/emergency_parse.c.o
+[95/1472] Linking C shared module bin/rx_treemap.rxplugin
+[96/1472] Linking C shared module bin/rx_recv390.rxplugin
+[97/1472] Building C object interpreter/CMakeFiles/crexxsaa.dir/crexxsaa.c.o
+[98/1472] Building C object interpreter/CMakeFiles/rxvm_platform_notls_objects.dir/rxvmsock.c.o
+[99/1472] Building C object lib/plugins/arrays/CMakeFiles/_arrays.dir/arrays.c.o
+[100/1472] Building C object lib/plugins/llist/CMakeFiles/_llist.dir/llist.c.o
+[101/1472] Building C object lib/plugins/strings/CMakeFiles/_strings.dir/strings.c.o
+[102/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/helpers.cc.o
+[103/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/symtab.cc.o
+[104/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_adfa.cc.o
+[105/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_cfg.cc.o
+[106/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass3_fixup.cc.o
+[107/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa.cc.o
+[108/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa_tree.cc.o
+[109/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_interf.cc.o
+[110/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_nfa.cc.o
+[111/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/nfa/re_to_nfa.cc.o
+[112/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/output.cc.o
+[113/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass4_render.cc.o
+[114/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass1_analyze.cc.o
+[115/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/compact.cc.o
+[116/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/dce.cc.o
+[117/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/cfg.cc.o
+[118/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/freeze.cc.o
+[119/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/interfere.cc.o
+[120/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/adfa/adfa.cc.o
+[121/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass2_generate.cc.o
+[122/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/optimize.cc.o
+[123/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/liveanal.cc.o
+[124/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/rename.cc.o
+[125/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/normalize.cc.o
+[126/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/varalloc.cc.o
+[127/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/opt.cc.o
+[128/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fallback_tags.cc.o
+[129/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/minimization.cc.o
+[130/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tagver_table.cc.o
+[131/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/dead_rules.cc.o
+[132/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fillpoints.cc.o
+[133/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/find_state.cc.o
+[134/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/ebcdic.cc.o
+[135/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tcmd.cc.o
+[136/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/enc.cc.o
+[137/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/range_suffix.cc.o
+[138/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/determinization.cc.o
+[139/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf8.cc.o
+[140/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf16.cc.o
+[141/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/closure.cc.o
+[142/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/msg.cc.o
+[143/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/default_tags.cc.o
+[144/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/fixed_tags.cc.o
+[145/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/nullable.cc.o
+[146/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/warn.cc.o
+[147/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/regexp.cc.o
+[148/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/ast_to_re.cc.o
+[149/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/split_charset.cc.o
+[150/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/maxpath.cc.o
+[151/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/control_flow.cc.o
+[152/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/skeleton.cc.o
+[153/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/file_utils.cc.o
+[154/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/help_re2c.cc.o
+[155/1472] Linking C shared module bin/rx_map.rxplugin
+[156/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_code.cc.o
+[157/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/input.cc.o
+[158/1472] Building C object tests/native_signals/CMakeFiles/signal_tester.dir/sigtest-posix.c.o
+[159/1472] Building C object lib/plugins/rxtcp/CMakeFiles/_rxtcp.dir/rxtcp.c.o
+[160/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/range.cc.o
+[161/1472] Building C object tests/rxpa/CMakeFiles/_rxpa_classdecl_static_decl.dir/rxpa_classdecl.c.o
+[162/1472] Linking C static library tests/rx_rxpalink_decl.a
+[163/1472] Building C object tests/rxpa/CMakeFiles/_rxpalink_static.dir/rxpa_staticlink.c.o
+[164/1472] Linking C static library tests/rx_testfuncs_static.a
+[165/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/string_utils.cc.o
+[166/1472] Linking C static library dslsyntax-codebuffer/libdslsyntax_editor.a
+[167/1472] Building C object tests/rxpa/CMakeFiles/funcvm.dir/__/__/interpreter/rxvmmain.c.o
+[168/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_data.cc.o
+[169/1472] Building C object contract/CMakeFiles/crexx-contract.dir/contractmain.c.o
+[170/1472] Building C object contract/CMakeFiles/crexx-contract.dir/contract_json.c.o
+[171/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/ast.cc.o
+[172/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/unicode_casemap.cc.o
+[173/1472] Building C object contract/CMakeFiles/crexx-contract.dir/contract_model.c.o
+[174/1472] Building C object compiler/tests/CMakeFiles/mutate_rxbin_feature.dir/mutate_rxbin_feature.c.o
+[175/1472] Building C object assembler/CMakeFiles/rxas_test_flatten.dir/rxas_test_flatten.c.o
+[176/1472] Building C object compiler/tests/CMakeFiles/test_rxvml_utf_boundaries.dir/src/test_rxvml_utf_boundaries.c.o
+[177/1472] Building C object dslsyntax-tools/CMakeFiles/parser_tester.dir/parser_tester.c.o
+[178/1472] Linking C executable disassembler/mutate_graph_rxbin
+[179/1472] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqfile.c.o
+[180/1472] Building C object compiler/tests/CMakeFiles/crexx_fake_editor.dir/src/fake_editor.c.o
+[181/1472] Building C object contract/CMakeFiles/crexx-contract.dir/contract_compat.c.o
+[182/1472] Building C object interpreter/CMakeFiles/crexxsaa_tool.dir/crexxsaa_tool.c.o
+[183/1472] Linking C shared library bin/libcrexxsaa.dylib
+[184/1472] Building C object interpreter/CMakeFiles/test_jtable_policy.dir/tests/test_jtable_policy.c.o
+[185/1472] Building C object interpreter/CMakeFiles/test_signal_mask.dir/tests/test_signal_mask.c.o
+[186/1472] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqmain.c.o
+[187/1472] Linking C static library bin/rxvm_mc_decimal.a
+[188/1472] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber_test.dir/decnumber_test.c.o
+[189/1472] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[190/1472] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dyn_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[191/1472] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[192/1472] Linking C shared module bin/rxvm_db_decimal.rxvmplugin
+[193/1472] Linking C static library bin/rxvm_db_decimal_manual.a
+[194/1472] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_full_tests.dir/mc_decimal_full_tests.c.o
+[195/1472] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/rxpafuncs.c.o
+[196/1472] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/tests/test_rxpa_utf_validation.c.o
+[197/1472] Linking C shared module bin/rx_arrays.rxplugin
+[198/1472] Linking C shared module bin/rx_rxmath.rxplugin
+[199/1472] Linking C shared module bin/rx_stack.rxplugin
+[200/1472] Linking C shared module bin/rx_cipher.rxplugin
+[201/1472] Building C object lib/plugins/stack/CMakeFiles/_stack_static.dir/stack.c.o
+[202/1472] Building C object lib/plugins/cipher/CMakeFiles/_cipher_static.dir/cipher.c.o
+[203/1472] Building C object lib/plugins/rxmath/CMakeFiles/_rxmath_static.dir/rxmath.c.o
+[204/1472] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_tests.dir/db_decimal_tests.c.o
+[205/1472] Linking C shared module bin/rx_strings.rxplugin
+[206/1472] Linking C shared module bin/rx_getpi.rxplugin
+[207/1472] Linking C shared module bin/rx_llist.rxplugin
+[208/1472] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess_static.dir/keyaccess.c.o
+[209/1472] Building CXX object re2c/CMakeFiles/re2c.dir/src/main.cc.o
+[210/1472] Linking C shared module bin/rx_rxtcp.rxplugin
+[211/1472] Building C object lib/plugins/llist/CMakeFiles/_llist_static.dir/llist.c.o
+[212/1472] Linking CXX executable re2c/re2c
+[213/1472] Building C object tests/CMakeFiles/test_rxinteger_contract.dir/test_rxinteger_contract.c.o
+[214/1472] Building C object lib/plugins/id/CMakeFiles/_id_static.dir/id.c.o
+[215/1472] Building C object lib/plugins/rxtcp/CMakeFiles/_rxtcp_static.dir/rxtcp.c.o
+[216/1472] Building C object lib/plugins/treemap/CMakeFiles/_treemap_static.dir/treemap.c.o
+[217/1472] Building C object tests/CMakeFiles/test_rxop_metadata.dir/__/binutils/include/opdata.c.o
+[218/1472] Building C object tests/CMakeFiles/test_rxop_metadata.dir/__/binutils/rxopmeta.c.o
+[219/1472] Linking C executable tools/signal_tester
+[220/1472] Building C object tests/CMakeFiles/test_rxop_metadata.dir/test_rxop_metadata.c.o
+[221/1472] Building C object lib/plugins/recv390/CMakeFiles/_recv390_static.dir/recv390.c.o
+[222/1472] Linking C static library tests/rx_rxpalink_static.a
+[223/1472] Linking C static library tests/rx_rxpa_classdecl_static_decl.a
+[224/1472] Building C object interpreter/CMakeFiles/ts_regvalue_tester.dir/tests/ts_regvalue_tester.c.o
+[225/1472] Building C object tests/rxpa/CMakeFiles/testvm.dir/__/__/interpreter/rxvmmain.c.o
+[226/1472] Linking C executable tests/funcvm
+[227/1472] Linking C executable dslsyntax-tools/parser_tester
+[228/1472] Linking C executable compiler/tests/mutate_rxbin_feature
+[229/1472] Linking C executable bin/rxas_test_flatten
+[230/1472] Linking C executable bin/crexx-contract
+[231/1472] Linking C executable compiler/tests/crexx_fake_editor
+[232/1472] Linking C executable bin/crexxsaa
+[233/1472] Linking C executable bin/rxseq
+[234/1472] Linking C executable interpreter/ts_regvalue_tester
+[235/1472] Linking C executable interpreter/test_signal_mask
+[236/1472] Linking C executable interpreter/test_jtable_policy
+[237/1472] Linking C executable compiler/tests/test_rxvml_utf_boundaries
+[238/1472] Linking C executable interpreter/test_rxpa_utf_validation
+[239/1472] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_test_harness
+[240/1472] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_dyn_test_harness
+[241/1472] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber_test
+[242/1472] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_manual_test_harness
+[243/1472] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_full_tests
+[244/1472] Linking C executable interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal_tests
+[245/1472] Linking archive-level db_decimal regression harness ...
+[246/1472] Create REXX ASSEMBLER Parser...
+[247/1472] Linking C static library bin/rx_keyaccess_static.a
+[248/1472] Linking C static library bin/rx_stack_static.a
+[249/1472] Linking C static library bin/rx_rxmath_static.a
+[250/1472] Linking C static library bin/rx_llist_static.a
+[251/1472] Linking C static library bin/rx_cipher_static.a
+[252/1472] Linking C static library bin/rx_treemap_static.a
+[253/1472] Linking C static library bin/rx_id_static.a
+[254/1472] Linking C executable tests/test_rxinteger_contract
+[255/1472] Linking C executable tests/test_rxop_metadata
+[256/1472] Linking C static library bin/rx_recv390_static.a
+[257/1472] Linking C executable tests/testvm
+[258/1472] Linking C static library bin/rx_rxtcp_static.a
+[259/1472] Building C object interpreter/CMakeFiles/test_rxvmstem.dir/tests/test_rxvmstem.c.o
+[260/1472] Linking C executable interpreter/test_rxvmstem
+[261/1472] Create REXX ASSEMBLER Lexer...
+[262/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[263/1472] Building C object assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o
+[264/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[265/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[266/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[267/1472] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+[268/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[269/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[270/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[271/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[272/1472] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[273/1472] Linking C static library bin/librxaslib.a
+[274/1472] Create Options Parser...
+[275/1472] Linking C executable bin/rxas
+[276/1472] Create REXX C Parser...
+[277/1472] Create Options Lexer...
+[278/1472] Create REXX B Parser...
+[279/1472] cREXX RXLINK fixture tests_link_provider_a ...
+[280/1472] cREXX RXLINK fixture tests_link_root ...
+[281/1472] cREXX RXLINK fixture tests_link_provider_b ...
+[282/1472] cREXX assemble _elapsed ...
+[283/1472] cREXX RXLINK fixture tests_link_interface_impl ...
+[284/1472] cREXX RXBIN 007 portable-format tests ...
+[285/1472] cREXX RXLINK fixture tests_link_interface_root ...
+[286/1472] cREXX RXAS Float Constant Pool Tests ...
+[287/1472] cREXX RXLINK fixture tests_link_srcfproc_root ...
+[288/1472] cREXX RXLINK fixture tests_link_srcfproc_contract ...
+[289/1472] cREXX RXAS Library Archive ...
+[290/1472] cREXX RXLINK fixture tests_link_srcmethod_provider ...
+[291/1472] cREXX RXLINK fixture tests_link_srcmethod_root ...
+[292/1472] cREXX RXDAS roundtrip fixture tests_compact_format ...
+[293/1472] Building C object interpreter/CMakeFiles/test_float_pool_format.dir/tests/test_float_pool_format.c.o
+[294/1472] Building C object disassembler/CMakeFiles/test_disassembler_dump.dir/tests/test_disassembler_dump.c.o
+[295/1472] cREXX RXAS jump-table corruption base (linear) ...
+[296/1472] cREXX RXAS jump-table corruption base (openhash) ...
+[297/1472] cREXX RXAS jump-table corruption base (acph) ...
+[298/1472] cREXX RXLINK fixture tests_link_signature_bad_impl ...
+[299/1472] Building C object interpreter/CMakeFiles/test_compact_format.dir/tests/test_compact_format.c.o
+[300/1472] Building C object disassembler/CMakeFiles/test_disassembler_dump.dir/rxdadism.c.o
+[301/1472] cREXX RXLINK inline-metadata fixture ...
+[302/1472] cREXX RXLINK interface fixture ...
+[303/1472] cREXX RXLINK srcfprocsel fixture ...
+[304/1472] cREXX RXLINK stripped fixture ...
+[305/1472] cREXX RXLINK success fixture ...
+[306/1472] cREXX RXLINK control-file fixture ...
+[307/1472] cREXX RXLINK srcmethodsel fixture ...
+[308/1472] cREXX RXDAS roundtrip fixture tests_float_pool ...
+[309/1472] cREXX RXDAS roundtrip fixture tests_wide_operands ...
+[310/1472] cREXX RXDAS roundtrip fixture tests_int_contract ...
+[311/1472] cREXX RXDAS roundtrip fixture tests_basic ...
+[312/1472] cREXX RXDAS roundtrip fixture tests_disassembler_roundtrip ...
+[313/1472] cREXX RXDAS roundtrip fixture tests_disassembler_imported ...
+[314/1472] cREXX RXDAS roundtrip fixture tests_interfaces ...
+[315/1472] cREXX RXDAS roundtrip fixture tests_jump_table ...
+[316/1472] cREXX RXDAS roundtrip fixture tests_binary ...
+[317/1472] cREXX RXDAS roundtrip fixture tests_jump_table_hash_edges ...
+[318/1472] cREXX RXDAS roundtrip fixture tests_jump_table_rexx_strings ...
+[319/1472] cREXX RXAS Instruction Tests (raise uncaptured signal) ...
+[320/1472] cREXX RXAS Instruction Tests (fallback panic source reporting) ...
+[321/1472] Linking C executable disassembler/test_disassembler_dump
+[322/1472] cREXX RXAS Instruction Tests (breakpoint address reporting) ...
+[323/1472] cREXX RXAS Instruction Tests (UTF flag cache) ...
+[324/1472] cREXX RXAS Instruction Tests (register flag partitioning) ...
+[325/1472] cREXX RXAS Instruction Tests (attribute bulk insert/delete) ...
+[326/1472] cREXX RXAS Instruction Tests (reference value instructions) ...
+[327/1472] cREXX RXAS Instruction Tests (PERF2-02 direct reference guards) ...
+[328/1472] cREXX RXAS Instruction Tests (PERF2-05 partial reference materialization) ...
+[329/1472] cREXX RXAS Instruction Tests (object initialization lifecycle instructions) ...
+[330/1472] Linking C executable interpreter/test_float_pool_format
+[331/1472] cREXX RXAS Instruction Tests (PERF2-05 exact reference relink) ...
+[332/1472] cREXX RXAS Instruction Tests (signal call argument attributes) ...
+[333/1472] Linking C executable interpreter/test_compact_format
+[334/1472] cREXX RXAS Instruction Tests (signal mask boundary handling) ...
+[335/1472] cREXX RXAS Instruction Tests (signal handler response modes) ...
+[336/1472] cREXX RXAS Instruction Tests (signal silent halt response) ...
+[337/1472] cREXX RXAS Instruction Tests (signal frame handler table scope) ...
+[338/1472] cREXX RXAS Instruction Tests (signal call-window mapping unwind) ...
+[339/1472] cREXX RXAS Instruction Tests (nested pending signal delivery) ...
+[340/1472] cREXX RXAS Instruction Tests (action-aware signal handlers) ...
+[341/1472] cREXX RXAS Instruction Tests (signal branch with bound value) ...
+[342/1472] cREXX RXAS Instruction Tests (signal handler push/pop scope) ...
+[343/1472] cREXX RXAS Basic Instruction Tests ...
+[344/1472] cREXX RXAS Float Math Instruction Tests ...
+[345/1472] cREXX RXAS Instruction Tests (signed 64-bit integer contract) ...
+[346/1472] cREXX RXAS Integer Math Instruction Tests ...
+[347/1472] cREXX RXAS Instruction Tests (NR-09 large instructions) ...
+[348/1472] cREXX RXAS System and I/O Instruction Tests ...
+[349/1472] cREXX RXAS Logic and Flow Instruction Tests ...
+[350/1472] cREXX RXAS String Instruction Tests ...
+[351/1472] cREXX RXAS Instruction Tests (binary buffer and I/O) ...
+[352/1472] cREXX RXAS Instruction Tests (linear jump table dispatch) ...
+[353/1472] cREXX RXAS Instruction Tests (linear jump table source matrix) ...
+[354/1472] cREXX RXAS Instruction Tests (openhash jump table source matrix) ...
+[355/1472] cREXX RXAS Instruction Tests (acph jump table source matrix) ...
+[356/1472] cREXX RXAS Instruction Tests (auto jump table source matrix) ...
+[357/1472] cREXX RXAS Instruction Tests (auto jump table policy paths) ...
+[358/1472] cREXX RXAS Instruction Tests (open-hash and ACPH jump table edge cases) ...
+[359/1472] cREXX RXAS Instruction Tests (typed binary memory operations) ...
+[360/1472] cREXX RXAS Instruction Tests (Rexx padded and numeric string jump tables) ...
+[361/1472] cREXX RXAS Instruction Tests (jump table syntax and value boundaries) ...
+[362/1472] cREXX RXLINK record-stream concat fixture ...
+[363/1472] Building C object linker/CMakeFiles/test_linked_format.dir/tests/test_linked_format.c.o
+[364/1472] Linking C executable linker/test_linked_format
+[365/1472] cREXX RXDAS invalid semantic-graph fixture ...
+[366/1472] Create REXX C Lexer...
+[367/1472] cREXX RXAS Socket Instruction Tests ...
+[368/1472] cREXX RXAS Decimal Instruction Tests ...
+[369/1472] cREXX RXAS Conversion Instruction Tests ...
+[370/1472] cREXX RXAS Object Instruction Tests ...
+[371/1472] cREXX RXAS Reflection Instruction Tests ...
+[372/1472] cREXX RXAS Interface Dispatch Instruction Tests ...
+[373/1472] cREXX RXAS Instruction Tests (descriptor selector contracts) ...
+[374/1472] cREXX RXAS Stress Instruction Tests ...
+[375/1472] cREXX RXAS Instruction Tests (remaining deterministic instruction gaps) ...
+[376/1472] cREXX RXAS Instruction Tests (arbitrary operand pipeline) ...
+[377/1472] Generating whole_procedure_runtime_rxvm_noopt.rxbin
+[378/1472] Generating whole_procedure_runtime_rxvm_opt.rxbin
+[379/1472] Generating whole_procedure_runtime_rxbvm_noopt.rxbin
+[380/1472] Generating whole_procedure_runtime_rxbvm_opt.rxbin
+[381/1472] Generating nr18_flow_runtime_rxvm_noopt.rxbin
+[382/1472] Generating nr18_flow_runtime_rxvm_opt.rxbin
+[383/1472] Generating nr18_flow_runtime_rxbvm_noopt.rxbin
+[384/1472] Generating nr18_flow_runtime_rxbvm_opt.rxbin
+[385/1472] Generating storage_identity_runtime_rxvm_noopt.rxbin
+[386/1472] Generating storage_identity_runtime_rxvm_opt.rxbin
+[387/1472] Generating storage_identity_runtime_rxbvm_noopt.rxbin
+[388/1472] Generating storage_identity_runtime_rxbvm_opt.rxbin
+[389/1472] cREXX RXAS intr_test - Native Signal Test Harness ...
+[390/1472] Generating reference_iterator_system_rxvm_noopt.rxbin
+[391/1472] Generating reference_iterator_system_rxvm_opt.rxbin
+[392/1472] Mutating jump table rxasjtablecorruptlinearkey (linear-key-offset) ...
+[393/1472] Mutating jump table rxasjtablecorruptlineartarget (linear-target) ...
+[394/1472] Mutating jump table rxasjtablecorruptacphtarget (acph-target) ...
+[395/1472] Mutating jump table rxasjtablecorruptheader (header) ...
+[396/1472] Mutating jump table rxasjtablecorruptalgorithm (algorithm) ...
+[397/1472] Mutating jump table rxasjtablecorruptopenslot (open-slot-offset) ...
+[398/1472] Mutating jump table rxasjtablecorruptacphslot (acph-slot-kind) ...
+[399/1472] Generating reference_iterator_system_rxbvm_noopt.rxbin
+[400/1472] Generating reference_iterator_perf_rxvm_noopt.rxbin
+[401/1472] Generating reference_iterator_perf_rxbvm_noopt.rxbin
+[402/1472] Generating reference_generated_contract_rxvm_noopt.rxbin
+[403/1472] Generating reference_generated_contract_rxbvm_noopt.rxbin
+[404/1472] Generating reference_iterator_system_rxbvm_opt.rxbin
+[405/1472] Generating reference_generated_contract_rxvm_opt.rxbin
+[406/1472] Generating reference_iterator_perf_rxvm_opt.rxbin
+[407/1472] Generating reference_iterator_perf_rxbvm_opt.rxbin
+[408/1472] Generating reference_generated_contract_rxbvm_opt.rxbin
+[409/1472] Building C object compiler/tests/CMakeFiles/crexx_demo_sqlite3.dir/__/__/_deps/crexx_sqlite_amalgamation-src/sqlite3.c.o
+[410/1472] Linking C static library compiler/tests/libcrexx_demo_sqlite3.a
+[411/1472] Create REXX B Lexer...
+[412/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_walk.c.o
+[413/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag_fallback.c.o
+[414/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_print.c.o
+[415/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_tree.c.o
+[416/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpmain.c.o
+[417/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag.c.o
+[418/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_ext.c.o
+[419/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dsl.c.o
+[420/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_util.c.o
+[421/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopar.c.o
+[422/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopgr.c.o
+[423/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_srcmap.c.o
+[424/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbpar.c.o
+[425/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcsym.c.o
+[426/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_core.c.o
+[427/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_highlight_controller.c.o
+[428/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcval.c.o
+[429/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcposcn.c.o
+[430/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcpar.c.o
+[431/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcgmr.c.o
+[432/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcdiag.c.o
+[433/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_rewrite.c.o
+[434/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbgmr.c.o
+[435/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_plugin.c.o
+[436/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_trans.c.o
+[437/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_sym.c.o
+[438/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_fixup.c.o
+[439/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_val.c.o
+[440/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap.c.o
+[441/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_check.c.o
+[442/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap_build.c.o
+[443/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline_rules.c.o
+[444/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_type.c.o
+[445/1472] Building C object compiler/CMakeFiles/rxclib.dir/rexcscan.c.o
+[446/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpsymb.c.o
+[447/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_orch.c.o
+[448/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o
+[449/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_core.c.o
+[450/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_proc.c.o
+[451/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_flow.c.o
+[452/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_levelc_lower.c.o
+[453/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_super.c.o
+[454/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_reg.c.o
+[455/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_expr.c.o
+[456/1472] Building C object compiler/CMakeFiles/rxclib.dir/__/platform/rxinteger.c.o
+[457/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_meta.c.o
+[458/1472] Building C object compiler/CMakeFiles/rxclib.dir/__/platform/platform.c.o
+[459/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_instr.c.o
+[460/1472] Building C object compiler/CMakeFiles/rxc.dir/rxc_main.c.o
+[461/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dispatch.c.o
+[462/1472] Building C object compiler/tests/CMakeFiles/test_rxcp_super_combiner.dir/test_rxcp_super_combiner.c.o
+[463/1472] Building C object compiler/tests/CMakeFiles/test_source_provenance.dir/src/test_source_provenance.c.o
+[464/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_partial_call.c.o
+[465/1472] Building C object compiler/tests/CMakeFiles/test_highlight_cache.dir/src/test_highlight_cache.c.o
+[466/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_opt.c.o
+[467/1472] Building C object compiler/tests/CMakeFiles/test_source_semantics.dir/src/test_source_semantics.c.o
+[468/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_flow.c.o
+[469/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_exit.c.o
+[470/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcpfunc.c.o
+[471/1472] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline.c.o
+[472/1472] Building C object compiler/CMakeFiles/rxclib.dir/rexbscan.c.o
+[473/1472] Linking C static library bin/librxclib.a
+[474/1472] Linking C executable compiler/tests/test_source_semantics
+[475/1472] Linking C executable bin/rxc
+[476/1472] Linking C executable compiler/tests/test_source_provenance
+[477/1472] Linking C executable compiler/tests/test_rxcp_super_combiner
+[478/1472] Linking C executable compiler/tests/test_highlight_cache
+[479/1472] Building C object compiler/tests/CMakeFiles/crexx_test_driver.dir/src/test_driver.c.o
+[480/1472] Linking C executable compiler/tests/crexx_test_driver
+[481/1472] Building C object compiler/tests/CMakeFiles/test_highlight_editor_diagnostics.dir/src/test_highlight_editor_diagnostics.c.o
+[482/1472] Linking C executable compiler/tests/test_highlight_editor_diagnostics
+[483/1472] cREXX compile and assemble _address ...
+[484/1472] cREXX compile and assemble _rxsystem ...
+[485/1472] cREXX compile and assemble _jdn ...
+[486/1472] cREXX compile and assemble _datei ...
+[487/1472] cREXX compile and assemble _dateo ...
+[488/1472] cREXX compile and assemble _ftrunc ...
+[489/1472] cREXX compile and assemble _itrunc ...
+[490/1472] cREXX compile and assemble _typedformat ...
+[491/1472] cREXX compile and assemble abbrev ...
+[492/1472] cREXX compile and assemble abs ...
+[493/1472] cREXX compile and assemble intabs ...
+[494/1472] cREXX compile and assemble floatabs ...
+[495/1472] cREXX compile and assemble b2x ...
+[496/1472] Building token.rxbin
+[497/1472] Building Dummy.rxbin
+[498/1472] cREXX compile and assemble b2d ...
+[499/1472] cREXX compile and assemble binary ...
+[500/1472] cREXX compile and assemble c2x ...
+[501/1472] cREXX compile and assemble c2d ...
+[502/1472] cREXX compile and assemble center ...
+[503/1472] cREXX compile and assemble centre ...
+[504/1472] cREXX compile and assemble changestr ...
+[505/1472] cREXX compile and assemble compare ...
+[506/1472] cREXX compile and assemble copies ...
+[507/1472] cREXX compile and assemble countstr ...
+[508/1472] cREXX compile and assemble d2b ...
+[509/1472] cREXX compile and assemble d2c ...
+[510/1472] cREXX compile and assemble d2x ...
+[511/1472] cREXX compile and assemble date ...
+[512/1472] cREXX compile and assemble delstr ...
+[513/1472] cREXX compile and assemble delword ...
+[514/1472] cREXX compile and assemble fileio ...
+[515/1472] cREXX compile and assemble filter ...
+[516/1472] cREXX compile and assemble format ...
+[517/1472] cREXX compile and assemble intformat ...
+[518/1472] cREXX compile and assemble floatformat ...
+[519/1472] cREXX compile and assemble fnv ...
+[520/1472] cREXX compile and assemble getenv ...
+[521/1472] cREXX compile and assemble insert ...
+[522/1472] cREXX compile and assemble length ...
+[523/1472] cREXX compile and assemble linesize ...
+[524/1472] cREXX compile and assemble loadmodule ...
+[525/1472] cREXX compile and assemble lower ...
+[526/1472] cREXX compile and assemble max ...
+[527/1472] cREXX compile and assemble intmax ...
+[528/1472] cREXX compile and assemble floatmax ...
+[529/1472] cREXX compile and assemble min ...
+[530/1472] cREXX compile and assemble intmin ...
+[531/1472] cREXX compile and assemble floatmin ...
+[532/1472] cREXX compile and assemble numeric ...
+[533/1472] cREXX compile and assemble overlay ...
+[534/1472] cREXX compile and assemble pos ...
+[535/1472] cREXX compile and assemble qscan ...
+[536/1472] cREXX compile and assemble qpos ...
+[537/1472] cREXX compile and assemble qsplit ...
+[538/1472] cREXX compile and assemble qsplitsafe ...
+[539/1472] cREXX compile and assemble qextractall ...
+[540/1472] cREXX compile and assemble qextractpair ...
+[541/1472] cREXX compile and assemble qstripcomment ...
+[542/1472] cREXX compile and assemble qremoveall ...
+[543/1472] cREXX compile and assemble fsayfmt ...
+[544/1472] cREXX compile and assemble lastpos ...
+[545/1472] cREXX compile and assemble left ...
+[546/1472] cREXX compile and assemble right ...
+[547/1472] cREXX compile and assemble raise ...
+[548/1472] cREXX compile and assemble reverse ...
+[549/1472] cREXX compile and assemble signal ...
+[550/1472] cREXX compile and assemble trace ...
+[551/1472] cREXX compile and assemble sign ...
+[552/1472] cREXX compile and assemble intsign ...
+[553/1472] cREXX compile and assemble floatsign ...
+[554/1472] cREXX compile and assemble space ...
+[555/1472] cREXX compile and assemble strip ...
+[556/1472] cREXX compile and assemble substr ...
+[557/1472] cREXX compile and assemble substro ...
+[558/1472] cREXX compile and assemble symbol ...
+[559/1472] cREXX compile and assemble time ...
+[560/1472] cREXX compile and assemble translate ...
+[561/1472] cREXX compile and assemble trunc ...
+[562/1472] cREXX compile and assemble floattrunc ...
+[563/1472] cREXX compile and assemble upper ...
+[564/1472] cREXX compile and assemble value ...
+[565/1472] cREXX compile and assemble verify ...
+[566/1472] cREXX compile and assemble version ...
+[567/1472] cREXX compile and assemble word ...
+[568/1472] cREXX compile and assemble words ...
+[569/1472] cREXX compile and assemble wordindex ...
+[570/1472] cREXX compile and assemble subword ...
+[571/1472] cREXX compile and assemble wordlength ...
+[572/1472] cREXX compile and assemble wordpos ...
+[573/1472] cREXX compile and assemble qword ...
+[574/1472] cREXX compile and assemble qwordlength ...
+[575/1472] cREXX compile and assemble qwords ...
+[576/1472] cREXX compile and assemble qwordindex ...
+[577/1472] cREXX compile and assemble qwordpos ...
+[578/1472] cREXX compile and assemble qsubword ...
+[579/1472] cREXX compile and assemble regex ...
+[580/1472] cREXX compile and assemble x2b ...
+[581/1472] cREXX compile and assemble x2c ...
+[582/1472] cREXX compile and assemble x2d ...
+[583/1472] cREXX compile and assemble random ...
+[584/1472] cREXX compile and assemble reradix ...
+[585/1472] cREXX compile and assemble sequence ...
+[586/1472] cREXX compile and assemble find ...
+[587/1472] cREXX compile and assemble index ...
+[588/1472] cREXX compile and assemble xrange ...
+[589/1472] cREXX compile and assemble parsecompile ...
+[590/1472] cREXX compile and assemble parsestring ...
+[591/1472] cREXX compile and assemble parse ...
+[592/1472] cREXX compile and assemble datatype ...
+[593/1472] cREXX compile and assemble arrayfind ...
+[594/1472] cREXX compile and assemble splice ...
+[595/1472] cREXX compile and assemble arrayinsert ...
+[596/1472] cREXX compile and assemble arraydelete ...
+[597/1472] cREXX compile and assemble arrayappend ...
+[598/1472] cREXX compile and assemble arrayprepend ...
+[599/1472] cREXX compile and assemble objectarrayinsert ...
+[600/1472] cREXX compile and assemble objectarraydelete ...
+[601/1472] cREXX compile and assemble objectarrayappend ...
+[602/1472] cREXX compile and assemble objectarrayprepend ...
+[603/1472] cREXX compile and assemble objectarraydrop ...
+[604/1472] cREXX compile and assemble objectarraymove ...
+[605/1472] cREXX compile and assemble arraypop ...
+[606/1472] cREXX compile and assemble arrayshift ...
+[607/1472] cREXX compile and assemble arrayget ...
+[608/1472] cREXX compile and assemble arrayset ...
+[609/1472] cREXX compile and assemble arraycontains ...
+[610/1472] cREXX compile and assemble arrayindexof ...
+[611/1472] cREXX compile and assemble arrayreverse ...
+[612/1472] cREXX compile and assemble arrayjoin ...
+[613/1472] cREXX compile and assemble arraysort ...
+[614/1472] cREXX compile and assemble arraycopy ...
+[615/1472] cREXX compile and assemble arraydrop ...
+[616/1472] cREXX compile and assemble arrayhi ...
+[617/1472] cREXX compile and assemble arraymove ...
+[618/1472] cREXX compile and assemble fmtmask ...
+[619/1472] cREXX compile and assemble compilemask ...
+[620/1472] cREXX compile and assemble runmask ...
+[621/1472] cREXX compile and assemble parseExec ...
+[622/1472] cREXX compile and assemble stem ...
+[623/1472] cREXX compile and assemble rxjson ...
+[624/1472] cREXX compile and assemble rxsocket ...
+[625/1472] cREXX compile and assemble rxhttp ...
+[626/1472] cREXX compile and assemble wordrep ...
+[627/1472] cREXX REXX Library Archive ...
+[628/1472] cREXX Linked Library Image ...
+[629/1472] Building Query.rxbin
+[630/1472] Building Dump.rxbin
+[631/1472] Building Fsay.rxbin
+[632/1472] Building Msay.rxbin
+[633/1472] Building Add.rxbin
+[634/1472] Building Sort.rxbin
+[635/1472] Building Sortx.rxbin
+[636/1472] Building Execio.rxbin
+[637/1472] Building C object tests/rxpa/CMakeFiles/_rxpa_dynlink.dir/rxpa_dynlink.c.o
+[638/1472] Building RexxScript.rxbin
+[639/1472] Building C object tests/rxpa/CMakeFiles/rxc_staticlink.dir/__/__/compiler/rxc_main.c.o
+[640/1472] Building Substr.rxbin
+[641/1472] Building optimized arrayformat function example
+[642/1472] Building optimized arraydump function example
+[643/1472] Building C object tests/rxpa/CMakeFiles/_testfuncs_dynamic.dir/rxpa_functests.c.o
+[644/1472] Building C object tests/rxpa/multplugins/CMakeFiles/_plugin1.dir/plugin1.c.o
+[645/1472] Bundling array-formatting function example
+[646/1472] Building C object tests/rxpa/multplugins/CMakeFiles/_plugin2.dir/plugin2.c.o
+[647/1472] Linking C shared module tests/rxpa/rx_rxpa_dynlink.rxplugin
+[648/1472] Building C object tests/rxpa/CMakeFiles/_rxpa_classdecl.dir/rxpa_classdecl.c.o
+[649/1472] Building C object tests/rxpa/CMakeFiles/_rxpa_bad_signatures.dir/rxpa_bad_signatures.c.o
+[650/1472] Building C object tests/rxpa/CMakeFiles/rxc_classdecl_static.dir/__/__/compiler/rxc_main.c.o
+[651/1472] Building optimized array-formatting example program
+[652/1472] Building exittestsupport.rxbin
+[653/1472] Linking C shared module tests/rxpa/rx_testfuncs_dynamic.rxplugin
+[654/1472] Linking C executable tests/rxc_staticlink
+[655/1472] Linking C shared module tests/rxpa/rx_rxpa_classdecl.rxplugin
+[656/1472] Linking C shared module tests/rxpa/multplugins/rx_plugin1.rxplugin
+[657/1472] Linking C shared module tests/rxpa/multplugins/rx_plugin2.rxplugin
+[658/1472] Building Signal.rxbin
+[659/1472] Linking C shared module tests/rxpa/rx_rxpa_bad_signatures.rxplugin
+[660/1472] C Packing cREXX RXFNSB Library ...
+[661/1472] Linking C executable tests/rxc_classdecl_static
+[662/1472] Building C object interpreter/CMakeFiles/rxbvme.dir/rxvmmain.c.o
+[663/1472] Building C object interpreter/CMakeFiles/rxvme.dir/rxvmmain.c.o
+[664/1472] Building C object interpreter/CMakeFiles/rxvme.dir/library.c.o
+[665/1472] Building C object interpreter/CMakeFiles/rxbvme.dir/library.c.o
+[666/1472] Linking C executable bin/rxvme
+[667/1472] Linking C executable bin/rxbvme
+[668/1472] Building Address.rxbin
+[669/1472] Building Trace.rxbin
+[670/1472] Building Parse.rxbin
+[671/1472] Building rxcexits.rxbin (bundled via concatenation)
+[672/1472] Generating ascommon_noopt.rxbin
+[673/1472] Generating ascommon_opt.rxbin
+[674/1472] Clearing stale class library member images ...
+[675/1472] Clearing stale native-backed class library member images ...
+[676/1472] Building the LOADMODULE focused provider
+[677/1472] Generating tlinesz_opt.rxbin
+[678/1472] Generating tlinesz_noopt.rxbin
+[679/1472] Compiling dynamic_load_provider.crexx ...
+[680/1472] Compiling stub_plugin.crexx ...
+[681/1472] cREXX compile and assemble rxdb_gui ...
+[682/1472] Generating ts_abbrev_noopt.rxbin
+[683/1472] Compiling cms_address_demo.crexx ...
+[684/1472] Generating ts_abbrev_opt.rxbin
+[685/1472] cREXX compile and assemble llm ...
+[686/1472] cREXX compile and assemble Qfind ...
+[687/1472] Generating ts_abs_noopt.rxbin
+[688/1472] Generating ts_abs_opt.rxbin
+[689/1472] cREXX compile and assemble ObjectIterator ...
+[690/1472] cREXX compile and assemble StringIterator ...
+[691/1472] Generating ts_typed_numeric_noopt.rxbin
+[692/1472] cREXX compile and assemble ObjectPrintable ...
+[693/1472] cREXX compile and assemble ObjectComparator ...
+[694/1472] cREXX compile and assemble ObjectStack ...
+[695/1472] cREXX compile and assemble ObjectLinkedList ...
+[696/1472] Generating ts_typed_numeric_opt.rxbin
+[697/1472] cREXX compile and assemble Scanlex ...
+[698/1472] cREXX compile and assemble StringLinkedList ...
+[699/1472] Generating ts_address_protocol_noopt.rxbin
+[700/1472] cREXX compile and assemble StringStack ...
+[701/1472] cREXX compile and assemble ObjectIterable ...
+[702/1472] cREXX compile and assemble StringIterable ...
+[703/1472] Generating ts_address_protocol_opt.rxbin
+[704/1472] cREXX compile and assemble StringTreeSetIterator ...
+[705/1472] cREXX compile and assemble ObjectObjectTreeMapIterator ...
+[706/1472] cREXX compile and assemble StringHashMapIterator ...
+[707/1472] cREXX compile and assemble StringHashSetIterator ...
+[708/1472] Generating ts_address_noopt.rxbin
+[709/1472] Generating ts_address_opt.rxbin
+[710/1472] cREXX compile and assemble StringObjectHashMapIterator ...
+[711/1472] cREXX compile and assemble StringObjectTreeMapIterator ...
+[712/1472] cREXX compile and assemble StringTreeMapIterator ...
+[713/1472] cREXX compile and assemble ObjectArrayList ...
+[714/1472] cREXX compile and assemble StringArrayList ...
+[715/1472] cREXX compile and assemble StringTreeSet ...
+[716/1472] cREXX compile and assemble RexxComparator ...
+[717/1472] cREXX compile and assemble StringHashSet ...
+[718/1472] Generating ts_address_crexx_noopt.rxbin
+[719/1472] cREXX compile and assemble ObjectObjectTreeMap ...
+[720/1472] cREXX compile and assemble native-backed classlib adapter Id ...
+[721/1472] cREXX compile and assemble Rexx ...
+[722/1472] cREXX compile and assemble ObjectArrayListIterator ...
+[723/1472] cREXX compile and assemble StringArrayListIterator ...
+[724/1472] cREXX compile and assemble StringHashMap ...
+[725/1472] cREXX compile and assemble StringObjectHashMap ...
+[726/1472] Compiling kv_address_demo.crexx ...
+[727/1472] cREXX compile and assemble StringOldTreeMap ...
+[728/1472] Compiling address_cms_host.crexx ...
+[729/1472] cREXX compile and assemble native-backed classlib adapter Os ...
+[730/1472] cREXX compile and assemble native-backed classlib adapter KeyDB ...
+[731/1472] cREXX Linked native-backed Class Library Adapter Image ...
+[732/1472] cREXX compile and assemble StringObjectTreeMap ...
+[733/1472] Compiling sqlite_address_demo.crexx ...
+[734/1472] Compiling cms_address_environment.crexx ...
+[735/1472] cREXX Linked Level G Library Image ...
+[736/1472] cREXX compile and assemble StringTreeMap ...
+[737/1472] Compiling dynamic_load_host.crexx ...
+[738/1472] cREXX Linked Class Library Image ...
+[739/1472] Clearing stale rxfnsc runtime member images ...
+[740/1472] Compiling crexxsaa_variables_host.crexx ...
+[741/1472] Compiling address_callback_host.crexx ...
+[742/1472] Generating we_noopt.rxbin
+[743/1472] Compiling test_reentrancy.crexx ...
+[744/1472] Generating testid_noopt.rxbin
+[745/1472] Generating we_opt.rxbin
+[746/1472] Generating asutf_noopt.rxbin
+[747/1472] cREXX compile and assemble tinyexpr ...
+[748/1472] Generating asutf_opt.rxbin
+[749/1472] Building C object compiler/tests/CMakeFiles/test_crexxsaa_status.dir/src/test_crexxsaa_status.c.o
+[750/1472] Building C object compiler/tests/CMakeFiles/test_bridge.dir/src/test_bridge.c.o
+[751/1472] Generating testid_opt.rxbin
+[752/1472] cREXX compile, assemble, link and package rxdb ...
+[753/1472] Building C object compiler/tests/CMakeFiles/test_address_bridge.dir/src/test_address_bridge.c.o
+[754/1472] Generating testrexx_noopt.rxbin
+[755/1472] Building C object compiler/tests/CMakeFiles/test_dynamic_load.dir/src/test_dynamic_load.c.o
+[756/1472] Building C object compiler/tests/CMakeFiles/test_crexxsaa_variables.dir/src/test_crexxsaa_variables.c.o
+[757/1472] cREXX compile and assemble rxfnsc runtime RexxClassicCharacterScan ...
+[758/1472] Building C object compiler/tests/CMakeFiles/test_address_callback_host.dir/src/test_address_callback_host.c.o
+[759/1472] Building optimized pprint compiler-exit example
+[760/1472] Generating ts_address_crexx_opt.rxbin
+[761/1472] Building C object compiler/tests/CMakeFiles/native_kv_address_demo.dir/__/__/demos/native/kv/kv_address_demo.c.o
+[762/1472] Building C object compiler/tests/CMakeFiles/native_sqlite_address_demo.dir/__/__/demos/native/sqlite/sqlite_address_demo.c.o
+[763/1472] Building C object interpreter/CMakeFiles/test_reentrancy.dir/tests/test_reentrancy.c.o
+[764/1472] Building C object debugger/CMakeFiles/rxdb.dir/rxdb.c.o
+[765/1472] Compiling test_trace_source_jump_helper.crexx (noopt)
+[766/1472] Compiling test_trace_source_jump_helper.crexx (opt)
+[767/1472] cREXX Linked Level L Library Image ...
+[768/1472] Generating testrexx_opt.rxbin
+[769/1472] Generating ts_llm_ollama_noopt.rxbin
+[770/1472] Generating test1_noopt.rxbin
+[771/1472] Generating testKeyDB_noopt.rxbin
+[772/1472] Generating test1_opt.rxbin
+[773/1472] Bundling standalone pprint compiler-exit example
+[774/1472] Generating testStringArrayList_noopt.rxbin
+[775/1472] Generating testKeyDB_opt.rxbin
+[776/1472] Generating ts_address_capture_noopt.rxbin
+[777/1472] Linking C executable compiler/tests/test_bridge
+[778/1472] Generating ts_llm_ollama_opt.rxbin
+[779/1472] Generating testStringArrayList_opt.rxbin
+[780/1472] Linking C executable compiler/tests/test_address_bridge
+[781/1472] Linking C executable compiler/tests/native_kv_address_demo
+[782/1472] Linking C executable compiler/tests/native_sqlite_address_demo
+[783/1472] Generating ts_address_capture_opt.rxbin
+[784/1472] Linking C executable compiler/tests/test_address_callback_host
+[785/1472] Generating basic_noopt.rxbin
+[786/1472] Linking C executable compiler/tests/test_crexxsaa_status
+[787/1472] Linking C executable compiler/tests/test_dynamic_load
+[788/1472] Generating basic_opt.rxbin
+[789/1472] Linking C executable compiler/tests/test_crexxsaa_variables
+[790/1472] Generating testStringHashMap_noopt.rxbin
+[791/1472] Generating testStringHashMap_opt.rxbin
+[792/1472] cREXX compile and assemble rxfnsc runtime RexxValue ...
+[793/1472] Generating ts_address_argv_noopt.rxbin
+[794/1472] Compiling test_dump.crexx with exit (noopt)
+[795/1472] Compiling test_dump.crexx with exit (opt)
+[796/1472] Compiling test_query.crexx with exit (noopt)
+[797/1472] Generating ts_address_argv_opt.rxbin
+[798/1472] Generating testStringHashSet_noopt.rxbin
+[799/1472] Compiling test_query.crexx with exit (opt)
+[800/1472] Generating testStringHashSet_opt.rxbin
+[801/1472] Compiling address_llm_host.crexx ...
+[802/1472] cREXX compile and assemble rxfnsc runtime RexxClassicState ...
+[803/1472] Compiling test_sort.crexx with exit (noopt)
+[804/1472] Generating testStringLinkedList_noopt.rxbin
+[805/1472] Generating ts_address_array_lifecycle_noopt.rxbin
+[806/1472] Compiling test_sort.crexx with exit (opt)
+[807/1472] cREXX compile and assemble rxfnsc runtime RexxStem ...
+[808/1472] cREXX compile and assemble rxfnsc runtime RexxClassicConfig ...
+[809/1472] Generating testStringLinkedList_opt.rxbin
+[810/1472] Generating ts_address_array_lifecycle_opt.rxbin
+[811/1472] Compiling test_sortx.crexx with exit (noopt)
+[812/1472] Compiling test_sortx.crexx with exit (opt)
+[813/1472] Generating ts_binary_noopt.rxbin
+[814/1472] Compiling test_address.crexx with exit (noopt)
+[815/1472] Compiling test_address.crexx with exit (opt)
+[816/1472] Compiling test_address_direct.crexx with exit (noopt)
+[817/1472] Compiling llm_address_environment.crexx ...
+[818/1472] Generating testStringTreeMap_noopt.rxbin
+[819/1472] cREXX compile and assemble rxfnsc runtime RexxClassicCharacterOps ...
+[820/1472] Compiling test_execio.crexx with exit (noopt)
+[821/1472] Compiling test_execio.crexx with exit (opt)
+[822/1472] cREXX compile and assemble rxfnsc runtime RexxClassicEncoding ...
+[823/1472] cREXX compile and assemble rxfnsc runtime RexxClassicDatatype ...
+[824/1472] Compiling test_add.crexx with exit (noopt)
+[825/1472] Compiling test_add.crexx with exit (opt)
+[826/1472] Compiling test_fsay.crexx with exit (noopt)
+[827/1472] Compiling test_fsay.crexx with exit (opt)
+[828/1472] Compiling test_msay.crexx with exit (noopt)
+[829/1472] Compiling test_msay.crexx with exit (opt)
+[830/1472] cREXX compile and assemble rxfnsc runtime RexxVariablePool ...
+[831/1472] Compiling test_address_direct.crexx with exit (opt)
+[832/1472] Compiling test_parse_direct.crexx with exit (noopt)
+[833/1472] Compiling test_signal.crexx with exit (noopt)
+[834/1472] Compiling test_signal.crexx with exit (opt)
+[835/1472] Generating testStringTreeMap_opt.rxbin
+[836/1472] Compiling test_signal_direct.crexx with exit (noopt)
+[837/1472] Compiling test_signal_block.crexx with exit (noopt)
+[838/1472] Generating testStringTreeSet_noopt.rxbin
+[839/1472] Compiling test_signal_block.crexx with exit (opt)
+[840/1472] Compiling test_signal_direct.crexx with exit (opt)
+[841/1472] Compiling reference_source_invalid_signal.crexx with exit (noopt)
+[842/1472] Compiling reference_source_invalid_signal.crexx with exit (opt)
+[843/1472] Compiling test_trace_exit.crexx with exit (noopt)
+[844/1472] Compiling test_parse_direct.crexx with exit (opt)
+[845/1472] Compiling test_trace_negated_string.crexx with exit (noopt)
+[846/1472] Compiling test_trace_exit.crexx with exit (opt)
+[847/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifs ...
+[848/1472] Compiling test_trace_negated_string.crexx with exit (opt)
+[849/1472] Compiling test_trace_results.crexx with exit (noopt)
+[850/1472] Generating testStringTreeSet_opt.rxbin
+[851/1472] Compiling test_parse.crexx with exit (noopt)
+[852/1472] Compiling test_trace_llm.crexx with exit (noopt)
+[853/1472] Compiling test_trace_results.crexx with exit (opt)
+[854/1472] Compiling test_trace_llm.crexx with exit (opt)
+[855/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifD2x ...
+[856/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifAbbrev ...
+[857/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2d ...
+[858/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifC2x ...
+[859/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifAddress ...
+[860/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifAbs ...
+[861/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifB2x ...
+[862/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifCenter ...
+[863/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifChangestr ...
+[864/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifC2d ...
+[865/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifCompare ...
+[866/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifCountstr ...
+[867/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifD2c ...
+[868/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifCopies ...
+[869/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifDatatype ...
+[870/1472] Generating ts_binary_opt.rxbin
+[871/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifDate ...
+[872/1472] Generating ts_c2x_noopt.rxbin
+[873/1472] Generating ts_c2x_opt.rxbin
+[874/1472] Generating ts_center_noopt.rxbin
+[875/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifDelstr ...
+[876/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifDelword ...
+[877/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifLastpos ...
+[878/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifFormat ...
+[879/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifLeft ...
+[880/1472] Generating ts_center_opt.rxbin
+[881/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifInsert ...
+[882/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifLength ...
+[883/1472] Generating ts_changestr_noopt.rxbin
+[884/1472] Generating ts_changestr_opt.rxbin
+[885/1472] Generating ts_compare_noopt.rxbin
+[886/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifMax ...
+[887/1472] Generating ts_compare_opt.rxbin
+[888/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifMin ...
+[889/1472] Generating ts_countstr_noopt.rxbin
+[890/1472] Generating ts_countstr_opt.rxbin
+[891/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifNumeric ...
+[892/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifPos ...
+[893/1472] Generating ts_d2c_noopt.rxbin
+[894/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifOverlay ...
+[895/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifReverse ...
+[896/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifRandom ...
+[897/1472] Generating ts_d2c_opt.rxbin
+[898/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifRight ...
+[899/1472] Generating ts_d2x_noopt.rxbin
+[900/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifSign ...
+[901/1472] Generating ts_d2x_opt.rxbin
+[902/1472] Generating ts_date_noopt.rxbin
+[903/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifSpace ...
+[904/1472] Generating ts_date_opt.rxbin
+[905/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifSubstr ...
+[906/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifStrip ...
+[907/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifSymbol ...
+[908/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifSubword ...
+[909/1472] Generating ts_date2_noopt.rxbin
+[910/1472] Generating ts_date2_opt.rxbin
+[911/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifTime ...
+[912/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifTrace ...
+[913/1472] Generating ts_date_core_noopt.rxbin
+[914/1472] Generating ts_date_core_opt.rxbin
+[915/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifTranslate ...
+[916/1472] Generating ts_delstr_noopt.rxbin
+[917/1472] Generating ts_delstr_opt.rxbin
+[918/1472] Generating ts_delword_noopt.rxbin
+[919/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifTrunc ...
+[920/1472] Generating ts_delword_opt.rxbin
+[921/1472] Generating ts_fileio_chars_noopt.rxbin
+[922/1472] Generating ts_fileio_chars_opt.rxbin
+[923/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifValue ...
+[924/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifVerify ...
+[925/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifWord ...
+[926/1472] Generating ts_format_noopt.rxbin
+[927/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordindex ...
+[928/1472] Generating ts_format_opt.rxbin
+[929/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordlength ...
+[930/1472] Generating testStringStack_noopt.rxbin
+[931/1472] Generating testStringStack_opt.rxbin
+[932/1472] Generating ts_fnv_noopt.rxbin
+[933/1472] Generating ts_fnv_opt.rxbin
+[934/1472] Generating testObjectCollections_noopt.rxbin
+[935/1472] Generating ts_fsayfmt_noopt.rxbin
+[936/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifWords ...
+[937/1472] Compiling test_trace_direct.crexx with exit (noopt)
+[938/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordpos ...
+[939/1472] Generating ts_fsayfmt_opt.rxbin
+[940/1472] Generating testObjectCollections_opt.rxbin
+[941/1472] Generating ts_insert_noopt.rxbin
+[942/1472] Compiling test_trace_stderr.crexx with exit (noopt)
+[943/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2b ...
+[944/1472] Compiling test_trace_file.crexx with exit (noopt)
+[945/1472] Generating ts_insert_opt.rxbin
+[946/1472] Compiling test_trace_stderr.crexx with exit (opt)
+[947/1472] Generating testStringObjectMaps_noopt.rxbin
+[948/1472] Generating ts_left_noopt.rxbin
+[949/1472] Generating ts_left_opt.rxbin
+[950/1472] Compiling test_trace_normal_quiet.crexx with exit (noopt)
+[951/1472] Compiling test_trace_file.crexx with exit (opt)
+[952/1472] Generating ts_length_noopt.rxbin
+[953/1472] Compiling test_trace_direct.crexx with exit (opt)
+[954/1472] Compiling test_trace_normal_command.crexx with exit (noopt)
+[955/1472] Generating ts_length_opt.rxbin
+[956/1472] Compiling test_trace_normal_quiet.crexx with exit (opt)
+[957/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2c ...
+[958/1472] Generating ts_lower_noopt.rxbin
+[959/1472] Compiling test_trace_env.crexx with exit (noopt)
+[960/1472] cREXX compile and assemble rxfnsc runtime RexxClassicBifXrange ...
+[961/1472] Generating ts_lower_opt.rxbin
+[962/1472] Compiling test_trace_env.crexx with exit (noopt)
+[963/1472] Compiling test_trace_normal_command.crexx with exit (opt)
+[964/1472] cREXX Linked rxfnsc Runtime Library Image ...
+[965/1472] Compiling test_trace_env.crexx with exit (opt)
+[966/1472] Generating ts_min_max_noopt.rxbin
+[967/1472] Clearing stale RexxScript runtime member images ...
+[968/1472] Generating ts_min_max_opt.rxbin
+[969/1472] Compiling test_trace_env_ignored.crexx with exit (noopt)
+[970/1472] Compiling test_trace_env.crexx with exit (opt)
+[971/1472] Generating testRexxValue_noopt.rxbin
+[972/1472] Compiling test_trace_env_ignored.crexx with exit (opt)
+[973/1472] Compiling test_trace_source_jump.crexx with exit (noopt)
+[974/1472] Generating ts_overlay_noopt.rxbin
+[975/1472] Generating testRexxValue_opt.rxbin
+[976/1472] Generating ts_overlay_opt.rxbin
+[977/1472] Compiling test_trace_namespace_commands.crexx with exit (opt)
+[978/1472] Compiling test_trace_namespace_commands.crexx with exit (noopt)
+[979/1472] Generating testRexxRuntimePools_noopt.rxbin
+[980/1472] Generating ts_pos_noopt.rxbin
+[981/1472] Compiling test_trace_source_jump.crexx with exit (opt)
+[982/1472] Compiling test_substr.crexx with exit (noopt)
+[983/1472] Linking C executable bin/rxdb
+[984/1472] Compiling test_substr.crexx with exit (opt)
+[985/1472] Linking C executable interpreter/test_reentrancy
+[986/1472] Generating testRexxRuntimePools_opt.rxbin
+[987/1472] Generating ts_pos_opt.rxbin
+[988/1472] Compiling test_dummy.crexx with exit (opt)
+[989/1472] Generating ts_arraysort_errors_noopt.rxbin
+[990/1472] Compiling test_dummy.crexx with exit (noopt)
+[991/1472] Generating ts_arraysort_errors_opt.rxbin
+[992/1472] Generating ts_stem_errors_noopt.rxbin
+[993/1472] Generating testRexxClassicBifs_noopt.rxbin
+[994/1472] Generating ts_qpos_noopt.rxbin
+[995/1472] Generating ts_stem_errors_opt.rxbin
+[996/1472] Generating ts_qpos_opt.rxbin
+[997/1472] Generating testRexxClassicBifs_opt.rxbin
+[998/1472] Generating ts_llm_providers_noopt.rxbin
+[999/1472] Generating crexxbrexx_opt.rxbin
+[1000/1472] Generating crexxbrexx_noopt.rxbin
+[1001/1472] Generating ts_tinyexpr_noopt.rxbin
+[1002/1472] Generating ts_qlibrary_noopt.rxbin
+[1003/1472] Generating ts_llm_providers_opt.rxbin
+[1004/1472] Generating testRexxClassicBifAbbrev_noopt.rxbin
+[1005/1472] Generating ts_qlibrary_opt.rxbin
+[1006/1472] Generating ts_tinyexpr_opt.rxbin
+[1007/1472] Generating testRexxClassicBifAbbrev_opt.rxbin
+[1008/1472] Generating arrays_test_noopt.rxbin
+[1009/1472] Generating ts_random_noopt.rxbin
+[1010/1472] Generating arrays_test_opt.rxbin
+[1011/1472] Generating math_test_noopt.rxbin
+[1012/1472] Generating testRexxClassicBifAbs_noopt.rxbin
+[1013/1472] Generating ts_random_opt.rxbin
+[1014/1472] Compiling test_parse.crexx with exit (opt)
+[1015/1472] Generating math_test_opt.rxbin
+[1016/1472] Generating testStringObjectMaps_opt.rxbin
+[1017/1472] Generating testRexxClassicBifAbs_opt.rxbin
+[1018/1472] Generating ts_reverse_noopt.rxbin
+[1019/1472] Generating ts_reverse_opt.rxbin
+[1020/1472] Generating stack_test_noopt.rxbin
+[1021/1472] Generating cipher_test_noopt.rxbin
+[1022/1472] Generating cipher_test_opt.rxbin
+[1023/1472] Generating testObjectObjectTreeMap_noopt.rxbin
+[1024/1472] Generating stack_test_opt.rxbin
+[1025/1472] Generating testRexxClassicBifAddress_noopt.rxbin
+[1026/1472] Generating strings_test_noopt.rxbin
+[1027/1472] Generating testRexxClassicBifAddress_opt.rxbin
+[1028/1472] Generating ts_regex_noopt.rxbin
+[1029/1472] Generating testObjectObjectTreeMap_opt.rxbin
+[1030/1472] Generating getpi_test_noopt.rxbin
+[1031/1472] Generating getpi_test_opt.rxbin
+[1032/1472] Generating ts_regex_opt.rxbin
+[1033/1472] Generating keyaccess_test_noopt.rxbin
+[1034/1472] Generating testRexxClassicBifB2x_noopt.rxbin
+[1035/1472] Generating strings_test_opt.rxbin
+[1036/1472] Generating keyaccess_test_opt.rxbin
+[1037/1472] Generating testRexxClassicBifB2x_opt.rxbin
+[1038/1472] Generating testRexxComparator_noopt.rxbin
+[1039/1472] Generating testRexxComparator_opt.rxbin
+[1040/1472] Generating ts_right_noopt.rxbin
+[1041/1472] Generating ts_right_opt.rxbin
+[1042/1472] Generating llist_test_noopt.rxbin
+[1043/1472] Generating testRexxClassicBifC2d_noopt.rxbin
+[1044/1472] Generating tcp_test_noopt.rxbin
+[1045/1472] Generating llist_test_opt.rxbin
+[1046/1472] Generating testRexxClassicBifC2d_opt.rxbin
+[1047/1472] Generating testQfind_noopt.rxbin
+[1048/1472] Generating tcp_test_opt.rxbin
+[1049/1472] Generating testQfind_opt.rxbin
+[1050/1472] Generating ts_sign_noopt.rxbin
+[1051/1472] Generating ts_sign_opt.rxbin
+[1052/1472] Generating testRexxClassicBifC2x_noopt.rxbin
+[1053/1472] Generating testOS_noopt.rxbin
+[1054/1472] Generating system_test_noopt.rxbin
+[1055/1472] Generating testRexxClassicBifC2x_opt.rxbin
+[1056/1472] Generating testTokenise_noopt.rxbin
+[1057/1472] Generating system_test_opt.rxbin
+[1058/1472] Generating ts_space_noopt.rxbin
+[1059/1472] Generating testTokenise_opt.rxbin
+[1060/1472] cREXX compile and assemble veclib ...
+[1061/1472] Generating testOS_opt.rxbin
+[1062/1472] Generating ts_space_opt.rxbin
+[1063/1472] Generating testRexxClassicBifCenter_noopt.rxbin
+[1064/1472] Generating testRexxClassicBifCenter_opt.rxbin
+[1065/1472] Building program with standalone pprint exit example
+[1066/1472] Generating levelbfunc_noopt.rxbin
+[1067/1472] Generating testJSON_noopt.rxbin
+[1068/1472] Generating testJSON_opt.rxbin
+[1069/1472] Generating concatenation_noopt.rxbin
+[1070/1472] Generating ts_strip_noopt.rxbin
+[1071/1472] Generating levelbfunc_opt.rxbin
+[1072/1472] Generating ts_strip_opt.rxbin
+[1073/1472] Generating testRexxClassicBifCentre_noopt.rxbin
+[1074/1472] Generating concatenation_opt.rxbin
+[1075/1472] Generating testRexxClassicBifCentre_opt.rxbin
+[1076/1472] Generating benchmark_awfy_sieve_noopt.rxbin
+[1077/1472] Generating benchmark_awfy_sieve_opt.rxbin
+[1078/1472] Generating benchmark_awfy_permute_noopt.rxbin
+[1079/1472] Generating ts_symbol_noopt.rxbin
+[1080/1472] Generating benchmark_awfy_permute_opt.rxbin
+[1081/1472] Generating benchmark_awfy_mandelbrot_noopt.rxbin
+[1082/1472] Generating ts_symbol_opt.rxbin
+[1083/1472] Generating testRexxClassicBifChangestr_noopt.rxbin
+[1084/1472] Generating benchmark_awfy_mandelbrot_opt.rxbin
+[1085/1472] Generating testRexxClassicBifChangestr_opt.rxbin
+[1086/1472] Generating ts_test_noopt.rxbin
+[1087/1472] Generating ts_test_opt.rxbin
+[1088/1472] Generating benchmark_awfy_towers_noopt.rxbin
+[1089/1472] Generating benchmark_awfy_bounce_noopt.rxbin
+[1090/1472] Generating benchmark_awfy_storage_noopt.rxbin
+[1091/1472] Generating benchmark_awfy_bounce_opt.rxbin
+[1092/1472] Generating benchmark_awfy_towers_opt.rxbin
+[1093/1472] Generating testRexxClassicBifCompare_noopt.rxbin
+[1094/1472] Generating benchmark_awfy_storage_opt.rxbin
+[1095/1472] Generating ts_time_noopt.rxbin
+[1096/1472] Generating testRexxClassicBifCompare_opt.rxbin
+[1097/1472] Generating ts_time_opt.rxbin
+[1098/1472] Generating benchmark_awfy_list_noopt.rxbin
+[1099/1472] Generating benchmark_awfy_richards_noopt.rxbin
+[1100/1472] Generating benchmark_json_parser_noopt.rxbin
+[1101/1472] Generating benchmark_awfy_list_opt.rxbin
+[1102/1472] Generating benchmark_json_parser_opt.rxbin
+[1103/1472] Generating testRexxClassicBifCopies_noopt.rxbin
+[1104/1472] Generating ts_trace_noopt.rxbin
+[1105/1472] Generating benchmark_base64_roundtrip_noopt.rxbin
+[1106/1472] Generating benchmark_awfy_richards_opt.rxbin
+[1107/1472] Generating testRexxClassicBifCopies_opt.rxbin
+[1108/1472] Generating benchmark_base64_roundtrip_opt.rxbin
+[1109/1472] Generating ts_trace_opt.rxbin
+[1110/1472] Generating testRexxClassicBifCountstr_noopt.rxbin
+[1111/1472] Generating benchmark_parse_frozen_noopt.rxbin
+[1112/1472] Generating benchmark_parse_frozen_generic_noopt.rxbin
+[1113/1472] Generating benchmark_rexxcps_levelb_noopt.rxbin
+[1114/1472] Generating benchmark_parse_frozen_opt.rxbin
+[1115/1472] Generating testRexxClassicBifCountstr_opt.rxbin
+[1116/1472] Generating benchmark_parse_frozen_generic_opt.rxbin
+[1117/1472] Generating ts_translate_noopt.rxbin
+[1118/1472] Generating benchmark_rexxcps_levelb_opt.rxbin
+[1119/1472] Generating testRexxClassicBifD2x_noopt.rxbin
+[1120/1472] Generating benchmark_runner_noopt.rxbin
+[1121/1472] Generating ts_translate_opt.rxbin
+[1122/1472] Generating testRexxClassicBifD2x_opt.rxbin
+[1123/1472] Generating benchmark_rexxcps_levelb_opaque_noopt.rxbin
+[1124/1472] Generating ts_trunc_noopt.rxbin
+[1125/1472] Generating ts_trunc_opt.rxbin
+[1126/1472] Generating testRexxClassicBifD2c_noopt.rxbin
+[1127/1472] Generating benchmark_rexxcps_levelb_opaque_opt.rxbin
+[1128/1472] Generating benchmark_runner_opt.rxbin
+[1129/1472] Generating nr10_cross_runtime_matrix_selftest_noopt.rxbin
+[1130/1472] Generating testRexxClassicBifD2c_opt.rxbin
+[1131/1472] Generating nr03_evidence_tool_selftest_noopt.rxbin
+[1132/1472] Generating ts_upper_noopt.rxbin
+[1133/1472] Generating ts_upper_opt.rxbin
+[1134/1472] Generating testRexxClassicBifDate_noopt.rxbin
+[1135/1472] Generating ts_upper_lower_noopt.rxbin
+[1136/1472] Generating testRexxClassicBifDate_opt.rxbin
+[1137/1472] Generating nr10_lifecycle_tool_selftest_noopt.rxbin
+[1138/1472] Generating nr10_artifact_inventory_selftest_noopt.rxbin
+[1139/1472] Generating ts_upper_lower_opt.rxbin
+[1140/1472] Generating testRexxClassicBifDatatype_noopt.rxbin
+[1141/1472] Generating inlining_simple_noopt.rxbin
+[1142/1472] Generating testRexxClassicBifDatatype_opt.rxbin
+[1143/1472] Generating nr10_artifact_inventory_selftest_opt.rxbin
+[1144/1472] Generating ts_version_noopt.rxbin
+[1145/1472] Generating inlining_simple_opt.rxbin
+[1146/1472] Generating ts_version_opt.rxbin
+[1147/1472] Generating reference_iterator_compare_rxvm_noopt.rxbin
+[1148/1472] Generating testRexxClassicBifDelstr_noopt.rxbin
+[1149/1472] Generating testRexxClassicBifDelstr_opt.rxbin
+[1150/1472] Generating ts_value_noopt.rxbin
+[1151/1472] Generating reference_iterator_compare_rxbvm_noopt.rxbin
+[1152/1472] Generating nr10_lifecycle_tool_selftest_opt.rxbin
+[1153/1472] Generating reference_iterator_compare_rxvm_opt.rxbin
+[1154/1472] Generating ts_value_opt.rxbin
+[1155/1472] Generating testRexxClassicBifDelword_noopt.rxbin
+[1156/1472] Generating reference_iterator_compare_rxbvm_opt.rxbin
+[1157/1472] Generating testRexxClassicBifDelword_opt.rxbin
+[1158/1472] Generating ts_verify_noopt.rxbin
+[1159/1472] Generating stringarraylist_iterator_compare_rxvm_noopt.rxbin
+[1160/1472] Generating stringarraylist_iterator_compare_rxbvm_noopt.rxbin
+[1161/1472] Generating stringarraylist_iterator_compare_rxvm_opt.rxbin
+[1162/1472] Generating ts_verify_opt.rxbin
+[1163/1472] Generating testRexxClassicBifFormat_noopt.rxbin
+[1164/1472] Generating testRexxClassicBifFormat_opt.rxbin
+[1165/1472] Generating stringarraylist_iterator_compare_rxbvm_opt.rxbin
+[1166/1472] Generating stringtreemap_insert_compare_noopt.rxbin
+[1167/1472] Generating binary_fastpath_compare_noopt.rxbin
+[1168/1472] Generating ts_wordlength_noopt.rxbin
+[1169/1472] Generating stringtreemap_insert_compare_opt.rxbin
+[1170/1472] Generating ts_wordlength_opt.rxbin
+[1171/1472] Generating testRexxClassicBifInsert_noopt.rxbin
+[1172/1472] Generating testRexxClassicBifInsert_opt.rxbin
+[1173/1472] Generating ts_wordpos_noopt.rxbin
+[1174/1472] Generating binary_byvalue_compare_rxvm_noopt.rxbin
+[1175/1472] Generating binary_fastpath_compare_opt.rxbin
+[1176/1472] Generating binary_byvalue_compare_rxbvm_noopt.rxbin
+[1177/1472] Generating binary_byvalue_compare_rxvm_opt.rxbin
+[1178/1472] Generating ts_wordpos_opt.rxbin
+[1179/1472] Generating testRexxClassicBifLastpos_noopt.rxbin
+[1180/1472] Generating testRexxClassicBifLastpos_opt.rxbin
+[1181/1472] Generating ts_wrdix_noopt.rxbin
+[1182/1472] Generating rxjson_parser_compare_noopt.rxbin
+[1183/1472] Generating binary_byvalue_compare_rxbvm_opt.rxbin
+[1184/1472] Generating ts_wrdix_opt.rxbin
+[1185/1472] Generating rxjson_numeric_materialization_compare_noopt.rxbin
+[1186/1472] Generating rxjson_parser_compare_opt.rxbin
+[1187/1472] Generating nr10_cross_runtime_matrix_selftest_opt.rxbin
+[1188/1472] Generating testRexxClassicBifLeft_noopt.rxbin
+[1189/1472] Generating tinyexpr_dispatch_compare_noopt.rxbin
+[1190/1472] Generating testRexxClassicBifLeft_opt.rxbin
+[1191/1472] Generating ts_x2b_noopt.rxbin
+[1192/1472] Generating ts_x2b_opt.rxbin
+[1193/1472] Generating tinyexpr_dispatch_compare_opt.rxbin
+[1194/1472] Generating testRexxClassicBifLength_noopt.rxbin
+[1195/1472] Generating testRexxClassicBifLength_opt.rxbin
+[1196/1472] Generating jump_dispatch_compare_noopt.rxbin
+[1197/1472] Generating ts_x2c_noopt.rxbin
+[1198/1472] Generating runtime_interface_lookup_compare_noopt.rxbin
+[1199/1472] Generating ts_x2c_opt.rxbin
+[1200/1472] Generating jump_dispatch_compare_opt.rxbin
+[1201/1472] Generating rxjson_numeric_materialization_compare_opt.rxbin
+[1202/1472] Generating testRexxClassicBifMax_noopt.rxbin
+[1203/1472] Generating testRexxClassicBifMax_opt.rxbin
+[1204/1472] Generating ts_x2d_noopt.rxbin
+[1205/1472] Generating runtime_interface_lookup_compare_opt.rxbin
+[1206/1472] Generating inlining_complex_noopt.rxbin
+[1207/1472] Generating inlining_complex_opt.rxbin
+[1208/1472] Generating ts_x2d_opt.rxbin
+[1209/1472] Generating testRexxClassicBifMin_noopt.rxbin
+[1210/1472] Generating testRexxClassicBifMin_opt.rxbin
+[1211/1472] Generating tscopies_noopt.rxbin
+[1212/1472] Generating tscopies_opt.rxbin
+[1213/1472] Generating testRexxClassicBifNumeric_noopt.rxbin
+[1214/1472] Generating testRexxClassicBifNumeric_opt.rxbin
+[1215/1472] Generating tslastpos_noopt.rxbin
+[1216/1472] Generating tslastpos_opt.rxbin
+[1217/1472] Generating testRexxClassicBifOverlay_noopt.rxbin
+[1218/1472] Generating tsubstr_noopt.rxbin
+[1219/1472] Generating testRexxClassicBifOverlay_opt.rxbin
+[1220/1472] Generating tsubstr_opt.rxbin
+[1221/1472] Generating testRexxClassicBifPos_noopt.rxbin
+[1222/1472] Generating tsword_noopt.rxbin
+[1223/1472] Generating tsword_opt.rxbin
+[1224/1472] Generating testRexxClassicBifPos_opt.rxbin
+[1225/1472] Generating ts_words_noopt.rxbin
+[1226/1472] Generating ts_words_opt.rxbin
+[1227/1472] Generating testRexxClassicBifRandom_noopt.rxbin
+[1228/1472] Generating rxpa_signal_funcs_dynamic_opt.rxbin
+[1229/1472] Generating rxpa_dynlink_run_noopt.rxbin
+[1230/1472] Generating rxpa_signal_funcs_dynamic_noopt.rxbin
+[1231/1472] Generating rxpa_dynlink_run_opt.rxbin
+[1232/1472] Generating rxpa_staticlink_run_noopt.rxbin
+[1233/1472] Generating rxpa_staticlink_run_opt.rxbin
+[1234/1472] Generating ts_reradix_noopt.rxbin
+[1235/1472] Generating ts_reradix_opt.rxbin
+[1236/1472] Generating testRexxClassicBifRandom_opt.rxbin
+[1237/1472] Generating rxpa_signal_funcs_static_noopt.rxbin
+[1238/1472] Generating rxpa_signal_funcs_static_opt.rxbin
+[1239/1472] Generating rxpa_string_funcs_static_noopt.rxbin
+[1240/1472] Generating rxpa_string_funcs_dynamic_opt.rxbin
+[1241/1472] Generating rxpa_string_funcs_dynamic_noopt.rxbin
+[1242/1472] Generating rxpa_string_funcs_static_opt.rxbin
+[1243/1472] Generating ts_sequence_noopt.rxbin
+[1244/1472] Generating ts_sequence_opt.rxbin
+[1245/1472] Generating testRexxClassicBifReverse_noopt.rxbin
+[1246/1472] Generating testRexxClassicBifReverse_opt.rxbin
+[1247/1472] Generating rxpa_int_funcs_dynamic_opt.rxbin
+[1248/1472] Generating rxpa_int_funcs_dynamic_noopt.rxbin
+[1249/1472] Generating rxpa_int_funcs_static_opt.rxbin
+[1250/1472] Generating rxpa_int_funcs_static_noopt.rxbin
+[1251/1472] Generating rxpa_float_funcs_dynamic_noopt.rxbin
+[1252/1472] Generating ts_find_noopt.rxbin
+[1253/1472] Generating ts_find_opt.rxbin
+[1254/1472] Generating testRexxClassicBifRight_noopt.rxbin
+[1255/1472] Generating testRexxClassicBifRight_opt.rxbin
+[1256/1472] Generating rxpa_float_funcs_dynamic_opt.rxbin
+[1257/1472] Generating ts_index_noopt.rxbin
+[1258/1472] Generating rxpa_float_funcs_static_opt.rxbin
+[1259/1472] Generating rxpa_float_funcs_static_noopt.rxbin
+[1260/1472] Generating rxpa_array_push_funcs_dynamic_noopt.rxbin
+[1261/1472] Generating ts_index_opt.rxbin
+[1262/1472] Generating rxpa_array_push_funcs_dynamic_opt.rxbin
+[1263/1472] Generating testRexxClassicBifSign_noopt.rxbin
+[1264/1472] Generating testRexxClassicBifSign_opt.rxbin
+[1265/1472] Generating ts_parse_noopt.rxbin
+[1266/1472] Generating rxpa_array_push_funcs_static_opt.rxbin
+[1267/1472] Generating rxpa_array_push_funcs_static_noopt.rxbin
+[1268/1472] Generating rxpa_native_payload_funcs_dynamic_noopt.rxbin
+[1269/1472] Generating rxpa_native_payload_funcs_dynamic_opt.rxbin
+[1270/1472] Generating ts_parse_opt.rxbin
+[1271/1472] Generating rxpa_native_payload_funcs_static_noopt.rxbin
+[1272/1472] Generating testRexxClassicBifSpace_noopt.rxbin
+[1273/1472] Generating testRexxClassicBifSpace_opt.rxbin
+[1274/1472] Generating nr03_evidence_tool_selftest_opt.rxbin
+[1275/1472] Generating rxpa_native_unwind_funcs_dynamic_noopt.rxbin
+[1276/1472] Generating rxpa_native_payload_funcs_static_opt.rxbin
+[1277/1472] Generating ts_parseexec_noopt.rxbin
+[1278/1472] Generating rxpa_native_unwind_funcs_dynamic_opt.rxbin
+[1279/1472] Generating rxpa_native_unwind_funcs_static_noopt.rxbin
+[1280/1472] Generating ts_parseexec_opt.rxbin
+[1281/1472] Generating rxpa_native_unwind_funcs_static_opt.rxbin
+[1282/1472] Generating testRexxClassicBifStrip_noopt.rxbin
+[1283/1472] Generating testRexxClassicBifStrip_opt.rxbin
+[1284/1472] Generating ts_datatype_noopt.rxbin
+[1285/1472] Generating ts_datatype_opt.rxbin
+[1286/1472] Generating testRexxClassicBifSubstr_noopt.rxbin
+[1287/1472] Generating testRexxClassicBifSubstr_opt.rxbin
+[1288/1472] Generating ts_numeric_noopt.rxbin
+[1289/1472] Generating ts_numeric_opt.rxbin
+[1290/1472] Generating testRexxClassicBifSubword_noopt.rxbin
+Warning in testRexxClassicBifSubword.crexx @ 3:8 - #UNUSED_IMPORT: Import is recognised but not used., "rexxclassicbifsubword"
+1 warning(s) in source file
+[1291/1472] Generating ts_splice_noopt.rxbin
+[1292/1472] Generating testRexxClassicBifSubword_opt.rxbin
+Warning in testRexxClassicBifSubword.crexx @ 3:8 - #UNUSED_IMPORT: Import is recognised but not used., "rexxclassicbifsubword"
+1 warning(s) in source file
+[1293/1472] Generating ts_splice_opt.rxbin
+[1294/1472] Generating rxpa_mult_test_opt.rxbin
+[1295/1472] Generating rxpa_mult_test_noopt.rxbin
+[1296/1472] Generating testRexxClassicBifSymbol_noopt.rxbin
+[1297/1472] Generating testRexxClassicBifSymbol_opt.rxbin
+[1298/1472] Generating ts_arraydelete_noopt.rxbin
+[1299/1472] Generating testRexxClassicBifTime_noopt.rxbin
+[1300/1472] Generating testRexxClassicBifTime_opt.rxbin
+[1301/1472] Generating ts_arraydelete_opt.rxbin
+[1302/1472] Generating testRexxClassicBifTrace_noopt.rxbin
+[1303/1472] Generating testRexxClassicBifTrace_opt.rxbin
+[1304/1472] Generating ts_arraydelete_focused_noopt.rxbin
+[1305/1472] Generating ts_arraydelete_focused_opt.rxbin
+[1306/1472] Generating testRexxClassicBifTranslate_noopt.rxbin
+[1307/1472] Generating testRexxClassicBifTranslate_opt.rxbin
+[1308/1472] Generating ts_arrayappend_noopt.rxbin
+[1309/1472] Generating ts_arrayappend_opt.rxbin
+[1310/1472] Generating testRexxClassicBifTrunc_noopt.rxbin
+[1311/1472] Generating testRexxClassicBifTrunc_opt.rxbin
+[1312/1472] Generating ts_arraycontains_noopt.rxbin
+[1313/1472] Generating ts_arraycontains_opt.rxbin
+[1314/1472] Generating testRexxClassicBifValue_noopt.rxbin
+[1315/1472] Generating testRexxClassicBifValue_opt.rxbin
+[1316/1472] Generating ts_arraycopy_noopt.rxbin
+[1317/1472] Generating ts_arraycopy_opt.rxbin
+[1318/1472] Generating testRexxClassicBifVerify_noopt.rxbin
+[1319/1472] Generating testRexxClassicBifVerify_opt.rxbin
+[1320/1472] Generating ts_arraydrop_noopt.rxbin
+[1321/1472] Generating ts_arraydrop_opt.rxbin
+[1322/1472] Generating testRexxClassicBifWord_noopt.rxbin
+[1323/1472] Generating ts_arrayfind_noopt.rxbin
+[1324/1472] Generating testRexxClassicBifWord_opt.rxbin
+[1325/1472] Generating ts_arrayfind_opt.rxbin
+[1326/1472] Generating testRexxClassicBifWordindex_noopt.rxbin
+[1327/1472] Generating testRexxClassicBifWordindex_opt.rxbin
+[1328/1472] Generating ts_arrayget_noopt.rxbin
+[1329/1472] Generating ts_arrayget_opt.rxbin
+[1330/1472] Generating testRexxClassicBifWordlength_noopt.rxbin
+[1331/1472] Generating ts_arrayhi_noopt.rxbin
+[1332/1472] Generating testRexxClassicBifWordlength_opt.rxbin
+[1333/1472] Generating ts_arrayhi_opt.rxbin
+[1334/1472] Generating ts_arrayindexof_noopt.rxbin
+[1335/1472] Generating testRexxClassicBifWordpos_noopt.rxbin
+[1336/1472] Generating ts_arrayindexof_opt.rxbin
+[1337/1472] Generating testRexxClassicBifWordpos_opt.rxbin
+[1338/1472] Generating ts_arrayinsert_noopt.rxbin
+[1339/1472] Generating testRexxClassicBifWords_noopt.rxbin
+[1340/1472] Generating testRexxClassicBifWords_opt.rxbin
+[1341/1472] Generating ts_arrayinsert_opt.rxbin
+[1342/1472] Generating testRexxClassicBifX2b_noopt.rxbin
+[1343/1472] Generating testRexxClassicBifX2b_opt.rxbin
+[1344/1472] Generating ts_arrayjoin_noopt.rxbin
+[1345/1472] Generating ts_arrayjoin_opt.rxbin
+[1346/1472] Generating testRexxClassicBifX2c_noopt.rxbin
+[1347/1472] Generating testRexxClassicBifX2c_opt.rxbin
+[1348/1472] Generating ts_arraymove_noopt.rxbin
+[1349/1472] Generating ts_arraymove_opt.rxbin
+[1350/1472] Generating testRexxClassicBifX2d_noopt.rxbin
+[1351/1472] Generating testRexxClassicBifX2d_opt.rxbin
+[1352/1472] Generating ts_arraypop_noopt.rxbin
+[1353/1472] Generating ts_arraypop_opt.rxbin
+[1354/1472] Generating testRexxClassicBifXrange_noopt.rxbin
+[1355/1472] Generating testRexxClassicBifXrange_opt.rxbin
+[1356/1472] Generating ts_arrayprepend_noopt.rxbin
+[1357/1472] Generating ts_arrayprepend_opt.rxbin
+[1358/1472] Generating ts_arrayreverse_noopt.rxbin
+[1359/1472] Generating ts_arrayreverse_opt.rxbin
+[1360/1472] Generating ts_arrayset_noopt.rxbin
+[1361/1472] Generating ts_arrayset_opt.rxbin
+[1362/1472] Generating ts_arrayshift_noopt.rxbin
+[1363/1472] Generating ts_arrayshift_opt.rxbin
+[1364/1472] Generating ts_arraysort_noopt.rxbin
+[1365/1472] Generating ts_arraysort_opt.rxbin
+[1366/1472] Generating ts_b2d_noopt.rxbin
+[1367/1472] Generating ts_b2d_opt.rxbin
+[1368/1472] Generating ts_b2x_noopt.rxbin
+[1369/1472] Generating ts_b2x_opt.rxbin
+[1370/1472] Generating ts_c2d_noopt.rxbin
+[1371/1472] Generating ts_c2d_opt.rxbin
+[1372/1472] Generating ts_centre_noopt.rxbin
+[1373/1472] Generating ts_centre_opt.rxbin
+[1374/1472] Generating ts_d2b_noopt.rxbin
+[1375/1472] Generating ts_d2b_opt.rxbin
+[1376/1472] Generating ts_ftrunc_noopt.rxbin
+[1377/1472] Generating ts_ftrunc_opt.rxbin
+[1378/1472] Generating ts_getenv_noopt.rxbin
+[1379/1472] Generating ts_getenv_opt.rxbin
+[1380/1472] Generating ts_itrunc_noopt.rxbin
+[1381/1472] Generating ts_itrunc_opt.rxbin
+[1382/1472] Generating ts_loadmodule_noopt.rxbin
+[1383/1472] Generating ts_loadmodule_opt.rxbin
+[1384/1472] Generating ts_max_noopt.rxbin
+[1385/1472] Generating ts_max_opt.rxbin
+[1386/1472] Generating ts_min_noopt.rxbin
+[1387/1472] Generating ts_min_opt.rxbin
+[1388/1472] Generating ts_objectarrayappend_noopt.rxbin
+[1389/1472] Generating ts_objectarrayappend_opt.rxbin
+[1390/1472] Generating ts_objectarraydelete_noopt.rxbin
+[1391/1472] Generating ts_objectarraydelete_opt.rxbin
+[1392/1472] Generating ts_objectarraydrop_noopt.rxbin
+[1393/1472] Generating ts_objectarraydrop_opt.rxbin
+[1394/1472] Generating ts_objectarrayinsert_noopt.rxbin
+[1395/1472] Generating ts_objectarrayinsert_opt.rxbin
+[1396/1472] Generating ts_objectarraymove_noopt.rxbin
+[1397/1472] Generating ts_objectarraymove_opt.rxbin
+[1398/1472] Generating ts_objectarrayprepend_noopt.rxbin
+[1399/1472] Generating ts_objectarrayprepend_opt.rxbin
+[1400/1472] Generating ts_qwordlength_noopt.rxbin
+[1401/1472] Generating ts_qwordlength_opt.rxbin
+[1402/1472] Generating ts_raise_noopt.rxbin
+[1403/1472] Generating ts_raise_opt.rxbin
+[1404/1472] Generating ts_rxsystem_noopt.rxbin
+[1405/1472] Generating ts_rxsystem_opt.rxbin
+[1406/1472] Generating ts_rxsystem_exit_noopt.rxbin
+[1407/1472] Generating ts_rxsystem_exit_opt.rxbin
+[1408/1472] Generating ts_signal_noopt.rxbin
+[1409/1472] Generating ts_signal_opt.rxbin
+[1410/1472] Generating ts_substro_noopt.rxbin
+[1411/1472] Generating ts_substro_opt.rxbin
+[1412/1472] Generating ts_subword_noopt.rxbin
+[1413/1472] Generating ts_subword_opt.rxbin
+[1414/1472] Generating ts_xrange_noopt.rxbin
+[1415/1472] Generating ts_xrange_opt.rxbin
+[1416/1472] Generating ts_objectarray_noopt.rxbin
+[1417/1472] Generating ts_objectarray_opt.rxbin
+[1418/1472] Generating ts_stem_noopt.rxbin
+[1419/1472] Generating ts_stem_opt.rxbin
+[1420/1472] Generating ts_rxjson_noopt.rxbin
+[1421/1472] Generating ts_rxjson_opt.rxbin
+[1422/1472] Generating ts_rxjson_document_noopt.rxbin
+[1423/1472] Generating ts_rxjson_document_opt.rxbin
+[1424/1472] Generating ts_rxjson_numeric_projection_noopt.rxbin
+[1425/1472] Generating ts_rxjson_numeric_projection_opt.rxbin
+[1426/1472] Generating ts_rxjson_noisy_contract_noopt.rxbin
+[1427/1472] Generating ts_rxjson_noisy_contract_opt.rxbin
+[1428/1472] Generating ts_rxsocket_noopt.rxbin
+[1429/1472] Generating ts_rxsocket_opt.rxbin
+[1430/1472] Generating ts_socket_tls_live_noopt.rxbin
+[1431/1472] Generating ts_socket_tls_live_opt.rxbin
+[1432/1472] Generating ts_rxhttp_noopt.rxbin
+[1433/1472] Generating ts_rxhttp_opt.rxbin
+[1434/1472] cREXX compile and assemble RexxScript runtime RexxScriptEvaluator ...
+[1435/1472] cREXX compile and assemble RexxScript runtime RexxScriptRuntime ...
+[1436/1472] cREXX compile and assemble RexxScript runtime RexxScriptEvaluateCompat ...
+[1437/1472] cREXX Linked RexxScript Runtime Library Image ...
+[1438/1472] Generating testRexxScriptRuntime_noopt.rxbin
+[1439/1472] Generating testRexxScriptRuntime_opt.rxbin
+[1440/1472] Compiling test_rexxscript.crexx with exit (opt)
+[1441/1472] Compiling test_rexxscript_direct.crexx with exit (noopt)
+[1442/1472] Compiling test_rexxscript.crexx with exit (noopt)
+[1443/1472] Compiling test_rexxscript_direct.crexx with exit (opt)
+[1444/1472] Generating testRexxScriptCompat_noopt.rxbin
+[1445/1472] Generating testRexxScriptCompat_opt.rxbin
+[1446/1472] cREXX compile, assemble, link and package standalone RexxScript runner ...
+[1447/1472] Building C object rexxscript/CMakeFiles/rexxscript_cli.dir/RexxScriptRunner.c.o
+[1448/1472] Linking C executable bin/rexxscript
+[1449/1472] cREXX compile, assemble, link and package crexx ...
+[1450/1472] Building C object crexx_driver/CMakeFiles/crexx.dir/crexx.c.o
+[1451/1472] Linking C executable bin/crexx
+[1452/1472] rxpp compile, assemble, link and package rxpp ...
+[1453/1472] Compiling dynamic interface contract ...
+[1454/1472] Compiling dynamic interface provider ...
+[1455/1472] Compiling dynamic interface host ...
+[1456/1472] Building C object preprocessor/CMakeFiles/rxpp.dir/rxpp.c.o
+[1457/1472] Linking C executable bin/rxpp
+[1458/1472] Building C object preprocessor/CMakeFiles/rxpp_sh.dir/rxpp_sh.c.o
+[1459/1472] Linking C executable bin/rxpp-sh
+[1460/1472] Generating treemap_test.crexx
+[1461/1472] Generating id_test.crexx
+[1462/1472] Generating recv390_test.crexx
+[1463/1472] Generating map_test.crexx
+[1464/1472] Generating treemap_test_noopt.rxbin
+[1465/1472] Generating recv390_test_noopt.rxbin
+[1466/1472] Generating id_test_noopt.rxbin
+[1467/1472] Generating id_test_opt.rxbin
+[1468/1472] Generating treemap_test_opt.rxbin
+[1469/1472] Generating map_test_noopt.rxbin
+[1470/1472] Generating map_test_opt.rxbin
+[1471/1472] Generating recv390_test_opt.rxbin

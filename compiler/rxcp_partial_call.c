@@ -377,13 +377,15 @@ static int partial_get_operand(RxcpPartialState *state,
 static int partial_exec_assembler(RxcpPartialState *state, ASTNode *node) {
     const OpInfo *instruction;
     RxOpEffects effects;
-    ASTNode *operand[3];
+    ASTNode *operand[4];
     RxcpPartialValue value1;
     RxcpPartialValue value2;
     RxcpPartialValue value3;
+    RxcpPartialValue value4;
     RxcpPartialSlot *slot1;
     RxcpPartialSlot *slot2;
     size_t char_count;
+    rxinteger start;
     rxinteger count;
     int codepoint;
     int want_blank;
@@ -395,6 +397,7 @@ static int partial_exec_assembler(RxcpPartialState *state, ASTNode *node) {
     partial_value_init(&value1);
     partial_value_init(&value2);
     partial_value_init(&value3);
+    partial_value_init(&value4);
     slot1 = 0;
     slot2 = 0;
     ok = 0;
@@ -405,11 +408,13 @@ static int partial_exec_assembler(RxcpPartialState *state, ASTNode *node) {
     operand[0] = node->child;
     operand[1] = operand[0] ? operand[0]->sibling : 0;
     operand[2] = operand[1] ? operand[1]->sibling : 0;
-    if (operand[2] && operand[2]->sibling) goto done;
+    operand[3] = operand[2] ? operand[2]->sibling : 0;
+    if (operand[3] && operand[3]->sibling) goto done;
     if (!operand[0] || !operand[1] ||
         !partial_get_operand(state, operand[0], &value1, &slot1) ||
         !partial_get_operand(state, operand[1], &value2, &slot2)) goto done;
     if (operand[2] && !partial_get_operand(state, operand[2], &value3, 0)) goto done;
+    if (operand[3] && !partial_get_operand(state, operand[3], &value4, 0)) goto done;
     if (!slot1) goto done;
 
     switch (effects.const_evaluator) {
@@ -426,34 +431,17 @@ static int partial_exec_assembler(RxcpPartialState *state, ASTNode *node) {
             ok = 1;
             break;
 
-        case RXOP_CONST_EVAL_SETSTRPOS:
-            if (slot1->value.type != TP_STRING ||
-                (value2.type != TP_INTEGER && value2.type != TP_BOOLEAN)) goto done;
-            string_set_byte_pos(&slot1->value.string, (size_t)value2.integer);
-            ok = 1;
-            break;
-
-        case RXOP_CONST_EVAL_GETSTRPOS:
-            if (!slot2 || slot2->value.type != TP_STRING ||
-                !partial_set_default(&slot1->value, TP_INTEGER)) goto done;
-#ifdef NUTF8
-            slot1->value.integer = (rxinteger)slot2->value.string.string_pos;
-#else
-            slot1->value.integer = (rxinteger)slot2->value.string.string_char_pos;
-#endif
-            ok = 1;
-            break;
-
         case RXOP_CONST_EVAL_STRCHAR_AT:
-            if (value2.type != TP_STRING || value3.type != TP_INTEGER || !slot2 ||
+            if (value2.type != TP_STRING || value3.type != TP_INTEGER ||
+                value3.integer < 0 ||
                 !partial_set_default(&slot1->value, TP_INTEGER)) goto done;
-            string_set_byte_pos(&slot2->value.string, (size_t)value3.integer);
 #ifdef NUTF8
-            if (slot2->value.string.string_pos >= slot2->value.string.string_length) goto done;
-            codepoint = (unsigned char)slot2->value.string.string_value[slot2->value.string.string_pos];
+            if ((size_t)value3.integer >= value2.string.string_length) goto done;
+            codepoint = (unsigned char)value2.string.string_value[(size_t)value3.integer];
 #else
-            if (slot2->value.string.string_char_pos >= slot2->value.string.string_chars) goto done;
-            utf8codepoint(slot2->value.string.string_value + slot2->value.string.string_pos,
+            if ((size_t)value3.integer >= value2.string.string_chars) goto done;
+            string_cache_seek_char(&value2.string, (size_t)value3.integer);
+            utf8codepoint(value2.string.string_value + value2.string.string_cache_byte_pos,
                           &codepoint);
 #endif
             slot1->value.integer = (rxinteger)codepoint;
@@ -461,15 +449,17 @@ static int partial_exec_assembler(RxcpPartialState *state, ASTNode *node) {
             break;
 
         case RXOP_CONST_EVAL_SUBSTRING:
-            if (value2.type != TP_STRING || value3.type != TP_INTEGER || !slot2 ||
+            if (value2.type != TP_STRING || value3.type != TP_INTEGER ||
+                value4.type != TP_INTEGER ||
                 !partial_set_default(&slot1->value, TP_STRING)) goto done;
-            count = value3.integer;
+            start = value3.integer;
+            count = value4.integer;
             if (count <= 0) {
                 if (set_string_validated(&slot1->value.string, "", 0u) != 0) goto done;
             } else {
-                string_slice_from_cursor(&slot1->value.string,
-                                         &slot2->value.string,
-                                         (size_t)count);
+                string_slice_at(&slot1->value.string, &value2.string,
+                                start < 0 ? 0u : (size_t)start,
+                                (size_t)count);
             }
             ok = 1;
             break;
@@ -515,12 +505,12 @@ static int partial_exec_assembler(RxcpPartialState *state, ASTNode *node) {
 #ifdef NUTF8
                 codepoint = (unsigned char)slot2->value.string.string_value[index];
 #else
-                if (!is_ascii) string_set_byte_pos(&slot2->value.string, index);
+                if (!is_ascii) string_cache_seek_char(&slot2->value.string, index);
                 if (is_ascii) {
                     codepoint = (unsigned char)slot2->value.string.string_value[index];
                 } else {
                     utf8codepoint(slot2->value.string.string_value +
-                                  slot2->value.string.string_pos,
+                                  slot2->value.string.string_cache_byte_pos,
                                   &codepoint);
                 }
 #endif
@@ -600,6 +590,7 @@ static int partial_exec_assembler(RxcpPartialState *state, ASTNode *node) {
     if (ok && !partial_value_within_budget(&slot1->value)) ok = 0;
 
 done:
+    partial_value_clear(&value4);
     partial_value_clear(&value3);
     partial_value_clear(&value2);
     partial_value_clear(&value1);

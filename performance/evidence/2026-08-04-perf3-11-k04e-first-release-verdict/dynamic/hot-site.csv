@@ -1,0 +1,5 @@
+vm,variant,ilt_reg_int_reg_site,brf_site,ble_reg_int_site,target_dispatches,total_profile_dispatches
+rxvm,control,560000,560000,0,1120000,54221182
+rxvm,candidate,0,0,560000,560000,53661154
+rxbvm,control,560000,560000,0,1120000,54221125
+rxbvm,candidate,0,0,560000,560000,53661154

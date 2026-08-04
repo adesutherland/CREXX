@@ -1,0 +1,8 @@
+build=pass; Richards/Towers no-opt artifacts and crexx_test_driver
+focused_ctest=rxc_inline_byvalue_arg_reuse 1/1 pass
+noopt_correctness=Richards/Towers x rxvm/rxbvm 4/4 pass
+noopt_images=byte-identical to C0 for both workloads in RXAS and RXBIN
+richards_rxas_sha256=d18ff4e622d02748a892b8dcb812d62ceb0b1a0dae612cb56f16ac33308b5eac
+richards_rxbin_sha256=e94e6f87c96c9d7cfb20441d00c1660e4027e05485c2571b5d5a4b71c0b49788
+towers_rxas_sha256=50f5f4e01da31481fcd8b1eb75122885a447033def9ef9eff2b4b09991995c76
+towers_rxbin_sha256=b8cde44dbf167d36b7c6c8882ed9e7ac7c1e069521019a50c0c9e747738541ae

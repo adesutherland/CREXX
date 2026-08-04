@@ -44,6 +44,11 @@
 #include <float.h>
 #include <string.h>
 
+/* Tests may replace only the failure-atomic slice allocation boundary. */
+#ifndef RXVM_VALUE_MALLOC
+#define RXVM_VALUE_MALLOC malloc
+#endif
+
 #ifdef CREXX_VM_PROFILING
 #include "rxvmprofile.h"
 #define RXVM_PROFILE_RECORD_ALLOCATION(kind_, bytes_, value_slots_) \
@@ -96,6 +101,11 @@ RX_INLINE void clear_value_uninitialized_object(value *v) {
 }
 
 #ifndef NUTF8
+RX_INLINE void string_cache_reset(value *v) {
+    v->string_cache_byte_pos = 0;
+    v->string_cache_char_pos = 0;
+}
+
 RX_INLINE int has_utf8_valid_count(const value *v) {
     return (v->status.all_type_flags & (RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID)) ==
            (RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID);
@@ -111,7 +121,7 @@ RX_INLINE void mark_utf8_valid_count(value *v) {
 
 RX_INLINE void mark_ascii_string_valid_count(value *v) {
     v->string_chars = v->string_length;
-    v->string_char_pos = 0;
+    string_cache_reset(v);
     mark_utf8_valid_count(v);
 }
 
@@ -145,16 +155,19 @@ RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
     return codepoint >= 0 && codepoint <= 0x10ffff &&
            !(codepoint >= 0xd800 && codepoint <= 0xdfff);
 }
+#else
+RX_INLINE void string_cache_reset(value *v) {
+    (void)v;
+}
 #endif
 
 /* Complete an in-place string-byte replacement. Public/compiler type flags and
  * the value's other representations remain unchanged; VM-private string
- * validity and cursor state describe only the newly written byte span. */
+ * validity and private lookup cache describe only the newly written byte span. */
 RX_INLINE void finish_string_write(value *v, size_t length) {
     v->string_length = length;
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
-    v->string_char_pos = 0;
     refresh_utf8_flags(v);
 #else
     clear_vm_private_flags(v);
@@ -164,7 +177,7 @@ RX_INLINE void finish_string_write(value *v, size_t length) {
 /* Numeric formatting and hex rendering are known to produce ASCII. */
 RX_INLINE void finish_ascii_string_write(value *v, size_t length) {
     v->string_length = length;
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
     mark_ascii_string_valid_count(v);
 #else
@@ -181,7 +194,6 @@ RX_INLINE void clear_binary_payload(value *v) {
     if (v->binary_value) free(v->binary_value);
     v->binary_value = 0;
     v->binary_length = 0;
-    v->binary_pos = 0;
     v->binary_buffer_length = 0;
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
@@ -212,10 +224,9 @@ RX_INLINE void value_zero(value *v) {
     v->float_value = 0;
     v->object_type = 0;
     v->string_length = 0; // Lazy Free String - just zero the used length
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
     v->string_chars = 0;
-    v->string_char_pos = 0;
 #endif
     v->num_attributes = 0;
 
@@ -224,7 +235,6 @@ RX_INLINE void value_zero(value *v) {
 
     /* Lazy Free binary - just zero the used length */
     v->binary_length = 0;
-    v->binary_pos = 0;
 }
 
 /* Setup a new value structure */
@@ -238,7 +248,6 @@ RX_INLINE void value_init(value *v) {
     v->max_num_attributes = 0;
     v->num_attributes = 0;
     v->binary_value = 0;
-    v->binary_pos = 0;
     v->binary_buffer_length = 0;
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
@@ -543,7 +552,6 @@ RX_INLINE int set_binary(value *v, const void *data, size_t length) {
     if (prep_binary_buffer(v, length) != 0) return -1;
     if (length && data) memcpy(v->binary_value, data, length);
     else if (length) memset(v->binary_value, 0, length);
-    v->binary_pos = 0;
     clear_vm_private_flags(v);
     return 0;
 }
@@ -554,7 +562,6 @@ RX_INLINE int set_buffer_binary(value *v, char *buffer, size_t length, size_t bu
     if (v->binary_value) free(v->binary_value);
     v->binary_value = buffer;
     v->binary_length = length;
-    v->binary_pos = 0;
     v->binary_buffer_length = buffer_length;
     clear_vm_private_flags(v);
     return 0;
@@ -565,7 +572,6 @@ RX_INLINE int append_binary(value *v, const void *data, size_t length) {
     if (prep_binary_buffer(v, start + length) != 0) return -1;
     if (length && data) memcpy(v->binary_value + start, data, length);
     else if (length) memset(v->binary_value + start, 0, length);
-    if (v->binary_pos > v->binary_length) v->binary_pos = v->binary_length;
     clear_vm_private_flags(v);
     return 0;
 }
@@ -575,7 +581,6 @@ RX_INLINE int append_binary_value(value *dest, value *source) {
     if (dest == source) {
         if (prep_binary_buffer(dest, source_length * 2) != 0) return -1;
         if (source_length) memcpy(dest->binary_value + source_length, dest->binary_value, source_length);
-        if (dest->binary_pos > dest->binary_length) dest->binary_pos = dest->binary_length;
         clear_vm_private_flags(dest);
         return 0;
     }
@@ -604,13 +609,14 @@ RX_INLINE int concat_binary(value *dest, value *left, value *right) {
     if (prep_binary_buffer(dest, total_length) != 0) return -1;
     if (left_length) memcpy(dest->binary_value, left->binary_value, left_length);
     if (right_length) memcpy(dest->binary_value + left_length, right->binary_value, right_length);
-    dest->binary_pos = 0;
     clear_vm_private_flags(dest);
     return 0;
 }
 
 RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t length) {
     size_t actual_length;
+    char *new_buffer = 0;
+    size_t new_buffer_length = 0;
 
     if (offset >= source->binary_length) actual_length = 0;
     else {
@@ -618,17 +624,47 @@ RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t len
         if (length < actual_length) actual_length = length;
     }
 
-    if (dest == source) {
-        if (actual_length) memmove(dest->binary_value, source->binary_value + offset, actual_length);
+    if ((dest == source && dest->native_payload_ops && actual_length != 0) ||
+        (dest != source &&
+         (dest->native_payload_ops || actual_length > dest->binary_buffer_length))) {
+        new_buffer_length = actual_length ? buffer_size(actual_length) : 0;
+        if (new_buffer_length) {
+            new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
+            if (!new_buffer) return -1;
+            memcpy(new_buffer, source->binary_value + offset, actual_length);
+            RXVM_PROFILE_RECORD_ALLOCATION(
+                    RXVM_PROFILE_ALLOC_BINARY_BUFFER, new_buffer_length, 0);
+        }
+    }
+
+    if (dest->native_payload_ops) {
+        clear_binary_payload(dest);
+        dest->binary_value = new_buffer;
+        dest->binary_buffer_length = new_buffer_length;
         dest->binary_length = actual_length;
-        dest->binary_pos = 0;
         clear_vm_private_flags(dest);
         return 0;
     }
 
-    if (prep_binary_buffer(dest, actual_length) != 0) return -1;
+    if (new_buffer) {
+        if (dest->binary_value) free(dest->binary_value);
+        dest->binary_value = new_buffer;
+        dest->binary_buffer_length = new_buffer_length;
+        dest->binary_length = actual_length;
+        clear_vm_private_flags(dest);
+        return 0;
+    }
+
+    if (dest == source) {
+        if (actual_length) memmove(dest->binary_value, source->binary_value + offset, actual_length);
+        dest->binary_length = actual_length;
+        clear_vm_private_flags(dest);
+        return 0;
+    }
+
+    dest->binary_length = actual_length;
     if (actual_length) memcpy(dest->binary_value, source->binary_value + offset, actual_length);
-    dest->binary_pos = 0;
+    clear_vm_private_flags(dest);
     return 0;
 }
 
@@ -734,10 +770,9 @@ RX_MOSTLYINLINE void clear_value_contents(value* v) {
         v->string_buffer_length = sizeof(v->small_string_buffer);
     }
     v->string_length = 0;
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
     v->string_chars = 0;
-    v->string_char_pos = 0;
 #endif
 
     /* Free decimal */
@@ -940,9 +975,8 @@ RX_INLINE void set_string(value *v, char *value, size_t length) {
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,length);
     memcpy(v->string_value, value, v->string_length);
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
-    v->string_char_pos = 0;
     refresh_utf8_flags(v);
 #else
     clear_vm_private_flags(v);
@@ -956,9 +990,8 @@ RX_INLINE void set_null_string(value *v, const char *from) {
     if (v->string_value == from) return;
     prep_string_buffer(v, strlen(from));
     memcpy(v->string_value, from, v->string_length);
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
-    v->string_char_pos = 0;
     refresh_utf8_flags(v);
 #else
     clear_vm_private_flags(v);
@@ -974,7 +1007,7 @@ RX_INLINE int set_string_validated(value *v, const char *from, size_t length) {
     set_string(v, (char *)(from ? from : ""), length);
 #ifndef NUTF8
     v->string_chars = chars;
-    v->string_char_pos = 0;
+    string_cache_reset(v);
     mark_utf8_valid_count(v);
 #endif
     return 0;
@@ -990,9 +1023,8 @@ RX_INLINE void set_const_string(value *v, string_constant *from) {
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,from->string_len);
     memcpy(v->string_value, from->string, v->string_length);
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
-    v->string_char_pos = 0;
     v->string_chars = from->string_chars;
     mark_utf8_valid_count(v);
 #else
@@ -1006,9 +1038,8 @@ RX_INLINE void set_value_string(value *v, value *from) {
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v, from->string_length);
     memcpy(v->string_value, from->string_value, v->string_length);
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
-    v->string_char_pos = 0;
     v->string_chars = from->string_chars;
     copy_vm_private_flags(v, from);
 #else
@@ -1031,9 +1062,8 @@ RX_INLINE void set_buffer_string(
     v->string_value = buffer;
     v->string_length = length;
     v->string_buffer_length = buffer_length;
-    v->string_pos = 0;
+    string_cache_reset(v);
 #ifndef NUTF8
-    v->string_char_pos = 0;
     v->string_chars = string_chars;
 #endif
     clear_vm_private_flags(v);
@@ -1103,19 +1133,17 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     if (source->string_length) {
         /* Copy String Data */
         prep_string_buffer(dest, source->string_length);
-        dest->string_pos = source->string_pos;
+        string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
-        dest->string_char_pos = source->string_char_pos;
 #endif
         memcpy(dest->string_value, source->string_value, dest->string_length);
     }
     else {
         dest->string_length = 0;
-        dest->string_pos = 0;
+        string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = 0;
-        dest->string_char_pos = 0;;
 #endif
     }
     copy_vm_private_flags(dest, source);
@@ -1127,13 +1155,11 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     else if (source->binary_length) {
         if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
         memcpy(dest->binary_value, source->binary_value, dest->binary_length);
-        dest->binary_pos = source->binary_pos;
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;
     }
     else {
         dest->binary_length = 0;
-        dest->binary_pos = 0;
         dest->native_payload_ops = 0;
         dest->native_payload_flags = 0;
     }
@@ -1177,18 +1203,16 @@ RX_INLINE void move_value(value *dest, value *source) {
         dest->string_value = source->string_value;
         dest->string_length = source->string_length;
         dest->string_buffer_length = source->string_buffer_length;
-        dest->string_pos = source->string_pos;
+        string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
-        dest->string_char_pos = source->string_char_pos;
 #endif
     }
     else {
         dest->string_length = source->string_length;
-        dest->string_pos = source->string_pos;
+        string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
-        dest->string_char_pos = source->string_char_pos;
 #endif
         if (dest->string_length) {
             memcpy(dest->string_value, source->string_value,
@@ -1199,14 +1223,12 @@ RX_INLINE void move_value(value *dest, value *source) {
     /* Move Binary */
     if (source->binary_value) {
         dest->binary_length = source->binary_length;
-        dest->binary_pos = source->binary_pos;
         dest->binary_value = source->binary_value;
         dest->binary_buffer_length = source->binary_buffer_length;
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;
         source->binary_value = 0;
         source->binary_length = 0;
-        source->binary_pos = 0;
         source->binary_buffer_length = 0;
         source->native_payload_ops = 0;
         source->native_payload_flags = 0;
@@ -1368,19 +1390,17 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
     if (source->string_length) {
         /* Copy String Data */
         prep_string_buffer(dest, source->string_length);
-        dest->string_pos = 0;
+        string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
-        dest->string_char_pos = 0;
 #endif
         memcpy(dest->string_value, source->string_value, source->string_length);
     }
     else {
         dest->string_length = 0;
-        dest->string_pos = 0;
+        string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = 0;
-        dest->string_char_pos = 0;
 #endif
     }
     copy_vm_private_flags(dest, source);
@@ -1401,13 +1421,11 @@ RX_INLINE void copy_binary_value(value *dest, value *source) {
     else if (source->binary_length) {
         if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
         memcpy(dest->binary_value, source->binary_value, dest->binary_length);
-        dest->binary_pos = source->binary_pos;
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;
     }
     else {
         dest->binary_length = 0;
-        dest->binary_pos = 0;
         dest->native_payload_ops = 0;
         dest->native_payload_flags = 0;
     }
@@ -1417,38 +1435,38 @@ RX_INLINE void copy_binary_value(value *dest, value *source) {
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
 #ifndef NUTF8
-RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos);
-
-RX_INLINE void string_reset_cursor(value *v) {
-    v->string_pos = 0;
-    v->string_char_pos = 0;
-}
+RX_INLINE void string_cache_seek_char(value *v, size_t char_pos);
 
 RX_INLINE void string_set_lengths(value *v, size_t byte_length, size_t char_length) {
     v->string_length = byte_length;
     v->string_chars = char_length;
-    string_reset_cursor(v);
+    string_cache_reset(v);
 }
 
 RX_INLINE void string_set_ascii_length(value *v, size_t length) {
     string_set_lengths(v, length, length);
 }
 
-RX_INLINE size_t string_chars_remaining(const value *v) {
-    if (v->string_char_pos >= v->string_chars) return 0;
-    return v->string_chars - v->string_char_pos;
-}
+RX_INLINE int string_slice_at(value *dest, value *source,
+                              size_t char_start, size_t char_count) {
+    size_t byte_pos;
+    size_t actual_chars;
+    size_t byte_length;
+    size_t required_length;
+    char *new_buffer = 0;
+    size_t new_buffer_length = 0;
 
-RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_count) {
-    size_t byte_pos = source->string_pos;
-    size_t actual_chars = MIN(char_count, string_chars_remaining(source));
-    size_t byte_length = actual_chars;
+    string_cache_seek_char(source, char_start);
+    byte_pos = source->string_cache_byte_pos;
+    actual_chars = MIN(char_count,
+                       source->string_chars - source->string_cache_char_pos);
+    byte_length = actual_chars;
 
     if (actual_chars == 0) {
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
         mark_utf8_valid_count(dest);
-        return;
+        return 0;
     }
 
 #if ASCII_FAST_PATH
@@ -1464,10 +1482,26 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
         byte_length = end_pos >= byte_pos ? end_pos - byte_pos : 0;
     }
 
+    if (byte_length == SIZE_MAX) return -1;
+    required_length = byte_length + 1;
+
+    if (dest != source && required_length > dest->string_buffer_length) {
+        new_buffer_length = buffer_size(required_length);
+        new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
+        if (!new_buffer) return -1;
+        memcpy(new_buffer, source->string_value + byte_pos, byte_length);
+        new_buffer[byte_length] = '\0';
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, new_buffer_length, 0);
+    }
+
     if (dest == source) {
         memmove(dest->string_value, source->string_value + byte_pos, byte_length);
+    } else if (new_buffer) {
+        if (dest->string_value != dest->small_string_buffer) free(dest->string_value);
+        dest->string_value = new_buffer;
+        dest->string_buffer_length = new_buffer_length;
     } else {
-        prep_string_buffer(dest, byte_length);
         memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
     }
 
@@ -1475,57 +1509,74 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
     null_terminate_string_buffer(dest);
     if (has_utf8_valid_count(source)) mark_utf8_valid_count(dest);
     else clear_vm_private_flags(dest);
+    return 0;
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
     int was_valid = has_utf8_valid_count_or_empty(v);
-    string_set_byte_pos(v, char_count);
-    string_set_lengths(v, v->string_pos, v->string_char_pos);
+    size_t byte_length;
+    size_t actual_chars;
+
+    string_cache_seek_char(v, char_count);
+    byte_length = v->string_cache_byte_pos;
+    actual_chars = v->string_cache_char_pos;
+    string_set_lengths(v, byte_length, actual_chars);
     null_terminate_string_buffer(v);
     if (was_valid || v->string_length == 0) mark_utf8_valid_count(v);
     else clear_vm_private_flags(v);
 }
 #else
-RX_INLINE void string_reset_cursor(value *v) {
-    v->string_pos = 0;
-}
-
 RX_INLINE void string_set_lengths(value *v, size_t byte_length, size_t char_length) {
     (void)char_length;
     v->string_length = byte_length;
-    string_reset_cursor(v);
 }
 
 RX_INLINE void string_set_ascii_length(value *v, size_t length) {
     string_set_lengths(v, length, length);
 }
 
-RX_INLINE size_t string_chars_remaining(const value *v) {
-    if (v->string_pos >= v->string_length) return 0;
-    return v->string_length - v->string_pos;
-}
-
-RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_count) {
-    size_t byte_pos = source->string_pos;
-    size_t byte_length = MIN(char_count, string_chars_remaining(source));
+RX_INLINE int string_slice_at(value *dest, value *source,
+                              size_t char_start, size_t char_count) {
+    size_t byte_pos = MIN(char_start, source->string_length);
+    size_t byte_length = MIN(char_count, source->string_length - byte_pos);
+    size_t required_length;
+    char *new_buffer = 0;
+    size_t new_buffer_length = 0;
 
     if (byte_length == 0) {
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
         clear_vm_private_flags(dest);
-        return;
+        return 0;
+    }
+
+    if (byte_length == SIZE_MAX) return -1;
+    required_length = byte_length + 1;
+
+    if (dest != source && required_length > dest->string_buffer_length) {
+        new_buffer_length = buffer_size(required_length);
+        new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
+        if (!new_buffer) return -1;
+        memcpy(new_buffer, source->string_value + byte_pos, byte_length);
+        new_buffer[byte_length] = '\0';
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, new_buffer_length, 0);
     }
 
     if (dest == source) {
         memmove(dest->string_value, source->string_value + byte_pos, byte_length);
+    } else if (new_buffer) {
+        if (dest->string_value != dest->small_string_buffer) free(dest->string_value);
+        dest->string_value = new_buffer;
+        dest->string_buffer_length = new_buffer_length;
     } else {
-        prep_string_buffer(dest, byte_length);
         memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
     }
 
     string_set_ascii_length(dest, byte_length);
     null_terminate_string_buffer(dest);
     clear_vm_private_flags(dest);
+    return 0;
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
@@ -1570,9 +1621,8 @@ RX_INLINE void string_append(value *v1, value *v2) {
 
     extend_string_buffer(v1, v1->string_length + append_length);
     memcpy(v1->string_value + start, v2->string_value, append_length);
-    v1->string_pos = 0;
+    string_cache_reset(v1);
 #ifndef NUTF8
-    v1->string_char_pos = 0;
     v1->string_chars += append_chars;
     set_utf8_known_concat_flags(v1, left_known, right_known);
 #else
@@ -1589,9 +1639,8 @@ RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
     extend_string_buffer(v1, v1->string_length + length);
     memcpy(v1->string_value + start, value, length);
 
-    v1->string_pos = 0;
+    string_cache_reset(v1);
 #ifndef NUTF8
-    v1->string_char_pos = 0;
     {
         size_t chars = 0;
         if (!utf8nvalid_count(value, length, &chars)) {
@@ -1620,9 +1669,8 @@ RX_INLINE void string_sappend(value *v1, value *v2) {
     extend_string_buffer(v1, v1->string_length + append_length + 1);
     v1->string_value[start++] = ' ';
     memcpy(v1->string_value + start, v2->string_value, append_length);
-    v1->string_pos = 0;
+    string_cache_reset(v1);
 #ifndef NUTF8
-    v1->string_char_pos = 0;
     v1->string_chars += append_chars + 1;
     set_utf8_known_concat_flags(v1, left_known, right_known);
 #else
@@ -1648,13 +1696,11 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
 
         memcpy(buffer, v2->string_value, v2->string_length);
         memcpy(buffer + v2->string_length, v3->string_value, v3->string_length);
-        v1->string_pos = 0;
 
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars);
-        v1->string_char_pos = 0;
 #endif
     }
     else {
@@ -1662,10 +1708,9 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
         prep_string_buffer(v1, len);
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         memcpy(v1->string_value + v2->string_length, v3->string_value, v3->string_length);
-        v1->string_pos = 0;
+        string_cache_reset(v1);
 #ifndef NUTF8
         v1->string_chars = left_chars + right_chars;
-        v1->string_char_pos = 0;
 #endif
     }
 #ifndef NUTF8
@@ -1694,12 +1739,10 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
         memcpy(buffer, v2->string_value, v2->string_length);
         buffer[v2->string_length] = ' ';
         memcpy(buffer + v2->string_length + 1, v3->string_value, v3->string_length);
-        v1->string_pos = 0;
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars + 1);
-        v1->string_char_pos = 0;
 #endif
     }
     else {
@@ -1708,10 +1751,9 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         v1->string_value[v2->string_length] = ' ';
         memcpy(v1->string_value + v2->string_length + 1, v3->string_value, v3->string_length);
-        v1->string_pos = 0;
+        string_cache_reset(v1);
 #ifndef NUTF8
         v1->string_chars = left_chars + right_chars + 1;
-        v1->string_char_pos = 0;
 #endif
     }
 #ifndef NUTF8
@@ -1737,14 +1779,12 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
 
         memcpy(buffer, v2->string_value, v2->string_length);
         memcpy(buffer + v2->string_length, v3->string, v3->string_len);
-        v1->string_pos = 0;
 
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
                           left_chars + v3->string_chars);
-        v1->string_char_pos = 0;
 #endif
     }
     else {
@@ -1752,10 +1792,9 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
         prep_string_buffer(v1, len);
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         memcpy(v1->string_value + v2->string_length, v3->string, v3->string_len);
-        v1->string_pos = 0;
+        string_cache_reset(v1);
 #ifndef NUTF8
         v1->string_chars = left_chars + v3->string_chars;
-        v1->string_char_pos = 0;
 #endif
     }
 #ifndef NUTF8
@@ -1782,14 +1821,12 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
         memcpy(buffer, v2->string_value, v2->string_length);
         buffer[v2->string_length] = ' ';
         memcpy(buffer + v2->string_length + 1, v3->string, v3->string_len);
-        v1->string_pos = 0;
 
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
                           left_chars + v3->string_chars + 1);
-        v1->string_char_pos = 0;
 #endif
     }
     else {
@@ -1798,10 +1835,9 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         v1->string_value[v2->string_length] = ' ';
         memcpy(v1->string_value + v2->string_length + 1, v3->string, v3->string_len);
-        v1->string_pos = 0;
+        string_cache_reset(v1);
 #ifndef NUTF8
         v1->string_chars = left_chars + v3->string_chars + 1;
-        v1->string_char_pos = 0;
 #endif
     }
 #ifndef NUTF8
@@ -1827,14 +1863,12 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
 
         memcpy(buffer, v2->string, v2->string_len);
         memcpy(buffer + v2->string_len, v3->string_value, v3->string_length);
-        v1->string_pos = 0;
 
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
                           v2->string_chars + right_chars);
-        v1->string_char_pos = 0;
 #endif
     }
     else {
@@ -1843,10 +1877,9 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
 
         memcpy(v1->string_value, v2->string, v2->string_len);
         memcpy(v1->string_value + v2->string_len, v3->string_value, v3->string_length);
-        v1->string_pos = 0;
+        string_cache_reset(v1);
 #ifndef NUTF8
         v1->string_chars = v2->string_chars + right_chars;
-        v1->string_char_pos = 0;
 #endif
     }
 #ifndef NUTF8
@@ -1874,14 +1907,12 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
         buffer[v2->string_len] = ' ';
         memcpy(buffer + v2->string_len + 1, v3->string_value,
                v3->string_length);
-        v1->string_pos = 0;
 
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
                           v2->string_chars + right_chars + 1);
-        v1->string_char_pos = 0;
 #endif
     }
     else {
@@ -1891,10 +1922,9 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
         v1->string_value[v2->string_len] = ' ';
         memcpy(v1->string_value + v2->string_len + 1, v3->string_value,
                v3->string_length);
-        v1->string_pos = 0;
+        string_cache_reset(v1);
 #ifndef NUTF8
         v1->string_chars = v2->string_chars + right_chars + 1;
-        v1->string_char_pos = 0;
 #endif
     }
 #ifndef NUTF8
@@ -1905,57 +1935,50 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
 }
 
 #ifndef NUTF8
-/* This sets v's string_pos (the byte index) and v's string_char_pos
- * (the utf8 codepoint index) based on a new string_char_pos */
+/* Seek the VM-private UTF-8 cache to a character index. */
 RX_INLINE void string_step_forward(value *v) {
     size_t step;
     size_t remaining;
 
-    if (v->string_pos >= v->string_length) {
-        v->string_pos = v->string_length;
+    if (v->string_cache_byte_pos >= v->string_length) {
+        v->string_cache_byte_pos = v->string_length;
         return;
     }
 
-    step = utf8codepointcalcsize(v->string_value + v->string_pos);
-    remaining = v->string_length - v->string_pos;
+    step = utf8codepointcalcsize(v->string_value + v->string_cache_byte_pos);
+    remaining = v->string_length - v->string_cache_byte_pos;
     if (step > remaining) step = remaining;
-    v->string_pos += step;
+    v->string_cache_byte_pos += step;
 }
 
 RX_INLINE void string_step_backward(value *v) {
     size_t step;
 
-    if (v->string_pos == 0) {
-        v->string_pos = 0;
+    if (v->string_cache_byte_pos == 0) {
         return;
     }
 
-    step = utf8rcodepointcalcsize(v->string_value + v->string_pos);
-    if (step > v->string_pos) step = v->string_pos;
-    v->string_pos -= step;
+    step = utf8rcodepointcalcsize(v->string_value + v->string_cache_byte_pos);
+    if (step > v->string_cache_byte_pos) step = v->string_cache_byte_pos;
+    v->string_cache_byte_pos -= step;
 }
 
-RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
-    assert (v->string_char_pos <= v->string_chars);
+RX_INLINE void string_cache_seek_char(value *v, size_t char_pos) {
+    assert (v->string_cache_char_pos <= v->string_chars);
 
     // Boundary Check: If the requested position is beyond the last character,
     // clamp it to the end of the string.
-    if (new_string_char_pos >= v->string_chars) {
+    if (char_pos >= v->string_chars) {
         if (v->string_chars == 0) {
-            v->string_pos = 0;
-            v->string_char_pos = 0;
+            string_cache_reset(v);
         } else {
-            // Position at the very end of the string.
-            // string_char_pos can be equal to string_chars, indicating a position
-            // after the last character, which is useful for appending.
-            // Here we will just set it to the last valid character index for seeking.
-            v->string_pos = v->string_length;
-            v->string_char_pos = v->string_chars;
+            v->string_cache_byte_pos = v->string_length;
+            v->string_cache_char_pos = v->string_chars;
         }
         return;
     }
 
-    int diff = (int)new_string_char_pos - (int)v->string_char_pos;
+    int diff = (int)char_pos - (int)v->string_cache_char_pos;
 
     if (diff == 0) {
         return; // Nothing to do
@@ -1964,48 +1987,47 @@ RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
     // Optimised for stepping one character forward or backward
     if (diff == 1) {
         string_step_forward(v);
-        v->string_char_pos++;
+        v->string_cache_char_pos++;
         return;
     }
     if (diff == -1) {
         string_step_backward(v);
-        v->string_char_pos--;
+        v->string_cache_char_pos--;
         return;
     }
 
     // For larger jumps, determine the most efficient starting point.
     // We compare the cost of seeking from the start, the current position, or the end.
-    size_t cost_from_start = new_string_char_pos;
+    size_t cost_from_start = char_pos;
     size_t cost_from_current = (diff > 0) ? diff : -diff;
-    size_t cost_from_end = v->string_chars - new_string_char_pos;
+    size_t cost_from_end = v->string_chars - char_pos;
 
     if (cost_from_start <= cost_from_current && cost_from_start <= cost_from_end) {
         // Seek from the beginning
-        v->string_char_pos = 0;
-        v->string_pos = 0;
-        while (v->string_char_pos < new_string_char_pos) {
+        string_cache_reset(v);
+        while (v->string_cache_char_pos < char_pos) {
             string_step_forward(v);
-            v->string_char_pos++;
+            v->string_cache_char_pos++;
         }
     } else if (cost_from_end < cost_from_current) {
         // Seek from the end (backwards)
-        v->string_char_pos = v->string_chars;
-        v->string_pos = v->string_length;
-        while (v->string_char_pos > new_string_char_pos) {
+        v->string_cache_char_pos = v->string_chars;
+        v->string_cache_byte_pos = v->string_length;
+        while (v->string_cache_char_pos > char_pos) {
             string_step_backward(v);
-            v->string_char_pos--;
+            v->string_cache_char_pos--;
         }
     } else {
         // Seek from the current position
         if (diff > 0) { // Forward
-            while (v->string_char_pos < new_string_char_pos) {
+            while (v->string_cache_char_pos < char_pos) {
                 string_step_forward(v);
-                v->string_char_pos++;
+                v->string_cache_char_pos++;
             }
         } else { // Backward
-            while (v->string_char_pos > new_string_char_pos) {
+            while (v->string_cache_char_pos > char_pos) {
                 string_step_backward(v);
-                v->string_char_pos--;
+                v->string_cache_char_pos--;
             }
         }
     }
@@ -2015,21 +2037,21 @@ RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
 RX_INLINE void string_concat_char(value *v1, value *v2) {
     int char_size;
     char *insert_at;
+    size_t insert_offset = v1->string_length;
 #ifndef NUTF8
     int was_valid = has_utf8_valid_count_or_empty(v1);
     int scalar_valid = is_valid_unicode_scalar(v2->int_value);
 #endif
 
-    v1->string_pos = v1->string_length;
 #ifdef NUTF8
     char_size = 1;
 #else
-    v1->string_char_pos = v1->string_chars;
     char_size = utf8codepointsize(v2->int_value);
 #endif
 
     extend_string_buffer(v1,v1->string_length + char_size);
-    insert_at = v1->string_value + v1->string_pos;
+    insert_at = v1->string_value + insert_offset;
+    string_cache_reset(v1);
 
 #ifdef NUTF8
     *insert_at = (unsigned char)v2->int_value;
@@ -2052,7 +2074,7 @@ RX_INLINE void int_to_string(numeric_context *cnt, value *temp, value *v) {
         prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
         v->string_length = snprintf(v->string_value, SMALLEST_STRING_BUFFER_LENGTH,
                                     "%" RXINTEGER_PRI, v->int_value);
-        v->string_pos = 0;
+        string_cache_reset(v);
 #ifndef NUTF8
         mark_ascii_string_valid_count(v);
 #endif
@@ -2268,7 +2290,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         else
             strcpy(coefficient->string_value, "nan");
         coefficient->string_length = 3;
-        coefficient->string_pos = 0;
+        string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
 #endif
@@ -2280,7 +2302,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         else
             strcpy(coefficient->string_value, signbit(value) ? "-inf" : "inf");
         coefficient->string_length = signbit(value) ? 4 : 3;
-        coefficient->string_pos = 0;
+        string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
 #endif
@@ -2291,7 +2313,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         // Handle zero
         strcpy(coefficient->string_value, "0");
         coefficient->string_length = 1;
-        coefficient->string_pos = 0;
+        string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
 #endif
@@ -2348,7 +2370,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
 
     trim_numeric_trailing_zeros(coefficient->string_value);
     coefficient->string_length = strlen(coefficient->string_value);
-    coefficient->string_pos = 0;
+    string_cache_reset(coefficient);
 #ifndef NUTF8
     mark_ascii_string_valid_count(coefficient);
 #endif
@@ -2414,7 +2436,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     prep_string_buffer(formatted_output_value, output_buffer_size);
     formatted_output_value->string_length = 0;
     formatted_output_value->string_value[0] = 0; // Null-terminate - just in case
-    formatted_output_value->string_pos = 0;
+    string_cache_reset(formatted_output_value);
 #ifndef NUTF8
     mark_ascii_string_valid_count(formatted_output_value);
 #endif
@@ -2449,7 +2471,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
             }
         }
         formatted_output_value->string_length = strlen(formatted_output_value->string_value);
-        formatted_output_value->string_pos = 0;
+        string_cache_reset(formatted_output_value);
 #ifndef NUTF8
         mark_ascii_string_valid_count(formatted_output_value);
 #endif
@@ -2466,7 +2488,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
             // The number has already been formatted in scientific notation by decimalExtract
             sprintf(formatted_output, scientific_format, coefficient, exponent);
             formatted_output_value->string_length = strlen(formatted_output_value->string_value);
-            formatted_output_value->string_pos = 0;
+            string_cache_reset(formatted_output_value);
 #ifndef NUTF8
             mark_ascii_string_valid_count(formatted_output_value);
 #endif
@@ -2544,7 +2566,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
             formatted_output[-exponent + 1 + digits_in_coef] = 0;
         }
         formatted_output_value->string_length = strlen(formatted_output_value->string_value);
-        formatted_output_value->string_pos = 0;
+        string_cache_reset(formatted_output_value);
 #ifndef NUTF8
             mark_ascii_string_valid_count(formatted_output_value);
 #endif
@@ -2597,7 +2619,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     // Add the exponent
     sprintf(formatted_output, engineering_format, eng_exp);
     formatted_output_value->string_length = strlen(formatted_output_value->string_value);
-    formatted_output_value->string_pos = 0;
+    string_cache_reset(formatted_output_value);
 #ifndef NUTF8
     mark_ascii_string_valid_count(formatted_output_value);
 #endif
@@ -2612,7 +2634,7 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
     if (value == 0) {
         strcpy(coefficient->string_value, "0");
         coefficient->string_length = 1;
-        coefficient->string_pos = 0;
+        string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
 #endif
@@ -2624,7 +2646,7 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
     coefficient->string_length = snprintf(coefficient->string_value,
                                           SMALLEST_STRING_BUFFER_LENGTH,
                                           "%" RXINTEGER_PRI, value);
-    coefficient->string_pos = 0;
+    string_cache_reset(coefficient);
 
     // We are converting to coefficient, as an example, from 123456 to 1.23456 (i.e. normalised scientific notation)
     if (value > 0) {

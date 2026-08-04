@@ -85,8 +85,7 @@ rexxclassicbif_right: procedure = .RexxValue
 
   if width < string_length then do
     start = string_length - width
-    assembler setstrpos string,start
-    assembler substring result,string,width
+    assembler substring result,string,start,width
     return .RexxValue(result)
   end
 

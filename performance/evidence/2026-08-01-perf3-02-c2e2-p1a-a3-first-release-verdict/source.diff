@@ -1,0 +1,103 @@
+diff --git a/assembler/rxas_flow.c b/assembler/rxas_flow.c
+index c7a889f82..254589b8c 100644
+--- a/assembler/rxas_flow.c
++++ b/assembler/rxas_flow.c
+@@ -110,6 +110,7 @@ typedef struct flow_graph {
+     size_t block_count;
+     size_t resolved_indirect_branches;
+     int complete_control_flow;
++    int has_typed_signal_edges;
+     flow_storage_analysis *storage;
+ } flow_graph;
+ 
+@@ -568,7 +569,7 @@ static int flow_add_jump_table_successors(flow_graph *graph, flow_node *node,
+     return 1;
+ }
+ 
+-static int flow_build_edges(flow_graph *graph) {
++static int flow_build_edges(flow_graph *graph, int include_signal_edges) {
+     size_t index;
+     size_t operand_index;
+     size_t target_count;
+@@ -636,7 +637,8 @@ static int flow_build_edges(flow_graph *graph) {
+                 if (node->op->flow != FLOW_NEXT) leaders[index + 1] = 1;
+             }
+         }
+-        if ((node->effects.semantics & RXOP_SEM_MAY_THROW) != 0) {
++        if (include_signal_edges &&
++            (node->effects.semantics & RXOP_SEM_MAY_THROW) != 0) {
+             /* Action-aware handlers can be inherited from a caller, so every
+              * potentially throwing instruction has logical skip and retry
+              * continuations even when this procedure contains no SIGCALLA.
+@@ -918,13 +920,15 @@ static void flow_build_use_kill_and_taint(flow_graph *graph) {
+ }
+ 
+ static int flow_build_graph(flow_graph *graph, Assembler_Context *context,
+-                            instruction_queue *items, size_t item_count) {
++                            instruction_queue *items, size_t item_count,
++                            int include_signal_edges) {
+     size_t index;
+     size_t stride;
+     memset(graph, 0, sizeof(*graph));
+     graph->context = context;
+     graph->items = items;
+     graph->item_count = item_count;
++    graph->has_typed_signal_edges = include_signal_edges != 0;
+     if (!item_count) return 1;
+     flow_collect_registers(graph);
+     graph->bit_count = graph->register_count * FLOW_VIEW_COUNT;
+@@ -944,7 +948,7 @@ static int flow_build_graph(flow_graph *graph, Assembler_Context *context,
+         graph->nodes[index].live_in = graph->bit_storage + stride * 2 + index * graph->word_count;
+         graph->nodes[index].live_out = graph->bit_storage + stride * 3 + index * graph->word_count;
+     }
+-    flow_build_edges(graph);
++    flow_build_edges(graph, include_signal_edges);
+     flow_mark_reachable(graph);
+     flow_collect_async_handler_targets(graph);
+     flow_build_use_kill_and_taint(graph);
+@@ -1692,6 +1696,11 @@ static int flow_storage_analyse(const flow_graph *graph,
+ }
+ 
+ static int flow_storage_attach(flow_graph *graph) {
++    /* Storage transfer depends on distinct normal, signal-skip and
++     * signal-retry successors. Refuse a normal-only legacy graph rather than
++     * exposing a plausible but incomplete point environment to a future
++     * consumer. */
++    if (!graph->has_typed_signal_edges) return 0;
+     if (graph->storage) return 1;
+     graph->storage = calloc(1, sizeof(*graph->storage));
+     if (!graph->storage)
+@@ -2817,7 +2826,10 @@ void rxas_flow_optimise(Assembler_Context *context,
+     before_instructions = flow_instruction_count(items, item_count);
+     iterations = 0;
+     do {
+-        flow_build_graph(&graph, context, items, item_count);
++        /* Existing rewrite consumers use only normal successors. Build their
++         * fixed-point graphs in that explicit legacy mode; typed signal
++         * continuations are requested by storage consumers below. */
++        flow_build_graph(&graph, context, items, item_count, 0);
+         stats.procedures = 1;
+         stats.blocks = graph.block_count;
+         /* An unresolved target or indirect jump can enter at any instruction.
+@@ -2857,10 +2869,18 @@ void rxas_flow_optimise(Assembler_Context *context,
+         iterations++;
+     } while (changed && iterations <= before_instructions + 1);
+ 
+-    flow_build_graph(&graph, context, items, item_count);
++    flow_build_graph(&graph, context, items, item_count,
++                     context->debug_mode);
+     after_instructions = flow_instruction_count(items, item_count);
+-    flow_storage_attach(&graph);
+-    flow_debug_storage_identity(&graph);
++    /* Typed signal edges and the graph-owned storage service are demand
++     * driven. At present their only consumer is the debug identity report;
++     * ordinary fixed-point graphs use only normal successors. A future rewrite
++     * consumer must request typed construction and attach the same bounded
++     * service before querying it. */
++    if (context->debug_mode) {
++        flow_storage_attach(&graph);
++        flow_debug_storage_identity(&graph);
++    }
+     flow_debug_summary(&graph, &stats, before_instructions, after_instructions);
+     flow_free_graph(&graph);
+ }

@@ -42,10 +42,9 @@ that cannot be represented in the requested field width. Allocation failure
 raises `FAILURE`. UTF-8 text-field reads and conversions raise `UNICODE_ERROR`
 when the source bytes are not valid UTF-8.
 
-The legacy cursor instructions `setbinpos`, `getbinpos`, and `bslice` remain
-available for compatibility. New Release 1 compiler lowering should prefer
-direct offset instructions such as `bcopy`, `bget*`, `bset*`, `bgets`, `bsets`,
-`bcmpb`, and `bcmps`.
+`bslice` takes an explicit start and length. Release 1 compiler lowering should
+prefer direct offset instructions such as `bcopy`, `bget*`, `bset*`, `bgets`,
+`bsets`, `bcmpb`, and `bcmps` when materializing a slice is unnecessary.
 
 ## `bappend`
 
@@ -60,8 +59,7 @@ Append the binary payload of one register to the end of another register.
 ### Operands And Semantics
 
 `rDst` and `rRight` are binary registers. `rDst` is resized to hold its original
-bytes followed by `rRight`. Its binary cursor is preserved when still within
-the resized value; `rRight` and its cursor are unchanged.
+bytes followed by `rRight`. `rRight` is unchanged.
 
 ### Signals
 
@@ -135,7 +133,7 @@ Clear a binary register by setting its logical byte length to zero.
 
 ### Operands And Semantics
 
-The register remains a binary value. The legacy cursor is reset to zero.
+The register remains a binary value with a zero logical length.
 
 ### Signals
 
@@ -216,7 +214,7 @@ compares both lengths and all bytes and does not interpret an integer offset.
 
 `rLeft` and `rRight` are binary registers. `bConst` is an inline binary literal
 or named binary constant. `rResult` receives integer Boolean `0` or `1`; only
-that payload changes and both inputs/cursors are unchanged.
+that payload changes and both inputs are unchanged.
 
 ### Signals
 
@@ -253,7 +251,7 @@ Compare two complete logical binary values for inequality.
 ### Operands And Semantics
 
 `rResult` receives integer Boolean `1` when lengths or any bytes differ,
-otherwise `0`. Only its integer payload changes; inputs and cursors are unchanged.
+otherwise `0`. Only its integer payload changes; inputs are unchanged.
 
 ### Signals
 
@@ -442,7 +440,7 @@ Read an IEEE binary32 field and widen it into a VM float register.
 ### Operands And Semantics
 
 `rOffset.int` is a zero-based byte offset. Only `rOut.float` changes; the
-source, offset, binary cursor, and other destination state are unchanged.
+source, offset, and other destination state are unchanged.
 
 ### Signals
 
@@ -479,7 +477,7 @@ Read an IEEE binary64 field into a VM float register.
 ### Operands And Semantics
 
 `rOffset.int` is a zero-based byte offset. Only `rOut.float` changes; sources
-and cursors are unchanged.
+are unchanged.
 
 ### Signals
 
@@ -515,8 +513,8 @@ Read a signed 16-bit little-endian integer field.
 
 ### Operands And Semantics
 
-`rOffset.int` is zero-based. The field is sign-extended into `rOut.int`; sources,
-cursors, and other destination state are unchanged.
+`rOffset.int` is zero-based. The field is sign-extended into `rOut.int`; sources
+and other destination state are unchanged.
 
 ### Signals
 
@@ -553,7 +551,7 @@ Read a signed 32-bit little-endian integer field.
 ### Operands And Semantics
 
 `rOffset.int` is zero-based. The field is sign-extended into `rOut.int`; sources
-and cursors are unchanged.
+are unchanged.
 
 ### Signals
 
@@ -590,8 +588,8 @@ storage form for `.int`.
 
 ### Operands And Semantics
 
-`rOffset.int` is zero-based. Only `rOut.int` changes; sources and cursors remain
-unchanged. The active VM integer type must represent the decoded value.
+`rOffset.int` is zero-based. Only `rOut.int` changes; sources remain unchanged.
+The active VM integer type must represent the decoded value.
 
 ### Signals
 
@@ -628,7 +626,7 @@ Read a signed 8-bit integer field and sign-extend it into an integer register.
 ### Operands And Semantics
 
 `rOffset.int` is zero-based. The byte is sign-extended into `rOut.int`; sources
-and cursors remain unchanged.
+remain unchanged.
 
 ### Signals
 
@@ -705,7 +703,7 @@ Read an unsigned 16-bit little-endian integer field.
 ### Operands And Semantics
 
 `rOffset.int` is zero-based. The zero-extended value replaces only `rOut.int`;
-sources and cursors remain unchanged.
+sources remain unchanged.
 
 ### Signals
 
@@ -743,7 +741,7 @@ Read an unsigned 32-bit little-endian integer field.
 ### Operands And Semantics
 
 `rOffset.int` is zero-based. The zero-extended value replaces only `rOut.int`;
-sources and cursors remain unchanged.
+sources remain unchanged.
 
 ### Signals
 
@@ -780,8 +778,8 @@ Read an unsigned byte field.
 
 ### Operands And Semantics
 
-`rOffset.int` is zero-based. The byte replaces only `rOut.int`; sources and
-cursors remain unchanged.
+`rOffset.int` is zero-based. The byte replaces only `rOut.int`; sources remain
+unchanged.
 
 ### Signals
 
@@ -852,7 +850,7 @@ Return the logical byte length of a binary register or binary constant.
 
 ### Operands And Semantics
 
-Only `rOut.int` changes. The source binary and its cursor remain unchanged.
+Only `rOut.int` changes. The source binary remains unchanged.
 
 ### Signals
 
@@ -1007,7 +1005,7 @@ Write an IEEE binary32 field from a VM float register.
 ### Operands And Semantics
 
 `rOffset.int` is zero-based and `rValue.float` supplies the value. Four bytes
-change; the binary cursor and source registers are unchanged.
+change; source registers are unchanged.
 
 ### Signals
 
@@ -1044,7 +1042,7 @@ Write an IEEE binary64 field from a VM float register.
 ### Operands And Semantics
 
 `rOffset.int` is zero-based and `rValue.float` supplies the value. Eight bytes
-change; the binary cursor and sources are unchanged.
+change; sources are unchanged.
 
 ### Signals
 
@@ -1081,7 +1079,7 @@ Write a signed 16-bit little-endian integer field.
 ### Operands And Semantics
 
 The zero-based offset and signed value come from integer payloads. Two bytes
-change; cursors and source registers are unchanged.
+change; source registers are unchanged.
 
 ### Signals
 
@@ -1119,7 +1117,7 @@ Write a signed 32-bit little-endian integer field.
 ### Operands And Semantics
 
 The zero-based offset and signed value come from integer payloads. Four bytes
-change; cursors and sources are unchanged.
+change; sources are unchanged.
 
 ### Signals
 
@@ -1158,7 +1156,7 @@ storage form for `.int`.
 ### Operands And Semantics
 
 The zero-based offset and signed value come from integer payloads. Eight bytes
-change; cursors and sources are unchanged.
+change; sources are unchanged.
 
 ### Signals
 
@@ -1195,7 +1193,7 @@ Write a signed 8-bit integer field.
 ### Operands And Semantics
 
 The zero-based offset and signed value come from integer payloads. One byte
-changes; cursors and sources are unchanged.
+changes; sources are unchanged.
 
 ### Signals
 
@@ -1271,7 +1269,7 @@ Write an unsigned 16-bit little-endian integer field.
 ### Operands And Semantics
 
 The zero-based offset and unsigned value come from integer payloads. Two bytes
-change; cursors and sources are unchanged.
+change; sources are unchanged.
 
 ### Signals
 
@@ -1308,7 +1306,7 @@ Write an unsigned 32-bit little-endian integer field.
 ### Operands And Semantics
 
 The zero-based offset and unsigned value come from integer payloads. Four bytes
-change; cursors and sources are unchanged.
+change; sources are unchanged.
 
 ### Signals
 
@@ -1345,7 +1343,7 @@ Write an unsigned byte field.
 ### Operands And Semantics
 
 The zero-based offset and byte value come from integer payloads. One byte
-changes; cursors and sources are unchanged.
+changes; sources are unchanged.
 
 ### Signals
 
@@ -1371,40 +1369,41 @@ main() .locals=3
 
 ## `bslice`
 
-Copy bytes from the current legacy cursor position of one binary register into
-another register.
+Copy an explicit byte range from one binary register into another register.
 
 ### Forms
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00be` | `bslice rDst,rSrc,rLen` | Copy bytes from `rSrc` cursor into `rDst`. |
+| `0x00be` | `bslice rDst,rSrc,rStart,rLen` | Copy bytes `[rStart,rStart+rLen)`. |
 
 ### Operands And Semantics
 
-`bslice` is retained for cursor-style compatibility. It copies at most `rLen`
-bytes and truncates at end of source. New strict field extraction should use
-target-sized `bcopy`.
+`rStart` and `rLen` are integer registers. A negative start clamps to zero; a
+start or length beyond the source clips to its logical byte length. The source
+is unchanged. Strict fixed-size field extraction should use target-sized
+`bcopy` or typed binary reads.
 
 ### Related
 
-`setbinpos`, `getbinpos`, `bcopy`.
+`bcopy`, `bmove`, `bmemmove`.
 
 ### Signals
 
-Negative lengths are treated as zero; copying truncates at end of source.
-Allocation failure is fatal rather than translated to a VM signal.
+Negative lengths raise `OUT_OF_RANGE`; copying truncates at end of source.
+Allocation failure raises `FAILURE`.
 
 ### Example
 
 <!-- rxas-example name="binary-bslice" test="run" -->
 ```rxas
 .globals=0
-main() .locals=3
+main() .locals=4
     load r1,0x001122
     load r0,0x
-    load r2,2
-    bslice r0,r1,r2
+    load r2,1
+    load r3,2
+    bslice r0,r1,r2,r3
     ret
 ```
 
@@ -1421,7 +1420,7 @@ Overlay the whole binary payload of one register into another binary register.
 ### Operands And Semantics
 
 `rOffset.int` is zero-based. The whole source payload overwrites the matching
-destination range; logical lengths, cursors, and source bytes are unchanged.
+destination range; logical lengths and source bytes are unchanged.
 
 ### Signals
 
@@ -1442,39 +1441,6 @@ main() .locals=3
     load r1,1
     load r2,0x1122
     bupdate r0,r1,r2
-    ret
-```
-
-## `getbinpos`
-
-Read the current legacy cursor position of a binary register.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x00bd` | `getbinpos rOut,rBin` | Store the binary cursor byte offset in `rOut`. |
-
-### Operands And Semantics
-
-Only `rOut.int` changes. The source binary and cursor remain unchanged.
-
-### Related
-
-`setbinpos`, `bslice`.
-
-### Signals
-
-This instruction does not signal or move the binary cursor.
-
-### Example
-
-<!-- rxas-example name="binary-getbinpos" test="run" -->
-```rxas
-.globals=0
-main() .locals=2
-    load r1,0x0011
-    getbinpos r0,r1
     ret
 ```
 
@@ -1514,40 +1480,6 @@ main() .locals=3
     ret
 ```
 
-## `setbinpos`
-
-Set the current legacy cursor position of a binary register.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x00bc` | `setbinpos rBin,rOffset` | Set `rBin` cursor from `rOffset`. |
-
-### Operands And Semantics
-
-The cursor is clamped to the range `0..blen(rBin)`.
-
-### Related
-
-`getbinpos`, `bslice`.
-
-### Signals
-
-This instruction does not signal; offsets are clamped to the valid cursor range.
-
-### Example
-
-<!-- rxas-example name="binary-setbinpos" test="run" -->
-```rxas
-.globals=0
-main() .locals=2
-    load r0,0x0011
-    load r1,1
-    setbinpos r0,r1
-    ret
-```
-
 ## `setbyte`
 
 Write one byte to a binary register.
@@ -1561,7 +1493,7 @@ Write one byte to a binary register.
 ### Operands And Semantics
 
 Both register operands supply integer payloads. One destination byte changes;
-logical length, binary cursor, and source registers are unchanged.
+logical length and source registers are unchanged.
 
 ### Signals
 

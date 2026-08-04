@@ -1,0 +1,5 @@
+workload,vm,entry,schema,dynamic_instructions,calls,fresh_frames,reused_frames,frame_entry_work,copy_ops,copy_bytes,move_ops,move_bytes,clear_reset_destroy_ops,clear_reset_destroy_bytes,conversion_ops,allocation_requests,allocation_bytes,max_request_bytes,frame_high_water,branch_executions,branch_taken,branch_fallthrough,backedges,selector_attempts,frame_entry_ns,copy_ns,move_ns,clear_reset_destroy_ns,conversion_ns,status
+Richards,rxvm,richards-c1abc,5,8925947,119157,9,119149,4800912,26817578,212694721,99035,0,200949,16318,4,240096,673208,15536,6,1750622,1220546,530076,116253,0,0,0,0,0,0,complete
+Richards,rxbvm,richards-c1abc,5,8925947,119157,9,119149,4800912,26817578,212694721,99035,0,200949,16318,4,240096,673208,15536,6,1750622,1220546,530076,116253,0,0,0,0,0,0,complete
+Towers,rxvm,towers-c1abc,5,6815816,163950,14,163937,4179035,19649142,151295850,0,0,26640288,36608858,3,14815963,5022603264,9728,14,1461605,1037873,423732,150,0,0,0,0,0,0,complete
+Towers,rxbvm,towers-c1abc,5,6815816,163950,14,163937,4179035,19649142,151295850,0,0,26640288,36608858,3,14815963,5022603264,9728,14,1461605,1037873,423732,150,0,0,0,0,0,0,complete

@@ -1,0 +1,14 @@
+release build and isolated install
+installed_file_count=136
+e80c75887e940d605d87761269bff0e556fb21c82cb176ff91a3d031b0bd54a5  /tmp/crexx-perf3-03-closeout.VNMmVS/install/bin/rxvm
+0015c0843e30d43925b20c9e599461848b49362403f62707535dc95e7e98e04c  /tmp/crexx-perf3-03-closeout.VNMmVS/install/bin/rxbvm
+e80c75887e940d605d87761269bff0e556fb21c82cb176ff91a3d031b0bd54a5  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxvm
+0015c0843e30d43925b20c9e599461848b49362403f62707535dc95e7e98e04c  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxbvm
+51e42735d5e3c58ebd80bef48c9b1d52532d809f961e2099094b4f0dd3a42ea8  /tmp/crexx-perf3-03-closeout.VNMmVS/install/bin/library.rxbin
+/tmp/crexx-perf3-03-closeout.VNMmVS/install/bin/rxvm 998936 bytes
+/tmp/crexx-perf3-03-closeout.VNMmVS/install/bin/rxbvm 999144 bytes
+/tmp/crexx-perf3-03-closeout.VNMmVS/install/bin/library.rxbin 935653 bytes
+local Windows toolchain availability
+clang-cl=unavailable
+x86_64-w64-mingw32-gcc=unavailable
+zig=unavailable

@@ -1,0 +1,10 @@
+utc=2026-08-01T12:56:25Z
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+13:56  up 18 days,  7:04, 1 user, load averages: 1.12 1.21 1.22
+      73 /tmp/crexx-perf3-03.TsP0ej/prefilter3-common-timing-append-02/samples.csv
+nonzero_exit_rows=0
+nonpass_rows=0

@@ -1,0 +1,102 @@
+* PERF3-10 storage/component integer-to-string proof and fail-closed cases.
+
+itos_trace_batch() .locals=14
+    load r0,41
+    itos r0
+    .traceevent "V" 6 "R" "S" "r" 0 1 1 0 "first" ""
+    itos r0
+    .traceevent "A" 6 "R" "S" "r" 0 1 1 0 "second" ""
+    sconcat r13,r0,""
+    ret r13
+
+itos_integer_write() .locals=14
+    load r1,41
+    itos r1
+    inc r1
+    itos r1
+    sconcat r13,r1,""
+    ret r13
+
+itos_string_write() .locals=14
+    load r2,41
+    itos r2
+    load r2,"changed"
+    itos r2
+    sconcat r13,r2,""
+    ret r13
+
+itos_context_write() .locals=14
+    load r3,41
+    itos r3
+    setnumcas 2
+    itos r3
+    sconcat r13,r3,""
+    ret r13
+
+itos_join_missing() .locals=14
+    load r4,41
+    brt itos_join_missing_other,a0
+    itos r4
+itos_join_missing_other:
+    itos r4
+    sconcat r13,r4,""
+    ret r13
+
+itos_join_agrees() .locals=14
+    load r5,41
+    itos r5
+    brt itos_join_agrees_left,a0
+    load r13,1
+    br itos_join_agrees_use
+itos_join_agrees_left:
+    load r13,2
+itos_join_agrees_use:
+    itos r5
+    sconcat r13,r5,""
+    ret r13
+
+itos_link_transfer() .locals=14
+    load r6,41
+    itos r6
+    link r7,r6
+    itos r7
+    sconcat r13,r7,""
+    unlink r7
+    ret r13
+
+itos_swap_transfer() .locals=14
+    load r8,41
+    itos r8
+    swap r8,r9
+    itos r9
+    sconcat r13,r9,""
+    ret r13
+
+itos_unescaped_indirect() .locals=14
+    load r10,41
+    itos r10
+    stemset r1,r2,r3
+    itos r10
+    sconcat r13,r10,""
+    ret r13
+
+itos_tainted_indirect() .locals=14
+    load r11,41
+    itos r11
+    link r7,r11
+    stemset r1,r2,r3
+    itos r11
+    sconcat r13,r11,""
+    unlink r7
+    ret r13
+
+itos_call_barrier() .locals=14
+    load r12,41
+    itos r12
+    call itos_helper()
+    itos r12
+    sconcat r13,r12,""
+    ret r13
+
+itos_helper() .locals=0
+    ret

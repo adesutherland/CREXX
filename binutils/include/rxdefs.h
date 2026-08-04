@@ -201,7 +201,7 @@ typedef enum {
 
 typedef enum {
     RXOP_SEM_NONE = 0,
-    RXOP_SEM_MAY_THROW = 1,
+    /* Value 1 was the retired RXOP_SEM_MAY_THROW bit. */
     RXOP_SEM_CALL = 2,
     RXOP_SEM_DYNAMIC_CALL = 4,
     RXOP_SEM_RETURN = 8,
@@ -217,14 +217,167 @@ typedef enum {
     RXOP_SEM_OPAQUE = 8192
 } RxOpSemanticFlags;
 
+/* Canonical value components used by flow consumers.  These describe which
+ * representation inside a value is observed or changed; they are deliberately
+ * separate from register-slot reads/writes and from serialized opcodes. */
+typedef enum {
+    RXOP_COMPONENT_NONE = 0,
+    RXOP_COMPONENT_INTEGER = 1,
+    RXOP_COMPONENT_FLOAT = 2,
+    RXOP_COMPONENT_STRING = 4,
+    RXOP_COMPONENT_DECIMAL = 8,
+    RXOP_COMPONENT_BINARY = 16,
+    /* VM value status/type flags copied by ACOPY. */
+    RXOP_COMPONENT_ATTRIBUTES = 32,
+    RXOP_COMPONENT_REFERENCE = 64,
+    /* Host-owned binary payloads have lifetime/finalizer semantics distinct
+     * from an ordinary RXAS binary value. */
+    RXOP_COMPONENT_NATIVE_PAYLOAD = 128,
+    /* Logical child-count state used by SETATTRS/GETATTRS and checked by
+     * attribute-addressing instructions. It is distinct from ACOPY status. */
+    RXOP_COMPONENT_ATTRIBUTE_COUNT = 256,
+    RXOP_COMPONENT_ALL = 511
+} RxOpValueComponentMask;
+
+typedef enum {
+    RXOP_DERIVATION_NONE = 0,
+    RXOP_DERIVATION_INTEGER_TO_FLOAT,
+    RXOP_DERIVATION_INTEGER_TO_STRING,
+    RXOP_DERIVATION_FLOAT_TO_STRING,
+    RXOP_DERIVATION_DECIMAL_TO_STRING,
+    RXOP_DERIVATION_INTEGER_TO_DECIMAL,
+    RXOP_DERIVATION_BOOLEAN_TO_INTEGER,
+    RXOP_DERIVATION_BOOLEAN_TO_DECIMAL,
+    RXOP_DERIVATION_BOOLEAN_TO_FLOAT,
+    RXOP_DERIVATION_BOOLEAN_TO_STRING,
+    RXOP_DERIVATION_FLOAT_TO_INTEGER,
+    RXOP_DERIVATION_FLOAT_TO_BOOLEAN,
+    RXOP_DERIVATION_INTEGER_TO_BOOLEAN,
+    RXOP_DERIVATION_STRING_TO_BOOLEAN,
+    RXOP_DERIVATION_STRING_TO_FLOAT,
+    RXOP_DERIVATION_STRING_TO_INTEGER,
+    RXOP_DERIVATION_STRING_TO_DECIMAL,
+    RXOP_DERIVATION_DECIMAL_TO_INTEGER,
+    RXOP_DERIVATION_DECIMAL_TO_BOOLEAN,
+    RXOP_DERIVATION_FLOAT_TO_DECIMAL,
+    RXOP_DERIVATION_DECIMAL_TO_FLOAT
+} RxOpValueDerivation;
+
+typedef enum {
+    RXOP_CONTEXT_NONE = 0,
+    RXOP_CONTEXT_NUMERIC = 1
+} RxOpContextMask;
+
+/* Signal phase is an explicit contract. Consumers must fail closed on UNKNOWN;
+ * known opcodes distinguish pre-write, post-write and named partial state. */
+typedef enum {
+    RXOP_SIGNAL_PHASE_NONE = 0,
+    RXOP_SIGNAL_PHASE_BEFORE_WRITES,
+    RXOP_SIGNAL_PHASE_AFTER_WRITES,
+    RXOP_SIGNAL_PHASE_PARTIAL_WRITES,
+    RXOP_SIGNAL_PHASE_UNKNOWN
+} RxOpSignalPhase;
+
+typedef enum {
+    RXOP_SIGNAL_STATE_NONE = 0,
+    RXOP_SIGNAL_STATE_KNOWN,
+    RXOP_SIGNAL_STATE_UNKNOWN
+} RxOpSignalState;
+
+/* Where the signal name is obtained.  STATIC_NAMES uses the contract's
+ * canonical '|' separated name set.  Literal and register operands are
+ * zero-based RXAS operand positions resolved for each instruction instance. */
+typedef enum {
+    RXOP_SIGNAL_SOURCE_NONE = 0,
+    RXOP_SIGNAL_SOURCE_STATIC_NAMES,
+    RXOP_SIGNAL_SOURCE_LITERAL_OPERAND,
+    RXOP_SIGNAL_SOURCE_REGISTER_OPERAND,
+    RXOP_SIGNAL_SOURCE_PLUGIN,
+    RXOP_SIGNAL_SOURCE_UNKNOWN,
+    /* Signal propagated by a direct, dynamic or fused CALL.  The exact name
+     * is callee/plugin supplied, but the caller-side failure phase is known. */
+    RXOP_SIGNAL_SOURCE_PROPAGATED_CALL
+} RxOpSignalSource;
+
+typedef enum {
+    RXOP_SIGNAL_CONT_NONE = 0,
+    RXOP_SIGNAL_CONT_NORMAL = 1,
+    RXOP_SIGNAL_CONT_SKIP = 2,
+    RXOP_SIGNAL_CONT_HANDLER = 4,
+    RXOP_SIGNAL_CONT_UNWIND = 8,
+    RXOP_SIGNAL_CONT_TERMINAL = 16,
+    RXOP_SIGNAL_CONT_ALL = 31
+} RxOpSignalContinuations;
+
+typedef enum {
+    RXOP_SIGNAL_DEP_NONE = 0,
+    RXOP_SIGNAL_DEP_NUMERIC_CONTEXT = 1,
+    RXOP_SIGNAL_DEP_HANDLER_POLICY = 2,
+    RXOP_SIGNAL_DEP_PLUGIN = 4,
+    RXOP_SIGNAL_DEP_LOCALE = 8,
+    RXOP_SIGNAL_DEP_EXTERNAL_STATE = 16,
+    RXOP_SIGNAL_DEP_UNKNOWN = 32
+} RxOpSignalDependencies;
+
+typedef enum {
+    RXOP_SIGNAL_PROP_NONE = 0,
+    RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE = 1,
+    RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE = 2,
+    RXOP_SIGNAL_PROP_SUCCESS_STABLE = 4,
+    RXOP_SIGNAL_PROP_POLICY_WRITE = 8,
+    RXOP_SIGNAL_PROP_ASYNC_ENTRY = 16
+} RxOpSignalProperties;
+
+/* Normal-path handler-policy transfer. Failure phase determines whether this
+ * transfer is visible on skip/handler/failure edges. */
+typedef enum {
+    RXOP_POLICY_EFFECT_NONE = 0,
+    RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_HANDLER,
+    RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_EXISTING,
+    RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE,
+    RXOP_POLICY_EFFECT_IGNORE,
+    RXOP_POLICY_EFFECT_HALT,
+    RXOP_POLICY_EFFECT_SILENT_HALT,
+    RXOP_POLICY_EFFECT_BRANCH,
+    RXOP_POLICY_EFFECT_CALL,
+    RXOP_POLICY_EFFECT_CALL_BRANCH,
+    RXOP_POLICY_EFFECT_RETURN,
+    RXOP_POLICY_EFFECT_CALL_ACTION,
+    RXOP_POLICY_EFFECT_PUSH,
+    RXOP_POLICY_EFFECT_POP,
+    RXOP_POLICY_EFFECT_BRANCH_VALUE,
+    RXOP_POLICY_EFFECT_UNKNOWN
+} RxOpSignalPolicyEffect;
+
+typedef struct {
+    int opcode;
+    RxOpSignalState state;
+    RxOpSignalPhase phase;
+    RxOpSignalSource source;
+    /* SIZE_MAX when the name does not come from an RXAS operand. */
+    size_t source_operand;
+    const char *static_names;
+    /* Register operands whose state may be visible on failure. */
+    unsigned int failure_writes;
+    const char *failure_writes_signature;
+    /* Aggregate component mask for the failure-visible register writes. */
+    unsigned int failure_component_writes;
+    unsigned int failure_context_writes;
+    unsigned int dependencies;
+    unsigned int continuations;
+    unsigned int properties;
+    RxOpSignalPolicyEffect policy_effect;
+    RxOpSignalSource policy_source;
+    size_t policy_source_operand;
+    const char *policy_static_name;
+} RxOpSignalContract;
+
 /* Compile-time evaluators are semantic implementations shared by any callable
  * body that uses the instruction; they are not BIF identities.  NONE is the
  * fail-closed default for every instruction not individually proved. */
 typedef enum {
     RXOP_CONST_EVAL_NONE = 0,
     RXOP_CONST_EVAL_STRLEN,
-    RXOP_CONST_EVAL_SETSTRPOS,
-    RXOP_CONST_EVAL_GETSTRPOS,
     RXOP_CONST_EVAL_STRCHAR_AT,
     RXOP_CONST_EVAL_SUBSTRING,
     RXOP_CONST_EVAL_PADSTR,
@@ -250,10 +403,6 @@ typedef struct {
     const char *branch_targets_signature;
     RxOpImplicitEffect implicit;
     unsigned int semantics;
-    /* Value-internal cursor state is separately observable through RXAS and
-     * therefore cannot be hidden inside the coarse payload read/write masks. */
-    unsigned int cursor_reads;
-    unsigned int cursor_writes;
     RxOpConstEvaluator const_evaluator;
     FlowType flow;
     int optimizer_barrier;
@@ -287,14 +436,47 @@ typedef enum {
 } Opcode;
 #undef X
 
+/* Canonical equivalence between a materialized integer comparison followed by
+ * BRT/BRF and the corresponding non-materializing conditional branch.  Source
+ * operands name indices in the comparison instruction; int/register forms may
+ * therefore be normalized by swapping them. */
+typedef struct RxOpCompareBranchFusion {
+    int compare_opcode;
+    int branch_opcode;
+    int fused_opcode;
+    size_t left_source_operand;
+    size_t right_source_operand;
+} RxOpCompareBranchFusion;
+
 RxOpEffects rxop_effects(int opcode);
 size_t rxop_effect_count(void);
 int rxop_effect_reads_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_kills_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand_index);
-int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index);
-int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
+unsigned int rxop_component_reads(int opcode, size_t operand_index);
+unsigned int rxop_component_writes(int opcode, size_t operand_index);
+int rxop_compare_branch_fusion(int compare_opcode, int branch_opcode,
+                               RxOpCompareBranchFusion *fusion);
+/* True when a two-register copy is guaranteed to perform no work, signal, or
+ * observable value/effect update if both operands denote the same physical
+ * register storage. */
+int rxop_same_storage_copy_is_noop(int opcode);
+/* Components proved absent after a successful operand write.  This is kept
+ * separate from writes because one opcode may assign a scalar component while
+ * clearing reference or native-payload lifetime state. */
+unsigned int rxop_component_clears(int opcode, size_t operand_index);
+RxOpValueDerivation rxop_value_derivation(int opcode);
+size_t rxop_derivation_source_operand(int opcode);
+unsigned int rxop_derivation_source_component(int opcode);
+unsigned int rxop_derivation_context_reads(int opcode);
+unsigned int rxop_context_writes(int opcode);
+RxOpSignalContract rxop_signal_contract(int opcode);
+size_t rxop_signal_contract_count(void);
+int rxop_can_signal(int opcode);
+int rxop_signal_failure_writes_operand(const RxOpSignalContract *contract,
+                                       size_t operand_index);
+RxOpSignalPhase rxop_signal_phase(int opcode);
 
 void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);
 void *src_instv(const char *name, const OperandType *operands, size_t operand_count);

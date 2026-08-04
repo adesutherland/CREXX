@@ -61,8 +61,7 @@ left: procedure = .string
   if width = string_length then return string
 
   if width < string_length then do
-    assembler setstrpos string,cursor
-    assembler substring result,string,width
+    assembler substring result,string,cursor,width
     return result
   end
 

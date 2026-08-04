@@ -234,24 +234,12 @@ handler name in the `SIGNAL ON` statement.
 
 ### Handler Actions
 
-A procedure handler returns one of three explicit actions:
+A procedure handler returns one of two explicit actions:
 
 ```rexx
-.signalaction.retry()
 .signalaction.skip()
 .signalaction.fail()
 ```
-
-`retry` resumes at the interrupted instruction. The operation that raised the
-signal is attempted again:
-
-```rexx
-return .signalaction.retry()
-```
-
-This is appropriate only when the handler has changed the circumstances that
-caused the failure. Retrying without correcting the cause ordinarily raises
-the same signal again.
 
 `skip` resumes after the signal point:
 
@@ -268,6 +256,11 @@ value. Skipping a failed operation may leave its intended result unavailable.
 ```rexx
 return .signalaction.fail()
 ```
+
+Instruction-level `.signalaction.retry()` was retired before Release 1. It is
+not a standard REXX condition-trap continuation and can repeat partial writes
+or external side effects. Put retryable work in an explicit loop or wrapper
+procedure instead.
 
 The runtime then produces its normal panic report, including source metadata
 when available.

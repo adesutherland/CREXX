@@ -223,9 +223,7 @@ slot, not its string slot. Binary-memory VM instructions exposed at RXAS are:
 - `bcmps rCmp,0x...,"literal"`
 - `bconcat rDst,rLeft,rRight`
 - `bappend rDst,rRight`
-- `setbinpos rBin,rOffset`
-- `getbinpos rOut,rBin`
-- `bslice rDst,rSrc,rLen`
+- `bslice rDst,rSrc,rStart,rLen`
 - `bupdate rDst,rOffset,rSrc`
 - `stobin rReg`
 - `bintos rReg`
@@ -244,7 +242,7 @@ through the VM float register; `bgetf64`/`bsetf64` store IEEE binary64 values.
 VM may keep a larger private physical capacity, grown in blocks and reused
 across later logical resizes; `blen` reports only the logical length. Negative
 lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
-`bclear` sets the logical byte length and cursor to zero. `bfill` fills the
+`bclear` sets the logical byte length to zero. `bfill` fills the
 current logical byte range and raises `OUT_OF_RANGE` for bytes outside
 `0..255`.
 
@@ -260,15 +258,29 @@ Rexx string value on reads. `sget` extracts a codepoint-counted slice from a
 register supplies the input source offset and is overwritten with `-1`, `0`, or
 `1`.
 
-`setbinpos`, `getbinpos`, and `bslice` are legacy cursor instructions retained
-for compatibility and covered by `rxasbinarylegacytests`. New Release 1 source
-lowering uses target-sized `bcopy`, typed reads/writes, and zero-copy compares
-instead of cursor-based extraction. `setbyte` and `bupdate` are strict and
+`bslice rDst,rSrc,rStart,rLen` performs explicit zero-based extraction without
+mutating the source. The former binary cursor instructions are retired and
+their numeric opcode slots remain reserved; old RXBIN images using them are
+not compatible with this instruction set. Any build directory or auxiliary
+worktree first built before this cursorless change must therefore be cleaned
+and rebuilt before use; mixing retained generated RXBIN with current tools is
+unsupported. Release 1 source lowering also uses
+target-sized `bcopy`, typed reads/writes, and zero-copy compares where a
+materialized slice is unnecessary. `setbyte` and `bupdate` are strict and
 raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or overlay
 writes past the destination length. `stobin` copies the register's current
 string bytes into its binary slot. `bintos` validates the register's current
 binary bytes as UTF-8 and copies them into its string slot; invalid bytes raise
 `UNICODE_ERROR` in UTF builds.
+
+The explicit string form is
+`substring rDst,rSrc,rStart,rLen`, where positions and lengths count Unicode
+characters. A negative start clips to zero and a non-positive length produces
+the empty string. `bslice` likewise clips a negative start to zero, but a
+negative binary length raises `OUT_OF_RANGE`. Both operations are safe when
+destination and source name the same storage. A required allocation either
+completes before the destination changes or raises `FAILURE`; the opcode signal
+metadata records these failure-before-write contracts.
 
 Level B exposes these byte-buffer instructions through the `rxfnsb` binary
 helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,
@@ -466,14 +478,33 @@ effects are not represented as normal operands. For example, `inc0`, `dec0`,
 as using the corresponding fixed local register when checking whether an
 intervening instruction is relevant to a rule.
 
-The opcode-effects inventory is split deliberately without duplicating facts.
+The opcode metadata inventory is split deliberately without duplicating facts.
 `rxops.h` remains authoritative for the dense opcode list, operand format,
 control flow, opcode flags and source-mnemonic status.
 `binutils/include/rxopeffects.h` is the one-to-one semantic sidecar: it has one
 ordered entry for every opcode slot, including reserved and internal slots.
+`binutils/include/rxopsignals.h` is a second one-to-one sidecar for signal
+capability, failure phase, signal-name source, failure-visible writes,
+dependencies, continuations and observability properties. The former coarse
+`RXOP_SEM_MAY_THROW` flag has been retired; generic effects no longer duplicate
+or approximate signal behavior. Handler-policy instructions additionally name
+their normal-path action (`ignore`, halt, branch/call/return, breakpoint,
+push/pop), exact static or literal signal-name source and source operand. An
+unknown signal set is distinct from an unknown policy write: a known call may
+have conservative signal behaviour without changing its caller's handler
+table.
 `binutils/rxopmeta.c` combines both sources through the stable
-`rxop_effects()` C API; `rxop_effect_count()` exposes the mechanically checked
-inventory size.
+`rxop_effects()` and `rxop_signal_contract()` C APIs; their count functions
+expose the mechanically checked inventory sizes.
+
+The K04e handler audit records `STRLEN` as a string read with
+failure-atomic `UNICODE_ERROR` before its integer write, all three `ISUB`
+forms as failure-atomic `OVERFLOW_UNDERFLOW` before their integer write, and
+the three-form loose `REQ` through `RLTE` family as non-signalling string
+reads with an integer result. Integer subtract and loose comparison use the VM
+integer setter and therefore clear reference/native payload components;
+`STRLEN` preserves other destination components. These entries describe the
+existing handlers and do not change VM or RXBIN semantics.
 
 `RxOpEffects` uses the following guarantees:
 
@@ -495,17 +526,17 @@ inventory size.
 - `branch_targets` identifies explicit label operands through the same generic
   query representation. Packed jump-table
   instructions instead carry `RXOP_SEM_INDIRECT_BRANCH`.
-- `semantics` covers possible signal/error transfer, direct and dynamic call
-  boundaries, returns, alias creation/release, reference creation/read/write/
-  release, storage-lifetime end, indirect writes, indirect branches and opaque
-  side effects.
+- `semantics` covers direct and dynamic call boundaries, returns, alias
+  creation/release, reference creation/read/write/release, storage-lifetime
+  end, indirect writes, indirect branches and opaque side effects. Signal
+  behavior comes only from `RxOpSignalContract`.
 - `flow` and `optimizer_barrier` are returned in the same object but are
   derived from the canonical `rxops.h` flow/flags. A non-classified state also
   forces the returned barrier bit.
 
-The current inventory has 641 entries: 582 source opcodes (576 classified and
-six explicitly conservative process/redirect operations), 56 reserved slots
-and three internal handlers. Coverage is not inferred from an instruction name
+The current inventories each have 650 entries: 591 source opcodes (585
+classified and six explicitly conservative process/redirect operations), 56
+reserved slots and three internal handlers. Coverage is not inferred from an instruction name
 or format. The audit used the VM handlers between `START_OF_INSTRUCTIONS` and
 `END_OF_INSTRUCTIONS`, the assembler/compiler behavior described here, and
 focused semantic tests. The tests mechanically validate table alignment,
@@ -513,22 +544,318 @@ operand-mask legality, flow/branch/call/implicit consistency, source coverage,
 reserved/internal treatment and fail-closed unknown queries; they do not claim
 to parse arbitrary C handler bodies formally.
 
-NR-27 adds a transient whole-procedure machine-flow layer after the unchanged
-20-item local peephole and before ordinary RXBIN emission. Stable peephole
+RXAS optimisation routing is explicit in `assembler/rxas_flow_pass.c`. Every
+current rule family has one stable owner—local mechanical scan, immutable CFG,
+component SSA/use proof or diagnostic-only—and a capability mask over local
+scan, CFG, dominance, signal, storage, value, use and loop facts. One linear
+opcode/metadata census conservatively identifies potential consumers before
+whole-procedure analysis. A zero candidate count may avoid a consumer, but the
+census is never a correctness proof and is deliberately allowed to overselect.
+K05 branch threading and M00 reachability request CFG only; exact K06 copy/
+status subsumption remains local; M01-M06 and K01-K04 retain their component
+proof ownership. M01-M04 request the component base, while M05, M06 and
+K01-K04 additionally request the sparse use index. The established `-d` flow
+dump has its own explicit diagnostic route. No current production consumer
+requests loop analysis.
+
+D0.5 adds an exact linear write-once/single-use typed-copy route. One local-
+register census records explicit occurrences plus metadata, TRACE, implicit
+register and call-window observations. `ICOPY`, `FCOPY` or `SCOPY` may bypass
+SSA only when its destination occurs exactly as that copy destination and one
+immediately adjacent, non-signalling component read; the read is redirected
+and the copy is deleted in the same sparse transaction. Reused registers,
+mapping operations, calls, TRACE/meta observations, signalling consumers and
+all non-adjacent uses remain on the SSA route.
+
+NR-27 adds a transient whole-procedure machine-flow layer after the bounded
+100-item local peephole and before ordinary RXBIN emission. Stable peephole
 output is moved, with its token ownership, into a growable procedure stream.
-The assembler then builds resolved label successors/predecessors, reachability,
-typed-view liveness and transformation-specific must-availability/may-reach
-facts over the original queue records. Surviving records still pass through the
-same assembler emission functions; RXAS syntax, canonical RXBIN and the public
-ABI do not change.
+One immutable `RxasFlowProcedure` is then built for each rewrite epoch;
+surviving records still pass through the same assembler emission functions, so
+RXAS syntax, canonical RXBIN and the public ABI do not change.
+
+The peephole is a permanent preprocessing owner, not legacy code scheduled for
+removal. Exact local rewrites belong there when opcode metadata proves complete
+equivalence without procedure-wide liveness, alias/storage, signal-path,
+hidden-cleanup or TRACE-observation reasoning. Adjacent non-signalling algebra
+and mechanical encoding selection are the normal cases. CFG/SSA remains the
+owner when any of those wider facts are required. Increasing the bound must be
+measured against the same input for pre-graph census, graph/SSA size, emitted
+image, assembler time and peak memory; the bound is not a substitute for a
+procedure analysis.
+
+`assembler/rxas_flow_graph.c` is the sole owner of stable record, instruction,
+basic-block, typed-edge and reachability descriptors for that epoch. M00 uses
+its entry/same-frame/asynchronous-root reachability to remove dead opcode,
+TRACE and source-step records. Existing semantic consumers share its lazy
+proof manager, and K05 collects a complete compatible branch-thread batch from
+the same CFG only after those consumers decline the epoch. Any mutation ends
+the epoch and rebuilds the graph, except that compatible semantic edits are
+one validated transaction whose proof-facing records remain pinned to the
+epoch originals. The original queue index remains the record
+identity;
+every opcode record maps to a stable instruction ID, block ID and exact
+pre-emission RXBIN address. Source-step, TRACE, label and metadata records keep
+their own IDs and map to the block/address at which they are observed.
+
+Code blocks start at procedure entry, labels, branch and handler targets, and
+after calls, signalling instructions and other control terminators. Seven
+stable synthetic blocks represent entry, handler dispatch, asynchronous
+handler entry, normal return, unwind, terminal exit and unresolved control.
+Edges distinguish normal fallthrough, branch, signal skip, handler, unwind,
+terminal and explicit fail-closed unknown flow. Signal edges
+come from `RxOpSignalContract.continuations`; handler-policy instructions with
+label operands feed the handler and asynchronous roots rather than inventing a
+normal branch from the registration instruction.
+
+Construction snapshots record/opcode metadata, builds an open-addressed label
+index, forms blocks, appends edges and computes compact rooted reachability. It
+is expected linear in queued records plus emitted edges. There is no parallel
+legacy edge graph, dense record-by-register use/kill allocation or dense M07
+storage environment. M07 is a debug-only executable oracle over sparse SSA
+storage nodes and queries. Read APIs require the owning epoch and return no
+descriptor for a stale epoch. `rxas -d` prints deterministic `PERF3 flow-*`
+and `PERF3 sparse-storage-oracle` records without pointer values, so graph,
+edge and retained-analysis identities can be compared mechanically.
+
+Stage 3 layers a demand-driven structural-analysis manager over each immutable
+procedure epoch. `assembler/rxas_flow_analysis.c` retains successor edge IDs
+and unique predecessor block sets in sparse CSR form, then computes reachable
+reverse postorder from a virtual root joining the procedure-entry, registered-
+handler and asynchronous-handler roots. Unreachable blocks remain represented
+by the graph but are excluded from dominance, SCC and loop proofs.
+
+The cached base structural result contains Cooper-Harvey-Kennedy immediate
+dominators, dominance-tree intervals and sparse dominance frontiers. SCC,
+backedge and loop-forest construction is a separate monotonic capability on
+the same cached object. When explicitly requested it adds iterative Kosaraju
+SCCs, dominance-classified backedges and a loop hierarchy. Natural loops with
+the same header share one region; irreducible SCCs remain explicit conservative
+regions. Instruction-level signal retry was retired on 2026-08-03, so
+backedges and loop regions represent source/control flow rather than synthetic
+retry cycles. Source order remains a diagnostic mapping and is never treated
+as dominance evidence.
+
+Every structural query requires the graph epoch. The first successful result
+is cached until graph destruction; a failed deliberately small work budget may
+be retried with a larger budget. Allocation failure, invalid control or budget
+exhaustion leaves the analysis unavailable and cannot enable a rewrite.
+Deterministic `PERF3 flow-analysis*` and `PERF3 flow-loop` diagnostics expose
+work, retained-byte, reachability, predecessor, dominator-iteration, frontier,
+SCC, backedge and loop counters; dormant loop facts print as unavailable rather
+than being inferred. Post-dominance is deliberately deferred until a consumer
+needs a must-execute query. Ordinary assembly does not solve unused loop
+analysis: tests and future optimizer consumers request it explicitly. Stage 3
+therefore changes neither queued records nor RXBIN output.
+
+Stage 4 adds `assembler/rxas_flow_signal.c`, a second demand-driven epoch
+cache layered on the structural result. Handler policy is modeled as a sparse
+write-once chain with entry, write, phi and clobber definitions. Procedure
+entry is an explicit inherited-unknown policy parameter. Static/literal
+handler installation produces an exact named action; unresolved opcodes
+clobber the whole policy. Parallel normal and signal-skip edges remain distinct
+phi inputs even when Stage 3 correctly reports one unique predecessor block.
+Cyclic phi queries defer the backedge identity and merge external definitions,
+which preserves an unchanged loop policy without using source order as proof.
+
+Each signal edge selects policy from the instruction's recorded failure phase:
+before-write edges see the incoming policy, after-write edges see the normal
+transfer, and partial/unknown policy writes fail closed. Return and unwind
+edges expose the procedure-entry policy parameter because handler-table
+changes are local to the callee frame. The VM initially shares the caller's
+handler table and copies it on a child-frame write. This frame-local policy
+rule must not be confused with call arguments: call-window argument slots are
+pointers to caller-owned value storage, so callee writes and reference effects
+can remain caller-visible after return.
+
+`sigpush` leaves the active handler unchanged, but the VM may silently fail to
+allocate its saved stack entry. A later `sigpop` therefore yields explicit
+stack-unknown policy unless a future proof establishes a successful matching
+push; the analysis never assumes restoration merely from lexical pairing.
+
+Numeric context, plugin, locale, external state, reference-visible state,
+TRACE and call boundaries use separate sparse effect identities. Calls advance
+the call/reference/external/plugin/locale identities while preserving handler
+policy. TRACE records advance only TRACE identity. Before/after/partial signal
+edges select the corresponding effect versions; an unproved partial effect
+gets an explicit unknown definition rather than one global barrier.
+`rxas_flow_policy_at_instruction()`, `rxas_flow_policy_on_edge()`,
+`rxas_flow_effect_at_instruction()` and `rxas_flow_effect_on_edge()` are the
+initial narrow query surface. A deliberately small budget, stale epoch,
+allocation failure or malformed graph returns no usable result. Ordinary
+assembly does not request the cache; tests, `rxas -d` and future consumers do.
+Stage 4 is output-neutral and preserves exact canonical RXBIN images.
+
+Stage 5 adds `assembler/rxas_flow_ssa.c`, a third demand-driven epoch cache
+over the same immutable procedure.  It separates a register name from the
+storage currently named by that register.  Local, argument and global
+registers begin with distinct base `StorageId` definitions; `link`, `linkarg`,
+attribute/reference links, `swap`, their fused forms and `unlink` then create,
+move or restore symbolic storage identities.  In particular, `linkarg` names
+caller-owned argument storage rather than inventing callee-local value state.
+Unknown aliases and unsupported indirect mutation remain explicit unknowns.
+Calls preserve mappings that are structurally unchanged but advance the Stage
+4 reference/effect identities needed to prevent a false unchanged-value proof.
+For a fused opcode that both remaps registers and writes values, the mapping is
+retained but component values fail closed until canonical metadata describes
+the order of its intra-instruction sub-events; the analysis does not guess
+whether the write named the pre- or post-remap storage.
+
+Each storage component is represented by a write-once `ValueId`.  The tracked
+set is integer, float, string, decimal, binary, attributes, reference,
+host-owned native payload and the distinct attribute-count component.  The
+count is not a value-status flag: `setattrs`, `minattrs`, `getattrs` and
+attribute links describe it explicitly in canonical opcode metadata.  Values
+distinguish procedure-entry, direct write, constant, copy, derived, known
+absent, phi and unknown definitions; a null/absent value is not the same as an
+unavailable proof.  Copy propagation therefore carries presence as well as
+the source identity, including a `dcopy` of a null decimal.  Join values and
+storage mappings are materialized lazily and cyclic phis canonicalize an
+unchanged loop identity without using source order.  An unknown storage input
+has a separate value identity and cannot collide with a valid zero-based
+`ValueId` or simplify a join into a false proof.
+
+Normal instruction states consume the canonical component read/write and
+derivation metadata.  Signal skip, handler and unwind edges instead
+select the Stage 1 failure-visible writes and the Stage 4 edge state.  Derived
+`itos`, `ftos` and `dtos` string values name their integer, float or decimal
+source `ValueId` and the exact numeric/plugin/effect identities on which the
+operation depends.  Derivation metadata also names the source operand, so a
+two-register conversion such as `itof rTarget,rSource` does not accidentally
+use the destination's old value as its proof source.  This is
+storage/component infrastructure only: no Stage 5 consumer changes queued
+records or emitted RXBIN.
+
+Persistent states retain only mapping and component definitions.  Point
+queries walk and cache the required storage/value chain; they do not allocate
+a `nodes x registers x components` table.  `rxas -d` deliberately materializes
+only actual derivation sites and prints deterministic `PERF3 flow-ssa*`
+counters, so diagnostics exercise the first proof candidates without forcing
+every possible point/component query.  Work-budget exhaustion, allocation
+failure, a stale epoch or invalid control returns no usable analysis.  Ordinary
+consumer-free assembly does not request this cache.
+
+Stage 6 adds `assembler/rxas_flow_proof.c`, a fourth per-epoch cache and the
+only authority for migrated proof consumers.  It exposes bounded queries for
+dominated successful repetition, equivalent scalar-constant writes,
+speculatability, loop must-execute and loop component invariance.  Proof keys
+name symbolic `StorageId`s; result records
+name the generator/candidate `ValueId`s, effect identities and a stable failure
+reason.  Value and effect phis are compared through conservative reduction and
+equivalent leaf sets rather than numeric identity or source order.  Stale
+epochs, invalid control, unsupported signal dependencies, allocation failure
+and work-budget exhaustion return an unavailable or rejected proof and cannot
+enable a rewrite.
+
+The proof cache is a capability-lazy service rather than an eager bundle.
+Every M01-M06 and K01-K04 call site presents its stable routing ID; the service
+acquires the route's CFG, dominance, signal, storage, value and optional use
+facts monotonically for the immutable epoch. Public query entry points reject
+when their required capability was not declared, so a query cannot silently
+expand analysis. A failed stronger capability does not invalidate already
+acquired lower-capability facts: that route rejects, while later base
+consumers remain safe and available. Loop queries likewise require the
+separate loop capability. The compatibility constructor still requests the
+complete service for tests and external callers that explicitly need it.
+
+Storage resolution creates a provisional phi only when recursive lookup of a
+join requires a cycle placeholder or when predecessor storages genuinely
+differ. Equal acyclic predecessors resolve directly to their common
+`StorageId`; diagnostics report the elided phi, retained input and cache
+counts. Whole-procedure semantic consumers are admitted only when the
+indirect-value work bound and the 262,144 block-by-register join bound both
+pass. An over-bound procedure continues through local mechanical rewrites,
+M00 and K05, but SSA consumers and diagnostic SSA/use materialization fail
+closed. Future recovery of valuable advanced cases must use an explicitly
+bounded candidate-sliced or region proof rather than raising this limit.
+
+Compatible semantic rewrites are committed through the sparse transactional
+manager in `assembler/rxas_flow_batch.c`. M04, K02/K03, M05, M06, K04, M02,
+M03 and M01 retain their established priority, but disjoint typed plans may be
+collected from one immutable epoch before one rebuild. Only records actually
+edited are snapshotted. Proof-facing `RxasFlowRecord` pointers are pinned to
+those originals while later consumers inspect the provisional queue; complete
+validation either commits the registered records together or restores all of
+them. A delete-only consumer additionally requires its target to remain
+unchanged from the epoch. K01 remains a separately budgeted storage-
+permutation epoch, and K05 remains a later CFG-only batch because topology-
+changing rewrites require a different compatibility proof from semantic SSA
+rewrites. Deterministic `PERF3 semantic-batch` diagnostics report plans,
+changed/deleted records, opcode replacements and operand rewrites.
+
+An immediate one-based `linkattr1` can additionally name an interned attribute
+path.  Its identity contains the owner `StorageId`, exact attribute-count
+`ValueId`, reference-effect generation and slot.  The path is reusable through
+owner register aliases, but a dynamic/non-positive slot, unknown or merged
+count, different owner, or changed reference generation remains fail-closed.
+
+The M05 migration adds `assembler/rxas_flow_use.c`, a fifth demand-driven
+per-epoch cache over component SSA.  It indexes direct `ValueId` uses,
+storage observations and reverse phi dependencies once per procedure;
+edge-aware liveness then propagates only through those sparse dependencies.
+Explicit operands, read/write operands, metadata, register-backed TRACE,
+implicit reads, call windows and opaque observations remain distinct use
+kinds. Component writes are indexed separately from observations. Writes
+through a storage phi are expanded once to every
+possible leaf storage; an unresolved target becomes an opaque-write barrier,
+not a false read of an unrelated `ValueId`.  A range call is retained as one
+bounded call-window observation rather than expanded across every
+local/component pair.
+
+The first use-index consumer replaces the dense per-candidate typed-copy
+solver.  Exact `icopy`, `fcopy` and strict `scopy` deletion requires a local,
+unaliased destination, the copy's write-once result `ValueId`, an equivalent
+source value at every redirected use, no metadata/TRACE/read-write or
+live call-window observation, and at least one exact component-only operand
+rewrite.  The proof service returns an immutable all-or-nothing rewrite plan;
+the optimizer validates the complete plan before changing any operand or
+deleting the copy.  Budget exhaustion, stale epochs and incomplete use facts
+reject the whole plan.  The old availability/may-reach solver and its repeated
+dense register scans have been removed.
+
+X01 is the first component-placement consumer built on the same sparse use
+index. It recognizes an exact adjacent typed copy followed by a one-register
+metadata-derived XTOY operation, but asks the proof service—not adjacency—to
+authorize the rewrite. Its immutable plan proves distinct local unaliased
+storage, the copied input and derived result `ValueId` relationships, dead
+displaced components, redirectable result uses, and compatible call, signal,
+context, reference, metadata and TRACE observations. The consumer validates
+the complete plan, retargets the derivation to the original source, redirects
+all proved result uses, removes only matching derived-value TRACE events, and
+deletes the copy as one transaction. The first production case is
+`dcopy temporary,source` followed by `dtos temporary`; the mechanism is
+component- and derivation-metadata driven rather than mnemonic-specific.
+Reference objects are a separate observation from register-to-storage aliases:
+an earlier `mkref` may keep either storage visible even when the register alias
+census is one. X01 therefore rejects a placement when such a reference-creation
+path can reach the candidate; reference lifetime/release is not guessed.
+
+The first migrated authority was repeated one-register `itos`.  A deletion
+requires the generator's successful continuation to dominate the candidate,
+the same storage and equivalent integer source/string result, and equivalent
+numeric-context and reference-visible effect dependencies.  The old private
+per-generator availability solver has been removed.  The new service is
+allowed to prove a larger safe domain; the old solver's decisions are a
+retained minimum-capability baseline, not a parity oracle.
+
+Calls model caller-owned argument mutation without becoming a universal local
+barrier.  `call1` through `call4` create unknown component definitions for
+their explicit actual arguments.  A range call records its local call-window
+base and uses a statically constant count when available; an unknown count
+conservatively covers every later local.  Storage outside the argument window
+may remain provably unchanged.  Normal and failure continuations use the same
+argument exposure rule, so signal edges cannot recover a value the callee may
+have changed.
 
 The NR-27 register universe distinguishes local (`r`), argument (`a`) and
 global (`g`) register classes and tracks integer, float, string, decimal,
 binary, attribute and reference views. Explicit and implicit accesses come
 from `rxop_effects()`. Register metadata and register-backed TRACE records are
 observations. Alias/reference/lifetime/indirect/opaque operations taint involved
-registers and invalidate the relevant facts. Calls and other modeled barriers
-kill availability rather than excluding an otherwise independent region.
+registers and invalidate the relevant facts. Legacy consumers still treat
+calls and other modeled barriers conservatively; migrated component-SSA
+consumers may retain facts only for storage proved outside the call argument
+window and unaffected by reference-visible effects.
 Registered branch SIGNAL handlers are conservative asynchronous observation
 targets for every executable instruction in the procedure. An unresolved
 label or unknown opcode makes control flow incomplete and disables all NR-27
@@ -538,18 +865,124 @@ fallthrough are all present in the same retained procedure stream. The flow
 graph then includes every case edge plus the miss edge. Undeclared, malformed,
 cross-procedure, unsupported or off-graph-miss tables remain fail-closed.
 
+Component information is a canonical opcode-metadata service rather than an
+NR-27-local mnemonic switch. `rxop_component_reads()` and
+`rxop_component_writes()` distinguish integer, float, string, decimal, binary,
+attribute, reference and native-payload components for each explicit operand.
+`rxop_component_clears()` records components made provably absent by a write.
+For example, integer and float constant loads clear both reference and native
+payloads; `bcopy` carries binary and native payload together.
+`rxop_value_derivation()` identifies proved representation relationships;
+`rxop_derivation_context_reads()` and `rxop_context_writes()` make numeric
+context part of those facts. `rxop_signal_contract()` distinguishes proven
+non-signal, known signal and fail-closed unknown behavior and records
+pre-write, post-write, partial-write or unknown failure phases. Unproved
+opcodes and signal locations remain conservative. The contract inventory marks
+the VM `concat`/`sconcat` family non-signalling, stem writes failure-atomic
+before writes, and decimal comparisons plugin-signalling after their integer
+result write. Alias-topology effects are independently versioned from mutation
+observable through an existing reference. An unknown exceptional signal set
+does not invent a normal numeric-context write for an otherwise classified
+opcode. A register-backed TRACE event observes only the component named by its
+value type; the event remains present and does not automatically observe every
+representation inside the value.
+
+TRACE observation is profile-sensitive. In an optimised assembly, a rewrite
+may omit, combine or relocate an event when it removes or moves the operation
+or value represented by that event. It must delete a removed value's matching
+event atomically, retain unrelated events, and never leave metadata reading a
+deleted, stale or mismatched component. Multiple retained events may share one
+reached address and remain ordered, so `CNOP` is not needed merely to separate
+them. `rxas -n`, together with compiler no-opt mode, provides the source-
+correspondent trace path; ordered batching is not a requirement to preserve
+every pre-optimisation event.
+
+The graph-owned storage-identity service follows direct `link`, `swap` and
+`unlink` mapping rather than equating raw register numbers. The first
+component consumer uses this identity to remove a later one-register `itos`
+only when an earlier `itos` for the same storage proves both the unchanged
+integer source and unchanged string result under the same numeric context on
+every incoming normal path. Relevant component writes, context changes,
+ambiguous/tainted references, caller-owned argument mutation, opaque or
+indirect effects and unproved signal phases reject the proof. An unrelated
+no-argument call does not invent a local-value write. TRACE records are
+retained; ordered same-boundary delivery lets the producer event survive even
+when the redundant executable conversion is removed. The proof service is
+generic: after `itos`, M01 deleted the old repeated-`itof` authority and made a
+metadata-driven one-register `xtoy` consumer its successor. All 20 such
+conversions now name their exact source component, result component,
+derivation and context dependencies in canonical metadata; the consumer has
+no conversion-mnemonic allow-list. The proof admits only a dominating
+successful repetition with equivalent component values and effects.
+
+The first larger-domain case is `itod`. Both bundled decimal plugins implement
+integer-to-decimal conversion for every integer, with allocation failure
+handled by the VM panic convention. `itod` and the same-function `btod`
+therefore clear stale backend diagnostics and are total non-signalling
+operations; their values still depend on numeric context and plugin identity.
+Signalling conversion families remain rejected where the first successful
+continuation does not dominate the repetition. `btoi` and `itob` remain
+rejected pending a distinct proof that repeating their same-component
+normalization does not change the value. Later loop hoisting remains a
+separate consumer.
+
+M02 migrates repeated integer and exact-bit float constant writes.  The legacy
+raw-register availability solver is deleted.  A candidate is removable only
+when its before/after `StorageId` is unchanged, every reachable scalar
+`ValueId` leaf equals the candidate constant, and reference/native-payload
+components are already absent on every path.  This last condition preserves
+the VM assignment side effects that release a reference and finalize
+host-owned binary state.  Equal-value phis, direct link/swap mappings and
+ordered TRACE paths can therefore prove even though raw register or source
+order differs; different phis, signed-zero bit changes and hidden cleanup fail
+closed.  A cheap syntactic demand filter only decides whether to ask the proof
+service and never authorizes deletion.  Migrated consumers share one immutable
+proof session per fixed-point epoch, and retained-byte metrics are refreshed
+after lazy query materialization.
+
+M03 migrates repeated `NULL`.  The legacy raw-register all-view availability
+solver and its blanket TRACE guards are deleted.  A candidate must be an exact
+classified non-signalling `NULL`, its pre-instruction target must resolve to a
+known `StorageId`, and every reaching leaf of all eight tracked components
+must already be `ABSENT`.  This proves that deletion skips no scalar/payload
+destruction, reference release or native-payload finalization.  Distinct
+write-once absent leaves may agree through a phi, direct aliases follow
+storage identity, and explicit TRACE records remain ordered observations.
+An intervening component write or unknown storage/value leaf fails closed.
+The proof deliberately uses pre-instruction storage: VM `NULL` clears the
+value reached by a register but does not change the register's link topology.
+
+M04 migrates exact same-storage copies. The canonical
+`rxop_same_storage_copy_is_noop()` contract covers `copy`, `icopy`,
+`fcopy`, `scopy`, `dcopy`, `acopy` and `bcopy`: when both operands
+denote the same physical value storage, the VM path performs no write,
+allocation, signal or externally observable effect. This conditional contract is more
+exact than the opcode's general signal contract; different-storage `bcopy`
+remains conservative. Identical physical register operands prove the old floor
+directly. Distinct registers require equal pre-instruction `StorageId`, or
+storage phis with the same unique write-once leaf. LINK-established and
+agreeing-phi aliases can therefore prove, while divergent, different or unknown
+storage fails closed. Explicit TRACE records remain; an event after a
+semantically empty copy does not make that copy observable.
+
 The admitted first transformation panel is deliberately narrower than the
 fact engine:
 
 - `icopy`, `fcopy` and strict-comparison uses of `scopy` may be redirected only
   when the typed source view is unchanged on every path and every may-reaching
   destination observation can be redirected atomically; decimal copy remains
-  excluded because it can allocate and signal;
-- an exact self `copy` is removed because the VM handler is explicitly a
-  no-op, while nonidentity full-value copies remain excluded pending ownership,
-  payload, attribute, flag and cleanup proof;
-- repeated identical integer/bitwise-equal float loads, repeated `null`, and
-  repeated one-register `itof` are removed only under a must-available fact;
+  excluded from that established consumer pending decimal-lifetime proof,
+  although `dcopy` itself is now a proven total non-signalling operation;
+- all seven exact same-storage copy families use the M04 conditional metadata
+  and StorageId proof, while nonidentity full-value copies remain excluded
+  pending ownership, payload, attribute, flag and cleanup proof;
+- repeated integer/bitwise-equal float constants use the M02 storage/value and
+  hidden-cleanup proof; repeated `null` uses the M03 known-storage and
+  all-component-absence proof;
+- repeated metadata-admitted one-register XTOY derivations use the generic
+  dominated-success repetition proof;
+- a repeated one-register `itos` is removed only under the storage-identity,
+  integer/string-component and numeric-context proof described above;
 - unreachable instructions, TRACE records and source-step records are removed
   only when the entire procedure CFG is complete; and
 - dead-result deletion remains disabled because a nominal numeric destination
@@ -562,20 +995,28 @@ count. `rxas -d` prints per-candidate accept/reject reasons and a per-procedure
 summary. `-n` bypasses both the local and whole-procedure optimizers.
 
 NR-18 adds one reverse direction for surviving `icopy`/`fcopy` records. For an
-immediately adjacent, classified, nonthrowing, single-kill producer, the pass
-may retarget operand 1 from a disposable local temporary to the copy's final
-local and delete the copy. The written typed view must be exact; the final view
-must be dead at the producer boundary; the temporary view must be dead after
-the copy; the producer must not read the final; and TRACE/source-step, implicit,
-alias/reference/lifetime, opaque, ownership and asynchronous-handler
-observations reject the candidate. These conditions make the original and
-retargeted states equal at every observable edge while reducing the executable
-count by one.
+immediately adjacent, metadata-classified, non-signalling, context-neutral,
+single-component producer, the proof service may return an immutable plan that
+retargets operand 1 from a disposable local temporary to the copy's final local
+and deletes the copy. The exact producer result must have only the typed copy
+as a sparse direct or dependent use. Both storages must be local, known and
+unaliased; the producer must not read the final storage through another
+register mapping; and TRACE/register metadata, calls, opaque uses, asynchronous
+handlers and source-address observations reject the candidate.
+
+Scalar producers such as `load` and integer comparisons release reference and
+native-payload state, whereas `icopy`/`fcopy` write only their typed component.
+Producer forwarding therefore also proves that every component cleared by the
+producer is already absent in both the discarded temporary and the final
+destination. Fresh local entry storage supplies a known empty state;
+arguments, globals, aliases and unknown or previously populated storage fail
+closed. This hidden-cleanup condition is part of opcode metadata and prevents
+typed liveness alone from changing lifetime behaviour.
 
 Copy rewrites proved from one graph may be applied in the same iteration only
 when their complete physical source/destination register pairs are disjoint.
-Their substitutions then commute and cannot invalidate one another's liveness
-or availability facts. Procedures newly admitted through exact jump-table
+Their substitutions then commute and cannot invalidate one another's SSA/use
+proof. Procedures newly admitted through exact jump-table
 edges always receive reachability cleanup. Global typed-value analysis is
 additionally bounded to one million `queue-item x liveness-word` cells for
 those procedures; above the bound, `rxas -d` reports `scope=reachability-only`.
@@ -583,31 +1024,112 @@ This preserves the linear high-yield cleanup without turning large generated
 dispatch procedures into quadratic assembly work. Procedures without resolved
 indirect tables retain the established NR-27 behavior without that bound.
 
-The older compare/branch rule still reads explicit read/kill and implicit
-register facts through `rxop_effects()` inside the bounded local queue. NR-27
-does not change that rule's selection boundary. `test_rxop_metadata` is
-generated from `op_table` and the complete effects sidecar so instructions
-cannot be added without a mechanically aligned entry. The NR-27 effects audit
-also records that decimal literal load and decimal copy may signal, while
-one- and two-register integer-to-float conversion and float comparison are
-non-signalling in the current VM handlers.
+Integer compare/branch fusion is also a whole-procedure proof-service consumer.
+Canonical opcode metadata maps each `IEQ`/`INE`/`IGT`/`IGTE`/`ILT`/`ILTE` plus
+`BRT`/`BRF` form to `BEQ`/`BNE`/`BGT`/`BGE`/`BLT`/`BLE`, including normalized
+immediate/register operand order. The immutable plan requires the compare and
+branch to be consecutive executable instructions in one CFG block, all three
+opcodes to be total and context-neutral, and the local result storage to be
+unaliased. A source may share that storage only when it is the same physical
+result register and component SSA supplies the exact pre-write integer
+`ValueId`; the fused branch then reads that incoming value rather than the
+materialized Boolean. Every reference/native payload cleared by materializing
+the Boolean must already be absent. The result integer `ValueId` may have only
+the branch read and, under the selected TRACE
+policy, any number of precisely matching result events between compare and
+branch. The immutable plan records and revalidates those events, deletes them
+atomically with the compare, and leaves unrelated same-boundary events present.
+Live non-trace uses, metadata and caller windows reject fusion; unrelated TRACE
+events remain. Call-window handling now resolves the exact local bounds when
+the count has a constant integer `ValueId`, otherwise conservatively extends to
+the highest local. Classified fixed-arity and zero-argument calls expose their
+complete caller interface through explicit operands; only range-call forms
+add an implicit base/count local window. The proof follows the compare result
+through copy/derived values
+and phis and rejects only when that identity is visible in the resolved window
+or the query fails closed. Counted CALLs had deliberately unknown signal
+contracts in the K04c baseline. Their former retry edge turned an otherwise
+constant count into an unknown phi and widened the window. K04d retires that
+non-standard, unused continuation and adds propagated-call partial-state
+metadata for the remaining skip/handler/unwind failure paths. The old bounded
+recursive read-before-kill solver and its keyhole rules have been removed.
 
-Attribute/register-view cleanup is also a keyhole concern. A full `copy`
+`test_rxop_metadata` is generated from `op_table` and both complete sidecars so
+instructions cannot be added without mechanically aligned effect and signal
+entries. The signal sidecar records the integer fused branches as
+non-signalling, decimal literal load as plugin-signalling and decimal copy as
+total/non-signalling, while one- and two-register integer-to-float conversion
+and float comparison are also non-signalling in the current VM handlers. The
+legacy `FGT`/`BRT` to `FGTBR` shortcut is not selected until the fused float
+opcode receives an explicit signal contract and equivalent component proof.
+
+Attribute/register-view cleanup also retains one small mechanical keyhole. A
+full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately
 by `acopy rA,rB` is reduced to the full copy for hand-written or legacy RXAS.
+This is the closed K06 classification, not a proof-service consumer. Opcode
+metadata records full `COPY` as reading/writing every component and `ACOPY` as
+reading/writing only `RXOP_COMPONENT_ATTRIBUTES`; both are non-signalling. The
+VM handlers confirm `copy_value()` assigns `status.all_type_flags` before
+`ACOPY` would repeat that exact assignment. The declarative rule captures the
+same source/destination pair and permits no intervening executable instruction.
+`test_rxop_metadata` locks the subset/non-signalling invariant, while the
+focused optimizer fixture locks different-source, different-target and
+executable-gap negatives. Moving this exact local algebra into CFG/SSA would
+add analysis cost without adding a correctness fact.
 Compiler-generated RXAS should not emit that pair for typed payload access. A
 future explicit flag-copy operation would use `acopy`, but there is no current
 compiler use case. Typed payload copies are `icopy`, `fcopy`, `scopy`, `dcopy`,
-and `bcopy`; `bcopy` copies only the binary payload and byte cursor, not
-public/compiler/library status flags. Duplicate `link`/typed-copy/`unlink`
-reads, and equivalent `linkattr1` reads for the same owner and one-based
-attribute slot, may reuse the first detached copy when no barrier or
-mapped-register use intervenes.
+and `bcopy`; `bcopy` copies only the binary payload, not
+public/compiler/library status flags.
+
+Duplicate `link`/typed-copy/`unlink` reads and equivalent one-based
+`linkattr1` reads are no longer keyhole authorities. One immutable proof plan
+validates both exact triples, proves the full typed-copy component mask
+equivalent, and rewrites the later link to copy the first
+detached value before deleting its original copy/unlink. An attribute plan
+also proves the candidate slot is in range so deletion cannot suppress an
+`OUT_OF_RANGE` signal. Calls through aliased arguments, divergent source phis,
+changed source/detached components, changed count/reference generation,
+different owners or slots, component writes and unproved signal paths reject.
+Register metadata and TRACE reads of the unchanged first detached value may
+remain ordered while the redundant second executable read is removed. The
+twelve former syntax-expanded rules have been deleted.
+
+Cancelling `swap` pairs are likewise owned by the proof service rather than
+the legacy bounded `NO_HAZARD` keyholes. A pair-key demand filter only asks
+the question. The immutable proof verifies the exact physical operands,
+dominance, restored pre-first/post-second `StorageId` bindings and every
+intervening raw-register use from the shared use index; relevant component
+reads/writes, register metadata, TRACE, call windows and opaque state
+reject. Different registers that already name the same storage are an exact
+identity case, while a disjoint intervening permutation or unrelated external
+effect need not block deletion. The consumer has no source-queue distance
+limit and revalidates the complete plan before deleting either instruction.
+
+Potential signals remain explicit CFG edges. A source-linear normal/skip
+spine may cross a known static signal when its handler policy is still the
+inherited entry policy: resumption reaches the restoring swap, while branch,
+return, unwind and terminal actions leave the current frame's temporary
+mapping. A handler installed, merged or clobbered in the procedure rejects.
+Uses reachable from the asynchronous-handler root also reject even when their
+records lie outside the lexical interval. Ordinary control splits and unknown
+signal-name sets remain closed. This is narrower than treating signals as
+invisible and more capable than requiring one basic block.
+
+NR-09 may encode two adjacent or metadata-separated swaps as one ordered
+four-operand `swapn`. Repeating the same unordered physical pair composes to
+identity algebraically for every input mapping and is deleted by the same K01
+proof. Component SSA independently composes all overlapping `swapn` pairs in
+operand order into final input-state sources; it does not interpret them as a
+parallel assignment. Larger arbitrary permutation simplification remains a
+separate future rewrite consumer.
 
 Signal support adds action-aware and dynamic-name forms:
 
 - `sigcalla proc(),"NAME"` installs a handler that returns an internal action
-  marker interpreted by the VM as `skip`, `retry`, or `fail`
+  marker interpreted by the VM as `skip` or `fail`; the unused non-standard
+  `retry` action has been retired
 - `sigpush "NAME"` saves the current handler entry for `NAME` on the current
   frame's handler stack
 - `sigpop "NAME"` restores the most recent saved handler entry for `NAME`

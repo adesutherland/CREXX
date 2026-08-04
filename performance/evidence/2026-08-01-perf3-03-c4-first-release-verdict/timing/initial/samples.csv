@@ -1,0 +1,105 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Base64-base64-c0-rxvm-warmup-1,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,warmup,1,1,2500,1406793000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-warmup-1,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,warmup,1,2,2500,1561811000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-warmup-1,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,warmup,1,3,2500,1471123000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-warmup-1,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,warmup,1,4,2500,1367039000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-1,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,1,1,2500,1402751000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-1,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,1,2,2500,1475783000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-1,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,1,3,2500,1435873000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-1,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,1,4,2500,1685265000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-2,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,2,1,2500,1339435000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-2,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,2,2,2500,1638634000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-2,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,2,3,2500,1402162000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-2,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,2,4,2500,1524478000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-3,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,3,1,2500,1721033000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-3,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,3,2,2500,1666640000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-3,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,3,3,2500,1422803000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-3,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,3,4,2500,1617533000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-4,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,4,1,2500,1442529000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-4,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,4,2,2500,1633997000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-4,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,4,3,2500,1470424000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-4,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,4,4,2500,1504669000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-5,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,5,1,2500,1402189000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-5,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,5,2,2500,1378611000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-5,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,5,3,2500,1495239000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-5,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,5,4,2500,1605983000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-6,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,6,1,2500,1483971000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-6,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,6,2,2500,1754889000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-6,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,6,3,2500,1463559000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-6,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,6,4,2500,1417232000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-7,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,7,1,2500,1382709000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-7,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,7,2,2500,1435098000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-7,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,7,3,2500,1375992000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-7,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,7,4,2500,1570980000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-8,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,8,1,2500,1602142000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-8,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,8,2,2500,1643848000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-8,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,8,3,2500,1278580000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-8,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,8,4,2500,1633222000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-9,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,9,1,2500,1646202000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-9,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,9,2,2500,1488531000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-9,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,9,3,2500,1636396000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-9,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,9,4,2500,1501180000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-10,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,10,1,2500,1515672000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-10,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,10,2,2500,1747811000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-10,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,10,3,2500,1443346000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-10,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,10,4,2500,1677845000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-11,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,11,1,2500,1597542000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-11,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,11,2,2500,1706305000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-11,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,11,3,2500,1568532000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-11,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,11,4,2500,1390486000,,0,pass,,
+timing-Base64-base64-prefilter3-rxbvm-recorded-12,timing,Base64,base64-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,12,1,2500,1586787000,,0,pass,,
+timing-Base64-base64-c0-rxvm-recorded-12,timing,Base64,base64-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,12,2,2500,1662106000,,0,pass,,
+timing-Base64-base64-prefilter3-rxvm-recorded-12,timing,Base64,base64-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,12,3,2500,1505594000,,0,pass,,
+timing-Base64-base64-c0-rxbvm-recorded-12,timing,Base64,base64-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,12,4,2500,1701868000,,0,pass,,
+timing-RexxCPS-rexxcps-c0-rxvm-warmup-1,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,warmup,1,1,1000-clauses,1331153000,,0,pass,38322252,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-warmup-1,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,warmup,1,2,1000-clauses,1260908000,,0,pass,40350322,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-warmup-1,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,warmup,1,3,1000-clauses,1383530000,,0,pass,36766159,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-warmup-1,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,warmup,1,4,1000-clauses,1392398000,,0,pass,36509075,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-1,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,1,1,1000-clauses,1304231000,,0,pass,39004070,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-1,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,1,2,1000-clauses,1273467000,,0,pass,40006441,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-1,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,1,3,1000-clauses,1390919000,,0,pass,36642586,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-1,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,1,4,1000-clauses,1375783000,,0,pass,37033779,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-2,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,2,1,1000-clauses,1288747000,,0,pass,39568975,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-2,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,2,2,1000-clauses,1388296000,,0,pass,36751735,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-2,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,2,3,1000-clauses,1380205000,,0,pass,36893698,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-2,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,2,4,1000-clauses,1313839000,,0,pass,38763596,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-3,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,3,1,1000-clauses,1401528000,,0,pass,36369257,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-3,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,3,2,1000-clauses,1383556000,,0,pass,36814344,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-3,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,3,3,1000-clauses,1299705000,,0,pass,39313353,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-3,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,3,4,1000-clauses,1276987000,,0,pass,39826674,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-4,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,4,1,1000-clauses,1398778000,,0,pass,36420121,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-4,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,4,2,1000-clauses,1322243000,,0,pass,38499557,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-4,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,4,3,1000-clauses,1311267000,,0,pass,38836233,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-4,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,4,4,1000-clauses,1378839000,,0,pass,36888901,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-5,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,5,1,1000-clauses,1302618000,,0,pass,39074558,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-5,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,5,2,1000-clauses,1299683000,,0,pass,39145110,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-5,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,5,3,1000-clauses,1385228000,,0,pass,36755855,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-5,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,5,4,1000-clauses,1390059000,,0,pass,36568152,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-6,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,6,1,1000-clauses,1310893000,,0,pass,38938725,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-6,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,6,2,1000-clauses,1384146000,,0,pass,36702164,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-6,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,6,3,1000-clauses,1401203000,,0,pass,36246987,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-6,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,6,4,1000-clauses,1340161000,,0,pass,37963775,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-7,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,7,1,1000-clauses,1385753000,,0,pass,36827563,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-7,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,7,2,1000-clauses,1394344000,,0,pass,36428181,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-7,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,7,3,1000-clauses,1348439000,,0,pass,37790788,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-7,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,7,4,1000-clauses,1304909000,,0,pass,39082652,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-8,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,8,1,1000-clauses,1386662000,,0,pass,36645742,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-8,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,8,2,1000-clauses,1285964000,,0,pass,39583150,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-8,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,8,3,1000-clauses,1281648000,,0,pass,39756531,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-8,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,8,4,1000-clauses,1387581000,,0,pass,36615149,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-9,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,9,1,1000-clauses,1327662000,,0,pass,38344845,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-9,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,9,2,1000-clauses,1292774000,,0,pass,39424676,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-9,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,9,3,1000-clauses,1387055000,,0,pass,36723325,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-9,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,9,4,1000-clauses,1416006000,,0,pass,35908480,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-10,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,10,1,1000-clauses,1281162000,,0,pass,39730705,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-10,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,10,2,1000-clauses,1406252000,,0,pass,36172350,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-10,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,10,3,1000-clauses,1391895000,,0,pass,36620982,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-10,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,10,4,1000-clauses,1338219000,,0,pass,38017357,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-11,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,11,1,1000-clauses,1386980000,,0,pass,36648025,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-11,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,11,2,1000-clauses,1405462000,,0,pass,36216433,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-11,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,11,3,1000-clauses,1322991000,,0,pass,38482260,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-11,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,11,4,1000-clauses,1291602000,,0,pass,39431399,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxbvm-recorded-12,timing,RexxCPS,rexxcps-prefilter3-rxbvm,crexx,rxbvm,C4-production,A,no,no,recorded,12,1,1000-clauses,1417690000,,0,pass,35903065,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxvm-recorded-12,timing,RexxCPS,rexxcps-c0-rxvm,crexx,rxvm,C0-current,A,no,no,recorded,12,2,1000-clauses,1342437000,,0,pass,37973722,cREXX clauses per second
+timing-RexxCPS-rexxcps-prefilter3-rxvm-recorded-12,timing,RexxCPS,rexxcps-prefilter3-rxvm,crexx,rxvm,C4-production,A,no,no,recorded,12,3,1000-clauses,1283503000,,0,pass,39777129,cREXX clauses per second
+timing-RexxCPS-rexxcps-c0-rxbvm-recorded-12,timing,RexxCPS,rexxcps-c0-rxbvm,crexx,rxbvm,C0-current,A,no,no,recorded,12,4,1000-clauses,1391792000,,0,pass,36492388,cREXX clauses per second

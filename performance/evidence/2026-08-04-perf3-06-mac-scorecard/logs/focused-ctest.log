@@ -1,0 +1,35 @@
+Test project /private/tmp/crexx-perf3-06.yHwy0b/build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/10 Test    #1: linked_opt_runtime_artifacts_build .........   Passed   28.47 sec
+      Start 1862: benchmark_awfy_sieve_opt
+ 2/10 Test #1862: benchmark_awfy_sieve_opt ...................   Passed    0.28 sec
+      Start 1864: benchmark_awfy_permute_opt
+ 3/10 Test #1864: benchmark_awfy_permute_opt .................   Passed    0.03 sec
+      Start 1868: benchmark_awfy_towers_opt
+ 4/10 Test #1868: benchmark_awfy_towers_opt ..................   Passed    0.05 sec
+      Start 1870: benchmark_awfy_bounce_opt
+ 5/10 Test #1870: benchmark_awfy_bounce_opt ..................   Passed    0.02 sec
+      Start 1876: benchmark_awfy_richards_opt
+ 6/10 Test #1876: benchmark_awfy_richards_opt ................   Passed    0.18 sec
+      Start 1880: benchmark_base64_roundtrip_opt
+ 7/10 Test #1880: benchmark_base64_roundtrip_opt .............   Passed    0.02 sec
+      Start 1886: benchmark_rexxcps_levelb_opt
+ 8/10 Test #1886: benchmark_rexxcps_levelb_opt ...............   Passed    1.02 sec
+      Start 1893: nr10_cross_runtime_matrix_selftest_noopt
+ 9/10 Test #1893: nr10_cross_runtime_matrix_selftest_noopt ...   Passed    0.02 sec
+      Start 1894: nr10_cross_runtime_matrix_selftest_opt
+10/10 Test #1894: nr10_cross_runtime_matrix_selftest_opt .....   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Label Time Summary:
+benchmark        =   1.66 sec*proc (9 tests)
+language         =   1.59 sec*proc (7 tests)
+linked_opt       =   1.65 sec*proc (8 tests)
+noncanonical     =   1.02 sec*proc (1 test)
+performance      =   0.07 sec*proc (2 tests)
+rexxcps-smoke    =   1.02 sec*proc (1 test)
+runner           =   0.07 sec*proc (2 tests)
+smoke            =   1.65 sec*proc (8 tests)
+
+Total Test time (real) =  30.16 sec

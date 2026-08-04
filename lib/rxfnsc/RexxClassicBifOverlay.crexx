@@ -134,8 +134,7 @@ rexxclassicbif_overlay: procedure = .RexxValue
       end
     end
     else do
-      assembler setstrpos target,cursor
-      assembler substring result,target,before
+      assembler substring result,target,cursor,before
     end
   end
 
@@ -150,8 +149,7 @@ rexxclassicbif_overlay: procedure = .RexxValue
       end
     end
     else do
-      assembler setstrpos new_string,cursor
-      assembler substring segment,new_string,overlay_length
+      assembler substring segment,new_string,cursor,overlay_length
       assembler append result,segment
     end
   end
@@ -159,8 +157,7 @@ rexxclassicbif_overlay: procedure = .RexxValue
   tail_start = before + overlay_length
   if tail_start < target_length then do
     tail_length = target_length - tail_start
-    assembler setstrpos target,tail_start
-    assembler substring segment,target,tail_length
+    assembler substring segment,target,tail_start,tail_length
     assembler append result,segment
   end
   return .RexxValue(result)

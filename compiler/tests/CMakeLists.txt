@@ -515,9 +515,9 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "if(NOT rxas_out MATCHES [=[bgetu32 [^\\n]*,0x78563412fe7f0000000000000000f03f4f4b]=])\n"
        "  message(FATAL_ERROR \"Binary memory source did not read a fixed-width field directly from a binary constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "endif()\n"
-       "foreach(_opcode bcheckrange getbinpos setbinpos bslice)\n"
+       "foreach(_opcode bcheckrange bslice)\n"
        "  if(rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
-       "    message(FATAL_ERROR \"Binary memory source emitted legacy cursor/slice opcode ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "    message(FATAL_ERROR \"Binary memory source emitted unnecessary checked-range/slice opcode ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
        "endforeach()\n"
        "if(NOT rxas_out MATCHES [=[load r[0-9]+,4]=])\n"
@@ -2603,6 +2603,38 @@ add_test(NAME inline_receiver_nested_this_direct_placement_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_nested_this_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_nested_this_opt.cmake)
 set_tests_properties(inline_receiver_nested_this_direct_placement_opt PROPERTIES
+        LABELS "linked_opt;receiver"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_receiver_detached_guard_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DLOCAL_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_guard_local.crexx
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_guard_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_guard_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_detached_guard_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_guard_opt.cmake)
+set_tests_properties(inline_receiver_detached_guard_opt PROPERTIES
+        LABELS "linked_opt;receiver"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_receiver_production_ladder_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_production_ladder.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_production_ladder_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_production_ladder.cmake)
+set_tests_properties(inline_receiver_production_ladder_opt PROPERTIES
         LABELS "linked_opt;receiver"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 

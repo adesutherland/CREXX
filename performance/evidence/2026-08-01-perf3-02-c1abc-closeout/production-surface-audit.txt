@@ -1,0 +1,7 @@
+status=PASS
+scope=compiler
+command=rg -n 'RXCP_PERF3_RECEIVER|inline_perf3_receiver_option|broad no-write|investigation control' compiler
+match_count=0
+interpretation=The ordinary compiler contains no disposable PERF3 receiver mask or broad negative investigation branch.
+replay_source=../2026-08-01-perf3-02-r1-repanel/compiler-option-source.diff
+replay_source_sha256=7bf1f32e61b1fb40bbdae6d1f12cd9fb36ca2825c48270a51fabee289252fdbf

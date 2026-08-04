@@ -43,6 +43,7 @@ _itrunc: procedure = .string
   decimal_point = "."
   point_position = 1
   integer_length = .int
+  start = 0
 
   assembler ftos number
   assembler strpos point_position,decimal_point,number
@@ -52,5 +53,5 @@ _itrunc: procedure = .string
   end
   integer_length = point_position - 1
   if integer_length <= 0 then return result
-  assembler substring result,number,integer_length
+  assembler substring result,number,start,integer_length
   return result

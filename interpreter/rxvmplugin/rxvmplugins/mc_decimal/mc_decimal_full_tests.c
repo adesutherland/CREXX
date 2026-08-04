@@ -14,6 +14,63 @@
 
 decplugin *plugin;
 
+static int test_decimalToString_total_contract(void) {
+    value number;
+    char *output;
+    int errors = 0;
+
+    memset(&number, 0, sizeof(number));
+    output = malloc(plugin->getRequiredStringSize(plugin));
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "nan") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    plugin->decimalFromString(plugin, &number, "1.25");
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "1.25") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    number.decimal_value_length = 0;
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "nan") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    free(output);
+    if (number.decimal_value) free(number.decimal_value);
+    return errors;
+}
+
+static int test_decimalFromInt_total_contract(void) {
+    value number;
+    char *output;
+    int errors = 0;
+
+    memset(&number, 0, sizeof(number));
+    output = malloc(plugin->getRequiredStringSize(plugin));
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalFromInt(plugin, &number, 42);
+    if (plugin->base.signal_number != 0 || plugin->base.signal_string != NULL)
+        errors++;
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "42") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    free(output);
+    if (number.decimal_value) free(number.decimal_value);
+    return errors;
+}
+
 // Do test
 int aTestFromToInt(char* expected, int64_t int_input) {
     int64_t int_output;
@@ -1157,6 +1214,8 @@ int main(int argc, char *argv[]) {
     errors += test_decimalFromDouble();
     errors += test_decimalToDouble();
     errors += test_decimalToString_decimalFromString();
+    errors += test_decimalToString_total_contract();
+    errors += test_decimalFromInt_total_contract();
     errors += test_basic_decimal_functions();
     errors += test_decimalCompare();
     errors += test_decimalCompareString();

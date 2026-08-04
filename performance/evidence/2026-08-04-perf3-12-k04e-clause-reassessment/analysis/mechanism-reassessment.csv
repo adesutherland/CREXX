@@ -1,0 +1,6 @@
+rank_by_ceiling,family,mechanism,current_dynamic_count_or_ceiling,previous_rxvm_percent,current_rxvm_percent,count_change,implementation_order,disposition
+1,R12-P01,PARSE direct destination,9240000,17.041302,17.219344,0,3,unchanged; exact conditional signal contract required
+2,R12-S01,segmented compound tail,2240000,4.131225,4.174386,0,2,unchanged; compare with loop reuse
+3,R12-C01,copied XTOY component placement,2220000,4.094339,4.137115,0,1,unchanged; next bounded implementation slice
+4,R12-H01,loop scoped tail reuse,1960000,3.614822,3.652588,0,2,unchanged; comparative compound-tail PoC
+5,R12-I01,direct call plus return,560000,1.032806,1.043597,0,4,unchanged; defer until body simplification

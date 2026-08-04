@@ -1,0 +1,50 @@
+options levelb
+namespace inline_receiver_production_ladder
+
+main: procedure = .int
+  probe = .Probe()
+  box = .Box(3)
+  say probe.unusedCaller(1)
+  say probe.unusedCaller(0)
+  say probe.formalCaller(box)
+  say box.read()
+  say probe.referenceCaller(box)
+  say box.read()
+  return 0
+
+Box: class
+  value = .int
+
+  *: factory
+    arg initial = .int
+    value = initial
+    return
+
+  replace: method = .int
+    arg replacement = .int
+    value = replacement
+    return value
+
+  read: method = .int
+    return value
+
+Probe: class
+  *: factory
+    return
+
+  unused: method = .int
+    arg choose_first = .boolean
+    if choose_first then return 41
+    return 42
+
+  unusedCaller: method = .int
+    arg choose_first = .boolean
+    return unused(choose_first)
+
+  formalCaller: method = .int
+    arg item = .Box
+    return item.replace(7)
+
+  referenceCaller: method = .int
+    arg expose item = .Box
+    return item.replace(9)

@@ -1,0 +1,3 @@
+vm,n,q1_percent,paired_median_percent,q3_percent,mean_percent,mean_ci95_low_percent,mean_ci95_high_percent,favorable_pairs,status
+rxvm,36,-2.082876680,0.335668272,1.811757707,0.553066265,-0.818865728,1.924998258,20,noisy-inconclusive
+rxbvm,36,-2.346407940,0.756590825,2.183671693,0.930885702,-0.755139102,2.616910506,22,noisy-inconclusive

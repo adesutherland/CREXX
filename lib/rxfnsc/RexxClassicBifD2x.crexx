@@ -60,8 +60,7 @@ rexxclassicbif_d2x: procedure = .RexxValue
     start = 1
     number_length = number_length - 1
     magnitude = ""
-    assembler setstrpos number,start
-    assembler substring magnitude,number,number_length
+    assembler substring magnitude,number,start,number_length
   end
   result = rexxclassic_decimal_to_hex(magnitude, negative)
 
@@ -98,8 +97,7 @@ rexxclassic_decimal_to_hex: procedure = .string
   chunk_length = first_chunk_length
   do while offset < decimal_length
     segment = ""
-    assembler setstrpos decimal_digits,offset
-    assembler substring segment,decimal_digits,chunk_length
+    assembler substring segment,decimal_digits,offset,chunk_length
     limb_count = limb_count + 1
     limbs[limb_count] = segment
     offset = offset + chunk_length
@@ -154,8 +152,7 @@ rexxclassic_fit_hex: procedure = .string
   assembler strlen source_length,source
   if source_length > output_length then do
     start = source_length - output_length
-    assembler setstrpos source,start
-    assembler substring result,source,output_length
+    assembler substring result,source,start,output_length
     return result
   end
   if source_length = output_length then return source

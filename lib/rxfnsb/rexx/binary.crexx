@@ -90,8 +90,7 @@ binsubstr: procedure = .binary
   assembler blen total,data
   if count < 0 then count = total - offset
   if count <= 0 then return result
-  assembler setbinpos data,offset
-  assembler bslice result,data,count
+  assembler bslice result,data,offset,count
   return result
 
 /**

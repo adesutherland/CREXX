@@ -18,7 +18,7 @@ Clear EOF and error indicators on an open C stream.
 
 ### Operands And Semantics
 
-The stream state changes; the handle register and all its payloads/cursors are
+The stream state changes; the handle register and all its payloads are
 unchanged. The handle must be nonzero and valid.
 
 ### Signals
@@ -91,7 +91,7 @@ Read an open stream's end-of-file indicator.
 
 ### Operands And Semantics
 
-Only `rStatus.int` changes; the stream, handle register, and cursors are
+Only `rStatus.int` changes; the stream and handle register are
 otherwise unchanged. Any nonzero result means EOF has been observed.
 
 ### Signals
@@ -201,7 +201,7 @@ Open a C stream or obtain a standard-stream handle.
 Filename and mode strings are copied and NUL-terminated. Exact filenames
 `stdin`, `stdout`, and `stderr` return the corresponding runtime streams;
 otherwise C `fopen` is used and successful files are marked non-inheritable
-across spawned commands. Only `rFile.int` changes; sources/cursors are unchanged.
+across spawned commands. Only `rFile.int` changes; sources are unchanged.
 
 ### Signals
 
@@ -237,8 +237,8 @@ Read up to a requested byte count into a binary payload.
 ### Operands And Semantics
 
 `rFile.int` is an open `FILE *`; `rCount.int` is the maximum byte count. The
-destination binary length becomes the C `fread` count, its binary cursor resets
-to zero, and VM-private binary flags refresh. Sources are unchanged.
+destination binary length becomes the C `fread` count and VM-private binary
+flags refresh. Sources are unchanged.
 
 ### Signals
 
@@ -310,7 +310,7 @@ Read one UTF-8 code point from a C stream.
 ### Operands And Semantics
 
 The destination string becomes the one code point and its integer payload the
-Unicode scalar; both string cursors reset. At EOF integer becomes `-1` and the
+Unicode scalar. At EOF integer becomes `-1` and the
 string becomes empty. The stream advances by the encoded byte count.
 
 ### Signals
@@ -344,7 +344,7 @@ Read one text line from a C stream without its line ending.
 
 ### Operands And Semantics
 
-The destination string is cleared, filled byte by byte, and its cursor reset.
+The destination string is cleared and filled byte by byte.
 Line terminators are consumed but omitted. The source handle is unchanged while
 the stream position advances.
 
@@ -379,8 +379,8 @@ Write a register's complete string bytes to a C stream.
 
 ### Operands And Semantics
 
-The stream position advances by bytes written. Neither register, string cursor,
-nor payload is changed; no terminator or newline is added.
+The stream position advances by bytes written. Neither register nor payload is
+changed; no terminator or newline is added.
 
 ### Signals
 
@@ -414,7 +414,7 @@ Write a register's complete binary payload to a C stream.
 
 ### Operands And Semantics
 
-The stream advances by bytes written. Registers and binary cursor are unchanged.
+The stream advances by bytes written. Registers are unchanged.
 
 ### Signals
 
@@ -448,7 +448,7 @@ Write the low byte of an integer payload to a C stream.
 
 ### Operands And Semantics
 
-The stream advances by one byte on success. Registers and cursors are unchanged;
+The stream advances by one byte on success. Registers are unchanged;
 the C library converts the integer as for `fputc`.
 
 ### Signals
@@ -519,7 +519,7 @@ Read an environment variable by name.
 ### Operands And Semantics
 
 The destination string is replaced with the environment value supplied by the
-platform helper and its cursor resets. The name register is unchanged.
+platform helper. The name register is unchanged.
 
 ### Signals
 
@@ -585,8 +585,8 @@ Read one LF-terminated line from standard input.
 
 ### Operands And Semantics
 
-The destination string length is reset, bytes before LF are stored, and both
-string cursors reset. LF is consumed and omitted; EOF may produce empty text.
+The destination string length is reset and bytes before LF are stored. LF is
+consumed and omitted; EOF may produce empty text.
 
 ### Signals
 
@@ -623,7 +623,7 @@ Write a value to VM standard output followed by a newline.
 
 ### Operands And Semantics
 
-Output uses the VM print hook and adds LF. Operands, payloads, and cursors are
+Output uses the VM print hook and adds LF. Operands and payloads are
 unchanged; the register form reads its complete logical string.
 
 ### Signals
@@ -658,7 +658,7 @@ Write string bytes to VM standard output without a newline.
 ### Operands And Semantics
 
 The complete logical string is passed to the VM print hook with no terminator.
-Operands and cursors are unchanged.
+Operands are unchanged.
 
 ### Signals
 
@@ -725,7 +725,7 @@ Bind a VM-managed socket to a host/address string and port.
 ### Operands And Semantics
 
 The socket handle and port come from integer payloads; host comes from the full
-string. No register or cursor is changed. The implementation discards the
+string. No register is changed. The implementation discards the
 socket-layer return code; inspect `sockstatus`/`sockerror` afterward.
 
 ### Signals
@@ -759,7 +759,7 @@ Enable or disable blocking mode on a VM-managed socket.
 ### Operands And Semantics
 
 `rSocket.int` is the handle and `rEnabled.int` is interpreted as false/true.
-Only `rStatus.int` changes; sources and cursors are unchanged.
+Only `rStatus.int` changes; sources are unchanged.
 
 ### Signals
 
@@ -826,7 +826,7 @@ Connect a VM-managed TCP socket to a host and port.
 ### Operands And Semantics
 
 Handle and port are integer payloads; host is the complete string. Registers
-and cursors are unchanged. The socket entry records status and error text.
+are unchanged. The socket entry records status and error text.
 
 ### Signals
 
@@ -860,7 +860,7 @@ Connect a VM-managed socket and establish client TLS in one operation.
 ### Operands And Semantics
 
 The host string supplies both endpoint/SNI context and the port is an integer.
-Registers/cursors are unchanged while socket state gains a TLS session on
+Registers are unchanged while socket state gains a TLS session on
 success.
 
 ### Signals
@@ -894,7 +894,7 @@ Read the last error text stored for a VM-managed socket.
 
 ### Operands And Semantics
 
-The destination string is replaced and its cursor reset. The handle register
+The destination string is replaced. The handle register
 and socket status are unchanged.
 
 ### Signals
@@ -929,7 +929,7 @@ Set the native `SO_KEEPALIVE` option on a socket.
 ### Operands And Semantics
 
 Handle and Boolean enable flag come from integer payloads. Only `rStatus.int`
-changes; sources/cursors remain unchanged.
+changes; sources remain unchanged.
 
 ### Signals
 
@@ -994,7 +994,7 @@ Format a socket's local endpoint.
 
 ### Operands And Semantics
 
-The destination string is replaced and its cursor reset. The handle register
+The destination string is replaced. The handle register
 and socket are unchanged.
 
 ### Signals
@@ -1093,7 +1093,7 @@ Format a connected socket's peer endpoint.
 
 ### Operands And Semantics
 
-The destination string is replaced and its cursor reset. Socket/handle source
+The destination string is replaced. Socket/handle source
 is unchanged.
 
 ### Signals
@@ -1158,8 +1158,8 @@ Receive up to a requested byte count as UTF-8 text.
 
 ### Operands And Semantics
 
-Handle/count are integer payloads. The destination string is replaced, its
-cursor reset, and received bytes consumed from the socket; sources are unchanged.
+Handle/count are integer payloads. The destination string is replaced and
+received bytes are consumed from the socket; sources are unchanged.
 
 ### Signals
 
@@ -1192,7 +1192,7 @@ Receive up to a requested byte count as binary data.
 
 ### Operands And Semantics
 
-The destination binary is replaced with received bytes and its cursor resets.
+The destination binary is replaced with received bytes.
 Handle/count registers remain unchanged; bytes are consumed from the socket.
 
 ### Signals
@@ -1227,7 +1227,7 @@ Send a complete string payload on a connected socket.
 ### Operands And Semantics
 
 The full logical string byte range is offered to the socket. Only `rCount.int`
-changes; handle, string, and string cursor remain unchanged.
+changes; handle and string remain unchanged.
 
 ### Signals
 
@@ -1261,7 +1261,7 @@ Send a complete binary payload on a connected socket.
 ### Operands And Semantics
 
 The full logical binary byte range is offered. Only `rCount.int` changes;
-handle, binary payload, and binary cursor remain unchanged.
+handle and binary payload remain unchanged.
 
 ### Signals
 
@@ -1327,7 +1327,7 @@ Upgrade an already connected socket to client TLS.
 ### Operands And Semantics
 
 The host string supplies TLS peer/SNI context. Only `rStatus.int` changes;
-sources/cursors are unchanged and successful socket state gains TLS.
+sources are unchanged and successful socket state gains TLS.
 
 ### Signals
 
@@ -1503,7 +1503,7 @@ Selectors are `Z` (C `timezone` offset seconds), `T` (process `clock()` ticks),
 `C` (`CLOCKS_PER_SEC`), `N` (standard and daylight timezone names joined by
 `;`), and `U` (UTC-style time-of-day microseconds computed from local fields
 plus `timezone`). Integer selectors write only `rValue.int`; `N` replaces its
-string and resets the byte cursor. Unknown/empty selectors leave it unchanged.
+string. Unknown/empty selectors leave it unchanged.
 
 ### Signals
 

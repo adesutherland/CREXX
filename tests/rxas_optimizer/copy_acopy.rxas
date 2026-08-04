@@ -1,8 +1,21 @@
 * Optimiser redundant full-copy/status-copy coverage.
 
-main() .locals=3
+main() .locals=9
     load r0,"payload"
     copy r1,r0
     acopy r1,r0
     say r1
+
+    /* Different target: the status copy is not subsumed. */
+    copy r3,r2
+    acopy r4,r2
+
+    /* Different source: the status copy is not subsumed. */
+    copy r5,r2
+    acopy r5,r0
+
+    /* An intervening executable instruction closes the adjacent rule. */
+    copy r7,r6
+    load r8,0
+    acopy r7,r6
     ret

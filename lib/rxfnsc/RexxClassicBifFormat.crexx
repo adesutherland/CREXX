@@ -107,14 +107,12 @@ rexxclassicbif_format: procedure = .RexxValue
     mantissa = ""
     if e_position > 0 then do
       start = 0
-      assembler setstrpos number_text,start
-      assembler substring mantissa,number_text,e_position
+      assembler substring mantissa,number_text,start,e_position
     end
     start = e_position + 1
     segment_length = number_length - start
     if segment_length > 0 then do
-      assembler setstrpos number_text,start
-      assembler substring exponent_text,number_text,segment_length
+      assembler substring exponent_text,number_text,start,segment_length
     end
     exponent = exponent_text
   end
@@ -128,8 +126,7 @@ rexxclassicbif_format: procedure = .RexxValue
     befo = ""
     if segment_length > 0 then do
       start = 1
-      assembler setstrpos mantissa,start
-      assembler substring befo,mantissa,segment_length
+      assembler substring befo,mantissa,start,segment_length
     end
     mantissa = befo
     mantissa_length = segment_length
@@ -146,15 +143,13 @@ rexxclassicbif_format: procedure = .RexxValue
     befo = ""
     if point_position > 0 then do
       start = 0
-      assembler setstrpos mantissa,start
-      assembler substring befo,mantissa,point_position
+      assembler substring befo,mantissa,start,point_position
     end
     start = point_position + 1
     afte_length = mantissa_length - start
     afte = ""
     if afte_length > 0 then do
-      assembler setstrpos mantissa,start
-      assembler substring afte,mantissa,afte_length
+      assembler substring afte,mantissa,start,afte_length
     end
     befo_length = point_position
   end
@@ -227,8 +222,7 @@ rexxclassicbif_format: procedure = .RexxValue
     segment = ""
     if segment_length > 0 then do
       start = 0
-      assembler setstrpos integer,start
-      assembler substring segment,integer,segment_length
+      assembler substring segment,integer,start,segment_length
     end
     integer = segment
     integer_length = segment_length
@@ -259,15 +253,13 @@ rexxclassicbif_format: procedure = .RexxValue
     assembler appendchar afte,point_character
     segment = ""
     start = point
-    assembler setstrpos integer,start
-    assembler substring segment,integer,after
+    assembler substring segment,integer,start,after
     assembler append afte,segment
   end
   segment = ""
   if point > 0 then do
     start = 0
-    assembler setstrpos integer,start
-    assembler substring segment,integer,point
+    assembler substring segment,integer,start,point
   end
   integer = segment
   integer_length = point
@@ -355,8 +347,7 @@ _format_increment: procedure = .string
   end
   if position > 0 then do
     start = 0
-    assembler setstrpos digits,start
-    assembler substring result,digits,position
+    assembler substring result,digits,start,position
   end
   codepoint = codepoint + 1
   assembler appendchar result,codepoint

@@ -106,6 +106,5 @@ strip: procedure = .string
   if start = 0 & end_position = string_length then return string
   slice_length = end_position - start
   if slice_length <= 0 then return result
-  assembler setstrpos string,start
-  assembler substring result,string,slice_length
+  assembler substring result,string,start,slice_length
   return result

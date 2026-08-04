@@ -21,8 +21,8 @@ Append one register's complete string payload to another in place.
 
 ### Operands And Semantics
 
-Both operands are string registers. `rDst` is resized and its string cursor is
-reset to zero. `rSrc` is unchanged, and self-append is supported.
+Both operands are string registers. `rDst` is resized and its VM-private UTF
+lookup cache is reset. `rSrc` is unchanged, and self-append is supported.
 
 ### Signals
 
@@ -58,7 +58,7 @@ Append one Unicode code point, supplied as an integer payload, to a string.
 ### Operands And Semantics
 
 `rCodepoint` is an integer register. UTF builds encode it as UTF-8. The
-destination cursor finishes at the new end; the source register is unchanged.
+destination lookup cache is reset; the source register is unchanged.
 
 ### Signals
 
@@ -96,7 +96,7 @@ Concatenate two strings without inserting a blank.
 
 ### Operands And Semantics
 
-The destination string is replaced and its cursor resets to zero. Register
+The destination string is replaced and its private lookup cache resets. Register
 sources are unchanged and may alias the destination.
 
 ### Signals
@@ -133,8 +133,8 @@ Append the code point at a zero-based character index in a source string.
 ### Operands And Semantics
 
 `rIndex` is an integer register and is restored after temporary internal use.
-Locating the code point moves the source string cursor. `rDst` is appended to,
-not cleared.
+Locating the code point may update the source's private lookup cache; this is
+not observable RXAS state. `rDst` is appended to, not cleared.
 
 ### Signals
 
@@ -159,43 +159,6 @@ main() .locals=3
 
 `appendchar`, `strchar`.
 
-## `getstrpos`
-
-Read a string register's current character cursor.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x009b` | `getstrpos rIndex,rString` | Copy the cursor into `rIndex`'s integer payload. |
-
-### Operands And Semantics
-
-The result is a zero-based code-point position in UTF builds and a byte
-position in non-UTF builds. The source string and cursor are unchanged.
-
-### Signals
-
-This instruction does not raise a signal.
-
-### Example
-
-<!-- rxas-example name="string-getstrpos" test="run" -->
-```rxas
-.globals=0
-
-main() .locals=3
-    load r1,"abc"
-    load r2,1
-    setstrpos r1,r2
-    getstrpos r0,r1
-    ret
-```
-
-### Related
-
-`setstrpos`, `substr`.
-
 ## `hexchar`
 
 Format a selected source character as uppercase hexadecimal.
@@ -211,7 +174,8 @@ Format a selected source character as uppercase hexadecimal.
 By default `rDst` receives the low byte of the code point as two hex digits. If
 its incoming string contains `UTFV1`, it receives four UTF-8 bytes padded to
 eight digits; `UTFV2` requests only the actual UTF-8 bytes. The destination
-cursor resets; locating the character moves the source cursor.
+lookup cache resets; locating the character may update the source's private
+cache without changing its value.
 
 ### Signals
 
@@ -249,8 +213,8 @@ Append one integer code point repeatedly to an existing string.
 ### Operands And Semantics
 
 `rCodepoint` and `rCount` are integer registers. The destination is not cleared
-first. A zero or negative count appends nothing; otherwise its cursor finishes
-at the new end.
+first. A zero or negative count appends nothing; otherwise its private lookup
+cache is reset.
 
 ### Signals
 
@@ -287,8 +251,8 @@ Find the first occurrence of an integer code point in a string.
 ### Operands And Semantics
 
 The result overwrites `rIndex`'s integer payload. The search starts at the
-beginning and moves `rString`'s internal cursor while scanning. The logical
-string and code-point register remain unchanged.
+beginning. The logical string and code-point register remain unchanged; any
+UTF lookup caching is private to the VM.
 
 ### Signals
 
@@ -324,7 +288,7 @@ Append one ASCII blank and then another register's string payload.
 ### Operands And Semantics
 
 The blank is inserted even if either string is empty. `rDst` is resized and its
-cursor resets to zero. `rSrc` is unchanged; self-append is supported.
+private lookup cache resets. `rSrc` is unchanged; self-append is supported.
 
 ### Signals
 
@@ -361,7 +325,7 @@ Concatenate two strings with exactly one ASCII blank between them.
 
 ### Operands And Semantics
 
-The destination is replaced and its cursor resets to zero. The intervening
+The destination is replaced and its private lookup cache resets. The intervening
 blank is unconditional. Register sources are unchanged and may alias `rDst`.
 
 ### Signals
@@ -398,7 +362,7 @@ Copy only a register's string payload.
 ### Operands And Semantics
 
 The destination receives the bytes, character count, and VM-private UTF
-validity state, but its cursor resets to zero. Integer, float, decimal, binary,
+validity state; its private lookup cache resets. Integer, float, decimal, binary,
 attributes, and public flags are not copied. The source is unchanged.
 
 ### Signals
@@ -436,7 +400,7 @@ Test two strings for exact equality.
 
 This is a length-aware byte comparison with no numeric coercion or
 trailing-blank padding. `rResult` receives integer `1` for equality or `0`
-otherwise. Sources and cursors are unchanged.
+otherwise. Sources are unchanged.
 
 ### Signals
 
@@ -459,43 +423,6 @@ main() .locals=3
 
 `sne`, `rseq`.
 
-## `setstrpos`
-
-Set a string register's character cursor.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x009a` | `setstrpos rString,rIndex` | Seek to zero-based character `rIndex`. |
-
-### Operands And Semantics
-
-`rIndex` is an integer register. UTF builds translate the character index to a
-byte position. Positions at or beyond the length clamp to the end; a negative
-integer converts to an unsigned position and also clamps to the end.
-
-### Signals
-
-Invalid UTF-8 raises `UNICODE_ERROR`. Out-of-range positions do not signal.
-
-### Example
-
-<!-- rxas-example name="string-setstrpos" test="run" -->
-```rxas
-.globals=0
-
-main() .locals=2
-    load r0,"abc"
-    load r1,1
-    setstrpos r0,r1
-    ret
-```
-
-### Related
-
-`getstrpos`, `substr`, `strchar`.
-
 ## `sgt`
 
 Test exact lexicographic greater-than ordering.
@@ -511,8 +438,7 @@ Test exact lexicographic greater-than ordering.
 ### Operands And Semantics
 
 Strings are compared as length-aware byte sequences with no numeric coercion
-or blank padding. `rResult` receives integer `1` or `0`; sources and cursors
-are unchanged.
+or blank padding. `rResult` receives integer `1` or `0`; sources are unchanged.
 
 ### Signals
 
@@ -550,8 +476,7 @@ Test exact lexicographic greater-than-or-equal ordering.
 ### Operands And Semantics
 
 Comparison is strict and byte-oriented, without numeric conversion or blank
-padding. `rResult` receives integer `1` or `0`. Sources and cursors are
-unchanged.
+padding. `rResult` receives integer `1` or `0`. Sources are unchanged.
 
 ### Signals
 
@@ -589,7 +514,7 @@ Test exact lexicographic less-than ordering.
 ### Operands And Semantics
 
 Comparison is a strict length-aware byte ordering. `rResult` receives integer
-`1` or `0`; sources and cursors remain unchanged.
+`1` or `0`; sources remain unchanged.
 
 ### Signals
 
@@ -627,7 +552,7 @@ Test exact lexicographic less-than-or-equal ordering.
 ### Operands And Semantics
 
 Comparison is strict and byte-oriented. `rResult` receives integer `1` or `0`;
-source strings and their cursors are unchanged.
+source strings are unchanged.
 
 ### Signals
 
@@ -664,8 +589,7 @@ Test two strings for exact inequality.
 ### Operands And Semantics
 
 This is the inverse of strict `seq`, including length. `rResult` receives
-integer `1` when the byte strings differ and `0` otherwise. Sources and cursors
-are unchanged.
+integer `1` when the byte strings differ and `0` otherwise. Sources are unchanged.
 
 ### Signals
 
@@ -701,8 +625,7 @@ Convert a string payload to the VM's narrow Boolean convention.
 ### Operands And Semantics
 
 The integer payload becomes `1` only when the string is exactly the single byte
-`1`; every other string becomes `0`. The string payload and cursor are
-unchanged.
+`1`; every other string becomes `0`. The string payload is unchanged.
 
 ### Signals
 
@@ -736,7 +659,7 @@ Parse a register's complete string payload as a binary64 value.
 
 ### Operands And Semantics
 
-The string payload and cursor remain unchanged. The whole logical string must
+The string payload remains unchanged. The whole logical string must
 match the VM numeric parser's float grammar.
 
 ### Signals
@@ -773,7 +696,7 @@ directly into a separate destination.
 
 ### Operands And Semantics
 
-The source string payload and cursor remain unchanged. In the two-register form
+The source string payload remains unchanged. In the two-register form
 the source register receives no integer side effect. The parser requires a
 complete valid integer representation within the VM integer range.
 
@@ -806,18 +729,16 @@ Read a Unicode code point from a string into an integer payload.
 | Opcode | Form | Effect |
 | --- | --- | --- |
 | `0x0096` | `strchar rCodepoint,rString,rIndex` | Read zero-based character `rIndex`. |
-| `0x0097` | `strchar rCodepoint,rString` | Read at `rString`'s current cursor. |
 
 ### Operands And Semantics
 
-The three-register form moves the source cursor to `rIndex`; the two-register
-form uses the existing cursor. UTF builds return the Unicode scalar value. The
-logical source string is unchanged.
+UTF builds return the Unicode scalar value at the explicit zero-based character
+index; non-UTF builds return the byte value. The source is unchanged.
 
 ### Signals
 
-Invalid UTF-8 raises `UNICODE_ERROR`. No explicit bounds signal is provided;
-the cursor or index must refer to an existing character.
+Invalid UTF-8 raises `UNICODE_ERROR`. An index outside the source raises
+`OUT_OF_RANGE`.
 
 ### Example
 
@@ -834,7 +755,7 @@ main() .locals=3
 
 ### Related
 
-`hexchar`, `concchar`, `setstrpos`.
+`hexchar`, `concchar`, `substring`.
 
 ## `strlen`
 
@@ -849,7 +770,7 @@ Return a string's logical character length.
 ### Operands And Semantics
 
 UTF builds count Unicode code points; non-UTF builds count bytes. The source
-string and cursor are unchanged. Only the destination integer payload is
+string is unchanged. Only the destination integer payload is
 written.
 
 ### Signals
@@ -870,7 +791,7 @@ main() .locals=2
 
 ### Related
 
-`getstrpos`, `trunc`.
+`substring`, `trunc`.
 
 ## `strlower`
 
@@ -884,7 +805,7 @@ Copy a string and convert it to lowercase.
 
 ### Operands And Semantics
 
-The destination is replaced and its cursor resets to zero. UTF builds use the
+The destination is replaced and its private lookup cache resets. UTF builds use the
 project Unicode case mapping. The source is unchanged; destination aliasing is
 supported.
 
@@ -924,8 +845,8 @@ Find a substring using one-based Rexx positions.
 
 On entry `rStartResult` contains the one-based start; on return it is overwritten
 with the one-based match position or `0`. UTF positions count code points. The
-haystack cursor is restored after the temporary seek. Both source buffers may
-be NUL-terminated internally without changing logical text.
+haystack value is unchanged. Both source buffers may be NUL-terminated
+internally without changing logical text.
 
 ### Signals
 
@@ -962,7 +883,7 @@ Copy a string and convert it to uppercase.
 
 ### Operands And Semantics
 
-The destination is replaced and its cursor resets to zero. UTF builds use the
+The destination is replaced and its private lookup cache resets. UTF builds use the
 project Unicode case mapping. The source remains unchanged and may alias the
 destination.
 
@@ -1000,7 +921,7 @@ Truncate a string in place to a number of leading Unicode characters.
 ### Operands And Semantics
 
 `rLength` is an integer register. Byte and character lengths are updated and
-the string cursor resets to zero. A length beyond the string leaves it
+the private lookup cache resets. A length beyond the string leaves it
 unchanged. A negative integer converts to a large unsigned size and therefore
 also leaves the string unchanged.
 
@@ -1023,63 +944,24 @@ main() .locals=2
 
 ### Related
 
-`trunc`, `substr`.
-
-## `substr`
-
-Copy characters from a source string's current cursor.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x009c` | `substr rDst,rSrc,rLength` | Copy up to `rLength` characters from the cursor. |
-
-### Operands And Semantics
-
-`rLength` is an integer register. Nonpositive lengths produce an empty
-destination; excessive lengths clip to the remaining characters. The
-destination cursor resets to zero, the source cursor is not advanced, and
-same-register slicing is supported.
-
-### Signals
-
-Invalid UTF-8 raises `UNICODE_ERROR`; clipping does not signal.
-
-### Example
-
-<!-- rxas-example name="string-substr" test="run" -->
-```rxas
-.globals=0
-
-main() .locals=4
-    load r1,"abcdef"
-    load r2,2
-    setstrpos r1,r2
-    load r3,3
-    substr r0,r1,r3
-    ret
-```
-
-### Related
-
-`substring`, `setstrpos`, `substcut`.
+`trunc`, `substring`.
 
 ## `substring`
 
-Provide the legacy opcode-equivalent spelling of `substr`.
+Copy a character range using an explicit zero-based start and length.
 
 ### Forms
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00a1` | `substring rDst,rSrc,rLength` | Copy from `rSrc`'s current cursor. |
+| `0x00a1` | `substring rDst,rSrc,rStart,rLength` | Copy characters `[rStart,rStart+rLength)`. |
 
 ### Operands And Semantics
 
-The runtime implementation is shared with `substr`: nonpositive length yields
-an empty destination, excessive length clips, the destination cursor resets,
-the source cursor is preserved, and destination/source aliasing is supported.
+`rStart` and `rLength` are integer registers. A negative start clamps to zero;
+a nonpositive length yields an empty destination; and a start or length beyond
+the source clips to its character count. The source is unchanged and
+destination/source aliasing is supported.
 
 ### Signals
 
@@ -1094,15 +976,14 @@ Invalid UTF-8 raises `UNICODE_ERROR`; clipping does not signal.
 main() .locals=4
     load r1,"abcdef"
     load r2,1
-    setstrpos r1,r2
     load r3,2
-    substring r0,r1,r3
+    substring r0,r1,r2,r3
     ret
 ```
 
 ### Related
 
-`substr`, `setstrpos`.
+`strchar`, `substcut`, `trunc`.
 
 ## `swap`
 
@@ -1118,8 +999,8 @@ its effect is persistent.
 ### Operands And Semantics
 
 The VM swaps the two pointers in the current frame's register table. All value
-payloads, attributes, reference/native payloads, status flags, and string and
-binary cursors therefore move together with their storage. This is not a
+payloads, attributes, reference/native payloads, and status flags therefore
+move together with their storage. This is not a
 payload copy and does not allocate. Subsequent uses of either register number
 see the other register's former complete value.
 
@@ -1166,7 +1047,8 @@ Translate one integer code point through two parallel character lists.
 
 `rCodepoint` supplies and receives an integer. The VM scans `rSearchList`; a
 match at character index `i` selects character `i` from `rReplacementList`. No
-match preserves the input. Both list cursors may move during scanning.
+match preserves the input. VM-private UTF lookup caches may change during
+scanning without becoming observable value state.
 
 ### Signals
 
@@ -1207,8 +1089,8 @@ Remove repeated leading bytes from a string.
 
 The two-register form removes leading ASCII spaces. The three-register form is
 byte-oriented and removes only repetitions of `rTrim`'s first byte; an empty
-trim string removes nothing. The result is NUL-terminated. Character-count and
-cursor metadata are not consistently recomputed by these legacy forms.
+trim string removes nothing. The result is NUL-terminated. Character-count
+metadata is not consistently recomputed by these legacy forms.
 
 ### Signals
 
@@ -1247,7 +1129,7 @@ Remove repeated trailing bytes from a string.
 The two-register form removes trailing ASCII spaces. The three-register form
 removes only repetitions of the first byte in `rTrim`; an empty trim string
 removes nothing. The source remains unchanged in the three-register form.
-Character-count and cursor metadata are not consistently refreshed.
+Character-count metadata is not consistently refreshed.
 
 ### Signals
 
@@ -1284,8 +1166,8 @@ Copy a string and cap its logical byte length.
 
 Despite the historical description saying characters, the implementation
 compares `rLength` with the byte length. Negative lengths become zero. It can
-therefore split a UTF-8 sequence and does not recompute character metadata or
-reset the cursor after shortening. Use `substcut` for character truncation.
+therefore split a UTF-8 sequence and does not recompute character metadata.
+Use `substcut` for character truncation.
 
 ### Signals
 
@@ -1306,4 +1188,4 @@ main() .locals=3
 
 ### Related
 
-`substcut`, `substr`.
+`substcut`, `substring`.

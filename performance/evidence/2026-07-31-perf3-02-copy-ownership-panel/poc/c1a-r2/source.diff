@@ -1,0 +1,43 @@
+diff --git a/compiler/rxcp_inline_bind.c b/compiler/rxcp_inline_bind.c
+index f73b4a07d..fb16cb7ac 100644
+--- a/compiler/rxcp_inline_bind.c
++++ b/compiler/rxcp_inline_bind.c
+@@ -1705,11 +1705,25 @@ static int inline_symbol_has_generated_storage_scope(Symbol *symbol) {
+  * one explicit return: its a1 mapping, or its already-proved inline alias, is
+  * the same receiver storage across arbitrary internal branches and calls, and
+  * the single-exit/fallthrough rewrite keeps receiver-owned link cleanup on one
+- * path.  Multiple explicit returns remain materialised because the current
+- * summary does not prove that every rewritten exit balances receiver-owned
+- * class-attribute links.  The established ordinary direct-object path does not
++ * path.  Multiple explicit returns remain materialised unless the method has
++ * no calls and does not read or write any receiver attribute.  That narrower
++ * case cannot create receiver-owned links, so there is no per-exit receiver
++ * cleanup to balance.  The established ordinary direct-object path does not
+  * need this nested-§this exit restriction.  Computed and class-attribute
+  * receivers still need their existing evaluate-once locator/copyback path. */
++static int inline_method_receiver_is_unused(ASTNode *proc_def,
++                                            const InlineCallableSummary *summary) {
++    ASTNode *instrs;
++
++    if (!proc_def || !summary || summary->calls != 0 ||
++        (summary->control_flags & RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE)) {
++        return 0;
++    }
++
++    instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
++    return instrs && !inline_subtree_reads_class_attribute(instrs);
++}
++
+ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
+                                                    ASTNode *receiver,
+                                                    Symbol **storage_out) {
+@@ -1740,7 +1754,8 @@ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
+         !summary || summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+         !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER) ||
+         (receiver_symbol->is_this &&
+-         (summary->result_flags & RXCP_INLINE_RESULT_MULTIPLE))) {
++         (summary->result_flags & RXCP_INLINE_RESULT_MULTIPLE) &&
++         !inline_method_receiver_is_unused(proc_def, summary))) {
+         return 0;
+     }
+

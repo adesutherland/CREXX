@@ -1,0 +1,14 @@
+PERF3-02 final guard cap pre-run record
+
+- After paired append 01 all four guard intervals still cross zero.
+- None approaches the +3% workload-regression guard; largest upper bound +0.934663%.
+- Richards has 34 valid pairs and will receive exactly two more.
+- Towers has 24 valid pairs and will receive exactly 12 more.
+- These two serial blocks reach, but do not exceed, 36 pairs per guard.
+- Exact binaries, workload images, work counts and host session are unchanged.
+- Pre-block reference UTC: 2026-07-31T16:16:18Z.
+- Load averages: 1.90 2.39 2.39.
+- AC Power; battery 80%; lowpowermode 0.
+- No thermal, performance or CPU-power warning was recorded.
+- Interactive sessions: adrian console only.
+- No overlapping build, test, compiler, assembler, linker or VM process found.

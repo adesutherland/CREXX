@@ -2,8 +2,8 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 384
-- Opcode/form rows: 591
+- Unique mnemonics: 379
+- Opcode/form rows: 585
 
 ## Section Counts
 
@@ -14,8 +14,8 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md) | 44 |
 | [Floating Point](instructions/04-floating-point.md) | 24 |
 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md) | 46 |
-| [Strings And Characters](instructions/06-strings-and-characters.md) | 34 |
-| [Binary Memory](instructions/07-binary-memory.md) | 43 |
+| [Strings And Characters](instructions/06-strings-and-characters.md) | 31 |
+| [Binary Memory](instructions/07-binary-memory.md) | 41 |
 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 41 |
 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 44 |
 | [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md) | 19 |
@@ -182,7 +182,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `getabufs` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#getabufs) |
 | `getandtp` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#getandtp) |
 | `getattrs` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#getattrs) |
-| `getbinpos` | 1 | [Binary Memory](instructions/07-binary-memory.md#getbinpos) |
 | `getbyte` | 1 | [Binary Memory](instructions/07-binary-memory.md#getbyte) |
 | `getenv` | 2 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#getenv) |
 | `getnumcas` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#getnumcas) |
@@ -190,7 +189,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `getnumfrm` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#getnumfrm) |
 | `getnumfuz` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#getnumfuz) |
 | `getnumstd` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#getnumstd) |
-| `getstrpos` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#getstrpos) |
 | `gettp` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#gettp) |
 | `hexchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#hexchar) |
 | `iadd` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#iadd) |
@@ -305,7 +303,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `scopy` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#scopy) |
 | `seq` | 2 | [Strings And Characters](instructions/06-strings-and-characters.md#seq) |
 | `setattrs` | 4 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#setattrs) |
-| `setbinpos` | 1 | [Binary Memory](instructions/07-binary-memory.md#setbinpos) |
 | `setbyte` | 1 | [Binary Memory](instructions/07-binary-memory.md#setbyte) |
 | `setlinkattr1` | 2 | [Large And Fused Instructions](instructions/12-large-instructions.md#setlinkattr1) |
 | `setlinkiload` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#setlinkiload) |
@@ -318,7 +315,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `setobjuninit` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#setobjuninit) |
 | `setortp` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#setortp) |
 | `setref` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#setref) |
-| `setstrpos` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#setstrpos) |
 | `settp` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#settp) |
 | `settpcall` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#settpcall) |
 | `settpmask` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#settpmask) |
@@ -385,13 +381,12 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `stemsize` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemsize) |
 | `stemvalueat` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemvalueat) |
 | `str2redir` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#str2redir) |
-| `strchar` | 2 | [Strings And Characters](instructions/06-strings-and-characters.md#strchar) |
+| `strchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strchar) |
 | `strlen` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strlen) |
 | `strlower` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strlower) |
 | `strpos` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strpos) |
 | `strupper` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strupper) |
 | `substcut` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#substcut) |
-| `substr` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#substr) |
 | `substring` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#substring) |
 | `swap` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#swap) |
 | `swapcall` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#swapcall) |

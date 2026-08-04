@@ -1,0 +1,51 @@
+* PERF3-11 M04 exact physical-storage self-copy proofs.
+
+raw_copy_family() .locals=7
+    copy r0,r0
+    icopy r1,r1
+    fcopy r2,r2
+    scopy r3,r3
+    dcopy r4,r4
+    acopy r5,r5
+    bcopy r6,r6
+    ret
+
+linked_copy_family() .locals=9
+    link r8,r7
+    copy r8,r7
+    bcopy r8,r7
+    unlink r8
+    ret
+
+trace_anchor() .locals=15
+    copy r14,r14
+trace_anchor_label:
+    .traceevent "V" 4 "R" "I" "r" 14 0 0 0 "self-copy-trace-anchor" ""
+    ret
+
+agreeing_storage_phi() .locals=17
+    brt agreeing_storage_phi_left,a0
+    link r16,r15
+    br agreeing_storage_phi_join
+agreeing_storage_phi_left:
+    link r16,r15
+agreeing_storage_phi_join:
+    dcopy r16,r15
+    unlink r16
+    ret
+
+divergent_storage_phi() .locals=20
+    brt divergent_storage_phi_left,a0
+    link r18,r17
+    br divergent_storage_phi_join
+divergent_storage_phi_left:
+    link r18,r19
+divergent_storage_phi_join:
+    dcopy r18,r17
+    .traceevent "V" 4 "R" "D" "r" 18 0 0 0 "divergent-copy-retained" ""
+    unlink r18
+    ret
+
+different_storage() .locals=22
+    copy r20,r21
+    ret

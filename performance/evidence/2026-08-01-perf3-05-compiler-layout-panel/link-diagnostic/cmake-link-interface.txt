@@ -1,0 +1,84 @@
+   312	add_library(rxvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxvm_core_objects>)
+   313	# set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+   314	# set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
+   315	# set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
+   316	target_link_libraries(rxvml rxvmplugin mc_decimal_manual avl_tree rxpa)
+   317	target_include_directories(rxvml PRIVATE . ./rxvmplugin
+   318			../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+   319	
+   320	# Bytecode Version
+   321	add_library(rxbvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxbvm_core_objects>)
+   322	target_link_libraries(rxbvml rxvmplugin mc_decimal_manual avl_tree rxpa)
+   323	target_include_directories(rxbvml PRIVATE . ./rxvmplugin
+   324			../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+   325	target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
+   326	
+   327	function(crexx_enable_vm_platform target_name)
+   328	    target_sources(${target_name} PRIVATE $<TARGET_OBJECTS:rxvm_platform_objects>)
+   329	    if(CREXX_SOCKET_TARGET_LIBS)
+   330	        target_link_libraries(${target_name} ${CREXX_SOCKET_TARGET_LIBS})
+   331	    endif()
+   332	endfunction()
+   333	
+   334	foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
+   335	    target_link_libraries(${_rxvm_core_target} rxvmref rxbin)
+   336	    crexx_enable_vm_platform(${_rxvm_core_target})
+   337	    if(CREXX_VM_PROFILING)
+   338	        target_compile_definitions(${_rxvm_core_target} PRIVATE CREXX_VM_PROFILING=1)
+   339	    endif()
+   340	endforeach()
+   341	if(BUILD_TESTING)
+   342	    add_executable(test_rxcrexxcmd_flush tests/test_rxcrexxcmd_flush.c)
+   343	    target_include_directories(test_rxcrexxcmd_flush PRIVATE
+   344	            . ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+   345	            ../platform ../avl_tree ../utf8 ../inc)
+   346	    target_link_libraries(test_rxcrexxcmd_flush PRIVATE rxvml)
+   347	    add_test(NAME crexx_address_unredirected_flush COMMAND test_rxcrexxcmd_flush)
+   348	    set_tests_properties(crexx_address_unredirected_flush PROPERTIES
+   349	            LABELS "interpreter;address;runtime")
+   350	endif()
+   351	if(BUILD_TESTING)
+   352	    foreach(_rxvm_instrumented_target rxvm_instrumented rxbvm_instrumented)
+   353	        target_link_libraries(${_rxvm_instrumented_target} rxvmref rxbin)
+   354	        crexx_enable_vm_platform(${_rxvm_instrumented_target})
+   355	    endforeach()
+   356	endif()
+   357	
+   358	# libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
+   359	# archive pulled into it must be compiled as PIC.
+   360	foreach(_crexxsaa_static_dep rxvml rxvmref rxvmplugin mc_decimal_manual avl_tree rxpa rxbin platform decnumber)
+   361	    if(TARGET ${_crexxsaa_static_dep})
+   362	        set_target_properties(${_crexxsaa_static_dep} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+   363	    endif()
+   364	endforeach()
+   365	
+   366	add_library(crexxsaa SHARED crexxsaa.c crexxsaa.h)
+   367	target_link_libraries(crexxsaa PUBLIC rxvml rxvmplugin mc_decimal_manual avl_tree rxpa)
+   368	target_include_directories(crexxsaa PUBLIC
+   369	        .
+   370	        ./rxvmplugin
+   371	        ../assembler
+   372	        ../binutils/include
+   373	        ${CMAKE_SOURCE_DIR}/rxpa
+   374	        ../platform
+   375	        ../avl_tree
+   376	        ../utf8
+   377	        ../inc)
+   378	set_target_properties(crexxsaa PROPERTIES
+   379	        OUTPUT_NAME crexxsaa
+   380	        POSITION_INDEPENDENT_CODE ON)
+   381	install(TARGETS crexxsaa
+   382	        RUNTIME DESTINATION bin
+   383	        LIBRARY DESTINATION bin
+   384	        ARCHIVE DESTINATION lib)
+   385	install(FILES crexxsaa.h DESTINATION include)
+   386	
+   387	add_executable(crexxsaa_tool crexxsaa_tool.c)
+   388	target_link_libraries(crexxsaa_tool PRIVATE crexxsaa)
+   389	target_include_directories(crexxsaa_tool PRIVATE .)
+   390	set_target_properties(crexxsaa_tool PROPERTIES
+
+Exact baseline link commands:
+: && /usr/bin/cc -O3 -DNDEBUG -arch arm64 -dynamiclib -Wl,-headerpad_max_install_names -o bin/libcrexxsaa.dylib -install_name @rpath/libcrexxsaa.dylib interpreter/CMakeFiles/crexxsaa.dir/crexxsaa.c.o  bin/librxvml.a  bin/librxvmplugin.a  bin/rxvm_mc_decimal_manual.a  bin/libavl_tree.a  bin/librxpa.a  bin/libplatform.a  bin/libdecnumber.a  -lm  bin/librxvmref.a  bin/librxbin.a  -framework Network  -framework Security  -framework CoreFoundation && :
+: && /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names interpreter/CMakeFiles/crexxsaa_tool.dir/crexxsaa_tool.c.o -o bin/crexxsaa  -Wl,-rpath,/tmp/crexx-perf3-05.9DY131/build-baseline/bin  bin/libcrexxsaa.dylib  bin/librxvml.a  bin/librxbin.a  -framework Network  -framework Security  -framework CoreFoundation  bin/librxvmplugin.a  bin/librxvmref.a  bin/rxvm_mc_decimal_manual.a  bin/libplatform.a  bin/libdecnumber.a  -lm  bin/libavl_tree.a  bin/librxpa.a && :
+: && /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names interpreter/CMakeFiles/test_rxcrexxcmd_flush.dir/tests/test_rxcrexxcmd_flush.c.o -o bin/test_rxcrexxcmd_flush  bin/librxvml.a  bin/librxvmplugin.a  bin/rxvm_mc_decimal_manual.a  bin/libplatform.a  bin/libdecnumber.a  -lm  bin/libavl_tree.a  bin/librxpa.a  bin/librxvmref.a  bin/librxbin.a  -framework Network  -framework Security  -framework CoreFoundation && :

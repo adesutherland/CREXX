@@ -123,15 +123,17 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
 In normal UTF builds, `.string` register data is stored as UTF-8 bytes while
 the VM exposes character operations as codepoint operations. A VM `value`
 tracks `string_length` as the byte length and, in UTF builds, also tracks
-`string_chars` plus a byte/codepoint cursor pair (`string_pos` and
-`string_char_pos`). Instructions such as `strlen`, `strchar`,
-`setstrpos`/`getstrpos`, `substr`, `strpos`, `appendchar`, `fndblnk`, and
-`fndnblnk` operate in codepoint space and use helpers such as
-`string_set_byte_pos()`, `string_slice_from_cursor()`, and
-`string_concat_char()` to walk or synthesize the underlying UTF-8 bytes. Some
-scan paths have ASCII fast paths when byte length and codepoint count match.
-These string instructions assume valid UTF-8 in the register payload. NUTF8
-builds collapse this model back to byte positions and byte lengths.
+`string_chars`. The UTF VM may privately cache one byte/codepoint lookup pair
+(`string_cache_byte_pos` and `string_cache_char_pos`), but that cache is not
+RXAS-visible value state and is never copied, traced, or modelled by flow
+analysis. Instructions such as `strlen`, indexed `strchar`, explicit
+`substring destination,source,start,length`, `strpos`, `appendchar`,
+`fndblnk`, and `fndnblnk` operate in codepoint space and use helpers such as
+`string_cache_seek_char()`, `string_slice_at()`, and `string_concat_char()` to
+walk or synthesize the underlying UTF-8 bytes. Some scan paths have ASCII fast
+paths when byte length and codepoint count match. These string instructions
+assume valid UTF-8 in the register payload. NUTF8 builds collapse this model
+back to byte positions and byte lengths without private UTF cache fields.
 
 Numeric-to-string promotion opcodes such as `itos`, `btos`, `ftos`, and `dtos`
 may mutate the target VM value to materialize its string representation. That is
@@ -167,14 +169,15 @@ invalid constant binary-to-string casts are rejected as `CANNOT_CAST_BINARY` and
 invalid runtime binary values raise `UNICODE_ERROR` through `bintos`.
 
 `.binary` is present in the Level B surface and compiler metadata as
-`TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and
-`binary_pos`, and `binary_buffer_length` slot. Copies and moves preserve that
-slot, socket and file byte operations use it (`socksendb`, `sockrecvb`,
+`TP_BINARY`. The VM `value` has separate `binary_value`, `binary_length`, and
+`binary_buffer_length` slots. Socket and file byte operations use them
+(`socksendb`, `sockrecvb`,
 `freadb`, `fwriteb`), and native payloads reuse it with
 `rxvm_native_payload_ops`. The VM has shared binary buffer helpers for
 reserve/set/append/concat/slice operations. `GETBYTE` reads a zero-based byte
 index and returns `-1` when the requested byte is outside the current binary
-length. `FREADB` and socket binary receive reuse the binary buffer growth
+length. `BSLICE destination,source,start,length` uses an explicit zero-based
+byte start and does not mutate its source. `FREADB` and socket binary receive reuse the binary buffer growth
 machinery instead of reallocating to exact byte counts.
 
 At the Level B source surface, `||` is byte concatenation when either operand is
@@ -196,8 +199,8 @@ operands are constant-pool binary records. `load rN,0x...` lowers to
 string slot. Binary literals are byte-paired hex (`0x00ff` is two bytes);
 `0x`/`0X` is the empty binary literal, and disassembly canonicalizes as
 lowercase `0x...`. RXAS also exposes byte-buffer instructions for length,
-single-byte update, concat, append, byte-cursor get/set, cursor-based slice,
-fixed-size overlay update, `stobin` string-byte conversion, and `bintos`
+single-byte update, concat, append, explicit-offset slice, fixed-size overlay
+update, `stobin` string-byte conversion, and `bintos`
 binary-to-string conversion. Binary-buffer instructions never validate UTF-8 and
 clear VM-private UTF cache flags on the destination. `bintos` is the exception:
 it validates the source bytes and raises `UNICODE_ERROR` in UTF builds when they
@@ -320,7 +323,7 @@ The completed UTF baseline is:
 3. The register status word is partitioned in `rxflags.h`; VM-private UTF cache
    bits are preserved from external writes.
 4. `.binary` has growable buffer helpers plus RXAS/VM literal load, length,
-   byte get/set, append, concat, cursor, slice, and overlay instructions.
+   byte get/set, append, concat, explicit-offset slice, and overlay instructions.
 5. Explicit `.string`/`.binary` coexistence is first class in Level B:
    `as .binary` stores exact UTF-8 bytes through `stobin`, `as .string`
    validates bytes through `bintos`, and valid constant casts fold in both

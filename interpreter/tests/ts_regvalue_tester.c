@@ -2,23 +2,37 @@
 // Created by Adrian Sutherland on 28/06/2025.
 //
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "platform.h"
 #include "rxbin.h"
 #include "rxvalue.h"
+
+static size_t test_value_alloc_fail_after = SIZE_MAX;
+static void *test_value_malloc(size_t length);
+#define RXVM_VALUE_MALLOC test_value_malloc
 #include "rxvmvars.h" // Value functions to be tested
+#undef RXVM_VALUE_MALLOC
 #include "rxvmref.h"
 #include "utf.h"      // Your utf8 helper header
 
+static void *test_value_malloc(size_t length) {
+    if (test_value_alloc_fail_after == 0) return 0;
+    if (test_value_alloc_fail_after != SIZE_MAX) test_value_alloc_fail_after--;
+    return malloc(length);
+}
+
 /*
  * Verifies the internal consistency of a value's string members.
- * This version allows string_char_pos to be equal to string_chars.
+ * The private UTF lookup cache may point immediately after the final
+ * character, but it must always describe a valid byte/character pair.
  */
 void check_value_state(value* v, const char* file, int line) {
     // 1. Check if char_pos is valid. It can be from 0 to string_chars.
-    if (v->string_char_pos > v->string_chars) {
-        fprintf(stderr, "VERIFY FAIL (%s:%d): v->string_char_pos (%zu) is out of bounds for v->string_chars (%zu)\n",
-                file, line, v->string_char_pos, v->string_chars);
+    if (v->string_cache_char_pos > v->string_chars) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): v->string_cache_char_pos (%zu) is out of bounds for v->string_chars (%zu)\n",
+                file, line, v->string_cache_char_pos, v->string_chars);
         exit(1);
     }
 
@@ -30,19 +44,20 @@ void check_value_state(value* v, const char* file, int line) {
         exit(1);
     }
 
-    // 3. Verify that string_pos correctly corresponds to string_char_pos
+    // 3. Verify that the private byte position matches its character position.
     //    (Only if the char_pos is within the string itself, not at the very end)
-    if (v->string_char_pos <= v->string_chars) {
+    if (v->string_cache_char_pos <= v->string_chars) {
         size_t calculated_pos = 0;
         size_t i = 0;
-        for (i = 0; i < v->string_char_pos; ++i) {
+        for (i = 0; i < v->string_cache_char_pos; ++i) {
             // Protect against reading past the end if state is already corrupt
             if (calculated_pos >= v->string_length) break;
             calculated_pos += utf8codepointcalcsize(v->string_value + calculated_pos);
         }
-        if (v->string_pos != calculated_pos) {
-            fprintf(stderr, "VERIFY FAIL (%s:%d): v->string_pos (%zu) does not match v->string_char_pos (%zu). Expected pos: %zu\n",
-                    file, line, v->string_pos, v->string_char_pos, calculated_pos);
+        if (v->string_cache_byte_pos != calculated_pos) {
+            fprintf(stderr, "VERIFY FAIL (%s:%d): v->string_cache_byte_pos (%zu) does not match v->string_cache_char_pos (%zu). Expected pos: %zu\n",
+                    file, line, v->string_cache_byte_pos,
+                    v->string_cache_char_pos, calculated_pos);
             exit(1);
         }
     }
@@ -127,7 +142,7 @@ void check_binary_bytes(value* v, const unsigned char* expected, size_t length, 
 
 #define CHECK_BINARY(v, expected, length) check_binary_bytes(v, expected, length, __FILE__, __LINE__)
 
-void test_string_positioning() {
+void test_string_cache() {
     value v;
     value_init(&v);
 
@@ -141,23 +156,23 @@ void test_string_positioning() {
 
     printf("Testing forward iteration...\n");
     for (size_t i = 0; i < v.string_chars; ++i) {
-        string_set_byte_pos(&v, i);
+        string_cache_seek_char(&v, i);
         CHECK_STATE(&v);
     }
 
     printf("Testing backward iteration...\n");
     for (size_t i = v.string_chars - 1; ; --i) {
-        string_set_byte_pos(&v, i);
+        string_cache_seek_char(&v, i);
         CHECK_STATE(&v);
         if (i == 0) break;
     }
 
     printf("Testing random jumps...\n");
-    string_set_byte_pos(&v, 5);  CHECK_STATE(&v);
-    string_set_byte_pos(&v, 15); CHECK_STATE(&v);
-    string_set_byte_pos(&v, 2);  CHECK_STATE(&v);
-    string_set_byte_pos(&v, v.string_chars - 1); CHECK_STATE(&v);
-    string_set_byte_pos(&v, 0);  CHECK_STATE(&v);
+    string_cache_seek_char(&v, 5);  CHECK_STATE(&v);
+    string_cache_seek_char(&v, 15); CHECK_STATE(&v);
+    string_cache_seek_char(&v, 2);  CHECK_STATE(&v);
+    string_cache_seek_char(&v, v.string_chars - 1); CHECK_STATE(&v);
+    string_cache_seek_char(&v, 0);  CHECK_STATE(&v);
 
     printf("Testing string modifications...\n");
     value v2;
@@ -166,9 +181,9 @@ void test_string_positioning() {
     string_append(&v, &v2);
     CHECK_STATE(&v); // CRITICAL: Check state after modification
 
-    // Re-run position tests on the modified string
+    // Re-run cache-seek tests on the modified string
     for (size_t i = 0; i < v.string_chars; ++i) {
-        string_set_byte_pos(&v, i);
+        string_cache_seek_char(&v, i);
         CHECK_STATE(&v);
     }
 
@@ -196,16 +211,18 @@ void test_boundary_conditions() {
     // Test 1: Seek to the position right after the last character (char_pos == string_chars).
     // This should be a valid operation.
     printf("  Testing seek to end position (pos %zu)...\n", v.string_chars);
-    string_set_byte_pos(&v, v.string_chars);
+    string_cache_seek_char(&v, v.string_chars);
     CHECK_STATE(&v);
-    CHECK_SIZE_EQUAL(v.string_pos, v.string_length, "string_pos at end position");
+    CHECK_SIZE_EQUAL(v.string_cache_byte_pos, v.string_length,
+                     "private byte cache at end position");
 
     // Test 2: Seek ONE position beyond the end.
     // THIS IS THE KEY TEST. The original code will read past the buffer, corrupting its
-    // internal state (e.g., setting v.string_char_pos to 5). The subsequent CHECK_STATE will fail.
+    // internal state. The subsequent CHECK_STATE catches that regression.
     printf("  Testing seek one-past-end (pos %zu)...\n", v.string_chars + 1);
-    string_set_byte_pos(&v, v.string_chars + 1);
-    printf("  State after one-past-end seek: string_pos=%zu, string_char_pos=%zu\n", v.string_pos, v.string_char_pos);
+    string_cache_seek_char(&v, v.string_chars + 1);
+    printf("  Cache after one-past-end seek: byte=%zu, char=%zu\n",
+           v.string_cache_byte_pos, v.string_cache_char_pos);
     CHECK_STATE(&v); // <-- EXPECTED TO FAIL ON ORIGINAL CODE
 
     // Reset for the next test
@@ -214,8 +231,9 @@ void test_boundary_conditions() {
 
     // Test 3: Seek MANY positions beyond the end.
     printf("  Testing seek many-past-end (pos %zu)...\n", v.string_chars + 5);
-    string_set_byte_pos(&v, v.string_chars + 5);
-    printf("  State after many-past-end seek: string_pos=%zu, string_char_pos=%zu\n", v.string_pos, v.string_char_pos);
+    string_cache_seek_char(&v, v.string_chars + 5);
+    printf("  Cache after many-past-end seek: byte=%zu, char=%zu\n",
+           v.string_cache_byte_pos, v.string_cache_char_pos);
     CHECK_STATE(&v); // <-- EXPECTED TO FAIL ON ORIGINAL CODE
 
     clear_value(&v);
@@ -237,20 +255,18 @@ void test_flawed_optimization_trigger() {
     printf("Testing with string of length %zu\n", v.string_chars);
     CHECK_STATE(&v);
 
-    // Position the cursor near the end of the string.
+    // Position the private cache near the end of the string.
     size_t near_end_pos = v.string_chars - 3;
-    string_set_byte_pos(&v, near_end_pos);
+    string_cache_seek_char(&v, near_end_pos);
     printf("  Positioned at char %zu. Seeking to invalid pos %zu...\n", near_end_pos, v.string_chars + 1);
     CHECK_STATE(&v);
 
     // Now, from this high position, jump to an invalid position.
-    // `diff` will be small and positive.
-    // The buggy check `v->string_chars - 1 - new_string_char_pos < diff` will
-    // underflow and likely evaluate to `false`, causing the code to seek forward
-    // from the current position and run off the end of the buffer.
-    string_set_byte_pos(&v, v.string_chars + 1);
+    // A historical unsigned-underflow check here could seek past the buffer.
+    string_cache_seek_char(&v, v.string_chars + 1);
 
-    printf("  State after flawed seek: string_pos=%zu, string_char_pos=%zu\n", v.string_pos, v.string_char_pos);
+    printf("  Cache after high-to-invalid seek: byte=%zu, char=%zu\n",
+           v.string_cache_byte_pos, v.string_cache_char_pos);
     CHECK_STATE(&v); // <-- EXPECTED TO FAIL ON ORIGINAL CODE
 
     clear_value(&v);
@@ -323,6 +339,11 @@ void test_binary_buffers() {
     unsigned char prefix_appended[] = { 0xaa, 0x10, 0x20, 0x30, 0x40, 0x50 };
     unsigned char combined[] = { 0xaa, 0x10, 0x20, 0x30, 0x40, 0x50, 0x10, 0x20, 0x30, 0x40, 0x50 };
     unsigned char sliced[] = { 0x10, 0x20, 0x30 };
+    unsigned char large_binary[40];
+    unsigned char retained_binary[] = { 0xde, 0xad };
+    const char *large_string = "0123456789012345678901234567890123456789";
+    value large_source;
+    value retained_dest;
     size_t capacity;
     size_t grown_capacity;
 
@@ -333,16 +354,17 @@ void test_binary_buffers() {
     value_init(&other);
     value_init(&concat);
     value_init(&slice);
+    value_init(&large_source);
+    value_init(&retained_dest);
+
+    memset(large_binary, 0x5a, sizeof(large_binary));
 
     CHECK_RC_ZERO(set_binary(&v, initial, sizeof(initial)));
     CHECK_BINARY(&v, initial, sizeof(initial));
-    CHECK_SIZE_EQUAL(v.binary_pos, 0, "binary_pos after binary write");
     capacity = v.binary_buffer_length;
 
-    v.binary_pos = 2;
     CHECK_RC_ZERO(set_binary(&v, smaller, sizeof(smaller)));
     CHECK_BINARY(&v, smaller, sizeof(smaller));
-    CHECK_SIZE_EQUAL(v.binary_pos, 0, "binary_pos after replacing binary");
     CHECK_SIZE_EQUAL(v.binary_buffer_length, capacity, "binary_buffer_length after smaller binary write");
 
     CHECK_RC_ZERO(prep_binary_buffer(&v, capacity - 1));
@@ -354,57 +376,66 @@ void test_binary_buffers() {
     CHECK_SIZE_EQUAL(v.binary_buffer_length, grown_capacity, "binary_buffer_length after logical resize beyond capacity");
     CHECK_RC_ZERO(set_binary(&v, smaller, sizeof(smaller)));
 
-    v.binary_pos = 1;
     CHECK_RC_ZERO(append_binary(&v, extra, sizeof(extra)));
     CHECK_BINARY(&v, appended, sizeof(appended));
-    CHECK_SIZE_EQUAL(v.binary_pos, 1, "binary_pos after binary append");
 
     copy_value(&copy, &v);
     CHECK_BINARY(&copy, appended, sizeof(appended));
-    CHECK_SIZE_EQUAL(copy.binary_pos, 1, "binary_pos after binary copy");
 
     copy.status.all_type_flags = 0x00010000;
     v.status.all_type_flags = 0x00020000;
-    v.binary_pos = 2;
     copy_binary_value(&copy, &v);
     CHECK_BINARY(&copy, appended, sizeof(appended));
-    CHECK_SIZE_EQUAL(copy.binary_pos, 2, "binary_pos after binary-only copy");
     CHECK_STATUS(&copy, 0x00ff0000, 0x00010000);
 
-    v.binary_pos = 1;
     CHECK_RC_ZERO(append_binary_value(&v, &v));
     CHECK_BINARY(&v, doubled, sizeof(doubled));
-    CHECK_SIZE_EQUAL(v.binary_pos, 1, "binary_pos after self append");
 
     CHECK_RC_ZERO(set_binary(&other, prefix, sizeof(prefix)));
     CHECK_RC_ZERO(concat_binary(&concat, &other, &v));
     CHECK_BINARY(&concat, combined, sizeof(combined));
-    CHECK_SIZE_EQUAL(concat.binary_pos, 0, "binary_pos after binary concat");
 
-    other.binary_pos = 1;
     CHECK_RC_ZERO(concat_binary(&other, &other, &copy));
     CHECK_BINARY(&other, prefix_appended, sizeof(prefix_appended));
-    CHECK_SIZE_EQUAL(other.binary_pos, 0, "binary_pos after in-place binary concat");
 
     CHECK_RC_ZERO(slice_binary(&slice, &concat, 1, 3));
     CHECK_BINARY(&slice, sliced, sizeof(sliced));
-    CHECK_SIZE_EQUAL(slice.binary_pos, 0, "binary_pos after binary slice");
 
-    concat.binary_pos = 4;
     CHECK_RC_ZERO(slice_binary(&concat, &concat, 50, 8));
     CHECK_SIZE_EQUAL(concat.binary_length, 0, "binary_length after out-of-range slice");
-    CHECK_SIZE_EQUAL(concat.binary_pos, 0, "binary_pos after out-of-range slice");
+
+    CHECK_RC_ZERO(set_binary(&large_source, large_binary, sizeof(large_binary)));
+    CHECK_RC_ZERO(set_binary(&retained_dest, retained_binary, sizeof(retained_binary)));
+    test_value_alloc_fail_after = 0;
+    CHECK_INT_EQUAL(slice_binary(&retained_dest, &large_source, 0,
+                                 sizeof(large_binary)), -1,
+                    "binary slice allocation failure result");
+    test_value_alloc_fail_after = SIZE_MAX;
+    CHECK_BINARY(&retained_dest, retained_binary, sizeof(retained_binary));
+
+    set_null_string(&large_source, large_string);
+    set_null_string(&retained_dest, "keep");
+    test_value_alloc_fail_after = 0;
+    CHECK_INT_EQUAL(string_slice_at(&retained_dest, &large_source, 0,
+                                    strlen(large_string)), -1,
+                    "string slice allocation failure result");
+    test_value_alloc_fail_after = SIZE_MAX;
+    CHECK_SIZE_EQUAL(retained_dest.string_length, 4,
+                     "string slice destination length after allocation failure");
+    CHECK_INT_EQUAL(memcmp(retained_dest.string_value, "keep", 4), 0,
+                    "string slice destination bytes after allocation failure");
 
     CHECK_RC_ZERO(set_binary(&other, 0, 0));
     CHECK_RC_ZERO(concat_binary(&other, &other, &other));
     CHECK_SIZE_EQUAL(other.binary_length, 0, "binary_length after empty self concat");
-    CHECK_SIZE_EQUAL(other.binary_pos, 0, "binary_pos after empty self concat");
 
     clear_value(&v);
     clear_value(&copy);
     clear_value(&other);
     clear_value(&concat);
     clear_value(&slice);
+    clear_value(&large_source);
+    clear_value(&retained_dest);
 
     printf("--- Binary Buffer Tests Finished ---\n");
 }
@@ -811,7 +842,7 @@ void test_reference_lifetime_release_helper() {
 }
 
 int main() {
-    test_string_positioning();
+    test_string_cache();
     test_boundary_conditions();
     test_flawed_optimization_trigger();
     test_utf_status_flags();

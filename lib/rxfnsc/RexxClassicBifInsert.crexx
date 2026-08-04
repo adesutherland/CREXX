@@ -129,8 +129,7 @@ rexxclassicbif_insert: procedure = .RexxValue
       end
     end
     else do
-      assembler setstrpos target,cursor
-      assembler substring result,target,before
+      assembler substring result,target,cursor,before
     end
   end
 
@@ -145,16 +144,14 @@ rexxclassicbif_insert: procedure = .RexxValue
       end
     end
     else do
-      assembler setstrpos new_string,cursor
-      assembler substring segment,new_string,insert_length
+      assembler substring segment,new_string,cursor,insert_length
       assembler append result,segment
     end
   end
 
   if before < target_length then do
     tail_length = target_length - before
-    assembler setstrpos target,before
-    assembler substring segment,target,tail_length
+    assembler substring segment,target,before,tail_length
     assembler append result,segment
   end
   return .RexxValue(result)

@@ -120,20 +120,15 @@ own range checks.
 
 These instructions operate on raw bytes and do not validate UTF-8.
 
-## `setbinpos`, `getbinpos`, and `bslice`
+## `bslice`
 
-These legacy cursor instructions remain available for cursor-style byte
-processing. New Release 1 source lowering should prefer target-sized `bcopy`
-for binary field extraction.
+`bslice rDst,rSrc,rOffset,rLen` copies up to `rLen` bytes from `rSrc`, starting
+at the explicit zero-based byte offset `rOffset`, into `rDst`. A negative offset
+is clamped to zero, a slice extending beyond the source is truncated, and a
+negative length raises `OUT_OF_RANGE`.
 
-`setbinpos rBin,rOffset` sets the binary cursor after clamping the offset to
-`0..blen(rBin)`.
-
-`getbinpos rOut,rBin` reads the current binary cursor.
-
-`bslice rDst,rSrc,rLen` copies up to `rLen` bytes from `rSrc` starting at its
-cursor into `rDst`. It truncates at end of buffer; generated strict reads should
-use `bcheckrange` or target-sized `bcopy` instead.
+Binary values have no logical cursor. Generated strict reads should use
+`bcheckrange` or target-sized `bcopy` when truncation is not acceptable.
 
 ## `stobin` and `bintos`
 

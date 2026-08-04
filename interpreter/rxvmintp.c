@@ -63,6 +63,7 @@
 #include "rxsignature.h"
 #include <ctype.h>
 #include <limits.h>
+#include <locale.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
@@ -158,6 +159,12 @@ typedef char rxvm_execution_slot_must_hold_pointer[
 #endif
 
 #define RXVM_LABEL_OWNER RXVM_LABEL_OWNER_NOINLINE RXVM_LABEL_OWNER_NOCLONE
+
+#if defined(_MSC_VER)
+#  define RXVM_HELPER_NOINLINE __declspec(noinline)
+#else
+#  define RXVM_HELPER_NOINLINE RXVM_LABEL_OWNER_NOINLINE
+#endif
 
 int rxvm_link(rxvm_context *ctx);
 
@@ -270,11 +277,39 @@ static int rxvm_trimmed_space_equal(const char *left, size_t left_len, const cha
     return left_len == right_len && memcmp(left, right, left_len) == 0;
 }
 
+/*
+ * Reject only a leading byte that cannot begin a strtod subject in the active
+ * locale. Numeric and uncertain spans retain the exact current converter.
+ * Keep this helper out of line so the loose comparator remains inlineable.
+ */
+static RXVM_HELPER_NOINLINE int rxvm_loose_string2float(
+        double *out, const char *text, size_t length) {
+    unsigned char first;
+    struct lconv *numeric_locale;
+
+    if (length == 0) return 1;
+    first = (unsigned char) text[0];
+    if (first >= 0x80 || isspace(first) ||
+        (first >= '0' && first <= '9') || first == '+' || first == '-' ||
+        first == '.' || first == ',' || first == 'i' || first == 'I' ||
+        first == 'n' || first == 'N') {
+        return string2float(out, (char *) text, length);
+    }
+
+    numeric_locale = localeconv();
+    if (numeric_locale && numeric_locale->decimal_point &&
+        numeric_locale->decimal_point[0] != '\0' &&
+        first == (unsigned char) numeric_locale->decimal_point[0]) {
+        return string2float(out, (char *) text, length);
+    }
+    return 1;
+}
+
 static int rxvm_loose_compare_text(const char *left, size_t left_len, const char *right, size_t right_len) {
     double left_number;
     double right_number;
-    int left_numeric = string2float(&left_number, (char *) left, left_len) == 0;
-    int right_numeric = string2float(&right_number, (char *) right, right_len) == 0;
+    int left_numeric = rxvm_loose_string2float(&left_number, left, left_len) == 0;
+    int right_numeric = rxvm_loose_string2float(&right_number, right, right_len) == 0;
 
     if (left_numeric && right_numeric) {
         if (left_number > right_number) return 1;
@@ -3979,8 +4014,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
 typedef enum rxsignal_handler_action {
     RXSIGNAL_HANDLER_ACTION_NONE = 0,
     RXSIGNAL_HANDLER_ACTION_SKIP,
-    RXSIGNAL_HANDLER_ACTION_FAIL,
-    RXSIGNAL_HANDLER_ACTION_RETRY
+    RXSIGNAL_HANDLER_ACTION_FAIL
 } rxsignal_handler_action;
 
 static rxsignal_handler_action rxsignal_read_handler_action(value *action) {
@@ -3989,7 +4023,6 @@ static rxsignal_handler_action rxsignal_read_handler_action(value *action) {
     null_terminate_string_buffer(action);
     if (strcmp(action->string_value, "__rxsignal_skip") == 0) return RXSIGNAL_HANDLER_ACTION_SKIP;
     if (strcmp(action->string_value, "__rxsignal_fail") == 0) return RXSIGNAL_HANDLER_ACTION_FAIL;
-    if (strcmp(action->string_value, "__rxsignal_retry") == 0) return RXSIGNAL_HANDLER_ACTION_RETRY;
     return RXSIGNAL_HANDLER_ACTION_NONE;
 }
 
@@ -4794,11 +4827,7 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
 #define HANDLE_INTERRUPT_ACTION_RETURN() \
 if (is_interrupt && temp_frame->is_interrupt_action) { \
     rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
-    if (action__ == RXSIGNAL_HANDLER_ACTION_RETRY) { \
-        if (current_frame && current_frame->procedure && current_frame->procedure->binarySpace) { \
-            next_pc = VM_EXECUTION_POINTER(last_interrupted_address[is_interrupt]); \
-        } \
-    } else if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
+    if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
         value *payload__ = rxsignal_handler_payload(temp_frame); \
         if (payload__ && payload__->string_length) { \
             fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \
@@ -5178,10 +5207,12 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
      *      op1R   address the first register operand
      *      op2R   address the second register operand
      *      op3R   address the third  register operand
+     *      op4R   address the fourth register operand
      *
      *      op1RI  integer of first register operand
      *      op2RI  integer of second register operand
      *      op3RI  integer of third register operand
+     *      op4RI  integer of fourth register operand
      *
      *      op1RF  float of first register operand
      *      op2RF  float of second register operand
@@ -6294,9 +6325,8 @@ START_OF_INSTRUCTIONS
                     op1R->string_value[pos] = (char) ch;
                     pos++;
                 }
-                op1R->string_pos = 0;
+                string_cache_reset(op1R);
 #ifndef NUTF8
-                op1R->string_char_pos = 0;
                 refresh_utf8_flags(op1R);
 #else
                 clear_vm_private_flags(op1R);
@@ -6490,6 +6520,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMFUZ %d\n", (int)op1I);
     if (op1I < 0) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
+        DISPATCH;
     }
     current_frame->num_context.fuzz = op1I;
     // Sync the numeric context of the decimal plugin
@@ -6725,9 +6756,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     START_INSTRUCTION(ITOD_REG)
     VM_ADVANCE(1);
     DEBUG("TRACE - ITOD R%lu\n", REG_IDX(1));
-    // Convert
+    /* Integer-to-decimal is total for every rxinteger. The plugin contract
+     * clears stale diagnostics; allocation failure follows the VM OOM panic
+     * convention rather than becoming a language signal. */
     current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value);
-    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert Boolean to Decimal                                     added August 2024 pej
@@ -6736,9 +6768,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     START_INSTRUCTION(BTOD_REG)
     VM_ADVANCE(1);
     DEBUG("TRACE - BTOD R%lu\n", REG_IDX(1));
-    // Convert
+    /* Uses the same total integer-to-decimal plugin contract as ITOD. */
     current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value ? 1 : 0);
-    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH;
     /* ------------------------------------------------------------------------------------
  * Convert Float to Decimal                                       added August 2024 pej
@@ -7171,11 +7202,6 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     START_INSTRUCTION(DCOPY_REG_REG) // label not yet defined
     VM_ADVANCE(2);
     DEBUG("TRACE - DCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-    if (op2R->decimal_value == NULL) {
-        // Signal error
-        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "No Source Decimal Value")
-        DISPATCH;
-    }
     if (op1R == op2R) {
         // NOP
         DISPATCH;
@@ -7184,6 +7210,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
             RXVM_PROFILE_VALUE_DECIMAL_COPY,
             RXVM_PROFILE_VALUE_DECIMAL,
             op2R->decimal_value_length);
+    /* A zero logical length is decimal absence even when lazy backing storage
+     * remains allocated.  Typed copy propagates that absence without changing
+     * any unrelated component of the destination. */
+    if (op2R->decimal_value == NULL || op2R->decimal_value_length == 0) {
+        op1R->decimal_value_length = 0;
+        DISPATCH;
+    }
     if (op1R->decimal_value == NULL) {
         // Allocate storage for the decimal
         op1R->decimal_value = malloc(op2R->decimal_value_length);
@@ -8586,11 +8619,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(DEC0) VM_ADVANCE(0);
             /* TODO This is really idec0 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC0\n");
-            if (!rxinteger_checked_sub(current_locals[0]->int_value, 1,
-                                       &current_locals[0]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(current_locals[0]->int_value, 1,
+                                           &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[0]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
             /* ------------------------------------------------------------------------------------
          *  DEC1   R1--                                                       pej 7. April 2021
@@ -8599,11 +8636,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(DEC1) VM_ADVANCE(0);
             /* TODO This is really idec1 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC1\n");
-            if (!rxinteger_checked_sub(current_locals[1]->int_value, 1,
-                                       &current_locals[1]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(current_locals[1]->int_value, 1,
+                                           &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[1]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
             /* ------------------------------------------------------------------------------------
             *  DEC2   op2R--                                                       pej 7. April 2021
@@ -8612,20 +8653,28 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(DEC2) VM_ADVANCE(0);
             /* TODO This is really idec2 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC2\n");
-            if (!rxinteger_checked_sub(current_locals[2]->int_value, 1,
-                                       &current_locals[2]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(current_locals[2]->int_value, 1,
+                                           &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[2]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
         START_INSTRUCTION(DEC_REG) VM_ADVANCE(1);
             /* TODO This is really idec reg - i.e. it does not prime the int */
             DEBUG("TRACE - DEC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_sub(current_locals[REG_IDX(1)]->int_value, 1,
-                                       &current_locals[REG_IDX(1)]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_sub(
+                        current_locals[REG_IDX(1)]->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[REG_IDX(1)]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
         START_INSTRUCTION(BR_ID)
             DEBUG("TRACE - BR 0x%x\n", (unsigned int)REG_IDX(1));
@@ -9088,10 +9137,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC0) VM_ADVANCE(0);
             DEBUG("TRACE - INC0\n");
-            if (!rxinteger_checked_add(REG_VAL(0)->int_value, 1, &REG_VAL(0)->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(REG_VAL(0)->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else REG_VAL(0)->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC1   R1++                                                       pej 7. April 2021
@@ -9099,10 +9152,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC1) VM_ADVANCE(0);
             DEBUG("TRACE - INC1\n");
-            if (!rxinteger_checked_add(REG_VAL(1)->int_value, 1, &REG_VAL(1)->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(REG_VAL(1)->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else REG_VAL(1)->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC2   op2R++                                                       pej 7. April 2021
@@ -9110,10 +9167,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC2) VM_ADVANCE(0);
             DEBUG("TRACE - INC2\n");
-            if (!rxinteger_checked_add(REG_VAL(2)->int_value, 1, &REG_VAL(2)->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(REG_VAL(2)->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else REG_VAL(2)->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
  *  -----------------------------------------------------------------------------------
@@ -9810,11 +9871,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
  */
         START_INSTRUCTION(INC_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_add(current_locals[REG_IDX(1)]->int_value, 1,
-                                       &current_locals[REG_IDX(1)]->int_value)) {
-                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            {
+                rxinteger result;
+                if (!rxinteger_checked_add(
+                        current_locals[REG_IDX(1)]->int_value, 1, &result)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else current_locals[REG_IDX(1)]->int_value = result;
+                DISPATCH;
             }
-            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
@@ -10544,18 +10609,30 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #ifndef NUTF8
                 int result;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
-                string_set_byte_pos(op2R, op3R->int_value);
-                utf8codepoint(op2R->string_value + op2R->string_pos, &result);
-                REG_RETURN_INT(result)
+                if (op3R->int_value < 0 ||
+                    (size_t)op3R->int_value >= op2R->string_chars) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                }
+                else {
+                    string_cache_seek_char(op2R, (size_t)op3R->int_value);
+                    utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &result);
+                    REG_RETURN_INT(result)
+                }
 #else
-                REG_RETURN_INT(op2R->string_value[op3R->int_value])
+                if (op3R->int_value < 0 ||
+                    (size_t)op3R->int_value >= op2R->string_length) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                }
+                else {
+                    REG_RETURN_INT(op2R->string_value[op3R->int_value])
+                }
 #endif
             }
             DISPATCH;
 // Lazy Peter approach
 #define setCodePointETC()       \
-   {string_set_byte_pos(op2R, op3R->int_value); \
-    start = op2R->string_value + op2R->string_pos; \
+   {string_cache_seek_char(op2R, (size_t)op3R->int_value); \
+    start = op2R->string_value + op2R->string_cache_byte_pos; \
     end = utf8codepoint(start, &ch); \
     bytelen = end - start;}
 #define split2hex(chr,into)           \
@@ -10638,8 +10715,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 for (i = 0; i < op2R->string_length; i++) {
 #ifndef NUTF8
-                    string_set_byte_pos(op2R, i);
-                    utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                    string_cache_seek_char(op2R, (size_t)i);
+                    utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                     ch=op2R->string_value[i];
 #endif
@@ -10947,8 +11024,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #endif
                 for (result = op3R->int_value; result < len; result++) {
 #ifndef NUTF8
-                    string_set_byte_pos(op2R, result);
-                    utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                    string_cache_seek_char(op2R, (size_t)result);
+                    utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                     ch = op2R->string_value[result];
 #endif
@@ -10999,8 +11076,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 if (result >= 0) {  // FORWARD SEARCH
                     for (; result < len; result++) {
 #ifndef NUTF8
-                        string_set_byte_pos(op2R, result);
-                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                        string_cache_seek_char(op2R, (size_t)result);
+                        utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                         ch = op2R->string_value[result];
 #endif
@@ -11012,8 +11089,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     if (result >= len) result = len - 1;  // Clamp to valid range
                     for (; result >= 0; result--) {
 #ifndef NUTF8
-                        string_set_byte_pos(op2R, result);
-                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                        string_cache_seek_char(op2R, (size_t)result);
+                        utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                         ch = op2R->string_value[result];
 #endif
@@ -11076,7 +11153,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 memset(op1R->binary_value + old_length, 0, new_length - old_length);
             }
             op1R->binary_length = new_length;
-            if (op1R->binary_pos > new_length) op1R->binary_pos = new_length;
             clear_vm_private_flags(op1R);
         }
     }
@@ -11093,7 +11169,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     }
     else {
         op1R->binary_length = 0;
-        op1R->binary_pos = 0;
         clear_vm_private_flags(op1R);
     }
     DISPATCH;
@@ -11134,7 +11209,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         else {
             op1R->binary_length = length;
             if (length) memmove(op1R->binary_value, op2R->binary_value + offset, length);
-            if (op1R->binary_pos > op1R->binary_length) op1R->binary_pos = op1R->binary_length;
             clear_vm_private_flags(op1R);
         }
     }
@@ -11157,7 +11231,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         else {
             op1R->binary_length = length;
             if (length) memcpy(op1R->binary_value, source->string + offset, length);
-            if (op1R->binary_pos > op1R->binary_length) op1R->binary_pos = op1R->binary_length;
             clear_vm_private_flags(op1R);
         }
     }
@@ -11927,41 +12000,18 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  SETBINPOS_REG_REG  op1 binary cursor = clamp(op2, 0..len)
+ *  BSLICE_REG_REG_REG_REG  op1 = op2[op3..op3 + op4)
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(SETBINPOS_REG_REG) VM_ADVANCE(2);
-    DEBUG("TRACE - SETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-    if (op2R->int_value < 0) {
-        op1R->binary_pos = 0;
-    }
-    else if ((size_t)op2R->int_value > op1R->binary_length) {
-        op1R->binary_pos = op1R->binary_length;
-    }
-    else {
-        op1R->binary_pos = (size_t)op2R->int_value;
-    }
-    DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  GETBINPOS_REG_REG  Int op1 = op2 binary cursor
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(GETBINPOS_REG_REG) VM_ADVANCE(2);
-    DEBUG("TRACE - GETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-    REG_RETURN_INT((rxinteger)op2R->binary_pos)
-    DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  BSLICE_REG_REG_REG  op1 = op2[op2.binary_pos..op2.binary_pos + op3)
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(BSLICE_REG_REG_REG) VM_ADVANCE(3);
-    DEBUG("TRACE - BSLICE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-    if (op3R->int_value < 0) {
+    START_INSTRUCTION(BSLICE_REG_REG_REG_REG) VM_ADVANCE(4);
+    DEBUG("TRACE - BSLICE R%d,R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),
+          (int)REG_IDX(3), (int)REG_IDX(4));
+    if (op4R->int_value < 0) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
     }
-    else if (slice_binary(op1R, op2R, op2R->binary_pos, (size_t)op3R->int_value) != 0) {
+    else if (slice_binary(op1R, op2R,
+                          op3R->int_value < 0 ? 0u : (size_t)op3R->int_value,
+                          (size_t)op4R->int_value) != 0) {
         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
     }
     DISPATCH;
@@ -12037,8 +12087,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #ifndef NUTF8
                 int ch;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
-                string_set_byte_pos(op2R, op3R->int_value);
-                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                string_cache_seek_char(op2R, (size_t)op3R->int_value);
+                utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
                 op3R->int_value = ch;
 #else
                 op3R->int_value=op2R->string_value[op3R->int_value - 1];
@@ -12110,21 +12160,24 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  SUBSTR_REG_REG_REG op1 = substr(op2, length)
- *  Extracts 'length' codepoints from op2, starting at the cursor previously set by
- *  SETSTRPOS. The source cursor is stored as byte + codepoint positions on the value.
+ *  SUBSTRING_REG_REG_REG_REG op1 = op2[op3..op3 + op4) by character
  * ----------------------------------------------------------------------------------- */
 
-        START_INSTRUCTION(SUBSTR_REG_REG_REG)
-        START_INSTRUCTION(SUBSTRING_REG_REG_REG) VM_ADVANCE(3);
-            DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+        START_INSTRUCTION(SUBSTRING_REG_REG_REG_REG) VM_ADVANCE(4);
+            DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),
+                  REG_IDX(3), REG_IDX(4));
             {
-                rxinteger length = op3R->int_value;
+                rxinteger start = op3R->int_value;
+                rxinteger length = op4R->int_value;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 if (length <= 0) {
                     PUTSTRLEN(op1R, 0);
                 } else {
-                    string_slice_from_cursor(op1R, op2R, (size_t) length);
+                    if (string_slice_at(op1R, op2R,
+                                        start < 0 ? 0u : (size_t)start,
+                                        (size_t)length) != 0) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                    }
                 }
             }
             DISPATCH;
@@ -12185,19 +12238,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     REG_RETURN_INT(0);
                 } else {
 #ifndef NUTF8
-                    {
-                        size_t saved_string_pos = op3R->string_pos;
-                        size_t saved_string_char_pos = op3R->string_char_pos;
-
-                        start_offset = (size_t)(start_pos - 1);
-                        if (start_offset >= op3R->string_chars) {
-                            start_offset = op3R->string_length;
-                        } else {
-                            string_set_byte_pos(op3R, start_offset);
-                            start_offset = op3R->string_pos;
-                            op3R->string_pos = saved_string_pos;
-                            op3R->string_char_pos = saved_string_char_pos;
-                        }
+                    start_offset = (size_t)(start_pos - 1);
+                    if (start_offset >= op3R->string_chars) {
+                        start_offset = op3R->string_length;
+                    } else {
+                        string_cache_seek_char(op3R, start_offset);
+                        start_offset = op3R->string_cache_byte_pos;
                     }
 #else
                     start_offset = (size_t)(start_pos - 1);
@@ -12285,51 +12331,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #else
             op1R->int_value = (rxinteger)op2R->string_length;
 #endif
-            DISPATCH;
-
-/*
- * SETSTRPOS_REG_REG - Set String (op1) charpos set to op2
- */
-        START_INSTRUCTION(SETSTRPOS_REG_REG) VM_ADVANCE(2);
-            DEBUG("TRACE - SETSTRPOS R%lu R%lu\n", REG_IDX(1),
-                  REG_IDX(2));
-            REQUIRE_VALID_UTF8_REGISTER(op1R);
-#ifndef NUTF8
-            string_set_byte_pos(op1R, op2R->int_value);
-#else
-            op1R->string_pos = op2R->int_value;
-#endif
-            DISPATCH;
-
-/*
- * GETSTRPOS_REG_REG - Get String (op2) charpos into op1
- */
-        START_INSTRUCTION(GETSTRPOS_REG_REG) VM_ADVANCE(2);
-            DEBUG("TRACE - GETSTRPOS R%lu R%lu\n", REG_IDX(1),
-                  REG_IDX(2));
-#ifndef NUTF8
-            op1R->int_value = (int) op2R->string_char_pos;
-#else
-            op1R->int_value = op2R->string_pos;
-#endif
-            DISPATCH;
-
-/*
- * STRCHAR_REG_REG - op1 (as int) = op2[charpos]
- */
-        START_INSTRUCTION(STRCHAR_REG_REG) VM_ADVANCE(2);
-            DEBUG("TRACE - STRCHAR R%lu R%lu\n", REG_IDX(1),
-                  REG_IDX(2));
-            {
-                int ch;
-#ifndef NUTF8
-                REQUIRE_VALID_UTF8_REGISTER(op2R);
-                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
-                op1R->int_value = ch;
-#else
-                op1R->int_value = op2R->string_value[op2R->string_pos];
-#endif
-            }
             DISPATCH;
 
 /*
@@ -12717,7 +12718,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             }
             else {
                 op1R->binary_length = fread(op1R->binary_value, 1, (size_t)op3R->int_value, (FILE *) op2R->int_value);
-                op1R->binary_pos = 0;
                 clear_vm_private_flags(op1R);
             }
         }
@@ -12730,7 +12730,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         int ch;
 
         op1R->string_length = 0;
-        op1R->string_pos = 0;
+        string_cache_reset(op1R);
 
         if (op2R->int_value == 0) {
             // no file - raise error
@@ -12773,8 +12773,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             if (validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
                 SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in text file read");
             } else {
-                op1R->string_char_pos = 0;
                 op1R->string_chars = chars;
+                string_cache_reset(op1R);
                 mark_utf8_valid_count(op1R);
             }
         }
@@ -12799,7 +12799,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             int next_byte;
             int invalid = 0;
             size_t chars = 0;
-            op1R->string_pos = 0;
+            string_cache_reset(op1R);
             prep_string_buffer(op1R, 4);
 
             /* Read the first byte - determines length */
@@ -12807,8 +12807,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             if (first_byte == EOF) {
                 op1R->int_value = -1;
                 op1R->string_length = 0;
-                op1R->string_char_pos = 0;
                 op1R->string_chars = 0;
+                string_cache_reset(op1R);
                 mark_utf8_valid_count(op1R);
             } else {
                 op1R->string_value[0] = (char)first_byte;
@@ -12845,8 +12845,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 } else {
                     utf8codepoint(op1R->string_value, &codepoint);
                     op1R->int_value = codepoint;
-                    op1R->string_char_pos = 0;
                     op1R->string_chars = chars;
+                    string_cache_reset(op1R);
                     mark_utf8_valid_count(op1R);
                 }
             }
@@ -12863,7 +12863,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     op1R->string_length = 1;
                 }
             }
-            op1R->string_pos = 0;
+            string_cache_reset(op1R);
             clear_vm_private_flags(op1R);
 #endif
         }
@@ -13513,6 +13513,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         RESERVED_IMPL(RESERVED_097)
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
+        RESERVED_IMPL(RESERVED_151)
+        RESERVED_IMPL(RESERVED_154)
+        RESERVED_IMPL(RESERVED_155)
+        RESERVED_IMPL(RESERVED_156)
+        RESERVED_IMPL(RESERVED_188)
+        RESERVED_IMPL(RESERVED_189)
         RESERVED_IMPL(RESERVED_263)
 
         START_INSTRUCTION(SWAPN_REG_REG_REG_REG) VM_ADVANCE(4);

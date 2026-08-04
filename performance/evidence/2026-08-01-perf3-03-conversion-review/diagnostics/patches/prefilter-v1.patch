@@ -1,0 +1,44 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 9b56da524..679b6ff8b 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -270,11 +270,37 @@ static int rxvm_trimmed_space_equal(const char *left, size_t left_len, const cha
+     return left_len == right_len && memcmp(left, right, left_len) == 0;
+ }
+ 
++/*
++ * Fail-closed loose-comparison numeric prefilter. It rejects only an empty
++ * ASCII-whitespace span or an ASCII leading byte that no supported strtod
++ * spelling can begin with. Non-ASCII input and both common locale decimal
++ * separators fall back to the existing converter.
++ */
++static int rxvm_maybe_numeric_text(const char *text, size_t length) {
++    size_t i = 0;
++    unsigned char first;
++
++    while (i < length) {
++        first = (unsigned char)text[i];
++        if (first >= 0x80) return 1;
++        if (first != ' ' && first != '\t' && first != '\n' && first != '\r' &&
++            first != '\f' && first != '\v') break;
++        i++;
++    }
++    if (i == length) return 0;
++    first = (unsigned char)text[i];
++    return (first >= '0' && first <= '9') || first == '+' || first == '-' ||
++           first == '.' || first == ',' || first == 'i' || first == 'I' ||
++           first == 'n' || first == 'N';
++}
++
+ static int rxvm_loose_compare_text(const char *left, size_t left_len, const char *right, size_t right_len) {
+     double left_number;
+     double right_number;
+-    int left_numeric = string2float(&left_number, (char *) left, left_len) == 0;
+-    int right_numeric = string2float(&right_number, (char *) right, right_len) == 0;
++    int left_numeric = rxvm_maybe_numeric_text(left, left_len) &&
++                       string2float(&left_number, (char *) left, left_len) == 0;
++    int right_numeric = rxvm_maybe_numeric_text(right, right_len) &&
++                        string2float(&right_number, (char *) right, right_len) == 0;
+ 
+     if (left_numeric && right_numeric) {
+         if (left_number > right_number) return 1;

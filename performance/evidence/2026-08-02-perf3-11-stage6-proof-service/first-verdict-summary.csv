@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rexxcps-stage5-rxvm,RexxCPS,crexx,rxvm,Stage5-old-solver-21-ITOS,A,no,no,1000-clauses,benchmark_rate,12,42361358.000000,42843601.500000,43042540.500000,43295314.750000,43920907.000000,231621.000000,0.538121,3.623274,no
+rexxcps-stage6-rxvm,RexxCPS,crexx,rxvm,Stage6-new-proof-19-ITOS,A,no,no,1000-clauses,benchmark_rate,12,44628074.000000,45769924.750000,46257365.500000,46366922.250000,46628351.000000,178209.000000,0.385255,4.324235,no
+rexxcps-stage5-rxbvm,RexxCPS,crexx,rxbvm,Stage5-old-solver-21-ITOS,A,no,no,1000-clauses,benchmark_rate,12,40321565.000000,40573084.000000,40840816.500000,41122038.000000,41498942.000000,291620.000000,0.714041,2.882844,no
+rexxcps-stage6-rxbvm,RexxCPS,crexx,rxbvm,Stage6-new-proof-19-ITOS,A,no,no,1000-clauses,benchmark_rate,12,42924313.000000,43400547.500000,43644889.500000,44022279.500000,44449225.000000,388490.500000,0.890117,3.493907,no

@@ -1,0 +1,5 @@
+artifact	bytes	global_defined_exports	crexxsaa_prefixed_exports
+librxvml.a	1040384	137	0
+libcrexxsaa.dylib	1053728	367	16
+libcrexxsaa-unrestricted.dylib	1053744	367	16
+libcrexxsaa-filtered.dylib	1046824	16	16

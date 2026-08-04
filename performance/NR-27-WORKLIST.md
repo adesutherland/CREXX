@@ -53,10 +53,11 @@ separate evidence.
 - [x] Read root and performance instructions, live roadmap and historical
   Strand 4 terms.
 - [x] Complete the focused RXAS/RXVM/effects, NR-04/08/09 and retained RXSEQ
-  evidence audit. The current VM handlers require `MAY_THROW` on decimal
-  literal load and `dcopy`, and prove no signal for one-/two-register `itof`
-  and float comparisons; the canonical sidecar and metadata test now record
-  those corrections.
+  evidence audit. At the time, the VM-handler audit corrected the coarse
+  `MAY_THROW` classification for decimal literal load and `dcopy`, and proved
+  no signal for one-/two-register `itof` and float comparisons. PERF3-11 Stage
+  1 later retired that flag; the opcode-aligned `RxOpSignalContract` sidecar is
+  now the authoritative capability, phase and continuation record.
 
 ## Design selection before production edits
 

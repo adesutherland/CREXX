@@ -1,0 +1,14 @@
+scope,variant,executions_passed,executions_total,result,detail
+benchmark-opt-noopt-dual-vm-and-guards,C0,14,14,pass,Richards-Towers-opt-noopt-plus-Permute-Bounce-Sieve-opt
+benchmark-opt-noopt-dual-vm-and-guards,C1a-R2,14,14,pass,canonical-native-results
+benchmark-opt-noopt-dual-vm-and-guards,C1b-R1,14,14,pass,canonical-native-results
+benchmark-opt-noopt-dual-vm-and-guards,C1ab-R1,14,14,pass,canonical-native-results
+benchmark-opt-noopt-dual-vm-and-guards,C1c-R1,14,14,pass,canonical-native-results
+benchmark-opt-noopt-dual-vm-and-guards,C1abc-R1,14,14,pass,canonical-native-results
+benchmark-opt-noopt-dual-vm-and-guards,C1a-R1-negative,12,14,fail,optimized-Richards-both-VMs-return-0-1-instead-of-23246-9297
+benchmark-opt-noopt-dual-vm-and-guards,C1broad-plus-C1c,14,14,pass,benchmark-screen-alone-is-insufficient
+focused-nested-reference,C0-C1a-C1b-C1ab-C1c-C1abc,12,12,pass,two-structural-scripts-per-mask
+focused-detached-guard,C1b-C1ab-C1abc,3,3,pass,positive-local-imported-and-all-negative-shapes
+focused-detached-guard,C1broad-plus-C1c,0,1,fail,crosses-call-bearing-guard-and-retains-neither-materialized-receiver-nor-call
+ordinary-default-focused-ctest,C1b-R1,9,9,pass,inliner-import-and-receiver-suite
+formal-timing-output,C0-C1a-C1b-C1ab-C1c,156,156,pass,12-warmups-plus-144-recorded-executions

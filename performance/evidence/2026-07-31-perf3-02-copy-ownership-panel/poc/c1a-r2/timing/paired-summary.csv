@@ -1,0 +1,5 @@
+workload,vm,rounds,candidate_over_c0_median_elapsed_percent,c0_over_candidate_median_speedup,c0_over_candidate_geomean_speedup,min_round_speedup,max_round_speedup,interpretation
+Richards,rxvm,12,-8.075226,1.087860,1.084076,1.029476,1.107519,target-positive-all-rounds
+Richards,rxbvm,12,-9.471819,1.104646,1.107668,1.055714,1.162284,target-positive-all-rounds
+Towers,rxvm,12,-1.114974,1.011300,1.021582,0.990855,1.112757,byte-identical-guard-within-3-percent-median
+Towers,rxbvm,12,0.988300,0.990215,0.996893,0.965306,1.079186,byte-identical-guard-within-3-percent-median

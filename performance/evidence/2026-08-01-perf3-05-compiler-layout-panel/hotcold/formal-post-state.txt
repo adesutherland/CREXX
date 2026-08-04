@@ -1,0 +1,48 @@
+utc=2026-08-01T10:59:53Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+{ 1.48 1.38 1.48 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+3806 /bin/zsh -c ROOT=/tmp/crexx-perf3-05.9DY131
+(date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; uname -a; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > "$ROOT/hotcold/formal-post-state.txt" 2>&1
+printf 'stderr_bytes='; wc -c < "$ROOT/hotcold/formal-driver.stderr.txt"
+wc -l "$ROOT/hotcold/timing/"{samples,outputs,summary}.csv
+sed -n '1,30p' "$ROOT/hotcold/formal-driver.stdout.txt"
+python3 - <<'PY'
+import csv
+p='/tmp/crexx-perf3-05.9DY131/hotcold/timing/summary.csv'
+rows=list(csv.DictReader(open(p)))
+by={(r['workload'],r['vm'],r['variant']):r for r in rows}
+print('workload,vm,baseline_median,candidate_median,effect_percent_positive_faster,baseline_rel_mad,candidate_rel_mad,baseline_rerun,candidate_rerun')
+for w in ['Sieve','Base64','Richards','Towers','RexxCPS']:
+ for vm in ['rxvm','rxbvm']:
+  a=by[(w,vm,'L0-current')]; b=by[(w,vm,'L3-noflatten')]
+  am=float(a['median']); bm=float(b['median'])
+  if a['metric']=='benchmark_rate': eff=(bm/am-1)*100
+  else: eff=(am/bm-1)*100
+  print(f"{w},{vm},{am:.6f},{bm:.6f},{eff:.3f},{a['relative_mad_percent']},{b['relative_mad_percent']},{a['rerun_recommended']},{b['rerun_recommended']}")
+PY
+sed -n '1,28p' "$ROOT/hotcold/timing/summary.csv"
+3807 /bin/zsh -c ROOT=/tmp/crexx-perf3-05.9DY131
+(date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; uname -a; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > "$ROOT/hotcold/formal-post-state.txt" 2>&1
+printf 'stderr_bytes='; wc -c < "$ROOT/hotcold/formal-driver.stderr.txt"
+wc -l "$ROOT/hotcold/timing/"{samples,outputs,summary}.csv
+sed -n '1,30p' "$ROOT/hotcold/formal-driver.stdout.txt"
+python3 - <<'PY'
+import csv
+p='/tmp/crexx-perf3-05.9DY131/hotcold/timing/summary.csv'
+rows=list(csv.DictReader(open(p)))
+by={(r['workload'],r['vm'],r['variant']):r for r in rows}
+print('workload,vm,baseline_median,candidate_median,effect_percent_positive_faster,baseline_rel_mad,candidate_rel_mad,baseline_rerun,candidate_rerun')
+for w in ['Sieve','Base64','Richards','Towers','RexxCPS']:
+ for vm in ['rxvm','rxbvm']:
+  a=by[(w,vm,'L0-current')]; b=by[(w,vm,'L3-noflatten')]
+  am=float(a['median']); bm=float(b['median'])
+  if a['metric']=='benchmark_rate': eff=(bm/am-1)*100
+  else: eff=(am/bm-1)*100
+  print(f"{w},{vm},{am:.6f},{bm:.6f},{eff:.3f},{a['relative_mad_percent']},{b['relative_mad_percent']},{a['rerun_recommended']},{b['rerun_recommended']}")
+PY
+sed -n '1,28p' "$ROOT/hotcold/timing/summary.csv"

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gc4470635048e 20260804",
+  "result": "pass",
+  "started_utc": "2026-08-04T09:51:26+0000",
+  "completed_utc": "2026-08-04T09:51:55+0000",
+  "repository": {"branch":"codex/perf3-rxas-flow-infrastructure","commit":"c4470635048e497417c4db92c03ecbcd79eaa750","dirty_scope":["?? performance/evidence/2026-08-04-perf3-11-k04e-mac-scorecard/","?? performance/evidence/2026-08-04-perf3-12-k04e-clause-reassessment/","?? performance/manifests/perf3-11-k04e-current-mac-timing-noise-append-v1.txt","?? performance/manifests/perf3-11-k04e-current-mac-v1.txt"]},
+  "host": {"os":"Darwin 25.5.0 arm64","cpu":"Apple M5"},
+  "driver_arguments": ["--manifest","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-04-perf3-12-k04e-clause-reassessment/manifests/rexxcps-profile-fixed200-manifest-v1.txt","--release-build","/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release","--profile-build","/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-profile","--output-dir","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-04-perf3-12-k04e-clause-reassessment/profiles/rxvm","--vm","rxvm","--profile-mode","counts","--force"],
+  "input_manifest": {"path":"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-04-perf3-12-k04e-clause-reassessment/manifests/rexxcps-profile-fixed200-manifest-v1.txt","sha256":"118f668099447bdca3e0c6b40984ac0d4833205cd2a1d75e712bcfd0356ba981"},
+  "ordinary_release": {"build":"/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxvm","vm_version":"crexx-1.0.0-beta.3+local.gc4470635048e (Threaded Mode)","vm_sha256":"a973c34663682c102e4df1eb8e2abe646ae36cb66f8c852f7a81b9ef562eae67"},
+  "profile_release": {"build":"/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-profile","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxvm","profile_mode":"counts","vm_version":"crexx-1.0.0-beta.3+local.gc4470635048e (Threaded Mode)","vm_sha256":"825adb533a810f3c0640ab989d92a55d44cacf0669962d1bcf5520a2f439c24c","rxseq_sha256":"479c58243ee20bbb7337845ffd76dd064a8c7290368d74657a353f035bb00242"},
+  "toolchain": {"cmake":"cmake version 4.3.2","compiler_path":"/usr/bin/cc","compiler":"Apple clang version 21.0.0 (clang-2100.1.1.101)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-04-perf3-12-k04e-clause-reassessment/profiles/rxvm"
+}

@@ -1,0 +1,9 @@
+case,m02_nulls,m03_nulls,noopt_nulls,decision
+old_null_floor,1,1,2,old_floor_recovered
+same_absence_phi,3,2,3,stronger_equal_absence_join
+different_absence_phi,2,2,2,reject_component_present
+intervening_scalar,2,2,2,reject_component_present
+trace_equivalent_absence,2,1,2,stronger_ordered_trace
+linked_absent_storage,2,1,2,stronger_storage_identity
+reference_cleanup_required,2,2,2,reject_component_present
+native_cleanup_required,2,2,2,reject_component_present

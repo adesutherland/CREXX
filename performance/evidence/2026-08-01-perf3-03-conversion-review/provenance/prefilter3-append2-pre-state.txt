@@ -1,0 +1,24 @@
+utc=2026-08-01T12:31:45Z
+{ 1.31 1.26 1.23 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+20580 /bin/zsh -c perf3_tmp=$(cat /tmp/crexx-perf3-03-active-dir.txt)
+awk 'NR <= 2 || /^base64-.*-rxvm\|/ || /^rexxcps-.*-rxbvm\|/' "$perf3_tmp/prefilter3-matrix-v1.txt" > "$perf3_tmp/prefilter3-append2-v1.txt"
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  shasum -a 256 /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm "$perf3_tmp/prefilter3-build/bin/rxvm" "$perf3_tmp/prefilter3-build/bin/rxbvm" "$perf3_tmp/prefilter3-append2-v1.txt"
+} > "$perf3_tmp/prefilter3-append2-pre-state.txt" 2>&1
+sed -n '1,60p' "$perf3_tmp/prefilter3-append2-pre-state.txt"
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest "$perf3_tmp/prefilter3-append2-v1.txt" --output-dir "$perf3_tmp/prefilter3-timing-append-02" --measurement timing --warmups 0 --runs 12 > "$perf3_tmp/prefilter3-append2-runner.stdout.txt" 2> "$perf3_tmp/prefilter3-append2-runner.stderr.txt"
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+aa4f9456c65142541f28b8bbdac46a07e056431e4866e7c393e634d15f22cc22  /tmp/crexx-perf3-03.TsP0ej/prefilter3-build/bin/rxvm
+e3713c74145f0d2d5dc659ee90c397bd97fe4fee0e88839e4347a47231bb2365  /tmp/crexx-perf3-03.TsP0ej/prefilter3-build/bin/rxbvm
+78dc26f13f7b70a5675aba5c7eeea7704c3b86670e7555eb0bed01c4382c347f  /tmp/crexx-perf3-03.TsP0ej/prefilter3-append2-v1.txt

@@ -4,7 +4,7 @@ These instructions provide checked fixed-width integer arithmetic, comparisons,
 logical and bitwise operations, Boolean/scalar conversion, and inclusive range
 checks. Unless stated otherwise, a destination receives only the indicated
 scalar payload; unrelated payloads, attributes, type metadata, flags, and
-source cursors remain unchanged.
+sources remain unchanged.
 
 ## `and`
 
@@ -19,7 +19,7 @@ Compute logical conjunction of two integer truth values.
 ### Operands And Semantics
 
 Both source integer payloads are read. The destination integer becomes the
-canonical Boolean `0` or `1`; sources and all cursors are unchanged.
+canonical Boolean `0` or `1`; sources are unchanged.
 
 ### Signals
 
@@ -55,7 +55,7 @@ Convert an in-place Boolean integer to floating point.
 ### Operands And Semantics
 
 Zero in the register's integer payload produces `0.0`; any nonzero value
-produces `1.0`. Only the float payload changes; the integer payload, cursor,
+produces `1.0`. Only the float payload changes; the integer payload,
 attributes, type metadata, and flags remain intact.
 
 ### Signals
@@ -91,7 +91,7 @@ Canonicalize an in-place Boolean integer.
 ### Operands And Semantics
 
 An integer zero remains zero; every nonzero integer becomes one. No other
-payload, cursor, attribute, type field, or flag is changed.
+payload, attribute, type field, or flag is changed.
 
 ### Signals
 
@@ -126,7 +126,7 @@ Convert an in-place Boolean integer to its one-character string form.
 ### Operands And Semantics
 
 Zero in the integer payload selects `"0"`; nonzero selects `"1"`. The string
-payload is replaced and its cursor reset. The integer payload and non-string
+payload is replaced. The integer payload and non-string
 state remain unchanged.
 
 ### Signals
@@ -200,7 +200,7 @@ Compute bitwise AND of two fixed-width integers.
 ### Operands And Semantics
 
 The operation covers every bit of the signed `rxinteger` representation and
-writes only the destination integer payload. Sources and cursors are unchanged.
+writes only the destination integer payload. Sources are unchanged.
 
 ### Signals
 
@@ -239,7 +239,7 @@ Require an integer to lie within an inclusive lower/upper bound.
 ### Operands And Semantics
 
 Every operand is read as a signed integer. Equality with either bound succeeds.
-The instruction is a check only: it does not modify registers or cursors, and
+The instruction is a check only: it does not modify registers, and
 does not diagnose reversed bounds separately.
 
 ### Signals
@@ -275,7 +275,7 @@ Copy only an integer payload between registers.
 ### Operands And Semantics
 
 Only the destination integer payload changes. Its string, float, decimal and
-binary payloads, attributes, cursor, type metadata, and flags remain intact;
+binary payloads, attributes, type metadata, and flags remain intact;
 the source is unchanged.
 
 ### Signals
@@ -351,7 +351,7 @@ Compare signed integers for equality.
 ### Operands And Semantics
 
 The destination integer becomes canonical Boolean `1` for equality, otherwise
-`0`. Sources and cursors are unchanged.
+`0`. Sources are unchanged.
 
 ### Signals
 
@@ -535,7 +535,7 @@ Branch when one register integer is less than another.
 ### Operands And Semantics
 
 A true signed comparison transfers to the procedure-local label; false falls
-through. Neither register nor cursor is changed.
+through. Neither register nor register is changed.
 
 ### Signals
 
@@ -575,7 +575,7 @@ Compare whether one signed integer is less than or equal to another.
 ### Operands And Semantics
 
 The destination integer becomes canonical Boolean `0` or `1`. Sources and
-cursors are unchanged.
+value state is unchanged.
 
 ### Signals
 
@@ -650,7 +650,7 @@ Multiply two signed integers with overflow checking.
 ### Operands And Semantics
 
 The destination integer receives the product when representable. Sources and
-cursors remain unchanged.
+value state remains unchanged.
 
 ### Signals
 
@@ -684,12 +684,14 @@ Increment a selected register integer in place.
 
 ### Operands And Semantics
 
-Only the register's integer payload changes. Its other payloads, cursor,
+Only the register's integer payload changes. Its other payloads,
 attributes, type metadata, and flags remain intact.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger` without wrapping.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger` without wrapping or changing
+the prior integer payload. A skip or retry handler therefore observes the
+pre-increment value.
 
 ### Example
 
@@ -724,7 +726,8 @@ frame to provide register zero.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`; the prior `r0.int` is
+preserved on that path.
 
 ### Example
 
@@ -758,7 +761,8 @@ Only `r1`'s integer payload changes. The frame must provide register one.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`; the prior `r1.int` is
+preserved on that path.
 
 ### Example
 
@@ -792,7 +796,8 @@ Only `r2`'s integer payload changes. The frame must provide register two.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`; the prior `r2.int` is
+preserved on that path.
 
 ### Example
 
@@ -824,7 +829,7 @@ Compare signed integers for inequality.
 ### Operands And Semantics
 
 The destination integer becomes canonical Boolean `1` when unequal and `0`
-when equal. Only that payload changes; sources and cursors are unchanged.
+when equal. Only that payload changes; sources are unchanged.
 
 ### Signals
 
@@ -895,7 +900,7 @@ Compute bitwise OR of two integers.
 ### Operands And Semantics
 
 Every `rxinteger` bit participates. Only the destination integer payload
-changes; sources and cursors remain unchanged.
+changes; sources remain unchanged.
 
 ### Signals
 
@@ -1007,7 +1012,7 @@ Negate a signed integer in place.
 
 ### Operands And Semantics
 
-Only the integer payload changes; all other payloads, cursor, attributes, type
+Only the integer payload changes; all other payloads, attributes, type
 metadata, and flags remain intact.
 
 ### Signals
@@ -1157,7 +1162,7 @@ Canonicalize an integer payload as Boolean in place.
 
 ### Operands And Semantics
 
-Only the integer payload is normalized. Other payloads, cursor, attributes,
+Only the integer payload is normalized. Other payloads, attributes,
 type metadata, and flags remain unchanged.
 
 ### Signals
@@ -1232,7 +1237,7 @@ Format an integer payload as a decimal string in the same register.
 ### Operands And Semantics
 
 Formatting uses the current frame numeric context. The string payload is
-replaced and its cursor reset; the integer payload and other value state remain
+replaced; the integer payload and other value state remain
 unchanged.
 
 ### Signals
@@ -1269,7 +1274,7 @@ Compute bitwise exclusive OR of two integers.
 ### Operands And Semantics
 
 Every fixed-width integer bit participates. Only the destination integer
-payload changes; source registers and cursors are unchanged.
+payload changes; source registers are unchanged.
 
 ### Signals
 
@@ -1304,7 +1309,7 @@ Compute logical negation of an integer truth value.
 ### Operands And Semantics
 
 The destination integer becomes a canonical Boolean. Only that payload changes;
-the source and both cursors remain unchanged.
+the source remain unchanged.
 
 ### Signals
 
@@ -1339,7 +1344,7 @@ Compute logical disjunction of two integer truth values.
 ### Operands And Semantics
 
 The destination integer becomes canonical Boolean `0` or `1`. Only its integer
-payload changes; sources and cursors remain unchanged.
+payload changes; sources remain unchanged.
 
 ### Signals
 
@@ -1379,7 +1384,7 @@ Perform loose REXX equality comparison.
 If both complete strings parse as floating-point numbers, numeric values are
 compared. Otherwise bytes are compared lexically after padding the shorter
 string on the right with spaces. The destination integer becomes `0` or `1`;
-sources and cursors are unchanged.
+sources are unchanged.
 
 ### Signals
 
@@ -1417,7 +1422,7 @@ Perform loose REXX greater-than comparison.
 
 Both numeric strings compare as floating-point numbers; otherwise comparison is
 unsigned-byte lexical with right-space padding. The destination integer becomes
-`1` only when left is greater. Sources and cursors are unchanged.
+`1` only when left is greater. Sources are unchanged.
 
 ### Signals
 
@@ -1455,7 +1460,7 @@ Perform loose REXX greater-than-or-equal comparison.
 
 Comparison is numeric when both strings parse as floating point, otherwise
 unsigned-byte lexical with right-space padding. The destination receives
-canonical Boolean greater-or-equal; sources and cursors are unchanged.
+canonical Boolean greater-or-equal; sources are unchanged.
 
 ### Signals
 
@@ -1493,7 +1498,7 @@ Perform loose REXX less-than comparison.
 
 Both numeric strings compare as floating-point numbers; otherwise comparison is
 unsigned-byte lexical with right-space padding. The destination integer is `1`
-only when left is less. Sources and cursors are unchanged.
+only when left is less. Sources are unchanged.
 
 ### Signals
 
@@ -1531,7 +1536,7 @@ Perform loose REXX less-than-or-equal comparison.
 
 Comparison is numeric when both strings parse as floating point, otherwise
 unsigned-byte lexical with right-space padding. The destination receives
-canonical Boolean less-or-equal; sources and cursors are unchanged.
+canonical Boolean less-or-equal; sources are unchanged.
 
 ### Signals
 
@@ -1569,7 +1574,7 @@ Perform loose REXX inequality comparison.
 
 Both numeric strings compare as floating-point numbers; otherwise the VM uses
 unsigned-byte lexical comparison with right-space padding. The destination is
-`1` when unequal and `0` when equal. Sources and cursors are unchanged.
+`1` when unequal and `0` when equal. Sources are unchanged.
 
 ### Signals
 
@@ -1607,7 +1612,7 @@ Compare strings for equality after trimming ASCII spaces at both ends.
 Leading and trailing byte `0x20` spaces are ignored independently, then the
 remaining bytes must match exactly. Unlike `req`, numeric spellings are not
 converted and internal spaces are significant. The destination integer becomes
-`0` or `1`; sources and cursors are unchanged.
+`0` or `1`; sources are unchanged.
 
 ### Signals
 

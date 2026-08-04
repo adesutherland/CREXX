@@ -75,14 +75,12 @@ splice: procedure = .string
   end
 
   if prefix_length > 0 then do
-    assembler setstrpos haystack,cursor
-    assembler substring result,haystack,prefix_length
+    assembler substring result,haystack,cursor,prefix_length
   end
   if needle <> "" then assembler append result,needle
   if suffix_length > 0 then do
     suffix = ""
-    assembler setstrpos haystack,suffix_start
-    assembler substring suffix,haystack,suffix_length
+    assembler substring suffix,haystack,suffix_start,suffix_length
     assembler append result,suffix
   end
   return result

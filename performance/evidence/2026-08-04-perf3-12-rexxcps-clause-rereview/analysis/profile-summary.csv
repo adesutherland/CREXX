@@ -1,0 +1,31 @@
+metric,rxvm_noopt,rxvm_opt,rxbvm_noopt,rxbvm_opt,classification,note
+vm_instructions,148701541,54221210,148701541,54221182,observation,independent instruction-row sums
+SCOPY_REG_REG,9786188,8946184,9786188,8946181,observation,all sources; PARSE subset derived separately
+DCOPY_REG_REG,2780000,2220000,2780000,2220000,observation,optimized count matches DTOS
+DTOS_REG,2500000,2220000,2500000,2220000,observation,conversion remains required
+NULLN_REG_REG_REG,843203,283204,843203,283203,observation,optimized grouped null form
+NULLN_REG_REG_REG_REG,850,1680850,850,1680850,observation,optimized grouped null form
+CONCAT_REG_STRING_REG,560002,2520002,560002,2520002,observation,2240000 assigned to Key Bee tail and 280000 to avar default
+PARSEPOS2_REG_REG_REG_INT,280000,280000,280000,280000,observation,one per hot lvar iteration
+PARSEWORDS3_REG_REG_REG_REG,1400000,1400000,1400000,1400000,observation,five total sites weighted per hot iteration/call
+PARSEWORDS3D_REG_REG_REG_REG,280000,280000,280000,280000,observation,one per cps_subroutine call
+STEMGET_REG_REG_REG,2500000,2500000,2500000,2500000,observation,stem access remains semantically required
+STEMSET_REG_REG_REG,1380000,1380000,1380000,1380000,observation,stem update remains semantically required
+STEMRESET_REG_REG,280000,280000,280000,280000,observation,one default reset per lvar
+ITOS_REG,6640009,280006,6640009,280006,observation,accepted repeated-conversion proof already effective
+CALL4_REG_FUNC_REG_REG_REG_REG,280000,280000,280000,280000,observation,cps_subroutine hot call
+call_enter_frame,,282941,,282941,observation,all procedures
+return_leave_frame,,282941,,282941,observation,all procedures
+standalone_values,,1100039,,1100039,observation,272809672 requested bytes
+value_slots,,1100662,,1100662,observation,272964176 requested bytes
+string_buffers,,280023,,280023,observation,8961984 requested bytes
+frame_activations,,282942,,282942,observation,all procedures
+frame_reuses,,282922,,282922,observation,all procedures
+decimal_copy_count,,2220000,,2220000,observation,97680000 logical bytes
+parse_scopies,,7280000,,7280000,derived_upper_bound,exact source/RXAS weighting within total SCOPY
+parse_grouped_nulls,,1960000,,1960000,derived_upper_bound,exact source/RXAS weighting within observed NULLN total
+parse_direct_destination_dispatch_ceiling,,9240000,,9240000,derived_upper_bound,17.041302 percent of rxvm optimized instructions
+key_bee_tail_materializations,,2240000,,2240000,derived_observation,exact source/RXAS weighting within CONCAT string-reg
+key_bee_loop_reuse_ceiling,,1960000,,1960000,derived_upper_bound,retain one materialization per lvar
+key_bee_segmented_stem_ceiling,,2240000,,2240000,derived_upper_bound,replace concat-plus-stem with existing stem2 operation
+xtoy_copy_elimination_ceiling,,2220000,,2220000,observed_upper_bound,DTOS retained; DCOPY deleted

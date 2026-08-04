@@ -1,0 +1,23 @@
+* A call may change the source through an aliased by-reference argument.
+
+main() .locals=9
+    load r0,"first"
+
+    link r1,r0
+    scopy r2,r1
+    unlink r1
+
+    link r4,r0
+    load r3,1
+    call r8,maybe_mutate(),r3
+    unlink r4
+
+    link r5,r0
+    scopy r6,r5
+    unlink r5
+
+    say r6
+    ret
+
+maybe_mutate() .locals=0
+    ret

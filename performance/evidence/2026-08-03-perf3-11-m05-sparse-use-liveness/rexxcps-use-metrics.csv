@@ -1,0 +1,6 @@
+procedure,epoch,uses,explicit,read_write,implicit,metadata,trace,cursor,call_window,opaque,unknown,phi_edges,live_values,budget,work,retained_bytes
+main,3,2536,1224,467,0,416,406,0,23,0,16,22737,16250,384448,357056,2340153
+cps_subroutine,2,265,64,16,0,152,33,0,0,0,8,365,515,37264,7051,76973
+fail,2,26,16,0,0,8,2,0,0,0,0,0,16,10240,240,6448
+__rxtrace_handler,2,6004,2418,1813,0,480,1248,2,43,0,110,27532,22071,650176,325867,2493331
+__rxtrace_reset_display_state,2,4,0,0,0,0,4,0,0,0,0,0,2,10080,45,5554

@@ -1,23 +1,36 @@
 # cREXX performance workspace
 
 This is the operational home for the cREXX performance programme. It keeps the
-live roadmap, closed initial-sweep/idea ledger, portfolio contract and retained
+live roadmap, closed programme ledgers, portfolio contract and retained
 evidence together without turning test directories into a planning system.
 
 The original programme charter and 2026-07-15 evidence review remain in
 [`docs/planning/release-1/performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
 The initial `NR-*` sweep and its evidence ledger are closed in
 [`ROADMAP-INITIAL-SWEEP-2026-07-23.md`](ROADMAP-INITIAL-SWEEP-2026-07-23.md).
-[`ROADMAP.md`](ROADMAP.md) is the live successor programme: current profiling,
-semantic quickening, flow-aware inlining, core Level B BIFs, RXAS/VM work,
-capability decisions and per-benchmark ooRexx closure.
+PERF2 is closed in
+[`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md).
+[`ROADMAP.md`](ROADMAP.md) is the approved live PERF3 programme: exact-current
+Mac evidence, evidence-selected copy/ownership, conversion, accessor and
+layout/stream panels, qualified-deficit closure and selected-candidate platform
+validation.
 
 ## Directory map
 
 | Location | Purpose |
 | --- | --- |
-| `performance/ROADMAP.md` | Live second-programme priorities, dependencies, gates and per-benchmark outcome plan |
+| `performance/ROADMAP.md` | Approved live PERF3 priorities, transfers, dependencies and exit gates |
+| `performance/ROADMAP-PERF2-2026-07-31.md` | Closed PERF2 status, findings, decisions, future-point ledger and retained evidence links |
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
+| `performance/PERF3-01-WORKLIST.md` | Accepted current-HEAD Mac evidence/ranking package that selected PERF3-02 as the first bounded design panel |
+| `performance/PERF3-02-WORKLIST.md` | Historical C0-C4 panel and authoritative clean-host timing, superseded by the selected infrastructure-enabled C1abc composition |
+| `performance/PERF3-02-C1B-WORKLIST.md` | Completed receiver-link/exit proof underlying the selected C1b-R1 production rung; canonical dual-VM opt/no-opt results and exact copy removal pass |
+| `performance/PERF3-02-C2E2-WORKLIST.md` | Completed diagnostic RXAS symbolic storage-identity proof; core-infrastructure candidate with exception-aware production integration gated |
+| `performance/PERF3-02-C2E2-P1-WORKLIST.md` | Locked typed normal/skip/retry continuation and graph-owned storage-identity infrastructure; no rewrite consumer selected and assembler-cost recovery queued separately |
+| `performance/PERF3-02-R1-WORKLIST.md` | Completed infrastructure-enabled option replay and selected C1abc production closeout; rejected variants remain replayable from retained evidence |
+| `performance/PERF3-10-WORKLIST.md` | Accepted ordered TRACE batching and storage/component-proved redundant `ITOS` control, first verdict and proportional closeout |
+| `performance/PERF3-11-WORKLIST.md` | Active scalable RXAS graph/signal/component-SSA programme; M01-M06 and K01-K04/K06 are complete and K05 immutable-CFG branch threading is next; also owns the future-capability and RXC-to-RXAS architecture-transfer ledgers |
+| `performance/PERF3-11-MIGRATION-WORKLIST.md` | Locked remaining-proof inventory and resumable one-authority migration ledger; K06 is classified mechanical and K05 is the next semantic migration |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |
@@ -46,6 +59,18 @@ capability decisions and per-benchmark ooRexx closure.
 | `performance/evidence/2026-07-29-perf2-11-windows-x86-64/` | Windows x86-64 correctness and formal timing/RSS/lifecycle/artifact scorecard under the supported CLion MinGW toolchain; no profiling or tuning |
 | `performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/` | Same-session Windows GCC/Clang `-O3` comparison, cross-platform RexxCPS review and exact-class NetRexx control; no profiling |
 | `performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/` | Bounded MSVC `rxbvm` build/portability, compiler and static-CRT controls; no profiling or toolchain selection |
+| `performance/evidence/2026-07-31-perf3-01-current-mac/` | Current-product Apple baseline-validity package: formal timing, focused schema-5 counts, retained Linux native attribution and ranked PERF3-02/03/04/05 disposition |
+| `performance/evidence/2026-07-31-perf3-02-copy-ownership-panel/` | C0 site/payload attribution, all preserved C1-C4 paths, authoritative governed clean-host timing and candidate decision package |
+| `performance/evidence/2026-07-31-perf3-02-c1b-analysis/` | Analysis-only proof of the C1a-R1 alias-lifetime failure and bounded C1b-R1 detached receiver-guard snapshot PoC contract; no implementation or timing |
+| `performance/evidence/2026-08-01-perf3-02-c1b-correctness/` | Approved C1b-R1 correctness-only PoC: exact dual-VM opt/no-opt Richards matrix, two-copy image delta, fail-closed tests and independent P1 storage-identity proof; no timing |
+| `performance/evidence/2026-07-31-perf3-02-c2e2-storage-identity/` | Diagnostic symbolic register-storage identity PoC: focused must-analysis/runtime proof, Richards/Towers coverage, CRI-13 shape replay, tactical RXAS rule migration map and production integration gate |
+| `performance/evidence/2026-08-01-perf3-02-r1-repanel/` | Locked-infrastructure C0-C4 replay: eight reproducible masks, correctness rejection of both broad-rule builds, exact C2/C3/C4 disposition and governed paired timing that recommends the safe C1abc composition |
+| `performance/evidence/2026-08-01-perf3-02-c1abc-closeout/` | Selected C1abc ordinary-production identity, focused and 1,972-test broad correctness, reviewed golden transition and retained option-replay integrity |
+| `performance/evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/` | Accepted PERF3-10 exact C0/C1 timing, equal-work conversion counts, static proof, ordered TRACE correctness and 1,982-test broad closeout |
+| `performance/evidence/2026-08-02-perf3-11-stage0-oracle/` | Clean pre-refactor RXAS binary/input hashes, 61-test signal/storage oracle, idle assembler elapsed/RSS samples and deterministic procedure scale |
+| `performance/evidence/2026-08-02-perf3-11-stage6-proof-service/` | Accepted reusable proof service and sole ITOS authority: retained 21-to-19 instruction delta, +7.469%/+6.866% RexxCPS verdict, call-window correctness discovery and 1,987-test closeout |
+| `performance/evidence/2026-08-02-perf3-11-legacy-proof-baseline/` | Stable remaining legacy-proof inventory, exact focused acceptance floor, canonical keyhole identities, output-neutral diagnostic and 49/49 focused replay |
+| `performance/evidence/2026-08-02-perf3-11-m01-xtoy/` | Completed metadata-driven XTOY repetition migration: old ITOF floor plus 11 stronger focused deletions, total ITOD/BTOD contract, unchanged canonical images and 1,989-test closeout |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
@@ -222,12 +247,14 @@ approved portfolio, serial correctness-gated raw capture, machine/build
 provenance and separate steady-state/lifecycle reports are proved by the NR-10
 formal bundle; the NR-11 governance and scorecard define future publication.
 
-The successor roadmap starts with a clean current-HEAD profiling and
-same-session comparison refresh. Cross-runtime work remains staged: qualify
-equal work first, keep Regina limited to RexxCPS, preserve non-comparable cells
-as diagnostics, and add each repaired capability/equivalence cell to the
-governed score only when it passes the portfolio contract. See
-`portfolio/cross-runtime-plan.md` and `ROADMAP.md`.
+PERF3 starts, after roadmap approval, with a current-HEAD Mac baseline-validity
+and evidence audit. It reuses retained PERF2 evidence where hashes and product
+scope remain valid and refreshes only the cells needed to restore current
+ranking authority. Cross-runtime work remains staged: qualify equal work first,
+keep Regina limited to RexxCPS, preserve non-comparable cells as diagnostics,
+and add each repaired capability/equivalence cell to the governed score only
+when it passes the portfolio contract. See `portfolio/cross-runtime-plan.md`
+and `ROADMAP.md`.
 
 ## Technical pointers
 

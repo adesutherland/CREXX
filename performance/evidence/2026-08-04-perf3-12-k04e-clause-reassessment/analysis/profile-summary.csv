@@ -1,0 +1,5 @@
+vm,mode,previous_total,current_total,delta,delta_percent,classification
+rxvm,noopt,148701541,148700911,-630,-0.000424,observation
+rxbvm,noopt,148701541,148700911,-630,-0.000424,observation
+rxvm,opt,54221210,53660581,-560629,-1.033966,observation
+rxbvm,opt,54221182,53660552,-560630,-1.033969,observation

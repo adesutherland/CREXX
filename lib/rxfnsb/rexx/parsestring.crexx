@@ -342,8 +342,7 @@ _legacy_span: procedure = .string
   offset = .int
   if span_length <= 0 then return result
   offset = start - 1
-  assembler setstrpos source,offset
-  assembler substring result,source,span_length
+  assembler substring result,source,offset,span_length
   return result
 
 _legacy_tail: procedure = .string

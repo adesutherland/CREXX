@@ -1,0 +1,16 @@
+capture=post-profile
+utc=2026-08-04T06:53:34Z
+host=Apple M5
+os=Darwin 25.5.0 arm64
+logical_cpus=10
+memory_bytes=25769803776
+power=AC attached; battery 80%; not charging
+low_power_mode=0
+load_1m=1.20
+load_5m=1.18
+load_15m=1.27
+sampling=serial
+competing_crexx_processes=none observed
+repository_branch=codex/perf3-rxas-flow-infrastructure
+repository_commit=209206f0f0f07cd709dcdd04665489756e0b433e
+accepted_product_commit=5fbe36049e26ee73ea0cf1720a7fc416f33d0fe2

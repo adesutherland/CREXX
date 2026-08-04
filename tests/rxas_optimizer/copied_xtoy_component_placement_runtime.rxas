@@ -1,0 +1,33 @@
+* PERF3-12A X1 runtime equivalence for placed and retained DCOPY/DTOS.
+
+main() .locals=12
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    seq r11,r1,"12"
+    brf failed,r11
+
+    * The source string component is observable, so this pair must remain.
+    load r2,"old"
+    load r2,12d
+    dcopy r3,r2
+    dtos r3
+    seq r11,r3,"12"
+    brf failed,r11
+    seq r11,r2,"old"
+    brf failed,r11
+
+    * The copied decimal component is observable after conversion too.
+    load r4,12d
+    dcopy r5,r4
+    dtos r5
+    dadd r6,r5,1d
+    deq r11,r6,13d
+    brf failed,r11
+
+    say "PASS: PERF3-12A X1 component placement runtime"
+    ret 0
+
+failed:
+    say "FAIL: PERF3-12A X1 component placement runtime"
+    ret 1

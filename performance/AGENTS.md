@@ -119,6 +119,24 @@ claims. Apply these standing rules to future performance work:
   referenced rather than copied, and no committed calibration, superseded
   scratch run or reproducible duplicate build output.
 
+## RXAS preprocessing ownership
+
+Keep the bounded RXAS peephole optimiser as the permanent first optimisation
+stage before procedure-level CFG/SSA construction.  Add a newly found rewrite
+to that stage when opcode metadata proves an exact local transformation and it
+does not require procedure-wide liveness, alias/storage identity, signal-path,
+hidden-cleanup or TRACE-observation reasoning.  Adjacent non-signalling algebra
+and mechanical encoding selection are the normal eligible cases.  A signalling
+rewrite is not eligible under this standing instruction; it needs its own
+instruction-contract proof and approval.
+
+Do not move a rewrite into CFG/SSA merely to consolidate implementation when
+the bounded peephole can prove it completely and more cheaply.  Conversely, do
+not enlarge the peephole or recreate tactical scans to approximate facts owned
+by CFG/SSA.  Measure any queue-bound change against the same input for emitted
+image, records and instructions entering the graph, graph/SSA size, assembler
+time and peak memory.  Preserve negative window-size evidence.
+
 ## Implementation gates
 
 ### Mandatory first Release verdict after a production performance edit

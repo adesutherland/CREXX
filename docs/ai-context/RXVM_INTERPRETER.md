@@ -228,12 +228,16 @@ five-attribute interrupt object as `sigcall`, but the handler's return string
 is interpreted as a VM action marker:
 
 - `__rxsignal_skip`: resume after the signal point
-- `__rxsignal_retry`: resume at the recorded interrupted address
 - `__rxsignal_fail` or any missing/unknown action: fall through to the default
   panic path, including the closest preceding source location
 
 The Level B `SIGNAL` compiler exit hides those internal marker strings behind
-`.signalaction.skip()`, `.signalaction.retry()`, and `.signalaction.fail()`.
+`.signalaction.skip()` and `.signalaction.fail()`. Instruction-level retry was
+retired on 2026-08-03: it is not a standard REXX trap continuation, had no
+production users, and cannot safely repeat instructions with partial writes or
+external side effects. A legacy `__rxsignal_retry` return is unknown and
+therefore follows the fail path. Source code that needs retry uses an explicit
+loop or wrapper procedure.
 
 Pending signals are held in the global `interrupts` bitset. `DISPATCH` checks
 that bitset after each instruction when the current frame is not already inside
@@ -285,6 +289,22 @@ The trace-event code fields are compact numeric character codes in the VM
 payload. TRACE handlers map them to presentation prefixes later and may read
 frame-local registers only when `value_source` names a register and `value_ref`
 is non-negative.
+
+Several ordered trace events may share one executable address after compiler
+or assembler optimization. When that address is reached, the trace controller
+collects every visible result event at that exact boundary into an ordered
+pending batch. The generated TRACE exit drains the complete batch before
+execution continues, preserving event count, metadata order and the component
+value named by each record. Delivery does not scan an address range and does
+not infer that skipped, branched-over or signal-bypassed instructions ran.
+Consequently an executable `cnop` or conversion is not required merely to keep
+two metadata events at distinct addresses.
+
+This guarantee applies to the events retained in the optimised image; it does
+not require the optimiser to preserve an event for an operation or value that
+it removes or moves. Optimised TRACE may therefore differ from the no-opt
+event stream, while every retained event must remain safe and ordered. Use
+compiler and assembler no-opt mode for source-correspondent tracing.
 
 Unstripped images may expose trace-event metadata. `metaloaddata` treats
 optional trace-event strings such as `symbol` and `resolved_name` defensively:
@@ -409,11 +429,13 @@ initialized object. The VM-private flag partition keeps this lifecycle marker
 out of public register flag writes such as `settp`.
 In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
-keep both in sync and reset `string_pos` / `string_char_pos` to the start of
-the new value.
+keep both in sync and reset the VM-private UTF lookup cache to the start of the
+new value. The cache is acceleration state only: RXAS cannot observe it, value
+copies do not preserve it, and optimizer metadata must not model it as a
+logical read or write.
 
 In-place string-byte writers use the private completion helpers rather than
-assigning `string_length` alone. `finish_string_write()` resets both cursors,
+assigning `string_length` alone. `finish_string_write()` resets the lookup cache,
 validates/recounts an arbitrary UTF-8 byte span and replaces only the
 VM-private UTF validity bits. `finish_ascii_string_write()` records the exact
 byte/codepoint count for known ASCII output. Both preserve compiler/public
@@ -425,6 +447,15 @@ survive. The PERF2-07 V3 regression covers `DCOPY; DTOS; STRLEN`, Unicode and
 typed-null destinations, a live reference alias and sibling numeric writers
 on both VMs and both optimization modes.
 
+`DCOPY` treats decimal absence as a total copy of decimal absence: it clears
+the destination's logical decimal length, preserves reusable backing storage
+and unrelated value components, and does not signal. `DTOS` is likewise total:
+decimal absence formats as `nan`, plugin diagnostics are cleared at the
+conversion boundary, and the completed ASCII write refreshes string length/count
+and validity metadata. Checked `INC`/`DEC` forms and both `SETNUMFUZ` forms
+validate into temporary state and signal before mutating the observed integer
+or numeric context.
+
 The `xtos` family of scalar-to-string conversions is allowed to mutate the
 destination value to materialize its string representation. This is acceptable
 for linked values, including object attributes, as representation
@@ -432,6 +463,24 @@ materialization rather than user-visible assignment. The current VM does not
 maintain a validity flag for a cached string representation, so repeated
 conversions still perform the conversion work and the compiler does not rely on
 string-form reuse.
+
+### Loose String Comparison Numeric Prefilter
+
+Loose string comparison first attempts binary64 conversion of both operands;
+when either conversion fails, it performs the existing blank-padded byte
+comparison. `rxvm_loose_string2float()` avoids calling the copied `strtod()`
+path only for an empty span or a leading byte that cannot begin a numeric
+subject. Digits, signs, whitespace, common radix bytes, `inf`/`nan` initials,
+high bytes and the active locale radix initial all fall through to the exact
+existing `string2float()` converter. The helper therefore changes conversion
+ownership and cost, not comparison grammar or results.
+
+Keep the helper private and out of line so `rxvm_loose_compare_text()` remains
+inlineable. The no-inline spelling must cover GCC/Clang and MSVC. Do not extend
+this optimization into a public opcode, serialized RXBIN form, JSON-specific
+path or value cache without a separate design and invalidation/lifecycle proof.
+The selected implementation and governed contract/performance evidence are in
+`performance/PERF3-03-WORKLIST.md`.
 
 ### Decimal Plugin Runtime
 
@@ -490,18 +539,19 @@ Ordinary `.binary` payloads should be built through the shared helpers in
 `slice_binary()`. These helpers keep `binary_length` and
 `binary_buffer_length` consistent, reuse existing capacity where possible, and
 clear native payload finalizers before replacing a native-backed object with an
-ordinary byte sequence. The register also carries `binary_pos`, a byte cursor
-used by `SETBINPOS`, `GETBINPOS`, and cursor-based `BSLICE`.
+ordinary byte sequence. Binary values carry no logical cursor.
 
 RXAS-level binary opcodes operate only on the binary slot. `LOAD_REG_BINARY`
 loads a `BINARY_CONST` from `0x...` RXAS syntax. `BCOPY_REG_REG` copies only
-the binary payload and byte cursor; it deliberately does not copy
+the binary payload; it deliberately does not copy
 public/compiler/library status flags. `GETBYTE` reads zero-based binary
 offsets and returns `-1` for out-of-range reads. `SETBYTE` and `BUPDATE` are
 strict and raise `OUT_OF_RANGE` for invalid byte indexes or fixed-size overlay
-writes past the destination length. `BCONCAT`, `BAPPEND`, and `BSLICE` build
-ordinary byte buffers without UTF-8 validation and clear VM-private UTF cache
-flags on the destination. `BCHECKRANGE` validates a zero-based byte offset and
+writes past the destination length. `BCONCAT` and `BAPPEND` build ordinary byte
+buffers. `BSLICE_REG_REG_REG_REG` takes explicit destination, source, start,
+and length registers and clips the requested byte range to the source length.
+These operations do not perform UTF-8 validation and clear VM-private UTF
+cache flags on the destination. `BCHECKRANGE` validates a zero-based byte offset and
 length without mutating either register; negative values and ranges that do not
 fit inside the current logical binary length raise `OUT_OF_RANGE`.
 
@@ -517,7 +567,7 @@ outside the target storage type raise `OUT_OF_RANGE`. `BRESIZE` preserves
 existing bytes, zero-fills growth, sets only the logical byte length, and may
 reuse/grow the private physical binary capacity in blocks. It raises
 `OUT_OF_RANGE` for negative lengths. `BCLEAR` sets the logical binary length
-and cursor to zero. `BFILL`
+to zero. `BFILL`
 fills the current logical byte range and requires a byte value in `0..255`.
 
 The Release 1 binary-memory VM surface also includes target-sized copy from a

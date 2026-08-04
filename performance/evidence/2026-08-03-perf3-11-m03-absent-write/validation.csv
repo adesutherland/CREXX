@@ -1,0 +1,9 @@
+check,result,detail
+strict-gnu90,pass,flow consumer proof SSA and opcode metadata; one pre-existing unused parameter warning
+debug-proof-contract,pass,RXAS immutable flow graph
+focused-debug,pass,7/7 M03 adjacent M02 and old-floor optimizer tests
+release-proof-contract,pass,RXAS immutable flow graph
+canonical-images,pass,Richards Towers RexxCPS byte-identical M02 versus M03 3/3
+trace-preservation,pass,two ordered TRACE events retained after equivalent NULL deletion
+broad-debug-ctest,pass,1993/1993 in 188.43 seconds
+diff-check,pass,no whitespace errors

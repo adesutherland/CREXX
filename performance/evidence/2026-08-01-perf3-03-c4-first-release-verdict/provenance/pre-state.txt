@@ -1,0 +1,135 @@
+utc=2026-08-01T14:56:13Z
+purpose=mandatory PERF3-03 C4 production first ordinary Release verdict
+sampling=one warmup plus 12 paired balanced rounds; Base64 2500 and canonical RexxCPS; both VMs
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+15:56  up 18 days,  9:04, 1 user, load averages: 1.31 1.19 1.12
+29430 /bin/zsh -c verdict_root=$(cat /tmp/crexx-perf3-03-first-verdict-active-dir.txt)
+cp performance/evidence/2026-08-01-perf3-03-conversion-review/provenance/prefilter3-matrix-v1.txt "$verdict_root/first-verdict-manifest-v1.txt"
+perl -ni -e 'print unless /^sieve-/' "$verdict_root/first-verdict-manifest-v1.txt"
+perl -pi -e 's/C4-prefilter-v3/C4-production/g; s#/tmp/crexx-perf3-03\.TsP0ej/prefilter3-build/bin/#'"$verdict_root"'/build-candidate/bin/#g' "$verdict_root/first-verdict-manifest-v1.txt"
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  printf '%s\n' 'purpose=mandatory PERF3-03 C4 production first ordinary Release verdict'
+  printf '%s\n' 'sampling=one warmup plus 12 paired balanced rounds; Base64 2500 and canonical RexxCPS; both VMs'
+  uname -a
+  sysctl -n machdep.cpu.brand_string hw.logicalcpu
+  pmset -g batt | sed -n '1,3p'
+  pmset -g therm 2>&1 | sed -n '1,20p'
+  uptime
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  git status --short --branch
+  git diff -- interpreter/rxvmintp.c
+  rg '^(CMAKE_BUILD_TYPE|CREXX_VM_PROFILING):' "$verdict_root/build-candidate/CMakeCache.txt"
+  shasum -a 256 "$verdict_root/build-candidate/bin/rxvm" "$verdict_root/build-candidate/bin/rxbvm" /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm /tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin "$verdict_root/first-verdict-manifest-v1.txt" performance/tools/run_cross_runtime_matrix.crexx
+  stat -f '%N %z bytes' "$verdict_root/build-candidate/bin/rxvm" "$verdict_root/build-candidate/bin/rxbvm" /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+} > "$verdict_root/pre-state.txt" 2>&1
+sed -n '1,20p' "$verdict_root/first-verdict-manifest-v1.txt"
+sed -n '1,90p' "$verdict_root/pre-state.txt"
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest "$verdict_root/first-verdict-manifest-v1.txt" --output-dir "$verdict_root/timing-initial" --measurement timing --warmups 1 --runs 12 > "$verdict_root/runner.stdout.txt" 2> "$verdict_root/runner.stderr.txt"
+## develop...origin/develop [ahead 3]
+ M assembler/rxas_flow.c
+ M interpreter/rxvmintp.c
+ M performance/PERF3-02-C2E2-P1-WORKLIST.md
+ M performance/ROADMAP.md
+?? performance/PERF3-02-C2E2-P1A-WORKLIST.md
+?? performance/PERF3-03-WORKLIST.md
+?? performance/PERF3-05-WORKLIST.md
+?? performance/evidence/2026-07-15-nr-02-portfolio-expansion/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-20-nr-10-formal-baseline/lifecycle-decimal/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-23-nr-16-17-closeout/final-baseline/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-23-perf2-01-current-baseline/04-lifecycle-rss/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-07-27-perf2-06-07-selection-panel/raw/lifecycle/crexx/lifecycle_probe.rxbin
+?? performance/evidence/2026-08-01-perf3-02-c2e2-p1a-a3-first-release-verdict/
+?? performance/evidence/2026-08-01-perf3-02-c2e2-p1a-closeout/
+?? performance/evidence/2026-08-01-perf3-02-c2e2-p1a-first-release-verdict/
+?? performance/evidence/2026-08-01-perf3-03-conversion-review/
+?? performance/evidence/2026-08-01-perf3-05-compiler-layout-panel/
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 9b56da524..253945ebe 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -63,6 +63,7 @@
+ #include "rxsignature.h"
+ #include <ctype.h>
+ #include <limits.h>
++#include <locale.h>
+ #ifdef _WIN32
+ #include <windows.h>
+ #include <io.h>
+@@ -159,6 +160,12 @@ typedef char rxvm_execution_slot_must_hold_pointer[
+ 
+ #define RXVM_LABEL_OWNER RXVM_LABEL_OWNER_NOINLINE RXVM_LABEL_OWNER_NOCLONE
+ 
++#if defined(_MSC_VER)
++#  define RXVM_HELPER_NOINLINE __declspec(noinline)
++#else
++#  define RXVM_HELPER_NOINLINE RXVM_LABEL_OWNER_NOINLINE
++#endif
++
+ int rxvm_link(rxvm_context *ctx);
+ 
+ #define RXVM_FFORMAT_MAX_FIELD 1000
+@@ -270,11 +277,39 @@ static int rxvm_trimmed_space_equal(const char *left, size_t left_len, const cha
+     return left_len == right_len && memcmp(left, right, left_len) == 0;
+ }
+ 
++/*
++ * Reject only a leading byte that cannot begin a strtod subject in the active
++ * locale. Numeric and uncertain spans retain the exact current converter.
++ * Keep this helper out of line so the loose comparator remains inlineable.
++ */
++static RXVM_HELPER_NOINLINE int rxvm_loose_string2float(
++        double *out, const char *text, size_t length) {
++    unsigned char first;
++    struct lconv *numeric_locale;
++
++    if (length == 0) return 1;
++    first = (unsigned char) text[0];
++    if (first >= 0x80 || isspace(first) ||
++        (first >= '0' && first <= '9') || first == '+' || first == '-' ||
++        first == '.' || first == ',' || first == 'i' || first == 'I' ||
++        first == 'n' || first == 'N') {
++        return string2float(out, (char *) text, length);
++    }
++
++    numeric_locale = localeconv();
++    if (numeric_locale && numeric_locale->decimal_point &&
++        numeric_locale->decimal_point[0] != '\0' &&
++        first == (unsigned char) numeric_locale->decimal_point[0]) {
++        return string2float(out, (char *) text, length);
++    }
++    return 1;
++}
++
+ static int rxvm_loose_compare_text(const char *left, size_t left_len, const char *right, size_t right_len) {
+     double left_number;
+     double right_number;
+-    int left_numeric = string2float(&left_number, (char *) left, left_len) == 0;
+-    int right_numeric = string2float(&right_number, (char *) right, right_len) == 0;
++    int left_numeric = rxvm_loose_string2float(&left_number, left, left_len) == 0;
++    int right_numeric = rxvm_loose_string2float(&right_number, right, right_len) == 0;
+ 
+     if (left_numeric && right_numeric) {
+         if (left_number > right_number) return 1;
+CMAKE_BUILD_TYPE:STRING=Release
+CREXX_VM_PROFILING:BOOL=OFF
+e80c75887e940d605d87761269bff0e556fb21c82cb176ff91a3d031b0bd54a5  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxvm
+0015c0843e30d43925b20c9e599461848b49362403f62707535dc95e7e98e04c  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxbvm
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+51e42735d5e3c58ebd80bef48c9b1d52532d809f961e2099094b4f0dd3a42ea8  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/library.rxbin
+f0d86b2a1da359f6e15b2f1f7c7d6b392d7ed74b5dd99ef364bd5c4e4f02c3d6  /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin
+d85192dab1d74e54a71029f530992396b8f073b75624a10e4eac85dc96a4d1c7  /tmp/crexx-perf3-05.9DY131/build-baseline/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+2ba5155fe50ac5388b89543b23b212d2b96c9216961a8c08224d2463e2e58e99  /tmp/crexx-perf3-03-first-verdict.xCMBN2/first-verdict-manifest-v1.txt
+efb194ec8194bfed5c26bd2fd98fb225f219c16a29fd710e9428fd331dc2a06c  performance/tools/run_cross_runtime_matrix.crexx
+/tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxvm 998936 bytes
+/tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxbvm 999144 bytes
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm 998840 bytes
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm 999016 bytes

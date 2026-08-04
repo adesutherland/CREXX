@@ -1,0 +1,75 @@
+CMake Error at compiler/tests/run_inline_receiver_guard_opt.cmake:24 (message):
+  call-bearing guard retained neither the materialized receiver nor the call
+  fallback:
+
+  §inline_receiver_guard_local.probe.callcaller() .locals=7
+
+     .meta "inline_receiver_guard_local.probe.callcaller"="b" ".boolean" §inline_receiver_guard_local.probe.callcaller() "identity=.int"
+     .srcstep 163 163 17 "inline_receiver_guard_local.crexx" 43 3 32 "  callCaller: method = .boolean"
+     assertinitialized a1
+     numsci 18,1,1
+     .srcstep 148 148 17 "inline_receiver_guard_local.crexx" 44 9 24 "    arg identity = .int"
+     .meta "inline_receiver_guard_local.probe.callcaller.identity"="b" ".int" a2
+     .meta "inline_receiver_guard_local.probe.callcaller.§this"="b" ".probe" a1
+     .srcstep 162 162 17 "inline_receiver_guard_local.crexx" 45 5 31 "    return callGuard(identity)"
+     .srcstep 161 161 17 "inline_receiver_guard_local.crexx" 45 12 21 "    return callGuard(identity)"
+     .srcstep 149 149 33 "inline_receiver_guard_local.crexx" 45 12 21 "    return callGuard(identity)"
+     .traceevent "V" 6 "R" "O" "a" 1 149 149 0 "§this" ""
+     .traceevent "A" 6 "R" "O" "a" 1 149 149 0 "§this" ""
+     .srcstep 150 150 33 "inline_receiver_guard_local.crexx" 39 9 17 "    arg identity = .int"
+     .traceevent "V" 6 "R" "I" "a" 2 150 150 0 "identity" ""
+     .traceevent "A" 6 "R" "I" "a" 2 150 150 0 "identity" ""
+     .srcstep 158 158 17 "inline_receiver_guard_local.crexx" 40 5 38 "    if booleanIdentity(flags[identity]) then return 1"
+     .srcstep 156 156 17 "inline_receiver_guard_local.crexx" 40 8 23 "    if booleanIdentity(flags[identity]) then return 1"
+     .srcstep 151 151 33 "inline_receiver_guard_local.crexx" 40 8 23 "    if booleanIdentity(flags[identity]) then return 1"
+     .traceevent "V" 6 "R" "O" "a" 1 151 151 0 "§this" ""
+     .traceevent "A" 6 "R" "O" "a" 1 151 151 0 "§this" ""
+     .srcstep 152 152 33 "inline_receiver_guard_local.crexx" 40 24 29 "    if booleanIdentity(flags[identity]) then return 1"
+     linksetattrslinkadd r5,a1,1,2,r4,a2,1
+     .traceevent "V" 6 "R" "I" "a" 2 152 152 0 "identity" ""
+     .traceevent "C" 4 "R" "I" "a" 2 152 152 0 "flags" ""
+     .traceevent "V" 6 "R" "B" "r" 4 152 152 0 "flags" ""
+     igetunlink r2,r4
+     .traceevent "A" 6 "R" "B" "r" 2 152 152 0 "__inline_scoped_arg_112_0" ""
+     unlink r5
+     .srcstep 153 153 33 "inline_receiver_guard_local.crexx" 40 8 23 "    if booleanIdentity(flags[identity]) then return 1"
+     .traceevent "V" 6 "R" "O" "a" 1 153 153 0 "§this" ""
+     .traceevent "A" 6 "R" "O" "a" 1 153 153 0 "§this" ""
+     .srcstep 154 154 33 "inline_receiver_guard_local.crexx" 35 9 14 "    arg value = .boolean"
+     .traceevent "V" 6 "R" "B" "r" 2 154 154 0 "__inline_scoped_arg_112_0" ""
+     icopy r3,r2
+     .traceevent "A" 6 "R" "B" "r" 3 154 154 0 "value" ""
+     .srcstep 155 155 17 "inline_receiver_guard_local.crexx" 36 5 17 "    return value"
+     .traceevent "V" 6 "R" "B" "r" 3 158 158 0 "value" ""
+     br l378bexprend
+
+  l378bexprend:
+
+     brf l377iffalse,r3
+     .srcstep 159 159 17 "inline_receiver_guard_local.crexx" 40 38 39 "    if booleanIdentity(flags[identity]) then return 1"
+     .srcstep 157 157 17 "inline_receiver_guard_local.crexx" 40 46 54 "    if booleanIdentity(flags[identity]) then return 1"
+     load r6,1
+     .traceevent "L" 4 "R" "B" "r" 6 162 162 0 "" ""
+     icopy r5,r6
+     br l369bexprend
+
+  l377iffalse:
+
+     .srcstep 160 160 17 "inline_receiver_guard_local.crexx" 41 5 13 "    return 0"
+     load r6,0
+     .traceevent "L" 4 "R" "B" "r" 6 162 162 0 "" ""
+     icopy r5,r6
+     br l369bexprend
+
+  l369bexprend:
+
+     ret r5
+     .meta "inline_receiver_guard_local.probe.callcaller.identity"
+     .meta "inline_receiver_guard_local.probe.callcaller.§this"
+
+
+
+Call Stack (most recent call first):
+  compiler/tests/run_inline_receiver_guard_opt.cmake:65 (require_fallback)
+
+

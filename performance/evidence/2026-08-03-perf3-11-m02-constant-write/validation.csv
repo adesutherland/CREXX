@@ -1,0 +1,12 @@
+gate,result,detail
+first-release-verdict,accepted,Adrian accepted 2026-08-03
+strict-gnu90,pass,flow consumer proof SSA and opcode metadata; one pre-existing unused parameter warning
+opcode-metadata,pass,650 dense opcode contracts including hidden native payload component
+immutable-flow-unit,pass,RXAS immutable flow graph PASS including constant and cleanup proofs
+focused-optimizer,pass,53/53
+release-dual-vm,pass,rxvm and rxbvm opt/noopt signal and hidden-cleanup runtime 4/4
+canonical-images,pass,Richards Towers RexxCPS byte-identical 3/3
+ordinary-release-scale,accepted,median 0.05 seconds both; RSS 22134784 to 30081024 bytes
+diagnostic-release-scale,accepted,median 0.39 seconds both; M02 median RSS 31195136 bytes
+broad-debug,pass,1991/1991 in 186.89 seconds
+runtime-timing,not-applicable,all representative runtime images byte-identical

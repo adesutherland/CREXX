@@ -1,0 +1,38 @@
+/* Focused Level B execution-wide queue tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + check_int(0, queued(), "initial depth")
+
+call queue "tail"
+call push "head"
+errors = errors + check_int(2, queued(), "mixed depth")
+errors = errors + check("head", pull(), "push is LIFO front")
+
+call append_nested "nested"
+errors = errors + check_int(2, queued(), "nested procedure shares queue")
+errors = errors + check("tail", pull(), "queue is FIFO tail")
+errors = errors + check("nested", pull(), "nested append visible")
+errors = errors + check("", pull(), "empty pull")
+errors = errors + check_int(0, queued(), "final depth")
+
+if errors = 0 then say "PASS: rxqueue shared state"
+return errors <> 0
+
+append_nested: procedure = .void
+  arg value = .string
+  call queue value
+return
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: RXQUEUE" label "expected" expected "got" actual
+  return 1
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: RXQUEUE" label "expected" expected "got" actual
+  return 1

@@ -203,7 +203,7 @@ Temporarily bind a local register name to a register in the caller's frame.
 `rIndex` supplies a zero-based integer index into the immediate parent frame's
 local-register table. The instruction rebinds the destination register slot;
 subsequent reads and writes through `rLocal` access the caller's complete value,
-including its cursor, attributes, type metadata, and flags. `unlink rLocal`
+including its attributes, type metadata, and flags. `unlink rLocal`
 restores the callee's original local-register binding.
 
 ### Signals
@@ -600,8 +600,8 @@ Load the procedure name referenced by one raw procedure operand slot.
 ### Operands And Semantics
 
 The module is one-based and the address is a raw operand slot whose index must
-refer to a procedure constant. The destination string is replaced and its
-cursor resets. This returns only the name, not a callable procedure object.
+refer to a procedure constant. The destination string is replaced. This
+returns only the name, not a callable procedure object.
 
 ### Signals
 
@@ -639,7 +639,7 @@ Load a string constant referenced by one raw operand slot.
 ### Operands And Semantics
 
 The one-based module and raw operand address select a constant-pool record. The
-destination string is replaced from that constant and its cursor resets;
+destination string is replaced from that constant;
 source registers remain unchanged.
 
 ### Signals
@@ -678,7 +678,7 @@ OR selected public writable status flags into a value.
 
 The literal is masked by `RXFLAG_PUBLIC_WRITABLE_MASK` before OR. Existing
 flags remain set. VM-private and reserved bits in the literal are ignored;
-payloads and cursors remain unchanged.
+payloads remain unchanged.
 
 ### Signals
 
@@ -713,8 +713,8 @@ Update public writable status-flag bands while preserving VM-private state.
 
 The literal cannot write VM-private or reserved bits. If it requests no public
 bit, all public bands are cleared. Otherwise each nonzero requested band
-replaces that band while a zero band preserves its current bits. Payloads and
-cursors are unchanged.
+replaces that band while a zero band preserves its current bits. Payloads are
+unchanged.
 
 ### Signals
 
@@ -830,7 +830,7 @@ Resolve a concrete runtime method for an object's registered class.
 The method descriptor is a string constant. Resolution combines it with
 `rObject`'s runtime class metadata. On success the destination is cleared and
 its integer payload receives the opaque runtime procedure pointer. The object,
-its attributes, cursor, and flags remain unchanged.
+its attributes, and flags remain unchanged.
 
 ### Signals
 
@@ -869,7 +869,7 @@ Return the canonical source spelling of a value's runtime object type.
 
 An internal runtime class name is converted to its canonical source spelling.
 Values without concrete object metadata return `.object`. The destination is
-cleared, receives a string, and has its cursor reset; the source is unchanged.
+cleared and receives a string; the source is unchanged.
 
 ### Signals
 

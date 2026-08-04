@@ -1,0 +1,12 @@
+rw-r--r--     501/20         3784 Aug  1 10:58 2026 __.SYMDEF SORTED
+rw-r--r--     501/0        805296 Aug  1 10:58 2026 rxvmintp.c.o
+rw-r--r--     501/0         22272 Aug  1 10:57 2026 rxvmload.c.o
+rw-r--r--     501/0          6184 Aug  1 10:57 2026 interrupt.c.o
+rw-r--r--     501/0         32760 Aug  1 10:57 2026 rxspawn.c.o
+rw-r--r--     501/0         43744 Aug  1 10:57 2026 rxcrexxcmd.c.o
+rw-r--r--     501/0          1776 Aug  1 10:57 2026 exitfunc.c.o
+rw-r--r--     501/0         14960 Aug  1 10:57 2026 rxpafuncs.c.o
+rw-r--r--     501/0          5904 Aug  1 10:57 2026 rxvm_run.c.o
+rw-r--r--     501/0         37752 Aug  1 10:57 2026 rxvmsock.c.o
+rw-r--r--     501/0          4448 Aug  1 10:57 2026 rxvmlib.c.o
+rw-r--r--     501/0         60536 Aug  1 10:57 2026 rxvml.c.o

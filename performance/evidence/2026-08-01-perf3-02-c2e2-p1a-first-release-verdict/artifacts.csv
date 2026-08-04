@@ -1,0 +1,6 @@
+artifact,sha256,bytes,role
+/tmp/crexx-c2e2-p1-baseline.VosQ4p/rxas-baseline,af80b2c9f664a2ed1b7ec7a4cca5a419718f2f5384e3cfb880f86c7a06ad7422,596824,pre_p1_timing_oracle
+/tmp/crexx-p1a.ceSYyq/rxas-p1-locked,09ea8e49c54dfc839833a1fa40dfa5809467aa53c730dc050ae0a2b95f73669e,596776,locked_p1_timing_oracle
+/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxas,7cec2f1245da24cf24ffd37ec94faba0309dfc41f088d5b94c382522c0e9258d,596776,p1a_candidate
+/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxas,ac1737cc7d6d7ba59a1a3771d1c6d977b974f5d5c23fa5f10c032f0d00c259d9,256519,richards_input
+/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxas,35ead6d2a0313e64986370c803bf960cc20a73bf5b1813d9c0e8d2ac2a7c3e4e,81002,towers_input

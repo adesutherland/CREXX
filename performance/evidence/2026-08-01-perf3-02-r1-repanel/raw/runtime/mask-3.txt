@@ -1,0 +1,14 @@
+mask=3 mode=opt bench=awfy_richards vm=rxvm rc=0 output=benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297 PASS: AWFY Richards 
+mask=3 mode=opt bench=awfy_richards vm=rxbvm rc=0 output=benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297 PASS: AWFY Richards 
+mask=3 mode=opt bench=awfy_towers vm=rxvm rc=0 output=benchmark=awfy_towers repetitions=1 result=8191 PASS: AWFY Towers 
+mask=3 mode=opt bench=awfy_towers vm=rxbvm rc=0 output=benchmark=awfy_towers repetitions=1 result=8191 PASS: AWFY Towers 
+mask=3 mode=noopt bench=awfy_richards vm=rxvm rc=0 output=benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297 PASS: AWFY Richards 
+mask=3 mode=noopt bench=awfy_richards vm=rxbvm rc=0 output=benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297 PASS: AWFY Richards 
+mask=3 mode=noopt bench=awfy_towers vm=rxvm rc=0 output=benchmark=awfy_towers repetitions=1 result=8191 PASS: AWFY Towers 
+mask=3 mode=noopt bench=awfy_towers vm=rxbvm rc=0 output=benchmark=awfy_towers repetitions=1 result=8191 PASS: AWFY Towers 
+mask=3 mode=opt bench=awfy_permute vm=rxvm rc=0 output=benchmark=awfy_permute repetitions=1 result=8660 PASS: AWFY Permute 
+mask=3 mode=opt bench=awfy_permute vm=rxbvm rc=0 output=benchmark=awfy_permute repetitions=1 result=8660 PASS: AWFY Permute 
+mask=3 mode=opt bench=awfy_bounce vm=rxvm rc=0 output=benchmark=awfy_bounce repetitions=1 result=1331 PASS: AWFY Bounce 
+mask=3 mode=opt bench=awfy_bounce vm=rxbvm rc=0 output=benchmark=awfy_bounce repetitions=1 result=1331 PASS: AWFY Bounce 
+mask=3 mode=opt bench=awfy_sieve vm=rxvm rc=0 output=benchmark=awfy_sieve repetitions=1 result=669 PASS: AWFY Sieve 
+mask=3 mode=opt bench=awfy_sieve vm=rxbvm rc=0 output=benchmark=awfy_sieve repetitions=1 result=669 PASS: AWFY Sieve 

@@ -54,8 +54,7 @@ rexxclassicbif_d2c: procedure = .RexxValue
     start = 1
     number_length = number_length - 1
     magnitude = ""
-    assembler setstrpos number,start
-    assembler substring magnitude,number,number_length
+    assembler substring magnitude,number,start,number_length
   end
 
   hexadecimal = rexxclassic_decimal_to_hex(magnitude, negative)

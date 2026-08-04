@@ -14,8 +14,7 @@ char_at: procedure = .string
   offset = posn - 1
   one = 1
   out = .string
-  assembler setstrpos text, offset
-  assembler substring out, text, one
+  assembler substring out, text, offset, one
   return out
 
 left_copy: procedure = .string

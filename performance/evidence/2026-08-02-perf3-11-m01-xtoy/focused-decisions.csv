@@ -1,0 +1,26 @@
+opcode,case,old_count,new_count,noopt_count,decision
+ITOF,itof_old_floor,1,1,2,old floor recovered
+FTOS,ftos_repeat,2,1,2,new total repetition proved
+FTOS,ftos_context_write,2,2,2,rejected effect changed
+DTOS,dtos_repeat,2,1,2,new total repetition proved
+DTOS,dtos_context_write,2,2,2,rejected effect changed
+ITOD,itod_repeat,2,1,2,new total repetition proved
+ITOD,itod_source_write,2,2,2,rejected source changed
+ITOD,itod_context_write,2,2,2,rejected effect changed
+ITOD,itod_skip_continuation,2,1,2,new total contract proved
+ITOD,itod_trace_batch,2,1,2,new total repetition and ordered TRACE proved
+ITOD,itod_link_transfer,2,1,2,new linked-storage repetition proved
+BTOD,btod_repeat,2,1,2,new total repetition proved
+BTOF,btof_repeat,2,1,2,new total repetition proved
+BTOS,btos_repeat,2,1,2,new total repetition proved
+FTOB,ftob_repeat,2,1,2,new total repetition proved
+STOB,stob_repeat,2,1,2,new total repetition proved
+FTOI,ftoi_signal_path,2,2,2,rejected success edge not dominating
+STOF,stof_signal_path,2,2,2,rejected success edge not dominating
+STOD,stod_signal_path,2,2,2,rejected success edge not dominating
+DTOI,dtoi_signal_path,2,2,2,rejected success edge not dominating
+DTOB,dtob_signal_path,2,2,2,rejected success edge not dominating
+FTOD,ftod_signal_path,2,2,2,rejected success edge not dominating
+DTOF,dtof_signal_path,2,2,2,rejected success edge not dominating
+BTOI,btoi_same_component,2,2,2,rejected source changed; idempotence proof required
+ITOB,itob_same_component,2,2,2,rejected source changed; idempotence proof required

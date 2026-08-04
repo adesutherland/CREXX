@@ -160,7 +160,7 @@ static void apply_assembler_operand_effects(ASTNode *node,
     effects = rxop_effects(instruction->opcode);
     if (effects.state != RXOP_EFFECT_CLASSIFIED ||
         effects.implicit != RXOP_IMPLICIT_NONE ||
-        (effects.semantics & ~RXOP_SEM_MAY_THROW) != 0) {
+        effects.semantics != RXOP_SEM_NONE) {
         return;
     }
 
@@ -168,11 +168,9 @@ static void apply_assembler_operand_effects(ASTNode *node,
     for (child = node->child; child; child = child->sibling) {
         if (child->symbolNode) {
             child->symbolNode->readUsage =
-                (unsigned int)(rxop_effect_reads_operand(&effects, operand_index) ||
-                               rxop_effect_reads_cursor(&effects, operand_index));
+                (unsigned int)rxop_effect_reads_operand(&effects, operand_index);
             child->symbolNode->writeUsage =
-                (unsigned int)(rxop_effect_writes_operand(&effects, operand_index) ||
-                               rxop_effect_writes_cursor(&effects, operand_index));
+                (unsigned int)rxop_effect_writes_operand(&effects, operand_index);
         }
         operand_index++;
     }

@@ -1,0 +1,169 @@
+/* PERF3-11 signal-contract semantic oracle.
+ *
+ * Proves total DCOPY/DTOS, pre-write numeric-context failure and portable
+ * pre-write checked INC/DEC behavior through both VM dispatch engines.
+ */
+
+.globals=1
+
+main() .locals=10
+    sigcalla skip_signal(),"INVALID_ARGUMENTS"
+    sigcalla skip_signal(),"OVERFLOW_UNDERFLOW"
+    load g0,0
+
+    /* An absent decimal source is a total copy of decimal absence.  It neither
+     * signals nor changes an unrelated destination integer component. */
+    load r0,123
+    load r0,12d
+    null r1
+    dcopy r0,r1
+    dtos r0
+    seq r9,r0,"nan"
+    brf failed,r9
+    ieq r9,r0,123
+    brf failed,r9
+    ieq r9,g0,0
+    brf failed,r9
+
+    /* DTOS is total for decimal absence and clears stale plugin diagnostics. */
+    null r2
+    dtos r2
+    seq r9,r2,"nan"
+    brf failed,r9
+    ieq r9,g0,0
+    brf failed,r9
+
+    /* Invalid literal fuzz signals before changing numeric context. */
+    setnumdgts 12
+    setnumfuz 7
+    setnumfuz -1
+    getnumfuz r2
+    ieq r9,r2,7
+    brf failed,r9
+    setnumfuz 0
+
+    /* M01 removes only dominated, success-stable repeated derivations. */
+    load r5,3
+    itof r5
+    itof r5
+    feq r9,r5,3.0
+    brf failed,r9
+
+    load r5,1.25
+    ftos r5
+    ftos r5
+    seq r9,r5,"1.25"
+    brf failed,r9
+
+    load r5,12d
+    dtos r5
+    dtos r5
+    seq r9,r5,"12"
+    brf failed,r9
+
+    load r5,12
+    itod r5
+    itod r5
+    dtos r5
+    seq r9,r5,"12"
+    brf failed,r9
+
+    load r5,1
+    btod r5
+    btod r5
+    dtos r5
+    seq r9,r5,"1"
+    brf failed,r9
+
+    load r5,1
+    btof r5
+    btof r5
+    feq r9,r5,1.0
+    brf failed,r9
+
+    load r5,1
+    btos r5
+    btos r5
+    seq r9,r5,"1"
+    brf failed,r9
+
+    load r5,1.25
+    ftob r5
+    ftob r5
+    ieq r9,r5,1
+    brf failed,r9
+
+    load r5,"1"
+    stob r5
+    stob r5
+    ieq r9,r5,1
+    brf failed,r9
+
+    /* A repeated scalar load is removable only after hidden payload cleanup
+     * is already proved absent. */
+    load r5,0
+    mkref r5,r6
+    load r5,0
+    refvalid r9,r5
+    brt failed,r9
+
+    /* Generic INC/DEC preserve the prior integer on overflow. */
+    load r3,9223372036854775807
+    inc r3
+    ieq r9,r3,9223372036854775807
+    brf failed,r9
+    load r4,-9223372036854775807
+    dec r4
+    icopy r7,r4
+    dec r4
+    ieq r9,r4,r7
+    brf failed,r9
+
+    /* Fixed-register forms obey the same contract. */
+    load r0,9223372036854775807
+    inc0
+    ieq r9,r0,9223372036854775807
+    brf failed,r9
+    load r0,-9223372036854775807
+    dec0
+    icopy r7,r0
+    dec0
+    ieq r9,r0,r7
+    brf failed,r9
+
+    load r1,9223372036854775807
+    inc1
+    ieq r9,r1,9223372036854775807
+    brf failed,r9
+    load r1,-9223372036854775807
+    dec1
+    icopy r7,r1
+    dec1
+    ieq r9,r1,r7
+    brf failed,r9
+
+    load r2,9223372036854775807
+    inc2
+    ieq r9,r2,9223372036854775807
+    brf failed,r9
+    load r2,-9223372036854775807
+    dec2
+    icopy r7,r2
+    dec2
+    ieq r9,r2,r7
+    brf failed,r9
+
+    /* One invalid-setting signal and eight checked-arithmetic signals. */
+    ieq r9,g0,9
+    brf failed,r9
+
+    say "PASS: PERF3-11 signal contract runtime"
+    ret 0
+
+failed:
+    say "FAIL: PERF3-11 signal contract runtime"
+    ret 1
+
+skip_signal() .locals=0
+    inc g0
+    ret "__rxsignal_skip"

@@ -1,0 +1,13 @@
+* D0.4: independent M05 typed-copy and K04 compare/branch plans must commit
+* through one immutable semantic epoch and one validated queue batch.
+
+semantic_batch_flow() .locals=8
+    load r0,7
+    icopy r1,r0
+semantic_batch_copy_use:
+    iadd r2,r1,1
+    ieq r3,r4,5
+    brt semantic_batch_done,r3
+    ret r2
+semantic_batch_done:
+    ret r2

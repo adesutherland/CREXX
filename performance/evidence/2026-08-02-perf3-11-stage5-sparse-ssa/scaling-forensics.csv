@@ -1,0 +1,4 @@
+variant,workload,elapsed_s,peak_rss_bytes,status,observation
+recursive-dynamic-storage,RexxCPS,82.51,approximately-11000000,rejected-terminated,repeated recursive dynamic-storage traversal dominated CPU
+eager-all-components,RexxCPS,0.78,approximately-305000000,rejected-memory,eager point and component queries retained approximately 245 MB and 257 MB in the two large procedures
+generation-marked-derivation-demand,RexxCPS,0.28,18710528,accepted,actual derivation sites materialized and all other values remain on demand

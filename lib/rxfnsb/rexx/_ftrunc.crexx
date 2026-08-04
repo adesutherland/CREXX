@@ -51,6 +51,5 @@ _ftrunc: procedure = .string
   assembler strlen formatted_length,number
   fraction_length = formatted_length - point_position
   if fraction_length <= 0 then return result
-  assembler setstrpos number,point_position
-  assembler substring result,number,fraction_length
+  assembler substring result,number,point_position,fraction_length
   return result

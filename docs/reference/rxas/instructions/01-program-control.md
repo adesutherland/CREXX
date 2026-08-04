@@ -405,8 +405,8 @@ Transfer control unconditionally to a procedure-local label.
 
 ### Operands And Semantics
 
-The assembler resolves and backpatches the label. No register, payload, flag,
-or cursor is read or modified, and there is no fall-through path.
+The assembler resolves and backpatches the label. No register, payload, or flag
+is read or modified, and there is no fall-through path.
 
 ### Signals
 
@@ -848,7 +848,7 @@ points, or deliberately retained instruction positions.
 
 The zero-operand form has no inputs. The nine-operand form records explicit
 register reads for optimiser liveness but intentionally leaves the register
-values unchanged. Cursors, flags, frames, and control metadata remain unchanged
+values unchanged. Flags, frames, and control metadata remain unchanged
 except for normal program-counter advance.
 
 ### Signals
@@ -929,7 +929,7 @@ Dispatch through a packed table using a whole logical binary value as the key.
 
 `rKey` supplies its complete binary payload and `table` is a procedure-local
 `.jtable` whose cases are binary literals. A match branches to the case label;
-a miss falls through. The source, binary cursor, and table are unchanged.
+a miss falls through. The source and table are unchanged.
 
 ### Signals
 
@@ -972,8 +972,8 @@ Dispatch through a fixed-width binary table using a zero-copy source slice.
 
 `rOffset` supplies a zero-based byte offset. All table keys must be nonempty
 binary literals of one fixed width, which determines the slice length. A match
-branches and a miss falls through. Neither register nor the binary cursor is
-modified, and no temporary slice is allocated.
+branches and a miss falls through. Neither register is modified, and no
+temporary slice is allocated.
 
 ### Signals
 
@@ -1061,8 +1061,8 @@ Dispatch through a packed table using a string's exact UTF-8 bytes.
 ### Operands And Semantics
 
 The logical string bytes, excluding any NUL terminator, are matched against
-string-literal cases. A match branches and a miss falls through. The string and
-its cursor are unchanged; this form performs exact byte matching without
+string-literal cases. A match branches and a miss falls through. The string is
+unchanged; this form performs exact byte matching without
 numeric or trailing-blank canonicalization.
 
 ### Signals
@@ -1106,7 +1106,7 @@ Dispatch using Rexx blank-padded nonnumeric string equality.
 
 The assembler trims trailing ASCII spaces from case keys and the VM ignores
 them in the runtime string. Leading spaces remain significant. A match branches
-and a miss falls through without copying or changing the source or cursor. A
+and a miss falls through without copying or changing the source. A
 table cannot mix exact, padded, and numeric string modes.
 
 ### Signals
@@ -1150,8 +1150,8 @@ table.
 
 Assembler and VM use the shared string-to-double parser and canonical
 little-endian IEEE-754 key bytes; `-0` and `0` are one key. A numeric match
-branches, while nonnumeric input falls through. The source and cursor are
-unchanged. NaN input retains loose-comparison first-case alias behavior.
+branches, while nonnumeric input falls through. The source is unchanged. NaN
+input retains loose-comparison first-case alias behavior.
 
 ### Signals
 

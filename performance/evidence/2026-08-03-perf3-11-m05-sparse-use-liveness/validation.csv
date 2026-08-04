@@ -1,0 +1,14 @@
+check,result,detail
+strict-gnu90,pass,one pre-existing unused-parameter warning
+focused-debug,pass,6/6
+focused-release,pass,6/6
+canonical-richards,pass,byte-identical M04/M05
+canonical-towers,pass,byte-identical M04/M05
+canonical-rexxcps,pass,byte-identical M04/M05
+focused-flow,pass,byte-identical M04/M05
+focused-panel,pass,only copy_before_endlife register source differs; instruction count unchanged
+ordinary-rexxcps-scale,accepted,0.16-0.17 s and 102.8 MB peak RSS
+diagnostic-rexxcps-scale,pass,0.61 s and 130138112 bytes peak RSS
+full-debug-build,pass,complete
+broad-debug,pass,1995/1995 in 231.94 seconds
+diff-check,pass,no whitespace errors

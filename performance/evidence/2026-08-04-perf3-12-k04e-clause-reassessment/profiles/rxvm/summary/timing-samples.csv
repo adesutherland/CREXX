@@ -1,0 +1,3 @@
+entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness
+rexxcps-noopt,rexxcps-k04e,RexxCPS,baseline,noopt,process,recorded,1,2832188000,0,pass
+rexxcps-opt,rexxcps-k04e,RexxCPS,candidate,opt,process,recorded,1,1738574000,0,pass

@@ -1,0 +1,41 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 209: arg_semantics_object_opt
+      Start 211: object_reference_regression_opt
+      Start 319: inline_test_object_return_assign_opt
+      Start 321: inline_test_object_return_expr_opt
+      Start 323: inline_test_object_const_arg_mutation_opt
+      Start 329: inline_test_object_expr_arg_opt
+      Start 339: inline_test_class_methods_opt
+      Start 398: arg_semantics_object_run_opt
+      Start 400: object_reference_regression_run_opt
+      Start 722: inline_test_object_return_expr_run_opt
+      Start 730: inline_test_object_expr_arg_run_opt
+      Start 720: inline_test_object_return_assign_run_opt
+      Start 744: inline_test_class_methods_run_opt
+      Start 724: inline_test_object_const_arg_mutation_run_opt
+ 1/16 Test #319: inline_test_object_return_assign_opt ............   Passed    1.24 sec
+ 2/16 Test #339: inline_test_class_methods_opt ...................   Passed    1.24 sec
+ 3/16 Test #329: inline_test_object_expr_arg_opt .................   Passed    1.26 sec
+ 4/16 Test #209: arg_semantics_object_opt ........................   Passed    1.27 sec
+ 5/16 Test #321: inline_test_object_return_expr_opt ..............   Passed    1.27 sec
+ 6/16 Test #323: inline_test_object_const_arg_mutation_opt .......   Passed    1.27 sec
+ 7/16 Test #211: object_reference_regression_opt .................   Passed    1.29 sec
+ 8/16 Test #730: inline_test_object_expr_arg_run_opt .............   Passed    1.31 sec
+ 9/16 Test #720: inline_test_object_return_assign_run_opt ........   Passed    1.36 sec
+10/16 Test #398: arg_semantics_object_run_opt ....................   Passed    1.37 sec
+11/16 Test #744: inline_test_class_methods_run_opt ...............   Passed    1.37 sec
+12/16 Test #722: inline_test_object_return_expr_run_opt ..........   Passed    1.38 sec
+13/16 Test #724: inline_test_object_const_arg_mutation_run_opt ...   Passed    1.38 sec
+14/16 Test #400: object_reference_regression_run_opt .............   Passed    1.41 sec
+      Start   1: linked_opt_runtime_artifacts_build
+15/16 Test   #1: linked_opt_runtime_artifacts_build ..............   Passed    0.07 sec
+      Start 576: inline_receiver_production_ladder_opt
+16/16 Test #576: inline_receiver_production_ladder_opt ...........   Passed    1.67 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+linked_opt    =  11.25 sec*proc (8 tests)
+receiver      =   1.67 sec*proc (1 test)
+
+Total Test time (real) =   3.18 sec

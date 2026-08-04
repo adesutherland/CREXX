@@ -1,0 +1,28 @@
+diff --git a/compiler/rxcp_inline_bind.c b/compiler/rxcp_inline_bind.c
+index f73b4a07d..41c90a124 100644
+--- a/compiler/rxcp_inline_bind.c
++++ b/compiler/rxcp_inline_bind.c
+@@ -1708,8 +1708,11 @@ static int inline_symbol_has_generated_storage_scope(Symbol *symbol) {
+  * path.  Multiple explicit returns remain materialised because the current
+  * summary does not prove that every rewritten exit balances receiver-owned
+  * class-attribute links.  The established ordinary direct-object path does not
+- * need this nested-§this exit restriction.  Computed and class-attribute
+- * receivers still need their existing evaluate-once locator/copyback path. */
++ * need this nested-§this exit restriction.  An already-materialized by-value
++ * object formal also owns ordinary direct storage unless argument binding has
++ * coalesced it through inline_value_alias; generated/captured storage remains
++ * excluded.  Computed and class-attribute receivers still need their existing
++ * evaluate-once locator/copyback path. */
+ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
+                                                    ASTNode *receiver,
+                                                    Symbol **storage_out) {
+@@ -1733,8 +1736,7 @@ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
+         receiver_symbol->type != TP_OBJECT || receiver_symbol->value_dims != 0 ||
+         receiver_symbol->is_ref_arg ||
+         (!receiver_symbol->is_this &&
+-         (receiver_symbol->is_arg ||
+-          inline_symbol_has_generated_storage_scope(receiver_symbol) ||
++         (inline_symbol_has_generated_storage_scope(receiver_symbol) ||
+           receiver_symbol->inline_value_alias)) ||
+         receiver->flow_substitute_symbol ||
+         !summary || summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||

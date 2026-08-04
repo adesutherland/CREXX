@@ -8,7 +8,7 @@ endforeach()
 
 file(MAKE_DIRECTORY "${WORKING_DIRECTORY}/reject_non_source_mnemonics")
 
-function(expect_rxas_reject CASE_NAME LINE)
+function(expect_rxas_reject CASE_NAME LINE EXPECTED_DIAGNOSTIC)
     set(_source "${WORKING_DIRECTORY}/reject_non_source_mnemonics/${CASE_NAME}.rxas")
     set(_output "${WORKING_DIRECTORY}/reject_non_source_mnemonics/${CASE_NAME}")
     file(WRITE "${_source}" "main() .locals=3\n    ${LINE}\n    ret 0\n")
@@ -31,17 +31,30 @@ function(expect_rxas_reject CASE_NAME LINE)
                 "Output:\n${_full_out}")
     endif()
 
-    if(NOT _full_out MATCHES "invalid instruction mnemonic")
+    if(NOT _full_out MATCHES "${EXPECTED_DIAGNOSTIC}")
         message(FATAL_ERROR
-                "Expected invalid mnemonic diagnostic for ${LINE}.\n"
+                "Expected ${EXPECTED_DIAGNOSTIC} diagnostic for ${LINE}.\n"
                 "Output:\n${_full_out}")
     endif()
 endfunction()
 
-expect_rxas_reject(inull "inull")
-expect_rxas_reject(interrupt "interrupt")
-expect_rxas_reject(iunknown "iunknown")
-expect_rxas_reject(opendll "opendll r0,r1,r2")
-expect_rxas_reject(dllparms "dllparms r0,r1,r2")
-expect_rxas_reject(reserved "reserved")
-expect_rxas_reject(reserved_514 "reserved_514")
+expect_rxas_reject(inull "inull" "invalid instruction mnemonic")
+expect_rxas_reject(interrupt "interrupt" "invalid instruction mnemonic")
+expect_rxas_reject(iunknown "iunknown" "invalid instruction mnemonic")
+expect_rxas_reject(opendll "opendll r0,r1,r2" "invalid instruction mnemonic")
+expect_rxas_reject(dllparms "dllparms r0,r1,r2" "invalid instruction mnemonic")
+expect_rxas_reject(reserved "reserved" "invalid instruction mnemonic")
+expect_rxas_reject(reserved_514 "reserved_514" "invalid instruction mnemonic")
+
+# Cursor-bearing source mnemonics were deliberately retired by the cursorless
+# value redesign. Keep this list explicit so a stale spelling cannot silently
+# return through an unrelated opcode-table edit.
+expect_rxas_reject(getstrpos "getstrpos r0,r1" "invalid instruction mnemonic")
+expect_rxas_reject(setstrpos "setstrpos r0,r1" "invalid instruction mnemonic")
+expect_rxas_reject(substr "substr r0,r1,r2" "invalid instruction mnemonic")
+expect_rxas_reject(getbinpos "getbinpos r0,r1" "invalid instruction mnemonic")
+expect_rxas_reject(setbinpos "setbinpos r0,r1" "invalid instruction mnemonic")
+
+# The retained slice mnemonics require explicit start and length registers.
+expect_rxas_reject(substring_three_operands "substring r0,r1,r2" "invalid operand")
+expect_rxas_reject(bslice_three_operands "bslice r0,r1,r2" "invalid operand")

@@ -1,0 +1,9 @@
+source_commit=c4470635048e497417c4db92c03ecbcd79eaa750
+source_state=clean detached worktree
+ordinary_build=Release; -O3 -DNDEBUG; CREXX_VM_PROFILING=OFF
+profile_build=Release; -O3 -DNDEBUG; CREXX_VM_PROFILING=ON
+host=Apple M5; Darwin 25.5.0 arm64; macOS 26.5.2 25F84; 10 logical CPUs
+power=AC attached
+low_power_mode=0
+thermal=No thermal or performance warning recorded
+sampling=serial counts-only

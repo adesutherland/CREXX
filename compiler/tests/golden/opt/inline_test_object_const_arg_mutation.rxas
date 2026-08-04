@@ -6,7 +6,7 @@
 .meta "inline_test_object_const_arg_mutation.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=8
+main() .locals=7
    .meta "inline_test_object_const_arg_mutation.main"="b" ".int" main() ""
    .srcstep 18 18 17 "inline_test_object_const_arg_mutation.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -31,17 +31,17 @@ main() .locals=8
    .srcstep 10 10 17 "inline_test_object_const_arg_mutation.crexx" 13 3 32 "  call value.setName(\"changed\")"
    .srcstep 7 7 33 "inline_test_object_const_arg_mutation.crexx" 13 8 13 "  call value.setName(\"changed\")"
    .traceevent "V" 6 "R" "O" "r" 0 7 7 0 "box" ""
-   copy r5,r0
-   .traceevent "A" 6 "R" "O" "r" 5 7 7 0 "§this" ""
+   copy r4,r0
+   .traceevent "A" 6 "R" "O" "r" 4 7 7 0 "§this" ""
    .srcstep 8 8 17 "inline_test_object_const_arg_mutation.crexx" 26 5 16 "    name = next"
-   load r6,"changed"
-   .traceevent "L" 4 "R" "S" "r" 6 8 8 0 "" ""
-   linkattr1 r2,r5,1
-   scopy r2,r6
+   load r5,"changed"
+   .traceevent "L" 4 "R" "S" "r" 5 8 8 0 "" ""
+   linkattr1 r2,r4,1
+   scopy r2,r5
    unlink r2
    .srcstep 9 9 6 "inline_test_object_const_arg_mutation.crexx" 13 8 32 "  call value.setName(\"changed\")"
-   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "§this" ""
-   copy r0,r5
+   .traceevent "V" 6 "R" "O" "r" 4 0 0 0 "§this" ""
+   copy r0,r4
    .srcstep 15 15 17 "inline_test_object_const_arg_mutation.crexx" 7 3 18 "  say box.getName()"
    .meta "inline_test_object_const_arg_mutation.main.box"="b" ".box" r0
    .srcstep 14 14 17 "inline_test_object_const_arg_mutation.crexx" 7 7 10 "  say box.getName()"
@@ -51,10 +51,10 @@ main() .locals=8
    .srcstep 13 13 17 "inline_test_object_const_arg_mutation.crexx" 30 5 16 "    return name"
    linkattr1 r2,r0,1
    .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "name" ""
-   scopy r7,r2
+   scopy r6,r2
    unlinkbr r2,l121bexprend
 l121bexprend:
-   say r7
+   say r6
    .srcstep 16 16 17 "inline_test_object_const_arg_mutation.crexx" 8 3 56 "  say \"Object const-arg mutation inline test finished.\""
    say "Object const-arg mutation inline test finished."
    .srcstep 17 17 17 "inline_test_object_const_arg_mutation.crexx" 9 3 11 "  return 0"

@@ -29,9 +29,8 @@ main() .locals=8
    brf fail_alias_concat_flags,r2
 
    load r5,1
-   setstrpos r4,r5
-   load r5,2
-   substr r6,r4,r5
+   load r2,2
+   substring r6,r4,r5,r2
    getandtp r1,r6,3
    ieq r2,r1,3
    brf fail_substr_flags,r2
@@ -78,7 +77,7 @@ fail_alias_concat_flags:
    ret 1
 
 fail_substr_flags:
-   say "FAIL: SUBSTR did not preserve UTF flags"
+   say "FAIL: SUBSTRING did not preserve UTF flags"
    ret 1
 
 fail_loadsettp_flags:

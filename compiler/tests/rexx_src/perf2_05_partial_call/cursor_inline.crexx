@@ -4,15 +4,12 @@ call cursor_guard("é Alpha")
 
 /* SAY keeps this outer procedure on the ordinary normal-call path. The
  * nested scan helper remains eligible for normal inlining with a dynamic
- * formal, so its incidental source-cursor write must stay private. */
+ * formal. Explicit positions mean the source has no hidden cursor state. */
 cursor_guard: procedure = .void
   arg text = .string
   initial = 4
-  after = .int
-  assembler setstrpos text,initial
   say scan_blank(text)
-  assembler getstrpos after,text
-  say after
+  say initial
   return
 
 scan_blank: procedure = .int

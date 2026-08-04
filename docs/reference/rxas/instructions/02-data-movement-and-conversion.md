@@ -2,7 +2,7 @@
 
 These instructions copy, transfer, clear, load, or bind register values. Scalar
 loads change only their named payload unless stated otherwise; full-value copy
-and move include every payload, cursor, attribute, type, flag, and reference
+and move include every payload, attribute, type, flag, and reference
 association.
 
 ## `acopy`
@@ -17,9 +17,9 @@ Copy the complete status-flag word between values.
 
 ### Operands And Semantics
 
-Only `rDestination`'s status word changes. This includes VM-private validity and
-cursor-related flags as well as compiler, library, user, and reserved bands;
-payloads, cursors, attributes, and type metadata are untouched. The source is
+Only `rDestination`'s status word changes. This includes VM-private validity
+flags as well as compiler, library, user, and reserved bands; payloads,
+attributes, and type metadata are untouched. The source is
 unchanged.
 
 ### Signals
@@ -55,7 +55,7 @@ Deep-copy a complete value while leaving the source intact.
 ### Operands And Semantics
 
 The destination's existing storage is replaced by copies of scalar, decimal,
-string and binary payloads, both cursors, attributes recursively, object type,
+string and binary payloads, attributes recursively, object type,
 status flags, and reference payload/identity state. Mutable buffers and
 attributes are not aliased to the source. Self-copy is safe.
 
@@ -92,7 +92,7 @@ Reset a register to the VM's empty value state.
 ### Operands And Semantics
 
 The register releases or clears scalar storage, decimal/string/binary payloads,
-cursors, attributes, object type, flags, and reference associations, then
+attributes, object type, flags, and reference associations, then
 becomes a zero/empty value. The operation is semantically the same as `null`.
 
 ### Signals
@@ -125,7 +125,7 @@ Load a scalar literal or bind one register slot to another.
 | --- | --- | --- |
 | `0x0001` | `load rDestination,integer` | Set integer payload. |
 | `0x0002` | `load rDestination,float` | Set float payload. |
-| `0x0003` | `load rDestination,"string"` | Set string payload/cursor from constant. |
+| `0x0003` | `load rDestination,"string"` | Set string payload from constant. |
 | `0x0004` | `load rDestination,rSource` | Rebind destination slot to source value. |
 | `0x0005` | `load rDestination,decimal` | Parse decimal constant through the plugin. |
 | `0x0006` | `load destinationIndex,sourceIndex` | Rebind raw numbered register slots. |
@@ -135,7 +135,7 @@ Load a scalar literal or bind one register slot to another.
 ### Operands And Semantics
 
 Integer and float forms write only that scalar payload. String and binary forms
-replace their payload and reset the matching cursor. Decimal form replaces the
+replace their payload. Decimal form replaces the
 decimal payload using the current decimal context. Register forms change the
 frame's register-pointer table persistently: later reads and writes through the
 destination access the same complete value as the source until another binding
@@ -179,7 +179,7 @@ Load a scalar literal and set its externally writable status flags atomically.
 
 Only compiler, library, and user flag bands are writable. Integer and float
 forms replace all public-writable flags with the masked literal and discard
-VM-private/reserved bits. The string form replaces its payload/cursor but uses
+VM-private/reserved bits. The string form replaces its payload but uses
 band-aware public write: VM-private flags survive, a zero public request clears
 all public bands, and nonzero requested bands replace only those bands. Other
 payloads and attributes remain intact.
@@ -217,7 +217,7 @@ Transfer a complete value and its owned storage to another register.
 ### Operands And Semantics
 
 The destination's old storage is destroyed, then all scalar payloads, buffers,
-cursors, attributes, type metadata, flags, and reference associations transfer
+attributes, type metadata, flags, and reference associations transfer
 from the source. The source becomes an empty initialized value. When both
 operands resolve to the same value, the instruction is a no-op. This mnemonic
 is retained for source compatibility but marked deprecated by the VM.
@@ -254,7 +254,7 @@ Reset a register to the VM's empty value state.
 
 ### Operands And Semantics
 
-All payloads and owned storage, both cursors, attributes, object metadata,
+All payloads and owned storage, attributes, object metadata,
 status flags, and reference associations are cleared or released. The register
 remains allocated and can be reused immediately. This has the same runtime
 implementation as `erase`.

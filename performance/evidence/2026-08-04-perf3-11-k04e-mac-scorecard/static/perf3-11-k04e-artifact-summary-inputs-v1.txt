@@ -1,0 +1,10 @@
+crexx-perf2-artifacts|1
+# role|workload/name|exact RXBIN|exact temporary disassembly
+shared-library|library|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/bin/library.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/library.rxas
+workload|Sieve|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/awfy_sieve.rxas
+workload|Permute|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/awfy_permute.rxas
+workload|Bounce|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/awfy_bounce.rxas
+workload|Richards|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/awfy_richards.rxas
+workload|Base64|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/base64_roundtrip.rxas
+workload|Towers|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/awfy_towers.rxas
+workload|RexxCPS|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/static/current/rexxcps_levelb.rxas

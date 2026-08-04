@@ -90,22 +90,19 @@ floattrunc: procedure = .string
   if point_position < 0 then do
     digit_length = coefficient_length - sign_offset
     start = sign_offset
-    assembler setstrpos formatted,start
-    assembler substring digits,formatted,digit_length
+    assembler substring digits,formatted,start,digit_length
   end
   else do
     prefix_length = point_position - sign_offset
     digit_length = coefficient_length - sign_offset - 1
     if prefix_length > 0 then do
       start = sign_offset
-      assembler setstrpos formatted,start
-      assembler substring digits,formatted,prefix_length
+      assembler substring digits,formatted,start,prefix_length
     end
     tail_length = coefficient_length - point_position - 1
     if tail_length > 0 then do
       start = point_position + 1
-      assembler setstrpos formatted,start
-      assembler substring tail,formatted,tail_length
+      assembler substring tail,formatted,start,tail_length
       assembler append digits,tail
     end
   end
@@ -116,8 +113,7 @@ floattrunc: procedure = .string
   if decimal_position <= 0 then assembler appendchar result,zero_character
   else if decimal_position < digit_length then do
     start = 0
-    assembler setstrpos digits,start
-    assembler substring whole,digits,decimal_position
+    assembler substring whole,digits,start,decimal_position
     assembler append result,whole
   end
   else do
@@ -146,8 +142,7 @@ floattrunc: procedure = .string
   if remaining > 0 & start < digit_length then do
     copy_length = digit_length - start
     if copy_length > remaining then copy_length = remaining
-    assembler setstrpos digits,start
-    assembler substring segment,digits,copy_length
+    assembler substring segment,digits,start,copy_length
     assembler append fractional,segment
     remaining = remaining - copy_length
   end

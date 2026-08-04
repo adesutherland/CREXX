@@ -29,7 +29,7 @@ import rxfnsb
  * Deterministic NR-09 decision-ledger builder. It consumes retained RXSEQ
  * sequence-ranking CSVs; it does not capture profiles or implement fusion.
  */
-main: procedure = .int expose meta revisions revision_seen workloads workload_seen effects effect_count agg_map agg_count work_map work_count role_agg selected selected_reason selected_count raw_rows identity_by_id sequence_sources ,
+main: procedure = .int expose meta revisions revision_seen workloads workload_seen effects effect_count signals signal_count agg_map agg_count work_map work_count role_agg selected selected_reason selected_count raw_rows identity_by_id sequence_sources ,
     agg_revision agg_role agg_identity agg_stable_id agg_pattern agg_example_module agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence agg_window agg_example_start agg_dynamic_count agg_sites agg_modules agg_max_sites agg_max_modules agg_max_symbols agg_entry_count agg_workload_count agg_mode_count ,
     work_revision work_role work_workload work_identity work_stable_id work_pattern work_entry work_mode work_window work_dynamic_count work_sites work_modules work_max_sites work_max_modules work_entry_count work_mode_count
   arg args = .string[]
@@ -71,6 +71,8 @@ main: procedure = .int expose meta revisions revision_seen workloads workload_se
   workload_seen = .StringTreeMap()
   effects = .StringTreeMap()
   effect_count = 0
+  signals = .StringTreeMap()
+  signal_count = 0
   agg_map = .StringTreeMap()
   agg_count = 0
   agg_revision = .string[]
@@ -123,6 +125,7 @@ main: procedure = .int expose meta revisions revision_seen workloads workload_se
 
   entries_path = ""
   effects_path = ""
+  signals_path = ""
   header_seen = 0
   do while lines(manifest_path)
     line = linein(manifest_path)
@@ -143,6 +146,7 @@ main: procedure = .int expose meta revisions revision_seen workloads workload_se
     path = absolute_path(root, fields[2])
     if fields[1] = "entries" then entries_path = path
     else if fields[1] = "effects" then effects_path = path
+    else if fields[1] = "signals" then signals_path = path
     else if fields[1] = "sequence" then
       sequence_sources[sequence_sources[0] + 1] = path
     else do
@@ -153,11 +157,21 @@ main: procedure = .int expose meta revisions revision_seen workloads workload_se
   call linein manifest_path
   if \header_seen | entries_path = "" | effects_path = "" | ,
       sequence_sources[0] = 0 then return execution_error("ledger inputs are incomplete")
+  if signals_path = "" then do
+    separator = lastpos("/", effects_path)
+    if separator = 0 then separator = lastpos("\\", effects_path)
+    if separator = 0 then return execution_error("cannot infer opcode signal metadata path")
+    signals_path = left(effects_path, separator) || "rxopsignals.h"
+  end
 
   if load_entry_metadata(entries_path) <> 0 then return 1
   say "NR-09: loaded entry metadata"
   if load_effects(effects_path) <> 0 then return 1
   say "NR-09: loaded" effect_count "opcode effects"
+  if load_signals(signals_path) <> 0 then return 1
+  say "NR-09: loaded" signal_count "opcode signal contracts"
+  if effect_count <> signal_count then
+    return execution_error("opcode effect/signal row counts disagree")
   do i = 1 to sequence_sources[0]
     say "NR-09: loading sequence input" i "of" sequence_sources[0]
     if load_sequences(sequence_sources[i]) <> 0 then return 1
@@ -201,7 +215,7 @@ main: procedure = .int expose meta revisions revision_seen workloads workload_se
   if write_markdown(output_dir || "/decision-view.md", global_top, ,
       workload_top_rows) <> 0 then return 1
   if write_run_state(output_dir || "/run-state.txt", manifest_path, ,
-      entries_path, effects_path) <> 0 then return 1
+      entries_path, effects_path, signals_path) <> 0 then return 1
   if write_checksums(output_dir) <> 0 then return 1
 
   say "PASS: deterministic NR-09 sequence ledger retained under" output_dir
@@ -563,13 +577,22 @@ load_effects: procedure = .int expose effects effect_count
     end
     opcode = substr(line, length(prefix) + 1, comma_at - length(prefix) - 1)
     payload = strip(substr(line, comma_at + 1))
-    if left(payload, 4) <> "RXE(" | right(payload, 2) <> "))" then do
+    open_at = pos("(", payload)
+    if open_at = 0 | right(payload, 2) <> "))" then do
       call linein path
       return execution_error("malformed opcode effect payload: " || opcode)
     end
-    payload = substr(payload, 5, length(payload) - 6)
+    effect_form = left(payload, open_at - 1)
+    if effect_form <> "RXE" & effect_form <> "RXEV" & ,
+        effect_form <> "RXEC" then do
+      call linein path
+      return execution_error("unknown opcode effect form: " || opcode)
+    end
+    payload = substr(payload, open_at + 1, length(payload) - open_at - 2)
     fields = split_delimited(payload, ",")
-    if fields[0] <> 7 then do
+    expected_fields = 7
+    if effect_form = "RXEC" then expected_fields = 10
+    if fields[0] <> expected_fields then do
       call linein path
       return execution_error("opcode effect field count mismatch: " || opcode)
     end
@@ -583,8 +606,35 @@ load_effects: procedure = .int expose effects effect_count
     effect_count = effect_count + 1
   end
   call linein path
-  if effect_count <> 641 then
-    return execution_error("expected 641 opcode effects, found " || effect_count)
+  if effect_count = 0 then return execution_error("opcode effects are empty")
+  return 0
+
+load_signals: procedure = .int expose signals signal_count
+  arg path = .string
+  prefix = "RXOP_SIGNAL("
+  do while lines(path)
+    line = strip(linein(path))
+    if left(line, length(prefix)) <> prefix then iterate
+    comma_at = pos(",", line)
+    if comma_at = 0 | right(line, 1) <> ")" then do
+      call linein path
+      return execution_error("malformed opcode signal row")
+    end
+    opcode = substr(line, length(prefix) + 1, comma_at - length(prefix) - 1)
+    contract = strip(substr(line, comma_at + 1, length(line) - comma_at - 1))
+    if left(contract, 9) = "RXSC_NONE" then state = "none"
+    else if contract = "RXSC_UNKNOWN" then state = "unknown"
+    else if left(contract, 5) = "RXSC_" then state = "known"
+    else do
+      call linein path
+      return execution_error("unknown opcode signal contract: " || opcode)
+    end
+    call signals.put(opcode || "|state", state)
+    call signals.put(opcode || "|contract", contract)
+    signal_count = signal_count + 1
+  end
+  call linein path
+  if signal_count = 0 then return execution_error("opcode signal contracts are empty")
   return 0
 
 stable_identity: procedure = .string expose identity_by_id
@@ -793,7 +843,7 @@ select_identity: procedure = .void expose selected selected_reason selected_coun
     call selected_reason.put(stable_id, selected_reason.get(stable_id) || ";" || reason)
   return
 
-review_pattern: procedure = .string[] expose effects
+review_pattern: procedure = .string[] expose effects signals
   arg pattern = .string
   result = .string[]
   complete = "complete"
@@ -813,6 +863,8 @@ review_pattern: procedure = .string[] expose effects
   branch = .string
   implicit = .string
   semantics = .string
+  signal_state = .string
+  signal_contract = .string
   detail = .string
   operations = split_delimited(pattern, " | ")
   do i = 1 to operations[0]
@@ -826,7 +878,9 @@ review_pattern: procedure = .string[] expose effects
     branch = effects.get(opcode || "|branch")
     implicit = effects.get(opcode || "|implicit")
     semantics = effects.get(opcode || "|semantics")
-    if effect_class = "" then do
+    signal_state = signals.get(opcode || "|state")
+    signal_contract = signals.get(opcode || "|contract")
+    if effect_class = "" | signal_state = "" then do
       complete = "missing:" || opcode
       detail = opcode || "[missing]"
     end
@@ -834,7 +888,7 @@ review_pattern: procedure = .string[] expose effects
       if effect_class <> "RXOP_EFFECT_CLASSIFIED" then complete = "incomplete:" || opcode
       detail = opcode || "[" || effect_class || ";R=" || reads || ";W=" || writes || ,
           ";K=" || kills || ";B=" || branch || ";I=" || implicit || ,
-          ";S=" || semantics || "]"
+          ";S=" || semantics || ";SIG=" || signal_contract || "]"
       if reads <> "RXOP_OP_NONE" | writes <> "RXOP_OP_NONE" | ,
           kills <> "RXOP_OP_NONE" | implicit <> "RXOP_IMPLICIT_NONE" then
         liveness = "needs-proof"
@@ -845,7 +899,7 @@ review_pattern: procedure = .string[] expose effects
           pos("RXOP_SEM_INDIRECT_WRITE", semantics) > 0 then alias = "yes"
       if pos("RXOP_SEM_REFERENCE_", semantics) > 0 | ,
           pos("RXOP_SEM_LIFETIME_END", semantics) > 0 then reference_risk = "yes"
-      if pos("RXOP_SEM_MAY_THROW", semantics) > 0 then exception = "yes"
+      if signal_state <> "none" then exception = "yes"
       if pos("RXOP_SEM_OPAQUE", semantics) > 0 then opaque = 1
       if pos("RXOP_SEM_CALL", semantics) > 0 | ,
           pos("RXOP_SEM_RETURN", semantics) > 0 | opaque then interrupt = "high"
@@ -1100,18 +1154,20 @@ sha256_file: procedure = .string
   if rc <> 0 | out[0] = 0 then return ""
   return lower(word(out[1], 1))
 
-write_run_state: procedure = .int expose effect_count agg_count work_count selected_count revisions raw_rows sequence_sources
+write_run_state: procedure = .int expose effect_count signal_count agg_count work_count selected_count revisions raw_rows sequence_sources
   arg path = .string, manifest_path = .string, entries_path = .string, ,
-      effects_path = .string
+      effects_path = .string, signals_path = .string
   output = .string[]
-  output[1] = "schema=1"
+  output[1] = "schema=2"
   output[2] = "effect_rows=" || effect_count
-  output[3] = "aggregate_rows=" || agg_count
-  output[4] = "workload_aggregate_rows=" || work_count
-  output[5] = "selected_pattern_ids=" || selected_count
-  output[6] = "manifest_sha256=" || sha256_file(manifest_path)
-  output[7] = "entry_metadata_sha256=" || sha256_file(entries_path)
-  output[8] = "opcode_effects_sha256=" || sha256_file(effects_path)
+  output[3] = "signal_rows=" || signal_count
+  output[4] = "aggregate_rows=" || agg_count
+  output[5] = "workload_aggregate_rows=" || work_count
+  output[6] = "selected_pattern_ids=" || selected_count
+  output[7] = "manifest_sha256=" || sha256_file(manifest_path)
+  output[8] = "entry_metadata_sha256=" || sha256_file(entries_path)
+  output[9] = "opcode_effects_sha256=" || sha256_file(effects_path)
+  output[10] = "opcode_signals_sha256=" || sha256_file(signals_path)
   do i = 1 to sequence_sources[0]
     output[output[0] + 1] = "sequence_input_" || i || "_sha256=" || ,
         sha256_file(sequence_sources[i])

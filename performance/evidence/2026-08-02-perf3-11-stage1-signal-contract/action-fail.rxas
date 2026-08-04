@@ -1,0 +1,12 @@
+/* PERF3-11 Stage 1 oracle for the explicit SIGCALLA fail action. */
+
+.globals=0
+
+main() .locals=0
+    sigcalla choose_fail(),"OTHER"
+    signal "OTHER","PERF3-11 deliberate fail action"
+    say "FAIL: action handler unexpectedly resumed"
+    ret 1
+
+choose_fail() .locals=0
+    ret "__rxsignal_fail"

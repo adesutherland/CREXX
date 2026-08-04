@@ -302,8 +302,7 @@ _legacy_slice: procedure = .string
   arg source = .string, start = .int, slice_length = .int
   result = ""
   if slice_length <= 0 then return result
-  assembler setstrpos source,start
-  assembler substring result,source,slice_length
+  assembler substring result,source,start,slice_length
   return result
 
 _emit_legacy_item: procedure = .int

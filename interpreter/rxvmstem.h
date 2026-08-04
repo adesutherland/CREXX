@@ -292,9 +292,8 @@ RX_INLINE int rxstem_set_parts_string(value *dest,
         dest->string_buffer_length = buffer_length;
     }
     dest->string_length = length;
-    dest->string_pos = 0;
+    string_cache_reset(dest);
 #ifndef NUTF8
-    dest->string_char_pos = 0;
     refresh_utf8_flags(dest);
 #else
     clear_vm_private_flags(dest);
@@ -330,9 +329,8 @@ RX_INLINE int rxstem_set_value_string(value *dest, const value *source) {
         memmove(dest->string_value, source->string_value, length);
     }
     dest->string_length = length;
-    dest->string_pos = 0;
+    string_cache_reset(dest);
 #ifndef NUTF8
-    dest->string_char_pos = 0;
     dest->string_chars = source->string_chars;
     copy_vm_private_flags(dest, source);
 #else

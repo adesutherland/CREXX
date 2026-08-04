@@ -99,7 +99,7 @@ pre_process: method = .exitplan
 
  /* -------------------------------------------------------------------------------------------------------------------
   * Scan leading PARSE modifiers and source selector:
-  * UPPER, LOWER, LOG, TRACE, TRIM, INTO, VERSION, SOURCE, VALUE, VAR, ARG.
+  * UPPER, LOWER, LOG, TRACE, TRIM, INTO, VERSION, SOURCE, PULL, VALUE, VAR, ARG.
   * -------------------------------------------------------------------------------------------------------------------
   */
   do token_ix=2 to tokens.0
@@ -151,6 +151,16 @@ pre_process: method = .exitplan
         call compile_plan.add_keyword(token_ix, text, "parse_source", "parse")
         leave
      end
+     else if source_kind = "" & utext = "PULL" then do
+        /* Classic Rexx permits PARSE PULL template as shorthand for
+         * PARSE PULL() template.  Normalize both forms to the same source
+         * expression below so the rest of the parse compiler is unchanged.
+         */
+        source_kind = "PULL"
+        source_found = 1
+        call compile_plan.add_keyword(token_ix, text, "parse_source", "parse")
+        leave
+     end
      else if isParseKeywordToken(ti, "VALUE") | isParseKeywordToken(ti, "VAR") | isParseKeywordToken(ti, "ARG") then do
         source_kind = utext
         call compile_plan.add_keyword(token_ix, text, "parse_source", "parse")
@@ -184,7 +194,7 @@ end
 
 /* -------------------------------------------------------------------------------------------------------------------
  * For plain PARSE statements without an explicit source selector
- * (that is, no VALUE, VAR, or ARG), determine the first template token.
+ * (that is, no VALUE, VAR, ARG, or PULL), determine the first template token.
  *
  * The PARSE statement begins at token 1, so the template normally starts at
  * token 2. Leading modifiers and options are skipped:
@@ -205,6 +215,17 @@ if source_kind = "" then do
    if _into \= "" then token_ix = token_ix + 2
 end
 else if source_kind = "VERSION" | source_kind = "SOURCE" then token_ix = token_ix + 1
+else if source_kind = "PULL" then do
+   /* Accept both PARSE PULL template and PARSE PULL() template. */
+   if token_ix + 1 <= tokens.0 & upper(strip(tokens[token_ix+1].get_text())) = "(" then do
+      if token_ix + 2 > tokens.0 | upper(strip(tokens[token_ix+2].get_text())) <> ")" then do
+         call compile_plan.set_error(token_ix, "PARSE PULL requires () or a template", "INVALID_ARGUMENTS")
+         return compile_plan
+      end
+      token_ix = token_ix + 3
+   end
+   else token_ix = token_ix + 1
+end
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Ensure at least one template token remains after removing leading options.
@@ -297,6 +318,11 @@ token_end = tokens.0
       source_start_ix=0
       source_end_ix=0
       source_expr="sourceinfo()"
+   end
+   else if source_kind = "PULL" then do
+      source_start_ix=0
+      source_end_ix=0
+      source_expr="pull()"
    end
    else do
       source_start_ix=token_ix

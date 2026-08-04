@@ -1,0 +1,5 @@
+vm,mode,control_total,candidate_total,delta,delta_percent,control_setstrpos,candidate_setstrpos,candidate_substring4,result,invalid_events,counter_overflow
+rxvm,noopt,148700911,143099442,-5601469,-3.766937,1400643,0,1400645,0,0,0
+rxbvm,noopt,148700911,143099442,-5601469,-3.766937,1400643,0,1400645,0,0,0
+rxvm,opt,53660581,53659088,-1493,-0.002782,643,0,644,0,0,0
+rxbvm,opt,53660552,53659041,-1511,-0.002816,642,0,639,0,0,0

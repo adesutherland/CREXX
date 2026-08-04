@@ -95,7 +95,7 @@ End the storage lifetime represented by a register.
 
 References targeting `rStorage` or its nested attributes become invalid, and a
 reference payload held by `rStorage` is released. Ordinary payload, attributes,
-cursor, type metadata, and flags are not cleared. Compilers use this at lexical
+type metadata, and flags are not cleared. Compilers use this at lexical
 scope exit before reusing local storage.
 
 ### Signals
@@ -135,8 +135,8 @@ The VM validates `rString` as UTF-8 and hashes its first `rLength` encoded bytes
 in forward order with the 32-bit FNV-1a offset basis and prime. The byte count is
 clamped to `0..rString.string_length`; zero or a negative value therefore hashes
 the empty byte sequence. The unsigned result is returned as an integer in
-`0..4294967295`. Only the destination integer payload is changed; sources and
-cursors are unchanged.
+`0..4294967295`. Only the destination integer payload is changed; sources are
+unchanged.
 
 The stable vectors include `2166136261` for an empty byte sequence and
 `440920331` for `"abc"`.
@@ -177,8 +177,7 @@ Return a compact description of the running VM build.
 
 The destination string becomes four space-separated fields: platform
 (`linux`, `windows`, `macOS`, `cms`, or `unknown`), `32` or `64`, the cREXX
-version string, and the compile date. String replacement resets its string
-cursor; no source register is read.
+version string, and the compile date. No source register is read.
 
 ### Signals
 
@@ -325,14 +324,16 @@ Install an action-aware procedure call as a signal handler.
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x021d` | `sigcalla handler(),"NAME"` | Let `handler` choose skip, retry, or fail. |
+| `0x021d` | `sigcalla handler(),"NAME"` | Let `handler` choose skip or fail. |
 
 ### Operands And Semantics
 
 The handler receives the same five-attribute raw object as `sigcall`. Its return
 string is interpreted as `__rxsignal_skip` (resume after the signal point),
-`__rxsignal_retry` (retry the recorded instruction), or `__rxsignal_fail`
-(default panic). A missing or unknown return action also selects the panic path.
+or `__rxsignal_fail` (default panic). A missing or unknown return action,
+including the retired legacy `__rxsignal_retry` marker, also selects the panic
+path. Retrying work is expressed with an explicit source-level loop so partial
+writes and side effects remain visible.
 
 ### Signals
 
@@ -488,8 +489,8 @@ Raise a named VM signal immediately, optionally with a message or value payload.
 
 ### Operands And Semantics
 
-Register names are NUL-terminated in place if needed; their content and cursor
-otherwise remain unchanged. Payload values are copied into the pending signal
+Register names are NUL-terminated in place if needed; their content otherwise
+remains unchanged. Payload values are copied into the pending signal
 object. Dispatch then applies the current frame's handler response; non-breakpoint
 signals are cleared when selected.
 
@@ -529,7 +530,7 @@ Raise a literal-name signal only when a register integer is zero.
 ### Operands And Semantics
 
 The integer payload of `rCondition` is tested; zero raises and nonzero falls
-through. No operand or cursor is changed. A false condition uses the same
+through. No operand is changed. A false condition uses the same
 pending-signal and handler process as `signal`.
 
 ### Signals
@@ -568,7 +569,7 @@ Raise a literal-name signal only when a register integer is nonzero.
 ### Operands And Semantics
 
 The integer payload of `rCondition` is tested; nonzero raises and zero falls
-through. Operands and cursors are unchanged.
+through. Operands are unchanged.
 
 ### Signals
 

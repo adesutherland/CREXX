@@ -1,0 +1,14 @@
+case,opcode,m03,m04,classification
+raw-full,COPY_REG_REG,removed,removed,old-floor-recovered
+raw-integer,ICOPY_REG_REG,removed,removed,old-floor-recovered
+raw-float,FCOPY_REG_REG,removed,removed,old-floor-recovered
+raw-string,SCOPY_REG_REG,removed,removed,old-floor-recovered
+raw-decimal,DCOPY_REG_REG,retained,removed,stronger-proof
+raw-attributes,ACOPY_REG_REG,retained,removed,stronger-proof
+raw-binary,BCOPY_REG_REG,retained,removed,stronger-proof
+linked-full,COPY_REG_REG,retained,removed,stronger-proof
+linked-binary,BCOPY_REG_REG,retained,removed,stronger-proof
+trace-anchored-full,COPY_REG_REG,retained,removed,stronger-proof-trace-retained
+agreeing-storage-phi,DCOPY_REG_REG,retained,removed,stronger-proof
+divergent-storage-phi,DCOPY_REG_REG,retained,retained,storage-not-identical
+different-storage,COPY_REG_REG,retained,retained,storage-not-identical

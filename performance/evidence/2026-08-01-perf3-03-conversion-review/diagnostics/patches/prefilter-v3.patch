@@ -1,0 +1,53 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 9b56da524..085cacce1 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -63,6 +63,7 @@
+ #include "rxsignature.h"
+ #include <ctype.h>
+ #include <limits.h>
++#include <locale.h>
+ #ifdef _WIN32
+ #include <windows.h>
+ #include <io.h>
+@@ -270,11 +271,38 @@ static int rxvm_trimmed_space_equal(const char *left, size_t left_len, const cha
+     return left_len == right_len && memcmp(left, right, left_len) == 0;
+ }
+ 
++/*
++ * Fail closed only when the leading byte cannot begin a strtod subject in the
++ * active locale. The locale lookup is restricted to the would-be reject path.
++ */
++static RXVM_LABEL_OWNER_NOINLINE int rxvm_loose_string2float(
++        double *out, const char *text, size_t length) {
++    unsigned char first;
++    struct lconv *numeric_locale;
++
++    if (length == 0) return 1;
++    first = (unsigned char)text[0];
++    if (first >= 0x80 || isspace(first) ||
++        (first >= '0' && first <= '9') || first == '+' || first == '-' ||
++        first == '.' || first == ',' || first == 'i' || first == 'I' ||
++        first == 'n' || first == 'N') {
++        return string2float(out, (char *)text, length);
++    }
++
++    numeric_locale = localeconv();
++    if (numeric_locale && numeric_locale->decimal_point &&
++        numeric_locale->decimal_point[0] != '\0' &&
++        first == (unsigned char)numeric_locale->decimal_point[0]) {
++        return string2float(out, (char *)text, length);
++    }
++    return 1;
++}
++
+ static int rxvm_loose_compare_text(const char *left, size_t left_len, const char *right, size_t right_len) {
+     double left_number;
+     double right_number;
+-    int left_numeric = string2float(&left_number, (char *) left, left_len) == 0;
+-    int right_numeric = string2float(&right_number, (char *) right, right_len) == 0;
++    int left_numeric = rxvm_loose_string2float(&left_number, left, left_len) == 0;
++    int right_numeric = rxvm_loose_string2float(&right_number, right, right_len) == 0;
+ 
+     if (left_numeric && right_numeric) {
+         if (left_number > right_number) return 1;

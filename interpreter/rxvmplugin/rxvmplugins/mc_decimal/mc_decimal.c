@@ -257,7 +257,11 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
     decNumber *dn = number->decimal_value;
 
-    if (!dn) {
+    /* DTOS is total and must not leak a stale or formatting diagnostic. */
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+
+    if (!dn || number->decimal_value_length == 0) {
         strcpy(string, "nan");
         return;
     }
@@ -280,14 +284,19 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         decNumberToCREXXString(plugin, dn, string);
     }
     check_signal(plugin);
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
 }
 
 /* Convert an int to a rxvmplugin number */
 void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
     decContext *context = (decContext*)(plugin->base.private_context);
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    context->status = 0;
     EnsureCapacity(result, context->digits);
     decNumberFromInt64(result->decimal_value, value);
-    check_signal(plugin);
+    context->status = 0;
 }
 
 /* Convert a rxvmplugin number to an int */

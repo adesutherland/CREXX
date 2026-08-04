@@ -1,0 +1,29 @@
+Test project /private/tmp/crexx-perf3-01.jetu7C/build-release
+    Start    1: linked_opt_runtime_artifacts_build
+1/8 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.55 sec
+    Start 1806: benchmark_awfy_sieve_opt
+2/8 Test #1806: benchmark_awfy_sieve_opt .............   Passed    0.34 sec
+    Start 1808: benchmark_awfy_permute_opt
+3/8 Test #1808: benchmark_awfy_permute_opt ...........   Passed    0.02 sec
+    Start 1812: benchmark_awfy_towers_opt
+4/8 Test #1812: benchmark_awfy_towers_opt ............   Passed    0.06 sec
+    Start 1814: benchmark_awfy_bounce_opt
+5/8 Test #1814: benchmark_awfy_bounce_opt ............   Passed    0.02 sec
+    Start 1820: benchmark_awfy_richards_opt
+6/8 Test #1820: benchmark_awfy_richards_opt ..........   Passed    0.37 sec
+    Start 1824: benchmark_base64_roundtrip_opt
+7/8 Test #1824: benchmark_base64_roundtrip_opt .......   Passed    0.02 sec
+    Start 1830: benchmark_rexxcps_levelb_opt
+8/8 Test #1830: benchmark_rexxcps_levelb_opt .........   Passed    1.05 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+benchmark        =   1.88 sec*proc (7 tests)
+language         =   1.88 sec*proc (7 tests)
+linked_opt       =   1.88 sec*proc (7 tests)
+noncanonical     =   1.05 sec*proc (1 test)
+rexxcps-smoke    =   1.05 sec*proc (1 test)
+smoke            =   1.88 sec*proc (7 tests)
+
+Total Test time (real) =   2.46 sec

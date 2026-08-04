@@ -1,0 +1,52 @@
+* New attribute-path proof coverage for full, integer, float, and decimal reads.
+
+main() .locals=28
+    setattrs r0,1
+    linkattr1 r1,r0,1
+    load r2,"payload"
+    copy r1,r2
+    unlink r1
+    linkattr1 r3,r0,1
+    copy r4,r3
+    unlink r3
+    linkattr1 r5,r0,1
+    copy r6,r5
+    unlink r5
+
+    setattrs r7,1
+    linkattr1 r8,r7,1
+    load r9,17
+    icopy r8,r9
+    unlink r8
+    linkattr1 r10,r7,1
+    icopy r11,r10
+    unlink r10
+    linkattr1 r12,r7,1
+    icopy r13,r12
+    unlink r12
+
+    setattrs r14,1
+    linkattr1 r15,r14,1
+    load r16,2.5
+    fcopy r15,r16
+    unlink r15
+    linkattr1 r17,r14,1
+    fcopy r18,r17
+    unlink r17
+    linkattr1 r19,r14,1
+    fcopy r20,r19
+    unlink r19
+
+    setattrs r21,1
+    linkattr1 r22,r21,1
+    load r23,19d
+    dcopy r22,r23
+    unlink r22
+    linkattr1 r24,r21,1
+    dcopy r25,r24
+    unlink r24
+    linkattr1 r26,r21,1
+    dcopy r27,r26
+    unlink r26
+
+    ret

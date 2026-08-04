@@ -23,7 +23,9 @@ to decimal one under the current context. Only the decimal payload changes.
 
 ### Signals
 
-Propagates decimal-plugin allocation or conversion signals.
+None. Boolean-to-decimal conversion uses the total integer-to-decimal plugin
+contract and clears stale plugin diagnostics. Allocation failure follows the
+VM panic-on-OOM convention.
 
 ### Example
 
@@ -55,7 +57,7 @@ Add two decimal values under the current numeric context.
 ### Operands And Semantics
 
 The destination decimal payload receives the context-rounded sum. Register
-sources, scalar payloads, attributes, and cursors remain unchanged; destination
+sources, scalar payloads, attributes, and remain unchanged; destination
 aliasing with a source is supported by the plugin.
 
 ### Signals
@@ -133,13 +135,15 @@ Copy only a decimal payload between registers.
 ### Operands And Semantics
 
 The destination decimal buffer is allocated or enlarged as necessary and
-receives the exact encoded decimal. Other payloads, cursors, attributes, type
-metadata, and flags remain intact. Self-copy is a no-op; the source is unchanged.
+receives the exact encoded decimal. An absent or logically empty source clears
+the destination's logical decimal length while retaining reusable backing
+storage. Other payloads, attributes, type metadata, and flags remain
+intact. Self-copy is a no-op; the source is unchanged.
 
 ### Signals
 
-Raises `INVALID_ARGUMENTS` when the source has no decimal payload. Allocation
-failure is not translated into a VM signal.
+This instruction does not signal. Allocation failure remains fatal rather than
+being translated into a VM signal.
 
 ### Example
 
@@ -212,7 +216,8 @@ not decimal arithmetic. Only the integer payload changes.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger` without wrapping.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger` without wrapping or changing
+the prior integer payload.
 
 ### Example
 
@@ -247,7 +252,8 @@ that register. This is not a decimal operation.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`; the prior `r0.int` is
+preserved on that path.
 
 ### Example
 
@@ -282,7 +288,8 @@ that register. This is not a decimal operation.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`; the prior `r1.int` is
+preserved on that path.
 
 ### Example
 
@@ -317,7 +324,8 @@ that register. This is not a decimal operation.
 
 ### Signals
 
-Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`; the prior `r2.int` is
+preserved on that path.
 
 ### Example
 
@@ -348,7 +356,7 @@ Read the active decimal plugin's identity strings.
 ### Operands And Semantics
 
 The three destination string payloads are replaced respectively with the
-plugin name, human description, and version. Their string cursors reset; other
+plugin name, human description, and version. Other
 value state remains intact. Destinations should be distinct because writes are
 performed in operand order.
 
@@ -386,7 +394,7 @@ Compare decimal values for numeric equality.
 
 The destination is set to integer Boolean `1` when decimal numeric values are
 equal, otherwise `0`. Exponent/encoding differences do not defeat numeric
-equality. Sources and cursors are unchanged.
+equality. Sources are unchanged.
 
 ### Signals
 
@@ -421,7 +429,7 @@ Branch when two register decimals are numerically equal.
 ### Operands And Semantics
 
 True transfers to the procedure-local label; false falls through. Sources and
-all cursors remain unchanged.
+all value state remains unchanged.
 
 ### Signals
 
@@ -461,7 +469,7 @@ Extract a decimal into a coefficient string and integer exponent.
 The plugin normalizes and rounds to the current digits setting, trims trailing
 coefficient zeros, writes the coefficient string (or `nan`, `inf`, `-inf`) to
 the first destination, and writes the base-ten exponent integer to the second.
-The source decimal is unchanged. The coefficient string cursor resets.
+The source decimal is unchanged.
 
 ### Signals
 
@@ -499,7 +507,7 @@ Compare whether one decimal value is greater than another.
 ### Operands And Semantics
 
 The destination becomes integer Boolean `1` iff left is numerically greater,
-otherwise `0`. Sources and cursors are unchanged.
+otherwise `0`. Sources are unchanged.
 
 ### Signals
 
@@ -534,7 +542,7 @@ Branch when one register decimal is greater than another.
 ### Operands And Semantics
 
 True transfers to the procedure-local label; false falls through. Sources and
-cursors are unchanged.
+value state is unchanged.
 
 ### Signals
 
@@ -648,7 +656,7 @@ Compare whether one decimal value is less than another.
 ### Operands And Semantics
 
 The destination becomes integer Boolean `1` iff left is numerically less,
-otherwise `0`. Sources and cursors are unchanged.
+otherwise `0`. Sources are unchanged.
 
 ### Signals
 
@@ -683,7 +691,7 @@ Branch when one register decimal is less than another.
 ### Operands And Semantics
 
 True transfers to the procedure-local label; false falls through. Both decimal
-sources and their cursors remain unchanged.
+sources remain unchanged.
 
 ### Signals
 
@@ -723,7 +731,7 @@ Compare whether one decimal value is less than or equal to another.
 ### Operands And Semantics
 
 The destination becomes canonical integer Boolean less-or-equal. Decimal
-sources, cursors, and other destination state remain unchanged.
+sources, and other destination state remain unchanged.
 
 ### Signals
 
@@ -834,7 +842,7 @@ Compare decimal values for numeric inequality.
 ### Operands And Semantics
 
 The destination becomes integer Boolean `1` when numeric decimal values differ
-and `0` when equal. Sources, decimal encodings, and cursors remain unchanged.
+and `0` when equal. Sources, decimal encodings, and remain unchanged.
 
 ### Signals
 
@@ -908,9 +916,9 @@ Append source characters that do not occur in a removal-list string.
 
 Each source character is compared with every removal-list character and is
 appended to the destination only when absent. The destination is not cleared,
-so pre-existing text is retained; its cursor follows string append behavior.
+so pre-existing text is retained.
 During scanning the VM overwrites `rSource.int` and `rRemovalList.int` with the
-last examined code points, while leaving their strings and cursors unchanged.
+last examined code points, while leaving their strings unchanged.
 
 ### Signals
 
@@ -947,7 +955,7 @@ Negate a decimal payload in place.
 
 ### Operands And Semantics
 
-Only the decimal payload changes; other payloads, cursor, attributes, type
+Only the decimal payload changes; other payloads, attributes, type
 metadata, and flags remain intact.
 
 ### Signals
@@ -1128,13 +1136,14 @@ Format a decimal payload as a string in place.
 
 The current digits, form, case, fuzz, and standard settings govern formatting.
 The string buffer is replaced with the NUL-terminated result; the decimal
-payload remains unchanged. The implementation does not explicitly reset the
-existing string cursor after changing the length.
+payload remains unchanged. Decimal absence formats as `nan`. The completed
+ASCII write refreshes string validity metadata.
 
 ### Signals
 
-Propagates decimal-plugin formatting conditions; buffer allocation failure is
-not separately translated.
+This instruction does not signal. Decimal-plugin formatting diagnostics are
+cleared at this total conversion boundary; buffer allocation failure remains
+fatal rather than being translated into a VM signal.
 
 ### Example
 
@@ -1232,7 +1241,7 @@ Read the current decimal precision in digits.
 
 ### Operands And Semantics
 
-Only the destination integer payload changes; no context or cursor is mutated.
+Only the destination integer payload changes; no context is mutated.
 
 ### Signals
 
@@ -1369,7 +1378,9 @@ changes; the original integer and other value state remain intact.
 
 ### Signals
 
-Propagates decimal-plugin conversion and allocation conditions.
+None. Integer-to-decimal conversion is total for every `rxinteger` and clears
+stale plugin diagnostics. Allocation failure follows the VM panic-on-OOM
+convention rather than becoming a language signal.
 
 ### Example
 
@@ -1581,15 +1592,13 @@ Set numeric fuzz and synchronize the decimal plugin.
 ### Operands And Semantics
 
 Nonnegative values are the supported domain. Success updates the current frame
-and synchronizes the plugin; a register operand is unchanged. The literal form
-currently assigns and synchronizes even after detecting a negative value,
-before the queued signal is dispatched; the register form does not mutate on
-that error.
+and synchronizes the plugin; a register operand is unchanged. Both forms
+validate before changing or synchronizing the current numeric context.
 
 ### Signals
 
-Raises `INVALID_ARGUMENTS` for a negative value, with the mutation distinction
-above.
+Raises `INVALID_ARGUMENTS` for a negative value. The prior fuzz setting is
+preserved on that path.
 
 ### Example
 
@@ -1655,7 +1664,7 @@ Parse an in-place string payload as a decimal value.
 
 The string is NUL-terminated in its existing buffer if necessary, then parsed
 under the current decimal context. Only the decimal payload changes; string
-content and cursor otherwise remain unchanged.
+content otherwise remain unchanged.
 
 ### Signals
 

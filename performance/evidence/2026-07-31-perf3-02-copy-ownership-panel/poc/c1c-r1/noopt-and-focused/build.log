@@ -1,0 +1,5 @@
+[0/2] Re-checking globbed directories...
+[1/5] Building C object compiler/tests/CMakeFiles/crexx_test_driver.dir/src/test_driver.c.o
+[2/5] Linking C executable compiler/tests/crexx_test_driver
+[3/5] Generating benchmark_awfy_towers_noopt.rxbin
+[4/5] Generating benchmark_awfy_richards_noopt.rxbin

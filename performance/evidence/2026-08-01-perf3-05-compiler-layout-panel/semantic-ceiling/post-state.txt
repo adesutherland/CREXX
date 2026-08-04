@@ -1,0 +1,52 @@
+utc=2026-08-01T10:07:04Z
+{ 1.13 3.37 6.56 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+90234 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > /tmp/crexx-perf3-05.9DY131/base64-ceiling/post-state.txt 2>&1
+wc -c /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stdout.txt /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stderr.txt
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/timing/capture-manifest.json
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/timing/summary.csv
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/timing/ratios.csv
+sed -n '1,80p' /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stdout.txt
+sed -n '1,80p' /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stderr.txt
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/post-state.txt
+90235 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > /tmp/crexx-perf3-05.9DY131/base64-ceiling/post-state.txt 2>&1
+wc -c /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stdout.txt /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stderr.txt
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/timing/capture-manifest.json
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/timing/summary.csv
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/timing/ratios.csv
+sed -n '1,80p' /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stdout.txt
+sed -n '1,80p' /tmp/crexx-perf3-05.9DY131/base64-ceiling/driver.stderr.txt
+cat /tmp/crexx-perf3-05.9DY131/base64-ceiling/post-state.txt

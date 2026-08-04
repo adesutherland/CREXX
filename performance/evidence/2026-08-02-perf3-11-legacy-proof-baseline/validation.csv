@@ -1,0 +1,7 @@
+gate,result,detail
+strict_gnu90,pass,rxas_opt_diagnostic_source
+debug_rxas_build,pass,parallel_10
+release_rxas_build,pass,parallel_10
+stable_diagnostic_test,pass,copy_acopy_signature_d132e98f
+focused_optimizer_matrix,pass,49_of_49
+focused_image_parity,pass,3_of_3_byte_identical
