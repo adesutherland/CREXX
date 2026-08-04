@@ -1,10 +1,9 @@
 %% crexxalmanac.sty -- cRexx Almanac inspired compact API reference layout
-%% 2026/08/03 v0.4
+%% 2026/08/04 v1.0.3
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{crexxalmanac}[2026/08/03 v0.4 Almanac-style API reference]
+\ProvidesPackage{crexxalmanac}[2026/08/04 v1.0.3 Almanac-style API reference]
 
 \RequirePackage{xcolor}
-\RequirePackage{array}
 \RequirePackage{amssymb}
 \RequirePackage{xparse}
 \RequirePackage{tikz}
@@ -20,46 +19,45 @@
 \newlength\APIHeadingHeight
 \newlength\APIHeadingSplit
 \newlength\APIHeadingInset
+\newlength\APIMarkerWidth
+\newlength\APISinceWidth
 \newlength\APITypeWidth
+\newlength\APINameWidth
 \newlength\APIDeclarationWidth
 \newlength\APITypeDeclarationGap
+\newlength\APIRowSkip
 
 \setlength\APIHeadingHeight{7.8mm}
 \setlength\APIHeadingSplit{0.73\linewidth}
 \setlength\APIHeadingInset{2.2mm}
-\setlength\APITypeWidth{7.4em}
+\setlength\APIMarkerWidth{1.45em}
+\setlength\APISinceWidth{2.05em}
+\setlength\APITypeWidth{8.2em}
+\setlength\APINameWidth{8.8em}
 \setlength\APIDeclarationWidth{0.60\linewidth}
 \setlength\APITypeDeclarationGap{0.55em}
+\setlength\APIRowSkip{0.05ex}
 
 \NewDocumentCommand{\APISetHeadingSplit}{m}{\setlength\APIHeadingSplit{#1}}
 \NewDocumentCommand{\APISetHeadingHeight}{m}{\setlength\APIHeadingHeight{#1}}
+\NewDocumentCommand{\APISetMarkerWidth}{m}{\setlength\APIMarkerWidth{#1}}
+\NewDocumentCommand{\APISetSinceWidth}{m}{\setlength\APISinceWidth{#1}}
 \NewDocumentCommand{\APISetTypeWidth}{m}{\setlength\APITypeWidth{#1}}
+\NewDocumentCommand{\APISetNameWidth}{m}{\setlength\APINameWidth{#1}}
 \NewDocumentCommand{\APISetDeclarationWidth}{m}{\setlength\APIDeclarationWidth{#1}}
 \NewDocumentCommand{\APISetTypeDeclarationGap}{m}{\setlength\APITypeDeclarationGap{#1}}
+\NewDocumentCommand{\APISetRowSkip}{m}{\setlength\APIRowSkip{#1}}
 
-% Shallower banner with both labels vertically centred.
 \NewDocumentCommand{\APIClassHeading}{m m}{%
   \par\noindent
   \begin{tikzpicture}
     \useasboundingbox (0,0) rectangle (\linewidth,\APIHeadingHeight);
-    \fill[apiDark]
-      (0,0) rectangle (\APIHeadingSplit,\APIHeadingHeight);
-    \fill[apiLight]
-      (\APIHeadingSplit,0) rectangle (\linewidth,\APIHeadingHeight);
-
-    \node[
-      anchor=west,
-      inner sep=0pt,
-      text=white,
-      font=\sffamily\bfseries\Large
-    ] at (\APIHeadingInset,{0.5\APIHeadingHeight}) {#1};
-
-    \node[
-      anchor=east,
-      inner sep=0pt,
-      text=apiText,
-      font=\sffamily\large
-    ] at ({\linewidth-\APIHeadingInset},{0.5\APIHeadingHeight}) {#2};
+    \fill[apiDark] (0,0) rectangle (\APIHeadingSplit,\APIHeadingHeight);
+    \fill[apiLight] (\APIHeadingSplit,0) rectangle (\linewidth,\APIHeadingHeight);
+    \node[anchor=west,inner sep=0pt,text=white,font=\sffamily\bfseries\Large]
+      at (\APIHeadingInset,{0.5\APIHeadingHeight}) {#1};
+    \node[anchor=east,inner sep=0pt,text=apiText,font=\sffamily\large]
+      at ({\linewidth-\APIHeadingInset},{0.5\APIHeadingHeight}) {#2};
   \end{tikzpicture}%
   \par\vspace{2.5pt}%
 }
@@ -69,100 +67,140 @@
   {\par\vspace{2pt}{\color{apiRule}\hrule height 0.3pt}\vspace{4pt}\endgroup}
 
 \NewDocumentCommand{\APIHierarchyLine}{O{} m m}{%
-  \noindent
-  \makebox[1.45em][l]{\scriptsize #1}%
-  \hspace*{\dimexpr #2em\relax}%
-  #3\par
+  \noindent\makebox[1.45em][l]{\scriptsize #1}%
+  \hspace*{\dimexpr #2em\relax}#3\par
 }
 
 \NewDocumentCommand{\APIHierarchyBranch}{}{\ensuremath{\llcorner}}
-
 \NewDocumentCommand{\APINew}{}{\textasteriskcentered}
 \NewDocumentCommand{\APIChanged}{}{\ensuremath{\triangle}}
 \NewDocumentCommand{\APIField}{}{\ensuremath{\blacktriangle}}
 \NewDocumentCommand{\APIOpen}{}{\ensuremath{\circ}}
 
-% Widely spaced leader dots, extending to a small gap before the return type.
 \NewDocumentCommand{\APILeaderFill}{}{%
-  \nobreak\leaders\hbox{\kern0.22em\raisebox{0.34ex}{\scriptsize.}\kern0.22em}\hfill
+  \nobreak\leaders
+    \hbox{\kern0.22em\raisebox{0.34ex}{\scriptsize.}\kern0.22em}%
+    \hfill
   \kern0.35em
 }
 
-% The modifier column is elastic. Consequently its leaders finish immediately
-% before the fixed-width return-type column.
+\makeatletter
+\newcommand{\API@ModifierWidth}{%
+  \dimexpr\linewidth-\APIMarkerWidth-\APISinceWidth-\APITypeWidth
+  -\APITypeDeclarationGap-\APIDeclarationWidth\relax
+}
+\newcommand{\API@ArgumentWidth}{%
+  \dimexpr\APIDeclarationWidth-\APINameWidth\relax
+}
+\newcommand{\API@MarkerBox}[1]{\hbox to \APIMarkerWidth{\hfil\scriptsize #1}}
+\newcommand{\API@SinceBox}[1]{\hbox to \APISinceWidth{\hfil\scriptsize #1}}
+\newcommand{\API@ModifierBox}[1]{%
+  \hbox to \API@ModifierWidth{\color{apiMid}#1\APILeaderFill}%
+}
+% A long return type is anchored at its right edge and may extend to the left;
+% it can therefore never overwrite the fixed method-name column.
+\newcommand{\API@TypeBox}[1]{%
+  \hbox to \APITypeWidth{\hfil\hbox to 0pt{\hss\bfseries #1}}%
+}
+\newcommand{\API@GapBox}{\hbox to \APITypeDeclarationGap{\hfil}}
+\newcommand{\API@NameBox}[1]{%
+  \hbox to \APINameWidth{\bfseries #1\hfil}%
+}
+\newcommand{\API@ArgumentsBox}[1]{%
+  \hbox to \API@ArgumentWidth{#1\hfil}%
+}
+\newcommand{\API@MethodRow}[8]{%
+  \par\noindent
+  \hbox to \linewidth{%
+    \API@MarkerBox{#1}%
+    \API@SinceBox{#2}%
+    \API@ModifierBox{#3}%
+    \API@TypeBox{#4}%
+    \API@GapBox
+    \API@NameBox{#5}%
+    \API@ArgumentsBox{#6\IfBlankF{#7}{\ {\color{apiMid}#7}}}%
+  }%
+  \par\vspace{-\APIRowSkip}%
+}
+\newcommand{\API@ValueRow}[6]{%
+  \par\noindent
+  \hbox to \linewidth{%
+    \API@MarkerBox{#1}%
+    \API@SinceBox{#2}%
+    \API@ModifierBox{#3}%
+    \API@TypeBox{#4}%
+    \API@GapBox
+    \API@NameBox{#5}%
+    \API@ArgumentsBox{\IfBlankF{#6}{{\color{apiMid}= #6}}}%
+  }%
+  \par\vspace{-\APIRowSkip}%
+}
+
 \NewDocumentEnvironment{APIMembers}{}
-  {\begingroup\small\sffamily\color{apiText}%
-   \setlength{\tabcolsep}{0pt}%
-   \begin{tabular}{@{}
-      >{\raggedleft\arraybackslash}p{1.45em}
-      >{\raggedleft\arraybackslash}p{2.05em}
-      >{\raggedright\arraybackslash}p{\dimexpr\linewidth-3.5em-\APITypeWidth-\APITypeDeclarationGap-\APIDeclarationWidth\relax}
-      >{\raggedleft\arraybackslash}p{\APITypeWidth}
-      @{\hspace{\APITypeDeclarationGap}}
-      >{\raggedright\arraybackslash}p{\APIDeclarationWidth}@{}}}
-  {\end{tabular}\par\endgroup}
+  {\begingroup\small\sffamily\color{apiText}\parskip=0pt\relax}
+  {\par\endgroup}
 
 % marker, version, modifiers, return type, name, arguments, trailing clause
 \NewDocumentCommand{\APIMember}{m m m m m m m}{%
-  {\scriptsize #1} &
-  {\scriptsize #2} &
-  {\color{apiMid}#3\APILeaderFill} &
-  {\bfseries #4} &
-  {\bfseries #5}{#6}%
-  \IfBlankF{#7}{\ {\color{apiMid}#7}}%
-  \\[-0.05ex]
+  \API@MethodRow{#1}{#2}{#3}{#4}{#5}{#6}{#7}{}%
 }
-
-% marker, version, modifiers, class name, arguments, trailing clause
+% marker, version, modifiers, factory name, arguments, trailing clause
 \NewDocumentCommand{\APIConstructor}{m m m m m m}{%
-  {\scriptsize #1} &
-  {\scriptsize #2} &
-  {\color{apiMid}#3\APILeaderFill} &
-  {} &
-  {\bfseries #4}{#5}%
-  \IfBlankF{#6}{\ {\color{apiMid}#6}}%
-  \\[-0.05ex]
+  \API@MethodRow{#1}{#2}{#3}{}{#4}{#5}{#6}{}%
 }
-
 % marker, version, modifiers, type, name, value
 \NewDocumentCommand{\APIConstant}{m m m m m m}{%
-  {\scriptsize #1} &
-  {\scriptsize #2} &
-  {\color{apiMid}#3\APILeaderFill} &
-  {\bfseries #4} &
-  {\bfseries #5}%
-  \IfBlankF{#6}{\ {\color{apiMid}= #6}}%
-  \\[-0.05ex]
+  \API@ValueRow{#1}{#2}{#3}{#4}{#5}{#6}%
 }
-
-
-% --------------------------------------------------------------------------
-% Chapter-wide API layout
-%
-% This widens only the chapter body; page size, headers, footers, and the
-% document's normal geometry remain untouched.  The starred adjustwidth
-% environment interprets the two values as inner and outer margins in a
-% two-sided document.
-% --------------------------------------------------------------------------
 
 \newlength\APIChapterInnerExpansion
 \newlength\APIChapterOuterExpansion
-\setlength\APIChapterInnerExpansion{10mm}
-\setlength\APIChapterOuterExpansion{10mm}
-
+\setlength\APIChapterInnerExpansion{8mm}
+\setlength\APIChapterOuterExpansion{8mm}
 \NewDocumentCommand{\APISetChapterExpansion}{m m}{%
   \setlength\APIChapterInnerExpansion{#1}%
   \setlength\APIChapterOuterExpansion{#2}%
 }
-
-% Place this after \chapter and end it before the next \chapter.
-% Negative margins enlarge the available line width.
 \NewDocumentEnvironment{APIWideChapter}{}
   {\begin{adjustwidth*}{-\APIChapterInnerExpansion}{-\APIChapterOuterExpansion}}
   {\end{adjustwidth*}}
 
-\NewDocumentEnvironment{APIClass}{m m}
-  {\APIClassHeading{#1}{#2}}
-  {\par}
+\NewDocumentEnvironment{APIClass}{m m}{\APIClassHeading{#1}{#2}}{\par}
+\NewDocumentEnvironment{CrexxClass}{m m}{\begin{APIClass}{#1}{#2}}{\end{APIClass}}
+\NewDocumentEnvironment{Hierarchy}{}{\begin{APIHierarchy}}{\end{APIHierarchy}}
+\NewDocumentEnvironment{Members}{}{\begin{APIMembers}}{\end{APIMembers}}
+\NewDocumentCommand{\HierarchyLine}{O{} m m}{\APIHierarchyLine[#1]{#2}{#3}}
 
+% cRexx parameter notation helpers.
+% \Param{name}{type} -> name=type
+% \DefaultParam{name}{type}{value} -> name=type=value
+\NewDocumentCommand{\Param}{m m}{#1=#2}
+\NewDocumentCommand{\DefaultParam}{m m m}{#1=#2=#3}
+
+% Concise semantic interface. Markers are retained.
+\NewDocumentCommand{\Method}{O{} m m m m}{%
+  \APIMember{}{}{#2}{#3}{#4}{#5}{#1}%
+}
+\NewDocumentCommand{\ChangedMethod}{O{} m m m m}{%
+  \APIMember{\APIChanged}{}{#2}{#3}{#4}{#5}{#1}%
+}
+\NewDocumentCommand{\MethodMeta}{m m m m m m O{}}{%
+  \APIMember{#1}{#2}{#3}{#4}{#5}{#6}{#7}%
+}
+\NewDocumentCommand{\Factory}{O{} m m m}{%
+  \APIConstructor{\APINew}{}{#2}{#3}{#4}{#1}%
+}
+\NewDocumentCommand{\FactoryMeta}{m m m m m O{}}{%
+  \APIConstructor{#1}{#2}{#3}{#4}{#5}{#6}%
+}
+\NewDocumentCommand{\Constant}{m m m m}{%
+  \APIConstant{\APIField}{}{#1}{#2}{#3}{#4}%
+}
+\NewDocumentCommand{\ConstantMeta}{m m m m m m}{%
+  \APIConstant{#1}{#2}{#3}{#4}{#5}{#6}%
+}
+\NewDocumentCommand{\Field}{m m m}{%
+  \APIConstant{\APIField}{}{#1}{#2}{#3}{}%
+}
+\makeatother
 \endinput
