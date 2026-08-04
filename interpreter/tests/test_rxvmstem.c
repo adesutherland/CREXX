@@ -271,6 +271,60 @@ static void test_failure_atomicity(void) {
     clear_value(&stem);
 }
 
+static void test_get_failure_contract(void) {
+    value stem;
+    value left;
+    value right;
+    value data;
+    value out;
+    rxstem_key_parts parts;
+    rxstem_header before;
+    rxstem_header after;
+    char long_text[160];
+
+    value_init(&stem);
+    value_init(&left);
+    value_init(&right);
+    value_init(&data);
+    value_init(&out);
+
+    /* Lazy private initialization can fail, but a GET failure changes neither
+     * the logical empty stem nor its destination. */
+    set_text(&left, "missing");
+    set_text(&out, "destination-before");
+    parts = rxstem_one_part(&left);
+    next_failure = TEST_FAIL_PREP_BINARY;
+    CHECK(rxstem_get_parts(&out, &stem, &parts) == RXSTEM_OUT_OF_MEMORY);
+    CHECK(stem.binary_length == 0 && stem.num_attributes == 0);
+    CHECK(text_is(&out, "destination-before"));
+
+    /* The segmented handler shares the same failure-atomic value copy.  An
+     * allocation failure must preserve both the destination and logical stem
+     * state, including its generation and entry count. */
+    CHECK(rxstem_init(&stem) == RXSTEM_OK);
+    set_text(&left, "left");
+    set_text(&right, "right");
+    fill_long_text(long_text, sizeof(long_text), 'm');
+    set_text(&data, long_text);
+    parts = rxstem_two_parts(&left, &right);
+    CHECK(rxstem_set_parts(&stem, &parts, &data) == RXSTEM_OK);
+    CHECK(rxstem_load(&stem, &before) == RXSTEM_OK);
+    next_failure = TEST_FAIL_STRING;
+    CHECK(rxstem_get_parts(&out, &stem, &parts) == RXSTEM_OUT_OF_MEMORY);
+    CHECK(text_is(&out, "destination-before"));
+    CHECK(rxstem_load(&stem, &after) == RXSTEM_OK);
+    CHECK(after.generation == before.generation &&
+          after.count == before.count && after.capacity == before.capacity);
+    CHECK(rxstem_get_parts(&out, &stem, &parts) == RXSTEM_OK);
+    CHECK(text_is(&out, long_text));
+
+    clear_value(&out);
+    clear_value(&data);
+    clear_value(&right);
+    clear_value(&left);
+    clear_value(&stem);
+}
+
 static void test_corruption_overflow_and_bounds(void) {
     value stem;
     value key;
@@ -402,6 +456,7 @@ static void test_copy_move_and_destruction(void) {
 int main(void) {
     test_basic_segmented_and_alias_semantics();
     test_failure_atomicity();
+    test_get_failure_contract();
     test_corruption_overflow_and_bounds();
     test_copy_move_and_destruction();
     CHECK(next_failure == TEST_FAIL_NONE);

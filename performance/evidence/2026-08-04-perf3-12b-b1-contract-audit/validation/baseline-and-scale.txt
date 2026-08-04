@@ -1,0 +1,61 @@
+PERF3-12B B1 baseline and scale validation
+Date: 2026-08-04
+Control commit: 6033cc2a7bed8801716a760d7de7298341efee59
+
+Retained evidence checksum verification
+---------------------------------------
+Commands, run from each evidence root:
+  shasum -a 256 -c checksums.sha256
+
+Results:
+  PERF3-12 clause rereview: 140/140 entries OK
+  PERF3-12A X1 verdict:      45/45 entries OK
+  combined:                 185/185 entries OK
+
+Current accepted artifact identity
+----------------------------------
+  source:       2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6
+  no-opt RXAS:  75b0cb2c6075316b66b79c6b94d5ee1d21e2042ec093da25ccddb3ba24c8000e
+  opt RXAS:     49efe16928bc9720904d127325a93d1e7c39642eb2f592f2972e52fbdcdcb585
+  no-opt RXBIN: 6a3d8844d60f28c4c60315031b7e8116fb344af10f6ac4422359d508c138d223
+  opt RXBIN:    92b922eec6f7ad63f3b69f2cdbf3734db0010c6ce5033285ccbf79f9bb93ea38
+  library:      a9dd2186065637e8629ec651e825227565db4d870645468d1b05d68cb6fbd5ba
+
+The source/no-opt artifacts and optimized image match retained authority. The
+optimized RXAS is the accepted X1 form. Library drift is the declared later
+queue module and must remain common to every PERF3-12B cell.
+
+Focused pre-edit baseline
+-------------------------
+Selector:
+  ^(rxas_optimizer_metadata|rxvmstem_storage|nr15_native_stem_contract|
+    ts_stem(_errors)?_(noopt|opt)|
+    nr15_stem_(semantics|access)_(rxvm|rxbvm)_(noopt|opt))$
+
+Result: 16/16 passed in the unchanged Debug control tree.
+
+Unchanged optimized RexxCPS assembly scale
+-----------------------------------------
+Ordinary profiling-off Release RXAS:
+  elapsed: 0.36 seconds
+  maximum RSS: 137,035,776 bytes
+
+Diagnostic RXAS (`-d`):
+  elapsed: 0.66 seconds
+  maximum RSS: 134,938,624 bytes
+
+Main first proof epoch:
+  ssa-bytes=83,902,504
+  ssa-values=139,839
+  ssa-storages=1,633
+
+Main flow summary:
+  blocks=254
+  registers=107
+  instructions=380 -> 370
+  component placement=2/27, applied=2
+  requested loop capability=0
+
+These are one-sample mechanism/scale observations, not wall-clock performance
+claims. The candidate panel must use the same input and capture both ordinary
+and diagnostic scale again.

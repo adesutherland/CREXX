@@ -1,0 +1,7 @@
+source_line,rxas_concat_line,rxas_consumer_line,consumer,joined_register,right_provenance,left_provisioning,trace,dynamic_weight,eligibility
+159,494,498,STEMSET,r67,ITOS r51 from lvar integer,no unpunctuated left register; literal Key Bee dot is folded,joined C event at line 495,280000,left literal and ITOS output independently valid UTF-8; complete joined use is TRACE plus set
+160,504,506,STEMGET,r68,ITOS r51 from unchanged lvar integer,no unpunctuated left register; literal Key Bee dot is folded,joined C event at line 505,280000,left literal and ITOS output independently valid UTF-8; complete joined use is TRACE plus get
+162,534,536,STEMGET,r72,ITOS r51 from lvar integer in two-iteration j loop,no unpunctuated left register; literal Key Bee dot is folded,joined C event at line 535,560000,left literal and ITOS output independently valid UTF-8; complete joined use is TRACE plus get
+168,595,609,STEMSET,r75,first ITOS r51 in two-iteration j loop,no unpunctuated left register; literal Key Bee dot is folded,joined C event at line 596,560000,key remains live across get convert add and DTOS; complete joined use is TRACE plus set
+168,599,601,STEMGET,r79,second ITOS r51 in same clause and loop iteration,no unpunctuated left register; literal Key Bee dot is folded,joined C event at line 600,560000,complete joined use is TRACE plus get before r79 is overwritten
+TOTAL,,,,,,,,2240000,segmented-route upper bound; overlapping with loop-reuse ceiling

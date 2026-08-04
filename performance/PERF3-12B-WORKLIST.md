@@ -1,6 +1,6 @@
 # PERF3-12B compound-tail representation and reuse
 
-Status: in progress — B1 exact baseline and contract audit
+Status: in progress — B2 isolated S1 segmented-route PoC
 
 Started: 2026-08-04
 
@@ -32,7 +32,7 @@ scale and end-to-end effect.
 - Approach PoCs must remain independently replayable. Do not layer segmented
   stem selection and loop reuse before each route has its own exact ceiling,
   negative panel and ordinary profiling-off Release comparison.
-- After the comparative PoC panel, stop for Adrian to select B0, B1, B2 or a
+- After the comparative PoC panel, stop for Adrian to select S0, S1, H1 or a
   bounded follow-on. A selected production edit then receives the mandatory
   first Release verdict and another stop before broad closeout.
 - `CAP-06` per-worker arenas plus a central block depot is a deferred RXVM
@@ -63,21 +63,25 @@ the left segment `"Key Bee"` for an immediate `STEMGET2`/`STEMSET2` rewrite.
 
 The existing two-segment handlers stream `left || "." || right` for hashing
 and comparison. `STEMSET2` materializes the canonical key only on a proved new
-insertion. Replacing every target concat gives B1 an upper bound of 2,240,000
+insertion. Replacing every target concat gives route S1 an upper bound of 2,240,000
 removed dispatches (4.131225% of the pre-X1 optimized profile). Materializing
-one joined key per `lvar` generation gives B2 a maximum 1,960,000 removed
+one joined key per `lvar` generation gives route H1 a maximum 1,960,000 removed
 dispatches (3.614822%). These are overlapping ceilings and must not be added.
 
 ## Design comparison
 
-### B0 — retain current joined-key lowering
+Route labels identify competing designs; execution labels B0-B6 below identify
+programme phases. Keeping these namespaces separate avoids describing phase B2
+as though it were design route B2.
+
+### S0 — retain current joined-key lowering
 
 The control preserves current RXC constant folding, ordinary `CONCAT`, user
-TRACE events and one-part native-stem operations. Retain B0 if neither route
+TRACE events and one-part native-stem operations. Retain S0 if neither route
 can prove its semantics or if end-to-end benefit does not repay proof,
 register, signal or assembler cost.
 
-### B1 — segmented native-stem selection
+### S1 — segmented native-stem selection
 
 Recognize a joined key produced only for one exact `STEMGET` or `STEMSET`,
 prove its left and right segments, and replace the pair with existing
@@ -96,13 +100,11 @@ A new constant-operand stem opcode is outside the selected surface and may be
 recorded only as a rejected fallback if existing forms cannot approach the
 ceiling for a demonstrated reason.
 
-`STEMGET` and `STEMGET2` currently have unknown signal metadata even though the
-shared handlers expose concrete pre-write failure paths. B1 cannot rely on
-unknown-equals-unknown. Audit the four one-/two-segment get/set contracts from
-the shared handler, correct metadata coherently in the isolated PoC if proved,
-and preserve failure-visible writes exactly.
+The accepted B1 audit gives all four one-/two-segment get/set operations an
+exact pre-write `UNICODE_ERROR|FAILURE` contract. S1 must preserve that contract
+and its failure-visible writes; it cannot rely on unknown-equals-unknown.
 
-### B2 — loop-scoped joined-key reuse
+### H1 — loop-scoped joined-key reuse
 
 Materialize a joined key once for a stable operand generation and redirect
 later equivalent uses within the loop region. Request loop capability only for
@@ -120,28 +122,29 @@ not register numbers or source order. Operand writes, mapping changes,
 references, indirect writes, context changes, calls, signal continuations and
 phis terminate or reject a reuse generation.
 
-### B3 — simple RXC hoisting control
+### C1 — simple RXC hoisting control
 
 An RXC emitter can retain or materialize the tail in a compiler temporary.
 Use this only as an exact ceiling/control. Select it for production only if
 compiler-only semantic knowledge is essential and the required emitter change
 is demonstrably simpler and less entangled than preserving intent for RXAS.
 
-### B4 — combined segmented selection and loop reuse
+### X1 — combined segmented selection and loop reuse
 
 Deferred. The routes remove overlapping work and impose different register,
-TRACE and signal obligations. Consider composition only after independent B1
-and B2 results show a residual material target and define an unambiguous owner.
+TRACE and signal obligations. Consider composition only after independent S1
+and H1 results show a residual material target and define an unambiguous owner.
 
 ## Required semantic proof
 
 - **UTF-8:** one-part lookup validates the joined string, while two-part lookup
   validates each segment. Arbitrary byte fragments can therefore differ even
-  when their concatenation is valid. B1 requires independently proved valid
+  when their concatenation is valid. S1 requires independently proved valid
   segments or an exact failure-equivalence proof; otherwise reject.
-- **Signals and writes:** preserve `UNICODE_ERROR`, `INVALID_ARGUMENTS` and
-  `FAILURE`, their phase, destination writes and stem mutation. Corrupt native
-  state, allocation failure and new insertion are explicit negatives.
+- **Signals and writes:** preserve the reachable `UNICODE_ERROR|FAILURE`
+  contract, phase, destination writes and stem mutation; do not introduce the
+  unreachable `INVALID_ARGUMENTS` path. Corrupt native state, allocation
+  failure and new insertion are explicit negatives.
 - **Stem state:** cover hit, miss/default, insert, update, reset/generation,
   insertion order, empty/dotted segments and key equality.
 - **Storage and aliases:** reject changed components, links/references,
@@ -171,19 +174,23 @@ and B2 results show a residual material target and define an unambiguous owner.
 
 ### B1 — exact baseline and contract audit
 
-- [ ] Verify the retained PERF3-12/X1 evidence checksums and product identities.
-- [ ] Rebuild only artifacts needed to prove current optimized/no-opt RXAS,
+- [x] Verify the retained PERF3-12/X1 evidence checksums and product identities.
+- [x] Rebuild only artifacts needed to prove current optimized/no-opt RXAS,
   RXBIN and both VMs match the accepted baseline or explain bounded drift.
-- [ ] Inventory every target static site, its operand provenance, TRACE record,
+- [x] Inventory every target static site, its operand provenance, TRACE record,
   stem consumer, loop membership and exact dynamic weight.
-- [ ] Audit `STEMGET`, `STEMSET`, `STEMGET2` and `STEMSET2` handler/effect/
+- [x] Audit `STEMGET`, `STEMSET`, `STEMGET2` and `STEMSET2` handler/effect/
   component/signal contracts; add adversarial metadata/runtime fixtures before
   using a corrected contract in a candidate.
-- [ ] Record assembler time/RSS and graph/SSA/use size for the unchanged input.
+- [x] Record assembler time/RSS and graph/SSA/use size for the unchanged input.
+- [x] Run the mandatory ordinary profiling-off Release verdict for the exact
+  metadata correction and retain the unexpected but neutral X1 site relocation.
+- [x] Adrian accepted the B1 metadata verdict and authorized the isolated
+  segmented-route PoC.
 
 ### B2 — isolated segmented-route PoC
 
-- [ ] Build a replayable B1 candidate in an isolated tree/patch with no change
+- [ ] Build a replayable S1 candidate in an isolated tree/patch with no change
   to canonical benchmark source.
 - [ ] Prove exact concat/stem pairing, segment provenance, individual UTF-8
   validity, complete joined-result uses, signal/write equivalence and TRACE
@@ -196,7 +203,7 @@ and B2 results show a residual material target and define an unambiguous owner.
 
 ### B3 — isolated loop-reuse PoC
 
-- [ ] Build a separately replayable B2 candidate using capability-lazy loop and
+- [ ] Build a separately replayable H1 candidate using capability-lazy loop and
   value/effect facts.
 - [ ] Compare lazy first-use with preheader placement; keep only variants that
   preserve zero-iteration and ordered signal/TRACE behavior.
@@ -207,14 +214,14 @@ and B2 results show a residual material target and define an unambiguous owner.
 
 ### B4 — comparative Release panel and selection stop
 
-- [ ] Build ordinary profiling-off Release B0, B1 and B2 products from exact
+- [ ] Build ordinary profiling-off Release S0, S1 and H1 products from exact
   recorded sources with both VM modes and no profiling instrumentation.
 - [ ] Run the smallest decisive balanced/interleaved RexxCPS comparison plus
   native-stem and no-candidate guards. Keep raw outputs and negative results.
 - [ ] Compare correctness, instruction/copy/allocation removal, runtime, RSS,
   image/register growth and assembler scale without summing overlapping
   ceilings.
-- [ ] Retain replay material for both candidates and report B0/B1/B2 to Adrian.
+- [ ] Retain replay material for both candidates and report S0/S1/H1 to Adrian.
 - [ ] **Stop for route selection. Do not combine or install a production
   candidate before approval.**
 
@@ -238,7 +245,6 @@ and B2 results show a residual material target and define an unambiguous owner.
 
 ## Immediate next step
 
-`B1 — exact baseline and contract audit`: checksum the retained evidence,
-prove current artifact identity, enumerate the five generated sites, and make
-the one-/two-segment native-stem signal contracts exact before either PoC can
-claim semantic equivalence.
+`B2 — isolated S1 segmented-route PoC`: implement replayable exact `CONCAT` to
+`STEMGET2`/`STEMSET2` selection and measure stable-left setup, UTF-8, signal,
+storage and TRACE costs without layering the H1 loop-reuse route.
