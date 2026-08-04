@@ -1,0 +1,1 @@
+pipe literal ls -1 | command | locate /.crexx/ | sort | specs /rexxApiDoc/ nw 1-* nw />> classlib-api.tex/ 50 | cons
