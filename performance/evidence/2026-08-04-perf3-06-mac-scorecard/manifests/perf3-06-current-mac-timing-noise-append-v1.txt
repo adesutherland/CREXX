@@ -1,0 +1,7 @@
+# PERF3-06 Apple formal timing cells selected mechanically by the governed
+# relative-MAD/min-max-span rule. No initial sample is removed. Aggregate is no
+# in this capture-only manifest; the merged summary uses the full v1 manifest.
+crexx-cross-runtime-matrix|1
+bounce-oorexx|Bounce|oorexx|oorexx|equivalent-port|A|no|no|4200|PASS: AWFY Bounce ooRexx object port||/Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx;/Users/adrian/CLionProjects/CREXX/tests/benchmarks/cross-runtime/oorexx/awfy_bounce.rex;4200
+base64-rxvm|Base64|crexx|rxvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf3-06.yHwy0b/build-release/bin/rxvm;/private/tmp/crexx-perf3-06.yHwy0b/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf3-06.yHwy0b/build-release/bin/library.rxbin;-a;2500
+base64-rxbvm|Base64|crexx|rxbvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf3-06.yHwy0b/build-release/bin/rxbvm;/private/tmp/crexx-perf3-06.yHwy0b/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf3-06.yHwy0b/build-release/bin/library.rxbin;-a;2500

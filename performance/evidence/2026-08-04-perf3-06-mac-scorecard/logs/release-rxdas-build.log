@@ -1,0 +1,4 @@
+[0/2] Re-checking globbed directories...
+[1/4] Building C object disassembler/CMakeFiles/rxdas.dir/rxdamain.c.o
+[2/4] Building C object disassembler/CMakeFiles/rxdas.dir/rxdadism.c.o
+[3/4] Linking C executable bin/rxdas

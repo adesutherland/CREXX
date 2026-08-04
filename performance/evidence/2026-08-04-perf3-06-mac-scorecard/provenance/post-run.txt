@@ -1,0 +1,21 @@
+PERF3-06 accepted-product Apple formal scorecard post-run environment
+captured_utc=2026-08-04T06:04:20Z
+captured_local=2026-08-04T07:04:20+0100
+power_source=AC Power
+battery=80 percent; AC attached; not charging
+low_power_mode=0
+thermal_warning=none recorded
+performance_warning=none recorded
+cpu_power_warning=none recorded
+load_averages=1.09 1.23 1.29
+active_build_test_vm_processes_after_run=0
+top_processes_after_run=codex 1.5 percent; Codex Service 0.9 percent; Google Chrome 0.8 percent
+initial_capture_started_utc=2026-08-04T05:47:24Z
+initial_capture_completed_utc=2026-08-04T06:01:28Z
+initial_executions=348/348 pass; 58 warmups and 290 recorded
+append_cells=bounce-oorexx;base64-rxvm;base64-rxbvm
+append_executions=30/30 pass; 0 warmups and 30 recorded
+samples_removed=0
+post_append_noisy_cells=bounce-oorexx;base64-rxvm;base64-rxbvm
+second_append=forbidden and not run
+interpretation=formal same-session Apple absolute observation; no unmatched-session regression or cross-platform claim

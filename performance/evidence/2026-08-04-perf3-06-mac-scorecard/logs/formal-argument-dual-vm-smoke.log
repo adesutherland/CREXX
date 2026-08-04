@@ -1,0 +1,44 @@
+benchmark=awfy_sieve repetitions=5500 result=669
+PASS: AWFY Sieve
+benchmark=awfy_permute repetitions=5000 result=8660
+PASS: AWFY Permute
+benchmark=awfy_bounce repetitions=4200 result=1331
+PASS: AWFY Bounce
+benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+benchmark=awfy_towers repetitions=100 result=8191
+PASS: AWFY Towers
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g5fbe36049e26 20260804
+       System is: macOS
+REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+        Averaged: 500 x 100 iterations of 1000 clauses (over 1.1 s)
+REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=500 averaging=100 calibrated=1
+
+     Performance: 46705706 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+benchmark=awfy_sieve repetitions=5500 result=669
+PASS: AWFY Sieve
+benchmark=awfy_permute repetitions=5000 result=8660
+PASS: AWFY Permute
+benchmark=awfy_bounce repetitions=4200 result=1331
+PASS: AWFY Bounce
+benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+benchmark=awfy_towers repetitions=100 result=8191
+PASS: AWFY Towers
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g5fbe36049e26 20260804
+       System is: macOS
+REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+        Averaged: 500 x 100 iterations of 1000 clauses (over 1.1 s)
+REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=500 averaging=100 calibrated=1
+
+     Performance: 44761235 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port

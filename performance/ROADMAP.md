@@ -148,6 +148,18 @@ Six advanced M05 copies are conservatively retained and recorded for a future
 candidate-sliced/region proof. Debug/Release optimizer/runtime checks pass
 108/108, broad Debug passes 2,021/2,021, and canonical images remain exact.
 
+PERF3-06 is complete from accepted product `5fbe36049`. Its formal Apple M5
+scorecard passes 348/348 initial plus 30/30 governed-append executions with no
+sample removed. The common-five geometric means are 2.453066x/2.285744x
+versus ooRexx and 0.912280x/0.850054x versus decimal NetRexx for
+`rxvm`/`rxbvm`. Both VMs now clear the 2.00x ooRexx aggregate band, while
+Richards and noisy Base64 remain below parity and the 1.50x per-cell band.
+RexxCPS reaches ooRexx parity at 1.151301x/1.133307x but remains below its
+separate 1.50x band; Towers remains a qualified separate deficit at
+0.390842x/0.389933x. OoRexx Bounce and both cREXX Base64 cells remain
+noise-labelled after the single permitted append. PERF3-12 is the next
+evidence gate: current RexxCPS clause-lowering rereview.
+
 PERF2 is closed and preserved in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md). The initial
 `NR-*` sweep remains closed in
@@ -158,8 +170,9 @@ Standing measurement, regression and publication rules remain normative in
 [`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md) and
 [`AGENTS.md`](AGENTS.md).
 
-The committed baseline for this closeout tranche is
-`4a3940395980dc40ea45917d71d99caa080e89bb`; the PERF3 planning baseline
+The accepted product baseline for the PERF3-06 scorecard is
+`5fbe36049e26ee73ea0cf1720a7fc416f33d0fe2`; the earlier closeout tranche is
+`4a3940395980dc40ea45917d71d99caa080e89bb`. The PERF3 planning baseline
 remains `e38e514bf611ae3873513368c44742e2ae7332d1`, whose product-code parent is
 `3f43a0014be10c930a12b8a636297b60f294c0a6`. The exact new local tip is kept in
 repository history rather than self-referenced by the commit that contains
@@ -331,13 +344,13 @@ their recorded trigger fires:
 | PERF3-04 | P1 | Generic final/concrete scalar accessor proof | queued evidence only | A general proof and hand-equivalent ceiling justify a candidate, or the lead is deferred. |
 | PERF3-05 | P1 | Compiler, native layout and private-stream panel | complete — retain L0 | Adrian accepted the 2026-08-01 panel. Exact C1abc+A1 baseline/drift products match; effective ThinLTO, merged/per-VM PGO and no-flatten layout fail representative or zero-work guards; L4 remains unopened. No production VM change was made. Control: [`PERF3-05-WORKLIST.md`](PERF3-05-WORKLIST.md); evidence: [`2026-08-01-perf3-05-compiler-layout-panel`](evidence/2026-08-01-perf3-05-compiler-layout-panel/). |
 | PERF3-05-B1 | P2 | VM library link interface and static API granularity | queued build/API hygiene | Current Mac links complete in 61-71 ms, so the reported large delay is not reproduced. Export leakage is real but not causal in the isolated relink. Rework should make `crexxsaa` implementation archives/includes private, publish only the supported header/export surface, split the static phase API if narrow clients are supported, and remeasure on the reporting host. Evidence: [`link diagnostic`](evidence/2026-08-01-perf3-05-compiler-layout-panel/link-diagnostic/). |
-| PERF3-06 | P0 | Qualified-deficit closure and Mac scorecard | queued next accounting gate | PERF3-02, PERF3-03 and PERF3-10 now form an accepted tranche. Capture their exact current-product same-session common-five plus RexxCPS/Towers scorecard before another production candidate changes the baseline; every guard and exclusion remains explicit. |
+| PERF3-06 | P0 | Qualified-deficit closure and Mac scorecard | complete — accepted product scorecard retained | The formal Apple refresh passes 348/348 initial plus 30/30 append executions. Common-five means are 2.453066x/2.285744x versus ooRexx and 0.912280x/0.850054x versus NetRexx. Richards and noisy Base64 remain common deficits; RexxCPS clears parity but not 1.50x, and Towers remains a separate deficit. Control: [`PERF3-06-WORKLIST.md`](PERF3-06-WORKLIST.md); evidence: [`2026-08-04-perf3-06-mac-scorecard`](evidence/2026-08-04-perf3-06-mac-scorecard/). |
 | PERF3-07 | P2 | Capability and lifecycle side lanes | deferred/independent | Each approved product/capability use case has its own scope and does not distort the common benchmark programme. |
 | PERF3-08 | P1 | Selected-candidate platform validation and default-VM decision | queued late gate | Apple ARM64, Linux x86-64, supported Linux ARM64 and Windows evidence support an explicit default/private-stream recommendation or a named defer. |
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
 | PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | complete — D0.5 scale verdict passed | Gates 1-6, M01-M06 and K01-K06 are locked. D0.1-D0.4 provide explicit routes, one immutable graph, capability-lazy proofs and sparse transactional rewrites. D0.5 adds lazy equal-join phi elision, migrates exact write-once/single-use typed copies to a linear mechanical route, and bounds whole-procedure SSA while retaining local/M00/K05 processing. Ordinary Release `Parse.rxas` peak falls from 2.56 GB to 142.7-142.9 MB; all 261 K05 rewrites remain, while six non-write-once M05 copies are explicitly deferred to future candidate-sliced/region SSA. Debug/Release optimizer/runtime checks pass 108/108, broad Debug passes 2,021/2,021, and canonical images remain exact. The future ledger retains RXC-to-RXAS ownership, inlining redesign, hoisting, register work and the bounded region-proof follow-on. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); K06: [`2026-08-03-perf3-11-k06-mechanical-classification`](evidence/2026-08-03-perf3-11-k06-mechanical-classification/); K01: [`2026-08-03-perf3-11-k01-storage-permutation`](evidence/2026-08-03-perf3-11-k01-storage-permutation/); K02/K03: [`2026-08-03-perf3-11-k02-k03-linked-reads`](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/); K04: [`2026-08-03-perf3-11-k04-call-window`](evidence/2026-08-03-perf3-11-k04-call-window/); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
-| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued evidence after current scorecard | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
+| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | queued next evidence gate | Re-profile current accepted code and audit general compiler clause shapes, conversion/loop hoisting, inactive TRACE, PARSE, stems and ADDRESS. Separate compiler lowering from reusable RXAS consumers and reject benchmark-specific rewrites. |
 
 ## Approved execution order
 
@@ -608,6 +621,17 @@ current sources/images, two warmups and ten serial recorded observations per
 absolute cell. A before/after verdict uses at least one warmup and twelve
 balanced/interleaved pairs, with governance append rules. No unmatched
 historical ratio becomes a regression claim.
+
+Completed 2026-08-04 at clean accepted product `5fbe36049`. The initial
+29-cell matrix passes `348/348`; the governed ooRexx Bounce and dual-VM Base64
+append passes `30/30`. All three appended cells remain noise-labelled, no
+sample is removed and no second append is taken. The exact common-five means
+are `2.453066x/2.285744x` versus ooRexx and `0.912280x/0.850054x` versus
+decimal NetRexx for `rxvm`/`rxbvm`. Richards remains the largest qualified
+common deficit; Base64 remains noisy and below parity. RexxCPS clears parity
+at `1.151301x/1.133307x` but not its 1.50x band, while Towers remains a
+separate qualified deficit at `0.390842x/0.389933x`. Evidence:
+[`2026-08-04-perf3-06-mac-scorecard`](evidence/2026-08-04-perf3-06-mac-scorecard/).
 
 ## PERF3-07 — capability and lifecycle side lanes
 
