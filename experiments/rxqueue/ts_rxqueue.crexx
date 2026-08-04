@@ -8,6 +8,10 @@
 
 options levelb
 import rxfnsb
+push my4711' fred'
+parse pull p0 p1
+say 1111 p0
+say 2222 p1
 
 /* Add 100 entries using PUSH. */
 do i = 1 to 100
