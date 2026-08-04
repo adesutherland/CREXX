@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gc4470635048e 20260804",
+  "source_manifest": "/Users/adrian/CLionProjects/CREXX/performance/manifests/perf3-11-k04e-current-mac-timing-noise-append-v1.txt",
+  "measurement": "timing",
+  "warmups": 0,
+  "recorded_runs": 10,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-08-04T09:43:42+0000",
+  "completed_utc": "2026-08-04T09:44:25+0000",
+  "result": "pass"
+}

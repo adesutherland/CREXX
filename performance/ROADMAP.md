@@ -167,6 +167,24 @@ Thirty-six paired ordinary Release rounds remain noisy/inconclusive but have
 positive point estimates and no 3% guard hit; Adrian accepted that verdict.
 Broad Debug passes 2,021/2,021.
 
+The authorized clean-product Mac refresh at `c44706350` passes `348/348`
+initial plus `30/30` governed-append executions. Current common-five means are
+`2.465740x/2.316900x` versus ooRexx and `0.894608x/0.840606x` versus decimal
+NetRexx for `rxvm`/`rxbvm`; the high-level ranking is unchanged. Both VMs clear
+the 2.00x ooRexx aggregate target, Richards and noisy Base64 remain common
+deficits, Towers remains separate, and RexxCPS is above ooRexx parity but below
+1.50x. No sample was removed; noisy `permute-netrexx` and both cREXX Base64
+cells received the sole permitted append and remain labelled. Evidence:
+[`2026-08-04-perf3-11-k04e-mac-scorecard`](evidence/2026-08-04-perf3-11-k04e-mac-scorecard/).
+
+The subsequent fixed-work PERF3-12 reassessment records current optimized
+RexxCPS totals of 53,660,581/53,660,552. K04e accounts for the exact 560,000
+hot-site reduction, while every ranked clause opportunity retains its original
+count. The queue therefore remains copied-XTOY component placement first,
+compound-tail comparison second, PARSE transaction third and late inlining/
+register finalization fourth. Evidence:
+[`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/).
+
 PERF3-06 is complete from accepted product `5fbe36049`. Its formal Apple M5
 scorecard passes 348/348 initial plus 30/30 governed-append executions with no
 sample removed. The common-five geometric means are 2.453066x/2.285744x
@@ -371,7 +389,7 @@ their recorded trigger fires:
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
 | PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | complete — K04e accepted | Gates 1-6, M01-M06 and K01-K06 are locked. D0.1-D0.5 provide explicit routes, one immutable graph, capability-lazy proofs, sparse transactional rewrites and a 142.7-142.9 MB Parse boundary. D0.6 retains the peephole as the permanent cheap pre-SSA stage and records a standing ownership rule for exact local metadata-proved transformations. Its accepted 100-record bound leaves the exact RexxCPS analysis and image unchanged versus 20 at an approximately 10 ms ordinary assembly cost. K04e restores the hot in-place integer compare/branch fusion through the source's pre-write ValueId and existing SSA-owned liveness, alias, cleanup and TRACE proof, without restoring the tactical rule. It removes one static instruction and exactly 560,000 equal-work dispatches; the 36-pair runtime verdict is noisy/inconclusive with positive point estimates and no guard hit. Broad Debug passes 2,021/2,021. Procedure-length windows remain a retained negative unless sparsity repays scan cost. The future ledger retains RXC-to-RXAS ownership, inlining redesign, hoisting, register work and the bounded region-proof follow-on. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); K04e verdict: [`2026-08-04-perf3-11-k04e-first-release-verdict`](evidence/2026-08-04-perf3-11-k04e-first-release-verdict/); D0.6 verdict: [`2026-08-04-perf3-11-d06-pre-ssa-boundary`](evidence/2026-08-04-perf3-11-d06-pre-ssa-boundary/); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); K06: [`2026-08-03-perf3-11-k06-mechanical-classification`](evidence/2026-08-03-perf3-11-k06-mechanical-classification/); K01: [`2026-08-03-perf3-11-k01-storage-permutation`](evidence/2026-08-03-perf3-11-k01-storage-permutation/); K02/K03: [`2026-08-03-perf3-11-k02-k03-linked-reads`](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/); K04: [`2026-08-03-perf3-11-k04-call-window`](evidence/2026-08-03-perf3-11-k04-call-window/); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
-| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — implementation queue retained | Fixed-count schema-5 profiles are checksum-valid under both VMs. The largest ceiling is transactional PARSE placement at 9.24M dispatches; compound-tail routes expose 1.96M-2.24M concats; copied XTOY exposes 2.22M `DCOPY` plus 97.68 MB and is recommended first because existing component SSA can own it without an ISA change. TRACE is guard-only and ADDRESS is zero-runtime here. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md); evidence: [`2026-08-04-perf3-12-rexxcps-clause-rereview`](evidence/2026-08-04-perf3-12-rexxcps-clause-rereview/). |
+| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — K04e reassessed, implementation queue retained | Current fixed-count schema-5 profiles are checksum-valid under both VMs at 53.661M optimized instructions. K04e removes its exact 560k hot dispatches without changing any ranked mechanism count. The largest ceiling remains transactional PARSE placement at 9.24M dispatches; compound-tail routes expose 1.96M-2.24M concats; copied XTOY exposes 2.22M `DCOPY` plus 97.68 MB and remains first because existing component SSA can own it without an ISA change. TRACE is guard-only and ADDRESS is zero-runtime here. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md); current evidence: [`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/); original gate: [`2026-08-04-perf3-12-rexxcps-clause-rereview`](evidence/2026-08-04-perf3-12-rexxcps-clause-rereview/). |
 
 ## Approved execution order
 

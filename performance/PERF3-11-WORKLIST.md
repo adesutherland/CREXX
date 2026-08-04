@@ -934,6 +934,15 @@ Release. The unqualified final broad Debug rerun passes 2,021/2,021 in 201.24
 seconds and closes K04e. Evidence:
 [`2026-08-04-perf3-11-k04e-first-release-verdict`](evidence/2026-08-04-perf3-11-k04e-first-release-verdict/).
 
+The subsequently authorized clean-product Mac refresh at committed
+`c44706350` passes `348/348` initial and `30/30` governed-append executions.
+Common-five means are `2.465740x/2.316900x` versus ooRexx and
+`0.894608x/0.840606x` versus decimal NetRexx for `rxvm`/`rxbvm`. The accepted
+ranking is unchanged: both VMs clear the 2.00x ooRexx aggregate target;
+Richards, noisy Base64, Towers and the RexxCPS 1.50x target remain open. No
+sample was removed and no second append was taken. Evidence:
+[`2026-08-04-perf3-11-k04e-mac-scorecard`](evidence/2026-08-04-perf3-11-k04e-mac-scorecard/).
+
 ### Stage 11 — later consumers after legacy migration
 
 Only after the foundation and first consumer are accepted:

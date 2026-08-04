@@ -1,0 +1,7 @@
+power=AC attached; battery 91 percent
+low_power_mode=0
+thermal=No thermal or performance warning recorded
+load_average=1.16 1.36 3.25
+profile_commands=both pass
+profile_stderr_bytes=0
+timing_interpretation=diagnostic only

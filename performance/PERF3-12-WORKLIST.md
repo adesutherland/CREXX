@@ -174,6 +174,24 @@ inlining and register finalization until these consumers simplify the actual
 body and temporary set. Inactive TRACE is guard-only and ADDRESS has zero
 runtime work in this slice.
 
+## K04e/current-product reassessment
+
+The authorized post-K04e fixed-work reassessment completed on 2026-08-04
+against clean detached accepted product `c44706350`. Current optimized totals
+are 53,660,581/53,660,552 under `rxvm`/`rxbvm`, down
+560,629/560,630 from the original PERF3-12 profiles. K04e's isolated hot-site
+proof accounts for exactly 560,000 removed dispatches; the small remainder is
+consistent with the accepted D0.6/current library and final-output paths.
+
+Every ranked clause mechanism retains its exact material count: the PARSE
+ceiling is 9.24M, compound tails 2.24M, copied XTOY 2.22M plus 97.68 MB, and
+direct call/return 560k. Their share rises slightly because the total stream is
+smaller. The leverage ranking and implementation queue therefore remain
+unchanged. `PERF3-12A / R12-C01` copied-XTOY component placement is still the
+next bounded implementation slice; it requires separate approval and its own
+mandatory first ordinary Release verdict. Evidence:
+[`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/).
+
 ## Exit criterion
 
 PERF3-12 completes when the fresh dual-VM profile is correctness- and
