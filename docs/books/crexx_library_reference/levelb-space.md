@@ -1,4 +1,4 @@
-## Level B `space`
+## space
 
 `space` normalizes whitespace-delimited words:
 

@@ -1,4 +1,4 @@
-## `arraycopy` (Level B)
+## arraycopy
 
 ```rexx
 arraycopy(array = .string[] expose [, from = .int [, count = .int]]) = .string[]

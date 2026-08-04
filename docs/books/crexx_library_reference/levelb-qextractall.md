@@ -1,4 +1,4 @@
-## Level B `qextractall`
+## qextractall
 
 `qextractall(open=.string, close=.string, text=.string [,start=.int
 [,mode=.string]]) = .string[]` returns every balanced top-level span in source

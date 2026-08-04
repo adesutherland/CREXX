@@ -1,4 +1,4 @@
-## `x2d` (Level B)
+## x2d
 
 ```rexx
 x2d(hexadecimal = .string [, signed_length = .int]) = .int

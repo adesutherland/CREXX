@@ -1,4 +1,4 @@
-## `wordpos` (Level B)
+## wordpos
 
 ```rexx
 wordpos(phrase = .string, string = .string [, start = .int]) = .int

@@ -1,4 +1,4 @@
-## `c2d` (Level B)
+## c2d
 
 ```rexx
 c2d(from = .string) = .int

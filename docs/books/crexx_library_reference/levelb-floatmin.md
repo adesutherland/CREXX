@@ -1,4 +1,4 @@
-## Level B `floatmin`
+## floatmin
 
 ```rexx
 floatmin(first = .float, ... = .float) = .float

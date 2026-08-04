@@ -224,7 +224,7 @@ add_dynamic_plugin_target(des rxdes.c desbase.c desbase.h)
 
 Configure with the selected scratch or system prefix explicitly:
 
-```console
+```bash
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/crexx-prefix
 cmake --build build --target des --verbose
 ```
@@ -275,7 +275,7 @@ The compiler and VM paths are separate and explicit. For a plugin produced as
 `/path/to/plugin/rxdes.rxplugin` and a cRexx installation at
 `/path/to/crexx-prefix`, a complete optimized build and run is:
 
-```console
+```bash
 /path/to/crexx-prefix/bin/rxc \
   -i /path/to/plugin -i /path/to/crexx-prefix/bin \
   -o execdes execdes.crexx

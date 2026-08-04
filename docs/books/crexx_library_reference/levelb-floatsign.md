@@ -1,4 +1,4 @@
-## Level B `floatsign`
+## floatsign
 
 ```rexx
 floatsign(number = .float) = .int

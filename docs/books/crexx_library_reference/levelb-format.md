@@ -1,4 +1,4 @@
-## `format` (Level B)
+## format
 
 ```rexx
 format(number = .decimal,

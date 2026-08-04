@@ -1,0 +1,2194 @@
+\begin{CrexxClass}{StringHashMap}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringHashMap \hfill\textit{StringIterable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringHashMap}
+      {(\Param{expected}{1024})}
+
+    \Method
+      {public}
+      {.int}
+      {\_find}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {put}
+      {(\Param{key}{.string}, \Param{value}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {containsKey}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {keyArray}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {valueArray}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {keySet}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {valueSet}
+      {()}
+
+    \Method
+      {public}
+      {.StringHashMapIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {free}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{os}{system\_os}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ os}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {os}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {uptime}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {user}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {loadpath}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {osname}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {appendBinaryFile}
+      {(\Param{source}{.string}, \Param{target}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {getHost}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {beep}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {wait}
+      {(\Param{time}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {rxbinModules}
+      {(\Param{source}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {listDir}
+      {(\Param{file}{.string}, \Param{entries}{.string[]})}
+
+    \Method
+      {public}
+      {.string}
+      {getEnv}
+      {(\Param{env\_name}{.string})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringArrayListIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringArrayListIterator \hfill\textit{StringIterator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringArrayListIterator}
+      {(\Param{values}{reference .string[]}, \Param{count}{reference .int}, \Param{snapshot\_flag}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {index}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {reset}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isLive}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{RexxComparator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ RexxComparator \hfill\textit{ObjectComparator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {RexxComparator}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {compare}
+      {(\Param{left}{.object}, \Param{right}{.object})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{ObjectLinkedList}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectLinkedList}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {ObjectLinkedList}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {append}
+      {(\Param{value}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {prepend}
+      {(\Param{value}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {insertAfterCurrent}
+      {(\Param{value}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {insertBeforeCurrent}
+      {(\Param{value}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {current}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {previous}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {setFirst}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {setLast}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {setPosition}
+      {(\Param{pos}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {clear}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isEmpty}
+      {()}
+
+    \Method
+      {public}
+      {.object[]}
+      {toArray}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {fromArray}
+      {(\Param{list}{.object[]})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{ObjectStack}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectStack}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {ObjectStack}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {push}
+      {(\Param{item}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isEmpty}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {empty}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {pop}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {peek}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringHashSet}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringHashSet}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringHashSet}
+      {(\Param{expected}{1024})}
+
+    \Method
+      {public}
+      {.int}
+      {\_find}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {add}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {fromArray}
+      {(\Param{items}{.string[]})}
+
+    \Method
+      {public}
+      {.int}
+      {contains}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {toArray}
+      {()}
+
+    \Method
+      {public}
+      {.StringHashSetIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {free}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringHashSetIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringHashSetIterator \hfill\textit{StringIterator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringHashSetIterator}
+      {(\Param{items}{.string[]})}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringArrayList}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringArrayList \hfill\textit{StringIterable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringArrayList}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {init}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {add}
+      {(\Param{item}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {append}
+      {(\Param{item}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {prepend}
+      {(\Param{item}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{index}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {set}
+      {(\Param{index}{.int}, \Param{item}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {insert}
+      {(\Param{index}{.int}, \Param{item}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {remove}
+      {(\Param{index}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {indexOf}
+      {(\Param{item}{.string}, \Param{from}{1})}
+
+    \Method
+      {public}
+      {.int}
+      {contains}
+      {(\Param{item}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isEmpty}
+      {()}
+
+    \Method
+      {public}
+      {.StringArrayListIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.StringArrayListIterator}
+      {snapshotIterator}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {clear}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{qFind}{data\_qfind}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ qFind \hfill\textit{matchResult}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {}
+      {(\Param{line}{.string}, \Param{delim}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {position}
+      {()}
+
+    \Factory
+      {public}
+      {fastFind}
+      {(\Param{line}{.string}, \Param{delim}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {found}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {position}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {before}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {match}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {after}
+      {()}
+
+    \Factory
+      {public}
+      {qFind}
+      {(\Param{line}{.string}, \Param{delim}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {found}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {position}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {before}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {match}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {after}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringLinkedList}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringLinkedList}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringLinkedList}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {append}
+      {(\Param{value}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {prepend}
+      {(\Param{value}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {insertAfterCurrent}
+      {(\Param{value}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {insertBeforeCurrent}
+      {(\Param{value}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {current}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {previous}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {currentAddress}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {setFirst}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {setLast}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {setPosition}
+      {(\Param{pos}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {setAddress}
+      {(\Param{addr}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {clear}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isEmpty}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {toArray}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {fromArray}
+      {(\Param{list}{.string[]})}
+
+    \Method
+      {public}
+      {.int}
+      {debug}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{ObjectObjectTreeMapIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectObjectTreeMapIterator}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {ObjectObjectTreeMapIterator}
+      {(\Param{keys}{.object[]}, \Param{values}{.object[]})}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {nextKey}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {value}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {nextValue}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringObjectTreeMap}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringObjectTreeMap \hfill\textit{StringIterable, ObjectPrintable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringObjectTreeMap}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {put}
+      {(\Param{key}{.string}, \Param{value}{.object})}
+
+    \Method
+      {public}
+      {.object}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {containsKey}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {firstKey}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastKey}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {keyArray}
+      {()}
+
+    \Method
+      {public}
+      {.object[]}
+      {valueArray}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {keySet}
+      {()}
+
+    \Method
+      {public}
+      {.StringObjectTreeMapIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {String}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {free}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringTreeMapIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringTreeMapIterator \hfill\textit{StringIterator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringTreeMapIterator}
+      {(\Param{keys}{.string[]})}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringOldTreeMap}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringOldTreeMap \hfill\textit{StringIterable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringOldTreeMap}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {\_find}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.string[]}
+      {\_sortedKeys}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {put}
+      {(\Param{key}{.string}, \Param{value}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {containsKey}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {firstKey}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastKey}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {keyArray}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {valueArray}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {keySet}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {valueSet}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeMapIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {free}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringObjectHashMapIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringObjectHashMapIterator \hfill\textit{StringIterator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringObjectHashMapIterator}
+      {(\Param{keys}{.string[]}, \Param{values}{.object[]})}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {nextKey}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {value}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {nextValue}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{pclass = pos('}{}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ pclass = pos('}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {*      - *}
+      {()}
+
+    \Method
+      {public}
+      {.returnType}
+      {*      - name}
+      {()}
+
+    \Factory
+      {public}
+      {pfactory = pos('}
+      {()}
+
+    \Method
+      {public}
+      {}
+      {pmethod = pos('}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{ObjectArrayList}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectArrayList \hfill\textit{ObjectIterable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {ObjectArrayList}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {init}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {add}
+      {(\Param{item}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {append}
+      {(\Param{item}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {prepend}
+      {(\Param{item}{.object})}
+
+    \Method
+      {public}
+      {.object}
+      {get}
+      {(\Param{index}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {set}
+      {(\Param{index}{.int}, \Param{item}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {insert}
+      {(\Param{index}{.int}, \Param{item}{.object})}
+
+    \Method
+      {public}
+      {.object}
+      {remove}
+      {(\Param{index}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isEmpty}
+      {()}
+
+    \Method
+      {public}
+      {.ObjectArrayListIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.ObjectArrayListIterator}
+      {snapshotIterator}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {clear}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringStack}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringStack}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringStack}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {push}
+      {(\Param{item}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isEmpty}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {empty}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {pop}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {peek}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+% rexxDoc: no class declaration found in ./testrev.crexx
+
+\begin{CrexxClass}{StringTreeSetIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringTreeSetIterator \hfill\textit{StringIterator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringTreeSetIterator}
+      {(\Param{items}{.string[]})}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringObjectHashMap}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringObjectHashMap \hfill\textit{StringIterable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringObjectHashMap}
+      {(\Param{expected}{1024})}
+
+    \Method
+      {public}
+      {.int}
+      {\_find}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {put}
+      {(\Param{key}{.string}, \Param{value}{.object})}
+
+    \Method
+      {public}
+      {.object}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {containsKey}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {keyArray}
+      {()}
+
+    \Method
+      {public}
+      {.object[]}
+      {valueArray}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {keySet}
+      {()}
+
+    \Method
+      {public}
+      {.StringObjectHashMapIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {\_indexToken}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {free}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{pclass = pos('}{}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ pclass = pos('}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {*      - *}
+      {()}
+
+    \Method
+      {public}
+      {.returnType}
+      {*      - name}
+      {()}
+
+    \Factory
+      {public}
+      {pfactory = pos('}
+      {()}
+
+    \Method
+      {public}
+      {}
+      {pmethod = pos('}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+% rexxDoc: no class declaration found in ./StringIterable.crexx
+
+% rexxDoc: no class declaration found in ./StringIterator.crexx
+
+% rexxDoc: no class declaration found in ./ObjectPrintable.crexx
+
+\begin{CrexxClass}{scanlex\_token}{scanlex}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ scanlex\_token}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {scanlex\_token}
+      {(\Param{type}{.string}, \Param{text}{.string}, \Param{pos}{.int})}
+
+    \Method
+      {public}
+      {.string}
+      {get\_type}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {get\_text}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {get\_pos}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{id}{id\_id}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ id}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {id}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {uuid}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {uuidt}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {uuidV7}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {ulid}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {nanoId}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {snowflake}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {base58}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{ObjectObjectTreeMap}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectObjectTreeMap \hfill\textit{ObjectPrintable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {ObjectObjectTreeMap}
+      {(\Param{comparator}{.ObjectComparator})}
+
+    \Method
+      {public}
+      {.int}
+      {put}
+      {(\Param{key}{.object}, \Param{value}{.object})}
+
+    \Method
+      {public}
+      {.object}
+      {get}
+      {(\Param{key}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.object})}
+
+    \Method
+      {public}
+      {.int}
+      {containsKey}
+      {(\Param{key}{.object})}
+
+    \Method
+      {public}
+      {.object}
+      {firstKey}
+      {()}
+
+    \Method
+      {public}
+      {.object}
+      {lastKey}
+      {()}
+
+    \Method
+      {public}
+      {.object[]}
+      {keyArray}
+      {()}
+
+    \Method
+      {public}
+      {.object[]}
+      {valueArray}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {String}
+      {()}
+
+    \Method
+      {public}
+      {.ObjectObjectTreeMapIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {free}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{StringTreeMap}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ StringTreeMap \hfill\textit{StringIterable, ObjectPrintable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {StringTreeMap}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {put}
+      {(\Param{key}{.string}, \Param{value}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {containsKey}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {firstKey}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastKey}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {keyArray}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {valueArray}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {keySet}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeSet}
+      {valueSet}
+      {()}
+
+    \Method
+      {public}
+      {.StringTreeMapIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {String}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {free}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+% rexxDoc: no class declaration found in ./ObjectIterator.crexx
+
+% rexxDoc: no class declaration found in ./ObjectIterable.crexx
+
+\begin{CrexxClass}{rexx}{rexx}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{Object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ rexx \hfill\textit{ObjectPrintable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {rexx}
+      {(\Param{s}{.string})}
+
+    \Method
+      {public}
+      {.boolean}
+      {abbrev}
+      {(\Param{astr}{.string}, \Param{len}{0})}
+
+    \Method
+      {public}
+      {.rexx}
+      {abs}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {b2x}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {b2d}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {c2x}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {c2d}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {center}
+      {(\Param{expose centlen}{.int}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {centre}
+      {(\Param{centlen}{.int}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {changestr}
+      {(\Param{needle}{.string}, \Param{nneedle}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {compare}
+      {(\Param{astr}{.string}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {copies}
+      {(\Param{count}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {countstr}
+      {(\Param{needle}{.string})}
+
+    \Method
+      {public}
+      {.rexx}
+      {d2b}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {d2c}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {d2x}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {delstr}
+      {(\Param{position}{.int}, \Param{dellen}{0})}
+
+    \Method
+      {public}
+      {.rexx}
+      {delword}
+      {(\Param{wnum}{.int}, \Param{wcount}{0})}
+
+    \Method
+      {public}
+      {.rexx}
+      {format}
+      {(\Param{before}{0}, \Param{after}{0}, \Param{expp}{0}, \Param{expt}{-1})}
+
+    \Method
+      {public}
+      {.rexx}
+      {insert}
+      {(\Param{string}{.string}, \Param{position}{0}, \Param{len}{0}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.int}
+      {length}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {linesize}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {lower}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {overlay}
+      {(\Param{string}{.string}, \Param{position}{1}, \Param{len}{0}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.int}
+      {pos}
+      {(\Param{needle}{.string}, \Param{start}{1})}
+
+    \Method
+      {public}
+      {.int}
+      {lastpos}
+      {(\Param{needle}{.string}, \Param{search\_end}{0})}
+
+    \Method
+      {public}
+      {.rexx}
+      {left}
+      {(\Param{number}{.int}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {right}
+      {(\Param{number}{.int}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {reverse}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {sign}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {space}
+      {(\Param{spacenr}{1}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {strip}
+      {(\Param{option}{"B"}, \Param{schar}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {substr}
+      {(\Param{start}{.int}, \Param{len}{0}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.string}
+      {symbol}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {translate}
+      {(\Param{tochar}{""}, \Param{fromchar}{""}, \Param{pad}{" "})}
+
+    \Method
+      {public}
+      {.rexx}
+      {trunc}
+      {(\Param{fraction}{0})}
+
+    \Method
+      {public}
+      {.rexx}
+      {upper}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {value}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {verify}
+      {(\Param{intab}{.string}, \Param{match\_mode}{'N'}, \Param{spos}{1})}
+
+    \Method
+      {public}
+      {.rexx}
+      {word}
+      {(\Param{wordnum}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {words}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {wordindex}
+      {(\Param{wordnum}{.int})}
+
+    \Method
+      {public}
+      {.rexx}
+      {subword}
+      {(\Param{wordnum}{.int}, \Param{wordcount}{0})}
+
+    \Method
+      {public}
+      {.int}
+      {wordlength}
+      {(\Param{wordnum}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {wordpos}
+      {(\Param{string}{.string}, \Param{start}{1})}
+
+    \Method
+      {public}
+      {.rexx}
+      {x2b}
+      {()}
+
+    \Method
+      {public}
+      {.rexx}
+      {x2c}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {x2d}
+      {(\Param{signed\_length}{0})}
+
+    \Method
+      {public}
+      {.rexx}
+      {reradix}
+      {(\Param{fromRadix}{.int}, \Param{toRadix}{.int})}
+
+    \Method
+      {public}
+      {.rexx}
+      {sequence}
+      {(\Param{tos}{.string})}
+
+    \Method
+      {public}
+      {.rexx}
+      {xrange}
+      {(\Param{tos}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {datatype}
+      {(\Param{type}{""})}
+
+    \Method
+      {public}
+      {.string}
+      {stringValue}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}

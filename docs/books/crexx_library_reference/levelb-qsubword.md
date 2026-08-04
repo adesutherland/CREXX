@@ -1,4 +1,4 @@
-## Level B `qsubword`
+## qsubword
 
 `qsubword(text=.string, word_number=.int [,count=.int]) = .string` returns a
 source span beginning at the positive word number. Omitted `count` selects

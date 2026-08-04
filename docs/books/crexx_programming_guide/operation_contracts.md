@@ -47,7 +47,7 @@ runtime, but their private attributes are never exported.
 Compile and assemble the source, then identify the operation and its
 supplemental contract facts explicitly:
 
-```console
+```bash
 rxc -x -o example_contract example_contract.crexx
 rxas -o example_contract example_contract.rxas
 crexx-contract \

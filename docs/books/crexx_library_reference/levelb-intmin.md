@@ -1,4 +1,4 @@
-## Level B `intmin`
+## intmin
 
 ```rexx
 intmin(first = .int, ... = .int) = .int

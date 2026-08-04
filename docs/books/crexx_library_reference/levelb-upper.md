@@ -1,4 +1,4 @@
-## Level B `upper`
+## upper
 
 `upper` returns an uppercased copy of a string:
 

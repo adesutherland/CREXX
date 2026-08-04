@@ -1,4 +1,4 @@
-## Level B `date`
+## date
 
 The typed Level B calendar extension is:
 
@@ -13,7 +13,7 @@ format is `NORMAL`. Calendar years are the proleptic Gregorian range 1 through
 This is deliberately distinct from the three-argument Classic Level C DATE
 BIF documented in `lib/rxfnsc/date.md`.
 
-## Formats
+### Formats
 
 Format names are case-insensitive documented abbreviations. X variants carry
 a four-digit year; the corresponding short numeric input variants map `00`
@@ -50,7 +50,7 @@ through `99` deterministically to 2000 through 2099.
 `S` means SORTED on output and STANDARD on input. Use `ST` when naming
 STANDARD output explicitly.
 
-## Separators and errors
+### Separators and errors
 
 `osep` and `isep` are empty or exactly one Unicode codepoint. A supplied
 separator replaces the format's normal separator; SORTED normally has none.

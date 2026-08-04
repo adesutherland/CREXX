@@ -1,4 +1,4 @@
-## Level B `overlay`
+## overlay
 
 `overlay` writes formatted text over a target string:
 

@@ -1,4 +1,4 @@
-## `delword` (Level B)
+## delword
 
 ```rexx
 delword(string = .string, start = .int [, count = .int]) = .string

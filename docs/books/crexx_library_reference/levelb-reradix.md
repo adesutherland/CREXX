@@ -1,4 +1,4 @@
-## Level B `reradix`
+## reradix
 
 `reradix` converts an unsigned integer between radices 2 through 16:
 

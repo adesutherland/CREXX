@@ -1,4 +1,4 @@
-## Level B `substr`
+## substr
 
 `substr` returns a 1-based Unicode-codepoint slice:
 

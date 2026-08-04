@@ -1,4 +1,4 @@
-## Level B `arrayreverse`
+## arrayreverse
 
 `arrayreverse` reverses a one-based Level B string array in place:
 
