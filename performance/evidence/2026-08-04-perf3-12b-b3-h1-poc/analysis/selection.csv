@@ -1,0 +1,11 @@
+source_line,consumer,dynamic_weight,result,replacement,reason
+159,STEMSET,280000,retained-cache-seed,STEMSET key r103,"first conditional concat remains at its original point; result stored in private local 103"
+160,STEMGET,280000,selected,STEMGET key r103,"same literal/right ValueId and stable cache; exact C TRACE deleted"
+162,STEMGET,560000,selected,STEMGET key r103,"same literal/right ValueId and stable cache; exact C TRACE deleted"
+168,STEMGET,560000,selected,STEMGET key r103,"same literal/right ValueId and stable cache; exact C TRACE deleted"
+168,STEMSET,560000,selected,STEMSET key r103,"same literal/right ValueId and stable cache; exact C TRACE deleted"
+TOTAL_TARGET,,2240000,,,
+RETAINED_CACHE_MATERIALIZATION,,280000,,,
+SELECTED_CONCAT_REMOVAL,,1960000,,,
+ADDED_SETUP_DISPATCHES,,0,,,
+NET_DISPATCH_REDUCTION,,1960000,,,

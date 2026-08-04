@@ -1,0 +1,9 @@
+469e59969d596c7e817b4f506e4add513fac8b5204e9c00a3df3c41f431772fc  ./README.md
+1c5301ef12707814ee53ba6c592a54b9730f74f5516133788432b01170bc5f6b  ./analysis/foundation-and-work.md
+71537f4a90032910dd4455c798bf420d69337ac7d669da22139d9e3888cef58b  ./analysis/selection.csv
+9a7a522181d0d239e845a9cc36ad2175c7ce7654ac16ca2ace475d3b02cd4d92  ./artifacts.csv
+3ac4dc72a0b73f311cbceec20db38f33a023cedbe8e43c6e628c72a890b96242  ./replay/README.md
+bd4ea32f8dae472e0eb9e7b85f9b2c6c9cb3e7d8b9d7013b37270493cf54932f  ./replay/h1-cache-seed.patch
+3a84d58b06d16234cbff0e1255eeb11875caba5d5c04751e45e89e530759f1d0  ./validation/assembler-scale.txt
+f577a82ae9c70e4da1c1bd624c7ba08c86fefa86de7e7068f29330b0d9814323  ./validation/focused-correctness.txt
+4af46e13ddc330eabf261b5f8f10de5ddb7f7cfd72a77764c93e477fda55a284  ./validation/release-structure.txt

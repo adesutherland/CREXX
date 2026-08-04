@@ -1,6 +1,6 @@
 # PERF3-12B compound-tail representation and reuse
 
-Status: in progress — B2 S1 PoC complete; B3 awaiting approval
+Status: in progress — B3 H1 PoC complete; B4 awaiting approval
 
 Started: 2026-08-04
 
@@ -227,14 +227,40 @@ Evidence:
 
 ### B3 — isolated loop-reuse PoC
 
-- [ ] Build a separately replayable H1 candidate using capability-lazy loop and
+- [x] Build a separately replayable H1 candidate using capability-lazy loop and
   value/effect facts.
-- [ ] Compare lazy first-use with preheader placement; keep only variants that
+- [x] Compare lazy first-use with preheader placement; keep only variants that
   preserve zero-iteration and ordered signal/TRACE behavior.
-- [ ] Run loop/storage/reference/call/signal/TRACE adversarial fixtures plus
+- [x] Run loop/storage/reference/call/signal/TRACE adversarial fixtures plus
   opt/no-opt dual-VM equivalence.
-- [ ] Capture exact static/dynamic concat removal, materializations retained,
+- [x] Capture exact static/dynamic concat removal, materializations retained,
   buffer/copy/allocation effects and assembler time/RSS.
+
+Retained B3 outcome:
+
+- isolated commit `80c78fcee` on `codex/perf3-12b-h1-poc` retains the first
+  conditional concat as a lazy cache seed and proves all four later target
+  uses equivalent within their common reducible natural loop;
+- it removes four static CONCATs and exact `C` TRACE records, or 1,960,000 hot
+  dispatches, with no dynamic setup instruction and `.locals` 103 -> 104;
+- relative to the latest accepted X1 fixed-work total, with B1 hot-work
+  neutral, the derived H1 total is 50,879,051 under either VM (-3.709378%);
+- preheader placement is rejected for the real slice: the seed is not
+  must-execute, the right component is loop-variant and the seed TRACE is an
+  ordered observation, so zero-iteration and conditional behavior stay intact;
+- exact payload accounting avoids 18,340,000 temporary bytes; inline strings
+  make heap allocations expected neutral, still subject to the B4 counts check;
+- changed-value/cache/reference/call/signal-TRACE/no-loop adversarial proofs,
+  Debug/Release graph and metadata checks, the 16/16 native-stem selector and
+  six control/H1/no-opt dual-VM smoke cells are green;
+- first-epoch SSA retained bytes remain exactly 83,902,504. The one-sample gross
+  maximum-RSS delta is +851,968 bytes, while elapsed observations are explicitly
+  non-authoritative because the host was on battery; and
+- the common F1 CONCAT metadata remains excluded: a control with F1 and zero S1
+  selections emits main `380 -> 369`, while H1 emits `380 -> 365`.
+
+Evidence:
+[`2026-08-04-perf3-12b-b3-h1-poc`](evidence/2026-08-04-perf3-12b-b3-h1-poc/).
 
 ### B4 — comparative Release panel and selection stop
 
@@ -269,8 +295,8 @@ Evidence:
 
 ## Immediate next step
 
-`B3 — isolated H1 loop-scoped joined-key reuse PoC`: from the accepted B1 base,
-build a separately replayable capability-lazy reuse route; compare lazy
-first-use with only proved-safe preheader placement, exercise loop/storage/
-reference/call/signal/TRACE negatives, and capture exact work plus assembler
-scale without layering S1. Await Adrian's approval before starting.
+`B4 — comparative Release panel and route-selection stop`: on AC with the
+remote terminal absent, build exact retained S0, S1 and H1 profiling-off Release
+products, run the balanced/interleaved RexxCPS panel under both VMs, compare
+counts/RSS/image/register/assembler effects without summing overlapping work,
+and stop for route selection. Await Adrian's approval before starting.
