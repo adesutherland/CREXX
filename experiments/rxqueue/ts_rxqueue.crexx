@@ -1,0 +1,71 @@
+/*
+ * Test the CREXX execution-wide data queue.
+ *
+ * The main program fills the queue and consumes part of it.
+ * Two nested procedures then consume the remaining entries,
+ * demonstrating that all procedures share the same queue.
+ */
+
+options levelb
+import rxfnsb
+
+/* Add 100 entries using PUSH. */
+do i = 1 to 100
+    call push "Record "i
+end
+
+say "Initial queue depth:" queued()
+say
+
+/* Consume every fifth loop iteration: 20 entries in total. */
+say "Main program"
+say "------------"
+
+do i = 1 to 100 by 5
+    say "Main" i pull()
+end
+
+say "Queue depth after main:" queued()
+say
+
+call subproc
+
+say
+say "Final queue depth:" queued()
+
+exit 0
+
+
+subproc: procedure = .void
+    qmax = queued()
+
+    say "Subprocedure 1"
+    say "--------------"
+    say "Entries available:" qmax
+
+    /* Consume one entry for every third loop value. */
+    do i = 1 to qmax by 3
+        say "Sub-1" i pull()
+    end
+
+    say "Entries remaining:" queued()
+    say
+
+    call subproc2
+return
+
+
+subproc2: procedure = .void
+    qmax = queued()
+
+    say "Subprocedure 2"
+    say "--------------"
+    say "Entries available:" qmax
+
+    /* Consume all remaining entries. */
+    do i = 1 to qmax
+        say "Sub-2" i pull()
+    end
+
+    say "Entries remaining:" queued()
+return
