@@ -1,0 +1,28 @@
+options levelb
+
+main: procedure
+  first = .string
+  second = .string
+  parsed_first = .string
+  push "front"
+  queue "back"
+  pull first
+  pull second
+
+  if first <> "front" then do
+    say "FAIL: PUSH/PULL ordering"
+    exit 1
+  end
+  if second <> "back" then do
+    say "FAIL: QUEUE/PULL ordering"
+    exit 1
+  end
+
+  queue "classic-value"
+  parse pull parsed_first
+  if parsed_first <> "classic-value" then do
+    say "FAIL: bare PARSE PULL compatibility"
+    exit 1
+  end
+
+  say "RXQUEUE EXIT PASSED"
