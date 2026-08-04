@@ -1,6 +1,6 @@
 # PERF3-12A cursorless RXAS and copied-XTOY placement
 
-Status: cursorless first Release verdict ready — awaiting Adrian acceptance
+Status: complete — cursorless RXAS and X1 accepted; combined closeout retained
 
 Started: 2026-08-04
 
@@ -16,11 +16,15 @@ shape identified by PERF3-12.
 - Product baseline commit: `0db998bea` (`perf: refresh K04e Mac and RexxCPS
   evidence`). This worklist/roadmap commit is product-neutral and becomes the
   named implementation starting point.
+- Accepted cursorless baseline commit: `afc0b274f` (`perf: replace RXAS value
+  cursors with explicit slices`). Adrian accepted X1 and authorized combined
+  closeout on 2026-08-04; its final integrated commit is made only after the
+  checks recorded below.
 - Adrian approved a deliberate breaking RXAS/RXBIN change on 2026-08-04.
   Compatibility with bytecode or assembler source using the removed cursor
   forms is not required.
-- Retained count baseline: optimized RexxCPS at
-  53,660,581/53,660,552 instructions under `rxvm`/`rxbvm`, including exactly
+- X1 retained count baseline: cursorless optimized RexxCPS at
+  53,659,088/53,659,041 instructions under `rxvm`/`rxbvm`, including exactly
   2,220,000 `DCOPY` and `DTOS` executions and 97,680,000 decimal-copy bytes.
 - Retained profiling-off Mac runtime authority: PERF3-06/K04e scorecard;
   accepted baseline evidence is not replaced merely because a new candidate
@@ -149,14 +153,15 @@ has approved a breaking change, so neither compatibility mechanism is needed.
 
 ### C4 — cursorless correctness and first Release verdict
 
-- [ ] Focused positives: empty, ASCII, UTF-8, zero/past-end start, zero/large
+- [x] Focused positives: empty, ASCII, UTF-8, zero/past-end start, zero/large
   length, negative inputs, same-register aliases and allocation/signal paths
-  under `rxvm` and `rxbvm`.
+  under `rxvm` and `rxbvm`. Closeout adds injected allocation failure and
+  failure-atomic destination checks for both string and binary slices.
 - [x] Minimum first-verdict positives pass for ASCII, UTF-8, past-end/large
   length, empty binary and same-register string slicing under both VMs.
-  Explicit negative-input and injected allocation-failure runtime cases remain
-  part of proportionate closeout if the first verdict is accepted; canonical
-  metadata already records before-write signal behavior.
+  Explicit negative-input and injected allocation-failure runtime cases now
+  pass as part of the accepted proportionate closeout; canonical metadata
+  records before-write signal behavior.
 - [x] Run opcode metadata, RXBIN round-trip/validation, VM string/binary,
   compiler partial-call/inlining, Level B library and RXAS optimizer floors.
 - [x] Build the ordinary profiling-off Release product immediately after the
@@ -167,7 +172,8 @@ has approved a breaking change, so neither compatibility mechanism is needed.
 - [ ] Run profiling-off paired RexxCPS, Sieve and string/binary-heavy guards on
   the clean Mac host. Remote-terminal disturbance makes wall-clock measurement
   non-authoritative tonight; Adrian approved instruction reduction plus
-  functional equivalence as the first-verdict evidence boundary.
+  functional equivalence as the first-verdict evidence boundary. The wider
+  clean-host panel remains a retained follow-up, not a PERF3-12A closeout gate.
 
 ## Cursorless first Release verdict
 
@@ -225,19 +231,59 @@ proof problem.
 
 ## Copied-XTOY implementation and verdict
 
-- [ ] Add a distinct SSA/use-owned component-placement route, immutable proof
+- [x] Add a distinct SSA/use-owned component-placement route, immutable proof
   plan, rejection reasons/metrics and atomic queue consumer.
-- [ ] Prove the measured `DCOPY`/`DTOS` case plus bounded metadata-driven
+- [x] Prove the measured `DCOPY`/`DTOS` case plus bounded metadata-driven
   positives; add source-result, temporary-component, later-write, context,
   branch/phi, link/ref, call, signal-handler and TRACE negatives.
-- [ ] Run focused metadata/signal/optimizer/runtime tests and inherited
+- [x] Run focused metadata/signal/optimizer/runtime tests and inherited
   M01-M06/K04 floors.
-- [ ] Build the ordinary Release product and compare exact static/fixed-work
+- [x] Build the ordinary Release product and compare exact static/fixed-work
   reductions, paired RexxCPS under both VMs, Sieve and a copy/string-heavy
   guard. Report and stop for Adrian before closeout.
-- [ ] After both verdicts are accepted, run the proportionate broad closeout,
+- [x] After both verdicts are accepted, run the proportionate broad closeout,
   update current docs/evidence/roadmap, review, commit locally, then publish
-  only with Adrian's explicit direction.
+  only with Adrian's explicit direction. The 30-way Debug run passes 2,033 of
+  2,034 and times out only `rxpa_signature_diagnostics` at 120 seconds under
+  host load; that exact test passes isolated in 12.11 seconds, giving 2,034 of
+  2,034 functional outcomes. No push is included.
+
+## X1 first Release verdict
+
+The capability-lazy X1 route proves and atomically applies two of the five
+generated RexxCPS `DCOPY`/`DTOS` sites. Candidate disassembly retains three
+`DCOPY` and all five `DTOS`. All 77 RXAS optimizer tests plus the immutable
+flow-graph contract pass (78/78), and the X1 runtime oracle passes opt/no-opt
+under both VMs. Ordinary Release RexxCPS, Sieve and Base64 guards pass in all
+requested VM/mode cells with zero stderr.
+
+| VM | Mode | Cursorless | X1 | Delta |
+| --- | --- | ---: | ---: | ---: |
+| `rxvm` | no-opt | 143,099,442 | 143,099,442 | 0 (0.000000%) |
+| `rxbvm` | no-opt | 143,099,442 | 143,099,414 | -28 (-0.000020%) |
+| `rxvm` | optimized | 53,659,088 | 52,839,051 | -820,037 (-1.528235%) |
+| `rxbvm` | optimized | 53,659,041 | 52,839,051 | -819,990 (-1.528149%) |
+
+Both optimized VMs execute 1,400,000 `DCOPY` and the unchanged 2,220,000
+`DTOS`. Decimal-copy work falls by exactly 820,000 operations and 36,080,000
+bytes. The remaining +/-37/10 optimized movement and the 28-instruction no-opt
+`rxbvm` movement are low-frequency startup/final-path instructions; target
+counts agree exactly, all status domains are complete, result is zero, and
+invalid/overflow counters are zero.
+
+Ordinary full-procedure assembly completes in 0.51 seconds at 134.7 MB maximum
+RSS; diagnostic assembly completes in 0.99 seconds at 135.7 MB. Wall-clock
+benchmark claims remain deferred to the clean-host combined closeout. Evidence:
+[`2026-08-04-perf3-12a-x1-first-release-verdict`](evidence/2026-08-04-perf3-12a-x1-first-release-verdict/).
+Adrian accepted X1 and authorized proportionate broad closeout. That closeout
+also caught a reference-object observability gap: `MKREF` can expose storage
+without creating another register mapping. X1 now rejects placement when an
+earlier reference to either involved storage can reach the candidate, and the
+original PERF2-07 representation oracle plus a dedicated optimizer negative
+pass. The accepted fixed-work verdict above is retained unchanged. Existing
+build/worktree RXBIN files must be deleted or cleanly rebuilt because the
+cursorless instruction-set change is intentionally incompatible. Publication
+still requires Adrian's explicit direction.
 
 ## Acceptance contract
 

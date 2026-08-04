@@ -116,6 +116,12 @@ typedef struct flow_stats {
     size_t producer_proof_rejected;
     size_t producer_proof_unavailable;
     size_t producer_destinations_forwarded;
+    size_t component_placement_queries;
+    size_t component_placement_proved;
+    size_t component_placement_rejected;
+    size_t component_placement_unavailable;
+    size_t component_placements_applied;
+    size_t component_placement_trace_events_removed;
     size_t compare_branch_queries;
     size_t compare_branch_proved;
     size_t compare_branch_rejected;
@@ -489,8 +495,8 @@ static int flow_trace_event_matches_deletion(
         const RxasFlowTraceDeletion *deletion) {
     char register_type;
     char value_type;
+    char expected_value_type;
     if (!item || !deletion || item->instrType != TRACE_EVENT ||
-        deletion->component != RXOP_COMPONENT_INTEGER ||
         !flow_token_is_string(item->operand2Token, "R") ||
         !item->operand3Token || item->operand3Token->token_type != STRING ||
         !item->operand3Token->token_value.string[0] ||
@@ -503,7 +509,21 @@ static int flow_trace_event_matches_deletion(
         return 0;
     value_type = (char)toupper((unsigned char)
             item->operand3Token->token_value.string[0]);
-    if (value_type != 'B' && value_type != 'I') return 0;
+    expected_value_type = deletion->component == RXOP_COMPONENT_INTEGER
+            ? 'I' : deletion->component == RXOP_COMPONENT_FLOAT
+                    ? 'F' : deletion->component == RXOP_COMPONENT_STRING
+                            ? 'S' : deletion->component ==
+                                        RXOP_COMPONENT_DECIMAL
+                                    ? 'D' : deletion->component ==
+                                                RXOP_COMPONENT_BINARY
+                                            ? 'X' : deletion->component ==
+                                                        RXOP_COMPONENT_REFERENCE
+                                                    ? 'R' : '\0';
+    if (!expected_value_type ||
+        (value_type != expected_value_type &&
+         !(deletion->component == RXOP_COMPONENT_INTEGER &&
+           value_type == 'B')))
+        return 0;
     register_type = (char)tolower((unsigned char)
             item->operand4Token->token_value.string[0]);
     return register_type == flow_proof_register_type(
@@ -1112,6 +1132,262 @@ static size_t flow_forward_producer_destination(flow_graph *graph,
     }
     free(claimed_registers);
     return forwarded;
+}
+
+/* X01 places a one-register derivation on the copied source component.  The
+ * immutable proof owns all storage, ValueId, observation and signal policy;
+ * this consumer validates and applies only complete, disjoint plans. */
+static size_t flow_place_copied_derivations(
+        flow_graph *graph, flow_stats *stats,
+        flow_proof_session *session) {
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *copy_record;
+    const RxasFlowRecord *derivation_record;
+    RxasFlowComponentPlacementPlan plan;
+    RxasFlowOperandRewrite rewrite;
+    RxasFlowTraceDeletion deletion;
+    size_t copy_index;
+    size_t derivation_index;
+    size_t copy_instruction;
+    size_t derivation_instruction;
+    size_t rewrite_index;
+    size_t deletion_index;
+    size_t applied;
+    instruction_queue *copy;
+    instruction_queue *derivation;
+    Assembler_Token *temporary;
+    Assembler_Token *source;
+    Assembler_Token *derivation_operand;
+    int temporary_register;
+    int source_register;
+    int valid;
+    unsigned char *claimed_registers;
+    claimed_registers = calloc(
+            graph->register_count ? graph->register_count : 1, 1);
+    if (!claimed_registers)
+        RX_PANIC_OOM("calloc RXAS component-placement batch",
+                     graph->register_count, 0);
+    applied = 0;
+    for (copy_index = 0; copy_index + 1 < graph->item_count;
+         copy_index++) {
+        derivation_index = copy_index + 1;
+        copy = &graph->items[copy_index];
+        derivation = &graph->items[derivation_index];
+        if (!graph->nodes[copy_index].reachable ||
+            !graph->nodes[derivation_index].reachable ||
+            copy->instrType != OP_CODE || derivation->instrType != OP_CODE ||
+            !graph->nodes[copy_index].op ||
+            !graph->nodes[derivation_index].op ||
+            copy->operandCount != 2 || derivation->operandCount != 1 ||
+            rxop_value_derivation(
+                    graph->nodes[derivation_index].op->opcode) ==
+                    RXOP_DERIVATION_NONE)
+            continue;
+        temporary = rxas_queue_operand(copy, 0);
+        source = rxas_queue_operand(copy, 1);
+        derivation_operand = rxas_queue_operand(derivation, 0);
+        if (flow_register_type(temporary) != 'r' ||
+            flow_register_type(source) != 'r' ||
+            flow_register_type(derivation_operand) != 'r' ||
+            temporary->token_value.integer < 0 ||
+            source->token_value.integer < 0 ||
+            derivation_operand->token_value.integer !=
+                    temporary->token_value.integer)
+            continue;
+        temporary_register = flow_register_index(
+                graph, 'r', (size_t)temporary->token_value.integer);
+        source_register = flow_register_index(
+                graph, 'r', (size_t)source->token_value.integer);
+        if (temporary_register < 0 || source_register < 0 ||
+            temporary_register == source_register ||
+            claimed_registers[temporary_register] ||
+            claimed_registers[source_register])
+            continue;
+        proof = flow_proof_session_require(
+                session, graph, RXAS_PASS_X01_COMPONENT_PLACEMENT);
+        copy_record = session->procedure ? rxas_flow_procedure_record(
+                session->procedure, session->epoch, copy_index) : 0;
+        derivation_record = session->procedure
+                ? rxas_flow_procedure_record(
+                        session->procedure, session->epoch,
+                        derivation_index) : 0;
+        copy_instruction = copy_record
+                ? copy_record->instruction_id : RXAS_FLOW_ID_NONE;
+        derivation_instruction = derivation_record
+                ? derivation_record->instruction_id : RXAS_FLOW_ID_NONE;
+        if (!proof || copy_instruction == RXAS_FLOW_ID_NONE ||
+            derivation_instruction == RXAS_FLOW_ID_NONE ||
+            !rxas_flow_prove_component_placement(
+                    proof, session->epoch, copy_instruction,
+                    derivation_instruction, &plan)) {
+            stats->component_placement_unavailable++;
+            stats->rejected_effect++;
+            continue;
+        }
+        stats->component_placement_queries++;
+        if (!plan.proved) {
+            if (graph->context->debug_mode)
+                fprintf(stderr,
+                        "PERF3 component-placement-proof procedure=%s "
+                        "copy=%llu:%s derivation=%llu:%s proved=0 "
+                        "reason=%s rejected-kind=%d rejected-record=%llu "
+                        "rejected-instruction=%llu rejected-operand=%llu "
+                        "rejected-value=%llu\n",
+                        graph->context->current_proc_name
+                                ? graph->context->current_proc_name
+                                : "(directives)",
+                        (unsigned long long)copy_index,
+                        graph->nodes[copy_index].op->mnemonic,
+                        (unsigned long long)derivation_index,
+                        graph->nodes[derivation_index].op->mnemonic,
+                        rxas_flow_proof_reason_name(plan.reason),
+                        (int)plan.rejected_use_kind,
+                        (unsigned long long)plan.rejected_use_record_id,
+                        (unsigned long long)
+                                plan.rejected_use_instruction_id,
+                        (unsigned long long)plan.rejected_use_operand_index,
+                        (unsigned long long)plan.rejected_use_value_id);
+            if (flow_proof_reason_unavailable(plan.reason)) {
+                stats->component_placement_unavailable++;
+                stats->rejected_effect++;
+            }
+            else {
+                stats->component_placement_rejected++;
+                if (plan.reason == RXAS_FLOW_PROOF_TRACE_OBSERVED)
+                    stats->rejected_trace++;
+                else stats->rejected_live++;
+            }
+            continue;
+        }
+        valid = plan.copy_record_id == copy_index &&
+                plan.derivation_record_id == derivation_index &&
+                plan.expected_copy_opcode ==
+                        graph->nodes[copy_index].op->opcode &&
+                plan.expected_derivation_opcode ==
+                        graph->nodes[derivation_index].op->opcode &&
+                flow_record_matches_epoch(graph, copy_index) &&
+                flow_record_matches_epoch(graph, derivation_index) &&
+                plan.derivation_rewrite.record_id == derivation_index &&
+                plan.derivation_rewrite.instruction_id ==
+                        derivation_instruction &&
+                plan.derivation_rewrite.operand_index == 0 &&
+                flow_operand_matches_proof_register(
+                        temporary,
+                        plan.derivation_rewrite.expected_register) &&
+                flow_operand_matches_proof_register(
+                        derivation_operand,
+                        plan.derivation_rewrite.expected_register) &&
+                flow_operand_matches_proof_register(
+                        source,
+                        plan.derivation_rewrite.replacement_register);
+        for (rewrite_index = 0; valid &&
+             rewrite_index < plan.rewrite_count; rewrite_index++) {
+            instruction_queue *use_item;
+            Assembler_Token *use_operand;
+            if (!rxas_flow_component_placement_plan_rewrite(
+                        proof, session->epoch, &plan,
+                        rewrite_index, &rewrite) ||
+                rewrite.record_id >= graph->item_count) {
+                valid = 0;
+                break;
+            }
+            use_item = &graph->items[rewrite.record_id];
+            use_operand = rxas_queue_operand(
+                    use_item, rewrite.operand_index);
+            if (use_item->instrType != OP_CODE ||
+                rewrite.operand_index >= use_item->operandCount ||
+                !flow_operand_matches_proof_register(
+                        use_operand, rewrite.expected_register) ||
+                !flow_operand_matches_proof_register(
+                        source, rewrite.replacement_register))
+                valid = 0;
+        }
+        for (deletion_index = 0; valid &&
+             deletion_index < plan.trace_deletion_count;
+             deletion_index++) {
+            if (!rxas_flow_component_placement_plan_trace_deletion(
+                        proof, session->epoch, &plan,
+                        deletion_index, &deletion) ||
+                deletion.record_id >= graph->item_count ||
+                deletion.value_id != plan.derivation_result_value_id ||
+                !flow_record_matches_epoch(graph, deletion.record_id) ||
+                !flow_trace_event_matches_deletion(
+                        &graph->items[deletion.record_id], &deletion))
+                valid = 0;
+        }
+        if (!valid) {
+            stats->component_placement_unavailable++;
+            stats->rejected_effect++;
+            continue;
+        }
+        if (!flow_edit_record(graph, copy_index) ||
+            !flow_edit_record(graph, derivation_index)) {
+            stats->component_placement_unavailable++;
+            stats->rejected_effect++;
+            continue;
+        }
+        for (rewrite_index = 0; rewrite_index < plan.rewrite_count;
+             rewrite_index++) {
+            rxas_flow_component_placement_plan_rewrite(
+                    proof, session->epoch, &plan,
+                    rewrite_index, &rewrite);
+            if (!flow_edit_record(graph, rewrite.record_id)) break;
+        }
+        if (rewrite_index != plan.rewrite_count) {
+            stats->component_placement_unavailable++;
+            stats->rejected_effect++;
+            continue;
+        }
+        for (deletion_index = 0;
+             deletion_index < plan.trace_deletion_count;
+             deletion_index++) {
+            rxas_flow_component_placement_plan_trace_deletion(
+                    proof, session->epoch, &plan,
+                    deletion_index, &deletion);
+            if (!flow_edit_record(graph, deletion.record_id)) break;
+        }
+        if (deletion_index != plan.trace_deletion_count) {
+            stats->component_placement_unavailable++;
+            stats->rejected_effect++;
+            continue;
+        }
+        copy = flow_edit_record(graph, copy_index);
+        derivation = flow_edit_record(graph, derivation_index);
+        flow_set_operand(derivation, 0, source);
+        for (rewrite_index = 0; rewrite_index < plan.rewrite_count;
+             rewrite_index++) {
+            rxas_flow_component_placement_plan_rewrite(
+                    proof, session->epoch, &plan,
+                    rewrite_index, &rewrite);
+            flow_set_operand(
+                    flow_edit_record(graph, rewrite.record_id),
+                    rewrite.operand_index, source);
+        }
+        for (deletion_index = 0;
+             deletion_index < plan.trace_deletion_count;
+             deletion_index++) {
+            rxas_flow_component_placement_plan_trace_deletion(
+                    proof, session->epoch, &plan,
+                    deletion_index, &deletion);
+            flow_delete_record(graph, deletion.record_id);
+        }
+        copy->instrType = EMPTY;
+        claimed_registers[temporary_register] = 1;
+        claimed_registers[source_register] = 1;
+        stats->component_placement_proved++;
+        stats->component_placements_applied++;
+        stats->component_placement_trace_events_removed +=
+                plan.trace_deletion_count;
+        stats->typed_copies_removed++;
+        stats->operands_redirected += plan.rewrite_count + 1;
+        flow_debug_accept(
+                graph, derivation_index,
+                "component-placement-ssa",
+                plan.rewrite_count + plan.trace_deletion_count + 1);
+        applied++;
+    }
+    free(claimed_registers);
+    return applied;
 }
 
 typedef struct flow_duplicate_linked_read_candidate {
@@ -2558,6 +2834,8 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "self-copy-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "derivation-proof=%llu/%llu rejected=%llu unavailable=%llu "
             "producer-proof=%llu/%llu rejected=%llu unavailable=%llu "
+            "component-placement-proof=%llu/%llu rejected=%llu "
+            "unavailable=%llu applied=%llu trace-delete=%llu "
             "duplicate-linked-read-proof=%llu/%llu rejected=%llu reused=%llu "
             "storage-permutation-proof=%llu/%llu rejected=%llu "
             "compare-branch-proof=%llu/%llu rejected=%llu "
@@ -2604,6 +2882,13 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->producer_proof_queries,
             (unsigned long long)stats->producer_proof_rejected,
             (unsigned long long)stats->producer_proof_unavailable,
+            (unsigned long long)stats->component_placement_proved,
+            (unsigned long long)stats->component_placement_queries,
+            (unsigned long long)stats->component_placement_rejected,
+            (unsigned long long)stats->component_placement_unavailable,
+            (unsigned long long)stats->component_placements_applied,
+            (unsigned long long)
+                    stats->component_placement_trace_events_removed,
             (unsigned long long)stats->duplicate_linked_read_proved,
             (unsigned long long)stats->duplicate_linked_read_queries,
             (unsigned long long)stats->duplicate_linked_read_rejected,
@@ -2800,6 +3085,8 @@ static int flow_has_semantic_candidates(
            rxas_optimisation_has_candidates(
                    census, RXAS_PASS_M06_PRODUCER_FORWARD) ||
            rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_X01_COMPONENT_PLACEMENT) ||
+           rxas_optimisation_has_candidates(
                    census, RXAS_PASS_K04_COMPARE_BRANCH) ||
            rxas_optimisation_has_candidates(
                    census, RXAS_PASS_M02_CONSTANT) ||
@@ -2850,6 +3137,10 @@ static size_t flow_apply_semantic_epoch(
     if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M06_PRODUCER_FORWARD))
         planned += flow_forward_producer_destination(
+                graph, stats, session);
+    if (allow_ssa && rxas_optimisation_has_candidates(
+            census, RXAS_PASS_X01_COMPONENT_PLACEMENT))
+        planned += flow_place_copied_derivations(
                 graph, stats, session);
     if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_K04_COMPARE_BRANCH))

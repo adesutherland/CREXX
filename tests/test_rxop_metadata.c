@@ -384,6 +384,31 @@ int main(void) {
                     RXOP_SIGNAL_STATE_NONE,
           "loose string comparison component/signal metadata regression",
           &op_table[OP_REQ_REG_REG_STRING]);
+    check(rxop_component_reads(OP_DADD_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_DECIMAL &&
+              rxop_component_reads(OP_DMULT_REG_REG_DECIMAL, 1) ==
+                  RXOP_COMPONENT_DECIMAL &&
+              rxop_component_writes(OP_DADD_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_DECIMAL &&
+              rxop_component_writes(OP_DMULT_REG_REG_DECIMAL, 0) ==
+                  RXOP_COMPONENT_DECIMAL,
+          "decimal arithmetic component metadata regression",
+          &op_table[OP_DADD_REG_REG_REG]);
+    check(rxop_component_reads(OP_STEMGET_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_STEMSET_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_STEMSET_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_STEMSET2_REG_REG_REG_REG, 3) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_STEMGET_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_clears(OP_STEMGET_REG_REG_REG, 0) ==
+                    (RXOP_COMPONENT_REFERENCE |
+                     RXOP_COMPONENT_NATIVE_PAYLOAD),
+          "native stem string component metadata regression",
+          &op_table[OP_STEMGET_REG_REG_REG]);
     check(rxop_component_writes(OP_SETATTRS_REG_INT, 0) ==
                   RXOP_COMPONENT_ATTRIBUTE_COUNT &&
               rxop_component_reads(OP_LINKATTR1_REG_REG_INT, 1) ==
@@ -930,6 +955,7 @@ int main(void) {
           "indexed STRCHAR effects/evaluator regression",
           &op_table[OP_STRCHAR_REG_REG_REG]);
     effects = rxop_effects(OP_SUBSTRING_REG_REG_REG_REG);
+    signal = rxop_signal_contract(OP_SUBSTRING_REG_REG_REG_REG);
     check(effects.reads_signature &&
               strcmp(effects.reads_signature, "0111") == 0 &&
               effects.writes_signature &&
@@ -942,10 +968,16 @@ int main(void) {
               rxop_component_reads(OP_SUBSTRING_REG_REG_REG_REG, 3) ==
                   RXOP_COMPONENT_INTEGER &&
               rxop_component_writes(OP_SUBSTRING_REG_REG_REG_REG, 0) ==
-                  RXOP_COMPONENT_STRING,
+                  RXOP_COMPONENT_STRING &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "UNICODE_ERROR|FAILURE") == 0 &&
+              signal.failure_writes == RXOP_OP_NONE,
           "explicit SUBSTRING effects/component regression",
           &op_table[OP_SUBSTRING_REG_REG_REG_REG]);
     effects = rxop_effects(OP_BSLICE_REG_REG_REG_REG);
+    signal = rxop_signal_contract(OP_BSLICE_REG_REG_REG_REG);
     check(effects.reads_signature &&
               strcmp(effects.reads_signature, "0111") == 0 &&
               effects.writes_signature &&
@@ -957,7 +989,12 @@ int main(void) {
               rxop_component_reads(OP_BSLICE_REG_REG_REG_REG, 3) ==
                   RXOP_COMPONENT_INTEGER &&
               rxop_component_writes(OP_BSLICE_REG_REG_REG_REG, 0) ==
-                  RXOP_COMPONENT_BINARY,
+                  RXOP_COMPONENT_BINARY &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE|FAILURE") == 0 &&
+              signal.failure_writes == RXOP_OP_NONE,
           "explicit BSLICE effects/component regression",
           &op_table[OP_BSLICE_REG_REG_REG_REG]);
     effects = rxop_effects(OP_FNDBLNK_REG_REG_REG);

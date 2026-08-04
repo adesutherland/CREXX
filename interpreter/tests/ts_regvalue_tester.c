@@ -2,13 +2,26 @@
 // Created by Adrian Sutherland on 28/06/2025.
 //
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "platform.h"
 #include "rxbin.h"
 #include "rxvalue.h"
+
+static size_t test_value_alloc_fail_after = SIZE_MAX;
+static void *test_value_malloc(size_t length);
+#define RXVM_VALUE_MALLOC test_value_malloc
 #include "rxvmvars.h" // Value functions to be tested
+#undef RXVM_VALUE_MALLOC
 #include "rxvmref.h"
 #include "utf.h"      // Your utf8 helper header
+
+static void *test_value_malloc(size_t length) {
+    if (test_value_alloc_fail_after == 0) return 0;
+    if (test_value_alloc_fail_after != SIZE_MAX) test_value_alloc_fail_after--;
+    return malloc(length);
+}
 
 /*
  * Verifies the internal consistency of a value's string members.
@@ -326,6 +339,11 @@ void test_binary_buffers() {
     unsigned char prefix_appended[] = { 0xaa, 0x10, 0x20, 0x30, 0x40, 0x50 };
     unsigned char combined[] = { 0xaa, 0x10, 0x20, 0x30, 0x40, 0x50, 0x10, 0x20, 0x30, 0x40, 0x50 };
     unsigned char sliced[] = { 0x10, 0x20, 0x30 };
+    unsigned char large_binary[40];
+    unsigned char retained_binary[] = { 0xde, 0xad };
+    const char *large_string = "0123456789012345678901234567890123456789";
+    value large_source;
+    value retained_dest;
     size_t capacity;
     size_t grown_capacity;
 
@@ -336,6 +354,10 @@ void test_binary_buffers() {
     value_init(&other);
     value_init(&concat);
     value_init(&slice);
+    value_init(&large_source);
+    value_init(&retained_dest);
+
+    memset(large_binary, 0x5a, sizeof(large_binary));
 
     CHECK_RC_ZERO(set_binary(&v, initial, sizeof(initial)));
     CHECK_BINARY(&v, initial, sizeof(initial));
@@ -382,6 +404,27 @@ void test_binary_buffers() {
     CHECK_RC_ZERO(slice_binary(&concat, &concat, 50, 8));
     CHECK_SIZE_EQUAL(concat.binary_length, 0, "binary_length after out-of-range slice");
 
+    CHECK_RC_ZERO(set_binary(&large_source, large_binary, sizeof(large_binary)));
+    CHECK_RC_ZERO(set_binary(&retained_dest, retained_binary, sizeof(retained_binary)));
+    test_value_alloc_fail_after = 0;
+    CHECK_INT_EQUAL(slice_binary(&retained_dest, &large_source, 0,
+                                 sizeof(large_binary)), -1,
+                    "binary slice allocation failure result");
+    test_value_alloc_fail_after = SIZE_MAX;
+    CHECK_BINARY(&retained_dest, retained_binary, sizeof(retained_binary));
+
+    set_null_string(&large_source, large_string);
+    set_null_string(&retained_dest, "keep");
+    test_value_alloc_fail_after = 0;
+    CHECK_INT_EQUAL(string_slice_at(&retained_dest, &large_source, 0,
+                                    strlen(large_string)), -1,
+                    "string slice allocation failure result");
+    test_value_alloc_fail_after = SIZE_MAX;
+    CHECK_SIZE_EQUAL(retained_dest.string_length, 4,
+                     "string slice destination length after allocation failure");
+    CHECK_INT_EQUAL(memcmp(retained_dest.string_value, "keep", 4), 0,
+                    "string slice destination bytes after allocation failure");
+
     CHECK_RC_ZERO(set_binary(&other, 0, 0));
     CHECK_RC_ZERO(concat_binary(&other, &other, &other));
     CHECK_SIZE_EQUAL(other.binary_length, 0, "binary_length after empty self concat");
@@ -391,6 +434,8 @@ void test_binary_buffers() {
     clear_value(&other);
     clear_value(&concat);
     clear_value(&slice);
+    clear_value(&large_source);
+    clear_value(&retained_dest);
 
     printf("--- Binary Buffer Tests Finished ---\n");
 }

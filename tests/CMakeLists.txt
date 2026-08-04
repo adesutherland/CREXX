@@ -151,6 +151,8 @@ crexx_add_rxas_optimizer_check(redundant_itos_flow redundant_itos_flow.rxas redu
 crexx_add_rxas_optimizer_check(redundant_itos_flow_noopt redundant_itos_flow.rxas redundant_itos_flow_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(redundant_xtoy_flow redundant_xtoy_flow.rxas redundant_xtoy_flow RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(redundant_xtoy_flow_noopt redundant_xtoy_flow.rxas redundant_xtoy_flow_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(copied_xtoy_component_placement copied_xtoy_component_placement.rxas copied_xtoy_component_placement RXAS_FLAGS -d)
+crexx_add_rxas_optimizer_check(copied_xtoy_component_placement_noopt copied_xtoy_component_placement.rxas copied_xtoy_component_placement_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(redundant_constant_flow redundant_constant_flow.rxas redundant_constant_flow RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(redundant_constant_flow_noopt redundant_constant_flow.rxas redundant_constant_flow_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(redundant_absent_flow redundant_absent_flow.rxas redundant_absent_flow RXAS_FLAGS -d)
@@ -243,6 +245,24 @@ foreach(_perf3_11_runner IN ITEMS rxvm rxbvm)
     foreach(_perf3_11_mode IN ITEMS noopt opt)
         set_tests_properties(signal_contract_runtime_${_perf3_11_runner}_${_perf3_11_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "PASS: PERF3-11 signal contract runtime"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(copied_xtoy_component_placement_runtime ALL)
+foreach(_perf3_12a_x1_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME copied_xtoy_component_placement_runtime_${_perf3_12a_x1_runner}
+            SOURCE ${RXAS_OPTIMIZER_DIR}/copied_xtoy_component_placement_runtime
+            TARGET_GROUP copied_xtoy_component_placement_runtime
+            RUNNER ${_perf3_12a_x1_runner}
+            DEPENDS ${RXAS_OPTIMIZER_DIR}/copied_xtoy_component_placement_runtime.rxas rxas ${_perf3_12a_x1_runner} rxlink
+            TEST_LABELS "rxas;optimizer;runtime;flow"
+    )
+    foreach(_perf3_12a_x1_mode IN ITEMS noopt opt)
+        set_tests_properties(copied_xtoy_component_placement_runtime_${_perf3_12a_x1_runner}_${_perf3_12a_x1_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: PERF3-12A X1 component placement runtime"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

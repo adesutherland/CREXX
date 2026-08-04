@@ -12173,8 +12173,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 if (length <= 0) {
                     PUTSTRLEN(op1R, 0);
                 } else {
-                    string_slice_at(op1R, op2R, start < 0 ? 0u : (size_t)start,
-                                    (size_t)length);
+                    if (string_slice_at(op1R, op2R,
+                                        start < 0 ? 0u : (size_t)start,
+                                        (size_t)length) != 0) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                    }
                 }
             }
             DISPATCH;

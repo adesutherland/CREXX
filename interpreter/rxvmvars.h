@@ -44,6 +44,11 @@
 #include <float.h>
 #include <string.h>
 
+/* Tests may replace only the failure-atomic slice allocation boundary. */
+#ifndef RXVM_VALUE_MALLOC
+#define RXVM_VALUE_MALLOC malloc
+#endif
+
 #ifdef CREXX_VM_PROFILING
 #include "rxvmprofile.h"
 #define RXVM_PROFILE_RECORD_ALLOCATION(kind_, bytes_, value_slots_) \
@@ -610,11 +615,44 @@ RX_INLINE int concat_binary(value *dest, value *left, value *right) {
 
 RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t length) {
     size_t actual_length;
+    char *new_buffer = 0;
+    size_t new_buffer_length = 0;
 
     if (offset >= source->binary_length) actual_length = 0;
     else {
         actual_length = source->binary_length - offset;
         if (length < actual_length) actual_length = length;
+    }
+
+    if ((dest == source && dest->native_payload_ops && actual_length != 0) ||
+        (dest != source &&
+         (dest->native_payload_ops || actual_length > dest->binary_buffer_length))) {
+        new_buffer_length = actual_length ? buffer_size(actual_length) : 0;
+        if (new_buffer_length) {
+            new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
+            if (!new_buffer) return -1;
+            memcpy(new_buffer, source->binary_value + offset, actual_length);
+            RXVM_PROFILE_RECORD_ALLOCATION(
+                    RXVM_PROFILE_ALLOC_BINARY_BUFFER, new_buffer_length, 0);
+        }
+    }
+
+    if (dest->native_payload_ops) {
+        clear_binary_payload(dest);
+        dest->binary_value = new_buffer;
+        dest->binary_buffer_length = new_buffer_length;
+        dest->binary_length = actual_length;
+        clear_vm_private_flags(dest);
+        return 0;
+    }
+
+    if (new_buffer) {
+        if (dest->binary_value) free(dest->binary_value);
+        dest->binary_value = new_buffer;
+        dest->binary_buffer_length = new_buffer_length;
+        dest->binary_length = actual_length;
+        clear_vm_private_flags(dest);
+        return 0;
     }
 
     if (dest == source) {
@@ -624,7 +662,7 @@ RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t len
         return 0;
     }
 
-    if (prep_binary_buffer(dest, actual_length) != 0) return -1;
+    dest->binary_length = actual_length;
     if (actual_length) memcpy(dest->binary_value, source->binary_value + offset, actual_length);
     clear_vm_private_flags(dest);
     return 0;
@@ -1409,11 +1447,14 @@ RX_INLINE void string_set_ascii_length(value *v, size_t length) {
     string_set_lengths(v, length, length);
 }
 
-RX_INLINE void string_slice_at(value *dest, value *source,
-                               size_t char_start, size_t char_count) {
+RX_INLINE int string_slice_at(value *dest, value *source,
+                              size_t char_start, size_t char_count) {
     size_t byte_pos;
     size_t actual_chars;
     size_t byte_length;
+    size_t required_length;
+    char *new_buffer = 0;
+    size_t new_buffer_length = 0;
 
     string_cache_seek_char(source, char_start);
     byte_pos = source->string_cache_byte_pos;
@@ -1425,7 +1466,7 @@ RX_INLINE void string_slice_at(value *dest, value *source,
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
         mark_utf8_valid_count(dest);
-        return;
+        return 0;
     }
 
 #if ASCII_FAST_PATH
@@ -1441,10 +1482,26 @@ RX_INLINE void string_slice_at(value *dest, value *source,
         byte_length = end_pos >= byte_pos ? end_pos - byte_pos : 0;
     }
 
+    if (byte_length == SIZE_MAX) return -1;
+    required_length = byte_length + 1;
+
+    if (dest != source && required_length > dest->string_buffer_length) {
+        new_buffer_length = buffer_size(required_length);
+        new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
+        if (!new_buffer) return -1;
+        memcpy(new_buffer, source->string_value + byte_pos, byte_length);
+        new_buffer[byte_length] = '\0';
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, new_buffer_length, 0);
+    }
+
     if (dest == source) {
         memmove(dest->string_value, source->string_value + byte_pos, byte_length);
+    } else if (new_buffer) {
+        if (dest->string_value != dest->small_string_buffer) free(dest->string_value);
+        dest->string_value = new_buffer;
+        dest->string_buffer_length = new_buffer_length;
     } else {
-        prep_string_buffer(dest, byte_length);
         memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
     }
 
@@ -1452,6 +1509,7 @@ RX_INLINE void string_slice_at(value *dest, value *source,
     null_terminate_string_buffer(dest);
     if (has_utf8_valid_count(source)) mark_utf8_valid_count(dest);
     else clear_vm_private_flags(dest);
+    return 0;
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
@@ -1477,28 +1535,48 @@ RX_INLINE void string_set_ascii_length(value *v, size_t length) {
     string_set_lengths(v, length, length);
 }
 
-RX_INLINE void string_slice_at(value *dest, value *source,
-                               size_t char_start, size_t char_count) {
+RX_INLINE int string_slice_at(value *dest, value *source,
+                              size_t char_start, size_t char_count) {
     size_t byte_pos = MIN(char_start, source->string_length);
     size_t byte_length = MIN(char_count, source->string_length - byte_pos);
+    size_t required_length;
+    char *new_buffer = 0;
+    size_t new_buffer_length = 0;
 
     if (byte_length == 0) {
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
         clear_vm_private_flags(dest);
-        return;
+        return 0;
+    }
+
+    if (byte_length == SIZE_MAX) return -1;
+    required_length = byte_length + 1;
+
+    if (dest != source && required_length > dest->string_buffer_length) {
+        new_buffer_length = buffer_size(required_length);
+        new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
+        if (!new_buffer) return -1;
+        memcpy(new_buffer, source->string_value + byte_pos, byte_length);
+        new_buffer[byte_length] = '\0';
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, new_buffer_length, 0);
     }
 
     if (dest == source) {
         memmove(dest->string_value, source->string_value + byte_pos, byte_length);
+    } else if (new_buffer) {
+        if (dest->string_value != dest->small_string_buffer) free(dest->string_value);
+        dest->string_value = new_buffer;
+        dest->string_buffer_length = new_buffer_length;
     } else {
-        prep_string_buffer(dest, byte_length);
         memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
     }
 
     string_set_ascii_length(dest, byte_length);
     null_terminate_string_buffer(dest);
     clear_vm_private_flags(dest);
+    return 0;
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {

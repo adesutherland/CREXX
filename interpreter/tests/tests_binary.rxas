@@ -127,6 +127,39 @@ main() .locals=20
    ieq r0,r6,66
    brf fail_bslice_byte1,r0
 
+   /* Negative starts clip to zero and same-register slices remain safe. */
+   load r7,-1
+   load r13,2
+   bslice r14,r12,r7,r13
+   load r7,0
+   getbyte r6,r14,r7
+   ieq r0,r6,170
+   brf fail_bslice_negative_start,r0
+
+   load r14,0x112233
+   load r7,1
+   load r13,1
+   bslice r14,r14,r7,r13
+   load r7,0
+   getbyte r6,r14,r7
+   ieq r0,r6,34
+   brf fail_bslice_alias,r0
+
+   /* A negative length signals before changing the destination. */
+   load r14,0xdead
+   sigbr catch_bslice_negative_length,"OUT_OF_RANGE"
+   load r7,0
+   load r13,-1
+   bslice r14,r12,r7,r13
+   br fail_bslice_negative_length_signal
+
+catch_bslice_negative_length:
+   load r7,0
+   getbyte r6,r14,r7
+   ieq r0,r6,222
+   brf fail_bslice_failure_write,r0
+   load r7,1
+
    load r15,0xccdd
    bupdate r12,r7,r15
 
@@ -237,6 +270,22 @@ fail_bslice_byte0:
 
 fail_bslice_byte1:
    say "FAIL: bslice byte 1 mismatch"
+   ret 1
+
+fail_bslice_negative_start:
+   say "FAIL: bslice negative start mismatch"
+   ret 1
+
+fail_bslice_alias:
+   say "FAIL: bslice same-register mismatch"
+   ret 1
+
+fail_bslice_negative_length_signal:
+   say "FAIL: bslice negative length did not signal"
+   ret 1
+
+fail_bslice_failure_write:
+   say "FAIL: bslice changed destination before signal"
    ret 1
 
 fail_bupdate_byte1:

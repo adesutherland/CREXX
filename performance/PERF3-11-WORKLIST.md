@@ -975,6 +975,7 @@ to combine consumers or bypass each consumer's correctness and Release gate.
 | FC06 | register reuse/allocation | interference and component/storage liveness | PERF3-11 after scalable liveness |
 | FC07 | compiler clause and variable/representation hoisting | RXC lowering audit separated from RXAS proof | PERF3-12 |
 | FC08 | candidate-sliced or region SSA for over-bound procedures | exact candidate boundary, signal continuations, storage/value/use closure and bounded work | PERF3 follow-on only when deferred advanced cases have material value |
+| FC09 | explicit RXBIN module initialization | linker-declared initializer metadata plus VM once-only lifecycle, ordering and signal proof | PERF3-07 `CAP-05`; independent lifecycle lane |
 
 #### RXC-to-RXAS architecture-transfer ledger
 

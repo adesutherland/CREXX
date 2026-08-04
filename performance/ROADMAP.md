@@ -389,7 +389,7 @@ their recorded trigger fires:
 | PERF3-09 | P3 | JIT/AOT/native-backend architecture decision | deferred | Reopen only under the recorded economic and architecture gate. |
 | PERF3-10 | P0 | Trace-safe storage/component conversion proof | complete — C1/T1 accepted | Closeout passes 59/59 focused and 1,982/1,982 broad Debug tests. Paired RexxCPS median CPS improves 10.38%/10.61% on `rxvm`/`rxbvm`; equal-work profiling removes 1,399,605 dynamic instructions and 1,400,000 `ITOS`. Control: [`PERF3-10-WORKLIST.md`](PERF3-10-WORKLIST.md); evidence: [`2026-08-01-perf3-10-trace-safe-itos-closeout`](evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/). |
 | PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | complete — K04e accepted | Gates 1-6, M01-M06 and K01-K06 are locked. D0.1-D0.5 provide explicit routes, one immutable graph, capability-lazy proofs, sparse transactional rewrites and a 142.7-142.9 MB Parse boundary. D0.6 retains the peephole as the permanent cheap pre-SSA stage and records a standing ownership rule for exact local metadata-proved transformations. Its accepted 100-record bound leaves the exact RexxCPS analysis and image unchanged versus 20 at an approximately 10 ms ordinary assembly cost. K04e restores the hot in-place integer compare/branch fusion through the source's pre-write ValueId and existing SSA-owned liveness, alias, cleanup and TRACE proof, without restoring the tactical rule. It removes one static instruction and exactly 560,000 equal-work dispatches; the 36-pair runtime verdict is noisy/inconclusive with positive point estimates and no guard hit. Broad Debug passes 2,021/2,021. Procedure-length windows remain a retained negative unless sparsity repays scan cost. The future ledger retains RXC-to-RXAS ownership, inlining redesign, hoisting, register work and the bounded region-proof follow-on. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); K04e verdict: [`2026-08-04-perf3-11-k04e-first-release-verdict`](evidence/2026-08-04-perf3-11-k04e-first-release-verdict/); D0.6 verdict: [`2026-08-04-perf3-11-d06-pre-ssa-boundary`](evidence/2026-08-04-perf3-11-d06-pre-ssa-boundary/); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); K06: [`2026-08-03-perf3-11-k06-mechanical-classification`](evidence/2026-08-03-perf3-11-k06-mechanical-classification/); K01: [`2026-08-03-perf3-11-k01-storage-permutation`](evidence/2026-08-03-perf3-11-k01-storage-permutation/); K02/K03: [`2026-08-03-perf3-11-k02-k03-linked-reads`](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/); K04: [`2026-08-03-perf3-11-k04-call-window`](evidence/2026-08-03-perf3-11-k04-call-window/); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
-| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — cursorless first verdict ready; awaiting acceptance | Current fixed-count schema-5 profiles are checksum-valid under both VMs at 53.661M optimized instructions. The cursorless prerequisite removes public string/binary cursor state, replaces setter-plus-slice pairs with explicit-position slices, keeps only a VM-private UTF cache and uses deleted value fields as a compile-time inventory fence. Fresh focused Debug passes 24/24 and ordinary Release smoke passes under both VMs. Fixed-work RexxCPS falls by 5,601,469 no-opt instructions per VM and 1,493/1,511 optimized instructions under `rxvm`/`rxbvm`; all former setter dispatches are zero. Wall-clock guards remain deferred to a clean Mac host because the remote terminal disturbs timing. Adrian's acceptance authorizes copied-XTOY work against the retained 2.22M `DCOPY` plus 97.68 MB target; no X1 edit has started. TRACE is guard-only and ADDRESS is zero-runtime here. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md), [`PERF3-12A-WORKLIST.md`](PERF3-12A-WORKLIST.md); cursorless verdict: [`2026-08-04-perf3-12a-cursorless-first-release-verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/); clause reassessment: [`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/). |
+| PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — cursorless RXAS and X1 accepted | Cursorless RXAS is committed locally at `afc0b274f`; all optimizer-visible cursor boundaries are gone, leaving only parser/iterator and VM-private UTF-cache cursors. X1 adds a capability-lazy immutable component-placement proof and atomically removes two of five generated `DCOPY`/`DTOS` sites. Focused RXAS validation passes 78/78 and the opt/no-opt runtime oracle, ordinary Release RexxCPS, Sieve and Base64 pass under both VMs. Fixed-work optimized RexxCPS falls from 53,659,088/53,659,041 to 52,839,051 under `rxvm`/`rxbvm`: -820,037/-819,990 (-1.528235%/-1.528149%). Both VMs remove exactly 820,000 `DCOPY` and 36,080,000 copied bytes while retaining all 2,220,000 `DTOS`; full assembly remains sparse at 0.51 s/134.7 MB. Closeout adds negative/allocation slice coverage and a fail-closed `MKREF` storage-observation guard. Broad Debug passes 2,033/2,034 at parallel 30; the sole 120-second host-load timeout passes isolated in 12.11 seconds, giving 2,034/2,034 functional outcomes. The disturbed-host wall-clock panel remains queued; no push is made. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md), [`PERF3-12A-WORKLIST.md`](PERF3-12A-WORKLIST.md); X1 verdict: [`2026-08-04-perf3-12a-x1-first-release-verdict`](evidence/2026-08-04-perf3-12a-x1-first-release-verdict/); cursorless verdict: [`2026-08-04-perf3-12a-cursorless-first-release-verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/); clause reassessment: [`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/). |
 
 ## Approved execution order
 
@@ -680,6 +680,14 @@ separate qualified deficit at `0.390842x/0.389933x`. Evidence:
   it does not replace the qualified common codec-loop benchmark.
 - `CAP-04` pure-load lifecycle remains a measurement/API-use-case question and
   enters public API work only with an approved product need.
+- `CAP-05` explicit RXBIN module initialization is logged for a separate
+  lifecycle design. The linker would record declared module initializers and
+  VM prepare would invoke each exactly once after linking and before the
+  application `main`. Selection must define ordering, idempotency, signals and
+  failure, re-entrant calls, late-loaded modules and optional teardown. A bare
+  `_init` name scan and a library-owned wrapper `main` are not selected; the
+  current `rxvm_prepare()` only prepares execution images, so libraries must
+  continue to initialize shared cREXX state lazily meanwhile.
 
 These lanes can proceed under their own authority but do not borrow PERF3
 performance approval or alter benchmark equivalence silently.
@@ -1093,15 +1101,22 @@ is not required, and removal of the cursor fields from the VM value structure
 is an intentional compile-time cross-check for missed instructions. The
 cross-check found and removed all production dependencies plus one stale
 current register diagram and obsolete generated operation assets. The
-cursorless first verdict is now ready: focused Debug passes 24/24, ordinary
-Release smoke passes under both VMs, and fixed-work RexxCPS removes 5,601,469
+cursorless first verdict was accepted: fixed-work RexxCPS removes 5,601,469
 no-opt instructions per VM plus 1,493/1,511 optimized instructions under
-`rxvm`/`rxbvm`. All former setter dispatches are zero. Wall-clock claims remain
-deferred until the remote terminal is absent. Work is stopped for Adrian's
-acceptance; once accepted, copied-XTOY placement resumes against the retained
-2.22M `DCOPY`/`DTOS` target and receives a separate verdict before combined
-closeout. Evidence:
-[`2026-08-04-perf3-12a-cursorless-first-release-verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/).
+`rxvm`/`rxbvm`, and all former setter dispatches are zero. Adrian then accepted
+X1 copied-XTOY placement. It removes exactly 820,000 optimized `DCOPY`
+dispatches and 36,080,000 copied bytes while retaining all 2,220,000 `DTOS`, a
+further 1.528235%/1.528149% optimized instruction reduction. Combined closeout
+adds exact negative and injected-allocation slice coverage and rejects
+component placement when `MKREF` exposes either storage without a second
+register mapping. Broad Debug has 2,034/2,034 functional outcomes: 2,033 pass
+in the parallel-30 run and its only host-load timeout passes isolated in 12.11
+seconds. Old build/worktree RXBIN files must be deleted or rebuilt because
+compatibility was deliberately broken. Wall-clock claims remain deferred until
+the remote terminal is absent. Evidence:
+[`cursorless first verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/)
+and
+[`X1 first verdict`](evidence/2026-08-04-perf3-12a-x1-first-release-verdict/).
 
 ## Authoritative references
 

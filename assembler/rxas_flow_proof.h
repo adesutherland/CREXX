@@ -54,6 +54,10 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_NOT_EXACT_PRODUCER_FORWARD,
     RXAS_FLOW_PROOF_NOT_ADJACENT_COPY,
     RXAS_FLOW_PROOF_TEMPORARY_OBSERVABLE,
+    RXAS_FLOW_PROOF_NOT_EXACT_COMPONENT_PLACEMENT,
+    RXAS_FLOW_PROOF_SOURCE_RESULT_OBSERVED,
+    RXAS_FLOW_PROOF_TEMPORARY_INPUT_OBSERVED,
+    RXAS_FLOW_PROOF_REFERENCE_OBSERVED,
     RXAS_FLOW_PROOF_ADDRESS_OBSERVED,
     RXAS_FLOW_PROOF_NOT_EXACT_COMPARE_BRANCH_FUSION,
     RXAS_FLOW_PROOF_NOT_EXACT_DUPLICATE_LINKED_READ,
@@ -121,6 +125,11 @@ typedef struct RxasFlowProofMetrics {
     size_t producer_forward_queries;
     size_t producer_forward_proved;
     size_t producer_forward_rejected;
+    size_t component_placement_queries;
+    size_t component_placement_proved;
+    size_t component_placement_rejected;
+    size_t component_placement_operand_rewrites;
+    size_t component_placement_trace_deletions;
     size_t compare_branch_queries;
     size_t compare_branch_proved;
     size_t compare_branch_rejected;
@@ -183,6 +192,35 @@ typedef struct RxasFlowProducerDestinationPlan {
     size_t copy_result_value_id;
     RxasFlowOperandRewrite producer_rewrite;
 } RxasFlowProducerDestinationPlan;
+
+typedef struct RxasFlowComponentPlacementPlan {
+    int proved;
+    RxasFlowProofReason reason;
+    size_t copy_instruction;
+    size_t derivation_instruction;
+    size_t copy_record_id;
+    size_t derivation_record_id;
+    int expected_copy_opcode;
+    int expected_derivation_opcode;
+    unsigned int source_component;
+    unsigned int result_component;
+    size_t source_storage_id;
+    size_t temporary_storage_id;
+    size_t source_value_id;
+    size_t copy_result_value_id;
+    size_t displaced_source_result_value_id;
+    size_t derivation_result_value_id;
+    RxasFlowUseKind rejected_use_kind;
+    size_t rejected_use_record_id;
+    size_t rejected_use_instruction_id;
+    size_t rejected_use_operand_index;
+    size_t rejected_use_value_id;
+    RxasFlowOperandRewrite derivation_rewrite;
+    size_t rewrite_offset;
+    size_t rewrite_count;
+    size_t trace_deletion_offset;
+    size_t trace_deletion_count;
+} RxasFlowComponentPlacementPlan;
 
 typedef struct RxasFlowCompareBranchPlan {
     int proved;
@@ -312,6 +350,18 @@ int rxas_flow_prove_producer_destination_forward(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t producer_instruction, size_t copy_instruction,
         RxasFlowProducerDestinationPlan *plan);
+int rxas_flow_prove_component_placement(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t copy_instruction, size_t derivation_instruction,
+        RxasFlowComponentPlacementPlan *plan);
+int rxas_flow_component_placement_plan_rewrite(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowComponentPlacementPlan *plan, size_t rewrite_index,
+        RxasFlowOperandRewrite *rewrite);
+int rxas_flow_component_placement_plan_trace_deletion(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowComponentPlacementPlan *plan, size_t deletion_index,
+        RxasFlowTraceDeletion *deletion);
 int rxas_flow_prove_compare_branch_fusion(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t compare_instruction, size_t branch_instruction,

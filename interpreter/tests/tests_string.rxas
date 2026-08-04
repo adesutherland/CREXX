@@ -143,6 +143,19 @@ strlen_end:
     ieq r0, r7, 2
     brf utf_substr_fail, r0
 
+    /* Negative starts clip to zero; non-positive lengths produce empty. */
+    load r1, "A🔥éZ"
+    load r2, -1
+    load r3, 2
+    substring r4, r1, r2, r3
+    seq r0, r4, "A🔥"
+    brf utf_substr_fail, r0
+    load r2, 1
+    load r3, -1
+    substring r4, r1, r2, r3
+    seq r0, r4, ""
+    brf utf_substr_fail, r0
+
     /* Same-register SUBSTRING must remain safe. */
     load r1, "A🔥éZ"
     load r2, 1

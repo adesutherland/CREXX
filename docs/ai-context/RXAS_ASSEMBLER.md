@@ -261,7 +261,10 @@ register supplies the input source offset and is overwritten with `-1`, `0`, or
 `bslice rDst,rSrc,rStart,rLen` performs explicit zero-based extraction without
 mutating the source. The former binary cursor instructions are retired and
 their numeric opcode slots remain reserved; old RXBIN images using them are
-not compatible with this instruction set. Release 1 source lowering also uses
+not compatible with this instruction set. Any build directory or auxiliary
+worktree first built before this cursorless change must therefore be cleaned
+and rebuilt before use; mixing retained generated RXBIN with current tools is
+unsupported. Release 1 source lowering also uses
 target-sized `bcopy`, typed reads/writes, and zero-copy compares where a
 materialized slice is unnecessary. `setbyte` and `bupdate` are strict and
 raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or overlay
@@ -269,6 +272,15 @@ writes past the destination length. `stobin` copies the register's current
 string bytes into its binary slot. `bintos` validates the register's current
 binary bytes as UTF-8 and copies them into its string slot; invalid bytes raise
 `UNICODE_ERROR` in UTF builds.
+
+The explicit string form is
+`substring rDst,rSrc,rStart,rLen`, where positions and lengths count Unicode
+characters. A negative start clips to zero and a non-positive length produces
+the empty string. `bslice` likewise clips a negative start to zero, but a
+negative binary length raises `OUT_OF_RANGE`. Both operations are safe when
+destination and source name the same storage. A required allocation either
+completes before the destination changes or raises `FAILURE`; the opcode signal
+metadata records these failure-before-write contracts.
 
 Level B exposes these byte-buffer instructions through the `rxfnsb` binary
 helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,
@@ -800,6 +812,23 @@ the optimizer validates the complete plan before changing any operand or
 deleting the copy.  Budget exhaustion, stale epochs and incomplete use facts
 reject the whole plan.  The old availability/may-reach solver and its repeated
 dense register scans have been removed.
+
+X01 is the first component-placement consumer built on the same sparse use
+index. It recognizes an exact adjacent typed copy followed by a one-register
+metadata-derived XTOY operation, but asks the proof service—not adjacency—to
+authorize the rewrite. Its immutable plan proves distinct local unaliased
+storage, the copied input and derived result `ValueId` relationships, dead
+displaced components, redirectable result uses, and compatible call, signal,
+context, reference, metadata and TRACE observations. The consumer validates
+the complete plan, retargets the derivation to the original source, redirects
+all proved result uses, removes only matching derived-value TRACE events, and
+deletes the copy as one transaction. The first production case is
+`dcopy temporary,source` followed by `dtos temporary`; the mechanism is
+component- and derivation-metadata driven rather than mnemonic-specific.
+Reference objects are a separate observation from register-to-storage aliases:
+an earlier `mkref` may keep either storage visible even when the register alias
+census is one. X01 therefore rejects a placement when such a reference-creation
+path can reach the candidate; reference lifetime/release is not guessed.
 
 The first migrated authority was repeated one-register `itos`.  A deletion
 requires the generator's successful continuation to dominate the candidate,

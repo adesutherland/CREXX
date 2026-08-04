@@ -259,6 +259,32 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
         return operand_index == 1 ? RXOP_COMPONENT_BINARY
                                   : RXOP_COMPONENT_INTEGER;
 
+    if (opcode >= OP_DADD_REG_REG_REG &&
+        opcode <= OP_DMOD_REG_DECIMAL_REG)
+        return RXOP_COMPONENT_DECIMAL;
+    if (opcode >= OP_DPOW_REG_REG_REG &&
+        opcode <= OP_DSEX_REG)
+        return RXOP_COMPONENT_DECIMAL;
+
+    /* Native stem keys and stored values are strings.  The receiver remains
+     * a whole native value; GET destinations are success-path writes and are
+     * classified separately by rxop_component_writes(). */
+    if (opcode == OP_STEMGET_REG_REG_REG)
+        return operand_index == 2 ? RXOP_COMPONENT_STRING
+                                  : RXOP_COMPONENT_ALL;
+    if (opcode == OP_STEMSET_REG_REG_REG)
+        return operand_index >= 1 ? RXOP_COMPONENT_STRING
+                                  : RXOP_COMPONENT_ALL;
+    if (opcode == OP_STEMRESET_REG_REG)
+        return operand_index == 1 ? RXOP_COMPONENT_STRING
+                                  : RXOP_COMPONENT_ALL;
+    if (opcode == OP_STEMGET2_REG_REG_REG_REG)
+        return operand_index >= 2 ? RXOP_COMPONENT_STRING
+                                  : RXOP_COMPONENT_ALL;
+    if (opcode == OP_STEMSET2_REG_REG_REG_REG)
+        return operand_index >= 1 ? RXOP_COMPONENT_STRING
+                                  : RXOP_COMPONENT_ALL;
+
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_ILTE_REG_INT_REG)
@@ -451,6 +477,11 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_STRING;
     if (opcode == OP_DCOPY_REG_REG || opcode == OP_LOAD_REG_DECIMAL)
         return RXOP_COMPONENT_DECIMAL;
+    if (opcode >= OP_DADD_REG_REG_REG &&
+        opcode <= OP_DMOD_REG_DECIMAL_REG)
+        return RXOP_COMPONENT_DECIMAL;
+    if (opcode >= OP_DPOW_REG_REG_REG && opcode <= OP_DSEX_REG)
+        return RXOP_COMPONENT_DECIMAL;
     if (opcode == OP_ACOPY_REG_REG) return RXOP_COMPONENT_ATTRIBUTES;
     if (opcode == OP_BCOPY_REG_REG)
         return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
@@ -467,6 +498,13 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_BINARY;
     if (opcode == OP_BSLICE_REG_REG_REG_REG)
         return RXOP_COMPONENT_BINARY;
+    if (opcode == OP_STEMGET_REG_REG_REG ||
+        opcode == OP_STEMGET2_REG_REG_REG_REG ||
+        opcode == OP_STEMKEYAT_REG_REG_REG ||
+        opcode == OP_STEMVALUEAT_REG_REG_REG)
+        return RXOP_COMPONENT_STRING;
+    if (opcode == OP_STEMSIZE_REG_REG)
+        return RXOP_COMPONENT_INTEGER;
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode >= OP_IEQ_REG_REG_REG && opcode <= OP_SLTE_REG_STRING_REG)
@@ -501,11 +539,10 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
 
 unsigned int rxop_component_clears(int opcode, size_t operand_index) {
     if (operand_index != 0) return RXOP_COMPONENT_NONE;
-    /* set_int() and set_float() release a reference payload and finalize any
-     * host-owned native payload before assigning the scalar field.  All
-     * comparison handlers use set_int() for their result; typed ICOPY/FCOPY
-     * deliberately do not. Ordinary binary data is a separate component and
-     * is not cleared. */
+    /* set_int(), set_float(), and native-stem string extraction release a
+     * reference payload and finalize any host-owned native payload before
+     * assigning the result component.  Typed copies deliberately do not.
+     * Ordinary binary data is a separate component and is not cleared. */
     if (opcode == OP_LOAD_REG_INT || opcode == OP_LOAD_REG_FLOAT ||
         opcode == OP_ISUB_REG_REG_REG ||
         opcode == OP_ISUB_REG_REG_INT ||
@@ -520,6 +557,11 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
         opcode == OP_BINEQ_REG_REG_BINARY ||
         opcode == OP_BINNE_REG_REG_REG ||
         opcode == OP_BINNE_REG_REG_BINARY ||
+        opcode == OP_STEMGET_REG_REG_REG ||
+        opcode == OP_STEMGET2_REG_REG_REG_REG ||
+        opcode == OP_STEMKEYAT_REG_REG_REG ||
+        opcode == OP_STEMVALUEAT_REG_REG_REG ||
+        opcode == OP_STEMSIZE_REG_REG ||
         (opcode >= OP_REQ_REG_REG_REG &&
          opcode <= OP_RLTE_REG_STRING_REG))
         return RXOP_COMPONENT_REFERENCE |

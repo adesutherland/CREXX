@@ -34,6 +34,7 @@ static const RxasOptimisationPassDescriptor pass_descriptors[] = {
     {RXAS_PASS_M04_SELF_COPY, "M04-self-copy", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_BASE},
     {RXAS_PASS_M05_TYPED_COPY, "M05-typed-copy", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
     {RXAS_PASS_M06_PRODUCER_FORWARD, "M06-producer-forward", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
+    {RXAS_PASS_X01_COMPONENT_PLACEMENT, "X01-component-placement", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
     {RXAS_PASS_M07_STORAGE_DIAGNOSTIC, "M07-storage-diagnostic",
      RXAS_OPT_OWNER_DIAGNOSTIC,
      RXAS_FLOW_CAP_CFG | RXAS_FLOW_CAP_SIGNAL | RXAS_FLOW_CAP_STORAGE},
@@ -48,6 +49,39 @@ static const RxasOptimisationPassDescriptor pass_descriptors[] = {
 static int pass_is_copy_candidate(int opcode) {
     return opcode == OP_ICOPY_REG_REG || opcode == OP_FCOPY_REG_REG ||
            opcode == OP_SCOPY_REG_REG;
+}
+
+static int pass_is_component_copy_candidate(int opcode) {
+    return opcode == OP_BCOPY_REG_REG || opcode == OP_ICOPY_REG_REG ||
+           opcode == OP_FCOPY_REG_REG || opcode == OP_SCOPY_REG_REG ||
+           opcode == OP_DCOPY_REG_REG;
+}
+
+static int pass_is_component_placement_candidate(
+        Assembler_Context *context, const instruction_queue *items,
+        size_t index, const instruction_queue *derivation,
+        int derivation_opcode) {
+    const instruction_queue *copy;
+    const OpInfo *copy_op;
+    const Assembler_Token *copy_destination;
+    const Assembler_Token *derivation_operand;
+    if (!items || !derivation || index == 0 ||
+        derivation->operandCount != 1 ||
+        rxop_value_derivation(derivation_opcode) == RXOP_DERIVATION_NONE)
+        return 0;
+    copy = &items[index - 1];
+    if (copy->instrType != OP_CODE || copy->operandCount != 2)
+        return 0;
+    copy_op = rxas_flow_resolve_opcode(context, copy);
+    if (!copy_op || !pass_is_component_copy_candidate(copy_op->opcode))
+        return 0;
+    copy_destination = rxas_queue_operand(copy, 0);
+    derivation_operand = rxas_queue_operand(derivation, 0);
+    return copy_destination && derivation_operand &&
+           copy_destination->token_type == RREG &&
+           derivation_operand->token_type == RREG &&
+           copy_destination->token_value.integer ==
+                   derivation_operand->token_value.integer;
 }
 
 static int pass_is_linked_read_candidate(int opcode) {
@@ -144,7 +178,13 @@ int rxas_optimisation_census(Assembler_Context *context,
             pass_add_candidate(census, RXAS_PASS_LOCAL_LOOP_BRANCH);
 
         if (rxop_value_derivation(opcode) != RXOP_DERIVATION_NONE)
+        {
             pass_add_candidate(census, RXAS_PASS_M01_DERIVATION);
+            if (pass_is_component_placement_candidate(
+                        context, items, index, item, opcode))
+                pass_add_candidate(
+                        census, RXAS_PASS_X01_COMPONENT_PLACEMENT);
+        }
         if (pass_is_scalar_constant_candidate(opcode, item))
             pass_add_candidate(census, RXAS_PASS_M02_CONSTANT);
         if (opcode == OP_NULL_REG)
