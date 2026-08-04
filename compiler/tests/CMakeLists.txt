@@ -3783,6 +3783,26 @@ if (ENABLE_PARSER_MODE)
     )
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_comment_only
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_comment_only.crexx
+            MUST_MATCH
+            "Node: type=38 \\(LEXER_COMMENT\\), pos=0, len=13, sev=48, text=\"/\\* comment \\*/\""
+            MUST_NOT_MATCH
+            "LEXER_OPERATOR_ARITHMETIC"
+            "PARSE_FAILURE"
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_empty
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_empty.crexx
+            MUST_MATCH
+            "Node: type=71 \\(PARSE_TREE_FILE\\), pos=0"
+            MUST_NOT_MATCH
+            "LEXER_TOKEN"
+            "PARSE_FAILURE"
+    )
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_comments_dash
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_comments_dash.crexx
             MUST_MATCH

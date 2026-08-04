@@ -1,4 +1,4 @@
-## Level B `time`
+## time
 
 `time` exposes the Level B VM clocks through a text-returning API:
 

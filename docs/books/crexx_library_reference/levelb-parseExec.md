@@ -1,4 +1,4 @@
-## Level B `parseexec`
+## parseexec
 
 `parseexec` executes the frozen stream format emitted by the compiler PARSE
 exit:

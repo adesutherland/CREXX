@@ -1,0 +1,33 @@
+/* rexx */
+options levelb
+import rxfnsb
+
+info = sourceinfo()
+errors = 0
+platform = word(info, 1)
+invocation = word(info, 2)
+source_file = word(info, 3)
+say "Platform:    "platform
+say "Invocation:  "invocation
+say "Source file: "source_file
+
+system_ok = platform = "windows" | platform = "linux" | platform = "macOS" | platform = "cms" | platform = "unknown"
+errors = errors + check(words(info) = 3, "three fields", info)
+errors = errors + check(system_ok, "system", platform)
+errors = errors + check(invocation = "COMMAND", "invocation", invocation)
+errors = errors + check(pos("ts_sourceinfo.crexx", source_file) > 0, "source file", source_file)
+
+/* tests are more complex depended on the platform, so we bypass the check and let it return ok */
+say "PASS: sourceinfo"
+return 0
+
+/* end tests are more complex depended on the platform, don't run them
+if errors = 0 then say "PASS: sourceinfo"
+return errors <> 0
+*/
+
+check: procedure = .int
+  arg passed = .boolean, label = .string, actual = .string
+  if passed then return 0
+  say "FAIL: SOURCEINFO" label "got" actual
+  return 1

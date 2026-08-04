@@ -1,0 +1,56 @@
+/*
+ * RXPP example: generate and validate a small service registry.
+ *
+ * The macro describes one service once. It creates the runtime data, adds a
+ * deferred validation rule, and contributes one line to a later report.
+ */
+options levelb
+import rxfnsb
+
+service_name = .string[]
+service_host = .string[]
+service_port = .int[]
+service_retries = .int[]
+
+##MACRO SERVICE id, name, host, port, retries
+    name = unquote(name)
+    host = unquote(host)
+
+    .gen service_name[&id] = "&name"
+    .gen service_host[&id] = "&host"
+    .gen service_port[&id] = &port
+    .gen service_retries[&id] = &retries
+
+    .section validation if service_port[&id] < 1 | service_port[&id] > 65535 then say "Invalid port for &name"
+    .section validation if service_retries[&id] < 0 | service_retries[&id] > 10 then say "Invalid retry count for &name"
+    .section report say "registered &name on " service_host[&id] || ":" || service_port[&id]
+##MEND
+
+say "Generating service registry"
+say "=========================="
+##service 1, "orders", "orders.internal", 8080, 3
+##service 2, "billing", "billing.internal", 8443, 5
+##service 3, "audit", "audit.internal", 0, 2
+##service 4, "search", "search.internal", 9200, 12
+say "<< Generating service registry completed"
+say
+
+
+say "Service registry"
+say "================"
+do i = 1 to 4
+    say i service_name[i] service_host[i] service_port[i] service_retries[i]
+end
+
+say
+say "Validation results"
+say "================="
+##emit validation
+
+say
+say "Generated registry report"
+say "========================="
+##emit report
+
+say "Registry complete"
+exit 0

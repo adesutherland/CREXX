@@ -1,4 +1,4 @@
-## Level B `qremoveall`
+## qremoveall
 
 `qremoveall(open=.string, close=.string, text=.string [,mode=.string]) =
 .string` removes every balanced top-level span. `I`/`C` (the default) removes

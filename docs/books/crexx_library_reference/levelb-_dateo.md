@@ -1,4 +1,4 @@
-## Level B `_dateo`
+## _dateo
 
 `_dateo(jdn=.int, format=.string [,osep=""]) -> .string` is the private
 output half of the extended Level B DATE implementation. Its formats and

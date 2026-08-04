@@ -1,4 +1,4 @@
-## Level B `substro`
+## substro
 
 `substro` is a cREXX-specific alternate name with the same Level B slicing
 contract as `substr`:

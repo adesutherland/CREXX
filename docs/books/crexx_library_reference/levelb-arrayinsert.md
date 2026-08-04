@@ -1,4 +1,4 @@
-## `arrayinsert` (Level B)
+## arrayinsert
 
 ```rexx
 arrayinsert(array = .string[] expose,

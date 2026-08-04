@@ -1,4 +1,4 @@
-## Level B system primitives
+## System Primitives
 
 `_rxsystem.crexx` supplies three low-level Level B runtime helpers. They are
 support functions used by the Level B file library, not Classic Level C BIFs.
@@ -12,7 +12,7 @@ call _exit(return_code)
 `return_code` is an `.int` and defaults to zero when omitted. `_exit` terminates
 the VM process with that exact code and does not return.
 
-## `_open`
+### `_open`
 
 ```rexx
 fileid = _open(name, mode)
@@ -41,7 +41,7 @@ Blank names and modes other than `r`, `w`, or `a` raise
 `INVALID_ARGUMENTS`. A failure while closing for a mode change raises
 `NOTREADY`.
 
-## `_close`
+### `_close`
 
 ```rexx
 call _close(name [, nomsg])
@@ -56,7 +56,7 @@ The cached handle and all of its cache metadata are cleared. A blank name raises
 name a no-op and suppresses a native close failure. This form is used only by
 cleanup paths such as `eraseFile`.
 
-## Example
+### Example
 
 ```rexx
 fileid = _open("events.log", "w")
@@ -64,7 +64,7 @@ assembler fwrite fileid,"started"
 call _close("events.log")
 ```
 
-## Coverage and performance
+### Coverage and performance
 
 `lib/rxfnsb/tests_functional/ts_rxsystem.crexx` exercises handle reuse, mode
 changes, data preservation, failed-open cache behavior, typed suppression, and

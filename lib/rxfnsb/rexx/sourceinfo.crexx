@@ -1,0 +1,66 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
+ * cREXX Level B runtime function.
+ */
+options levelb
+
+namespace rxfnsb expose sourceinfo
+
+/**
+ * Return the root program's system, invocation mode, and source file.
+ *
+ * @return three space-separated source context fields
+ */
+sourceinfo: procedure = .string
+  address_object = 0
+  meta_array = 0
+  meta_entry = ""
+  source_file = ""
+  candidate_file = ""
+  module = 0
+  source_address = 0
+
+  /* Use the existing caller-address and source-step metadata facilities. */
+  assembler metaloadcalleraddr address_object
+  assembler linkattr1 module,address_object,1
+  assembler linkattr1 source_address,address_object,2
+
+  do a = source_address to 0 by -1
+    assembler metaloaddata meta_array,module,a
+    do i = 1 to meta_array
+      assembler linkattr1 meta_entry,meta_array,i
+      if meta_entry = ".meta_source_step" then do
+        assembler linkattr1 candidate_file,meta_entry,4
+        /* Certified exit fragments carry synthetic source metadata. */
+        if candidate_file <> "exit_fragment" then do
+          source_file = candidate_file
+          return word(version(), 1) || " COMMAND " || source_file
+        end
+      end
+    end
+  end
+
+  return word(version(), 1) || " COMMAND "

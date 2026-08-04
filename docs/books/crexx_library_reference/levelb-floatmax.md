@@ -1,4 +1,4 @@
-## Level B `floatmax`
+## floatmax
 
 ```rexx
 floatmax(first = .float, ... = .float) = .float

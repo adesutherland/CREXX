@@ -1,4 +1,4 @@
-## Level B `sequence`
+## sequence
 
 `sequence` builds an inclusive ascending range of Unicode characters:
 

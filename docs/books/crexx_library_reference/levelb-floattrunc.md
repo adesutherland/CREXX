@@ -1,4 +1,4 @@
-## Level B `floattrunc`
+## floattrunc
 
 ```rexx
 floattrunc(number = .float, fraction = .int optional) = .string

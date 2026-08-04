@@ -1,4 +1,4 @@
-## Level B `arrayshift`
+## arrayshift
 
 `arrayshift` removes the first element of a one-based Level B string array:
 

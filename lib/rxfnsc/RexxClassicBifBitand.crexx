@@ -1,0 +1,8 @@
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifbitand expose BITAND
+import rexxclassicbitfunctions
+
+BITAND: procedure = .string
+  arg left = .string, right = "", pad = ""
+  result = rexxclassic_bitop(left, right, pad, "AND")
+  return rexxclassic_bit_result_text(result)

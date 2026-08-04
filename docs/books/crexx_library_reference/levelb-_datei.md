@@ -1,4 +1,4 @@
-## Level B `_datei`
+## _datei
 
 `_datei(idate=.string, format=.string [,isep=""]) -> .int` is the private
 input half of the extended Level B DATE implementation. It converts one format

@@ -1,4 +1,4 @@
-## `objectarraymove` (Level B)
+## objectarraymove
 
 ```rexx
 objectarraymove(array = .object[] expose,

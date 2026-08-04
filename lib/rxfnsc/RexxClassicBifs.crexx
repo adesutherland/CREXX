@@ -23,12 +23,14 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_bitand rexxclassicbif_bitor rexxclassicbif_bitxor bitand bitor bitxor rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
 import rexxvalue
 import rexxpool
 import rexxclassicconfig
 import rexxclassicdatatype
+import rexxclassicbitfunctions
 import rexxclassiccharacterscan
+import rexxclassicencoding
 import rxfnsb
 
 /**
@@ -213,6 +215,9 @@ rexxclassicbif_call: procedure = .RexxValue
   select
     when name = "ABBREV" then return rexxclassicbif_abbrev(context_ref)
     when name = "ABS" then return rexxclassicbif_abs(context_ref)
+    when name = "BITAND" then return rexxclassicbif_bitand(context_ref)
+    when name = "BITOR" then return rexxclassicbif_bitor(context_ref)
+    when name = "BITXOR" then return rexxclassicbif_bitxor(context_ref)
     when name = "COPIES" then return rexxclassicbif_copies(context_ref)
     when name = "DATATYPE" then return rexxclassicbif_datatype(context_ref)
     when name = "LEFT" then return rexxclassicbif_left(context_ref)
@@ -530,6 +535,144 @@ rexxclassicbif_abs: procedure = .RexxValue
   value = context.argument(1).asDecimal()
   if value < 0 then value = 0 - value
   return _ok(value as .string)
+
+/**
+ * Applies a bitwise AND operation to two Classic encoded strings.
+ *
+ * @bif BITAND
+ * @signature BITAND(string1 [,string2 [,pad]])
+ * @checkargs rANY oANY oPAD
+ * @sandbox pure
+ * @return bitwise AND result, preserving the longer tail when pad is omitted
+ */
+rexxclassicbif_bitand: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  return _rexxclassicbif_bitop(context_ref, "AND")
+
+/**
+ * Applies a bitwise OR operation to two Classic encoded strings.
+ *
+ * @bif BITOR
+ * @signature BITOR(string1 [,string2 [,pad]])
+ * @checkargs rANY oANY oPAD
+ * @sandbox pure
+ * @return bitwise OR result, preserving the longer tail when pad is omitted
+ */
+rexxclassicbif_bitor: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  return _rexxclassicbif_bitop(context_ref, "OR")
+
+/**
+ * Applies a bitwise exclusive OR operation to two Classic encoded strings.
+ *
+ * @bif BITXOR
+ * @signature BITXOR(string1 [,string2 [,pad]])
+ * @checkargs rANY oANY oPAD
+ * @sandbox pure
+ * @return bitwise exclusive OR result, preserving the longer tail when pad is omitted
+ */
+rexxclassicbif_bitxor: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  return _rexxclassicbif_bitop(context_ref, "XOR")
+
+bitand: procedure = .string
+  arg left = .string, right = "", pad = ""
+  result = rexxclassic_bitop(left, right, pad, "AND")
+  return rexxclassic_bit_result_text(result)
+
+bitor: procedure = .string
+  arg left = .string, right = "", pad = ""
+  result = rexxclassic_bitop(left, right, pad, "OR")
+  return rexxclassic_bit_result_text(result)
+
+bitxor: procedure = .string
+  arg left = .string, right = "", pad = ""
+  result = rexxclassic_bitop(left, right, pad, "XOR")
+  return rexxclassic_bit_result_text(result)
+
+_rexxclassicbif_bitop: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, operation = .string
+  context = dereference context_ref
+  call context.clearError()
+  argc = context.argumentCount()
+  if argc < 1 then do
+    call _set_bif_error(context_ref, "40.3", 1, "", "")
+    return _context_error(context_ref)
+  end
+  if argc > 3 then do
+    call _set_bif_error(context_ref, "40.4", 3, "", "")
+    return _context_error(context_ref)
+  end
+  if \context.argumentExists(1) then do
+    call _set_bif_error(context_ref, "40.5", 1, "", "")
+    return _context_error(context_ref)
+  end
+
+  config = context.characterConfig()
+  if context.argumentExists(3) then do
+    pad_check = context.argument(3).asBinary()
+    pad_check_length = .int
+    assembler blen pad_check_length,pad_check
+    if pad_check_length <> 1 then do
+      call _set_bif_error(context_ref, "40.23", 3, "", "")
+      return _context_error(context_ref)
+    end
+  end
+  left = context.argument(1).asBinary()
+  right = .binary
+  pad = .binary
+  if context.argumentExists(2) then right = context.argument(2).asBinary()
+  if context.argumentExists(3) then pad = context.argument(3).asBinary()
+
+  left_length = .int
+  right_length = .int
+  pad_length = .int
+  assembler blen left_length,left
+  assembler blen right_length,right
+  assembler blen pad_length,pad
+
+  result_length = left_length
+  if right_length > result_length then result_length = right_length
+  result = .binary
+  assembler bresize result,result_length
+
+  common_length = left_length
+  if right_length < common_length then common_length = right_length
+  pad_supplied = context.argumentExists(3)
+  left_byte = .int
+  right_byte = .int
+  result_byte = .int
+
+  do index = 0 to result_length - 1
+    if pad_supplied | index < common_length then do
+      left_byte = _rexxclassic_bitop_byte(left,left_length,pad,pad_length,index)
+      right_byte = _rexxclassic_bitop_byte(right,right_length,pad,pad_length,index)
+      select
+        when operation = "AND" then assembler iand result_byte,left_byte,right_byte
+        when operation = "OR" then assembler ior result_byte,left_byte,right_byte
+        otherwise assembler ixor result_byte,left_byte,right_byte
+      end
+    end
+    else if index < left_length then assembler getbyte result_byte,left,index
+    else assembler getbyte result_byte,right,index
+    assembler setbyte result,index,result_byte
+  end
+  if config.isUtf8Profile() & rexxclassic_bytes_are_utf8(result) then return .RexxValue.fromBinaryText(result)
+return .RexxValue.fromBinary(result)
+
+_rexxclassic_bitop_byte: procedure = .int
+  arg value = .binary, value_length = .int, pad = .binary, pad_length = .int, index = .int
+  byte = .int
+  if index < value_length then do
+    assembler getbyte byte,value,index
+    return byte
+  end
+  if pad_length <= 0 then return 0
+  pad_offset = index - value_length
+  pad_index = .int
+  assembler imod pad_index,pad_offset,pad_length
+  assembler getbyte byte,pad,pad_index
+  return byte
 
 /**
  * Repeats a string a whole-number count of times.

@@ -1,4 +1,4 @@
-## Level B `countstr`
+## countstr
 
 `countstr` counts case-sensitive, non-overlapping occurrences from left to
 right:

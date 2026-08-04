@@ -1,4 +1,4 @@
-## `splice` (Level B)
+## splice
 
 ```rexx
 splice(replacement = .string,

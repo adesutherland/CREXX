@@ -1,0 +1,8 @@
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifbitxor expose BITXOR
+import rexxclassicbitfunctions
+
+BITXOR: procedure = .string
+  arg left = .string, right = "", pad = ""
+  result = rexxclassic_bitop(left, right, pad, "XOR")
+  return rexxclassic_bit_result_text(result)

@@ -377,6 +377,13 @@ PARSE \[ option \] \[ CASELESS \] type \[ template \] ;
 Current implementation status:
 
 * `PARSE VALUE ...`, `PARSE VAR ...`, and `PARSE ARG ...` are implemented through the certified `PARSE` exit.
+* `PARSE VERSION template` uses the result of the `version()` built-in function
+  as its source and applies the normal PARSE template rules. For example,
+  `PARSE VERSION one` keeps the complete version string in `one`, while
+  `PARSE VERSION one two` assigns successive words to `one` and `two`.
+* `PARSE SOURCE template` uses the result of the `sourceinfo()` built-in
+  function as its source and applies the normal PARSE template rules. The
+  source string contains the system, invocation mode, and source file name.
 * These forms are supported in both Level G and Level B source. Their internal
   certified lowering may use Level B instructions; that compiler detail does
   not permit an authored `ASSEMBLER` statement in Level G source.

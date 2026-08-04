@@ -84,6 +84,7 @@ set(BIFS
 		value
 		verify
 		version
+		sourceinfo
 		word
 		words
 		wordindex
@@ -144,6 +145,7 @@ set(BIFS
 		rxsocket
 		rxhttp
 		wordrep
+		rxqueue
 )
 
 foreach (BIF ${BIFS})

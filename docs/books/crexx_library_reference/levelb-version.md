@@ -1,4 +1,4 @@
-## Level B `version`
+## version
 
 `version()` returns a compact description of the running VM build:
 

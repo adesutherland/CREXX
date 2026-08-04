@@ -1,4 +1,4 @@
-## Level B `filter`
+## filter
 
 `filter` removes characters from a string:
 

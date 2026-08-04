@@ -1,4 +1,4 @@
-## `b2x` (Level B)
+## b2x
 
 ```rexx
 b2x(binary = .string) = .string

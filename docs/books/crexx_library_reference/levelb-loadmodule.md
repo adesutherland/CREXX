@@ -1,4 +1,4 @@
-## Level B `loadmodule`
+## loadmodule
 
 `loadmodule` is the explicit Level B runtime loader for one RXBIN or RXPLUGIN
 artifact.
@@ -17,7 +17,7 @@ loads only the explicit path supplied by the caller; it does not search or
 sweep a directory. Callers should therefore pass an intended trusted artifact,
 as described in `docs/books/crexx_programming_guide/running.md`.
 
-## Failure contract
+### Failure contract
 
 `loadmodule` deliberately preserves the `METALOADMODULE` status protocol. A
 missing, invalid, or blank path returns a non-positive integer rather than
@@ -30,7 +30,7 @@ provider = loadmodule("./providers/example.rxbin")
 if provider <= 0 then return 1
 ```
 
-## Coverage and performance
+### Coverage and performance
 
 `lib/rxfnsb/tests_functional/ts_loadmodule.crexx` loads a focused provider and
 checks missing and blank-path statuses in optimized and unoptimized modes.

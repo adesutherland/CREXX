@@ -1,4 +1,4 @@
-## Level B `abbrev`
+## abbrev
 
 `abbrev` tests a case-sensitive leading abbreviation:
 

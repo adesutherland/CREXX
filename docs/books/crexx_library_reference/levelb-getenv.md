@@ -1,4 +1,4 @@
-## Level B `getenv`
+## getenv
 
 `getenv` reads one variable from the running process environment:
 

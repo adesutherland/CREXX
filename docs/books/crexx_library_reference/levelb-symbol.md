@@ -1,4 +1,4 @@
-## Level B `symbol`
+## symbol
 
 `symbol(name)` classifies a candidate against the compiled Level B source scope
 at the call site.

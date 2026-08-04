@@ -96,9 +96,10 @@ pre_process: method = .exitplan
   _direct_count=0
   _prepared_plan_hex=''
   _prepared_result_count=0
+
  /* -------------------------------------------------------------------------------------------------------------------
   * Scan leading PARSE modifiers and source selector:
-  * UPPER, LOWER, LOG, TRACE, TRIM, INTO, VALUE, VAR, ARG.
+  * UPPER, LOWER, LOG, TRACE, TRIM, INTO, VERSION, SOURCE, VALUE, VAR, ARG.
   * -------------------------------------------------------------------------------------------------------------------
   */
   do token_ix=2 to tokens.0
@@ -137,6 +138,18 @@ pre_process: method = .exitplan
         call compile_plan.add_binding("var", ti.get_text(), "", "", 0, "parse_into", "")
         _into = ti.get_text()
         iterate
+     end
+     else if source_kind = "" & isParseKeywordToken(ti, "VERSION") then do
+        source_kind = "VERSION"
+        source_found = 1
+        call compile_plan.add_keyword(token_ix, text, "parse_source", "parse")
+        leave
+     end
+     else if source_kind = "" & isParseKeywordToken(ti, "SOURCE") then do
+        source_kind = "SOURCE"
+        source_found = 1
+        call compile_plan.add_keyword(token_ix, text, "parse_source", "parse")
+        leave
      end
      else if isParseKeywordToken(ti, "VALUE") | isParseKeywordToken(ti, "VAR") | isParseKeywordToken(ti, "ARG") then do
         source_kind = utext
@@ -191,6 +204,7 @@ if source_kind = "" then do
    if _wanttrim > 0 then token_ix = token_ix + 1
    if _into \= "" then token_ix = token_ix + 2
 end
+else if source_kind = "VERSION" | source_kind = "SOURCE" then token_ix = token_ix + 1
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Ensure at least one template token remains after removing leading options.
@@ -271,13 +285,27 @@ token_end = tokens.0
  * token_ix now points at the source expression for PARSE VALUE / VAR.
  * -------------------------------------------------------------------------------------------------------------------
  */
-   source_start_ix=token_ix
-   split = find_parse_value_split(tokens, token_ix, token_end)
-
-   if split = 0 then do
-      call compile_plan.set_error(1, "PARSE VALUE requires source expression and template", "MISSING_ARGUMENTS")
-      return compile_plan
+   source_expr=''
+   source_start_ix=0
+   source_end_ix=0
+   if source_kind = "VERSION" then do
+      source_start_ix=0
+      source_end_ix=0
+      source_expr="version()"
    end
+   else if source_kind = "SOURCE" then do
+      source_start_ix=0
+      source_end_ix=0
+      source_expr="sourceinfo()"
+   end
+   else do
+      source_start_ix=token_ix
+      split = find_parse_value_split(tokens, token_ix, token_end)
+
+      if split = 0 then do
+         call compile_plan.set_error(1, "PARSE VALUE requires source expression and template", "MISSING_ARGUMENTS")
+         return compile_plan
+      end
    /* -------------------------------------------------------------------------------------------------------------------
     * Build a token placeholder string for the source expression.
     *
@@ -291,12 +319,13 @@ token_end = tokens.0
     * text during code generation.
     * -------------------------------------------------------------------------------------------------------------------
     */
-   source_end_ix=split-1
-   source_expr=''
-   do i=source_start_ix to source_end_ix
-      source_expr=source_expr||'{'i'}'    /* collect all token indexes as {i}, this will be replaced later by the token name */
+      source_end_ix=split-1
+      source_expr=''
+      do i=source_start_ix to source_end_ix
+         source_expr=source_expr||'{'i'}'    /* collect all token indexes as {i}, this will be replaced later by the token name */
+      end
+      token_ix=split
    end
-   token_ix=split
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Scan the PARSE template tokens and build the executable parse plan.

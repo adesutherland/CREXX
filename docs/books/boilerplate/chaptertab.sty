@@ -1,0 +1,135 @@
+%% chaptertab.sty -- persistent chapter-length margin tabs
+%% 2026/08/03 v1.0
+\NeedsTeXFormat{LaTeX2e}[2020-10-01]
+\ProvidesPackage{chaptertab}[2026/08/03 v1.0 Persistent chapter margin tabs]
+
+\RequirePackage{xcolor}
+\RequirePackage{xparse}
+\RequirePackage{tikz}
+
+\definecolor{chaptertabDefault}{HTML}{424641}
+
+\newif\ifChapterTabActive
+\ChapterTabActivefalse
+
+\newlength\ChapterTabLength
+\newlength\ChapterTabThickness
+\newlength\ChapterTabTopOffset
+\newlength\ChapterTabEdgeOffset
+
+\setlength\ChapterTabLength{40mm}
+\setlength\ChapterTabThickness{8mm}
+\setlength\ChapterTabTopOffset{20mm}
+\setlength\ChapterTabEdgeOffset{0mm}
+
+\newcommand\ChapterTabText{}
+\newcommand\ChapterTabColour{chaptertabDefault}
+\newcommand\ChapterTabSide{right}
+\newcommand\ChapterTabFont{\sffamily\bfseries\large}
+
+% Start a persistent tab, or change its text. It remains active until changed
+% by another \ChapterTab or stopped with \ClearChapterTab.
+\NewDocumentCommand{\ChapterTab}{m}{%
+  \gdef\ChapterTabText{#1}%
+  \global\ChapterTabActivetrue
+}
+
+\NewDocumentCommand{\ClearChapterTab}{}{%
+  \global\ChapterTabActivefalse
+  \gdef\ChapterTabText{}%
+}
+
+% Configuration commands. These may be used in the preamble or between
+% chapters. Side values are right, left, or outer.
+\NewDocumentCommand{\ChapterTabSetLength}{m}{\global\setlength\ChapterTabLength{#1}}
+\NewDocumentCommand{\ChapterTabSetThickness}{m}{\global\setlength\ChapterTabThickness{#1}}
+\NewDocumentCommand{\ChapterTabSetTopOffset}{m}{\global\setlength\ChapterTabTopOffset{#1}}
+\NewDocumentCommand{\ChapterTabSetEdgeOffset}{m}{\global\setlength\ChapterTabEdgeOffset{#1}}
+\NewDocumentCommand{\ChapterTabSetColour}{m}{\gdef\ChapterTabColour{#1}}
+\NewDocumentCommand{\ChapterTabSetFont}{m}{\gdef\ChapterTabFont{#1}}
+\NewDocumentCommand{\ChapterTabSetSide}{m}{%
+  \def\ChapterTabRequestedSide{#1}%
+  \def\ChapterTabRight{right}%
+  \def\ChapterTabLeft{left}%
+  \def\ChapterTabOuter{outer}%
+  \ifx\ChapterTabRequestedSide\ChapterTabRight
+    \gdef\ChapterTabSide{right}%
+  \else\ifx\ChapterTabRequestedSide\ChapterTabLeft
+    \gdef\ChapterTabSide{left}%
+  \else\ifx\ChapterTabRequestedSide\ChapterTabOuter
+    \gdef\ChapterTabSide{outer}%
+  \else
+    \PackageError{chaptertab}{Unknown side `#1'}%
+      {Use right, left, or outer.}%
+  \fi\fi\fi
+}
+
+\makeatletter
+
+\newcommand\chaptertab@right{%
+  \path[fill=\ChapterTabColour]
+    ([xshift={-\ChapterTabThickness-\ChapterTabEdgeOffset},
+      yshift=-\ChapterTabTopOffset]current page.north east)
+    rectangle
+    ([xshift=-\ChapterTabEdgeOffset,
+      yshift={\dimexpr-\ChapterTabTopOffset-\ChapterTabLength\relax}]
+      current page.north east);
+  \node[
+    rotate=90,
+    text=white,
+    font=\ChapterTabFont,
+    inner sep=0pt
+  ] at
+    ([xshift={\dimexpr-\ChapterTabEdgeOffset-\ChapterTabThickness/2\relax},
+      yshift={\dimexpr-\ChapterTabTopOffset-\ChapterTabLength/2\relax}]
+      current page.north east)
+    {\ChapterTabText};%
+}
+
+\newcommand\chaptertab@left{%
+  \path[fill=\ChapterTabColour]
+    ([xshift=\ChapterTabEdgeOffset,
+      yshift=-\ChapterTabTopOffset]current page.north west)
+    rectangle
+    ([xshift={\dimexpr\ChapterTabThickness+\ChapterTabEdgeOffset\relax},
+      yshift={\dimexpr-\ChapterTabTopOffset-\ChapterTabLength\relax}]
+      current page.north west);
+  \node[
+    rotate=-90,
+    text=white,
+    font=\ChapterTabFont,
+    inner sep=0pt
+  ] at
+    ([xshift={\dimexpr\ChapterTabEdgeOffset+\ChapterTabThickness/2\relax},
+      yshift={\dimexpr-\ChapterTabTopOffset-\ChapterTabLength/2\relax}]
+      current page.north west)
+    {\ChapterTabText};%
+}
+
+\newcommand\chaptertab@draw{%
+  % The zero-width wrapper ensures the overlay contributes no material to the
+  % output box, avoiding overfull \hbox warnings during shipout.
+  \hbox to 0pt{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \def\chaptertab@requested{\ChapterTabSide}%
+      \def\chaptertab@rightname{right}%
+      \def\chaptertab@leftname{left}%
+      \ifx\chaptertab@requested\chaptertab@rightname
+        \chaptertab@right
+      \else\ifx\chaptertab@requested\chaptertab@leftname
+        \chaptertab@left
+      \else
+        \ifodd\value{page}\chaptertab@right\else\chaptertab@left\fi
+      \fi\fi
+    \end{tikzpicture}%
+    \hss
+  }%
+}
+
+\AddToHook{shipout/foreground}{%
+  \ifChapterTabActive\chaptertab@draw\fi
+}
+
+\makeatother
+
+\endinput

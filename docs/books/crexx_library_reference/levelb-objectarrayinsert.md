@@ -1,4 +1,4 @@
-## `objectarrayinsert` (Level B)
+## objectarrayinsert
 
 ```rexx
 objectarrayinsert(array = .object[] expose,

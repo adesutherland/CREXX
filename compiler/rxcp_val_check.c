@@ -1297,7 +1297,14 @@ walker_result source_location_walker(walker_direction direction,
             /* This is a leaf without a token - so need to estimate a position */
             ASTNode *older = 0;
 
-            if (node->node_type == ERROR || node->node_type == WARNING) {
+            if (!node->parent) {
+                /* A tokenless root is valid for an empty or comment-only file. */
+                node->source_start = 0;
+                node->source_end = 0;
+                node->line = -1;
+                node->column = -1;
+            }
+            else if (node->node_type == ERROR || node->node_type == WARNING) {
                 node->line = node->parent->line;
                 node->column = node->parent->column;
                 node->source_start = node->parent->source_start;

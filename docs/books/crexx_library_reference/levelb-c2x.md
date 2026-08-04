@@ -1,4 +1,4 @@
-## `c2x` (Level B)
+## c2x
 
 ```rexx
 c2x(from = .string) = .string

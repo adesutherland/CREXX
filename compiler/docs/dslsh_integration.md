@@ -102,6 +102,12 @@ then calls the same cREXX parser-mode entry point. The committed parser mirror
 and the editor's real `CodeBuffer` version are not advanced. This is intended
 for completion previews and similar "what would this look like?" queries.
 
+Before the initial parse completes, `rxc` answers DSLSH's `C|EP` request with
+seed rules for `.rexx`, `.rex`, `.crexx`, `.crx`, and `.the`. This parser-owned
+configuration is the bootstrap path for a new or empty buffer. Rules learned
+from an authoritative parse remain local to that document's `CodeBuffer`, as
+defined by DSLSH's emergency-parsing contract.
+
 ## Manual Parser-Mode Testing
 
 The ctest syntax-highlighting fixtures use DSLSH's `parser_tester` tool. The

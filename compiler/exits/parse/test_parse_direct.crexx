@@ -1,8 +1,10 @@
 options levelb
 import rxcptest
 import rxcpexits
+import rxcexits
 import rxcp
 import rxfnsb
+import exittestsupport
 
 main: procedure
   failures = .int
@@ -14,6 +16,8 @@ main: procedure
   failures = failures + test_parse_suffix_options()
   failures = failures + test_parse_claimed_keywords()
   failures = failures + test_nr14_direct_lowering()
+  failures = failures + test_parse_version()
+  failures = failures + test_parse_source()
   call report_result failures
   return
 
@@ -246,6 +250,112 @@ test_parse_claimed_keywords: procedure = .int
   if check_contains("parse claimed frozen plan", replacement, "'3,1:1;1,4:left;2,1:,;1,5:right;'") = 0 then failures = failures + 1
   if check_contains("parse claimed trim assign", replacement, "left=strip(parsed[1])") = 0 then failures = failures + 1
   if check_contains("parse claimed trim assign 2", replacement, "right=strip(parsed[2])") = 0 then failures = failures + 1
+
+  return failures
+
+test_parse_version: procedure = .int
+  failures = .int
+  parser = .parseexit(2020)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VERSION"
+  call pushidentifier tokens, "runtimeVersion", ".string", 0
+  plan = parser.pre_process(tokens)
+  if check_equal("parse version pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_true("parse version keyword", find_keyword(plan, "VERSION") > 0, "keyword claim missing") = 0 then failures = failures + 1
+  version_bind = find_binding(plan, "runtimeVersion")
+  if check_true("parse version binding", version_bind > 0, "binding missing") = 0 then failures = failures + 1
+  if version_bind > 0 then do
+     binding = plan.get_binding(version_bind)
+     if check_equal("parse version provenance", "parse_target", binding.get_provenance()) = 0 then failures = failures + 1
+  end
+  result = parser.process(tokens)
+  if check_equal("parse version process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("parse version source", replacement, "version()") = 0 then failures = failures + 1
+
+  parser = .parseexit(2021)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VERSION"
+  call pushidentifier tokens, "one", ".string", 0
+  call pushidentifier tokens, "two", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_equal("parse version two process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("parse version two source", replacement, "version()") = 0 then failures = failures + 1
+  if check_contains("parse version two first target", replacement, "one=") = 0 then failures = failures + 1
+  if check_contains("parse version two second target", replacement, "two=") = 0 then failures = failures + 1
+
+  parser = .parseexit(2022)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VERSION"
+  call pushidentifier tokens, "one", ".string", 0
+  call pushidentifier tokens, "two", ".string", 0
+  call pushidentifier tokens, "three", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_equal("parse version three process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("parse version three source", replacement, "version()") = 0 then failures = failures + 1
+  if check_contains("parse version three first target", replacement, "one=") = 0 then failures = failures + 1
+  if check_contains("parse version three second target", replacement, "two=") = 0 then failures = failures + 1
+  if check_contains("parse version three third target", replacement, "three=") = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VERSION"
+  plan = parser.pre_process(tokens)
+  if check_equal("parse version missing target status", "ERROR", plan.get_status()) = 0 then failures = failures + 1
+  if plan.get_diagnostic_count() > 0 then do
+     diagnostic = plan.get_diagnostic(1)
+     if check_equal("parse version missing target code", "MISSING_ARGUMENTS", diagnostic.get_code()) = 0 then failures = failures + 1
+     if check_equal("parse version missing target message", "PARSE requires arguments", diagnostic.get_message()) = 0 then failures = failures + 1
+  end
+
+  return failures
+
+test_parse_source: procedure = .int
+  failures = .int
+  parser = .parseexit(2030)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "SOURCE"
+  call pushidentifier tokens, "sourceInfo", ".string", 0
+  plan = parser.pre_process(tokens)
+  if check_equal("parse source pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_true("parse source keyword", find_keyword(plan, "SOURCE") > 0, "keyword claim missing") = 0 then failures = failures + 1
+  result = parser.process(tokens)
+  if check_equal("parse source process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("parse source expression", replacement, "sourceinfo()") = 0 then failures = failures + 1
+  if check_contains("parse source target", replacement, "sourceInfo=") = 0 then failures = failures + 1
+
+  parser = .parseexit(2031)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "SOURCE"
+  call pushidentifier tokens, "system", ".string", 0
+  call pushidentifier tokens, "mode", ".string", 0
+  call pushidentifier tokens, "file", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_equal("parse source three process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("parse source three expression", replacement, "sourceinfo()") = 0 then failures = failures + 1
+  if check_contains("parse source first target", replacement, "system=") = 0 then failures = failures + 1
+  if check_contains("parse source second target", replacement, "mode=") = 0 then failures = failures + 1
+  if check_contains("parse source third target", replacement, "file=") = 0 then failures = failures + 1
 
   return failures
 

@@ -284,14 +284,20 @@ int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int de
         LOG("cREXX Parser Server starting... (debug=%d)", debug_mode);
     }
 
-    const char *crexx_config = 
-        "[.rexx]\n"
-        "keywords=say,if,then,else,select,when,otherwise,do,end,to,by,for,while,until,forever,leave,iterate,procedure,expose,return,exit,pull,parse,arg\n"
-        "operators=+,-,*,/,=,<,>,(,),{,},,,;\n"
-        "line_comment=--\n"
-        "block_start=/*\n"
-        "block_end=*/\n"
-        "quotes=\"\n";
+#define CREXX_EP_RULES \
+        "keywords=say,if,then,else,select,when,otherwise,do,end,to,by,for,while,until,forever,leave,iterate,procedure,expose,return,exit,pull,parse,arg\n" \
+        "operators=+,-,*,/,=,<,>,(,),{,},,,;\n" \
+        "line_comment=--\n" \
+        "block_start=/*\n" \
+        "block_end=*/\n" \
+        "quotes=\"\n"
+    const char *crexx_config =
+        "[.rexx]\n" CREXX_EP_RULES
+        "[.rex]\n" CREXX_EP_RULES
+        "[.crexx]\n" CREXX_EP_RULES
+        "[.crx]\n" CREXX_EP_RULES
+        "[.the]\n" CREXX_EP_RULES;
+#undef CREXX_EP_RULES
     cb_set_ep_config_string(crexx_config);
 
     CodeBuffer *cb = create_code_buffer(NULL, rxc_highlight_controller_parse);

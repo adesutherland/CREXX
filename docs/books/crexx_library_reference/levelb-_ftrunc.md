@@ -1,4 +1,4 @@
-## Level B `_ftrunc`
+## _ftrunc
 
 `_ftrunc` is a private `_rxsysb` helper used by Level B `format`:
 

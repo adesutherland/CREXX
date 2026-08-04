@@ -1,4 +1,4 @@
-## Level B `qwordpos`
+## qwordpos
 
 `qwordpos(search=.string, text=.string [,start=.int]) = .int` finds an exact
 sequence of quote-aware words at or after the positive word number `start`.

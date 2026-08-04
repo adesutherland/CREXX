@@ -1,4 +1,4 @@
-## Level B `changestr`
+## changestr
 
 `changestr` replaces every case-sensitive, non-overlapping occurrence of
 `needle` in the original `haystack`:
