@@ -65,8 +65,7 @@ arraysort: procedure=.int
     key = ""
     if zero_offset < item_length then do
       key_length = item_length - zero_offset
-      assembler setstrpos item,zero_offset
-      assembler substring key,item,key_length
+      assembler substring key,item,zero_offset,key_length
     end
     keys[index] = key
   end

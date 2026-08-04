@@ -63,8 +63,7 @@ word: procedure = .string
     if current_word = wordnum then do
       if word_end < 0 then word_end = string_length
       word_length = word_end - word_start
-      assembler setstrpos string,word_start
-      assembler substring result,string,word_length
+      assembler substring result,string,word_start,word_length
       return result
     end
     if word_end < 0 then return ""

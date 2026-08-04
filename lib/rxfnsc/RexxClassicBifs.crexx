@@ -1142,8 +1142,7 @@ _expand_whole_decimal: procedure = .string
   if exponent_position >= 0 then do
     exponent_start = exponent_position + 1
     exponent_length = text_length - exponent_start
-    assembler setstrpos text,exponent_start
-    assembler substring exponent_text,text,exponent_length
+    assembler substring exponent_text,text,exponent_start,exponent_length
     exponent = exponent_text
     mantissa_end = exponent_position
   end
@@ -1181,8 +1180,7 @@ _expand_whole_decimal: procedure = .string
   else do
     if negative then assembler appendchar whole_text,minus_character
     segment_length = integer_source_length - first_nonzero
-    assembler setstrpos digits,first_nonzero
-    assembler substring segment,digits,segment_length
+    assembler substring segment,digits,first_nonzero,segment_length
     assembler append whole_text,segment
     if decimal_position > digit_length then do
       padding_count = decimal_position - digit_length

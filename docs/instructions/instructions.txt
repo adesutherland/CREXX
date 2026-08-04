@@ -136,17 +136,13 @@
 0x0094 trunc      {REG,REG,REG}        Trunc String (op2) to (op3) Chars into op1
 0x0095 strlen     {REG,REG}            String Length op1 = length(op2)
 0x0096 strchar    {REG,REG,REG}        op1 (as int) = op2[op3]
-0x0097 strchar    {REG,REG}            op1 (as int) = op2[charpos]
 0x0098 hexchar    {REG,REG,REG}        op1 (as hex) = op2[op3]
 0x0099 poschar    {REG,REG,REG}        op1 = position of op3 in op2
-0x009a setstrpos  {REG,REG}            Set String (op1) charpos set to op2
-0x009b getstrpos  {REG,REG}            Get String (op2) charpos into op1
-0x009c substr     {REG,REG,REG}        op1 = op2[charpos]...op2[charpos+op3-1]
 0x009d strlower   {REG,REG}            Set string to lower case value
 0x009e strupper   {REG,REG}            Set string to upper case value
 0x009f transchar  {REG,REG,REG}        replace op1 if it is in op3-list by char in op2-list
 0x00a0 dropchar   {REG,REG,REG}        set op1 from op2 after dropping all chars from op3
-0x00a1 substring  {REG,REG,REG}        set op1=substr(op2,op3) remaining string
+0x00a1 substring  {REG,REG,REG,REG}    String slice op1 = op2[op3..op3+op4) by character
 0x00a2 substcut   {REG,REG}            set op1=substr(op1,,op2) cuts off op1 after position op3
 0x00a3 padstr     {REG,REG,REG}        set op1=op2[repeated op3 times]
 0x00a4 strpos     {REG,REG,REG}        op1 is position of op2 in op3
@@ -173,9 +169,7 @@
 0x00b9 setbyte    {REG,REG,REG}        Set binary byte op1[op2] = op3
 0x00ba bconcat    {REG,REG,REG}        Binary concat op1 = op2 || op3
 0x00bb bappend    {REG,REG}            Append binary op2 to op1
-0x00bc setbinpos  {REG,REG}            Set binary byte cursor on op1 from op2
-0x00bd getbinpos  {REG,REG}            Get binary byte cursor from op2 into op1
-0x00be bslice     {REG,REG,REG}        Binary slice op1 = op2[cursor..cursor+op3)
+0x00be bslice     {REG,REG,REG,REG}    Binary slice op1 = op2[op3..op3+op4)
 0x00bf bupdate    {REG,REG,REG}        Overlay binary op3 into op1 at byte offset op2
 0x00c0 stobin     {REG}                Convert string register bytes to binary bytes
 0x00c1 bintos     {REG}                Convert binary register bytes to string bytes after UTF-8 validation

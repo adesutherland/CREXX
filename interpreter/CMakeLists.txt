@@ -1160,14 +1160,14 @@ add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
 crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 
-# Binary Buffer, I/O, and legacy cursor instruction tests
+# Binary buffer, I/O, and explicit slice instruction tests
 crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
-crexx_add_vm_dual_test(NAME rxasbinarylegacytests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Legacy Cursor Ops")
+crexx_add_vm_dual_test(NAME rxasbinaryslicetests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Explicit Slice")
 # Both VM variants execute in this directory and the authored RXAS uses the
 # same fixed scratch filenames.  Keep the pair from truncating each other's
 # files when CTest runs them concurrently under slower instrumented builds.
-set_tests_properties(rxasbinarylegacytests rxasbinarylegacytests-rxbvm PROPERTIES
-        RESOURCE_LOCK rxas_binary_legacy_scratch)
+set_tests_properties(rxasbinaryslicetests rxasbinaryslicetests-rxbvm PROPERTIES
+        RESOURCE_LOCK rxas_binary_slice_scratch)
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_dual_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
 crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")

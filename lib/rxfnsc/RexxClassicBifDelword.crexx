@@ -158,14 +158,12 @@ rexxclassicbif_delword: procedure = .RexxValue
   result = ""
   cursor = 0
   if delete_start > 0 then do
-    assembler setstrpos string,cursor
-    assembler substring result,string,delete_start
+    assembler substring result,string,cursor,delete_start
   end
   if delete_end < string_length then do
     tail = ""
     tail_length = string_length - delete_end
-    assembler setstrpos string,delete_end
-    assembler substring tail,string,tail_length
+    assembler substring tail,string,delete_end,tail_length
     assembler append result,tail
   end
   return .RexxValue(result)

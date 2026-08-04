@@ -5,7 +5,7 @@ say user_substr("René日🙂", 5, 2, "🙂")
 say user_substr("a", 1, 3, "🙂")
 say user_word("  Alpha Beta", 2)
 say user_word(" é日　🙂", 1)
-say user_cursor("AéZ", 1)
+say user_char("AéZ", 1)
 
 /* These are intentionally ordinary user procedures. No callable name or BIF
  * membership admits them; the optimizer must prove their actual bodies. */
@@ -44,8 +44,7 @@ user_substr: procedure = .string
   if \length_supplied then do
     if available = 0 then return result
     if start_offset = 0 then return string
-    assembler setstrpos string,start_offset
-    assembler substring result,string,available
+    assembler substring result,string,start_offset,available
     return result
   end
 
@@ -55,8 +54,7 @@ user_substr: procedure = .string
   if copy_length > 0 then do
     if start_offset = 0 & copy_length = string_length & length = string_length then
       return string
-    assembler setstrpos string,start_offset
-    assembler substring result,string,copy_length
+    assembler substring result,string,start_offset,copy_length
   end
 
   padding_length = length - copy_length
@@ -89,8 +87,7 @@ user_word: procedure = .string
     if current_word = wordnum then do
       if word_end < 0 then word_end = string_length
       word_length = word_end - word_start
-      assembler setstrpos string,word_start
-      assembler substring result,string,word_length
+      assembler substring result,string,word_start,word_length
       return result
     end
     if word_end < 0 then return ""
@@ -98,9 +95,8 @@ user_word: procedure = .string
   end
   return ""
 
-user_cursor: procedure = .int
+user_char: procedure = .int
   arg string = .string, position = .int
   result = .int
-  assembler setstrpos string,position
-  assembler getstrpos result,string
+  assembler strchar result,string,position
   return result

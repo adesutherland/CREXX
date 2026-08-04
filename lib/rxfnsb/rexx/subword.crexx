@@ -87,6 +87,5 @@ subword: procedure = .string
 
   result = ""
   selection_length = selection_end - selection_start
-  assembler setstrpos string,selection_start
-  assembler substring result,string,selection_length
+  assembler substring result,string,selection_start,selection_length
   return result

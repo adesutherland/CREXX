@@ -1,7 +1,4 @@
-Deprecated: These legacy cursor instructions remain available for cursor-style byte
-processing. New Release 1 source lowering should prefer target-sized `bcopy`
-for binary field extraction.
-
-`bslice rDst,rSrc,rLen` copies up to `rLen` bytes from `rSrc` starting at its
-cursor into `rDst`. It truncates at end of buffer; generated strict reads should
-use `bcheckrange` or target-sized `bcopy` instead.
+`bslice rDst,rSrc,rOffset,rLen` copies up to `rLen` bytes from `rSrc`, starting
+at the explicit zero-based byte offset `rOffset`, into `rDst`. A negative offset
+is clamped to zero, a slice extending beyond the source is truncated, and a
+negative length raises `OUT_OF_RANGE`. Binary values have no logical cursor.

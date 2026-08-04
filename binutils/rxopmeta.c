@@ -21,28 +21,32 @@ typedef struct {
     const char *branch_targets_signature;
     RxOpImplicitEffect implicit;
     unsigned int semantics;
-    unsigned int cursor_reads;
-    unsigned int cursor_writes;
     RxOpConstEvaluator const_evaluator;
 } RxOpEffectSpec;
 
 #define RXE(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
     STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS, \
-    RXOP_OP_NONE, RXOP_OP_NONE, RXOP_CONST_EVAL_NONE
+    RXOP_CONST_EVAL_NONE
 #define RXEV(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
     STATE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, \
     READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
-    RXOP_OP_NONE, RXOP_OP_NONE, RXOP_CONST_EVAL_NONE
+    RXOP_CONST_EVAL_NONE
+#define RXEVC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
+              CONST_EVALUATOR) \
+    STATE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, \
+    READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
+    CONST_EVALUATOR
 #define RXEC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
-             CURSOR_READS, CURSOR_WRITES, CONST_EVALUATOR) \
+             CONST_EVALUATOR) \
     STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS, \
-    CURSOR_READS, CURSOR_WRITES, CONST_EVALUATOR
+    CONST_EVALUATOR
 #define RXOP_EFFECT(NAME, EFFECTS) { OP_##NAME, EFFECTS },
 static const RxOpEffectSpec rxop_effect_specs[] = {
 #include "rxopeffects.h"
 };
 #undef RXOP_EFFECT
 #undef RXEC
+#undef RXEVC
 #undef RXEV
 #undef RXE
 
@@ -146,8 +150,6 @@ RxOpEffects rxop_effects(int opcode) {
     effects.branch_targets_signature = NULL;
     effects.implicit = RXOP_IMPLICIT_NONE;
     effects.semantics = RXOP_SEM_OPAQUE;
-    effects.cursor_reads = RXOP_OP_ALL;
-    effects.cursor_writes = RXOP_OP_ALL;
     effects.const_evaluator = RXOP_CONST_EVAL_NONE;
     effects.flow = FLOW_TERM;
     effects.optimizer_barrier = 1;
@@ -169,8 +171,6 @@ RxOpEffects rxop_effects(int opcode) {
     effects.branch_targets_signature = spec->branch_targets_signature;
     effects.implicit = spec->implicit;
     effects.semantics = spec->semantics;
-    effects.cursor_reads = spec->cursor_reads;
-    effects.cursor_writes = spec->cursor_writes;
     effects.const_evaluator = spec->const_evaluator;
     effects.flow = op_table[opcode].flow;
     effects.optimizer_barrier =
@@ -214,16 +214,6 @@ int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand
                                               operand_index);
 }
 
-int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index) {
-    return effects && rxop_effect_has_operand(effects->cursor_reads, NULL,
-                                              operand_index);
-}
-
-int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index) {
-    return effects && rxop_effect_has_operand(effects->cursor_writes, NULL,
-                                              operand_index);
-}
-
 unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_COPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ALL;
     if (opcode == OP_ICOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_INTEGER;
@@ -262,6 +252,12 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
 
     if (opcode == OP_STRLEN_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_STRING;
+    if (opcode == OP_SUBSTRING_REG_REG_REG_REG)
+        return operand_index == 1 ? RXOP_COMPONENT_STRING
+                                  : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_BSLICE_REG_REG_REG_REG)
+        return operand_index == 1 ? RXOP_COMPONENT_BINARY
+                                  : RXOP_COMPONENT_INTEGER;
 
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;
@@ -451,6 +447,8 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_FLOAT;
     if (opcode == OP_SCOPY_REG_REG || opcode == OP_LOAD_REG_STRING)
         return RXOP_COMPONENT_STRING;
+    if (opcode == OP_SUBSTRING_REG_REG_REG_REG)
+        return RXOP_COMPONENT_STRING;
     if (opcode == OP_DCOPY_REG_REG || opcode == OP_LOAD_REG_DECIMAL)
         return RXOP_COMPONENT_DECIMAL;
     if (opcode == OP_ACOPY_REG_REG) return RXOP_COMPONENT_ATTRIBUTES;
@@ -466,6 +464,8 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         opcode == OP_MINATTRS_REG_INT_INT)
         return RXOP_COMPONENT_ATTRIBUTE_COUNT;
     if (opcode == OP_LOAD_REG_BINARY)
+        return RXOP_COMPONENT_BINARY;
+    if (opcode == OP_BSLICE_REG_REG_REG_REG)
         return RXOP_COMPONENT_BINARY;
     if (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_DEC_REG)
         return RXOP_COMPONENT_INTEGER;

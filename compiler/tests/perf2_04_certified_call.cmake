@@ -21,7 +21,7 @@ function(check_selected_rxas label path optimized)
     file(READ "${path}" rxas_text)
     if(optimized)
         if(rxas_text MATCHES "call[^\n]*rxfnsb\\.(upper|lower|length|left|right|substr|word)\\(\\)" OR
-           rxas_text MATCHES "[ \t](strupper|strlower|strlen|setstrpos|substring|padstr|fndnblnk|fndblnk)[ \t]")
+           rxas_text MATCHES "[ \t](strupper|strlower|strlen|substring|padstr|fndnblnk|fndblnk)[ \t]")
             message(FATAL_ERROR "${label} retained runtime work for certified constant calls:\n${rxas_text}")
         endif()
         if(rxas_text MATCHES "[ \t]\\.srcstep[^\n]*\"(upper|lower|length|left|right|substr|word)\\.crexx\"")
@@ -176,7 +176,7 @@ run_checked("spoof word provider compile"
     "${RXC}" --no-exe-import -s "${SPOOF_WORD_DIR}"
     -o "${WORK_DIR}/spoof_word" "${SPOOF_WORD_DIR}/main.crexx")
 file(READ "${WORK_DIR}/spoof_word.rxas" spoof_word_rxas)
-if(spoof_word_rxas MATCHES "[ \t](fndnblnk|fndblnk|setstrpos|substring)[ \t]" OR
+if(spoof_word_rxas MATCHES "[ \t](fndnblnk|fndblnk|substring)[ \t]" OR
    spoof_word_rxas MATCHES "[ \t]call[ \t]")
     message(FATAL_ERROR "body-driven evaluation retained spoof WORD runtime work:\n${spoof_word_rxas}")
 endif()

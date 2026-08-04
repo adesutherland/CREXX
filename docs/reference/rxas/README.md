@@ -15,8 +15,8 @@ documentation pipeline.
 
 ## Current Inventory
 
-- Source-accepted unique mnemonics: 384
-- Source-accepted opcode/form rows: 591
+- Source-accepted unique mnemonics: 379
+- Source-accepted opcode/form rows: 585
 - Authoritative database: `binutils/include/rxops.h`, filtered by
   `rxop_is_source_mnemonic()` in `binutils/include/rxdefs.h`
 - Human-readable inventory source: `rxas -i`, which applies the same filter
@@ -32,8 +32,8 @@ because they lack prose or examples.
 
 ### Skeleton Comparison
 
-The authoritative filtered database currently has 384 unique mnemonics and 591
-form rows. The section files contain 384 exact single-mnemonic headings, with
+The authoritative filtered database currently has 379 unique mnemonics and 585
+form rows. The section files contain 379 exact single-mnemonic headings, with
 no missing, unknown, or duplicate mnemonic headings.
 
 ## Source Syntax
@@ -47,8 +47,8 @@ no missing, unknown, or duplicate mnemonic headings.
 - [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md): 44 mnemonics
 - [Floating Point](instructions/04-floating-point.md): 24 mnemonics
 - [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md): 46 mnemonics
-- [Strings And Characters](instructions/06-strings-and-characters.md): 34 mnemonics
-- [Binary Memory](instructions/07-binary-memory.md): 43 mnemonics
+- [Strings And Characters](instructions/06-strings-and-characters.md): 31 mnemonics
+- [Binary Memory](instructions/07-binary-memory.md): 41 mnemonics
 - [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md): 41 mnemonics
 - [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md): 44 mnemonics
 - [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md): 19 mnemonics
@@ -61,4 +61,4 @@ no missing, unknown, or duplicate mnemonic headings.
 - The section grouping is editorial and can evolve as the human reference settles.
 - Each mnemonic should appear exactly once across the section files; use [Instruction Inventory](instruction-inventory.md) to validate coverage.
 - Binary-memory forms require particular care because constant/register forms,
-  byte cursors, bounds, and endian behavior differ by instruction.
+  explicit byte ranges, bounds, and endian behavior differ by instruction.

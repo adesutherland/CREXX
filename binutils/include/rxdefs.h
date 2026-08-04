@@ -378,8 +378,6 @@ typedef struct {
 typedef enum {
     RXOP_CONST_EVAL_NONE = 0,
     RXOP_CONST_EVAL_STRLEN,
-    RXOP_CONST_EVAL_SETSTRPOS,
-    RXOP_CONST_EVAL_GETSTRPOS,
     RXOP_CONST_EVAL_STRCHAR_AT,
     RXOP_CONST_EVAL_SUBSTRING,
     RXOP_CONST_EVAL_PADSTR,
@@ -405,10 +403,6 @@ typedef struct {
     const char *branch_targets_signature;
     RxOpImplicitEffect implicit;
     unsigned int semantics;
-    /* Value-internal cursor state is separately observable through RXAS and
-     * therefore cannot be hidden inside the coarse payload read/write masks. */
-    unsigned int cursor_reads;
-    unsigned int cursor_writes;
     RxOpConstEvaluator const_evaluator;
     FlowType flow;
     int optimizer_barrier;
@@ -460,14 +454,12 @@ int rxop_effect_reads_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_kills_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand_index);
-int rxop_effect_reads_cursor(const RxOpEffects *effects, size_t operand_index);
-int rxop_effect_writes_cursor(const RxOpEffects *effects, size_t operand_index);
 unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
 int rxop_compare_branch_fusion(int compare_opcode, int branch_opcode,
                                RxOpCompareBranchFusion *fusion);
 /* True when a two-register copy is guaranteed to perform no work, signal, or
- * observable cursor/effect update if both operands denote the same physical
+ * observable value/effect update if both operands denote the same physical
  * register storage. */
 int rxop_same_storage_copy_is_noop(int opcode);
 /* Components proved absent after a successful operand write.  This is kept

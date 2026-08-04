@@ -146,6 +146,5 @@ rexxclassicbif_strip: procedure = .RexxValue
   if start = 0 & end_position = string_length then return .RexxValue(string)
   slice_length = end_position - start
   if slice_length <= 0 then return .RexxValue(result)
-  assembler setstrpos string,start
-  assembler substring result,string,slice_length
+  assembler substring result,string,start,slice_length
   return .RexxValue(result)

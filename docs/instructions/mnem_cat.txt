@@ -84,9 +84,7 @@ fsub|2
 ftob|2
 ftoi|2
 ftos|2
-getbinpos|11
 getbyte|11
-getstrpos|9
 gettp|7
 hexchar|9
 iadd|1
@@ -153,10 +151,8 @@ sayx|5
 sconcat|9
 scopy|9
 seq|9
-setbinpos|11
 setbyte|11
 setortp|3
-setstrpos|9
 settp|7
 sget|11
 sgt|9
@@ -172,7 +168,6 @@ strlen|9
 strlower|9
 strupper|9
 substcut|9
-substr|9
 substring|9
 swap|3
 time|6

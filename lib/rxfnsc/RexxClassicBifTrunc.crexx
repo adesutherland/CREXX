@@ -100,30 +100,26 @@ rexxclassicbif_trunc: procedure = .RexxValue
     mantissa_end = exponent_position
     start = exponent_position + 1
     tail_length = text_length - start
-    assembler setstrpos work_text,start
-    assembler substring exponent_text,work_text,tail_length
+    assembler substring exponent_text,work_text,start,tail_length
   end
 
   if point_position < 0 then do
     prefix_length = mantissa_end - sign_offset
     digit_length = prefix_length
     start = sign_offset
-    assembler setstrpos work_text,start
-    assembler substring digits,work_text,digit_length
+    assembler substring digits,work_text,start,digit_length
   end
   else do
     prefix_length = point_position - sign_offset
     digit_length = mantissa_end - sign_offset - 1
     if prefix_length > 0 then do
       start = sign_offset
-      assembler setstrpos work_text,start
-      assembler substring digits,work_text,prefix_length
+      assembler substring digits,work_text,start,prefix_length
     end
     tail_length = mantissa_end - point_position - 1
     if tail_length > 0 then do
       start = point_position + 1
-      assembler setstrpos work_text,start
-      assembler substring segment,work_text,tail_length
+      assembler substring segment,work_text,start,tail_length
       assembler append digits,segment
     end
   end
@@ -154,14 +150,12 @@ rexxclassicbif_trunc: procedure = .RexxValue
   if decimal_position <= 0 then assembler appendchar result,zero_character
   else if decimal_position < significant_length then do
     start = leading_zeros
-    assembler setstrpos digits,start
-    assembler substring whole,digits,decimal_position
+    assembler substring whole,digits,start,decimal_position
     assembler append result,whole
   end
   else do
     start = leading_zeros
-    assembler setstrpos digits,start
-    assembler substring whole,digits,significant_length
+    assembler substring whole,digits,start,significant_length
     assembler append result,whole
     padding_count = decimal_position - significant_length
     if padding_count > 0 then do
@@ -188,8 +182,7 @@ rexxclassicbif_trunc: procedure = .RexxValue
     copy_length = significant_length - relative_start
     if copy_length > remaining then copy_length = remaining
     absolute_start = leading_zeros + relative_start
-    assembler setstrpos digits,absolute_start
-    assembler substring segment,digits,copy_length
+    assembler substring segment,digits,absolute_start,copy_length
     assembler append fractional,segment
     remaining = remaining - copy_length
   end

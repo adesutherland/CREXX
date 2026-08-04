@@ -2564,22 +2564,6 @@
 \end{description}
 \clearpage
 \begin{description}
-\item[\texttt{GETSTRPOS}]  - Get String Position\index{getstrpos}\\
-\item[\texttt{Syntax}] - form \\
-\fontspec{IBM Plex Mono}
-\includesvg{../../svg/getstrpos.gv}
-\fontspec{Minion Pro}
-\item[\texttt{Operation}]
-\IfFileExists{operation/getstrpos.operation}{\input{operation/getstrpos.operation}}{}
-\item[\texttt{}]
-\item[\texttt{0x009b}]\fontspec{IBM Plex Sans Condensed} Get String (op2) charpos into op1 REGREG\\
-\fontspec{Minion Pro}
-\IfFileExists{../../examples/getstrposREGREG.def}{\input{../../examples/getstrposREGREG.def}}{}
-\IfFileExists{../../examples/getstrposREGREG.rexx}{\splice{rxc ../../examples/getstrposREGREG}}{}
-\IfFileExists{../../examples/getstrposREGREG.rxas}{\lstinputlisting[language=rxas,label=getstrpos,caption=getstrpos example.]{../../examples/getstrposREGREG.rxas} \splice{rxas ../../examples/getstrposREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/getstrposREGREG} \end{terminaloutput}}{}
-\end{description}
-\clearpage
-\begin{description}
 \item[\texttt{HEXCHAR}]  - Get Hex Char from String\index{hexchar}\\
 \item[\texttt{Syntax}] - form \\
 \fontspec{IBM Plex Mono}
@@ -2859,22 +2843,6 @@
 \end{description}
 \clearpage
 \begin{description}
-\item[\texttt{SETSTRPOS}]  - Set String Charpos\index{setstrpos}\\
-\item[\texttt{Syntax}] - form \\
-\fontspec{IBM Plex Mono}
-\includesvg{../../svg/setstrpos.gv}
-\fontspec{Minion Pro}
-\item[\texttt{Operation}]
-\IfFileExists{operation/setstrpos.operation}{\input{operation/setstrpos.operation}}{}
-\item[\texttt{}]
-\item[\texttt{0x009a}]\fontspec{IBM Plex Sans Condensed} Set String (op1) charpos set to op2 REGREG\\
-\fontspec{Minion Pro}
-\IfFileExists{../../examples/setstrposREGREG.def}{\input{../../examples/setstrposREGREG.def}}{}
-\IfFileExists{../../examples/setstrposREGREG.rexx}{\splice{rxc ../../examples/setstrposREGREG}}{}
-\IfFileExists{../../examples/setstrposREGREG.rxas}{\lstinputlisting[language=rxas,label=setstrpos,caption=setstrpos example.]{../../examples/setstrposREGREG.rxas} \splice{rxas ../../examples/setstrposREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/setstrposREGREG} \end{terminaloutput}}{}
-\end{description}
-\clearpage
-\begin{description}
 \item[\texttt{SGT}]  - String Greater Than\index{sgt}\\
 \item[\texttt{Syntax}] - variants\\
 \fontspec{IBM Plex Mono}
@@ -3038,7 +3006,7 @@
 \clearpage
 \begin{description}
 \item[\texttt{STRCHAR}]  - String to Char\index{strchar}\\
-\item[\texttt{Syntax}] - variants\\
+\item[\texttt{Syntax}] - form\\
 \fontspec{IBM Plex Mono}
 \includesvg{../../svg/strchar.gv}
 \fontspec{Minion Pro}
@@ -3050,11 +3018,6 @@
 \IfFileExists{../../examples/strcharREGREGREG.def}{\input{../../examples/strcharREGREGREG.def}}{}
 \IfFileExists{../../examples/strcharREGREGREG.rexx}{\splice{rxc ../../examples/strcharREGREGREG}}{}
 \IfFileExists{../../examples/strcharREGREGREG.rxas}{\lstinputlisting[language=rxas,label=strchar,caption=strchar example.]{../../examples/strcharREGREGREG.rxas} \splice{rxas ../../examples/strcharREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/strcharREGREGREG} \end{terminaloutput}}{}
-\item[\texttt{0x0097}]\fontspec{IBM Plex Sans Condensed} op1 (as int) = op2[charpos] REGREG\\
-\fontspec{Minion Pro}
-\IfFileExists{../../examples/strcharREGREG.def}{\input{../../examples/strcharREGREG.def}}{}
-\IfFileExists{../../examples/strcharREGREG.rexx}{\splice{rxc ../../examples/strcharREGREG}}{}
-\IfFileExists{../../examples/strcharREGREG.rxas}{\lstinputlisting[language=rxas,label=strchar,caption=strchar example.]{../../examples/strcharREGREG.rxas} \splice{rxas ../../examples/strcharREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/strcharREGREG} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}
@@ -3122,23 +3085,7 @@
 \end{description}
 \clearpage
 \begin{description}
-\item[\texttt{SUBSTR}]  - Substring\index{substr}\\
-\item[\texttt{Syntax}] - form \\
-\fontspec{IBM Plex Mono}
-\includesvg{../../svg/substr.gv}
-\fontspec{Minion Pro}
-\item[\texttt{Operation}]
-\IfFileExists{operation/substr.operation}{\input{operation/substr.operation}}{}
-\item[\texttt{}]
-\item[\texttt{0x009c}]\fontspec{IBM Plex Sans Condensed} op1 = op2[charpos]...op2[charpos+op3-1] REGREGREG\\
-\fontspec{Minion Pro}
-\IfFileExists{../../examples/substrREGREGREG.def}{\input{../../examples/substrREGREGREG.def}}{}
-\IfFileExists{../../examples/substrREGREGREG.rexx}{\splice{rxc ../../examples/substrREGREGREG}}{}
-\IfFileExists{../../examples/substrREGREGREG.rxas}{\lstinputlisting[language=rxas,label=substr,caption=substr example.]{../../examples/substrREGREGREG.rxas} \splice{rxas ../../examples/substrREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/substrREGREGREG} \end{terminaloutput}}{}
-\end{description}
-\clearpage
-\begin{description}
-\item[\texttt{SUBSTRING}]  - Set remaining String\index{substring}\\
+\item[\texttt{SUBSTRING}]  - Explicit String Slice\index{substring}\\
 \item[\texttt{Syntax}] - form \\
 \fontspec{IBM Plex Mono}
 \includesvg{../../svg/substring.gv}
@@ -3146,11 +3093,11 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/substring.operation}{\input{operation/substring.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x00a1}]\fontspec{IBM Plex Sans Condensed} set op1=substr(op2,op3) remaining string REGREGREG\\
+\item[\texttt{0x00a1}]\fontspec{IBM Plex Sans Condensed} String slice op1 = op2[op3..op3+op4) by character REGREGREGREG\\
 \fontspec{Minion Pro}
-\IfFileExists{../../examples/substringREGREGREG.def}{\input{../../examples/substringREGREGREG.def}}{}
-\IfFileExists{../../examples/substringREGREGREG.rexx}{\splice{rxc ../../examples/substringREGREGREG}}{}
-\IfFileExists{../../examples/substringREGREGREG.rxas}{\lstinputlisting[language=rxas,label=substring,caption=substring example.]{../../examples/substringREGREGREG.rxas} \splice{rxas ../../examples/substringREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/substringREGREGREG} \end{terminaloutput}}{}
+\IfFileExists{../../examples/substringREGREGREGREG.def}{\input{../../examples/substringREGREGREGREG.def}}{}
+\IfFileExists{../../examples/substringREGREGREGREG.rexx}{\splice{rxc ../../examples/substringREGREGREGREG}}{}
+\IfFileExists{../../examples/substringREGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=substring,caption=substring example.]{../../examples/substringREGREGREGREG.rxas} \splice{rxas ../../examples/substringREGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/substringREGREGREGREG} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}
@@ -4369,7 +4316,7 @@
 \end{description}
 \clearpage
 \begin{description}
-\item[\texttt{BSLICE}]  - Legacy Binary Cursor Slice\index{bslice}\\
+\item[\texttt{BSLICE}]  - Explicit Binary Slice\index{bslice}\\
 \item[\texttt{Syntax}] - form \\
 \fontspec{IBM Plex Mono}
 \includesvg{../../svg/bslice.gv}
@@ -4377,11 +4324,11 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/bslice.operation}{\input{operation/bslice.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x00be}]\fontspec{IBM Plex Sans Condensed} Binary slice op1 = op2[cursor..cursor+op3) REGREGREG\\
+\item[\texttt{0x00be}]\fontspec{IBM Plex Sans Condensed} Binary slice op1 = op2[op3..op3+op4) REGREGREGREG\\
 \fontspec{Minion Pro}
-\IfFileExists{../../examples/bsliceREGREGREG.def}{\input{../../examples/bsliceREGREGREG.def}}{}
-\IfFileExists{../../examples/bsliceREGREGREG.rexx}{\splice{rxc ../../examples/bsliceREGREGREG}}{}
-\IfFileExists{../../examples/bsliceREGREGREG.rxas}{\lstinputlisting[language=rxas,label=bslice,caption=bslice example.]{../../examples/bsliceREGREGREG.rxas} \splice{rxas ../../examples/bsliceREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/bsliceREGREGREG} \end{terminaloutput}}{}
+\IfFileExists{../../examples/bsliceREGREGREGREG.def}{\input{../../examples/bsliceREGREGREGREG.def}}{}
+\IfFileExists{../../examples/bsliceREGREGREGREG.rexx}{\splice{rxc ../../examples/bsliceREGREGREGREG}}{}
+\IfFileExists{../../examples/bsliceREGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=bslice,caption=bslice example.]{../../examples/bsliceREGREGREGREG.rxas} \splice{rxas ../../examples/bsliceREGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/bsliceREGREGREGREG} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}
@@ -4398,22 +4345,6 @@
 \IfFileExists{../../examples/bupdateREGREGREG.def}{\input{../../examples/bupdateREGREGREG.def}}{}
 \IfFileExists{../../examples/bupdateREGREGREG.rexx}{\splice{rxc ../../examples/bupdateREGREGREG}}{}
 \IfFileExists{../../examples/bupdateREGREGREG.rxas}{\lstinputlisting[language=rxas,label=bupdate,caption=bupdate example.]{../../examples/bupdateREGREGREG.rxas} \splice{rxas ../../examples/bupdateREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/bupdateREGREGREG} \end{terminaloutput}}{}
-\end{description}
-\clearpage
-\begin{description}
-\item[\texttt{GETBINPOS}]  - Legacy Binary Cursor Read\index{getbinpos}\\
-\item[\texttt{Syntax}] - form \\
-\fontspec{IBM Plex Mono}
-\includesvg{../../svg/getbinpos.gv}
-\fontspec{Minion Pro}
-\item[\texttt{Operation}]
-\IfFileExists{operation/getbinpos.operation}{\input{operation/getbinpos.operation}}{}
-\item[\texttt{}]
-\item[\texttt{0x00bd}]\fontspec{IBM Plex Sans Condensed} Get binary byte cursor from op2 into op1 REGREG\\
-\fontspec{Minion Pro}
-\IfFileExists{../../examples/getbinposREGREG.def}{\input{../../examples/getbinposREGREG.def}}{}
-\IfFileExists{../../examples/getbinposREGREG.rexx}{\splice{rxc ../../examples/getbinposREGREG}}{}
-\IfFileExists{../../examples/getbinposREGREG.rxas}{\lstinputlisting[language=rxas,label=getbinpos,caption=getbinpos example.]{../../examples/getbinposREGREG.rxas} \splice{rxas ../../examples/getbinposREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/getbinposREGREG} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}
@@ -4481,22 +4412,6 @@
 \IfFileExists{../../examples/loadREGBINARY.def}{\input{../../examples/loadREGBINARY.def}}{}
 \IfFileExists{../../examples/loadREGBINARY.rexx}{\splice{rxc ../../examples/loadREGBINARY}}{}
 \IfFileExists{../../examples/loadREGBINARY.rxas}{\lstinputlisting[language=rxas,label=load,caption=load example.]{../../examples/loadREGBINARY.rxas} \splice{rxas ../../examples/loadREGBINARY} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/loadREGBINARY} \end{terminaloutput}}{}
-\end{description}
-\clearpage
-\begin{description}
-\item[\texttt{SETBINPOS}]  - Legacy Binary Cursor Set\index{setbinpos}\\
-\item[\texttt{Syntax}] - form \\
-\fontspec{IBM Plex Mono}
-\includesvg{../../svg/setbinpos.gv}
-\fontspec{Minion Pro}
-\item[\texttt{Operation}]
-\IfFileExists{operation/setbinpos.operation}{\input{operation/setbinpos.operation}}{}
-\item[\texttt{}]
-\item[\texttt{0x00bc}]\fontspec{IBM Plex Sans Condensed} Set binary byte cursor on op1 from op2 REGREG\\
-\fontspec{Minion Pro}
-\IfFileExists{../../examples/setbinposREGREG.def}{\input{../../examples/setbinposREGREG.def}}{}
-\IfFileExists{../../examples/setbinposREGREG.rexx}{\splice{rxc ../../examples/setbinposREGREG}}{}
-\IfFileExists{../../examples/setbinposREGREG.rxas}{\lstinputlisting[language=rxas,label=setbinpos,caption=setbinpos example.]{../../examples/setbinposREGREG.rxas} \splice{rxas ../../examples/setbinposREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/setbinposREGREG} \end{terminaloutput}}{}
 \end{description}
 \clearpage
 \begin{description}

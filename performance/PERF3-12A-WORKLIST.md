@@ -1,6 +1,6 @@
 # PERF3-12A cursorless RXAS and copied-XTOY placement
 
-Status: in progress — architecture approved; product baseline pending commit
+Status: cursorless first Release verdict ready — awaiting Adrian acceptance
 
 Started: 2026-08-04
 
@@ -104,46 +104,47 @@ has approved a breaking change, so neither compatibility mechanism is needed.
 - [x] Record the architecture decision, alternatives, retained evidence and
   stop boundaries.
 - [x] Remove the exploratory conversion-cursor metadata/test PoC.
-- [ ] Validate the product-neutral diff and commit it locally without pushing.
+- [x] Validate the product-neutral diff and commit it locally without pushing:
+  `0cc620378` (`perf: baseline cursorless PERF3-12A`).
 
 ### C1 — opcode and value contract
 
-- [ ] Inventory every cursor opcode, metadata record, VM field/helper,
+- [x] Inventory every cursor opcode, metadata record, VM field/helper,
   compiler/library emitter and documented/tested behavior.
-- [ ] Define exact explicit string/binary slice contracts: zero-based position,
+- [x] Define exact explicit string/binary slice contracts: zero-based position,
   length, UTF character versus byte unit, clipping, negative/range behavior,
   destination/source aliasing, allocation failure and signal phase/writes.
-- [ ] Replace the cursor instruction entries without renumbering unrelated
+- [x] Replace the cursor instruction entries without renumbering unrelated
   opcodes; update effects, components, signals and format validation.
-- [ ] Delete `string_pos`, `string_char_pos`, and `binary_pos` from the value
+- [x] Delete `string_pos`, `string_char_pos`, and `binary_pos` from the value
   structure early. Treat resulting compiler errors as the mandatory inventory
   cross-check: each use must become an explicit operation, a clearly private
   UTF-cache use, or be removed.
-- [ ] Add a repository fence proving the deleted logical field names and
+- [x] Add a repository fence proving the deleted logical field names and
   cursor opcodes are absent from production code and current documentation.
 
 ### C2 — VM and private UTF cache
 
-- [ ] Implement explicit string and binary slicing in both VM dispatch modes,
+- [x] Implement explicit string and binary slicing in both VM dispatch modes,
   including same-storage operand cases and failure-visible-write semantics.
-- [ ] Replace cursor-mutating UTF scans with a private cache/helper whose state
+- [x] Replace cursor-mutating UTF scans with a private cache/helper whose state
   is invalidated by string writes but is otherwise semantically invisible.
-- [ ] Prove explicit indexed `strchar`, `concchar`, `hexchar`, `poschar`,
+- [x] Prove explicit indexed `strchar`, `concchar`, `hexchar`, `poschar`,
   `fndblnk`, `fndnblnk`, substring and related string operations no longer
   mutate observable source state.
-- [ ] Remove binary cursor maintenance from allocation, resize, append, copy,
+- [x] Remove binary cursor maintenance from allocation, resize, append, copy,
   conversion, I/O and cleanup paths.
 
 ### C3 — producers and consumers
 
-- [ ] Migrate all bundled Level B and RXAS library sources to explicit-position
+- [x] Migrate all bundled Level B and RXAS library sources to explicit-position
   operations, preserving RexxDoc blocks and tags.
-- [ ] Update RXC assembler validation, partial-call evaluation, inlining/remap
+- [x] Update RXC assembler validation, partial-call evaluation, inlining/remap
   metadata and any direct emitter path. Remove cursor isolation/copy rules that
   no longer have a semantic purpose.
-- [ ] Remove cursor capabilities, use-index entries and proof guards from RXAS
+- [x] Remove cursor capabilities, use-index entries and proof guards from RXAS
   flow analysis; retain no optimizer-visible private-cache state.
-- [ ] Update focused assembler/runtime/compiler/library fixtures and regenerate
+- [x] Update focused assembler/runtime/compiler/library fixtures and regenerate
   only source-controlled derived artifacts required by normal builds.
 
 ### C4 — cursorless correctness and first Release verdict
@@ -151,13 +152,49 @@ has approved a breaking change, so neither compatibility mechanism is needed.
 - [ ] Focused positives: empty, ASCII, UTF-8, zero/past-end start, zero/large
   length, negative inputs, same-register aliases and allocation/signal paths
   under `rxvm` and `rxbvm`.
-- [ ] Run opcode metadata, RXBIN round-trip/validation, VM string/binary,
+- [x] Minimum first-verdict positives pass for ASCII, UTF-8, past-end/large
+  length, empty binary and same-register string slicing under both VMs.
+  Explicit negative-input and injected allocation-failure runtime cases remain
+  part of proportionate closeout if the first verdict is accepted; canonical
+  metadata already records before-write signal behavior.
+- [x] Run opcode metadata, RXBIN round-trip/validation, VM string/binary,
   compiler partial-call/inlining, Level B library and RXAS optimizer floors.
-- [ ] Build the ordinary profiling-off Release product immediately after the
+- [x] Build the ordinary profiling-off Release product immediately after the
   minimum gate.
-- [ ] Measure exact static/dynamic removal of setter dispatches, paired
-  RexxCPS under both VMs, Sieve and string/binary-heavy guards. Report and stop
-  for Adrian before broad closeout or copied-XTOY production work.
+- [x] Measure exact dynamic removal of setter dispatches and fixed-work RexxCPS
+  under both VMs. The candidate removes 5,601,469 no-opt instructions and
+  1,493/1,511 optimized instructions under `rxvm`/`rxbvm`.
+- [ ] Run profiling-off paired RexxCPS, Sieve and string/binary-heavy guards on
+  the clean Mac host. Remote-terminal disturbance makes wall-clock measurement
+  non-authoritative tonight; Adrian approved instruction reduction plus
+  functional equivalence as the first-verdict evidence boundary.
+
+## Cursorless first Release verdict
+
+Fresh Debug validation passes **24/24**. The ordinary profiling-off Release
+product builds, and its RexxCPS no-opt/opt smoke cells pass under both VMs.
+All four fixed `200 x 100` profile cells pass with result 0, no invalid events
+and no counter overflow.
+
+| VM | Mode | Retained control | Cursorless | Delta |
+| --- | --- | ---: | ---: | ---: |
+| `rxvm` | no-opt | 148,700,911 | 143,099,442 | -5,601,469 (-3.766937%) |
+| `rxbvm` | no-opt | 148,700,911 | 143,099,442 | -5,601,469 (-3.766937%) |
+| `rxvm` | optimized | 53,660,581 | 53,659,088 | -1,493 (-0.002782%) |
+| `rxbvm` | optimized | 53,660,552 | 53,659,041 | -1,511 (-0.002816%) |
+
+The retired setter executes zero times, directly removing 1,400,643 no-opt
+dispatches per VM and 643/642 optimized dispatches. The extra no-opt reduction
+is explained by the now-read-only library argument contract: defensive
+`BRTPANDT`/`SCOPY`/`BR`/`SWAP` isolation disappears, and helpers such as
+`word` read `a1` directly. The candidate no-opt benchmark image is byte-for-byte
+identical to the retained control; only the linked library changes its work.
+
+Evidence:
+[`2026-08-04-perf3-12a-cursorless-first-release-verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/).
+The recommendation is to accept cursorless RXAS and authorize X1 copied-XTOY
+component placement, while retaining the clean-host wall-clock panel for the
+combined closeout. No X1 production work starts before Adrian's decision.
 
 ## Copied-XTOY design selection
 

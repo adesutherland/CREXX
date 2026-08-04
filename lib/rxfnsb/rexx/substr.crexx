@@ -69,8 +69,7 @@ substr: procedure = .string
   if \length_supplied then do
     if available = 0 then return result
     if start_offset = 0 then return string
-    assembler setstrpos string,start_offset
-    assembler substring result,string,available
+    assembler substring result,string,start_offset,available
     return result
   end
 
@@ -80,8 +79,7 @@ substr: procedure = .string
   if copy_length > 0 then do
     if start_offset = 0 & copy_length = string_length & length = string_length then
       return string
-    assembler setstrpos string,start_offset
-    assembler substring result,string,copy_length
+    assembler substring result,string,start_offset,copy_length
   end
 
   padding_length = length - copy_length

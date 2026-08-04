@@ -92,6 +92,5 @@ _parse_strip_value: procedure = .string
   assembler fndnblnk last,source,search
   if first = 0 & last = source_length - 1 then return source
   slice_length = last - first + 1
-  assembler setstrpos source,first
-  assembler substring result,source,slice_length
+  assembler substring result,source,first,slice_length
   return result

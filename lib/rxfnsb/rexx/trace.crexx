@@ -814,8 +814,7 @@ _trace_normalize_mode: procedure = .string expose _trace_mode_cache_ready _trace
     if start >= normalized_length then normalized = ""
     else do
       remainder_length = normalized_length - start
-      assembler setstrpos normalized,start
-      assembler substring remainder,normalized,remainder_length
+      assembler substring remainder,normalized,start,remainder_length
       normalized = remainder
     end
   end

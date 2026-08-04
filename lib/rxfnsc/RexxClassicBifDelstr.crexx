@@ -89,18 +89,15 @@ rexxclassicbif_delstr: procedure = .RexxValue
   if \length_supplied then delete_length = available
   if delete_length >= available then do
     if prefix_length = 0 then return .RexxValue("")
-    assembler setstrpos string,cursor
-    assembler substring result,string,prefix_length
+    assembler substring result,string,cursor,prefix_length
     return .RexxValue(result)
   end
 
   if prefix_length > 0 then do
-    assembler setstrpos string,cursor
-    assembler substring result,string,prefix_length
+    assembler substring result,string,cursor,prefix_length
   end
   tail_start = prefix_length + delete_length
   tail_length = string_length - tail_start
-  assembler setstrpos string,tail_start
-  assembler substring tail,string,tail_length
+  assembler substring tail,string,tail_start,tail_length
   assembler append result,tail
   return .RexxValue(result)

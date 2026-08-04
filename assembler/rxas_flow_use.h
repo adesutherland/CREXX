@@ -20,8 +20,6 @@ typedef enum RxasFlowUseKind {
     RXAS_FLOW_USE_IMPLICIT_READ,
     RXAS_FLOW_USE_METADATA_READ,
     RXAS_FLOW_USE_TRACE_READ,
-    RXAS_FLOW_USE_CURSOR_READ,
-    RXAS_FLOW_USE_CURSOR_WRITE,
     RXAS_FLOW_USE_CALL_WINDOW_READ,
     RXAS_FLOW_USE_OPAQUE_OBSERVATION
 } RxasFlowUseKind;
@@ -53,8 +51,6 @@ typedef struct RxasFlowUseMetrics {
     size_t implicit_reads;
     size_t metadata_reads;
     size_t trace_reads;
-    size_t cursor_reads;
-    size_t cursor_writes;
     size_t call_window_reads;
     size_t opaque_observations;
     size_t unknown_values;

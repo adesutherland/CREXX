@@ -523,8 +523,7 @@ _stream_zero_span: procedure = .string
   arg source = .string, start = .int, span_length = .int
   result = ""
   if span_length <= 0 then return result
-  assembler setstrpos source,start
-  assembler substring result,source,span_length
+  assembler substring result,source,start,span_length
   return result
 
 _stream_span: procedure = .string

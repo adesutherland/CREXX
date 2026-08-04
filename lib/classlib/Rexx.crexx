@@ -707,15 +707,13 @@ _classic_decimal: procedure = .decimal
     else normalized = "-"
     if digits_start >= 0 & digits_start <= last then do
       slice_length = last - digits_start + 1
-      assembler setstrpos source,digits_start
-      assembler substring digits,source,slice_length
+      assembler substring digits,source,digits_start,slice_length
       assembler append normalized,digits
     end
   end
   else do
     slice_length = last - first + 1
-    assembler setstrpos source,first
-    assembler substring normalized,source,slice_length
+    assembler substring normalized,source,first,slice_length
   end
 
   result = normalized

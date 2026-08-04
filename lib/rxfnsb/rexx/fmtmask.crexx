@@ -324,7 +324,7 @@ fmtmask: procedure=.string
      llen=.int; assembler strlen llen,mask
     do while pos <= llen
 /* rxpp: subst1Char(ch,mask, pos)    /* current mask character */ */
-       __jpos=pos-1; assembler SETSTRPOS mask,__jpos; assembler substr ch,mask,one    /* current mask character */
+       __jpos=pos-1; assembler substring ch,mask,__jpos,one    /* current mask character */
         /* --------------------------------------------------------------
          * TEXT FIELD
          * Example: XXXXXXXX
@@ -334,7 +334,7 @@ fmtmask: procedure=.string
        /*    width = readTextMaskLen(mask, pos,llen)  */  /* read full mask segment */
 /* rxpp: masklen(width,mask,pos,llen) */
 /* rxpp: __indx=.int; do __indx=pos to llen; subst1Char(ch,mask,__indx); if ch\= "X" then leave; end; width=__indx-pos */
-           __indx=.int; do __indx=pos to llen; __jpos=__indx-1; assembler SETSTRPOS mask,__jpos; assembler substr ch,mask,one; if ch\= "X" then leave; end; width=__indx-pos
+           __indx=.int; do __indx=pos to llen; __jpos=__indx-1; assembler substring ch,mask,__jpos,one; if ch\= "X" then leave; end; width=__indx-pos
            out = out || left(vals.argi, width)        /* format text value */
            argi = argi + 1
            pos  = pos + width                         /* skip entire mask segment */
@@ -392,7 +392,7 @@ readNumMask: procedure=.string
     ch=.string
     do while i <= llen
 /* rxpp: subst1Char(ch,s, i) */
-       __jpos=i-1; assembler SETSTRPOS s,__jpos; assembler substr ch,s,one
+       __jpos=i-1; assembler substring ch,s,__jpos,one
    /*    ch = substr(s, i, 1) */
        if ch = "9" then i = i + 1
 /* rxpp: else if CurrencySymbol() then i = i + 1 */
@@ -403,7 +403,7 @@ readNumMask: procedure=.string
           if seenDot then leave
           if i = llen then leave
 /* rxpp: subst1Char(ch,s, i+1) */
-          __jpos=i+1-1; assembler SETSTRPOS s,__jpos; assembler substr ch,s,one
+          __jpos=i+1-1; assembler substring ch,s,__jpos,one
           if ch \= "9" then leave
        /*  if  substr(s, i+1, 1)="9" then leave */
           seenDot = 1
@@ -460,7 +460,7 @@ fmtNumMask: procedure=.string
    one=1
    do i = 1 to llen
 /* rxpp: subst1Char(ch,mask, i) */
-      __jpos=i-1; assembler SETSTRPOS mask,__jpos; assembler substr ch,mask,one
+      __jpos=i-1; assembler substring ch,mask,__jpos,one
 /*      ch = substr(mask, i, 1) */
       if ch = "." then do
          seenDot = 1
@@ -527,13 +527,13 @@ getCurrencyMaskChar: procedure=.string
   ch=.string
   do i = 1 to llen
 /* rxpp: subst1Char(ch,mask,i) */
-     __jpos=i-1; assembler SETSTRPOS mask,__jpos; assembler substr ch,mask,one
+     __jpos=i-1; assembler substring ch,mask,__jpos,one
 /*     ch = substr(mask, i, 1) */
 /* rxpp: if CurrencySymbol() then return ch */
      if ch = "$" | ch = "03"x | ch = "04"x | ch = "05"x then return ch
   end
 return ""
 
-/* ##define subst1Char(into,string,at)    {__jpos=at-1; assembler SETSTRPOS string,__jpos; assembler substr into,string,one} D*/
+/* ##define subst1Char(into,string,at)    {__jpos=at-1; assembler substring into,string,__jpos,one} D*/
 /* ##define CurrencySymbol()              {ch = "$" | ch = "03"x | ch = "04"x | ch = "05"x} D*/
 /* ##define MaskLen(into,string,offset,llen)   {__indx=.int; do __indx=offset to llen; subst1Char(ch,string,__indx); if ch\= "X" then leave; end; into=__indx-offset} D*/

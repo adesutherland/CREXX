@@ -412,7 +412,7 @@ Rebind one local register number to another register's current storage.
 ### Operands And Semantics
 
 The current frame's register-pointer entry for `rLocal` is replaced. All later
-payload, attribute, flag, reference, and cursor operations through `rLocal`
+payload, attribute, flag, and reference operations through `rLocal`
 affect the target storage. Links may be chained. `unlink rLocal` restores that
 register number's original base storage, not a copy of the target value.
 

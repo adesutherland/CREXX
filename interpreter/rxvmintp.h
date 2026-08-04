@@ -442,7 +442,7 @@ struct stack_frame {
                                                                                                       \
 // Get Character
 #ifndef NUTF8
-  #define GETSTRCHAR(c,v,p) {string_set_byte_pos((v),(p)); utf8codepoint((v)->string_value+(v)->string_pos, &(c));}
+  #define GETSTRCHAR(c,v,p) {string_cache_seek_char((v),(p)); utf8codepoint((v)->string_value+(v)->string_cache_byte_pos, &(c));}
 #else
   #define GETSTRCHAR(c,v,p) {c=(v)->string_value[(p)]; }
 #endif
@@ -462,6 +462,7 @@ struct stack_frame {
 #define op1R                     (REG_OP(1))
 #define op2R                     (REG_OP(2))
 #define op3R                     (REG_OP(3))
+#define op4R                     (REG_OP(4))
 #define op1I                     (INT_OP(1))
 #define op2I                     (INT_OP(2))
 #define op3I                     (INT_OP(3))
@@ -474,6 +475,7 @@ struct stack_frame {
 #define op1RI                    (INT_VAL(op1R))
 #define op2RI                    (INT_VAL(op2R))
 #define op3RI                    (INT_VAL(op3R))
+#define op4RI                    (INT_VAL(op4R))
 #define op2RF                    (FLOAT_VAL(op2R))
 #define op3RF                    (FLOAT_VAL(op3R))
 #define REG_OP_TEST(v,n)        { (v) = REG_OP(n);}

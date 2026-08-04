@@ -479,7 +479,7 @@ Reset two, three, or four registers to empty values.
 ### Operands And Semantics
 
 Each operand receives normal `null`/`value_zero` semantics: payloads, owned
-storage, cursors, attributes, type metadata, flags, and references are reset.
+storage, attributes, type metadata, flags, and references are reset.
 
 ### Signals
 

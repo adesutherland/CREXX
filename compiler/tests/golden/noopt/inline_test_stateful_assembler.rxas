@@ -75,16 +75,10 @@ main() .locals=8
 
 char_at() .locals=5
    .meta "inline_test_stateful_assembler.char_at"="b" ".string" char_at() "text=.string,posn=.int"
-   .srcstep 17 17 17 "inline_test_stateful_assembler.crexx" 12 1 29 "char_at: procedure = .string"
+   .srcstep 16 16 17 "inline_test_stateful_assembler.crexx" 12 1 29 "char_at: procedure = .string"
    numsci 18,1,1
    .srcstep 9 9 17 "inline_test_stateful_assembler.crexx" 13 7 21 "  arg text = .string, posn = .int"
-   .meta "inline_test_stateful_assembler.char_at.text"="b" ".string" r4
-   brtpandt l43c,a1,512
-   scopy r4,a1
-   br l43d
-l43c:
-   swap r4,a1
-l43d:
+   .meta "inline_test_stateful_assembler.char_at.text"="b" ".string" a1
    .srcstep 10 10 17 "inline_test_stateful_assembler.crexx" 13 23 34 "  arg text = .string, posn = .int"
    .meta "inline_test_stateful_assembler.char_at.posn"="b" ".int" a2
    .meta "inline_test_stateful_assembler.char_at.out"="b" ".string" r2
@@ -101,17 +95,14 @@ l43d:
    load r1,1
    .traceevent "L" 4 "R" "I" "r" 1 13 13 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 13 13 0 "one" ""
-   .srcstep 14 14 17 "inline_test_stateful_assembler.crexx" 17 13 35 "  assembler setstrpos text, offset"
-   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "text" ""
-   .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "offset" ""
-   setstrpos r4,r0
-   .srcstep 15 15 17 "inline_test_stateful_assembler.crexx" 18 13 37 "  assembler substring out, text, one"
+   .srcstep 14 14 17 "inline_test_stateful_assembler.crexx" 17 13 45 "  assembler substring out, text, offset, one"
    .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "out" ""
-   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "text" ""
+   .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "text" ""
+   .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "offset" ""
    .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "one" ""
-   substring r2,r4,r1
-   .srcstep 16 16 17 "inline_test_stateful_assembler.crexx" 19 3 13 "  return out"
-   .traceevent "V" 6 "R" "S" "r" 2 16 16 0 "out" ""
+   substring r2,a1,r0,r1
+   .srcstep 15 15 17 "inline_test_stateful_assembler.crexx" 18 3 13 "  return out"
+   .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "out" ""
    ret r2
    .meta "inline_test_stateful_assembler.char_at.offset"
    .meta "inline_test_stateful_assembler.char_at.one"
@@ -121,24 +112,24 @@ l43d:
 
 left_copy() .locals=2
    .meta "inline_test_stateful_assembler.left_copy"="b" ".string" left_copy() "text=.string,len=.int"
-   .srcstep 22 22 17 "inline_test_stateful_assembler.crexx" 21 1 31 "left_copy: procedure = .string"
+   .srcstep 21 21 17 "inline_test_stateful_assembler.crexx" 20 1 31 "left_copy: procedure = .string"
    numsci 18,1,1
-   .srcstep 18 18 17 "inline_test_stateful_assembler.crexx" 22 7 21 "  arg text = .string, len = .int"
+   .srcstep 17 17 17 "inline_test_stateful_assembler.crexx" 21 7 21 "  arg text = .string, len = .int"
    .meta "inline_test_stateful_assembler.left_copy.text"="b" ".string" r1
-   brtpandt l72c,a1,512
+   brtpandt l70c,a1,512
    scopy r1,a1
-   br l72d
-l72c:
+   br l70d
+l70c:
    swap r1,a1
-l72d:
-   .srcstep 19 19 17 "inline_test_stateful_assembler.crexx" 22 23 33 "  arg text = .string, len = .int"
+l70d:
+   .srcstep 18 18 17 "inline_test_stateful_assembler.crexx" 21 23 33 "  arg text = .string, len = .int"
    .meta "inline_test_stateful_assembler.left_copy.len"="b" ".int" a2
-   .srcstep 20 20 17 "inline_test_stateful_assembler.crexx" 23 13 31 "  assembler substcut text, len"
+   .srcstep 19 19 17 "inline_test_stateful_assembler.crexx" 22 13 31 "  assembler substcut text, len"
    .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "text" ""
    .traceevent "V" 6 "R" "I" "a" 2 0 0 0 "len" ""
    substcut r1,a2
-   .srcstep 21 21 17 "inline_test_stateful_assembler.crexx" 24 3 14 "  return text"
-   .traceevent "V" 6 "R" "S" "r" 1 21 21 0 "text" ""
+   .srcstep 20 20 17 "inline_test_stateful_assembler.crexx" 23 3 14 "  return text"
+   .traceevent "V" 6 "R" "S" "r" 1 20 20 0 "text" ""
    ret r1
    .meta "inline_test_stateful_assembler.left_copy.len"
    .meta "inline_test_stateful_assembler.left_copy.text"

@@ -5207,10 +5207,12 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
      *      op1R   address the first register operand
      *      op2R   address the second register operand
      *      op3R   address the third  register operand
+     *      op4R   address the fourth register operand
      *
      *      op1RI  integer of first register operand
      *      op2RI  integer of second register operand
      *      op3RI  integer of third register operand
+     *      op4RI  integer of fourth register operand
      *
      *      op1RF  float of first register operand
      *      op2RF  float of second register operand
@@ -6323,9 +6325,8 @@ START_OF_INSTRUCTIONS
                     op1R->string_value[pos] = (char) ch;
                     pos++;
                 }
-                op1R->string_pos = 0;
+                string_cache_reset(op1R);
 #ifndef NUTF8
-                op1R->string_char_pos = 0;
                 refresh_utf8_flags(op1R);
 #else
                 clear_vm_private_flags(op1R);
@@ -10608,18 +10609,30 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #ifndef NUTF8
                 int result;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
-                string_set_byte_pos(op2R, op3R->int_value);
-                utf8codepoint(op2R->string_value + op2R->string_pos, &result);
-                REG_RETURN_INT(result)
+                if (op3R->int_value < 0 ||
+                    (size_t)op3R->int_value >= op2R->string_chars) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                }
+                else {
+                    string_cache_seek_char(op2R, (size_t)op3R->int_value);
+                    utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &result);
+                    REG_RETURN_INT(result)
+                }
 #else
-                REG_RETURN_INT(op2R->string_value[op3R->int_value])
+                if (op3R->int_value < 0 ||
+                    (size_t)op3R->int_value >= op2R->string_length) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                }
+                else {
+                    REG_RETURN_INT(op2R->string_value[op3R->int_value])
+                }
 #endif
             }
             DISPATCH;
 // Lazy Peter approach
 #define setCodePointETC()       \
-   {string_set_byte_pos(op2R, op3R->int_value); \
-    start = op2R->string_value + op2R->string_pos; \
+   {string_cache_seek_char(op2R, (size_t)op3R->int_value); \
+    start = op2R->string_value + op2R->string_cache_byte_pos; \
     end = utf8codepoint(start, &ch); \
     bytelen = end - start;}
 #define split2hex(chr,into)           \
@@ -10702,8 +10715,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 for (i = 0; i < op2R->string_length; i++) {
 #ifndef NUTF8
-                    string_set_byte_pos(op2R, i);
-                    utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                    string_cache_seek_char(op2R, (size_t)i);
+                    utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                     ch=op2R->string_value[i];
 #endif
@@ -11011,8 +11024,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #endif
                 for (result = op3R->int_value; result < len; result++) {
 #ifndef NUTF8
-                    string_set_byte_pos(op2R, result);
-                    utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                    string_cache_seek_char(op2R, (size_t)result);
+                    utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                     ch = op2R->string_value[result];
 #endif
@@ -11063,8 +11076,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 if (result >= 0) {  // FORWARD SEARCH
                     for (; result < len; result++) {
 #ifndef NUTF8
-                        string_set_byte_pos(op2R, result);
-                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                        string_cache_seek_char(op2R, (size_t)result);
+                        utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                         ch = op2R->string_value[result];
 #endif
@@ -11076,8 +11089,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     if (result >= len) result = len - 1;  // Clamp to valid range
                     for (; result >= 0; result--) {
 #ifndef NUTF8
-                        string_set_byte_pos(op2R, result);
-                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                        string_cache_seek_char(op2R, (size_t)result);
+                        utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
 #else
                         ch = op2R->string_value[result];
 #endif
@@ -11140,7 +11153,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 memset(op1R->binary_value + old_length, 0, new_length - old_length);
             }
             op1R->binary_length = new_length;
-            if (op1R->binary_pos > new_length) op1R->binary_pos = new_length;
             clear_vm_private_flags(op1R);
         }
     }
@@ -11157,7 +11169,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     }
     else {
         op1R->binary_length = 0;
-        op1R->binary_pos = 0;
         clear_vm_private_flags(op1R);
     }
     DISPATCH;
@@ -11198,7 +11209,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         else {
             op1R->binary_length = length;
             if (length) memmove(op1R->binary_value, op2R->binary_value + offset, length);
-            if (op1R->binary_pos > op1R->binary_length) op1R->binary_pos = op1R->binary_length;
             clear_vm_private_flags(op1R);
         }
     }
@@ -11221,7 +11231,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         else {
             op1R->binary_length = length;
             if (length) memcpy(op1R->binary_value, source->string + offset, length);
-            if (op1R->binary_pos > op1R->binary_length) op1R->binary_pos = op1R->binary_length;
             clear_vm_private_flags(op1R);
         }
     }
@@ -11991,41 +12000,18 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  SETBINPOS_REG_REG  op1 binary cursor = clamp(op2, 0..len)
+ *  BSLICE_REG_REG_REG_REG  op1 = op2[op3..op3 + op4)
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(SETBINPOS_REG_REG) VM_ADVANCE(2);
-    DEBUG("TRACE - SETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-    if (op2R->int_value < 0) {
-        op1R->binary_pos = 0;
-    }
-    else if ((size_t)op2R->int_value > op1R->binary_length) {
-        op1R->binary_pos = op1R->binary_length;
-    }
-    else {
-        op1R->binary_pos = (size_t)op2R->int_value;
-    }
-    DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  GETBINPOS_REG_REG  Int op1 = op2 binary cursor
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(GETBINPOS_REG_REG) VM_ADVANCE(2);
-    DEBUG("TRACE - GETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-    REG_RETURN_INT((rxinteger)op2R->binary_pos)
-    DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  BSLICE_REG_REG_REG  op1 = op2[op2.binary_pos..op2.binary_pos + op3)
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(BSLICE_REG_REG_REG) VM_ADVANCE(3);
-    DEBUG("TRACE - BSLICE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-    if (op3R->int_value < 0) {
+    START_INSTRUCTION(BSLICE_REG_REG_REG_REG) VM_ADVANCE(4);
+    DEBUG("TRACE - BSLICE R%d,R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),
+          (int)REG_IDX(3), (int)REG_IDX(4));
+    if (op4R->int_value < 0) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
     }
-    else if (slice_binary(op1R, op2R, op2R->binary_pos, (size_t)op3R->int_value) != 0) {
+    else if (slice_binary(op1R, op2R,
+                          op3R->int_value < 0 ? 0u : (size_t)op3R->int_value,
+                          (size_t)op4R->int_value) != 0) {
         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
     }
     DISPATCH;
@@ -12101,8 +12087,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #ifndef NUTF8
                 int ch;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
-                string_set_byte_pos(op2R, op3R->int_value);
-                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                string_cache_seek_char(op2R, (size_t)op3R->int_value);
+                utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
                 op3R->int_value = ch;
 #else
                 op3R->int_value=op2R->string_value[op3R->int_value - 1];
@@ -12174,21 +12160,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  SUBSTR_REG_REG_REG op1 = substr(op2, length)
- *  Extracts 'length' codepoints from op2, starting at the cursor previously set by
- *  SETSTRPOS. The source cursor is stored as byte + codepoint positions on the value.
+ *  SUBSTRING_REG_REG_REG_REG op1 = op2[op3..op3 + op4) by character
  * ----------------------------------------------------------------------------------- */
 
-        START_INSTRUCTION(SUBSTR_REG_REG_REG)
-        START_INSTRUCTION(SUBSTRING_REG_REG_REG) VM_ADVANCE(3);
-            DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+        START_INSTRUCTION(SUBSTRING_REG_REG_REG_REG) VM_ADVANCE(4);
+            DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),
+                  REG_IDX(3), REG_IDX(4));
             {
-                rxinteger length = op3R->int_value;
+                rxinteger start = op3R->int_value;
+                rxinteger length = op4R->int_value;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 if (length <= 0) {
                     PUTSTRLEN(op1R, 0);
                 } else {
-                    string_slice_from_cursor(op1R, op2R, (size_t) length);
+                    string_slice_at(op1R, op2R, start < 0 ? 0u : (size_t)start,
+                                    (size_t)length);
                 }
             }
             DISPATCH;
@@ -12249,19 +12235,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     REG_RETURN_INT(0);
                 } else {
 #ifndef NUTF8
-                    {
-                        size_t saved_string_pos = op3R->string_pos;
-                        size_t saved_string_char_pos = op3R->string_char_pos;
-
-                        start_offset = (size_t)(start_pos - 1);
-                        if (start_offset >= op3R->string_chars) {
-                            start_offset = op3R->string_length;
-                        } else {
-                            string_set_byte_pos(op3R, start_offset);
-                            start_offset = op3R->string_pos;
-                            op3R->string_pos = saved_string_pos;
-                            op3R->string_char_pos = saved_string_char_pos;
-                        }
+                    start_offset = (size_t)(start_pos - 1);
+                    if (start_offset >= op3R->string_chars) {
+                        start_offset = op3R->string_length;
+                    } else {
+                        string_cache_seek_char(op3R, start_offset);
+                        start_offset = op3R->string_cache_byte_pos;
                     }
 #else
                     start_offset = (size_t)(start_pos - 1);
@@ -12349,51 +12328,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #else
             op1R->int_value = (rxinteger)op2R->string_length;
 #endif
-            DISPATCH;
-
-/*
- * SETSTRPOS_REG_REG - Set String (op1) charpos set to op2
- */
-        START_INSTRUCTION(SETSTRPOS_REG_REG) VM_ADVANCE(2);
-            DEBUG("TRACE - SETSTRPOS R%lu R%lu\n", REG_IDX(1),
-                  REG_IDX(2));
-            REQUIRE_VALID_UTF8_REGISTER(op1R);
-#ifndef NUTF8
-            string_set_byte_pos(op1R, op2R->int_value);
-#else
-            op1R->string_pos = op2R->int_value;
-#endif
-            DISPATCH;
-
-/*
- * GETSTRPOS_REG_REG - Get String (op2) charpos into op1
- */
-        START_INSTRUCTION(GETSTRPOS_REG_REG) VM_ADVANCE(2);
-            DEBUG("TRACE - GETSTRPOS R%lu R%lu\n", REG_IDX(1),
-                  REG_IDX(2));
-#ifndef NUTF8
-            op1R->int_value = (int) op2R->string_char_pos;
-#else
-            op1R->int_value = op2R->string_pos;
-#endif
-            DISPATCH;
-
-/*
- * STRCHAR_REG_REG - op1 (as int) = op2[charpos]
- */
-        START_INSTRUCTION(STRCHAR_REG_REG) VM_ADVANCE(2);
-            DEBUG("TRACE - STRCHAR R%lu R%lu\n", REG_IDX(1),
-                  REG_IDX(2));
-            {
-                int ch;
-#ifndef NUTF8
-                REQUIRE_VALID_UTF8_REGISTER(op2R);
-                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
-                op1R->int_value = ch;
-#else
-                op1R->int_value = op2R->string_value[op2R->string_pos];
-#endif
-            }
             DISPATCH;
 
 /*
@@ -12781,7 +12715,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             }
             else {
                 op1R->binary_length = fread(op1R->binary_value, 1, (size_t)op3R->int_value, (FILE *) op2R->int_value);
-                op1R->binary_pos = 0;
                 clear_vm_private_flags(op1R);
             }
         }
@@ -12794,7 +12727,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         int ch;
 
         op1R->string_length = 0;
-        op1R->string_pos = 0;
+        string_cache_reset(op1R);
 
         if (op2R->int_value == 0) {
             // no file - raise error
@@ -12837,8 +12770,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             if (validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
                 SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in text file read");
             } else {
-                op1R->string_char_pos = 0;
                 op1R->string_chars = chars;
+                string_cache_reset(op1R);
                 mark_utf8_valid_count(op1R);
             }
         }
@@ -12863,7 +12796,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             int next_byte;
             int invalid = 0;
             size_t chars = 0;
-            op1R->string_pos = 0;
+            string_cache_reset(op1R);
             prep_string_buffer(op1R, 4);
 
             /* Read the first byte - determines length */
@@ -12871,8 +12804,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             if (first_byte == EOF) {
                 op1R->int_value = -1;
                 op1R->string_length = 0;
-                op1R->string_char_pos = 0;
                 op1R->string_chars = 0;
+                string_cache_reset(op1R);
                 mark_utf8_valid_count(op1R);
             } else {
                 op1R->string_value[0] = (char)first_byte;
@@ -12909,8 +12842,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 } else {
                     utf8codepoint(op1R->string_value, &codepoint);
                     op1R->int_value = codepoint;
-                    op1R->string_char_pos = 0;
                     op1R->string_chars = chars;
+                    string_cache_reset(op1R);
                     mark_utf8_valid_count(op1R);
                 }
             }
@@ -12927,7 +12860,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     op1R->string_length = 1;
                 }
             }
-            op1R->string_pos = 0;
+            string_cache_reset(op1R);
             clear_vm_private_flags(op1R);
 #endif
         }
@@ -13577,6 +13510,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         RESERVED_IMPL(RESERVED_097)
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
+        RESERVED_IMPL(RESERVED_151)
+        RESERVED_IMPL(RESERVED_154)
+        RESERVED_IMPL(RESERVED_155)
+        RESERVED_IMPL(RESERVED_156)
+        RESERVED_IMPL(RESERVED_188)
+        RESERVED_IMPL(RESERVED_189)
         RESERVED_IMPL(RESERVED_263)
 
         START_INSTRUCTION(SWAPN_REG_REG_REG_REG) VM_ADVANCE(4);

@@ -160,8 +160,7 @@ static int flow_proof_register(const Assembler_Token *token,
 static int flow_proof_use_is_pure_write(const RxasFlowUse *use) {
     return use &&
            (use->kind == RXAS_FLOW_USE_EXPLICIT_WRITE ||
-            use->kind == RXAS_FLOW_USE_OPAQUE_WRITE ||
-            use->kind == RXAS_FLOW_USE_CURSOR_WRITE);
+            use->kind == RXAS_FLOW_USE_OPAQUE_WRITE);
 }
 
 static int flow_proof_same_scalar_constant(const Assembler_Token *left,
@@ -2243,8 +2242,6 @@ int rxas_flow_prove_redundant_constant_write(
         instruction->effects.branch_targets != RXOP_OP_NONE ||
         instruction->effects.implicit != RXOP_IMPLICIT_NONE ||
         instruction->effects.semantics != RXOP_SEM_NONE ||
-        instruction->effects.cursor_reads != RXOP_OP_NONE ||
-        instruction->effects.cursor_writes != RXOP_OP_NONE ||
         instruction->effects.flow != FLOW_NEXT ||
         instruction->effects.optimizer_barrier ||
         instruction->signal.state != RXOP_SIGNAL_STATE_NONE ||
@@ -2384,8 +2381,6 @@ int rxas_flow_prove_redundant_absent_write(
         instruction->effects.branch_targets != RXOP_OP_NONE ||
         instruction->effects.implicit != RXOP_IMPLICIT_NONE ||
         instruction->effects.semantics != RXOP_SEM_NONE ||
-        instruction->effects.cursor_reads != RXOP_OP_NONE ||
-        instruction->effects.cursor_writes != RXOP_OP_NONE ||
         instruction->effects.flow != FLOW_NEXT ||
         instruction->effects.optimizer_barrier ||
         instruction->signal.state != RXOP_SIGNAL_STATE_NONE ||
@@ -2572,7 +2567,6 @@ int rxas_flow_prove_typed_copy_redirect(
     size_t rewrite_start;
     size_t head;
     size_t tail;
-    size_t storage_use_index;
     FlowProofValueWalkResult walk;
     if (!plan) return 0;
     flow_proof_typed_copy_plan_init(plan, candidate_instruction);
@@ -2626,7 +2620,6 @@ int rxas_flow_prove_typed_copy_redirect(
         instruction->effects.branch_targets != RXOP_OP_NONE ||
         instruction->effects.implicit != RXOP_IMPLICIT_NONE ||
         instruction->effects.semantics != RXOP_SEM_NONE ||
-        instruction->effects.cursor_reads != RXOP_OP_NONE ||
         instruction->effects.flow != FLOW_NEXT ||
         instruction->effects.optimizer_barrier ||
         instruction->signal.state != RXOP_SIGNAL_STATE_NONE ||
@@ -2724,23 +2717,6 @@ int rxas_flow_prove_typed_copy_redirect(
                         destination.register_class &&
                 unknown_use->register_id.number == destination.number) {
                 plan->reason = RXAS_FLOW_PROOF_USE_NOT_REDIRECTABLE;
-                goto complete;
-            }
-        }
-    }
-    if (component == RXOP_COMPONENT_STRING) {
-        size_t storage_uses;
-        storage_uses = rxas_flow_storage_use_count(
-                service->use, expected_epoch,
-                destination_after.storage_id);
-        for (storage_use_index = 0;
-             storage_use_index < storage_uses; storage_use_index++) {
-            const RxasFlowUse *use;
-            use = rxas_flow_storage_use(
-                    service->use, expected_epoch,
-                    destination_after.storage_id, storage_use_index);
-            if (use && use->kind == RXAS_FLOW_USE_CURSOR_READ) {
-                plan->reason = RXAS_FLOW_PROOF_CURSOR_OBSERVED;
                 goto complete;
             }
         }
@@ -3252,8 +3228,6 @@ int rxas_flow_prove_producer_destination_forward(
         copy->effects.branch_targets != RXOP_OP_NONE ||
         copy->effects.implicit != RXOP_IMPLICIT_NONE ||
         copy->effects.semantics != RXOP_SEM_NONE ||
-        copy->effects.cursor_reads != RXOP_OP_NONE ||
-        copy->effects.cursor_writes != RXOP_OP_NONE ||
         copy->effects.flow != FLOW_NEXT ||
         copy->effects.optimizer_barrier ||
         copy->signal.state != RXOP_SIGNAL_STATE_NONE ||
@@ -3281,8 +3255,6 @@ int rxas_flow_prove_producer_destination_forward(
         producer->effects.implicit != RXOP_IMPLICIT_NONE ||
         producer->effects.semantics != RXOP_SEM_NONE ||
         producer->effects.branch_targets != RXOP_OP_NONE ||
-        producer->effects.cursor_reads != RXOP_OP_NONE ||
-        producer->effects.cursor_writes != RXOP_OP_NONE ||
         producer->signal.state != RXOP_SIGNAL_STATE_NONE ||
         rxop_context_writes(producer->op->opcode) != RXOP_CONTEXT_NONE ||
         rxop_component_writes(producer->op->opcode, 0) != component ||
@@ -3706,8 +3678,6 @@ int rxas_flow_prove_compare_branch_fusion(
         compare->effects.branch_targets != RXOP_OP_NONE ||
         compare->effects.implicit != RXOP_IMPLICIT_NONE ||
         compare->effects.semantics != RXOP_SEM_NONE ||
-        compare->effects.cursor_reads != RXOP_OP_NONE ||
-        compare->effects.cursor_writes != RXOP_OP_NONE ||
         compare->signal.state != RXOP_SIGNAL_STATE_NONE ||
         rxop_context_writes(compare->op->opcode) != RXOP_CONTEXT_NONE ||
         rxop_component_writes(compare->op->opcode, 0) !=
@@ -3721,8 +3691,6 @@ int rxas_flow_prove_compare_branch_fusion(
         branch->effects.branch_targets != RXOP_OP_1 ||
         branch->effects.implicit != RXOP_IMPLICIT_NONE ||
         branch->effects.semantics != RXOP_SEM_NONE ||
-        branch->effects.cursor_reads != RXOP_OP_NONE ||
-        branch->effects.cursor_writes != RXOP_OP_NONE ||
         branch->signal.state != RXOP_SIGNAL_STATE_NONE ||
         rxop_context_writes(branch->op->opcode) != RXOP_CONTEXT_NONE ||
         rxop_component_reads(branch->op->opcode, 1) !=
@@ -3735,8 +3703,6 @@ int rxas_flow_prove_compare_branch_fusion(
         fused_effects.branch_targets != RXOP_OP_1 ||
         fused_effects.implicit != RXOP_IMPLICIT_NONE ||
         fused_effects.semantics != RXOP_SEM_NONE ||
-        fused_effects.cursor_reads != RXOP_OP_NONE ||
-        fused_effects.cursor_writes != RXOP_OP_NONE ||
         fused_signal.state != RXOP_SIGNAL_STATE_NONE ||
         rxop_context_writes(fusion.fused_opcode) != RXOP_CONTEXT_NONE ||
         rxop_format_operand_count(op_table[fusion.fused_opcode].format) != 3 ||
@@ -4202,24 +4168,6 @@ static int flow_proof_attribute_link_in_range(
            (size_t)leaf.constant_token->token_value.integer >= slot;
 }
 
-static int flow_proof_cursor_unchanged_between(
-        RxasFlowProofService *service, unsigned long expected_epoch,
-        size_t storage_id, size_t first_record, size_t second_record) {
-    size_t use_count;
-    size_t use_index;
-    use_count = rxas_flow_storage_use_count(
-            service->use, expected_epoch, storage_id);
-    for (use_index = 0; use_index < use_count; use_index++) {
-        const RxasFlowUse *use;
-        use = rxas_flow_storage_use(
-                service->use, expected_epoch, storage_id, use_index);
-        if (use && use->kind == RXAS_FLOW_USE_CURSOR_WRITE &&
-            use->record_id > first_record && use->record_id < second_record)
-            return 0;
-    }
-    return 1;
-}
-
 static int flow_proof_component_unwritten_between(
         RxasFlowProofService *service, unsigned long expected_epoch,
         size_t storage_id, unsigned int component,
@@ -4621,21 +4569,6 @@ int rxas_flow_prove_duplicate_linked_read(
             goto complete;
         }
     }
-    if (first_copy->effects.cursor_reads != RXOP_OP_NONE) {
-        service->use = rxas_flow_require_use_analysis(
-                service->procedure, expected_epoch, 0);
-        if (!service->use ||
-            !flow_proof_cursor_unchanged_between(
-                    service, expected_epoch, first_linked.storage_id,
-                    first_copy->record_id, second_copy->record_id) ||
-            !flow_proof_cursor_unchanged_between(
-                    service, expected_epoch,
-                    first_detached_after.storage_id,
-                    first_copy->record_id, second_copy->record_id)) {
-            plan->reason = RXAS_FLOW_PROOF_CURSOR_OBSERVED;
-            goto complete;
-        }
-    }
     plan->proved = 1;
     plan->reason = RXAS_FLOW_PROOF_PROVED;
 
@@ -4669,8 +4602,6 @@ static int flow_proof_exact_mapping_instruction(
            instruction->effects.branch_targets == RXOP_OP_NONE &&
            instruction->effects.implicit == RXOP_IMPLICIT_NONE &&
            instruction->effects.semantics == RXOP_SEM_NONE &&
-           instruction->effects.cursor_reads == RXOP_OP_NONE &&
-           instruction->effects.cursor_writes == RXOP_OP_NONE &&
            !instruction->effects.optimizer_barrier &&
            instruction->signal.state == RXOP_SIGNAL_STATE_NONE &&
            rxop_context_writes(opcode) == RXOP_CONTEXT_NONE &&
@@ -5303,8 +5234,6 @@ const char *rxas_flow_proof_reason_name(RxasFlowProofReason reason) {
             return "use-not-redirectable";
         case RXAS_FLOW_PROOF_SOURCE_NOT_EQUIVALENT:
             return "source-not-equivalent";
-        case RXAS_FLOW_PROOF_CURSOR_OBSERVED:
-            return "cursor-observed";
         case RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED:
             return "call-window-observed";
         case RXAS_FLOW_PROOF_NO_REDIRECTS: return "no-redirects";

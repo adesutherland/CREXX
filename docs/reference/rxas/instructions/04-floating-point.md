@@ -3,8 +3,8 @@
 Floating-point instructions operate on the binary64 payload of a VM register.
 RXAS registers are not statically typed: a register operand means that the
 instruction reads or writes the float, integer, or string payload named below.
-Writing one payload does not copy the source register's other payloads, status
-flags, or string/binary cursor.
+Writing one payload does not copy the source register's other payloads or
+status flags.
 
 Float literals must use a decimal point or exponent, such as `2.0` or `2e0`.
 The arithmetic instructions use the host C binary64 operations and `libm`.
@@ -27,7 +27,7 @@ Add two binary64 values. This is the normal float addition primitive.
 ### Operands And Semantics
 
 Register sources are read through their float payloads. Only the destination's
-float payload is replaced; sources and all cursors are unchanged. Destination
+float payload is replaced; sources are unchanged. Destination
 aliasing with either source is allowed because the operands are read before the
 result is stored.
 
@@ -65,7 +65,7 @@ or status flags.
 ### Operands And Semantics
 
 Both operands are registers. The source is unchanged. The destination's string,
-integer, decimal, attributes, status flags, and cursors are not copied.
+integer, decimal, attributes, status flags, and are not copied.
 
 ### Signals
 
@@ -101,7 +101,7 @@ Divide one binary64 value by another.
 
 ### Operands And Semantics
 
-`rDst` receives a float payload. Sources and cursors are unchanged, and source
+`rDst` receives a float payload. Sources are unchanged, and source
 registers may alias the destination.
 
 ### Signals
@@ -184,8 +184,7 @@ integer. The coefficient uses the current numeric case setting for `nan` and
 and `DBL_DIG`; trailing fractional zeroes are removed. Finite nonzero output is
 normalized to one digit before the decimal point. Zero produces coefficient
 `"0"` and exponent `0`; infinities and NaNs produce `inf`, `-inf`, or `nan`
-and exponent `0`. The source float payload is unchanged. The coefficient's
-string cursor is reset to zero.
+and exponent `0`. The source float payload is unchanged.
 
 ### Signals
 
@@ -223,8 +222,8 @@ is deprecated; use `fextr` for new code.
 The checked parser accepts one conversion from `a`, `A`, `e`, `E`, `f`, `F`,
 `g`, or `G`, with optional decimal width and precision, plus literal text and
 `%%`. Unsupported or additional conversion text is copied literally. The
-destination string is replaced and its byte and character cursors are reset to
-zero. The format register may be NUL-terminated internally as part of the
+destination string is replaced. The format register may be NUL-terminated
+internally as part of the
 operation; callers should therefore treat its private string buffer state as
 mutable even though its logical text is unchanged.
 
@@ -264,7 +263,7 @@ Compare two binary64 values and return whether the left value is greater.
 
 ### Operands And Semantics
 
-`rResult` receives integer `0` or `1`. Sources and cursors are unchanged. Any
+`rResult` receives integer `0` or `1`. Sources are unchanged. Any
 ordered comparison involving NaN is false.
 
 ### Signals
@@ -300,7 +299,7 @@ Branch when one register's binary64 value is greater than another's.
 ### Operands And Semantics
 
 `label` is a procedure-local RXAS label. Both value operands are registers read
-through their float payloads. No register or cursor is changed. A NaN makes the
+through their float payloads. No register is changed. A NaN makes the
 condition false.
 
 ### Signals
@@ -341,7 +340,7 @@ or equal to the right value.
 
 ### Operands And Semantics
 
-`rResult` receives integer `0` or `1`. Sources and cursors are unchanged.
+`rResult` receives integer `0` or `1`. Sources are unchanged.
 Positive and negative zero compare equal; any ordered comparison involving NaN
 is false.
 
@@ -382,7 +381,7 @@ result as a float payload.
 
 The VM computes binary64 division, applies C `trunc`, and writes that binary64
 value to `rDst`. Despite the mnemonic, it does not write an integer payload.
-Sources and cursors are unchanged.
+Sources are unchanged.
 
 ### Signals
 
@@ -418,7 +417,7 @@ Compare two binary64 values and return whether the left value is less.
 
 ### Operands And Semantics
 
-`rResult` receives integer `0` or `1`. Sources and cursors are unchanged. Any
+`rResult` receives integer `0` or `1`. Sources are unchanged. Any
 ordered comparison involving NaN is false.
 
 ### Signals
@@ -454,7 +453,7 @@ Branch when one register's binary64 value is less than another's.
 ### Operands And Semantics
 
 `label` is a procedure-local RXAS label. Both value operands are registers read
-through their float payloads. No register or cursor is changed. A NaN makes the
+through their float payloads. No register is changed. A NaN makes the
 condition false.
 
 ### Signals
@@ -495,7 +494,7 @@ equal to the right value.
 
 ### Operands And Semantics
 
-`rResult` receives integer `0` or `1`. Sources and cursors are unchanged.
+`rResult` receives integer `0` or `1`. Sources are unchanged.
 Positive and negative zero compare equal; any ordered comparison involving NaN
 is false.
 
@@ -535,7 +534,7 @@ operands.
 
 ### Operands And Semantics
 
-`rDst` receives a float payload. Sources and cursors are unchanged. Destination
+`rDst` receives a float payload. Sources are unchanged. Destination
 aliasing is allowed.
 
 ### Signals
@@ -572,7 +571,7 @@ Multiply two binary64 values.
 
 ### Operands And Semantics
 
-Only `rDst`'s float payload is replaced. Sources and cursors are unchanged, and
+Only `rDst`'s float payload is replaced. Sources are unchanged, and
 the destination may alias a source.
 
 ### Signals
@@ -613,10 +612,10 @@ float payloads.
 nonnegative start searches forward. A negative start requests a reverse search
 from the absolute index, clamped to the last character. `rIndex` receives the
 zero-based character index. A failed forward search returns `-length`; a failed
-reverse search returns a negative value. In UTF builds, a non-ASCII scan updates
-the source register's internal string byte/character cursor while examining
-characters; do not rely on its previous cursor afterward. The logical string
-and start register are unchanged.
+reverse search returns a negative value. In UTF builds, a non-ASCII scan may
+update the source register's VM-private UTF lookup cache while examining
+characters. This is not observable RXAS state; the logical string and start
+register are unchanged.
 
 ### Signals
 
@@ -638,7 +637,7 @@ main() .locals=3
 
 ### Related
 
-`fndnblnk`, `getstrpos`, `setstrpos`.
+`fndnblnk`, `strchar`, `substring`.
 
 ## `fndnblnk`
 
@@ -658,9 +657,9 @@ payloads.
 nonnegative start searches forward. A negative start searches backward from the
 absolute index, clamped to the last character. `rIndex` receives the zero-based
 character index. A failed forward search returns `-length`; a failed reverse
-search returns `-1`. In UTF builds, a non-ASCII scan updates the source
-register's internal string byte/character cursor while examining characters;
-the logical string and start register are unchanged.
+search returns `-1`. In UTF builds, a non-ASCII scan may update the source
+register's VM-private UTF lookup cache while examining characters; this is not
+observable RXAS state. The logical string and start register are unchanged.
 
 ### Signals
 
@@ -682,7 +681,7 @@ main() .locals=3
 
 ### Related
 
-`fndblnk`, `getstrpos`, `setstrpos`.
+`fndblnk`, `strchar`, `substring`.
 
 ## `fne`
 
@@ -698,7 +697,7 @@ result.
 
 ### Operands And Semantics
 
-`rResult` receives integer `0` or `1`; sources and cursors are unchanged. A NaN
+`rResult` receives integer `0` or `1`; sources are unchanged. A NaN
 compares unequal to every value, including itself.
 
 ### Signals
@@ -736,7 +735,7 @@ function.
 
 ### Operands And Semantics
 
-`rDst` receives the `pow` binary64 result. Sources and cursors are unchanged,
+`rDst` receives the `pow` binary64 result. Sources are unchanged,
 and destination aliasing is allowed.
 
 ### Signals
@@ -773,7 +772,7 @@ Change the sign of a register's binary64 payload in place.
 ### Operands And Semantics
 
 The register is both source and destination. Other payloads, status flags, and
-cursors are unchanged. Because the implementation subtracts from positive
+value state is unchanged. Because the implementation subtracts from positive
 zero, applying it to positive zero produces positive zero rather than a
 bit-level sign toggle; NaN sign bits are likewise not a portable contract.
 
@@ -811,7 +810,7 @@ Subtract one binary64 value from another.
 
 ### Operands And Semantics
 
-Only `rDst`'s float payload is replaced. Sources and cursors are unchanged, and
+Only `rDst`'s float payload is replaced. Sources are unchanged, and
 the destination may alias a source.
 
 ### Signals
@@ -848,7 +847,7 @@ Convert a register's binary64 payload to an integer Boolean payload in place.
 
 The float payload is read and the integer payload of the same register is
 written. Both positive and negative zero become `0`; finite nonzero values
-become `1`. Other payloads, status flags, and cursors are unchanged.
+become `1`. Other payloads, status flags, and are unchanged.
 
 ### Signals
 
@@ -888,7 +887,7 @@ nearest-integer conversion and require an exact round trip.
 The conversion starts with `floor(value)` and increments when the remaining
 fraction is greater than `0.5`; exact half values therefore stay at the lower
 integer. The integer payload is written before exactness is checked. The float
-payload, other payloads, status flags, and cursors are unchanged.
+payload, other payloads, status flags, and are unchanged.
 
 ### Signals
 
@@ -929,8 +928,8 @@ numeric context.
 
 The float payload remains available and the string payload of the same register
 is replaced. Formatting honors numeric digits, form, and case after the
-extractor clamps binary64 precision to its supported range. The string cursor
-is reset to zero. NaN and infinity are rendered using the current numeric case.
+extractor clamps binary64 precision to its supported range. NaN and infinity
+are rendered using the current numeric case.
 
 ### Signals
 

@@ -1,5 +1,0 @@
-Deprecated: These legacy cursor instructions remain available for cursor-style byte
-processing. New Release 1 source lowering should prefer target-sized `bcopy`
-for binary field extraction.
-
-`getbinpos rOut,rBin` reads the current binary cursor.

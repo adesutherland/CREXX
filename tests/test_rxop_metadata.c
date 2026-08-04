@@ -69,9 +69,6 @@ static void check_unknown_effects(int opcode) {
           "unknown effect must be conservative", NULL);
     check(effects.reads == RXOP_OP_ALL && effects.writes == RXOP_OP_ALL,
           "unknown effect must expose worst-case explicit access", NULL);
-    check(effects.cursor_reads == RXOP_OP_ALL &&
-              effects.cursor_writes == RXOP_OP_ALL,
-          "unknown effect must expose worst-case cursor access", NULL);
     check(effects.kills == RXOP_OP_NONE,
           "unknown effect must not claim a kill", NULL);
     check(effects.branch_targets == RXOP_OP_ALL,
@@ -421,10 +418,6 @@ int main(void) {
               "read mask names a non-register operand", op);
         check((effects.writes & ~legal_registers) == 0,
               "write mask names a non-register operand", op);
-        check((effects.cursor_reads & ~legal_registers) == 0,
-              "cursor-read mask names a non-register operand", op);
-        check((effects.cursor_writes & ~legal_registers) == 0,
-              "cursor-write mask names a non-register operand", op);
         check((effects.kills & ~effects.writes) == 0,
               "kill mask is not a subset of writes", op);
         check((effects.kills & effects.reads) == 0,
@@ -467,8 +460,6 @@ int main(void) {
             int writes = rxop_effect_writes_operand(&effects, operand_index);
             int kills = rxop_effect_kills_operand(&effects, operand_index);
             int branch = rxop_effect_branch_target_operand(&effects, operand_index);
-            int cursor_reads = rxop_effect_reads_cursor(&effects, operand_index);
-            int cursor_writes = rxop_effect_writes_cursor(&effects, operand_index);
             int failure_writes =
                 rxop_signal_failure_writes_operand(&signal, operand_index);
             check(!reads || type == OP_REG,
@@ -481,10 +472,6 @@ int main(void) {
                   "definite kill also claims to read the same operand", op);
             check(!branch || type == OP_ID,
                   "branch effect names a non-label operand", op);
-            check(!cursor_reads || type == OP_REG,
-                  "cursor-read effect names a non-register operand", op);
-            check(!cursor_writes || type == OP_REG,
-                  "cursor-write effect names a non-register operand", op);
             check(signal.state == RXOP_SIGNAL_STATE_UNKNOWN ||
                       !failure_writes || type == OP_REG,
                   "signal failure write names a non-register operand", op);
@@ -930,66 +917,56 @@ int main(void) {
               effects.kills == RXOP_OP_NONE,
           "PADSTR must append through operand 1",
           &op_table[OP_PADSTR_REG_REG_REG]);
-    check(effects.cursor_writes == RXOP_OP_1 &&
-              effects.const_evaluator == RXOP_CONST_EVAL_PADSTR,
-          "PADSTR cursor/evaluator regression",
+    check(effects.const_evaluator == RXOP_CONST_EVAL_PADSTR,
+          "PADSTR evaluator regression",
           &op_table[OP_PADSTR_REG_REG_REG]);
     effects = rxop_effects(OP_STRLEN_REG_REG);
-    check(effects.cursor_reads == RXOP_OP_NONE &&
-              effects.cursor_writes == RXOP_OP_NONE &&
-              effects.const_evaluator == RXOP_CONST_EVAL_STRLEN,
-          "STRLEN evaluator must not invent cursor effects",
+    check(effects.const_evaluator == RXOP_CONST_EVAL_STRLEN,
+          "STRLEN evaluator regression",
           &op_table[OP_STRLEN_REG_REG]);
-    effects = rxop_effects(OP_SETSTRPOS_REG_REG);
-    check(effects.cursor_writes == RXOP_OP_1 &&
-              effects.const_evaluator == RXOP_CONST_EVAL_SETSTRPOS,
-          "SETSTRPOS cursor/evaluator regression",
-          &op_table[OP_SETSTRPOS_REG_REG]);
-    effects = rxop_effects(OP_GETSTRPOS_REG_REG);
-    check(effects.cursor_reads == RXOP_OP_2 &&
-              effects.const_evaluator == RXOP_CONST_EVAL_GETSTRPOS,
-          "GETSTRPOS cursor/evaluator regression",
-          &op_table[OP_GETSTRPOS_REG_REG]);
-    effects = rxop_effects(OP_COPY_REG_REG);
-    check(effects.cursor_reads == RXOP_OP_2 &&
-              effects.cursor_writes == RXOP_OP_1,
-          "COPY must preserve the binary cursor",
-          &op_table[OP_COPY_REG_REG]);
-    effects = rxop_effects(OP_BCOPY_REG_REG);
-    check(effects.cursor_reads == RXOP_OP_2 &&
-              effects.cursor_writes == RXOP_OP_1,
-          "BCOPY must preserve the binary cursor",
-          &op_table[OP_BCOPY_REG_REG]);
-    effects = rxop_effects(OP_SETBINPOS_REG_REG);
-    check(effects.cursor_reads == RXOP_OP_NONE &&
-              effects.cursor_writes == RXOP_OP_1,
-          "SETBINPOS cursor-write regression",
-          &op_table[OP_SETBINPOS_REG_REG]);
-    effects = rxop_effects(OP_GETBINPOS_REG_REG);
-    check(effects.cursor_reads == RXOP_OP_2 &&
-              effects.cursor_writes == RXOP_OP_NONE,
-          "GETBINPOS cursor-read regression",
-          &op_table[OP_GETBINPOS_REG_REG]);
     effects = rxop_effects(OP_STRCHAR_REG_REG_REG);
-    check(effects.cursor_writes == RXOP_OP_2 &&
+    check(effects.reads == RXOP_OP_23 && effects.writes == RXOP_OP_1 &&
               effects.const_evaluator == RXOP_CONST_EVAL_STRCHAR_AT,
-          "indexed STRCHAR source cursor regression",
+          "indexed STRCHAR effects/evaluator regression",
           &op_table[OP_STRCHAR_REG_REG_REG]);
-    effects = rxop_effects(OP_SUBSTRING_REG_REG_REG);
-    check(effects.cursor_reads == RXOP_OP_2 &&
-              effects.cursor_writes == RXOP_OP_1 &&
-              effects.const_evaluator == RXOP_CONST_EVAL_SUBSTRING,
-          "SUBSTRING cursor/evaluator regression",
-          &op_table[OP_SUBSTRING_REG_REG_REG]);
+    effects = rxop_effects(OP_SUBSTRING_REG_REG_REG_REG);
+    check(effects.reads_signature &&
+              strcmp(effects.reads_signature, "0111") == 0 &&
+              effects.writes_signature &&
+              strcmp(effects.writes_signature, "1000") == 0 &&
+              effects.const_evaluator == RXOP_CONST_EVAL_SUBSTRING &&
+              rxop_component_reads(OP_SUBSTRING_REG_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_SUBSTRING_REG_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_reads(OP_SUBSTRING_REG_REG_REG_REG, 3) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_SUBSTRING_REG_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_STRING,
+          "explicit SUBSTRING effects/component regression",
+          &op_table[OP_SUBSTRING_REG_REG_REG_REG]);
+    effects = rxop_effects(OP_BSLICE_REG_REG_REG_REG);
+    check(effects.reads_signature &&
+              strcmp(effects.reads_signature, "0111") == 0 &&
+              effects.writes_signature &&
+              strcmp(effects.writes_signature, "1000") == 0 &&
+              rxop_component_reads(OP_BSLICE_REG_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_BINARY &&
+              rxop_component_reads(OP_BSLICE_REG_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_reads(OP_BSLICE_REG_REG_REG_REG, 3) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_BSLICE_REG_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_BINARY,
+          "explicit BSLICE effects/component regression",
+          &op_table[OP_BSLICE_REG_REG_REG_REG]);
     effects = rxop_effects(OP_FNDBLNK_REG_REG_REG);
-    check(effects.cursor_writes == RXOP_OP_2 &&
-              effects.const_evaluator == RXOP_CONST_EVAL_FNDBLNK,
-          "FNDBLNK source cursor regression",
+    check(effects.const_evaluator == RXOP_CONST_EVAL_FNDBLNK,
+          "FNDBLNK evaluator regression",
           &op_table[OP_FNDBLNK_REG_REG_REG]);
     effects = rxop_effects(OP_FNDNBLNK_REG_REG_REG);
-    check(effects.cursor_writes == RXOP_OP_2 &&
-              effects.const_evaluator == RXOP_CONST_EVAL_FNDNBLNK,
-          "FNDNBLNK source cursor regression",
+    check(effects.const_evaluator == RXOP_CONST_EVAL_FNDNBLNK,
+          "FNDNBLNK evaluator regression",
           &op_table[OP_FNDNBLNK_REG_REG_REG]);
     effects = rxop_effects(OP_STRPOS_REG_REG_REG);
     check(effects.reads == RXOP_OP_ALL && effects.writes == RXOP_OP_1 &&

@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE "${WORK_DIR}")
 file(MAKE_DIRECTORY "${WORK_DIR}")
 
-set(expected "3\n日🙂\na🙂🙂\nBeta\né日\n1\n")
+set(expected "3\n日🙂\na🙂🙂\nBeta\né日\n233\n")
 
 function(run_checked label)
     execute_process(
@@ -35,8 +35,8 @@ run_checked("optimized user-body compile"
     "${RXC}" --no-exe-import -o "${WORK_DIR}/selected_opt" "${SELECTED_SOURCE}")
 file(READ "${WORK_DIR}/selected_opt.rxas" opt_rxas)
 if(opt_rxas MATCHES "[ \t]call[0-9]*[ \t]" OR
-   opt_rxas MATCHES "[ \t](strlen|setstrpos|substring|padstr|fndnblnk|fndblnk)[ \t]" OR
-   opt_rxas MATCHES "^user_(length|substr|word|cursor)\\(\\)" OR
+   opt_rxas MATCHES "[ \t](strlen|substring|strchar|padstr|fndnblnk|fndblnk)[ \t]" OR
+   opt_rxas MATCHES "^user_(length|substr|word|char)\\(\\)" OR
    NOT opt_rxas MATCHES "selected\\.crexx")
     message(FATAL_ERROR
         "optimized ordinary user bodies did not reach the literal-result ceiling:\n${opt_rxas}")
@@ -48,7 +48,7 @@ run_dual_vm("optimized user body" "${WORK_DIR}/selected_opt.rxbin")
 run_checked("no-opt user-body compile"
     "${RXC}" --no-exe-import -n -o "${WORK_DIR}/selected_noopt" "${SELECTED_SOURCE}")
 file(READ "${WORK_DIR}/selected_noopt.rxas" noopt_rxas)
-foreach(proc user_length user_substr user_word user_cursor)
+foreach(proc user_length user_substr user_word user_char)
     if(NOT noopt_rxas MATCHES "call[0-9]* .*${proc}\\(\\)" OR
        NOT noopt_rxas MATCHES "${proc}\\(\\) \\.locals=")
         message(FATAL_ERROR
@@ -107,15 +107,14 @@ foreach(mode opt noopt)
     file(READ "${WORK_DIR}/cursor_${mode}.rxas" cursor_rxas)
     if(mode STREQUAL "opt")
         if(cursor_rxas MATCHES "call[0-9]* .*scan_blank\\(\\)" OR
-           NOT cursor_rxas MATCHES "[ \t]fndblnk[ \t]" OR
-           NOT cursor_rxas MATCHES "[ \t]scopy[ \t]")
+           NOT cursor_rxas MATCHES "[ \t]fndblnk[ \t]")
             message(FATAL_ERROR
-                "optimized cursor-writing helper was not safely isolated:\n${cursor_rxas}")
+                "optimized explicit-position helper was not safely inlined:\n${cursor_rxas}")
         endif()
     else()
         if(NOT cursor_rxas MATCHES "call[0-9]* .*scan_blank\\(\\)")
             message(FATAL_ERROR
-                "no-opt cursor-writing helper lost its normal call:\n${cursor_rxas}")
+                "no-opt explicit-position helper lost its normal call:\n${cursor_rxas}")
         endif()
     endif()
     run_checked("${mode} cursor-inline assemble"
@@ -130,7 +129,7 @@ foreach(mode opt noopt)
         string(REPLACE "\r\n" "\n" cursor_out "${cursor_out}")
         if(NOT cursor_res EQUAL 0 OR NOT cursor_out STREQUAL cursor_expected)
             message(FATAL_ERROR
-                "${mode} cursor isolation ${vm}: expected [${cursor_expected}], got [${cursor_out}], stderr [${cursor_err}]")
+                "${mode} explicit-position ${vm}: expected [${cursor_expected}], got [${cursor_out}], stderr [${cursor_err}]")
         endif()
     endforeach()
 endforeach()

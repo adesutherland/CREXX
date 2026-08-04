@@ -1128,7 +1128,7 @@ static int flow_duplicate_linked_read_copy_opcode(int opcode) {
 }
 
 /* K02/K03 selection is a linear demand filter. The immutable proof owns the
- * two exact triples, storage/path identity, component/cursor equivalence and
+ * two exact triples, storage/path identity, component equivalence and
  * LINKATTR1 range safety. Apply one plan per epoch, then rebuild before
  * considering an overlapping repeated-read chain. */
 static size_t flow_reuse_duplicate_linked_read(
@@ -1855,8 +1855,6 @@ static int flow_plan_local_single_use_copy(
         graph->nodes[copy_record].effects.branch_targets != RXOP_OP_NONE ||
         graph->nodes[copy_record].effects.implicit != RXOP_IMPLICIT_NONE ||
         graph->nodes[copy_record].effects.semantics != RXOP_SEM_NONE ||
-        graph->nodes[copy_record].effects.cursor_reads != RXOP_OP_NONE ||
-        graph->nodes[copy_record].effects.cursor_writes != RXOP_OP_NONE ||
         rxop_signal_contract(graph->nodes[copy_record].op->opcode).state !=
                 RXOP_SIGNAL_STATE_NONE ||
         rxop_context_writes(graph->nodes[copy_record].op->opcode) !=
@@ -1896,9 +1894,7 @@ static int flow_plan_local_single_use_copy(
         if (matches ||
             !rxop_effect_reads_operand(&node->effects, operand) ||
             rxop_effect_writes_operand(&node->effects, operand) ||
-            rxop_component_reads(node->op->opcode, operand) != component ||
-            rxop_effect_reads_cursor(&node->effects, operand) ||
-            rxop_effect_writes_cursor(&node->effects, operand))
+            rxop_component_reads(node->op->opcode, operand) != component)
             return 0;
         matched_operand = operand;
         matches++;

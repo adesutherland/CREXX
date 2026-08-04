@@ -121,8 +121,7 @@ rexxclassicbif_space: procedure = .RexxValue
     end
 
     word_length = word_end - word_start
-    assembler setstrpos string,word_start
-    assembler substring segment,string,word_length
+    assembler substring segment,string,word_start,word_length
     assembler append result,segment
     have_word = 1
     scan = word_end

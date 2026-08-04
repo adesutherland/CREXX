@@ -223,9 +223,7 @@ slot, not its string slot. Binary-memory VM instructions exposed at RXAS are:
 - `bcmps rCmp,0x...,"literal"`
 - `bconcat rDst,rLeft,rRight`
 - `bappend rDst,rRight`
-- `setbinpos rBin,rOffset`
-- `getbinpos rOut,rBin`
-- `bslice rDst,rSrc,rLen`
+- `bslice rDst,rSrc,rStart,rLen`
 - `bupdate rDst,rOffset,rSrc`
 - `stobin rReg`
 - `bintos rReg`
@@ -244,7 +242,7 @@ through the VM float register; `bgetf64`/`bsetf64` store IEEE binary64 values.
 VM may keep a larger private physical capacity, grown in blocks and reused
 across later logical resizes; `blen` reports only the logical length. Negative
 lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
-`bclear` sets the logical byte length and cursor to zero. `bfill` fills the
+`bclear` sets the logical byte length to zero. `bfill` fills the
 current logical byte range and raises `OUT_OF_RANGE` for bytes outside
 `0..255`.
 
@@ -260,10 +258,12 @@ Rexx string value on reads. `sget` extracts a codepoint-counted slice from a
 register supplies the input source offset and is overwritten with `-1`, `0`, or
 `1`.
 
-`setbinpos`, `getbinpos`, and `bslice` are legacy cursor instructions retained
-for compatibility and covered by `rxasbinarylegacytests`. New Release 1 source
-lowering uses target-sized `bcopy`, typed reads/writes, and zero-copy compares
-instead of cursor-based extraction. `setbyte` and `bupdate` are strict and
+`bslice rDst,rSrc,rStart,rLen` performs explicit zero-based extraction without
+mutating the source. The former binary cursor instructions are retired and
+their numeric opcode slots remain reserved; old RXBIN images using them are
+not compatible with this instruction set. Release 1 source lowering also uses
+target-sized `bcopy`, typed reads/writes, and zero-copy compares where a
+materialized slice is unnecessary. `setbyte` and `bupdate` are strict and
 raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or overlay
 writes past the destination length. `stobin` copies the register's current
 string bytes into its binary slot. `bintos` validates the register's current
@@ -779,12 +779,12 @@ count, different owner, or changed reference generation remains fail-closed.
 
 The M05 migration adds `assembler/rxas_flow_use.c`, a fifth demand-driven
 per-epoch cache over component SSA.  It indexes direct `ValueId` uses,
-storage/cursor observations and reverse phi dependencies once per procedure;
+storage observations and reverse phi dependencies once per procedure;
 edge-aware liveness then propagates only through those sparse dependencies.
 Explicit operands, read/write operands, metadata, register-backed TRACE,
-implicit reads, cursor reads, call windows and opaque observations remain
-distinct use kinds.  Component and cursor writes are indexed separately from
-observations.  Writes through a storage phi are expanded once to every
+implicit reads, call windows and opaque observations remain distinct use
+kinds. Component writes are indexed separately from observations. Writes
+through a storage phi are expanded once to every
 possible leaf storage; an unresolved target becomes an opaque-write barrier,
 not a false read of an unrelated `ValueId`.  A range call is retained as one
 bounded call-window observation rather than expanded across every
@@ -793,7 +793,7 @@ local/component pair.
 The first use-index consumer replaces the dense per-candidate typed-copy
 solver.  Exact `icopy`, `fcopy` and strict `scopy` deletion requires a local,
 unaliased destination, the copy's write-once result `ValueId`, an equivalent
-source value at every redirected use, no metadata/TRACE/read-write/cursor or
+source value at every redirected use, no metadata/TRACE/read-write or
 live call-window observation, and at least one exact component-only operand
 rewrite.  The proof service returns an immutable all-or-nothing rewrite plan;
 the optimizer validates the complete plan before changing any operand or
@@ -927,7 +927,7 @@ M04 migrates exact same-storage copies. The canonical
 `rxop_same_storage_copy_is_noop()` contract covers `copy`, `icopy`,
 `fcopy`, `scopy`, `dcopy`, `acopy` and `bcopy`: when both operands
 denote the same physical value storage, the VM path performs no write,
-allocation, signal or cursor/effect update. This conditional contract is more
+allocation, signal or externally observable effect. This conditional contract is more
 exact than the opcode's general signal contract; different-storage `bcopy`
 remains conservative. Identical physical register operands prove the old floor
 directly. Distinct registers require equal pre-instruction `StorageId`, or
@@ -1051,18 +1051,18 @@ add analysis cost without adding a correctness fact.
 Compiler-generated RXAS should not emit that pair for typed payload access. A
 future explicit flag-copy operation would use `acopy`, but there is no current
 compiler use case. Typed payload copies are `icopy`, `fcopy`, `scopy`, `dcopy`,
-and `bcopy`; `bcopy` copies only the binary payload and byte cursor, not
+and `bcopy`; `bcopy` copies only the binary payload, not
 public/compiler/library status flags.
 
 Duplicate `link`/typed-copy/`unlink` reads and equivalent one-based
 `linkattr1` reads are no longer keyhole authorities. One immutable proof plan
-validates both exact triples, proves the full typed-copy component mask and
-cursor state equivalent, and rewrites the later link to copy the first
+validates both exact triples, proves the full typed-copy component mask
+equivalent, and rewrites the later link to copy the first
 detached value before deleting its original copy/unlink. An attribute plan
 also proves the candidate slot is in range so deletion cannot suppress an
 `OUT_OF_RANGE` signal. Calls through aliased arguments, divergent source phis,
 changed source/detached components, changed count/reference generation,
-different owners or slots, cursor writes and unproved signal paths reject.
+different owners or slots, component writes and unproved signal paths reject.
 Register metadata and TRACE reads of the unchanged first detached value may
 remain ordered while the redundant second executable read is removed. The
 twelve former syntax-expanded rules have been deleted.
@@ -1071,8 +1071,8 @@ Cancelling `swap` pairs are likewise owned by the proof service rather than
 the legacy bounded `NO_HAZARD` keyholes. A pair-key demand filter only asks
 the question. The immutable proof verifies the exact physical operands,
 dominance, restored pre-first/post-second `StorageId` bindings and every
-intervening raw-register use from the shared use index; relevant component or
-cursor reads/writes, register metadata, TRACE, call windows and opaque state
+intervening raw-register use from the shared use index; relevant component
+reads/writes, register metadata, TRACE, call windows and opaque state
 reject. Different registers that already name the same storage are an exact
 identity case, while a disjoint intervening permutation or unrelated external
 effect need not block deletion. The consumer has no source-queue distance

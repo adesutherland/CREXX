@@ -429,11 +429,13 @@ initialized object. The VM-private flag partition keeps this lifecycle marker
 out of public register flag writes such as `settp`.
 In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
-keep both in sync and reset `string_pos` / `string_char_pos` to the start of
-the new value.
+keep both in sync and reset the VM-private UTF lookup cache to the start of the
+new value. The cache is acceleration state only: RXAS cannot observe it, value
+copies do not preserve it, and optimizer metadata must not model it as a
+logical read or write.
 
 In-place string-byte writers use the private completion helpers rather than
-assigning `string_length` alone. `finish_string_write()` resets both cursors,
+assigning `string_length` alone. `finish_string_write()` resets the lookup cache,
 validates/recounts an arbitrary UTF-8 byte span and replaces only the
 VM-private UTF validity bits. `finish_ascii_string_write()` records the exact
 byte/codepoint count for known ASCII output. Both preserve compiler/public
@@ -449,7 +451,7 @@ on both VMs and both optimization modes.
 the destination's logical decimal length, preserves reusable backing storage
 and unrelated value components, and does not signal. `DTOS` is likewise total:
 decimal absence formats as `nan`, plugin diagnostics are cleared at the
-conversion boundary, and the completed ASCII write refreshes string cursors
+conversion boundary, and the completed ASCII write refreshes string length/count
 and validity metadata. Checked `INC`/`DEC` forms and both `SETNUMFUZ` forms
 validate into temporary state and signal before mutating the observed integer
 or numeric context.
@@ -537,18 +539,19 @@ Ordinary `.binary` payloads should be built through the shared helpers in
 `slice_binary()`. These helpers keep `binary_length` and
 `binary_buffer_length` consistent, reuse existing capacity where possible, and
 clear native payload finalizers before replacing a native-backed object with an
-ordinary byte sequence. The register also carries `binary_pos`, a byte cursor
-used by `SETBINPOS`, `GETBINPOS`, and cursor-based `BSLICE`.
+ordinary byte sequence. Binary values carry no logical cursor.
 
 RXAS-level binary opcodes operate only on the binary slot. `LOAD_REG_BINARY`
 loads a `BINARY_CONST` from `0x...` RXAS syntax. `BCOPY_REG_REG` copies only
-the binary payload and byte cursor; it deliberately does not copy
+the binary payload; it deliberately does not copy
 public/compiler/library status flags. `GETBYTE` reads zero-based binary
 offsets and returns `-1` for out-of-range reads. `SETBYTE` and `BUPDATE` are
 strict and raise `OUT_OF_RANGE` for invalid byte indexes or fixed-size overlay
-writes past the destination length. `BCONCAT`, `BAPPEND`, and `BSLICE` build
-ordinary byte buffers without UTF-8 validation and clear VM-private UTF cache
-flags on the destination. `BCHECKRANGE` validates a zero-based byte offset and
+writes past the destination length. `BCONCAT` and `BAPPEND` build ordinary byte
+buffers. `BSLICE_REG_REG_REG_REG` takes explicit destination, source, start,
+and length registers and clips the requested byte range to the source length.
+These operations do not perform UTF-8 validation and clear VM-private UTF
+cache flags on the destination. `BCHECKRANGE` validates a zero-based byte offset and
 length without mutating either register; negative values and ranges that do not
 fit inside the current logical binary length raise `OUT_OF_RANGE`.
 
@@ -564,7 +567,7 @@ outside the target storage type raise `OUT_OF_RANGE`. `BRESIZE` preserves
 existing bytes, zero-fills growth, sets only the logical byte length, and may
 reuse/grow the private physical binary capacity in blocks. It raises
 `OUT_OF_RANGE` for negative lengths. `BCLEAR` sets the logical binary length
-and cursor to zero. `BFILL`
+to zero. `BFILL`
 fills the current logical byte range and requires a byte value in `0..255`.
 
 The Release 1 binary-memory VM surface also includes target-sized copy from a

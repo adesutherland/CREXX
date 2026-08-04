@@ -175,8 +175,7 @@ rexxclassic_byte_slice: procedure = .binary
   arg bytes = .binary, start = .int, count = .int
   result = .binary
   if count <= 0 then return result
-  assembler setbinpos bytes,start
-  assembler bslice result,bytes,count
+  assembler bslice result,bytes,start,count
   return result
 
 /** Compare two equal-length zero-based byte spans without allocating. */

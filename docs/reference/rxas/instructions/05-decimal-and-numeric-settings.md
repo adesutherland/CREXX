@@ -57,7 +57,7 @@ Add two decimal values under the current numeric context.
 ### Operands And Semantics
 
 The destination decimal payload receives the context-rounded sum. Register
-sources, scalar payloads, attributes, and cursors remain unchanged; destination
+sources, scalar payloads, attributes, and remain unchanged; destination
 aliasing with a source is supported by the plugin.
 
 ### Signals
@@ -137,7 +137,7 @@ Copy only a decimal payload between registers.
 The destination decimal buffer is allocated or enlarged as necessary and
 receives the exact encoded decimal. An absent or logically empty source clears
 the destination's logical decimal length while retaining reusable backing
-storage. Other payloads, cursors, attributes, type metadata, and flags remain
+storage. Other payloads, attributes, type metadata, and flags remain
 intact. Self-copy is a no-op; the source is unchanged.
 
 ### Signals
@@ -356,7 +356,7 @@ Read the active decimal plugin's identity strings.
 ### Operands And Semantics
 
 The three destination string payloads are replaced respectively with the
-plugin name, human description, and version. Their string cursors reset; other
+plugin name, human description, and version. Other
 value state remains intact. Destinations should be distinct because writes are
 performed in operand order.
 
@@ -394,7 +394,7 @@ Compare decimal values for numeric equality.
 
 The destination is set to integer Boolean `1` when decimal numeric values are
 equal, otherwise `0`. Exponent/encoding differences do not defeat numeric
-equality. Sources and cursors are unchanged.
+equality. Sources are unchanged.
 
 ### Signals
 
@@ -429,7 +429,7 @@ Branch when two register decimals are numerically equal.
 ### Operands And Semantics
 
 True transfers to the procedure-local label; false falls through. Sources and
-all cursors remain unchanged.
+all value state remains unchanged.
 
 ### Signals
 
@@ -469,7 +469,7 @@ Extract a decimal into a coefficient string and integer exponent.
 The plugin normalizes and rounds to the current digits setting, trims trailing
 coefficient zeros, writes the coefficient string (or `nan`, `inf`, `-inf`) to
 the first destination, and writes the base-ten exponent integer to the second.
-The source decimal is unchanged. The coefficient string cursor resets.
+The source decimal is unchanged.
 
 ### Signals
 
@@ -507,7 +507,7 @@ Compare whether one decimal value is greater than another.
 ### Operands And Semantics
 
 The destination becomes integer Boolean `1` iff left is numerically greater,
-otherwise `0`. Sources and cursors are unchanged.
+otherwise `0`. Sources are unchanged.
 
 ### Signals
 
@@ -542,7 +542,7 @@ Branch when one register decimal is greater than another.
 ### Operands And Semantics
 
 True transfers to the procedure-local label; false falls through. Sources and
-cursors are unchanged.
+value state is unchanged.
 
 ### Signals
 
@@ -656,7 +656,7 @@ Compare whether one decimal value is less than another.
 ### Operands And Semantics
 
 The destination becomes integer Boolean `1` iff left is numerically less,
-otherwise `0`. Sources and cursors are unchanged.
+otherwise `0`. Sources are unchanged.
 
 ### Signals
 
@@ -691,7 +691,7 @@ Branch when one register decimal is less than another.
 ### Operands And Semantics
 
 True transfers to the procedure-local label; false falls through. Both decimal
-sources and their cursors remain unchanged.
+sources remain unchanged.
 
 ### Signals
 
@@ -731,7 +731,7 @@ Compare whether one decimal value is less than or equal to another.
 ### Operands And Semantics
 
 The destination becomes canonical integer Boolean less-or-equal. Decimal
-sources, cursors, and other destination state remain unchanged.
+sources, and other destination state remain unchanged.
 
 ### Signals
 
@@ -842,7 +842,7 @@ Compare decimal values for numeric inequality.
 ### Operands And Semantics
 
 The destination becomes integer Boolean `1` when numeric decimal values differ
-and `0` when equal. Sources, decimal encodings, and cursors remain unchanged.
+and `0` when equal. Sources, decimal encodings, and remain unchanged.
 
 ### Signals
 
@@ -916,9 +916,9 @@ Append source characters that do not occur in a removal-list string.
 
 Each source character is compared with every removal-list character and is
 appended to the destination only when absent. The destination is not cleared,
-so pre-existing text is retained; its cursor follows string append behavior.
+so pre-existing text is retained.
 During scanning the VM overwrites `rSource.int` and `rRemovalList.int` with the
-last examined code points, while leaving their strings and cursors unchanged.
+last examined code points, while leaving their strings unchanged.
 
 ### Signals
 
@@ -955,7 +955,7 @@ Negate a decimal payload in place.
 
 ### Operands And Semantics
 
-Only the decimal payload changes; other payloads, cursor, attributes, type
+Only the decimal payload changes; other payloads, attributes, type
 metadata, and flags remain intact.
 
 ### Signals
@@ -1137,7 +1137,7 @@ Format a decimal payload as a string in place.
 The current digits, form, case, fuzz, and standard settings govern formatting.
 The string buffer is replaced with the NUL-terminated result; the decimal
 payload remains unchanged. Decimal absence formats as `nan`. The completed
-ASCII write resets string byte/codepoint cursors and validity metadata.
+ASCII write refreshes string validity metadata.
 
 ### Signals
 
@@ -1241,7 +1241,7 @@ Read the current decimal precision in digits.
 
 ### Operands And Semantics
 
-Only the destination integer payload changes; no context or cursor is mutated.
+Only the destination integer payload changes; no context is mutated.
 
 ### Signals
 
@@ -1664,7 +1664,7 @@ Parse an in-place string payload as a decimal value.
 
 The string is NUL-terminated in its existing buffer if necessary, then parsed
 under the current decimal context. Only the decimal payload changes; string
-content and cursor otherwise remain unchanged.
+content otherwise remain unchanged.
 
 ### Signals
 

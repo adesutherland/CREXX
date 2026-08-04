@@ -176,12 +176,6 @@ static int flow_use_add(RxasFlowUseAnalysis *analysis, size_t record_id,
         case RXAS_FLOW_USE_TRACE_READ:
             analysis->metrics.trace_reads++;
             break;
-        case RXAS_FLOW_USE_CURSOR_READ:
-            analysis->metrics.cursor_reads++;
-            break;
-        case RXAS_FLOW_USE_CURSOR_WRITE:
-            analysis->metrics.cursor_writes++;
-            break;
         case RXAS_FLOW_USE_CALL_WINDOW_READ:
             analysis->metrics.call_window_reads++;
             break;
@@ -273,24 +267,6 @@ static int flow_use_add_components(RxasFlowUseAnalysis *analysis,
             return 0;
     }
     return 1;
-}
-
-static int flow_use_add_cursor(RxasFlowUseAnalysis *analysis,
-                               size_t record_id, size_t instruction_id,
-                               size_t operand_index, RxasFlowRegister reg,
-                               RxasFlowUseKind kind) {
-    RxasFlowStorageFact fact;
-    size_t storage_id;
-    storage_id = 0;
-    if (!flow_use_consume(analysis, 1)) return 0;
-    if (rxas_flow_storage_at_instruction(
-                analysis->ssa, analysis->metrics.epoch, instruction_id, 0,
-                reg, &fact))
-        storage_id = fact.storage_id;
-    return flow_use_add(analysis, record_id, instruction_id, operand_index,
-                        reg, RXOP_COMPONENT_NONE, RXOP_COMPONENT_NONE,
-                        RXAS_FLOW_ID_NONE,
-                        storage_id, kind);
 }
 
 static int flow_use_prepare_storage_walk(RxasFlowUseAnalysis *analysis) {
@@ -532,16 +508,6 @@ static int flow_use_collect_instruction(
                     reg, components))
                 return 0;
         }
-        if (rxop_effect_reads_cursor(&instruction->effects, operand) &&
-            !flow_use_add_cursor(analysis, record->id, instruction->id,
-                                 operand, reg,
-                                 RXAS_FLOW_USE_CURSOR_READ))
-            return 0;
-        if (rxop_effect_writes_cursor(&instruction->effects, operand) &&
-            !flow_use_add_cursor(analysis, record->id, instruction->id,
-                                 operand, reg,
-                                 RXAS_FLOW_USE_CURSOR_WRITE))
-            return 0;
     }
     implicit_complete = flow_use_add_implicit(analysis, instruction, item);
     if (!implicit_complete) return 0;
@@ -1118,8 +1084,6 @@ static const char *flow_use_kind_name(RxasFlowUseKind kind) {
         case RXAS_FLOW_USE_IMPLICIT_READ: return "implicit-read";
         case RXAS_FLOW_USE_METADATA_READ: return "metadata-read";
         case RXAS_FLOW_USE_TRACE_READ: return "trace-read";
-        case RXAS_FLOW_USE_CURSOR_READ: return "cursor-read";
-        case RXAS_FLOW_USE_CURSOR_WRITE: return "cursor-write";
         case RXAS_FLOW_USE_CALL_WINDOW_READ: return "call-window-read";
         case RXAS_FLOW_USE_OPAQUE_OBSERVATION: return "opaque";
     }
@@ -1135,7 +1099,7 @@ int rxas_flow_use_dump(const RxasFlowUseAnalysis *analysis,
             "explicit=%llu read-write=%llu writes=%llu opaque-writes=%llu "
             "implicit=%llu "
             "metadata=%llu "
-            "trace=%llu cursor-read=%llu cursor-write=%llu "
+            "trace=%llu "
             "call-window=%llu opaque=%llu unknown=%llu "
             "phi-edges=%llu live-values=%llu budget=%llu work=%llu "
             "retained-bytes=%llu\n",
@@ -1148,8 +1112,6 @@ int rxas_flow_use_dump(const RxasFlowUseAnalysis *analysis,
             (unsigned long long)analysis->metrics.implicit_reads,
             (unsigned long long)analysis->metrics.metadata_reads,
             (unsigned long long)analysis->metrics.trace_reads,
-            (unsigned long long)analysis->metrics.cursor_reads,
-            (unsigned long long)analysis->metrics.cursor_writes,
             (unsigned long long)analysis->metrics.call_window_reads,
             (unsigned long long)analysis->metrics.opaque_observations,
             (unsigned long long)analysis->metrics.unknown_values,

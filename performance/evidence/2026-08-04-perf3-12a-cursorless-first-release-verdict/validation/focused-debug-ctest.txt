@@ -1,0 +1,68 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug-perf3-12a
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/24 Test    #1: linked_opt_runtime_artifacts_build .........   Passed  206.41 sec
+      Start  349: perf2_04_certified_call
+      Start  473: binary_memory_source_run_noopt
+      Start  653: inline_test_stateful_assembler_run_noopt
+      Start  474: binary_memory_source_run_opt
+      Start  654: inline_test_stateful_assembler_run_opt
+      Start   23: rxc_binary_memory_source
+      Start  256: inline_test_stateful_assembler_noopt
+      Start  257: inline_test_stateful_assembler_opt
+      Start  350: perf2_05_partial_call
+      Start 1745: rxas_flow_graph_contract
+ 2/24 Test #1745: rxas_flow_graph_contract ...................   Passed    0.01 sec
+      Start 1061: ts_regvalue_tester
+ 3/24 Test #1061: ts_regvalue_tester .........................   Passed    0.01 sec
+      Start 1744: rxas_optimizer_metadata
+ 4/24 Test #1744: rxas_optimizer_metadata ....................   Passed    0.01 sec
+      Start    9: rxas_reject_non_source_mnemonics
+ 5/24 Test    #9: rxas_reject_non_source_mnemonics ...........   Passed    0.20 sec
+      Start 1847: asutf_opt
+ 6/24 Test #1847: asutf_opt ..................................   Passed    0.23 sec
+      Start 1846: asutf_noopt
+ 7/24 Test #1846: asutf_noopt ................................   Passed    0.01 sec
+      Start 1080: rxasutfflagtests
+ 8/24 Test #1080: rxasutfflagtests ...........................   Passed    0.01 sec
+      Start 1167: rxasstringtests-rxbvm
+ 9/24 Test #1167: rxasstringtests-rxbvm ......................   Passed    0.37 sec
+      Start 1081: rxasutfflagtests-rxbvm
+10/24 Test #1081: rxasutfflagtests-rxbvm .....................   Passed    0.01 sec
+      Start 1166: rxasstringtests
+11/24 Test #1166: rxasstringtests ............................   Passed    0.01 sec
+      Start 1251: rxasinstructiongaptests-rxbvm
+12/24 Test #1251: rxasinstructiongaptests-rxbvm ..............   Passed    0.01 sec
+      Start 1172: rxasbinaryslicetests
+13/24 Test #1172: rxasbinaryslicetests .......................   Passed    0.01 sec
+      Start 1250: rxasinstructiongaptests
+14/24 Test #1250: rxasinstructiongaptests ....................   Passed    0.01 sec
+      Start 1173: rxasbinaryslicetests-rxbvm
+15/24 Test #1173: rxasbinaryslicetests-rxbvm .................   Passed    0.01 sec
+16/24 Test  #350: perf2_05_partial_call ......................   Passed    1.24 sec
+17/24 Test  #257: inline_test_stateful_assembler_opt .........   Passed    1.87 sec
+18/24 Test  #256: inline_test_stateful_assembler_noopt .......   Passed    1.89 sec
+19/24 Test   #23: rxc_binary_memory_source ...................   Passed    1.97 sec
+20/24 Test  #654: inline_test_stateful_assembler_run_opt .....   Passed    2.13 sec
+21/24 Test  #474: binary_memory_source_run_opt ...............   Passed    2.30 sec
+22/24 Test  #653: inline_test_stateful_assembler_run_noopt ...   Passed    2.33 sec
+23/24 Test  #473: binary_memory_source_run_noopt .............   Passed    2.43 sec
+24/24 Test  #349: perf2_04_certified_call ....................   Passed    6.48 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Label Time Summary:
+compiler       =   7.71 sec*proc (2 tests)
+constants      =   7.71 sec*proc (2 tests)
+flow           =   0.01 sec*proc (1 test)
+imports        =   6.48 sec*proc (1 test)
+inlining       =   1.24 sec*proc (1 test)
+linked_opt     =   4.66 sec*proc (3 tests)
+metadata       =   0.02 sec*proc (2 tests)
+optimizer      =   0.02 sec*proc (2 tests)
+perf2_04       =   6.48 sec*proc (1 test)
+perf2_05       =   1.24 sec*proc (1 test)
+performance    =   7.71 sec*proc (2 tests)
+rxas           =   0.02 sec*proc (2 tests)
+smoke          =   0.58 sec*proc (4 tests)
+
+Total Test time (real) = 212.93 sec

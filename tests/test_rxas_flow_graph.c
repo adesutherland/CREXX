@@ -2525,7 +2525,6 @@ static void test_sparse_use_and_liveness(Assembler_Context *context) {
     const RxasFlowUseAnalysis *uses;
     const RxasFlowUseMetrics *metrics;
     RxasFlowComponentFact fact;
-    RxasFlowStorageFact storage;
     const RxasFlowUse *use;
     char *dump;
     size_t copy_instruction;
@@ -2534,7 +2533,6 @@ static void test_sparse_use_and_liveness(Assembler_Context *context) {
     int saw_explicit;
     int saw_metadata;
     int saw_trace;
-    int saw_cursor;
 
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0);
@@ -2674,45 +2672,12 @@ static void test_sparse_use_and_liveness(Assembler_Context *context) {
     }
     fixture_destroy(&fixture);
 
-    memset(&fixture, 0, sizeof(fixture));
-    operands[0] = fixture_register(&fixture, 1);
-    operands[1] = fixture_register(&fixture, 0);
-    fixture_op(&fixture, "scopy", operands, 2);
-    operands[0] = fixture_register(&fixture, 2);
-    operands[1] = fixture_register(&fixture, 1);
-    fixture_op(&fixture, "getstrpos", operands, 2);
-    fixture_op(&fixture, "ret", 0, 0);
-    procedure = rxas_flow_procedure_build(context, fixture.items,
-                                          fixture.item_count, 31);
-    check(procedure != 0, "cursor-use fixture construction failed");
-    if (procedure) {
-        ssa = rxas_flow_require_ssa_analysis(procedure, 31, 0);
-        copy_instruction = rxas_flow_procedure_record(
-                procedure, 31, 0)->instruction_id;
-        check(ssa && rxas_flow_storage_at_instruction(
-                    ssa, 31, copy_instruction, 1,
-                    fixture_local_register(1), &storage),
-              "SCOPY destination storage was unavailable");
-        uses = rxas_flow_require_use_analysis(procedure, 31, 0);
-        saw_cursor = 0;
-        for (index = 0; uses && index < rxas_flow_storage_use_count(
-                    uses, 31, storage.storage_id); index++) {
-            use = rxas_flow_storage_use(
-                    uses, 31, storage.storage_id, index);
-            if (use && use->kind == RXAS_FLOW_USE_CURSOR_READ)
-                saw_cursor = 1;
-        }
-        check(saw_cursor,
-              "SCOPY destination cursor observation was not indexed");
-        rxas_flow_procedure_destroy(procedure);
-    }
-    fixture_destroy(&fixture);
 }
 
 static void test_typed_copy_redirect_proof(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
-    Assembler_Token *operands[3];
+    Assembler_Token *operands[4];
     instruction_queue *metadata;
     const RxasFlowProofService *proof;
     RxasFlowTypedCopyPlan plan;
@@ -2807,22 +2772,41 @@ static void test_typed_copy_redirect_proof(Assembler_Context *context) {
     operands[1] = fixture_register(&fixture, 0);
     fixture_op(&fixture, "scopy", operands, 2);
     operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_integer(&fixture, 0);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 4);
     operands[1] = fixture_register(&fixture, 1);
-    fixture_op(&fixture, "getstrpos", operands, 2);
-    operands[0] = fixture_register(&fixture, 2);
+    operands[2] = fixture_register(&fixture, 2);
+    operands[3] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "substring", operands, 4);
+    operands[0] = fixture_register(&fixture, 4);
     fixture_op(&fixture, "ret", operands, 1);
     procedure = rxas_flow_procedure_build(context, fixture.items,
                                           fixture.item_count, 34);
     check(procedure != 0,
-          "cursor-observed typed-copy fixture construction failed");
+          "explicit-slice typed-copy fixture construction failed");
     if (procedure) {
         proof = rxas_flow_require_proof_service(procedure, 34, 0);
         candidate = rxas_flow_procedure_record(
                 procedure, 34, 1)->instruction_id;
         check(proof && rxas_flow_prove_typed_copy_redirect(
-                    proof, 34, candidate, &plan) && !plan.proved &&
-              plan.reason == RXAS_FLOW_PROOF_CURSOR_OBSERVED,
-              "SCOPY cursor observation did not block typed-copy deletion");
+                    proof, 34, candidate, &plan) && plan.proved &&
+              plan.reason == RXAS_FLOW_PROOF_PROVED &&
+              plan.component == RXOP_COMPONENT_STRING &&
+              plan.rewrite_count == 1,
+              "explicit SUBSTRING did not permit SCOPY redirection");
+        check(rxas_flow_typed_copy_plan_rewrite(
+                    proof, 34, &plan, 0, &rewrite) &&
+              rewrite.instruction_id ==
+                    rxas_flow_procedure_record(
+                            procedure, 34, 4)->instruction_id &&
+              rewrite.operand_index == 1 &&
+              rewrite.expected_register.number == 1 &&
+              rewrite.replacement_register.number == 0,
+              "explicit SUBSTRING redirection targeted the wrong operand");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);

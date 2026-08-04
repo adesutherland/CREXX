@@ -109,7 +109,7 @@ static rxpa_utf8_validation_result rxpa_validate_value_tree(
             return RXPA_UTF8_INVALID;
         }
         v->string_chars = chars;
-        v->string_char_pos = 0;
+        string_cache_reset(v);
         mark_utf8_valid_count(v);
     }
 #endif

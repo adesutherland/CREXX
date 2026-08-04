@@ -100,8 +100,7 @@ rexxclassicbif_center: procedure = .RexxValue
     difference = string_length - width
     start = difference
     assembler idiv start,start,2
-    assembler SETSTRPOS string,start
-    assembler substring result,string,width
+    assembler substring result,string,start,width
     return .RexxValue(result)
   end
 
