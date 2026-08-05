@@ -664,6 +664,8 @@ static rxvm_plugin *new_decplugin() {
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
     plugin->base.type = RXVM_PLUGIN_DECIMAL;
+    plugin->base.signal_number = RXSIGNAL_NONE;
+    plugin->base.signal_string = NULL;
     plugin->base.private_context = context;
     plugin->base.name = "mcdecimal";
     plugin->base.version = "Plugin:0.1 Library:3.64";

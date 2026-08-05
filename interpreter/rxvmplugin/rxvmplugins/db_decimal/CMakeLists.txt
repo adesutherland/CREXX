@@ -9,6 +9,7 @@ include(${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/RxvmPluginFunction.cmake)
 
 # Add the dynamic plugin library
 add_dynamic_rxvmplugin_target(db_decimal_dynamic db_decimal.c)
+target_link_libraries(db_decimal_dynamic ${CREXX_MATH_LIBRARY})
 
 # Set the output name to db_decimal
 set_target_properties(db_decimal_dynamic PROPERTIES OUTPUT_NAME db_decimal)
