@@ -781,7 +781,12 @@ unchanged from the epoch. K01 remains a separately budgeted storage-
 permutation epoch, and K05 remains a later CFG-only batch because topology-
 changing rewrites require a different compatibility proof from semantic SSA
 rewrites. Deterministic `PERF3 semantic-batch` diagnostics report plans,
-changed/deleted records, opcode replacements and operand rewrites.
+changed/deleted records, opcode replacements, operand rewrites and private
+locals provisioned. A transaction may retarget the register operand of an
+otherwise unchanged TRACE record when an immutable proof plan owns that exact
+event. Procedure `.locals` and the assembler's current-local count advance only
+after every record in the transaction validates and commits; a rejected or
+zero-candidate plan cannot leak a local or leave a partial TRACE rewrite.
 
 An immediate one-based `linkattr1` can additionally name an interned attribute
 path.  Its identity contains the owner `StorageId`, exact attribute-count
@@ -829,6 +834,28 @@ Reference objects are a separate observation from register-to-storage aliases:
 an earlier `mkref` may keep either storage visible even when the register alias
 census is one. X01 therefore rejects a placement when such a reference-creation
 path can reach the candidate; reference lifetime/release is not guessed.
+
+H01 is the first loop-capable value-reuse consumer. It recognizes repeated
+joined string keys only after exact CONCAT component metadata identifies an
+equivalent literal/constant left component and right-component `ValueId`.
+The proof requires a dominating lazy seed and candidate within one common
+reducible natural loop, private destination storage at both construction
+sites, exact signal/effect compatibility and a complete redirectable use set.
+Source order and register-number equality are not proofs. A changed component,
+reference or alias exposure, relevant call-window observation, unowned TRACE
+event, irreducible/no-common loop, stale epoch or exhausted capability rejects
+the candidate.
+
+Accepted candidates sharing one seed are planned against the same immutable
+epoch and receive one new private local. The seed CONCAT, its exact TRACE event
+and direct proved seed uses are retargeted to that local; later equivalent
+CONCAT and owned TRACE records are deleted and their stem-key uses are
+redirected. This permits the compiler's former temporary register to be reused
+or overwritten later without changing the cached generation. Placement remains
+lazy: the current production case deliberately rejects preheader hoisting
+because the seed is conditional, the right component is loop-variant and the
+TRACE event is ordered. The mechanism is metadata/value/use driven rather than
+specific to RexxCPS, a stem name or a register number.
 
 The first migrated authority was repeated one-register `itos`.  A deletion
 requires the generator's successful continuation to dominate the candidate,

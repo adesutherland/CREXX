@@ -1,0 +1,80 @@
+Wed Aug  5 08:23:26 BST 2026
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+sysctl: unknown oid 'kern.thermal_pressure'
+ 8:23  up 22 days,  1:31, 1 user, load averages: 5.42 3.20 2.13
+44d8b6a7ecd7d42bc14ff2b7d6a7ac355abf21c8
+## develop...origin/develop [ahead 7]
+?? performance/evidence/2026-08-05-perf3-12b-mac-scorecard/
+?? performance/manifests/perf3-12b-current-mac-v1.txt
+[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g44d8b6a7ecd7 [0m (macOS 64 20260805)
+cREXX License (MIT)
+Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+See https://github.com/adesutherland/CREXX for project details
+Open Object Rexx Version 5.1.0 r12973
+Build date: May  2 2025
+Addressing mode: 64
+Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
+Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.
+This program and the accompanying materials are made available under the terms
+of the Common Public License v1.0 which accompanies this distribution or at
+https://www.oorexx.org/license.html
+/opt/homebrew/bin/regina: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025 (64 bit)
+openjdk version "26.0.1" 2026-04-21
+OpenJDK Runtime Environment Temurin-26.0.1+8 (build 26.0.1+8)
+OpenJDK 64-Bit Server VM Temurin-26.0.1+8 (build 26.0.1+8, mixed mode, sharing)
+  598  38.6 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+76455  23.1 /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XprotectService.xpc/Contents/MacOS/XprotectService
+  649  10.3 /usr/libexec/syspolicyd
+ 1088   5.4 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+  606   3.6 /usr/libexec/trustd
+ 1137   3.2 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+51448   2.2 /usr/libexec/amfid
+ 1074   1.2 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+  565   0.5 /usr/libexec/opendirectoryd
+  524   0.5 /usr/libexec/logd
+51736   0.3 /bin/zsh
+ 1535   0.3 /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+ 1089   0.3 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+  591   0.3 /usr/sbin/notifyd
+  881   0.1 /usr/sbin/cfprefsd
+  528   0.1 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+    1   0.1 /sbin/launchd
+99817   0.0 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+99070   0.0 /System/Library/CoreServices/osanalyticshelper
+98927   0.0 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl

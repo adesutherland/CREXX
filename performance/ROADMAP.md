@@ -177,6 +177,15 @@ deficits, Towers remains separate, and RexxCPS is above ooRexx parity but below
 cells received the sole permitted append and remain labelled. Evidence:
 [`2026-08-04-perf3-11-k04e-mac-scorecard`](evidence/2026-08-04-perf3-11-k04e-mac-scorecard/).
 
+The accepted PERF3-12B merged-product refresh at `44d8b6a7e` is now the
+current formal Apple scorecard. It passes 348/348 executions with no noise
+append: common-five means are `2.375939x/2.376230x` versus ooRexx and
+`0.852882x/0.852987x` versus decimal NetRexx for `rxvm`/`rxbvm`. RexxCPS is
+47.203/47.093 MCPS, or `1.172472x/1.165701x` ooRexx. The high-level ranking is
+unchanged and independent-session movement from K04e is descriptive only.
+Evidence:
+[`2026-08-05-perf3-12b-mac-scorecard`](evidence/2026-08-05-perf3-12b-mac-scorecard/).
+
 The subsequent fixed-work PERF3-12 reassessment records current optimized
 RexxCPS totals of 53,660,581/53,660,552. K04e accounts for the exact 560,000
 hot-site reduction, while every ranked clause opportunity retains its original
@@ -391,7 +400,7 @@ their recorded trigger fires:
 | PERF3-11 | P0 | Scalable RXAS flow, signal policy and sparse component SSA | complete — K04e accepted | Gates 1-6, M01-M06 and K01-K06 are locked. D0.1-D0.5 provide explicit routes, one immutable graph, capability-lazy proofs, sparse transactional rewrites and a 142.7-142.9 MB Parse boundary. D0.6 retains the peephole as the permanent cheap pre-SSA stage and records a standing ownership rule for exact local metadata-proved transformations. Its accepted 100-record bound leaves the exact RexxCPS analysis and image unchanged versus 20 at an approximately 10 ms ordinary assembly cost. K04e restores the hot in-place integer compare/branch fusion through the source's pre-write ValueId and existing SSA-owned liveness, alias, cleanup and TRACE proof, without restoring the tactical rule. It removes one static instruction and exactly 560,000 equal-work dispatches; the 36-pair runtime verdict is noisy/inconclusive with positive point estimates and no guard hit. Broad Debug passes 2,021/2,021. Procedure-length windows remain a retained negative unless sparsity repays scan cost. The future ledger retains RXC-to-RXAS ownership, inlining redesign, hoisting, register work and the bounded region-proof follow-on. Control: [`PERF3-11-WORKLIST.md`](PERF3-11-WORKLIST.md); K04e verdict: [`2026-08-04-perf3-11-k04e-first-release-verdict`](evidence/2026-08-04-perf3-11-k04e-first-release-verdict/); D0.6 verdict: [`2026-08-04-perf3-11-d06-pre-ssa-boundary`](evidence/2026-08-04-perf3-11-d06-pre-ssa-boundary/); migration: [`PERF3-11-MIGRATION-WORKLIST.md`](PERF3-11-MIGRATION-WORKLIST.md); K06: [`2026-08-03-perf3-11-k06-mechanical-classification`](evidence/2026-08-03-perf3-11-k06-mechanical-classification/); K01: [`2026-08-03-perf3-11-k01-storage-permutation`](evidence/2026-08-03-perf3-11-k01-storage-permutation/); K02/K03: [`2026-08-03-perf3-11-k02-k03-linked-reads`](evidence/2026-08-03-perf3-11-k02-k03-linked-reads/); K04: [`2026-08-03-perf3-11-k04-call-window`](evidence/2026-08-03-perf3-11-k04-call-window/); M06: [`2026-08-03-perf3-11-m06-producer-forwarding`](evidence/2026-08-03-perf3-11-m06-producer-forwarding/). |
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — implementation queue accepted | The checksum-closed analysis ranks transactional PARSE, compound tails, copied XTOY, and later inlining/register work while ordering implementation by proof readiness. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md); evidence: [`2026-08-04-perf3-12-rexxcps-clause-rereview`](evidence/2026-08-04-perf3-12-rexxcps-clause-rereview/); reassessment: [`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/). |
 | PERF3-12A | P1 | Cursorless RXAS and copied-XTOY placement | complete — accepted and published | Cursorless RXAS removes all optimizer-visible cursor boundaries. X1 atomically removes two of five generated `DCOPY`/`DTOS` sites and fixed-work optimized RexxCPS falls from 53,659,088/53,659,041 to 52,839,051 instructions under `rxvm`/`rxbvm`: -820,037/-819,990 (-1.528235%/-1.528149%). Both VMs remove exactly 820,000 `DCOPY` and 36,080,000 copied bytes while retaining all 2,220,000 `DTOS`; full assembly remains sparse at 0.51 s/134.7 MB. Focused RXAS passes 78/78, broad Debug has 2,034/2,034 functional outcomes, and final implementation is `4a480bbfa` on published `develop`. Old build/worktree RXBIN must be rebuilt. Control: [`PERF3-12A-WORKLIST.md`](PERF3-12A-WORKLIST.md); X1 verdict: [`2026-08-04-perf3-12a-x1-first-release-verdict`](evidence/2026-08-04-perf3-12a-x1-first-release-verdict/); cursorless verdict: [`2026-08-04-perf3-12a-cursorless-first-release-verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/). |
-| PERF3-12B | P1 | Compound-tail representation and loop-scoped reuse | in progress — B4 complete; route-selection stop | The AC comparative panel reaches the 36-pair cap without deleting either retained low S0/rxbvm observation. H1 is clear favorable at +3.075212%/+4.274944% paired median CPS on `rxvm`/`rxbvm`, with both mean 95% intervals wholly positive; S1 remains noisy/inconclusive on `rxvm` at +0.673386% and is only +0.523554% on `rxbvm`. Counts confirm both remove 1.96M CONCATs, but S1 adds about 0.28M LOADs while H1 adds no hot setup. Allocation/copy/RSS and 0.33 s/~133 MB assembly scale are neutral; H1 leaves first-epoch SSA bytes at 83,902,504. Native selectors pass 16/16 each, graph/metadata pairs 2/2, six exact dual-VM cells pass and the Sieve negative emits byte-identical zero-selection images. H1 is recommended; no production route is installed before Adrian's selection. Control: [`PERF3-12B-WORKLIST.md`](PERF3-12B-WORKLIST.md); evidence: [`B2 S1 PoC`](evidence/2026-08-04-perf3-12b-b2-s1-poc/), [`B3 H1 PoC`](evidence/2026-08-04-perf3-12b-b3-h1-poc/), [`B4 comparative panel`](evidence/2026-08-04-perf3-12b-b4-comparative-panel/). |
+| PERF3-12B | P1 | Compound-tail representation and loop-scoped reuse | complete — H1 accepted and merged | The selected capability-lazy H1 proof retains one conditional joined-key seed in a fresh private local and redirects four later proved-equivalent uses. It removes 1.96M hot CONCAT dispatches with no setup instruction; B4 is clear favorable at +3.075212%/+4.274944% paired median CPS on `rxvm`/`rxbvm`, and the clean B5 production verdict is clear on `rxvm`. Canonical RexxCPS emits 1,210 static instructions, `main 380 -> 365`, and `.locals=104`; Sieve is a byte-identical zero-candidate guard. The fresh merged-product Apple scorecard passes 348/348 with no append and keeps both VMs above the 2.00x ooRexx aggregate target. S1 remains a replayable rejected fallback. Control: [`PERF3-12B-WORKLIST.md`](PERF3-12B-WORKLIST.md); evidence: [`B4 comparative panel`](evidence/2026-08-04-perf3-12b-b4-comparative-panel/), [`B5 first verdict`](evidence/2026-08-05-perf3-12b-b5-first-release-verdict/), [`current Mac scorecard`](evidence/2026-08-05-perf3-12b-mac-scorecard/). |
 
 ## Approved execution order
 
@@ -1188,6 +1197,30 @@ allocation, RSS and assembler scale remain neutral. H1 is recommended, but the
 programme is stopped for Adrian to select S0, S1 or H1 before B5 production
 reimplementation. Evidence:
 [`B4 comparative panel`](evidence/2026-08-04-perf3-12b-b4-comparative-panel/).
+
+Adrian selected H1 on 2026-08-05. B5 reimplemented the proof and consumer in
+production rather than importing the PoC decision wholesale: immutable
+ValueIds, exact signal/use plans and one transactionally provisioned private
+local authorize four later joined-key reuses. Canonical `main` emits
+`380 -> 365` with `.locals=104`; focused Debug/Release, native-stem, dual-VM and
+zero-candidate gates pass. The first ordinary Release verdict is independently
+clear favorable on `rxvm` at +2.557920% paired median; its small `rxbvm` panel
+is +3.169497% but interval-inconclusive after one retained low observation.
+Adrian accepted the verdict; the B4 36-pair result remains the both-VM causal
+authority. Evidence:
+[`B5 first verdict`](evidence/2026-08-05-perf3-12b-b5-first-release-verdict/).
+
+B6 merges the accepted work with current `origin/develop` at clean product
+`44d8b6a7e` and retains a fresh formal Mac scorecard. All 348 executions pass
+without a noise append. Common-five means remain above the 2.00x ooRexx target
+at `2.375939x/2.376230x`; RexxCPS is 47.203/47.093 MCPS and the static image is
+exactly the selected H1 count of 1,210 instructions. Independent-session
+movement from K04e is descriptive, while B4/B5 retain causal ownership. S1 and
+H1 replay material remains in checksum-closed evidence after disposable PoC
+worktrees are removed. The next performance implementation slice is PERF3-12C
+transactional PARSE, after Adrian's separately planned RXVM per-worker arena
+and central block-depot work. Evidence:
+[`current Mac scorecard`](evidence/2026-08-05-perf3-12b-mac-scorecard/).
 
 ## Authoritative references
 

@@ -1,0 +1,49 @@
+Command: cmake --build cmake-build-debugasan --target test_rxas_flow_graph test_rxop_metadata rxas --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[0/2] Re-checking globbed directories...
+[1/27] Create REXX ASSEMBLER Parser...
+[2/27] Create REXX ASSEMBLER Lexer...
+[3/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[4/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[5/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[6/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[7/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[8/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o
+[9/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[10/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[11/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[12/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o
+[13/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[14/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[15/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[16/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[17/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[18/27] Building C object assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o
+[19/27] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+/Users/adrian/CLionProjects/CREXX/assembler/rxasmain.c:262:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  262 |         sprintf(combined_location, ".;%s;%s", scanner.location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/assembler/rxasmain.c:270:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  270 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[20/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[21/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[22/27] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[23/27] Linking C static library bin/librxaslib.a
+[24/27] Linking C executable bin/rxas
+[25/27] Building C object tests/CMakeFiles/test_rxas_flow_graph.dir/test_rxas_flow_graph.c.o
+[26/27] Linking C executable tests/test_rxas_flow_graph

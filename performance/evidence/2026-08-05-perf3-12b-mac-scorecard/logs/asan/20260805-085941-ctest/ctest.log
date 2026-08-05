@@ -1,0 +1,75 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxas_optimizer_metadata\|rxas_flow_graph_contract\|rxas_optimizer_semantic_batch_flow\|rxas_optimizer_joined_key_private_local\|rxas_optimizer_joined_key_private_local_noopt\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1755: rxas_optimizer_metadata
+1/5 Test #1755: rxas_optimizer_metadata .........................   Passed    0.30 sec
+    Start 1756: rxas_flow_graph_contract
+2/5 Test #1756: rxas_flow_graph_contract ........................   Passed    0.32 sec
+    Start 1769: rxas_optimizer_semantic_batch_flow
+3/5 Test #1769: rxas_optimizer_semantic_batch_flow ..............***Failed    0.34 sec
+CMake Error at /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/check_optimizer.cmake:40 (message):
+  rxdas failed for
+  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxas_optimizer/semantic_batch_flow/semantic_batch_flow.rxbin
+
+  case: semantic_batch_flow
+
+  stdout:
+
+
+
+  stderr:
+
+
+
+
+    Start 1770: rxas_optimizer_joined_key_private_local
+4/5 Test #1770: rxas_optimizer_joined_key_private_local .........***Failed    0.06 sec
+CMake Error at /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/check_optimizer.cmake:40 (message):
+  rxdas failed for
+  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxas_optimizer/joined_key_private_local/joined_key_private_local.rxbin
+
+  case: joined_key_private_local
+
+  stdout:
+
+
+
+  stderr:
+
+
+
+
+    Start 1771: rxas_optimizer_joined_key_private_local_noopt
+5/5 Test #1771: rxas_optimizer_joined_key_private_local_noopt ...***Failed    0.05 sec
+CMake Error at /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/check_optimizer.cmake:40 (message):
+  rxdas failed for
+  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxas_optimizer/joined_key_private_local_noopt/joined_key_private_local.rxbin
+
+  case: joined_key_private_local_noopt
+
+  stdout:
+
+
+
+  stderr:
+
+
+
+
+
+40% tests passed, 3 tests failed out of 5
+
+Label Time Summary:
+flow         =   0.32 sec*proc (1 test)
+metadata     =   0.62 sec*proc (2 tests)
+optimizer    =   1.07 sec*proc (5 tests)
+rxas         =   1.07 sec*proc (5 tests)
+
+Total Test time (real) =   1.10 sec
+
+The following tests FAILED:
+	1769 - rxas_optimizer_semantic_batch_flow (Failed)       optimizer rxas
+	1770 - rxas_optimizer_joined_key_private_local (Failed)  optimizer rxas
+	1771 - rxas_optimizer_joined_key_private_local_noopt (Failed) optimizer rxas
+Errors while running CTest

@@ -7,8 +7,8 @@ d007aa8ae3bda702d2d724f749eeed04b7b2d9b32e295269e758cc225fd8d551  performance/ev
 b73ec95678dc25d778ed0ccad492031a2aee01c79634080e6cbacc16278ec0c1  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/logs/focused-debug-ctest.log
 d2c967aa5e8bbe2b23c545d6697e342fff4ebf8e80c3211f188abac98f4bdc5e  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/logs/focused-release-ctest.log
 e1925eff27bda58d77f45858cbe59781e4207e115bda2fb44c96ff10edccc4e4  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/diagnostic-summary.txt
-eb4f564c0cf439ac400a7301c7927d2a233032f0c7b8a8d657d7994cb6c59587  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/production-disassembly.rxas
-cab5890b45127028a4f995c2f390775b960f24476fdb5ace1f6a58c50bdef73f  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/s0-disassembly.rxas
+8d2a9201d50af482d69e2863a96dcd48d898442b7e25768728365fb69f2abde2  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/production-disassembly.rxas
+c6939057b78e3d90d63d0acefddd4c511c6c4ed6429fefa1dcc6f6b06bf37810  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/s0-disassembly.rxas
 43f41e0e62b07e908d7c4b1cc354baf37b92bd83ba87ebab974db25739280504  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/capture-manifest.json
 d6e060520087f061b848de8d2fa7c5e2c6e712e9ff058d7b050840927966ee03  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/outputs.csv
 176cd676e59f21b433710503e0a78a80331dd4684af2a0843b5c250998078bed  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/paired.csv

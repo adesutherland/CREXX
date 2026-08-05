@@ -1,0 +1,4 @@
+[0/2] Re-checking globbed directories...
+[1/4] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[2/4] Linking C static library bin/librxaslib.a
+[3/4] Linking C executable bin/rxas

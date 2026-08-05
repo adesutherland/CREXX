@@ -1,8 +1,10 @@
 # PERF3-12B compound-tail representation and reuse
 
-Status: in progress — H1 production verdict accepted; B6 closeout in progress
+Status: complete — H1 accepted, merged, scorecarded and published through B6
 
 Started: 2026-08-04
+
+Completed: 2026-08-05
 
 Purpose: compare two general ways to remove repeated materialization of native
 stem compound tails: existing two-segment stem operations and loop-scoped reuse
@@ -12,7 +14,10 @@ scale and end-to-end effect.
 
 ## Authority and stop boundaries
 
-- Branch: `codex/perf3-12b-compound-tail`.
+- Implementation branch: `codex/perf3-12b-compound-tail`, merged into
+  `develop` as clean product `44d8b6a7e` and removed during B6. The isolated
+  S1/H1 PoC worktrees and branches are also removed; their independently
+  replayable patches remain checksum-closed below.
 - Published starting commit: `965b461d813f6042063ee786d8d00cea870da096`
   on `develop`. The accepted X1 implementation is `4a480bbfa`; the later merge
   integrates only René's RexxDoc formatter work.
@@ -339,16 +344,45 @@ Evidence:
 
 ### B6 — proportional closeout after acceptance
 
-- [ ] Remove disposable PoCs while retaining replayable patches/evidence for
+- [x] Remove disposable PoCs while retaining replayable patches/evidence for
   selected and rejected options.
-- [ ] Run focused plus required broad correctness and any selected sanitizer or
+- [x] Run focused plus required broad correctness and any selected sanitizer or
   supported-platform checks justified by the changed surface.
-- [ ] Update RXAS/VM/compiler documentation and the live roadmap.
-- [ ] Commit and publish only when requested.
+- [x] Update affected RXAS documentation and the live roadmap; audit VM/compiler
+  documentation and retain it unchanged because H1 adds no opcode, VM or RXC
+  behavior.
+- [x] Commit and publish only when requested; Adrian requested both for this
+  closeout on 2026-08-05.
+
+Retained B6 outcome:
+
+- the fresh clean merged-product Apple scorecard passes all 348 processes
+  (58 warmups plus 290 recorded observations), zero cells require an append,
+  and both VM common-five geometric means remain above the `2.00x` ooRexx
+  target at `2.375939x/2.376230x`;
+- RexxCPS reaches 47.203/47.093 MCPS and retains exactly the selected H1 static
+  shape: 1,210 instructions and `.locals=104`;
+- the scorecard is an absolute current-product report, not an unmatched causal
+  comparison with K04e. B4/B5 remain the causal H1 authorities;
+- a strict GNU90 warning pass is clean, the full Debug product builds and all
+  2,039 CTests pass, while focused Apple AddressSanitizer passes 5/5 after the
+  runner records that LeakSanitizer is unsupported on this platform;
+- the final unsigned capability-mask cleanup rebuilds `rxas` to the identical
+  SHA-256, so it does not invalidate the clean-product scorecard;
+- the affected RXAS architecture reference, live performance roadmap, master
+  benchmark index and team update are current. No RXC or VM semantic surface
+  changed; and
+- both PoC replay bundles verify before their clean worktrees/branches are
+  removed. The separate RXVM worker-memory worktree and the older pre-flow
+  checkpoint remain untouched.
+
+Evidence:
+[`2026-08-05-perf3-12b-mac-scorecard`](evidence/2026-08-05-perf3-12b-mac-scorecard/).
 
 ## Immediate next step
 
-`B6 — proportional closeout after accepted H1 production verdict`: integrate
-current `origin/develop`, capture a fresh formal Apple scorecard from the final
-profiling-off product, run broad QA, close documentation/evidence, remove only
-the disposable S1/H1 PoC worktrees and publish when every gate is green.
+PERF3-12B is closed. Adrian will next integrate the separate RXVM per-worker
+arena plus central block-depot memory restructure. After that work, resume the
+performance implementation queue at `PERF3-12C — transactional PARSE`, using
+the now-proven sparse proof service without implicitly combining the two
+programmes.
