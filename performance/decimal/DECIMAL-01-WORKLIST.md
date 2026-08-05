@@ -1,6 +1,6 @@
 # DECIMAL-01 decimal correctness and performance worklist
 
-Status: **focused repair accepted; Gate 1 baseline preparation open; no timing reservation or candidate selected**
+Status: **focused repair accepted; Gate 1 harness qualified; awaiting exclusive host reservation; no candidate selected**
 
 Opened: 2026-08-05
 
@@ -240,6 +240,33 @@ speed control. Gate 1 measurement requires a newly confirmed exclusive host
 reservation. Harness construction, workload qualification and retained-command
 design are not performance evidence and may proceed before reservation.
 
+- [x] Freeze the D0s/D0d/D1a/D1b cell boundary in
+  [`GATE1-CELL-MATRIX.md`](GATE1-CELL-MATRIX.md).
+- [x] Implement fixed-work Common-18 and Classic-9 Level B workloads with a
+  runtime opaque seed and deterministic checksums.
+- [x] Implement the L1 direct decimal-plugin ABI payload without internal
+  timing or statistics.
+- [x] Qualify both VMs, opt/no-opt images, default/explicit providers, the L1
+  payload, RexxCPS decimal-string controls and optimizer-integrity checks:
+  81/81 selected Release CTests pass; elapsed values are discarded.
+- [x] Create a three-way optimizer boundary: compiler-on/RXAS-on product,
+  identical compiler-on/RXAS-off isolation control, and compiler-off/RXAS-off
+  broad diagnostic.
+- [x] Disassemble all six final context/mode RXBIN images and require them to
+  retain runtime parse/format, arithmetic and decimal comparisons rather than
+  constant-folding or assembler-optimizing away the opaque operands.
+- [x] Admit all six Classic-9 `db_decimal` modes after exact D0/D1b checksum
+  agreement; retain Common-18 `db_decimal` mismatches as D1a diagnostics.
+- [x] Define the independently authored, publishable
+  [`CREXX Decimal Benchmark (CDB-1)`](CREXX-DECIMAL-BENCHMARK.md); its Gate 1
+  kernels form the arithmetic core.
+- [ ] Add the original billing application extension before the first public
+  CDB-1 result; public Telco material may inform its shape but restricted source
+  or data is not copied.
+- [ ] Run the canonical RexxCPS provider-row guard after the host is reserved.
+- [ ] Calibrate and capture Gate 1 timing only after Adrian explicitly confirms
+  exclusive host availability.
+
 ### Gate 2 first candidate panel
 
 Queued candidates are tuned `decNumber`, `libmpdec` and fixed-34 `decQuad`.
@@ -273,9 +300,10 @@ the engineering plan.
 ## 10. Resume checkpoint
 
 Current checkpoint: Adrian accepted the focused repair and opened Gate 1
-baseline preparation. Complete the remaining operation/semantic inventory,
-broaden authoritative vectors around the repaired findings, cover the remaining
-invalid individual-setter forms and Classic quotient rule, and construct the
-independent D0/D1 workload harness. These are correctness/setup actions, not
-performance runs. Before the first timing cell, ask Adrian to clear and reserve
-the host and wait for explicit confirmation.
+baseline preparation. The independent D0/D1 harness and CDB-1 arithmetic core
+are now correctness-qualified. Complete the remaining operation/semantic
+inventory, broaden authoritative vectors around the repaired findings, cover
+the remaining invalid individual-setter forms and Classic quotient rule, and
+add the original billing application extension before publication. These are
+correctness/setup actions, not performance runs. Before the first timing cell,
+ask Adrian to clear and reserve the host and wait for explicit confirmation.

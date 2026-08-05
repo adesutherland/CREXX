@@ -12,6 +12,8 @@ and does not authorize an extended-candidate implementation.
 
 | Source | Evidence type | Useful content | Boundary |
 | --- | --- | --- | --- |
+| General Decimal Arithmetic [`decTest`](https://speleotrove.com/decimal/dectest.html) | language- and representation-independent correctness vectors | Authoritative arithmetic, conversion, rounding, status and context cases to map through the CREXX plugin surface | Correctness corpus, not a performance benchmark |
+| Cowlishaw [`Telco`](https://speleotrove.com/decimal/telco.html) and [specification](https://speleotrove.com/decimal/telcoSpec.html) | upstream-author billing application/reference workload | Explicit decimal input, per-call calculations and rounding, taxation, output and accumulation with small worked results | The author explicitly says the narrow operation mix is not suitable for benchmarking decimal implementations generally; published materials are all-rights-reserved, so CDB-1 does not copy source or bulk data |
 | Cowlishaw [`decNumber` performance appendix](https://speleotrove.com/decimal/dnperf.html) | upstream-author operation measurements | Direct fixed `decQuad`/`decDouble` versus arbitrary `decNumber` operation and conversion shapes | Historical Pentium M, Windows XP, GCC 3.4.4, default `DECDPUN=3`; useful for hypotheses, not current ratios |
 | mpdecimal [decimal benchmarks](https://www.bytereef.org/mpdecimal/benchmarks.html) | candidate-author cross-library measurements with described workloads | `libmpdec`, `decNumber`, `decDouble`/`decQuad` and Intel BID comparisons at several precisions; Mandelbrot, Telco, conversion and large-number shapes | Mostly Core 2/Athlon-era results and candidate-authored; versions and source hashes need reconstruction before reproduction |
 | mpdecimal [testing account](https://www.bytereef.org/mpdecimal/testing.html) | upstream correctness/toolchain evidence | Official IBM vectors, additional differential tests, sanitizers and broad compiler coverage | Capability and confidence evidence, not CREXX semantic equivalence or performance |
@@ -42,6 +44,11 @@ and does not authorize an extended-candidate implementation.
 5. No reviewed public evidence answers Apple M5 behaviour, CREXX adapter cost,
    plugin lifecycle, dynamic context changes, Common/Classic semantics or the
    typed VM workload mix. Those remain local proof obligations.
+6. No reviewed source establishes an IEEE, ANSI or General Decimal Arithmetic
+   performance suite. DECIMAL-01 therefore uses `decTest` for correctness and
+   publishes the independently authored CDB-1 workload definition and raw
+   results. Telco informs one original billing shape only; it is not the suite
+   or a standards-body score.
 
 ## Experiment shapes imported as hypotheses
 

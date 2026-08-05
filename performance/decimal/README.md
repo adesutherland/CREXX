@@ -31,6 +31,13 @@ observable VM/provider cells. It contains no timing. Gate 1 baseline
 preparation is now open, but its first performance cell still requires a newly
 confirmed exclusive-host reservation.
 
+The qualified Gate 1 boundary and exact checksums are recorded in
+[`GATE1-CELL-MATRIX.md`](GATE1-CELL-MATRIX.md). Those independently authored
+kernels form the arithmetic core of the draft publishable
+[`CREXX Decimal Benchmark (CDB-1)`](CREXX-DECIMAL-BENCHMARK.md). CDB-1 uses
+standard decimal semantics as its correctness authority but is not represented
+as an IEEE, ANSI or General Decimal Arithmetic performance standard.
+
 The permanent boundary is:
 
 - plans, worklists, candidate dispositions and evidence indexes live here;

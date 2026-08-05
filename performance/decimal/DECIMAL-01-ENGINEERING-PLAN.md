@@ -1,6 +1,6 @@
 # DECIMAL-01 decimal backend performance engineering plan
 
-Status: **approved; Gate 0 correctness audit active; no candidate selected**
+Status: **approved; focused repair accepted; Gate 1 harness qualified and awaiting host reservation; no candidate selected**
 
 Date: 2026-08-05
 
@@ -357,8 +357,8 @@ The first portfolio should include:
 
 1. a fixed-work add/subtract/multiply/divide mix;
 2. a conversion-heavy decimal-text ledger;
-3. Mike Cowlishaw's Telco decimal benchmark or a source-faithful,
-   licence-compatible equivalent;
+3. an independently authored, publishable CDB-1 billing workload informed by
+   Telco's public application shape without copying restricted source or data;
 4. decimal Mandelbrot with exact output/checksum and explicitly fixed context;
 5. compound-interest/amortisation work that exercises rounding boundaries;
 6. the existing RexxCPS `decimal-string` family control; and
@@ -367,6 +367,14 @@ The first portfolio should include:
 
 Canonical workloads remain unchanged. Provider diagnostics use separately
 named sources and cannot silently replace the formal portfolio.
+
+There is no reviewed standards-body arithmetic performance suite. Official
+`decTest` material remains correctness evidence. Cowlishaw's Telco workload is
+an application reference whose own documentation says its narrow operation
+mix is not suitable for benchmarking decimal implementations generally. CREXX
+therefore publishes its exact CDB-1 operation mix, inputs, work counts,
+checksums, licences and raw observations and reports any billing cell as one
+portfolio member rather than a standards benchmark.
 
 ### 7.4 Cost counters
 
@@ -534,6 +542,14 @@ L1-L3 on Apple ARM64. Attribute arithmetic, conversion, allocation, context
 and lifecycle costs. D1a mismatches remain visible and excluded from
 selection; D1b contains only individually correctness-qualified Classic-9
 workloads and remains a separately disclosed speed-control row.
+
+The prepared workload set is specified as the independently authored,
+publishable [`CREXX Decimal Benchmark (CDB-1)`](CREXX-DECIMAL-BENCHMARK.md).
+Three images are retained: compiler-on/RXAS-on as the primary product verdict,
+the identical compiler output with RXAS optimization off as the assembler
+isolation control, and compiler-off/RXAS-off as a broad diagnostic. Maintained
+qualification disassembles every final RXBIN and rejects an image if required
+runtime decimal operations have been optimized away.
 
 **Stop:** approve the first candidate batch using observed cost, not a library
 reputation.
