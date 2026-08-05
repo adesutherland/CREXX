@@ -33,7 +33,7 @@ import rxfnsb
  * equality-based helpers such as contains/indexOf. Those need an object
  * equality contract before they can be specified cleanly.
  */
-ArrayList: class implements .Iterable
+ArrayList: class implements .ObjectIterable
 size_ = .int
 val = .object[]
 

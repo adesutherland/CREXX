@@ -28,7 +28,7 @@ namespace data expose ArrayListIterator
 /**
  * Iterator for ArrayList.
  */
-ArrayListIterator: class implements .Iterator
+ArrayListIterator: class implements .ObjectIterator
 
 values_ref_ = reference .object[]
 count_ref_ = reference .int
