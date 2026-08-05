@@ -54,7 +54,7 @@ emitAlmanacClass: procedure
    namespace_ = ''
    className = ''
    classKind = 'class'
-   baseClass = 'Object'
+   baseClass = '.object'
    interfaces = .string[]
 
    memberKind = .string[]
@@ -76,7 +76,7 @@ emitAlmanacClass: procedure
       if pclass > 0 then do
          classKind = 'class'
          className = strip(left(line,pclass-1))
-         baseClass = 'Object'
+         baseClass = '.object'
          tail = strip(substr(line,pclass+7))
          call parseClassTail tail, baseClass, interfaces
          iterate

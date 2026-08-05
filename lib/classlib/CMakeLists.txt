@@ -5,14 +5,18 @@ set(CLSS
   StringIterator
   ObjectIterable
   ObjectPrintable
+  Printable
   ObjectIterator
   StringArrayList
   StringArrayListIterator
   ObjectArrayList
   ObjectArrayListIterator
   ObjectObjectTreeMapIterator
+  TreeMapIterator
   ObjectObjectTreeMap
+  TreeMap
   ObjectComparator
+  Comparator
   RexxComparator
   StringHashMap
   StringHashMapIterator
@@ -25,8 +29,8 @@ set(CLSS
   Rexx
   StringStack
   ObjectStack
-  StringOldTreeMap
   StringTreeMap
+  StringOldTreeMap
   StringTreeMapIterator
   StringObjectTreeMap
   StringObjectTreeMapIterator
@@ -102,6 +106,7 @@ set(CLASS_DEPS_StringTreeSet StringIterable StringIterator StringTreeSetIterator
 set(CLASS_DEPS_StringTreeSetIterator StringIterator)
 set(CLASS_DEPS_ObjectObjectTreeMapIterator ObjectIterator)
 set(CLASS_DEPS_ObjectObjectTreeMap ObjectObjectTreeMapIterator ObjectComparator ObjectPrintable)
+set(CLASS_DEPS_TreeMap TreeMapIterator Comparator Printable)
 
 
 if(WIN32)
