@@ -451,10 +451,23 @@ static int decimalCompareNumbers(decplugin *plugin, const decNumber *op1,
     decNumber left_buffer;
     decNumber right_buffer;
     decNumber result;
-    decNumber *left = comparisonNumber(comparison_digits, &left_buffer);
-    decNumber *right = comparisonNumber(comparison_digits, &right_buffer);
+    decNumber *left;
+    decNumber *right;
     int cmp;
 
+    /* FUZZ zero compares values already prepared at arithmetic precision.
+     * Avoid copying and applying unary plus to both operands in that normal
+     * case; the extra normalization is needed only when FUZZ reduces the
+     * significant digits used by comparison. */
+    if (comparison_digits == (size_t)arithmetic_digits) {
+        decNumberCompare(&result, op1, op2, context);
+        cmp = decNumberToInt32(&result, context);
+        check_signal(plugin);
+        return cmp;
+    }
+
+    left = comparisonNumber(comparison_digits, &left_buffer);
+    right = comparisonNumber(comparison_digits, &right_buffer);
     context->digits = (int32_t)comparison_digits;
     decNumberPlus(left, op1, context);
     decNumberPlus(right, op2, context);

@@ -56,6 +56,20 @@ _require_minimum(ddiv 2)
 _require_minimum(deq 1)
 _require_minimum(dlt 2)
 
+# A decimal immediate is parsed and allocated by the VM on every instruction
+# dispatch.  The arithmetic kernel deliberately initializes these two decimal
+# values once before its hot loop.  Compiler constant propagation must not turn
+# the loop's register operands back into repeatedly parsed immediates.
+foreach(_hot_literal IN ITEMS "0\\.125d" "3\\.125d")
+    if(_rxas MATCHES
+            "(^|\n)[^\n]*(dadd|dsub|dmult|ddiv)[ \t]+[^\n]*${_hot_literal}")
+        message(FATAL_ERROR
+                "DECIMAL-01 optimizer integrity failure for ${CASE}: "
+                "hot-loop decimal constant ${_hot_literal} was propagated "
+                "into a repeatedly parsed literal operand in ${DISASSEMBLY}")
+    endif()
+endforeach()
+
 if(NOT _source_rxas MATCHES "OPAQUE_SEED")
     message(FATAL_ERROR
             "DECIMAL-01 optimizer integrity failure for ${CASE}: "

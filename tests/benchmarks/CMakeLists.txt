@@ -53,6 +53,16 @@ crexx_add_language_benchmark(benchmark_parse_frozen_generic parse_frozen_generic
 crexx_add_language_benchmark(benchmark_rexxcps_levelb rexxcps_levelb.crexx 10
         "PASS: RexxCPS 2.2d cREXX port")
 
+add_test(
+        NAME benchmark_rexxcps_decimal_register_integrity
+        COMMAND ${CMAKE_COMMAND}
+                -DRXAS=${CMAKE_CURRENT_BINARY_DIR}/benchmark_rexxcps_levelb_opt.rxas
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_rexxcps_decimal_registers.cmake
+)
+set_tests_properties(benchmark_rexxcps_decimal_register_integrity PROPERTIES
+        LABELS "benchmark;performance;decimal;optimizer-integrity;rexxcps-control"
+)
+
 crexx_add_rexx_opt_matrix(
         NAME benchmark_rexxcps_levelb_opaque
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rexxcps_levelb_opaque.crexx

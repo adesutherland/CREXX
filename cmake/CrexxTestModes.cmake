@@ -141,6 +141,7 @@ function(crexx_add_rexx_opt_matrix)
         set(_crexx_artifact ${CREXX_WORKING_DIRECTORY}/${_crexx_output_base}.rxbin)
         add_custom_command(
                 OUTPUT ${_crexx_artifact}
+                BYPRODUCTS ${CREXX_WORKING_DIRECTORY}/${_crexx_output_base}.rxas
                 COMMAND ${_crexx_compile_cmd}
                 COMMAND ${_crexx_assemble_cmd}
                 DEPENDS ${_crexx_compile_depends}

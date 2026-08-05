@@ -78,6 +78,63 @@ static int flow_scope_owns_recyclable_registers(ASTNode *node) {
     return 1;
 }
 
+/* Return the literal held by an ordinary write-once decimal symbol without
+ * replacing the symbol use.  Decimal immediates are parsed by the VM at each
+ * instruction dispatch, so arithmetic must retain the prepared register.
+ * Counted-loop emission still benefits from the narrower fact that a fixed BY
+ * value has a known sign.  This mirrors the mature constant-propagation
+ * definition/write checks while leaving storage and TRACE-visible reads intact. */
+static const char *flow_readonly_decimal_literal(ASTNode *node) {
+    static const char zero[] = "0.0";
+    Symbol *symbol;
+    ASTNode *first;
+    ASTNode *assignment;
+    ASTNode *value;
+    size_t i;
+    size_t writes_start;
+
+    if (!node || !node->symbolNode) return 0;
+    symbol = node->symbolNode->symbol;
+    if (!symbol || symbol->type != TP_DECIMAL) return 0;
+    if (symbol->scope && symbol->scope->type == SCOPE_CLASS) return 0;
+    if (symbol->has_reference_target || symbol->value_dims) return 0;
+    if (!sym_nond(symbol)) return 0;
+
+    first = sym_trnd(symbol, 0)->node;
+    value = 0;
+    writes_start = 0;
+
+    if (first && first->node_type == VAR_TARGET && first->parent &&
+        first->parent->node_type == ASSIGN && first->sibling) {
+        value = first->sibling;
+        writes_start = 1;
+    }
+    else if (first && first->parent && first->parent->node_type == DEFINE) {
+        if (sym_nond(symbol) < 2) return zero;
+        assignment = sym_trnd(symbol, 1)->node;
+        if (assignment && assignment->node_type == VAR_TARGET &&
+            assignment->parent && assignment->parent->node_type == ASSIGN &&
+            assignment->sibling) {
+            value = assignment->sibling;
+            writes_start = 2;
+        }
+        else {
+            for (i = 1; i < sym_nond(symbol); i++) {
+                if (sym_trnd(symbol, i)->writeUsage) return 0;
+            }
+            return zero;
+        }
+    }
+    else return 0;
+
+    for (i = writes_start; i < sym_nond(symbol); i++) {
+        if (sym_trnd(symbol, i)->writeUsage) return 0;
+    }
+    if (!is_constant(value) || value->value_type != TP_DECIMAL ||
+        value->target_type != TP_DECIMAL || !value->decimal_value) return 0;
+    return value->decimal_value;
+}
+
 static void emit_dispatch(ASTNode *node) {
     ASTNode *selector = ast_chdn(node, 0);
     ASTNode *entry;
@@ -360,6 +417,7 @@ void emit_flow(ASTNode *node, void *pl) {
     char *temp2;
     char *comment_meta;
     char *op;
+    const char *constant_decimal;
     int j;
     unsigned int trace_step_id;
     unsigned int trace_clause_id;
@@ -792,6 +850,14 @@ void emit_flow(ASTNode *node, void *pl) {
                                 else j = 1;
                             }
                             else j = 0; /* Not a constant */
+                        }
+                        else if (payload->context->optimise &&
+                                 ast_chdn(n, 0)->value_type == TP_DECIMAL &&
+                                 (constant_decimal = flow_readonly_decimal_literal(ast_chdn(n, 0)))) {
+                            /* Preserve the prepared register operand while
+                             * recovering only the immutable step-sign fact. */
+                            if (constant_decimal[0] == '-') j = -1;
+                            else j = 1;
                         }
                         else j = 0; /* Not a constant */
                     }

@@ -112,6 +112,7 @@ foreach(_decimal_standard IN ITEMS common18 classic9)
             COMMAND $<TARGET_FILE:rxas>
                     -n -o ${_decimal_rxas_noopt_base} ${_decimal_name}_opt
             DEPENDS rxas ${_decimal_name}_opt_artifact
+                    ${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_opt.rxas
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     set(_decimal_rxas_noopt_target ${_decimal_rxas_noopt_base}_artifact)

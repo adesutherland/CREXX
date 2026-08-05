@@ -2230,6 +2230,14 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     if (symbol->has_reference_target) return; /* Referenced storage is alias-observable */
     if (symbol->value_dims) return; /* Arrays are never constants */
     if (symbol->type == TP_BINARY || symbol->type == TP_OBJECT || symbol->type == TP_REFERENCE) return; /* Binary, objects and references are never constants */
+    /* Decimal immediate operands are not pre-decoded constants in the VM.
+     * Each execution allocates a temporary value, parses the literal through
+     * the selected provider, and then clears and frees the value.  Replacing a
+     * single-assignment decimal register therefore turns one conversion into
+     * repeated work when the use is inside a loop.  Preserve the register and
+     * its one-time initialization.  Explicit language constants have already
+     * taken the separate explicit_constants_only path above. */
+    if (symbol->type == TP_DECIMAL) return;
     if (!sym_nond(symbol)) return; /* No nodes - weird - return */
 
 
