@@ -1,0 +1,51 @@
+Test project /Users/adrian/CLionProjects/CREXX-perf3-12b-s1-poc/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/16 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.16 sec
+      Start 1515: ts_stem_noopt
+      Start 1545: ts_stem_errors_noopt
+      Start 1944: nr15_stem_semantics_rxvm_noopt
+      Start 1946: nr15_stem_access_rxvm_noopt
+      Start 1948: nr15_stem_semantics_rxbvm_noopt
+      Start 1950: nr15_stem_access_rxbvm_noopt
+      Start  343: nr15_native_stem_contract
+      Start 1516: ts_stem_opt
+      Start 1546: ts_stem_errors_opt
+      Start 1947: nr15_stem_access_rxvm_opt
+ 2/16 Test  #343: nr15_native_stem_contract ............   Passed    0.11 sec
+      Start 1945: nr15_stem_semantics_rxvm_opt
+ 3/16 Test #1945: nr15_stem_semantics_rxvm_opt .........   Passed    0.08 sec
+      Start 1949: nr15_stem_semantics_rxbvm_opt
+ 4/16 Test #1546: ts_stem_errors_opt ...................   Passed    0.22 sec
+      Start 1951: nr15_stem_access_rxbvm_opt
+ 5/16 Test #1947: nr15_stem_access_rxvm_opt ............   Passed    0.25 sec
+      Start 1059: rxvmstem_storage
+ 6/16 Test #1059: rxvmstem_storage .....................   Passed    0.01 sec
+      Start 1752: rxas_optimizer_metadata
+ 7/16 Test #1752: rxas_optimizer_metadata ..............   Passed    0.01 sec
+ 8/16 Test #1516: ts_stem_opt ..........................   Passed    0.28 sec
+ 9/16 Test #1949: nr15_stem_semantics_rxbvm_opt ........   Passed    0.09 sec
+10/16 Test #1951: nr15_stem_access_rxbvm_opt ...........   Passed    0.09 sec
+11/16 Test #1944: nr15_stem_semantics_rxvm_noopt .......   Passed    0.49 sec
+12/16 Test #1946: nr15_stem_access_rxvm_noopt ..........   Passed    0.49 sec
+13/16 Test #1545: ts_stem_errors_noopt .................   Passed    0.51 sec
+14/16 Test #1515: ts_stem_noopt ........................   Passed    0.54 sec
+15/16 Test #1948: nr15_stem_semantics_rxbvm_noopt ......   Passed    0.47 sec
+16/16 Test #1950: nr15_stem_access_rxbvm_noopt .........   Passed    0.45 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+compiler       =   0.11 sec*proc (1 test)
+interpreter    =   0.01 sec*proc (1 test)
+linked_opt     =   1.00 sec*proc (6 tests)
+metadata       =   0.01 sec*proc (1 test)
+nr15           =   2.52 sec*proc (10 tests)
+optimizer      =   0.01 sec*proc (1 test)
+performance    =   2.51 sec*proc (9 tests)
+rxas           =   0.01 sec*proc (1 test)
+rxbin          =   0.11 sec*proc (1 test)
+semantics      =   1.13 sec*proc (4 tests)
+smoke          =   0.54 sec*proc (1 test)
+stem           =   2.52 sec*proc (10 tests)
+
+Total Test time (real) =   0.75 sec

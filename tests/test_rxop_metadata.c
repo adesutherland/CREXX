@@ -130,6 +130,23 @@ static void check_propagated_call_metadata(int opcode, int writes_result) {
           &op_table[opcode]);
 }
 
+static void check_native_stem_signal_contract(int opcode) {
+    RxOpSignalContract signal = rxop_signal_contract(opcode);
+
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "UNICODE_ERROR|FAILURE") == 0 &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_EXTERNAL_STATE &&
+              !(signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "native stem access must expose its exact failure-atomic contract",
+          &op_table[opcode]);
+}
+
 int main(void) {
     int i;
     int source_count;
@@ -793,21 +810,20 @@ int main(void) {
                     RXOP_SIGNAL_STATE_NONE,
           "concat family must match its non-signalling VM implementation",
           &op_table[OP_SCONCAT_REG_REG_STRING]);
-    signal = rxop_signal_contract(OP_STEMSET_REG_REG_REG);
-    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
-              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
-              signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
-              signal.static_names &&
-              strcmp(signal.static_names,
-                     "UNICODE_ERROR|INVALID_ARGUMENTS|FAILURE") == 0 &&
-              signal.failure_writes == RXOP_OP_NONE &&
-              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
-              signal.failure_context_writes == RXOP_CONTEXT_NONE &&
-              signal.dependencies == RXOP_SIGNAL_DEP_EXTERNAL_STATE &&
-              rxop_signal_contract(OP_STEMSET2_REG_REG_REG_REG).phase ==
-                    RXOP_SIGNAL_PHASE_BEFORE_WRITES,
-          "stem writes must expose their failure-atomic VM signal contract",
-          &op_table[OP_STEMSET_REG_REG_REG]);
+    check(rxop_component_reads(OP_CONCAT_REG_STRING_REG, 2) ==
+                    RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_CONCAT_REG_REG_STRING, 1) ==
+                    RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_CONCAT_REG_STRING_REG, 0) ==
+                    RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_SCONCAT_REG_REG_REG, 0) ==
+                    RXOP_COMPONENT_STRING,
+          "concat family must expose exact string component flow",
+          &op_table[OP_CONCAT_REG_STRING_REG]);
+    check_native_stem_signal_contract(OP_STEMGET_REG_REG_REG);
+    check_native_stem_signal_contract(OP_STEMSET_REG_REG_REG);
+    check_native_stem_signal_contract(OP_STEMGET2_REG_REG_REG_REG);
+    check_native_stem_signal_contract(OP_STEMSET2_REG_REG_REG_REG);
     signal = rxop_signal_contract(OP_DGT_REG_REG_REG);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.source == RXOP_SIGNAL_SOURCE_PLUGIN &&

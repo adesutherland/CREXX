@@ -1,0 +1,51 @@
+PERF3-12B B2 S1 ordinary Release structure
+Date: 2026-08-04
+CREXX_VM_PROFILING=OFF
+
+Inputs
+------
+accepted optimized RXAS:
+  49efe16928bc9720904d127325a93d1e7c39642eb2f592f2972e52fbdcdcb585
+same-shaped control RXAS:
+  4cb64e13cc6a679b66d36995eaad0d4cf5e654439485d613660a536af835d148
+S1 candidate RXAS:
+  ba25f2b8041fce10697afa47088d0b21ac4712372b66d3057bbe78f2935d785a
+
+Both modified inputs have main `.locals=104` and one loop-local literal LOAD.
+Only the candidate literal exactly supplies the left segment required by S1.
+
+Outputs
+-------
+same-shaped control RXBIN:
+  d86eb067801090ded1f1c5a69251c19783241173c116e78c8a6c0196108e96fb
+  68,481 bytes; main `.locals=104`; code segment 0xf5b
+
+S1 candidate RXBIN:
+  e56ced1fcf744f2bfb79721363937e53348e73cac81d0607c51ded3cdef0a615
+  68,337 bytes; main `.locals=104`; code segment 0xf4f
+
+Candidate minus same-shaped control:
+  static executable instructions: -4
+  TRACE records:                 -4 (1,245 -> 1,241)
+  target Key Bee concats:        -4 (5 -> 1)
+  STEMGET2:                      +3
+  STEMSET2:                      +1
+  code bytes:                    -12
+  whole RXBIN bytes:             -144
+
+The whole-image delta includes the deliberately different control literal and
+is not a pure S1 size result. The code-segment delta and instruction/TRACE
+counts isolate the rewrite.
+
+The first source-159 STEMSET remains in its one-part form. The four other
+sites become three `STEMGET2` and one `STEMSET2`. The distinct
+`"1.0" || lvar` concat remains untouched.
+
+The optimizer-disabled PoC image is
+`793cbf065d9ceac57bd058a402b19059bc04ed684e69d57547840e2ed0fc12f7`.
+It is byte-identical to the B1-tool assembly of the same modified generated
+input, establishing that the changed output is optimization-owned rather than
+an input or VM-format side effect.
+
+Diagnostic and ordinary assembly produce byte-identical images within each
+cell.

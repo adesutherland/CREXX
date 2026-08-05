@@ -105,6 +105,18 @@ static void fixture_record(FlowFixture *fixture, enum queue_item_type type) {
     item->instrToken = fixture_text_token(fixture, ID, "anchor");
 }
 
+static void fixture_trace_register(FlowFixture *fixture,
+                                   rxinteger register_number,
+                                   const char *value_type) {
+    instruction_queue *trace;
+    fixture_record(fixture, TRACE_EVENT);
+    trace = &fixture->items[fixture->item_count - 1];
+    trace->operand2Token = fixture_string(fixture, "R");
+    trace->operand3Token = fixture_string(fixture, value_type);
+    trace->operand4Token = fixture_string(fixture, "r");
+    trace->operand5Token = fixture_integer(fixture, register_number);
+}
+
 static void fixture_op(FlowFixture *fixture, const char *mnemonic,
                        Assembler_Token **operands, size_t operand_count) {
     instruction_queue *item;
@@ -2906,6 +2918,213 @@ static void test_loop_proofs(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+typedef enum JoinedKeyFixtureMutation {
+    JOINED_KEY_FIXTURE_NONE = 0,
+    JOINED_KEY_FIXTURE_RIGHT_CHANGE,
+    JOINED_KEY_FIXTURE_CACHE_CHANGE,
+    JOINED_KEY_FIXTURE_REFERENCE_CHANGE,
+    JOINED_KEY_FIXTURE_CALL_CHANGE,
+    JOINED_KEY_FIXTURE_SIGNAL_TRACE,
+    JOINED_KEY_FIXTURE_NO_LOOP
+} JoinedKeyFixtureMutation;
+
+typedef struct JoinedKeyFixtureRecords {
+    size_t seed;
+    size_t seed_trace;
+    size_t candidate;
+    size_t candidate_trace;
+    size_t stem;
+} JoinedKeyFixtureRecords;
+
+static void fixture_joined_key_loop(
+        FlowFixture *fixture, JoinedKeyFixtureMutation mutation,
+        JoinedKeyFixtureRecords *records) {
+    Assembler_Token *operands[3];
+    memset(records, 0, sizeof(*records));
+    operands[0] = fixture_register(fixture, 1);
+    operands[1] = fixture_integer(fixture, 1);
+    fixture_op(fixture, "load", operands, 2);
+    operands[0] = fixture_register(fixture, 6);
+    operands[1] = fixture_integer(fixture, 0);
+    fixture_op(fixture, "load", operands, 2);
+    operands[0] = fixture_register(fixture, 3);
+    operands[1] = fixture_string(fixture, "value");
+    fixture_op(fixture, "load", operands, 2);
+    fixture_label(fixture, "joined_loop");
+    operands[0] = fixture_label_ref(fixture, "joined_done");
+    operands[1] = fixture_register(fixture, 6);
+    fixture_op(fixture, "brt", operands, 2);
+    operands[0] = fixture_register(fixture, 1);
+    operands[1] = fixture_register(fixture, 1);
+    operands[2] = fixture_integer(fixture, 1);
+    fixture_op(fixture, "iadd", operands, 3);
+    operands[0] = fixture_register(fixture, 1);
+    fixture_op(fixture, "itos", operands, 1);
+    records->seed = fixture->item_count;
+    operands[0] = fixture_register(fixture, 5);
+    operands[1] = fixture_string(fixture, "Key.");
+    operands[2] = fixture_register(fixture, 1);
+    fixture_op(fixture, "concat", operands, 3);
+    records->seed_trace = fixture->item_count;
+    fixture_trace_register(fixture, 5, "S");
+
+    if (mutation == JOINED_KEY_FIXTURE_RIGHT_CHANGE) {
+        operands[0] = fixture_register(fixture, 1);
+        operands[1] = fixture_register(fixture, 1);
+        operands[2] = fixture_integer(fixture, 1);
+        fixture_op(fixture, "iadd", operands, 3);
+        operands[0] = fixture_register(fixture, 1);
+        fixture_op(fixture, "itos", operands, 1);
+    }
+    else if (mutation == JOINED_KEY_FIXTURE_CACHE_CHANGE) {
+        operands[0] = fixture_register(fixture, 5);
+        operands[1] = fixture_string(fixture, "changed");
+        fixture_op(fixture, "load", operands, 2);
+    }
+    else if (mutation == JOINED_KEY_FIXTURE_REFERENCE_CHANGE) {
+        operands[0] = fixture_register(fixture, 8);
+        operands[1] = fixture_register(fixture, 5);
+        fixture_op(fixture, "link", operands, 2);
+        operands[0] = fixture_register(fixture, 8);
+        operands[1] = fixture_string(fixture, "changed-through-link");
+        fixture_op(fixture, "load", operands, 2);
+    }
+    else if (mutation == JOINED_KEY_FIXTURE_CALL_CHANGE) {
+        operands[0] = fixture_register(fixture, 4);
+        operands[1] = fixture_integer(fixture, 1);
+        fixture_op(fixture, "load", operands, 2);
+        operands[0] = fixture_register(fixture, 9);
+        operands[1] = fixture_text_token(fixture, FUNC, "callee");
+        operands[2] = fixture_register(fixture, 4);
+        fixture_op(fixture, "call", operands, 3);
+    }
+
+    records->candidate = fixture->item_count;
+    operands[0] = fixture_register(fixture, 2);
+    operands[1] = fixture_string(fixture, "Key.");
+    operands[2] = fixture_register(fixture, 1);
+    fixture_op(fixture, "concat", operands, 3);
+    records->candidate_trace = fixture->item_count;
+    fixture_trace_register(fixture, 2, "S");
+    records->stem = fixture->item_count;
+    operands[0] = fixture_register(fixture, 4);
+    operands[1] = fixture_register(fixture, 2);
+    operands[2] = fixture_register(fixture, 3);
+    fixture_op(fixture, "stemset", operands, 3);
+
+    if (mutation == JOINED_KEY_FIXTURE_SIGNAL_TRACE) {
+        operands[0] = fixture_register(fixture, 2);
+        operands[1] = fixture_register(fixture, 4);
+        operands[2] = fixture_register(fixture, 7);
+        fixture_op(fixture, "stemget", operands, 3);
+        fixture_trace_register(fixture, 2, "S");
+    }
+    if (mutation != JOINED_KEY_FIXTURE_NO_LOOP) {
+        operands[0] = fixture_label_ref(fixture, "joined_loop");
+        fixture_op(fixture, "br", operands, 1);
+    }
+    fixture_label(fixture, "joined_done");
+    fixture_op(fixture, "ret", 0, 0);
+}
+
+static void check_joined_key_case(
+        Assembler_Context *context, JoinedKeyFixtureMutation mutation,
+        unsigned long epoch, int expected_proved,
+        RxasFlowProofReason expected_reason) {
+    FlowFixture fixture;
+    JoinedKeyFixtureRecords records;
+    RxasFlowProcedure *procedure;
+    const RxasOptimisationPassDescriptor *descriptor;
+    const RxasFlowProofService *proof;
+    RxasFlowJoinedKeyReusePlan plan;
+    RxasFlowOperandRewrite rewrite;
+    RxasFlowTraceDeletion deletion;
+    const RxasFlowRecord *seed;
+    const RxasFlowRecord *candidate;
+    const RxasFlowRecord *stem;
+    memset(&fixture, 0, sizeof(fixture));
+    fixture_joined_key_loop(&fixture, mutation, &records);
+    procedure = rxas_flow_procedure_build(
+            context, fixture.items, fixture.item_count, epoch);
+    check(procedure != 0, "joined-key proof fixture construction failed");
+    descriptor = rxas_optimisation_pass_descriptor(
+            RXAS_PASS_H01_JOINED_KEY_REUSE);
+    seed = procedure ? rxas_flow_procedure_record(
+            procedure, epoch, records.seed) : 0;
+    candidate = procedure ? rxas_flow_procedure_record(
+            procedure, epoch, records.candidate) : 0;
+    stem = procedure ? rxas_flow_procedure_record(
+            procedure, epoch, records.stem) : 0;
+    proof = procedure && descriptor
+            ? rxas_flow_require_proof_capabilities(
+                    procedure, epoch, descriptor->capabilities, 0)
+            : 0;
+    memset(&plan, 0, sizeof(plan));
+    check(proof && seed && candidate && stem &&
+          rxas_flow_prove_joined_key_reuse(
+                  proof, epoch, seed->instruction_id,
+                  candidate->instruction_id, stem->instruction_id, &plan),
+          "joined-key proof query failed");
+    if (plan.proved != expected_proved ||
+        plan.reason != expected_reason)
+        fprintf(stderr,
+                "joined-key mutation=%d expected=%d/%s actual=%d/%s\n",
+                (int)mutation, expected_proved,
+                rxas_flow_proof_reason_name(expected_reason),
+                plan.proved, rxas_flow_proof_reason_name(plan.reason));
+    check(plan.proved == expected_proved &&
+          plan.reason == expected_reason,
+          "joined-key proof returned the wrong verdict");
+    if (expected_proved) {
+        check(plan.loop_id != RXAS_FLOW_ID_NONE &&
+              plan.cache_register.number == 5 &&
+              plan.candidate_register.number == 2 &&
+              plan.stem_key_operand == 1 &&
+              plan.seed_rewrite_count == 1 &&
+              plan.trace_deletion_count == 1 &&
+              !plan.preheader_eligible &&
+              !plan.preheader_must_execute &&
+              !plan.preheader_right_invariant &&
+              !plan.preheader_trace_free,
+              "joined-key proof lost its loop/cache/preheader audit");
+        check(rxas_flow_joined_key_reuse_plan_seed_rewrite(
+                      proof, epoch, &plan, 0, &rewrite) &&
+              rewrite.record_id == records.seed_trace &&
+              rewrite.instruction_id == RXAS_FLOW_ID_NONE &&
+              rewrite.operand_index == RXAS_FLOW_ID_NONE &&
+              rewrite.expected_register.number == 5,
+              "joined-key proof returned the wrong seed TRACE rewrite");
+        check(rxas_flow_joined_key_reuse_plan_trace_deletion(
+                      proof, epoch, &plan, 0, &deletion) &&
+              deletion.record_id == records.candidate_trace &&
+              deletion.expected_register.number == 2 &&
+              deletion.component == RXOP_COMPONENT_STRING,
+              "joined-key proof returned the wrong TRACE deletion");
+        check(!rxas_flow_joined_key_reuse_plan_trace_deletion(
+                      proof, epoch + 1, &plan, 0, &deletion),
+              "joined-key TRACE plan accepted a stale epoch");
+    }
+    if (procedure) rxas_flow_procedure_destroy(procedure);
+    fixture_destroy(&fixture);
+}
+
+static void test_joined_key_reuse_proof(Assembler_Context *context) {
+    check_joined_key_case(context, JOINED_KEY_FIXTURE_NONE, 42, 1,
+                          RXAS_FLOW_PROOF_PROVED);
+    check_joined_key_case(context, JOINED_KEY_FIXTURE_RIGHT_CHANGE, 43, 0,
+                          RXAS_FLOW_PROOF_JOINED_KEY_NOT_EQUIVALENT);
+    check_joined_key_case(context, JOINED_KEY_FIXTURE_CACHE_CHANGE, 44, 1,
+                          RXAS_FLOW_PROOF_PROVED);
+    check_joined_key_case(context, JOINED_KEY_FIXTURE_REFERENCE_CHANGE, 45, 0,
+                          RXAS_FLOW_PROOF_USE_NOT_REDIRECTABLE);
+    check_joined_key_case(context, JOINED_KEY_FIXTURE_CALL_CHANGE, 46, 0,
+                          RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED);
+    check_joined_key_case(context, JOINED_KEY_FIXTURE_SIGNAL_TRACE, 47, 0,
+                          RXAS_FLOW_PROOF_TRACE_OBSERVED);
+    check_joined_key_case(context, JOINED_KEY_FIXTURE_NO_LOOP, 48, 0,
+                          RXAS_FLOW_PROOF_NOT_IN_LOOP);
+}
+
 static void test_optimisation_routing(Assembler_Context *context) {
     FlowFixture fixture;
     Assembler_Token *operands[3];
@@ -3246,6 +3465,7 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
     memset(&fixture, 0, sizeof(fixture));
     fixture_op(&fixture, "ret", 0, 0);
     fixture_op(&fixture, "ret", 0, 0);
+    fixture_trace_register(&fixture, 5, "S");
     context->procedure_queue = fixture.items;
     context->procedure_queue_items = fixture.item_count;
     check(rxas_flow_queue_batch_begin(
@@ -3277,8 +3497,23 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
           metrics.records_changed == 1 &&
           metrics.records_deleted == 1 &&
           fixture.items[0].instrType == EMPTY &&
-          fixture.items[1].instrType == OP_CODE,
+          fixture.items[1].instrType == OP_CODE &&
+          fixture.items[2].instrType == TRACE_EVENT,
           "validated semantic queue batch did not commit atomically");
+    rxas_flow_queue_batch_destroy(&batch);
+
+    check(rxas_flow_queue_batch_begin(
+                  &batch, context, fixture.items, fixture.item_count),
+          "TRACE rewrite semantic queue batch construction failed");
+    planned = rxas_flow_queue_batch_edit(&batch, 2, &epoch_item);
+    if (planned) planned->operand5Token = fixture_integer(&fixture, 12);
+    check(rxas_flow_queue_batch_commit(&batch, &metrics) &&
+          metrics.records_changed == 1 &&
+          metrics.operand_records_rewritten == 1 &&
+          fixture.items[2].operand5Token &&
+          fixture.items[2].operand5Token->token_type == INT &&
+          fixture.items[2].operand5Token->token_value.integer == 12,
+          "validated TRACE register rewrite did not commit atomically");
     rxas_flow_queue_batch_destroy(&batch);
     context->procedure_queue = 0;
     context->procedure_queue_items = 0;
@@ -3315,6 +3550,7 @@ int main(void) {
     test_sparse_use_and_liveness(&context);
     test_typed_copy_redirect_proof(&context);
     test_loop_proofs(&context);
+    test_joined_key_reuse_proof(&context);
     test_optimisation_routing(&context);
     test_branch_thread_plans(&context);
     test_semantic_queue_batch(&context);

@@ -1,0 +1,21 @@
+PERF3-12B B4 exact main-procedure diagnostic summary
+
+S0:
+PERF3 flow-proof epoch=2 status=available budget=87232 work=10606 bytes=4504496 requested=0x7e acquired=0x7e repetition=9 cache-hits=0 proved=5 rejected=4 segmented-stem=0/0 rejected=0 trace-deletions=0 success-edge=0 loop=0 ssa-bytes=83902504 ssa-values=137949 ssa-storages=1637
+NR27 flow procedure=main blocks=254 registers=107 instructions=380->369 segmented-stem-proof=0/0 rejected=0 selected=0 trace-delete=0 records=21 deleted=14 opcodes=1 operand-records=7
+diagnostic assembly: 0.61 real; 132562944 maximum resident bytes
+
+S1:
+PERF3 flow-proof epoch=2 status=available budget=87296 work=10976 bytes=4506496 requested=0x7e acquired=0x7e repetition=9 cache-hits=0 proved=5 rejected=4 segmented-stem=3/6 rejected=3 trace-deletions=3 success-edge=0 loop=0 ssa-bytes=83902520 ssa-values=138006 ssa-storages=1648
+NR27 flow procedure=main blocks=251 registers=108 instructions=381->366 segmented-stem-proof=4/10 rejected=6 selected=4 trace-delete=4 records=33 deleted=22 opcodes=5 operand-records=11
+diagnostic assembly: 0.58 real; 132546560 maximum resident bytes
+
+H1:
+PERF3 flow-proof epoch=2 status=available budget=87232 work=16715 bytes=4516312 requested=0xfe acquired=0xfe repetition=9 cache-hits=0 proved=5 rejected=4 joined-key-reuse=4/4 rejected=0 trace-deletions=4 preheader=0 success-edge=0 loop=8 ssa-bytes=83902504 ssa-values=138311 ssa-storages=1651
+NR27 flow procedure=main blocks=251 registers=108 instructions=380->365 joined-key-reuse-proof=4/4 rejected=0 reused=4 trace-delete=4 preheader=0 records=33 deleted=22 opcodes=1 operand-records=11
+diagnostic assembly: 0.58 real; 132923392 maximum resident bytes
+
+The full B2/B3 diagnostic products remain in their checksum-closed evidence
+bundles. B4 retains these exact decisive lines and the complete ordinary
+assembly timing/RSS samples rather than duplicating about 12 MiB of repetitive
+diagnostic dumps.

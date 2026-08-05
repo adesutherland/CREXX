@@ -35,6 +35,36 @@ static int queue_named_operands_equal(const instruction_queue *left,
            left->operand10Token == right->operand10Token;
 }
 
+static int queue_trace_register_rewrite_valid(
+        const instruction_queue *original,
+        const instruction_queue *planned) {
+    return original && planned &&
+           original->instrType == TRACE_EVENT &&
+           planned->instrType == TRACE_EVENT &&
+           original->instrToken == planned->instrToken &&
+           original->operand1Token == planned->operand1Token &&
+           original->operand2Token == planned->operand2Token &&
+           original->operand3Token == planned->operand3Token &&
+           original->operand4Token == planned->operand4Token &&
+           original->operand6Token == planned->operand6Token &&
+           original->operand7Token == planned->operand7Token &&
+           original->operand8Token == planned->operand8Token &&
+           original->operand9Token == planned->operand9Token &&
+           original->operand10Token == planned->operand10Token &&
+           original->operand2Token &&
+           original->operand2Token->token_type == STRING &&
+           !strcmp((const char *)original->operand2Token->token_value.string,
+                   "R") &&
+           original->operand4Token && planned->operand4Token &&
+           original->operand4Token->token_type == STRING &&
+           planned->operand4Token->token_type == STRING &&
+           !strcmp((const char *)original->operand4Token->token_value.string,
+                   (const char *)planned->operand4Token->token_value.string) &&
+           original->operand5Token && planned->operand5Token &&
+           original->operand5Token->token_type == INT &&
+           planned->operand5Token->token_type == INT;
+}
+
 static int queue_record_equal(const instruction_queue *left,
                               const instruction_queue *right) {
     return left->instrType == right->instrType &&
@@ -174,6 +204,8 @@ int rxas_flow_queue_batch_commit(
         const instruction_queue *planned;
         int opcode_changed;
         int operands_changed;
+        int named_operands_changed;
+        int trace_register_rewrite;
         original = &batch->entries[entry_index].original;
         planned = &batch->original_items[
                 batch->entries[entry_index].record_id];
@@ -189,6 +221,11 @@ int rxas_flow_queue_batch_commit(
         }
         opcode_changed = original->instrToken != planned->instrToken;
         operands_changed = !queue_operands_equal(original, planned);
+        named_operands_changed =
+                !queue_named_operands_equal(original, planned);
+        trace_register_rewrite = named_operands_changed &&
+                !opcode_changed && !operands_changed &&
+                queue_trace_register_rewrite_valid(original, planned);
         if ((opcode_changed || operands_changed) &&
             (original->instrType != OP_CODE ||
              planned->instrType != OP_CODE)) {
@@ -197,14 +234,15 @@ int rxas_flow_queue_batch_commit(
         }
         if (original->instrType == planned->instrType &&
             !opcode_changed && !operands_changed &&
-            !queue_named_operands_equal(original, planned)) {
+            named_operands_changed && !trace_register_rewrite) {
             valid = 0;
             break;
         }
         result.records_changed++;
         if (planned->instrType == EMPTY) result.records_deleted++;
         if (opcode_changed) result.opcodes_replaced++;
-        if (operands_changed) result.operand_records_rewritten++;
+        if (operands_changed || trace_register_rewrite)
+            result.operand_records_rewritten++;
     }
     if (!valid) queue_batch_rollback(batch);
     batch->finished = 1;

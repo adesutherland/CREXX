@@ -70,6 +70,9 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_NOT_ADJACENT_BRANCH,
     RXAS_FLOW_PROOF_COMPARE_RESULT_OBSERVED,
     RXAS_FLOW_PROOF_TRACE_OBSERVED,
+    RXAS_FLOW_PROOF_NOT_EXACT_JOINED_KEY_REUSE,
+    RXAS_FLOW_PROOF_JOINED_KEY_NOT_EQUIVALENT,
+    RXAS_FLOW_PROOF_JOINED_RESULT_OBSERVED,
     RXAS_FLOW_PROOF_NOT_IN_LOOP,
     RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP,
     RXAS_FLOW_PROOF_NOT_MUST_EXECUTE,
@@ -140,6 +143,11 @@ typedef struct RxasFlowProofMetrics {
     size_t storage_permutation_queries;
     size_t storage_permutation_proved;
     size_t storage_permutation_rejected;
+    size_t joined_key_reuse_queries;
+    size_t joined_key_reuse_proved;
+    size_t joined_key_reuse_rejected;
+    size_t joined_key_reuse_trace_deletions;
+    size_t joined_key_preheader_eligible;
     size_t success_edge_queries;
     size_t loop_queries;
 } RxasFlowProofMetrics;
@@ -305,6 +313,49 @@ typedef struct RxasFlowStoragePermutationPlan {
     RxasFlowRegister second_right;
 } RxasFlowStoragePermutationPlan;
 
+typedef struct RxasFlowJoinedKeyReusePlan {
+    int proved;
+    RxasFlowProofReason reason;
+    size_t seed_instruction;
+    size_t candidate_instruction;
+    size_t stem_instruction;
+    size_t seed_record_id;
+    size_t candidate_record_id;
+    size_t stem_record_id;
+    size_t loop_id;
+    int expected_concat_opcode;
+    int expected_stem_opcode;
+    RxasFlowRegister cache_register;
+    RxasFlowRegister candidate_register;
+    RxasFlowRegister seed_right_register;
+    RxasFlowRegister candidate_right_register;
+    size_t cache_storage_id;
+    size_t cache_storage_root;
+    size_t candidate_storage_id;
+    size_t candidate_storage_root;
+    size_t cache_value_id;
+    size_t candidate_value_id;
+    size_t seed_right_value_id;
+    size_t candidate_right_value_id;
+    size_t stem_key_operand;
+    int preheader_speculatable;
+    int preheader_must_execute;
+    int preheader_right_invariant;
+    int preheader_trace_free;
+    int preheader_eligible;
+    RxasFlowProofReason preheader_must_execute_reason;
+    RxasFlowProofReason preheader_invariant_reason;
+    RxasFlowUseKind rejected_use_kind;
+    size_t rejected_use_record_id;
+    size_t rejected_use_instruction_id;
+    size_t rejected_use_operand_index;
+    size_t rejected_use_value_id;
+    size_t seed_rewrite_offset;
+    size_t seed_rewrite_count;
+    size_t trace_deletion_offset;
+    size_t trace_deletion_count;
+} RxasFlowJoinedKeyReusePlan;
+
 typedef struct RxasFlowProofService RxasFlowProofService;
 
 const RxasFlowProofService *rxas_flow_require_proof_service(
@@ -377,6 +428,18 @@ int rxas_flow_prove_storage_permutation_round_trip(
 int rxas_flow_compare_branch_plan_trace_deletion(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         const RxasFlowCompareBranchPlan *plan, size_t deletion_index,
+        RxasFlowTraceDeletion *deletion);
+int rxas_flow_prove_joined_key_reuse(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t seed_instruction, size_t candidate_instruction,
+        size_t stem_instruction, RxasFlowJoinedKeyReusePlan *plan);
+int rxas_flow_joined_key_reuse_plan_seed_rewrite(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowJoinedKeyReusePlan *plan, size_t rewrite_index,
+        RxasFlowOperandRewrite *rewrite);
+int rxas_flow_joined_key_reuse_plan_trace_deletion(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowJoinedKeyReusePlan *plan, size_t deletion_index,
         RxasFlowTraceDeletion *deletion);
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,

@@ -1,0 +1,12 @@
+artifact,role,sha256,status
+tests/benchmarks/rexxcps_levelb.crexx,canonical source,2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6,unchanged
+benchmark_rexxcps_levelb_opt.rxas,accepted generated optimized RXAS,49efe16928bc9720904d127325a93d1e7c39642eb2f592f2972e52fbdcdcb585,replay base
+perf3-12b-s1-input.rxas,S1 generated-RXAS input,ba25f2b8041fce10697afa47088d0b21ac4712372b66d3057bbe78f2935d785a,reproduced by replay/s1-left-load.patch
+perf3-12b-s1-poc-control.rxas,same-shaped generated-RXAS control,4cb64e13cc6a679b66d36995eaad0d4cf5e654439485d613660a536af835d148,reproduced by replay/same-shaped-control.patch
+rxas,isolated profiling-off Release PoC tool,7235a55b4ebb42a55da10676e0f9b67175a3eae6cc3cb197e113258a182f37cc,commit 888fa94eb
+perf3-12b-s1-scale-control.rxbin,same-shaped optimized control,d86eb067801090ded1f1c5a69251c19783241173c116e78c8a6c0196108e96fb,ordinary and diagnostic identical
+perf3-12b-s1-scale-candidate.rxbin,optimized S1 candidate,e56ced1fcf744f2bfb79721363937e53348e73cac81d0607c51ded3cdef0a615,ordinary and diagnostic identical
+perf3-12b-s1-release-candidate-noopt.rxbin,optimizer-disabled S1 input,793cbf065d9ceac57bd058a402b19059bc04ed684e69d57547840e2ed0fc12f7,identical to B1 tool on same modified input
+rxvm,accepted profiling-off Release threaded VM,473a58820b3f6eb9873ea4feec76b74f63dd461a000b7389e32da35368959fdf,unchanged runtime control
+rxbvm,accepted profiling-off Release bytecode VM,6e942a8198df47d7dc4308b57c516c95f239729601ce9c1a0648410ac7ac776f,unchanged runtime control
+library.rxbin,accepted common linked library,a9dd2186065637e8629ec651e825227565db4d870645468d1b05d68cb6fbd5ba,common to all smoke cells

@@ -1,0 +1,10 @@
+source_line,consumer,dynamic_weight,result,replacement,reason
+159,STEMSET,280000,rejected,none,"later failure-atomic STEMGET signal-skip preserves the joined register and exposes it to user-visible TRACE"
+160,STEMGET,280000,selected,STEMGET2,"exact joined use plus deletable C TRACE; left literal and ITOS right are independently UTF-8 safe"
+162,STEMGET,560000,selected,STEMGET2,"exact joined use plus deletable C TRACE; left literal and ITOS right are independently UTF-8 safe"
+168,STEMGET,560000,selected,STEMGET2,"exact joined use plus deletable C TRACE; left literal and ITOS right are independently UTF-8 safe"
+168,STEMSET,560000,selected,STEMSET2,"exact joined use plus deletable C TRACE; left literal and ITOS right are independently UTF-8 safe"
+TOTAL_TARGET,,2240000,,,
+SELECTED_CONCAT_REMOVAL,,1960000,,,
+STABLE_LEFT_LOAD_COST,,280000,,,
+NET_DISPATCH_REDUCTION,,1680000,,,

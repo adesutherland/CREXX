@@ -1,0 +1,21 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start 1752: rxas_optimizer_metadata
+1/5 Test #1752: rxas_optimizer_metadata .........................   Passed    0.01 sec
+    Start 1753: rxas_flow_graph_contract
+2/5 Test #1753: rxas_flow_graph_contract ........................   Passed    0.01 sec
+    Start 1766: rxas_optimizer_semantic_batch_flow
+3/5 Test #1766: rxas_optimizer_semantic_batch_flow ..............   Passed    0.02 sec
+    Start 1767: rxas_optimizer_joined_key_private_local
+4/5 Test #1767: rxas_optimizer_joined_key_private_local .........   Passed    0.01 sec
+    Start 1768: rxas_optimizer_joined_key_private_local_noopt
+5/5 Test #1768: rxas_optimizer_joined_key_private_local_noopt ...   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+flow         =   0.01 sec*proc (1 test)
+metadata     =   0.01 sec*proc (2 tests)
+optimizer    =   0.06 sec*proc (5 tests)
+rxas         =   0.06 sec*proc (5 tests)
+
+Total Test time (real) =   0.10 sec

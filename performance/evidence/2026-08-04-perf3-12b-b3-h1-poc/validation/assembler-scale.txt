@@ -1,0 +1,38 @@
+PERF3-12B B3 H1 assembler scale observation
+Date: 2026-08-04
+Host power: Battery Power, discharging
+Interpretation: raw mechanism/scale evidence only; no elapsed-time verdict
+
+Ordinary profiling-off Release, one sample, exact same H1 input
+----------------------------------------------------------------
+cell                 real  user  sys   max RSS      peak footprint  reclaims
+common-F1 control    0.37  0.30  0.05  132775936   131858912       39447
+H1 candidate         0.68  0.31  0.05  133627904   132710880       39543
+
+Observed H1 minus control maximum RSS is 851,968 bytes (+0.641658%); peak
+footprint differs by the same 851,968 bytes (+0.646121%). The host was on
+battery and the user had identified remote-terminal activity as a material Mac
+timing disturbance. The elapsed figures are retained but deliberately not used
+as a performance conclusion. B4 must rerun the balanced panel on AC with that
+activity absent.
+
+Diagnostic first immutable epoch, main
+--------------------------------------
+metric                         common-F1 control  H1 candidate  delta
+SSA retained bytes             83902504           83902504      0
+SSA values                     138266             138311        +45
+SSA storages                   1651               1651          0
+proof-service retained bytes   4514864            4516312       +1448
+proof work                     10619              16715         +6096
+acquired capabilities          0x7e               0xfe          +loops
+
+H1 makes four proof queries and accepts all four. Its census requests loop
+capability only where there are repeated exact joined-key candidates plus a
+stem consumer; unrelated CONCAT-heavy procedures do not acquire H1 loops.
+
+Tool identities
+---------------
+common-F1 control (B2 S1, S1 selected zero):
+  7235a55b4ebb42a55da10676e0f9b67175a3eae6cc3cb197e113258a182f37cc
+H1 candidate:
+  d1402e0a5d80fa0cbef5612c13cd062bed77eced3446ad79b017bf051208287a

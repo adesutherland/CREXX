@@ -1,0 +1,57 @@
+PERF3-12B B3 H1 focused correctness
+Date: 2026-08-04
+PoC commit: 80c78fcee628dd60fe4d572892718f4dda09a4fc
+
+Immutable proof/metadata pair
+-----------------------------
+Commands:
+  ctest --test-dir cmake-build-debug \
+    -R 'rxas_(optimizer_metadata|flow_graph_contract)' --output-on-failure
+  ctest --test-dir cmake-build-release \
+    -R 'rxas_(optimizer_metadata|flow_graph_contract)' --output-on-failure
+
+Results: Debug 2/2 passed; Release 2/2 passed.
+
+The H1 graph fixtures cover an accepted conditional natural-loop reuse with
+exact TRACE deletion and preheader diagnostics, plus rejection after a changed
+right value, direct cache write, linked/reference write, call-window mutation,
+failure-atomic signal-skip TRACE observation and absence of a natural loop.
+
+Final native-stem selector
+--------------------------
+Selector:
+  ^(linked_opt_runtime_artifacts_build|nr15_native_stem_contract|
+    rxvmstem_storage|ts_stem_(noopt|opt)|ts_stem_errors_(noopt|opt)|
+    rxas_optimizer_metadata|
+    nr15_stem_(semantics|access)_(rxvm|rxbvm)_(noopt|opt))$
+
+Final result: 16/16 passed, 0 failed.
+
+The first fresh-worktree invocation had three setup failures: `test_rxvmstem`,
+`mutate_rxbin_feature`/`rxdas`, and `ts_stem_errors_noopt.rxbin` had not been
+built by the selected linked-artifact fixture. Explicitly building
+`rxdas mutate_rxbin_feature test_rxvmstem ts_stem_errors_noopt_artifact` and
+rerunning the unchanged selector gave 16/16. This was test setup, not a product
+failure.
+
+Fixed-work dual-VM smoke
+------------------------
+Command shape:
+  <accepted-vm> <image> <accepted-library.rxbin> -a --smoke-count 200
+
+VM/image                         rc  PASS markers  stderr bytes
+rxvm  common-F1 control           0       1             0
+rxvm  optimized H1 candidate      0       1             0
+rxvm  optimizer-disabled input    0       1             0
+rxbvm common-F1 control           0       1             0
+rxbvm optimized H1 candidate      0       1             0
+rxbvm optimizer-disabled input    0       1             0
+
+Optimizer-disabled assembly by the common-F1 control and H1 tools is
+byte-identical. The six cells establish PASS/zero-stderr functional behavior;
+their auto-calibrated CPS output is excluded from performance evidence.
+
+Runtime identities:
+  rxvm    473a58820b3f6eb9873ea4feec76b74f63dd461a000b7389e32da35368959fdf
+  rxbvm   6e942a8198df47d7dc4308b57c516c95f239729601ce9c1a0648410ac7ac776f
+  library a9dd2186065637e8629ec651e825227565db4d870645468d1b05d68cb6fbd5ba

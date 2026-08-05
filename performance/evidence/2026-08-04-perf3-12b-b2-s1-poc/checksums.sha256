@@ -1,0 +1,10 @@
+3eac083f0a75aaa5c2dd500e5213f6be0d13091e9921790101dc822a446e3cef  ./README.md
+69ddb65a49cc24f3e34fe74e1ede4d1d3a57ebb03a3472f44616dcc78b33229f  ./analysis/foundation-and-work.md
+38cae8789b96eb12553faf8b7e341372734d7dfeb473b1df54e2d39f80ca8f20  ./analysis/selection.csv
+890d7cf61b9a3d3e4829d16ba5ede3440f684db7bae2a58e416bf17e561869e0  ./artifacts.csv
+1df6f252e4aab3f31970fb675c72867aefbf5426bd3bd1c14aab5a4b0425400e  ./replay/README.md
+503aa146f7edc86b9227a6f02ecf7e18b4bc8feae832c288c770e4aaeb1a0693  ./replay/s1-left-load.patch
+b7ebe58bf3e7df7f7130f6eb03a63e624bd14f8ca0f97e72b5b776c4d4ff5071  ./replay/same-shaped-control.patch
+bf606fc00ef7f2f0e6016b909d05ba3e1c3bd1c0001810d5cd08155e81985329  ./validation/assembler-scale.txt
+2165b3c1cf1c3db1632f409d47f26f45e8e94a5eabd2914c42ea46e592fa99fc  ./validation/focused-correctness.txt
+986d05039f02e840f2e5e5a021ad2fc969468ba6dee4820b1fbed77c4b62e953  ./validation/release-structure.txt

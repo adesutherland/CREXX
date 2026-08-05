@@ -1,0 +1,55 @@
+PERF3-12B B2 S1 matched assembler scale
+Date: 2026-08-04
+
+Environment
+-----------
+Host: Apple M5, Darwin 25.5.0 arm64, macOS 26.5.2, 10 logical CPUs
+Power: AC
+Toolchain: CMake 4.3.2, Ninja 1.13.2, Apple clang 21.0.0
+Build: Release, CREXX_VM_PROFILING=OFF
+Tool SHA-256:
+  7235a55b4ebb42a55da10676e0f9b67175a3eae6cc3cb197e113258a182f37cc
+
+Command shapes, serial, one recorded sample each
+------------------------------------------------
+  /usr/bin/time -l <poc-rxas> -o <output> <same-shaped-control.rxas>
+  /usr/bin/time -l <poc-rxas> -o <output> <s1-candidate.rxas>
+  /usr/bin/time -l <poc-rxas> -d -o <output> <same-shaped-control.rxas>
+  /usr/bin/time -l <poc-rxas> -d -o <output> <s1-candidate.rxas>
+
+Raw relevant observations
+-------------------------
+cell                    real_s  user_s  sys_s  maximum_RSS_bytes
+ordinary control          0.32    0.28   0.04       132890624
+ordinary candidate        0.31    0.27   0.04       132710400
+diagnostic control        0.57    0.35   0.21       132726784
+diagnostic candidate      0.57    0.35   0.21       132612096
+
+All four samples report 13 page faults, zero swaps and zero block input/output
+operations. These one-sample observations are retained to detect gross scale
+failure only; they are not a benchmark timing improvement claim.
+
+First main-procedure proof epoch
+--------------------------------
+metric                         control       candidate
+SSA retained bytes             83902520      83902520
+SSA values                       137960        138006
+SSA storages                       1648          1648
+proof work                        10619         10976
+S1 proved/queries/rejected        0/0/0         3/6/3
+
+The fourth S1 site is selected after the first transactional graph rebuild.
+Final main summaries are:
+
+  control:   instructions 381 -> 370; S1 0/0, selected 0
+  candidate: instructions 381 -> 366; S1 4/10, rejected 6,
+             selected 4, TRACE deletions 4
+
+Repeated queries across fixed-point epochs are diagnostic counts, not distinct
+source candidates. The source candidate set is five sites, four selected.
+
+Verdict
+-------
+The isolated pass does not inflate first-epoch SSA storage or retained bytes,
+and matched elapsed/RSS is neutral at this resolution. B4 should retain the
+same scale control when comparing S0, S1 and H1.

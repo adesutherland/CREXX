@@ -1,0 +1,11 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-1,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,1,1,1000-clauses,1350021000,,0,pass,45047237,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-2,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,2,1,1000-clauses,1333662000,,0,pass,45727539,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-3,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,3,1,1000-clauses,1331999000,,0,pass,45765376,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-4,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,4,1,1000-clauses,1327009000,,0,pass,46016829,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-5,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,5,1,1000-clauses,1330998000,,0,pass,45829430,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-6,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,6,1,1000-clauses,1341239000,,0,pass,45444672,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-7,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,7,1,1000-clauses,1346665000,,0,pass,45256569,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-8,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,8,1,1000-clauses,1342154000,,0,pass,45465829,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-9,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,9,1,1000-clauses,1336625000,,0,pass,45676367,cREXX clauses per second
+timing-RexxCPS-rexxcps-s0-rxbvm-recorded-10,timing,RexxCPS,rexxcps-s0-rxbvm,crexx-s0,rxbvm,common-f1-control,A,no,no,recorded,10,1,1000-clauses,1325685000,,0,pass,46009377,cREXX clauses per second
