@@ -1,203 +1,15 @@
-\begin{CrexxClass}{id}{id\_id}
+\begin{CrexxClass}{.ArrayList}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ id}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayList \hfill\textit{.Iterable}}
   \end{Hierarchy}
 
   \begin{Members}
 
     \Factory
       {public}
-      {id}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {uuid}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {uuidt}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {uuidV7}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {ulid}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {nanoId}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {snowflake}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {base58}
-      {()}
-
-  \end{Members}
-\end{CrexxClass}
-\begin{CrexxClass}{KeyDB}{data\_KeyDB}
-
-  \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ KeyDB}
-  \end{Hierarchy}
-
-  \begin{Members}
-
-    \Factory
-      {public}
-      {KeyDB}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {open}
-      {(\Param{filename}{.string}, \Param{mode}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {close}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {isOpen}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {begin}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {commit}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {rollback}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {put}
-      {(\Param{key}{.string}, \Param{value}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {get}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {remove}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {size}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {stats}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {backup}
-      {(\Param{path}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {validate}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {compact}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {containsKey}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {putCommit}
-      {(\Param{key}{.string}, \Param{value}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {removeCommit}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {getHandle}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {dispose}
-      {()}
-
-  \end{Members}
-\end{CrexxClass}
-\begin{CrexxClass}{ObjectArrayList}{data}
-
-  \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectArrayList \hfill\textit{ObjectIterable}}
-  \end{Hierarchy}
-
-  \begin{Members}
-
-    \Factory
-      {public}
-      {ObjectArrayList}
+      {ArrayList}
       {()}
 
     \Method
@@ -262,13 +74,13 @@
 
     \Method
       {public}
-      {.ObjectArrayListIterator}
+      {.ArrayListIterator}
       {iterator}
       {()}
 
     \Method
       {public}
-      {.ObjectArrayListIterator}
+      {.ArrayListIterator}
       {snapshotIterator}
       {()}
 
@@ -280,18 +92,18 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectArrayListIterator}{data}
+\begin{CrexxClass}{.ArrayListIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectArrayListIterator \hfill\textit{ObjectIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayListIterator \hfill\textit{.Iterator}}
   \end{Hierarchy}
 
   \begin{Members}
 
     \Factory
       {public}
-      {ObjectArrayListIterator}
+      {ArrayListIterator}
       {(\Param{values}{reference .object[]}, \Param{count}{reference .int}, \Param{snapshot\_flag}{.int})}
 
     \Method
@@ -326,10 +138,10 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectComparator}{data}
+\begin{CrexxClass}{\textit{.Comparator}}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{ObjectComparator}}
+    \HierarchyLine[\APIOpen]{0}{\textit{.Comparator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -342,26 +154,26 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectIterable}{data}
+\begin{CrexxClass}{\textit{.Iterable}}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{ObjectIterable}}
+    \HierarchyLine[\APIOpen]{0}{\textit{.Iterable}}
   \end{Hierarchy}
 
   \begin{Members}
 
     \Method
       {public}
-      {.ObjectIterator}
+      {.Iterator}
       {iterator}
       {()}
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectIterator}{data}
+\begin{CrexxClass}{\textit{.Iterator}}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{ObjectIterator}}
+    \HierarchyLine[\APIOpen]{0}{\textit{.Iterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -374,11 +186,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectLinkedList}{data}
+\begin{CrexxClass}{.ObjectLinkedList}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectLinkedList}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ObjectLinkedList}
   \end{Hierarchy}
 
   \begin{Members}
@@ -486,19 +298,19 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectObjectTreeMap}{data}
+\begin{CrexxClass}{.TreeMap}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectObjectTreeMap \hfill\textit{ObjectPrintable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .TreeMap \hfill\textit{.Printable}}
   \end{Hierarchy}
 
   \begin{Members}
 
     \Factory
       {public}
-      {ObjectObjectTreeMap}
-      {(\Param{comparator}{.ObjectComparator})}
+      {TreeMap}
+      {(\Param{comp}{.Comparator})}
 
     \Method
       {public}
@@ -568,7 +380,7 @@
 
     \Method
       {public}
-      {.ObjectObjectTreeMapIterator}
+      {.TreeMapIterator}
       {iterator}
       {()}
 
@@ -580,18 +392,18 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectObjectTreeMapIterator}{data}
+\begin{CrexxClass}{.TreeMapIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectObjectTreeMapIterator}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .TreeMapIterator}
   \end{Hierarchy}
 
   \begin{Members}
 
     \Factory
       {public}
-      {ObjectObjectTreeMapIterator}
+      {TreeMapIterator}
       {(\Param{keys}{.object[]}, \Param{values}{.object[]})}
 
     \Method
@@ -626,10 +438,10 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectPrintable}{data}
+\begin{CrexxClass}{\textit{.Printable}}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{ObjectPrintable}}
+    \HierarchyLine[\APIOpen]{0}{\textit{.Printable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -642,11 +454,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{ObjectStack}{data}
+\begin{CrexxClass}{.ObjectStack}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ ObjectStack}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ObjectStack}
   \end{Hierarchy}
 
   \begin{Members}
@@ -694,11 +506,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{os}{system\_os}
+\begin{CrexxClass}{.os}{system\_os}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ os}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .os}
   \end{Hierarchy}
 
   \begin{Members}
@@ -776,11 +588,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{qFind}{data\_qfind}
+\begin{CrexxClass}{.qFind}{data\_qfind}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ qFind \hfill\textit{matchResult}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .qFind \hfill\textit{.matchResult}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -868,11 +680,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{rexx}{rexx}
+\begin{CrexxClass}{.rexx}{rexx}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ rexx \hfill\textit{ObjectPrintable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .rexx \hfill\textit{.ObjectPrintable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1202,11 +1014,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{RexxComparator}{data}
+\begin{CrexxClass}{.RexxComparator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ RexxComparator \hfill\textit{ObjectComparator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .RexxComparator \hfill\textit{.Comparator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1224,11 +1036,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{scanlex\_token}{scanlex}
+\begin{CrexxClass}{.scanlex\_token}{scanlex}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ scanlex\_token}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .scanlex\_token}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1258,11 +1070,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringArrayList}{data}
+\begin{CrexxClass}{.StringArrayList}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringArrayList \hfill\textit{StringIterable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayList \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1364,11 +1176,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringArrayListIterator}{data}
+\begin{CrexxClass}{.StringArrayListIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringArrayListIterator \hfill\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayListIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1410,11 +1222,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringHashMap}{data}
+\begin{CrexxClass}{.StringHashMap}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringHashMap \hfill\textit{StringIterable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMap \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1504,11 +1316,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringHashMapIterator}{data}
+\begin{CrexxClass}{.StringHashMapIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringHashMapIterator \hfill\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1550,11 +1362,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringHashSet}{data}
+\begin{CrexxClass}{.StringHashSet}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringHashSet}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashSet}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1626,11 +1438,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringHashSetIterator}{data}
+\begin{CrexxClass}{.StringHashSetIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringHashSetIterator \hfill\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashSetIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1660,10 +1472,10 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringIterable}{data}
+\begin{CrexxClass}{\textit{.StringIterable}}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{StringIterable}}
+    \HierarchyLine[\APIOpen]{0}{\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1676,10 +1488,10 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringIterator}{data}
+\begin{CrexxClass}{\textit{.StringIterator}}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1692,11 +1504,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringLinkedList}{data}
+\begin{CrexxClass}{.StringLinkedList}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringLinkedList}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringLinkedList}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1828,11 +1640,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringObjectHashMap}{data}
+\begin{CrexxClass}{.StringObjectHashMap}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringObjectHashMap \hfill\textit{StringIterable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMap \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1916,11 +1728,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringObjectHashMapIterator}{data}
+\begin{CrexxClass}{.StringObjectHashMapIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringObjectHashMapIterator \hfill\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1968,11 +1780,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringObjectTreeMap}{data}
+\begin{CrexxClass}{.StringObjectTreeMap}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringObjectTreeMap \hfill\textit{StringIterable, ObjectPrintable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMap \hfill\textit{.StringIterable}, \textit{.ObjectPrintable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2068,11 +1880,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringObjectTreeMapIterator}{data}
+\begin{CrexxClass}{.StringObjectTreeMapIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringObjectTreeMapIterator \hfill\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2120,11 +1932,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringOldTreeMap}{data}
+\begin{CrexxClass}{.StringOldTreeMap}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringOldTreeMap \hfill\textit{StringIterable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringOldTreeMap \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2232,11 +2044,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringStack}{data}
+\begin{CrexxClass}{.StringStack}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringStack}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringStack}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2284,11 +2096,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringTreeMap}{data}
+\begin{CrexxClass}{.StringTreeMap}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringTreeMap \hfill\textit{StringIterable, ObjectPrintable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMap \hfill\textit{.StringIterable}, \textit{.ObjectPrintable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2390,11 +2202,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringTreeMapIterator}{data}
+\begin{CrexxClass}{.StringTreeMapIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringTreeMapIterator \hfill\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2424,11 +2236,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringTreeSet}{data}
+\begin{CrexxClass}{.StringTreeSet}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringTreeSet \hfill\textit{StringIterable}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSet \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2506,11 +2318,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{StringTreeSetIterator}{data}
+\begin{CrexxClass}{.StringTreeSetIterator}{data}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{Object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ StringTreeSetIterator \hfill\textit{StringIterator}}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSetIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2536,6 +2348,194 @@
       {public}
       {.int}
       {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+\begin{CrexxClass}{.id}{id\_id}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .id}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {id}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {uuid}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {uuidt}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {uuidV7}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {ulid}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {nanoId}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {snowflake}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {base58}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+\begin{CrexxClass}{.KeyDB}{data\_KeyDB}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .KeyDB}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {KeyDB}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {open}
+      {(\Param{filename}{.string}, \Param{mode}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {close}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isOpen}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {begin}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {commit}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {rollback}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {put}
+      {(\Param{key}{.string}, \Param{value}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {remove}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {stats}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {backup}
+      {(\Param{path}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {validate}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {compact}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {containsKey}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {putCommit}
+      {(\Param{key}{.string}, \Param{value}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {removeCommit}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {getHandle}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {dispose}
       {()}
 
   \end{Members}

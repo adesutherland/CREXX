@@ -4,13 +4,17 @@ set(CLSS
   StringIterable
   StringIterator
   ObjectIterable
+  Iterable
   ObjectPrintable
   Printable
   ObjectIterator
+  Iterator
   StringArrayList
   StringArrayListIterator
   ObjectArrayList
+  ArrayList
   ObjectArrayListIterator
+  ArrayListIterator
   ObjectObjectTreeMapIterator
   TreeMapIterator
   ObjectObjectTreeMap
@@ -91,6 +95,10 @@ set(CLASS_DEPS_StringArrayList StringIterable)
 set(CLASS_DEPS_StringArrayListIterator StringArrayList StringIterator)
 set(CLASS_DEPS_ObjectArrayList ObjectIterable)
 set(CLASS_DEPS_ObjectArrayListIterator ObjectArrayList ObjectIterator)
+set(CLASS_DEPS_ObjectArrayListIterator ObjectArrayList ObjectIterator)
+set(CLASS_DEPS_ArrayList Iterable)
+set(CLASS_DEPS_ArrayListIterator ArrayList Iterator)
+set(CLASS_DEPS_ArrayListIterator ArrayList Iterator)
 set(CLASS_DEPS_StringHashMap StringTreeSet StringHashMapIterator StringIterable)
 set(CLASS_DEPS_StringHashMapIterator StringIterator)
 set(CLASS_DEPS_StringObjectHashMap StringTreeSet StringObjectHashMapIterator StringIterator StringIterable)

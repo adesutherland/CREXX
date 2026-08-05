@@ -129,29 +129,33 @@ emitAlmanacClass: procedure
    if strip(extraInterface) \= '' then
       call appendUnique interfaces, extraInterface
 
-   say '\begin{CrexxClass}{'latexEscape(className)'}{'latexEscape(namespace_)'}'
+   if classKind = 'interface' then
+      displayedClassName = formatInterfaceName(className)
+   else
+      displayedClassName = formatClassName(className)
+
+   say '\begin{CrexxClass}{'displayedClassName'}{'latexEscape(namespace_)'}'
    say
    say '  \begin{Hierarchy}'
 
    hierarchyTail = ''
    if interfaces[0] > 0 then do
-      hierarchyTail = ' \hfill\textit{'
+      hierarchyTail = ' \hfill'
       do j = 1 to interfaces[0]
          if j > 1 then hierarchyTail = hierarchyTail || ', '
-         hierarchyTail = hierarchyTail || latexEscape(stripLeadingDot(interfaces[j]))
+         hierarchyTail = hierarchyTail || formatInterfaceName(interfaces[j])
       end
-      hierarchyTail = hierarchyTail || '}'
    end
 
    if classKind = 'interface' then do
-      /* Interfaces have no implicit Object base.  Any extended interfaces
-       * are shown at the right of the interface declaration.
+      /* Interfaces have no implicit .object base.  Any inherited interfaces
+       * are shown at the right, individually typeset in italics.
        */
-      say '    \HierarchyLine[\APIOpen]{0}{\textit{'latexEscape(className)'}'hierarchyTail'}'
+      say '    \HierarchyLine[\APIOpen]{0}{'formatInterfaceName(className)hierarchyTail'}'
    end
    else do
-      say '    \HierarchyLine[\APIOpen]{0}{'latexEscape(baseClass)'}'
-      say '    \HierarchyLine{1}{\APIHierarchyBranch\ 'latexEscape(className)hierarchyTail'}'
+      say '    \HierarchyLine[\APIOpen]{0}{'formatClassName(baseClass)'}'
+      say '    \HierarchyLine{1}{\APIHierarchyBranch\ 'formatClassName(className)hierarchyTail'}'
    end
 
    say '  \end{Hierarchy}'
@@ -204,6 +208,27 @@ splitLines: procedure=.string[]
 return result
 
 
+/* Format class and interface names in one central place.
+ *
+ * Class names remain upright and retain their cRexx spelling.  Interface
+ * names are italicised and retain (or receive) their leading cRexx dot.
+ */
+formatClassName: procedure=.string
+   arg name=.string
+
+   name = strip(name)
+   if left(name,1) \= '.' then name = '.' || name
+return latexEscape(name)
+
+
+formatInterfaceName: procedure=.string
+   arg name=.string
+
+   name = strip(name)
+   if left(name,1) \= '.' then name = '.' || name
+return '\textit{' || latexEscape(name) || '}'
+
+
 /* Parse "extends" and "implements" from the class-header tail. */
 parseClassTail: procedure
    arg tail=.string, expose baseClass=.string, expose interfaces=.string[]
@@ -217,7 +242,7 @@ parseClassTail: procedure
          when low = 'extends' then mode = 'extends'
          when low = 'implements' then mode = 'implements'
          when mode = 'extends' then do
-            baseClass = stripLeadingDot(word)
+            baseClass = word
             mode = ''
          end
          when mode = 'implements' then call appendUnique interfaces, word

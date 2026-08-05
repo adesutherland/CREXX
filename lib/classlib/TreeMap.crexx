@@ -33,7 +33,7 @@ namespace data expose TreeMap
  * lookup, insertion, removal, and ordered traversal avoid the old array-backed
  * map's linear scan and snapshot sort hot paths.
  */
-TreeMap: class implements .ObjectPrintable
+TreeMap: class implements .Printable
 val	    = .int
 root_	    = .int
 count_	    = .int

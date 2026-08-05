@@ -1,14 +1,12 @@
- rexxApiDoc Id.crexx                             >> classlib-api.tex
- rexxApiDoc KeyDB.crexx                          >> classlib-api.tex
- rexxApiDoc ObjectArrayList.crexx                >> classlib-api.tex
- rexxApiDoc ObjectArrayListIterator.crexx        >> classlib-api.tex
- rexxApiDoc ObjectComparator.crexx               >> classlib-api.tex
- rexxApiDoc ObjectIterable.crexx                 >> classlib-api.tex
- rexxApiDoc ObjectIterator.crexx                 >> classlib-api.tex
+ rexxApiDoc ArrayList.crexx                      >> classlib-api.tex
+ rexxApiDoc ArrayListIterator.crexx              >> classlib-api.tex
+ rexxApiDoc Comparator.crexx                     >> classlib-api.tex
+ rexxApiDoc Iterable.crexx                       >> classlib-api.tex
+ rexxApiDoc Iterator.crexx                       >> classlib-api.tex
  rexxApiDoc ObjectLinkedList.crexx               >> classlib-api.tex
- rexxApiDoc ObjectObjectTreeMap.crexx            >> classlib-api.tex
- rexxApiDoc ObjectObjectTreeMapIterator.crexx    >> classlib-api.tex
- rexxApiDoc ObjectPrintable.crexx                >> classlib-api.tex
+ rexxApiDoc TreeMap.crexx                        >> classlib-api.tex
+ rexxApiDoc TreeMapIterator.crexx                >> classlib-api.tex
+ rexxApiDoc Printable.crexx                      >> classlib-api.tex
  rexxApiDoc ObjectStack.crexx                    >> classlib-api.tex
  rexxApiDoc Os.crexx                             >> classlib-api.tex
  rexxApiDoc Qfind.crexx                          >> classlib-api.tex
@@ -34,4 +32,6 @@
  rexxApiDoc StringTreeMapIterator.crexx          >> classlib-api.tex
  rexxApiDoc StringTreeSet.crexx                  >> classlib-api.tex
  rexxApiDoc StringTreeSetIterator.crexx          >> classlib-api.tex
+ rexxApiDoc Id.crexx                             >> classlib-api.tex
+ rexxApiDoc KeyDB.crexx                          >> classlib-api.tex
  
