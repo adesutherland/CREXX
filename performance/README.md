@@ -22,6 +22,7 @@ validation.
 | `performance/ROADMAP.md` | Approved live PERF3 priorities, transfers, dependencies and exit gates |
 | `performance/ROADMAP-PERF2-2026-07-31.md` | Closed PERF2 status, findings, decisions, future-point ledger and retained evidence links |
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
+| `performance/decimal/` | Independent DECIMAL-01 decimal-provider correctness, candidate and performance-engineering control plane; no backend selected |
 | `performance/PERF3-01-WORKLIST.md` | Accepted current-HEAD Mac evidence/ranking package that selected PERF3-02 as the first bounded design panel |
 | `performance/PERF3-02-WORKLIST.md` | Historical C0-C4 panel and authoritative clean-host timing, superseded by the selected infrastructure-enabled C1abc composition |
 | `performance/PERF3-02-C1B-WORKLIST.md` | Completed receiver-link/exit proof underlying the selected C1b-R1 production rung; canonical dual-VM opt/no-opt results and exact copy removal pass |
@@ -74,6 +75,7 @@ validation.
 | `performance/evidence/2026-08-04-perf3-12b-b4-comparative-panel/` | Checksum-closed S0/S1/H1 route selection with a 36-pair both-VM H1 verdict and replayable rejected S1 fallback |
 | `performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/` | Accepted clean production H1 proof, exact structural result and mandatory first ordinary Release verdict |
 | `performance/evidence/2026-08-05-perf3-12b-mac-scorecard/` | Fresh clean merged-product Apple scorecard: 348/348 executions, no noise append, static/artifact identities and current aggregate ranking |
+| `performance/evidence/2026-08-05-decimal-01-numctx-repair-verdict/` | Provisional focused decimal correctness repair: Debug/Release 9/9 plus 6/6 observable VM/provider cells; no timing or broad closeout |
 | `performance/evidence/2026-08-02-perf3-11-legacy-proof-baseline/` | Stable remaining legacy-proof inventory, exact focused acceptance floor, canonical keyhole identities, output-neutral diagnostic and 49/49 focused replay |
 | `performance/evidence/2026-08-02-perf3-11-m01-xtoy/` | Completed metadata-driven XTOY repetition migration: old ITOF floor plus 11 stronger focused deletions, total ITOD/BTOD contract, unchanged canonical images and 1,989-test closeout |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |

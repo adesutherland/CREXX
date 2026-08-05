@@ -1,0 +1,180 @@
+/*
+ * DECIMAL-01 Gate 1 fixed-work Common-18 workload.
+ *
+ * This is a provider-comparison workload, not a published application score.
+ * It emits a deterministic checksum for separate D0/D1a qualification and
+ * performs no internal timing.
+ */
+options levelb comments_dash numeric_common
+import rxfnsb
+
+numeric digits 18
+arg argv = .string[]
+
+if argv[0] <> 3 then return fail("use MODE ITERATIONS OPAQUE_SEED")
+mode = lower(argv[1])
+if verify(argv[2], "0123456789") <> 0 then
+  return fail("ITERATIONS must be positive")
+iterations = argv[2] as .int
+if iterations < 1 then return fail("ITERATIONS must be positive")
+if verify(argv[3], "0123456789") <> 0 | length(argv[3]) <> 1 then
+  return fail("OPAQUE_SEED must be one decimal digit")
+seed = argv[3]
+
+checksum = .string
+select
+  when mode = "all" then checksum = all_kernels(iterations, seed)
+  when mode = "arithmetic" then checksum = arithmetic_kernel(iterations, seed)
+  when mode = "conversion" then checksum = conversion_kernel(iterations, seed)
+  when mode = "compare" then checksum = compare_kernel(iterations, seed)
+  when mode = "context" then checksum = context_kernel(iterations, seed)
+  when mode = "ledger" then checksum = ledger_kernel(iterations, seed)
+  when mode = "compound" then checksum = compound_kernel(iterations, seed)
+  otherwise return fail("unknown MODE")
+end
+
+say "DECIMAL-GATE1 standard=common digits=18 mode=" || mode ,
+    "iterations=" || iterations "work=" || work_units(mode, iterations) ,
+    "checksum=" || checksum
+say "PASS: DECIMAL-01 Gate 1 decimal workload"
+return 0
+
+all_kernels: procedure = .string
+  numeric digits 18
+  arg iterations = .int, seed = .string
+  return "arithmetic=" || arithmetic_kernel(iterations, seed) || ,
+      ";conversion=" || conversion_kernel(iterations, seed) || ,
+      ";compare=" || compare_kernel(iterations, seed) || ,
+      ";context=" || context_kernel(iterations, seed) || ,
+      ";ledger=" || ledger_kernel(iterations, seed) || ,
+      ";compound=" || compound_kernel(iterations, seed)
+
+arithmetic_kernel: procedure = .string
+  numeric digits 18
+  arg iterations = .int, seed = .string
+  value = ("123456789012345.6" || seed) as .decimal
+  step = "0.125" as .decimal
+  scale = "3.125" as .decimal
+  do i = 1 to iterations
+    value = value + step
+    value = value - step
+    product = value * scale
+    value = product / scale
+  end
+  return value as .string
+
+conversion_kernel: procedure = .string
+  numeric digits 18
+  arg iterations = .int, seed = .string
+  total_length = 0
+  rendered = ""
+  do i = 1 to iterations
+    selector = ((i - 1) <mod> 4) + 1
+    select
+      when selector = 1 then source = "123456789012345.6" || seed
+      when selector = 2 then source = "0.000012345678901234" || seed
+      when selector = 3 then source = "9.876543210123456" || seed || "e+24"
+      otherwise source = "-314159265358979.3" || seed
+    end
+    number = source as .decimal
+    rendered = number as .string
+    total_length = total_length + length(rendered)
+  end
+  return total_length || ":" || rendered
+
+compare_kernel: procedure = .string
+  numeric digits 18
+  arg iterations = .int, seed = .string
+  equal_text = "123456789012345.6" || seed
+  equal_left = equal_text as .decimal
+  equal_right = equal_text as .decimal
+  early_low = equal_text as .decimal
+  early_high = ("223456789012345.6" || seed) as .decimal
+  late_low = ("123456789012345.67" || seed) as .decimal
+  next_seed = ((seed as .int) + 1) as .string
+  late_high = ("123456789012345.67" || next_seed) as .decimal
+  hits = 0
+  do i = 1 to iterations
+    if equal_left = equal_right then hits = hits + 1
+    if early_low < early_high then hits = hits + 2
+    if late_low < late_high then hits = hits + 4
+  end
+  return hits as .string
+
+context_kernel: procedure = .string
+  numeric digits 18
+  arg iterations = .int, seed = .string
+  left_value = ("1.2" || seed) as .decimal
+  right_value = "2.75" as .decimal
+  rendered = ""
+  do i = 1 to iterations
+    result = context_inner(left_value, right_value)
+    rendered = result as .string
+  end
+  return rendered
+
+context_inner: procedure = .decimal
+  numeric digits 18
+  arg left_value = .decimal, right_value = .decimal
+  return left_value + right_value
+
+ledger_kernel: procedure = .string
+  numeric digits 18
+  arg iterations = .int, seed = .string
+  balance = "100000000000000.00" as .decimal
+  rendered = ""
+  total_length = 0
+  do i = 1 to iterations
+    selector = ((i - 1) <mod> 6) + 1
+    select
+      when selector = 1 then source = "123456789012.34" || seed
+      when selector = 2 then source = "-9876543210.12345"
+      when selector = 3 then source = "0.000000000000125"
+      when selector = 4 then source = "77777777777.7777"
+      when selector = 5 then source = "-33333333333.3333"
+      otherwise source = "42.000000000000001"
+    end
+    balance = balance + (source as .decimal)
+    rendered = balance as .string
+    total_length = total_length + length(rendered)
+  end
+  return (balance as .string) || ":" || total_length
+
+compound_kernel: procedure = .string
+  numeric digits 18
+  arg iterations = .int, seed = .string
+  principal = ("123456789012345.6" || seed) as .decimal
+  annual_rate = "0.0475000000000000" as .decimal
+  months = "12" as .decimal
+  payment = "10535000000000.00" as .decimal
+  total_length = 0
+  rendered = ""
+  do cycle = 1 to iterations
+    balance = principal
+    do month = 1 to 12
+      interest = (balance * annual_rate) / months
+      balance = balance + interest
+      balance = balance - payment
+      rendered = balance as .string
+      total_length = total_length + length(rendered)
+    end
+  end
+  return rendered || ":" || total_length
+
+work_units: procedure = .int
+  arg mode = .string, iterations = .int
+  select
+    when mode = "all" then return iterations * 73
+    when mode = "arithmetic" then return iterations * 4
+    when mode = "conversion" then return iterations * 2
+    when mode = "compare" then return iterations * 3
+    when mode = "context" then return iterations
+    when mode = "ledger" then return iterations * 3
+    when mode = "compound" then return iterations * 60
+  end
+  return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

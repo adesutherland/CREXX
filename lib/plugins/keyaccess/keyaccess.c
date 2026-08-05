@@ -161,12 +161,26 @@ struct IndexRecord {
 static void log_error(const char* operation, int error_code, const char* details);
 static int lock_file(struct FileHandle* handle);
 static int unlock_file(struct FileHandle* handle);
+static const char* binary_file_mode(const char* mode);
 static char* create_index_path(const char* dataPath);
 static struct IndexRecord* find_key(FILE* indexFile, const char* searchKey);
 static void cache_init(struct FileHandle* handle);
 static void cache_put(struct FileHandle* handle, const char* key, const char* value);
 static char* cache_get(struct FileHandle* handle, const char* key);
 static int write_record(struct FileHandle* handle, const struct IndexRecord* record, const char* value);
+
+static const char* binary_file_mode(const char* mode) {
+    if (strcmp(mode, "r") == 0) {
+        return "rb";
+    }
+    if (strcmp(mode, "w") == 0) {
+        return "wb";
+    }
+    if (strcmp(mode, "w+") == 0) {
+        return "w+b";
+    }
+    return mode;
+}
 
 // Error logging
 static void log_error(const char* operation, int error_code, const char* details) {
@@ -206,12 +220,16 @@ static void log_error(const char* operation, int error_code, const char* details
 PROCEDURE(openfile) {
     char* filename = GETSTRING(ARG0);
     char* mode = GETSTRING(ARG1);
+    const char* file_mode;
     struct FileHandle* handle;
 
     if (!filename || !mode) {
         log_error("openfile", KA_ERROR_PARAM, "NULL filename or mode");
         RETURNINTX(KA_ERROR_PARAM);
     }
+
+    /* Index records and data offsets are binary, so Windows text mode is unsafe. */
+    file_mode = binary_file_mode(mode);
 
     handle = (struct FileHandle*)malloc(sizeof(struct FileHandle));
     if (!handle) {
@@ -233,7 +251,7 @@ PROCEDURE(openfile) {
     }
 
     // Open data file
-    handle->dataFile = fopen(handle->dataPath, mode);
+    handle->dataFile = fopen(handle->dataPath, file_mode);
     if (!handle->dataFile) {
         log_error("openfile", KA_ERROR_IO, "Failed to open data file");
         free(handle->dataPath);
@@ -243,7 +261,7 @@ PROCEDURE(openfile) {
     }
 
     // Open or create index file
-    handle->indexFile = fopen(handle->indexPath, mode);
+    handle->indexFile = fopen(handle->indexPath, file_mode);
     if (!handle->indexFile) {
         log_error("openfile", KA_ERROR_IO, "Failed to open index file");
         fclose(handle->dataFile);

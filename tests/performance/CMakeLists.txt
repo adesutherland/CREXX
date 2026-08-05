@@ -37,6 +37,191 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
     endforeach()
 endforeach()
 
+# DECIMAL-01 Gate 1 provider comparison. The workload performs no internal
+# timing; CTest only qualifies deterministic execution across the two VMs,
+# all three optimizer boundaries, and the explicit bundled providers.
+add_custom_target(performance_decimal_gate1)
+add_dependencies(performance_decimal_gate1 mc_decimal_dynamic db_decimal_dynamic)
+add_dependencies(performance_decimal_gate1 rxdas)
+
+add_executable(decimal_gate1_adapter
+        ${CMAKE_CURRENT_SOURCE_DIR}/decimal/decimal_gate1_adapter.c)
+target_include_directories(decimal_gate1_adapter PRIVATE
+        ${CMAKE_SOURCE_DIR}/interpreter
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+target_link_libraries(decimal_gate1_adapter PRIVATE
+        rxvmplugin ${CREXX_MATH_LIBRARY})
+add_dependencies(decimal_gate1_adapter mc_decimal_dynamic db_decimal_dynamic)
+add_dependencies(performance_decimal_gate1 decimal_gate1_adapter)
+
+foreach(_decimal_adapter_provider IN ITEMS mc db)
+    foreach(_decimal_adapter_context IN ITEMS common18 classic9)
+        if(_decimal_adapter_context STREQUAL "common18")
+            set(_decimal_adapter_standard common)
+            set(_decimal_adapter_digits 18)
+        else()
+            set(_decimal_adapter_standard classic)
+            set(_decimal_adapter_digits 9)
+        endif()
+        foreach(_decimal_adapter_mode IN ITEMS
+                arithmetic conversion compare copy-clear sync)
+            set(_decimal_adapter_test
+                    decimal_gate1_adapter_${_decimal_adapter_provider}_${_decimal_adapter_context}_${_decimal_adapter_mode})
+            add_test(
+                    NAME ${_decimal_adapter_test}
+                    COMMAND $<TARGET_FILE:decimal_gate1_adapter>
+                            rxvm_${_decimal_adapter_provider}_decimal
+                            ${_decimal_adapter_standard}
+                            ${_decimal_adapter_digits}
+                            ${_decimal_adapter_mode}
+                            2
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            )
+            set_tests_properties(${_decimal_adapter_test} PROPERTIES
+                    LABELS "performance;decimal;decimal01;gate1;adapter;qualification"
+                    PASS_REGULAR_EXPRESSION "PASS: DECIMAL-01 Gate 1 adapter payload"
+                    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+                    FIXTURES_REQUIRED linked_opt_runtime_artifacts
+            )
+        endforeach()
+    endforeach()
+endforeach()
+
+foreach(_decimal_standard IN ITEMS common18 classic9)
+    set(_decimal_name decimal_gate1_${_decimal_standard})
+    crexx_add_rexx_opt_matrix(
+            NAME ${_decimal_name}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/decimal/${_decimal_name}.crexx
+            TARGET_GROUP performance_decimal_gate1
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library compiler_exit_bin mc_decimal_dynamic db_decimal_dynamic
+            RUNTIME_ARGS ${LIBRPATH} -a all 2 1
+            TEST_LABELS "performance;decimal;decimal01;gate1;qualification"
+            REQUIRED_OUTPUT_REGEX "PASS: DECIMAL-01 Gate 1 decimal workload"
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:"
+    )
+
+    # Assemble the optimized compiler output a second time with only the RXAS
+    # optimizer disabled. This isolates RXAS effects from the full no-opt image,
+    # which disables optimization in both rxc and rxas.
+    set(_decimal_rxas_noopt_base ${_decimal_name}_opt_rxas_noopt)
+    set(_decimal_rxas_noopt_artifact
+            ${CMAKE_CURRENT_BINARY_DIR}/${_decimal_rxas_noopt_base}.rxbin)
+    add_custom_command(
+            OUTPUT ${_decimal_rxas_noopt_artifact}
+            COMMAND $<TARGET_FILE:rxas>
+                    -n -o ${_decimal_rxas_noopt_base} ${_decimal_name}_opt
+            DEPENDS rxas ${_decimal_name}_opt_artifact
+                    ${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_opt.rxas
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set(_decimal_rxas_noopt_target ${_decimal_rxas_noopt_base}_artifact)
+    add_custom_target(${_decimal_rxas_noopt_target}
+            DEPENDS ${_decimal_rxas_noopt_artifact})
+    add_dependencies(performance_decimal_gate1 ${_decimal_rxas_noopt_target})
+
+    foreach(_decimal_mode IN ITEMS noopt opt opt_rxas_noopt)
+        if(_decimal_mode STREQUAL "opt_rxas_noopt")
+            set(_decimal_integrity_source
+                    ${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_opt.rxas)
+        else()
+            set(_decimal_integrity_source
+                    ${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_${_decimal_mode}.rxas)
+        endif()
+        set(_decimal_integrity_test
+                ${_decimal_name}_${_decimal_mode}_rxas_integrity)
+        add_test(
+                NAME ${_decimal_integrity_test}
+                COMMAND ${CMAKE_COMMAND}
+                        -DRXAS_SOURCE=${_decimal_integrity_source}
+                        -DRXBIN=${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_${_decimal_mode}.rxbin
+                        -DRXDAS=$<TARGET_FILE:rxdas>
+                        -DDISASSEMBLY=${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_${_decimal_mode}_final.rxas
+                        -DCASE=${_decimal_name}_${_decimal_mode}
+                        -P ${CMAKE_CURRENT_SOURCE_DIR}/decimal/check_decimal_gate1_rxas.cmake
+        )
+        set_tests_properties(${_decimal_integrity_test} PROPERTIES
+                LABELS "performance;decimal;decimal01;gate1;qualification;optimizer-integrity"
+                FIXTURES_REQUIRED linked_opt_runtime_artifacts
+        )
+    endforeach()
+
+    foreach(_decimal_runner IN ITEMS rxvm rxbvm)
+        foreach(_decimal_provider IN ITEMS default mc db)
+            if(_decimal_provider STREQUAL "default")
+                set(_decimal_plugin_args)
+            else()
+                set(_decimal_plugin_args -p rxvm_${_decimal_provider}_decimal)
+            endif()
+            foreach(_decimal_mode IN ITEMS noopt opt opt_rxas_noopt)
+                set(_decimal_test
+                        ${_decimal_name}_${_decimal_runner}_${_decimal_provider}_${_decimal_mode})
+                add_test(
+                        NAME ${_decimal_test}
+                        COMMAND $<TARGET_FILE:${_decimal_runner}>
+                                ${_decimal_plugin_args}
+                                ${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_${_decimal_mode}
+                                ${LIBRPATH}
+                                -a all 2 1
+                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+                )
+                set_tests_properties(${_decimal_test} PROPERTIES
+                        LABELS "performance;decimal;decimal01;gate1;qualification"
+                        PASS_REGULAR_EXPRESSION
+                                "PASS: DECIMAL-01 Gate 1 decimal workload"
+                        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+                        FIXTURES_REQUIRED linked_opt_runtime_artifacts
+                )
+            endforeach()
+        endforeach()
+    endforeach()
+endforeach()
+
+# The shared CTest setup target must also make every optimizer qualification
+# image and dynamic provider available for an isolated DECIMAL-01 selection.
+add_dependencies(linked_opt_runtime_artifacts performance_decimal_gate1)
+
+crexx_add_rexx_opt_matrix(
+        NAME decimal_gate1_rexxcps_family
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rexxcps_family_controls.crexx
+        TARGET_GROUP performance_decimal_gate1
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin mc_decimal_dynamic db_decimal_dynamic
+        RUNTIME_ARGS ${LIBRPATH} -a decimal-string 2
+        TEST_LABELS "performance;decimal;decimal01;gate1;qualification;rexxcps-control"
+        REQUIRED_OUTPUT_REGEX "PASS: RexxCPS family control"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:"
+)
+
+foreach(_decimal_runner IN ITEMS rxvm rxbvm)
+    foreach(_decimal_provider IN ITEMS default mc db)
+        if(_decimal_provider STREQUAL "default")
+            set(_decimal_plugin_args)
+        else()
+            set(_decimal_plugin_args -p rxvm_${_decimal_provider}_decimal)
+        endif()
+        foreach(_decimal_mode IN ITEMS noopt opt)
+            set(_decimal_test
+                    decimal_gate1_rexxcps_family_${_decimal_runner}_${_decimal_provider}_${_decimal_mode})
+            add_test(
+                    NAME ${_decimal_test}
+                    COMMAND $<TARGET_FILE:${_decimal_runner}>
+                            ${_decimal_plugin_args}
+                            ${CMAKE_CURRENT_BINARY_DIR}/decimal_gate1_rexxcps_family_${_decimal_mode}
+                            ${LIBRPATH}
+                            -a decimal-string 2
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            )
+            set_tests_properties(${_decimal_test} PROPERTIES
+                    LABELS "performance;decimal;decimal01;gate1;qualification;rexxcps-control"
+                    PASS_REGULAR_EXPRESSION "PASS: RexxCPS family control"
+                    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+                    FIXTURES_REQUIRED linked_opt_runtime_artifacts
+            )
+        endforeach()
+    endforeach()
+endforeach()
+
 # crexx_add_rexx_opt_matrix registers optimized images with the shared runtime
 # fixture, while these NR-15 target groups are deliberately not part of ALL.
 # Make the same serialized fixture own both groups so an isolated CTest run can

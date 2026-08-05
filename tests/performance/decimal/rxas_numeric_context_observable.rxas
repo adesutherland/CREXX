@@ -1,0 +1,126 @@
+/*
+ * DECIMAL-01 Gate 0 diagnostic for observable numeric-context effects.
+ *
+ * The normal decimal RXAS fixture now carries the same regression semantics.
+ * This separately named program remains the compact six-cell end-to-end
+ * diagnostic for provider/VM selection; any non-zero result is a regression.
+ */
+
+.globals=0
+
+main() .locals=8
+    load r1,0
+    say "DECIMAL-01 RXAS numeric-context observable contract"
+
+    /* FUZZ changes comparison precision, not stored arithmetic precision. */
+    numsci 9,1,1
+    load r3,1.00000001d
+    load r4,1.00000000d
+    deq r5,r3,r4
+    brf fuzz_zero_ok,r5
+    inc r1
+    say "FAIL fuzz=0 treated distinct values as equal"
+fuzz_zero_ok:
+    setnumfuz 1
+    deq r5,r3,r4
+    brt fuzz_one_ok,r5
+    inc r1
+    say "FAIL fuzz=1 did not ignore the least significant comparison digit"
+fuzz_one_ok:
+
+    /* FORM and CASE must affect exponential formatting. */
+    numsci 6,2,1
+    load r3,1e20d
+    dtos r3
+    seq r0,r3,"1E+20"
+    brt scientific_upper_ok,r0
+    inc r1
+    sayx "FAIL scientific/upper expected 1E+20 got "
+    say r3
+scientific_upper_ok:
+    numeng 6,1,1
+    load r3,1e20d
+    dtos r3
+    seq r0,r3,"100e+18"
+    brt engineering_lower_ok,r0
+    inc r1
+    sayx "FAIL engineering/lower expected 100e+18 got "
+    say r3
+engineering_lower_ok:
+
+    /* STANDARD selects half-even Common versus half-up Classic rounding. */
+    numsci 5,1,1
+    load r3,1.23445d
+    dadd r3,r3,0d
+    dtos r3
+    seq r0,r3,"1.2344"
+    brt common_rounding_ok,r0
+    inc r1
+    sayx "FAIL Common half-even expected 1.2344 got "
+    say r3
+common_rounding_ok:
+    numsci 5,1,2
+    load r3,1.23445d
+    dadd r3,r3,0d
+    dtos r3
+    seq r0,r3,"1.2345"
+    brt classic_rounding_ok,r0
+    inc r1
+    sayx "FAIL Classic half-up expected 1.2345 got "
+    say r3
+classic_rounding_ok:
+
+    /* A called frame's numeric context must not overwrite the caller. */
+    numsci 9,1,1
+    call r2,child_context()
+    brt child_ok,r2
+    inc r1
+    say "FAIL child numeric context"
+child_ok:
+    getnumdgts r3
+    ine r0,r3,9
+    brt caller_restore_fail,r0
+    getnumfuz r3
+    ine r0,r3,0
+    brt caller_restore_fail,r0
+    getnumfrm r3
+    ine r0,r3,1
+    brt caller_restore_fail,r0
+    getnumcas r3
+    ine r0,r3,1
+    brt caller_restore_fail,r0
+    getnumstd r3
+    ine r0,r3,1
+    brt caller_restore_fail,r0
+    br caller_restore_ok
+caller_restore_fail:
+    inc r1
+    say "FAIL caller numeric context changed after return"
+caller_restore_ok:
+
+    ieq r0,r1,0
+    brf finish,r0
+    say "PASS: DECIMAL-01 RXAS numeric-context observable contract"
+finish:
+    ret r1
+
+child_context() .locals=2
+    numeng 7,2,2
+    getnumdgts r1
+    ine r0,r1,7
+    brt child_context_fail,r0
+    getnumfuz r1
+    ine r0,r1,0
+    brt child_context_fail,r0
+    getnumfrm r1
+    ine r0,r1,2
+    brt child_context_fail,r0
+    getnumcas r1
+    ine r0,r1,2
+    brt child_context_fail,r0
+    getnumstd r1
+    ine r0,r1,2
+    brt child_context_fail,r0
+    ret 1
+child_context_fail:
+    ret 0

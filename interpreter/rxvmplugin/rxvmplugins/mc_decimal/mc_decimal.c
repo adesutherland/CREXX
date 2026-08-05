@@ -417,14 +417,73 @@ static void decimalNeg(decplugin *plugin, value *result, const value *op1) {
     check_signal(plugin);
 }
 
-/* Compare two rxvmplugin numbers returning -1, 0, 1 for less than, equal, greater than */
-static int decimalCompare(decplugin *plugin, const value *op1, const value *op2) {
+/* NUMERIC FUZZ affects comparison precision only.  Arithmetic values remain
+ * stored at the ordinary context precision. */
+static size_t getComparisonDigits(decplugin *plugin) {
+    size_t digits = plugin->getDigits(plugin);
+    numeric_context *num_context = plugin->num_context;
+
+    if (num_context && num_context->fuzz > 0) {
+        int requested_digits = num_context->digits - num_context->fuzz;
+        if (requested_digits < 1) requested_digits = 1;
+        if ((size_t)requested_digits < digits) digits = (size_t)requested_digits;
+    }
+    return digits;
+}
+
+static decNumber *comparisonNumber(size_t digits, decNumber *local) {
+    decNumber *number;
+
+    if (digits <= DECNUMDIGITS) return local;
+    number = malloc(getRequiredDecNumberSize(digits));
+    if (!number) {
+        RX_PANIC_OOM("malloc mc_decimal comparison value",
+                     getRequiredDecNumberSize(digits), "decimal comparison value");
+    }
+    return number;
+}
+
+static int decimalCompareNumbers(decplugin *plugin, const decNumber *op1,
+                                 const decNumber *op2) {
     decContext *context = (decContext*)(plugin->base.private_context);
+    int32_t arithmetic_digits = context->digits;
+    size_t comparison_digits = getComparisonDigits(plugin);
+    decNumber left_buffer;
+    decNumber right_buffer;
     decNumber result;
-    decNumberCompare(&result, op1->decimal_value, op2->decimal_value, context);
-    int cmp = decNumberToInt32(&result, context);
+    decNumber *left;
+    decNumber *right;
+    int cmp;
+
+    /* FUZZ zero compares values already prepared at arithmetic precision.
+     * Avoid copying and applying unary plus to both operands in that normal
+     * case; the extra normalization is needed only when FUZZ reduces the
+     * significant digits used by comparison. */
+    if (comparison_digits == (size_t)arithmetic_digits) {
+        decNumberCompare(&result, op1, op2, context);
+        cmp = decNumberToInt32(&result, context);
+        check_signal(plugin);
+        return cmp;
+    }
+
+    left = comparisonNumber(comparison_digits, &left_buffer);
+    right = comparisonNumber(comparison_digits, &right_buffer);
+    context->digits = (int32_t)comparison_digits;
+    decNumberPlus(left, op1, context);
+    decNumberPlus(right, op2, context);
+    decNumberCompare(&result, left, right, context);
+    cmp = decNumberToInt32(&result, context);
+    context->digits = arithmetic_digits;
+
+    if (left != &left_buffer) free(left);
+    if (right != &right_buffer) free(right);
     check_signal(plugin);
     return cmp;
+}
+
+/* Compare two rxvmplugin numbers returning -1, 0, 1 for less than, equal, greater than */
+static int decimalCompare(decplugin *plugin, const value *op1, const value *op2) {
+    return decimalCompareNumbers(plugin, op1->decimal_value, op2->decimal_value);
 }
 
 /* Compare an rxvmplugin number to a string representation of a number returning -1, 0, 1 for less than, equal, greater than */
@@ -441,10 +500,7 @@ static int decimalCompareString(decplugin *plugin, const value *op1, const char 
         op2dn = &buffer;
     }
     decNumberFromString(op2dn, op2, context);
-    decNumber result;
-    decNumberCompare(&result, op1->decimal_value, op2dn, context);
-    int cmp = decNumberToInt32(&result, context);
-    check_signal(plugin);
+    int cmp = decimalCompareNumbers(plugin, op1->decimal_value, op2dn);
     if (op2dn != &buffer) {
         free(op2dn);
     };
@@ -608,6 +664,8 @@ static rxvm_plugin *new_decplugin() {
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
     plugin->base.type = RXVM_PLUGIN_DECIMAL;
+    plugin->base.signal_number = RXSIGNAL_NONE;
+    plugin->base.signal_string = NULL;
     plugin->base.private_context = context;
     plugin->base.name = "mcdecimal";
     plugin->base.version = "Plugin:0.1 Library:3.64";

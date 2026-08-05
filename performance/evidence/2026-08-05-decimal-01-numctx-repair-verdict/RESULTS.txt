@@ -1,0 +1,61 @@
+PRE-REPAIR OBSERVABLE RESULT
+rxvm/default exit=1: FUZZ failure
+rxbvm/default exit=1: FUZZ failure
+rxvm/mc exit=1: FUZZ failure
+rxbvm/mc exit=1: FUZZ failure
+rxvm/db exit=3: FUZZ, form/case and Common half-even failures
+rxbvm/db exit=3: FUZZ, form/case and Common half-even failures
+
+POST-REPAIR DEBUG FOCUSED CTEST
+nr09_numeric_context_contract PASS
+rxasdecimaltests PASS
+rxasdecimaltests-rxbvm PASS
+rxasdecimaltests-mc PASS
+rxasdecimaltests-mc-rxbvm PASS
+rxasdecimaltests-db PASS
+rxasdecimaltests-db-rxbvm PASS
+mc_decimal_full_tests PASS
+db_decimal_tests PASS
+Result: 9/9 PASS
+
+POST-REPAIR DEBUG OBSERVABLE MATRIX
+rxvm/default exit=0 PASS
+rxvm/mc exit=0 PASS
+rxvm/db exit=0 PASS
+rxbvm/default exit=0 PASS
+rxbvm/mc exit=0 PASS
+rxbvm/db exit=0 PASS
+Result: 6/6 PASS
+
+POST-REPAIR RELEASE FOCUSED CTEST
+nr09_numeric_context_contract PASS
+rxasdecimaltests PASS
+rxasdecimaltests-rxbvm PASS
+rxasdecimaltests-mc PASS
+rxasdecimaltests-mc-rxbvm PASS
+rxasdecimaltests-db PASS
+rxasdecimaltests-db-rxbvm PASS
+mc_decimal_full_tests PASS
+db_decimal_tests PASS
+Result: 9/9 PASS
+
+POST-REPAIR RELEASE OBSERVABLE MATRIX
+rxvm/default exit=0 PASS
+rxvm/mc exit=0 PASS
+rxvm/db exit=0 PASS
+rxbvm/default exit=0 PASS
+rxbvm/mc exit=0 PASS
+rxbvm/db exit=0 PASS
+Result: 6/6 PASS
+
+BOUNDARY CASES INCLUDED
+- FUZZ 0 remains distinct and FUZZ 1 produces both equal and distinct buckets.
+- Register/register and register/literal decimal comparison paths agree.
+- Scientific upper emits 1E+20; engineering lower emits 100e+18.
+- Common half-even covers positive/negative and odd/even halfway cases.
+- Classic half-up covers the same positive halfway boundary.
+- The previous exponent_shift == 0 db_decimal rounding bypass is covered.
+
+INTERPRETATION
+Focused correctness repair passes in both ordinary build modes.
+No timing, benchmark, broad CTest, sanitizer or cross-platform claim is made.
