@@ -1,0 +1,46 @@
+PERF3-12B B3 H1 ordinary Release structure
+Date: 2026-08-04
+CREXX_VM_PROFILING=OFF
+
+Inputs
+------
+accepted optimized RXAS:
+  49efe16928bc9720904d127325a93d1e7c39642eb2f592f2972e52fbdcdcb585
+H1 generated-RXAS input:
+  d30cc26b95da0f1b449fe5c1077288fc20c1a08c5d9c1303aac8a474989166ce
+
+The modified input has main `.locals=104`. The first existing target concat
+writes r103 and its original STEMSET consumes r103. No executable instruction
+is added.
+
+Outputs
+-------
+common-F1 control RXBIN:
+  744ddab6d4d7ce73e376a5f44c2b38cfd4e7d58c3f4d5f524e8459a91ef0bf1e
+  68,433 bytes; main `.locals=104`; code segment 0xf58
+  main instructions 380 -> 369; S1 selected 0
+
+H1 candidate RXBIN:
+  6dca22dac98d3440775e6faac14962b2af31d3e3a4138aa300e1b4a7a82e5250
+  68,361 bytes; main `.locals=104`; code segment 0xf48
+  main instructions 380 -> 365; H1 proved/selected 4/4
+
+H1 minus common-F1 control:
+  static executable instructions: -4
+  TRACE records:                 -4
+  target Key Bee concats:        -4 (5 -> 1)
+  one-part STEMGET/STEMSET:      unchanged, four key operands rX -> r103
+  code bytes:                    -16
+  whole RXBIN bytes:             -72
+
+The retained source-159 concat is the lazy cache seed. The four selected sites
+are the source-160 STEMGET, source-162 STEMGET and source-168 STEMGET/STEMSET.
+The independent `"1.0" || lvar` concat remains untouched.
+
+The optimizer-disabled image is
+`f20e6c9ab466838b462dbf352a01cb0a96ea3e612645717b3214c5eddf3b6dd7`
+at 69,305 bytes. It is byte-identical between the common-F1 control and H1
+tools, establishing that changed optimized output is optimization-owned rather
+than an input or VM-format side effect.
+
+Diagnostic and ordinary assembly produce byte-identical images in both cells.

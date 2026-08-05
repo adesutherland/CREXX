@@ -174,6 +174,14 @@ inlining and register finalization until these consumers simplify the actual
 body and temporary set. Inactive TRACE is guard-only and ADDRESS has zero
 runtime work in this slice.
 
+PERF3-12A and PERF3-12B are now complete. PERF3-12B selected the general
+capability-lazy joined-key reuse route, removed 1.96 million hot CONCAT
+dispatches and retained a fresh 348/348 Apple scorecard. PERF3-12C
+transactional PARSE is therefore the next implementation slice in this queue.
+Adrian has deliberately placed the separate RXVM per-worker arena/central
+block-depot memory work first; that sequencing does not change PERF3-12C's
+proof obligations or authorize it implicitly.
+
 ## K04e/current-product reassessment
 
 The authorized post-K04e fixed-work reassessment completed on 2026-08-04

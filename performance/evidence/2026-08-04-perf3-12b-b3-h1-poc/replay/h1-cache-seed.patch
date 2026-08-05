@@ -1,0 +1,26 @@
+--- benchmark_rexxcps_levelb_opt.rxas
++++ perf3-12b-h1-input.rxas
+@@ -7,7 +7,7 @@
+ g1 .expose=rexxcps_levelb.__rxtrace_in_handler
+ g2 .expose=rexxcps_levelb.__rxtrace_last_source_file
+ 
+-main() .locals=103
++main() .locals=104
+    .meta "rexxcps_levelb.main"="b" ".int" main() ""
+    numsci 9,1,2
+    .meta "rexxcps_levelb.main.j"="b" ".decimal" r25
+@@ -491,11 +491,11 @@
+    .meta "rexxcps_levelb.main.key1"="b" ".string" "Key Bee"
+    itos r51
+    .traceevent "V" 6 "R" "S" "r" 51 108 108 0 "lvar" ""
+-   concat r67,"Key Bee.",r51
+-   .traceevent "C" 4 "R" "S" "r" 67 108 108 0 "acompound" ""
++   concat r103,"Key Bee.",r51
++   .traceevent "C" 4 "R" "S" "r" 103 108 108 0 "acompound" ""
+    load r68,"56"
+    .traceevent "L" 4 "R" "S" "r" 68 108 108 0 "" ""
+-   stemset r4,r67,r68
++   stemset r4,r103,r68
+    .traceevent "A" 6 "R" "S" "r" 68 108 108 0 "acompound" ""
+    .srcstep 110 110 17 "rexxcps_levelb.crexx" 160 9 38 "        if flag = acompound.key1.lvar then say \"Failed1\""
+    .traceevent "V" 6 "R" "S" "r" 41 110 110 0 "flag" ""

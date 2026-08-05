@@ -1,0 +1,9 @@
+workload,k04e_static,current_static,static_delta,k04e_bytes,current_bytes,byte_delta
+Sieve,72,73,1,4900,4892,-8
+Permute,209,209,0,11810,11810,0
+Bounce,352,352,0,17167,17167,0
+Richards,1802,1802,0,79014,79014,0
+Base64,604,595,-9,38149,37829,-320
+Towers,551,548,-3,28614,28550,-64
+RexxCPS,1221,1210,-11,68577,68361,-216
+shared-library,62326,61223,-1103,936949,933969,-2980

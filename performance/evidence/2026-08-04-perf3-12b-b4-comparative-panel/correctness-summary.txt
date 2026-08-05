@@ -1,0 +1,21 @@
+PERF3-12B B4 correctness and negative summary
+
+- S1 native-stem selector: 16/16 pass.
+- H1 native-stem selector: 16/16 pass.
+- S1 immutable graph/opcode-metadata checks: 2/2 pass.
+- H1 immutable graph/opcode-metadata checks: 2/2 pass.
+- Exact S0/S1/H1 images: PASS with zero stderr under rxvm and rxbvm (6/6).
+- Balanced formal timing: 222/222 process outcomes pass, comprising six
+  warmups and 216 recorded cells. The separate 10-sample S0/rxbvm append also
+  passes 10/10.
+- Every canonical-default timing output reports effective_count=500.
+- RSS cells: 18/18 pass.
+- Counts-only profile cells: 6/6 pass and all instruction/allocation/value
+  status sections report complete.
+- Sieve no-candidate guard: S1 selected 0 and H1 reused 0; each emits main
+  73 -> 73 and both output images have SHA-256
+  bb45de98d6f87c50c97c50b3de1d8ef50e30bc7c5677f95d64d459f6858e3bc1.
+
+The six route/VM smoke logs and both no-candidate diagnostic logs are retained
+under guards/. Detailed adversarial route fixtures remain checksum-closed in
+the B2 and B3 evidence bundles.

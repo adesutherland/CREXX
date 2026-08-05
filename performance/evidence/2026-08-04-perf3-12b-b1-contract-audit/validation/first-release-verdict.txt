@@ -1,0 +1,91 @@
+PERF3-12B B1 exact native-stem metadata first Release verdict
+Date: 2026-08-04
+Status: neutral mechanism verdict; accepted by Adrian on 2026-08-04
+
+Provisional production edit
+---------------------------
+  STEMGET/STEMGET2: RXSC_UNKNOWN -> exact pre-write
+                    UNICODE_ERROR|FAILURE contract
+  STEMSET/STEMSET2: remove unreachable INVALID_ARGUMENTS name
+  dependencies:     external mutable state
+  success-stable:   false
+  failure writes:   none at the logical value/component/context level
+
+Minimum focused correctness
+---------------------------
+Debug selector: 16/16 passed.
+It covers opcode metadata, injected native-stem initialization/output failure,
+one-/two-segment runtime and RXBIN contract, functional stem/error paths and
+NR-15 semantic/access cells under opt/no-opt and both VMs.
+
+Ordinary Release product
+------------------------
+  CREXX_VM_PROFILING=OFF
+  pre-edit rxas:  37a7064af7e3899e3b0325d13a63f055e61d821faa48645173110560df457571
+  candidate rxas: 53fab2568e0611283c8e282c53067bfc73671630a0a21138844aa0924d76a2be
+
+Exact image comparison
+----------------------
+No-opt:
+  baseline/candidate SHA-256:
+    6a3d8844d60f28c4c60315031b7e8116fb344af10f6ac4422359d508c138d223
+  size: 48,990 -> 48,990 bytes
+  byte comparison: identical
+
+Optimized:
+  baseline SHA-256:
+    92b922eec6f7ad63f3b69f2cdbf3734db0010c6ce5033285ccbf79f9bb93ea38
+  candidate SHA-256:
+    472bfa13720bec60658e2d422afe62fa80ed13945d39c82430cda88be1406e87
+  size: 68,393 -> 68,441 bytes (+48)
+  code segment: 0xf61 -> 0xf61 (identical size)
+  constant pool: 0x34c00 -> 0x34ca0 (+160 uncompressed bytes)
+  DCOPY opcodes: 2 -> 2
+  DTOS opcodes:  4 -> 4
+  TRACE records: 1,243 -> 1,245
+
+The known signal boundary changes X1's fixed-point choice, not the amount of
+runtime work. At source line 163 the accepted image performs in-place `DTOS`
+and line 164 retains `DCOPY; DTOS`; the candidate retains the copy at line 163
+and performs in-place `DTOS` at line 164. Both clauses execute on every same
+inner-loop iteration, so static and fixed-work DCOPY/DTOS dispatch counts are
+exactly neutral. The extra two records are optimized TRACE metadata for the
+now-retained line-163 temporary; they do not execute with TRACE inactive and
+are permitted by the documented optimized-trace policy.
+
+The relocation is explained by proof service output: the newly exact stem
+failure edges make the line-163 placement reject as `storage-changed`; the
+next equivalent line-164 placement becomes provable. There is no compound-tail
+rewrite and no VM/runtime source change in this verdict.
+
+Release correctness smoke
+-------------------------
+Fixed-work command shape, run for candidate opt/no-opt under each VM:
+  <vm> <image> library.rxbin -a --smoke-count 200
+
+  rxvm  no-opt: rc=0, PASS marker=1, stderr=0 bytes
+  rxvm  opt:    rc=0, PASS marker=1, stderr=0 bytes
+  rxbvm no-opt: rc=0, PASS marker=1, stderr=0 bytes
+  rxbvm opt:    rc=0, PASS marker=1, stderr=0 bytes
+
+Assembler scale
+---------------
+                        pre-edit B0       candidate
+  ordinary elapsed      0.36 s            0.67 s
+  ordinary max RSS      137,035,776 B     133,758,976 B
+  diagnostic elapsed    0.66 s            0.86 s
+  diagnostic max RSS    134,938,624 B     136,347,648 B
+  first SSA bytes       83,902,504 B      83,902,504 B
+
+These are single samples on a loaded/battery host, not a timing regression or
+improvement claim. Memory and graph size remain inside the accepted sparse
+boundary. Full performance sampling is deliberately not run for a metadata
+edit with identical hot instruction work.
+
+Verdict
+-------
+Correctness fixtures pass, the no-opt image is byte-identical, the optimized
+code segment and hot opcode work are neutral, both VMs pass fixed-work smoke,
+and only the safe X1 selection point plus optimized TRACE metadata changes.
+Adrian accepted the exact contract correction as B1 infrastructure on
+2026-08-04. The next phase is `B2 — isolated S1 segmented-route PoC`.

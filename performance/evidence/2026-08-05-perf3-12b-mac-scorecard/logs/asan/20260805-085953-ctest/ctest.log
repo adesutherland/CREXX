@@ -1,0 +1,24 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxas_optimizer_metadata\|rxas_flow_graph_contract\|rxas_optimizer_semantic_batch_flow\|rxas_optimizer_joined_key_private_local\|rxas_optimizer_joined_key_private_local_noopt\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1755: rxas_optimizer_metadata
+1/5 Test #1755: rxas_optimizer_metadata .........................   Passed    0.04 sec
+    Start 1756: rxas_flow_graph_contract
+2/5 Test #1756: rxas_flow_graph_contract ........................   Passed    0.05 sec
+    Start 1769: rxas_optimizer_semantic_batch_flow
+3/5 Test #1769: rxas_optimizer_semantic_batch_flow ..............   Passed    0.38 sec
+    Start 1770: rxas_optimizer_joined_key_private_local
+4/5 Test #1770: rxas_optimizer_joined_key_private_local .........   Passed    0.10 sec
+    Start 1771: rxas_optimizer_joined_key_private_local_noopt
+5/5 Test #1771: rxas_optimizer_joined_key_private_local_noopt ...   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+flow         =   0.05 sec*proc (1 test)
+metadata     =   0.09 sec*proc (2 tests)
+optimizer    =   0.66 sec*proc (5 tests)
+rxas         =   0.66 sec*proc (5 tests)
+
+Total Test time (real) =   0.69 sec

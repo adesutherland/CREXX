@@ -39,6 +39,7 @@ typedef enum RxasOptimisationPassId {
     RXAS_PASS_K02_K03_LINKED_READ,
     RXAS_PASS_K04_COMPARE_BRANCH,
     RXAS_PASS_K05_BRANCH_THREAD,
+    RXAS_PASS_H01_JOINED_KEY_REUSE,
     RXAS_PASS_COUNT
 } RxasOptimisationPassId;
 

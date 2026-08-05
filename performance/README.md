@@ -29,11 +29,13 @@ validation.
 | `performance/PERF3-02-C2E2-P1-WORKLIST.md` | Locked typed normal/skip/retry continuation and graph-owned storage-identity infrastructure; no rewrite consumer selected and assembler-cost recovery queued separately |
 | `performance/PERF3-02-R1-WORKLIST.md` | Completed infrastructure-enabled option replay and selected C1abc production closeout; rejected variants remain replayable from retained evidence |
 | `performance/PERF3-10-WORKLIST.md` | Accepted ordered TRACE batching and storage/component-proved redundant `ITOS` control, first verdict and proportional closeout |
-| `performance/PERF3-11-WORKLIST.md` | Active scalable RXAS graph/signal/component-SSA programme; M01-M06 and K01-K04/K06 are complete and K05 immutable-CFG branch threading is next; also owns the future-capability and RXC-to-RXAS architecture-transfer ledgers |
-| `performance/PERF3-11-MIGRATION-WORKLIST.md` | Locked remaining-proof inventory and resumable one-authority migration ledger; K06 is classified mechanical and K05 is the next semantic migration |
+| `performance/PERF3-11-WORKLIST.md` | Completed scalable RXAS graph/signal/component-SSA programme through K04e, with future-capability and RXC-to-RXAS architecture-transfer ledgers retained |
+| `performance/PERF3-11-MIGRATION-WORKLIST.md` | Completed one-authority proof migration ledger and retained classification history for the migrated semantic/mechanical consumers |
+| `performance/PERF3-12B-WORKLIST.md` | Completed compound-tail route comparison, accepted production H1 proof, first Release verdict, broad closeout and fresh current-product Mac scorecard |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |
+| `performance/TEAM-PERFORMANCE-UPDATE-2026-08-05.md` | Team-facing PERF3-12B closure, current Apple scorecard and next-work sequencing |
 | `performance/PERF2-01-HANDOVER-PROMPT.md` | Paste-ready new-session prompt for the first successor-roadmap activity |
 | `performance/PERF2-02-HANDOVER-PROMPT.md` | Paste-ready Ultra-session prompt for quickening architecture and the bounded reference/value placement PoC |
 | `performance/PERF2-04-HANDOVER-PROMPT.md` | Paste-ready new-session prompt for the inlining-first core Level B BIF campaign after PERF2-03 closure |
@@ -69,6 +71,9 @@ validation.
 | `performance/evidence/2026-08-01-perf3-10-trace-safe-itos-closeout/` | Accepted PERF3-10 exact C0/C1 timing, equal-work conversion counts, static proof, ordered TRACE correctness and 1,982-test broad closeout |
 | `performance/evidence/2026-08-02-perf3-11-stage0-oracle/` | Clean pre-refactor RXAS binary/input hashes, 61-test signal/storage oracle, idle assembler elapsed/RSS samples and deterministic procedure scale |
 | `performance/evidence/2026-08-02-perf3-11-stage6-proof-service/` | Accepted reusable proof service and sole ITOS authority: retained 21-to-19 instruction delta, +7.469%/+6.866% RexxCPS verdict, call-window correctness discovery and 1,987-test closeout |
+| `performance/evidence/2026-08-04-perf3-12b-b4-comparative-panel/` | Checksum-closed S0/S1/H1 route selection with a 36-pair both-VM H1 verdict and replayable rejected S1 fallback |
+| `performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/` | Accepted clean production H1 proof, exact structural result and mandatory first ordinary Release verdict |
+| `performance/evidence/2026-08-05-perf3-12b-mac-scorecard/` | Fresh clean merged-product Apple scorecard: 348/348 executions, no noise append, static/artifact identities and current aggregate ranking |
 | `performance/evidence/2026-08-02-perf3-11-legacy-proof-baseline/` | Stable remaining legacy-proof inventory, exact focused acceptance floor, canonical keyhole identities, output-neutral diagnostic and 49/49 focused replay |
 | `performance/evidence/2026-08-02-perf3-11-m01-xtoy/` | Completed metadata-driven XTOY repetition migration: old ITOF floor plus 11 stronger focused deletions, total ITOD/BTOD contract, unchanged canonical images and 1,989-test closeout |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |

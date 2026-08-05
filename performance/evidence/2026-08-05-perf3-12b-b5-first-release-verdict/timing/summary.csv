@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rexxcps-s0-rxvm,RexxCPS,crexx-s0,rxvm,retained-s0,A,no,no,1000-clauses,benchmark_rate,6,45336629.000000,46175629.500000,46288139.000000,46389478.000000,46713474.000000,136245.000000,0.294341,2.974509,no
+rexxcps-b5-rxvm,RexxCPS,crexx-b5,rxvm,production-h1,A,no,no,1000-clauses,benchmark_rate,6,46642052.000000,47038800.750000,47199707.000000,47430102.250000,47917413.000000,225401.000000,0.477547,2.702053,no
+rexxcps-s0-rxbvm,RexxCPS,crexx-s0,rxbvm,retained-s0,A,no,no,1000-clauses,benchmark_rate,6,45533982.000000,45681103.750000,45806432.000000,45935853.750000,46213284.000000,153565.000000,0.335248,1.482984,no
+rexxcps-b5-rxbvm,RexxCPS,crexx-b5,rxbvm,production-h1,A,no,no,1000-clauses,benchmark_rate,6,44165164.000000,47092343.250000,47316788.000000,47497954.750000,47986027.000000,265624.000000,0.561374,8.075068,no

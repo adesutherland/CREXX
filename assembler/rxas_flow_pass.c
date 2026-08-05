@@ -43,7 +43,9 @@ static const RxasOptimisationPassDescriptor pass_descriptors[] = {
     {RXAS_PASS_K01_STORAGE_PERMUTATION, "K01-storage-permutation", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
     {RXAS_PASS_K02_K03_LINKED_READ, "K02-K03-linked-read", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
     {RXAS_PASS_K04_COMPARE_BRANCH, "K04-compare-branch", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
-    {RXAS_PASS_K05_BRANCH_THREAD, "K05-branch-thread", RXAS_OPT_OWNER_CFG, RXAS_FLOW_CAP_CFG}
+    {RXAS_PASS_K05_BRANCH_THREAD, "K05-branch-thread", RXAS_OPT_OWNER_CFG, RXAS_FLOW_CAP_CFG},
+    {RXAS_PASS_H01_JOINED_KEY_REUSE, "H01-joined-key-reuse", RXAS_OPT_OWNER_SSA,
+     CAP_SEMANTIC_USE | RXAS_FLOW_CAP_LOOPS}
 };
 
 static int pass_is_copy_candidate(int opcode) {
@@ -141,11 +143,16 @@ int rxas_optimisation_census(Assembler_Context *context,
                              RxasOptimisationCensus *census) {
     const instruction_queue *item;
     const OpInfo *op;
+    const RxasOptimisationPassDescriptor *joined_key_descriptor;
     size_t index;
+    size_t joined_key_candidates;
+    size_t joined_key_stems;
     int opcode;
     if (!items || !census) return 0;
     memset(census, 0, sizeof(*census));
     census->records = item_count;
+    joined_key_candidates = 0;
+    joined_key_stems = 0;
     for (index = 0; index < item_count; index++) {
         item = &items[index];
         if (item->instrType != OP_CODE) continue;
@@ -210,6 +217,23 @@ int rxas_optimisation_census(Assembler_Context *context,
             pass_add_candidate(census, RXAS_PASS_K04_COMPARE_BRANCH);
         if (pass_is_branch_thread_candidate(opcode))
             pass_add_candidate(census, RXAS_PASS_K05_BRANCH_THREAD);
+        if (opcode == OP_CONCAT_REG_STRING_REG)
+            joined_key_candidates++;
+        if (opcode == OP_STEMGET_REG_REG_REG ||
+            opcode == OP_STEMSET_REG_REG_REG)
+            joined_key_stems++;
+    }
+    /* H01 needs both a repeated joined-key shape and a compound consumer.
+     * This keeps its loop capability lazy for procedures which merely contain
+     * unrelated string concatenations (notably the trace handler). */
+    if (joined_key_candidates > 1 && joined_key_stems) {
+        census->candidates[RXAS_PASS_H01_JOINED_KEY_REUSE] =
+                joined_key_candidates;
+        joined_key_descriptor = rxas_optimisation_pass_descriptor(
+                RXAS_PASS_H01_JOINED_KEY_REUSE);
+        if (joined_key_descriptor)
+            census->requested_capabilities |=
+                    joined_key_descriptor->capabilities;
     }
     return 1;
 }

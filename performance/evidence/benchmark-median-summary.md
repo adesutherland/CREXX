@@ -1,7 +1,7 @@
 # Benchmark median summary
 
 Status: live comparison index; qualification pilots, historical evidence and
-the current 2026-07-27 PERF2-09 same-session Mac closure
+the current 2026-08-05 PERF3-12B same-session Mac scorecard
 
 This master table gives one row per dated evidence bundle and benchmark/run.
 Platform cells are `median (recorded sample count)`. Process-time rows are in
@@ -20,6 +20,13 @@ bundle's scope or no valid observation exists.
 
 | Date / evidence run | Benchmark / run | Metric | CREXX | ooRexx | Regina | NetRexx |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
+| 2026-08-05 / PERF3-12B Mac scorecard | Sieve | work/s | 4,590 / 4,310 (10) | 704 (10) | — | 2,620 (10) |
+| 2026-08-05 / PERF3-12B Mac scorecard | Permute | work/s | 2,190 / 2,180 (10) | 296 (10) | — | 4,390 (10) |
+| 2026-08-05 / PERF3-12B Mac scorecard | Bounce | work/s | 3,060 / 3,170 (10) | 909 (10) | — | 2,030 (10) |
+| 2026-08-05 / PERF3-12B Mac scorecard | Richards | work/s | 6.05 / 6.08 (10) | 10.6 (10) | — | 16.9 (10) |
+| 2026-08-05 / PERF3-12B Mac scorecard | Base64 | work/s | 1,700 / 1,750 (10) | 2,070 (10) | — | 1,780 (10) |
+| 2026-08-05 / PERF3-12B Mac scorecard | Towers / qualified object port | process ms | 2,840 / 2,840 (10) | 1,140 (10) | — | 34.0 (10) control |
+| 2026-08-05 / PERF3-12B Mac scorecard | RexxCPS 2.2d / disclosed versus canonical | native MCPS | 47.2 / 47.1 (10) | 40.1 (10) | 33.2 (10) | 48.3 (10)††† |
 | 2026-07-27 / PERF2-09 Mac closure | Sieve | work/s | 5,080 / 3,760 (10) | 704 (10) | — | 2,680 (10) |
 | 2026-07-27 / PERF2-09 Mac closure | Permute | work/s | 2,460 / 2,150 (10) | 307 (10) | — | 4,580 (10) |
 | 2026-07-27 / PERF2-09 Mac closure | Bounce | work/s | 3,590 / 2,730 (10) | 921 (10) | — | 2,100 (10) |
