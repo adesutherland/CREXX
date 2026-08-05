@@ -10,6 +10,7 @@ else database_file = "testKeyDB.db"
 
 kdb = .KeyDB()
 failures = 0
+alpha_value = "one" || d2c(26) || "tail" /* ASCII SUB must survive binary file I/O on Windows. */
 
 handle = kdb.open(database_file, "w+")
 if handle < 0 then do
@@ -19,12 +20,12 @@ end
 
 rc = kdb.begin()
 failures = failures + check_int("begin", rc, 0)
-failures = failures + check_int("put alpha", kdb.put("alpha", "one"), 0)
+failures = failures + check_int("put alpha", kdb.put("alpha", alpha_value), 0)
 failures = failures + check_int("put beta", kdb.put("beta", "two"), 0)
 rc = kdb.commit()
 failures = failures + check_int("commit", rc, 0)
 
-failures = failures + check_string("get alpha", kdb.get("alpha"), "one")
+failures = failures + check_string("get alpha", kdb.get("alpha"), alpha_value)
 failures = failures + check_string("get beta", kdb.get("beta"), "two")
 failures = failures + check_int("contains alpha", kdb.containsKey("alpha"), 1)
 failures = failures + check_int("size after insert", kdb.size(), 2)
@@ -47,7 +48,7 @@ if handle < 0 then do
   failures = failures + 1
 end
 else do
-  failures = failures + check_string("get alpha after reopen", kdb.get("alpha"), "one")
+  failures = failures + check_string("get alpha after reopen", kdb.get("alpha"), alpha_value)
   failures = failures + check_int("contains beta after reopen", kdb.containsKey("beta"), 0)
   failures = failures + check_string("get beta after reopen", kdb.get("beta"), "NOT_FOUND")
   failures = failures + check_int("close after reopen", kdb.close(), 0)
