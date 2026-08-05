@@ -326,9 +326,54 @@
 
   \end{Members}
 \end{CrexxClass}
-% rexxDoc: no class declaration found in ObjectComparator.crexx
-% rexxDoc: no class declaration found in ObjectIterable.crexx
-% rexxDoc: no class declaration found in ObjectIterator.crexx
+\begin{CrexxClass}{ObjectComparator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{ObjectComparator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.int}
+      {compare}
+      {(\Param{left}{.object}, \Param{right}{.object})}
+
+  \end{Members}
+\end{CrexxClass}
+\begin{CrexxClass}{ObjectIterable}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{ObjectIterable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.ObjectIterator}
+      {iterator}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+\begin{CrexxClass}{ObjectIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{ObjectIterator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
 \begin{CrexxClass}{ObjectLinkedList}{data}
 
   \begin{Hierarchy}
@@ -581,7 +626,22 @@
 
   \end{Members}
 \end{CrexxClass}
-% rexxDoc: no class declaration found in ObjectPrintable.crexx
+\begin{CrexxClass}{ObjectPrintable}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{ObjectPrintable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
 \begin{CrexxClass}{ObjectStack}{data}
 
   \begin{Hierarchy}
@@ -727,7 +787,7 @@
 
     \Factory
       {public}
-      {}
+      {matchResult}
       {(\Param{line}{.string}, \Param{delim}{.string})}
 
     \Method
@@ -1600,8 +1660,38 @@
 
   \end{Members}
 \end{CrexxClass}
-% rexxDoc: no class declaration found in StringIterable.crexx
-% rexxDoc: no class declaration found in StringIterator.crexx
+\begin{CrexxClass}{StringIterable}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{StringIterable}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.StringIterator}
+      {iterator}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+\begin{CrexxClass}{StringIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{StringIterator}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
 \begin{CrexxClass}{StringLinkedList}{data}
 
   \begin{Hierarchy}

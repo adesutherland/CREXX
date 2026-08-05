@@ -53,6 +53,7 @@ emitAlmanacClass: procedure
 
    namespace_ = ''
    className = ''
+   classKind = 'class'
    baseClass = 'Object'
    interfaces = .string[]
 
@@ -73,9 +74,21 @@ emitAlmanacClass: procedure
 
       pclass = pos(': class', low)
       if pclass > 0 then do
+         classKind = 'class'
          className = strip(left(line,pclass-1))
+         baseClass = 'Object'
          tail = strip(substr(line,pclass+7))
          call parseClassTail tail, baseClass, interfaces
+         iterate
+      end
+
+      pinterface = pos(': interface', low)
+      if pinterface > 0 then do
+         classKind = 'interface'
+         className = strip(left(line,pinterface-1))
+         baseClass = ''
+         tail = strip(substr(line,pinterface+11))
+         call parseInterfaceTail tail, interfaces
          iterate
       end
 
@@ -119,7 +132,6 @@ emitAlmanacClass: procedure
    say '\begin{CrexxClass}{'latexEscape(className)'}{'latexEscape(namespace_)'}'
    say
    say '  \begin{Hierarchy}'
-   say '    \HierarchyLine[\APIOpen]{0}{'latexEscape(baseClass)'}'
 
    hierarchyTail = ''
    if interfaces[0] > 0 then do
@@ -131,7 +143,17 @@ emitAlmanacClass: procedure
       hierarchyTail = hierarchyTail || '}'
    end
 
-   say '    \HierarchyLine{1}{\APIHierarchyBranch\ 'latexEscape(className)hierarchyTail'}'
+   if classKind = 'interface' then do
+      /* Interfaces have no implicit Object base.  Any extended interfaces
+       * are shown at the right of the interface declaration.
+       */
+      say '    \HierarchyLine[\APIOpen]{0}{\textit{'latexEscape(className)'}'hierarchyTail'}'
+   end
+   else do
+      say '    \HierarchyLine[\APIOpen]{0}{'latexEscape(baseClass)'}'
+      say '    \HierarchyLine{1}{\APIHierarchyBranch\ 'latexEscape(className)hierarchyTail'}'
+   end
+
    say '  \end{Hierarchy}'
    say
    say '  \begin{Members}'
@@ -199,6 +221,34 @@ parseClassTail: procedure
             mode = ''
          end
          when mode = 'implements' then call appendUnique interfaces, word
+         otherwise nop
+      end
+   end
+return
+
+
+/* Parse inherited interfaces from an interface-header tail.
+ *
+ * Supported forms:
+ *     Name: interface
+ *     Name: interface extends .Parent
+ *     Name: interface extends .Parent1 .Parent2
+ *
+ * Some source levels may use IMPLEMENTS for interface inheritance; accept
+ * that spelling as well so the documentation generator remains tolerant.
+ */
+parseInterfaceTail: procedure
+   arg tail=.string, expose interfaces=.string[]
+
+   wordCount = words(tail)
+   mode = ''
+   do i = 1 to wordCount
+      word = word(tail,i)
+      low = lower(word)
+      select
+         when low = 'extends' then mode = 'interfaces'
+         when low = 'implements' then mode = 'interfaces'
+         when mode = 'interfaces' then call appendUnique interfaces, word
          otherwise nop
       end
    end
