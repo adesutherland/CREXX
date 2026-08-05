@@ -1,6 +1,6 @@
 # PERF3-12B compound-tail representation and reuse
 
-Status: in progress — B4 comparative panel complete; route-selection stop
+Status: in progress — H1 production verdict accepted; B6 closeout in progress
 
 Started: 2026-08-04
 
@@ -272,7 +272,7 @@ Evidence:
   image/register growth and assembler scale without summing overlapping
   ceilings.
 - [x] Retain replay material for both candidates and report S0/S1/H1 to Adrian.
-- [ ] **Stop for route selection. Do not combine or install a production
+- [x] **Stop for route selection. Do not combine or install a production
   candidate before approval.**
 
 Retained B4 outcome:
@@ -299,19 +299,43 @@ Retained B4 outcome:
   2/2, six exact route/VM smoke cells pass, and the Sieve negative selects or
   reuses zero with byte-identical S1/H1 images; and
 - B4 recommends H1. S0 remains the control and S1 remains a replayable rejected
-  fallback until Adrian selects the route.
+  fallback. Adrian selected H1 and authorized B5 on 2026-08-05.
 
 Evidence:
 [`2026-08-04-perf3-12b-b4-comparative-panel`](evidence/2026-08-04-perf3-12b-b4-comparative-panel/).
 
 ### B5 — selected production route and mandatory first Release verdict
 
-- [ ] Reimplement only the selected proof/consumer cleanly in production.
-- [ ] Run minimum focused correctness needed for safe measurement.
-- [ ] Freeze implementation, build the ordinary profiling-off Release product,
+- [x] Reimplement only the selected proof/consumer cleanly in production.
+- [x] Run minimum focused correctness needed for safe measurement.
+- [x] Freeze implementation, build the ordinary profiling-off Release product,
   run the accepted target/guard comparison and report exact counts plus runtime.
-- [ ] **Stop for Adrian's first Release verdict.** Broad Debug, sanitizer,
+- [x] **Stop for Adrian's first Release verdict.** Broad Debug, sanitizer,
   cross-platform, documentation polish and combined follow-ons wait.
+
+Retained B5 outcome:
+
+- the production proof uses immutable ValueIds, exact signal/write metadata,
+  dominance and a common reducible natural loop; changed values, references,
+  call-window observation, extra TRACE and invalid loop shape fail closed;
+- one transactionally provisioned private local owns each accepted seed group,
+  so later compiler-temporary writes do not overwrite the cached generation;
+- canonical RexxCPS makes four relevant proof queries, accepts all four and
+  emits `main 380 -> 365`, `.locals=104`, one joined-key construction and five
+  stem consumers of the cached value;
+- final focused graph/metadata/semantic-batch/opt/no-opt panels pass 5/5 in
+  both Debug and Release, the native-stem/runtime selector passes 19/19, both
+  VMs pass with zero stderr and Sieve remains byte-identical at zero candidates;
+- the first ordinary Release panel passes all 28 processes. Production is
+  clear favorable under `rxvm` at +2.557920% paired median (6/6 favorable,
+  +1.208636%..+3.320166% mean interval); `rxbvm` is +3.169497% paired median
+  and 5/6 favorable but the retained low observation makes six pairs
+  inconclusive; and
+- Adrian accepted the verdict on 2026-08-05. The 36-pair B4 result remains the
+  authority that H1 is clear favorable on both VMs.
+
+Evidence:
+[`2026-08-05-perf3-12b-b5-first-release-verdict`](evidence/2026-08-05-perf3-12b-b5-first-release-verdict/).
 
 ### B6 — proportional closeout after acceptance
 
@@ -324,9 +348,7 @@ Evidence:
 
 ## Immediate next step
 
-`B4 — route-selection stop`: choose S0, S1 or H1 from the retained comparative
-panel. H1 is recommended because it is clearly favorable on both VMs, removes
-the full 1.96M hot dispatches without S1's 0.28M setup LOAD and remains neutral
-for allocation, RSS and assembler scale. If H1 is selected, the next item is
-`B5 — clean production H1 reimplementation and mandatory first ordinary
-Release verdict`; stop again at that verdict before B6 closeout.
+`B6 — proportional closeout after accepted H1 production verdict`: integrate
+current `origin/develop`, capture a fresh formal Apple scorecard from the final
+profiling-off product, run broad QA, close documentation/evidence, remove only
+the disposable S1/H1 PoC worktrees and publish when every gate is green.

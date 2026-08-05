@@ -1,0 +1,22 @@
+* PERF3-12B H01: RXAS must provision one private local for a lazy joined-key
+* seed, preserve the seed TRACE through retargeting, and remove the repeated
+* materialisation even when the compiler temporary is subsequently reused.
+
+joined_key_private_local() .locals=8
+    load r1,0
+    load r2,"value"
+    load r7,0
+joined_key_loop:
+    brt joined_key_done,r7
+    iadd r1,r1,1
+    itos r1
+    concat r5,"Key.",r1
+    .traceevent "C" 4 "R" "S" "r" 5 1 1 0 "seed-key" ""
+    stemset r0,r5,r2
+    load r5,"temporary-reused"
+    concat r3,"Key.",r1
+    .traceevent "C" 4 "R" "S" "r" 3 2 2 0 "repeated-key" ""
+    stemget r4,r0,r3
+    br joined_key_loop
+joined_key_done:
+    ret r4

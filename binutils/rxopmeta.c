@@ -258,6 +258,9 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_BSLICE_REG_REG_REG_REG)
         return operand_index == 1 ? RXOP_COMPONENT_BINARY
                                   : RXOP_COMPONENT_INTEGER;
+    if (opcode >= OP_CONCAT_REG_REG_REG &&
+        opcode <= OP_SCONCAT_REG_STRING_REG)
+        return RXOP_COMPONENT_STRING;
 
     if (opcode >= OP_DADD_REG_REG_REG &&
         opcode <= OP_DMOD_REG_DECIMAL_REG)
@@ -472,6 +475,9 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (opcode == OP_FCOPY_REG_REG || opcode == OP_LOAD_REG_FLOAT)
         return RXOP_COMPONENT_FLOAT;
     if (opcode == OP_SCOPY_REG_REG || opcode == OP_LOAD_REG_STRING)
+        return RXOP_COMPONENT_STRING;
+    if (opcode >= OP_CONCAT_REG_REG_REG &&
+        opcode <= OP_SCONCAT_REG_STRING_REG)
         return RXOP_COMPONENT_STRING;
     if (opcode == OP_SUBSTRING_REG_REG_REG_REG)
         return RXOP_COMPONENT_STRING;

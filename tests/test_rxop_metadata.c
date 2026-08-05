@@ -810,6 +810,16 @@ int main(void) {
                     RXOP_SIGNAL_STATE_NONE,
           "concat family must match its non-signalling VM implementation",
           &op_table[OP_SCONCAT_REG_REG_STRING]);
+    check(rxop_component_reads(OP_CONCAT_REG_STRING_REG, 2) ==
+                    RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_CONCAT_REG_REG_STRING, 1) ==
+                    RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_CONCAT_REG_STRING_REG, 0) ==
+                    RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_SCONCAT_REG_REG_REG, 0) ==
+                    RXOP_COMPONENT_STRING,
+          "concat family must expose exact string component flow",
+          &op_table[OP_CONCAT_REG_STRING_REG]);
     check_native_stem_signal_contract(OP_STEMGET_REG_REG_REG);
     check_native_stem_signal_contract(OP_STEMSET_REG_REG_REG);
     check_native_stem_signal_contract(OP_STEMGET2_REG_REG_REG_REG);
