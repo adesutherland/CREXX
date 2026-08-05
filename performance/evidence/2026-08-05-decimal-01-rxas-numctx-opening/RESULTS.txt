@@ -1,0 +1,27 @@
+rxvm/default exit=1
+DECIMAL-01 RXAS numeric-context observable contract
+FAIL fuzz=1 did not ignore the least significant comparison digit
+
+rxbvm/default exit=1
+DECIMAL-01 RXAS numeric-context observable contract
+FAIL fuzz=1 did not ignore the least significant comparison digit
+
+rxvm/mc exit=1
+DECIMAL-01 RXAS numeric-context observable contract
+FAIL fuzz=1 did not ignore the least significant comparison digit
+
+rxbvm/mc exit=1
+DECIMAL-01 RXAS numeric-context observable contract
+FAIL fuzz=1 did not ignore the least significant comparison digit
+
+rxvm/db exit=3
+DECIMAL-01 RXAS numeric-context observable contract
+FAIL fuzz=1 did not ignore the least significant comparison digit
+FAIL engineering/lower expected 100e+18 got 1E+20
+FAIL Common half-even expected 1.2344 got 1.2345
+
+rxbvm/db exit=3
+DECIMAL-01 RXAS numeric-context observable contract
+FAIL fuzz=1 did not ignore the least significant comparison digit
+FAIL engineering/lower expected 100e+18 got 1E+20
+FAIL Common half-even expected 1.2344 got 1.2345

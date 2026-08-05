@@ -401,6 +401,7 @@ their recorded trigger fires:
 | PERF3-12 | P1 | Current RexxCPS clause-lowering rereview | complete — implementation queue accepted | The checksum-closed analysis ranks transactional PARSE, compound tails, copied XTOY, and later inlining/register work while ordering implementation by proof readiness. Control: [`PERF3-12-WORKLIST.md`](PERF3-12-WORKLIST.md); evidence: [`2026-08-04-perf3-12-rexxcps-clause-rereview`](evidence/2026-08-04-perf3-12-rexxcps-clause-rereview/); reassessment: [`2026-08-04-perf3-12-k04e-clause-reassessment`](evidence/2026-08-04-perf3-12-k04e-clause-reassessment/). |
 | PERF3-12A | P1 | Cursorless RXAS and copied-XTOY placement | complete — accepted and published | Cursorless RXAS removes all optimizer-visible cursor boundaries. X1 atomically removes two of five generated `DCOPY`/`DTOS` sites and fixed-work optimized RexxCPS falls from 53,659,088/53,659,041 to 52,839,051 instructions under `rxvm`/`rxbvm`: -820,037/-819,990 (-1.528235%/-1.528149%). Both VMs remove exactly 820,000 `DCOPY` and 36,080,000 copied bytes while retaining all 2,220,000 `DTOS`; full assembly remains sparse at 0.51 s/134.7 MB. Focused RXAS passes 78/78, broad Debug has 2,034/2,034 functional outcomes, and final implementation is `4a480bbfa` on published `develop`. Old build/worktree RXBIN must be rebuilt. Control: [`PERF3-12A-WORKLIST.md`](PERF3-12A-WORKLIST.md); X1 verdict: [`2026-08-04-perf3-12a-x1-first-release-verdict`](evidence/2026-08-04-perf3-12a-x1-first-release-verdict/); cursorless verdict: [`2026-08-04-perf3-12a-cursorless-first-release-verdict`](evidence/2026-08-04-perf3-12a-cursorless-first-release-verdict/). |
 | PERF3-12B | P1 | Compound-tail representation and loop-scoped reuse | complete — H1 accepted and merged | The selected capability-lazy H1 proof retains one conditional joined-key seed in a fresh private local and redirects four later proved-equivalent uses. It removes 1.96M hot CONCAT dispatches with no setup instruction; B4 is clear favorable at +3.075212%/+4.274944% paired median CPS on `rxvm`/`rxbvm`, and the clean B5 production verdict is clear on `rxvm`. Canonical RexxCPS emits 1,210 static instructions, `main 380 -> 365`, and `.locals=104`; Sieve is a byte-identical zero-candidate guard. The fresh merged-product Apple scorecard passes 348/348 with no append and keeps both VMs above the 2.00x ooRexx aggregate target. S1 remains a replayable rejected fallback. Control: [`PERF3-12B-WORKLIST.md`](PERF3-12B-WORKLIST.md); evidence: [`B4 comparative panel`](evidence/2026-08-04-perf3-12b-b4-comparative-panel/), [`B5 first verdict`](evidence/2026-08-05-perf3-12b-b5-first-release-verdict/), [`current Mac scorecard`](evidence/2026-08-05-perf3-12b-mac-scorecard/). |
+| DECIMAL-01 | P1 independent | Decimal-provider correctness and performance engineering | active — repair accepted; Gate 1 baseline preparation open | Individual and combined numeric-context state/parity remains green. Adrian accepted repairs applying `DIGITS - FUZZ` comparison precision in both providers, routing `db_decimal` through the shared REXX form/case formatter, and selecting explicit Common half-even versus Classic half-up rounding. Debug and ordinary profiling-off Release pass 9/9 focused tests plus 6/6 observable provider/VM cells. Gate 1 workload/harness preparation is open; no performance timing ran and none may start without an Adrian-confirmed exclusive host reservation. Control: [`performance/decimal`](decimal/); worklist: [`DECIMAL-01-WORKLIST.md`](decimal/DECIMAL-01-WORKLIST.md); opening evidence: [`2026-08-05-decimal-01-rxas-numctx-opening`](evidence/2026-08-05-decimal-01-rxas-numctx-opening/); repair verdict: [`2026-08-05-decimal-01-numctx-repair-verdict`](evidence/2026-08-05-decimal-01-numctx-repair-verdict/). |
 
 ## Approved execution order
 
@@ -717,6 +718,37 @@ separate qualified deficit at `0.390842x/0.389933x`. Evidence:
 These lanes can proceed under their own authority but do not borrow PERF3
 performance approval or alter benchmark equivalence silently.
 
+### DECIMAL-01 — independent decimal-provider engineering
+
+Adrian opened a separate decimal-library review on 2026-08-05. Its control
+plane is [`performance/decimal`](decimal/), and its detailed evidence/design
+contract is
+[`DECIMAL-01-ENGINEERING-PLAN.md`](decimal/DECIMAL-01-ENGINEERING-PLAN.md).
+
+The first gate inventories all decimal operations and Mike Cowlishaw numeric
+options, classifies current `FUZZ`, Common/Classic, quotient, signal and
+platform-precision gaps, and freezes an independent correctness oracle. It
+also resolves the unconfirmed report about the individual RXAS numeric setters
+and getters and the compiler-used combined `NUMSCI`/`NUMENG` path. The
+recommended first measured panel then compares current/tuned `decNumber`,
+`libmpdec` and already-vendored fixed-34-digit `decQuad`. `db_decimal` is split
+between an unrestricted diagnostic ceiling and a separately labelled,
+workload-qualified Classic-9 speed control for the ooRexx comparison. Intel,
+Boost, GCC decimal, a native-64-bit-limb fork and a hybrid fixed/arbitrary
+provider are later gated candidates, not selected work.
+
+Candidate sources and disposable native comparators remain outside the product
+tree; maintained orchestration is Level B cREXX. Any value tag, plugin ABI,
+default-provider or production edit requires a separate decision and the
+mandatory first ordinary Release verdict.
+
+Before the extended candidate panel, DECIMAL-01 must retain a public-evidence
+dossier covering upstream claims, independent research, reproducibility,
+versions, platforms, correctness suites, licences and maintenance. Public
+figures prioritize local PoCs but never become CREXX results. This Mac is a
+shared performance host: every timing session requires Adrian to clear and
+reserve it first; correctness-test elapsed time is not performance evidence.
+
 ## PERF3-08 — platform validation and architecture selection
 
 The approved order is:
@@ -782,6 +814,16 @@ Adrian approved these five points on 2026-07-31:
    behind their separate entry and decision gates.
 5. Mac iteration is followed by selected Linux x86-64, required Linux ARM64
    and Windows validation before the default-VM/final architecture decision.
+
+On 2026-08-05 Adrian requested the independent DECIMAL-01 review and
+performance-engineering plan. He subsequently approved the seven-step gated
+plan and opened Gate 0 correctness work only. Gate 0 must freshly validate the
+reported individual/combined RXAS numeric-context concern. The later public
+candidate panel must be informed by source-attributed public evidence. No
+candidate, experimental provider, default-provider change or production
+decimal edit is selected. Before any performance run Adrian must be asked to
+clear and reserve the shared host, and any pause request is binding before the
+next cell.
 
 Adrian subsequently accepted the PERF3-01 current-product evidence boundary
 and ranked PERF3-02/03/04/05 panel on 2026-07-31. This closes PERF3-01 and

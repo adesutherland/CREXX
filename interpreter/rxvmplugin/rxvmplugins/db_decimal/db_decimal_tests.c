@@ -169,15 +169,15 @@ static int test_int_tofrom_conversions() {
 
     // Test with INT64_MAX (9223372036854775807)
     if (max_digits_supported >= 18)
-        errors += aTestFromToInt("9.22337203685477581E+18", INT64_MAX);
+        errors += aTestFromToInt("9.22337203685477581e+18", INT64_MAX);
     else // Assume 15 digits
-        errors += aTestFromToInt("9.22337203685478E+18", INT64_MAX);
+        errors += aTestFromToInt("9.22337203685478e+18", INT64_MAX);
 
     // Test with INT64_MIN (-9223372036854775808)
     if (max_digits_supported >= 18)
-        errors += aTestFromToInt("-9.22337203685477581E+18", INT64_MIN);
+        errors += aTestFromToInt("-9.22337203685477581e+18", INT64_MIN);
     else // Assume 15 digits
-        errors += aTestFromToInt("-9.22337203685478E+18", INT64_MIN);
+        errors += aTestFromToInt("-9.22337203685478e+18", INT64_MIN);
 
     // Test with 1
     errors += aTestFromToInt("1", 1);
@@ -199,27 +199,27 @@ static int test_int_tofrom_conversions() {
 
     /* Boundary Conditions Around Limits - Near INT64_MAX Test 9223372036854775806 (one less than INT64_MAX). */
     if (max_digits_supported >= 18)
-        errors += aTestFromToInt("9.22337203685477581E+18", 9223372036854775806);
+        errors += aTestFromToInt("9.22337203685477581e+18", 9223372036854775806);
     else // Assume 15 digits
-        errors += aTestFromToInt("9.22337203685478E+18", 9223372036854775806);
+        errors += aTestFromToInt("9.22337203685478e+18", 9223372036854775806);
 
     /* Boundary Conditions Around Limits - Near INT64_MAX Test 9223372036854775800 (close to INT64_MAX but with trailing zeros).*/
     if (max_digits_supported >= 18)
-        errors += aTestFromToInt("9.2233720368547758E+18", 9223372036854775800);
+        errors += aTestFromToInt("9.2233720368547758e+18", 9223372036854775800);
     else // Assume 15 digits
-        errors += aTestFromToInt("9.22337203685477E+18", 9223372036854770000);
+        errors += aTestFromToInt("9.22337203685477e+18", 9223372036854770000);
 
     /* Boundary Conditions Around Limits - Near INT64_MIN: Test -9223372036854775807 (one more than INT64_MIN). */
     if (max_digits_supported >= 18)
-        errors += aTestFromToInt("-9.22337203685477581E+18", -9223372036854775807);
+        errors += aTestFromToInt("-9.22337203685477581e+18", -9223372036854775807);
     else // Assume 15 digits
-        errors += aTestFromToInt("-9.22337203685477E+18", -9223372036854770000);
+        errors += aTestFromToInt("-9.22337203685477e+18", -9223372036854770000);
 
     /* Boundary Conditions Around Limits - Near INT64_MIN: Test -9223372036854775800 (close to INT64_MIN but with trailing zeros). */
     if (max_digits_supported >= 18)
-        errors += aTestFromToInt("-9.2233720368547758E+18", -9223372036854775800);
+        errors += aTestFromToInt("-9.2233720368547758e+18", -9223372036854775800);
     else // Assume 15 digits
-        errors += aTestFromToInt("-9.22337203685477E+18", -9223372036854770000);
+        errors += aTestFromToInt("-9.22337203685477e+18", -9223372036854770000);
 
     /* Values Just Beyond Limits: 9223372036854775808 - should trigger Invalid_operation. */
     errors += aTestBeyondLimits("9223372036854775808");
@@ -510,15 +510,15 @@ int test_decimalToString_decimalFromString() {
     else printf("OK - ");
     printf("decNumber: 123e-3 -> 0.123, Result: %s\n", buffer);
 
-    // Test 123456789000000000000000000000 -> 1.23456789E+29
+    // Test 123456789000000000000000000000 -> 1.23456789e+29
     plugin->decimalFromString(plugin, &input, "123456789000000000000000000000");
     plugin->decimalToString(plugin, &input, buffer);
-    if (strcmp("1.23456789E+29", buffer) != 0) {
+    if (strcmp("1.23456789e+29", buffer) != 0) {
         printf("Error - ");
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: 123456789000000000000000000000 -> 1.23456789E+29, Result: %s\n", buffer);
+    printf("decNumber: 123456789000000000000000000000 -> 1.23456789e+29, Result: %s\n", buffer);
 
         if (input.decimal_value) free(input.decimal_value);
     return errors;
@@ -664,7 +664,7 @@ int test_add() {
         plugin->decimalFromString(plugin, &b, "987654321098765432");
         plugin->decimalAdd(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("1.11111111011111111E+18", buffer) != 0) {
+        if (strcmp("1.11111111011111111e+18", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
@@ -691,7 +691,7 @@ int test_add() {
         plugin->decimalFromString(plugin, &b, "9876543210987654321");
         plugin->decimalAdd(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("1.11111111011111111E+19", buffer) != 0) {
+        if (strcmp("1.11111111011111111e+19", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
@@ -703,7 +703,7 @@ int test_add() {
         plugin->decimalFromString(plugin, &b, "9876543210987654321");
         plugin->decimalAdd(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("1.11111111011111E+19", buffer) != 0) {
+        if (strcmp("1.11111111011111e+19", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
@@ -860,7 +860,7 @@ int test_subtract() {
         plugin->decimalFromString(plugin, &b, "1234567890123456789");
         plugin->decimalSub(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("8.64197532086419753E+18", buffer) != 0) {
+        if (strcmp("8.64197532086419753e+18", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
@@ -872,7 +872,7 @@ int test_subtract() {
         plugin->decimalFromString(plugin, &b, "1234567890123456789");
         plugin->decimalSub(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("8.64197532086419E+18", buffer) != 0) {
+        if (strcmp("8.64197532086419e+18", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
@@ -1045,7 +1045,7 @@ int test_multiply() {
         plugin->decimalFromString(plugin, &b, "9876543210987654321");
         plugin->decimalMul(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("1.21932631137021795E+37", buffer) != 0) {
+        if (strcmp("1.21932631137021795e+37", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
@@ -1057,7 +1057,7 @@ int test_multiply() {
         plugin->decimalFromString(plugin, &b, "9876543210987654321");
         plugin->decimalMul(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("1.21932631137022E+37", buffer) != 0) {
+        if (strcmp("1.21932631137022e+37", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
