@@ -1,4 +1,4 @@
-# Queue and Pull
+# Queue, Push and Pull
 
 The current implementation supports the following language features:
 
@@ -16,6 +16,33 @@ At this stage, the implementation does not support[^1]:
 - queue sharing between independent cRexx executions.
 
 `PARSE PULL` has been integrated into the existing `PARSE` implementation and behaves as expected.
+
+An example:
+
+```rexx <!--queuexample.crexx-->
+options levelb
+
+main: procedure
+  first = .string
+  second = .string
+  parsed_first = .string
+  push "front"
+  queue "back"
+ 
+  pull first
+  pull second
+
+  say first
+  say second
+
+  queue "classic-value"
+  parse pull parsed_first
+
+  say parsed_first
+```
+
+<!--splice--crexx queuexample-->
+
 
 [^1]: A future enhancement may introduce externally managed named queues. One possible approach would be to implement a lightweight TCP-based queue manager, allowing independent CREXX executions to access the same named queues without changing the Rexx language interface.
 

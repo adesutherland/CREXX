@@ -23,13 +23,18 @@ whatever is left of the original string and may therefore contain several words.
 For example, in the `parse` instruction:
 
 ```rexx <!--parse1.crexx-->
-    parse 'This is a sentence.' v1 v2 v3
+parse 'This is a sentence.' v1 v2 v3
+say v1
+say v2
+say v3
 ```
 
 the term (in this case a literal string) following the instruction keyword is
 parsed, and then: the variable ***v1*** would be assigned the value "**This**",
 ***v2*** would be assigned the value "**is**", and ***v3*** would be assigned
 the value "**a sentence.**".
+
+<!--splice--crexx parse1-->
 
 Leading blanks are removed from each word in the string before it is assigned to
 a variable, as is the blank that delimits the end of the word. Thus, variables
@@ -42,22 +47,34 @@ parsing mechanism uses a literal string in a template as a pattern, to split up
 the string. For example:
 
 ```rexx <!--parse2.crexx-->
-    parse 'To be, or not to be?' w1 ',' w2
+parse 'To be, or not to be?' w1 ',' w2
+say w1
+say w2
 ```
 
 would cause the string to be scanned for the comma, and then split at that
 point; the variable ***w1*** would be set to "**To be**", and ***w2*** is set to
 " **or not to be?**". Note that the pattern itself (and **only** the pattern) is
-removed from the string. Each section of the string is treated in just the same
+removed from the string. 
+
+<!--splice--crexx parse2-->
+
+Each section of the string is treated in just the same
 way as the whole string was in the previous example, and so either section could
 be split up into words. Thus, in:
 
 ```rexx <!--parse3.crexx-->
-    parse 'To be, or not to be?' w1 ',' w2 w3 w4
+parse 'To be, or not to be?' w1 ',' w2 w3 w4
+say w1
+say w2
+say w3
+say w4
 ```
 
 ***w2*** and ***w3*** would be assigned the values "**or**" and "**not**", and
 ***w4*** would be assigned the remainder: "**to be?**".
+
+<!--splice--crexx parse3-->
 
 If the string in the last example did not contain a comma, then the pattern
 would effectively "match" the end of the string, so the variable to the left of
@@ -67,32 +84,55 @@ putting the variable name in parentheses. The following instructions therefore
 have the same effect as the last example:
 
 ```rexx <!--parse4.crexx-->
-    c=','
-    parse 'To be, or not to be?' w1 (c) w2 w3 w4
+c=','
+parse 'To be, or not to be?' w1 (c) w2 w3 w4
+say w1
+say w2
+say w3
+say w4
 ```
+
+<!--splice--crexx parse4-->
+
 
 The third parsing mechanism is the numeric positional pattern. This works in the
 same way as the string pattern except that it specifies a column number. So:
 
 ```rexx <!--parse5.crexx-->
-    parse 'Flying pigs have wings' x1 5 x2
+parse 'Flying pigs have wings' x1 5 x2
+say x1
+say x2
 ```
 
 would split the string at the fifth column, so ***x1*** would be "**Flyi**" and
-***x2*** would start at column 5 and so be "**ng pigs have wings**". More than
+***x2*** would start at column 5 and so be "**ng pigs have wings**". 
+
+<!--splice--crexx parse5-->
+
+More than
 one pattern is allowed, so for example:
 
 ```rexx <!--parse6.crexx-->
-    parse 'Flying pigs have wings' x1 5 x2 10 x3
+parse 'Flying pigs have wings' x1 5 x2 10 x3
+say x1
+say x2
+say x3
 ```
+
+<!--splice--crexx parse6-->
 
 would split the string at columns 5 and 10, so ***x2*** would be "**ng pi**" and
 ***x3*** would be "**gs have wings**". The numbers can be relative to the last
 number used, so:
 
 ```rexx <!--parse7.crexx-->
-    parse 'Flying pigs have wings' x1 5 x2 +5 x3
+parse 'Flying pigs have wings' x1 5 x2 +5 x3
+say x1
+say x2
+say x3
 ```
+
+<!--splice--crexx parse7-->
 
 would have exactly the same effect as the last example; here the **+5** may be
 thought of as specifying the length of the string to be assigned to ***x2***. As
@@ -103,11 +143,16 @@ sign ("**=**") instead of a plus or minus sign. The last example could therefore
 be written:
 
 ```rexx <!--parse8.crexx-->
-    start=5
-    length=5
-    data='Flying pigs have wings'
-    parse data  x1 =(start) x2 +(length) x3
+start=5
+length=5
+data='Flying pigs have wings'
+parse data  x1 =(start) x2 +(length) x3
+say x1
+say x2
+say x3
 ```
+
+<!--splice--crexx parse8-->
 
 String patterns and positional patterns can be mixed (in effect the beginning of
 a string pattern just specifies a variable column number) and some very powerful
@@ -139,11 +184,11 @@ position in the string (positional patterns). Either of these can be specified
 explicitly in the template, or alternatively by a reference to a variable whose
 value is to be used as the pattern. For the following examples, assume that the
 following sample string is being parsed; note that all blanks are significant -
-there are two blanks after the first word "**is**" and also after the second
+there are two blanks after the first word "is" and also after the second
 comma:
 
 ```rexx <!--parse9.crexx-->
-    'This is  the text which, I think,  is scanned.'
+'This is  the text which, I think,  is scanned.'
 ```
 
 ### Parsing with literal patterns
@@ -153,16 +198,22 @@ matches the value of the literal. Literals are expressed as a quoted string. The
 null string matches the end of the data. The template:
 
 ```rexx <!--parse10.crexx-->
-    w1 ',' w2 ',' w3
+tx ='This is  the text which, I think,  is scanned.'
+parse tx w1 ',' w2 ',' w3
+say 'w1 has the value "'w1'"'
+say 'w2 has the value "'w2'"'
+say 'w3 has the value "'w3'"'
 ```
 
 when parsing the sample string, results in:
 
 ```rexx <!--parse11.crexx-->
-    w1 has the value "This is  the text which"
-    w2 has the value " I think"
-    w3 has the value "  is scanned."
+w1 has the value "This is  the text which"
+w2 has the value " I think"
+w3 has the value "  is scanned."
 ```
+
+<!--splice--crexx parse10-->
 
 Here the string is parsed using a template that asks that each of the variables
 receive a value corresponding to a portion of the original string between
@@ -171,7 +222,12 @@ themselves are removed from the data being parsed. A different parse would
 result with the template:
 
 ```rexx <!--parse12.crexx-->
-    w1 ',' w2 ',' w3 ',' w4
+tx ='This is  the text which, I think,  is scanned.'
+parse tx w1 ',' w2 ',' w3 ',' w4
+say 'w1 has the value "'w1'"'
+say 'w2 has the value "'w2'"'
+say 'w3 has the value "'w3'"'
+say 'w4 has the value "'w4'"'
 ```
 
 which would result in:
@@ -180,8 +236,10 @@ which would result in:
     w1 has the value "This is  the text which"
     w2 has the value " I think"
     w3 has the value "  is scanned."
-    w4 has the value ""  (null string)
+    w4 has the value ""
 ```
+
+<!--splice--crexx parse12-->
 
 This illustrates an important rule. When a match for a pattern cannot be found
 in the input string, it instead "matches" the end of the string. Thus, no match
@@ -200,17 +258,24 @@ of the string). The values of the variables which are assigned words will have
 neither leading nor trailing blanks. Thus the template:
 
 ```rexx <!--parse14.crexx-->
-    w1 w2 w3 w4 ','
+tx ='This is  the text which, I think,  is scanned.'
+parse tx w1 w2 w3 w4 ','
+say 'w1 has the value "'w1'"'
+say 'w2 has the value "'w2'"'
+say 'w3 has the value "'w3'"'
+say 'w4 has the value "'w4'"'
 ```
 
 would result in:
 
 ```rexx <!--parse15.crexx-->
-    w1 has the value "This'
+    w1 has the value "This"
     w2 has the value "is"
     w3 has the value "the"
     w4 has the value "text which"
 ```
+
+<!--splice--crexx parse14-->
 
 Note that the final variable (***w4*** in this example) could have had both
 leading blanks and trailing blanks, since only the blank that delimits the
@@ -218,17 +283,24 @@ previous word is removed from the data. Also observe that this example is not
 the same as specifying explicit blanks as patterns, as the template:
 
 ```rexx <!--parse16.crexx-->
-    w1 ' ' w2 ' ' w3 ' ' w4 ','
+tx ='This is  the text which, I think,  is scanned.'
+parse tx w1 ' ' w2 ' ' w3 ' ' w4 ','
+say 'w1 has the value "'w1'"'
+say 'w2 has the value "'w2'"'
+say 'w3 has the value "'w3'"'
+say 'w4 has the value "'w4'"'
 ```
 
 would in fact result in:
 
 ```rexx <!--parse17.crexx-->
-    w1 has the value "This'
+    w1 has the value "This"
     w2 has the value "is"
-    w3 has the value ""  (null string)
+    w3 has the value ""
     w4 has the value "the text which"
 ```
+
+<!--splice--crexx parse16-->
 
 since the third pattern would match the third blank in the data. In general,
 when a variable is followed by another variable then parsing of the input into
@@ -265,8 +337,11 @@ position within the string, rather than on its contents. They take the form of
 whole numbers, optionally preceded by a plus, minus, or equals sign which
 indicate relative or absolute positioning. These may cause the matching
 operation to "back up" to an earlier position in the data string, which can only
-occur when positional patterns are used. **Absolute positional patterns:** A
-number in a template that is **not** preceded by a sign refers to a particular
+occur when positional patterns are used. 
+
+#### Absolute positional patterns:
+
+A number in a template that is **not** preceded by a sign refers to a particular
 (absolute) character column in the input, with 1 referring to the first column.
 For example, the template:
 
@@ -295,8 +370,11 @@ have been written:
 ```
 
 A positional pattern that has no sign or is preceded by the equals sign is known
-as an *absolute positional pattern*. **Relative positional patterns:** A number
-in a template that is preceded by a plus or minus sign indicates movement
+as an *absolute positional pattern*. 
+
+#### Relative positional patterns
+
+A number in a template that is preceded by a plus or minus sign indicates movement
 relative to the character position at which the previous pattern match occurred.
 This is a *relative positional pattern*. If a plus or minus is specified, then
 the position used for the next match is calculated by adding (or subtracting)
