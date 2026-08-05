@@ -382,7 +382,7 @@ exists. **Notes:**
     obeyed in turn from left to right, as usual.
 
 3.  There may be blanks between the sign in a positional pattern and the number,
-    because cREXX defines that blanks adjacent to special characters are
+    because cRexx defines that blanks adjacent to special characters are
     removed.
 
 ### Parsing with variable patterns
@@ -417,3 +417,40 @@ the value of the variable is used as an absolute or relative positional pattern
 (instead of as a literal string pattern). In this case the value of the variable
 must be a non-negative whole number, and (as before) it may have been set
 earlier in the parsing process.
+
+
+### PARSE VERSION
+
+`PARSE VERSION` uses the string returned by the `version()` built-in function as its source and applies the normal template rules.
+
+For example:
+
+```rexx
+parse version version
+```
+
+assigns the complete version string to version, while:
+
+```rexx
+parse version version level
+```
+
+assigns successive words of the version string to version and level.
+
+### PARSE SOURCE
+
+`PARSE SOURCE` uses the string returned by the `sourceinfo()` built-in function as its source and applies the normal template rules.
+
+The source string contains:
+
+- execution environment
+- invocation mode
+- source file name
+
+For example:
+
+```rexx
+parse source environment mode filename
+```
+
+assigns the corresponding components of the source information to the specified variables using the standard `PARSE` rules.
