@@ -204,7 +204,7 @@ Install cRexx to a development prefix, then consume its installed CMake package.
 The project must not copy `crexxpa.h`, generated headers, or
 `RXPluginFunction.cmake` from a cRexx source or build tree.
 
-```cmake
+```bash
 cmake_minimum_required(VERSION 3.24)
 project(rxdes C)
 

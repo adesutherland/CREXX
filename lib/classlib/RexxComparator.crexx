@@ -2,7 +2,7 @@ options levelb
 namespace data expose RexxComparator
 import rexx
 
-RexxComparator: class implements .ObjectComparator
+RexxComparator: class implements .Comparator
 
   *: factory
     return
