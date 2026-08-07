@@ -346,7 +346,11 @@ A number in a template that is **not** preceded by a sign refers to a particular
 For example, the template:
 
 ```rexx <!--parse20.crexx-->
-    s1 10 s2 20 s3
+tx ='This is  the text which, I think,  is scanned.'
+parse tx s1 10 s2 20 s3
+say 's1 has the value "'s1'"'
+say 's2 has the value "'s2'"'
+say 's3 has the value "'s3'"'
 ```
 
 results in:
@@ -356,6 +360,8 @@ results in:
     s2 has the value "the text w"
     s3 has the value "hich, I think,  is scanned."
 ```
+
+<!--splice--crexx parse20-->
 
 Here ***s1*** is assigned characters from the first through the ninth character,
 and ***s2*** receives input characters 10 through 19. As usual the final
@@ -385,7 +391,10 @@ or by a string.
 For example, the instructions:
 
 ```rexx <!--parse23.crexx-->
-    parse '123456789'  3 w1 +3 w2 3 w3
+parse '123456789'  3 w1 +3 w2 3 w3
+say 'w1 has the value "'w1'"'
+say 'w2 has the value "'w2'"'
+say 'w3 has the value "'w3'"'
 ```
 
 result in
@@ -395,6 +404,8 @@ result in
     w2 has the value "6789"
     w3 has the value "3456789"
 ```
+
+<!--splice--crexx parse23-->
 
 The **+3** in this case is equivalent to the absolute number **6** in the same
 position, and may also be considered to be specifying the length of the data
@@ -442,9 +453,9 @@ One possible application of this is looking for abbreviations in a string. Thus
 the instruction:
 
 ```rexx <!--parse27.crexx-->
-    /* Ensure options have a leading blank and are
-       in uppercase before parsing. */
-    parse (' 'opts).upper ' PR' +1 prword ' '
+/* Ensure options have a leading blank and are
+   in uppercase before parsing. */
+parse (' 'opts).upper ' PR' +1 prword ' '
 ```
 
 will set the variable ***prword*** to the first word in ***opts*** that starts
@@ -477,8 +488,12 @@ literal (string) pattern. The variable may be one that has been set earlier in
 the parsing process, so for example:
 
 ```rexx <!--parse28.crexx-->
-    input="L/look for/1 10"
-    parse input  verb 2 delim +1 string (delim) rest
+input="L/look for/1 10"
+parse input  verb 2 delim +1 string (delim) rest
+say 'verb' verb
+say 'delim' delim
+say 'string' string
+say 'rest' rest
 ```
 
 will set:
@@ -489,6 +504,8 @@ will set:
     string to 'look for'
     rest to '1 10'
 ```
+
+<!--splice--crexx parse28-->
 
 If the left parenthesis **is** preceded by an equals, plus, or minus sign then
 the value of the variable is used as an absolute or relative positional pattern
@@ -503,17 +520,23 @@ earlier in the parsing process.
 
 For example:
 
-```rexx
+```rexx <!--parse30.crexx-->
 parse version version
+say version
 ```
+
+<!--splice--crexx parse30-->
 
 assigns the complete version string to version, while:
 
-```rexx
+```rexx <!--parse31.crexx-->
 parse version version level
+say version
+say level
 ```
-
 assigns successive words of the version string to version and level.
+
+<!--splice--crexx parse31-->
 
 ### PARSE SOURCE
 
@@ -527,8 +550,13 @@ The source string contains:
 
 For example:
 
-```rexx
+```rexx <!--parse32.crexx-->
 parse source environment mode filename
+say environment
+say mode
+say filename
 ```
 
 assigns the corresponding components of the source information to the specified variables using the standard `PARSE` rules.
+
+<!--splice--crexx parse32-->
