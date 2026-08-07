@@ -1,6 +1,5 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
-import rexxclassicbifsubword
 import rexxvalue
 
 errors = 0

@@ -92,7 +92,6 @@ Typical implementations
 ```
 ArrayList
 LinkedList
-Vector (legacy)
 Stack (legacy)
 ```
 
@@ -130,7 +129,7 @@ The concept of a set forms one of the foundations of modern mathematics. In the 
 
 A mathematical set is simply a collection of distinct objects, called *elements* or *members*. The defining characteristic is that an element either belongs to the set or it does not; multiple occurrences of the same element have no meaning. Thus the sets `{2, 3, 5, 7}` and `{7, 2, 5, 3}` are considered identical because they contain exactly the same members, and `{2, 3, 3, 5, 7}` represents the very same set because duplicate elements are ignored.
 
-cRexx's `Set` interface follows this mathematical model closely. When an element is added that is already present, the operation has no effect and the set remains unchanged. Consequently, the interface does not provide positional operations such as `get(int index)`, because the concept of an index is incompatible with the notion of a set. Instead, the fundamental operations revolve around membership: adding elements, removing them, testing whether a particular element is present, determining the number of elements, and iterating over the members.
+The `Set` interface follows this mathematical model closely. When an element is added that is already present, the operation has no effect and the set remains unchanged. Consequently, the interface does not provide positional operations such as `get(int index)`, because the concept of an index is incompatible with the notion of a set. Instead, the fundamental operations revolve around membership: adding elements, removing them, testing whether a particular element is present, determining the number of elements, and iterating over the members.
 
 One of the greatest strengths of the `Set` abstraction is that it naturally supports the operations of elementary set theory. The most familiar of these is the **union**, which combines two sets into a new set containing every element that appears in either of them. Equally important is the **intersection**, which retains only those elements that the two sets have in common. The **difference** of two sets consists of the elements that belong to one set but not the other, while the **symmetric difference** contains precisely those elements that occur in one set or the other, but not both.
 
@@ -142,7 +141,7 @@ The cRexx class library provides three principal implementations of the `Set` in
 
 `LinkedHashSet` extends this design by maintaining a linked list of its elements in insertion order. This preserves the efficiency of hash-based lookup while ensuring that iteration visits the elements in the order in which they were originally added. The additional bookkeeping incurs only a modest memory overhead, making `LinkedHashSet` an attractive choice when predictable iteration order is required.
 
-`TreeSet` takes a different approach by storing its elements in a self-balancing binary search tree, specifically an AVL tree. Rather than preserving insertion order, it maintains its elements in sorted order according to their natural ordering or a user-supplied comparator. Because the tree remains balanced, insertion, removal, and lookup all require logarithmic time. The ordered representation also enables a rich collection of navigation operations, including finding the smallest or largest element, locating the nearest element greater or less than a given value, and obtaining subsets that fall within a specified range. These capabilities make `TreeSet` particularly well suited for applications where maintaining sorted data is more important than achieving the absolute fastest lookup time.
+`TreeSet` takes a different approach by storing its elements in a self-balancing binary search tree, specifically an AVL tree[^avl]. Rather than preserving insertion order, it maintains its elements in sorted order according to their natural ordering or a user-supplied comparator. Because the tree remains balanced, insertion, removal, and lookup all require logarithmic time. The ordered representation also enables a rich collection of navigation operations, including finding the smallest or largest element, locating the nearest element greater or less than a given value, and obtaining subsets that fall within a specified range. These capabilities make `TreeSet` particularly well suited for applications where maintaining sorted data is more important than achieving the absolute fastest lookup time.
 
 In practice, a `Set` should be chosen whenever the uniqueness of elements is the primary concern. Typical applications include maintaining the collection of identifiers encountered during compilation, recording the set of visited nodes during graph traversal, representing the keywords of a programming language, storing the enabled options of a compiler, or eliminating duplicate entries from an input stream. In each of these cases, the essential question is not *where* an element occurs, but simply *whether* it is present. That distinction lies at the heart of the `Set` abstraction and explains why it occupies such a central place in both mathematics and cRexx class library.
 
@@ -283,13 +282,13 @@ The defining characteristic of a map is that each key is unique. Attempting to i
 
 The operations provided by the `Map` interface reflect this model of association. New mappings can be inserted, existing mappings updated, and mappings removed entirely. Given a key, the associated value can be retrieved efficiently, or the map can be queried to determine whether a particular key or value is present. The interface also provides views of the map's keys, values, and entries, allowing the contents to be traversed in a variety of ways. These views illustrate the close relationship between maps and collections: while a map is not itself a `Collection`, it can expose its keys as a `Set`, its values as a `Collection`, and its key-value associations as a `Set` of `Map.Entry` objects.
 
-From a mathematical perspective, maps support many operations analogous to those defined for functions and relations. Two maps may be compared for equality by determining whether they contain precisely the same key-value associations. A map may be copied, merged with another map, filtered according to its keys or values, or transformed by applying a function to each value. <!
+From a mathematical perspective, maps support many operations analogous to those defined for functions and relations. Two maps may be compared for equality by determining whether they contain precisely the same key-value associations. A map may be copied, merged with another map, filtered according to its keys or values, or transformed by applying a function to each value.
 
 The cRexx class library provides several implementations of the `Map` interface, each optimized for different requirements. The most frequently used implementation is `HashMap`, which stores its mappings in a hash table. Under normal circumstances, insertion, lookup, and removal all require constant time on average, making `HashMap` the preferred choice whenever maximum performance is desired and the order of the keys is unimportant. Because the placement of entries is determined by their hash codes, iteration order is intentionally unspecified and may vary as the map grows.
 
 `LinkedHashMap` extends `HashMap` by maintaining a linked list of its entries. This additional structure preserves a predictable iteration order, usually the order in which mappings were inserted, while retaining nearly the same performance characteristics as a hash table. The class also supports access-order iteration, allowing recently accessed entries to migrate toward the end of the sequence. This feature makes `LinkedHashMap` particularly useful for implementing least-recently-used (LRU) caches and similar data structures.
 
-`TreeMap` stores its entries in a self-balancing binary search tree, specifically a Red-Black tree. Rather than preserving insertion order, it maintains the keys in sorted order according to their natural ordering or a user-supplied comparator. As a consequence, insertion, removal, and lookup require logarithmic rather than constant time. In return, the map gains a rich collection of navigational operations, including finding the smallest or largest key, locating the nearest key greater or less than a given value, and obtaining views representing contiguous ranges of keys. These capabilities make `TreeMap` particularly attractive when ordered traversal or range queries are more important than raw lookup speed.
+`TreeMap` stores its entries in a self-balancing binary search tree, specifically an AVL tree. Rather than preserving insertion order, it maintains the keys in sorted order according to their natural ordering or a user-supplied comparator. As a consequence, insertion, removal, and lookup require logarithmic rather than constant time. In return, the map gains a rich collection of navigational operations, including finding the smallest or largest key, locating the nearest key greater or less than a given value, and obtaining views representing contiguous ranges of keys. These capabilities make `TreeMap` particularly attractive when ordered traversal or range queries are more important than raw lookup speed.
 
 <!-- Several specialized implementations complement these three principal classes. `EnumMap` provides an exceptionally compact and efficient representation for keys drawn from an enumeration, while `IdentityHashMap` compares keys by object identity rather than logical equality. `WeakHashMap` stores keys through weak references, allowing entries to disappear automatically when their keys are no longer referenced elsewhere in the application. Finally, `ConcurrentHashMap` supports safe, highly scalable concurrent access by multiple threads and has become the standard choice for shared mutable maps in multithreaded applications. -->
 
@@ -412,8 +411,6 @@ C
 ```
 
 ## TreeMap
-
-Implemented as a Red-Black tree.
 
 Keys are automatically sorted.
 
@@ -687,7 +684,7 @@ The `.stem` class is recast as a collection class, a content-addressable contain
 
 ## Notes on performance
 
-The `StringTreeMap` class is based on an AVL[^avl] Tree for optimal performance. This is a balanced binary tree with guaranteed $Olog N$ performance for all operations. This class is written in cRexx and its performance has been benchmarked against a *red-black tree* implementation in C, which is what most class libraries use. Its performance is nearly identical to that native implementation; the native TreeMap, which is faster than the JVM version, is available but requires more investment in the build process of an application[^build]. Also, its availability cannot be guaranteed for every platform cRexx runs on.
+The `StringTreeMap` class is based on an AVL Tree for optimal performance. This is a balanced binary tree with guaranteed $Olog N$ performance for all operations. This class is written in cRexx and its performance has been benchmarked against a *red-black tree* implementation in C, which is what most class libraries use. Its performance is nearly identical to that native implementation; the native TreeMap, which is faster than the JVM version, is available but requires more investment in the build process of an application[^build]. Also, its availability cannot be guaranteed for every platform cRexx runs on.
 
 [^avl]: <!--cite-->[knuth1998art]
 [^build]: See the chapter on building application software in the Programming Guide.

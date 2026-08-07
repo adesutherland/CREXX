@@ -3,7 +3,7 @@ import data
 import rexx
 
 failures = 0
-a = .ObjectObjectTreeMap(.RexxComparator())
+a = .TreeMap(.RexxComparator())
 
 key = .rexx
 val = .rexx

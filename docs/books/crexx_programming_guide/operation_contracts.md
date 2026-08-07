@@ -75,7 +75,7 @@ new output is written. Both versions must use `MAJOR.MINOR.PATCH`.
 An installed CREXX package provides `CREXX::crexx-contract` and
 `crexx_add_operation_contract()`:
 
-```cmake
+```bash
 find_package(CREXX CONFIG REQUIRED)
 
 crexx_add_operation_contract(

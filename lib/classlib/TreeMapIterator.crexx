@@ -1,0 +1,39 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ */
+
+options levelb comments_dash
+namespace data expose TreeMapIterator
+
+/** Snapshot iterator over object keys and object values. */
+TreeMapIterator: class
+keys_ = .object[]
+values_ = .object[]
+position_ = .int
+
+  *: factory
+    arg keys = .object[], values = .object[]
+    keys_ = keys
+    values_ = values
+    position_ = 0
+    return
+
+  hasNext: method = .int
+    if position_ < keys_[0] then return 1
+    return 0
+
+  next: method = .object
+    position_ = position_ + 1
+    return keys_[position_]
+
+  nextKey: method = .object
+    return next()
+
+  value: method = .object
+    return values_[position_]
+
+  nextValue: method = .object
+    position_ = position_ + 1
+    return values_[position_]

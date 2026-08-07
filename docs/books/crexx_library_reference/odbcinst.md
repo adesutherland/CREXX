@@ -1,6 +1,6 @@
 # ODBC Plugin Installation
 
-The OBDC plugin is dependent on a working ODBC installation on the operating platform. 
+The OBDC plugin is dependent on a working ODBC installation on the operating platform. This chapter assists in installing ODBC on the main platforms supported by cREXX.
 
 ## Windows ODBC Configuration
 
