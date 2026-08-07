@@ -57,7 +57,7 @@
 # endif
 #else
 # define RX_INLINE static
-#  define RX_MOSTLYINLINE static
+# define RX_MOSTLYINLINE static
 # define RX_FLATTEN
 # warning "Functions may not be inlined as intended"
 #endif

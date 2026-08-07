@@ -9,7 +9,8 @@ constants. User-facing RXAS syntax and instruction behavior are documented in
 
 - `rxas` collects procedure-local `.jtable`/`.jcase` declarations after
   label optimization and writes one immutable `BINARY_CONST`.
-- `rxvm` and `rxbvm` read the packed payload directly. Lookup does not
+- product `rxvm` and both concrete engines (`rxbvm`/`rxtvm`) read the packed
+  payload directly. Lookup does not
   allocate or copy the source key.
 - `rxdas` decodes the payload, synthesizes a stable table name and case
   labels, and emits reassemblable RXAS.
@@ -105,9 +106,10 @@ algorithms, headers, node/slot kinds, key offsets, leaf records, or matched
 targets raise `RXBIN_CORRUPTION`. Entry-local corruption that is never
 traversed need not be diagnosed eagerly.
 
-Post-assembly mutation tests cover all three algorithms in both VMs. `rxdas`
-round-trip tests cover all six jump forms and re-execute reconstructed modules
-under both VMs.
+Post-assembly mutation tests cover all three algorithms through product
+`rxvm`. `rxdas` round-trip tests cover all six jump forms and re-execute
+reconstructed modules through the product VM; the separate basic dispatch
+contract covers both concrete execution engines where available.
 
 ## Algorithm Policy
 

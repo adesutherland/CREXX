@@ -1,0 +1,71 @@
+source line counts
+   14148 interpreter/rxvmintp.c
+    2780 interpreter/rxvmvars.h
+     599 interpreter/rxvmstem.h
+   17527 total
+   14148 interpreter/rxvmintp.c
+    2780 interpreter/rxvmvars.h
+     599 interpreter/rxvmstem.h
+     674 binutils/include/rxops.h
+   18201 total
+inline declaration counts
+interpreter/rxvmintp.c RX_INLINE=8
+interpreter/rxvmintp.c RX_MOSTLYINLINE=interpreter/rxvmvars.h RX_INLINE=102
+interpreter/rxvmvars.h RX_MOSTLYINLINE=13
+interpreter/rxvmstem.h RX_INLINE=29
+interpreter/rxvmstem.h RX_MOSTLYINLINE=run boundaries
+4959:RXVM_LABEL_OWNER RXVM_RUN_HOT RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
+4871:}
+4890:}
+4924:}
+4934:}
+4944:}
+4954:}
+5025:};
+5049:};
+14147:    return rc;
+14148:}
+handler macro inventory
+5032:#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_) ((void)0)
+5033:#define VM_BIND_PRIVATE_R2_COPYATTR1_HANDLER(image_, instruction_)              \
+5038:#define VM_BIND_PRIVATE_R1_RELINK_HANDLER(image_, instruction_)                 \
+5051:#define VM_BIND_INSTRUCTION_HANDLER(image_, instruction_, opcode_)             \
+5058:#define VM_BIND_PRIVATE_R2_COPYATTR1_HANDLER(image_, instruction_)              \
+5062:#define VM_BIND_PRIVATE_R1_RELINK_HANDLER(image_, instruction_)                 \
+C source includes in interpreter
+interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decDouble.c:138:#include "decCommon.c"        // non-arithmetic decFloat routines
+interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decDouble.c:139:#include "decBasic.c"         // basic formats routines
+interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decSingle.c:69:#include "decCommon.c"        // non-basic decFloat routines
+interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decQuad.c:133:#include "decCommon.c"        // non-arithmetic decFloat routines
+interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decQuad.c:134:#include "decBasic.c"         // basic formats routines
+rxops includes
+5023:#include "../binutils/include/rxops.h"
+5047:#include "../binutils/include/rxops.h"
+release flag override
+cmake_minimum_required(VERSION 3.24)
+
+project(Interpreter C)
+
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
+
+set(CMAKE_C_STANDARD 99) # enables inline keyword
+if(MSVC)
+    set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG")
+else()
+    set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
+endif()
+option(CREXX_VM_PROFILING
+        "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
+        OFF)
+
+Mach-O size panels
+harness-control|rxvm|file=1000872|text=818260
+harness-control|rxbvm|file=1001032|text=818228
+noflatten-forced|rxvm|file=967544|text=779648
+noflatten-forced|rxbvm|file=967800|text=778380
+flatten-compiler|rxvm|file=787480|text=595224
+flatten-compiler|rxbvm|file=771240|text=589524
+noflatten-compiler|rxvm|file=588232|text=396620
+noflatten-compiler|rxbvm|file=571720|text=393268
+selective-compiler|rxvm|file=935832|text=752256
+selective-compiler|rxbvm|file=936088|text=749284

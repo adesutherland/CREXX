@@ -1,0 +1,28 @@
+if(NOT DEFINED RXVM OR NOT DEFINED CONCRETE_VM OR NOT DEFINED CONCRETE_NAME)
+    message(FATAL_ERROR "RXVM, CONCRETE_VM and CONCRETE_NAME are required")
+endif()
+
+if(NOT EXISTS "${RXVM}")
+    message(FATAL_ERROR "rxvm product entry point does not exist: ${RXVM}")
+endif()
+if(NOT EXISTS "${CONCRETE_VM}")
+    message(FATAL_ERROR "selected concrete VM does not exist: ${CONCRETE_VM}")
+endif()
+
+if(WIN32)
+    file(SHA256 "${RXVM}" rxvm_sha256)
+    file(SHA256 "${CONCRETE_VM}" concrete_sha256)
+    if(NOT rxvm_sha256 STREQUAL concrete_sha256)
+        message(FATAL_ERROR
+                "rxvm copy differs from ${CONCRETE_NAME}: ${rxvm_sha256} != ${concrete_sha256}")
+    endif()
+else()
+    if(NOT IS_SYMLINK "${RXVM}")
+        message(FATAL_ERROR "rxvm is not a symlink: ${RXVM}")
+    endif()
+    file(READ_SYMLINK "${RXVM}" rxvm_link)
+    if(NOT rxvm_link STREQUAL CONCRETE_NAME)
+        message(FATAL_ERROR
+                "rxvm points to '${rxvm_link}', expected '${CONCRETE_NAME}'")
+    endif()
+endif()

@@ -1,0 +1,23 @@
+utc=2026-08-06T11:41:03Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Apple M5
+10
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+Target: arm64-apple-darwin25.5.0
+cmake version 4.3.2
+1.13.2
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	82%; AC attached; not charging present: true
+12:41  up 23 days,  5:49, 1 user, load averages: 1.14 1.20 1.23
+branch=codex/rxvm-default-and-base64-review
+head=0d1fe884782ff369960b1c67c38127407ce54588
+ M interpreter/CMakeLists.txt
+ M interpreter/rxvmload.c
+ M interpreter/rxvmmemory.c
+ M interpreter/rxvmmemory.h
+ M interpreter/tests/test_rxvmmemory.c
+ M performance/PERF3-13-WORKLIST.md
+ M performance/ROADMAP.md

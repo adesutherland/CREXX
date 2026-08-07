@@ -3,7 +3,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(reference_iterator_system ALL)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME reference_iterator_system_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/reference_iterator_system
@@ -21,7 +21,7 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(reference_iterator_perf ALL)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME reference_iterator_perf_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/reference_iterator_perf
@@ -39,7 +39,7 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(reference_generated_contract ALL)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME reference_generated_contract_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/reference_generated_contract

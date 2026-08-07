@@ -1,0 +1,21 @@
+source_commit=0d1fe884782ff369960b1c67c38127407ce54588
+platform=Darwin arm64 Apple M5
+compiler=Apple clang 21.0.0 (clang-2100.1.1.101)
+generator=Ninja
+build_type=Release
+build_testing=ON
+vm_profiling=OFF
+default_product=rxvm -> rxbvm
+allocator_geometry=S0
+slab_bytes=65536
+max_standard_class_bytes=16384
+reclamation=R0
+v0_layout=V0
+v0_sizeof_value=240
+v1_layout=V1
+v1_sizeof_value=208
+minimum_string_sidecar_bytes=32
+warmups=1
+recorded_rounds=4
+sampling=serial-pairwise-balanced-by-workload
+

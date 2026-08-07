@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "rxpa.h"
+#include "rxvmmemory.h"
 
 // Function Prototypes
 void say_exit_default(char* message); // Default say exit function
@@ -65,12 +66,14 @@ void rxvm_mprintf(const char* format, ...) {
     va_end(argptr);
     if (needed_len > FIXED_BUFFER_SIZE) {
         /* Buffer not big enough - do it again with a dynamic buffer now we know the size needed */
-        buffer = malloc(needed_len);
+        buffer = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(),
+                                         needed_len);
+        if (!buffer) return;
         va_start(argptr, format);
         vsnprintf(buffer, needed_len, format, argptr);
         va_end(argptr);
         say_exit(buffer);
-        free(buffer);
+        (void)rxvm_memory_release(buffer);
     }
     else {
         say_exit(fixed_buffer);

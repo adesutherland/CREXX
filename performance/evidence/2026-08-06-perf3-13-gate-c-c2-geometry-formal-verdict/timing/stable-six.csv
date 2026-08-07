@@ -1,0 +1,3 @@
+candidate,n,geometric_mean_candidate_over_s0,membership
+S1,6,0.997964,Sieve;Permute;Bounce;Richards;Towers;RexxCPS
+S1b,6,1.003752,Sieve;Permute;Bounce;Richards;Towers;RexxCPS

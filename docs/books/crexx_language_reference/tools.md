@@ -115,10 +115,18 @@ Common options:
 
 The VM executables include:
 
-- `rxvm`: threaded interpreter
-- `rxbvm`: bytecode-dispatch interpreter
-- `rxvme`: threaded interpreter with the standard library image
-- `rxbvme`: bytecode-dispatch interpreter with the standard library image
+- `rxvm`: stable product entry point; selects `rxbvm` for Clang/AppleClang and
+  `rxtvm` for GCC
+- `rxbvm`: portable switch-dispatch interpreter
+- `rxtvm`: explicit direct-threaded interpreter on GNU/Clang-family compilers;
+  not built by MSVC
+- `rxvme`: compiler-selected interpreter with the standard library image
+- `rxbvme`: explicit switch-dispatch interpreter with the standard library
+  image
+
+On Unix-like systems `rxvm` is a relative link to the selected concrete VM. On
+Windows it is a copied executable so ordinary callers always use the same
+product name.
 
 ## Disassembler: `rxdas`
 

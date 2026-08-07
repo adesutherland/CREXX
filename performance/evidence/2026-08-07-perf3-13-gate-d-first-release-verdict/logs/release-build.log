@@ -1,0 +1,252 @@
+[0/2] Re-checking globbed directories...
+[1/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[2/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[3/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[4/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[5/252] Copying bootstrap src/options/parse_opts.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[6/252] Copying bootstrap src/parse/conf_lexer.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[7/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[8/252] Copying bootstrap src/parse/lexer.cc and src/parse/lexer.h, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[9/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[10/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[11/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[12/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[13/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[14/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[15/252] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[16/252] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[17/252] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[18/252] Generating doc/re2c.1
+[19/252] Copying bootstrap src/msg/ver_to_vernum.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[20/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_log.c.o
+[21/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/thread_utils.c.o
+[22/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/diff.c.o
+[23/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/serialization.c.o
+[24/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/comms.c.o
+[25/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_common.c.o
+[26/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/code_buffer.c.o
+[27/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/emergency_parse.c.o
+[28/252] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_parser.c.o
+[29/252] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[30/252] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[31/252] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[32/252] Building CXX object re2c/CMakeFiles/re2c_objects_autogen_ver_to_vernum.dir/src/msg/ver_to_vernum.cc.o
+[33/252] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[34/252] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[35/252] Linking C static library _deps/dsl_syntax_highlighter-build/libdslsyntax_parser.a
+[36/252] Building C object interpreter/CMakeFiles/rxvmmemory.dir/rxvmmemory.c.o
+[37/252] Linking C static library bin/libplatform.a
+[38/252] Linking C static library bin/libavl_tree.a
+[39/252] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/parser.cc.o
+[40/252] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_parser.cc.o
+[41/252] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[42/252] Linking C static library bin/librxvmmemory.a
+[43/252] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[44/252] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[45/252] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/options/parse_opts.cc.o
+[46/252] Linking C static library bin/librxvmref.a
+[47/252] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[48/252] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[49/252] Linking C static library bin/librxvmplugin.a
+[50/252] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[51/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[52/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[53/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[54/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[55/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[56/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[57/252] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/lexer.cc.o
+[58/252] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[59/252] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+[60/252] Linking C static library bin/librxpa.a
+[61/252] Building C object lemon/CMakeFiles/lemon.dir/lemon.c.o
+[62/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[63/252] Linking C static library bin/librxbin.a
+[64/252] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[65/252] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[66/252] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[67/252] Linking C executable lemon/lemon
+[68/252] Linking C static library bin/librxpashim.a
+[69/252] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal.dir/mc_decimal.c.o
+[70/252] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_lexer.cc.o
+[71/252] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[72/252] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_manual.dir/db_decimal.c.o
+[73/252] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dynamic.dir/mc_decimal.c.o
+[74/252] Generating src/msg/help_re2c.cc
+[75/252] Linking C static library bin/libdecnumber.a
+[76/252] Building C object interpreter/CMakeFiles/test_rxvmmemory.dir/tests/test_rxvmmemory.c.o
+[77/252] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[78/252] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[79/252] Building C object interpreter/CMakeFiles/test_rxvmstem_allocator_family.dir/tests/test_rxvmstem_allocator_family.c.o
+[80/252] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+[81/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/helpers.cc.o
+[82/252] Building C object interpreter/CMakeFiles/ts_regvalue_tester.dir/tests/ts_regvalue_tester.c.o
+[83/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass3_fixup.cc.o
+[84/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/output.cc.o
+[85/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_adfa.cc.o
+[86/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_cfg.cc.o
+[87/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa.cc.o
+[88/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/symtab.cc.o
+[89/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa_tree.cc.o
+[90/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_interf.cc.o
+[91/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_nfa.cc.o
+[92/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass1_analyze.cc.o
+[93/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass4_render.cc.o
+[94/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/nfa/re_to_nfa.cc.o
+[95/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/cfg.cc.o
+[96/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/compact.cc.o
+[97/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/dce.cc.o
+[98/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/freeze.cc.o
+[99/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass2_generate.cc.o
+[100/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/adfa/adfa.cc.o
+[101/252] Building C object interpreter/CMakeFiles/test_rxvmstem.dir/tests/test_rxvmstem.c.o
+[102/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/interfere.cc.o
+[103/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/liveanal.cc.o
+[104/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/optimize.cc.o
+[105/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/normalize.cc.o
+[106/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/rename.cc.o
+[107/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/varalloc.cc.o
+[108/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/opt.cc.o
+[109/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fallback_tags.cc.o
+[110/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/dead_rules.cc.o
+[111/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tagver_table.cc.o
+[112/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/minimization.cc.o
+[113/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fillpoints.cc.o
+[114/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tcmd.cc.o
+[115/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/find_state.cc.o
+[116/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/ebcdic.cc.o
+[117/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/determinization.cc.o
+[118/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/range_suffix.cc.o
+[119/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/enc.cc.o
+[120/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf8.cc.o
+[121/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf16.cc.o
+[122/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/closure.cc.o
+[123/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/msg.cc.o
+[124/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/default_tags.cc.o
+[125/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/fixed_tags.cc.o
+[126/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/nullable.cc.o
+[127/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/warn.cc.o
+[128/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/regexp.cc.o
+[129/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/ast_to_re.cc.o
+[130/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/split_charset.cc.o
+[131/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/control_flow.cc.o
+[132/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/maxpath.cc.o
+[133/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/file_utils.cc.o
+[134/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/skeleton.cc.o
+[135/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/help_re2c.cc.o
+[136/252] Linking C static library bin/rxvm_mc_decimal_manual.a
+[137/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_code.cc.o
+[138/252] Linking C shared module bin/rxvm_mc_decimal.rxvmplugin
+[139/252] Linking C static library bin/rxvm_mc_decimal.a
+[140/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/string_utils.cc.o
+[141/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/input.cc.o
+[142/252] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[143/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/range.cc.o
+[144/252] Linking C static library bin/rxvm_db_decimal_manual.a
+[145/252] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dyn_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[146/252] Linking C executable interpreter/test_rxvmstem
+[147/252] Linking C executable interpreter/ts_regvalue_tester
+[148/252] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_dynamic.dir/db_decimal.c.o
+[149/252] Linking C executable interpreter/test_rxvmstem_allocator_family
+[150/252] Linking C executable interpreter/test_rxvmmemory
+[151/252] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_dyn_test_harness
+[152/252] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_test_harness
+[153/252] Linking C shared module bin/rxvm_db_decimal.rxvmplugin
+[154/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/ast.cc.o
+[155/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_data.cc.o
+[156/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/unicode_casemap.cc.o
+[157/252] Building CXX object re2c/CMakeFiles/re2c.dir/src/main.cc.o
+[158/252] Linking CXX executable re2c/re2c
+[159/252] Create REXX ASSEMBLER Parser...
+[160/252] Create REXX ASSEMBLER Lexer...
+[161/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[162/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[163/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[164/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o
+[165/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[166/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[167/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[168/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[169/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[170/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[171/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o
+[172/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[173/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[174/252] Building C object assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o
+[175/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[176/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[177/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[178/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[179/252] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[180/252] Linking C static library bin/librxaslib.a
+[181/252] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[182/252] Linking C static library bin/librxvml.a
+[183/252] Linking C static library bin/librxbvml.a
+[184/252] Create Options Parser...
+[185/252] Linking C executable bin/rxbvm
+[186/252] Creating rxvm symlink to rxbvm
+[187/252] Linking archive-level db_decimal regression harness ...
+[188/252] Create REXX C Parser...
+[189/252] Create Options Lexer...
+[190/252] Create REXX B Parser...
+[191/252] Create REXX C Lexer...
+[192/252] Create REXX B Lexer...
+[193/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_walk.c.o
+[194/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag_fallback.c.o
+[195/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_print.c.o
+[196/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_tree.c.o
+[197/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_ext.c.o
+[198/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag.c.o
+[199/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpmain.c.o
+[200/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dsl.c.o
+[201/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_util.c.o
+[202/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopar.c.o
+[203/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopgr.c.o
+[204/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbpar.c.o
+[205/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_srcmap.c.o
+[206/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcsym.c.o
+[207/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_core.c.o
+[208/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcval.c.o
+[209/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_highlight_controller.c.o
+[210/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcpar.c.o
+[211/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcposcn.c.o
+[212/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcgmr.c.o
+[213/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcdiag.c.o
+[214/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_trans.c.o
+[215/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_rewrite.c.o
+[216/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_plugin.c.o
+[217/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbgmr.c.o
+[218/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_fixup.c.o
+[219/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap.c.o
+[220/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_val.c.o
+[221/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_sym.c.o
+[222/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_check.c.o
+[223/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline_rules.c.o
+[224/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap_build.c.o
+[225/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_orch.c.o
+[226/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_type.c.o
+[227/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpsymb.c.o
+[228/252] Building C object compiler/CMakeFiles/rxclib.dir/rexcscan.c.o
+[229/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o
+[230/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_levelc_lower.c.o
+[231/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_core.c.o
+[232/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_proc.c.o
+[233/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_flow.c.o
+[234/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_meta.c.o
+[235/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_super.c.o
+[236/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_reg.c.o
+[237/252] Building C object compiler/CMakeFiles/rxclib.dir/__/platform/rxinteger.c.o
+[238/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_expr.c.o
+[239/252] Building C object compiler/CMakeFiles/rxclib.dir/__/platform/platform.c.o
+[240/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_instr.c.o
+[241/252] Building C object compiler/CMakeFiles/rxc.dir/rxc_main.c.o
+[242/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dispatch.c.o
+[243/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_partial_call.c.o
+[244/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_opt.c.o
+[245/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_flow.c.o
+[246/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_exit.c.o
+[247/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcpfunc.c.o
+[248/252] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline.c.o
+[249/252] Building C object compiler/CMakeFiles/rxclib.dir/rexbscan.c.o
+[250/252] Linking C static library bin/librxclib.a
+[251/252] Linking C executable bin/rxc

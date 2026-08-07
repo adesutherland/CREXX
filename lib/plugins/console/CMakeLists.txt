@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run console_test.rxbin with the console plugin
 add_test(NAME console_test
-        COMMAND $<TARGET_FILE:rxvm> console_test rx_console ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} console_test rx_console ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

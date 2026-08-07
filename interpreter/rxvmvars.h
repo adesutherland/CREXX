@@ -34,6 +34,7 @@
 #endif
 #include "../binutils/include/rxflags.h"
 #include "../binutils/include/rxnumparse.h"
+#include "rxvmmemory.h"
 #include "rxvmref.h"
 
 #include <assert.h>
@@ -42,12 +43,187 @@
 #include <ctype.h>
 #include <errno.h>
 #include <float.h>
+#include <limits.h>
 #include <string.h>
 
-/* Tests may replace only the failure-atomic slice allocation boundary. */
-#ifndef RXVM_VALUE_MALLOC
-#define RXVM_VALUE_MALLOC malloc
+/* Tests may replace the failure-atomic slice allocation boundary. */
+#ifdef RXVM_VALUE_MALLOC
+#define RXVM_VALUE_EXTERNAL_TEST_ALLOCATOR 1
+#else
+#define RXVM_VALUE_MALLOC(size_) rxvm_memory_alloc_bytes(0, (size_))
 #endif
+
+#ifndef RXVM_VALUE_FREE
+#ifdef RXVM_VALUE_EXTERNAL_TEST_ALLOCATOR
+#define RXVM_VALUE_FREE(pointer_) free((pointer_))
+#else
+#define RXVM_VALUE_FREE(pointer_) ((void)rxvm_memory_release((pointer_)))
+#endif
+#endif
+
+#ifndef RXVM_VALUE_RESIZE
+#ifdef RXVM_VALUE_EXTERNAL_TEST_ALLOCATOR
+#define RXVM_VALUE_RESIZE(pointer_, copy_size_, new_size_) \
+    realloc((pointer_), (new_size_))
+#else
+#define RXVM_VALUE_RESIZE(pointer_, copy_size_, new_size_) \
+    rxvm_memory_resize_bytes(0, (pointer_), (copy_size_), (new_size_))
+#endif
+#endif
+
+#ifndef RXVM_VALUE_ALLOC_VALUES
+#ifdef RXVM_VALUE_EXTERNAL_TEST_ALLOCATOR
+#define RXVM_VALUE_ALLOC_VALUES(count_) \
+    RXVM_VALUE_MALLOC(sizeof(value) * (count_))
+#else
+#define RXVM_VALUE_ALLOC_VALUES(count_) \
+    rxvm_memory_alloc_values(0, (count_))
+#endif
+#endif
+
+#define RXVM_VALUE_DECIMAL_DATA_SLOT(value_) ((value_)->decimal_value)
+#define RXVM_VALUE_DECIMAL_LENGTH_SLOT(value_) \
+    (rxvm_value_decimal_header_from_data((value_)->decimal_value)->length)
+#define RXVM_VALUE_DECIMAL_CAPACITY_SLOT(value_) \
+    (rxvm_value_decimal_header_from_data((value_)->decimal_value)->capacity)
+
+/* Header and payload deliberately occupy one worker-slab allocation.  The
+ * value retains the hot payload pointer; subtracting the fixed header is only
+ * required for cold length/capacity management. */
+RX_INLINE void *rxvm_value_reserve_decimal(value *v, size_t size) {
+    rxvm_decimal_metadata *header;
+    rxvm_decimal_metadata *replacement;
+    size_t allocation_size;
+    size_t allocation_capacity;
+    size_t copy_size;
+
+    if (!v || size > SIZE_MAX - sizeof(*header)) return 0;
+    header = rxvm_value_decimal_header_from_data(v->decimal_value);
+    if (!header || size > header->capacity) {
+        allocation_size = sizeof(*header) + size;
+        copy_size = header ? sizeof(*header) + header->length : 0u;
+        replacement = RXVM_VALUE_RESIZE(
+                header, copy_size, allocation_size);
+        if (!replacement) return 0;
+#ifdef RXVM_VALUE_EXTERNAL_TEST_ALLOCATOR
+        /* Injected libc-style allocators expose no slab metadata.  Their
+         * exact requested size is the only capacity contract available. */
+        allocation_capacity = allocation_size;
+#else
+        allocation_capacity = rxvm_memory_capacity(replacement);
+#endif
+        replacement->capacity = allocation_capacity > sizeof(*replacement)
+                ? allocation_capacity - sizeof(*replacement)
+                : size;
+        header = replacement;
+        v->decimal_value = header + 1;
+    }
+    header->length = size;
+    return v->decimal_value;
+}
+
+RX_INLINE void rxvm_value_release_decimal_storage(value *v) {
+    rxvm_decimal_metadata *header;
+    if (!v || !v->decimal_value) return;
+    header = rxvm_value_decimal_header_from_data(v->decimal_value);
+    RXVM_VALUE_FREE(header);
+    v->decimal_value = 0;
+}
+
+#define RXVM_VALUE_NATIVE_OPS_SLOT(value_) ((value_)->native_payload_ops)
+#define RXVM_VALUE_NATIVE_FLAGS_SLOT(value_) ((value_)->native_payload_flags)
+
+#define RXVM_VALUE_ATTRIBUTE_BUFFERS_SLOT(value_) ((value_)->attribute_buffers)
+#define RXVM_VALUE_MAX_ATTRIBUTES_SLOT(value_) ((value_)->max_num_attributes)
+#define RXVM_VALUE_ATTRIBUTE_BUFFER_COUNT_SLOT(value_) ((value_)->num_attribute_buffers)
+
+#define RXVM_VALUE_STRING_CAPACITY(value_) ((value_)->string_buffer_length)
+#define RXVM_VALUE_BINARY_CAPACITY(value_) ((value_)->binary_buffer_length)
+#define RXVM_VALUE_SET_STRING_CAPACITY(value_, capacity_) \
+    ((value_)->string_buffer_length = (size_t)(capacity_))
+#define RXVM_VALUE_SET_BINARY_CAPACITY(value_, capacity_) \
+    ((value_)->binary_buffer_length = (size_t)(capacity_))
+#define RXVM_VALUE_SET_FOREIGN_STRING_CAPACITY(value_, capacity_) \
+    RXVM_VALUE_SET_STRING_CAPACITY((value_), (capacity_))
+#define RXVM_VALUE_MOVE_STRING_CAPACITY(dest_, source_) \
+    RXVM_VALUE_SET_STRING_CAPACITY( \
+            (dest_), RXVM_VALUE_STRING_CAPACITY(source_))
+#define RXVM_VALUE_MOVE_BINARY_CAPACITY(dest_, source_) \
+    RXVM_VALUE_SET_BINARY_CAPACITY( \
+            (dest_), RXVM_VALUE_BINARY_CAPACITY(source_))
+
+/* L32SDH narrows logical string metrics only. Allocation sizes and all buffer
+ * arithmetic remain size_t. These helpers are the sole size_t-to-metric
+ * boundary: recoverable ingress uses try_set; legacy internal writers fail
+ * explicitly rather than truncating an invariant-breaking request. */
+RX_INLINE int rxvm_value_string_metric_fits(size_t metric) {
+    return metric <= (size_t)UINT32_MAX;
+}
+
+#if defined(__clang__) || defined(__GNUC__)
+__attribute__((cold, noinline, noreturn))
+#elif defined(_MSC_VER)
+__declspec(noinline)
+#endif
+static void rxvm_value_string_metric_overflow(void) {
+    abort();
+}
+
+RX_INLINE rxvm_string_metric rxvm_value_narrow_string_metric_or_fail(
+        size_t metric) {
+    if (metric > (size_t)UINT32_MAX)
+        rxvm_value_string_metric_overflow();
+    return (rxvm_string_metric)metric;
+}
+
+/* Guard-free stores for values already bounded by an accepted byte length. */
+RX_INLINE void rxvm_value_set_string_length_known(
+        value *v, rxvm_string_metric length) {
+    v->string_length = length;
+}
+
+#ifndef NUTF8
+RX_INLINE void rxvm_value_set_string_chars_known(
+        value *v, rxvm_string_metric chars) {
+    v->string_chars = chars;
+}
+#endif
+
+RX_INLINE int rxvm_value_try_set_string_length(value *v, size_t length) {
+    if (!rxvm_value_string_metric_fits(length)) return -1;
+    v->string_length = (rxvm_string_metric)length;
+    return 0;
+}
+
+#ifndef NUTF8
+RX_INLINE int rxvm_value_try_set_string_chars(value *v, size_t chars) {
+    if (!rxvm_value_string_metric_fits(chars)) return -1;
+    v->string_chars = (rxvm_string_metric)chars;
+    return 0;
+}
+
+RX_INLINE int rxvm_value_try_set_string_cache_byte_pos(value *v, size_t pos) {
+    if (!rxvm_value_string_metric_fits(pos)) return -1;
+    v->string_cache_byte_pos = (rxvm_string_metric)pos;
+    return 0;
+}
+
+RX_INLINE int rxvm_value_try_set_string_cache_char_pos(value *v, size_t pos) {
+    if (!rxvm_value_string_metric_fits(pos)) return -1;
+    v->string_cache_char_pos = (rxvm_string_metric)pos;
+    return 0;
+}
+#endif
+
+RX_INLINE rxvm_string_metric rxvm_value_string_size_add_or_fail(
+        size_t left, size_t right) {
+    size_t result;
+    if (left > (size_t)UINT32_MAX ||
+        right > (size_t)UINT32_MAX - left)
+        rxvm_value_string_metric_overflow();
+    result = left + right;
+    return (rxvm_string_metric)result;
+}
 
 #ifdef CREXX_VM_PROFILING
 #include "rxvmprofile.h"
@@ -55,9 +231,21 @@
     rxvm_profile_record_allocation((kind_), (bytes_), (value_slots_))
 #define RXVM_PROFILE_RECORD_VALUE(operation_, payload_) \
     rxvm_profile_record_value_operation((operation_), (payload_))
+#define RXVM_PROFILE_REGISTER_VALUE(payload_) \
+    rxvm_profile_register_value((payload_))
+#define RXVM_PROFILE_MARK_VALUE_ORIGIN(payload_, origin_) \
+    rxvm_profile_mark_value_origin((payload_), (origin_))
+#define RXVM_PROFILE_RECORD_VALUE_STORAGE(payload_) \
+    rxvm_profile_record_value_storage((payload_))
+#define RXVM_PROFILE_RECORD_VALUE_STORAGE_IF_REGISTERED(payload_) \
+    rxvm_profile_record_value_storage_if_registered((payload_))
 #else
 #define RXVM_PROFILE_RECORD_ALLOCATION(kind_, bytes_, value_slots_) ((void)0)
 #define RXVM_PROFILE_RECORD_VALUE(operation_, payload_) ((void)0)
+#define RXVM_PROFILE_REGISTER_VALUE(payload_) ((void)0)
+#define RXVM_PROFILE_MARK_VALUE_ORIGIN(payload_, origin_) ((void)0)
+#define RXVM_PROFILE_RECORD_VALUE_STORAGE(payload_) ((void)0)
+#define RXVM_PROFILE_RECORD_VALUE_STORAGE_IF_REGISTERED(payload_) ((void)0)
 #endif
 
 /* Forward declarations */
@@ -70,7 +258,7 @@ RX_MOSTLYINLINE void destroy_value_storage(value* v);
 RX_MOSTLYINLINE void clear_value(value* v);
 RX_MOSTLYINLINE void release_value_reference_lifetime(value* v);
 RX_INLINE void move_value(value *dest, value *source);
-RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v);
+RX_MOSTLYINLINE void reclaim_attribute_storage(value *v);
 
 RX_INLINE void clear_vm_private_flags(value *v) {
     v->status.all_type_flags &= ~RXFLAG_VM_PRIVATE_MASK;
@@ -128,10 +316,11 @@ RX_INLINE void mark_ascii_string_valid_count(value *v) {
 RX_INLINE void refresh_utf8_flags(value *v) {
     size_t chars = 0;
     if (!utf8nvalid_count(v->string_value, v->string_length, &chars)) {
-        v->string_chars = chars;
+        rxvm_value_set_string_chars_known(v, chars);
         mark_utf8_valid_count(v);
     } else {
-        v->string_chars = utf8nlen(v->string_value, v->string_length);
+        rxvm_value_set_string_chars_known(
+                v, utf8nlen(v->string_value, v->string_length));
         clear_vm_private_flags(v);
     }
 }
@@ -165,36 +354,40 @@ RX_INLINE void string_cache_reset(value *v) {
  * the value's other representations remain unchanged; VM-private string
  * validity and private lookup cache describe only the newly written byte span. */
 RX_INLINE void finish_string_write(value *v, size_t length) {
-    v->string_length = length;
+    rxvm_value_set_string_length_known(v, (rxvm_string_metric)length);
     string_cache_reset(v);
 #ifndef NUTF8
     refresh_utf8_flags(v);
 #else
     clear_vm_private_flags(v);
 #endif
+    RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
 }
 
 /* Numeric formatting and hex rendering are known to produce ASCII. */
 RX_INLINE void finish_ascii_string_write(value *v, size_t length) {
-    v->string_length = length;
+    rxvm_value_set_string_length_known(v, (rxvm_string_metric)length);
     string_cache_reset(v);
 #ifndef NUTF8
     mark_ascii_string_valid_count(v);
 #else
     clear_vm_private_flags(v);
 #endif
+    RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
 }
 
 /* Clears the binary payload and runs native cleanup if the payload owns native resources. */
 RX_INLINE void clear_binary_payload(value *v) {
+    const rxvm_native_payload_ops *ops;
     if (!v) return;
-    if (v->native_payload_ops && v->native_payload_ops->finalize) {
-        v->native_payload_ops->finalize(v);
+    ops = rxvm_value_native_ops(v);
+    if (ops && ops->finalize) {
+        ops->finalize(v);
     }
-    if (v->binary_value) free(v->binary_value);
+    if (v->binary_value) RXVM_VALUE_FREE(v->binary_value);
     v->binary_value = 0;
     v->binary_length = 0;
-    v->binary_buffer_length = 0;
+    RXVM_VALUE_SET_BINARY_CAPACITY(v, 0);
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
 }
@@ -202,6 +395,8 @@ RX_INLINE void clear_binary_payload(value *v) {
 /* Zeros a register value */
 RX_INLINE void value_zero(value *v) {
     size_t i;
+
+    RXVM_PROFILE_RECORD_VALUE_STORAGE_IF_REGISTERED(v);
 
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
 
@@ -216,9 +411,15 @@ RX_INLINE void value_zero(value *v) {
         }
     }
 
-    if (v->native_payload_ops) {
+    if (rxvm_value_native_ops(v)) {
         clear_binary_payload(v);
     }
+
+    /*
+     * This is a logical register reset. Keep owned string, decimal, binary and
+     * attribute capacity sticky for recycled values; physical destruction or
+     * an explicit pressure policy owns reclamation.
+     */
     v->status.all_type_flags = 0;
     v->int_value = 0;
     v->float_value = 0;
@@ -231,16 +432,17 @@ RX_INLINE void value_zero(value *v) {
     v->num_attributes = 0;
 
     /* Lazy Free Decimal - just zero the used length */
-    v->decimal_value_length = 0;
+    rxvm_value_set_decimal_length(v, 0u);
 
     /* Lazy Free binary - just zero the used length */
     v->binary_length = 0;
+    RXVM_PROFILE_RECORD_VALUE_STORAGE_IF_REGISTERED(v);
 }
 
 /* Setup a new value structure */
 RX_INLINE void value_init(value *v) {
-    v->string_value = v->small_string_buffer;
-    v->string_buffer_length = sizeof(v->small_string_buffer);
+    v->string_value = 0;
+    RXVM_VALUE_SET_STRING_CAPACITY(v, 0u);
     v->attributes = 0;
     v->unlinked_attributes = 0;
     v->attribute_buffers = 0;
@@ -248,25 +450,51 @@ RX_INLINE void value_init(value *v) {
     v->max_num_attributes = 0;
     v->num_attributes = 0;
     v->binary_value = 0;
-    v->binary_buffer_length = 0;
+    RXVM_VALUE_SET_BINARY_CAPACITY(v, 0);
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
     v->reference_identity = 0;
     v->reference_payload = 0;
     v->decimal_value = 0;
-    v->decimal_value_length = 0;
-    v->decimal_buffer_length = 0;
     value_zero(v);
+    RXVM_PROFILE_REGISTER_VALUE(v);
 }
 
-/* Value Factory mallocs and inits */
-RX_INLINE value* value_f() {
+/* Value factory uses the exact typed silo when a worker is supplied/entered. */
+RX_INLINE value* value_f_in(rxvm_memory_worker *worker) {
     value* this;
-    this = malloc(sizeof(value));
+    this = (value *)rxvm_memory_alloc_values(worker, 1u);
     if (this) RXVM_PROFILE_RECORD_ALLOCATION(
             RXVM_PROFILE_ALLOC_VALUE, sizeof(value), 1);
     value_init(this);
+    RXVM_PROFILE_MARK_VALUE_ORIGIN(
+            this, RXVM_PROFILE_VALUE_ORIGIN_STANDALONE);
     return this;
+}
+
+RX_INLINE value* value_f() {
+    rxvm_memory_worker *worker = rxvm_memory_current_worker();
+    value *this;
+    if (worker) return value_f_in(worker);
+
+    /*
+     * value_f() is also consumed by compiler/plugin code whose historical
+     * caller contract is free(value). Keep that unentered compatibility path
+     * on libc; RXVM lifecycle boundaries use value_f_in() or an entered worker.
+     */
+    this = (value *)malloc(sizeof(value));
+    if (this) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_VALUE, sizeof(value), 1);
+    value_init(this);
+    RXVM_PROFILE_MARK_VALUE_ORIGIN(
+            this, RXVM_PROFILE_VALUE_ORIGIN_STANDALONE);
+    return this;
+}
+
+RX_INLINE void value_free(value *v) {
+    if (!v) return;
+    clear_value(v);
+    (void)rxvm_memory_release(v);
 }
 
 /*
@@ -301,7 +529,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
             reset_value_storage_for_reuse(v->attributes[i]);
         }
         v->num_attributes = num;
-        maybe_trim_attribute_storage(v);
+        RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
         return;
     }
 
@@ -312,6 +540,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
             clear_value_contents(v->attributes[i]);
         }
         v->num_attributes = num;
+        RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
         return;
     }
 
@@ -327,14 +556,18 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     size_t new_max = power_of_two_size(num);
 
     /* Now we need to make the pointer arrays big enough */
-    if (v->attributes) v->attributes = realloc(v->attributes, sizeof(value*) * new_max);
-    else v->attributes = malloc(sizeof(value*) * new_max);
+    if (v->attributes) v->attributes = RXVM_VALUE_RESIZE(
+            v->attributes, sizeof(value*) * v->max_num_attributes,
+            sizeof(value*) * new_max);
+    else v->attributes = RXVM_VALUE_MALLOC(sizeof(value*) * new_max);
     if (v->attributes) RXVM_PROFILE_RECORD_ALLOCATION(
             RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
             sizeof(value*) * new_max, 0);
 
-    if (v->unlinked_attributes) v->unlinked_attributes = realloc(v->unlinked_attributes, sizeof(value*) * new_max);
-    else v->unlinked_attributes = malloc(sizeof(value*) * new_max);
+    if (v->unlinked_attributes) v->unlinked_attributes = RXVM_VALUE_RESIZE(
+            v->unlinked_attributes, sizeof(value*) * v->max_num_attributes,
+            sizeof(value*) * new_max);
+    else v->unlinked_attributes = RXVM_VALUE_MALLOC(sizeof(value*) * new_max);
     if (v->unlinked_attributes) RXVM_PROFILE_RECORD_ALLOCATION(
             RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
             sizeof(value*) * new_max, 0);
@@ -347,9 +580,12 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     /* Reallocate only when the required capacity has changed. */
     if (new_capacity > old_capacity) {
         if (v->attribute_buffers) {
-            v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * new_capacity);
+            v->attribute_buffers = RXVM_VALUE_RESIZE(
+                    v->attribute_buffers, sizeof(value*) * old_capacity,
+                    sizeof(value*) * new_capacity);
         } else {
-            v->attribute_buffers = malloc(sizeof(value*) * new_capacity);
+            v->attribute_buffers = RXVM_VALUE_MALLOC(
+                    sizeof(value*) * new_capacity);
         }
         if (v->attribute_buffers) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
@@ -358,7 +594,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
 
     /* Create a new buffer */
     v->attribute_buffers[v->num_attribute_buffers - 1] =
-            malloc(sizeof(value) * (new_max - v->max_num_attributes));
+            RXVM_VALUE_ALLOC_VALUES(new_max - v->max_num_attributes);
     if (v->attribute_buffers[v->num_attribute_buffers - 1])
         RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_ATTRIBUTE_VALUES,
@@ -369,12 +605,15 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     a = v->attribute_buffers[v->num_attribute_buffers - 1];
     for (i = v->max_num_attributes; i < new_max; i++, a++) {
         value_init(a);
+        RXVM_PROFILE_MARK_VALUE_ORIGIN(
+                a, RXVM_PROFILE_VALUE_ORIGIN_ATTRIBUTE);
         v->attributes[i] = v->unlinked_attributes[i] = a;
     }
 
     /* Set the new number of attributes */
     v->num_attributes = num;
     v->max_num_attributes = new_max;
+    RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
 }
 
 /*
@@ -393,7 +632,7 @@ RX_INLINE int try_set_num_attributes(value* v, size_t num) {
             reset_value_storage_for_reuse(v->attributes[i]);
         }
         v->num_attributes = num;
-        maybe_trim_attribute_storage(v);
+        RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
         return 0;
     }
 
@@ -404,6 +643,7 @@ RX_INLINE int try_set_num_attributes(value* v, size_t num) {
             clear_value_contents(v->attributes[i]);
         }
         v->num_attributes = num;
+        RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
         return 0;
     }
 
@@ -431,27 +671,28 @@ RX_INLINE int try_set_num_attributes(value* v, size_t num) {
     if (new_buffer_capacity < new_buffer_count ||
         new_buffer_capacity > SIZE_MAX / sizeof(value *)) return -1;
 
-    new_attributes = malloc(sizeof(value *) * new_max);
+    new_attributes = RXVM_VALUE_MALLOC(sizeof(value *) * new_max);
     if (!new_attributes) return -1;
-    new_unlinked_attributes = malloc(sizeof(value *) * new_max);
+    new_unlinked_attributes = RXVM_VALUE_MALLOC(sizeof(value *) * new_max);
     if (!new_unlinked_attributes) {
-        free(new_attributes);
+        RXVM_VALUE_FREE(new_attributes);
         return -1;
     }
-    new_storage = malloc(sizeof(value) * new_value_count);
+    new_storage = RXVM_VALUE_ALLOC_VALUES(new_value_count);
     if (!new_storage) {
-        free(new_unlinked_attributes);
-        free(new_attributes);
+        RXVM_VALUE_FREE(new_unlinked_attributes);
+        RXVM_VALUE_FREE(new_attributes);
         return -1;
     }
 
     new_attribute_buffers = v->attribute_buffers;
     if (new_buffer_capacity > old_buffer_capacity) {
-        new_attribute_buffers = malloc(sizeof(value *) * new_buffer_capacity);
+        new_attribute_buffers = RXVM_VALUE_MALLOC(
+                sizeof(value *) * new_buffer_capacity);
         if (!new_attribute_buffers) {
-            free(new_storage);
-            free(new_unlinked_attributes);
-            free(new_attributes);
+            RXVM_VALUE_FREE(new_storage);
+            RXVM_VALUE_FREE(new_unlinked_attributes);
+            RXVM_VALUE_FREE(new_attributes);
             return -1;
         }
         if (v->num_attribute_buffers) {
@@ -476,6 +717,8 @@ RX_INLINE int try_set_num_attributes(value* v, size_t num) {
     a = new_storage;
     for (i = v->max_num_attributes; i < new_max; i++, a++) {
         value_init(a);
+        RXVM_PROFILE_MARK_VALUE_ORIGIN(
+                a, RXVM_PROFILE_VALUE_ORIGIN_ATTRIBUTE);
         new_attributes[i] = new_unlinked_attributes[i] = a;
     }
     new_attribute_buffers[new_buffer_count - 1] = new_storage;
@@ -495,10 +738,10 @@ RX_INLINE int try_set_num_attributes(value* v, size_t num) {
                 RXVM_PROFILE_ALLOC_ATTRIBUTE_VALUES,
                 sizeof(value) * new_value_count, new_value_count);
 
-    free(v->attributes);
-    free(v->unlinked_attributes);
+    RXVM_VALUE_FREE(v->attributes);
+    RXVM_VALUE_FREE(v->unlinked_attributes);
     if (new_attribute_buffers != v->attribute_buffers)
-        free(v->attribute_buffers);
+        RXVM_VALUE_FREE(v->attribute_buffers);
 
     v->attributes = new_attributes;
     v->unlinked_attributes = new_unlinked_attributes;
@@ -506,6 +749,7 @@ RX_INLINE int try_set_num_attributes(value* v, size_t num) {
     v->num_attribute_buffers = new_buffer_count;
     v->num_attributes = num;
     v->max_num_attributes = new_max;
+    RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
     return 0;
 }
 
@@ -522,13 +766,17 @@ RX_INLINE size_t buffer_size(size_t value) {
 }
 
 RX_INLINE int reserve_binary_buffer(value *v, size_t length) {
-    if (v->native_payload_ops) clear_binary_payload(v);
-    if (length > v->binary_buffer_length) {
+    size_t capacity;
+
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
+    capacity = RXVM_VALUE_BINARY_CAPACITY(v);
+    if (length > capacity) {
         size_t new_size = buffer_size(length);
         void *new_buffer;
 
-        if (v->binary_value) new_buffer = realloc(v->binary_value, new_size);
-        else new_buffer = malloc(new_size);
+        if (v->binary_value) new_buffer = RXVM_VALUE_RESIZE(
+                v->binary_value, v->binary_length, new_size);
+        else new_buffer = RXVM_VALUE_MALLOC(new_size);
 
         if (!new_buffer) return -1;
 
@@ -536,7 +784,7 @@ RX_INLINE int reserve_binary_buffer(value *v, size_t length) {
                 RXVM_PROFILE_ALLOC_BINARY_BUFFER, new_size, 0);
 
         v->binary_value = new_buffer;
-        v->binary_buffer_length = new_size;
+        RXVM_VALUE_SET_BINARY_CAPACITY(v, new_size);
     }
     return 0;
 }
@@ -544,6 +792,7 @@ RX_INLINE int reserve_binary_buffer(value *v, size_t length) {
 RX_INLINE int prep_binary_buffer(value *v, size_t length) {
     if (reserve_binary_buffer(v, length) != 0) return -1;
     v->binary_length = length;
+    RXVM_PROFILE_RECORD_VALUE_STORAGE(v);
     return 0;
 }
 
@@ -558,11 +807,11 @@ RX_INLINE int set_binary(value *v, const void *data, size_t length) {
 
 RX_INLINE int set_buffer_binary(value *v, char *buffer, size_t length, size_t buffer_length) {
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
-    if (v->binary_value) free(v->binary_value);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
+    if (v->binary_value) RXVM_VALUE_FREE(v->binary_value);
     v->binary_value = buffer;
     v->binary_length = length;
-    v->binary_buffer_length = buffer_length;
+    RXVM_VALUE_SET_BINARY_CAPACITY(v, buffer_length);
     clear_vm_private_flags(v);
     return 0;
 }
@@ -596,7 +845,7 @@ RX_INLINE int concat_binary(value *dest, value *left, value *right) {
 
     if (dest == left || dest == right) {
         size_t buffer_length = buffer_size(total_length);
-        char *buffer = malloc(buffer_length);
+        char *buffer = RXVM_VALUE_MALLOC(buffer_length);
         if (!buffer) return -1;
         RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_BINARY_BUFFER, buffer_length, 0);
@@ -624,9 +873,10 @@ RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t len
         if (length < actual_length) actual_length = length;
     }
 
-    if ((dest == source && dest->native_payload_ops && actual_length != 0) ||
+    if ((dest == source && rxvm_value_native_ops(dest) && actual_length != 0) ||
         (dest != source &&
-         (dest->native_payload_ops || actual_length > dest->binary_buffer_length))) {
+         (rxvm_value_native_ops(dest) ||
+          actual_length > RXVM_VALUE_BINARY_CAPACITY(dest)))) {
         new_buffer_length = actual_length ? buffer_size(actual_length) : 0;
         if (new_buffer_length) {
             new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
@@ -637,19 +887,19 @@ RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t len
         }
     }
 
-    if (dest->native_payload_ops) {
+    if (rxvm_value_native_ops(dest)) {
         clear_binary_payload(dest);
         dest->binary_value = new_buffer;
-        dest->binary_buffer_length = new_buffer_length;
+        RXVM_VALUE_SET_BINARY_CAPACITY(dest, new_buffer_length);
         dest->binary_length = actual_length;
         clear_vm_private_flags(dest);
         return 0;
     }
 
     if (new_buffer) {
-        if (dest->binary_value) free(dest->binary_value);
+        if (dest->binary_value) RXVM_VALUE_FREE(dest->binary_value);
         dest->binary_value = new_buffer;
-        dest->binary_buffer_length = new_buffer_length;
+        RXVM_VALUE_SET_BINARY_CAPACITY(dest, new_buffer_length);
         dest->binary_length = actual_length;
         clear_vm_private_flags(dest);
         return 0;
@@ -668,40 +918,66 @@ RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t len
     return 0;
 }
 
-RX_INLINE void prep_string_buffer(value *v, size_t length) {
-    v->string_length = length;
-    if (v->string_length > v->string_buffer_length) {
-        if (v->string_value != v->small_string_buffer) free(v->string_value);
-        v->string_buffer_length = buffer_size(v->string_length);
-        v->string_value = malloc(v->string_buffer_length);
+RX_INLINE void prep_string_buffer_metric(value *v,
+                                              rxvm_string_metric length) {
+    size_t capacity = RXVM_VALUE_STRING_CAPACITY(v);
+
+    rxvm_value_set_string_length_known(v, length);
+    if (!v->string_value || v->string_length > capacity) {
+        size_t new_capacity;
+
+        if (v->string_value) RXVM_VALUE_FREE(v->string_value);
+        new_capacity = buffer_size(v->string_length);
+        RXVM_VALUE_SET_STRING_CAPACITY(v, new_capacity);
+        v->string_value = RXVM_VALUE_MALLOC(new_capacity);
         if (v->string_value) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_STRING_BUFFER,
-                v->string_buffer_length, 0);
+                new_capacity, 0);
+    }
+}
+
+RX_INLINE void prep_string_buffer(value *v, size_t length) {
+    prep_string_buffer_metric(
+            v, rxvm_value_narrow_string_metric_or_fail(length));
+}
+
+RX_INLINE void extend_string_buffer_metric(value *v,
+                                            rxvm_string_metric length) {
+    size_t old_length = v->string_length;
+    size_t capacity = RXVM_VALUE_STRING_CAPACITY(v);
+    rxvm_value_set_string_length_known(v, length);
+    if (!v->string_value) {
+        size_t new_capacity = buffer_size(v->string_length);
+        RXVM_VALUE_SET_STRING_CAPACITY(v, new_capacity);
+        v->string_value = RXVM_VALUE_MALLOC(new_capacity);
+        if (v->string_value) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER,
+                new_capacity, 0);
+    }
+    else if (v->string_length > capacity) {
+        size_t new_capacity = buffer_size(v->string_length);
+        RXVM_VALUE_SET_STRING_CAPACITY(v, new_capacity);
+        v->string_value = RXVM_VALUE_RESIZE(
+                v->string_value, old_length, new_capacity);
+        if (v->string_value) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER,
+                new_capacity, 0);
     }
 }
 
 RX_INLINE void extend_string_buffer(value *v, size_t length) {
-    v->string_length = length;
-    if (v->string_length > v->string_buffer_length) {
-        v->string_buffer_length = buffer_size(v->string_length);
-        if (v->string_value == v->small_string_buffer) {
-            v->string_value = malloc(v->string_buffer_length);
-            memcpy(v->string_value, v->small_string_buffer, sizeof(v->small_string_buffer));
-        }
-        else {
-            v->string_value = realloc(v->string_value, v->string_buffer_length);
-        }
-        if (v->string_value) RXVM_PROFILE_RECORD_ALLOCATION(
-                RXVM_PROFILE_ALLOC_STRING_BUFFER,
-                v->string_buffer_length, 0);
-    }
+    extend_string_buffer_metric(
+            v, rxvm_value_narrow_string_metric_or_fail(length));
 }
 
 RX_INLINE void null_terminate_string_buffer(value *v) {
+    rxvm_string_metric terminated_length;
 
-    if (v->string_length + 1 > v->string_buffer_length) {
+    terminated_length = rxvm_value_string_size_add_or_fail(
+            v->string_length, 1u);
+    if (terminated_length > RXVM_VALUE_STRING_CAPACITY(v)) {
         /* Make room for the null */
-        extend_string_buffer(v, v->string_length + 1);
+        extend_string_buffer_metric(v, terminated_length);
 
         /* extend_string_buffer() increments string_length so put it back */
         v->string_length--;
@@ -741,33 +1017,34 @@ RX_MOSTLYINLINE void clear_value_contents(value* v) {
                 destroy_value_storage(v->unlinked_attributes[i]);
             }
         }
-        free(v->unlinked_attributes);
+        RXVM_VALUE_FREE(v->unlinked_attributes);
         v->unlinked_attributes = 0;
     }
 
     /* Free attribute buffer */
-    if (v->attribute_buffers) {
+    if (rxvm_value_attribute_buffers(v)) {
         for (i = 0; i < v->num_attribute_buffers; i++) {
-            if (v->attribute_buffers[i]) free(v->attribute_buffers[i]);
+            if (v->attribute_buffers[i])
+                RXVM_VALUE_FREE(v->attribute_buffers[i]);
         }
-        free(v->attribute_buffers);
+        RXVM_VALUE_FREE(v->attribute_buffers);
         v->attribute_buffers = 0;
         v->num_attribute_buffers = 0;
     }
 
     /* Free pointer arrays */
     if (v->attributes) {
-        free(v->attributes);
+        RXVM_VALUE_FREE(v->attributes);
         v->attributes = 0;
     }
     v->max_num_attributes = 0;
     v->num_attributes = 0;
 
     /* Free strings */
-    if (v->string_value != v->small_string_buffer) {
-        free(v->string_value);
-        v->string_value = v->small_string_buffer;
-        v->string_buffer_length = sizeof(v->small_string_buffer);
+    if (RXVM_VALUE_STRING_IS_ALLOCATED(v)) {
+        RXVM_VALUE_FREE(v->string_value);
+        v->string_value = 0;
+        RXVM_VALUE_SET_STRING_CAPACITY(v, 0u);
     }
     v->string_length = 0;
     string_cache_reset(v);
@@ -775,11 +1052,7 @@ RX_MOSTLYINLINE void clear_value_contents(value* v) {
     v->string_chars = 0;
 #endif
 
-    /* Free decimal */
-    if (v->decimal_value) free(v->decimal_value);
-    v->decimal_value = 0;
-    v->decimal_value_length = 0;
-    v->decimal_buffer_length = 0;
+    rxvm_value_release_decimal_storage(v);
 
     /* Free binary */
     clear_binary_payload(v);
@@ -879,7 +1152,6 @@ RX_INLINE void delete_attributes(value *v, size_t index, size_t count) {
         reset_value_storage_for_reuse(v->attributes[i]);
     }
     v->num_attributes = new_num;
-    maybe_trim_attribute_storage(v);
 }
 
 /* Int Flag */
@@ -961,19 +1233,20 @@ RX_INLINE void unset_type(value *v) {
 
 RX_INLINE void set_int(value *v, rxinteger value) {
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
     v->int_value = value;
 }
 RX_INLINE void set_float(value *v, double value) {
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
     v->float_value = value;
 }
 
-RX_INLINE void set_string(value *v, char *value, size_t length) {
+RX_INLINE void set_string_metric(value *v, char *value,
+                                 rxvm_string_metric length) {
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
-    prep_string_buffer(v,length);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
+    prep_string_buffer_metric(v, length);
     memcpy(v->string_value, value, v->string_length);
     string_cache_reset(v);
 #ifndef NUTF8
@@ -983,12 +1256,20 @@ RX_INLINE void set_string(value *v, char *value, size_t length) {
 #endif
 }
 
+RX_INLINE void set_string(value *v, char *value, size_t length) {
+    set_string_metric(
+            v, value, rxvm_value_narrow_string_metric_or_fail(length));
+}
+
 /* set value string from null string value */
 RX_INLINE void set_null_string(value *v, const char *from) {
+    size_t length = strlen(from);
+    rxvm_string_metric metric_length =
+            rxvm_value_narrow_string_metric_or_fail(length);
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
     if (v->string_value == from) return;
-    prep_string_buffer(v, strlen(from));
+    prep_string_buffer_metric(v, metric_length);
     memcpy(v->string_value, from, v->string_length);
     string_cache_reset(v);
 #ifndef NUTF8
@@ -1000,13 +1281,16 @@ RX_INLINE void set_null_string(value *v, const char *from) {
 
 RX_INLINE int set_string_validated(value *v, const char *from, size_t length) {
     if (!from && length != 0) return -1;
+    if (!rxvm_value_string_metric_fits(length)) return -1;
 #ifndef NUTF8
     size_t chars = 0;
     if (validate_utf8_bytes(from, length, &chars) != 0) return -1;
+    if (!rxvm_value_string_metric_fits(chars)) return -1;
 #endif
-    set_string(v, (char *)(from ? from : ""), length);
+    set_string_metric(v, (char *)(from ? from : ""),
+                      (rxvm_string_metric)length);
 #ifndef NUTF8
-    v->string_chars = chars;
+    rxvm_value_set_string_chars_known(v, chars);
     string_cache_reset(v);
     mark_utf8_valid_count(v);
 #endif
@@ -1019,13 +1303,15 @@ RX_INLINE int set_null_string_validated(value *v, const char *from) {
 }
 
 RX_INLINE void set_const_string(value *v, string_constant *from) {
+    rxvm_string_metric length =
+            rxvm_value_narrow_string_metric_or_fail(from->string_len);
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
-    prep_string_buffer(v,from->string_len);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
+    prep_string_buffer_metric(v, length);
     memcpy(v->string_value, from->string, v->string_length);
     string_cache_reset(v);
 #ifndef NUTF8
-    v->string_chars = from->string_chars;
+    rxvm_value_set_string_chars_known(v, (rxvm_string_metric)from->string_chars);
     mark_utf8_valid_count(v);
 #else
     clear_vm_private_flags(v);
@@ -1035,8 +1321,8 @@ RX_INLINE void set_const_string(value *v, string_constant *from) {
 RX_INLINE void set_value_string(value *v, value *from) {
     if (v == from) return;
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
-    prep_string_buffer(v, from->string_length);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
+    prep_string_buffer_metric(v, from->string_length);
     memcpy(v->string_value, from->string_value, v->string_length);
     string_cache_reset(v);
 #ifndef NUTF8
@@ -1056,15 +1342,18 @@ RX_INLINE void set_buffer_string(
         , size_t string_chars
 #endif
 ) {
+    rxvm_string_metric metric_length =
+            rxvm_value_narrow_string_metric_or_fail(length);
     if (v->reference_payload) rxvm_reference_value_release_payload(v);
-    if (v->native_payload_ops) clear_binary_payload(v);
-    if (v->string_value != v->small_string_buffer) free(v->string_value);
+    if (rxvm_value_native_ops(v)) clear_binary_payload(v);
+    if (RXVM_VALUE_STRING_IS_ALLOCATED(v))
+        RXVM_VALUE_FREE(v->string_value);
     v->string_value = buffer;
-    v->string_length = length;
-    v->string_buffer_length = buffer_length;
+    rxvm_value_set_string_length_known(v, metric_length);
+    RXVM_VALUE_SET_STRING_CAPACITY(v, buffer_length);
     string_cache_reset(v);
 #ifndef NUTF8
-    v->string_chars = string_chars;
+    rxvm_value_set_string_chars_known(v, (rxvm_string_metric)string_chars);
 #endif
     clear_vm_private_flags(v);
 }
@@ -1091,8 +1380,8 @@ RX_INLINE void* get_native_payload(value *v,
                                    const rxvm_native_payload_ops **out_ops,
                                    unsigned int *out_flags) {
     if (out_length) *out_length = v ? v->binary_length : 0;
-    if (out_ops) *out_ops = v ? v->native_payload_ops : 0;
-    if (out_flags) *out_flags = v ? v->native_payload_flags : 0;
+    if (out_ops) *out_ops = rxvm_value_native_ops(v);
+    if (out_flags) *out_flags = rxvm_value_native_flags(v);
     return v ? v->binary_value : 0;
 }
 
@@ -1108,7 +1397,7 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
         rxvm_reference_value_copy_payload(dest, source);
     }
 
-    if (dest->native_payload_ops || source->native_payload_ops) {
+    if (rxvm_value_native_ops(dest) || rxvm_value_native_ops(source)) {
         clear_binary_payload(dest);
     }
 
@@ -1117,22 +1406,22 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     dest->float_value = source->float_value;
     dest->object_type = source->object_type;
 
-    /* Copy Decimal Value */
-    if (source->decimal_value_length) {
-        dest->decimal_value_length = source->decimal_value_length;
-        dest->decimal_buffer_length = dest->decimal_value_length;
-        if (dest->decimal_value) dest->decimal_value = realloc(dest->decimal_value, dest->decimal_value_length);
-        else dest->decimal_value = malloc(dest->decimal_value_length);
-        memcpy(dest->decimal_value, source->decimal_value, dest->decimal_value_length);
+    /* Copy the decimal payload while retaining destination-owned capacity. */
+    if (rxvm_value_decimal_length(source)) {
+        void *decimal = rxvm_value_reserve_decimal(
+                dest, rxvm_value_decimal_length(source));
+        if (!decimal) RX_PANIC_OOM(
+                "copy decimal sidecar payload",
+                rxvm_value_decimal_length(source), "decimal value");
+        memcpy(decimal, rxvm_value_decimal_data(source),
+               rxvm_value_decimal_length(source));
     }
-    else {
-        dest->decimal_value_length = 0;
-    }
+    else rxvm_value_set_decimal_length(dest, 0u);
 
     /* Copy Strings */
     if (source->string_length) {
         /* Copy String Data */
-        prep_string_buffer(dest, source->string_length);
+        prep_string_buffer_metric(dest, source->string_length);
         string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
@@ -1149,8 +1438,9 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     copy_vm_private_flags(dest, source);
 
     /* Copy Binary */
-    if (source->native_payload_ops && source->native_payload_ops->copy) {
-        source->native_payload_ops->copy(dest, source);
+    if (rxvm_value_native_ops(source) &&
+        rxvm_value_native_ops(source)->copy) {
+        rxvm_value_native_ops(source)->copy(dest, source);
     }
     else if (source->binary_length) {
         if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
@@ -1188,21 +1478,15 @@ RX_INLINE void move_value(value *dest, value *source) {
     source->object_type = 0;
 
     /* Move Decimal Value */
-    if (source->decimal_value) {
-        dest->decimal_value_length = source->decimal_value_length;
-        dest->decimal_value = source->decimal_value;
-        dest->decimal_buffer_length = source->decimal_buffer_length;
-        source->decimal_value = 0;
-        source->decimal_value_length = 0;
-        source->decimal_buffer_length = 0;
-    }
+    dest->decimal_value = source->decimal_value;
+    source->decimal_value = 0;
 
     /* Move String */
-    if (source->string_value != source->small_string_buffer) {
+    if (RXVM_VALUE_STRING_IS_ALLOCATED(source)) {
         /* Move String Data */
         dest->string_value = source->string_value;
         dest->string_length = source->string_length;
-        dest->string_buffer_length = source->string_buffer_length;
+        RXVM_VALUE_MOVE_STRING_CAPACITY(dest, source);
         string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
@@ -1224,12 +1508,12 @@ RX_INLINE void move_value(value *dest, value *source) {
     if (source->binary_value) {
         dest->binary_length = source->binary_length;
         dest->binary_value = source->binary_value;
-        dest->binary_buffer_length = source->binary_buffer_length;
-        dest->native_payload_ops = source->native_payload_ops;
-        dest->native_payload_flags = source->native_payload_flags;
+        RXVM_VALUE_MOVE_BINARY_CAPACITY(dest, source);
         source->binary_value = 0;
         source->binary_length = 0;
-        source->binary_buffer_length = 0;
+        RXVM_VALUE_SET_BINARY_CAPACITY(source, 0);
+        dest->native_payload_ops = source->native_payload_ops;
+        dest->native_payload_flags = source->native_payload_flags;
         source->native_payload_ops = 0;
         source->native_payload_flags = 0;
     }
@@ -1245,8 +1529,8 @@ RX_INLINE void move_value(value *dest, value *source) {
     dest->unlinked_attributes = source->unlinked_attributes;
     dest->attribute_buffers = source->attribute_buffers;
     dest->max_num_attributes = source->max_num_attributes;
-    dest->num_attributes = source->num_attributes;
     dest->num_attribute_buffers = source->num_attribute_buffers;
+    dest->num_attributes = source->num_attributes;
 
     if (dest->reference_identity || source->reference_identity) {
         rxvm_reference_identity_move(dest, source);
@@ -1271,7 +1555,11 @@ RX_INLINE value *map_trimmed_attribute_pointer(value *old_attribute,
     return old_attribute;
 }
 
-RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
+/*
+ * Compact inactive attribute capacity at an explicit quiescent reclamation
+ * point. Ordinary shrink/delete paths deliberately retain reusable storage.
+ */
+RX_MOSTLYINLINE void reclaim_attribute_storage(value *v) {
     value **old_attributes;
     value **old_unlinked_attributes;
     value **old_attribute_buffers;
@@ -1284,7 +1572,8 @@ RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
     size_t new_max;
     size_t i;
 
-    if (!v || v->max_num_attributes < 64) return;
+    /* The typed 64-value silo remains ordinary sticky capacity. */
+    if (!v || v->max_num_attributes <= 64) return;
     if (v->num_attributes &&
         v->max_num_attributes <= v->num_attributes * 4) return;
 
@@ -1302,12 +1591,13 @@ RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
         }
         if (old_attribute_buffers) {
             for (i = 0; i < old_buffer_count; i++) {
-                if (old_attribute_buffers[i]) free(old_attribute_buffers[i]);
+                if (old_attribute_buffers[i])
+                    RXVM_VALUE_FREE(old_attribute_buffers[i]);
             }
-            free(old_attribute_buffers);
+            RXVM_VALUE_FREE(old_attribute_buffers);
         }
-        if (old_attributes) free(old_attributes);
-        if (old_unlinked_attributes) free(old_unlinked_attributes);
+        if (old_attributes) RXVM_VALUE_FREE(old_attributes);
+        if (old_unlinked_attributes) RXVM_VALUE_FREE(old_unlinked_attributes);
         v->attributes = 0;
         v->unlinked_attributes = 0;
         v->attribute_buffers = 0;
@@ -1319,10 +1609,10 @@ RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
     new_max = power_of_two_size(v->num_attributes);
     if (new_max >= old_max) return;
 
-    new_attributes = malloc(sizeof(value*) * new_max);
-    new_unlinked_attributes = malloc(sizeof(value*) * new_max);
-    new_attribute_buffers = malloc(sizeof(value*));
-    new_storage = malloc(sizeof(value) * new_max);
+    new_attributes = RXVM_VALUE_MALLOC(sizeof(value*) * new_max);
+    new_unlinked_attributes = RXVM_VALUE_MALLOC(sizeof(value*) * new_max);
+    new_attribute_buffers = RXVM_VALUE_MALLOC(sizeof(value*));
+    new_storage = RXVM_VALUE_ALLOC_VALUES(new_max);
     if (new_attributes) RXVM_PROFILE_RECORD_ALLOCATION(
             RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
             sizeof(value*) * new_max, 0);
@@ -1335,15 +1625,17 @@ RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
             RXVM_PROFILE_ALLOC_ATTRIBUTE_VALUES,
             sizeof(value) * new_max, new_max);
     if (!new_attributes || !new_unlinked_attributes || !new_attribute_buffers || !new_storage) {
-        if (new_attributes) free(new_attributes);
-        if (new_unlinked_attributes) free(new_unlinked_attributes);
-        if (new_attribute_buffers) free(new_attribute_buffers);
-        if (new_storage) free(new_storage);
+        if (new_attributes) RXVM_VALUE_FREE(new_attributes);
+        if (new_unlinked_attributes) RXVM_VALUE_FREE(new_unlinked_attributes);
+        if (new_attribute_buffers) RXVM_VALUE_FREE(new_attribute_buffers);
+        if (new_storage) RXVM_VALUE_FREE(new_storage);
         return;
     }
 
     for (i = 0; i < new_max; i++) {
         value_init(&new_storage[i]);
+        RXVM_PROFILE_MARK_VALUE_ORIGIN(
+                &new_storage[i], RXVM_PROFILE_VALUE_ORIGIN_ATTRIBUTE);
         new_unlinked_attributes[i] = &new_storage[i];
     }
 
@@ -1368,12 +1660,13 @@ RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
     }
     if (old_attribute_buffers) {
         for (i = 0; i < old_buffer_count; i++) {
-            if (old_attribute_buffers[i]) free(old_attribute_buffers[i]);
+            if (old_attribute_buffers[i])
+                RXVM_VALUE_FREE(old_attribute_buffers[i]);
         }
-        free(old_attribute_buffers);
+        RXVM_VALUE_FREE(old_attribute_buffers);
     }
-    if (old_attributes) free(old_attributes);
-    if (old_unlinked_attributes) free(old_unlinked_attributes);
+    if (old_attributes) RXVM_VALUE_FREE(old_attributes);
+    if (old_unlinked_attributes) RXVM_VALUE_FREE(old_unlinked_attributes);
 
     new_attribute_buffers[0] = new_storage;
     v->attributes = new_attributes;
@@ -1389,7 +1682,7 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
     RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_STRING_COPY, source);
     if (source->string_length) {
         /* Copy String Data */
-        prep_string_buffer(dest, source->string_length);
+        prep_string_buffer_metric(dest, source->string_length);
         string_cache_reset(dest);
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
@@ -1413,10 +1706,11 @@ RX_INLINE void copy_binary_value(value *dest, value *source) {
     RXVM_PROFILE_RECORD_VALUE(RXVM_PROFILE_VALUE_BINARY_COPY, source);
 
     if (dest->reference_payload) rxvm_reference_value_release_payload(dest);
-    if (dest->native_payload_ops) clear_binary_payload(dest);
+    if (rxvm_value_native_ops(dest)) clear_binary_payload(dest);
 
-    if (source->native_payload_ops && source->native_payload_ops->copy) {
-        source->native_payload_ops->copy(dest, source);
+    if (rxvm_value_native_ops(source) &&
+        rxvm_value_native_ops(source)->copy) {
+        rxvm_value_native_ops(source)->copy(dest, source);
     }
     else if (source->binary_length) {
         if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
@@ -1438,8 +1732,10 @@ RX_INLINE void copy_binary_value(value *dest, value *source) {
 RX_INLINE void string_cache_seek_char(value *v, size_t char_pos);
 
 RX_INLINE void string_set_lengths(value *v, size_t byte_length, size_t char_length) {
-    v->string_length = byte_length;
-    v->string_chars = char_length;
+    rxvm_value_set_string_length_known(
+            v, (rxvm_string_metric)byte_length);
+    rxvm_value_set_string_chars_known(
+            v, (rxvm_string_metric)char_length);
     string_cache_reset(v);
 }
 
@@ -1463,7 +1759,8 @@ RX_INLINE int string_slice_at(value *dest, value *source,
     byte_length = actual_chars;
 
     if (actual_chars == 0) {
-        if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
+        if (RXVM_VALUE_STRING_CAPACITY(dest) > 0)
+            dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
         mark_utf8_valid_count(dest);
         return 0;
@@ -1485,7 +1782,8 @@ RX_INLINE int string_slice_at(value *dest, value *source,
     if (byte_length == SIZE_MAX) return -1;
     required_length = byte_length + 1;
 
-    if (dest != source && required_length > dest->string_buffer_length) {
+    if (dest != source &&
+        required_length > RXVM_VALUE_STRING_CAPACITY(dest)) {
         new_buffer_length = buffer_size(required_length);
         new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
         if (!new_buffer) return -1;
@@ -1498,9 +1796,10 @@ RX_INLINE int string_slice_at(value *dest, value *source,
     if (dest == source) {
         memmove(dest->string_value, source->string_value + byte_pos, byte_length);
     } else if (new_buffer) {
-        if (dest->string_value != dest->small_string_buffer) free(dest->string_value);
+        if (RXVM_VALUE_STRING_IS_ALLOCATED(dest))
+            RXVM_VALUE_FREE(dest->string_value);
         dest->string_value = new_buffer;
-        dest->string_buffer_length = new_buffer_length;
+        RXVM_VALUE_SET_STRING_CAPACITY(dest, new_buffer_length);
     } else {
         memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
     }
@@ -1528,7 +1827,8 @@ RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
 #else
 RX_INLINE void string_set_lengths(value *v, size_t byte_length, size_t char_length) {
     (void)char_length;
-    v->string_length = byte_length;
+    rxvm_value_set_string_length_known(
+            v, (rxvm_string_metric)byte_length);
 }
 
 RX_INLINE void string_set_ascii_length(value *v, size_t length) {
@@ -1544,7 +1844,8 @@ RX_INLINE int string_slice_at(value *dest, value *source,
     size_t new_buffer_length = 0;
 
     if (byte_length == 0) {
-        if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
+        if (RXVM_VALUE_STRING_CAPACITY(dest) > 0)
+            dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
         clear_vm_private_flags(dest);
         return 0;
@@ -1553,7 +1854,8 @@ RX_INLINE int string_slice_at(value *dest, value *source,
     if (byte_length == SIZE_MAX) return -1;
     required_length = byte_length + 1;
 
-    if (dest != source && required_length > dest->string_buffer_length) {
+    if (dest != source &&
+        required_length > RXVM_VALUE_STRING_CAPACITY(dest)) {
         new_buffer_length = buffer_size(required_length);
         new_buffer = RXVM_VALUE_MALLOC(new_buffer_length);
         if (!new_buffer) return -1;
@@ -1566,9 +1868,10 @@ RX_INLINE int string_slice_at(value *dest, value *source,
     if (dest == source) {
         memmove(dest->string_value, source->string_value + byte_pos, byte_length);
     } else if (new_buffer) {
-        if (dest->string_value != dest->small_string_buffer) free(dest->string_value);
+        if (RXVM_VALUE_STRING_IS_ALLOCATED(dest))
+            RXVM_VALUE_FREE(dest->string_value);
         dest->string_value = new_buffer;
-        dest->string_buffer_length = new_buffer_length;
+        RXVM_VALUE_SET_STRING_CAPACITY(dest, new_buffer_length);
     } else {
         memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
     }
@@ -1613,17 +1916,21 @@ RX_INLINE int string_cmp_const(value *v1, string_constant *v2) {
 RX_INLINE void string_append(value *v1, value *v2) {
     size_t start = v1->string_length;
     size_t append_length = v2->string_length;
+    rxvm_string_metric result_length = rxvm_value_string_size_add_or_fail(
+            start, append_length);
 #ifndef NUTF8
     size_t append_chars = v2->string_chars;
+    rxvm_string_metric result_chars =
+            v1->string_chars + (rxvm_string_metric)append_chars;
     int left_known = has_utf8_valid_count_or_empty(v1);
     int right_known = has_utf8_valid_count_or_empty(v2);
 #endif
 
-    extend_string_buffer(v1, v1->string_length + append_length);
+    extend_string_buffer_metric(v1, result_length);
     memcpy(v1->string_value + start, v2->string_value, append_length);
     string_cache_reset(v1);
 #ifndef NUTF8
-    v1->string_chars += append_chars;
+    rxvm_value_set_string_chars_known(v1, result_chars);
     set_utf8_known_concat_flags(v1, left_known, right_known);
 #else
     clear_vm_private_flags(v1);
@@ -1632,11 +1939,13 @@ RX_INLINE void string_append(value *v1, value *v2) {
 
 RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
     size_t start = v1->string_length;
+    rxvm_string_metric result_length =
+            rxvm_value_string_size_add_or_fail(start, length);
 #ifndef NUTF8
     int had_valid = has_utf8_valid_count_or_empty(v1);
 #endif
 
-    extend_string_buffer(v1, v1->string_length + length);
+    extend_string_buffer_metric(v1, result_length);
     memcpy(v1->string_value + start, value, length);
 
     string_cache_reset(v1);
@@ -1644,11 +1953,14 @@ RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
     {
         size_t chars = 0;
         if (!utf8nvalid_count(value, length, &chars)) {
-            v1->string_chars += chars;
+            rxvm_value_set_string_chars_known(
+                    v1, v1->string_chars + (rxvm_string_metric)chars);
             if (had_valid) mark_utf8_valid_count(v1);
             else clear_vm_private_flags(v1);
         } else {
-            v1->string_chars += utf8nlen(value, length); /* SLOW! */
+            rxvm_value_set_string_chars_known(
+                    v1, v1->string_chars + (rxvm_string_metric)
+                            utf8nlen(value, length)); /* SLOW! */
             clear_vm_private_flags(v1);
         }
     }
@@ -1660,18 +1972,22 @@ RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
 RX_INLINE void string_sappend(value *v1, value *v2) {
     size_t start = v1->string_length;
     size_t append_length = v2->string_length;
+    rxvm_string_metric result_length = rxvm_value_string_size_add_or_fail(
+            rxvm_value_string_size_add_or_fail(start, append_length), 1u);
 #ifndef NUTF8
     size_t append_chars = v2->string_chars;
+    rxvm_string_metric result_chars = v1->string_chars +
+            (rxvm_string_metric)append_chars + 1u;
     int left_known = has_utf8_valid_count_or_empty(v1);
     int right_known = has_utf8_valid_count_or_empty(v2);
 #endif
 
-    extend_string_buffer(v1, v1->string_length + append_length + 1);
+    extend_string_buffer_metric(v1, result_length);
     v1->string_value[start++] = ' ';
     memcpy(v1->string_value + start, v2->string_value, append_length);
     string_cache_reset(v1);
 #ifndef NUTF8
-    v1->string_chars += append_chars + 1;
+    rxvm_value_set_string_chars_known(v1, result_chars);
     set_utf8_known_concat_flags(v1, left_known, right_known);
 #else
     clear_vm_private_flags(v1);
@@ -1679,18 +1995,21 @@ RX_INLINE void string_sappend(value *v1, value *v2) {
 }
 
 RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
-    size_t len = v2->string_length + v3->string_length ;
+    rxvm_string_metric len = rxvm_value_string_size_add_or_fail(
+            v2->string_length, v3->string_length);
     size_t buffer_len = buffer_size(len);
     char *buffer;
 #ifndef NUTF8
     size_t left_chars = v2->string_chars;
     size_t right_chars = v3->string_chars;
+    rxvm_string_metric result_chars =
+            (rxvm_string_metric)(left_chars + right_chars);
     int left_known = has_utf8_valid_count_or_empty(v2);
     int right_known = has_utf8_valid_count_or_empty(v3);
 #endif
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
-        buffer = malloc(buffer_len);
+        buffer = RXVM_VALUE_MALLOC(buffer_len);
         if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
@@ -1700,17 +2019,17 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars);
+        set_buffer_string(v1, buffer, len, buffer_len, result_chars);
 #endif
     }
     else {
         /* Can write into v1 directly */
-        prep_string_buffer(v1, len);
+        prep_string_buffer_metric(v1, len);
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         memcpy(v1->string_value + v2->string_length, v3->string_value, v3->string_length);
         string_cache_reset(v1);
 #ifndef NUTF8
-        v1->string_chars = left_chars + right_chars;
+        rxvm_value_set_string_chars_known(v1, result_chars);
 #endif
     }
 #ifndef NUTF8
@@ -1721,18 +2040,22 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
 }
 
 RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
-    size_t len = v2->string_length + v3->string_length + 1;
+    rxvm_string_metric len = rxvm_value_string_size_add_or_fail(
+            rxvm_value_string_size_add_or_fail(
+                    v2->string_length, v3->string_length), 1u);
     size_t buffer_len = buffer_size(len);
     char *buffer;
 #ifndef NUTF8
     size_t left_chars = v2->string_chars;
     size_t right_chars = v3->string_chars;
+    rxvm_string_metric result_chars =
+            (rxvm_string_metric)(left_chars + right_chars + 1u);
     int left_known = has_utf8_valid_count_or_empty(v2);
     int right_known = has_utf8_valid_count_or_empty(v3);
 #endif
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
-        buffer = malloc(buffer_len);
+        buffer = RXVM_VALUE_MALLOC(buffer_len);
         if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
@@ -1742,18 +2065,18 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars + 1);
+        set_buffer_string(v1, buffer, len, buffer_len, result_chars);
 #endif
     }
     else {
         /* Can write into v1 directly */
-        prep_string_buffer(v1, len);
+        prep_string_buffer_metric(v1, len);
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         v1->string_value[v2->string_length] = ' ';
         memcpy(v1->string_value + v2->string_length + 1, v3->string_value, v3->string_length);
         string_cache_reset(v1);
 #ifndef NUTF8
-        v1->string_chars = left_chars + right_chars + 1;
+        rxvm_value_set_string_chars_known(v1, result_chars);
 #endif
     }
 #ifndef NUTF8
@@ -1764,16 +2087,19 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
 }
 
 RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3) {
-    size_t len = v2->string_length + v3->string_len;
+    rxvm_string_metric len = rxvm_value_string_size_add_or_fail(
+            v2->string_length, v3->string_len);
     size_t buffer_len = buffer_size(len);
     char *buffer;
 #ifndef NUTF8
     size_t left_chars = v2->string_chars;
+    rxvm_string_metric result_chars =
+            (rxvm_string_metric)(left_chars + v3->string_chars);
     int left_known = has_utf8_valid_count_or_empty(v2);
 #endif
     if (v1 == v2) {
         /* Need to use a buffer */
-        buffer = malloc(buffer_len);
+        buffer = RXVM_VALUE_MALLOC(buffer_len);
         if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
@@ -1783,18 +2109,17 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len,
-                          left_chars + v3->string_chars);
+        set_buffer_string(v1, buffer, len, buffer_len, result_chars);
 #endif
     }
     else {
         /* Can write into v1 directly */
-        prep_string_buffer(v1, len);
+        prep_string_buffer_metric(v1, len);
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         memcpy(v1->string_value + v2->string_length, v3->string, v3->string_len);
         string_cache_reset(v1);
 #ifndef NUTF8
-        v1->string_chars = left_chars + v3->string_chars;
+        rxvm_value_set_string_chars_known(v1, result_chars);
 #endif
     }
 #ifndef NUTF8
@@ -1805,16 +2130,20 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
 }
 
 RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v3) {
-    size_t len = v2->string_length + v3->string_len + 1;
+    rxvm_string_metric len = rxvm_value_string_size_add_or_fail(
+            rxvm_value_string_size_add_or_fail(
+                    v2->string_length, v3->string_len), 1u);
     size_t buffer_len = buffer_size(len);
     char *buffer;
 #ifndef NUTF8
     size_t left_chars = v2->string_chars;
+    rxvm_string_metric result_chars =
+            (rxvm_string_metric)(left_chars + v3->string_chars + 1u);
     int left_known = has_utf8_valid_count_or_empty(v2);
 #endif
     if (v1 == v2) {
         /* Need to use a buffer */
-        buffer = malloc(buffer_len);
+        buffer = RXVM_VALUE_MALLOC(buffer_len);
         if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
@@ -1825,19 +2154,18 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len,
-                          left_chars + v3->string_chars + 1);
+        set_buffer_string(v1, buffer, len, buffer_len, result_chars);
 #endif
     }
     else {
         /* Can write into v1 directly */
-        prep_string_buffer(v1, len);
+        prep_string_buffer_metric(v1, len);
         memcpy(v1->string_value, v2->string_value, v2->string_length);
         v1->string_value[v2->string_length] = ' ';
         memcpy(v1->string_value + v2->string_length + 1, v3->string, v3->string_len);
         string_cache_reset(v1);
 #ifndef NUTF8
-        v1->string_chars = left_chars + v3->string_chars + 1;
+        rxvm_value_set_string_chars_known(v1, result_chars);
 #endif
     }
 #ifndef NUTF8
@@ -1848,16 +2176,19 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
 }
 
 RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3) {
-    size_t len = v2->string_len + v3->string_length;
+    rxvm_string_metric len = rxvm_value_string_size_add_or_fail(
+            v2->string_len, v3->string_length);
     size_t buffer_len = buffer_size(len);
     char *buffer;
 #ifndef NUTF8
     size_t right_chars = v3->string_chars;
+    rxvm_string_metric result_chars =
+            (rxvm_string_metric)(v2->string_chars + right_chars);
     int right_known = has_utf8_valid_count_or_empty(v3);
 #endif
     if (v1 == v3) {
         /* Need to use a buffer */
-        buffer = malloc(buffer_len);
+        buffer = RXVM_VALUE_MALLOC(buffer_len);
         if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
@@ -1867,19 +2198,18 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + right_chars);
+        set_buffer_string(v1, buffer, len, buffer_len, result_chars);
 #endif
     }
     else {
         /* Can write into v1 directly */
-        prep_string_buffer(v1, len);
+        prep_string_buffer_metric(v1, len);
 
         memcpy(v1->string_value, v2->string, v2->string_len);
         memcpy(v1->string_value + v2->string_len, v3->string_value, v3->string_length);
         string_cache_reset(v1);
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + right_chars;
+        rxvm_value_set_string_chars_known(v1, result_chars);
 #endif
     }
 #ifndef NUTF8
@@ -1890,16 +2220,20 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
 }
 
 RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v3) {
-    size_t len = v2->string_len + v3->string_length + 1;
+    rxvm_string_metric len = rxvm_value_string_size_add_or_fail(
+            rxvm_value_string_size_add_or_fail(
+                    v2->string_len, v3->string_length), 1u);
     size_t buffer_len = buffer_size(len);
     char *buffer;
 #ifndef NUTF8
     size_t right_chars = v3->string_chars;
+    rxvm_string_metric result_chars =
+            (rxvm_string_metric)(v2->string_chars + right_chars + 1u);
     int right_known = has_utf8_valid_count_or_empty(v3);
 #endif
     if (v1 == v3) {
         /* Need to use a buffer */
-        buffer = malloc(buffer_len);
+        buffer = RXVM_VALUE_MALLOC(buffer_len);
         if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
                 RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
@@ -1911,20 +2245,19 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + right_chars + 1);
+        set_buffer_string(v1, buffer, len, buffer_len, result_chars);
 #endif
     }
     else {
         /* Can write into v1 directly */
-        prep_string_buffer(v1, len);
+        prep_string_buffer_metric(v1, len);
         memcpy(v1->string_value, v2->string, v2->string_len);
         v1->string_value[v2->string_len] = ' ';
         memcpy(v1->string_value + v2->string_len + 1, v3->string_value,
                v3->string_length);
         string_cache_reset(v1);
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + right_chars + 1;
+        rxvm_value_set_string_chars_known(v1, result_chars);
 #endif
     }
 #ifndef NUTF8
@@ -1964,6 +2297,10 @@ RX_INLINE void string_step_backward(value *v) {
 }
 
 RX_INLINE void string_cache_seek_char(value *v, size_t char_pos) {
+    size_t current_char_pos;
+    size_t cost_from_current;
+    int seek_forward;
+
     assert (v->string_cache_char_pos <= v->string_chars);
 
     // Boundary Check: If the requested position is beyond the last character,
@@ -1978,28 +2315,29 @@ RX_INLINE void string_cache_seek_char(value *v, size_t char_pos) {
         return;
     }
 
-    int diff = (int)char_pos - (int)v->string_cache_char_pos;
-
-    if (diff == 0) {
+    current_char_pos = v->string_cache_char_pos;
+    if (char_pos == current_char_pos) {
         return; // Nothing to do
     }
+    seek_forward = char_pos > current_char_pos;
+    cost_from_current = seek_forward ?
+            char_pos - current_char_pos : current_char_pos - char_pos;
 
     // Optimised for stepping one character forward or backward
-    if (diff == 1) {
-        string_step_forward(v);
-        v->string_cache_char_pos++;
-        return;
-    }
-    if (diff == -1) {
-        string_step_backward(v);
-        v->string_cache_char_pos--;
+    if (cost_from_current == 1u) {
+        if (seek_forward) {
+            string_step_forward(v);
+            v->string_cache_char_pos++;
+        } else {
+            string_step_backward(v);
+            v->string_cache_char_pos--;
+        }
         return;
     }
 
     // For larger jumps, determine the most efficient starting point.
     // We compare the cost of seeking from the start, the current position, or the end.
     size_t cost_from_start = char_pos;
-    size_t cost_from_current = (diff > 0) ? diff : -diff;
     size_t cost_from_end = v->string_chars - char_pos;
 
     if (cost_from_start <= cost_from_current && cost_from_start <= cost_from_end) {
@@ -2019,7 +2357,7 @@ RX_INLINE void string_cache_seek_char(value *v, size_t char_pos) {
         }
     } else {
         // Seek from the current position
-        if (diff > 0) { // Forward
+        if (seek_forward) {
             while (v->string_cache_char_pos < char_pos) {
                 string_step_forward(v);
                 v->string_cache_char_pos++;
@@ -2038,6 +2376,7 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
     int char_size;
     char *insert_at;
     size_t insert_offset = v1->string_length;
+    rxvm_string_metric result_length;
 #ifndef NUTF8
     int was_valid = has_utf8_valid_count_or_empty(v1);
     int scalar_valid = is_valid_unicode_scalar(v2->int_value);
@@ -2049,7 +2388,9 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
     char_size = utf8codepointsize(v2->int_value);
 #endif
 
-    extend_string_buffer(v1,v1->string_length + char_size);
+    result_length = rxvm_value_string_size_add_or_fail(
+            v1->string_length, (size_t)char_size);
+    extend_string_buffer_metric(v1, result_length);
     insert_at = v1->string_value + insert_offset;
     string_cache_reset(v1);
 
@@ -2057,7 +2398,7 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
     *insert_at = (unsigned char)v2->int_value;
     clear_vm_private_flags(v1);
 #else
-    v1->string_chars += 1;
+    rxvm_value_set_string_chars_known(v1, v1->string_chars + 1u);
     utf8catcodepoint(insert_at, v2->int_value, char_size);
     set_utf8_known_concat_flags(v1, was_valid, scalar_valid);
 #endif
@@ -2070,10 +2411,13 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
 /* Calculate the string value */
 RX_INLINE void int_to_string(numeric_context *cnt, value *temp, value *v) {
     if (cnt->digits >= DIGITS_STRIKE_POINT) {
+        int written;
         // Fast path for a large number of digits - just convert the integer to string and set exponent to 0
         prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
-        v->string_length = snprintf(v->string_value, SMALLEST_STRING_BUFFER_LENGTH,
-                                    "%" RXINTEGER_PRI, v->int_value);
+        written = snprintf(v->string_value, SMALLEST_STRING_BUFFER_LENGTH,
+                           "%" RXINTEGER_PRI, v->int_value);
+        if (written < 0) abort();
+        rxvm_value_set_string_length_known(v, (size_t)written);
         string_cache_reset(v);
 #ifndef NUTF8
         mark_ascii_string_valid_count(v);
@@ -2114,10 +2458,12 @@ RX_INLINE char* reg2nullstring(value* reg) {
 
 /* Convert a string to an integer - returns 1 on error */
 RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
-    char *buffer = malloc(length + 1);
+    char *buffer = RXVM_VALUE_MALLOC(length + 1u);
     char *end = buffer;
     int rc = 0;
     rxinteger parsed;
+
+    if (!buffer) return 1;
 
     /* Null terminated buffer */
     buffer[length] = 0;
@@ -2142,7 +2488,7 @@ RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
     *out = parsed;
 
     end_string2integer:
-    free(buffer);
+    RXVM_VALUE_FREE(buffer);
     return rc;
 }
 
@@ -2289,7 +2635,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
             strcpy(coefficient->string_value, "NAN");
         else
             strcpy(coefficient->string_value, "nan");
-        coefficient->string_length = 3;
+        rxvm_value_set_string_length_known(coefficient, 3u);
         string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
@@ -2301,7 +2647,8 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
             strcpy(coefficient->string_value, signbit(value) ? "-INF" : "INF");
         else
             strcpy(coefficient->string_value, signbit(value) ? "-inf" : "inf");
-        coefficient->string_length = signbit(value) ? 4 : 3;
+        rxvm_value_set_string_length_known(
+                coefficient, signbit(value) ? 4u : 3u);
         string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
@@ -2312,7 +2659,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
     if (value == 0.0) {
         // Handle zero
         strcpy(coefficient->string_value, "0");
-        coefficient->string_length = 1;
+        rxvm_value_set_string_length_known(coefficient, 1u);
         string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
@@ -2369,7 +2716,8 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
     }
 
     trim_numeric_trailing_zeros(coefficient->string_value);
-    coefficient->string_length = strlen(coefficient->string_value);
+    rxvm_value_set_string_length_known(
+            coefficient, strlen(coefficient->string_value));
     string_cache_reset(coefficient);
 #ifndef NUTF8
     mark_ascii_string_valid_count(coefficient);
@@ -2432,8 +2780,13 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
 
     /* Prepare the output buffer */
     // Calculate the output buffer size which is based on the number of digits and the exponent size from the arguments
-    size_t output_buffer_size = coefficient_value->string_length + number_of_digits(exponent) + 5; // +5 for sign, decimal point, 'e' and null terminator
-    prep_string_buffer(formatted_output_value, output_buffer_size);
+    rxvm_string_metric output_buffer_size =
+            rxvm_value_string_size_add_or_fail(
+            rxvm_value_string_size_add_or_fail(
+                    coefficient_value->string_length,
+                    number_of_digits(exponent)),
+            5u); // +5 for sign, decimal point, 'e' and null terminator
+    prep_string_buffer_metric(formatted_output_value, output_buffer_size);
     formatted_output_value->string_length = 0;
     formatted_output_value->string_value[0] = 0; // Null-terminate - just in case
     string_cache_reset(formatted_output_value);
@@ -2470,7 +2823,9 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
                     formatted_output[i] = (char)tolower((unsigned char)formatted_output[i]);
             }
         }
-        formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+        rxvm_value_set_string_length_known(
+                formatted_output_value,
+                strlen(formatted_output_value->string_value));
         string_cache_reset(formatted_output_value);
 #ifndef NUTF8
         mark_ascii_string_valid_count(formatted_output_value);
@@ -2487,7 +2842,9 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
             // --- SCIENTIFIC NOTATION ---
             // The number has already been formatted in scientific notation by decimalExtract
             sprintf(formatted_output, scientific_format, coefficient, exponent);
-            formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+            rxvm_value_set_string_length_known(
+                    formatted_output_value,
+                    strlen(formatted_output_value->string_value));
             string_cache_reset(formatted_output_value);
 #ifndef NUTF8
             mark_ascii_string_valid_count(formatted_output_value);
@@ -2565,7 +2922,9 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
             }
             formatted_output[-exponent + 1 + digits_in_coef] = 0;
         }
-        formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+        rxvm_value_set_string_length_known(
+                formatted_output_value,
+                strlen(formatted_output_value->string_value));
         string_cache_reset(formatted_output_value);
 #ifndef NUTF8
             mark_ascii_string_valid_count(formatted_output_value);
@@ -2618,7 +2977,9 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
 
     // Add the exponent
     sprintf(formatted_output, engineering_format, eng_exp);
-    formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+    rxvm_value_set_string_length_known(
+            formatted_output_value,
+            strlen(formatted_output_value->string_value));
     string_cache_reset(formatted_output_value);
 #ifndef NUTF8
     mark_ascii_string_valid_count(formatted_output_value);
@@ -2630,10 +2991,12 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
 // - exponent (integer) will be set to the exponent
 static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value) {
 
+    prep_string_buffer(coefficient, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
+
     // Handle special case of zero
     if (value == 0) {
         strcpy(coefficient->string_value, "0");
-        coefficient->string_length = 1;
+        rxvm_value_set_string_length_known(coefficient, 1u);
         string_cache_reset(coefficient);
 #ifndef NUTF8
         mark_ascii_string_valid_count(coefficient);
@@ -2643,9 +3006,13 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
     }
 
     prep_string_buffer(coefficient, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
-    coefficient->string_length = snprintf(coefficient->string_value,
-                                          SMALLEST_STRING_BUFFER_LENGTH,
-                                          "%" RXINTEGER_PRI, value);
+    {
+        int written = snprintf(coefficient->string_value,
+                               SMALLEST_STRING_BUFFER_LENGTH,
+                               "%" RXINTEGER_PRI, value);
+        if (written < 0) abort();
+        rxvm_value_set_string_length_known(coefficient, (size_t)written);
+    }
     string_cache_reset(coefficient);
 
     // We are converting to coefficient, as an example, from 123456 to 1.23456 (i.e. normalised scientific notation)
@@ -2661,7 +3028,10 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
             // Shift the string to the right to make space for the decimal point
             memmove(coefficient->string_value + 2, coefficient->string_value + 1, coefficient->string_length);
             coefficient->string_value[1] = '.';
-            coefficient->string_length++;
+            rxvm_value_set_string_length_known(
+                    coefficient,
+                    rxvm_value_string_size_add_or_fail(
+                            coefficient->string_length, 1u));
             coefficient->string_value[coefficient->string_length] = 0; // Null-terminate
         }
     }
@@ -2677,7 +3047,10 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
             // Shift the string to the right to make space for the decimal point
             memmove(coefficient->string_value + 3, coefficient->string_value + 2, coefficient->string_length - 1);
             coefficient->string_value[2] = '.';
-            coefficient->string_length++;
+            rxvm_value_set_string_length_known(
+                    coefficient,
+                    rxvm_value_string_size_add_or_fail(
+                            coefficient->string_length, 1u));
             coefficient->string_value[coefficient->string_length] = 0; // Null-terminate
         }
     }
@@ -2689,5 +3062,10 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
 }
 
 #undef RXVM_PROFILE_RECORD_ALLOCATION
+#undef RXVM_PROFILE_RECORD_VALUE
+#undef RXVM_PROFILE_REGISTER_VALUE
+#undef RXVM_PROFILE_MARK_VALUE_ORIGIN
+#undef RXVM_PROFILE_RECORD_VALUE_STORAGE
+#undef RXVM_PROFILE_RECORD_VALUE_STORAGE_IF_REGISTERED
 
 #endif //CREXX_RXVMVARS_H

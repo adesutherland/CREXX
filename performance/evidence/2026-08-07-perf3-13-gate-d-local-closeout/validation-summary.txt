@@ -1,0 +1,12 @@
+focused_debug=15/15 pass
+focused_release=15/15 pass
+broad_debug_initial=1887/1909 pass; 22 failures
+broad_debug_serial_rerun=3/23 pass including fixture; 20 deferred spawn failures
+asan_affected=12/12 pass; detect_leaks=0 on macOS
+asan_unicode_datatype_noopt=1/1 pass; detect_leaks=0 on macOS
+isolated_install=pass
+installed_rxvm_target=rxbvm
+installed_sieve=pass
+timing_block_a=104/104 processes pass
+timing_block_b=104/104 processes pass
+

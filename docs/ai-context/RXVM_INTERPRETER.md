@@ -1,6 +1,6 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `007`, a coordinated compatibility break with no 006 reader. Its linker-sealed, text-backed/numeric-ID semantic graph, rule-neutral query surface, numeric type/member/factory operands, and follow-on cache/overlay design are specified in [RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports portable switch dispatch and, on GNU/Clang-family compilers, direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `007`, a coordinated compatibility break with no 006 reader. Its linker-sealed, text-backed/numeric-ID semantic graph, rule-neutral query surface, numeric type/member/factory operands, and follow-on cache/overlay design are specified in [RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
 ## 1. VM Lifecycle
 
@@ -11,7 +11,7 @@ The execution of a program within `rxvm` is handled in discrete phases (as defin
 4. **Preparation**: `rxvm_prepare()` builds an owned per-module
    `execution_image` for both VM modes. Operand cells are copied and direct
    function operands are rebound to process-local `proc_runtime *` values.
-   Computed-goto `rxvm` stores process-local handler pointers in instruction
+   Computed-goto `rxtvm` stores process-local handler pointers in instruction
    cells; switch-dispatch `rxbvm` keeps copied opcodes there and may install
    process-private opcode forms. Canonical `segment.binary` remains immutable
    and is still the serialization, reflection, source/profile and debug
@@ -314,37 +314,126 @@ carry `META_SOURCE_STEP` or `META_TRACE_EVENT`; they are not source-level TRACE
 or RXDB debug artifacts.
 
 ### `value` (Dynamic Typing Representation)
-Classic REXX is a dynamically typed language where "everything is a string" conceptually, but performance dictates native type usage when possible. The `value` struct (from `interpreter/rxvalue.h`) is a polymorphic container storing a REXX variable's state. 
+Classic REXX is dynamically typed, but the VM keeps frequently used native
+representations direct. The selected Release 1 register layout is
+`RXVM_VALUE_LAYOUT_NAME == "L32SDH"` with
+`RXVM_VALUE_ABI_VERSION == 2`. It is 176 bytes in the normal 64-bit UTF-8
+product and 168 bytes in a 64-bit `NUTF8` build. Compile-time assertions in
+`interpreter/rxvalue.h` enforce those sizes.
 
-To limit memory fragmentation, strings shorter than `SMALLEST_STRING_BUFFER_LENGTH` (32 bytes) are stored directly inside the struct via `small_string_buffer` rather than forcing a heap allocation.
+The selected shape has no inline string. Its direct fields are:
 
-```c
-struct value {
-    value_type status;               /* Partitioned status/cache flags */
-    rxinteger int_value;             /* Release 1 signed 64-bit .int */
-    double float_value;              /* Native floating point */
-    
-    void *decimal_value;             /* Pointer for arbitrary precision math */
-    size_t decimal_value_length;
-    
-    char *string_value;              /* String payload pointer */
-    size_t string_length;
-    
-    char *binary_value;
-    size_t binary_length;
+- the partitioned 32-bit status word, signed 64-bit integer and binary64 float;
+- a direct decimal payload pointer;
+- a direct string pointer and raw `size_t` allocation capacity, followed by
+  32-bit logical byte length, character count and private UTF-8 cache positions;
+- a direct binary pointer with raw `size_t` actual length and capacity;
+- direct native-payload operations and flags;
+- direct reference identity and reference payload cells;
+- the direct immutable object-type descriptor; and
+- direct live/unlinked attribute maps, backing-block list, native-width
+  capacity/count metadata and active attribute count.
 
-    const rxvm_native_payload_ops *native_payload_ops;
-    unsigned int native_payload_flags;
+Only string logical metrics are narrowed to 32 bits. Untrusted or growing
+string ingress is checked once before mutation; invariant-preserving hot stores
+are direct. Allocation capacities, allocation arithmetic, binary actual length,
+decimal sizes and attribute counts remain `size_t`. They are not encoded,
+shifted or decoded on access.
 
-    const struct RxGraphTypeRef *object_type; /* Immutable runtime type */
-    
-    value **attributes;              /* For associative arrays/objects */
-    size_t num_attributes;
+String, decimal, binary and attribute storage are side allocations owned by the
+same worker allocator as the containing register. String storage begins in the
+32-byte capacity class and grows through power-of-two classes. Decimal storage
+keeps the engine's payload address direct in `value`; a fixed 16-byte
+`rxvm_decimal_metadata` header containing raw `size_t` length and capacity is
+immediately before that payload. Header and payload are one allocation, so
+decimal growth does not require a separate descriptor allocation or a second
+hot pointer indirection. Binary and attribute storage retain their direct
+metadata because moving those families behind descriptors did not earn their
+lifecycle and code-size cost.
 
-    /* Inline memory buffer to save mallocs on small strings */
-    char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH]; 
-};
-```
+Logical reset is deliberately sticky. `value_zero()` clears observable state
+but retains ordinary string, decimal, binary and attribute capacity for the
+same register's later reuse. Physical destruction (`clear_value()` /
+`destroy_value_storage()`) runs native finalizers, destroys nested values and
+returns every owned side allocation. There is no automatic pressure or
+per-reset reclamation check in this baseline. `rxvm_memory_trim()` is an
+explicit quiescent operation that releases only the central depot's empty
+reserve; a later reclamation design requires its own evidence and approval.
+
+The register structure is an internal, rebuild-together VM ABI, not an RXBIN
+format or transport envelope. The compiler, RXVM/RXVML, RXPA, bundled decimal
+plugins and any native consumer including `rxvalue.h` must be rebuilt together
+when `RXVM_VALUE_ABI_VERSION` changes. A `value` pointer must never be serialized
+or sent to another process or host.
+
+### Worker Slab and Sidecar Allocation
+
+One `rxvm_memory_context` owns a synchronized central depot; each
+`rxvm_memory_worker` owns its local slabs, extents and statistics. The selected
+S0 geometry is fixed at 64 KiB aligned slabs with a 64-byte header:
+
+- byte classes are powers of two from 16 bytes through 16 KiB;
+- typed value-array classes cover 1, 2, 4, 8, 16, 32 and 64 values without
+  rounding each value to a generic byte class;
+- reference cells have their own typed class; and
+- larger byte requests and value arrays use exactly tracked, 16-byte-aligned
+  oversized extents.
+
+Within a slab, allocation first pops a worker-local returned-slot list. If that
+list is empty it advances the slab's bump area: the contiguous sequence of
+slots that has never yet been handed out. This is just pointer arithmetic plus
+one counter, not a search or system allocation. The central lock is used only
+when a worker acquires or returns a whole slab. One empty slab per worker/class
+is kept local; additional empty slabs return to the depot, which retains at
+most two per class and 32 overall before returning excess to the system.
+
+`rxvm_memory_enter()` binds the active worker in thread-local storage so value
+helpers can use the correct arena without threading an allocator parameter
+through every opcode. Ownership is recovered from the aligned slab or extent
+header. A release under a different active worker is rejected and counted as a
+wrong-owner free; allocator families are never guessed.
+
+A worker arena is single-thread-owned execution state, not a lockable heap
+handle. It must never be entered concurrently by two OS threads. Every thread
+that allocates VM-managed storage needs its own registered worker arena. An I/O
+helper may instead use a deliberately independent non-VM allocation domain and
+transfer its result after synchronization. The central depot is the
+synchronization boundary for whole slabs; adding a lock around ordinary
+allocation would hide an ownership error and defeat the local fast path.
+Managed-only metadata services such as `rxvm_memory_capacity()` must likewise
+receive a pointer from this allocator family. Injected or foreign allocators
+retain an explicit requested-capacity contract instead of being probed for
+slab metadata.
+
+The EF-0 spawn path uses that independent-domain option. A redirect reader or
+writer receives a private libc-owned single-shot completion, not an RXVM
+worker, register or `value *`. String and line-array input is flattened into an
+immutable byte snapshot before its writer starts. stdout and stderr readers
+grow separate byte buffers, publish exactly one terminal state, and may finish
+in either order without sharing mutable state. Joining the helper is the
+publication/acquire boundary. Only then does the receiver thread append bytes
+or construct lines in its own destination register under its currently entered
+worker. Broken pipe, child/launch/thread failure, partial output and abandoned
+request paths use the same join-before-destruction contract. POSIX uses
+close-on-exec completion descriptors and Windows uses private non-inheritable
+handle duplicates; neither platform hands a parent worker to an I/O thread.
+
+The current execution product still creates one logical worker. The allocator
+is a prerequisite for, not proof of, multi-threaded VM execution. A future
+worker must receive its own stack/register set, frame recycler, arena and
+procedure-affine state. `move_value()` is currently an owner-local operation:
+moving its pointers into another worker would leave them owned by the source
+arena and later fail the ownership check. Cross-worker communication must
+therefore copy into receiver-owned storage, use an explicitly transferable
+immutable buffer, or transfer ownership of a whole suitably isolated block at
+a defined safe point. Process and cross-host channels must use a versioned
+serialized envelope. None may expose a raw `value` or silently mutate a
+register owned by another worker. The preferred future Rexx-visible envelope
+is register-centric: one logical typed scalar or binary register image may
+contain ordered child-register images. That `ChannelValue` is a transport
+description, never the internal `value`; the receiver materializes it into its
+own register tree. Large binary content may later select immutable chunks or a
+bounded stream capability beneath the same logical surface.
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or
@@ -412,6 +501,13 @@ signal trees after the callback returns. Raw VM helpers can still clear the
 cache for internal materialization, but arbitrary bytes belong on the `.binary`
 path. `CREXX_RXPA_DISABLE_UTF8_CHECKS=1` disables the RXPA post-call check for
 developer migration/debugging; normal builds should leave it enabled.
+
+UTF instruction loops must use the matching metric: byte-span scans use
+`string_length`, while character-index iteration and cache seeks use
+`string_chars`. In particular, `POSCHAR` iterates over `string_chars` in a UTF
+build; using byte length as its character bound can seek beyond the last
+codepoint and turn a stale decoded value into a false match. `NUTF8` keeps the
+single byte-count model.
 
 The `object_type` descriptor pointer is the Level B hook for object identity,
 type tests and interface dispatch. Graph-backed descriptors are materialized by
@@ -484,8 +580,11 @@ The selected implementation and governed contract/performance evidence are in
 
 ### Decimal Plugin Runtime
 
-`.decimal` values are stored in the `value` decimal slot as plugin-owned byte
-content. The VM loads the default decimal plugin before executing the first
+`.decimal` values are stored in the co-allocated worker-owned header/payload
+sidecar described above. The payload bytes contain the selected plugin's
+decimal representation; the plugin must obtain or grow that storage through
+the host `reserve_decimal` service and must not call `free(decimal_value)`.
+The VM loads the default decimal plugin before executing the first
 frame, attaches it to the frame numeric context, and syncs that plugin whenever
 a child frame inherits a copied numeric context. A frame that loads its own
 decimal plugin marks `decimal_loaded_here`, so cleanup can free it when that
@@ -502,6 +601,10 @@ Both decimal backends map a failed text parse to `CONVERSION_ERROR`; the decNumb
 backend maps conversion-syntax and invalid-operation status bits explicitly,
 while the long-double backend maps its invalid parsed value. Decimal conversion
 instructions then raise that through the ordinary catchable VM signal path.
+The decimal-plugin interface and `value` layout are one tightly coupled
+internal contract: bundled/static/dynamic plugins and their host must be
+rebuilt together for ABI version 2. This does not change RXBIN decimal
+semantics or create a stable third-party wire ABI.
 
 ### Copy, Move, and Native Payloads
 
@@ -516,8 +619,10 @@ The VM has two distinct value-transfer paths:
 - `copy_value(dest, source)` preserves the source and duplicates the current
   value state into `dest`. Strings, decimals, ordinary binaries, and attributes
   are copied into destination-owned storage.
-- `move_value(dest, source)` transfers ownership of malloced buffers and
-  attribute arrays into `dest`, then reinitializes `source`. This is used for
+- `move_value(dest, source)` transfers ownership of allocated buffers and
+  attribute arrays into `dest`, then reinitializes `source`. Here "ownership"
+  means owner-local value ownership; it does not retag worker slabs or authorize
+  a cross-worker move. This is used for
   returning true local values from a Rexx procedure and is the efficient path
   for unique ownership.
 - Rexx `RET_REG` moves only when returning a real local register. Returning an
@@ -591,10 +696,12 @@ When `native_payload_ops` is set:
   `.binary` values and copies the ops pointer as-is. A copy hook is responsible
   for installing the destination payload, normally by calling
   `SETNATIVEPAYLOAD()` or the corresponding internal helper.
-- The VM must own every `binary_value` buffer. Copy hooks should never install
+- The VM must own every `binary_value` buffer through its allocator family.
+  Copy hooks should never install
   externally allocated memory directly into `binary_value`; they should call
   `SETNATIVEPAYLOAD()` / `rxvml_set_native_payload()` with the bytes to store.
-  The helper mallocs the destination buffer, copies those bytes, and records
+  The helper allocates receiver-owned destination storage, copies those bytes,
+  and records
   the shared ops pointer.
 - Scalar/string setters clear an attached native payload before replacing the
   visible value, so stale native resources are not accidentally copied after a
@@ -740,8 +847,13 @@ returns; without a redirect they write to the normal VM stdout/stderr path.
 ADDRESS redirect endpoint values are native payloads with the internal type name
 `rxsysb.redirect_endpoint`. The payload stores a refcounted native endpoint cell,
 so ordinary VM value copies retain the cell instead of byte-copying raw OS handle
-values. The last finalizer closes native handles and joins any owned redirect
-worker thread. `SPAWN` resolves these native endpoint payloads before dispatching
+values. Its private completion contains the endpoint handle, independently
+allocated bytes, diagnostics and one terminal state; it contains no worker or
+VM value pointer. Input endpoints snapshot their source before thread creation.
+Output endpoints are consumed only after join, when the receiver worker copies
+the bytes into the Rexx string or array. The last finalizer closes native
+handles, joins any owned redirect worker thread and discards an unconsumed
+completion. `SPAWN` resolves these native endpoint payloads before dispatching
 to `rxspawn.c`; it does not accept plain raw `REDIRECT` binary buffers. Existing
 bytecode remains compatible because redirect values are created by runtime
 instructions, not stored as durable `REDIRECT` struct bytes in `.rxbin` files.
@@ -826,9 +938,28 @@ provider-neutral: Rexx and native ADDRESS environments see the same
 
 The core execution engine lives in `run()` within `interpreter/rxvmintp.c`. 
 
-### Threaded vs Bytecode Dispatch
+### Product and concrete dispatch executables
+
+The build has one stable product entry point and up to two concrete engines:
+
+- `rxbvm` is the portable `switch(opcode)` engine and is always built;
+- `rxtvm` is the direct-threaded computed-goto engine and is built only by
+  GNU/Clang-family compilers; and
+- `rxvm` is the compiler-selected product entry point. It is a relative
+  symlink on Unix-like systems and a copied executable on Windows.
+
+Clang and AppleClang select `rxbvm`; GCC selects `rxtvm`; MSVC builds only the
+switch engine and copies `rxbvm.exe` to `rxvm.exe`. The broad correctness and
+smoke suites execute `rxvm`. A small explicit dispatch-contract test runs each
+concrete engine that exists, so the non-default engine does not become an
+unbuildable blind spot.
+
+`rxvme` and the `rxvml` embedding library follow the same compiler-selected
+engine. `rxbvme` and `rxbvml` remain explicit switch-dispatch forms.
+
+### Threaded vs switch dispatch
 The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two execution models:
-1. **Direct Threading (`rxvm`)**: During the preparation phase,
+1. **Direct Threading (`rxtvm`)**: During the preparation phase,
    `rxvm_prepare()` copies each module's canonical instruction slots into an
    owned runtime image. Operand cells remain unchanged and each instruction
    cell stores the C `void*` for its `&&label`. Target selection loads
@@ -840,7 +971,7 @@ The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two exe
    cells initially contain copied canonical opcodes; preparation may replace a
    selected cell with a process-private opcode while leaving
    `segment.binary` unchanged. Operands, calls, branches and active-frame
-   transitions use the same owned-image contract as `rxvm`.
+   transitions use the same owned-image contract as `rxtvm`.
 
 Neither source form is assumed to be universally faster. Generated performance
 depends on compiler transformations, architecture, branch prediction, code
@@ -968,11 +1099,15 @@ cmake -S . -B cmake-build-profile \
   -DCMAKE_BUILD_TYPE=Release \
   -DCREXX_VM_PROFILING=ON
 cmake --build cmake-build-profile --config Release \
-  --target rxvm rxbvm rxvme rxbvme rxseq
+  --target rxvm rxbvm rxtvm rxvme rxbvme rxseq
 ```
 
-The command-line surface is compiled into `rxvm`, `rxbvm`, and their embedded
-standard-library variants `rxvme` and `rxbvme`. Timing profiling remains off at
+Omit `rxtvm` when the configured compiler does not support GNU-style
+labels-as-values (notably MSVC).
+
+The command-line surface is compiled into compiler-selected `rxvm`, concrete
+`rxbvm`, optional concrete `rxtvm`, and the embedded-standard-library variants
+`rxvme` and `rxbvme`. Timing profiling remains off at
 runtime until `--profile`, `--profile=timing`, or `--profile-output` is passed.
 `--profile=counts` selects the same diagnostic census with clock reads disabled
 and all timing fields zero, so repeated counts-only reports are deterministic.
@@ -1147,10 +1282,11 @@ three, or four instructions. This is a separate run mode from timing profiling
 and must be given an `.rxseq` output file:
 
 ```sh
-cmake --build cmake-build-profile --target rxvm rxbvm rxseq
+cmake --build cmake-build-profile --target rxvm rxbvm rxtvm rxseq
 
 rxvm --sequence-count=2 --sequence-output run.rxseq program.rxbin
 rxbvm --sequence-count 4 --sequence-output run.rxseq program.rxbin
+rxtvm --sequence-count 4 --sequence-output run.rxseq program.rxbin
 ```
 
 `--profile` and `--sequence-count` are intentionally mutually exclusive.

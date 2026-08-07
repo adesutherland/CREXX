@@ -65,11 +65,16 @@ struct module* rxvm_load_file(struct rxvm_context* ctx, char* filename) {
 int rxvm_link(struct rxvm_context* ctx) {
     size_t i;
     int linked_any;
+    rxvm_memory_worker *previous;
 
     if (!ctx) return 0;
+    previous = rxvm_memory_enter(ctx->memory_worker);
     if (!ctx->link_dirty &&
         !ctx->interface_method_registry_dirty &&
-        !ctx->interface_factory_registry_dirty) return 0;
+        !ctx->interface_factory_registry_dirty) {
+        rxvm_memory_leave(previous);
+        return 0;
+    }
 
     linked_any = 0;
     for (i = 0; i < ctx->num_modules; i++) {
@@ -101,6 +106,7 @@ int rxvm_link(struct rxvm_context* ctx) {
            build them after the process-wide compatibility registries. */
         rxvm_rebuild_graph_bindings(ctx);
     }
+    rxvm_memory_leave(previous);
     return 0;
 }
 
@@ -114,7 +120,12 @@ int rxvm_prepare(struct rxvm_context* ctx) {
 
 int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) {
     int rc;
-    value* ret_val = value_f();
+    rxvm_memory_worker *previous = rxvm_memory_enter(ctx->memory_worker);
+    value* ret_val = value_f_in(ctx->memory_worker);
+    if (!ret_val) {
+        rxvm_memory_leave(previous);
+        return -1;
+    }
     ctx->ext_ret = ret_val;
 
     if (proc_name && strcmp(proc_name, "main") != 0) {
@@ -123,33 +134,42 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
             int i;
             ctx->ext_proc = p;
             ctx->ext_argc = argc;
-            ctx->ext_args = malloc(sizeof(value*) * argc);
+            ctx->ext_args = argc > 0
+                ? rxvm_memory_alloc_bytes(ctx->memory_worker,
+                                          sizeof(value*) * (size_t)argc)
+                : NULL;
+            if (argc > 0 && !ctx->ext_args) {
+                ctx->ext_argc = 0;
+                ctx->ext_proc = NULL;
+                value_free(ret_val);
+                ctx->ext_ret = NULL;
+                rxvm_memory_leave(previous);
+                return -1;
+            }
             for (i = 0; i < argc; i++) {
-                ctx->ext_args[i] = value_f();
+                ctx->ext_args[i] = value_f_in(ctx->memory_worker);
                 if (set_null_string_validated(ctx->ext_args[i], argv[i] ? argv[i] : "") != 0) {
                     int j;
                     fprintf(stderr, "ERROR: Invalid UTF-8 argument\n");
-                    clear_value(ctx->ext_args[i]);
-                    free(ctx->ext_args[i]);
+                    value_free(ctx->ext_args[i]);
                     for (j = 0; j < i; j++) {
-                        clear_value(ctx->ext_args[j]);
-                        free(ctx->ext_args[j]);
+                        value_free(ctx->ext_args[j]);
                     }
-                    free(ctx->ext_args);
+                    (void)rxvm_memory_release(ctx->ext_args);
                     ctx->ext_args = NULL;
                     ctx->ext_argc = 0;
                     ctx->ext_proc = NULL;
-                    clear_value(ret_val);
-                    free(ret_val);
+                    value_free(ret_val);
                     ctx->ext_ret = NULL;
+                    rxvm_memory_leave(previous);
                     return -1;
                 }
             }
         } else {
             fprintf(stderr, "ERROR: Procedure %s not found\n", proc_name);
-            clear_value(ret_val);
-            free(ret_val);
+            value_free(ret_val);
             ctx->ext_ret = NULL;
+            rxvm_memory_leave(previous);
             return -1;
         }
     }
@@ -159,10 +179,9 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
     if (ctx->ext_proc) {
         int i;
         for (i = 0; i < ctx->ext_argc; i++) {
-            clear_value(ctx->ext_args[i]);
-            free(ctx->ext_args[i]);
+            value_free(ctx->ext_args[i]);
         }
-        free(ctx->ext_args);
+        (void)rxvm_memory_release(ctx->ext_args);
         ctx->ext_proc = NULL;
         ctx->ext_argc = 0;
         ctx->ext_args = NULL;
@@ -175,10 +194,10 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
      */
     if (rc == 0 || ret_val->int_value != 0) rc = (int)ret_val->int_value;
 
-    clear_value(ret_val);
-    free(ret_val);
+    value_free(ret_val);
     ctx->ext_ret = NULL;
 
+    rxvm_memory_leave(previous);
     return rc;
 }
 

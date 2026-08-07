@@ -1,0 +1,96 @@
+(lldb) target create "/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v1-v1/bin/rxvm"
+Current executable set to '/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v1-v1/bin/rxvm' (arm64).
+(lldb) settings set -- target.run-args  "/private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin" "/private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/bin/library.rxbin" "-a"
+(lldb) run
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g0d1fe884782f.dirty 20260806
+       System is: macOS
+Process 51134 launched: '/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v1-v1/bin/rxvm' (arm64)
+Process 51134 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+    frame #0: 0x0000000100038da8 rxvm`run + 212320
+rxvm`run:
+->  0x100038da8 <+212320>: strh   w9, [x8]
+    0x100038dac <+212324>: mov    w8, #0x1                  ; =1 
+    0x100038db0 <+212328>: str    x8, [x22, #0x38]
+    0x100038db4 <+212332>: stp    xzr, xzr, [x22, #0x50]
+Target 0: (rxvm) stopped.
+(lldb) register read
+General Purpose Registers:
+        x0 = 0x0000000000000000
+        x1 = 0x0000000b1e840000
+        x2 = 0x0000000000000000
+        x3 = 0x0000000b1e7521b9
+        x4 = 0x00000001000d2963  "%s"
+        x5 = 0x000000016fdfdcd0
+        x6 = 0x000000000000003d
+        x7 = 0xfffff0003ffff800
+        x8 = 0x0000000000000000
+        x9 = 0x0000000000000030
+       x10 = 0x0000000b1eda44e8
+       x11 = 0x0000000100085f88  rxvm`___lldb_unnamed_symbol_100085f88
+       x12 = 0x00000000000000c2
+       x13 = 0x00000000000000c2
+       x14 = 0x0000000000000000
+       x15 = 0x0000000000000000
+       x16 = 0x0000000000000000
+       x17 = 0x000000010067b980
+       x18 = 0x0000000000000000
+       x19 = 0x0000000b1eda6078
+       x20 = 0x0000000000000000
+       x21 = 0x0000000b1eda40a0
+       x22 = 0x0000000b1e7a35e0
+       x23 = 0x0000000b1e752180
+       x24 = 0x0000000b1f1106d0
+       x25 = 0x0000000000000039
+       x26 = 0x0000000b1eda62e8
+       x27 = 0x0000000b1eda4040
+       x28 = 0x0000000b1f1106d0
+        fp = 0x000000016fdfe500
+        lr = 0x0000000100030b3c  rxvm`run + 178932
+        sp = 0x000000016fdfdda0
+        pc = 0x0000000100038da8  rxvm`run + 212320
+      cpsr = 0x80000000
+
+(lldb) disassemble -s `$pc-64` -c 40
+rxvm`run:
+    0x100038d68 <+212256>: orr    x8, x8, x8, lsr #2
+    0x100038d6c <+212260>: orr    x8, x8, x8, lsr #4
+    0x100038d70 <+212264>: orr    x8, x8, x8, lsr #8
+    0x100038d74 <+212268>: orr    x8, x8, x8, lsr #16
+    0x100038d78 <+212272>: orr    x8, x8, x8, lsr #32
+    0x100038d7c <+212276>: add    x1, x8, #0x1
+    0x100038d80 <+212280>: str    x1, [x19, #0x40]
+    0x100038d84 <+212284>: mov    x0, #0x0                  ; =0 
+    0x100038d88 <+212288>: bl     0x1000b69b4               ; rxvm_memory_alloc_bytes
+    0x100038d8c <+212292>: b      0x10003b300               ; <+221880>
+    0x100038d90 <+212296>: cmp    x8, #0x21
+    0x100038d94 <+212300>: b.hs   0x100043bac               ; <+256868>
+    0x100038d98 <+212304>: mov    w1, #0x20                 ; =32 
+    0x100038d9c <+212308>: b      0x100043bc8               ; <+256896>
+    0x100038da0 <+212312>: ldr    x8, [x22, #0x30]
+    0x100038da4 <+212316>: mov    w9, #0x30                 ; =48 
+->  0x100038da8 <+212320>: strh   w9, [x8]
+    0x100038dac <+212324>: mov    w8, #0x1                  ; =1 
+    0x100038db0 <+212328>: str    x8, [x22, #0x38]
+    0x100038db4 <+212332>: stp    xzr, xzr, [x22, #0x50]
+    0x100038db8 <+212336>: str    x8, [x22, #0x48]
+    0x100038dbc <+212340>: mov    w8, #0x3                  ; =3 
+    0x100038dc0 <+212344>: strb   w8, [x22]
+    0x100038dc4 <+212348>: str    xzr, [x22, #0x8]
+    0x100038dc8 <+212352>: b      0x10004fe20               ; <+306648>
+    0x100038dcc <+212356>: orr    x8, x8, x8, lsr #1
+    0x100038dd0 <+212360>: orr    x8, x8, x8, lsr #2
+    0x100038dd4 <+212364>: orr    x8, x8, x8, lsr #4
+    0x100038dd8 <+212368>: orr    x8, x8, x8, lsr #8
+    0x100038ddc <+212372>: orr    x8, x8, x8, lsr #16
+    0x100038de0 <+212376>: orr    x8, x8, x8, lsr #32
+    0x100038de4 <+212380>: add    x1, x8, #0x1
+    0x100038de8 <+212384>: str    x1, [x20, #0x40]
+    0x100038dec <+212388>: mov    x0, #0x0                  ; =0 
+    0x100038df0 <+212392>: bl     0x1000b69b4               ; rxvm_memory_alloc_bytes
+    0x100038df4 <+212396>: b      0x10003b764               ; <+223004>
+    0x100038df8 <+212400>: cmp    x8, #0x21
+    0x100038dfc <+212404>: b.hs   0x1000441a0               ; <+258392>
+    0x100038e00 <+212408>: mov    w1, #0x20                 ; =32 
+    0x100038e04 <+212412>: b      0x1000441bc               ; <+258420>

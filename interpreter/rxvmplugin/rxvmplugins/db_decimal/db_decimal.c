@@ -268,32 +268,13 @@ static long double round_decimal(long double value, size_t significant_digits,
 }
 
 /* Ensure that the decNumber is big enough to hold the number */
-static void EnsureCapacity(value *number) {
+static void EnsureCapacity(decplugin *plugin, value *number) {
     size_t size = sizeof(long double);
-    /* If the value has a rxvmplugin buffer already */
-    if (number->decimal_value) {
-
-        /* If the size is bigger than the current size, reallocate the memory */
-        if (size > number->decimal_buffer_length) {
-            /* Allocate the new memory */
-            void *new_value = realloc(number->decimal_value, size);
-
-            /* If the reallocation was unsuccessful, panic as per crexx standard behavior */
-            if (new_value == NULL) {
-                RX_PANIC_OOM("realloc db_decimal value", size, "decimal value");
-            }
-            number->decimal_value = new_value;
-            number->decimal_buffer_length = size;
-        }
-        number->decimal_value_length = size;
-    }
-    else {
-        /* Allocate the memory for the decNumber */
-        number->decimal_value = malloc(size);
-        number->decimal_buffer_length = size;
-        number->decimal_value_length = size;
-    }
+    if (!plugin->reserve_decimal(number, size))
+        RX_PANIC_OOM("reserve db_decimal sidecar payload", size,
+                     "decimal value");
 }
+
 
 /* Definitions the rxvmplugin functions */
 
@@ -310,22 +291,22 @@ static size_t getRequiredStringSize(decplugin *plugin) {
 static void decimalExtract(decplugin *plugin, char *coefficient,
                            rxinteger *exponent, value *decimal);
 
-static void initLocalStringValue(value *local) {
+static void initLocalStringValue(decplugin *plugin, value *local) {
+    size_t capacity = getRequiredStringSize(plugin);
     memset(local, 0, sizeof(*local));
-    local->string_value = local->small_string_buffer;
-    local->string_buffer_length = sizeof(local->small_string_buffer);
+    if (!plugin->reserve_string(local, capacity))
+        RX_PANIC_OOM("reserve db_decimal temporary string sidecar", capacity,
+                     "decimal formatting");
 }
 
-static void freeLocalStringValue(value *local) {
-    if (local->string_value != local->small_string_buffer) {
-        free(local->string_value);
-    }
+static void freeLocalStringValue(decplugin *plugin, value *local) {
+    plugin->release_value_storage(local);
 }
 
 /* Convert a string to a rxvmplugin number */
 static void decimalFromString(decplugin *plugin, value *result, const char *string) {
     char *endptr;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double *number = result->decimal_value;
     CLEAR_ERRNO;
 
@@ -373,7 +354,7 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
      * lazy backing storage remains allocated with a zero payload length. */
     plugin->base.signal_number = 0;
     plugin->base.signal_string = NULL;
-    if (!number->decimal_value || number->decimal_value_length == 0) {
+    if (!number->decimal_value || rxvm_value_decimal_length(number) == 0) {
         strcpy(string, "nan");
         return;
     }
@@ -401,17 +382,17 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         }
         return;
     }
-    initLocalStringValue(&coefficient_value);
+    initLocalStringValue(plugin, &coefficient_value);
     memset(&exponent_value, 0, sizeof(exponent_value));
-    initLocalStringValue(&formatted_value);
+    initLocalStringValue(plugin, &formatted_value);
     decimalExtract(plugin, coefficient_value.string_value,
                    &exponent_value.int_value, (value*)number);
     coefficient_value.string_length = strlen(coefficient_value.string_value);
     plugin->format_number_components(num_context, &coefficient_value,
                                      &exponent_value, &formatted_value);
     strcpy(string, formatted_value.string_value);
-    freeLocalStringValue(&coefficient_value);
-    freeLocalStringValue(&formatted_value);
+    freeLocalStringValue(plugin, &coefficient_value);
+    freeLocalStringValue(plugin, &formatted_value);
 
     plugin->base.signal_number = 0;
     plugin->base.signal_string = NULL;
@@ -422,7 +403,7 @@ void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
     plugin->base.signal_number = 0;
     plugin->base.signal_string = NULL;
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double *number = result->decimal_value;
     *number = (long double)value;
     *number = round_decimal(*number,
@@ -548,7 +529,7 @@ void decimalFromDouble(decplugin *plugin, value *result, double input) {
     // Otherwise we get lots of trailing "9s" in the result because of double precision limitations.
     // Special case for 0 and -0
     if (input == 0.0) {
-        EnsureCapacity(result);
+        EnsureCapacity(plugin, result);
         long double *number = result->decimal_value;
         if (signbit(input)) {
             *number = -0.0;
@@ -582,7 +563,7 @@ void decimalToDouble(decplugin *plugin, const value *input, double *result) {
 /* Add two rxvmplugin numbers */
 static void decimalAdd(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
 
     number = *(long double*)op1->decimal_value + *(long double*)op2->decimal_value;
@@ -596,7 +577,7 @@ static void decimalAdd(decplugin *plugin, value *result, const value *op1, const
 /* Subtract two rxvmplugin numbers */
 static void decimalSub(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = *(long double*)op1->decimal_value - *(long double*)op2->decimal_value;
     number = round_decimal(number,
@@ -609,7 +590,7 @@ static void decimalSub(decplugin *plugin, value *result, const value *op1, const
 /* Multiply two rxvmplugin numbers */
 static void decimalMul(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = *(long double*)op1->decimal_value * *(long double*)op2->decimal_value;
     number = round_decimal(number,
@@ -622,7 +603,7 @@ static void decimalMul(decplugin *plugin, value *result, const value *op1, const
 /* Divide two rxvmplugin numbers */
 static void decimalDiv(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = *(long double*)op1->decimal_value / *(long double*)op2->decimal_value;
     number = round_decimal(number,
@@ -635,7 +616,7 @@ static void decimalDiv(decplugin *plugin, value *result, const value *op1, const
 /* Power two rxvmplugin numbers */
 static void decimalPow(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = powl(*(long double*)op1->decimal_value, *(long double*)op2->decimal_value);
     number = round_decimal(number,
@@ -649,7 +630,7 @@ static void decimalPow(decplugin *plugin, value *result, const value *op1, const
 static void decimalNeg(decplugin *plugin, value *result, const value *op1) {
     CLEAR_ERRNO;
     if (result->decimal_value != op1->decimal_value)
-        EnsureCapacity(result);
+        EnsureCapacity(plugin, result);
     long double *op = op1->decimal_value;
     long double number;
     if (*op == 0.0L) {
@@ -861,7 +842,7 @@ static int decimalIsZero(decplugin *plugin, const value *number) {
 /* Truncate the decimal value to an integer */
 static void decimalTruncate(decplugin *plugin, value *result, const value *op1) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number = *(long double*)op1->decimal_value;
     // Truncate the decimal part
     number = truncl(number);
@@ -875,7 +856,7 @@ static void decimalTruncate(decplugin *plugin, value *result, const value *op1) 
 /* Round the decimal value to the nearest integer */
 static void decimalRound(decplugin *plugin, value *result, const value *op1) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number = *(long double*)op1->decimal_value;
     // Round to the nearest integer
     number = roundl(number);

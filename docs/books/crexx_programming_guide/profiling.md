@@ -22,8 +22,11 @@ cmake -S . -B cmake-build-profile \
   -DCMAKE_BUILD_TYPE=Release \
   -DCREXX_VM_PROFILING=ON
 cmake --build cmake-build-profile --config Release \
-  --target rxvm rxbvm rxvme rxbvme rxseq rxas
+  --target rxvm rxbvm rxtvm rxvme rxbvme rxseq rxas
 ```
+
+Omit `rxtvm` from that command for MSVC or another compiler without GNU-style
+labels-as-values support.
 
 The profiling option is off by default. When it is off, the instrumentation
 hooks compile to no code: the normal VM has no profiling branches, state, or
@@ -35,14 +38,15 @@ Executable locations depend on the CMake generator and platform. The examples
 below assume the profiling-build executables are installed or otherwise on
 `PATH`.
 
-All four command-line VM variants expose the same profiling options:
+All command-line VM variants expose the same profiling options:
 
 | VM | Execution mode | Runtime library |
 |---|---|---|
-| `rxvm` | threaded VM | load required RXBIN modules explicitly |
-| `rxbvm` | bytecode VM | load required RXBIN modules explicitly |
-| `rxvme` | threaded VM | standard library embedded |
-| `rxbvme` | bytecode VM | standard library embedded |
+| `rxvm` | compiler-selected product VM | load required RXBIN modules explicitly |
+| `rxbvm` | switch-dispatch VM | load required RXBIN modules explicitly |
+| `rxtvm` | direct-threaded VM, where supported | load required RXBIN modules explicitly |
+| `rxvme` | compiler-selected product VM | standard library embedded |
+| `rxbvme` | switch-dispatch VM | standard library embedded |
 
 Use the same VM variant when comparing profiles. Differences between VM modes
 are often exactly what the instruction and transition views reveal.

@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run matrix_test.rxbin with the matrix plugin, full test sample
 add_test(NAME matrix_test
-        COMMAND $<TARGET_FILE:rxvm> matrix_test rx_matrix ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} matrix_test rx_matrix ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

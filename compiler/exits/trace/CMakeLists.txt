@@ -160,6 +160,11 @@ function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
         endif()
         list(LENGTH _vm_targets _vm_target_count)
         foreach(_vm_target IN LISTS _vm_targets)
+            if(_vm_target STREQUAL "rxvm")
+                set(_vm_executable "${CREXX_RXVM_EXECUTABLE}")
+            else()
+                set(_vm_executable "$<TARGET_FILE:${_vm_target}>")
+            endif()
             set(_test_name ${TARGET_NAME}_${_mode})
             set(_work_name ${_base}_work)
             if(_vm_target_count GREATER 1)
@@ -169,7 +174,7 @@ function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
             add_test(
                     NAME ${_test_name}
                     COMMAND ${CMAKE_COMMAND}
-                            -DRXVM=$<TARGET_FILE:${_vm_target}>
+                            -DRXVM=${_vm_executable}
                             -DRXBIN=${_output}
                             -DEXTRA_RXBINS=${_extra_rxbin_arg}
                             -DLIBRPATH=${LIBRPATH}
@@ -234,7 +239,7 @@ crexx_add_trace_capture_test(
         test_trace_event_batch
         test_trace_event_batch.crexx
         EXPECT_STDOUT_REGEX ">=>[ ]+\"41\"[\r\n]+[ ]*>V>[ ]+\"41\""
-        VM_TARGETS rxvm rxbvm
+        VM_TARGETS rxvm
 )
 
 crexx_add_trace_capture_test(

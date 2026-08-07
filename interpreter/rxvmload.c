@@ -25,6 +25,7 @@
 /* CREXX Module Loader */
 
 #include <stdlib.h>
+#include <inttypes.h>
 #include "rxvmintp.h"
 #include "rxastree.h"
 #include "rxvmvars.h"
@@ -102,10 +103,149 @@ static void free_interface_method_registry(rxvm_context *context);
 static void build_module_runtime_procedures(module *mod);
 static void build_module_dynamic_site_caches(module *mod);
 
+static void *rxvm_load_memory_alloc(rxvm_memory_worker *worker, size_t size) {
+    return rxvm_memory_alloc_bytes(worker, size);
+}
+
+static char *rxvm_load_memory_strdup(rxvm_memory_worker *worker,
+                                     const char *text) {
+    size_t length;
+    char *copy;
+    if (!text) text = "";
+    length = strlen(text);
+    copy = rxvm_load_memory_alloc(worker, length + 1u);
+    if (copy) memcpy(copy, text, length + 1u);
+    return copy;
+}
+
+static void rxvm_load_memory_free(void *pointer) {
+    rxvm_memory_worker *previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(rxvm_memory_owner(pointer));
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
+
+static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
+    static const char *class_names[RXVM_MEMORY_CLASS_COUNT] = {
+        "byte16", "byte32", "byte64", "byte128", "byte256", "byte512",
+        "byte1024", "byte2048", "byte4096", "byte8192", "byte16384",
+        "value1", "value2", "value4", "value8", "value16", "value32",
+        "value64", "reference"
+    };
+    rxvm_memory_stats stats;
+    const char *enabled = getenv("CREXX_RXVM_MEMORY_STATS");
+    size_t retained_slab_bytes;
+    uint64_t internal_fragmentation_bytes;
+    size_t class_id;
+
+    if (!enabled || !*enabled || strcmp(enabled, "0") == 0) return;
+    rxvm_memory_get_stats(context, &stats);
+    retained_slab_bytes = (size_t)(stats.standard_slabs_owned +
+                                   stats.standard_slabs_reserved) *
+                          RXVM_MEMORY_SLAB_SIZE;
+    internal_fragmentation_bytes =
+            stats.cumulative_capacity_bytes >= stats.cumulative_requested_bytes
+            ? stats.cumulative_capacity_bytes -
+              stats.cumulative_requested_bytes
+            : 0u;
+
+    fprintf(stderr,
+            "RXVM_MEMORY_STATS version=1 allocations=%" PRIu64
+            " frees=%" PRIu64 " reallocations=%" PRIu64
+            " failures=%" PRIu64 " invalid_frees=%" PRIu64
+            " wrong_owner_frees=%" PRIu64
+            " requested_bytes=%" PRIu64 " capacity_bytes=%" PRIu64
+            " internal_fragmentation_bytes=%" PRIu64
+            " live_allocations=%" PRIu64
+            " peak_live_allocations=%" PRIu64
+            " live_capacity_bytes=%" PRIu64
+            " peak_live_capacity_bytes=%" PRIu64
+            " oversized_live_allocations=%" PRIu64
+            " oversized_live_bytes=%" PRIu64
+            " slabs_owned=%" PRIu64 " slabs_reserved=%" PRIu64
+            " retained_slab_bytes=%zu slabs_from_system=%" PRIu64
+            " slabs_to_system=%" PRIu64 " depot_refills=%" PRIu64
+            " depot_returns=%" PRIu64 " depot_hits=%" PRIu64
+            " trim_calls=%" PRIu64 "\n",
+            stats.allocation_calls, stats.free_calls,
+            stats.reallocation_calls, stats.allocation_failures,
+            stats.invalid_frees, stats.wrong_owner_frees,
+            stats.cumulative_requested_bytes,
+            stats.cumulative_capacity_bytes, internal_fragmentation_bytes,
+            stats.live_allocations, stats.peak_live_allocations,
+            stats.live_capacity_bytes, stats.peak_live_capacity_bytes,
+            stats.oversized_live_allocations, stats.oversized_live_bytes,
+            stats.standard_slabs_owned, stats.standard_slabs_reserved,
+            retained_slab_bytes, stats.standard_slabs_from_system,
+            stats.standard_slabs_to_system, stats.depot_refills,
+            stats.depot_returns, stats.depot_hits, stats.trim_calls);
+
+    fputs("RXVM_MEMORY_CLASS_STATS version=1 allocation_calls=", stderr);
+    for (class_id = 0; class_id < RXVM_MEMORY_CLASS_COUNT; class_id++) {
+        fprintf(stderr, "%s%s:%" PRIu64,
+                class_id ? "," : "", class_names[class_id],
+                stats.class_allocation_calls[class_id]);
+    }
+    fputs(" peak_live=", stderr);
+    for (class_id = 0; class_id < RXVM_MEMORY_CLASS_COUNT; class_id++) {
+        fprintf(stderr, "%s%s:%" PRIu64,
+                class_id ? "," : "", class_names[class_id],
+                stats.class_peak_live_allocations[class_id]);
+    }
+    fputc('\n', stderr);
+#ifdef CREXX_VM_MEMORY_CENSUS
+    {
+        int first_histogram_entry = 1;
+        fprintf(stderr,
+                "RXVM_MEMORY_OVERSIZED_STATS version=1 allocations=%" PRIu64
+                " requested_bytes=%" PRIu64 " max_request_bytes=%" PRIu64
+                " peak_live_allocations=%" PRIu64
+                " peak_live_bytes=%" PRIu64
+                " resize_standard_to_oversized=%" PRIu64
+                " resize_oversized_to_standard=%" PRIu64
+                " resize_oversized_to_oversized=%" PRIu64
+                " request_histogram=",
+                stats.oversized_allocation_calls,
+                stats.cumulative_oversized_requested_bytes,
+                stats.maximum_oversized_request_bytes,
+                stats.peak_oversized_live_allocations,
+                stats.peak_oversized_live_bytes,
+                stats.resize_standard_to_oversized,
+                stats.resize_oversized_to_standard,
+                stats.resize_oversized_to_oversized);
+        for (class_id = 0;
+             class_id < RXVM_MEMORY_SIZE_HISTOGRAM_BUCKETS; class_id++) {
+            uint64_t count = stats.oversized_request_histogram[class_id];
+            uint64_t upper;
+            if (!count) continue;
+            if (!class_id) upper = 0;
+            else if (class_id >= 65u) upper = UINT64_MAX;
+            else upper = UINT64_C(1) << (class_id - 1u);
+            fprintf(stderr, "%s%" PRIu64 ":%" PRIu64,
+                    first_histogram_entry ? "" : ",", upper, count);
+            first_histogram_entry = 0;
+        }
+        fputc('\n', stderr);
+    }
+#endif
+}
+
 // End of RXPA Declarations for this file
 
 /* Initialise modules context */
 void rxinimod(rxvm_context *context) {
+    context->memory_context = rxvm_memory_context_create();
+    if (!context->memory_context) {
+        RX_PANIC_OOM("create rxvm memory context", 1, 0);
+    }
+    context->memory_worker =
+            rxvm_memory_worker_create(context->memory_context);
+    if (!context->memory_worker) {
+        (void)rxvm_memory_context_destroy(context->memory_context);
+        context->memory_context = 0;
+        RX_PANIC_OOM("create rxvm memory worker", 1, 0);
+    }
     context->num_modules = 0;
     context->exposed_proc_tree = 0;
     context->exposed_reg_tree = 0;
@@ -139,7 +279,9 @@ void rxinimod(rxvm_context *context) {
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
-    context->modules = malloc(sizeof(module*) * context->module_buffer_size);
+    context->modules = rxvm_memory_alloc_bytes(
+            context->memory_worker,
+            sizeof(module*) * context->module_buffer_size);
     if (!context->modules) {
         RX_PANIC_OOM("malloc rxvm module table",
                      sizeof(module*) * context->module_buffer_size, 0);
@@ -149,6 +291,11 @@ void rxinimod(rxvm_context *context) {
 /* Free Module Context */
 void rxfremod(rxvm_context *context) {
     int j, k;
+    size_t memory_leaks;
+    rxvm_memory_worker *previous_memory_worker;
+
+    if (!context) return;
+    previous_memory_worker = rxvm_memory_enter(context->memory_worker);
 
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
@@ -189,23 +336,44 @@ void rxfremod(rxvm_context *context) {
             context->modules[j]->globals_dont_free = 0;
             for (k = 0; k < temp_count; k++) {
                 if (temp_globals[k] && (!temp_dont_free || !temp_dont_free[k])) {
-                    clear_value(temp_globals[k]);
-                    free(temp_globals[k]);
+                    value_free(temp_globals[k]);
                 }
             }
-            free(temp_globals);
-            if (temp_dont_free) free(temp_dont_free);
+            (void)rxvm_memory_release(temp_globals);
+            if (temp_dont_free) (void)rxvm_memory_release(temp_dont_free);
         }
-        if (context->modules[j]->execution_image) free(context->modules[j]->execution_image);
-        free(context->modules[j]->dynamic_site_cache_slots);
-        free(context->modules[j]->dynamic_site_caches);
-        if (context->modules[j]->proc_runtime_lookup) free(context->modules[j]->proc_runtime_lookup);
-        if (context->modules[j]->procedures) free(context->modules[j]->procedures);
-        free(context->modules[j]);
+        if (context->modules[j]->execution_image)
+            (void)rxvm_memory_release(context->modules[j]->execution_image);
+        (void)rxvm_memory_release(context->modules[j]->dynamic_site_cache_slots);
+        (void)rxvm_memory_release(context->modules[j]->dynamic_site_caches);
+        if (context->modules[j]->proc_runtime_lookup)
+            (void)rxvm_memory_release(context->modules[j]->proc_runtime_lookup);
+        if (context->modules[j]->procedures)
+            (void)rxvm_memory_release(context->modules[j]->procedures);
+        (void)rxvm_memory_release(context->modules[j]);
     }
-    free(context->modules);
+    (void)rxvm_memory_release(context->modules);
     rxvm_reference_context_free(&context->references);
     if (context->location) free(context->location);
+
+    rxvm_memory_report_if_requested(context->memory_context);
+
+    rxvm_memory_leave(previous_memory_worker == context->memory_worker ?
+                      0 : previous_memory_worker);
+    memory_leaks = rxvm_memory_worker_destroy(context->memory_worker);
+    context->memory_worker = 0;
+    memory_leaks += rxvm_memory_context_destroy(context->memory_context);
+    context->memory_context = 0;
+#ifndef NDEBUG
+    if (memory_leaks) {
+        fprintf(stderr,
+                "RXVM memory teardown detected %zu live allocation(s)\n",
+                memory_leaks);
+        abort();
+    }
+#else
+    (void)memory_leaks;
+#endif
 }
 
 static void free_interface_factory_registry(rxvm_context *context) {
@@ -220,14 +388,14 @@ static void free_interface_factory_registry(rxvm_context *context) {
     }
 
     for (i = 0; i < context->num_interface_factories; i++) {
-        free(context->interface_factories[i].interface_name);
-        free(context->interface_factories[i].factory_name);
-        free(context->interface_factories[i].descriptor);
+        (void)rxvm_memory_release(context->interface_factories[i].interface_name);
+        (void)rxvm_memory_release(context->interface_factories[i].factory_name);
+        (void)rxvm_memory_release(context->interface_factories[i].descriptor);
         rx_sig_free(&context->interface_factories[i].signature);
-        free(context->interface_factories[i].class_name);
+        (void)rxvm_memory_release(context->interface_factories[i].class_name);
     }
 
-    free(context->interface_factories);
+    (void)rxvm_memory_release(context->interface_factories);
     context->interface_factories = 0;
     context->num_interface_factories = 0;
     context->interface_factory_capacity = 0;
@@ -245,11 +413,11 @@ static void free_interface_method_registry(rxvm_context *context) {
     }
 
     for (i = 0; i < context->num_interface_methods; i++) {
-        free(context->interface_methods[i].class_name);
-        free(context->interface_methods[i].descriptor);
+        (void)rxvm_memory_release(context->interface_methods[i].class_name);
+        (void)rxvm_memory_release(context->interface_methods[i].descriptor);
     }
 
-    free(context->interface_methods);
+    (void)rxvm_memory_release(context->interface_methods);
     context->interface_methods = 0;
     context->num_interface_methods = 0;
     context->interface_method_capacity = 0;
@@ -290,7 +458,10 @@ static void add_module_runtime_procedure_offset(module *mod, proc_runtime_lookup
 
     if (*count == *capacity) {
         new_capacity = *capacity ? *capacity * 2 : 8;
-        new_lookup = realloc(*lookup, sizeof(proc_runtime_lookup_entry) * new_capacity);
+        new_lookup = rxvm_memory_resize_bytes(
+                mod->memory_worker, *lookup,
+                sizeof(proc_runtime_lookup_entry) * *count,
+                sizeof(proc_runtime_lookup_entry) * new_capacity);
         if (!new_lookup) {
             RX_PANIC_OOM("realloc rxvm procedure runtime lookup",
                          sizeof(proc_runtime_lookup_entry) * new_capacity,
@@ -368,7 +539,8 @@ static void build_module_runtime_procedures(module *mod) {
 
     mod->procedure_count = mod->proc_runtime_lookup_size;
     if (mod->procedure_count) {
-        mod->procedures = calloc(mod->procedure_count, sizeof(proc_runtime));
+        mod->procedures = rxvm_memory_calloc_bytes(
+                mod->memory_worker, mod->procedure_count, sizeof(proc_runtime));
         if (!mod->procedures) {
             RX_PANIC_OOM("calloc rxvm procedure runtime table",
                          mod->procedure_count * sizeof(proc_runtime),
@@ -412,10 +584,12 @@ static void build_module_dynamic_site_caches(module *mod) {
         cache_count > SIZE_MAX / sizeof(*mod->dynamic_site_caches)) {
         RX_PANIC_OOM("size rxvm dynamic-site caches", (size_t)-1, mod->name);
     }
-    mod->dynamic_site_cache_slots = (uint32_t *)malloc(
+    mod->dynamic_site_cache_slots = (uint32_t *)rxvm_memory_alloc_bytes(
+        mod->memory_worker,
         mod->segment.inst_size * sizeof(*mod->dynamic_site_cache_slots));
-    mod->dynamic_site_caches = (rxvm_dynamic_site_cache *)calloc(
-        cache_count, sizeof(*mod->dynamic_site_caches));
+    mod->dynamic_site_caches = (rxvm_dynamic_site_cache *)
+        rxvm_memory_calloc_bytes(mod->memory_worker, cache_count,
+                                 sizeof(*mod->dynamic_site_caches));
     if (!mod->dynamic_site_cache_slots || !mod->dynamic_site_caches) {
         RX_PANIC_OOM("allocate rxvm dynamic-site caches",
                      mod->segment.inst_size * sizeof(*mod->dynamic_site_cache_slots) +
@@ -474,7 +648,7 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                     /* Need to initialise a register and expose it in the search tree */
                     context->modules[mod_index]
                             ->globals[((expose_reg_constant *) c_entry)
-                            ->global_reg] = value_f();
+                            ->global_reg] = value_f_in(context->memory_worker);
                     add_node(&context->exposed_reg_tree, ((expose_reg_constant *)c_entry)->index,
                              (size_t)(context->modules[mod_index]
                                      ->globals[((expose_reg_constant *)c_entry)
@@ -556,7 +730,8 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
     mod_index = module_number_to_link;
     for (i = 0; i < context->modules[mod_index]->segment.globals; i++) {
         if (!context->modules[mod_index]->globals[i]) {
-            context->modules[mod_index]->globals[i] = value_f();
+            context->modules[mod_index]->globals[i] =
+                    value_f_in(context->memory_worker);
         }
     }
 
@@ -573,7 +748,10 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     /* Grow the module buffer if need be */
     while (n + 1 > context->module_buffer_size) {
         context->module_buffer_size *= 2;
-        new_buffer = realloc(context->modules, sizeof(module*) * context->module_buffer_size);
+        new_buffer = rxvm_memory_resize_bytes(
+                context->memory_worker, context->modules,
+                sizeof(module*) * (context->module_buffer_size / 2u),
+                sizeof(module*) * context->module_buffer_size);
         if (!new_buffer) {
             RX_PANIC_OOM("realloc rxvm module table",
                          sizeof(module*) * context->module_buffer_size,
@@ -581,10 +759,12 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
         }
         context->modules = new_buffer;
     }
-    context->modules[n] = malloc(sizeof(module));
+    context->modules[n] = rxvm_memory_alloc_bytes(context->memory_worker,
+                                                  sizeof(module));
     if (!context->modules[n]) {
         RX_PANIC_OOM("malloc rxvm module", sizeof(module), file_module_section->name);
     }
+    context->modules[n]->memory_worker = context->memory_worker;
     context->modules[n]->segment.globals = file_module_section->header.globals;
     context->modules[n]->segment.inst_size = file_module_section->header.instruction_size;
     context->modules[n]->segment.const_size = file_module_section->header.constant_size;
@@ -596,13 +776,17 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->proc_head = file_module_section->header.proc_head;
     context->modules[n]->expose_head = file_module_section->header.expose_head;
     context->modules[n]->meta_head = file_module_section->header.meta_head;
-    context->modules[n]->globals = calloc(context->modules[n]->segment.globals, sizeof(value*));
+    context->modules[n]->globals = rxvm_memory_calloc_bytes(
+            context->memory_worker, context->modules[n]->segment.globals,
+            sizeof(value*));
     if (!context->modules[n]->globals && context->modules[n]->segment.globals) {
         RX_PANIC_OOM("calloc rxvm module globals",
                      (size_t)context->modules[n]->segment.globals * sizeof(value*),
                      file_module_section->name);
     }
-    context->modules[n]->globals_dont_free = calloc(context->modules[n]->segment.globals, sizeof(char));
+    context->modules[n]->globals_dont_free = rxvm_memory_calloc_bytes(
+            context->memory_worker, context->modules[n]->segment.globals,
+            sizeof(char));
     if (!context->modules[n]->globals_dont_free && context->modules[n]->segment.globals) {
         RX_PANIC_OOM("calloc rxvm module globals ownership map",
                      (size_t)context->modules[n]->segment.globals * sizeof(char),
@@ -672,7 +856,10 @@ int rxldmod(rxvm_context *context, char *file_name) {
         if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found module %s (as absolute path)\n", file_name);
         file_exists = 1;
     } else if (location) {
-        char *loc_copy = strdup(location);
+        char *loc_copy = rxvm_load_memory_strdup(context->memory_worker,
+                                                 location);
+        if (!loc_copy) RX_PANIC_OOM("copy rxvm module location",
+                                    strlen(location) + 1u, location);
         char *token = strtok(loc_copy, ";");
         while (token) {
             if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in location %s\n", file_name, token);
@@ -684,7 +871,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             }
             token = strtok(NULL, ";");
         }
-        free(loc_copy);
+        rxvm_load_memory_free(loc_copy);
     } else {
         // Try as a relative path from the current working directory
         if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in current directory\n", file_name);
@@ -745,7 +932,10 @@ int rxldmod(rxvm_context *context, char *file_name) {
             if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found plugin %s (as absolute path)\n", file_name);
             file_exists = 1;
         } else if (location) {
-            char *loc_copy = strdup(location);
+            char *loc_copy = rxvm_load_memory_strdup(context->memory_worker,
+                                                     location);
+            if (!loc_copy) RX_PANIC_OOM("copy rxvm plugin location",
+                                        strlen(location) + 1u, location);
             char *token = strtok(loc_copy, ";");
             while (token) {
                 if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in location %s\n", file_name, token);
@@ -757,7 +947,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
                 }
                 token = strtok(NULL, ";");
             }
-            free(loc_copy);
+            rxvm_load_memory_free(loc_copy);
         } else {
             // Try as a relative path from the current working directory
             if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in current directory\n", file_name);
@@ -801,7 +991,12 @@ int rxldmod(rxvm_context *context, char *file_name) {
 
             // Load the plugin - and run the plugin initialization function
             // Create the filename by appending ".rxplugin" to the file name
-            char *full_file_name = malloc(strlen(file_name) + strlen(".rxplugin") + 1);
+            size_t full_file_name_size =
+                    strlen(file_name) + strlen(".rxplugin") + 1u;
+            char *full_file_name = rxvm_load_memory_alloc(
+                    context->memory_worker, full_file_name_size);
+            if (!full_file_name) RX_PANIC_OOM("build rxpa plugin filename",
+                                               full_file_name_size, file_name);
             sprintf(full_file_name, "%s.rxplugin", file_name);
 
             // Create rxpa_context and module for the addfunc callback
@@ -820,7 +1015,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
 
             // Load the plugin
             int rc = load_plugin(&rxpa_functions, found_location[0] ? found_location : 0, full_file_name);
-            free(full_file_name);
+            rxvm_load_memory_free(full_file_name);
 
             // Check Result
             if (!rc) {
@@ -891,12 +1086,16 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
 static void free_rxpa_context(rxpa_context *context)
 {
     if (context->plugin_being_loaded) free_module(context->plugin_being_loaded);
-    free(context);
+    rxvm_load_memory_free(context);
 }
 
 // Create a new RXPA context for a module
 static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context) {
-    rxpa_context *new_rxpa_context = malloc(sizeof(rxpa_context));
+    rxpa_context *new_rxpa_context = rxvm_load_memory_alloc(
+            rxvm_context->memory_worker, sizeof(rxpa_context));
+    if (!new_rxpa_context) {
+        RX_PANIC_OOM("allocate rxpa context", sizeof(rxpa_context), 0);
+    }
     new_rxpa_context->rxvm_context = rxvm_context;
     new_rxpa_context->const_buffer_size = 0;
     new_rxpa_context->const_buffer_top = 0;
@@ -1118,7 +1317,13 @@ void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char*
     }
     else {
         // Add to the list of statically linked functions
-        struct static_linked_function *new_static_func = malloc(sizeof(struct static_linked_function));
+        struct static_linked_function *new_static_func =
+                rxvm_memory_alloc_unowned_bytes(
+                        sizeof(struct static_linked_function));
+        if (!new_static_func) {
+            RX_PANIC_OOM("allocate static rxpa function",
+                         sizeof(struct static_linked_function), name);
+        }
         new_static_func->name = name;
         new_static_func->func = func;
         new_static_func->next = static_linked_functions;
@@ -1129,7 +1334,13 @@ void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char*
 static void append_static_metadata(char *kind, char *symbol, char *option, char *type,
                                    char *interface_symbol, char *owner, char *member_kind,
                                    char *member, char *args) {
-    struct static_linked_metadata *new_meta = malloc(sizeof(struct static_linked_metadata));
+    struct static_linked_metadata *new_meta =
+            rxvm_memory_alloc_unowned_bytes(
+                    sizeof(struct static_linked_metadata));
+    if (!new_meta) {
+        RX_PANIC_OOM("allocate static rxpa metadata",
+                     sizeof(struct static_linked_metadata), symbol);
+    }
 
     new_meta->kind = kind;
     new_meta->symbol = symbol;
@@ -1270,12 +1481,12 @@ int rxldmodp(rxvm_context *context) {
     // Delete Static Function List
     while (static_linked_functions) {
         struct static_linked_function *next = static_linked_functions->next;
-        free(static_linked_functions);
+        rxvm_load_memory_free(static_linked_functions);
         static_linked_functions = next;
     }
     while (static_linked_metadata) {
         struct static_linked_metadata *next = static_linked_metadata->next;
-        free(static_linked_metadata);
+        rxvm_load_memory_free(static_linked_metadata);
         static_linked_metadata = next;
     }
 

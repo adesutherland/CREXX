@@ -40,7 +40,7 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
 
         add_test(
                 NAME ${TARGET_NAME}_${_mode}
-                COMMAND $<TARGET_FILE:rxvm> ${CREXX_RUN_PREFIX} ${_output} ${CREXX_RUN_SUFFIX}
+                COMMAND ${CREXX_RXVM_EXECUTABLE} ${CREXX_RUN_PREFIX} ${_output} ${CREXX_RUN_SUFFIX}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
 

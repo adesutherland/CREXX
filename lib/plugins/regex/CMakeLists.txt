@@ -32,6 +32,6 @@ enable_testing()
 
 # Basic test to run regex_test.rxbin with the regex plugin
 add_test(NAME regex_test
-        COMMAND $<TARGET_FILE:rxvm> regex_test rx_regex ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} regex_test rx_regex ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

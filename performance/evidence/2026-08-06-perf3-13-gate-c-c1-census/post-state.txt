@@ -1,0 +1,33 @@
+Gate C C1 final post-state
+utc=2026-08-06T10:49:53Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	91%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+4fe6012469bae1f539fe74ce794c7a28fba03ca2
+ M interpreter/CMakeLists.txt
+ M interpreter/rxvminstrument_profile.h
+ M interpreter/rxvmintp.c
+ M interpreter/rxvml.c
+ M interpreter/rxvmload.c
+ M interpreter/rxvmmemory.c
+ M interpreter/rxvmmemory.h
+ M interpreter/rxvmprofile.c
+ M interpreter/rxvmprofile.h
+ M interpreter/rxvmvars.h
+ M interpreter/tests/check_vm_profile_csv.cmake
+ M interpreter/tests/test_rxvmmemory.c
+ M performance/PERF3-13-WORKLIST.md
+ M performance/ROADMAP.md
+?? performance/evidence/2026-08-06-perf3-13-gate-c-c1-census/
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+CREXX_VM_INLINE_POLICY:STRING=forced
+CREXX_VM_PROFILING:BOOL=ON
+CREXX_VM_RUN_FLATTEN:BOOL=ON
+8c1069a08c0ba374d6337c981517f792ad2c90583b319de458f889562358b128  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v0-census/bin/rxbvm
+75e5199c53b692b327beaf1cebeede07f0fac9d2c6f9658e96ac792406b5376e  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v0-census/bin/rxtvm

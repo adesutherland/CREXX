@@ -72,6 +72,13 @@ struct decplugin {
     void (*number_to_simple_format)(const char *input, char *output);
     // Function to create formated output from coefficient and exponent values
     void (*format_number_components)(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
+    /* Tightly coupled host service: allocate/resize the co-allocated decimal
+     * header and payload in the register owner's allocator family. */
+    void *(*reserve_decimal)(value *number, size_t size);
+    /* Host-owned temporary value services keep plugin-created string sidecars
+     * in the same allocator family as VM registers. */
+    void *(*reserve_string)(value *string, size_t size);
+    void (*release_value_storage)(value *value_storage);
 
     // Functions provided by the plugin
     void (*syncNumericContext)(decplugin *plugin); // Sync a numeric context into the plugin (should be called by the client after changing the context)

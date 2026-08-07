@@ -32,7 +32,8 @@ void check_value_state(value* v, const char* file, int line) {
     // 1. Check if char_pos is valid. It can be from 0 to string_chars.
     if (v->string_cache_char_pos > v->string_chars) {
         fprintf(stderr, "VERIFY FAIL (%s:%d): v->string_cache_char_pos (%zu) is out of bounds for v->string_chars (%zu)\n",
-                file, line, v->string_cache_char_pos, v->string_chars);
+                file, line, (size_t)v->string_cache_char_pos,
+                (size_t)v->string_chars);
         exit(1);
     }
 
@@ -40,7 +41,7 @@ void check_value_state(value* v, const char* file, int line) {
     size_t calculated_chars = utf8nlen(v->string_value, v->string_length);
     if (v->string_chars != calculated_chars) {
         fprintf(stderr, "VERIFY FAIL (%s:%d): v->string_chars is %zu but should be %zu\n",
-                file, line, v->string_chars, calculated_chars);
+                file, line, (size_t)v->string_chars, calculated_chars);
         exit(1);
     }
 
@@ -56,8 +57,8 @@ void check_value_state(value* v, const char* file, int line) {
         }
         if (v->string_cache_byte_pos != calculated_pos) {
             fprintf(stderr, "VERIFY FAIL (%s:%d): v->string_cache_byte_pos (%zu) does not match v->string_cache_char_pos (%zu). Expected pos: %zu\n",
-                    file, line, v->string_cache_byte_pos,
-                    v->string_cache_char_pos, calculated_pos);
+                    file, line, (size_t)v->string_cache_byte_pos,
+                    (size_t)v->string_cache_char_pos, calculated_pos);
             exit(1);
         }
     }
@@ -205,12 +206,13 @@ void test_boundary_conditions() {
     const char* test_str = "abc€";
     set_null_string(&v, test_str);
     printf("Testing with string: \"%s\" (length: %zu, chars: %zu)\n",
-           test_str, v.string_length, v.string_chars);
+           test_str, (size_t)v.string_length, (size_t)v.string_chars);
     CHECK_STATE(&v);
 
     // Test 1: Seek to the position right after the last character (char_pos == string_chars).
     // This should be a valid operation.
-    printf("  Testing seek to end position (pos %zu)...\n", v.string_chars);
+    printf("  Testing seek to end position (pos %zu)...\n",
+           (size_t)v.string_chars);
     string_cache_seek_char(&v, v.string_chars);
     CHECK_STATE(&v);
     CHECK_SIZE_EQUAL(v.string_cache_byte_pos, v.string_length,
@@ -219,10 +221,12 @@ void test_boundary_conditions() {
     // Test 2: Seek ONE position beyond the end.
     // THIS IS THE KEY TEST. The original code will read past the buffer, corrupting its
     // internal state. The subsequent CHECK_STATE catches that regression.
-    printf("  Testing seek one-past-end (pos %zu)...\n", v.string_chars + 1);
+    printf("  Testing seek one-past-end (pos %zu)...\n",
+           (size_t)v.string_chars + 1u);
     string_cache_seek_char(&v, v.string_chars + 1);
     printf("  Cache after one-past-end seek: byte=%zu, char=%zu\n",
-           v.string_cache_byte_pos, v.string_cache_char_pos);
+           (size_t)v.string_cache_byte_pos,
+           (size_t)v.string_cache_char_pos);
     CHECK_STATE(&v); // <-- EXPECTED TO FAIL ON ORIGINAL CODE
 
     // Reset for the next test
@@ -230,10 +234,12 @@ void test_boundary_conditions() {
     set_null_string(&v, test_str);
 
     // Test 3: Seek MANY positions beyond the end.
-    printf("  Testing seek many-past-end (pos %zu)...\n", v.string_chars + 5);
+    printf("  Testing seek many-past-end (pos %zu)...\n",
+           (size_t)v.string_chars + 5u);
     string_cache_seek_char(&v, v.string_chars + 5);
     printf("  Cache after many-past-end seek: byte=%zu, char=%zu\n",
-           v.string_cache_byte_pos, v.string_cache_char_pos);
+           (size_t)v.string_cache_byte_pos,
+           (size_t)v.string_cache_char_pos);
     CHECK_STATE(&v); // <-- EXPECTED TO FAIL ON ORIGINAL CODE
 
     clear_value(&v);
@@ -252,13 +258,14 @@ void test_flawed_optimization_trigger() {
     // Use a longer string to make the optimization more likely to be triggered.
     const char* test_str = "a long string to test the seeking logic"; // All ASCII
     set_null_string(&v, test_str);
-    printf("Testing with string of length %zu\n", v.string_chars);
+    printf("Testing with string of length %zu\n", (size_t)v.string_chars);
     CHECK_STATE(&v);
 
     // Position the private cache near the end of the string.
     size_t near_end_pos = v.string_chars - 3;
     string_cache_seek_char(&v, near_end_pos);
-    printf("  Positioned at char %zu. Seeking to invalid pos %zu...\n", near_end_pos, v.string_chars + 1);
+    printf("  Positioned at char %zu. Seeking to invalid pos %zu...\n",
+           near_end_pos, (size_t)v.string_chars + 1u);
     CHECK_STATE(&v);
 
     // Now, from this high position, jump to an invalid position.
@@ -266,7 +273,8 @@ void test_flawed_optimization_trigger() {
     string_cache_seek_char(&v, v.string_chars + 1);
 
     printf("  Cache after high-to-invalid seek: byte=%zu, char=%zu\n",
-           v.string_cache_byte_pos, v.string_cache_char_pos);
+           (size_t)v.string_cache_byte_pos,
+           (size_t)v.string_cache_char_pos);
     CHECK_STATE(&v); // <-- EXPECTED TO FAIL ON ORIGINAL CODE
 
     clear_value(&v);
@@ -361,19 +369,22 @@ void test_binary_buffers() {
 
     CHECK_RC_ZERO(set_binary(&v, initial, sizeof(initial)));
     CHECK_BINARY(&v, initial, sizeof(initial));
-    capacity = v.binary_buffer_length;
+    capacity = RXVM_VALUE_BINARY_CAPACITY(&v);
 
     CHECK_RC_ZERO(set_binary(&v, smaller, sizeof(smaller)));
     CHECK_BINARY(&v, smaller, sizeof(smaller));
-    CHECK_SIZE_EQUAL(v.binary_buffer_length, capacity, "binary_buffer_length after smaller binary write");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_BINARY_CAPACITY(&v), capacity,
+                     "binary capacity after smaller binary write");
 
     CHECK_RC_ZERO(prep_binary_buffer(&v, capacity - 1));
     CHECK_SIZE_EQUAL(v.binary_length, capacity - 1, "binary_length after logical resize inside capacity");
-    CHECK_SIZE_EQUAL(v.binary_buffer_length, capacity, "binary_buffer_length after logical resize inside capacity");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_BINARY_CAPACITY(&v), capacity,
+                     "binary capacity after logical resize inside capacity");
     CHECK_RC_ZERO(prep_binary_buffer(&v, capacity + 1));
     grown_capacity = buffer_size(capacity + 1);
     CHECK_SIZE_EQUAL(v.binary_length, capacity + 1, "binary_length after logical resize beyond capacity");
-    CHECK_SIZE_EQUAL(v.binary_buffer_length, grown_capacity, "binary_buffer_length after logical resize beyond capacity");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_BINARY_CAPACITY(&v), grown_capacity,
+                     "binary capacity after logical resize beyond capacity");
     CHECK_RC_ZERO(set_binary(&v, smaller, sizeof(smaller)));
 
     CHECK_RC_ZERO(append_binary(&v, extra, sizeof(extra)));
@@ -783,11 +794,17 @@ void test_reference_attribute_trim_policy() {
 
     set_num_attributes(&array, 4);
     CHECK_SIZE_EQUAL(array.num_attributes, 4, "trimmed attribute count");
-    CHECK_INT_EQUAL(array.max_num_attributes < large_capacity, 1, "extreme shrink trims capacity");
-    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(first_cell), 1, "active storage remains valid after trim");
-    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(first_cell), array.attributes[0], "active reference retargeted after trim");
-    CHECK_INT_EQUAL(rxvm_reference_cell_target(first_cell) != old_first, 1, "active reference moved to compacted storage");
+    CHECK_SIZE_EQUAL(array.max_num_attributes, large_capacity, "ordinary shrink retains capacity");
+    CHECK_POINTER_EQUAL(array.attributes[0], old_first, "ordinary shrink retains active storage");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(first_cell), 1, "active storage remains valid after shrink");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(first_cell), old_first, "active reference stays in retained storage");
     CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(removed_cell), 0, "removed storage invalidated by shrink");
+
+    reclaim_attribute_storage(&array);
+    CHECK_INT_EQUAL(array.max_num_attributes < large_capacity, 1, "explicit reclamation trims capacity");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(first_cell), 1, "active storage remains valid after reclamation");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(first_cell), array.attributes[0], "active reference retargeted after reclamation");
+    CHECK_INT_EQUAL(rxvm_reference_cell_target(first_cell) != old_first, 1, "active reference moved by reclamation");
 
     clear_value(&array);
     CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(first_cell), 0, "trimmed active storage invalidated by clear");
@@ -841,6 +858,288 @@ void test_reference_lifetime_release_helper() {
     printf("--- Reference Lifetime Release Helper Tests Finished ---\n");
 }
 
+void test_oversized_reuse_policy() {
+    value v;
+    char *ordinary_string;
+    void *ordinary_decimal;
+    void *ordinary_binary;
+    char *oversized_string;
+    void *oversized_decimal;
+    void *oversized_binary;
+    value *oversized_attributes;
+
+    printf("\n--- Running Oversized Reuse Policy Tests ---\n");
+
+    value_init(&v);
+    prep_string_buffer(&v, 8000u);
+    CHECK_POINTER_NOT_NULL(v.string_value, "ordinary string allocation");
+    ordinary_string = v.string_value;
+    ordinary_decimal = rxvm_value_reserve_decimal(&v, 8000u);
+    CHECK_POINTER_NOT_NULL(ordinary_decimal, "ordinary decimal allocation");
+    rxvm_value_set_decimal_length(&v, 1u);
+    CHECK_RC_ZERO(prep_binary_buffer(&v, 8000u));
+    ordinary_binary = v.binary_value;
+
+    value_zero(&v);
+    CHECK_POINTER_EQUAL(v.string_value, ordinary_string,
+                        "ordinary string capacity remains sticky");
+    CHECK_POINTER_EQUAL(rxvm_value_decimal_data(&v), ordinary_decimal,
+                        "ordinary decimal capacity remains sticky");
+    CHECK_POINTER_EQUAL(v.binary_value, ordinary_binary,
+                        "ordinary binary capacity remains sticky");
+
+    prep_string_buffer(&v, RXVM_MEMORY_MAX_STANDARD_SIZE + 1u);
+    CHECK_INT_EQUAL(RXVM_VALUE_STRING_CAPACITY(&v) >
+                            RXVM_MEMORY_MAX_STANDARD_SIZE, 1,
+                    "string grows into oversized extent");
+    CHECK_POINTER_NOT_NULL(
+            rxvm_value_reserve_decimal(
+                    &v, RXVM_MEMORY_MAX_STANDARD_SIZE + 1u),
+            "oversized decimal allocation");
+    rxvm_value_set_decimal_length(&v, 1u);
+    CHECK_RC_ZERO(prep_binary_buffer(
+            &v, RXVM_MEMORY_MAX_STANDARD_SIZE + 1u));
+    CHECK_INT_EQUAL(RXVM_VALUE_BINARY_CAPACITY(&v) >
+                            RXVM_MEMORY_MAX_STANDARD_SIZE, 1,
+                    "binary grows into oversized extent");
+    set_num_attributes(&v, 128u);
+    CHECK_SIZE_EQUAL(rxvm_value_max_attributes(&v), 128u,
+                     "attribute storage grows beyond typed silos");
+    oversized_string = v.string_value;
+    oversized_decimal = rxvm_value_decimal_data(&v);
+    oversized_binary = v.binary_value;
+    oversized_attributes = rxvm_value_attribute_buffers(&v)[0];
+
+    value_zero(&v);
+    CHECK_POINTER_EQUAL(v.string_value, oversized_string,
+                        "oversized string capacity remains sticky");
+    CHECK_INT_EQUAL(RXVM_VALUE_STRING_CAPACITY(&v) >
+                            RXVM_MEMORY_MAX_STANDARD_SIZE, 1,
+                    "oversized string capacity survives logical reset");
+    CHECK_POINTER_EQUAL(rxvm_value_decimal_data(&v), oversized_decimal,
+                        "oversized decimal capacity remains sticky");
+    CHECK_INT_EQUAL(rxvm_value_decimal_capacity(&v) >
+                            RXVM_MEMORY_MAX_STANDARD_SIZE, 1,
+                    "oversized decimal capacity survives logical reset");
+    CHECK_POINTER_EQUAL(v.binary_value, oversized_binary,
+                        "oversized binary capacity remains sticky");
+    CHECK_INT_EQUAL(RXVM_VALUE_BINARY_CAPACITY(&v) >
+                            RXVM_MEMORY_MAX_STANDARD_SIZE, 1,
+                    "oversized binary capacity survives logical reset");
+    CHECK_SIZE_EQUAL(rxvm_value_max_attributes(&v), 128u,
+                     "oversized attribute capacity survives logical reset");
+    CHECK_POINTER_EQUAL(rxvm_value_attribute_buffers(&v)[0],
+                        oversized_attributes,
+                        "oversized attribute storage remains sticky");
+
+    clear_value(&v);
+    printf("--- Oversized Reuse Policy Tests Finished ---\n");
+}
+
+void test_value_layout_and_string_sidecar() {
+    value source;
+    value copy;
+    value moved;
+    char *sticky_buffer;
+
+    printf("\n--- Running Value Layout and String Sidecar Tests ---\n");
+
+    value_init(&source);
+    value_init(&copy);
+    value_init(&moved);
+
+    {
+        size_t expected_size = 192u;
+        expected_size -= 16u;
+        CHECK_SIZE_EQUAL(sizeof(value), expected_size,
+                         "L32SDH value layout size");
+    }
+    CHECK_POINTER_EQUAL(source.string_value, 0,
+                        "L32SDH starts without a string sidecar");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_STRING_CAPACITY(&source), 0u,
+                     "L32SDH starts with zero string capacity");
+    CHECK_SIZE_EQUAL(sizeof(source.string_buffer_length), sizeof(size_t),
+                     "L32S keeps string allocation capacity native-width");
+    CHECK_SIZE_EQUAL(sizeof(source.binary_buffer_length), sizeof(size_t),
+                     "L32S keeps binary allocation capacity native-width");
+    CHECK_SIZE_EQUAL(sizeof(source.binary_length), sizeof(size_t),
+                     "L32S keeps binary actual length native-width");
+    CHECK_SIZE_EQUAL(sizeof(source.string_length), sizeof(uint32_t),
+                     "L32S string logical length is 32-bit");
+#ifndef NUTF8
+    CHECK_SIZE_EQUAL(sizeof(source.string_chars), sizeof(uint32_t),
+                     "L32S string character count is 32-bit");
+    CHECK_SIZE_EQUAL(sizeof(source.string_cache_byte_pos), sizeof(uint32_t),
+                     "L32S UTF byte cache is 32-bit");
+    CHECK_SIZE_EQUAL(sizeof(source.string_cache_char_pos), sizeof(uint32_t),
+                     "L32S UTF character cache is 32-bit");
+#endif
+    CHECK_INT_EQUAL(
+            offsetof(value, string_buffer_length) <
+            offsetof(value, string_length),
+            1,
+            "L32S keeps direct string capacity before packed metrics");
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_length(&source, (size_t)UINT32_MAX),
+            0,
+            "L32S accepts its maximum logical string length");
+    CHECK_SIZE_EQUAL(source.string_length, (size_t)UINT32_MAX,
+                     "L32S stores its maximum logical string length exactly");
+#ifndef NUTF8
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_chars(&source, (size_t)UINT32_MAX),
+            0,
+            "L32S accepts its maximum string character count");
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_cache_byte_pos(
+                    &source, (size_t)UINT32_MAX),
+            0,
+            "L32S accepts its maximum UTF byte cache position");
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_cache_char_pos(
+                    &source, (size_t)UINT32_MAX),
+            0,
+            "L32S accepts its maximum UTF character cache position");
+#endif
+#if SIZE_MAX > UINT32_MAX
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_length(
+                    &source, (size_t)UINT32_MAX + 1u),
+            -1,
+            "L32S rejects an over-wide string length");
+    CHECK_SIZE_EQUAL(source.string_length, (size_t)UINT32_MAX,
+                     "rejected L32S string length leaves the field unchanged");
+    CHECK_INT_EQUAL(
+            set_string_validated(
+                    &source, "", (size_t)UINT32_MAX + 1u),
+            -1,
+            "validated L32S ingress rejects an over-wide logical length");
+    CHECK_SIZE_EQUAL(source.string_length, (size_t)UINT32_MAX,
+                     "rejected validated ingress does not mutate the value");
+#ifndef NUTF8
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_chars(
+                    &source, (size_t)UINT32_MAX + 1u),
+            -1,
+            "L32S rejects an over-wide character count");
+    CHECK_SIZE_EQUAL(source.string_chars, (size_t)UINT32_MAX,
+                     "rejected L32S character count is failure-atomic");
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_cache_byte_pos(
+                    &source, (size_t)UINT32_MAX + 1u),
+            -1,
+            "L32S rejects an over-wide UTF byte cache position");
+    CHECK_SIZE_EQUAL(source.string_cache_byte_pos, (size_t)UINT32_MAX,
+                     "rejected L32S byte cache position is failure-atomic");
+    CHECK_INT_EQUAL(
+            rxvm_value_try_set_string_cache_char_pos(
+                    &source, (size_t)UINT32_MAX + 1u),
+            -1,
+            "L32S rejects an over-wide UTF character cache position");
+    CHECK_SIZE_EQUAL(source.string_cache_char_pos, (size_t)UINT32_MAX,
+                     "rejected L32S character cache position is failure-atomic");
+#endif
+#endif
+#ifndef NUTF8
+    source.string_length = 0;
+    source.string_chars = UINT32_MAX;
+    source.string_cache_byte_pos = 0;
+    source.string_cache_char_pos = UINT32_MAX - 2u;
+    string_cache_seek_char(&source, (size_t)UINT32_MAX - 1u);
+    CHECK_SIZE_EQUAL(source.string_cache_char_pos,
+                     (size_t)UINT32_MAX - 1u,
+                     "L32S UTF seek handles positions above INT_MAX");
+    string_cache_seek_char(&source, (size_t)UINT32_MAX - 3u);
+    CHECK_SIZE_EQUAL(source.string_cache_char_pos,
+                     (size_t)UINT32_MAX - 3u,
+                     "L32S UTF reverse seek avoids signed-difference overflow");
+#endif
+    source.string_length = 0;
+    string_cache_reset(&source);
+#ifndef NUTF8
+    source.string_chars = 0;
+#endif
+
+    set_string(&source, "", 0u);
+    CHECK_POINTER_NOT_NULL(source.string_value,
+                           "first zero-length string prepares storage");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_STRING_CAPACITY(&source),
+                     SMALLEST_STRING_BUFFER_LENGTH,
+                     "first string uses the minimum power-of-two class");
+    sticky_buffer = source.string_value;
+
+    set_null_string(&source, "sticky");
+    CHECK_POINTER_EQUAL(source.string_value, sticky_buffer,
+                        "small string reuses its first buffer");
+    value_zero(&source);
+    CHECK_POINTER_EQUAL(source.string_value, sticky_buffer,
+                        "logical reset keeps the string buffer sticky");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_STRING_CAPACITY(&source),
+                     SMALLEST_STRING_BUFFER_LENGTH,
+                     "logical reset keeps minimum string capacity");
+
+    set_null_string(&source, "moved");
+    copy_string_value(&copy, &source);
+    CHECK_SIZE_EQUAL(copy.string_length, source.string_length,
+                     "string copy preserves length");
+    CHECK_INT_EQUAL(memcmp(copy.string_value, source.string_value,
+                           source.string_length),
+                    0, "string copy preserves bytes");
+    CHECK_INT_EQUAL(copy.string_value != source.string_value, 1,
+                    "V1 copy retains destination-owned storage");
+
+    move_value(&moved, &source);
+    CHECK_SIZE_EQUAL(moved.string_length, 5u,
+                     "string move preserves length");
+    CHECK_INT_EQUAL(memcmp(moved.string_value, "moved", 5u),
+                    0, "string move preserves bytes");
+    CHECK_POINTER_EQUAL(moved.string_value, sticky_buffer,
+                        "V1 move transfers the sidecar without copying");
+    CHECK_POINTER_EQUAL(source.string_value, 0,
+                        "V1 source loses the transferred sidecar");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_STRING_CAPACITY(&source), 0u,
+                     "V1 source resets to zero string capacity");
+
+    clear_value(&source);
+    clear_value(&copy);
+    clear_value(&moved);
+    CHECK_POINTER_EQUAL(moved.string_value, 0,
+                        "V1 destruction releases the string sidecar");
+    CHECK_SIZE_EQUAL(RXVM_VALUE_STRING_CAPACITY(&moved), 0u,
+                     "V1 destruction restores zero string capacity");
+
+    printf("--- Value Layout and String Sidecar Tests Finished ---\n");
+}
+
+void test_integer_zero_string_storage() {
+    numeric_context context = {
+            9, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM,
+            DEFAULT_NUMERIC_CASE, NUMERIC_STANDARD_CLASSIC
+    };
+    value temporary;
+    value output;
+
+    printf("\n--- Running Integer Zero String Storage Test ---\n");
+
+    value_init(&temporary);
+    value_init(&output);
+    output.int_value = 0;
+
+    int_to_string(&context, &temporary, &output);
+
+    CHECK_POINTER_NOT_NULL(output.string_value,
+                           "integer zero conversion prepares string storage");
+    CHECK_SIZE_EQUAL(output.string_length, 1u,
+                     "integer zero conversion string length");
+    CHECK_INT_EQUAL(memcmp(output.string_value, "0", 1u), 0,
+                    "integer zero conversion string bytes");
+
+    clear_value(&temporary);
+    clear_value(&output);
+
+    printf("--- Integer Zero String Storage Test Finished ---\n");
+}
+
 int main() {
     test_string_cache();
     test_boundary_conditions();
@@ -856,6 +1155,9 @@ int main() {
     test_reference_attribute_storage_lifecycle();
     test_reference_attribute_trim_policy();
     test_reference_lifetime_release_helper();
+    test_oversized_reuse_policy();
+    test_value_layout_and_string_sidecar();
+    test_integer_zero_string_storage();
     // Add more tests with other strings (empty, all-ASCII, all-multibyte, etc.)
 
     printf("\nAll tests completed.\n");

@@ -1,0 +1,18 @@
+Test project /tmp/crexx-rxvm-inline.yvLywZ/builds/vm-default-clang-debug
+    Start 1042: rxvmstem_storage
+    Start 1098: rxasdispatchcontract-rxtvm
+    Start 1043: rxvmmemory_allocator
+    Start 1047: ts_regvalue_tester
+    Start 1096: rxasbasictests
+    Start 1041: rxvm_product_entry_point
+    Start 1097: rxasdispatchcontract-rxbvm
+1/7 Test #1042: rxvmstem_storage .................   Passed    0.00 sec
+2/7 Test #1047: ts_regvalue_tester ...............   Passed    0.00 sec
+3/7 Test #1098: rxasdispatchcontract-rxtvm .......   Passed    0.00 sec
+4/7 Test #1041: rxvm_product_entry_point .........   Passed    0.00 sec
+5/7 Test #1097: rxasdispatchcontract-rxbvm .......   Passed    0.01 sec
+6/7 Test #1096: rxasbasictests ...................   Passed    0.01 sec
+7/7 Test #1043: rxvmmemory_allocator .............   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 7
+Total Test time (real) =   0.04 sec

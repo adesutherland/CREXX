@@ -1,0 +1,5 @@
+metric,l32s_control,clean_l32sdh,candidate_minus_control
+value_bytes,192,176,-16
+file_bytes,1001000,1001048,48
+text_bytes,813332,815436,2104
+run_bytes,531180,533456,2276

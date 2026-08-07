@@ -1,0 +1,64 @@
+
+=== s0 ===
+Test project /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s0
+    Start 1043: rxvmmemory_allocator
+1/2 Test #1043: rxvmmemory_allocator .............   Passed    0.00 sec
+    Start 1047: ts_regvalue_tester
+2/2 Test #1047: ts_regvalue_tester ...............   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+interpreter    =   0.00 sec*proc (1 test)
+memory         =   0.00 sec*proc (1 test)
+smoke          =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.03 sec
+
+=== s1 ===
+Test project /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s1
+    Start 1043: rxvmmemory_allocator
+1/2 Test #1043: rxvmmemory_allocator .............   Passed    0.00 sec
+    Start 1047: ts_regvalue_tester
+2/2 Test #1047: ts_regvalue_tester ...............   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+interpreter    =   0.00 sec*proc (1 test)
+memory         =   0.00 sec*proc (1 test)
+smoke          =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.03 sec
+
+=== s1b ===
+Test project /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s1b
+    Start 1043: rxvmmemory_allocator
+1/2 Test #1043: rxvmmemory_allocator .............   Passed    0.00 sec
+    Start 1047: ts_regvalue_tester
+2/2 Test #1047: ts_regvalue_tester ...............   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+interpreter    =   0.00 sec*proc (1 test)
+memory         =   0.00 sec*proc (1 test)
+smoke          =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.03 sec
+
+=== s2 ===
+Test project /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s2
+    Start 1043: rxvmmemory_allocator
+1/2 Test #1043: rxvmmemory_allocator .............   Passed    0.00 sec
+    Start 1047: ts_regvalue_tester
+2/2 Test #1047: ts_regvalue_tester ...............   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+interpreter    =   0.00 sec*proc (1 test)
+memory         =   0.00 sec*proc (1 test)
+smoke          =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.03 sec

@@ -18,6 +18,7 @@ set(REXXBINS
         ts_address_capture.rxbin
         ts_address_argv.rxbin
         ts_address_array_lifecycle.rxbin
+        ts_address_spawn_transfer.rxbin
         ts_binary.rxbin
         ts_c2x.rxbin
         ts_center.rxbin
@@ -147,6 +148,8 @@ if(MINGW)
     target_link_options(address_argv_fixture PRIVATE -municode)
 endif()
 
+add_executable(address_spawn_transfer_fixture address_spawn_transfer_fixture.c)
+
 add_custom_target(testbifs ALL)
 
 set(_loadmodule_provider "${CMAKE_CURRENT_BINARY_DIR}/ts_loadmodule_provider.rxbin")
@@ -190,7 +193,8 @@ foreach(_binfile ${REXXBINS})
             "${_basename}" STREQUAL "ts_address_crexx" OR
             "${_basename}" STREQUAL "ts_address_capture" OR
             "${_basename}" STREQUAL "ts_address_argv" OR
-            "${_basename}" STREQUAL "ts_address_array_lifecycle")
+            "${_basename}" STREQUAL "ts_address_array_lifecycle" OR
+            "${_basename}" STREQUAL "ts_address_spawn_transfer")
         set(_rxc_flags)
     endif()
     set(_pass_test_name_argument)
@@ -213,6 +217,10 @@ foreach(_binfile ${REXXBINS})
     if("${_basename}" STREQUAL "ts_address_argv")
         list(APPEND _extra_depends address_argv_fixture)
         list(APPEND _runtime_args -a $<TARGET_FILE:address_argv_fixture>)
+    endif()
+    if("${_basename}" STREQUAL "ts_address_spawn_transfer")
+        list(APPEND _extra_depends address_spawn_transfer_fixture)
+        list(APPEND _runtime_args -a $<TARGET_FILE:address_spawn_transfer_fixture>)
     endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
@@ -325,6 +333,30 @@ _crexx_register_runtime_test(
         RUNTIME_ARGS ${LIBRPATH}
 )
 
+# PERF3-13 EF-0 retains the spawn ownership reproducer under both concrete VMs
+# and both compiler modes. Each stream exceeds the VM standard-allocation
+# ceiling and the fixture also drives simultaneous input/output/error traffic.
+set(_ef0_concrete_runners rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    list(APPEND _ef0_concrete_runners rxtvm)
+endif()
+set(_ef0_spawn_transfer_tests
+        ts_address_spawn_transfer_noopt
+        ts_address_spawn_transfer_opt)
+foreach(_ef0_runner IN LISTS _ef0_concrete_runners)
+    foreach(_ef0_mode IN ITEMS noopt opt)
+        list(APPEND _ef0_spawn_transfer_tests
+                ts_address_spawn_transfer_${_ef0_runner}_${_ef0_mode})
+        _crexx_register_runtime_test(
+                NAME ts_address_spawn_transfer_${_ef0_runner}_${_ef0_mode}
+                RUNNER ${_ef0_runner}
+                PROGRAM ts_address_spawn_transfer_${_ef0_mode}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                RUNTIME_ARGS ${LIBRPATH} -a $<TARGET_FILE:address_spawn_transfer_fixture>
+        )
+    endforeach()
+endforeach()
+
 # Run each caught-signal sequence in one VM so the harnesses verify that call
 # unwind preserves exposed arrays and object receivers across repeated errors.
 add_custom_target(ts_arraysort_errors)
@@ -365,6 +397,8 @@ set_tests_properties(ts_address_capture_noopt ts_address_capture_opt
 set_tests_properties(ts_address_argv_noopt ts_address_argv_opt
         ts_address_argv_rxbvm_noopt ts_address_argv_rxbvm_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: ADDRESS argv contract")
+set_tests_properties(${_ef0_spawn_transfer_tests}
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: EF-0 spawn transfer contract")
 
 crexx_label_smoke_tests(
         ts_address_noopt

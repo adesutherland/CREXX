@@ -168,7 +168,7 @@ foreach(image IN ITEMS nr09_opt nr09_noopt)
                        "${image} digits-below-five combined context")
 
     assemble_rxbin(${image})
-    foreach(runner_name IN ITEMS rxvm rxbvm)
+    foreach(runner_name IN ITEMS rxvm)
         if(runner_name STREQUAL "rxvm")
             set(runner "${RXVM}")
         else()

@@ -1,0 +1,105 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-control-warmup-1,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,warmup,1,1,5500,1056831000,,0,pass,,
+timing-Sieve-sieve-candidate-warmup-1,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,warmup,1,2,5500,1025278000,,0,pass,,
+timing-Sieve-sieve-control-recorded-1,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,1,1,5500,1040785000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-1,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,1,2,5500,1031579000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-2,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,2,1,5500,1028460000,,0,pass,,
+timing-Sieve-sieve-control-recorded-2,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,2,2,5500,1045571000,,0,pass,,
+timing-Sieve-sieve-control-recorded-3,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,3,1,5500,1041150000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-3,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,3,2,5500,1032151000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-4,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,4,1,5500,1024425000,,0,pass,,
+timing-Sieve-sieve-control-recorded-4,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,4,2,5500,1047914000,,0,pass,,
+timing-Sieve-sieve-control-recorded-5,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,5,1,5500,1041624000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-5,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,5,2,5500,1027015000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-6,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,6,1,5500,1030881000,,0,pass,,
+timing-Sieve-sieve-control-recorded-6,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,6,2,5500,1041529000,,0,pass,,
+timing-Sieve-sieve-control-recorded-7,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,7,1,5500,1050327000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-7,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,7,2,5500,1028405000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-8,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,8,1,5500,1024490000,,0,pass,,
+timing-Sieve-sieve-control-recorded-8,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,8,2,5500,1036543000,,0,pass,,
+timing-Sieve-sieve-control-recorded-9,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,9,1,5500,1061231000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-9,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,9,2,5500,1025891000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-10,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,10,1,5500,1025753000,,0,pass,,
+timing-Sieve-sieve-control-recorded-10,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,10,2,5500,1041724000,,0,pass,,
+timing-Sieve-sieve-control-recorded-11,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,11,1,5500,1036443000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-11,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,11,2,5500,1012176000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-12,timing,Sieve,sieve-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,12,1,5500,1026588000,,0,pass,,
+timing-Sieve-sieve-control-recorded-12,timing,Sieve,sieve-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,12,2,5500,1043048000,,0,pass,,
+timing-Richards-richards-control-warmup-1,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,warmup,1,1,20,2128743000,,0,pass,,
+timing-Richards-richards-candidate-warmup-1,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,warmup,1,2,20,2140553000,,0,pass,,
+timing-Richards-richards-control-recorded-1,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,1,1,20,2090405000,,0,pass,,
+timing-Richards-richards-candidate-recorded-1,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,1,2,20,2094240000,,0,pass,,
+timing-Richards-richards-candidate-recorded-2,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,2,1,20,2078103000,,0,pass,,
+timing-Richards-richards-control-recorded-2,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,2,2,20,2102999000,,0,pass,,
+timing-Richards-richards-control-recorded-3,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,3,1,20,2104460000,,0,pass,,
+timing-Richards-richards-candidate-recorded-3,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,3,2,20,2109068000,,0,pass,,
+timing-Richards-richards-candidate-recorded-4,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,4,1,20,2060815000,,0,pass,,
+timing-Richards-richards-control-recorded-4,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,4,2,20,2138089000,,0,pass,,
+timing-Richards-richards-control-recorded-5,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,5,1,20,2140886000,,0,pass,,
+timing-Richards-richards-candidate-recorded-5,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,5,2,20,2189066000,,0,pass,,
+timing-Richards-richards-candidate-recorded-6,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,6,1,20,2090697000,,0,pass,,
+timing-Richards-richards-control-recorded-6,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,6,2,20,2124906000,,0,pass,,
+timing-Richards-richards-control-recorded-7,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,7,1,20,2078782000,,0,pass,,
+timing-Richards-richards-candidate-recorded-7,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,7,2,20,2063873000,,0,pass,,
+timing-Richards-richards-candidate-recorded-8,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,8,1,20,2079032000,,0,pass,,
+timing-Richards-richards-control-recorded-8,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,8,2,20,2079217000,,0,pass,,
+timing-Richards-richards-control-recorded-9,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,9,1,20,2110807000,,0,pass,,
+timing-Richards-richards-candidate-recorded-9,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,9,2,20,2063902000,,0,pass,,
+timing-Richards-richards-candidate-recorded-10,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,10,1,20,2100288000,,0,pass,,
+timing-Richards-richards-control-recorded-10,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,10,2,20,2097643000,,0,pass,,
+timing-Richards-richards-control-recorded-11,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,11,1,20,2140684000,,0,pass,,
+timing-Richards-richards-candidate-recorded-11,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,11,2,20,2090990000,,0,pass,,
+timing-Richards-richards-candidate-recorded-12,timing,Richards,richards-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,12,1,20,2105822000,,0,pass,,
+timing-Richards-richards-control-recorded-12,timing,Richards,richards-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,12,2,20,2103977000,,0,pass,,
+timing-Towers-towers-control-warmup-1,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,warmup,1,1,100,2105160000,,0,pass,,
+timing-Towers-towers-candidate-warmup-1,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,warmup,1,2,100,2040372000,,0,pass,,
+timing-Towers-towers-control-recorded-1,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,1,1,100,2109939000,,0,pass,,
+timing-Towers-towers-candidate-recorded-1,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,1,2,100,2039022000,,0,pass,,
+timing-Towers-towers-candidate-recorded-2,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,2,1,100,2061775000,,0,pass,,
+timing-Towers-towers-control-recorded-2,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,2,2,100,2112980000,,0,pass,,
+timing-Towers-towers-control-recorded-3,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,3,1,100,2101030000,,0,pass,,
+timing-Towers-towers-candidate-recorded-3,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,3,2,100,2019794000,,0,pass,,
+timing-Towers-towers-candidate-recorded-4,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,4,1,100,2059293000,,0,pass,,
+timing-Towers-towers-control-recorded-4,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,4,2,100,2108129000,,0,pass,,
+timing-Towers-towers-control-recorded-5,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,5,1,100,2154629000,,0,pass,,
+timing-Towers-towers-candidate-recorded-5,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,5,2,100,2023276000,,0,pass,,
+timing-Towers-towers-candidate-recorded-6,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,6,1,100,2042728000,,0,pass,,
+timing-Towers-towers-control-recorded-6,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,6,2,100,2113076000,,0,pass,,
+timing-Towers-towers-control-recorded-7,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,7,1,100,2111957000,,0,pass,,
+timing-Towers-towers-candidate-recorded-7,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,7,2,100,2040864000,,0,pass,,
+timing-Towers-towers-candidate-recorded-8,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,8,1,100,2056343000,,0,pass,,
+timing-Towers-towers-control-recorded-8,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,8,2,100,2095865000,,0,pass,,
+timing-Towers-towers-control-recorded-9,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,9,1,100,2103551000,,0,pass,,
+timing-Towers-towers-candidate-recorded-9,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,9,2,100,2037053000,,0,pass,,
+timing-Towers-towers-candidate-recorded-10,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,10,1,100,2052130000,,0,pass,,
+timing-Towers-towers-control-recorded-10,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,10,2,100,2098147000,,0,pass,,
+timing-Towers-towers-control-recorded-11,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,11,1,100,2110445000,,0,pass,,
+timing-Towers-towers-candidate-recorded-11,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,11,2,100,2177080000,,0,pass,,
+timing-Towers-towers-candidate-recorded-12,timing,Towers,towers-candidate,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,recorded,12,1,100,2038108000,,0,pass,,
+timing-Towers-towers-control-recorded-12,timing,Towers,towers-control,L32S,rxbvm,value-192,A,yes,startup-included,recorded,12,2,100,2107514000,,0,pass,,
+timing-RexxCPS-rexxcps-control-warmup-1,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,warmup,1,1,1000-clauses,1211904000,,0,pass,50494544,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-warmup-1,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,warmup,1,2,1000-clauses,1243801000,,0,pass,49069543,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-1,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,1,1,1000-clauses,1230958000,,0,pass,49778734,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-1,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,1,2,1000-clauses,1217405000,,0,pass,50225714,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-2,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,2,1,1000-clauses,1216444000,,0,pass,50230155,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-2,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,2,2,1000-clauses,1237987000,,0,pass,49397694,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-3,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,3,1,1000-clauses,1235090000,,0,pass,49559957,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-3,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,3,2,1000-clauses,1223444000,,0,pass,49965025,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-4,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,4,1,1000-clauses,1206818000,,0,pass,50680898,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-4,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,4,2,1000-clauses,1234380000,,0,pass,49555487,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-5,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,5,1,1000-clauses,1233277000,,0,pass,49606718,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-5,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,5,2,1000-clauses,1223904000,,0,pass,50018557,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-6,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,6,1,1000-clauses,1219600000,,0,pass,50074110,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-6,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,6,2,1000-clauses,1225133000,,0,pass,49820497,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-7,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,7,1,1000-clauses,1237303000,,0,pass,49410484,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-7,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,7,2,1000-clauses,1218204000,,0,pass,50187198,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-8,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,8,1,1000-clauses,1243854000,,0,pass,49145314,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-8,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,8,2,1000-clauses,1231593000,,0,pass,49654751,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-9,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,9,1,1000-clauses,1234035000,,0,pass,49513824,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-9,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,9,2,1000-clauses,1215773000,,0,pass,50279807,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-10,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,10,1,1000-clauses,1224986000,,0,pass,49946607,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-10,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,10,2,1000-clauses,1240043000,,0,pass,49271666,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-11,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,11,1,1000-clauses,1236310000,,0,pass,49479427,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-11,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,11,2,1000-clauses,1229785000,,0,pass,49793407,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-12,timing,RexxCPS,rexxcps-candidate,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,recorded,12,1,1000-clauses,1223658000,,0,pass,49964226,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-12,timing,RexxCPS,rexxcps-control,L32S,rxbvm,value-192,A,no,startup-included,recorded,12,2,1000-clauses,1239777000,,0,pass,49348647,cREXX clauses per second

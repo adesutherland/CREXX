@@ -79,7 +79,11 @@ static int rxpa_visit_value(rxpa_value_visit_set* visited, value* v) {
 
     if (visited->count == visited->capacity) {
         new_capacity = visited->capacity ? visited->capacity * 2 : 16;
-        items = (value**)realloc(visited->items, new_capacity * sizeof(value*));
+        items = (value**)rxvm_memory_resize_bytes(
+            rxvm_memory_current_worker(),
+            visited->items,
+            visited->count * sizeof(value*),
+            new_capacity * sizeof(value*));
         if (!items) return -1;
         visited->items = items;
         visited->capacity = new_capacity;
@@ -108,7 +112,7 @@ static rxpa_utf8_validation_result rxpa_validate_value_tree(
         if (validate_utf8_bytes(v->string_value, v->string_length, &chars) != 0) {
             return RXPA_UTF8_INVALID;
         }
-        v->string_chars = chars;
+        rxvm_value_set_string_chars_known(v, chars);
         string_cache_reset(v);
         mark_utf8_valid_count(v);
     }
@@ -157,7 +161,7 @@ static void rxpa_validate_native_outputs(
         rc = rxpa_validate_value_tree(signal, &visited);
     }
 
-    free(visited.items);
+    (void)rxvm_memory_release(visited.items);
 
     if (rc == RXPA_UTF8_INVALID) {
         rxpa_set_signal(signal, SIGNAL_UNICODE_ERROR, "Invalid UTF-8 returned by native RXPA function");
@@ -186,8 +190,8 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* si
     /* Cleanup */
     while (current_pool_head) {
         rxpa_pool_node* next = current_pool_head->next;
-        free(current_pool_head->ptr);
-        free(current_pool_head);
+        (void)rxvm_memory_release(current_pool_head->ptr);
+        (void)rxvm_memory_release(current_pool_head);
         current_pool_head = next;
     }
 
@@ -278,19 +282,21 @@ char* rxvm_getstring(rxpa_attribute_value attributeValue) {
         printf("Argument String '%s'\n",val->string_value);
 #endif
         /* Copy-Out */
-        ret = malloc(val->string_length + 1);
+        ret = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(),
+                                      val->string_length + 1u);
         if (ret) {
             memcpy(ret, val->string_value, val->string_length);
             ret[val->string_length] = '\0';
             /* Track in pool */
-            node = malloc(sizeof(rxpa_pool_node));
+            node = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(),
+                                           sizeof(rxpa_pool_node));
             if (node) {
                 node->ptr = ret;
                 node->next = current_pool_head;
                 current_pool_head = node;
             } else {
-                /* If we can't track it, we're in trouble, but let's at least not leak it now if we can help it */
-                /* In a real system we'd signal an error */
+                (void)rxvm_memory_release(ret);
+                ret = NULL;
             }
         }
         return ret;

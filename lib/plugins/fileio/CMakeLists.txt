@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run fileio_test.rxbin with the fileio plugin
 add_test(NAME fileio_test
-        COMMAND $<TARGET_FILE:rxvm> fileio_test rx_fileio ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} fileio_test rx_fileio ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

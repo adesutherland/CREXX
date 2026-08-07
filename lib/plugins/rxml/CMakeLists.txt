@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run rxml_test.rxbin with the rxml plugin
 add_test(NAME rxml_test
-        COMMAND $<TARGET_FILE:rxvm> rxml_test rx_rxml ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} rxml_test rx_rxml ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
