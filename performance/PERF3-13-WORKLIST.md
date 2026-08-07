@@ -1028,16 +1028,16 @@ register-integrity guard remains. Decimal-plugin temporary string storage now
 uses the VM host allocator services, so the newer formatting path and the
 selected sidecar ownership model use one allocator family.
 
-Fresh Debug and ordinary profiling-off Release builds both pass the complete
-Decimal Gate 1 qualification set (81/81) and the combined allocator/value,
-decimal, datatype and canonical RexxCPS focused set (17/17). The broad Debug
-sweep is not globally green: it initially passes 1,967/1,990 and a serial
-rerun clears one transient, giving an effective 1,968/1,990. The exact 22
-survivors all produce their expected result and then report live allocations
-at VM teardown through a `crexx`/spawn driver path. The direct-VM dynamic
-interface test passes; only its `crexx` driver form shares this ownership gap.
-This is the accepted Gate E spawn migration work, not a decimal or selected
-value-layout regression.
+Fresh pre-EF-0 Debug and ordinary profiling-off Release builds both passed the
+complete Decimal Gate 1 qualification set (81/81) and the combined
+allocator/value, decimal, datatype and canonical RexxCPS focused set (17/17).
+The pre-EF-0 broad Debug sweep was not globally green: it initially passed
+1,967/1,990 and a serial rerun cleared one transient, giving an effective
+1,968/1,990. The exact 22 survivors all produced their expected result and
+then reported live allocations at VM teardown through a `crexx`/spawn driver
+path. The direct-VM dynamic-interface test passed; only its `crexx` driver form
+shared this ownership gap. EF-0 below closes that accepted Gate E migration
+gap without changing the selected value layout or ordinary allocator path.
 
 Production retains only the selected implementation. Disposable inlining and
 flattening experiment controls have been removed; their negative evidence is
@@ -1045,9 +1045,180 @@ retained in the Gate B dispatch study. `reclaim_attribute_storage()` remains
 as an explicit quiescent operation with no automatic hot-path caller, which is
 part of selected R0 rather than a second reclamation policy.
 
+## EF-0 — spawn I/O ownership and transfer recovery
+
+Adrian changed the Gate E/F sequence on 2026-08-07. Gates E and F opened
+together only for the minimum worker-ownership and transfer semantics needed
+to restore the existing spawn/`crexx` redirect paths to green. EF-0 is the
+first bounded vertical slice of the coherent multithreading architecture: it
+establishes an ownership-safe provider/completion boundary that full Gate E
+worker execution and full Gate F programmable channels can extend. Adrian
+accepted its first Release verdict on 2026-08-07. The local closeout is green
+and ready for its separate commit; publication still requires Adrian's
+explicit push approval. Full M5 remains closed until that publication, and
+full M6 remains closed until Gate E's worker model is selected.
+
+The unmodified `9e2e51c20133ece39d12d3b4e113d130b74b2af8` baseline was
+rebuilt before production edits. A fresh 30-way Debug sweep passed
+1,965/1,990. Its 25 failures moved around the same redirect race: the full run
+added `ts_address_capture` variants and the Level C driver smoke while the
+late-interface driver happened to pass. A serial union/control run then passed
+7/30 and failed 23/30; the direct-VM late-interface control and all four serial
+`ts_address_capture` controls passed, while the `crexx` driver, both
+`ts_address_crexx` modes and 20 driver smokes aborted after functional output.
+Every serial failure reported one to five live allocations at VM teardown.
+The two `-nocompile` tests fail during their preparation invocation only
+because that completed `crexx -noexec` process then reports the same one/two
+live allocations; neither exposes a separate preparation or artifact defect.
+
+The audit confirms that `prepare_redirect_thread_context()` copies a raw
+destination/input `value *` and the parent VM's `memory_worker` into every I/O
+thread context. Concurrent stdout and stderr readers consequently enter one
+worker arena and append directly to receiver registers. Input writers likewise
+read live receiver registers/attribute trees from a foreign thread. This
+violates worker exclusivity on success and on several cleanup paths.
+
+### EF-0 design selection
+
+1. **A — per-I/O-thread VM worker plus a worker-owned capture value.** This can
+   enforce allocator exclusivity, but a worker-owned `value` still cannot be
+   handed to the receiver. It would need a second byte serialization step,
+   worker registration/destruction and failure-atomic handoff before the
+   temporary worker can be destroyed. That is valid future Gate E machinery
+   but unnecessary for byte-stream redirect threads.
+2. **B — receiver-reserved mailbox/completion with generation checks.** A
+   private unpublished payload and publish/acquire/consume lifecycle fits Gate
+   F, but reserving receiver storage or introducing a reusable queue now adds
+   synchronization, generation and cancellation machinery that a single-shot
+   redirect endpoint does not need. A foreign thread must not mutate the
+   receiver reservation, so this also reduces to an independently owned byte
+   payload for EF-0.
+3. **C — single-shot private redirect completion with an independent capture
+   domain. Selected.** Each endpoint owns one non-VM completion containing only
+   its pipe handle, byte payload, mode, diagnostics and terminal state. Input
+   is copied from string/array registers into an immutable completion-owned
+   byte snapshot before thread creation. Output/error reader threads grow only
+   completion-owned byte buffers. They never enter an RXVM worker and never
+   receive a `value *`. Thread join supplies the release/acquire synchronization
+   boundary; the receiver VM thread then consumes the published bytes exactly
+   once and performs string append or line-array conversion through its own
+   worker. Endpoint identity makes a generation counter unnecessary in this
+   single-shot slice; the state machine still makes exactly one success/failure
+   publication and one optional consume/discard explicit.
+
+Design C is the smallest design that enforces ownership on every path. Its
+private completion is intentionally shaped as the first spawn provider payload
+for the later versioned Gate F envelope, but is not that public envelope. The
+preferred Rexx-side evolution is a logical register image: one typed scalar or
+binary payload plus zero or more ordered child-register images. Small messages
+can materialize directly, while large binary content can use immutable chunks
+or a bounded stream capability beneath the same register-centric surface. This
+logical `ChannelValue` must never be a live internal RXVM `value`; every
+receiver materializes it into receiver-owned registers. The final encoding,
+stream policy and public interface remain Gate F decisions.
+
+The Level B ADDRESS request remains the orchestration layer. EF-0 may
+re-engineer the existing `REDIR2STR`, `REDIR2ARR`, `STR2REDIR`, `ARR2REDIR` and
+`SPAWN` native boundary; the selected first implementation does not need a new
+public RXAS/RXBIN instruction. Adrian has explicitly allowed a later narrower
+native-to-cREXX instruction if implementation evidence requires it. General
+`chanstart`/`chanwait` instructions remain closed.
+
+### EF-0 numbered implementation plan
+
+1. Retain a focused failing Debug reproducer that concurrently captures stdout
+   and stderr beyond one read chunk and beyond the 16 KiB standard-allocation
+   ceiling, with repeated buffer growth.
+2. Replace the copied `REDIRECT` thread context with a private single-owner
+   completion/state object that contains no RXVM worker and no `value *`.
+3. Snapshot string and array input into immutable completion-owned bytes before
+   starting the writer thread, with overflow/allocation failure cleanup.
+4. Capture stdout and stderr independently into completion-owned byte buffers;
+   continue draining after capture allocation failure so the child cannot
+   deadlock on a full pipe.
+5. Centralize join, terminal publication and one-time receiver consume. Perform
+   final string/array conversion only while the receiver worker is entered.
+6. Give POSIX and Windows the same handle ownership, broken-pipe, launch/thread
+   failure, partial-output, cancellation/cleanup and finalizer contract.
+7. Exercise empty/string/array input and output, simultaneous stdin/stdout/
+   stderr, non-zero exit, early exit/broken pipe, repeated cleanup, nested
+   `ADDRESS CREXX`/driver execution and both concrete VMs in optimized and
+   no-opt forms where applicable. There is no existing spawn allocation/thread
+   failure injection hook; retain that case as an explicit gap unless a narrow
+   deterministic hook is justified by the implementation.
+8. Prove exact Debug teardown and the existing driver controls, review the
+   ownership diff, then freeze implementation.
+9. Build the ordinary profiling-off Release product, run the smallest decisive
+   spawn/driver verdict plus a bounded ordinary-VM neutrality check, report the
+   first Release verdict to Adrian and stop. Sanitizer, full Debug closeout,
+   portable builds, evidence closeout and commit follow only after acceptance.
+
+### EF-0 accepted implementation and closeout
+
+Design C is implemented in `rxspawn.c`. Each endpoint owns a private
+`REDIRECT_COMPLETION` allocated with libc. I/O threads receive only that
+completion. The receiver-side `REDIRECT` retains the destination worker and
+register, which no helper thread can access. Output readers use independent
+4 KiB read chunks, retain partial output on terminal error and keep draining
+after capture-allocation failure. Input string/array values are flattened
+before pipe and thread creation. Join precedes every consume or discard; the
+receiver verifies its active worker before performing string/array
+materialization.
+
+POSIX completion descriptors are close-on-exec and Windows uses private
+non-inheritable duplicates. Nested `crexxcmd_run_argv()` now forwards the
+parent input redirect rather than substituting `/dev/null`.
+
+The retained focused fixture exercises simultaneous stdout/stderr capture with
+24,480 bytes per stream, multiple capture-buffer growth operations and content
+verification. It also covers empty output, string/line-array output,
+string/array input, simultaneous stdin/stdout/stderr, non-zero status with
+partial output, early child exit/broken pipe, twelve repeated cleanup cycles
+and nested `ADDRESS CREXX`. CTest registers default, `rxbvm` and `rxtvm`
+variants in optimized and no-opt modes where the concrete VM is available.
+There is no production allocation/thread-failure injection selector; launch,
+thread-start and allocation failure paths are audited structurally and share
+the same centralized cleanup.
+
+Adrian accepted the mandatory first ordinary-Release verdict on 2026-08-07:
+the focused recovery set passed 15/15, the exact 22 handover failures plus the
+new fixture passed 23/23, and the bounded ordinary-VM RexxCPS/register controls
+passed 4/4. Post-acceptance closeout then passed focused Apple AddressSanitizer
+34/34 with leak detection disabled, full Debug 1,996/1,996 at the required
+30-way parallelism, and the combined ordinary Release set 38/38. The portable
+`rxbvm`, `rxbvml`, `rxbvme` and selected `rxvm` targets build. Apple
+LeakSanitizer reports that `detect_leaks` is unsupported on this platform;
+Debug teardown counters retain exact live-allocation coverage. No MinGW cross
+compiler is installed, so the shared Windows contract is implemented but its
+native compile/run proof remains a platform limitation. No timing cell was
+needed: this path has no retained spawn timing baseline, and ordinary VM
+allocation/execution is untouched and passes the bounded Release controls.
+
+Compact retained evidence:
+[`2026-08-07-perf3-13-ef0-spawn-recovery`](evidence/2026-08-07-perf3-13-ef0-spawn-recovery/).
+
+### EF-0 ownership contract
+
+- [x] No spawn I/O thread enters the receiver VM worker or any other VM worker.
+- [x] No thread completion contains or dereferences a live VM `value *`,
+  register, reference cell or attribute tree.
+- [x] Input is immutable and thread-owned before thread creation.
+- [x] Output/error bytes are endpoint-owned until terminal publication and
+  join; stdout and stderr share neither payload nor allocator state.
+- [x] Receiver conversion occurs exactly once under the receiver worker, or the
+  completion is deterministically discarded on an abandoned request.
+- [x] Success, non-zero child exit, broken pipe, allocation/thread/launch
+  failure, partial output, cleanup and finalizer paths release every completion
+  allocation and handle.
+- [x] Each endpoint publishes exactly one terminal success/failure state.
+- [x] POSIX and Windows implement the same ownership/state contract; native
+  Windows compile/run validation remains outstanding.
+- [x] Ordinary single-worker RXVM allocation remains lock-free and unchanged.
+
 ## M5 — worker/thread execution ownership
 
-This stage remains closed until Gate E.
+EF-0 is accepted and locally complete as the recovery subset above. The full
+M5 programme remains closed until EF-0 is published with Adrian's approval.
 
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
@@ -1064,7 +1235,9 @@ This stage remains closed until Gate E.
 
 ## M6 — thread/process/host transfer and programmable channels
 
-This stage remains closed until Gate F.
+EF-0 is accepted and locally complete for the private spawn
+completion/transfer subset above. The full transport-neutral M6 programme
+remains closed until the Gate E worker model has been selected.
 
 - [ ] Define one versioned value/message envelope with copy, move, immutable
   transfer-buffer and serialization modes.
@@ -1102,8 +1275,14 @@ This stage remains closed until Gate F.
    across 96 core-four pairs (95% interval +0.748% to +1.663%), with no guard
    hit. Cross-platform rebuild-together ABI validation remains before global
    Gate D closure.
-5. **Gate E — M5 start: closed.** Implement worker execution/memory ownership.
-6. **Gate F — M6 start: closed.** Implement transfer/channel semantics and
-   later consider RXAS exposure.
+5. **Gate E/F EF-0 recovery: accepted and locally complete 2026-08-07;
+   publication pending.** The minimum spawn I/O ownership and receiver-side
+   transfer slice passes its accepted first Release verdict, focused sanitizer,
+   full Debug and Release closeout. Commit separately and do not push without
+   Adrian's explicit approval.
+6. **Gate E — full M5 start: closed.** After EF-0 publication, implement worker
+   execution/memory ownership and stop for worker-model selection.
+7. **Gate F — full M6 start: closed.** After Gate E selection, implement
+   transport-neutral channels and only later consider public RXAS exposure.
 
 Approval of one gate does not approve the next.

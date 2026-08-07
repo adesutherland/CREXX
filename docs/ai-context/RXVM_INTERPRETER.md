@@ -395,23 +395,28 @@ wrong-owner free; allocator families are never guessed.
 
 A worker arena is single-thread-owned execution state, not a lockable heap
 handle. It must never be entered concurrently by two OS threads. Every thread
-that allocates VM-managed storage needs its own registered worker arena, even
-when the thread is only a stdout/stderr reader or another I/O helper. The
-central depot is the synchronization boundary for whole slabs; adding a lock
-around ordinary allocation would hide an ownership error and defeat the local
-fast path. Managed-only metadata services such as `rxvm_memory_capacity()`
-must likewise receive a pointer from this allocator family. Injected or foreign
-allocators retain an explicit requested-capacity contract instead of being
-probed for slab metadata.
+that allocates VM-managed storage needs its own registered worker arena. An I/O
+helper may instead use a deliberately independent non-VM allocation domain and
+transfer its result after synchronization. The central depot is the
+synchronization boundary for whole slabs; adding a lock around ordinary
+allocation would hide an ownership error and defeat the local fast path.
+Managed-only metadata services such as `rxvm_memory_capacity()` must likewise
+receive a pointer from this allocator family. Injected or foreign allocators
+retain an explicit requested-capacity contract instead of being probed for
+slab metadata.
 
-The transitional `crexxcmd_run_argv()` spawn capture path does not yet obey
-that rule: its stdout and stderr reader threads can enter the same worker. A
-Debug teardown failure and AddressSanitizer-assisted diagnostic proved that
-concurrent 32-byte sidecar allocations can then receive the same slot. The
-child VM tears down cleanly; the parent fails while clearing capture values.
-Until spawn is migrated to one worker per reader plus receiver-owned result
-copy/transfer, spawn-dependent tests are an explicit architecture gap rather
-than evidence that ordinary single-worker L32SDH lifetime is unsound.
+The EF-0 spawn path uses that independent-domain option. A redirect reader or
+writer receives a private libc-owned single-shot completion, not an RXVM
+worker, register or `value *`. String and line-array input is flattened into an
+immutable byte snapshot before its writer starts. stdout and stderr readers
+grow separate byte buffers, publish exactly one terminal state, and may finish
+in either order without sharing mutable state. Joining the helper is the
+publication/acquire boundary. Only then does the receiver thread append bytes
+or construct lines in its own destination register under its currently entered
+worker. Broken pipe, child/launch/thread failure, partial output and abandoned
+request paths use the same join-before-destruction contract. POSIX uses
+close-on-exec completion descriptors and Windows uses private non-inheritable
+handle duplicates; neither platform hands a parent worker to an I/O thread.
 
 The current execution product still creates one logical worker. The allocator
 is a prerequisite for, not proof of, multi-threaded VM execution. A future
@@ -423,7 +428,12 @@ therefore copy into receiver-owned storage, use an explicitly transferable
 immutable buffer, or transfer ownership of a whole suitably isolated block at
 a defined safe point. Process and cross-host channels must use a versioned
 serialized envelope. None may expose a raw `value` or silently mutate a
-register owned by another worker.
+register owned by another worker. The preferred future Rexx-visible envelope
+is register-centric: one logical typed scalar or binary register image may
+contain ordered child-register images. That `ChannelValue` is a transport
+description, never the internal `value`; the receiver materializes it into its
+own register tree. Large binary content may later select immutable chunks or a
+bounded stream capability beneath the same logical surface.
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or
@@ -837,8 +847,13 @@ returns; without a redirect they write to the normal VM stdout/stderr path.
 ADDRESS redirect endpoint values are native payloads with the internal type name
 `rxsysb.redirect_endpoint`. The payload stores a refcounted native endpoint cell,
 so ordinary VM value copies retain the cell instead of byte-copying raw OS handle
-values. The last finalizer closes native handles and joins any owned redirect
-worker thread. `SPAWN` resolves these native endpoint payloads before dispatching
+values. Its private completion contains the endpoint handle, independently
+allocated bytes, diagnostics and one terminal state; it contains no worker or
+VM value pointer. Input endpoints snapshot their source before thread creation.
+Output endpoints are consumed only after join, when the receiver worker copies
+the bytes into the Rexx string or array. The last finalizer closes native
+handles, joins any owned redirect worker thread and discards an unconsumed
+completion. `SPAWN` resolves these native endpoint payloads before dispatching
 to `rxspawn.c`; it does not accept plain raw `REDIRECT` binary buffers. Existing
 bytecode remains compatible because redirect values are created by runtime
 instructions, not stored as durable `REDIRECT` struct bytes in `.rxbin` files.
