@@ -68,7 +68,7 @@ int rxvm_link(struct rxvm_context* ctx) {
     rxvm_memory_worker *previous;
 
     if (!ctx) return 0;
-    previous = rxvm_memory_enter(ctx->memory_worker);
+    previous = rxvm_memory_enter(ctx->worker.memory_worker);
     if (!ctx->link_dirty &&
         !ctx->interface_method_registry_dirty &&
         !ctx->interface_factory_registry_dirty) {
@@ -120,8 +120,9 @@ int rxvm_prepare(struct rxvm_context* ctx) {
 
 int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) {
     int rc;
-    rxvm_memory_worker *previous = rxvm_memory_enter(ctx->memory_worker);
-    value* ret_val = value_f_in(ctx->memory_worker);
+    rxvm_memory_worker *previous =
+            rxvm_memory_enter(ctx->worker.memory_worker);
+    value* ret_val = value_f_in(ctx->worker.memory_worker);
     if (!ret_val) {
         rxvm_memory_leave(previous);
         return -1;
@@ -135,7 +136,7 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
             ctx->ext_proc = p;
             ctx->ext_argc = argc;
             ctx->ext_args = argc > 0
-                ? rxvm_memory_alloc_bytes(ctx->memory_worker,
+                ? rxvm_memory_alloc_bytes(ctx->worker.memory_worker,
                                           sizeof(value*) * (size_t)argc)
                 : NULL;
             if (argc > 0 && !ctx->ext_args) {
@@ -147,7 +148,7 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
                 return -1;
             }
             for (i = 0; i < argc; i++) {
-                ctx->ext_args[i] = value_f_in(ctx->memory_worker);
+                ctx->ext_args[i] = value_f_in(ctx->worker.memory_worker);
                 if (set_null_string_validated(ctx->ext_args[i], argv[i] ? argv[i] : "") != 0) {
                     int j;
                     fprintf(stderr, "ERROR: Invalid UTF-8 argument\n");

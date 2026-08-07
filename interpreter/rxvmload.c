@@ -235,15 +235,19 @@ static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
 
 /* Initialise modules context */
 void rxinimod(rxvm_context *context) {
-    context->memory_context = rxvm_memory_context_create();
-    if (!context->memory_context) {
-        RX_PANIC_OOM("create rxvm memory context", 1, 0);
+    rxvm_runtime *runtime = rxvm_runtime_create();
+    if (!runtime) {
+        RX_PANIC_OOM("create rxvm runtime", 1, 0);
     }
-    context->memory_worker =
-            rxvm_memory_worker_create(context->memory_context);
-    if (!context->memory_worker) {
-        (void)rxvm_memory_context_destroy(context->memory_context);
-        context->memory_context = 0;
+    context->worker.runtime = 0;
+    context->worker.memory_worker = 0;
+    context->worker.owner_thread_token = 0;
+    context->worker.execution_depth = 0u;
+    context->worker.state = RXVM_WORKER_UNINITIALIZED;
+    context->owns_runtime = 1u;
+    if (!rxvm_worker_initialize(&context->worker, runtime)) {
+        (void)rxvm_runtime_destroy(runtime);
+        context->owns_runtime = 0u;
         RX_PANIC_OOM("create rxvm memory worker", 1, 0);
     }
     context->num_modules = 0;
@@ -280,7 +284,7 @@ void rxinimod(rxvm_context *context) {
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
     context->modules = rxvm_memory_alloc_bytes(
-            context->memory_worker,
+            context->worker.memory_worker,
             sizeof(module*) * context->module_buffer_size);
     if (!context->modules) {
         RX_PANIC_OOM("malloc rxvm module table",
@@ -293,9 +297,23 @@ void rxfremod(rxvm_context *context) {
     int j, k;
     size_t memory_leaks;
     rxvm_memory_worker *previous_memory_worker;
+    rxvm_runtime *runtime;
+    rxvm_worker_transition_result transition;
 
     if (!context) return;
-    previous_memory_worker = rxvm_memory_enter(context->memory_worker);
+    transition = rxvm_worker_begin_draining(&context->worker);
+    if (transition != RXVM_WORKER_TRANSITION_OK) {
+        fprintf(stderr,
+                "RXVM worker teardown rejected: %s (%s)\n",
+                transition == RXVM_WORKER_TRANSITION_WRONG_THREAD
+                    ? "wrong owner thread" : "invalid lifecycle state",
+                rxvm_worker_state_name(
+                        rxvm_worker_get_state(&context->worker)));
+        abort();
+    }
+    runtime = context->worker.runtime;
+    previous_memory_worker =
+            rxvm_memory_enter(context->worker.memory_worker);
 
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
@@ -356,14 +374,16 @@ void rxfremod(rxvm_context *context) {
     rxvm_reference_context_free(&context->references);
     if (context->location) free(context->location);
 
-    rxvm_memory_report_if_requested(context->memory_context);
+    rxvm_memory_report_if_requested(rxvm_runtime_memory_context(runtime));
 
-    rxvm_memory_leave(previous_memory_worker == context->memory_worker ?
+    rxvm_memory_leave(previous_memory_worker == context->worker.memory_worker ?
                       0 : previous_memory_worker);
-    memory_leaks = rxvm_memory_worker_destroy(context->memory_worker);
-    context->memory_worker = 0;
-    memory_leaks += rxvm_memory_context_destroy(context->memory_context);
-    context->memory_context = 0;
+    memory_leaks = rxvm_worker_destroy(&context->worker);
+    if (context->owns_runtime) {
+        memory_leaks += rxvm_runtime_destroy(runtime);
+    }
+    context->worker.runtime = 0;
+    context->owns_runtime = 0u;
 #ifndef NDEBUG
     if (memory_leaks) {
         fprintf(stderr,
@@ -648,7 +668,8 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                     /* Need to initialise a register and expose it in the search tree */
                     context->modules[mod_index]
                             ->globals[((expose_reg_constant *) c_entry)
-                            ->global_reg] = value_f_in(context->memory_worker);
+                            ->global_reg] =
+                                value_f_in(context->worker.memory_worker);
                     add_node(&context->exposed_reg_tree, ((expose_reg_constant *)c_entry)->index,
                              (size_t)(context->modules[mod_index]
                                      ->globals[((expose_reg_constant *)c_entry)
@@ -731,7 +752,7 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
     for (i = 0; i < context->modules[mod_index]->segment.globals; i++) {
         if (!context->modules[mod_index]->globals[i]) {
             context->modules[mod_index]->globals[i] =
-                    value_f_in(context->memory_worker);
+                    value_f_in(context->worker.memory_worker);
         }
     }
 
@@ -749,7 +770,7 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     while (n + 1 > context->module_buffer_size) {
         context->module_buffer_size *= 2;
         new_buffer = rxvm_memory_resize_bytes(
-                context->memory_worker, context->modules,
+                context->worker.memory_worker, context->modules,
                 sizeof(module*) * (context->module_buffer_size / 2u),
                 sizeof(module*) * context->module_buffer_size);
         if (!new_buffer) {
@@ -759,12 +780,13 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
         }
         context->modules = new_buffer;
     }
-    context->modules[n] = rxvm_memory_alloc_bytes(context->memory_worker,
+    context->modules[n] = rxvm_memory_alloc_bytes(
+            context->worker.memory_worker,
                                                   sizeof(module));
     if (!context->modules[n]) {
         RX_PANIC_OOM("malloc rxvm module", sizeof(module), file_module_section->name);
     }
-    context->modules[n]->memory_worker = context->memory_worker;
+    context->modules[n]->memory_worker = context->worker.memory_worker;
     context->modules[n]->segment.globals = file_module_section->header.globals;
     context->modules[n]->segment.inst_size = file_module_section->header.instruction_size;
     context->modules[n]->segment.const_size = file_module_section->header.constant_size;
@@ -777,7 +799,8 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->expose_head = file_module_section->header.expose_head;
     context->modules[n]->meta_head = file_module_section->header.meta_head;
     context->modules[n]->globals = rxvm_memory_calloc_bytes(
-            context->memory_worker, context->modules[n]->segment.globals,
+            context->worker.memory_worker,
+            context->modules[n]->segment.globals,
             sizeof(value*));
     if (!context->modules[n]->globals && context->modules[n]->segment.globals) {
         RX_PANIC_OOM("calloc rxvm module globals",
@@ -785,7 +808,8 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
                      file_module_section->name);
     }
     context->modules[n]->globals_dont_free = rxvm_memory_calloc_bytes(
-            context->memory_worker, context->modules[n]->segment.globals,
+            context->worker.memory_worker,
+            context->modules[n]->segment.globals,
             sizeof(char));
     if (!context->modules[n]->globals_dont_free && context->modules[n]->segment.globals) {
         RX_PANIC_OOM("calloc rxvm module globals ownership map",
@@ -856,7 +880,8 @@ int rxldmod(rxvm_context *context, char *file_name) {
         if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found module %s (as absolute path)\n", file_name);
         file_exists = 1;
     } else if (location) {
-        char *loc_copy = rxvm_load_memory_strdup(context->memory_worker,
+        char *loc_copy = rxvm_load_memory_strdup(
+                context->worker.memory_worker,
                                                  location);
         if (!loc_copy) RX_PANIC_OOM("copy rxvm module location",
                                     strlen(location) + 1u, location);
@@ -932,8 +957,8 @@ int rxldmod(rxvm_context *context, char *file_name) {
             if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found plugin %s (as absolute path)\n", file_name);
             file_exists = 1;
         } else if (location) {
-            char *loc_copy = rxvm_load_memory_strdup(context->memory_worker,
-                                                     location);
+            char *loc_copy = rxvm_load_memory_strdup(
+                    context->worker.memory_worker, location);
             if (!loc_copy) RX_PANIC_OOM("copy rxvm plugin location",
                                         strlen(location) + 1u, location);
             char *token = strtok(loc_copy, ";");
@@ -994,7 +1019,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             size_t full_file_name_size =
                     strlen(file_name) + strlen(".rxplugin") + 1u;
             char *full_file_name = rxvm_load_memory_alloc(
-                    context->memory_worker, full_file_name_size);
+                    context->worker.memory_worker, full_file_name_size);
             if (!full_file_name) RX_PANIC_OOM("build rxpa plugin filename",
                                                full_file_name_size, file_name);
             sprintf(full_file_name, "%s.rxplugin", file_name);
@@ -1092,7 +1117,7 @@ static void free_rxpa_context(rxpa_context *context)
 // Create a new RXPA context for a module
 static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context) {
     rxpa_context *new_rxpa_context = rxvm_load_memory_alloc(
-            rxvm_context->memory_worker, sizeof(rxpa_context));
+            rxvm_context->worker.memory_worker, sizeof(rxpa_context));
     if (!new_rxpa_context) {
         RX_PANIC_OOM("allocate rxpa context", sizeof(rxpa_context), 0);
     }

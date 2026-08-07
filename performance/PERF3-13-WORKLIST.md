@@ -2,7 +2,24 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate D M4 Mac local closeout complete; cross-platform ABI validation pending**
+Status: **Gate E E1 accepted and locally complete; publication pending; E2 closed**
+
+## Current Gate E continuation
+
+- Worktree: `/Users/adrian/CLionProjects/CREXX`.
+- Branch: `develop`.
+- Published Gate E base: `19802842e0655b2f2ae011f911e909a2ded7233b`
+  (`Merge branch 'develop' of github.com:adesutherland/CREXX into develop`).
+- EF-0 implementation: `642e1b697bd019a800a2bddbaea8ef7a3d75e531`
+  (`perf: recover spawn I/O ownership`).
+- Adrian approved the full Gate E architecture and its immediate E1
+  single-worker ownership-shell slice on 2026-08-07. Each production slice
+  remains subject to its focused correctness, frozen ordinary Release verdict
+  and explicit acceptance stop.
+- Adrian accepted E1's first ordinary Release verdict on 2026-08-07. The E1
+  implementation and proportional Mac closeout are locally complete; the
+  coherent local commit remains unpublished until Adrian explicitly approves
+  the push. E2 is closed until then and requires its own slice approval.
 
 ## Exact isolated base
 
@@ -1054,9 +1071,10 @@ first bounded vertical slice of the coherent multithreading architecture: it
 establishes an ownership-safe provider/completion boundary that full Gate E
 worker execution and full Gate F programmable channels can extend. Adrian
 accepted its first Release verdict on 2026-08-07. The local closeout is green
-and ready for its separate commit; publication still requires Adrian's
-explicit push approval. Full M5 remains closed until that publication, and
-full M6 remains closed until Gate E's worker model is selected.
+and was published on `develop` in `642e1b697`; the synchronized continuation
+base is `19802842e`. Adrian approved the full M5 architecture and immediate E1
+slice on 2026-08-07. Full M6 remains closed until Gate E's worker model is
+selected.
 
 The unmodified `9e2e51c20133ece39d12d3b4e113d130b74b2af8` baseline was
 rebuilt before production edits. A fresh 30-way Debug sweep passed
@@ -1217,8 +1235,138 @@ Compact retained evidence:
 
 ## M5 — worker/thread execution ownership
 
-EF-0 is accepted and locally complete as the recovery subset above. The full
-M5 programme remains closed until EF-0 is published with Adrian's approval.
+EF-0 is accepted and published as the recovery subset above. Adrian approved
+the following full M5 architecture and immediate E1 slice on 2026-08-07. E1
+introduces ownership structure only: it creates no worker threads and changes
+no VM, language, RXAS/RXBIN or public pool semantics.
+
+### Gate E design selection
+
+1. **A — fully independent VM context and module load per worker.** This is
+   ownership-safe and is retained as the first concurrent correctness control,
+   but duplicates bytecode, link metadata and execution images. It is not the
+   selected final sharing model.
+2. **B — sealed shared runtime/program plus worker-local mutable state.
+   Selected.** A runtime owns the synchronized whole-slab depot, worker
+   registry, process signal broker, immutable plugin-factory/library catalogue
+   and sealed program generations. Each worker owns one VM context, allocator
+   arena, registers/stacks, module globals, procedure runtimes/frame recyclers,
+   dynamic caches, references, plugin instances, sockets, RXVML/RXPA state,
+   callbacks, scratch state and logical CREXX directory/environment. Program
+   bytes, constants and metadata become shareable only after an explicit
+   immutability audit and publication as a sealed generation.
+3. **C — share the current mutable VM context behind locks or TLS overlays.**
+   Rejected. Module globals, frame free lists, dispatch caches, native/plugin
+   state, references and late-load state would either race or serialize on a
+   coarse lock. Field-by-field TLS would obscure rather than enforce
+   ownership.
+4. **Process-per-worker.** Reserved for failure-prone or untrusted work. Gate E
+   thread workers are trusted in-process engines; later warm process pools use
+   the same Gate F protocol without weakening thread-worker ownership.
+
+The current `rxvm_context` becomes the internal worker VM and initially remains
+the compatibility shell used by the CLI and RXVML. A new runtime domain owns
+the memory context/depot. Ordinary allocation remains worker-local and
+lock-free; shared synchronization is limited to registration, program/plugin
+catalogues, signal routing and whole-slab depot exchange.
+
+Live VM `value`, reference cells, executing registers and mutable native
+payloads never cross workers. Freeing is owner-only by default. A bounded
+remote-free queue remains a required measured comparison but is not selected
+unless an unavoidable provider/native lifecycle proves that it is needed.
+Only an owning worker may return empty whole slabs at quiescent trim or
+teardown.
+
+Late loading publishes a new sealed program generation rather than mutating a
+generation being executed. Existing requests retain their old generation until
+completion. POSIX signals and Windows console events are installed through one
+process broker; the low-level handler records an event and workers observe
+worker-local pending flags at safe points. Targeted cancellation is a
+cooperative worker request, not forced thread termination.
+
+The future transport value remains a logical register image: a typed scalar or
+binary payload with ordered child-register images. Gate E may use a private
+copy-only subset in its concurrency harness, but no internal `value *`, public
+pool/channel API or RXAS/RXBIN instruction is introduced before Gate F.
+
+### Gate E numbered implementation plan
+
+1. **E1 — single-worker ownership shell.** Move the memory context/depot into
+   an internal runtime object, retain one allocator worker in each
+   `rxvm_context`, add explicit worker lifecycle and wrong-thread ownership
+   checks, and preserve the current one-worker API and execution path.
+2. Freeze E1 after the smallest focused Debug load/run/unload, RXVML/ADDRESS
+   and both-concrete-VM correctness set. Build ordinary profiling-off Release,
+   run the smallest retained single-worker neutrality verdict, report it to
+   Adrian and stop before broad closeout.
+3. **E2 — explicit active state.** Move RXVML/RXPA active contexts and temporary
+   pools, SAY routing, CREXX directory/environment, reference fallback state
+   and interrupt delivery from process globals to checked runtime/worker
+   ownership while preserving nested same-worker calls.
+4. **E3 — plugin/native lifecycle.** Separate immutable factory/library
+   catalogues from per-worker plugin instances and classify every bundled
+   native payload as immutable, worker-affine, completion-based or not
+   worker-safe.
+5. **E4 — sealed program generations.** Retain independent module loads as the
+   correctness control, then share only audited immutable RXBIN/constants/type
+   metadata. Keep globals, procedure runtimes, frame recyclers and caches in
+   worker overlays; add generation-safe late loading.
+6. **E5 — private concurrency proof.** Add persistent trusted worker threads,
+   fixed worker/session affinity, cooperative cancellation and a private
+   copy-only logical-register request/completion harness. Expose no public pool
+   API.
+7. **E6 — reclamation and scale selection.** Compare owner-only freeing with a
+   bounded remote-free prototype and whole-slab handback. Measure single-worker
+   neutrality, 1/2/4/8-worker throughput, contention, peak/retained RSS,
+   cancellation, failure isolation and deterministic shutdown.
+8. Complete accepted-slice sanitizer/lifecycle checks, full Debug CTest with
+   repository parallelism, Release and portable builds, then Mac, Intel Linux,
+   Linux ARM64 and same-machine Windows evidence. Timed work requires Adrian to
+   clear and reserve the host. Stop for worker-model selection before public
+   pool or Gate F semantics.
+
+### E1 accepted implementation and closeout
+
+E1 introduces `rxvm_runtime` as the owner of the allocator memory context and
+whole-slab depot. The compatibility `rxvm_context` embeds one
+thread-affine `rxvm_worker`, which owns its allocator arena, owner-thread token,
+depth-counted execution state and deterministic lifecycle. `run()` refuses a
+foreign thread, nested same-owner RXVML calls remain valid, teardown requires
+an idle owner to enter `draining`, and the runtime cannot be destroyed while a
+worker remains registered. Allocator entry and worker destruction independently
+enforce the same thread ownership. No new thread, public API, register transfer,
+channel or RXAS/RXBIN semantic is introduced, and ordinary local allocation
+remains lock-free.
+
+The focused cross-thread lifecycle test has POSIX and Windows implementations.
+It proves that a foreign OS thread owns neither the VM worker nor its allocator,
+cannot begin execution and cannot perturb the idle state. The owning thread
+proves nested execution, drain, exactly one stopped terminal state, worker
+unregistration and zero live allocations.
+
+Adrian cleared the Mac and accepted the mandatory first ordinary-Release
+verdict on 2026-08-07. One warmup and 12 pairwise-balanced serial rounds across
+Sieve, Richards, Towers and RexxCPS passed all 104 processes. The 48-pair pooled
+mean is -0.149146% with a 95% interval of -0.780096% to +0.481804%; no 3% guard
+fires. Individual retained observations are Sieve -0.654505% clear adverse,
+Richards +0.924804% inconclusive, Towers +1.146596% clear favorable and RexxCPS
+-2.013479% clear adverse. The candidate `rxbvm` grows by 1,440 bytes (0.144%).
+
+Post-acceptance closeout passes focused Apple AddressSanitizer 3/3, full Debug
+1,997/1,997 with `--parallel 30` in 319.75 seconds, 808 final ordinary Release
+build steps, and combined Release 14/14. A final compiled-source Debug control
+also passes 13/13 after an indentation-only closeout correction. Both concrete VM
+dispatch contracts and the static RXVML archive link pass. Apple LeakSanitizer
+does not support leak detection; Debug teardown retains exact live-allocation
+assertions. The broad ASan linked-artifact build separately exposes a
+pre-existing RXAS heap-use-after-free at `rxas_flow_proof.c:4413` while
+generating `nr15_stem_semantics_rxvm_opt`; E1 changes no assembler source, and
+the finding is retained rather than hidden or expanded into this slice. Native
+Windows compile/run proof is outstanding because no Windows cross-toolchain is
+installed.
+
+Compact retained evidence:
+[`2026-08-07-perf3-13-gate-e-e1-worker-shell`](evidence/2026-08-07-perf3-13-gate-e-e1-worker-shell/).
 
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
@@ -1275,13 +1423,16 @@ remains closed until the Gate E worker model has been selected.
    across 96 core-four pairs (95% interval +0.748% to +1.663%), with no guard
    hit. Cross-platform rebuild-together ABI validation remains before global
    Gate D closure.
-5. **Gate E/F EF-0 recovery: accepted and locally complete 2026-08-07;
-   publication pending.** The minimum spawn I/O ownership and receiver-side
-   transfer slice passes its accepted first Release verdict, focused sanitizer,
-   full Debug and Release closeout. Commit separately and do not push without
-   Adrian's explicit approval.
-6. **Gate E — full M5 start: closed.** After EF-0 publication, implement worker
-   execution/memory ownership and stop for worker-model selection.
+5. **Gate E/F EF-0 recovery: accepted and published 2026-08-07.** The minimum
+   spawn I/O ownership and receiver-side transfer slice passes its accepted
+   first Release verdict, focused sanitizer, full Debug and Release closeout.
+   It is published in `642e1b697` on the synchronized `19802842e` continuation
+   base.
+6. **Gate E — full M5 start: approved 2026-08-07; E1 accepted and locally
+   complete.** The runtime/worker ownership shell passes its accepted first
+   Release verdict and proportional Mac closeout. Publication remains pending
+   Adrian approval; E2 stays closed until separately approved. The full gate
+   stops for worker-model selection before any public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 

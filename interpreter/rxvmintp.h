@@ -30,6 +30,7 @@
 #include "rxpa.h"
 #include "rxvalue.h"
 #include "rxvmmemory.h"
+#include "rxvmworker.h"
 #include "rxsignal.h"
 #include "rxsignature.h"
 #include "rxvminstrument.h"
@@ -490,8 +491,8 @@ struct stack_frame {
 
 /* Runtime context */
 typedef struct rxvm_context {
-    rxvm_memory_context *memory_context;
-    rxvm_memory_worker *memory_worker;
+    rxvm_worker worker;
+    unsigned char owns_runtime;
     char *location;
     size_t num_modules;
     size_t module_buffer_size;

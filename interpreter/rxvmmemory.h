@@ -85,6 +85,8 @@ size_t rxvm_memory_worker_destroy(rxvm_memory_worker *worker);
 rxvm_memory_worker *rxvm_memory_enter(rxvm_memory_worker *worker);
 void rxvm_memory_leave(rxvm_memory_worker *previous_worker);
 rxvm_memory_worker *rxvm_memory_current_worker(void);
+int rxvm_memory_worker_is_current_thread_owner(
+        const rxvm_memory_worker *worker);
 
 /* Power-of-two byte storage, typed value arrays and typed reference cells. */
 void *rxvm_memory_alloc_bytes(rxvm_memory_worker *worker, size_t size);

@@ -2710,7 +2710,7 @@ static int invoke_runtime_factory_match(rxvm_context *context,
     context->ext_proc = match_proc;
     context->ext_argc = (int) argc;
     context->ext_args = args;
-    context->ext_ret = value_f_in(context->memory_worker);
+    context->ext_ret = value_f_in(context->worker.memory_worker);
     match_ret = context->ext_ret;
     if (!match_ret) {
         context->ext_proc = saved_ext_proc;
@@ -2754,7 +2754,7 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
 
         new_capacity = context->interface_factory_capacity ? context->interface_factory_capacity * 2 : 16;
         new_entries = rxvm_memory_resize_bytes(
-                context->memory_worker, context->interface_factories,
+                context->worker.memory_worker, context->interface_factories,
                 sizeof(rxvm_interface_factory_entry) *
                     context->num_interface_factories,
                 sizeof(rxvm_interface_factory_entry) * new_capacity);
@@ -2820,7 +2820,7 @@ static int add_runtime_interface_method_entry(rxvm_context *context,
 
         new_capacity = context->interface_method_capacity ? context->interface_method_capacity * 2 : 32;
         new_entries = rxvm_memory_resize_bytes(
-                context->memory_worker, context->interface_methods,
+                context->worker.memory_worker, context->interface_methods,
                 sizeof(rxvm_interface_method_entry) *
                     context->num_interface_methods,
                 sizeof(rxvm_interface_method_entry) * new_capacity);
@@ -3644,7 +3644,7 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                     RX_PANIC_OOM("size rxvm graph bindings", (size_t)-1, mod->name);
                 }
                 new_bindings = (rxvm_graph_binding **)rxvm_memory_resize_bytes(
-                    context->memory_worker, context->graph_bindings,
+                    context->worker.memory_worker, context->graph_bindings,
                     context->graph_binding_count * sizeof(*new_bindings),
                     new_capacity * sizeof(*new_bindings));
                 if (!new_bindings) {
@@ -3656,7 +3656,7 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                 context->graph_binding_capacity = new_capacity;
             }
             binding = (rxvm_graph_binding *)rxvm_memory_calloc_bytes(
-                    context->memory_worker, 1u, sizeof(*binding));
+                    context->worker.memory_worker, 1u, sizeof(*binding));
             if (!binding) {
                 RX_PANIC_OOM("calloc rxvm graph binding", sizeof(*binding), mod->name);
             }
@@ -3671,7 +3671,7 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                 }
                 binding->callable_targets = (proc_runtime **)
                     rxvm_memory_calloc_bytes(
-                        context->memory_worker, callable_count,
+                        context->worker.memory_worker, callable_count,
                         sizeof(*binding->callable_targets));
                 if (!binding->callable_targets) {
                     RX_PANIC_OOM("calloc rxvm callable bindings",
@@ -3685,7 +3685,7 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                 }
                 binding->factory_bindings = (rxvm_graph_factory_binding *)
                     rxvm_memory_calloc_bytes(
-                        context->memory_worker, factory_count,
+                        context->worker.memory_worker, factory_count,
                         sizeof(*binding->factory_bindings));
                 if (!binding->factory_bindings) {
                     RX_PANIC_OOM("calloc rxvm factory bindings",
@@ -3733,7 +3733,7 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                 }
                 binding->provider_bindings =
                     (rxvm_graph_provider_binding *)rxvm_memory_calloc_bytes(
-                        context->memory_worker, binding->provider_count,
+                        context->worker.memory_worker, binding->provider_count,
                         sizeof(*binding->provider_bindings));
                 if (!binding->provider_bindings) {
                     RX_PANIC_OOM("calloc rxvm provider bindings",
@@ -4992,7 +4992,21 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
 #else
     void *next_inst = &&IUNKNOWN;
 #endif
-    previous_memory_worker = rxvm_memory_enter(context->memory_worker);
+    {
+        rxvm_worker_transition_result transition =
+                rxvm_worker_begin_execution(&context->worker);
+        if (transition != RXVM_WORKER_TRANSITION_OK) {
+            fprintf(stderr,
+                    "RXVM worker execution rejected: %s (%s)\n",
+                    transition == RXVM_WORKER_TRANSITION_WRONG_THREAD
+                        ? "wrong owner thread" : "invalid lifecycle state",
+                    rxvm_worker_state_name(
+                            rxvm_worker_get_state(&context->worker)));
+            return 1;
+        }
+    }
+    previous_memory_worker =
+            rxvm_memory_enter(context->worker.memory_worker);
     RXVM_INSTRUMENTATION_STATE();
     RXVM_INSTRUMENTATION_VM_BEGIN(context);
 
@@ -14183,6 +14197,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     RXVM_INSTRUMENTATION_VM_END(context, rc);
 
     rxvm_memory_leave(previous_memory_worker);
+
+    if (rxvm_worker_end_execution(&context->worker) !=
+            RXVM_WORKER_TRANSITION_OK) {
+        abort();
+    }
 
     return rc;
 }
