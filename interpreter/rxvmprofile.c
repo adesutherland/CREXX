@@ -2,6 +2,7 @@
 
 #include "rxvmprofile.h"
 #include "rxvmintp.h"
+#include "rxvmvars.h"
 
 #include <ctype.h>
 #include <inttypes.h>
@@ -100,6 +101,402 @@ static const char *const rxvm_profile_frame_source_names[
 
 static RXVM_PROFILE_THREAD_LOCAL rxvm_profile_state *rxvm_active_allocation_profile;
 
+static size_t rxvm_profile_value_census_hash(const value *payload,
+                                             size_t capacity) {
+    uintptr_t bits = (uintptr_t)payload;
+    bits >>= 4u;
+    bits ^= bits >> 17u;
+    bits *= (uintptr_t)UINT64_C(0x9e3779b97f4a7c15);
+    bits ^= bits >> 23u;
+    return (size_t)bits & (capacity - 1u);
+}
+
+static int rxvm_profile_value_census_rehash(rxvm_profile_state *state,
+                                            size_t new_capacity) {
+    rxvm_profile_value_census_entry *old_entries =
+            state->value_census_entries;
+    size_t old_capacity = state->value_census_capacity;
+    rxvm_profile_value_census_entry *new_entries;
+    size_t index;
+
+    new_entries = (rxvm_profile_value_census_entry *)calloc(
+            new_capacity, sizeof(*new_entries));
+    if (!new_entries) {
+        state->value_census_tracking_unavailable = 1;
+        return 0;
+    }
+    state->value_census_entries = new_entries;
+    state->value_census_capacity = new_capacity;
+
+    for (index = 0; index < old_capacity; index++) {
+        rxvm_profile_value_census_entry *old = &old_entries[index];
+        size_t position;
+        if (!old->address) continue;
+        position = rxvm_profile_value_census_hash(old->address, new_capacity);
+        while (new_entries[position].address)
+            position = (position + 1u) & (new_capacity - 1u);
+        new_entries[position] = *old;
+    }
+    free(old_entries);
+    return 1;
+}
+
+static rxvm_profile_value_census_entry *rxvm_profile_value_census_entry_for(
+        rxvm_profile_state *state, const value *payload, int create) {
+    size_t position;
+    size_t start;
+
+    if (!state || !state->enabled || !payload ||
+            state->value_census_tracking_unavailable)
+        return 0;
+    if (!state->value_census_capacity) {
+        if (!create ||
+                !rxvm_profile_value_census_rehash(state, (size_t)1024u))
+            return 0;
+    }
+    if (create &&
+            (state->value_census_count + 1u) * 10u >=
+                    state->value_census_capacity * 7u) {
+        if (state->value_census_capacity > SIZE_MAX / 2u ||
+                !rxvm_profile_value_census_rehash(
+                        state, state->value_census_capacity * 2u))
+            return 0;
+    }
+
+    position = rxvm_profile_value_census_hash(
+            payload, state->value_census_capacity);
+    start = position;
+    do {
+        rxvm_profile_value_census_entry *entry =
+                &state->value_census_entries[position];
+        if (entry->address == payload) return entry;
+        if (!entry->address) {
+            if (!create) return 0;
+            entry->address = payload;
+            entry->origin_mask = RXVM_PROFILE_VALUE_ORIGIN_UNKNOWN;
+            state->value_census_count++;
+            return entry;
+        }
+        position = (position + 1u) &
+                   (state->value_census_capacity - 1u);
+    } while (position != start);
+
+    state->value_census_tracking_unavailable = 1;
+    return 0;
+}
+
+static uint32_t rxvm_profile_value_logical_mask(const value *payload) {
+    uint32_t mask = 0;
+    if (payload->string_length)
+        mask |= RXVM_PROFILE_VALUE_STORAGE_STRING;
+    if (rxvm_value_decimal_length(payload))
+        mask |= RXVM_PROFILE_VALUE_STORAGE_DECIMAL;
+    if (rxvm_value_native_ops(payload))
+        mask |= RXVM_PROFILE_VALUE_STORAGE_NATIVE;
+    else if (payload->binary_length)
+        mask |= RXVM_PROFILE_VALUE_STORAGE_BINARY;
+    if (payload->reference_payload || payload->reference_identity)
+        mask |= RXVM_PROFILE_VALUE_STORAGE_REFERENCE;
+    if (payload->num_attributes || payload->object_type)
+        mask |= RXVM_PROFILE_VALUE_STORAGE_OBJECT;
+    return mask;
+}
+
+static void rxvm_profile_value_census_replace_total(
+        rxvm_profile_state *state, unsigned int index,
+        uint64_t previous, uint64_t current) {
+    uint64_t *total;
+    if (index >= 8u) return;
+    total = &state->value_census_current_totals[index];
+    if (*total < previous) {
+        *total = 0;
+        state->value_census_tracking_unavailable = 1;
+    } else {
+        *total -= previous;
+    }
+    rxvm_profile_add_total(state, total, current);
+    if (*total > state->value_census_peak_totals[index])
+        state->value_census_peak_totals[index] = *total;
+}
+
+static void rxvm_profile_value_census_snapshot(
+        rxvm_profile_state *state,
+        rxvm_profile_value_census_entry *entry,
+        const value *payload) {
+    uint32_t logical_mask;
+    uint32_t storage_mask = 0;
+    uint32_t sticky_storage_mask = 0;
+    uint64_t string_capacity = 0;
+    uint64_t current_values[8];
+    uint64_t *current_fields[8];
+    uint64_t sticky_capacities[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    unsigned int metric;
+    uint64_t event;
+    static const uint32_t sticky_bits[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT] = {
+        RXVM_PROFILE_VALUE_STORAGE_STRING,
+        RXVM_PROFILE_VALUE_STORAGE_DECIMAL,
+        RXVM_PROFILE_VALUE_STORAGE_BINARY,
+        RXVM_PROFILE_VALUE_STORAGE_OBJECT
+    };
+
+    if (!entry || !payload) return;
+    rxvm_profile_increment(state, &state->value_census_event_sequence);
+    event = state->value_census_event_sequence;
+    logical_mask = rxvm_profile_value_logical_mask(payload);
+    if (logical_mask < 64u) {
+        entry->logical_masks_seen |= UINT64_C(1) << logical_mask;
+        rxvm_profile_increment(
+                state, &state->value_census_logical_observations[logical_mask]);
+    }
+
+    if (payload->string_length ||
+            RXVM_VALUE_STRING_IS_ALLOCATED(payload)) {
+        storage_mask |= RXVM_PROFILE_VALUE_STORAGE_STRING;
+        string_capacity =
+                (uint64_t)RXVM_VALUE_STRING_CAPACITY(payload);
+    }
+    if (RXVM_VALUE_STRING_IS_ALLOCATED(payload) &&
+            RXVM_VALUE_STRING_CAPACITY(payload))
+        sticky_storage_mask |= RXVM_PROFILE_VALUE_STORAGE_STRING;
+    if (rxvm_value_decimal_data(payload) ||
+            rxvm_value_decimal_capacity(payload))
+        storage_mask |= RXVM_PROFILE_VALUE_STORAGE_DECIMAL;
+    if (rxvm_value_decimal_data(payload) ||
+            rxvm_value_decimal_capacity(payload))
+        sticky_storage_mask |= RXVM_PROFILE_VALUE_STORAGE_DECIMAL;
+    if (rxvm_value_native_ops(payload))
+        storage_mask |= RXVM_PROFILE_VALUE_STORAGE_NATIVE;
+    else if (payload->binary_value || RXVM_VALUE_BINARY_CAPACITY(payload))
+        storage_mask |= RXVM_PROFILE_VALUE_STORAGE_BINARY;
+    if (!rxvm_value_native_ops(payload) &&
+            (payload->binary_value || RXVM_VALUE_BINARY_CAPACITY(payload)))
+        sticky_storage_mask |= RXVM_PROFILE_VALUE_STORAGE_BINARY;
+    if (payload->reference_payload || payload->reference_identity)
+        storage_mask |= RXVM_PROFILE_VALUE_STORAGE_REFERENCE;
+    if (payload->attributes || payload->unlinked_attributes ||
+            rxvm_value_attribute_buffers(payload) ||
+            rxvm_value_max_attributes(payload) ||
+            payload->object_type)
+        storage_mask |= RXVM_PROFILE_VALUE_STORAGE_OBJECT;
+    if (payload->attributes || payload->unlinked_attributes ||
+            rxvm_value_attribute_buffers(payload) ||
+            rxvm_value_max_attributes(payload))
+        sticky_storage_mask |= RXVM_PROFILE_VALUE_STORAGE_OBJECT;
+
+    sticky_capacities[0] =
+            (uint64_t)RXVM_VALUE_STRING_CAPACITY(payload);
+    sticky_capacities[1] =
+            (uint64_t)rxvm_value_decimal_capacity(payload);
+    sticky_capacities[2] =
+            (uint64_t)RXVM_VALUE_BINARY_CAPACITY(payload);
+    sticky_capacities[3] =
+            (uint64_t)rxvm_value_max_attributes(payload);
+
+    for (metric = 0;
+         metric < RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT; metric++) {
+        uint32_t bit = sticky_bits[metric];
+        int was_active = (entry->current_logical_mask & bit) != 0;
+        int is_active = (logical_mask & bit) != 0;
+        int is_sticky = (sticky_storage_mask & bit) != 0;
+        if (was_active && !is_active && is_sticky) {
+            if (!(entry->sticky_inactive_pending_mask & bit)) {
+                entry->sticky_inactive_pending_mask |= bit;
+                entry->sticky_inactive_event[metric] = event;
+                entry->sticky_inactive_capacity[metric] =
+                        sticky_capacities[metric];
+                rxvm_profile_add_total(
+                        state,
+                        &state->value_census_inactive_capacity_current[metric],
+                        sticky_capacities[metric]);
+                if (state->value_census_inactive_capacity_current[metric] >
+                        state->value_census_inactive_capacity_peak[metric])
+                    state->value_census_inactive_capacity_peak[metric] =
+                            state->value_census_inactive_capacity_current[metric];
+            }
+        } else if (!was_active && is_active &&
+                (entry->sticky_inactive_pending_mask & bit)) {
+            uint64_t distance = event - entry->sticky_inactive_event[metric];
+            uint64_t capacity = entry->sticky_inactive_capacity[metric];
+            unsigned int bucket = 0;
+            unsigned int capacity_bucket = 0;
+            uint64_t upper = 1;
+            rxvm_profile_increment(
+                    state, &state->value_census_reuse_count[metric]);
+            rxvm_profile_add_total(
+                    state,
+                    &state->value_census_reuse_distance_total[metric],
+                    distance);
+            if (distance > state->value_census_reuse_distance_max[metric])
+                state->value_census_reuse_distance_max[metric] = distance;
+            if (distance) {
+                bucket = 1u;
+                while (upper < distance &&
+                        bucket + 1u <
+                                RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS) {
+                    upper <<= 1u;
+                    bucket++;
+                }
+            }
+            rxvm_profile_increment(
+                    state,
+                    &state->value_census_reuse_distance_histogram
+                            [metric][bucket]);
+            upper = 1;
+            if (capacity) {
+                capacity_bucket = 1u;
+                while (upper < capacity &&
+                        capacity_bucket + 1u <
+                                RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS) {
+                    upper <<= 1u;
+                    capacity_bucket++;
+                }
+            }
+            rxvm_profile_increment(
+                    state,
+                    &state->value_census_reuse_capacity_histogram
+                            [metric][capacity_bucket]);
+            if (state->value_census_inactive_capacity_current[metric] <
+                    capacity) {
+                state->value_census_inactive_capacity_current[metric] = 0;
+                state->value_census_tracking_unavailable = 1;
+            } else {
+                state->value_census_inactive_capacity_current[metric] -=
+                        capacity;
+            }
+            entry->sticky_inactive_pending_mask &= ~bit;
+            entry->sticky_inactive_capacity[metric] = 0;
+        }
+        if (!is_sticky && (entry->sticky_inactive_pending_mask & bit)) {
+            uint64_t capacity = entry->sticky_inactive_capacity[metric];
+            unsigned int capacity_bucket = 0;
+            uint64_t upper = 1;
+            if (capacity) {
+                capacity_bucket = 1u;
+                while (upper < capacity &&
+                        capacity_bucket + 1u <
+                                RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS) {
+                    upper <<= 1u;
+                    capacity_bucket++;
+                }
+            }
+            rxvm_profile_increment(
+                    state,
+                    &state->value_census_release_without_reuse_count[metric]);
+            rxvm_profile_add_total(
+                    state,
+                    &state->value_census_release_without_reuse_capacity[metric],
+                    capacity);
+            rxvm_profile_increment(
+                    state,
+                    &state->value_census_release_without_reuse_histogram
+                            [metric][capacity_bucket]);
+            if (state->value_census_inactive_capacity_current[metric] <
+                    capacity) {
+                state->value_census_inactive_capacity_current[metric] = 0;
+                state->value_census_tracking_unavailable = 1;
+            } else {
+                state->value_census_inactive_capacity_current[metric] -=
+                        capacity;
+            }
+            entry->sticky_inactive_pending_mask &= ~bit;
+            entry->sticky_inactive_capacity[metric] = 0;
+        }
+    }
+    entry->current_logical_mask = logical_mask;
+
+    entry->storage_ever_mask |= storage_mask;
+    rxvm_profile_increment(state, &entry->observations);
+    current_values[0] = (uint64_t)payload->string_length;
+    current_values[1] = string_capacity;
+    current_values[2] = (uint64_t)rxvm_value_decimal_length(payload);
+    current_values[3] = (uint64_t)rxvm_value_decimal_capacity(payload);
+    current_values[4] = (uint64_t)payload->binary_length;
+    current_values[5] =
+            (uint64_t)RXVM_VALUE_BINARY_CAPACITY(payload);
+    current_values[6] = (uint64_t)payload->num_attributes;
+    current_values[7] = (uint64_t)rxvm_value_max_attributes(payload);
+    current_fields[0] = &entry->current_string_length;
+    current_fields[1] = &entry->current_string_capacity;
+    current_fields[2] = &entry->current_decimal_length;
+    current_fields[3] = &entry->current_decimal_capacity;
+    current_fields[4] = &entry->current_binary_length;
+    current_fields[5] = &entry->current_binary_capacity;
+    current_fields[6] = &entry->current_attributes;
+    current_fields[7] = &entry->current_attribute_capacity;
+    for (metric = 0; metric < 8u; metric++) {
+        uint64_t *entry_value = current_fields[metric];
+        rxvm_profile_value_census_replace_total(
+                state, metric, *entry_value, current_values[metric]);
+        *entry_value = current_values[metric];
+    }
+    for (metric = 0; metric < 4u; metric++) {
+        uint64_t used =
+                state->value_census_current_totals[metric * 2u];
+        uint64_t capacity =
+                state->value_census_current_totals[metric * 2u + 1u];
+        uint64_t dead = capacity >= used ? capacity - used : 0;
+        if (dead > state->value_census_peak_dead[metric])
+            state->value_census_peak_dead[metric] = dead;
+    }
+
+#define RXVM_PROFILE_VALUE_MAX(field_)                                        \
+    do {                                                                       \
+        if (entry->current_##field_ > entry->max_##field_)                    \
+            entry->max_##field_ = entry->current_##field_;                    \
+    } while (0)
+    RXVM_PROFILE_VALUE_MAX(string_length);
+    RXVM_PROFILE_VALUE_MAX(string_capacity);
+    RXVM_PROFILE_VALUE_MAX(decimal_length);
+    RXVM_PROFILE_VALUE_MAX(decimal_capacity);
+    RXVM_PROFILE_VALUE_MAX(binary_length);
+    RXVM_PROFILE_VALUE_MAX(binary_capacity);
+    RXVM_PROFILE_VALUE_MAX(attributes);
+    RXVM_PROFILE_VALUE_MAX(attribute_capacity);
+#undef RXVM_PROFILE_VALUE_MAX
+    if ((uint64_t)rxvm_value_attribute_buffer_count(payload) >
+            entry->max_attribute_buffers)
+        entry->max_attribute_buffers =
+                (uint64_t)rxvm_value_attribute_buffer_count(payload);
+}
+
+void rxvm_profile_register_value(const value *payload) {
+    rxvm_profile_state *state = rxvm_active_allocation_profile;
+    rxvm_profile_value_census_entry *entry =
+            rxvm_profile_value_census_entry_for(state, payload, 1);
+    rxvm_profile_value_census_snapshot(state, entry, payload);
+}
+
+void rxvm_profile_mark_value_origin(const value *payload,
+                                    rxvm_profile_value_origin origin) {
+    rxvm_profile_state *state = rxvm_active_allocation_profile;
+    rxvm_profile_value_census_entry *entry =
+            rxvm_profile_value_census_entry_for(state, payload, 1);
+    if (!entry) return;
+    if (origin != RXVM_PROFILE_VALUE_ORIGIN_UNKNOWN) {
+        entry->origin_mask &= ~RXVM_PROFILE_VALUE_ORIGIN_UNKNOWN;
+        if (origin != RXVM_PROFILE_VALUE_ORIGIN_STANDALONE)
+            entry->origin_mask &= ~RXVM_PROFILE_VALUE_ORIGIN_STANDALONE;
+    }
+    entry->origin_mask |= (uint32_t)origin;
+    rxvm_profile_value_census_snapshot(state, entry, payload);
+}
+
+void rxvm_profile_record_value_storage(const value *payload) {
+    rxvm_profile_state *state = rxvm_active_allocation_profile;
+    rxvm_profile_value_census_entry *entry =
+            rxvm_profile_value_census_entry_for(state, payload, 1);
+    rxvm_profile_value_census_snapshot(state, entry, payload);
+}
+
+void rxvm_profile_record_value_storage_if_registered(const value *payload) {
+    rxvm_profile_state *state = rxvm_active_allocation_profile;
+    rxvm_profile_value_census_entry *entry =
+            rxvm_profile_value_census_entry_for(state, payload, 0);
+    rxvm_profile_value_census_snapshot(state, entry, payload);
+}
+
 uint64_t rxvm_profile_now_ns(void) {
 #ifdef __APPLE__
     return clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
@@ -146,11 +543,11 @@ static rxvm_profile_value_shape rxvm_profile_value_payload_shape(
         shapes++;
     }
     if (payload->binary_length) {
-        shape = payload->native_payload_ops
+        shape = rxvm_value_native_ops(payload)
                 ? RXVM_PROFILE_VALUE_NATIVE : RXVM_PROFILE_VALUE_BINARY;
         shapes++;
     }
-    if (payload->decimal_value_length) {
+    if (rxvm_value_decimal_length(payload)) {
         shape = RXVM_PROFILE_VALUE_DECIMAL;
         shapes++;
     }
@@ -178,9 +575,10 @@ static uint64_t rxvm_profile_value_payload_bytes(const value *payload) {
     if (UINT64_MAX - bytes < (uint64_t)payload->binary_length)
         return UINT64_MAX;
     bytes += (uint64_t)payload->binary_length;
-    if (UINT64_MAX - bytes < (uint64_t)payload->decimal_value_length)
+    if (UINT64_MAX - bytes <
+            (uint64_t)rxvm_value_decimal_length(payload))
         return UINT64_MAX;
-    bytes += (uint64_t)payload->decimal_value_length;
+    bytes += (uint64_t)rxvm_value_decimal_length(payload);
     if (payload->num_attributes > UINT64_MAX / sizeof(value *))
         return UINT64_MAX;
     attribute_bytes = (uint64_t)payload->num_attributes * sizeof(value *);
@@ -211,6 +609,7 @@ void rxvm_profile_record_value_typed(rxvm_profile_value_operation operation,
 void rxvm_profile_record_value_operation(rxvm_profile_value_operation operation,
                                          const value *payload) {
     uint64_t bytes = rxvm_profile_value_payload_bytes(payload);
+    rxvm_profile_record_value_storage(payload);
     rxvm_profile_record_value_typed(
             operation, rxvm_profile_value_payload_shape(payload),
             (size_t)bytes);
@@ -1101,6 +1500,61 @@ void rxvm_profile_refresh_catalog(rxvm_profile_state *state,
 #endif
 }
 
+static void rxvm_profile_value_census_mark_tree(
+        rxvm_profile_state *state, const value *payload,
+        rxvm_profile_value_origin origin, unsigned int depth) {
+    rxvm_profile_value_census_entry *entry;
+    size_t index;
+
+    if (!payload || depth > 256u) return;
+    entry = rxvm_profile_value_census_entry_for(state, payload, 1);
+    if (!entry) return;
+    if (origin != RXVM_PROFILE_VALUE_ORIGIN_UNKNOWN) {
+        entry->origin_mask &= ~RXVM_PROFILE_VALUE_ORIGIN_UNKNOWN;
+        if (origin != RXVM_PROFILE_VALUE_ORIGIN_STANDALONE)
+            entry->origin_mask &= ~RXVM_PROFILE_VALUE_ORIGIN_STANDALONE;
+    }
+    entry->origin_mask |= (uint32_t)origin;
+    rxvm_profile_value_census_snapshot(state, entry, payload);
+
+    if (!payload->unlinked_attributes) return;
+    for (index = 0; index < rxvm_value_max_attributes(payload); index++) {
+        const value *attribute = payload->unlinked_attributes[index];
+        if (attribute && attribute != payload)
+            rxvm_profile_value_census_mark_tree(
+                    state, attribute, RXVM_PROFILE_VALUE_ORIGIN_ATTRIBUTE,
+                    depth + 1u);
+    }
+}
+
+void rxvm_profile_finish_value_census(rxvm_profile_state *state,
+                                      struct rxvm_context *context) {
+    size_t module_index;
+    int argument_index;
+
+    if (!state || !state->enabled || !context) return;
+    for (module_index = 0; module_index < context->num_modules;
+         module_index++) {
+        module *mod = context->modules[module_index];
+        int global_index;
+        if (!mod || !mod->globals || mod->segment.globals <= 0) continue;
+        for (global_index = 0; global_index < mod->segment.globals;
+             global_index++)
+            rxvm_profile_value_census_mark_tree(
+                    state, mod->globals[global_index],
+                    RXVM_PROFILE_VALUE_ORIGIN_GLOBAL, 0u);
+    }
+
+    rxvm_profile_value_census_mark_tree(
+            state, context->ext_ret, RXVM_PROFILE_VALUE_ORIGIN_API_NATIVE, 0u);
+    if (!context->ext_args || context->ext_argc <= 0) return;
+    for (argument_index = 0; argument_index < context->ext_argc;
+         argument_index++)
+        rxvm_profile_value_census_mark_tree(
+                state, context->ext_args[argument_index],
+                RXVM_PROFILE_VALUE_ORIGIN_API_NATIVE, 0u);
+}
+
 void rxvm_profile_begin(rxvm_profile_state *state, int enabled,
                         struct rxvm_context *context) {
     uint64_t minimum = UINT64_MAX;
@@ -1156,10 +1610,12 @@ void rxvm_profile_destroy(rxvm_profile_state *state) {
     free(state->activations);
     free(state->call_rows);
     free(state->branch_rows);
+    free(state->value_census_entries);
     state->procedures = 0;
     state->activations = 0;
     state->call_rows = 0;
     state->branch_rows = 0;
+    state->value_census_entries = 0;
     state->procedure_count = 0;
     state->procedure_capacity = 0;
     state->activation_count = 0;
@@ -1168,6 +1624,8 @@ void rxvm_profile_destroy(rxvm_profile_state *state) {
     state->call_row_capacity = 0;
     state->branch_row_count = 0;
     state->branch_row_capacity = 0;
+    state->value_census_count = 0;
+    state->value_census_capacity = 0;
     if (rxvm_active_allocation_profile == state)
         rxvm_active_allocation_profile = state->previous_allocation_profile;
     state->previous_allocation_profile = 0;
@@ -2219,6 +2677,306 @@ static void rxvm_profile_write_table(FILE *out,
     }
 }
 
+#define RXVM_PROFILE_VALUE_CENSUS_HISTOGRAM_BUCKETS 34u
+#define RXVM_PROFILE_VALUE_CENSUS_METRICS 16u
+
+static unsigned int rxvm_profile_value_census_bucket(uint64_t value) {
+    unsigned int bucket = 0;
+    uint64_t upper = 1;
+    if (!value) return 0;
+    bucket = 1;
+    while (upper < value &&
+            bucket + 1u < RXVM_PROFILE_VALUE_CENSUS_HISTOGRAM_BUCKETS) {
+        upper <<= 1u;
+        bucket++;
+    }
+    return bucket;
+}
+
+static uint64_t rxvm_profile_value_census_bucket_upper(unsigned int bucket) {
+    if (!bucket) return 0;
+    if (bucket + 1u >= RXVM_PROFILE_VALUE_CENSUS_HISTOGRAM_BUCKETS)
+        return UINT64_MAX;
+    return UINT64_C(1) << (bucket - 1u);
+}
+
+static void rxvm_profile_value_census_add(uint64_t *target,
+                                          uint64_t amount) {
+    if (UINT64_MAX - *target < amount) *target = UINT64_MAX;
+    else *target += amount;
+}
+
+static void rxvm_profile_write_value_census(
+        const rxvm_profile_state *state, const char *output_path,
+        const char *vm_mode, int result) {
+    static const char *const metric_names[
+            RXVM_PROFILE_VALUE_CENSUS_METRICS] = {
+        "current_string_length", "current_string_capacity",
+        "current_decimal_length", "current_decimal_capacity",
+        "current_binary_length", "current_binary_capacity",
+        "current_attributes", "current_attribute_capacity",
+        "max_string_length", "max_string_capacity",
+        "max_decimal_length", "max_decimal_capacity",
+        "max_binary_length", "max_binary_capacity",
+        "max_attributes", "max_attribute_capacity"
+    };
+    static const char *const sticky_names[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT] = {
+        "string", "decimal", "binary", "attributes"
+    };
+    uint64_t origin_counts[128] = {0};
+    uint64_t storage_counts[64] = {0};
+    uint64_t logical_seen_counts[64] = {0};
+    uint64_t histograms[RXVM_PROFILE_VALUE_CENSUS_METRICS]
+                       [RXVM_PROFILE_VALUE_CENSUS_HISTOGRAM_BUCKETS] = {{0}};
+    uint64_t metric_totals[RXVM_PROFILE_VALUE_CENSUS_METRICS] = {0};
+    uint64_t current_string_dead = 0;
+    uint64_t current_decimal_dead = 0;
+    uint64_t current_binary_dead = 0;
+    uint64_t current_attribute_dead = 0;
+    uint64_t inline_string_only = 0;
+    uint64_t compound_values = 0;
+    size_t path_length;
+    char *census_path;
+    FILE *out;
+    size_t index;
+
+    if (!state || !state->enabled || !output_path || !*output_path) return;
+    path_length = strlen(output_path);
+    if (path_length > SIZE_MAX - sizeof(".value-census.csv")) return;
+    census_path = (char *)malloc(
+            path_length + sizeof(".value-census.csv"));
+    if (!census_path) return;
+    memcpy(census_path, output_path, path_length);
+    memcpy(census_path + path_length, ".value-census.csv",
+           sizeof(".value-census.csv"));
+    out = fopen(census_path, "w");
+    if (!out) {
+        fprintf(stderr, "ERROR: unable to open value census output '%s'\n",
+                census_path);
+        free(census_path);
+        return;
+    }
+
+    for (index = 0; index < state->value_census_capacity; index++) {
+        const rxvm_profile_value_census_entry *entry =
+                &state->value_census_entries[index];
+        uint64_t values[RXVM_PROFILE_VALUE_CENSUS_METRICS];
+        unsigned int metric;
+        unsigned int mask;
+        if (!entry->address) continue;
+
+        origin_counts[entry->origin_mask & 0x7fu]++;
+        storage_counts[entry->storage_ever_mask & 0x3fu]++;
+        if ((entry->storage_ever_mask &
+                (entry->storage_ever_mask - 1u)) != 0)
+            compound_values++;
+        for (mask = 0; mask < 64u; mask++) {
+            if (entry->logical_masks_seen & (UINT64_C(1) << mask))
+                logical_seen_counts[mask]++;
+        }
+
+        values[0] = entry->current_string_length;
+        values[1] = entry->current_string_capacity;
+        values[2] = entry->current_decimal_length;
+        values[3] = entry->current_decimal_capacity;
+        values[4] = entry->current_binary_length;
+        values[5] = entry->current_binary_capacity;
+        values[6] = entry->current_attributes;
+        values[7] = entry->current_attribute_capacity;
+        values[8] = entry->max_string_length;
+        values[9] = entry->max_string_capacity;
+        values[10] = entry->max_decimal_length;
+        values[11] = entry->max_decimal_capacity;
+        values[12] = entry->max_binary_length;
+        values[13] = entry->max_binary_capacity;
+        values[14] = entry->max_attributes;
+        values[15] = entry->max_attribute_capacity;
+        for (metric = 0; metric < RXVM_PROFILE_VALUE_CENSUS_METRICS;
+             metric++) {
+            unsigned int bucket =
+                    rxvm_profile_value_census_bucket(values[metric]);
+            histograms[metric][bucket]++;
+            rxvm_profile_value_census_add(
+                    &metric_totals[metric], values[metric]);
+        }
+        if (entry->current_string_capacity >= entry->current_string_length)
+            rxvm_profile_value_census_add(
+                    &current_string_dead,
+                    entry->current_string_capacity -
+                            entry->current_string_length);
+        if (entry->current_decimal_capacity >= entry->current_decimal_length)
+            rxvm_profile_value_census_add(
+                    &current_decimal_dead,
+                    entry->current_decimal_capacity -
+                            entry->current_decimal_length);
+        if (entry->current_binary_capacity >= entry->current_binary_length)
+            rxvm_profile_value_census_add(
+                    &current_binary_dead,
+                    entry->current_binary_capacity -
+                            entry->current_binary_length);
+        if (entry->current_attribute_capacity >= entry->current_attributes)
+            rxvm_profile_value_census_add(
+                    &current_attribute_dead,
+                    entry->current_attribute_capacity -
+                            entry->current_attributes);
+    }
+
+    fputs("record,dimension,origin_mask,shape_mask,bucket_upper,count,total,max_or_peak,notes\n",
+          out);
+    fputs("summary,schema_version,,,0,1,1,1,value census sidecar schema 1\n",
+          out);
+    fprintf(out,
+            "summary,unique_value_addresses,,,0,%zu,%zu,%zu,"
+            "vm=%s result=%d sizeof_value=%zu slab_size=%zu max_standard=%zu tracking=%s\n",
+            state->value_census_count, state->value_census_count,
+            state->value_census_count, vm_mode, result, sizeof(value),
+            RXVM_MEMORY_SLAB_SIZE, RXVM_MEMORY_MAX_STANDARD_SIZE,
+            state->value_census_tracking_unavailable
+                    ? "degraded" : "complete");
+    fprintf(out,
+            "summary,inline_string_only,,,0,%" PRIu64 ",,,"
+            "inline string storage disabled by V1\n",
+            inline_string_only);
+    fprintf(out,
+            "summary,compound_storage_ever,,,0,%" PRIu64 ",,,"
+            "more than one string/decimal/binary/reference/object/native storage facet\n",
+            compound_values);
+    fprintf(out,
+            "retained,current_string_dead_bytes,,,0,,%" PRIu64 ",,capacity minus current length\n",
+            current_string_dead);
+    fprintf(out,
+            "retained,current_decimal_dead_bytes,,,0,,%" PRIu64 ",,capacity minus current length\n",
+            current_decimal_dead);
+    fprintf(out,
+            "retained,current_binary_dead_bytes,,,0,,%" PRIu64 ",,capacity minus current length\n",
+            current_binary_dead);
+    fprintf(out,
+            "retained,current_attribute_dead_slots,,,0,,%" PRIu64 ",,capacity minus active count\n",
+            current_attribute_dead);
+    for (index = 0; index < 8u; index++)
+        fprintf(out,
+                "peak,%s,,,0,,%" PRIu64 ",,peak simultaneous total during execution\n",
+                metric_names[index], state->value_census_peak_totals[index]);
+    fprintf(out,
+            "peak,string_dead_bytes,,,0,,%" PRIu64 ",,peak simultaneous capacity minus used\n",
+            state->value_census_peak_dead[0]);
+    fprintf(out,
+            "peak,decimal_dead_bytes,,,0,,%" PRIu64 ",,peak simultaneous capacity minus used\n",
+            state->value_census_peak_dead[1]);
+    fprintf(out,
+            "peak,binary_dead_bytes,,,0,,%" PRIu64 ",,peak simultaneous capacity minus used\n",
+            state->value_census_peak_dead[2]);
+    fprintf(out,
+            "peak,attribute_dead_slots,,,0,,%" PRIu64 ",,peak simultaneous capacity minus active count\n",
+            state->value_census_peak_dead[3]);
+    for (index = 0;
+         index < RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT; index++) {
+        unsigned int bucket;
+        uint64_t count = state->value_census_reuse_count[index];
+        uint64_t average = count
+                ? state->value_census_reuse_distance_total[index] / count
+                : 0;
+        fprintf(out,
+                "reuse,%s_events,,,0,%" PRIu64 ",%" PRIu64 ",%" PRIu64
+                ",distance is intervening value-census observations; average=%" PRIu64 "\n",
+                sticky_names[index], count,
+                state->value_census_reuse_distance_total[index],
+                state->value_census_reuse_distance_max[index], average);
+        fprintf(out,
+                "reclaimable_peak,%s_capacity,,,0,,%" PRIu64
+                ",,peak simultaneous inactive sticky capacity; bytes except attribute slots\n",
+                sticky_names[index],
+                state->value_census_inactive_capacity_peak[index]);
+        fprintf(out,
+                "release_without_reuse,%s_events,,,0,%" PRIu64 ",%" PRIu64
+                ",,final inactive episode released without another reuse; capacity is bytes except attribute slots\n",
+                sticky_names[index],
+                state->value_census_release_without_reuse_count[index],
+                state->value_census_release_without_reuse_capacity[index]);
+        for (bucket = 0;
+             bucket < RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS; bucket++) {
+            uint64_t bucket_count =
+                    state->value_census_reuse_distance_histogram
+                            [index][bucket];
+            if (!bucket_count) continue;
+            fprintf(out,
+                    "reuse_histogram,%s_distance_events,,,%" PRIu64
+                    ",%" PRIu64 ",,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket\n",
+                    sticky_names[index],
+                    rxvm_profile_value_census_bucket_upper(bucket),
+                    bucket_count);
+        }
+        for (bucket = 0;
+             bucket < RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS; bucket++) {
+            uint64_t bucket_count =
+                    state->value_census_reuse_capacity_histogram
+                            [index][bucket];
+            if (bucket_count)
+                fprintf(out,
+                        "reuse_capacity_histogram,%s_capacity,,,%" PRIu64
+                        ",%" PRIu64 ",,,power-of-two inclusive upper bound; bytes except attribute slots\n",
+                        sticky_names[index],
+                        rxvm_profile_value_census_bucket_upper(bucket),
+                        bucket_count);
+            bucket_count =
+                    state->value_census_release_without_reuse_histogram
+                            [index][bucket];
+            if (bucket_count)
+                fprintf(out,
+                        "release_without_reuse_histogram,%s_capacity,,,%" PRIu64
+                        ",%" PRIu64 ",,,power-of-two inclusive upper bound; bytes except attribute slots\n",
+                        sticky_names[index],
+                        rxvm_profile_value_census_bucket_upper(bucket),
+                        bucket_count);
+        }
+    }
+
+    for (index = 0; index < 128u; index++) {
+        if (!origin_counts[index]) continue;
+        fprintf(out, "origin,unique_values,%zu,,0,%" PRIu64 ",,,"
+                     "bits unknown=1 frame=2 global=4 attribute=8 standalone=16 scratch=32 api_native=64\n",
+                index, origin_counts[index]);
+    }
+    for (index = 0; index < 64u; index++) {
+        if (storage_counts[index])
+            fprintf(out,
+                    "storage_ever,unique_values,,%zu,0,%" PRIu64 ",,,"
+                    "bits string=1 decimal=2 binary=4 reference=8 object=16 native=32\n",
+                    index, storage_counts[index]);
+        if (logical_seen_counts[index])
+            fprintf(out,
+                    "logical_seen,unique_values,,%zu,0,%" PRIu64 ",,,"
+                    "at least one observation of this simultaneous logical mask\n",
+                    index, logical_seen_counts[index]);
+        if (state->value_census_logical_observations[index])
+            fprintf(out,
+                    "logical_observations,events,,%zu,0,%" PRIu64 ",,,"
+                    "operation/reset/storage observation frequency\n",
+                    index, state->value_census_logical_observations[index]);
+    }
+
+    for (index = 0; index < RXVM_PROFILE_VALUE_CENSUS_METRICS; index++) {
+        unsigned int bucket;
+        fprintf(out, "total,%s,,,0,,%" PRIu64 ",,sum across unique addresses\n",
+                metric_names[index], metric_totals[index]);
+        for (bucket = 0;
+             bucket < RXVM_PROFILE_VALUE_CENSUS_HISTOGRAM_BUCKETS;
+             bucket++) {
+            if (!histograms[index][bucket]) continue;
+            fprintf(out,
+                    "histogram,%s,,,%"
+                    PRIu64 ",%" PRIu64 ",,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket\n",
+                    metric_names[index],
+                    rxvm_profile_value_census_bucket_upper(bucket),
+                    histograms[index][bucket]);
+        }
+    }
+
+    fclose(out);
+    free(census_path);
+}
+
 void rxvm_profile_report(const rxvm_profile_state *state,
                          const char *output_path,
                          const char *vm_mode,
@@ -2249,4 +3007,5 @@ void rxvm_profile_report(const rxvm_profile_state *state,
     }
 
     if (close_output) fclose(out);
+    rxvm_profile_write_value_census(state, output_path, vm_mode, result);
 }

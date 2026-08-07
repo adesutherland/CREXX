@@ -50,7 +50,7 @@ function(crexx_add_rxdas_roundtrip)
             COMMAND ${CMAKE_COMMAND}
             -DRXDAS=$<TARGET_FILE:rxdas>
             -DRXAS=$<TARGET_FILE:rxas>
-            -DRXVM=$<TARGET_FILE:rxvm>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
             -DRXBVM=$<TARGET_FILE:rxbvm>
             -DINPUT_RXBIN=${_crexx_artifact}
             -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}

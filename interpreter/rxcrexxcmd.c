@@ -58,6 +58,7 @@ typedef struct _stat rx_stat_t;
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <time.h>
+#include "rxvmmemory.h"
 #include <unistd.h>
 #include <utime.h>
 #define RX_GETCWD getcwd
@@ -113,6 +114,42 @@ typedef struct rxcrexxcmd_entry {
 
 static char *directory_stack[RXCREXXCMD_MAX_STACK];
 static int directory_stack_count = 0;
+
+static void *rxcmd_memory_alloc(size_t size) {
+    return rxvm_memory_alloc_bytes(rxvm_memory_current_worker(), size);
+}
+
+static void *rxcmd_memory_alloc_detached(size_t size) {
+    return rxvm_memory_alloc_unowned_bytes(size);
+}
+
+static void *rxcmd_memory_resize(void *pointer,
+                                 size_t copy_size,
+                                 size_t new_size) {
+    rxvm_memory_worker *worker = pointer
+        ? rxvm_memory_owner(pointer)
+        : rxvm_memory_current_worker();
+    rxvm_memory_worker *previous = rxvm_memory_enter(worker);
+    void *resized = rxvm_memory_resize_bytes(worker, pointer,
+                                             copy_size, new_size);
+    rxvm_memory_leave(previous);
+    return resized;
+}
+
+static void rxcmd_memory_free(void *pointer) {
+    rxvm_memory_worker *previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(rxvm_memory_owner(pointer));
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
+
+/* Callback-returned text has the historical libc/free contract. */
+static char *rxcmd_callback_empty_value(void) {
+    char *value = (char *)malloc(1u);
+    if (value) value[0] = '\0';
+    return value;
+}
 
 static int cmd_help(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args);
 static int cmd_echo(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args);
@@ -221,7 +258,7 @@ static char *rx_strdup(const char *text) {
 
     if (!text) text = "";
     length = strlen(text);
-    copy = (char *)malloc(length + 1);
+    copy = (char *)rxcmd_memory_alloc(length + 1u);
     if (!copy) return NULL;
     memcpy(copy, text, length + 1);
     return copy;
@@ -230,7 +267,7 @@ static char *rx_strdup(const char *text) {
 static char *rx_strndup(const char *text, size_t length) {
     char *copy;
 
-    copy = (char *)malloc(length + 1);
+    copy = (char *)rxcmd_memory_alloc(length + 1u);
     if (!copy) return NULL;
     if (length) memcpy(copy, text, length);
     copy[length] = '\0';
@@ -249,7 +286,8 @@ static char *rx_join_path(const char *left, const char *right) {
     left_len = strlen(left);
     right_len = strlen(right);
     needs_sep = left[left_len - 1] != '/' && left[left_len - 1] != '\\';
-    path = (char *)malloc(left_len + (needs_sep ? 1 : 0) + right_len + 1);
+    path = (char *)rxcmd_memory_alloc(
+        left_len + (needs_sep ? 1u : 0u) + right_len + 1u);
     if (!path) return NULL;
 
     memcpy(path, left, left_len);
@@ -264,7 +302,8 @@ static int append_bytes(char **text, size_t *length, const char *bytes, size_t b
     if (!bytes) byte_count = 0;
     if (byte_count > ((size_t)-1) - *length - 1) return -1;
 
-    new_text = (char *)realloc(*text, *length + byte_count + 1);
+    new_text = (char *)rxcmd_memory_resize(
+        *text, *length, *length + byte_count + 1u);
     if (!new_text) return -1;
 
     if (byte_count) memcpy(new_text + *length, bytes, byte_count);
@@ -306,7 +345,7 @@ static int ctx_write_process_text(rxcrexxcmd_context *ctx, int is_error, const c
     }
     if (!saw_crlf) return ctx_write(ctx, is_error, text, length);
 
-    normalized = (char *)malloc(length);
+    normalized = (char *)rxcmd_memory_alloc(length);
     if (!normalized) return -1;
 
     out = 0;
@@ -316,7 +355,7 @@ static int ctx_write_process_text(rxcrexxcmd_context *ctx, int is_error, const c
     }
 
     result = ctx_write(ctx, is_error, normalized, out);
-    free(normalized);
+    rxcmd_memory_free(normalized);
     return result;
 #else
     return ctx_write(ctx, is_error, text, length);
@@ -360,7 +399,7 @@ static int ctx_printf(rxcrexxcmd_context *ctx, const char *format, ...) {
         return ctx_write(ctx, 0, stack_buffer, (size_t)needed);
     }
 
-    heap_buffer = (char *)malloc((size_t)needed + 1);
+    heap_buffer = (char *)rxcmd_memory_alloc((size_t)needed + 1u);
     if (!heap_buffer) {
         va_end(ap2);
         return -1;
@@ -369,7 +408,7 @@ static int ctx_printf(rxcrexxcmd_context *ctx, const char *format, ...) {
     vsnprintf(heap_buffer, (size_t)needed + 1, format, ap2);
     va_end(ap2);
     result = ctx_write(ctx, 0, heap_buffer, (size_t)needed);
-    free(heap_buffer);
+    rxcmd_memory_free(heap_buffer);
     return result;
 }
 
@@ -397,7 +436,7 @@ static int ctx_errorf(rxcrexxcmd_context *ctx, const char *format, ...) {
         return ctx_write(ctx, 1, "\n", 1);
     }
 
-    heap_buffer = (char *)malloc((size_t)needed + 1);
+    heap_buffer = (char *)rxcmd_memory_alloc((size_t)needed + 1u);
     if (!heap_buffer) {
         va_end(ap2);
         return -1;
@@ -407,7 +446,7 @@ static int ctx_errorf(rxcrexxcmd_context *ctx, const char *format, ...) {
     va_end(ap2);
     result = ctx_write(ctx, 1, heap_buffer, (size_t)needed);
     if (result == 0) result = ctx_write(ctx, 1, "\n", 1);
-    free(heap_buffer);
+    rxcmd_memory_free(heap_buffer);
     return result;
 }
 
@@ -415,8 +454,8 @@ static void free_args(rxcrexxcmd_args *args) {
     int i;
 
     if (!args || !args->argv) return;
-    for (i = 0; i < args->argc; i++) free(args->argv[i]);
-    free(args->argv);
+    for (i = 0; i < args->argc; i++) rxcmd_memory_free(args->argv[i]);
+    rxcmd_memory_free(args->argv);
     args->argv = NULL;
     args->argc = 0;
 }
@@ -428,9 +467,12 @@ static int push_arg(rxcrexxcmd_args *args, const char *text, size_t length) {
     copy = rx_strndup(text, length);
     if (!copy) return -1;
 
-    new_argv = (char **)realloc(args->argv, sizeof(char *) * (size_t)(args->argc + 1));
+    new_argv = (char **)rxcmd_memory_resize(
+        args->argv,
+        sizeof(char *) * (size_t)args->argc,
+        sizeof(char *) * (size_t)(args->argc + 1));
     if (!new_argv) {
-        free(copy);
+        rxcmd_memory_free(copy);
         return -1;
     }
 
@@ -445,7 +487,8 @@ static int token_append(char **token, size_t *length, size_t *capacity, char ch)
 
     if (*length + 1 >= *capacity) {
         new_capacity = *capacity ? *capacity * 2 : 32;
-        new_token = (char *)realloc(*token, new_capacity);
+        new_token = (char *)rxcmd_memory_resize(*token, *length,
+                                               new_capacity);
         if (!new_token) return -1;
         *token = new_token;
         *capacity = new_capacity;
@@ -486,7 +529,7 @@ static int parse_args(const char *command, rxcrexxcmd_args *args, char **diagnos
                 }
                 if (*cursor == '\\' && cursor[1]) cursor++;
                 if (token_append(&token, &token_len, &token_cap, *cursor++) != 0) {
-                    free(token);
+                    rxcmd_memory_free(token);
                     return -1;
                 }
                 continue;
@@ -499,24 +542,24 @@ static int parse_args(const char *command, rxcrexxcmd_args *args, char **diagnos
             }
             if (*cursor == '\\' && cursor[1]) cursor++;
             if (token_append(&token, &token_len, &token_cap, *cursor++) != 0) {
-                free(token);
+                rxcmd_memory_free(token);
                 return -1;
             }
         }
 
         if (quote) {
-            free(token);
+            rxcmd_memory_free(token);
             if (diagnostic) *diagnostic = rx_strdup("unterminated quoted string");
             free_args(args);
             return RXCREXXCMD_RC_USAGE;
         }
 
         if (push_arg(args, token ? token : "", token_len) != 0) {
-            free(token);
+            rxcmd_memory_free(token);
             free_args(args);
             return -1;
         }
-        free(token);
+        rxcmd_memory_free(token);
     }
 
     return 0;
@@ -616,7 +659,7 @@ static int expand_args(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, rxcrexxcm
             if (ctx && ctx->io && ctx->io->get_binding) {
                 found = ctx->io->get_binding(ctx->io->userdata, name, &value);
                 if (found < 0) {
-                    free(name);
+                    rxcmd_memory_free(name);
                     free(value);
                     free_args(expanded);
                     return RXCREXXCMD_RC_ERROR;
@@ -625,19 +668,19 @@ static int expand_args(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, rxcrexxcm
 
             if (found) {
                 if (push_arg(expanded, value ? value : "", value ? strlen(value) : 0) != 0) {
-                    free(name);
+                    rxcmd_memory_free(name);
                     free(value);
                     free_args(expanded);
                     return RXCREXXCMD_RC_ERROR;
                 }
             } else if (push_arg(expanded, args->argv[i], strlen(args->argv[i])) != 0) {
-                free(name);
+                rxcmd_memory_free(name);
                 free(value);
                 free_args(expanded);
                 return RXCREXXCMD_RC_ERROR;
             }
 
-            free(name);
+            rxcmd_memory_free(name);
             free(value);
             continue;
         }
@@ -650,7 +693,7 @@ static int expand_args(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, rxcrexxcm
             if (ctx && ctx->io && ctx->io->get_stem_count) {
                 found = ctx->io->get_stem_count(ctx->io->userdata, name, &count);
                 if (found < 0) {
-                    free(name);
+                    rxcmd_memory_free(name);
                     free_args(expanded);
                     return RXCREXXCMD_RC_ERROR;
                 }
@@ -658,7 +701,7 @@ static int expand_args(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, rxcrexxcm
 
             if (!found) {
                 ctx_errorf(ctx, "CREXX: missing stem binding: %s", name);
-                free(name);
+                rxcmd_memory_free(name);
                 free_args(expanded);
                 return RXCREXXCMD_RC_USAGE;
             }
@@ -670,20 +713,20 @@ static int expand_args(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, rxcrexxcm
                 if (ctx && ctx->io && ctx->io->get_stem_value) {
                     value_found = ctx->io->get_stem_value(ctx->io->userdata, name, index, &value);
                     if (value_found < 0) {
-                        free(name);
+                        rxcmd_memory_free(name);
                         free(value);
                         free_args(expanded);
                         return RXCREXXCMD_RC_ERROR;
                     }
                 }
-                if (!value_found) value = rx_strdup("");
+                if (!value_found) value = rxcmd_callback_empty_value();
                 if (!value) {
-                    free(name);
+                    rxcmd_memory_free(name);
                     free_args(expanded);
                     return RXCREXXCMD_RC_ERROR;
                 }
                 if (push_arg(expanded, value, strlen(value)) != 0) {
-                    free(name);
+                    rxcmd_memory_free(name);
                     free(value);
                     free_args(expanded);
                     return RXCREXXCMD_RC_ERROR;
@@ -691,7 +734,7 @@ static int expand_args(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, rxcrexxcm
                 free(value);
             }
 
-            free(name);
+            rxcmd_memory_free(name);
         }
     }
 
@@ -711,7 +754,7 @@ static char *join_args(rxcrexxcmd_args *args, int start) {
         length += strlen(args->argv[i]);
     }
 
-    text = (char *)malloc(length + 1);
+    text = (char *)rxcmd_memory_alloc(length + 1u);
     if (!text) return NULL;
     text[0] = '\0';
 
@@ -757,10 +800,10 @@ static char *current_directory(void) {
 
     size = 256;
     for (;;) {
-        buffer = (char *)malloc(size);
+        buffer = (char *)rxcmd_memory_alloc_detached(size);
         if (!buffer) return NULL;
         if (RX_GETCWD(buffer, (int)size)) return buffer;
-        free(buffer);
+        rxcmd_memory_free(buffer);
         if (errno != ERANGE) return NULL;
         if (size > ((size_t)-1) / 2) return NULL;
         size *= 2;
@@ -809,7 +852,7 @@ static int make_directory_recursive(const char *path) {
         if (*cursor != '/' && *cursor != '\\') continue;
         *cursor = '\0';
         if (*copy && !path_exists(copy, NULL) && RX_MKDIR(copy) != 0) {
-            free(copy);
+            rxcmd_memory_free(copy);
             return -1;
         }
         *cursor = RX_PATH_SEP;
@@ -817,7 +860,7 @@ static int make_directory_recursive(const char *path) {
 
     rc = 0;
     if (!path_exists(copy, NULL) && RX_MKDIR(copy) != 0) rc = -1;
-    free(copy);
+    rxcmd_memory_free(copy);
     return rc;
 }
 
@@ -866,7 +909,7 @@ static int remove_path_recursive(const char *path) {
         pattern = rx_join_path(path, "*");
         if (!pattern) return -1;
         handle = FindFirstFileA(pattern, &entry);
-        free(pattern);
+        rxcmd_memory_free(pattern);
         if (handle == INVALID_HANDLE_VALUE) return RX_RMDIR(path);
 
         rc = 0;
@@ -878,7 +921,7 @@ static int remove_path_recursive(const char *path) {
                 break;
             }
             if (remove_path_recursive(child) != 0) rc = -1;
-            free(child);
+            rxcmd_memory_free(child);
             if (rc != 0) break;
         } while (FindNextFileA(handle, &entry));
         FindClose(handle);
@@ -901,7 +944,7 @@ static int remove_path_recursive(const char *path) {
                 break;
             }
             if (remove_path_recursive(child) != 0) rc = -1;
-            free(child);
+            rxcmd_memory_free(child);
             if (rc != 0) break;
         }
         closedir(dir);
@@ -921,7 +964,7 @@ static int list_directory(rxcrexxcmd_context *ctx, const char *path) {
     pattern = rx_join_path(path, "*");
     if (!pattern) return -1;
     handle = FindFirstFileA(pattern, &entry);
-    free(pattern);
+    rxcmd_memory_free(pattern);
     if (handle == INVALID_HANDLE_VALUE) return -1;
 
     do {
@@ -1010,12 +1053,13 @@ static char *find_executable(const char *name) {
         if (command_found_at(name)) return rx_strdup(name);
 #ifdef _WIN32
         for (ext_index = 1; extensions[ext_index]; ext_index++) {
-            candidate = (char *)malloc(strlen(name) + strlen(extensions[ext_index]) + 1);
+            candidate = (char *)rxcmd_memory_alloc(
+                strlen(name) + strlen(extensions[ext_index]) + 1u);
             if (!candidate) return NULL;
             strcpy(candidate, name);
             strcat(candidate, extensions[ext_index]);
             if (command_found_at(candidate)) return candidate;
-            free(candidate);
+            rxcmd_memory_free(candidate);
         }
 #endif
         return NULL;
@@ -1034,39 +1078,40 @@ static char *find_executable(const char *name) {
 #ifdef _WIN32
         for (ext_index = 0; extensions[ext_index]; ext_index++) {
             char *with_ext;
-            with_ext = (char *)malloc(strlen(name) + strlen(extensions[ext_index]) + 1);
+            with_ext = (char *)rxcmd_memory_alloc(
+                strlen(name) + strlen(extensions[ext_index]) + 1u);
             if (!with_ext) {
-                free(dir);
+                rxcmd_memory_free(dir);
                 return NULL;
             }
             strcpy(with_ext, name);
             strcat(with_ext, extensions[ext_index]);
             candidate = rx_join_path(dir, with_ext);
-            free(with_ext);
+            rxcmd_memory_free(with_ext);
             if (!candidate) {
-                free(dir);
+                rxcmd_memory_free(dir);
                 return NULL;
             }
             if (command_found_at(candidate)) {
-                free(dir);
+                rxcmd_memory_free(dir);
                 return candidate;
             }
-            free(candidate);
+            rxcmd_memory_free(candidate);
         }
 #else
         candidate = rx_join_path(dir, name);
         if (!candidate) {
-            free(dir);
+            rxcmd_memory_free(dir);
             return NULL;
         }
         if (command_found_at(candidate)) {
-            free(dir);
+            rxcmd_memory_free(dir);
             return candidate;
         }
-        free(candidate);
+        rxcmd_memory_free(candidate);
 #endif
 
-        free(dir);
+        rxcmd_memory_free(dir);
         cursor = next ? next + 1 : NULL;
     }
 
@@ -1124,7 +1169,7 @@ static int cmd_echo(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     text = join_args(args, 1);
     if (!text) return RXCREXXCMD_RC_ERROR;
     rc = ctx_putln(ctx, text) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
-    free(text);
+    rxcmd_memory_free(text);
     return rc;
 }
 
@@ -1140,7 +1185,7 @@ static int cmd_pwd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
         return RXCREXXCMD_RC_ERROR;
     }
     rc = ctx_putln(ctx, cwd) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
-    free(cwd);
+    rxcmd_memory_free(cwd);
     return rc;
 }
 
@@ -1177,7 +1222,7 @@ static int cmd_pushd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
 
     if (RX_CHDIR(args->argv[1]) != 0) {
         ctx_errorf(ctx, "pushd: %s: %s", args->argv[1], strerror(errno));
-        free(cwd);
+        rxcmd_memory_free(cwd);
         return RXCREXXCMD_RC_NOT_FOUND;
     }
 
@@ -1185,7 +1230,7 @@ static int cmd_pushd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
     new_cwd = current_directory();
     if (!new_cwd) return RXCREXXCMD_RC_ERROR;
     rc = ctx_putln(ctx, new_cwd) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
-    free(new_cwd);
+    rxcmd_memory_free(new_cwd);
     return rc;
 }
 
@@ -1205,10 +1250,10 @@ static int cmd_popd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     rc = RX_CHDIR(target);
     if (rc != 0) {
         ctx_errorf(ctx, "popd: %s: %s", target, strerror(errno));
-        free(target);
+        rxcmd_memory_free(target);
         return RXCREXXCMD_RC_NOT_FOUND;
     }
-    free(target);
+    rxcmd_memory_free(target);
     return cmd_pwd(ctx, command, args);
 }
 
@@ -1471,7 +1516,8 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
         return RXCREXXCMD_RC_NOT_FOUND;
     }
 
-    ring = (char **)calloc((size_t)count, sizeof(char *));
+    ring = (char **)rxvm_memory_calloc_bytes(
+        rxvm_memory_current_worker(), (size_t)count, sizeof(char *));
     if (!ring) {
         fclose(file);
         return RXCREXXCMD_RC_ERROR;
@@ -1480,12 +1526,12 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     index = 0;
     stored = 0;
     while (fgets(line, sizeof(line), file)) {
-        free(ring[index % count]);
+        rxcmd_memory_free(ring[index % count]);
         ring[index % count] = rx_strdup(line);
         if (!ring[index % count]) {
             fclose(file);
-            for (i = 0; i < count; i++) free(ring[i]);
-            free(ring);
+            for (i = 0; i < count; i++) rxcmd_memory_free(ring[i]);
+            rxcmd_memory_free(ring);
             return RXCREXXCMD_RC_ERROR;
         }
         index++;
@@ -1498,8 +1544,8 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
         if (item && ctx_puts(ctx, item) != 0) rc = RXCREXXCMD_RC_ERROR;
     }
 
-    for (i = 0; i < count; i++) free(ring[i]);
-    free(ring);
+    for (i = 0; i < count; i++) rxcmd_memory_free(ring[i]);
+    rxcmd_memory_free(ring);
     return rc;
 }
 
@@ -1565,12 +1611,12 @@ static int write_text_file(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, const
     file = fopen(args->argv[1], mode);
     if (!file) {
         ctx_errorf(ctx, "%s: %s: %s", args->argv[0], args->argv[1], strerror(errno));
-        free(text);
+        rxcmd_memory_free(text);
         return RXCREXXCMD_RC_ERROR;
     }
     rc = fputs(text, file) == EOF ? RXCREXXCMD_RC_ERROR : 0;
     if (fclose(file) != 0) rc = RXCREXXCMD_RC_ERROR;
-    free(text);
+    rxcmd_memory_free(text);
     return rc;
 }
 
@@ -1595,7 +1641,7 @@ static int cmd_which(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
         return RXCREXXCMD_RC_NOT_FOUND;
     }
     ctx_putln(ctx, path);
-    free(path);
+    rxcmd_memory_free(path);
     return 0;
 }
 
@@ -1734,7 +1780,7 @@ static int cmd_setenv(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_a
     rc = setenv(args->argv[1], value, 1);
 #endif
     if (rc != 0) ctx_errorf(ctx, "setenv: %s: %s", args->argv[1], strerror(errno));
-    free(value);
+    rxcmd_memory_free(value);
     return rc == 0 ? 0 : RXCREXXCMD_RC_ERROR;
 }
 
@@ -1969,11 +2015,11 @@ static int cmd_batch(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
             if (*trim && !(trim[0] == '-' && trim[1] == '-')) {
                 rc = execute_line(ctx, trim);
                 if (rc != 0) {
-                    free(line);
+                    rxcmd_memory_free(line);
                     break;
                 }
             }
-            free(line);
+            rxcmd_memory_free(line);
             start = i + 1;
         }
     }
@@ -2022,7 +2068,7 @@ static int cmd_run(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
         free(out_text);
         free(err_text);
         free(run_error);
-        free(tail);
+        rxcmd_memory_free(tail);
         return command_rc ? command_rc : RXCREXXCMD_RC_ERROR;
     }
 
@@ -2031,7 +2077,7 @@ static int cmd_run(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
     free(out_text);
     free(err_text);
     free(run_error);
-    free(tail);
+    rxcmd_memory_free(tail);
     return command_rc;
 }
 
@@ -2048,7 +2094,7 @@ static int execute_line(rxcrexxcmd_context *ctx, const char *line) {
     if (parse_rc == -1) return RXCREXXCMD_RC_ERROR;
     if (parse_rc != 0) {
         if (diagnostic) ctx_errorf(ctx, "CREXX: %s", diagnostic);
-        free(diagnostic);
+        rxcmd_memory_free(diagnostic);
         return parse_rc;
     }
 
@@ -2104,5 +2150,5 @@ int rxcrexxcmd_execute(const char *command,
 }
 
 void rxcrexxcmd_free(char *text) {
-    free(text);
+    rxcmd_memory_free(text);
 }

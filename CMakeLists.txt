@@ -264,6 +264,22 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CREXX_RXPA_PLUGIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# The portable switch VM is the Clang/MSVC product default; GCC retains the
+# measured direct-threaded default.  This is defined before subdirectories so
+# every compiler, linker and runtime test can execute the stable rxvm product
+# path without knowing which concrete engine supplied it.
+set(CREXX_THREADED_VM_SUPPORTED OFF)
+if(CMAKE_C_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU)$")
+    set(CREXX_THREADED_VM_SUPPORTED ON)
+endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(CREXX_DEFAULT_VM_TARGET rxtvm)
+else()
+    set(CREXX_DEFAULT_VM_TARGET rxbvm)
+endif()
+set(CREXX_RXVM_EXECUTABLE
+        "$<TARGET_FILE_DIR:${CREXX_DEFAULT_VM_TARGET}>/rxvm${CMAKE_EXECUTABLE_SUFFIX}")
+
 file(GLOB CREXX_MESSAGE_CATALOGS CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/messages/*.msg")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/messages")

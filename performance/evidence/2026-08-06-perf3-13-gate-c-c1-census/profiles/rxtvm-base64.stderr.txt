@@ -1,0 +1,23 @@
+RXVM_MEMORY_STATS version=1 allocations=3984 frees=3984 reallocations=30 failures=0 invalid_frees=0 wrong_owner_frees=0 requested_bytes=4488646 capacity_bytes=4649540 internal_fragmentation_bytes=160894 live_allocations=0 peak_live_allocations=1178 live_capacity_bytes=0 peak_live_capacity_bytes=2052676 oversized_live_allocations=0 oversized_live_bytes=0 slabs_owned=13 slabs_reserved=5 retained_slab_bytes=1179648 slabs_from_system=20 slabs_to_system=2 depot_refills=20 depot_returns=7 depot_hits=0 trim_calls=0
+RXVM_MEMORY_CLASS_STATS version=1 allocation_calls=byte16:323,byte32:217,byte64:261,byte128:206,byte256:176,byte512:36,byte1024:2549,byte2048:46,byte4096:20,byte8192:13,byte16384:13,value1:108,value2:0,value4:0,value8:1,value16:0,value32:0,value64:0,reference:0 peak_live=byte16:316,byte32:107,byte64:141,byte128:196,byte256:167,byte512:31,byte1024:47,byte2048:44,byte4096:19,byte8192:13,byte16384:13,value1:70,value2:0,value4:0,value8:1,value16:0,value32:0,value64:0,reference:0
+RXVM_MEMORY_OVERSIZED_STATS version=1 allocations=15 requested_bytes=1397236 max_request_bytes=359184 peak_live_allocations=15 peak_live_bytes=1397236 resize_standard_to_oversized=0 resize_oversized_to_standard=0 resize_oversized_to_oversized=0 request_histogram=32768:6,65536:3,131072:3,262144:2,524288:1
+real 5.99
+user 5.97
+sys 0.00
+            19644416  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                1369  page reclaims
+                   8  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   1  voluntary context switches
+                 376  involuntary context switches
+        187739806792  instructions retired
+         25910467321  cycles elapsed
+            13877680  peak memory footprint

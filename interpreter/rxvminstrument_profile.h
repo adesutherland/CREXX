@@ -209,6 +209,7 @@
 
 #define RXVM_INSTRUMENTATION_VM_END(context_, result_)                         \
     do {                                                                        \
+        rxvm_profile_finish_value_census(&vm_profile, (context_));              \
         rxvm_profile_report(&vm_profile, (context_)->profile_output,            \
                             RXVM_PROFILE_VM_MODE, (result_), meta_map,          \
                             interrupt_to_string);                               \

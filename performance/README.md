@@ -15,6 +15,13 @@ Mac evidence, evidence-selected copy/ownership, conversion, accessor and
 layout/stream panels, qualified-deficit closure and selected-candidate platform
 validation.
 
+Current product verdicts and ordinary correctness runs use `rxvm`, whose
+dispatch engine is selected by the configured C compiler. A dispatch-engine
+experiment must name the concrete executables explicitly: portable `rxbvm`
+and, where supported, direct-threaded `rxtvm`. Older retained evidence and
+closed ledgers keep their historical `rxvm`/`rxbvm` labels; do not reinterpret
+those labels using the new product mapping.
+
 ## Directory map
 
 | Location | Purpose |

@@ -98,8 +98,11 @@ claims. Apply these standing rules to future performance work:
   Java and default HotSpot JIT are part of the normal NetRexx substrate; label
   `options binary` or primitive-Java numeric ports as controls and exclude them
   from Rexx aggregates. Disclose any necessary host-Java storage separately.
-- Report `rxvm` and `rxbvm` separately. Keep throughput, lifecycle, peak RSS
-  and artifact size in separate scorecards.
+- Product verdicts use compiler-selected `rxvm`. A dispatch-engine comparison
+  must report concrete `rxbvm` and `rxtvm` separately; never treat `rxvm` and
+  its selected concrete target as independent cells. Keep throughput,
+  lifecycle, peak RSS and artifact size in separate scorecards. Historical
+  evidence retains its recorded pre-selection labels.
 - Formal absolute baselines require two warmups and ten recorded serial samples
   per cell. Formal before/after decisions require at least one warmup per cell
   and 12 paired, balanced/interleaved recorded rounds.

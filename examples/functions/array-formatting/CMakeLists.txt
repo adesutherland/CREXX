@@ -55,7 +55,7 @@ if(BUILD_TESTING)
     add_test(
             NAME example_array_formatting
             COMMAND ${CMAKE_COMMAND}
-                    -DRXVM=$<TARGET_FILE:rxvm>
+                    -DRXVM=${CREXX_RXVM_EXECUTABLE}
                     -DPROGRAM=${_array_formatting_program}
                     -DMODULE1=${CREXX_ARRAY_FORMATTING_MODULE}
                     -DMODULE2=${CMAKE_BINARY_DIR}/bin/library.rxbin

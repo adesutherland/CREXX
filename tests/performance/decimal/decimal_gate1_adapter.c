@@ -12,6 +12,9 @@
 #include <string.h>
 
 #include "rxvmplugin_framework.h"
+#include "platform.h"
+#include "rxbin.h"
+#include "rxvmvars.h"
 
 static int parse_positive_count(const char *text, size_t *result) {
     char *end = NULL;
@@ -25,32 +28,24 @@ static int parse_positive_count(const char *text, size_t *result) {
 }
 
 static void init_value(value *target) {
-    memset(target, 0, sizeof(*target));
+    value_init(target);
 }
 
 static void clear_decimal_value(value *target) {
-    free(target->decimal_value);
-    target->decimal_value = NULL;
-    target->decimal_value_length = 0;
-    target->decimal_buffer_length = 0;
+    clear_value(target);
 }
 
 static int copy_decimal_value(value *target, const value *source) {
+    size_t length = rxvm_value_decimal_length(source);
     void *storage;
 
-    if (source->decimal_value == NULL || source->decimal_value_length == 0) {
-        target->decimal_value_length = 0;
+    if (source->decimal_value == NULL || length == 0) {
+        rxvm_value_set_decimal_length(target, 0u);
         return 0;
     }
-    if (target->decimal_buffer_length < source->decimal_value_length) {
-        storage = realloc(target->decimal_value, source->decimal_value_length);
-        if (storage == NULL) return 1;
-        target->decimal_value = storage;
-        target->decimal_buffer_length = source->decimal_value_length;
-    }
-    memcpy(target->decimal_value, source->decimal_value,
-           source->decimal_value_length);
-    target->decimal_value_length = source->decimal_value_length;
+    storage = rxvm_value_reserve_decimal(target, length);
+    if (storage == NULL) return 1;
+    memcpy(storage, source->decimal_value, length);
     return 0;
 }
 
@@ -178,7 +173,7 @@ static int run_copy_clear(decplugin *plugin, size_t iterations, char *checksum) 
     if (plugin_failed(plugin)) goto fail;
     for (i = 0; i < iterations; ++i) {
         if (copy_decimal_value(&copy, &source) != 0) goto fail;
-        bytes += copy.decimal_value_length;
+        bytes += rxvm_value_decimal_length(&copy);
         clear_decimal_value(&copy);
     }
     (void)snprintf(checksum, plugin->getRequiredStringSize(plugin), "%zu", bytes);

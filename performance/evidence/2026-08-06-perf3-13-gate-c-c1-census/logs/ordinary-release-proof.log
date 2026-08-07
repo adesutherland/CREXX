@@ -1,0 +1,9 @@
+Ordinary profiling-off Release proof
+CMAKE_BUILD_TYPE:STRING=Release
+CREXX_VM_INLINE_POLICY:STRING=forced
+CREXX_VM_PROFILING:BOOL=OFF
+CREXX_VM_RUN_FLATTEN:BOOL=ON
+rxvmmemory tests passed
+benchmark=awfy_sieve repetitions=50 result=669
+PASS: AWFY Sieve
+PASS: no census strings in ordinary binary

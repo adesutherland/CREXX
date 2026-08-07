@@ -33,7 +33,7 @@ target_include_directories(_system_static PRIVATE
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 add_test(
         NAME test_system
-        COMMAND $<TARGET_FILE:rxvm> system_test_noopt.rxbin ${LIBRPATH}
+        COMMAND ${CREXX_RXVM_EXECUTABLE} system_test_noopt.rxbin ${LIBRPATH}
 )
 
 set_tests_properties(test_system PROPERTIES

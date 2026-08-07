@@ -43,6 +43,6 @@ enable_testing()
 
 # Basic test to run gui_test.rxbin with the gui plugin
 add_test(NAME gui_test
-        COMMAND $<TARGET_FILE:rxvm> gui_test rx_gui ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} gui_test rx_gui ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

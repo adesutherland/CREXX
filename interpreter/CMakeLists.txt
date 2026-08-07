@@ -14,6 +14,11 @@ option(CREXX_VM_PROFILING
         "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
         OFF)
 
+if(CREXX_DEFAULT_VM_TARGET STREQUAL "rxtvm" AND NOT CREXX_THREADED_VM_SUPPORTED)
+    message(FATAL_ERROR
+            "The selected rxtvm default requires GNU/Clang labels-as-values support")
+endif()
+
 set(_rxvmintp_sanitizer_flags
         "${CMAKE_C_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 if(CMAKE_BUILD_TYPE)
@@ -62,6 +67,10 @@ endif()
 
 function(crexx_add_rxvm_core_objects target_name)
     add_library(${target_name} OBJECT ${RXVM_CORE_OBJECT_SOURCES})
+    if(CREXX_VM_PROFILING)
+        target_compile_definitions(${target_name} PRIVATE
+                CREXX_VM_MEMORY_CENSUS=1)
+    endif()
     target_include_directories(${target_name} PRIVATE
             .
             ./rxvmplugin
@@ -100,30 +109,59 @@ function(crexx_add_rxvm_platform_objects target_name)
     set_target_properties(${target_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endfunction()
 
-crexx_add_rxvm_core_objects(rxvm_core_objects)
 crexx_add_rxvm_core_objects(rxbvm_core_objects)
 target_compile_definitions(rxbvm_core_objects PRIVATE NTHREADED=1)
+if(CREXX_THREADED_VM_SUPPORTED)
+    crexx_add_rxvm_core_objects(rxtvm_core_objects)
+endif()
 if(CREXX_VM_PROFILING)
-    target_compile_definitions(rxvm_core_objects PRIVATE
-            CREXX_VM_PROFILING=1
-            RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_profile.h")
     target_compile_definitions(rxbvm_core_objects PRIVATE
             CREXX_VM_PROFILING=1
             RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_profile.h")
+    if(CREXX_THREADED_VM_SUPPORTED)
+        target_compile_definitions(rxtvm_core_objects PRIVATE
+                CREXX_VM_PROFILING=1
+                RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_profile.h")
+    endif()
 endif()
 if(BUILD_TESTING)
-    crexx_add_rxvm_core_objects(rxvm_instrumented_core_objects)
     crexx_add_rxvm_core_objects(rxbvm_instrumented_core_objects)
-    target_compile_definitions(rxvm_instrumented_core_objects PRIVATE
-            RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_test.h")
     target_compile_definitions(rxbvm_instrumented_core_objects PRIVATE
             NTHREADED=1
             RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_test.h")
+    if(CREXX_THREADED_VM_SUPPORTED)
+        crexx_add_rxvm_core_objects(rxtvm_instrumented_core_objects)
+        target_compile_definitions(rxtvm_instrumented_core_objects PRIVATE
+                RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_test.h")
+    endif()
 endif()
+if(CREXX_DEFAULT_VM_TARGET STREQUAL "rxtvm")
+    set(CREXX_DEFAULT_VM_CORE_OBJECT_TARGET rxtvm_core_objects)
+    set(CREXX_DEFAULT_VM_USES_SWITCH OFF)
+else()
+    set(CREXX_DEFAULT_VM_CORE_OBJECT_TARGET rxbvm_core_objects)
+    set(CREXX_DEFAULT_VM_USES_SWITCH ON)
+endif()
+set(CREXX_DEFAULT_VM_CORE_OBJECT_TARGET "${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}"
+        CACHE INTERNAL "Object target used by compiler-selected VM consumers" FORCE)
+set(CREXX_DEFAULT_VM_USES_SWITCH "${CREXX_DEFAULT_VM_USES_SWITCH}"
+        CACHE INTERNAL "Whether the compiler-selected VM uses switch dispatch" FORCE)
 crexx_add_rxvm_platform_objects(rxvm_platform_notls_objects)
 
 add_library(rxvmref STATIC rxvmref.c rxvmref.h)
 target_include_directories(rxvmref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_library(rxvmmemory STATIC rxvmmemory.c rxvmmemory.h)
+target_include_directories(rxvmmemory PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(rxvmmemory PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if(CREXX_VM_PROFILING)
+    # Keep the detailed allocator census out of the ordinary product.  The
+    # public definition keeps the diagnostic stats structure consistent for
+    # direct consumers of rxvmmemory in this profiling-only build.
+    target_compile_definitions(rxvmmemory PUBLIC
+            CREXX_VM_MEMORY_CENSUS=1)
+endif()
+target_link_libraries(rxvmref PUBLIC rxvmmemory)
 
 add_subdirectory(rxvmplugin)
 
@@ -209,21 +247,48 @@ endif()
 
 ##########################################
 # Bare Interpreter
-# Threaded Version
-add_executable(rxvm rxvmmain.c $<TARGET_OBJECTS:rxvm_core_objects>)
-# set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-# set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
-# set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
-target_link_libraries(rxvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
-target_include_directories(rxvm PRIVATE . ./rxvmplugin
-        ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
-
-# Bytecode Version
+# Portable switch-dispatch version.
 add_executable(rxbvm rxvmmain.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_link_libraries(rxbvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
+set(CREXX_CONCRETE_VM_TARGETS rxbvm)
+
+# Direct-threaded version.  MSVC and unknown compilers deliberately do not
+# compile this GNU/Clang extension.
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_executable(rxtvm rxvmmain.c $<TARGET_OBJECTS:rxtvm_core_objects>)
+    target_link_libraries(rxtvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
+    target_include_directories(rxtvm PRIVATE . ./rxvmplugin
+            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+    list(APPEND CREXX_CONCRETE_VM_TARGETS rxtvm)
+endif()
+
+# Keep rxvm as the stable build and executable product path.  Recreate the
+# compatibility entry point on every rxvm target build so removing an otherwise
+# up-to-date symlink/copy cannot leave the product target incomplete.
+if(WIN32)
+    add_custom_target(rxvm ALL
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>"
+                    "$<TARGET_FILE_DIR:${CREXX_DEFAULT_VM_TARGET}>/rxvm${CMAKE_EXECUTABLE_SUFFIX}"
+            DEPENDS ${CREXX_DEFAULT_VM_TARGET}
+            COMMENT "Creating rxvm copy of ${CREXX_DEFAULT_VM_TARGET}"
+            VERBATIM)
+else()
+    add_custom_target(rxvm ALL
+            COMMAND ${CMAKE_COMMAND} -E rm -f
+                    "$<TARGET_FILE_DIR:${CREXX_DEFAULT_VM_TARGET}>/rxvm${CMAKE_EXECUTABLE_SUFFIX}"
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    "$<TARGET_FILE_NAME:${CREXX_DEFAULT_VM_TARGET}>"
+                    "$<TARGET_FILE_DIR:${CREXX_DEFAULT_VM_TARGET}>/rxvm${CMAKE_EXECUTABLE_SUFFIX}"
+            DEPENDS ${CREXX_DEFAULT_VM_TARGET}
+            COMMENT "Creating rxvm symlink to ${CREXX_DEFAULT_VM_TARGET}"
+            VERBATIM)
+endif()
+message(STATUS
+        "cREXX product VM: rxvm -> ${CREXX_DEFAULT_VM_TARGET} (${CMAKE_C_COMPILER_ID})")
 
 # Offline second-stage analyser for dynamic instruction-sequence profiles.
 add_executable(rxseq rxseqmain.c rxseqfile.c)
@@ -240,22 +305,30 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING)
-    add_executable(rxvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxvm_instrumented_core_objects>)
-    target_link_libraries(rxvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
-    target_include_directories(rxvm_instrumented PRIVATE . ./rxvmplugin
-            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
-
     add_executable(rxbvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxbvm_instrumented_core_objects>)
     target_link_libraries(rxbvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
     target_include_directories(rxbvm_instrumented PRIVATE . ./rxvmplugin
             ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
     target_compile_definitions(rxbvm_instrumented PRIVATE NTHREADED=1)
+
+    if(CREXX_THREADED_VM_SUPPORTED)
+        add_executable(rxtvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxtvm_instrumented_core_objects>)
+        target_link_libraries(rxtvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
+        target_include_directories(rxtvm_instrumented PRIVATE . ./rxvmplugin
+                ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+    endif()
+
+    if(CREXX_DEFAULT_VM_TARGET STREQUAL "rxtvm")
+        add_executable(rxvm_instrumented ALIAS rxtvm_instrumented)
+    else()
+        add_executable(rxvm_instrumented ALIAS rxbvm_instrumented)
+    endif()
 endif()
 
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
     add_executable(test_rxvmprofile
             tests/test_rxvmprofile.c
-            $<TARGET_OBJECTS:rxvm_core_objects>
+            $<TARGET_OBJECTS:${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}>
             $<TARGET_OBJECTS:rxvm_platform_objects>)
     target_include_directories(test_rxvmprofile PRIVATE
             .
@@ -265,6 +338,9 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
             ../avl_tree
             ${CMAKE_SOURCE_DIR}/rxpa)
     target_compile_definitions(test_rxvmprofile PRIVATE CREXX_VM_PROFILING=1)
+    if(CREXX_DEFAULT_VM_USES_SWITCH)
+        target_compile_definitions(test_rxvmprofile PRIVATE NTHREADED=1)
+    endif()
     target_link_libraries(test_rxvmprofile PRIVATE
             rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim rxvmref rxbin
             ${CREXX_SOCKET_TARGET_LIBS})
@@ -286,9 +362,13 @@ add_custom_command(
 )
 add_custom_target(packed_library ALL DEPENDS library.c)
 
-# Threaded Version
-add_executable(rxvme rxvmmain.c ${CMAKE_CURRENT_BINARY_DIR}/library.c $<TARGET_OBJECTS:rxvm_core_objects>)
+# Compiler-selected product version.
+add_executable(rxvme rxvmmain.c ${CMAKE_CURRENT_BINARY_DIR}/library.c
+        $<TARGET_OBJECTS:${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}>)
 target_compile_definitions(rxvme PRIVATE LINK_CREXX_LIB=1)
+if(CREXX_DEFAULT_VM_USES_SWITCH)
+    target_compile_definitions(rxvme PRIVATE NTHREADED=1)
+endif()
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
@@ -308,8 +388,12 @@ add_dependencies(rxbvme packed_library)
 ##########################################
 # C Library Interpreter -  to be linked to make a standalone CREXX exe
 
-# Threaded Version
-add_library(rxvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxvm_core_objects>)
+# Compiler-selected product library.
+add_library(rxvml STATIC rxvmlib.c rxvml.c
+        $<TARGET_OBJECTS:${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}>)
+if(CREXX_DEFAULT_VM_USES_SWITCH)
+    target_compile_definitions(rxvml PRIVATE NTHREADED=1)
+endif()
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
@@ -331,7 +415,11 @@ function(crexx_enable_vm_platform target_name)
     endif()
 endfunction()
 
-foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
+set(_crexx_vm_core_targets rxbvm rxvme rxbvme rxvml rxbvml)
+if(CREXX_THREADED_VM_SUPPORTED)
+    list(APPEND _crexx_vm_core_targets rxtvm)
+endif()
+foreach(_rxvm_core_target IN LISTS _crexx_vm_core_targets)
     target_link_libraries(${_rxvm_core_target} rxvmref rxbin)
     crexx_enable_vm_platform(${_rxvm_core_target})
     if(CREXX_VM_PROFILING)
@@ -349,7 +437,11 @@ if(BUILD_TESTING)
             LABELS "interpreter;address;runtime")
 endif()
 if(BUILD_TESTING)
-    foreach(_rxvm_instrumented_target rxvm_instrumented rxbvm_instrumented)
+    set(_crexx_vm_instrumented_targets rxbvm_instrumented)
+    if(CREXX_THREADED_VM_SUPPORTED)
+        list(APPEND _crexx_vm_instrumented_targets rxtvm_instrumented)
+    endif()
+    foreach(_rxvm_instrumented_target IN LISTS _crexx_vm_instrumented_targets)
         target_link_libraries(${_rxvm_instrumented_target} rxvmref rxbin)
         crexx_enable_vm_platform(${_rxvm_instrumented_target})
     endforeach()
@@ -418,6 +510,18 @@ add_executable(test_rxvmstem tests/test_rxvmstem.c rxvalue.h rxvmvars.h rxvmstem
 target_include_directories(test_rxvmstem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
 target_link_libraries(test_rxvmstem rxvmref platform ${CREXX_MATH_LIBRARY})
 
+add_executable(test_rxvmstem_allocator_family
+        tests/test_rxvmstem_allocator_family.c
+        rxvalue.h rxvmvars.h rxvmstem.h)
+target_include_directories(test_rxvmstem_allocator_family PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
+target_link_libraries(test_rxvmstem_allocator_family
+        rxvmref platform ${CREXX_MATH_LIBRARY})
+
+add_executable(test_rxvmmemory tests/test_rxvmmemory.c)
+target_include_directories(test_rxvmmemory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(test_rxvmmemory PRIVATE rxvmmemory)
+
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
@@ -446,9 +550,25 @@ target_link_libraries(test_rxpa_utf_validation rxvmref platform ${CREXX_MATH_LIB
 # Enable testing
 enable_testing()
 
+add_test(
+        NAME rxvm_product_entry_point
+        COMMAND ${CMAKE_COMMAND}
+                "-DRXVM=${CREXX_RXVM_EXECUTABLE}"
+                "-DCONCRETE_VM=$<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>"
+                "-DCONCRETE_NAME=$<TARGET_FILE_NAME:${CREXX_DEFAULT_VM_TARGET}>"
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxvm_product.cmake)
+set_tests_properties(rxvm_product_entry_point PROPERTIES
+        LABELS "interpreter;build;dispatch")
+
 add_test(NAME rxvmstem_storage COMMAND test_rxvmstem)
+add_test(NAME rxvmstem_allocator_family COMMAND test_rxvmstem_allocator_family)
+add_test(NAME rxvmmemory_allocator COMMAND test_rxvmmemory)
+set_tests_properties(rxvmmemory_allocator PROPERTIES
+        LABELS "interpreter;memory")
 set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
+set_tests_properties(rxvmstem_allocator_family PROPERTIES
+        LABELS "interpreter;stem;memory")
 
 add_test(
         NAME crexxsaa_cache_tool_location
@@ -501,7 +621,7 @@ function(crexx_add_vm_expected_failure_test)
     endif()
 endfunction()
 
-function(crexx_add_vm_dual_test)
+function(crexx_add_vm_test)
     set(options)
     set(oneValueArgs NAME PASS_REGULAR_EXPRESSION EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
     set(multiValueArgs RXVM_ARGS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
@@ -515,16 +635,7 @@ function(crexx_add_vm_dual_test)
     if(NOT "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
         crexx_add_vm_expected_failure_test(
                 NAME ${CREXX_NAME}
-                RUNNER $<TARGET_FILE:rxvm>
-                RXVM_ARGS ${CREXX_RXVM_ARGS}
-                EXPECTED_EXIT_CODE ${CREXX_EXPECTED_EXIT_CODE}
-                EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
-                REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
-                FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
-        )
-        crexx_add_vm_expected_failure_test(
-                NAME ${CREXX_NAME}-rxbvm
-                RUNNER $<TARGET_FILE:rxbvm>
+                RUNNER ${CREXX_RXVM_EXECUTABLE}
                 RXVM_ARGS ${CREXX_RXVM_ARGS}
                 EXPECTED_EXIT_CODE ${CREXX_EXPECTED_EXIT_CODE}
                 EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
@@ -534,17 +645,12 @@ function(crexx_add_vm_dual_test)
     else()
         add_test(
                 NAME ${CREXX_NAME}
-                COMMAND $<TARGET_FILE:rxvm> ${CREXX_RXVM_ARGS}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
-        add_test(
-                NAME ${CREXX_NAME}-rxbvm
-                COMMAND $<TARGET_FILE:rxbvm> ${CREXX_RXVM_ARGS}
+                COMMAND ${CREXX_RXVM_EXECUTABLE} ${CREXX_RXVM_ARGS}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
 
         if(CREXX_PASS_REGULAR_EXPRESSION)
-            set_tests_properties(${CREXX_NAME} ${CREXX_NAME}-rxbvm PROPERTIES
+            set_tests_properties(${CREXX_NAME} PROPERTIES
                     PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
         endif()
     endif()
@@ -560,7 +666,7 @@ function(crexx_add_rxas_vm_binary SOURCE_NAME DESCRIPTION)
     )
 
     add_custom_target(run_${SOURCE_NAME} ALL DEPENDS ${SOURCE_NAME}.rxbin)
-    add_dependencies(run_${SOURCE_NAME} rxvm rxbvm)
+    add_dependencies(run_${SOURCE_NAME} rxvm)
 endfunction()
 
 function(crexx_add_generated_jtable_matrix ALGORITHM DISPLAY_NAME)
@@ -579,8 +685,8 @@ function(crexx_add_generated_jtable_matrix ALGORITHM DISPLAY_NAME)
             COMMENT "cREXX RXAS Instruction Tests (${ALGORITHM} jump table source matrix) ..."
     )
     add_custom_target(run_${SOURCE_NAME} ALL DEPENDS ${SOURCE_NAME}.rxbin)
-    add_dependencies(run_${SOURCE_NAME} rxvm rxbvm)
-    crexx_add_vm_dual_test(
+    add_dependencies(run_${SOURCE_NAME} rxvm)
+    crexx_add_vm_test(
             NAME rxasjumptable${ALGORITHM}sources
             RXVM_ARGS ${SOURCE_NAME}
             PASS_REGULAR_EXPRESSION "PASS: Jump Table ${DISPLAY_NAME} Source Matrix")
@@ -614,17 +720,15 @@ function(crexx_add_jtable_corruption_fixture NAME ALGORITHM MUTATION)
             COMMENT "Mutating jump table ${NAME} (${MUTATION}) ...")
 
     add_custom_target(run_${NAME} ALL DEPENDS ${CORRUPT_RXBIN})
-    foreach(RUNNER IN ITEMS rxvm rxbvm)
-        add_test(
-                NAME ${NAME}_${RUNNER}
-                COMMAND ${CMAKE_COMMAND}
-                        -DRUNNER=$<TARGET_FILE:${RUNNER}>
-                        -DRXBIN=${CORRUPT_RXBIN}
-                        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_jtable_corruption.cmake
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${NAME}_${RUNNER} PROPERTIES
-                LABELS "interpreter;rxas;jtable;corruption")
-    endforeach()
+    add_test(
+            NAME ${NAME}_rxvm
+            COMMAND ${CMAKE_COMMAND}
+                    -DRUNNER=${CREXX_RXVM_EXECUTABLE}
+                    -DRXBIN=${CORRUPT_RXBIN}
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_jtable_corruption.cmake
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME}_rxvm PROPERTIES
+            LABELS "interpreter;rxas;jtable;corruption")
 endfunction()
 
 function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
@@ -644,7 +748,7 @@ function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
             "  message(FATAL_ERROR \"rxas failed for ${SOURCE_NAME}.\\nSTDOUT:\\n${DOLLAR}{rxas_out}\\nSTDERR:\\n${DOLLAR}{rxas_err}\")\n"
             "endif()\n"
             "execute_process(\n"
-            "  COMMAND \"$<TARGET_FILE:rxvm>\" \"${SOURCE_NAME}\"\n"
+            "  COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${SOURCE_NAME}\"\n"
             "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
             "  OUTPUT_VARIABLE rxvm_out\n"
             "  ERROR_VARIABLE rxvm_err\n"
@@ -727,7 +831,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_signals ALL DEPENDS tests_signals.rxbin)
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxassignalstests
         RXVM_ARGS tests_signals
         EXPECTED_EXIT_CODE 30
@@ -769,7 +873,7 @@ add_custom_command(
 
 add_custom_target(run_tests_panic_source ALL DEPENDS tests_panic_source.rxbin)
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxaspanicaddresstests
         RXVM_ARGS tests_panic_source
         EXPECTED_EXIT_CODE 6
@@ -778,7 +882,7 @@ crexx_add_vm_dual_test(
             "PANIC: \\(SIGNAL CONVERSION_ERROR\\)"
             "address [0-9]+ \\(0x[0-9a-fA-F]+\\)"
 )
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxaspanicsourcetests
         RXVM_ARGS tests_panic_source
         EXPECTED_EXIT_CODE 6
@@ -799,8 +903,8 @@ add_custom_command(
 
 add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_address.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'.*breakpoint-tests-passed")
-crexx_add_vm_dual_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target.*breakpoint-tests-passed")
+crexx_add_vm_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'.*breakpoint-tests-passed")
+crexx_add_vm_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target.*breakpoint-tests-passed")
 if(BUILD_TESTING)
     add_test(NAME rxvminstrumentedbreakpointtests
             COMMAND $<TARGET_FILE:rxvm_instrumented> tests_breakpoint_address
@@ -815,76 +919,76 @@ endif()
 
 # Instruction Sanity Tests - register flag partitioning
 crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
-crexx_add_vm_dual_test(NAME rxasregisterflagtests RXVM_ARGS tests_register_flags PASS_REGULAR_EXPRESSION "PASS: Register Flag Partition")
+crexx_add_vm_test(NAME rxasregisterflagtests RXVM_ARGS tests_register_flags PASS_REGULAR_EXPRESSION "PASS: Register Flag Partition")
 
 # Instruction Sanity Tests - UTF status cache flags
 crexx_add_rxas_vm_binary(tests_utf_flags "UTF flag cache")
-crexx_add_vm_dual_test(NAME rxasutfflagtests RXVM_ARGS tests_utf_flags PASS_REGULAR_EXPRESSION "PASS: UTF Flag Cache")
+crexx_add_vm_test(NAME rxasutfflagtests RXVM_ARGS tests_utf_flags PASS_REGULAR_EXPRESSION "PASS: UTF Flag Cache")
 crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadlinetests tests_utf_freadline_boundary "UNICODE_ERROR")
 crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadcdpttests tests_utf_freadcdpt_boundary "UNICODE_ERROR")
 
 # Instruction Sanity Tests - bulk attribute insert/delete
 crexx_add_rxas_vm_binary(tests_attributes "attribute bulk insert/delete")
-crexx_add_vm_dual_test(NAME rxasattributebulktests RXVM_ARGS tests_attributes PASS_REGULAR_EXPRESSION "PASS: Attribute Bulk Ops")
+crexx_add_vm_test(NAME rxasattributebulktests RXVM_ARGS tests_attributes PASS_REGULAR_EXPRESSION "PASS: Attribute Bulk Ops")
 
 # Instruction Sanity Tests - reference values
 crexx_add_rxas_vm_binary(tests_references "reference value instructions")
-crexx_add_vm_dual_test(NAME rxasreferencetests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
-crexx_add_vm_dual_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid.*PASS: Reference RXAS Ops")
+crexx_add_vm_test(NAME rxasreferencetests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
+crexx_add_vm_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid.*PASS: Reference RXAS Ops")
 
 # PERF2-02 exact direct MKREF guards and mandatory fallback paths
 crexx_add_rxas_vm_binary(tests_perf2_reference_guards "PERF2-02 direct reference guards")
-crexx_add_vm_dual_test(NAME rxasperf2referenceguardtests RXVM_ARGS tests_perf2_reference_guards PASS_REGULAR_EXPRESSION "PASS: PERF2-02 Reference Guards")
+crexx_add_vm_test(NAME rxasperf2referenceguardtests RXVM_ARGS tests_perf2_reference_guards PASS_REGULAR_EXPRESSION "PASS: PERF2-02 Reference Guards")
 
 # PERF2-05 R2a private reference-descriptor materialization and fallbacks
 crexx_add_rxas_vm_binary(tests_perf2_partial_reference_materialization "PERF2-05 partial reference materialization")
-crexx_add_vm_dual_test(NAME rxasperf2partialreferencetests RXVM_ARGS tests_perf2_partial_reference_materialization PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Partial Reference Materialization")
+crexx_add_vm_test(NAME rxasperf2partialreferencetests RXVM_ARGS tests_perf2_partial_reference_materialization PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Partial Reference Materialization")
 
 # PERF2-05 R1a private exact local-reference relink and fallbacks
 crexx_add_rxas_vm_binary(tests_perf2_exact_relink "PERF2-05 exact reference relink")
-crexx_add_vm_dual_test(NAME rxasperf2exactrelinktests RXVM_ARGS tests_perf2_exact_relink PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Exact Reference Relink")
+crexx_add_vm_test(NAME rxasperf2exactrelinktests RXVM_ARGS tests_perf2_exact_relink PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Exact Reference Relink")
 
 # Instruction Sanity Tests - object initialization lifecycle
 crexx_add_rxas_vm_binary(tests_object_initialization "object initialization lifecycle instructions")
-crexx_add_vm_dual_test(NAME rxasobjectinitializationtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
-crexx_add_vm_dual_test(NAME rxasobjectinitializationcatchtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized.*PASS: Object Initialization RXAS Ops")
+crexx_add_vm_test(NAME rxasobjectinitializationtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
+crexx_add_vm_test(NAME rxasobjectinitializationcatchtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized.*PASS: Object Initialization RXAS Ops")
 
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
-crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30.*attr-source: signal other")
-crexx_add_vm_dual_test(NAME rxassignalattrnametests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-name: OTHER.*attr-source: signal other")
-crexx_add_vm_dual_test(NAME rxassignalattrpayloadtests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-payload: attr payload.*attr-source: signal other")
-crexx_add_vm_dual_test(NAME rxassignalattrsourcetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30.*attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrnametests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-name: OTHER.*attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrpayloadtests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-payload: attr payload.*attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrsourcetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-source: signal other")
 
 crexx_add_rxas_vm_binary(tests_signal_handler_modes "signal handler response modes")
-crexx_add_vm_dual_test(NAME rxassignalmodeignoretests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok.*mode-ret-after")
-crexx_add_vm_dual_test(NAME rxassignalmodebranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit.*mode-ret-after")
-crexx_add_vm_dual_test(NAME rxassignalmodecallbranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-ret-after")
-crexx_add_vm_dual_test(NAME rxassignalmodereturntests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodeignoretests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok.*mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodebranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit.*mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodecallbranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodereturntests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
 
 crexx_add_rxas_vm_binary(tests_signal_call_unwind "signal call-window mapping unwind")
-crexx_add_vm_dual_test(NAME rxassignalcallunwindtests RXVM_ARGS tests_signal_call_unwind PASS_REGULAR_EXPRESSION "PASS: Signal Call Mapping Unwind")
+crexx_add_vm_test(NAME rxassignalcallunwindtests RXVM_ARGS tests_signal_call_unwind PASS_REGULAR_EXPRESSION "PASS: Signal Call Mapping Unwind")
 
 crexx_add_rxas_vm_binary(tests_signal_mask_bounds "signal mask boundary handling")
-crexx_add_vm_dual_test(NAME rxassignalmaskotherignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-other-ignore-ok.*mask-tests-passed")
-crexx_add_vm_dual_test(NAME rxassignalmaskbreakpointignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-breakpoint-ignore-ok.*mask-tests-passed")
+crexx_add_vm_test(NAME rxassignalmaskotherignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-other-ignore-ok.*mask-tests-passed")
+crexx_add_vm_test(NAME rxassignalmaskbreakpointignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-breakpoint-ignore-ok.*mask-tests-passed")
 
 crexx_add_rxas_vm_binary(tests_signal_silent_halt "signal silent halt response")
-crexx_add_vm_dual_test(NAME rxassignalsilenthalttests RXVM_ARGS tests_signal_silent_halt)
+crexx_add_vm_test(NAME rxassignalsilenthalttests RXVM_ARGS tests_signal_silent_halt)
 
 crexx_add_rxas_vm_binary(tests_signal_frame_scope "signal frame handler table scope")
-crexx_add_vm_dual_test(NAME rxassignalframescopechildtests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: from child.*frame-main-after")
-crexx_add_vm_dual_test(NAME rxassignalframescopeparenttests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: after child ignore.*frame-main-after")
+crexx_add_vm_test(NAME rxassignalframescopechildtests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: from child.*frame-main-after")
+crexx_add_vm_test(NAME rxassignalframescopeparenttests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: after child ignore.*frame-main-after")
 
 crexx_add_rxas_vm_binary(tests_signal_nested_pending "nested pending signal delivery")
-crexx_add_vm_dual_test(NAME rxassignalnestedpendingtests RXVM_ARGS tests_signal_nested_pending PASS_REGULAR_EXPRESSION "nested:outer-before>outer-after>inner>main-after")
+crexx_add_vm_test(NAME rxassignalnestedpendingtests RXVM_ARGS tests_signal_nested_pending PASS_REGULAR_EXPRESSION "nested:outer-before>outer-after>inner>main-after")
 
 crexx_add_rxas_vm_binary(tests_signal_actions "action-aware signal handlers")
-crexx_add_vm_dual_test(NAME rxassignalactionskiptests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after.*action-dynamic-after")
-crexx_add_vm_dual_test(NAME rxassignalactiondynamictests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload.*action-dynamic-after")
+crexx_add_vm_test(NAME rxassignalactionskiptests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after.*action-dynamic-after")
+crexx_add_vm_test(NAME rxassignalactiondynamictests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload.*action-dynamic-after")
 
 crexx_add_rxas_vm_binary(tests_signal_retry_retired "retired signal retry marker")
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxassignalretryretiredtests
         RXVM_ARGS tests_signal_retry_retired
         EXPECTED_EXIT_CODE 30
@@ -895,18 +999,18 @@ crexx_add_vm_dual_test(
             "FAIL: retired retry marker resumed execution")
 
 crexx_add_rxas_vm_binary(tests_signal_pushpop "signal handler push/pop scope")
-crexx_add_vm_dual_test(NAME rxassignalpushpoprestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore.*pushpop-after-restored-ignore")
-crexx_add_vm_dual_test(NAME rxassignalpushpopbranchtests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit.*pushpop-after-restored-ignore")
-crexx_add_vm_dual_test(NAME rxassignalpushpophandlerrestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-after-restored-ignore")
+crexx_add_vm_test(NAME rxassignalpushpoprestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore.*pushpop-after-restored-ignore")
+crexx_add_vm_test(NAME rxassignalpushpopbranchtests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit.*pushpop-after-restored-ignore")
+crexx_add_vm_test(NAME rxassignalpushpophandlerrestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-after-restored-ignore")
 
 crexx_add_rxas_vm_binary(tests_signal_branch_value "signal branch with bound value")
-crexx_add_vm_dual_test(NAME rxassignalbrvrawtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1.*brv-payload: value payload")
-crexx_add_vm_dual_test(NAME rxassignalbrvnametests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
-crexx_add_vm_dual_test(NAME rxassignalbrvpayloadtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
+crexx_add_vm_test(NAME rxassignalbrvrawtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1.*brv-payload: value payload")
+crexx_add_vm_test(NAME rxassignalbrvnametests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
+crexx_add_vm_test(NAME rxassignalbrvpayloadtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
 
 # NR-09 large-instruction batch
 crexx_add_rxas_vm_binary(tests_nr09_superinstructions "NR-09 large instructions")
-crexx_add_vm_dual_test(NAME rxasnr09superinstructiontests RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")
+crexx_add_vm_test(NAME rxasnr09superinstructiontests RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")
 
 # Basic Instruction Tests
 add_custom_command(
@@ -920,7 +1024,19 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_basic ALL DEPENDS tests_basic.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasbasictests RXVM_ARGS tests_basic)
+crexx_add_vm_test(NAME rxasbasictests RXVM_ARGS tests_basic)
+
+# The broad functional suite follows the product rxvm target.  Keep one small
+# explicit contract test per concrete engine so dispatch-specific build or
+# preparation failures are still caught.
+foreach(_crexx_concrete_vm IN LISTS CREXX_CONCRETE_VM_TARGETS)
+    add_test(
+            NAME rxasdispatchcontract-${_crexx_concrete_vm}
+            COMMAND $<TARGET_FILE:${_crexx_concrete_vm}> tests_basic
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxasdispatchcontract-${_crexx_concrete_vm} PROPERTIES
+            LABELS "interpreter;rxas;dispatch")
+endforeach()
 
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
     crexx_add_rxas_vm_binary(tests_sequence_profile "dynamic sequence profile")
@@ -939,7 +1055,7 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
     add_dependencies(run_profiling_demo rxvm rxbvm)
 
     add_test(NAME rxvmprofiletable
-            COMMAND $<TARGET_FILE:rxvm> --profile tests_procedure_profile)
+            COMMAND ${CREXX_RXVM_EXECUTABLE} --profile tests_procedure_profile)
     add_test(NAME rxbvmprofiletable
             COMMAND $<TARGET_FILE:rxbvm> --profile tests_procedure_profile)
     set_tests_properties(rxvmprofiletable PROPERTIES
@@ -953,7 +1069,7 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
 
     add_test(NAME rxvmprofilecsv
             COMMAND ${CMAKE_COMMAND}
-                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DVM=${CREXX_RXVM_EXECUTABLE}"
                     "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_procedure_profile.rxbin"
                     "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/rxvm-profile.CSV"
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_vm_profile_csv.cmake)
@@ -967,10 +1083,15 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
             LABELS "interpreter;profiling")
 
     function(crexx_add_vm_call_census_test NAME VM_TARGET INPUT_TARGET CASE)
+        if(VM_TARGET STREQUAL "rxvm")
+            set(_vm_executable "${CREXX_RXVM_EXECUTABLE}")
+        else()
+            set(_vm_executable "$<TARGET_FILE:${VM_TARGET}>")
+        endif()
         add_test(
                 NAME ${NAME}
                 COMMAND ${CMAKE_COMMAND}
-                        "-DVM=$<TARGET_FILE:${VM_TARGET}>"
+                        "-DVM=${_vm_executable}"
                         "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/${INPUT_TARGET}.rxbin"
                         "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/${NAME}.csv"
                         "-DCASE=${CASE}"
@@ -995,7 +1116,7 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
 
     add_test(NAME rxvmsequence2
             COMMAND ${CMAKE_COMMAND}
-                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DVM=${CREXX_RXVM_EXECUTABLE}"
                     "-DRXSEQ=$<TARGET_FILE:rxseq>"
                     "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
                     -DLENGTH=2
@@ -1009,21 +1130,21 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq.cmake)
     add_test(NAME rxvmsequence4
             COMMAND ${CMAKE_COMMAND}
-                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DVM=${CREXX_RXVM_EXECUTABLE}"
                     "-DRXSEQ=$<TARGET_FILE:rxseq>"
                     "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
                     -DLENGTH=4
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq.cmake)
     add_test(NAME rxseqmodulemismatch
             COMMAND ${CMAKE_COMMAND}
-                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DVM=${CREXX_RXVM_EXECUTABLE}"
                     "-DRXSEQ=$<TARGET_FILE:rxseq>"
                     "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
                     "-DWRONG_INPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_basic.rxbin"
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq_mismatch.cmake)
     add_test(NAME vmprofilingdocumentation
             COMMAND ${CMAKE_COMMAND}
-                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DVM=${CREXX_RXVM_EXECUTABLE}"
                     "-DRXSEQ=$<TARGET_FILE:rxseq>"
                     "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/profiling_demo.rxbin"
                     "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}"
@@ -1046,10 +1167,10 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_int_math ALL DEPENDS tests_int_math.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasintmathtests RXVM_ARGS tests_int_math)
+crexx_add_vm_test(NAME rxasintmathtests RXVM_ARGS tests_int_math)
 
 crexx_add_rxas_vm_binary(tests_int_contract "signed 64-bit integer contract")
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxasintcontracttests
         RXVM_ARGS tests_int_contract
         PASS_REGULAR_EXPRESSION "PASS: Signed 64-bit Integer Contract")
@@ -1074,7 +1195,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_float_math ALL DEPENDS tests_float_math.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasfloatmathtests RXVM_ARGS tests_float_math)
+crexx_add_vm_test(NAME rxasfloatmathtests RXVM_ARGS tests_float_math)
 
 # Float Constant Pool Format and Runtime Tests
 add_custom_command(
@@ -1087,7 +1208,7 @@ add_custom_command(
 
 add_custom_target(run_tests_float_pool ALL DEPENDS tests_float_pool.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasfloatpooltests RXVM_ARGS tests_float_pool)
+crexx_add_vm_test(NAME rxasfloatpooltests RXVM_ARGS tests_float_pool)
 
 add_executable(test_float_pool_format tests/test_float_pool_format.c)
 target_link_libraries(test_float_pool_format PRIVATE rxbin)
@@ -1108,7 +1229,7 @@ add_custom_command(
 
 add_custom_target(run_tests_compact_format ALL DEPENDS tests_compact_format.rxbin)
 
-crexx_add_vm_dual_test(NAME rxascompactformattests RXVM_ARGS tests_compact_format)
+crexx_add_vm_test(NAME rxascompactformattests RXVM_ARGS tests_compact_format)
 
 add_executable(test_compact_format tests/test_compact_format.c)
 target_link_libraries(test_compact_format PRIVATE rxbin)
@@ -1130,7 +1251,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_string ALL DEPENDS tests_string.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasstringtests RXVM_ARGS tests_string)
+crexx_add_vm_test(NAME rxasstringtests RXVM_ARGS tests_string)
 
 # Logic and Flow Instruction Tests
 add_custom_command(
@@ -1144,7 +1265,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_logic_flow ALL DEPENDS tests_logic_flow.rxbin)
 
-crexx_add_vm_dual_test(NAME rxaslogicflowtests RXVM_ARGS tests_logic_flow)
+crexx_add_vm_test(NAME rxaslogicflowtests RXVM_ARGS tests_logic_flow)
 
 # System and I/O Instruction Tests
 add_custom_command(
@@ -1158,33 +1279,32 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
-crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
+crexx_add_vm_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 
 # Binary buffer, I/O, and explicit slice instruction tests
 crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
-crexx_add_vm_dual_test(NAME rxasbinaryslicetests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Explicit Slice")
-# Both VM variants execute in this directory and the authored RXAS uses the
-# same fixed scratch filenames.  Keep the pair from truncating each other's
-# files when CTest runs them concurrently under slower instrumented builds.
-set_tests_properties(rxasbinaryslicetests rxasbinaryslicetests-rxbvm PROPERTIES
+crexx_add_vm_test(NAME rxasbinaryslicetests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Explicit Slice")
+# The authored RXAS uses fixed scratch filenames.  Keep repeated or overlapping
+# invocations from truncating those files.
+set_tests_properties(rxasbinaryslicetests PROPERTIES
         RESOURCE_LOCK rxas_binary_slice_scratch)
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
-crexx_add_vm_dual_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
+crexx_add_vm_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
 crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
-crexx_add_vm_dual_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
+crexx_add_vm_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
 crexx_add_rxas_vm_binary(tests_jump_table_linear_sources "linear jump table source matrix")
-crexx_add_vm_dual_test(NAME rxasjumptablelinearsources RXVM_ARGS tests_jump_table_linear_sources PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Source Matrix")
+crexx_add_vm_test(NAME rxasjumptablelinearsources RXVM_ARGS tests_jump_table_linear_sources PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Source Matrix")
 crexx_add_generated_jtable_matrix(openhash OpenHash)
 crexx_add_generated_jtable_matrix(acph ACPH)
 crexx_add_generated_jtable_matrix(auto Auto)
 crexx_add_rxas_vm_binary(tests_jump_table_hash_edges "open-hash and ACPH jump table edge cases")
-crexx_add_vm_dual_test(NAME rxasjumptablehashedges RXVM_ARGS tests_jump_table_hash_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Hash Edge Cases")
+crexx_add_vm_test(NAME rxasjumptablehashedges RXVM_ARGS tests_jump_table_hash_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Hash Edge Cases")
 crexx_add_rxas_vm_binary(tests_jump_table_auto_edges "auto jump table policy paths")
-crexx_add_vm_dual_test(NAME rxasjumptableautoedges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
+crexx_add_vm_test(NAME rxasjumptableautoedges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
 crexx_add_rxas_vm_binary(tests_jump_table_rexx_strings "Rexx padded and numeric string jump tables")
-crexx_add_vm_dual_test(NAME rxasjumptablerexxstrings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
+crexx_add_vm_test(NAME rxasjumptablerexxstrings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
 crexx_add_rxas_vm_binary(tests_jump_table_boundaries "jump table syntax and value boundaries")
-crexx_add_vm_dual_test(NAME rxasjumptableboundaries RXVM_ARGS tests_jump_table_boundaries PASS_REGULAR_EXPRESSION "PASS: Jump Table Boundaries")
+crexx_add_vm_test(NAME rxasjumptableboundaries RXVM_ARGS tests_jump_table_boundaries PASS_REGULAR_EXPRESSION "PASS: Jump Table Boundaries")
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptalgorithm linear algorithm)
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptheader linear header)
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptlinearkey linear linear-key-offset)
@@ -1225,7 +1345,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_socket ALL DEPENDS tests_socket.rxbin)
 
-crexx_add_vm_dual_test(NAME rxassockettests RXVM_ARGS tests_socket PASS_REGULAR_EXPRESSION "PASS: Core Socket Instructions")
+crexx_add_vm_test(NAME rxassockettests RXVM_ARGS tests_socket PASS_REGULAR_EXPRESSION "PASS: Core Socket Instructions")
 
 # Decimal Instruction Tests
 add_custom_command(
@@ -1239,9 +1359,9 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_decimal ALL DEPENDS tests_decimal.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasdecimaltests RXVM_ARGS tests_decimal)
-crexx_add_vm_dual_test(NAME rxasdecimaltests-mc RXVM_ARGS -p rxvm_mc_decimal tests_decimal)
-crexx_add_vm_dual_test(NAME rxasdecimaltests-db RXVM_ARGS -p rxvm_db_decimal tests_decimal)
+crexx_add_vm_test(NAME rxasdecimaltests RXVM_ARGS tests_decimal)
+crexx_add_vm_test(NAME rxasdecimaltests-mc RXVM_ARGS -p rxvm_mc_decimal tests_decimal)
+crexx_add_vm_test(NAME rxasdecimaltests-db RXVM_ARGS -p rxvm_db_decimal tests_decimal)
 
 # Conversion and Formatting Instruction Tests
 add_custom_command(
@@ -1255,7 +1375,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_conversion ALL DEPENDS tests_conversion.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasconversiontests RXVM_ARGS tests_conversion)
+crexx_add_vm_test(NAME rxasconversiontests RXVM_ARGS tests_conversion)
 
 # Object and Attribute Instruction Tests
 add_custom_command(
@@ -1269,7 +1389,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_objects ALL DEPENDS tests_objects.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasobjecttests RXVM_ARGS tests_objects)
+crexx_add_vm_test(NAME rxasobjecttests RXVM_ARGS tests_objects)
 
 # Reflection and Introspection Instruction Tests
 add_custom_command(
@@ -1283,7 +1403,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_reflection ALL DEPENDS tests_reflection.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasreflectiontests RXVM_ARGS tests_reflection)
+crexx_add_vm_test(NAME rxasreflectiontests RXVM_ARGS tests_reflection)
 
 # Interface dispatch instruction tests
 add_custom_command(
@@ -1297,9 +1417,9 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_interfaces ALL DEPENDS tests_interfaces.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasinterfacetests RXVM_ARGS tests_interfaces PASS_REGULAR_EXPRESSION "PASS: Interface Dispatch Suite")
+crexx_add_vm_test(NAME rxasinterfacetests RXVM_ARGS tests_interfaces PASS_REGULAR_EXPRESSION "PASS: Interface Dispatch Suite")
 crexx_add_rxas_vm_binary(tests_selector_descriptors "descriptor selector contracts")
-crexx_add_vm_dual_test(NAME rxasselectordescriptortests RXVM_ARGS tests_selector_descriptors PASS_REGULAR_EXPRESSION "PASS: Descriptor Selector Contracts")
+crexx_add_vm_test(NAME rxasselectordescriptortests RXVM_ARGS tests_selector_descriptors PASS_REGULAR_EXPRESSION "PASS: Descriptor Selector Contracts")
 crexx_add_rxas_vm_failure_regex(rxasselectordescriptorbadmethod tests_selector_descriptor_bad_method "rxsig1\\|describe\\|\\.string\\|")
 crexx_add_rxas_vm_failure_regex(rxasselectordescriptorbadfactory tests_selector_descriptor_bad_factory "selector_bad_factory\\.shape")
 
@@ -1315,13 +1435,13 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_stress ALL DEPENDS tests_stress.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasstresstests RXVM_ARGS tests_stress)
+crexx_add_vm_test(NAME rxasstresstests RXVM_ARGS tests_stress)
 
 # Focused deterministic coverage for remaining RXAS instruction families
 crexx_add_rxas_vm_binary(tests_instruction_gaps "remaining deterministic instruction gaps")
-crexx_add_vm_dual_test(NAME rxasinstructiongaptests RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
+crexx_add_vm_test(NAME rxasinstructiongaptests RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
 crexx_add_rxas_vm_binary(tests_wide_operands "arbitrary operand pipeline")
-crexx_add_vm_dual_test(NAME rxaswideoperandtests RXVM_ARGS tests_wide_operands PASS_REGULAR_EXPRESSION "PASS: Arbitrary Operand Pipeline")
+crexx_add_vm_test(NAME rxaswideoperandtests RXVM_ARGS tests_wide_operands PASS_REGULAR_EXPRESSION "PASS: Arbitrary Operand Pipeline")
 
 # Re-entrancy Test
 add_custom_command(
@@ -1365,6 +1485,7 @@ add_custom_command(
                 $<TARGET_FILE:rxpashim>
                 $<TARGET_FILE:rxvmplugin>
                 $<TARGET_FILE:rxvmref>
+                $<TARGET_FILE:rxvmmemory>
                 $<TARGET_FILE:rxbin>
                 $<TARGET_FILE:platform>
                 $<TARGET_FILE:decnumber>
@@ -1380,6 +1501,7 @@ add_custom_command(
                 rxpashim
                 rxvmplugin
                 rxvmref
+                rxvmmemory
                 rxbin
                 platform
                 decnumber
@@ -1399,12 +1521,12 @@ crexx_label_smoke_tests(
         ts_regvalue_tester
         rxassignalstests
         rxasregisterflagtests
-        rxasutfflagtests-rxbvm
+        rxasutfflagtests
         rxasreferencetests
         rxasbasictests
-        rxasstringtests-rxbvm
+        rxasstringtests
         rxasdecimaltests-mc
-        rxasinterfacetests-rxbvm
+        rxasinterfacetests
         compact_format_check
         reentrancy_check
         db_decimal_archive_link

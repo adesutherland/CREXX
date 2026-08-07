@@ -1,0 +1,1 @@
+PASS: compact cross-runtime rss matrix retained under /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-rss-v2

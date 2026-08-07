@@ -1,0 +1,9 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve-control,Sieve,L32S,rxbvm,value-192,A,yes,startup-included,5500,normalized_work_per_second,12,5255.634040,5269.999073,5279.863576,5289.435817,5305.285415,10.312597,0.195319,0.940391,no
+sieve-candidate,Sieve,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,5500,normalized_work_per_second,12,5318.192279,5338.299927,5361.379123,5370.092657,5390.138203,12.299201,0.229404,1.341929,no
+richards-control,Richards,L32S,rxbvm,value-192,A,yes,startup-included,20,normalized_work_per_second,12,9.341128,9.371924,9.594314,9.646702,9.680036,0.074231,0.773694,3.532383,no
+richards-candidate,Richards,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,20,normalized_work_per_second,12,8.871308,9.173707,9.328793,9.565440,9.647141,0.252594,2.707685,8.316546,no
+towers-control,Towers,L32S,rxbvm,value-192,A,yes,startup-included,100,normalized_work_per_second,12,47.091777,47.207895,47.274708,47.401905,47.581322,0.095361,0.201717,1.035534,no
+towers-candidate,Towers,L32SDH-industrial,rxbvm,value-176,A,yes,startup-included,100,normalized_work_per_second,12,47.987109,48.396398,48.622737,48.799865,49.025712,0.182410,0.375153,2.136044,no
+rexxcps-control,RexxCPS,L32S,rxbvm,value-192,A,no,startup-included,1000-clauses,benchmark_rate,12,48742540.000000,49010604.250000,49475998.000000,49652067.500000,49770805.000000,211975.500000,0.428441,2.078311,no
+rexxcps-candidate,RexxCPS,L32SDH-industrial,rxbvm,value-176,A,no,startup-included,1000-clauses,benchmark_rate,12,49422742.000000,49726086.750000,49988950.000000,50355387.000000,50881781.000000,367778.000000,0.735719,2.918723,no

@@ -182,23 +182,24 @@ static value* node_to_value(ASTNode* node) {
         case TP_DECIMAL:
             // v.status.type_decimal = 1;
             if (node->decimal_value) {
-                v.decimal_value = malloc(strlen(node->decimal_value)+1);
-                strcpy(v.decimal_value, node->decimal_value);
-                v.decimal_value_length = strlen(node->decimal_value);
-                v.decimal_buffer_length = v.decimal_value_length;
+                size_t decimal_length = strlen(node->decimal_value);
+                void *decimal = rxvm_value_reserve_decimal(
+                        &v, decimal_length + 1u);
+                if (!decimal) RX_PANIC_OOM(
+                        "reserve compiler decimal sidecar",
+                        decimal_length + 1u, "constant value");
+                strcpy(decimal, node->decimal_value);
+                rxvm_value_set_decimal_length(&v, decimal_length);
             }
             break;
         case TP_STRING:
             // v.status.type_string = 1;
             if (node->node_string && node->node_string_length) {
-                v.string_value = malloc(node->node_string_length+1);
-                memcpy(v.string_value, node->node_string, node->node_string_length);
-                v.string_value[node->node_string_length] = 0; /* Null terminate */
-                v.string_length = node->node_string_length;
-                v.string_buffer_length = v.string_length;
-                string_cache_reset(&v);
+                set_string(&v, node->node_string, node->node_string_length);
+                null_terminate_string_buffer(&v);
 #ifndef NUTF8
-                v.string_chars = utf8nlen(v.string_value, v.string_length); /* SLOW! */
+                rxvm_value_set_string_chars_known(
+                        &v, utf8nlen(v.string_value, v.string_length)); /* SLOW! */
 #endif
             }
             break;

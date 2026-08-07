@@ -1,0 +1,15 @@
+criterion,status,evidence
+exact_layout,pass,V0=240 bytes; V1=208 bytes
+v0_machine_control,pass,203865 normalized text lines identical; sha256=253af30970ff83d616923864ce9f029eaeaa88bda3bf44fe8150573d51490235
+focused_release_v0,pass,3/3
+focused_release_v1,pass,3/3
+timing_correctness,pass,70/70 executions
+stable_six,pass,geometric V1/V0=1.010915174
+clear_favorable,pass,Sieve;Richards;RexxCPS
+clear_adverse,pass,none
+base64,nonselecting,noisy/inconclusive paired median -0.063439%
+rss_allocator_telemetry,pending,requires acceptance of first verdict
+formal_timing,pending,requires acceptance of first verdict
+runner_abnormal_exit_status,debt,failed V1 child status 139 was recorded as zero
+selection,survivor_only,V1 is not yet the selected production ABI
+

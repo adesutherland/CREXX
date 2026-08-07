@@ -6,9 +6,11 @@
 and target registers directly, and logical data flow is written from right to
 left in RXAS instruction forms.
 
-The threaded `rxvm` interpreter is the base VM executable. `rxbvm` provides the
-bytecode-dispatch variant. `rxvme` and `rxbvme` are extended interpreters that
-include the standard library image used by common Level B programs.
+`rxvm` is the stable product VM executable. It selects the switch-dispatch
+`rxbvm` under Clang/AppleClang and MSVC, and the direct-threaded `rxtvm` under
+GCC. GNU/Clang-family builds provide both concrete engines; MSVC provides only
+`rxbvm`. `rxvme` and `rxbvme` are extended interpreters that include the
+standard library image used by common Level B programs.
 
 ## Machine Interface
 

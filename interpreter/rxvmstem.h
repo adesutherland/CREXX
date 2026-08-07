@@ -41,10 +41,10 @@
 #define RXSTEM_TRY_SET_NUM_ATTRIBUTES try_set_num_attributes
 #endif
 #ifndef RXSTEM_MALLOC
-#define RXSTEM_MALLOC malloc
+#define RXSTEM_MALLOC RXVM_VALUE_MALLOC
 #endif
 #ifndef RXSTEM_FREE
-#define RXSTEM_FREE free
+#define RXSTEM_FREE RXVM_VALUE_FREE
 #endif
 
 /*
@@ -259,11 +259,12 @@ RX_INLINE int rxstem_parts_equal(const rxstem_key_parts *parts,
 RX_INLINE int rxstem_set_parts_string(value *dest,
                                       const rxstem_key_parts *parts) {
     size_t length;
-    size_t buffer_length = dest->string_buffer_length;
+    size_t buffer_length = RXVM_VALUE_STRING_CAPACITY(dest);
     char *buffer = dest->string_value;
     char *new_buffer = 0;
     int result = rxstem_parts_length(parts, &length);
     if (result != RXSTEM_OK) return result;
+    if (!rxvm_value_string_metric_fits(length)) return RXSTEM_OVERFLOW;
 
     if (length > buffer_length) {
         buffer_length = buffer_size(length);
@@ -284,14 +285,14 @@ RX_INLINE int rxstem_set_parts_string(value *dest,
     }
 
     if (dest->reference_payload) rxvm_reference_value_release_payload(dest);
-    if (dest->native_payload_ops) clear_binary_payload(dest);
+    if (rxvm_value_native_ops(dest)) clear_binary_payload(dest);
     if (new_buffer) {
-        if (dest->string_value != dest->small_string_buffer)
+        if (RXVM_VALUE_STRING_IS_ALLOCATED(dest))
             RXSTEM_FREE(dest->string_value);
         dest->string_value = new_buffer;
-        dest->string_buffer_length = buffer_length;
+        RXVM_VALUE_SET_STRING_CAPACITY(dest, buffer_length);
     }
-    dest->string_length = length;
+    rxvm_value_set_string_length_known(dest, length);
     string_cache_reset(dest);
 #ifndef NUTF8
     refresh_utf8_flags(dest);
@@ -308,7 +309,7 @@ RX_INLINE int rxstem_set_value_string(value *dest, const value *source) {
 
     if (dest == source) return RXSTEM_OK;
     length = source->string_length;
-    buffer_length = dest->string_buffer_length;
+    buffer_length = RXVM_VALUE_STRING_CAPACITY(dest);
     if (length > buffer_length) {
         buffer_length = buffer_size(length);
         if (buffer_length < length) return RXSTEM_OVERFLOW;
@@ -318,17 +319,17 @@ RX_INLINE int rxstem_set_value_string(value *dest, const value *source) {
     }
 
     if (dest->reference_payload) rxvm_reference_value_release_payload(dest);
-    if (dest->native_payload_ops) clear_binary_payload(dest);
+    if (rxvm_value_native_ops(dest)) clear_binary_payload(dest);
     if (new_buffer) {
-        if (dest->string_value != dest->small_string_buffer)
+        if (RXVM_VALUE_STRING_IS_ALLOCATED(dest))
             RXSTEM_FREE(dest->string_value);
         dest->string_value = new_buffer;
-        dest->string_buffer_length = buffer_length;
+        RXVM_VALUE_SET_STRING_CAPACITY(dest, buffer_length);
     }
     else if (length) {
         memmove(dest->string_value, source->string_value, length);
     }
-    dest->string_length = length;
+    rxvm_value_set_string_length_known(dest, length);
     string_cache_reset(dest);
 #ifndef NUTF8
     dest->string_chars = source->string_chars;

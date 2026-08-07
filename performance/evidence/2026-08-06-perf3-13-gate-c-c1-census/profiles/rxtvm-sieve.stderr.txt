@@ -1,0 +1,23 @@
+RXVM_MEMORY_STATS version=1 allocations=1473 frees=1473 reallocations=30 failures=0 invalid_frees=0 wrong_owner_frees=0 requested_bytes=3972302 capacity_bytes=4125060 internal_fragmentation_bytes=152758 live_allocations=0 peak_live_allocations=1166 live_capacity_bytes=0 peak_live_capacity_bytes=4087172 oversized_live_allocations=0 oversized_live_bytes=0 slabs_owned=13 slabs_reserved=5 retained_slab_bytes=1179648 slabs_from_system=19 slabs_to_system=1 depot_refills=19 depot_returns=6 depot_hits=0 trim_calls=0
+RXVM_MEMORY_CLASS_STATS version=1 allocation_calls=byte16:323,byte32:217,byte64:262,byte128:205,byte256:176,byte512:36,byte1024:45,byte2048:37,byte4096:20,byte8192:14,byte16384:10,value1:108,value2:0,value4:0,value8:2,value16:0,value32:0,value64:0,reference:0 peak_live=byte16:316,byte32:107,byte64:142,byte128:195,byte256:167,byte512:31,byte1024:42,byte2048:35,byte4096:19,byte8192:14,byte16384:10,value1:70,value2:0,value4:0,value8:2,value16:0,value32:0,value64:0,reference:0
+RXVM_MEMORY_OVERSIZED_STATS version=1 allocations=18 requested_bytes=3494388 max_request_bytes=1966080 peak_live_allocations=18 peak_live_bytes=3494388 resize_standard_to_oversized=0 resize_oversized_to_standard=0 resize_oversized_to_oversized=0 request_histogram=32768:6,65536:5,131072:3,262144:2,524288:1,2097152:1
+real 14.72
+user 14.38
+sys 0.01
+            26345472  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                1780  page reclaims
+                   7  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   0  voluntary context switches
+                 946  involuntary context switches
+        488113710017  instructions retired
+         62267808915  cycles elapsed
+            20840880  peak memory footprint

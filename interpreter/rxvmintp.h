@@ -29,6 +29,7 @@
 #include "rxbin.h"
 #include "rxpa.h"
 #include "rxvalue.h"
+#include "rxvmmemory.h"
 #include "rxsignal.h"
 #include "rxsignature.h"
 #include "rxvminstrument.h"
@@ -108,6 +109,7 @@ typedef struct proc_runtime_lookup_entry {
 
 /* Module Structure */
 struct module {
+    rxvm_memory_worker *memory_worker; /* Owning heap; immutable after load. */
     bin_space segment;         /* Binary and Constant Pool */
     char *name;                /* Module Name */
     char *description;         /* Module Description */
@@ -488,6 +490,8 @@ struct stack_frame {
 
 /* Runtime context */
 typedef struct rxvm_context {
+    rxvm_memory_context *memory_context;
+    rxvm_memory_worker *memory_worker;
     char *location;
     size_t num_modules;
     size_t module_buffer_size;

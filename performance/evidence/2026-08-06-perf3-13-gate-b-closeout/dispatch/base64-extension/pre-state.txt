@@ -1,0 +1,8 @@
+utc=2026-08-05T21:09:14Z
+{ 1.45 1.26 1.32 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+d880719007783f48de5962bff368c7e2ab5140a6e6f6a6f0f21a5a25136ba1de  /tmp/crexx-rxvm-inline.yvLywZ/results/base64-f1a0-balanced-pairs-matrix-v1.txt

@@ -81,7 +81,7 @@ add_test(NAME rxpp_diagnostic_catalogs
          COMMAND ${CMAKE_COMMAND}
              -DRXC_BIN=$<TARGET_FILE:rxc>
              -DRXAS_BIN=$<TARGET_FILE:rxas>
-             -DRXVM_BIN=$<TARGET_FILE:rxvm>
+             -DRXVM_BIN=${CREXX_RXVM_EXECUTABLE}
              -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
              -DSOURCE_ROOT=${CMAKE_SOURCE_DIR}
              -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_diagnostic_catalogs

@@ -1,0 +1,35 @@
+utc=2026-08-06T10:27:40Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	94%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+4fe6012469bae1f539fe74ce794c7a28fba03ca2
+ M interpreter/CMakeLists.txt
+ M interpreter/rxvminstrument_profile.h
+ M interpreter/rxvmintp.c
+ M interpreter/rxvml.c
+ M interpreter/rxvmload.c
+ M interpreter/rxvmmemory.c
+ M interpreter/rxvmmemory.h
+ M interpreter/rxvmprofile.c
+ M interpreter/rxvmprofile.h
+ M interpreter/rxvmvars.h
+ M interpreter/tests/test_rxvmmemory.c
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+CREXX_VM_INLINE_POLICY:STRING=forced
+CREXX_VM_PROFILING:BOOL=ON
+CREXX_VM_RUN_FLATTEN:BOOL=ON
+05a5e65d5e37a3ad3384f8a6b6e8a625b8c28fa25463cbf1be2d291cdcd45c7a  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v0-census/bin/rxbvm
+6b5e840c1c6397d6c823f2bdafa6f66ab8253eddde0f0ab336350ba11ae9debc  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v0-census/bin/rxtvm
+a80c4534bc095fa6f56b6af798361865bbfe800ca3fd6e3f5e74cd77985e28f1  /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/bin/library.rxbin
+a9db0e5dc96ab05fd3b78471fedc4bb641555d8b5c209ae33b1a2f80e8dc9d06  /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+ea2d6e93788c7574b77a29899a2aac7bd0f2bf5f0d4e5d84dbc2a0934ea74ed7  /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin
+243be61695fbde99ca2d1ab55df12c984fbf494569043aa82ba499c330435640  /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin
+5aedbada749f6940b6d162b2a6e7952ef85b5605cd23a5d6a621c7154e01eb37  /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/tests/benchmarks/benchmark_json_parser_opt.rxbin
+46d9742173ddb6bc2545669529d159ad234b559544d35a9bb900ff025e913d67  /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin
+5fe91566b058cf29bba4339e81e3a3025210b1e6e08bb42dfce6f608766e8f15  /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin

@@ -79,7 +79,7 @@ Rexx source surface:
   backing-array-backed iterator state with live references, explicit snapshot
   copies via `deref`, invalid backing/parent detection, and checksum-only
   performance smoke coverage. The fixtures run through optimized and
-  non-optimized assembly under both `rxvm` and `rxbvm`.
+  non-optimized assembly under product `rxvm`.
 - The first compiler-shaped contract slice is implemented in the working tree:
   `reference_generated_contract.rxas` models `StringArrayList`/iterator helper code
   that creates references from receiver arguments and backing attributes, uses
@@ -90,7 +90,7 @@ Rexx source surface:
   `reference .T` declares reference values, `reference target` creates a weak
   reference to aliasable storage, `snapshot ref` makes an explicit snapshot
   copy, `<refvalid>(ref)` checks validity, and method `self` can be referenced
-  explicitly. The source fixture runs noopt/opt through both `rxvm` and `rxbvm`
+  explicitly. The source fixture runs noopt/opt through product `rxvm`
   and negative fixtures cover value/reference boundary errors, non-storage
   targets, reference-to-reference targets, nested reference types, and non-ref
   operands to `snapshot`/`refvalid`.
@@ -193,8 +193,8 @@ or libraries could eventually emit:
   snapshot values unless `deref` is deliberately used for a deep snapshot;
 - `refvalid` gives client code a cheap preflight check, and invalid use remains
   catchable through `REFERENCE_INVALID`;
-- both optimized and non-optimized RXAS output are exercised by both VM
-  implementations (`rxvm` and `rxbvm`).
+- both optimized and non-optimized RXAS output are exercised through product
+  `rxvm`; the separate basic dispatch contract covers both concrete engines.
 
 The performance fixture is intentionally a smoke test rather than a benchmark
 gate. It prints elapsed times and asserts checksums so regressions in semantics
@@ -202,12 +202,12 @@ are caught without making CI depend on local machine speed.
 
 The source-level performance smoke under `tests/performance` mirrors the same
 direct, snapshot-parent, snapshot-backing, dynamic-parent, and dynamic-backing
-shapes. It records factory and iteration timings for opt/noopt runs on both VM
-modes; the timing output is observational, while checksums remain enforced.
+shapes. It records factory and iteration timings for opt/noopt product-VM runs;
+the timing output is observational, while checksums remain enforced.
 
 The classlib performance smoke adds the public `StringArrayList` surface to that
 coverage: direct `get()`, live `iterator()`, and `snapshotIterator()` are timed
-with enforced checksums under opt/noopt and both VM modes.
+with enforced checksums under opt/noopt through product `rxvm`.
 
 ## Internal Generated-Code Contract
 

@@ -88,8 +88,49 @@ typedef struct shelldata {
     value* crexx_bindings;
 } SHELLDATA;
 
-// Private structure for output to string thread
+#ifdef _WIN32
+typedef HANDLE REDIRECT_IO_HANDLE;
+#define REDIRECT_INVALID_IO_HANDLE INVALID_HANDLE_VALUE
+#else
+typedef int REDIRECT_IO_HANDLE;
+#define REDIRECT_INVALID_IO_HANDLE (-1)
+#endif
+
+enum {
+    REDIRECT_TRANSFER_NONE = 0,
+    REDIRECT_TRANSFER_INPUT_STRING = 1,
+    REDIRECT_TRANSFER_INPUT_ARRAY = 2,
+    REDIRECT_TRANSFER_OUTPUT_STRING = 3,
+    REDIRECT_TRANSFER_OUTPUT_ARRAY = 4
+};
+
+enum {
+    REDIRECT_COMPLETION_CREATED = 0,
+    REDIRECT_COMPLETION_RUNNING = 1,
+    REDIRECT_COMPLETION_SUCCEEDED = 2,
+    REDIRECT_COMPLETION_FAILED = 3
+};
+
+/*
+ * Single-shot EF-0 transfer state. This object is deliberately libc-owned and
+ * contains no VM worker or value pointer: the I/O thread owns it until join,
+ * then the receiver thread consumes or discards its byte payload exactly once.
+ */
+typedef struct redirect_completion {
+    REDIRECT_IO_HANDLE io_handle;
+    char *bytes;
+    size_t length;
+    size_t capacity;
+    int errorCode;
+    int lastError;
+    int errorSource;
+    unsigned char transfer_mode;
+    unsigned char terminal_state;
+    unsigned char consumed;
+} REDIRECT_COMPLETION;
+
 struct redirect {
+    rxvm_memory_worker *receiver_worker;
 #ifdef _WIN32
     HANDLE hRead;
     HANDLE hWrite;
@@ -100,11 +141,11 @@ struct redirect {
     pthread_t thread;
 #endif
     char has_thread;
-    value* reg;
+    value* receiver;
     int errorCode;
     int lastError;
     int errorSource;
-    struct redirect *thread_redirect;
+    REDIRECT_COMPLETION *completion;
     char endpoint_kind;
 };
 
@@ -126,10 +167,8 @@ typedef struct redirect_endpoint_payload {
 } REDIRECT_ENDPOINT_PAYLOAD;
 
 #ifdef _WIN32
-#define start_routine LPTHREAD_START_ROUTINE
 #define THREAD_RETURN unsigned long
 #else
-typedef void *(*start_routine)(void *);
 #define THREAD_RETURN void*
 #endif
 
@@ -150,19 +189,23 @@ static int launchChild(SHELLDATA* data);
 static void WaitForProcess(SHELLDATA* data);
 static void appendTextOutput(char **outputText, char *inputText);
 static void WriteToStdin(REDIRECT* data, char *line, size_t nBytes);
-static void redirectInput(value* redirect_reg, value* string_reg, start_routine start);
-static void redirectOutput(value* redirect_reg, value* string_reg, start_routine start);
+static void redirectInput(value* redirect_reg, value* string_reg, unsigned char transfer_mode);
+static void redirectOutput(value* redirect_reg, value* string_reg, unsigned char transfer_mode);
 static REDIRECT *redirect_endpoint_create(value *redirect_reg, char endpoint_kind);
 static void redirect_endpoint_init(REDIRECT *redirect, char endpoint_kind);
 static void redirect_endpoint_payload_copy(void *dest_value, void *source_value);
 static void redirect_endpoint_payload_finalize(void *payload_value);
 static value* add_new_element(value* array); /* Appends record to an array and returns the new record */
-static THREAD_RETURN Output2StringThread(void* lpvThreadParam);
-static THREAD_RETURN Output2ArrayThread(void* lpvThreadParam);
-static THREAD_RETURN InputFromStringThread(void* lpvThreadParam);
-static THREAD_RETURN InputFromArrayThread(void* lpvThreadParam);
-static int prepare_redirect_thread_context(REDIRECT *redirect);
+static THREAD_RETURN OutputCaptureThread(void* lpvThreadParam);
+static THREAD_RETURN InputSnapshotThread(void* lpvThreadParam);
+static REDIRECT_COMPLETION *redirect_completion_create(unsigned char transfer_mode);
+static void redirect_completion_destroy(REDIRECT_COMPLETION *completion);
+static int redirect_completion_append(REDIRECT_COMPLETION *completion,
+                                      const char *bytes, size_t length);
+static void redirect_completion_publish(REDIRECT_COMPLETION *completion,
+                                        unsigned char terminal_state);
 static void collect_redirect_thread_context(REDIRECT *redirect);
+static int join_redirect_thread(REDIRECT *redirect);
 #ifndef _WIN32
 static int ExeFound(char* exe);
 static char *find_executable_in_path_list(const char *path_list, const char *exe);
@@ -202,9 +245,42 @@ static const rxvm_native_payload_ops redirect_endpoint_payload_ops = {
     redirect_endpoint_payload_finalize
 };
 
+static void *rxspawn_memory_alloc(size_t size) {
+    return rxvm_memory_alloc_bytes(rxvm_memory_current_worker(), size);
+}
+
+static void rxspawn_memory_free(void *pointer) {
+    rxvm_memory_worker *previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(rxvm_memory_owner(pointer));
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
+
+static void *rxspawn_memory_resize(void *pointer,
+                                   size_t copy_size,
+                                   size_t new_size) {
+    rxvm_memory_worker *worker = pointer
+        ? rxvm_memory_owner(pointer)
+        : rxvm_memory_current_worker();
+    rxvm_memory_worker *previous = rxvm_memory_enter(worker);
+    void *resized = rxvm_memory_resize_bytes(worker, pointer,
+                                             copy_size, new_size);
+    rxvm_memory_leave(previous);
+    return resized;
+}
+
+/* Text returned through the historical spawn/RXCREXXCMD callbacks is libc-owned. */
+static char *copy_string_external(const char *text) {
+    size_t length = strlen(text);
+    char *copy = malloc(length + 1u);
+    if (copy) memcpy(copy, text, length + 1u);
+    return copy;
+}
+
 static char *copy_string(const char *text) {
     size_t length = strlen(text);
-    char *copy = malloc(length + 1);
+    char *copy = rxspawn_memory_alloc(length + 1u);
     if (copy) {
         memcpy(copy, text, length + 1);
     }
@@ -213,7 +289,7 @@ static char *copy_string(const char *text) {
 
 #ifdef _WIN32
 static char *copy_string_length(const char *text, size_t length) {
-    char *copy = malloc(length + 1);
+    char *copy = rxspawn_memory_alloc(length + 1u);
     if (copy) {
         memcpy(copy, text, length);
         copy[length] = '\0';
@@ -228,10 +304,10 @@ static wchar_t *wide_from_utf8(const char *text) {
     if (!text) return NULL;
     length = MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
     if (length <= 0) return NULL;
-    wide = malloc((size_t)length * sizeof(wchar_t));
+    wide = rxspawn_memory_alloc((size_t)length * sizeof(wchar_t));
     if (!wide) return NULL;
     if (!MultiByteToWideChar(CP_UTF8, 0, text, -1, wide, length)) {
-        free(wide);
+        rxspawn_memory_free(wide);
         return NULL;
     }
     return wide;
@@ -244,10 +320,10 @@ static char *utf8_from_wide(const wchar_t *wide) {
     if (!wide) return NULL;
     length = WideCharToMultiByte(CP_UTF8, 0, wide, -1, NULL, 0, NULL, NULL);
     if (length <= 0) return NULL;
-    text = malloc((size_t)length);
+    text = rxspawn_memory_alloc((size_t)length);
     if (!text) return NULL;
     if (!WideCharToMultiByte(CP_UTF8, 0, wide, -1, text, length, NULL, NULL)) {
-        free(text);
+        rxspawn_memory_free(text);
         return NULL;
     }
     return text;
@@ -304,23 +380,24 @@ static char *windows_search_executable(const char *name) {
             continue;
         }
 
-        wide_path = malloc(((size_t)needed + 1) * sizeof(wchar_t));
+        wide_path = rxspawn_memory_alloc(
+            ((size_t)needed + 1u) * sizeof(wchar_t));
         if (!wide_path) break;
         copied = SearchPathW(NULL, wide_name, extensions[i], needed + 1, wide_path, NULL);
         if (copied > 0 && copied <= needed) {
             DWORD attributes = GetFileAttributesW(wide_path);
             if (attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
                 result = utf8_from_wide(wide_path);
-                free(wide_path);
+                rxspawn_memory_free(wide_path);
                 break;
             }
         }
-        free(wide_path);
+        rxspawn_memory_free(wide_path);
 
         if (!extensions[i]) continue;
     }
 
-    free(wide_name);
+    rxspawn_memory_free(wide_name);
     return result;
 }
 
@@ -331,7 +408,7 @@ static char *windows_resolve_application_path(const char *command) {
     token = windows_command_token(command);
     if (!token) return NULL;
     path = windows_search_executable(token);
-    free(token);
+    rxspawn_memory_free(token);
     return path;
 }
 
@@ -344,7 +421,8 @@ static int append_to_buffer(char **buffer, size_t *length, size_t *capacity, con
     if (needed > *capacity) {
         new_capacity = *capacity ? *capacity : 64;
         while (new_capacity < needed) new_capacity *= 2;
-        new_buffer = realloc(*buffer, new_capacity);
+        new_buffer = rxspawn_memory_resize(*buffer, *length,
+                                           new_capacity);
         if (!new_buffer) return -1;
         *buffer = new_buffer;
         *capacity = new_capacity;
@@ -411,11 +489,11 @@ static char *windows_build_command_line(const char *const *argv, int argc) {
 
     for (i = 0; i < argc; i++) {
         if (i > 0 && append_char_to_buffer(&buffer, &length, &capacity, ' ') != 0) {
-            free(buffer);
+            rxspawn_memory_free(buffer);
             return NULL;
         }
         if (windows_append_quoted_arg(&buffer, &length, &capacity, argv[i]) != 0) {
-            free(buffer);
+            rxspawn_memory_free(buffer);
             return NULL;
         }
     }
@@ -447,7 +525,7 @@ static char *find_executable_in_path_list(const char *path_list, const char *exe
         const char *next_colon = strchr(cursor, ':');
         size_t dir_length = next_colon ? (size_t)(next_colon - cursor) : strlen(cursor);
         size_t candidate_length = (dir_length ? dir_length : 1) + strlen(exe) + 2;
-        char *candidate = malloc(candidate_length);
+        char *candidate = rxspawn_memory_alloc(candidate_length);
         if (!candidate) return NULL;
 
         if (dir_length) {
@@ -461,7 +539,7 @@ static char *find_executable_in_path_list(const char *path_list, const char *exe
         strcat(candidate, exe);
 
         if (ExeFound(candidate)) return candidate;
-        free(candidate);
+        rxspawn_memory_free(candidate);
 
         cursor = next_colon ? next_colon + 1 : NULL;
     }
@@ -475,11 +553,11 @@ static char *find_standard_shell(void) {
 #ifdef _CS_PATH
     size_t standard_path_length = confstr(_CS_PATH, NULL, 0);
     if (standard_path_length > 0) {
-        char *standard_path = malloc(standard_path_length);
+        char *standard_path = rxspawn_memory_alloc(standard_path_length);
         if (standard_path) {
             confstr(_CS_PATH, standard_path, standard_path_length);
             shell = find_executable_in_path_list(standard_path, "sh");
-            free(standard_path);
+            rxspawn_memory_free(standard_path);
             if (shell) return shell;
         }
     }
@@ -568,7 +646,7 @@ static char **build_shell_argv(const char *shell_path, const char *args_text, ch
     char **argv;
 
     arg_count = split_shell_args(buffer, NULL);
-    argv = malloc(sizeof(char *) * (size_t)(arg_count + 3));
+    argv = rxspawn_memory_alloc(sizeof(char *) * (size_t)(arg_count + 3));
     if (!argv) return NULL;
 
     argv[0] = shell_argv_name(shell_path);
@@ -583,7 +661,9 @@ static char **build_shell_argv(const char *shell_path, const char *args_text, ch
 static char *copy_value_string(value *string_value) {
     char *copy;
 
-    if (!string_value || !string_value->string_value) return copy_string("");
+    if (!string_value || !string_value->string_value) {
+        return copy_string_external("");
+    }
     copy = malloc(string_value->string_length + 1);
     if (!copy) return NULL;
     if (string_value->string_length) {
@@ -723,35 +803,197 @@ static int crexxcmd_get_stem_value(void *userdata, const char *name, size_t inde
     return 0;
 }
 
-static int prepare_redirect_thread_context(REDIRECT *redirect) {
-    REDIRECT *thread_redirect;
+static REDIRECT_COMPLETION *redirect_completion_create(unsigned char transfer_mode) {
+    REDIRECT_COMPLETION *completion;
 
-    if (!redirect) return -1;
-    /* REDIRECT values live inside Rexx .binary objects that can be copied while
-     * ADDRESS requests are assembled. Worker threads need a stable context. */
-    thread_redirect = malloc(sizeof(REDIRECT));
-    if (!thread_redirect) {
-        redirect->errorCode = 1;
+    completion = (REDIRECT_COMPLETION *)calloc(1, sizeof(*completion));
+    if (!completion) return NULL;
+    completion->io_handle = REDIRECT_INVALID_IO_HANDLE;
+    completion->transfer_mode = transfer_mode;
+    completion->terminal_state = REDIRECT_COMPLETION_CREATED;
+    return completion;
+}
+
+static void redirect_completion_close_handle(REDIRECT_COMPLETION *completion) {
+    if (!completion || completion->io_handle == REDIRECT_INVALID_IO_HANDLE) return;
+#ifdef _WIN32
+    CloseHandle(completion->io_handle);
+#else
+    close(completion->io_handle);
+#endif
+    completion->io_handle = REDIRECT_INVALID_IO_HANDLE;
+}
+
+static int redirect_completion_restrict_child_inheritance(
+        REDIRECT_COMPLETION *completion) {
+#ifdef _WIN32
+    (void)completion;
+    return 0; /* DuplicateHandle already made the completion end private. */
+#else
+    int flags;
+    if (!completion || completion->io_handle == -1) return -1;
+    flags = fcntl(completion->io_handle, F_GETFD);
+    if (flags == -1) return -1;
+    return fcntl(completion->io_handle, F_SETFD, flags | FD_CLOEXEC) == -1
+        ? -1 : 0;
+#endif
+}
+
+static void redirect_completion_destroy(REDIRECT_COMPLETION *completion) {
+    if (!completion) return;
+    redirect_completion_close_handle(completion);
+    free(completion->bytes);
+    completion->bytes = NULL;
+    free(completion);
+}
+
+static int redirect_completion_append(REDIRECT_COMPLETION *completion,
+                                      const char *bytes, size_t length) {
+    size_t needed;
+    size_t capacity;
+    char *resized;
+
+    if (!completion || (!bytes && length != 0)) return -1;
+    if (length > (size_t)-1 - completion->length - 1u) return -1;
+    needed = completion->length + length + 1u;
+    if (needed > completion->capacity) {
+        capacity = completion->capacity ? completion->capacity : 256u;
+        while (capacity < needed) {
+            if (capacity > (size_t)-1 / 2u) {
+                capacity = needed;
+                break;
+            }
+            capacity *= 2u;
+        }
+        resized = (char *)realloc(completion->bytes, capacity);
+        if (!resized) return -1;
+        completion->bytes = resized;
+        completion->capacity = capacity;
+    }
+    if (length) memcpy(completion->bytes + completion->length, bytes, length);
+    completion->length += length;
+    completion->bytes[completion->length] = '\0';
+    return 0;
+}
+
+static void redirect_completion_publish(REDIRECT_COMPLETION *completion,
+                                        unsigned char terminal_state) {
+    if (!completion) return;
+    if (completion->terminal_state != REDIRECT_COMPLETION_RUNNING ||
+        (terminal_state != REDIRECT_COMPLETION_SUCCEEDED &&
+         terminal_state != REDIRECT_COMPLETION_FAILED)) {
+        completion->errorCode = 1;
+        completion->errorSource = 9;
+        completion->terminal_state = REDIRECT_COMPLETION_FAILED;
+        return;
+    }
+    completion->terminal_state = terminal_state;
+}
+
+static int redirect_completion_copy_to_receiver(REDIRECT *redirect,
+                                                REDIRECT_COMPLETION *completion) {
+    size_t start;
+    size_t i;
+    value *element;
+
+    if (!redirect || !completion || completion->consumed) return 0;
+    completion->consumed = 1;
+    if (completion->transfer_mode == REDIRECT_TRANSFER_INPUT_STRING ||
+        completion->transfer_mode == REDIRECT_TRANSFER_INPUT_ARRAY) return 0;
+    if (!redirect->receiver ||
+        rxvm_memory_current_worker() != redirect->receiver_worker) {
+        completion->errorCode = 1;
+        completion->errorSource = 10;
         return -1;
     }
-    *thread_redirect = *redirect;
-    thread_redirect->thread_redirect = NULL;
-    redirect->thread_redirect = thread_redirect;
+
+    if (completion->transfer_mode == REDIRECT_TRANSFER_OUTPUT_STRING) {
+        if (completion->length) {
+            string_append_chars(redirect->receiver, completion->bytes,
+                                completion->length);
+        }
+        return 0;
+    }
+    if (completion->transfer_mode != REDIRECT_TRANSFER_OUTPUT_ARRAY) return -1;
+
+    start = 0;
+    for (i = 0; i < completion->length; i++) {
+        size_t end;
+        if (completion->bytes[i] != '\n') continue;
+        end = i;
+#ifdef _WIN32
+        if (end > start && completion->bytes[end - 1] == '\r') end--;
+#endif
+        element = add_new_element(redirect->receiver);
+        if (!element) return -1;
+        if (end > start) {
+            string_append_chars(element, completion->bytes + start, end - start);
+        }
+        start = i + 1u;
+    }
+    if (start < completion->length) {
+        element = add_new_element(redirect->receiver);
+        if (!element) return -1;
+        string_append_chars(element, completion->bytes + start,
+                            completion->length - start);
+    }
     return 0;
 }
 
 static void collect_redirect_thread_context(REDIRECT *redirect) {
-    REDIRECT *thread_redirect;
+    REDIRECT_COMPLETION *completion;
 
-    if (!redirect || !redirect->thread_redirect) return;
-    thread_redirect = redirect->thread_redirect;
-    if (thread_redirect->errorCode != 0) {
-        redirect->errorCode = thread_redirect->errorCode;
-        redirect->lastError = thread_redirect->lastError;
-        redirect->errorSource = thread_redirect->errorSource;
+    if (!redirect || !redirect->completion) return;
+    completion = redirect->completion;
+    if (completion->terminal_state != REDIRECT_COMPLETION_SUCCEEDED &&
+        completion->terminal_state != REDIRECT_COMPLETION_FAILED) {
+        completion->errorCode = 1;
+        completion->errorSource = 11;
     }
-    free(thread_redirect);
-    redirect->thread_redirect = NULL;
+    if (redirect_completion_copy_to_receiver(redirect, completion) != 0 &&
+        completion->errorCode == 0) {
+        completion->errorCode = 1;
+        completion->errorSource = 12;
+    }
+    if (completion->errorCode != 0) {
+        redirect->errorCode = completion->errorCode;
+        redirect->lastError = completion->lastError;
+        redirect->errorSource = completion->errorSource;
+    }
+    redirect_completion_destroy(completion);
+    redirect->completion = NULL;
+}
+
+/* Join is the publication/acquire boundary. Never consume or destroy a
+ * completion unless the owning I/O thread has definitely stopped. */
+static int join_redirect_thread(REDIRECT *redirect) {
+    if (!redirect || !redirect->has_thread) return 0;
+
+#ifdef _WIN32
+    if (!redirect->thread ||
+        WaitForSingleObject(redirect->thread, INFINITE) != WAIT_OBJECT_0) {
+        redirect->errorCode = 1;
+        redirect->lastError = (int)GetLastError();
+        redirect->errorSource = 13;
+        return -1;
+    }
+    CloseHandle(redirect->thread);
+    redirect->thread = NULL;
+#else
+    {
+        int join_rc = pthread_join(redirect->thread, NULL);
+        if (join_rc != 0) {
+            redirect->errorCode = 1;
+            redirect->lastError = join_rc;
+            redirect->errorSource = 13;
+            return -1;
+        }
+    }
+#endif
+
+    redirect->has_thread = 0;
+    collect_redirect_thread_context(redirect);
+    return 0;
 }
 
 static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length) {
@@ -852,16 +1094,7 @@ static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *o
             CloseHandle(redirect->hRead);
             redirect->hRead = INVALID_HANDLE_VALUE;
         }
-        if (redirect->has_thread) {
-            if (redirect->thread) {
-                WaitForSingleObject(redirect->thread, INFINITE);
-                CloseHandle(redirect->thread);
-            }
-            redirect->thread = NULL;
-            redirect->has_thread = 0;
-            collect_redirect_thread_context(redirect);
-            redirect->hWrite = INVALID_HANDLE_VALUE;
-        }
+        if (join_redirect_thread(redirect) != 0) return -1;
         if (redirect->hWrite != INVALID_HANDLE_VALUE) {
             CloseHandle(redirect->hWrite);
             redirect->hWrite = INVALID_HANDLE_VALUE;
@@ -883,15 +1116,7 @@ static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *o
             close(redirect->hRead);
             redirect->hRead = -1;
         }
-        if (redirect->has_thread) {
-            if (pthread_join(redirect->thread, NULL)) {
-                redirect->errorCode = 1;
-                return -1;
-            }
-            redirect->has_thread = 0;
-            collect_redirect_thread_context(redirect);
-            redirect->hWrite = -1;
-        }
+        if (join_redirect_thread(redirect) != 0) return -1;
         if (redirect->hWrite != -1) {
             close(redirect->hWrite);
             redirect->hWrite = -1;
@@ -915,16 +1140,7 @@ static int crexxcmd_close_output_redirect(REDIRECT *redirect) {
         CloseHandle(redirect->hWrite);
         redirect->hWrite = INVALID_HANDLE_VALUE;
     }
-    if (redirect->has_thread) {
-        if (redirect->thread) {
-            WaitForSingleObject(redirect->thread, INFINITE);
-            CloseHandle(redirect->thread);
-        }
-        redirect->thread = NULL;
-        redirect->has_thread = 0;
-        collect_redirect_thread_context(redirect);
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-    }
+    if (join_redirect_thread(redirect) != 0) return -1;
     if (redirect->hRead != INVALID_HANDLE_VALUE) {
         CloseHandle(redirect->hRead);
         redirect->hRead = INVALID_HANDLE_VALUE;
@@ -934,15 +1150,7 @@ static int crexxcmd_close_output_redirect(REDIRECT *redirect) {
         close(redirect->hWrite);
         redirect->hWrite = -1;
     }
-    if (redirect->has_thread) {
-        if (pthread_join(redirect->thread, NULL)) {
-            redirect->errorCode = 1;
-            return -1;
-        }
-        redirect->has_thread = 0;
-        collect_redirect_thread_context(redirect);
-        redirect->hWrite = -1;
-    }
+    if (join_redirect_thread(redirect) != 0) return -1;
     if (redirect->hRead != -1) {
         close(redirect->hRead);
         redirect->hRead = -1;
@@ -960,16 +1168,7 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
         CloseHandle(redirect->hRead);
         redirect->hRead = INVALID_HANDLE_VALUE;
     }
-    if (redirect->has_thread) {
-        if (redirect->thread) {
-            WaitForSingleObject(redirect->thread, INFINITE);
-            CloseHandle(redirect->thread);
-        }
-        redirect->thread = NULL;
-        redirect->has_thread = 0;
-        collect_redirect_thread_context(redirect);
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-    }
+    if (join_redirect_thread(redirect) != 0) return -1;
     if (redirect->hWrite != INVALID_HANDLE_VALUE) {
         CloseHandle(redirect->hWrite);
         redirect->hWrite = INVALID_HANDLE_VALUE;
@@ -979,15 +1178,7 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
         close(redirect->hRead);
         redirect->hRead = -1;
     }
-    if (redirect->has_thread) {
-        if (pthread_join(redirect->thread, NULL)) {
-            redirect->errorCode = 1;
-            return -1;
-        }
-        redirect->has_thread = 0;
-        collect_redirect_thread_context(redirect);
-        redirect->hWrite = -1;
-    }
+    if (join_redirect_thread(redirect) != 0) return -1;
     if (redirect->hWrite != -1) {
         close(redirect->hWrite);
         redirect->hWrite = -1;
@@ -999,6 +1190,7 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
 
 static void redirect_endpoint_init(REDIRECT *redirect, char endpoint_kind) {
     memset(redirect, 0, sizeof(*redirect));
+    redirect->receiver_worker = rxvm_memory_current_worker();
 #ifdef _WIN32
     redirect->hRead = INVALID_HANDLE_VALUE;
     redirect->hWrite = INVALID_HANDLE_VALUE;
@@ -1007,12 +1199,13 @@ static void redirect_endpoint_init(REDIRECT *redirect, char endpoint_kind) {
     redirect->hRead = -1;
     redirect->hWrite = -1;
 #endif
-    redirect->thread_redirect = NULL;
+    redirect->completion = NULL;
     redirect->endpoint_kind = endpoint_kind;
 }
 
 static void redirect_endpoint_cell_release(REDIRECT_ENDPOINT_CELL *cell) {
     REDIRECT *redirect;
+    int close_rc;
 
     if (!cell) return;
     cell->refcount--;
@@ -1020,11 +1213,14 @@ static void redirect_endpoint_cell_release(REDIRECT_ENDPOINT_CELL *cell) {
 
     redirect = &cell->redirect;
     if (redirect->endpoint_kind == REDIRECT_ENDPOINT_INPUT) {
-        crexxcmd_close_input_redirect(redirect);
+        close_rc = crexxcmd_close_input_redirect(redirect);
     } else {
-        crexxcmd_close_output_redirect(redirect);
+        close_rc = crexxcmd_close_output_redirect(redirect);
     }
-    free(cell);
+    /* A failed join cannot justify freeing storage a live thread may own. The
+     * worker teardown assertion will make this exceptional leak visible. */
+    if (close_rc != 0 && redirect->has_thread) return;
+    rxspawn_memory_free(cell);
 }
 
 static REDIRECT_ENDPOINT_PAYLOAD *redirect_endpoint_payload_from_value(value *payload_value) {
@@ -1041,7 +1237,9 @@ static REDIRECT_ENDPOINT_PAYLOAD *redirect_endpoint_payload_from_value(value *pa
 REDIRECT *rxspawn_redirect_from_value(value *redirect_reg) {
     REDIRECT_ENDPOINT_PAYLOAD *payload;
 
-    if (!redirect_reg || redirect_reg->native_payload_ops != &redirect_endpoint_payload_ops) return NULL;
+    if (!redirect_reg ||
+        rxvm_value_native_ops(redirect_reg) != &redirect_endpoint_payload_ops)
+        return NULL;
     payload = redirect_endpoint_payload_from_value(redirect_reg);
     return payload && payload->cell ? &payload->cell->redirect : NULL;
 }
@@ -1053,7 +1251,7 @@ static REDIRECT *redirect_endpoint_create(value *redirect_reg, char endpoint_kin
     if (!redirect_reg) return NULL;
 
     value_zero(redirect_reg);
-    cell = malloc(sizeof(*cell));
+    cell = rxspawn_memory_alloc(sizeof(*cell));
     if (!cell) return NULL;
     cell->refcount = 1;
     redirect_endpoint_init(&cell->redirect, endpoint_kind);
@@ -1061,7 +1259,7 @@ static REDIRECT *redirect_endpoint_create(value *redirect_reg, char endpoint_kin
     payload.cell = cell;
     if (set_native_payload(redirect_reg, &payload, sizeof(payload),
                            &redirect_endpoint_payload_ops, 0) != 0) {
-        free(cell);
+        rxspawn_memory_free(cell);
         return NULL;
     }
     return &cell->redirect;
@@ -1144,10 +1342,14 @@ static int crexxcmd_run_path(void *userdata,
     value_init(&output_value);
     value_init(&error_value);
 
-    nullredr(&input_redirect);
+    if (parent_data && parent_data->pInput) {
+        pIn = parent_data->pInput;
+    } else {
+        nullredr(&input_redirect);
+        pIn = rxspawn_redirect_from_value(&input_redirect);
+    }
     redr2str(&output_redirect, &output_value);
     redr2str(&error_redirect, &error_value);
-    pIn = rxspawn_redirect_from_value(&input_redirect);
     pOut = rxspawn_redirect_from_value(&output_redirect);
     pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
@@ -1160,7 +1362,7 @@ static int crexxcmd_run_path(void *userdata,
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
-    if (error_text && spawn_error) *error_text = copy_string(spawn_error);
+    if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
     clear_value(&input_redirect);
     clear_value(&output_redirect);
@@ -1206,10 +1408,14 @@ static int crexxcmd_run_argv(void *userdata,
     value_init(&output_value);
     value_init(&error_value);
 
-    nullredr(&input_redirect);
+    if (parent_data && parent_data->pInput) {
+        pIn = parent_data->pInput;
+    } else {
+        nullredr(&input_redirect);
+        pIn = rxspawn_redirect_from_value(&input_redirect);
+    }
     redr2str(&output_redirect, &output_value);
     redr2str(&error_redirect, &error_value);
-    pIn = rxspawn_redirect_from_value(&input_redirect);
     pOut = rxspawn_redirect_from_value(&output_redirect);
     pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
@@ -1224,7 +1430,7 @@ static int crexxcmd_run_argv(void *userdata,
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
-    if (error_text && spawn_error) *error_text = copy_string(spawn_error);
+    if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
     clear_value(&input_redirect);
     clear_value(&output_redirect);
@@ -1371,7 +1577,8 @@ int shellspawn (const char *command,
         if (!shell || !*shell) shell = "cmd.exe";
         if (!shell_args || !*shell_args) shell_args = "/D /S /C";
 
-        data.file_path = malloc(strlen(shell) + strlen(shell_args) + strlen(command) + 8);
+        data.file_path = rxspawn_memory_alloc(
+            strlen(shell) + strlen(shell_args) + strlen(command) + 8u);
         if (!data.file_path) {
             Error("Failure spawn W01", errorText);
             CleanUp(&data);
@@ -1411,7 +1618,8 @@ int shellspawn (const char *command,
 
         args_length = strlen(shell_args);
         command_length = strlen(command);
-        data.buffer = malloc(args_length + 1 + command_length + 1);
+        data.buffer = rxspawn_memory_alloc(
+            args_length + 1u + command_length + 1u);
         if (!data.buffer) {
             Error("Failure spawn U19", errorText);
             CleanUp(&data);
@@ -1437,7 +1645,7 @@ int shellspawn (const char *command,
 
         int commandFound = 0;
         if (ExeFound(base_name)) {
-            data.file_path = malloc(sizeof(char) * strlen(base_name) + 1);
+            data.file_path = rxspawn_memory_alloc(strlen(base_name) + 1u);
             strcpy(data.file_path, base_name);
             commandFound = 1;
         } else if (base_name[0] != '/') {
@@ -1531,7 +1739,7 @@ static int spawn_argv_capture(const char *const *argv,
             return SHELLSPAWN_FAILURE;
         }
         data.application_path = windows_search_executable(normalized_exe);
-        free(normalized_exe);
+        rxspawn_memory_free(normalized_exe);
         if (!data.application_path) {
             Error("Command not found", errorText);
             CleanUp(&data);
@@ -1542,7 +1750,8 @@ static int spawn_argv_capture(const char *const *argv,
     {
         int i;
 
-        data.argv = malloc(sizeof(char *) * (size_t)(argc + 1));
+        data.argv = rxspawn_memory_alloc(
+            sizeof(char *) * (size_t)(argc + 1));
         if (!data.argv) {
             Error("Failure spawn U21", errorText);
             CleanUp(&data);
@@ -1628,23 +1837,24 @@ void nullredr(value* redirect_reg) {
 /* Create a redirect pipe to string */
 /* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
 void redr2str(value* redirect_reg, value* string_reg) {
-    redirectOutput(redirect_reg, string_reg, Output2StringThread);
+    redirectOutput(redirect_reg, string_reg, REDIRECT_TRANSFER_OUTPUT_STRING);
 }
 
 /* Create a redirect pipe to string */
 /* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
 void redr2arr(value* redirect_reg, value* string_reg) {
-    redirectOutput(redirect_reg, string_reg, Output2ArrayThread);
+    redirectOutput(redirect_reg, string_reg, REDIRECT_TRANSFER_OUTPUT_ARRAY);
 }
 
 /* Create a redirect output pipe */
-void redirectOutput(value* redirect_reg, value* string_reg, start_routine start) {
+void redirectOutput(value* redirect_reg, value* string_reg, unsigned char transfer_mode) {
 
     REDIRECT *redirect;
+    REDIRECT_COMPLETION *completion;
 
     redirect = redirect_endpoint_create(redirect_reg, REDIRECT_ENDPOINT_OUTPUT);
     if (!redirect) return;
-    redirect->reg = string_reg;
+    redirect->receiver = string_reg;
 
 #ifdef _WIN32
 
@@ -1710,170 +1920,137 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
 
 #endif
 
-    // Launch the thread that reads the output
+    /* Transfer the parent read end into a non-VM single-owner completion. */
+    completion = redirect_completion_create(transfer_mode);
+    if (!completion) {
+        redirect->errorCode = 1;
 #ifdef _WIN32
-
-    if (prepare_redirect_thread_context(redirect) != 0) return;
-    redirect->thread = CreateThread(NULL, 0, start, (LPVOID)redirect->thread_redirect, 0, NULL);
-    if (redirect->thread == NULL)
-    {
-        DWORD last_error = GetLastError();
-        // Error - try and clean-up
         CloseHandle(redirect->hRead);
         CloseHandle(redirect->hWrite);
         redirect->hRead = INVALID_HANDLE_VALUE;
         redirect->hWrite = INVALID_HANDLE_VALUE;
-        redirect->errorCode = 5;
-        redirect->lastError = (int)last_error;
-        free(redirect->thread_redirect);
-        redirect->thread_redirect = NULL;
+#else
+        close(redirect->hRead);
+        close(redirect->hWrite);
+        redirect->hRead = -1;
+        redirect->hWrite = -1;
+#endif
         return;
     }
-
-#else
-
-    if (prepare_redirect_thread_context(redirect) != 0) return;
-    if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect->thread_redirect)) {
-        // Error
+    completion->io_handle = redirect->hRead;
+    redirect->hRead = REDIRECT_INVALID_IO_HANDLE;
+    if (redirect_completion_restrict_child_inheritance(completion) != 0) {
         redirect->errorCode = 1;
-        free(redirect->thread_redirect);
-        redirect->thread_redirect = NULL;
+        redirect->lastError = errno;
+        redirect->errorSource = 8;
+#ifdef _WIN32
+        CloseHandle(redirect->hWrite);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
+#else
+        close(redirect->hWrite);
+        redirect->hWrite = -1;
+#endif
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
+        return;
     }
+    completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
+    redirect->completion = completion;
 
+    /* Launch the thread that owns and drains the output read end. */
+#ifdef _WIN32
+    redirect->thread = CreateThread(NULL, 0, OutputCaptureThread,
+                                    (LPVOID)completion, 0, NULL);
+    if (redirect->thread == NULL) {
+        DWORD last_error = GetLastError();
+        CloseHandle(redirect->hWrite);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
+        redirect->errorCode = 5;
+        redirect->lastError = (int)last_error;
+        completion->errorCode = 1;
+        completion->lastError = (int)last_error;
+        completion->errorSource = 5;
+        redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
+        return;
+    }
+#else
+    {
+        int create_rc = pthread_create(&(redirect->thread), NULL,
+                                       OutputCaptureThread, (void *)completion);
+        if (create_rc) {
+            close(redirect->hWrite);
+            redirect->hWrite = -1;
+            redirect->errorCode = 1;
+            redirect->lastError = create_rc;
+            completion->errorCode = 1;
+            completion->lastError = create_rc;
+            completion->errorSource = 5;
+            redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
+            redirect_completion_destroy(completion);
+            redirect->completion = NULL;
+            return;
+        }
+    }
 #endif
 
     redirect->has_thread = 1;
 }
 
-/* Function to handle output to a string */
-/* Thread process to handle standard output */
-THREAD_RETURN Output2StringThread(void* lpvThreadParam)
+/* Capture raw bytes only. Join publishes them to the receiver VM thread. */
+THREAD_RETURN OutputCaptureThread(void* lpvThreadParam)
 {
-    REDIRECT* context = (REDIRECT*)lpvThreadParam;
-    context->errorCode= 0;
-    char lpBuffer[256 + 1]; // Add one for a trailing null if needed
-
-    int reading = 1;
+    REDIRECT_COMPLETION *completion = (REDIRECT_COMPLETION *)lpvThreadParam;
+    char buffer[4096];
+    int capture_failed = 0;
 
 #ifdef _WIN32
-
-    DWORD dwBytesRead;
-    while (reading) {
-        if (!ReadFile(context->hRead, lpBuffer, 256, &dwBytesRead, NULL)) {
+    DWORD bytes_read;
+    for (;;) {
+        if (!ReadFile(completion->io_handle, buffer, (DWORD)sizeof(buffer),
+                      &bytes_read, NULL)) {
             DWORD read_error = GetLastError();
-            if (read_error == ERROR_BROKEN_PIPE || read_error == ERROR_HANDLE_EOF) {
-                reading = 0;
-                continue;
-            }
-            context->errorCode = 1;
-            context->lastError = (int)read_error;
-            context->errorSource = 3;
-            return 0;
+            if (read_error == ERROR_BROKEN_PIPE || read_error == ERROR_HANDLE_EOF) break;
+            completion->errorCode = 1;
+            completion->lastError = (int)read_error;
+            completion->errorSource = 3;
+            break;
         }
-        else if (dwBytesRead == 0) {
-            reading = 0;
+        if (bytes_read == 0) break;
+        if (!capture_failed &&
+            redirect_completion_append(completion, buffer, (size_t)bytes_read) != 0) {
+            /* Continue draining so allocation failure cannot deadlock the child. */
+            capture_failed = 1;
+            completion->errorCode = 1;
+            completion->errorSource = 4;
         }
-        string_append_chars(context->reg, lpBuffer, dwBytesRead);
     }
-
 #else
-
-    size_t nBytesRead;
-    while (reading) {
-        nBytesRead = read(context->hRead, lpBuffer, 256);
-        if (nBytesRead == 0) reading = 0;
-        else if (nBytesRead == -1) {
-            context->errorCode = 1;
-            return 0;
+    for (;;) {
+        ssize_t bytes_read = read(completion->io_handle, buffer, sizeof(buffer));
+        if (bytes_read == 0) break;
+        if (bytes_read == -1) {
+            if (errno == EINTR) continue;
+            completion->errorCode = 1;
+            completion->lastError = errno;
+            completion->errorSource = 3;
+            break;
         }
-        string_append_chars(context->reg, lpBuffer, nBytesRead);
-    }
-
-#endif
-
-    return 0;
-}
-
-/* Function to handle output to a vector of strings */
-THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
-
-    REDIRECT* context = (REDIRECT*)lpvThreadParam;
-
-    char lpBuffer[256 + 1]; // Add one for a trailing null if needed
-    size_t nBytesRead;
-    value *buffer = 0;
-    size_t start;
-    int reading = 1;
-    size_t i;
-
-#ifdef _WIN32
-    DWORD dwBytesRead;
-    HANDLE hRead = context->hRead;
-    while (reading) {
-        if (!ReadFile(hRead, lpBuffer, 256, &dwBytesRead, NULL)) {
-            DWORD read_error = GetLastError();
-            if (read_error == ERROR_BROKEN_PIPE || read_error == ERROR_HANDLE_EOF) {
-                reading = 0;
-                continue;
-            }
-            context->errorCode = 1;
-            context->lastError = (int)read_error;
-            context->errorSource = 4;
-            return 0;
-        }
-        else if (dwBytesRead == 0) {
-            reading = 0;
-        }
-        nBytesRead = dwBytesRead;
-#else
-        int fd = context->hRead;
-    while (reading) {
-        nBytesRead = read(fd, lpBuffer, 256);
-        if (nBytesRead == 0) {
-            reading = 0;
-        }
-        else if (nBytesRead == -1) {
-            context->errorCode = 1;
-            return 0;
-        }
-#endif
-        start = 0;
-        for (i = 0; i < nBytesRead; i++) {
-            if (lpBuffer[i] == '\n') {
-//                lpBuffer[i] = 0;
-                if (!buffer) buffer = add_new_element(context->reg);
-                if (!buffer) {
-                    context->errorCode = 1;
-                    return 0;
-                }
-#ifdef _WIN32
-                /* Remove the \r if it is there */
-                if (i > 0 && lpBuffer[i - 1] == '\r') {
-                    if (i - start - 1)
-                        string_append_chars(buffer, lpBuffer + start,
-                                            i - start - 1);
-                }
-                else
-#endif
-                {
-                    if (i - start)
-                        string_append_chars(buffer, lpBuffer + start,
-                                            i - start);
-                }
-                buffer = 0;
-                start = i + 1;
-            }
-        }
-        if (start < nBytesRead) {
-            if (!buffer) buffer = add_new_element(context->reg);
-            if (!buffer) {
-                context->errorCode = 1;
-                return 0;
-            }
-            string_append_chars(buffer, lpBuffer + start, nBytesRead - start);
+        if (!capture_failed &&
+            redirect_completion_append(completion, buffer, (size_t)bytes_read) != 0) {
+            /* Continue draining so allocation failure cannot deadlock the child. */
+            capture_failed = 1;
+            completion->errorCode = 1;
+            completion->errorSource = 4;
         }
     }
+#endif
 
+    redirect_completion_close_handle(completion);
+    redirect_completion_publish(completion,
+        completion->errorCode ? REDIRECT_COMPLETION_FAILED
+                              : REDIRECT_COMPLETION_SUCCEEDED);
     return 0;
 }
 
@@ -1887,7 +2064,7 @@ value* add_new_element(value* array) {
     index = array->num_attributes;
     num = index + 1;
 
-    if (num > array->max_num_attributes) {
+    if (num > rxvm_value_max_attributes(array)) {
         if (num > ((size_t)-1) / 2) return 0;
         /* We need to increase the size of the buffer */
         /* Make the buffer double sized by setting the number of attributes */
@@ -1903,22 +2080,48 @@ value* add_new_element(value* array) {
 /* Create a redirect pipe from a string */
 /* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
 void str2redr(value* redirect_reg, value* string_reg) {
-    redirectInput(redirect_reg, string_reg, InputFromStringThread);
+    redirectInput(redirect_reg, string_reg, REDIRECT_TRANSFER_INPUT_STRING);
 }
 
 /* Create a redirect pipe from a array */
 /* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
 void arr2redr(value* redirect_reg, value* string_reg) {
-    redirectInput(redirect_reg, string_reg, InputFromArrayThread);
+    redirectInput(redirect_reg, string_reg, REDIRECT_TRANSFER_INPUT_ARRAY);
 }
 
-/* Create a redirect pipe from a thread function */
-void redirectInput(value* redirect_reg, value* string_reg, start_routine start) {
+static int redirect_snapshot_input(REDIRECT_COMPLETION *completion, value *source) {
+    size_t i;
+
+    if (!completion || !source) return -1;
+    if (completion->transfer_mode == REDIRECT_TRANSFER_INPUT_STRING) {
+        if (redirect_completion_append(completion, source->string_value,
+                                       source->string_length) != 0) return -1;
+        return redirect_completion_append(completion, "\n", 1u);
+    }
+    if (completion->transfer_mode != REDIRECT_TRANSFER_INPUT_ARRAY) return -1;
+    for (i = 0; i < source->num_attributes; i++) {
+        value *element = source->attributes[i];
+        if (redirect_completion_append(completion, element->string_value,
+                                       element->string_length) != 0 ||
+            redirect_completion_append(completion, "\n", 1u) != 0) return -1;
+    }
+    return 0;
+}
+
+/* Snapshot input before launching the thread that owns the pipe write end. */
+void redirectInput(value* redirect_reg, value* string_reg, unsigned char transfer_mode) {
     REDIRECT *redirect;
+    REDIRECT_COMPLETION *completion;
 
     redirect = redirect_endpoint_create(redirect_reg, REDIRECT_ENDPOINT_INPUT);
     if (!redirect) return;
-    redirect->reg = string_reg;
+    completion = redirect_completion_create(transfer_mode);
+    if (!completion || redirect_snapshot_input(completion, string_reg) != 0) {
+        redirect->errorCode = 1;
+        redirect_completion_destroy(completion);
+        return;
+    }
+    redirect->completion = completion;
 
 #ifdef _WIN32
 
@@ -1937,6 +2140,8 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
         // Error - try and clean-up
         redirect->errorCode = 1;
         redirect->lastError = (int)GetLastError();
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
         return;
     }
 
@@ -1954,6 +2159,8 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
         redirect->hRead = INVALID_HANDLE_VALUE;
         redirect->errorCode = 2;
         redirect->lastError = (int)last_error;
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
         return;
     }
 
@@ -1968,26 +2175,44 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
         redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 3;
         redirect->lastError = (int)last_error;
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
         return;
     }
 
+    completion->io_handle = redirect->hWrite;
+    redirect->hWrite = INVALID_HANDLE_VALUE;
+    if (redirect_completion_restrict_child_inheritance(completion) != 0) {
+        redirect->errorCode = 1;
+        redirect->lastError = errno;
+        redirect->errorSource = 8;
+        CloseHandle(redirect->hRead);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
+        return;
+    }
+    completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
+
+    {
     DWORD threadID;
-    // Launch the thread that writes to the pipe
-    if (prepare_redirect_thread_context(redirect) != 0) return;
-    redirect->thread = CreateThread(NULL, 0, start, redirect->thread_redirect, 0, &threadID);
+    redirect->thread = CreateThread(NULL, 0, InputSnapshotThread,
+                                    completion, 0, &threadID);
     if (redirect->thread == NULL)
     {
         DWORD last_error = GetLastError();
-        // Error
         CloseHandle(redirect->hRead);
-        CloseHandle(redirect->hWrite);
         redirect->hRead = INVALID_HANDLE_VALUE;
-        redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 4;
         redirect->lastError = (int)last_error;
-        free(redirect->thread_redirect);
-        redirect->thread_redirect = NULL;
+        completion->errorCode = 1;
+        completion->lastError = (int)last_error;
+        completion->errorSource = 5;
+        redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
         return;
+    }
     }
 
 #else
@@ -2000,92 +2225,106 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     // Create a pipe
     if (pipe(temppipe)) {
         redirect->errorCode = 1;
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
         return;
     }
     redirect->hRead = temppipe[0];
     redirect->hWrite = temppipe[1];
 
-    // Launch the thread that writes to the pipe
-    if (prepare_redirect_thread_context(redirect) != 0) return;
-    if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect->thread_redirect)) {
-        // Error
-        redirect->errorCode = 2;
-        free(redirect->thread_redirect);
-        redirect->thread_redirect = NULL;
+    completion->io_handle = redirect->hWrite;
+    redirect->hWrite = -1;
+    if (redirect_completion_restrict_child_inheritance(completion) != 0) {
+        redirect->errorCode = 1;
+        redirect->lastError = errno;
+        redirect->errorSource = 8;
+        close(redirect->hRead);
+        redirect->hRead = -1;
+        redirect_completion_destroy(completion);
+        redirect->completion = NULL;
         return;
+    }
+    completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
+    {
+        int create_rc = pthread_create(&(redirect->thread), NULL,
+                                       InputSnapshotThread, (void *)completion);
+        if (create_rc) {
+            close(redirect->hRead);
+            redirect->hRead = -1;
+            redirect->errorCode = 2;
+            redirect->lastError = create_rc;
+            completion->errorCode = 1;
+            completion->lastError = create_rc;
+            completion->errorSource = 5;
+            redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
+            redirect_completion_destroy(completion);
+            redirect->completion = NULL;
+            return;
+        }
     }
 #endif
     redirect->has_thread = 1;
 }
 
-/* Thread process to handle standard input */
-THREAD_RETURN InputFromStringThread(void* lpvThreadParam)
+/* Write an immutable snapshot only; this thread has no VM state. */
+THREAD_RETURN InputSnapshotThread(void* lpvThreadParam)
 {
-    REDIRECT* context = (REDIRECT*)lpvThreadParam;
-    context->errorCode= 0;
+    REDIRECT_COMPLETION *completion = (REDIRECT_COMPLETION *)lpvThreadParam;
+    size_t total = 0;
 
 #ifndef _WIN32
-
     sigset_t signal_mask;
-
-    // Use pthread_sigmask to block the SIG-PIPE (in case we write to the pipe after it was closed by the child process)
+    int mask_rc;
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGPIPE);
-    if (pthread_sigmask(SIG_BLOCK, &signal_mask, NULL)) {
-        context->errorCode = 1;
-        return NULL;
+    mask_rc = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
+    if (mask_rc) {
+        completion->errorCode = 1;
+        completion->lastError = mask_rc;
+        completion->errorSource = 6;
     }
-
 #endif
-
-    WriteToStdin(context, context->reg->string_value, context->reg->string_length);
-    WriteToStdin(context, "\n", 1);
 
 #ifdef _WIN32
-    CloseHandle(context->hWrite);
-    context->hWrite = INVALID_HANDLE_VALUE;
-#else
-    close(context->hWrite);
-    context->hWrite = -1;
-#endif
-
-    return 0;
-}
-
-/* Thread process to handle standard input */
-THREAD_RETURN InputFromArrayThread(void* lpvThreadParam)
-{
-    REDIRECT* context = (REDIRECT*)lpvThreadParam;
-    size_t i;
-    context->errorCode= 0;
-
-#ifndef _WIN32
-
-    sigset_t signal_mask;
-
-    // Use pthread_sigmask to block the SIG-PIPE (in case we write to the pipe after it was closed by the child process)
-    sigemptyset(&signal_mask);
-    sigaddset(&signal_mask, SIGPIPE);
-    if (pthread_sigmask(SIG_BLOCK, &signal_mask, NULL)) {
-        context->errorCode = 1;
-        return NULL;
+    while (!completion->errorCode && total < completion->length) {
+        size_t remaining = completion->length - total;
+        DWORD request = remaining > (size_t)0x7fffffffu
+            ? (DWORD)0x7fffffffu : (DWORD)remaining;
+        DWORD written = 0;
+        if (!WriteFile(completion->io_handle, completion->bytes + total,
+                       request, &written, NULL)) {
+            DWORD write_error = GetLastError();
+            if (write_error == ERROR_NO_DATA || write_error == ERROR_BROKEN_PIPE) break;
+            completion->errorCode = 1;
+            completion->lastError = (int)write_error;
+            completion->errorSource = 7;
+            break;
+        }
+        if (written == 0) break;
+        total += (size_t)written;
     }
-
-#endif
-
-    for (i=0; i<context->reg->num_attributes; i++) {
-        WriteToStdin(context, context->reg->attributes[i]->string_value, context->reg->attributes[i]->string_length);
-        WriteToStdin(context, "\n", 1);
-    }
-
-#ifdef _WIN32
-    CloseHandle(context->hWrite);
-    context->hWrite = INVALID_HANDLE_VALUE;
 #else
-    close(context->hWrite);
-    context->hWrite = -1;
+    while (!completion->errorCode && total < completion->length) {
+        ssize_t written = write(completion->io_handle,
+                                completion->bytes + total,
+                                completion->length - total);
+        if (written == -1) {
+            if (errno == EINTR) continue;
+            if (errno == EPIPE) break;
+            completion->errorCode = 1;
+            completion->lastError = errno;
+            completion->errorSource = 7;
+            break;
+        }
+        if (written == 0) break;
+        total += (size_t)written;
+    }
 #endif
 
+    redirect_completion_close_handle(completion);
+    redirect_completion_publish(completion,
+        completion->errorCode ? REDIRECT_COMPLETION_FAILED
+                              : REDIRECT_COMPLETION_SUCCEEDED);
     return 0;
 }
 
@@ -2155,15 +2394,7 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
         CloseHandle(redirect->hWrite);
         redirect->hWrite = INVALID_HANDLE_VALUE;
     }
-    if (redirect->has_thread) {
-        if (redirect->thread) {
-            WaitForSingleObject(redirect->thread, INFINITE);
-            CloseHandle(redirect->thread);
-        }
-        redirect->thread = NULL;
-        redirect->has_thread = 0;
-        collect_redirect_thread_context(redirect);
-    }
+    if (join_redirect_thread(redirect) != 0) return -1;
     if (redirect->hRead != INVALID_HANDLE_VALUE) {
         CloseHandle(redirect->hRead);
         redirect->hRead = INVALID_HANDLE_VALUE;
@@ -2173,14 +2404,7 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
         close(redirect->hWrite);
         redirect->hWrite = -1;
     }
-    if (redirect->has_thread) {
-        if (pthread_join(redirect->thread, NULL)) {
-            redirect->errorCode = 1;
-            return -1;
-        }
-        redirect->has_thread = 0;
-        collect_redirect_thread_context(redirect);
-    }
+    if (join_redirect_thread(redirect) != 0) return -1;
     if (redirect->hRead != -1) {
         close(redirect->hRead);
         redirect->hRead = -1;
@@ -2193,19 +2417,19 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
 void CleanUp(SHELLDATA* data)
 {
     if (data->buffer) {
-        free(data->buffer);
+        rxspawn_memory_free(data->buffer);
         data->buffer = 0;
     }
     if (data->argv) {
-        free(data->argv);
+        rxspawn_memory_free(data->argv);
         data->argv = 0;
     }
     if (data->file_path) {
-        free(data->file_path);
+        rxspawn_memory_free(data->file_path);
         data->file_path = 0;
     }
     if (data->application_path) {
-        free(data->application_path);
+        rxspawn_memory_free(data->application_path);
         data->application_path = 0;
     }
 
@@ -2249,32 +2473,23 @@ void CleanUp(SHELLDATA* data)
     }
 
     // Close the thread handles in the redirect structures
-    if (data->pInput && data->pInput->thread != NULL) {
-        WaitForSingleObject(data->pInput->thread, INFINITE);
-        CloseHandle(data->pInput->thread);
-        data->pInput->thread = NULL;
-        data->pInput->has_thread = 0;
-        collect_redirect_thread_context(data->pInput);
-    }
-    if (data->pOutput && data->pOutput->thread != NULL) {
-        WaitForSingleObject(data->pOutput->thread, INFINITE);
-        CloseHandle(data->pOutput->thread);
-        data->pOutput->thread = NULL;
-        data->pOutput->has_thread = 0;
-        collect_redirect_thread_context(data->pOutput);
-    }
-    if (data->pError && data->pError->thread != NULL) {
-        WaitForSingleObject(data->pError->thread, INFINITE);
-        CloseHandle(data->pError->thread);
-        data->pError->thread = NULL;
-        data->pError->has_thread = 0;
-        collect_redirect_thread_context(data->pError);
-    }
+    (void)join_redirect_thread(data->pInput);
+    (void)join_redirect_thread(data->pOutput);
+    (void)join_redirect_thread(data->pError);
 
 #else
 
-    if (data->ChildProcessPID) {
-        kill(-data->ChildProcessPID,15); // 15=TERM, 9=KILL
+    if (data->ChildProcessPID > 0) {
+        pid_t child_pid = data->ChildProcessPID;
+        int child_status;
+
+        /* CleanUp is an abandonment path: stop and reap the direct child
+         * before joining pipe owners, so no inherited end can keep them live. */
+        if (kill(child_pid, SIGKILL) == -1 && errno != ESRCH) {
+            data->waitThreadRC = 1;
+        }
+        while (waitpid(child_pid, &child_status, 0) == -1 && errno == EINTR) {
+        }
         data->ChildProcessPID = 0;
     }
 
@@ -2303,6 +2518,11 @@ void CleanUp(SHELLDATA* data)
         close(data->pError->hRead);
         data->pError->hRead = -1;
     }
+
+    /* The completion owns the opposite pipe end; join before its payload dies. */
+    (void)join_redirect_thread(data->pInput);
+    (void)join_redirect_thread(data->pOutput);
+    (void)join_redirect_thread(data->pError);
 #endif
 }
 
@@ -2367,28 +2587,24 @@ void WaitForProcess(SHELLDATA* data)
     // Wait for the Input, Output and Error threads to die
     if (data->pInput && data->pInput->has_thread)
     {
-        WaitForSingleObject(data->pInput->thread, INFINITE);
-        CloseHandle(data->pInput->thread);
-        data->pInput->thread = NULL;
-        data->pInput->has_thread = 0;
-        collect_redirect_thread_context(data->pInput);
-        data->pInput->hWrite = INVALID_HANDLE_VALUE;
+        if (join_redirect_thread(data->pInput) != 0) {
+            data->waitThreadRC = 1;
+            Error("Failure spawn U44", &data->waitThreadErrorText);
+        }
     }
     if (data->pOutput && data->pOutput->has_thread)
     {
-        WaitForSingleObject(data->pOutput->thread, INFINITE);
-        CloseHandle(data->pOutput->thread);
-        data->pOutput->thread = NULL;
-        data->pOutput->has_thread = 0;
-        collect_redirect_thread_context(data->pOutput);
+        if (join_redirect_thread(data->pOutput) != 0) {
+            data->waitThreadRC = 1;
+            Error("Failure spawn U45", &data->waitThreadErrorText);
+        }
     }
     if (data->pError && data->pError->has_thread)
     {
-        WaitForSingleObject(data->pError->thread, INFINITE);
-        CloseHandle(data->pError->thread);
-        data->pError->thread = NULL;
-        data->pError->has_thread = 0;
-        collect_redirect_thread_context(data->pError);
+        if (join_redirect_thread(data->pError) != 0) {
+            data->waitThreadRC = 1;
+            Error("Failure spawn U46", &data->waitThreadErrorText);
+        }
     }
 
     // Close 'my' end of any pipes
@@ -2432,46 +2648,45 @@ void WaitForProcess(SHELLDATA* data)
         w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
         if (w == -1)
         {
+            if (errno == EINTR) continue;
             data->waitThreadRC = 1;
             Error("Failure spawn U43", &data->waitThreadErrorText);
+            if (errno == ECHILD) data->ChildProcessPID = 0;
             break;
         }
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-    data->ChildProcessPID = 0;
-
-    // Get Return Code
-    data->ChildProcessRC = WEXITSTATUS(status);
+    if (w != -1) {
+        data->ChildProcessPID = 0;
+        if (WIFEXITED(status)) {
+            data->ChildProcessRC = WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            data->ChildProcessRC = 128 + WTERMSIG(status);
+        }
+    }
 
     /* Wait for the Input, Output and Error threads to die */
     if (data->pInput && data->pInput->has_thread)
     {
-        if (pthread_join(data->pInput->thread,NULL)) {
+        if (join_redirect_thread(data->pInput) != 0) {
             data->waitThreadRC = 1;
             Error("Failure spawn U44", &data->waitThreadErrorText);
         }
-        data->pInput->has_thread = 0;
-        collect_redirect_thread_context(data->pInput);
-        data->pInput->hWrite = -1;
     }
 
     if (data->pOutput && data->pOutput->has_thread)
     {
-        if (pthread_join(data->pOutput->thread,NULL)) {
+        if (join_redirect_thread(data->pOutput) != 0) {
             data->waitThreadRC = 1;
             Error("Failure spawn U45", &data->waitThreadErrorText);
         }
-        data->pOutput->has_thread = 0;
-        collect_redirect_thread_context(data->pOutput);
     }
 
     if (data->pError && data->pError->has_thread)
     {
-        if (pthread_join(data->pError->thread,NULL)) {
+        if (join_redirect_thread(data->pError) != 0) {
             data->waitThreadRC = 1;
             Error("Failure spawn U46", &data->waitThreadErrorText);
         }
-        data->pError->has_thread = 0;
-        collect_redirect_thread_context(data->pError);
     }
 
     // Close 'my' end of any pipes
@@ -2524,7 +2739,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
     int a;
     int arg_start;
 
-    *command = malloc(sizeof(char) * (strlen(command_string) + 1));
+    *command = rxspawn_memory_alloc(strlen(command_string) + 1u);
     if (*command == NULL) {
         *command = 0;
         *file = 0;
@@ -2546,7 +2761,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
 
     // Is there any command at all
     if (!(*file)[0]) {
-        free(*command);
+        rxspawn_memory_free(*command);
         *command = 0;
         *file = 0;
         *argv = 0;
@@ -2594,9 +2809,9 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
         }
     }
 
-    *argv = malloc(sizeof(char*) * (args + 1));
+    *argv = rxspawn_memory_alloc(sizeof(char*) * (size_t)(args + 1));
     if (*argv == NULL) {
-        free(*command);
+        rxspawn_memory_free(*command);
         *command = 0;
         *file = 0;
         *argv = 0;
@@ -2697,13 +2912,13 @@ int launchChild(SHELLDATA* data) {
         }
 
         InitializeProcThreadAttributeList(NULL, 1, 0, &attributeListSize);
-        si.lpAttributeList = malloc(attributeListSize);
+        si.lpAttributeList = rxspawn_memory_alloc(attributeListSize);
         if (!si.lpAttributeList) {
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
         if (!InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &attributeListSize)) {
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
             si.lpAttributeList = NULL;
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
@@ -2712,7 +2927,7 @@ int launchChild(SHELLDATA* data) {
                                        inheritedHandles, (SIZE_T)inheritedHandleCount * sizeof(HANDLE),
                                        NULL, NULL)) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
             si.lpAttributeList = NULL;
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
@@ -2726,7 +2941,7 @@ int launchChild(SHELLDATA* data) {
         // Handle error.
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
@@ -2757,12 +2972,13 @@ int launchChild(SHELLDATA* data) {
     newEnvironmentSize++;  // For the final extra '\0'.
 
     // Allocate the new environment block.
-    LPWSTR pszNewEnvironment = (LPWSTR) calloc(newEnvironmentSize, sizeof(wchar_t));
+    LPWSTR pszNewEnvironment = (LPWSTR)rxvm_memory_calloc_bytes(
+        rxvm_memory_current_worker(), newEnvironmentSize, sizeof(wchar_t));
     if (pszNewEnvironment == NULL) {
         // Handle memory allocation failure.
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
         FreeEnvironmentStringsW(pszCurrentEnvironment);
         CleanUp(data);
@@ -2806,21 +3022,22 @@ int launchChild(SHELLDATA* data) {
         // Handle the error here. Call GetLastError() to get the error code.
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
-        free(pszNewEnvironment);
+        rxspawn_memory_free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
 
     // Allocate memory for the wide character string.
-    wchar_t* wideFilePath = malloc(filePathLength * sizeof(wchar_t));
+    wchar_t* wideFilePath = rxspawn_memory_alloc(
+        filePathLength * sizeof(wchar_t));
     if (wideFilePath == NULL) {
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
-        free(pszNewEnvironment);
+        rxspawn_memory_free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
@@ -2834,22 +3051,23 @@ int launchChild(SHELLDATA* data) {
         if (applicationPathLength == 0) {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
 
-        wideApplicationPath = malloc(applicationPathLength * sizeof(wchar_t));
+        wideApplicationPath = rxspawn_memory_alloc(
+            applicationPathLength * sizeof(wchar_t));
         if (wideApplicationPath == NULL) {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
@@ -2864,11 +3082,11 @@ int launchChild(SHELLDATA* data) {
         {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideApplicationPath);
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_NOFOUND;
         }
@@ -2876,11 +3094,11 @@ int launchChild(SHELLDATA* data) {
         {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideApplicationPath);
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
@@ -2889,11 +3107,11 @@ int launchChild(SHELLDATA* data) {
     /* Cleanup */
     if (si.lpAttributeList) {
         DeleteProcThreadAttributeList(si.lpAttributeList);
-        free(si.lpAttributeList);
+        rxspawn_memory_free(si.lpAttributeList);
     }
-    free(wideApplicationPath);
-    free(wideFilePath);
-    free(pszNewEnvironment);
+    rxspawn_memory_free(wideApplicationPath);
+    rxspawn_memory_free(wideFilePath);
+    rxspawn_memory_free(pszNewEnvironment);
 
     return 0;
 
@@ -2901,6 +3119,7 @@ int launchChild(SHELLDATA* data) {
 
     if ((data->ChildProcessPID = fork()) == -1) {
         // Error("Failure spawn U33", errorText);
+        data->ChildProcessPID = 0;
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
@@ -2914,7 +3133,8 @@ int launchChild(SHELLDATA* data) {
     char *value;
     for (i = 0; data->variables && i + 1 < data->variables->num_attributes; i += 2) {
         /* Variable Name */
-        name = malloc(data->variables->attributes[i]->string_length + 1);
+        name = rxspawn_memory_alloc(
+            data->variables->attributes[i]->string_length + 1u);
         memcpy(name, data->variables->attributes[i]->string_value, data->variables->attributes[i]->string_length);
         name[data->variables->attributes[i]->string_length] = 0;
 
@@ -2926,15 +3146,16 @@ int launchChild(SHELLDATA* data) {
         }
 
         /* Variable Value */
-        value = malloc(data->variables->attributes[i + 1]->string_length + 1);
+        value = rxspawn_memory_alloc(
+            data->variables->attributes[i + 1]->string_length + 1u);
         memcpy(value, data->variables->attributes[i + 1]->string_value, data->variables->attributes[i + 1]->string_length);
         value[data->variables->attributes[i + 1]->string_length] = 0;
 
         /* Set/export variable */
         setenv(name, value,1);
 
-        free(value);
-        free(name);
+        rxspawn_memory_free(value);
+        rxspawn_memory_free(name);
     }
 
     // Close parent end of the pipes

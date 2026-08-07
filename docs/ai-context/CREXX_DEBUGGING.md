@@ -160,8 +160,10 @@ Process lessons:
   dimensions, or nested type information.
 * Add source-level positive tests and negative tests together. Boundary errors
   are part of the contract, not cleanup work.
-* Run the affected feature through noopt and opt, both `rxvm` and `rxbvm`, and
-  linked optimized runtime paths. Optimizer or linker-only failures are common
+* Run the affected feature through noopt and opt using product `rxvm`, and
+  linked optimized runtime paths. Add the narrow `rxbvm`/`rxtvm` dispatch
+  contract when the change touches dispatch or execution-image preparation.
+  Optimizer or linker-only failures are common
   when metadata, imports, inlining, or register lifetimes change.
 * Use ASAN for ownership-sensitive changes. In sanitizer build trees, build the
   test helper explicitly when needed:
@@ -224,10 +226,10 @@ Reference source-syntax lessons:
 Useful focused commands from the reference source slice:
 
 ```sh
-cmake --build cmake-build-debug --target rxc rxas rxvm rxbvm library compiler_exit_bin crexx_test_driver
+cmake --build cmake-build-debug --target rxc rxas rxvm library compiler_exit_bin crexx_test_driver
 ctest --test-dir cmake-build-debug -R 'reference_source_' --output-on-failure
 ctest --test-dir cmake-build-debug -R 'reference_(iterator|generated|source)|type_ops|arg_semantics_(scalar|array|object)|object_reference_regression|inline_test_ref_|inline_ref_array_count|inline_test_block_expr_live_sibling' --output-on-failure
-cmake --build cmake-build-asan --target rxc rxas rxvm rxbvm library crexx_test_driver
+cmake --build cmake-build-asan --target rxc rxas rxvm library crexx_test_driver
 ctest --test-dir cmake-build-asan -R 'reference_source_|reference_(iterator|generated)' --output-on-failure
 ```
 

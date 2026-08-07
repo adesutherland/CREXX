@@ -1,0 +1,11 @@
+utc=2026-08-06T13:31:03Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+14:31  up 23 days,  7:39, 1 user, load averages: 1.70 1.56 1.41
+52151  1113   0.0  0.0 /bin/zsh -lc {\012  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'\012  uname -a\012  sysctl -n machdep.cpu.brand_string\012  /usr/bin/clang --version | sed -n '1p'\012  pmset -g batt\012  pmset -g therm\012  uptime\012  ps -axo pid,ppid,%cpu,%mem,command | rg '(rxvm|rxbvm|rxtvm|run_cross_runtime|run_benchmarks|ctest|ninja|cmake --build)' | rg -v 'rg \(' || true\012} > /private/tmp/crexx-rxvm-inline.yvLywZ/results/gatec-v1/pre-state-authoritative.txt\012test ! -e /private/tmp/crexx-rxvm-inline.yvLywZ/results/gatec-v1-first-verdict-timing-authoritative\012caffeinate -i /private/tmp/crexx-perf3-13-gateb.qFFjMa/control-build-release/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest /private/tmp/crexx-rxvm-inline.yvLywZ/results/gatec-v1-first-verdict-manifest.txt --output-dir /private/tmp/crexx-rxvm-inline.yvLywZ/results/gatec-v1-first-verdict-timing-authoritative --measurement timing --warmups 1 --runs 4 > /private/tmp/crexx-rxvm-inline.yvLywZ/results/gatec-v1-first-verdict-authoritative-runner.log 2>&1

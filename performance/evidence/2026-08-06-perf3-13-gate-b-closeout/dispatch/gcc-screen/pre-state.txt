@@ -1,0 +1,26 @@
+utc=2026-08-05T21:54:51Z
+{ 1.43 2.04 1.95 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+87492 /bin/zsh -lc awk -F'|' -v OFS='|' '
+/^#/ || /^crexx-cross-runtime-matrix/ {print;next}
+$5=="F1A1-control" {gsub(/harness-control/,"gcc-control",$12);$5="GCC16-control";print}
+' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-seven-workload-matrix-v1.txt > /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt
+awk -F'|' '$1 !~ /^#/ && $1 != "crexx-cross-runtime-matrix" {print $2,$4,$5,$12}' /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt | head -6
+(date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/builds/gcc-control/bin/{rxvm,rxbvm} /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt) > /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-pre-state.txt 2>&1
+mkdir -p /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-timing
+/tmp/crexx-rxvm-inline.yvLywZ/builds/baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt --output-dir /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-timing --measurement timing --warmups 1 --runs 4 > /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-driver.stdout.txt 2> /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-driver.stderr.txt
+87502 /bin/zsh -lc awk -F'|' -v OFS='|' '
+/^#/ || /^crexx-cross-runtime-matrix/ {print;next}
+$5=="F1A1-control" {gsub(/harness-control/,"gcc-control",$12);$5="GCC16-control";print}
+' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-seven-workload-matrix-v1.txt > /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt
+awk -F'|' '$1 !~ /^#/ && $1 != "crexx-cross-runtime-matrix" {print $2,$4,$5,$12}' /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt | head -6
+(date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/builds/gcc-control/bin/{rxvm,rxbvm} /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt) > /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-pre-state.txt 2>&1
+mkdir -p /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-timing
+/tmp/crexx-rxvm-inline.yvLywZ/builds/baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt --output-dir /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-timing --measurement timing --warmups 1 --runs 4 > /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-driver.stdout.txt 2> /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-driver.stderr.txt
+0f2879277e01161f1644a76efb1e7816dddd25ed9b2292b0d49fa15f385e7f12  /tmp/crexx-rxvm-inline.yvLywZ/builds/gcc-control/bin/rxvm
+84a88d3b6670e8d0f3586ef94157c1a6ca5f81b471950805671d72e65e38e240  /tmp/crexx-rxvm-inline.yvLywZ/builds/gcc-control/bin/rxbvm
+0e457ae72a6ea09cb2b042ede3617b0f4ce526f105360869cea361544305885c  /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-screen-matrix-v1.txt

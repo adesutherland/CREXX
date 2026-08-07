@@ -222,6 +222,59 @@ typedef enum rxvm_profile_value_shape {
     RXVM_PROFILE_VALUE_SHAPE_COUNT
 } rxvm_profile_value_shape;
 
+typedef enum rxvm_profile_value_origin {
+    RXVM_PROFILE_VALUE_ORIGIN_UNKNOWN = 0x01u,
+    RXVM_PROFILE_VALUE_ORIGIN_FRAME = 0x02u,
+    RXVM_PROFILE_VALUE_ORIGIN_GLOBAL = 0x04u,
+    RXVM_PROFILE_VALUE_ORIGIN_ATTRIBUTE = 0x08u,
+    RXVM_PROFILE_VALUE_ORIGIN_STANDALONE = 0x10u,
+    RXVM_PROFILE_VALUE_ORIGIN_SCRATCH = 0x20u,
+    RXVM_PROFILE_VALUE_ORIGIN_API_NATIVE = 0x40u
+} rxvm_profile_value_origin;
+
+typedef enum rxvm_profile_value_storage {
+    RXVM_PROFILE_VALUE_STORAGE_STRING = 0x01u,
+    RXVM_PROFILE_VALUE_STORAGE_DECIMAL = 0x02u,
+    RXVM_PROFILE_VALUE_STORAGE_BINARY = 0x04u,
+    RXVM_PROFILE_VALUE_STORAGE_REFERENCE = 0x08u,
+    RXVM_PROFILE_VALUE_STORAGE_OBJECT = 0x10u,
+    RXVM_PROFILE_VALUE_STORAGE_NATIVE = 0x20u
+} rxvm_profile_value_storage;
+
+#define RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT 4u
+#define RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS 34u
+
+typedef struct rxvm_profile_value_census_entry {
+    const value *address;
+    uint32_t origin_mask;
+    uint32_t storage_ever_mask;
+    uint32_t current_logical_mask;
+    uint32_t sticky_inactive_pending_mask;
+    uint64_t logical_masks_seen;
+    uint64_t observations;
+    uint64_t sticky_inactive_event[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t sticky_inactive_capacity[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t current_string_length;
+    uint64_t current_string_capacity;
+    uint64_t current_decimal_length;
+    uint64_t current_decimal_capacity;
+    uint64_t current_binary_length;
+    uint64_t current_binary_capacity;
+    uint64_t current_attributes;
+    uint64_t current_attribute_capacity;
+    uint64_t max_string_length;
+    uint64_t max_string_capacity;
+    uint64_t max_decimal_length;
+    uint64_t max_decimal_capacity;
+    uint64_t max_binary_length;
+    uint64_t max_binary_capacity;
+    uint64_t max_attributes;
+    uint64_t max_attribute_capacity;
+    uint64_t max_attribute_buffers;
+} rxvm_profile_value_census_entry;
+
 typedef enum rxvm_profile_frame_phase {
     RXVM_PROFILE_FRAME_LOCAL_RELINK = 0,
     RXVM_PROFILE_FRAME_GLOBAL_RELINK,
@@ -309,6 +362,38 @@ typedef struct rxvm_profile_state {
     rxvm_profile_allocation_counter
             value_operations[RXVM_PROFILE_VALUE_OPERATION_COUNT]
                             [RXVM_PROFILE_VALUE_SHAPE_COUNT];
+    rxvm_profile_value_census_entry *value_census_entries;
+    size_t value_census_capacity;
+    size_t value_census_count;
+    uint64_t value_census_logical_observations[64];
+    uint64_t value_census_current_totals[8];
+    uint64_t value_census_peak_totals[8];
+    uint64_t value_census_peak_dead[4];
+    uint64_t value_census_event_sequence;
+    uint64_t value_census_reuse_count[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t value_census_reuse_distance_total[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t value_census_reuse_distance_max[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t value_census_reuse_distance_histogram
+            [RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT]
+            [RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS];
+    uint64_t value_census_reuse_capacity_histogram
+            [RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT]
+            [RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS];
+    uint64_t value_census_inactive_capacity_current[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t value_census_inactive_capacity_peak[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t value_census_release_without_reuse_count[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t value_census_release_without_reuse_capacity[
+            RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT];
+    uint64_t value_census_release_without_reuse_histogram
+            [RXVM_PROFILE_VALUE_STICKY_STORAGE_COUNT]
+            [RXVM_PROFILE_VALUE_REUSE_HISTOGRAM_BUCKETS];
+    int value_census_tracking_unavailable;
     rxvm_profile_counter
             frame_phases[RXVM_PROFILE_FRAME_PHASE_COUNT]
                         [RXVM_PROFILE_FRAME_SOURCE_COUNT];
@@ -373,6 +458,13 @@ void rxvm_profile_record_value_operation(rxvm_profile_value_operation operation,
 void rxvm_profile_record_value_typed(rxvm_profile_value_operation operation,
                                     rxvm_profile_value_shape shape,
                                     size_t bytes);
+void rxvm_profile_register_value(const value *payload);
+void rxvm_profile_mark_value_origin(const value *payload,
+                                    rxvm_profile_value_origin origin);
+void rxvm_profile_record_value_storage(const value *payload);
+void rxvm_profile_record_value_storage_if_registered(const value *payload);
+void rxvm_profile_finish_value_census(rxvm_profile_state *state,
+                                      struct rxvm_context *context);
 uint64_t rxvm_profile_frame_phase_begin(void);
 void rxvm_profile_record_frame_phase(rxvm_profile_frame_phase phase,
                                      int reused, uint64_t start_ns,

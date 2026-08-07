@@ -72,12 +72,13 @@ Stage 2 discovery data. CMake references are literal source facts, not delivery 
 | `TOOL-rxdas` | RXBIN disassembler | `disassembler` | `disassembler/CMakeLists.txt` builds `rxdas` |
 | `TOOL-rxcpack` | RXBIN-to-C packager | `cpacker` | `cpacker/CMakeLists.txt` builds `rxcpack` |
 | `TOOL-crexx` | high-level compile/assemble/run/native driver | `bin/crexx.crexx` | `bin/CMakeLists.txt` builds `crexx` |
-| `TOOL-rxvm` | threaded bare VM executable | `interpreter` | `interpreter/CMakeLists.txt` builds `rxvm` |
-| `TOOL-rxbvm` | bytecode-dispatch bare VM executable | `interpreter` | `interpreter/CMakeLists.txt` builds `rxbvm` |
-| `TOOL-rxvme` | threaded VM with packed Level B library | `interpreter` | `interpreter/CMakeLists.txt` builds `rxvme` |
-| `TOOL-rxbvme` | bytecode-dispatch VM with packed Level B library | `interpreter` | `interpreter/CMakeLists.txt` builds `rxbvme` |
-| `LIB-rxvml` | threaded embeddable VM static library | `interpreter/rxvmlib.c; interpreter/rxvml.c` | `interpreter/CMakeLists.txt` builds `rxvml` |
-| `LIB-rxbvml` | bytecode-dispatch embeddable VM static library | `interpreter/rxvmlib.c; interpreter/rxvml.c` | `interpreter/CMakeLists.txt` builds `rxbvml` |
+| `TOOL-rxvm` | compiler-selected bare VM product entry point | `interpreter` | `interpreter/CMakeLists.txt` links/copies `rxvm` to the selected concrete VM |
+| `TOOL-rxbvm` | portable switch-dispatch bare VM executable | `interpreter` | `interpreter/CMakeLists.txt` always builds `rxbvm` |
+| `TOOL-rxtvm` | direct-threaded bare VM executable | `interpreter` | `interpreter/CMakeLists.txt` builds `rxtvm` for GNU/Clang-family compilers, but not MSVC |
+| `TOOL-rxvme` | compiler-selected VM with packed Level B library | `interpreter` | `interpreter/CMakeLists.txt` builds `rxvme` from the selected core |
+| `TOOL-rxbvme` | switch-dispatch VM with packed Level B library | `interpreter` | `interpreter/CMakeLists.txt` builds `rxbvme` |
+| `LIB-rxvml` | compiler-selected embeddable VM static library | `interpreter/rxvmlib.c; interpreter/rxvml.c` | `interpreter/CMakeLists.txt` builds `rxvml` from the selected core |
+| `LIB-rxbvml` | switch-dispatch embeddable VM static library | `interpreter/rxvmlib.c; interpreter/rxvml.c` | `interpreter/CMakeLists.txt` builds `rxbvml` |
 | `LIB-crexxsaa` | public SAA-style host integration shared library/API | `interpreter/crexxsaa.c; interpreter/crexxsaa.h` | explicitly built and installed by `interpreter/CMakeLists.txt` |
 | `TOOL-crexxsaa` | CREXXSAA cache maintenance CLI | `interpreter/crexxsaa_tool.c` | explicitly built and installed by `interpreter/CMakeLists.txt` |
 | `INFRA-RXPA` | native plugin ABI/build framework | `rxpa; include/crexxpa.h; lib/include/rxpa.h` | `rxpa/CMakeLists.txt` and plugin target helpers |
@@ -93,8 +94,9 @@ Stage 2 discovery data. CMake references are literal source facts, not delivery 
 | `TOOL-rxdb` | RXDB debugger | `debugger/rxdb.crexx; debugger/rxdb_gui.crexx` | `debugger/CMakeLists.txt` |
 | `INFRA-VM-PROFILING` | compile-time-gated VM timing and dynamic-sequence profiling | `interpreter/rxvmprofile.*; interpreter/rxvminstrument_profile.h; interpreter/rxvmsequence.c` | `CREXX_VM_PROFILING` paths in `interpreter/CMakeLists.txt` |
 | `TOOL-rxseq` | offline dynamic instruction-sequence profile analyser | `interpreter/rxseqmain.c; interpreter/rxseqfile.c` | `interpreter/CMakeLists.txt` builds `rxseq` |
-| `TOOL-rxvm-instrumented` | threaded instrumentation-contract test VM | instrumented VM object variant | built only with `BUILD_TESTING` |
-| `TOOL-rxbvm-instrumented` | bytecode-dispatch instrumentation-contract test VM | instrumented VM object variant | built only with `BUILD_TESTING` |
+| `TOOL-rxvm-instrumented` | compiler-selected instrumentation-contract test target | selected instrumented VM object variant | built only with `BUILD_TESTING` |
+| `TOOL-rxbvm-instrumented` | switch-dispatch instrumentation-contract test VM | switch instrumented VM object variant | built only with `BUILD_TESTING` |
+| `TOOL-rxtvm-instrumented` | direct-threaded instrumentation-contract test VM | threaded instrumented VM object variant | built only with `BUILD_TESTING` and GNU/Clang-family compilers |
 | `LIB-rxmath-source` | older rxmath source tree | `lib/rxmath/rexx; lib/rxmath/native; lib/rxmath/rxas` | `no lib/rxmath CMakeLists.txt found` |
 | `LIB-veclib` | vector library | `lib/veclib/veclib.crexx` | `lib/veclib/CMakeLists.txt` |
 

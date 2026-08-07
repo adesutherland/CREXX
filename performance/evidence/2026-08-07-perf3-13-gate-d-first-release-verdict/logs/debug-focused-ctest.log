@@ -1,0 +1,34 @@
+Test project /private/tmp/crexx-rxvm-gated.6HZvFK/source/cmake-build-debug
+      Start 1042: rxvmstem_storage
+ 1/11 Test #1042: rxvmstem_storage .................   Passed    0.31 sec
+      Start 1043: rxvmstem_allocator_family
+ 2/11 Test #1043: rxvmstem_allocator_family ........   Passed    0.22 sec
+      Start 1044: rxvmmemory_allocator
+ 3/11 Test #1044: rxvmmemory_allocator .............   Passed    0.24 sec
+      Start 1048: ts_regvalue_tester
+ 4/11 Test #1048: ts_regvalue_tester ...............   Passed    0.22 sec
+      Start 1167: mc_decimal_test1
+ 5/11 Test #1167: mc_decimal_test1 .................   Passed    0.22 sec
+      Start 1168: mc_decimal_test2
+ 6/11 Test #1168: mc_decimal_test2 .................   Passed    0.00 sec
+      Start 1169: mc_decimal_test3
+ 7/11 Test #1169: mc_decimal_test3 .................   Passed    0.00 sec
+      Start 1170: mc_decimal_dyn_test1
+ 8/11 Test #1170: mc_decimal_dyn_test1 .............   Passed    0.44 sec
+      Start 1171: mc_decimal_manual_test1
+ 9/11 Test #1171: mc_decimal_manual_test1 ..........   Passed    0.22 sec
+      Start 1172: mc_decimal_full_tests
+10/11 Test #1172: mc_decimal_full_tests ............   Passed    0.22 sec
+      Start 1173: db_decimal_tests
+11/11 Test #1173: db_decimal_tests .................   Passed    0.80 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Label Time Summary:
+interpreter    =   0.77 sec*proc (3 tests)
+memory         =   0.46 sec*proc (2 tests)
+nr15           =   0.31 sec*proc (1 test)
+smoke          =   0.22 sec*proc (1 test)
+stem           =   0.53 sec*proc (2 tests)
+
+Total Test time (real) =   2.93 sec

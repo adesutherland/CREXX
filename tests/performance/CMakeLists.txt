@@ -18,7 +18,7 @@ crexx_add_rexx_opt_matrix(
 )
 
 add_custom_target(performance_reference_iterator ALL)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME reference_iterator_compare_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/reference_iterator_compare.crexx
@@ -48,7 +48,10 @@ add_executable(decimal_gate1_adapter
         ${CMAKE_CURRENT_SOURCE_DIR}/decimal/decimal_gate1_adapter.c)
 target_include_directories(decimal_gate1_adapter PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+        ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include
+        ${CMAKE_SOURCE_DIR}/utf8)
 target_link_libraries(decimal_gate1_adapter PRIVATE
         rxvmplugin ${CREXX_MATH_LIBRARY})
 add_dependencies(decimal_gate1_adapter mc_decimal_dynamic db_decimal_dynamic)
@@ -147,6 +150,11 @@ foreach(_decimal_standard IN ITEMS common18 classic9)
     endforeach()
 
     foreach(_decimal_runner IN ITEMS rxvm rxbvm)
+        if(_decimal_runner STREQUAL "rxvm")
+            set(_decimal_runner_executable ${CREXX_RXVM_EXECUTABLE})
+        else()
+            set(_decimal_runner_executable $<TARGET_FILE:${_decimal_runner}>)
+        endif()
         foreach(_decimal_provider IN ITEMS default mc db)
             if(_decimal_provider STREQUAL "default")
                 set(_decimal_plugin_args)
@@ -158,7 +166,7 @@ foreach(_decimal_standard IN ITEMS common18 classic9)
                         ${_decimal_name}_${_decimal_runner}_${_decimal_provider}_${_decimal_mode})
                 add_test(
                         NAME ${_decimal_test}
-                        COMMAND $<TARGET_FILE:${_decimal_runner}>
+                        COMMAND ${_decimal_runner_executable}
                                 ${_decimal_plugin_args}
                                 ${CMAKE_CURRENT_BINARY_DIR}/${_decimal_name}_${_decimal_mode}
                                 ${LIBRPATH}
@@ -194,6 +202,11 @@ crexx_add_rexx_opt_matrix(
 )
 
 foreach(_decimal_runner IN ITEMS rxvm rxbvm)
+    if(_decimal_runner STREQUAL "rxvm")
+        set(_decimal_runner_executable ${CREXX_RXVM_EXECUTABLE})
+    else()
+        set(_decimal_runner_executable $<TARGET_FILE:${_decimal_runner}>)
+    endif()
     foreach(_decimal_provider IN ITEMS default mc db)
         if(_decimal_provider STREQUAL "default")
             set(_decimal_plugin_args)
@@ -205,7 +218,7 @@ foreach(_decimal_runner IN ITEMS rxvm rxbvm)
                     decimal_gate1_rexxcps_family_${_decimal_runner}_${_decimal_provider}_${_decimal_mode})
             add_test(
                     NAME ${_decimal_test}
-                    COMMAND $<TARGET_FILE:${_decimal_runner}>
+                    COMMAND ${_decimal_runner_executable}
                             ${_decimal_plugin_args}
                             ${CMAKE_CURRENT_BINARY_DIR}/decimal_gate1_rexxcps_family_${_decimal_mode}
                             ${LIBRPATH}
@@ -232,7 +245,7 @@ add_dependencies(linked_opt_runtime_artifacts
         performance_nr16_17_stable_state)
 
 add_custom_target(performance_classlib_iterator ALL)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME stringarraylist_iterator_compare_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stringarraylist_iterator_compare.crexx
@@ -286,7 +299,7 @@ foreach(_crexx_mode IN ITEMS noopt opt)
 endforeach()
 
 add_custom_target(performance_binary_byvalue ALL)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME binary_byvalue_compare_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_byvalue_compare.crexx
@@ -424,7 +437,7 @@ crexx_add_rexx_opt_matrix(
 
 add_custom_target(performance_nr15_stem_semantics)
 add_custom_target(performance_nr15_stem_access)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME nr15_stem_semantics_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr15_stem_semantics.crexx
@@ -458,7 +471,7 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(performance_nr16_17_stable_state)
-foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME nr16_17_stable_state_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr16_17_stable_state_compare.crexx

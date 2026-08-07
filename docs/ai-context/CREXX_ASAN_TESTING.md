@@ -257,6 +257,14 @@ Debug suite passed 1580/1580. The complete machine, triage, and performance
 record is in
 `docs/planning/beta-3/reports/linux-vm-sanitizer-performance-review.md`.
 
+## Current VM object targets
+
+The portable interpreter translation unit compiles as `rxbvm_core_objects`.
+GNU/Clang-family builds also compile `rxtvm_core_objects`; MSVC builds only the
+portable object target. Product `rxvm` creates a symlink or copy of the
+compiler-selected concrete executable and does not compile `rxvmintp.c` a
+third time. Embedded and library products reuse the selected object target.
+
 ## 2026-06-17 Baseline Notes
 
 On the Linux ARM64 VM, both Debug ASan/LSan and ReleaseASAN completed full
@@ -269,8 +277,9 @@ build plus full CTest with leak detection enabled:
 * Full ReleaseASAN passed: 1295/1295, log directory
   `cmake-build-releaseasan/asan-logs/20260617-144706-full`.
 
-The ReleaseASAN build still spends a long time in the two concurrent
-`rxvmintp.c` compiles for `rxvm_core_objects` and `rxbvm_core_objects`. The
+At that baseline the ReleaseASAN build still spent a long time in the two
+concurrent `rxvmintp.c` compiles then named `rxvm_core_objects` and
+`rxbvm_core_objects`. The
 generated commands include `-O3 -O1`; GCC uses the later `-O1`, so this is the
 intended ASan-specific override for that translation unit, not a request to run
 both optimization levels.
@@ -304,10 +313,10 @@ generated ReleaseASAN compile commands were checked and include the extra `-O1`
 override. The full ReleaseASAN build and CTest should be rerun on a faster
 machine.
 
-Build-time review note: a no-op Release build reports `ninja: no work to do`,
+Historical build-time review note: a no-op Release build reported `ninja: no work to do`,
 so the current slowdown is not a perpetual rebuild loop. The expensive path is a
 clean build or any source change that touches `interpreter/rxvmintp.c`. CMake
-currently compiles that large translation unit separately for eight VM/test
+then compiled that large translation unit separately for eight VM/test
 targets (`rxvm`, `rxbvm`, `rxvme`, `rxbvme`, `rxvml`, `rxbvml`, `testvm`, and
 `funcvm`). The Release `.ninja_log` shows about 5957 seconds of aggregate latest
 `rxvmintp.c` compile time across those eight object files on this host. The

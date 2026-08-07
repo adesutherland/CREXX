@@ -36,6 +36,15 @@
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
+/*
+ * Stable RXVM register ABI selected by PERF3-13 Gate C. Strings and decimal
+ * payloads are sidecars; only logical string metrics are 32-bit. Allocation
+ * capacities and binary lengths remain native-width.
+ */
+#define RXVM_VALUE_ABI_VERSION 2u
+#define RXVM_VALUE_LAYOUT_NAME "L32SDH"
+typedef uint32_t rxvm_string_metric;
+
 /* The default number of digits. This constant is also the point at which integers and floating numbers are
  * truncated. If it is lower than 18, then integers are floats are rounded, if 18 or higher they are not rounded (for performance).
  * However, when displaying numbers, the digit number is always honored */
@@ -134,6 +143,12 @@ typedef struct rxvm_native_payload_ops {
 } rxvm_native_payload_ops;
 #endif
 
+/* The decimal header is co-allocated immediately before decimal_value. */
+typedef struct rxvm_decimal_metadata {
+    size_t length;
+    size_t capacity;
+} rxvm_decimal_metadata;
+
 struct RxGraphTypeRef;
 
 typedef union {
@@ -148,17 +163,16 @@ struct value {
     /* Value */
     rxinteger int_value;
     double float_value;
-    void *decimal_value; // Must be malloced
-    size_t decimal_value_length; // decimal_value length
-    size_t decimal_buffer_length; // decimal_value buffer length
+    void *decimal_value;
     char *string_value;
-    size_t string_length;
+    /* Allocation capacity stays native-width; only logical metrics narrow. */
     size_t string_buffer_length;
+    rxvm_string_metric string_length;
 #ifndef NUTF8
-    size_t string_chars;
+    rxvm_string_metric string_chars;
     /* VM-private UTF-8 character lookup cache; never an RXAS-visible cursor. */
-    size_t string_cache_byte_pos;
-    size_t string_cache_char_pos;
+    rxvm_string_metric string_cache_byte_pos;
+    rxvm_string_metric string_cache_char_pos;
 #endif
     char *binary_value; // Must be malloced
     size_t binary_length; // binary_value length
@@ -174,8 +188,75 @@ struct value {
     size_t max_num_attributes;
     size_t num_attributes;
     size_t num_attribute_buffers;
-    char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH];
 };
+
+/* The normal UTF-8 64-bit product is the selected 176-byte representation.
+ * NUTF8 omits three private cache metrics and is correspondingly 168 bytes. */
+#if UINTPTR_MAX == UINT64_MAX
+#ifndef NUTF8
+typedef char rxvm_value_must_be_176_bytes[sizeof(value) == 176u ? 1 : -1];
+#else
+typedef char rxvm_value_nutf8_must_be_168_bytes[
+        sizeof(value) == 168u ? 1 : -1];
+#endif
+typedef char rxvm_decimal_header_must_be_16_bytes[
+        sizeof(rxvm_decimal_metadata) == 16u ? 1 : -1];
+#endif
+
+static inline rxvm_decimal_metadata *
+rxvm_value_decimal_header_from_data(const void *data) {
+    return data
+            ? ((rxvm_decimal_metadata *)data) - 1
+            : 0;
+}
+
+static inline void *rxvm_value_decimal_data(const value *v) {
+    return v ? v->decimal_value : 0;
+}
+
+static inline size_t rxvm_value_decimal_length(const value *v) {
+    rxvm_decimal_metadata *header = v
+            ? rxvm_value_decimal_header_from_data(v->decimal_value)
+            : 0;
+    return header ? header->length : 0u;
+}
+
+static inline size_t rxvm_value_decimal_capacity(const value *v) {
+    rxvm_decimal_metadata *header = v
+            ? rxvm_value_decimal_header_from_data(v->decimal_value)
+            : 0;
+    return header ? header->capacity : 0u;
+}
+
+static inline void rxvm_value_set_decimal_length(value *v, size_t length) {
+    if (!v) return;
+    rxvm_decimal_metadata *header =
+            rxvm_value_decimal_header_from_data(v->decimal_value);
+    if (header) header->length = length;
+}
+
+static inline const rxvm_native_payload_ops *
+rxvm_value_native_ops(const value *v) {
+    return v ? v->native_payload_ops : 0;
+}
+
+static inline unsigned int rxvm_value_native_flags(const value *v) {
+    return v ? v->native_payload_flags : 0u;
+}
+
+static inline value **rxvm_value_attribute_buffers(const value *v) {
+    return v ? v->attribute_buffers : 0;
+}
+
+static inline size_t rxvm_value_max_attributes(const value *v) {
+    return v ? v->max_num_attributes : 0u;
+}
+
+static inline size_t rxvm_value_attribute_buffer_count(const value *v) {
+    return v ? v->num_attribute_buffers : 0u;
+}
+
+#define RXVM_VALUE_STRING_IS_ALLOCATED(value_) ((value_)->string_value != 0)
 
 
 #endif //CREXX_VALUE_H

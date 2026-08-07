@@ -58,11 +58,11 @@ static int test_try_set_num_attributes(value *v, size_t count) {
 
 static void *test_stem_malloc(size_t length) {
     if (consume_failure(TEST_FAIL_STRING)) return 0;
-    return malloc(length);
+    return RXVM_VALUE_MALLOC(length);
 }
 
 static void test_stem_free(void *buffer) {
-    free(buffer);
+    RXVM_VALUE_FREE(buffer);
 }
 
 static void fail(const char *expression, const char *file, int line) {

@@ -13,13 +13,14 @@ quickly without replacing the full CTest suite.
 ## Selection Rules
 
 - Cover every shipped toolchain product: `rxc`, `rxas`, `rxlink`, `rxdas`,
-  `rxvm`/`rxbvm`, `rxpp`, `rexxscript`, and `crexx`.
+  product `rxvm`, `rxpp`, `rexxscript`, and `crexx`. Concrete `rxbvm`/`rxtvm`
+  dispatch coverage belongs in the narrow dispatch-contract test.
 - Cover the main runtime surfaces: base BIFs, classlib, `rxfnsc`, `rxfnsg`,
   `rxfnsl`,
   native-backed adapters, RXPA plugins, SAA entry points, ADDRESS, source maps,
   diagnostics, signals, and native packaging.
 - Prefer one representative per matrix axis. Do not label both `noopt` and
-  `opt`, both `rxvm` and `rxbvm`, or every source/binary import variant unless
+  `opt`, both concrete VM engines, or every source/binary import variant unless
   that axis is the concern being tested.
 - Avoid smoke tests that require the global `linked_opt_runtime_artifacts`
   fixture. That fixture can build a large part of the suite and defeats quick
@@ -35,7 +36,7 @@ quickly without replacing the full CTest suite.
 | `rxas` assembler | parser init/token/error tests, invalid mnemonic diagnostic, optimizer copy/acopy case |
 | `rxlink` linker | success, control-file linking, interface linking, format checks, signature mismatch diagnostics |
 | `rxdas` disassembler | basic/interface roundtrip and dump support |
-| `rxvm` / `rxbvm` | basic RXAS execution, string/reference/decimal/interface instructions, compact format, signal and UTF checks |
+| `rxvm` product path | basic RXAS execution, string/reference/decimal/interface instructions, compact format, signal and UTF checks; separate narrow `rxbvm`/`rxtvm` dispatch contracts |
 | Libraries | rxfnsb ADDRESS/parse/stem/JSON/socket, rxfnsc runtime pools/classic BIFs/value, rxfnsg provider helpers, rxfnsl generated-output tinyexpr demo |
 | Classlib | list/hash map/object collections, JSON, native OS adapter |
 | Plugins and RXPA | math/stack/string/keyaccess/map/system plugins, dynamic/static RXPA link, class declarations, callbacks, native payload, multi-plugin loading |

@@ -163,7 +163,7 @@ crexx_add_rxas_optimizer_check(redundant_self_copy_flow redundant_self_copy_flow
 crexx_add_rxas_optimizer_check(redundant_self_copy_flow_noopt redundant_self_copy_flow.rxas redundant_self_copy_flow_noopt RXAS_FLAGS -n)
 
 add_custom_target(whole_procedure_runtime ALL)
-foreach(_nr27_runner IN ITEMS rxvm rxbvm)
+foreach(_nr27_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME whole_procedure_runtime_${_nr27_runner}
             SOURCE ${RXAS_OPTIMIZER_DIR}/whole_procedure_runtime
@@ -181,7 +181,7 @@ foreach(_nr27_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(nr18_flow_runtime ALL)
-foreach(_nr18_runner IN ITEMS rxvm rxbvm)
+foreach(_nr18_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME nr18_flow_runtime_${_nr18_runner}
             SOURCE ${RXAS_OPTIMIZER_DIR}/nr18_flow_runtime
@@ -199,7 +199,7 @@ foreach(_nr18_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(storage_identity_runtime ALL)
-foreach(_c2e2_runner IN ITEMS rxvm rxbvm)
+foreach(_c2e2_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME storage_identity_runtime_${_c2e2_runner}
             SOURCE ${RXAS_OPTIMIZER_DIR}/storage_identity_runtime
@@ -217,7 +217,7 @@ foreach(_c2e2_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(redundant_itos_runtime ALL)
-foreach(_perf3_10_runner IN ITEMS rxvm rxbvm)
+foreach(_perf3_10_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME redundant_itos_runtime_${_perf3_10_runner}
             SOURCE ${RXAS_OPTIMIZER_DIR}/redundant_itos_runtime
@@ -235,7 +235,7 @@ foreach(_perf3_10_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(signal_contract_runtime ALL)
-foreach(_perf3_11_runner IN ITEMS rxvm rxbvm)
+foreach(_perf3_11_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME signal_contract_runtime_${_perf3_11_runner}
             SOURCE ${RXAS_OPTIMIZER_DIR}/signal_contract_runtime
@@ -253,7 +253,7 @@ foreach(_perf3_11_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(copied_xtoy_component_placement_runtime ALL)
-foreach(_perf3_12a_x1_runner IN ITEMS rxvm rxbvm)
+foreach(_perf3_12a_x1_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME copied_xtoy_component_placement_runtime_${_perf3_12a_x1_runner}
             SOURCE ${RXAS_OPTIMIZER_DIR}/copied_xtoy_component_placement_runtime
@@ -271,7 +271,7 @@ foreach(_perf3_12a_x1_runner IN ITEMS rxvm rxbvm)
 endforeach()
 
 add_custom_target(branch_thread_runtime ALL)
-foreach(_k05_runner IN ITEMS rxvm rxbvm)
+foreach(_k05_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(
             NAME branch_thread_runtime_${_k05_runner}
             SOURCE ${RXAS_OPTIMIZER_DIR}/branch_thread_runtime
