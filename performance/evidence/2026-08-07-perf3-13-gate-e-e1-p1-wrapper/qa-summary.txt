@@ -1,0 +1,11 @@
+Focused AddressSanitizer build: PASS
+Focused AddressSanitizer CTest: 3/3 PASS
+ASAN_OPTIONS: detect_leaks=0 (Apple LeakSanitizer unsupported)
+Full Debug build: PASS
+Full Debug CTest: 1997/1997 PASS
+Full Debug CTest elapsed: 210.77 seconds
+Ordinary profiling-off Release closeout build: PASS
+Focused Release CTest: 14/14 PASS
+Concrete VM dispatch contracts: rxbvm PASS; rxtvm PASS
+Static RXVML archive consumer: PASS
+Native Windows cross-toolchain: unavailable on this host

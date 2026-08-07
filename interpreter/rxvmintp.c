@@ -4954,7 +4954,8 @@ RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteg
 
 #line 4947 "/tmp/crexx-rxvm-inline.yvLywZ/source/interpreter/rxvmintp.c"
 /* Interpreter */
-RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
+static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
+        rxvm_context *context, int argc, char *argv[]) {
     proc_runtime *procedure;
     proc_runtime *step_handler = 0;
     int rc = 0;
@@ -4992,19 +4993,6 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
 #else
     void *next_inst = &&IUNKNOWN;
 #endif
-    {
-        rxvm_worker_transition_result transition =
-                rxvm_worker_begin_execution(&context->worker);
-        if (transition != RXVM_WORKER_TRANSITION_OK) {
-            fprintf(stderr,
-                    "RXVM worker execution rejected: %s (%s)\n",
-                    transition == RXVM_WORKER_TRANSITION_WRONG_THREAD
-                        ? "wrong owner thread" : "invalid lifecycle state",
-                    rxvm_worker_state_name(
-                            rxvm_worker_get_state(&context->worker)));
-            return 1;
-        }
-    }
     previous_memory_worker =
             rxvm_memory_enter(context->worker.memory_worker);
     RXVM_INSTRUMENTATION_STATE();
@@ -14198,10 +14186,28 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 
     rxvm_memory_leave(previous_memory_worker);
 
+    return rc;
+}
+
+int run(rxvm_context *context, int argc, char *argv[]) {
+    rxvm_worker_transition_result transition =
+            rxvm_worker_begin_execution(&context->worker);
+    int rc;
+
+    if (transition != RXVM_WORKER_TRANSITION_OK) {
+        fprintf(stderr,
+                "RXVM worker execution rejected: %s (%s)\n",
+                transition == RXVM_WORKER_TRANSITION_WRONG_THREAD
+                    ? "wrong owner thread" : "invalid lifecycle state",
+                rxvm_worker_state_name(
+                        rxvm_worker_get_state(&context->worker)));
+        return 1;
+    }
+
+    rc = rxvm_run_owned_core(context, argc, argv);
     if (rxvm_worker_end_execution(&context->worker) !=
             RXVM_WORKER_TRANSITION_OK) {
         abort();
     }
-
     return rc;
 }

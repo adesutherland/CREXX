@@ -2,7 +2,7 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E1 accepted and locally complete; publication pending; E2 closed**
+Status: **Gate E E1-P1 accepted and locally complete; publication pending; E2 closed**
 
 ## Current Gate E continuation
 
@@ -20,6 +20,11 @@ Status: **Gate E E1 accepted and locally complete; publication pending; E2 close
   implementation and proportional Mac closeout are locally complete; the
   coherent local commit remains unpublished until Adrian explicitly approves
   the push. E2 is closed until then and requires its own slice approval.
+- Adrian accepted E1-P1's core-four Release verdict and authorized full QA on
+  2026-08-07. The wrapper removes the isolated RexxCPS layout regression and
+  passes proportional Mac sanitizer, full Debug and ordinary Release closeout.
+  It is retained as a separate local commit and is not approved for push. E2
+  and Gate F remain closed.
 
 ## Exact isolated base
 
@@ -1368,6 +1373,62 @@ installed.
 Compact retained evidence:
 [`2026-08-07-perf3-13-gate-e-e1-worker-shell`](evidence/2026-08-07-perf3-13-gate-e-e1-worker-shell/).
 
+### E1-P1 flattened-core layout stabilisation
+
+Adrian approved this bounded follow-up on 2026-08-07 after the E1 closeout.
+The retained first verdict's clear RexxCPS loss was isolated against
+`19802842e`, which already contains the published EF-0 spawn recovery. EF-0 is
+therefore not the cause of the E1 comparison.
+
+Machine-code inspection found that placing worker lifecycle entry, diagnostics
+and exit directly inside the 500+ KiB flattened `run()` body changed its stack
+frame from `0x6d0` to `0x6e0`, changed argument register allocation and changed
+the body from 533,440 to 528,100 bytes. The enlarged E1 `rxvm_context` also
+moves later fields by 32 bytes, but a private counterfactual retaining that
+layout while moving lifecycle handling to a small wrapper restored the
+flattened core's original stack/register pattern.
+
+Across two same-artifact, pairwise-balanced canonical RexxCPS blocks totalling
+60 recorded pairs, committed E1 is clear adverse against the post-EF-0 control
+at -0.780187% (95% interval -1.425203% to -0.135171%). The wrapper is neutral
+against the control at -0.153656% (-0.723528% to +0.416215%) and clear favorable
+against committed E1 at +0.657320% (+0.154892% to +1.159749%). This selects
+the wrapper and rejects context-layout redesign for this slice.
+
+Numbered implementation plan:
+
+1. Rename the current flattened body to a private noinline/no-clone core and
+   keep its allocator enter/leave and complete VM semantics unchanged.
+2. Make public `run()` the small lifecycle wrapper: begin ownership, invoke the
+   flattened core, end ownership. Nested same-owner calls continue to enter the
+   wrapper and use the existing depth count.
+3. Run the focused Debug worker/allocator, nested RXVML, late-interface,
+   ADDRESS CREXX and both-concrete-VM controls; then freeze implementation.
+4. Build the ordinary profiling-off Release product and run a pairwise-balanced
+   core-four comparison against exact post-EF-0 control `19802842e`, retaining
+   RexxCPS as the target and Sieve/Richards/Towers as layout guards.
+5. Report the first Release verdict and stop for Adrian. Broad closeout,
+   sanitizer refresh, evidence packaging and the separate E1-P1 commit follow
+   only after acceptance. E2 and Gate F remain closed.
+
+Adrian accepted the first Release verdict and authorized full QA on
+2026-08-07. One warmup and 20 pairwise-balanced serial rounds per workload
+passed all 168 processes. All rows are neutral: Sieve -0.190379%, Richards
+-0.286721%, Towers -0.059737%, RexxCPS -0.231775% and the pooled core four
+-0.192153% (95% interval -0.632127% to +0.247821%). No 3% guard fires. The
+candidate `rxbvm` is 1,264 bytes larger than the post-EF0 control and 176 bytes
+smaller than committed E1.
+
+Post-acceptance closeout passes the focused Apple AddressSanitizer worker,
+allocator and reentrancy set 3/3, full Debug 1,997/1,997 with `--parallel 30`
+in 210.77 seconds, and the ordinary profiling-off Release closeout 14/14.
+Both concrete VM dispatch contracts, linked artifacts, nested RXVML, late
+interface load, ADDRESS CREXX opt/no-opt and the static archive consumer pass.
+Apple LeakSanitizer remains unsupported; exact Debug teardown assertions stay
+enabled. Native Windows, Intel Linux and Linux ARM64 proof remains later Gate E
+platform work. Compact evidence:
+[`2026-08-07-perf3-13-gate-e-e1-p1-wrapper`](evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/).
+
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
 - [ ] Define module-global, reference-cell, native/plugin, signal and late-load
@@ -1428,11 +1489,12 @@ remains closed until the Gate E worker model has been selected.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 accepted and locally
-   complete.** The runtime/worker ownership shell passes its accepted first
-   Release verdict and proportional Mac closeout. Publication remains pending
-   Adrian approval; E2 stays closed until separately approved. The full gate
-   stops for worker-model selection before any public pool/channel semantics.
+6. **Gate E — full M5 start: approved 2026-08-07; E1 and E1-P1 accepted and
+   locally complete.** The runtime/worker ownership shell and its flattened-core
+   lifecycle wrapper pass their accepted first Release verdicts and proportional
+   Mac closeout. Publication remains pending Adrian approval; E2 stays closed
+   until separately approved. The full gate stops for worker-model selection
+   before any public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 
