@@ -226,14 +226,19 @@ we built cRexx on. These are
 | rxas    | cRexx assembler                                 |
 | rxlink  | cRexx linker                                    |
 | rxdas   | cRexx disassembler                              |
-| rxvm    | cRexx VM, threaded interpreter                  |
+| rxvm    | cRexx VM, compiler-selected product entry point |
 | rxpp    | cRexx macro preprocessor                        |
-| rxbvm   | cRexx VM, non-threaded conventional interpreter |
-| rxvme   | cRexx VM, with linked-in Rexx library           |
+| rxbvm   | cRexx VM, portable switch-dispatch interpreter  |
+| rxtvm   | cRexx VM, direct-threaded interpreter           |
+| rxvme   | compiler-selected VM with linked-in Rexx library |
 | rxdb    | cRexx debugger                                  |
 | rxcpack | cRexx C-generator for native executables        |
 
 Table: Delivered products. {#tbl:id}
+
+Clang and AppleClang make `rxvm` select `rxbvm`; GCC makes it select `rxtvm`.
+MSVC builds only the switch engine and supplies `rxvm.exe` as a copy of
+`rxbvm.exe`. The `rxtvm` executable is therefore not present in an MSVC build.
 
 cRexx can compile the Rexx script into an
 executable file, that can be run standalone, for example, on a computer

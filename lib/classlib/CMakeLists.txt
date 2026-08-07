@@ -304,7 +304,7 @@ string(APPEND _classlib_rexxdoc_check_content
 string(APPEND _classlib_rexxdoc_check_content
   "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed for RexxDoc coverage checker: \${out}\${err}\")\nendif()\n")
 string(APPEND _classlib_rexxdoc_check_content
-  "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${CMAKE_CURRENT_BINARY_DIR}/check_rexxdoc_coverage.rxbin\" -a \"${CMAKE_SOURCE_DIR}/tools/rexxDoc/classlib_rexxdoc_baseline.txt\" \"${CMAKE_SOURCE_DIR}/lib\" WORKING_DIRECTORY \"${CMAKE_SOURCE_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+  "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${CMAKE_CURRENT_BINARY_DIR}/check_rexxdoc_coverage.rxbin\" -a \"${CMAKE_SOURCE_DIR}/tools/rexxDoc/classlib_rexxdoc_baseline.txt\" \"${CMAKE_SOURCE_DIR}/lib\" WORKING_DIRECTORY \"${CMAKE_SOURCE_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND _classlib_rexxdoc_check_content
   "message(STATUS \"\${out}\${err}\")\nif(NOT res EQUAL 0)\n  message(FATAL_ERROR \"RexxDoc coverage check failed\")\nendif()\n")
 file(GENERATE OUTPUT "${_classlib_rexxdoc_check_script}" CONTENT "${_classlib_rexxdoc_check_content}")

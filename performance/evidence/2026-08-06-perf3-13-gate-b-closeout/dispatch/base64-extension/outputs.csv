@@ -1,0 +1,209 @@
+sample_id,stream,line_number,text
+timing-Base64-rxvm-base64-rxvm-harness-control-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-warmup-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-warmup-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-11,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-11,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-11,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-11,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-12,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-12,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-12,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-12,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-13,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-13,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-13,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-13,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-14,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-14,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-14,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-14,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-15,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-15,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-15,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-15,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-16,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-16,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-16,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-16,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-17,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-17,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-17,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-17,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-18,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-18,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-18,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-18,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-19,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-19,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-19,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-19,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-20,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-20,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-20,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-20,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-21,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-21,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-21,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-21,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-22,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-22,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-22,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-22,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-23,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-23,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-23,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-23,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-24,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-flatten-compiler-recorded-24,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-24,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxvm-base64-rxvm-harness-control-recorded-24,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-warmup-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-warmup-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-warmup-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-11,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-11,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-11,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-11,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-12,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-12,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-12,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-12,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-13,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-13,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-13,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-13,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-14,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-14,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-14,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-14,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-15,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-15,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-15,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-15,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-16,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-16,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-16,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-16,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-17,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-17,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-17,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-17,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-18,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-18,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-18,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-18,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-19,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-19,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-19,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-19,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-20,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-20,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-20,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-20,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-21,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-21,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-21,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-21,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-22,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-22,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-22,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-22,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-23,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-23,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-23,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-23,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-24,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-flatten-compiler-recorded-24,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-24,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-rxbvm-base64-rxbvm-harness-control-recorded-24,stdout,2,PASS: Base64 Roundtrip

@@ -116,6 +116,7 @@ typedef int rxvm_socket_fd;
 #define RXSOCK_ERR_TLS_VERIFY (-10)
 
 typedef struct rxvm_socket_entry {
+    rxvm_memory_worker *memory_worker;
     rxinteger handle;
     rxvm_socket_fd fd;
     int in_use;
@@ -151,6 +152,7 @@ typedef struct rxvm_socket_entry {
 } rxvm_socket_entry;
 
 typedef struct rxvm_socket_registry {
+    rxvm_memory_worker *memory_worker;
     rxvm_socket_entry *entries;
     size_t count;
     size_t capacity;
@@ -159,6 +161,37 @@ typedef struct rxvm_socket_registry {
     int wsa_started;
 #endif
 } rxvm_socket_registry;
+
+static void *rxvm_socket_memory_alloc(rxvm_memory_worker *worker,
+                                      size_t size) {
+    return rxvm_memory_alloc_bytes(worker, size);
+}
+
+static void *rxvm_socket_memory_calloc(rxvm_memory_worker *worker,
+                                       size_t count,
+                                       size_t size) {
+    return rxvm_memory_calloc_bytes(worker, count, size);
+}
+
+static void *rxvm_socket_memory_resize(rxvm_memory_worker *worker,
+                                       void *pointer,
+                                       size_t copy_size,
+                                       size_t new_size) {
+    rxvm_memory_worker *previous = rxvm_memory_enter(worker);
+    void *resized = rxvm_memory_resize_bytes(worker, pointer,
+                                             copy_size, new_size);
+    rxvm_memory_leave(previous);
+    return resized;
+}
+
+static void rxvm_socket_memory_free(rxvm_memory_worker *worker,
+                                    void *pointer) {
+    rxvm_memory_worker *previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(worker);
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
 
 static int rxvm_socket_is_invalid(rxvm_socket_fd fd) {
 #ifdef _WIN32
@@ -410,7 +443,8 @@ static void rxvm_socket_entry_schannel_verify_error(rxvm_socket_entry *entry,
     rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_VERIFY, (int)error_code, buffer);
 }
 
-static wchar_t *rxvm_socket_wide_from_utf8(const char *text) {
+static wchar_t *rxvm_socket_wide_from_utf8(rxvm_socket_entry *entry,
+                                           const char *text) {
     int length;
     wchar_t *wide;
 
@@ -421,17 +455,19 @@ static wchar_t *rxvm_socket_wide_from_utf8(const char *text) {
     }
     if (length <= 0) return 0;
 
-    wide = malloc((size_t)length * sizeof(wchar_t));
+    wide = rxvm_socket_memory_alloc(entry ? entry->memory_worker : NULL,
+                                    (size_t)length * sizeof(wchar_t));
     if (!wide) return 0;
     if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text, -1, wide, length) <= 0 &&
         MultiByteToWideChar(CP_ACP, 0, text, -1, wide, length) <= 0) {
-        free(wide);
+        rxvm_socket_memory_free(entry ? entry->memory_worker : NULL, wide);
         return 0;
     }
     return wide;
 }
 
-static int rxvm_socket_schannel_append_buffer(char **buffer,
+static int rxvm_socket_schannel_append_buffer(rxvm_socket_entry *entry,
+                                              char **buffer,
                                               size_t *buffer_len,
                                               const char *data,
                                               size_t data_len) {
@@ -440,7 +476,9 @@ static int rxvm_socket_schannel_append_buffer(char **buffer,
     if (!data_len) return 0;
     if (!buffer || !buffer_len || !data) return -1;
     if (data_len > ((size_t)-1) - *buffer_len) return -1;
-    new_buffer = realloc(*buffer, *buffer_len + data_len);
+    new_buffer = rxvm_socket_memory_resize(
+        entry ? entry->memory_worker : NULL,
+        *buffer, *buffer_len, *buffer_len + data_len);
     if (!new_buffer) return -1;
     memcpy(new_buffer + *buffer_len, data, data_len);
     *buffer = new_buffer;
@@ -461,10 +499,12 @@ static void rxvm_socket_schannel_clear(rxvm_socket_entry *entry) {
         entry->schannel_have_cred = 0;
     }
     memset(&entry->schannel_sizes, 0, sizeof(entry->schannel_sizes));
-    free(entry->schannel_encrypted);
+    rxvm_socket_memory_free(entry->memory_worker,
+                            entry->schannel_encrypted);
     entry->schannel_encrypted = 0;
     entry->schannel_encrypted_len = 0;
-    free(entry->schannel_decrypted);
+    rxvm_socket_memory_free(entry->memory_worker,
+                            entry->schannel_decrypted);
     entry->schannel_decrypted = 0;
     entry->schannel_decrypted_len = 0;
     entry->schannel_decrypted_pos = 0;
@@ -609,7 +649,8 @@ static int rxvm_socket_schannel_read_encrypted(rxvm_socket_entry *entry,
 
     received = rxvm_socket_schannel_recv_fd(entry, temp, sizeof(temp), prefix);
     if (received <= 0) return received;
-    if (rxvm_socket_schannel_append_buffer(buffer, buffer_len, temp, (size_t)received) != 0) {
+    if (rxvm_socket_schannel_append_buffer(entry, buffer, buffer_len,
+                                           temp, (size_t)received) != 0) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
         return -1;
     }
@@ -638,18 +679,22 @@ static rxvm_socket_registry *rxvm_socket_registry_for(rxvm_context *context) {
     if (!context) return 0;
     if (context->socket_registry) return context->socket_registry;
 
-    registry = calloc(1, sizeof(rxvm_socket_registry));
+    registry = rxvm_socket_memory_calloc(context->memory_worker, 1,
+                                         sizeof(rxvm_socket_registry));
     if (!registry) return 0;
+    registry->memory_worker = context->memory_worker;
     registry->capacity = 16;
-    registry->entries = calloc(registry->capacity, sizeof(rxvm_socket_entry));
+    registry->entries = rxvm_socket_memory_calloc(
+        registry->memory_worker, registry->capacity,
+        sizeof(rxvm_socket_entry));
     if (!registry->entries) {
-        free(registry);
+        rxvm_socket_memory_free(registry->memory_worker, registry);
         return 0;
     }
     registry->next_handle = 1;
     if (rxvm_socket_platform_init(registry) != 0) {
-        free(registry->entries);
-        free(registry);
+        rxvm_socket_memory_free(registry->memory_worker, registry->entries);
+        rxvm_socket_memory_free(registry->memory_worker, registry);
         return 0;
     }
     context->socket_registry = registry;
@@ -684,7 +729,11 @@ static rxvm_socket_entry *rxvm_socket_alloc_entry(rxvm_context *context) {
 
     if (registry->count == registry->capacity) {
         size_t new_capacity = registry->capacity * 2;
-        rxvm_socket_entry *new_entries = realloc(registry->entries, new_capacity * sizeof(rxvm_socket_entry));
+        rxvm_socket_entry *new_entries = rxvm_socket_memory_resize(
+            registry->memory_worker,
+            registry->entries,
+            registry->capacity * sizeof(rxvm_socket_entry),
+            new_capacity * sizeof(rxvm_socket_entry));
         if (!new_entries) return 0;
         memset(new_entries + registry->capacity, 0,
                (new_capacity - registry->capacity) * sizeof(rxvm_socket_entry));
@@ -750,13 +799,14 @@ static int rxvm_socket_apply_blocking(rxvm_socket_entry *entry) {
 #endif
 }
 
-static char *rxvm_socket_copy_cstring(const char *text) {
+static char *rxvm_socket_copy_cstring(rxvm_memory_worker *worker,
+                                      const char *text) {
     size_t length;
     char *copy;
 
     if (!text) return 0;
     length = strlen(text);
-    copy = malloc(length + 1);
+    copy = rxvm_socket_memory_alloc(worker, length + 1u);
     if (!copy) return 0;
     memcpy(copy, text, length + 1);
     return copy;
@@ -764,7 +814,7 @@ static char *rxvm_socket_copy_cstring(const char *text) {
 
 static void rxvm_socket_clear_connect_target(rxvm_socket_entry *entry) {
     if (!entry) return;
-    free(entry->connect_host);
+    rxvm_socket_memory_free(entry->memory_worker, entry->connect_host);
     entry->connect_host = 0;
     entry->connect_port = 0;
 }
@@ -775,9 +825,9 @@ static int rxvm_socket_set_connect_target(rxvm_socket_entry *entry,
     char *host_copy;
 
     if (!entry || !host || !host[0]) return -1;
-    host_copy = rxvm_socket_copy_cstring(host);
+    host_copy = rxvm_socket_copy_cstring(entry->memory_worker, host);
     if (!host_copy) return -1;
-    free(entry->connect_host);
+    rxvm_socket_memory_free(entry->memory_worker, entry->connect_host);
     entry->connect_host = host_copy;
     entry->connect_port = port;
     return 0;
@@ -836,8 +886,8 @@ void rxvm_socket_free_registry(struct rxvm_context *context) {
 #ifdef _WIN32
     if (registry->wsa_started) WSACleanup();
 #endif
-    free(registry->entries);
-    free(registry);
+    rxvm_socket_memory_free(registry->memory_worker, registry->entries);
+    rxvm_socket_memory_free(registry->memory_worker, registry);
     context->socket_registry = 0;
 }
 
@@ -847,6 +897,7 @@ rxinteger rxvm_socket_new(struct rxvm_context *context) {
     if (!entry) return RXSOCK_ERR_NO_MEMORY;
 
     memset(entry, 0, sizeof(*entry));
+    entry->memory_worker = context->memory_worker;
     entry->handle = context->socket_registry->next_handle++;
     if (context->socket_registry->next_handle <= 0) context->socket_registry->next_handle = 1;
     entry->fd = RXVM_SOCKET_INVALID;
@@ -1383,7 +1434,7 @@ static rxinteger rxvm_socket_starttls_schannel(rxvm_socket_entry *entry,
         return RXSOCK_WOULDBLOCK;
     }
 
-    wide_host = rxvm_socket_wide_from_utf8(host);
+    wide_host = rxvm_socket_wide_from_utf8(entry, host);
     if (!wide_host) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0,
                                  "TLS hostname conversion failed");
@@ -1402,7 +1453,7 @@ static rxinteger rxvm_socket_starttls_schannel(rxvm_socket_entry *entry,
     if (status != SEC_E_OK) {
         rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_TLS_STATE, status,
                                          "TLS credential setup failed");
-        free(wide_host);
+        rxvm_socket_memory_free(entry->memory_worker, wide_host);
         return RXSOCK_ERR_TLS_STATE;
     }
     entry->schannel_have_cred = 1;
@@ -1475,7 +1526,8 @@ static rxinteger rxvm_socket_starttls_schannel(rxvm_socket_entry *entry,
             if (had_input) {
                 SecBuffer *extra = rxvm_socket_schannel_find_buffer(in_buffers, 2,
                                                                     SECBUFFER_EXTRA);
-                if (extra && rxvm_socket_schannel_append_buffer(&entry->schannel_encrypted,
+                if (extra && rxvm_socket_schannel_append_buffer(entry,
+                                                                &entry->schannel_encrypted,
                                                                 &entry->schannel_encrypted_len,
                                                                 (const char *)extra->pvBuffer,
                                                                 extra->cbBuffer) != 0) {
@@ -1506,7 +1558,7 @@ static rxinteger rxvm_socket_starttls_schannel(rxvm_socket_entry *entry,
         }
     }
 
-    free(input);
+    rxvm_socket_memory_free(entry->memory_worker, input);
     if (result == RXSOCK_OK) {
         result = rxvm_socket_schannel_verify_server(entry, wide_host);
     }
@@ -1520,7 +1572,7 @@ static rxinteger rxvm_socket_starttls_schannel(rxvm_socket_entry *entry,
             result = RXSOCK_ERR_TLS_STATE;
         }
     }
-    free(wide_host);
+    rxvm_socket_memory_free(entry->memory_worker, wide_host);
 
     if (result != RXSOCK_OK) {
         rxvm_socket_schannel_clear(entry);
@@ -1865,7 +1917,8 @@ static size_t rxvm_socket_schannel_copy_decrypted(rxvm_socket_entry *entry,
     memcpy(buffer, entry->schannel_decrypted + entry->schannel_decrypted_pos, copy_size);
     entry->schannel_decrypted_pos += copy_size;
     if (entry->schannel_decrypted_pos >= entry->schannel_decrypted_len) {
-        free(entry->schannel_decrypted);
+        rxvm_socket_memory_free(entry->memory_worker,
+                                entry->schannel_decrypted);
         entry->schannel_decrypted = 0;
         entry->schannel_decrypted_len = 0;
         entry->schannel_decrypted_pos = 0;
@@ -1879,10 +1932,11 @@ static int rxvm_socket_schannel_store_decrypted(rxvm_socket_entry *entry,
     char *copy;
 
     if (!data_len) return 0;
-    copy = malloc(data_len);
+    copy = rxvm_socket_memory_alloc(entry->memory_worker, data_len);
     if (!copy) return -1;
     memcpy(copy, data, data_len);
-    free(entry->schannel_decrypted);
+    rxvm_socket_memory_free(entry->memory_worker,
+                            entry->schannel_decrypted);
     entry->schannel_decrypted = copy;
     entry->schannel_decrypted_len = data_len;
     entry->schannel_decrypted_pos = 0;
@@ -1897,7 +1951,8 @@ static void rxvm_socket_schannel_preserve_encrypted_extra(rxvm_socket_entry *ent
         return;
     }
 
-    free(entry->schannel_encrypted);
+    rxvm_socket_memory_free(entry->memory_worker,
+                            entry->schannel_encrypted);
     entry->schannel_encrypted = 0;
     entry->schannel_encrypted_len = 0;
 }
@@ -1941,7 +1996,7 @@ static int rxvm_socket_schannel_send(rxvm_socket_entry *entry,
 
     wire_len = (size_t)entry->schannel_sizes.cbHeader + chunk +
                (size_t)entry->schannel_sizes.cbTrailer;
-    wire = malloc(wire_len);
+    wire = rxvm_socket_memory_alloc(entry->memory_worker, wire_len);
     if (!wire) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
         return -1;
@@ -1965,7 +2020,7 @@ static int rxvm_socket_schannel_send(rxvm_socket_entry *entry,
 
     status = EncryptMessage(&entry->schannel_ctx, 0, &desc, 0);
     if (status != SEC_E_OK) {
-        free(wire);
+        rxvm_socket_memory_free(entry->memory_worker, wire);
         rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_OS, status,
                                          "TLS send failed");
         return -1;
@@ -1976,11 +2031,11 @@ static int rxvm_socket_schannel_send(rxvm_socket_entry *entry,
                     (size_t)buffers[2].cbBuffer;
     if (rxvm_socket_schannel_send_all_fd(entry, wire, encrypted_len,
                                          "TLS send failed") != 0) {
-        free(wire);
+        rxvm_socket_memory_free(entry->memory_worker, wire);
         return -1;
     }
 
-    free(wire);
+    rxvm_socket_memory_free(entry->memory_worker, wire);
     if (sent_out) *sent_out = chunk;
     rxvm_socket_entry_ok(entry);
     return 0;
@@ -2284,7 +2339,8 @@ rxinteger rxvm_socket_recv_string(struct rxvm_context *context, value *out, rxin
         return 0;
     }
 
-    buffer = malloc((size_t)max_bytes);
+    buffer = rxvm_socket_memory_alloc(context->memory_worker,
+                                      (size_t)max_bytes);
     if (!buffer) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
         return RXSOCK_ERR_NO_MEMORY;
@@ -2293,10 +2349,10 @@ rxinteger rxvm_socket_recv_string(struct rxvm_context *context, value *out, rxin
     received = rxvm_socket_recv_bytes(entry, buffer, (size_t)max_bytes);
     if (received > 0 && set_string_validated(out, buffer, (size_t)received) != 0) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_ARGUMENT, 0, "received text is not valid UTF-8");
-        free(buffer);
+        rxvm_socket_memory_free(context->memory_worker, buffer);
         return RXSOCK_ERR_ARGUMENT;
     }
-    free(buffer);
+    rxvm_socket_memory_free(context->memory_worker, buffer);
     return received < 0 ? received : received;
 }
 
@@ -2305,7 +2361,7 @@ rxinteger rxvm_socket_recv_binary(struct rxvm_context *context, value *out, rxin
     rxinteger received;
 
     if (!out) return RXSOCK_ERR_ARGUMENT;
-    if (out->native_payload_ops) clear_binary_payload(out);
+    if (rxvm_value_native_ops(out)) clear_binary_payload(out);
     out->binary_length = 0;
     if (!entry) return RXSOCK_ERR_INVALID_HANDLE;
     if (max_bytes < 0) {

@@ -37,12 +37,12 @@ add_test(NAME DESBaseTest COMMAND desbase_test)
 
 # Test with Rexx
 add_test(NAME DESRexxTest
-        COMMAND $<TARGET_FILE:rxvm> RxDesTst rxdes ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} RxDesTst rxdes ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Test with Rexx with invalid input
 add_test(NAME DESRexxInvalidTest
-        COMMAND $<TARGET_FILE:rxvm> RxDesTstInvalid rxdes ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} RxDesTstInvalid rxdes ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # Check for "Signal 10" in the output
 set_tests_properties(DESRexxInvalidTest PROPERTIES PASS_REGULAR_EXPRESSION ".*Signal 10.*")

@@ -13,7 +13,7 @@ target_include_directories(rxlink PRIVATE
         ../binutils/include)
 
 add_custom_target(rxlink_test_prereqs ALL
-        DEPENDS rxlink rxas rxvm rxbvm rxdas mc_decimal_dynamic)
+        DEPENDS rxlink rxas rxvm rxdas mc_decimal_dynamic)
 
 add_executable(rxlink_concat_files tests/concat_files.c)
 target_include_directories(rxlink_concat_files PRIVATE
@@ -27,7 +27,7 @@ function(crexx_add_rxas_fixture STEM SOURCE)
     add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${STEM}.rxbin
             COMMAND $<TARGET_FILE:rxas> -o ${STEM} ${SOURCE}
-            DEPENDS ${SOURCE} rxas rxvm rxbvm mc_decimal_dynamic
+            DEPENDS ${SOURCE} rxas rxvm mc_decimal_dynamic
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "cREXX RXLINK fixture ${STEM} ..."
     )
@@ -35,7 +35,7 @@ function(crexx_add_rxas_fixture STEM SOURCE)
     add_dependencies(${STEM}_fixture rxlink_test_prereqs)
 endfunction()
 
-function(crexx_add_vm_dual_test)
+function(crexx_add_vm_test)
     set(options)
     set(oneValueArgs NAME PASS_REGULAR_EXPRESSION)
     set(multiValueArgs RXVM_ARGS)
@@ -43,17 +43,12 @@ function(crexx_add_vm_dual_test)
 
     add_test(
             NAME ${CREXX_NAME}
-            COMMAND $<TARGET_FILE:rxvm> ${CREXX_RXVM_ARGS}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    add_test(
-            NAME ${CREXX_NAME}-rxbvm
-            COMMAND $<TARGET_FILE:rxbvm> ${CREXX_RXVM_ARGS}
+            COMMAND ${CREXX_RXVM_EXECUTABLE} ${CREXX_RXVM_ARGS}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     if(CREXX_PASS_REGULAR_EXPRESSION)
-        set_tests_properties(${CREXX_NAME} ${CREXX_NAME}-rxbvm PROPERTIES
+        set_tests_properties(${CREXX_NAME} PROPERTIES
                 PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
     endif()
 endfunction()
@@ -152,37 +147,37 @@ add_custom_command(
 )
 add_custom_target(tests_record_stream_combo_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_record_stream_combo.rxbin)
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_success_run
         RXVM_ARGS tests_linked_success
         PASS_REGULAR_EXPRESSION "PASS: Provider A[^\r\n]*\r?\nPASS: Root Returned[^\r\n]*\r?\n10"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_control_run
         RXVM_ARGS tests_linked_omit
         PASS_REGULAR_EXPRESSION "PASS: Provider A[^\r\n]*\r?\nPASS: Root Returned[^\r\n]*\r?\n10"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_strip_run
         RXVM_ARGS tests_linked_stripped
         PASS_REGULAR_EXPRESSION "PASS: Provider A[^\r\n]*\r?\nPASS: Root Returned[^\r\n]*\r?\n10"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_interface_run
         RXVM_ARGS tests_linked_interface
         PASS_REGULAR_EXPRESSION "PASS: Interface Linked"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_srcfproc_run
         RXVM_ARGS tests_linked_srcfproc
         PASS_REGULAR_EXPRESSION "PASS: SRCFPROC Linked"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_srcmethod_run
         RXVM_ARGS tests_linked_srcmethod
         PASS_REGULAR_EXPRESSION "PASS: SRCMETHOD Linked"

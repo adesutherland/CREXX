@@ -28,7 +28,7 @@ function(_crexx_import_executable target_name file_name)
     endif()
 endfunction()
 
-foreach(_crexx_tool IN ITEMS crexx rxc rxas rxlink rxdas crexx-contract rxvm rxbvm rxvme rxbvme)
+foreach(_crexx_tool IN ITEMS crexx rxc rxas rxlink rxdas crexx-contract rxvm rxbvm rxtvm rxvme rxbvme)
     _crexx_import_executable("${_crexx_tool}" "${_crexx_tool}")
     if(NOT EXISTS "${CREXX_BIN_DIR}/${_crexx_tool}@CMAKE_EXECUTABLE_SUFFIX@")
         set(CREXX_${_crexx_tool}_FOUND FALSE)

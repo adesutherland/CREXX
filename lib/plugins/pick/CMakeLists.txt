@@ -43,6 +43,6 @@ enable_testing()
 
 # Basic test to run pick_test.rxbin with the pick plugin
 add_test(NAME pick_test
-        COMMAND $<TARGET_FILE:rxvm> pick_test rx_pick ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} pick_test rx_pick ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

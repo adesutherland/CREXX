@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxvmref.h"
+#include "rxvmmemory.h"
 
 static uint64_t fallback_next_reference_id = 1;
 
@@ -86,7 +87,7 @@ static void rxvm_reference_context_push_free(rxvm_reference_context *context,
                                              rxvm_reference_cell *cell) {
     if (!context || !cell ||
         context->free_count >= RXVM_REFERENCE_FREE_LIST_SOFT_LIMIT) {
-        free(cell);
+        (void)rxvm_memory_release(cell);
         return;
     }
 
@@ -150,7 +151,7 @@ void rxvm_reference_context_free(rxvm_reference_context *context) {
         while (cell) {
             rxvm_reference_cell *next = cell->next_active;
             rxvm_reference_cell_invalidate(cell);
-            free(cell);
+            (void)rxvm_memory_release(cell);
             cell = next;
         }
         context->active_buckets[i] = 0;
@@ -159,7 +160,7 @@ void rxvm_reference_context_free(rxvm_reference_context *context) {
     cell = context->free_list;
     while (cell) {
         rxvm_reference_cell *next = cell->next_free;
-        free(cell);
+        (void)rxvm_memory_release(cell);
         cell = next;
     }
 
@@ -202,7 +203,8 @@ rxvm_reference_cell *rxvm_reference_cell_create_in_context(rxvm_reference_contex
 
     cell = rxvm_reference_context_pop_free(context);
     if (!cell) {
-        cell = malloc(sizeof(rxvm_reference_cell));
+        cell = (rxvm_reference_cell *)rxvm_memory_alloc_reference_cell(
+                rxvm_memory_current_worker());
         if (!cell) return 0;
     }
 

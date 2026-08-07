@@ -1,0 +1,27 @@
+utc=2026-08-06T09:10:18Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+10
+{ 1.48 1.82 2.07 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	99%; finishing charge; 0:00 remaining present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+19803 /bin/zsh -lc date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+uname -a
+sysctl -n hw.logicalcpu
+sysctl -n vm.loadavg
+pmset -g batt
+pmset -g therm
+pgrep -fal '(^|/)(ninja|cmake|rxvm|rxbvm|rxtvm|crexx)( |$)|run_cross_runtime_matrix' || true
+wc -l /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/samples.csv /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/outputs.csv
+shasum -a 256 /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/capture-manifest.json /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/samples.csv /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/outputs.csv /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/summary.csv /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/paired-summary.csv /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/common-five.csv
+     365 /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/samples.csv
+    1145 /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/outputs.csv
+    1510 total
+8b8479f826e531210ed4ab311e782bbe8ecc3b5aae1bd02349fe5293e56120a0  /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/capture-manifest.json
+66eeefb982ac45a7500c63e5a003417fd3d83a5e76dcfa19bcc005722230f6f2  /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/samples.csv
+b08fedd8bf6d3c8a77d9ebf722ac48fa6f4fe3e59bdc33c399f3cdb231e1df2a  /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/outputs.csv
+d25176e4d9ad0af6aac829a24943905e32e9206f74bd5d839ae18f6250645d72  /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/summary.csv
+adb4883f26e1ddb017ceef973afc3a9009773d6e119ae6cd3efbbdd7caae1ade  /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/paired-summary.csv
+7524d0eb4d9720db0724b4fc9381e844112166614df6f1c98eb4f5387484a824  /private/tmp/crexx-rxvm-inline.yvLywZ/results/gateb-closure-pairwise-v2/common-five.csv

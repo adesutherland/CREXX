@@ -1,0 +1,128 @@
+record,dimension,origin_mask,shape_mask,bucket_upper,count,total,max_or_peak,notes
+summary,schema_version,,,0,1,1,1,value census sidecar schema 1
+summary,unique_value_addresses,,,0,663,663,663,vm=rxbvm result=0 sizeof_value=240 slab_size=65536 max_standard=16384 tracking=complete
+summary,inline_string_only,,,0,211,,,ever used string with maximum capacity <= 32
+summary,compound_storage_ever,,,0,9,,,more than one string/decimal/binary/reference/object/native storage facet
+retained,current_string_dead_bytes,,,0,,595,,capacity minus current length
+retained,current_decimal_dead_bytes,,,0,,0,,capacity minus current length
+retained,current_binary_dead_bytes,,,0,,0,,capacity minus current length
+retained,current_attribute_dead_slots,,,0,,5,,capacity minus active count
+peak,current_string_length,,,0,,739,,peak simultaneous total during execution
+peak,current_string_capacity,,,0,,3424,,peak simultaneous total during execution
+peak,current_decimal_length,,,0,,308,,peak simultaneous total during execution
+peak,current_decimal_capacity,,,0,,308,,peak simultaneous total during execution
+peak,current_binary_length,,,0,,2688,,peak simultaneous total during execution
+peak,current_binary_capacity,,,0,,4096,,peak simultaneous total during execution
+peak,current_attributes,,,0,,136,,peak simultaneous total during execution
+peak,current_attribute_capacity,,,0,,176,,peak simultaneous total during execution
+peak,string_dead_bytes,,,0,,2735,,peak simultaneous capacity minus used
+peak,decimal_dead_bytes,,,0,,0,,peak simultaneous capacity minus used
+peak,binary_dead_bytes,,,0,,1408,,peak simultaneous capacity minus used
+peak,attribute_dead_slots,,,0,,50,,peak simultaneous capacity minus active count
+reuse,string_events,,,0,559996,73111614,901,distance is intervening value-census observations; average=130
+reclaimable_peak,string_capacity,,,0,,256,,peak simultaneous inactive sticky capacity; bytes except attribute slots
+release_without_reuse,string_events,,,0,0,0,,final inactive episode released without another reuse; capacity is bytes except attribute slots
+reuse_histogram,string_distance_events,,,128,39996,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+reuse_histogram,string_distance_events,,,256,519600,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+reuse_histogram,string_distance_events,,,1024,400,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+reuse_capacity_histogram,string_capacity,,,64,559996,,,power-of-two inclusive upper bound; bytes except attribute slots
+reuse,decimal_events,,,0,0,0,0,distance is intervening value-census observations; average=0
+reclaimable_peak,decimal_capacity,,,0,,0,,peak simultaneous inactive sticky capacity; bytes except attribute slots
+release_without_reuse,decimal_events,,,0,0,0,,final inactive episode released without another reuse; capacity is bytes except attribute slots
+reuse,binary_events,,,0,0,0,0,distance is intervening value-census observations; average=0
+reclaimable_peak,binary_capacity,,,0,,0,,peak simultaneous inactive sticky capacity; bytes except attribute slots
+release_without_reuse,binary_events,,,0,0,0,,final inactive episode released without another reuse; capacity is bytes except attribute slots
+reuse,attributes_events,,,0,14,972,88,distance is intervening value-census observations; average=69
+reclaimable_peak,attributes_capacity,,,0,,16,,peak simultaneous inactive sticky capacity; bytes except attribute slots
+release_without_reuse,attributes_events,,,0,0,0,,final inactive episode released without another reuse; capacity is bytes except attribute slots
+reuse_histogram,attributes_distance_events,,,64,6,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+reuse_histogram,attributes_distance_events,,,128,8,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+reuse_capacity_histogram,attributes_capacity,,,8,8,,,power-of-two inclusive upper bound; bytes except attribute slots
+reuse_capacity_histogram,attributes_capacity,,,16,6,,,power-of-two inclusive upper bound; bytes except attribute slots
+origin,unique_values,2,,0,413,,,bits unknown=1 frame=2 global=4 attribute=8 standalone=16 scratch=32 api_native=64
+origin,unique_values,4,,0,33,,,bits unknown=1 frame=2 global=4 attribute=8 standalone=16 scratch=32 api_native=64
+origin,unique_values,8,,0,176,,,bits unknown=1 frame=2 global=4 attribute=8 standalone=16 scratch=32 api_native=64
+origin,unique_values,16,,0,1,,,bits unknown=1 frame=2 global=4 attribute=8 standalone=16 scratch=32 api_native=64
+origin,unique_values,32,,0,39,,,bits unknown=1 frame=2 global=4 attribute=8 standalone=16 scratch=32 api_native=64
+origin,unique_values,64,,0,1,,,bits unknown=1 frame=2 global=4 attribute=8 standalone=16 scratch=32 api_native=64
+storage_ever,unique_values,,0,0,428,,,bits string=1 decimal=2 binary=4 reference=8 object=16 native=32
+logical_seen,unique_values,,0,0,657,,,at least one observation of this simultaneous logical mask
+logical_observations,events,,0,0,7964412,,,operation/reset/storage observation frequency
+storage_ever,unique_values,,1,0,214,,,bits string=1 decimal=2 binary=4 reference=8 object=16 native=32
+logical_seen,unique_values,,1,0,214,,,at least one observation of this simultaneous logical mask
+logical_observations,events,,1,0,7286392,,,operation/reset/storage observation frequency
+storage_ever,unique_values,,2,0,2,,,bits string=1 decimal=2 binary=4 reference=8 object=16 native=32
+logical_seen,unique_values,,2,0,2,,,at least one observation of this simultaneous logical mask
+logical_observations,events,,2,0,1650003,,,operation/reset/storage observation frequency
+storage_ever,unique_values,,3,0,7,,,bits string=1 decimal=2 binary=4 reference=8 object=16 native=32
+logical_seen,unique_values,,3,0,7,,,at least one observation of this simultaneous logical mask
+logical_observations,events,,3,0,1530021,,,operation/reset/storage observation frequency
+storage_ever,unique_values,,16,0,10,,,bits string=1 decimal=2 binary=4 reference=8 object=16 native=32
+logical_seen,unique_values,,16,0,12,,,at least one observation of this simultaneous logical mask
+logical_observations,events,,16,0,149,,,operation/reset/storage observation frequency
+storage_ever,unique_values,,20,0,2,,,bits string=1 decimal=2 binary=4 reference=8 object=16 native=32
+logical_seen,unique_values,,20,0,2,,,at least one observation of this simultaneous logical mask
+logical_observations,events,,20,0,10,,,operation/reset/storage observation frequency
+total,current_string_length,,,0,,141,,sum across unique addresses
+histogram,current_string_length,,,0,640,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_string_length,,,1,1,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_string_length,,,4,7,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_string_length,,,8,12,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_string_length,,,16,3,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,current_string_capacity,,,0,,736,,sum across unique addresses
+histogram,current_string_capacity,,,0,640,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_string_capacity,,,32,23,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,current_decimal_length,,,0,,0,,sum across unique addresses
+histogram,current_decimal_length,,,0,663,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,current_decimal_capacity,,,0,,0,,sum across unique addresses
+histogram,current_decimal_capacity,,,0,663,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,current_binary_length,,,0,,0,,sum across unique addresses
+histogram,current_binary_length,,,0,663,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,current_binary_capacity,,,0,,0,,sum across unique addresses
+histogram,current_binary_capacity,,,0,663,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,current_attributes,,,0,,43,,sum across unique addresses
+histogram,current_attributes,,,0,661,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_attributes,,,16,1,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_attributes,,,32,1,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,current_attribute_capacity,,,0,,48,,sum across unique addresses
+histogram,current_attribute_capacity,,,0,661,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_attribute_capacity,,,16,1,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,current_attribute_capacity,,,32,1,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_string_length,,,0,,1853,,sum across unique addresses
+histogram,max_string_length,,,0,442,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,1,14,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,2,25,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,4,52,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,8,71,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,16,40,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,32,9,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,64,9,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_length,,,128,1,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_string_capacity,,,0,,7456,,sum across unique addresses
+histogram,max_string_capacity,,,0,442,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_capacity,,,32,211,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_capacity,,,64,9,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_string_capacity,,,128,1,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_decimal_length,,,0,,396,,sum across unique addresses
+histogram,max_decimal_length,,,0,654,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_decimal_length,,,64,9,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_decimal_capacity,,,0,,396,,sum across unique addresses
+histogram,max_decimal_capacity,,,0,654,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_decimal_capacity,,,64,9,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_binary_length,,,0,,2688,,sum across unique addresses
+histogram,max_binary_length,,,0,661,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_binary_length,,,2048,2,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_binary_capacity,,,0,,4096,,sum across unique addresses
+histogram,max_binary_capacity,,,0,661,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_binary_capacity,,,2048,2,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_attributes,,,0,,142,,sum across unique addresses
+histogram,max_attributes,,,0,651,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_attributes,,,1,2,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_attributes,,,4,3,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_attributes,,,16,5,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_attributes,,,32,2,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+total,max_attribute_capacity,,,0,,184,,sum across unique addresses
+histogram,max_attribute_capacity,,,0,651,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_attribute_capacity,,,8,5,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_attribute_capacity,,,16,5,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket
+histogram,max_attribute_capacity,,,32,2,,,power-of-two inclusive upper bound; UINT64_MAX is overflow bucket

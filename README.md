@@ -16,7 +16,10 @@ The core toolchain is:
 - `rxc`: compiles cREXX source to `.rxas` assembler
 - `rxas`: assembles `.rxas` to `.rxbin` bytecode
 - `rxlink`: combines one or more `.rxbin` modules into a linked image
-- `rxvm` / `rxvme`: executes `rxbin` bytecode
+- `rxvm` / `rxvme`: executes `rxbin` bytecode using the product dispatch
+  engine selected for the C compiler
+- `rxbvm`: explicit portable switch-dispatch VM
+- `rxtvm`: explicit direct-threaded VM on GNU/Clang-family compilers
 - `crexx`: driver for common compile, assemble, link, and run workflows
 - `rxcpack`: packages bytecode images as C source for native executable builds
 
@@ -35,6 +38,11 @@ ctest --test-dir cmake-build-debug --output-on-failure --parallel 10 --timeout 6
 ```
 
 The build creates the toolchain under `cmake-build-debug/bin`.
+`rxvm` is the stable product entry point: Clang and AppleClang builds link it
+to `rxbvm`, GCC builds link it to `rxtvm`, and MSVC builds copy the sole
+`rxbvm.exe` engine to `rxvm.exe`. The ordinary test suite follows `rxvm`; a
+small dispatch contract test still exercises each concrete engine that was
+built.
 The `smoke` CTest label is the fast local gate; the full suite remains the
 release/CI gate. The explicit CTest timeout keeps 10-way local runs from
 failing slow-but-progressing tests under load.

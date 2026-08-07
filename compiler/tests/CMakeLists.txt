@@ -413,7 +413,7 @@ string(APPEND RXC_INVALID_BINARY_TO_STRING_RUNTIME_CONTENT
        "  message(FATAL_ERROR \"rxas failed for runtime invalid binary-to-string test.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n"
        "execute_process(\n"
-       "  COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"rxc_invalid_binary_to_string_runtime.rxbin\"\n"
+       "  COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"rxc_invalid_binary_to_string_runtime.rxbin\"\n"
        "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
        "  OUTPUT_VARIABLE rxvm_out\n"
        "  ERROR_VARIABLE rxvm_err\n"
@@ -836,7 +836,7 @@ macro(add_crexx_robustness_test NAME MAIN_FILE)
     endforeach()
 
     # Run rxvm and compare output
-    string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${NAME}.rxbin\" ${DEP_BINS} \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" OUTPUT_VARIABLE vm_out RESULT_VARIABLE res)\n")
+    string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${NAME}.rxbin\" ${DEP_BINS} \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" OUTPUT_VARIABLE vm_out RESULT_VARIABLE res)\n")
     string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed\")\nendif()\n")
     
     # Read golden file
@@ -1142,7 +1142,7 @@ add_test(NAME nr21_fixed_call_contract
                  -DRXAS=$<TARGET_FILE:rxas>
                  -DRXLINK=$<TARGET_FILE:rxlink>
                  -DRXDAS=$<TARGET_FILE:rxdas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
                  -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
@@ -1159,7 +1159,7 @@ add_test(NAME nr14_frozen_parse_contract
                  -DRXAS=$<TARGET_FILE:rxas>
                  -DRXLINK=$<TARGET_FILE:rxlink>
                  -DRXDAS=$<TARGET_FILE:rxdas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
                  -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
@@ -1174,7 +1174,7 @@ add_test(NAME nr15_native_stem_contract
                  -DRXAS=$<TARGET_FILE:rxas>
                  -DRXLINK=$<TARGET_FILE:rxlink>
                  -DRXDAS=$<TARGET_FILE:rxdas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
                  -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/nr15_native_stem_contract.rxas
@@ -1187,7 +1187,7 @@ add_test(NAME nr09_numeric_context_contract
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
                  -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
@@ -1200,7 +1200,7 @@ add_test(NAME nr09_codegen_contract
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
                  -DBENCH_DIR=${CMAKE_SOURCE_DIR}/tests/benchmarks
@@ -1214,7 +1214,7 @@ add_test(NAME nr26_flow_contract
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
                  -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
@@ -1227,7 +1227,7 @@ add_test(NAME perf2_04_inline_assembler_effects
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
                  -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_inline_assembler_effects.crexx
@@ -1240,7 +1240,7 @@ add_test(NAME perf2_04_inline_assembler_imports
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_case_import/dep/case_helpers.crexx
                  -DDEP_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_case_import/dep
@@ -1254,7 +1254,7 @@ add_test(NAME perf2_04_certified_call
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DBIF_SOURCE_DIR=${CMAKE_SOURCE_DIR}/lib/rxfnsb/rexx
                  -DSELECTED_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_04_certified_call/selected.crexx
@@ -1272,7 +1272,7 @@ add_test(NAME perf2_05_partial_call
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DSELECTED_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_05_partial_call/selected.crexx
                  -DCURSOR_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_05_partial_call/cursor_inline.crexx
@@ -1286,7 +1286,7 @@ add_test(NAME perf2_07_v3_representation
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
                  -DLIBRARY_DIR=${CMAKE_BINARY_DIR}/bin
@@ -1301,7 +1301,7 @@ add_test(NAME perf2_07_binary_byvalue_contract
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
                  -DRXDAS=$<TARGET_FILE:rxdas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
                  -DLIBRARY_DIR=${CMAKE_BINARY_DIR}/bin
@@ -1333,7 +1333,7 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
     
-    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_noopt.rxbin\" ${RUNTIME_MODULES} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_noopt.rxbin\" ${RUNTIME_MODULES} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
     
@@ -1353,7 +1353,7 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
             OUTPUT "${OPT_LINK_SCRIPT}"
             NAME "${NAME}_run_opt"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            RUNNER "$<TARGET_FILE:rxvm>"
+            RUNNER "${CREXX_RXVM_EXECUTABLE}"
             RXLINK "$<TARGET_FILE:rxlink>"
             PROGRAM "${NAME}_run_opt.rxbin"
             EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin" ${RUNTIME_MODULES}
@@ -1392,6 +1392,11 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     set(RXC_FLAGS "")
     set(RXAS_FLAGS "")
     set(LABELS "reference;compiler;source")
+    if(RUNNER STREQUAL "rxvm")
+        set(RUNNER_EXECUTABLE "${CREXX_RXVM_EXECUTABLE}")
+    else()
+        set(RUNNER_EXECUTABLE "$<TARGET_FILE:${RUNNER}>")
+    endif()
 
     if(MODE STREQUAL "noopt")
         set(RXC_FLAGS "-n")
@@ -1406,7 +1411,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
                 OUTPUT "${LINK_SCRIPT}"
                 NAME "${NAME}"
                 WORKING_DIRECTORY "${WORK_DIR}"
-                RUNNER "$<TARGET_FILE:${RUNNER}>"
+                RUNNER "${RUNNER_EXECUTABLE}"
                 RXLINK "$<TARGET_FILE:rxlink>"
                 PROGRAM "${BASE}.rxbin"
                 EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin"
@@ -1439,7 +1444,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
         string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked ${RUNNER} failed: \${out}\")\nendif()\n")
     else()
-        string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        string(APPEND CONTENT "execute_process(COMMAND \"${RUNNER_EXECUTABLE}\" \"${BASE}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"${RUNNER} failed: \${out}\")\nendif()\n")
     endif()
@@ -1458,7 +1463,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
 endfunction()
 
 foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime)
-    foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    foreach(_crexx_runner IN ITEMS rxvm)
         foreach(_crexx_mode IN ITEMS noopt opt)
             add_crexx_reference_source_test(${_crexx_reference_fixture} ${_crexx_runner} ${_crexx_mode})
         endforeach()
@@ -1495,7 +1500,7 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
                     OUTPUT "${LINK_SCRIPT}"
                     NAME "${NAME}${TEST_SUFFIX}"
                     WORKING_DIRECTORY "${WORK_DIR}"
-                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RUNNER "${CREXX_RXVM_EXECUTABLE}"
                     RXLINK "$<TARGET_FILE:rxlink>"
                     PROGRAM "${WORK_DIR}/main${TEST_SUFFIX}.rxbin"
                     EXTRA_ARGS ${LINK_EXTRA_ARGS}
@@ -1528,7 +1533,7 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
             if(TEST_MODE STREQUAL "opt")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             else()
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             endif()
         else()
             string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -1547,7 +1552,7 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
             if(TEST_MODE STREQUAL "opt")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             else()
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             endif()
         endif()
 
@@ -1603,7 +1608,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
                     OUTPUT "${LINK_SCRIPT}"
                     NAME "${NAME}${TEST_SUFFIX}"
                     WORKING_DIRECTORY "${WORK_DIR}"
-                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RUNNER "${CREXX_RXVM_EXECUTABLE}"
                     RXLINK "$<TARGET_FILE:rxlink>"
                     PROGRAM "${WORK_DIR}/main${TEST_SUFFIX}.rxbin"
                     EXTRA_ARGS ${LINK_EXTRA_ARGS}
@@ -1642,7 +1647,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             if(TEST_MODE STREQUAL "opt")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             else()
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/${DEP_B_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/${DEP_B_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             endif()
         else()
             foreach(DEP_SPEC IN ITEMS "${DEP_A_MODULE};${DEP_A_BASENAME}" "${DEP_B_MODULE};${DEP_B_BASENAME}")
@@ -1665,7 +1670,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             if(TEST_MODE STREQUAL "opt")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             else()
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}.rxbin\" \"\${work}/${DEP_B_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}.rxbin\" \"\${work}/${DEP_B_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             endif()
         endif()
 
@@ -1706,7 +1711,7 @@ function(add_crexx_isolated_run_test NAME SOURCE_FILE)
                     OUTPUT "${LINK_SCRIPT}"
                     NAME "${NAME}${TEST_SUFFIX}"
                     WORKING_DIRECTORY "${WORK_DIR}"
-                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RUNNER "${CREXX_RXVM_EXECUTABLE}"
                     RXLINK "$<TARGET_FILE:rxlink>"
                     PROGRAM "${WORK_DIR}/${NAME}${TEST_SUFFIX}.rxbin"
                     EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin"
@@ -1729,7 +1734,7 @@ function(add_crexx_isolated_run_test NAME SOURCE_FILE)
         if(TEST_MODE STREQUAL "opt")
             string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         else()
-            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         endif()
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked rxvm failed: \${out}\")\nendif()\n")
@@ -1768,7 +1773,7 @@ function(add_crexx_isolated_run_fail_test NAME SOURCE_FILE)
                     OUTPUT "${LINK_SCRIPT}"
                     NAME "${NAME}${TEST_SUFFIX}"
                     WORKING_DIRECTORY "${WORK_DIR}"
-                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RUNNER "${CREXX_RXVM_EXECUTABLE}"
                     RXLINK "$<TARGET_FILE:rxlink>"
                     PROGRAM "${WORK_DIR}/${NAME}${TEST_SUFFIX}.rxbin"
                     ALLOW_RUN_FAILURE
@@ -1792,7 +1797,7 @@ function(add_crexx_isolated_run_fail_test NAME SOURCE_FILE)
         if(TEST_MODE STREQUAL "opt")
             string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         else()
-            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         endif()
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND SCRIPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
@@ -1828,7 +1833,7 @@ macro(add_crexx_run_args_test NAME SOURCE_FILE)
     string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
 
-    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_args_noopt.rxbin\" -a${PROGRAM_ARGS_TEXT} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_args_noopt.rxbin\" -a${PROGRAM_ARGS_TEXT} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
 
@@ -1847,7 +1852,7 @@ macro(add_crexx_run_args_test NAME SOURCE_FILE)
             OUTPUT "${OPT_LINK_SCRIPT}"
             NAME "${NAME}_run_args_opt"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            RUNNER "$<TARGET_FILE:rxvm>"
+            RUNNER "${CREXX_RXVM_EXECUTABLE}"
             RXLINK "$<TARGET_FILE:rxlink>"
             PROGRAM "${NAME}_run_args_opt.rxbin"
             EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin" -a ${PROGRAM_ARGS}
@@ -1974,7 +1979,7 @@ add_test(
         COMMAND ${CMAKE_COMMAND}
                 -DRXC=$<TARGET_FILE:rxc>
                 -DRXAS=$<TARGET_FILE:rxas>
-                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
                 -DRXBVM=$<TARGET_FILE:rxbvm>
                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin
                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
@@ -1989,7 +1994,7 @@ add_test(
         COMMAND ${CMAKE_COMMAND}
                 -DRXC=$<TARGET_FILE:rxc>
                 -DRXAS=$<TARGET_FILE:rxas>
-                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
                 -DRXBVM=$<TARGET_FILE:rxbvm>
                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin
                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
@@ -2005,7 +2010,7 @@ add_test(
         COMMAND ${CMAKE_COMMAND}
                 -DRXC=$<TARGET_FILE:rxc>
                 -DRXAS=$<TARGET_FILE:rxas>
-                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
                 -DRXBVM=$<TARGET_FILE:rxbvm>
                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin
                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
@@ -2120,7 +2125,7 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]
 string(APPEND INLINE_CROSS_FILE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_main.rxbin\" \"inline_cross_file_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on inline main: \${out}\")\nendif()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
@@ -2157,7 +2162,7 @@ string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "file(READ \"\${work}/inli
 string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.inc\\(\\)]=])\n  message(FATAL_ERROR \"Old-version summary payload did not retain inc() call:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_main.rxbin\" \"inline_cross_file_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on old-version summary consumer: \${out}\${err}\")\nendif()\n")
-string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on old-version summary fallback: \${run_out}\${err}\")\nendif()\n")
 string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
 string(APPEND INLINE_SUMMARY_VERSION_FALLBACK_CONTENT "if(NOT run_out STREQUAL \"42\\n7\\n-1\\n0\\n1\\n20\\n-3\\n42\\n10\\n3\\nred:blue\\nseed\\nafter\\n11\\n11\\n15\\n8\\n21\\n21\\n1\\n22\\n.int\\n23\\n6\\n12\\n9\\n10\\ncall:12\\n\")\n  message(FATAL_ERROR \"Old-version summary fallback output mismatch: \${run_out}\")\nendif()\n")
@@ -2191,7 +2196,7 @@ string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "file(READ \"\${work}/inline
 string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.inc\\(\\)]=])\n  message(FATAL_ERROR \"Mismatched summary payload did not retain inc() call:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_main.rxbin\" \"inline_cross_file_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on mismatched summary consumer: \${out}\${err}\")\nendif()\n")
-string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on mismatched summary fallback: \${run_out}\${err}\")\nendif()\n")
 string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
 string(APPEND INLINE_SUMMARY_SHAPE_FALLBACK_CONTENT "if(NOT run_out STREQUAL \"42\\n7\\n-1\\n0\\n1\\n20\\n-3\\n42\\n10\\n3\\nred:blue\\nseed\\nafter\\n11\\n11\\n15\\n8\\n21\\n21\\n1\\n22\\n.int\\n23\\n6\\n12\\n9\\n10\\ncall:12\\n\")\n  message(FATAL_ERROR \"Mismatched summary fallback output mismatch: \${run_out}\")\nendif()\n")
@@ -2227,7 +2232,7 @@ string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "file(READ \"\${work}/inlin
 string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.refbump\\(\\)]=])\n  message(FATAL_ERROR \"Contradictory formal-effect summary did not retain refbump() call:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_main.rxbin\" \"inline_cross_file_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on contradictory formal-effect consumer: \${out}\${err}\")\nendif()\n")
-string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on contradictory formal-effect fallback: \${run_out}\${err}\")\nendif()\n")
 string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
 string(APPEND INLINE_SUMMARY_FORMAL_FALLBACK_CONTENT "if(NOT run_out STREQUAL \"42\\n7\\n-1\\n0\\n1\\n20\\n-3\\n42\\n10\\n3\\nred:blue\\nseed\\nafter\\n11\\n11\\n15\\n8\\n21\\n21\\n1\\n22\\n.int\\n23\\n6\\n12\\n9\\n10\\ncall:12\\n\")\n  message(FATAL_ERROR \"Contradictory formal-effect fallback output mismatch: \${run_out}\")\nendif()\n")
@@ -2262,7 +2267,7 @@ string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "file(READ \"\${work}/inl
 string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT main_rxas MATCHES [=[call [^\\n]*inline_cross_file_dep\\.box\\.setname\\(\\)]=])\n  message(FATAL_ERROR \"Contradictory receiver summary did not retain setName() call:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o inline_receiver_summary_main.rxbin inline_receiver_summary_main WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on receiver-summary consumer: \${out}\${err}\")\nendif()\n")
-string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_receiver_summary_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_receiver_summary_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
 string(APPEND INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT "if(NOT res EQUAL 0 OR NOT run_out STREQUAL \"after\\n\")\n  message(FATAL_ERROR \"Receiver-summary fallback runtime mismatch: \${run_out}\${err}\")\nendif()\n")
 file(GENERATE OUTPUT "${INLINE_RECEIVER_SUMMARY_FALLBACK_SCRIPT}" CONTENT "${INLINE_RECEIVER_SUMMARY_FALLBACK_CONTENT}")
@@ -2293,7 +2298,7 @@ string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(main_rxas MATCHES [=[slt [^\\n]
 string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT main_rxas MATCHES [=[ilt [^\\n]*,1]=])\n  message(FATAL_ERROR \"Optimized binary import did not lower array[0] count compare as integer compare:\\n\${main_rxas}\")\nendif()\n")
 string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_ref_array_count_main.rxbin\" \"inline_ref_array_count_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on inline ref-array-count main: \${out}\${err}\")\nendif()\n")
-string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_ref_array_count_dep.rxbin\" \"\${work}/inline_ref_array_count_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_ref_array_count_dep.rxbin\" \"\${work}/inline_ref_array_count_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on inline ref-array-count binary import: \${run_out}\${err}\")\nendif()\n")
 string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
 string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT run_out STREQUAL \"?\\nA\\n\")\n  message(FATAL_ERROR \"Output mismatch: expected ? and A, got: \${run_out}\")\nendif()\n")
@@ -2314,7 +2319,7 @@ string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"$<
 string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on inline RHS block-expression concat: \${out}\${err}\")\nendif()\n")
 string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_rhs_block_expr_concat.rxbin\" \"inline_rhs_block_expr_concat\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on inline RHS block-expression concat: \${out}\${err}\")\nendif()\n")
-string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_rhs_block_expr_concat.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_rhs_block_expr_concat.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on inline RHS block-expression concat: \${run_out}\${err}\")\nendif()\n")
 string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
 string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT run_out STREQUAL \"prefix:abc:def\\n\")\n  message(FATAL_ERROR \"Output mismatch: expected prefix:abc:def, got: \${run_out}\")\nendif()\n")
@@ -2377,7 +2382,7 @@ string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "if(NOT res EQUAL 0)\n  message(F
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_dep.rxbin\" \"inline_cross_file_dep\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on source-import dependency: \${out}\")\nendif()\n")
-string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_cross_file_dep.rxbin\" \"\${work}/inline_cross_file_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
@@ -2579,7 +2584,7 @@ string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*i
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_local_member_scalar.rxbin\" \"inline_local_member_scalar\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on local member inline test: \${out}\")\nendif()\n")
-string(APPEND INLINE_LOCAL_MEMBER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_local_member_scalar.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND INLINE_LOCAL_MEMBER_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_local_member_scalar.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on local member inline test: \${out}\")\nendif()\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
@@ -2595,7 +2600,7 @@ add_test(NAME inline_receiver_nested_this_direct_placement_opt
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
@@ -2610,7 +2615,7 @@ add_test(NAME inline_receiver_detached_guard_opt
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
@@ -2627,7 +2632,7 @@ add_test(NAME inline_receiver_production_ladder_opt
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
@@ -2642,7 +2647,7 @@ add_test(NAME inline_receiver_reference_alias_opt
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
@@ -2657,7 +2662,7 @@ add_test(NAME inline_reference_member_accessors_opt
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
@@ -2672,7 +2677,7 @@ add_test(NAME inline_reference_accessors_import_opt
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
-                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
@@ -2713,7 +2718,7 @@ string(APPEND CRXC_NOARGS_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"
 string(APPEND CRXC_NOARGS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"crxc_noargs_run.rxbin\" \"crxc_noargs_run\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CRXC_NOARGS_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND CRXC_NOARGS_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
-string(APPEND CRXC_NOARGS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"crxc_noargs_run.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CRXC_NOARGS_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"crxc_noargs_run.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CRXC_NOARGS_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND CRXC_NOARGS_CONTENT "if(NOT res EQUAL 99)\n  message(FATAL_ERROR \"rxvm noargs expected rc 99, got \${res}: \${out}\")\nendif()\n")
 string(APPEND CRXC_NOARGS_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/crxc_noargs.out\" golden_out)\n")
@@ -2741,7 +2746,7 @@ string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "if(NOT res EQUAL 0)\n  message(FATA
 string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"structured_exit_debug_main.rxbin\" \"structured_exit_debug_main\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "string(APPEND run_out \"\${out}\")\n")
 string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed for structured exit main: \${out}\")\nendif()\n")
-string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"structured_exit_debug_main.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"structured_exit_debug_main.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "string(APPEND run_out \"\${out}\")\n")
 string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed for structured exit main: \${out}\")\nendif()\n")
 string(APPEND STRUCTURED_EXIT_DEBUG_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/structured_exit_debug.out\" golden_out)\n")
@@ -3946,7 +3951,7 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
            "endif()\n")
     string(APPEND SCRIPT_CONTENT
            "execute_process(\n"
-           "    COMMAND \"$<TARGET_FILE:rxvm>\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
+           "    COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
            "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
            "    OUTPUT_VARIABLE rxvm_out\n"
            "    ERROR_VARIABLE rxvm_err\n"
@@ -4535,19 +4540,19 @@ set_tests_properties(address_bridge PROPERTIES
         LABELS "compiler;stage3"
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_test(NAME address_cms_provider COMMAND
-        $<TARGET_FILE:rxvm>
+        ${CREXX_RXVM_EXECUTABLE}
         ${CMAKE_BINARY_DIR}/bin/library.rxbin
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin)
 set_tests_properties(address_cms_provider PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_cms_demo COMMAND
-        $<TARGET_FILE:rxvm>
+        ${CREXX_RXVM_EXECUTABLE}
         ${CMAKE_BINARY_DIR}/bin/library.rxbin
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_demo.rxbin)
 set_tests_properties(address_cms_demo PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_llm_provider COMMAND
-        $<TARGET_FILE:rxvm>
+        ${CREXX_RXVM_EXECUTABLE}
         ${CMAKE_BINARY_DIR}/bin/library.rxbin
         ${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin
         ${CMAKE_CURRENT_BINARY_DIR}/address_llm_provider.rxbin
@@ -4566,9 +4571,14 @@ add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
-foreach(_dynamic_interface_runner IN ITEMS rxvm rxbvm)
+foreach(_dynamic_interface_runner IN ITEMS rxvm)
+    if(_dynamic_interface_runner STREQUAL "rxvm")
+        set(_dynamic_interface_runner_executable "${CREXX_RXVM_EXECUTABLE}")
+    else()
+        set(_dynamic_interface_runner_executable "$<TARGET_FILE:${_dynamic_interface_runner}>")
+    endif()
     add_test(NAME dynamic_interface_load_${_dynamic_interface_runner}
-            COMMAND $<TARGET_FILE:${_dynamic_interface_runner}>
+            COMMAND ${_dynamic_interface_runner_executable}
                     ${CMAKE_BINARY_DIR}/bin/library.rxbin
                     ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_contract.rxbin
                     ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_host.rxbin
@@ -4628,7 +4638,7 @@ add_test(NAME trace_stem_sugar
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
         -DRXAS=$<TARGET_FILE:rxas>
-        -DRXVM=$<TARGET_FILE:rxvm>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
         -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
         -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library
         -DWORK=${CMAKE_CURRENT_BINARY_DIR}/trace_stem_sugar
@@ -4687,7 +4697,7 @@ string(APPEND RXC_DIAGNOSTIC_CATALOG_CONTENT
        "  message(FATAL_ERROR \"diagnostic catalogue checker assembly failed with \${res}:\\n\${out}\${err}\")\n"
        "endif()\n"
        "execute_process(\n"
-       "  COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${tool_base}.rxbin\" -a \"${CMAKE_SOURCE_DIR}/messages/diagnostics.en_GB.msg\" \"${RXC_DIAGNOSTIC_CATALOG_SOURCE_LIST}\" \"2\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.de_DE.msg\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.nl_NL.msg\" \"1\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.en_US.msg\"\n"
+       "  COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${tool_base}.rxbin\" -a \"${CMAKE_SOURCE_DIR}/messages/diagnostics.en_GB.msg\" \"${RXC_DIAGNOSTIC_CATALOG_SOURCE_LIST}\" \"2\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.de_DE.msg\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.nl_NL.msg\" \"1\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.en_US.msg\"\n"
        "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
        "  OUTPUT_VARIABLE out\n"
        "  ERROR_VARIABLE err\n"

@@ -234,8 +234,10 @@ cmake --build build --target des --verbose
 - the header-only `CREXX::RXPA` target and the
   `add_dynamic_plugin_target()` helper;
 - imported executable targets such as `CREXX::rxc`, `CREXX::rxas`,
-  `CREXX::crexx-contract`, `CREXX::rxvm`, and `CREXX::rxbvm`, with corresponding
-  `CREXX_<tool>_EXECUTABLE` path variables;
+  `CREXX::crexx-contract`, product `CREXX::rxvm`, concrete `CREXX::rxbvm`, and
+  optional concrete `CREXX::rxtvm`, with corresponding
+  `CREXX_<tool>_EXECUTABLE` path variables (`CREXX_rxtvm_FOUND` is false when
+  the installed compiler could not build direct threading);
 - the `crexx_add_operation_contract()` helper for the build-time, JSON contract
   surface documented in [Operation Contracts](operation_contracts.md);
 - `CREXX_IMPORT_DIR`, `CREXX_PLUGIN_DIR`, and `CREXX_RUNTIME_DIR`, which name

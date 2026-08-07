@@ -132,6 +132,37 @@ static rxvml_context* rxvml_active_context = NULL;
 
 /* rxvml_value is defined as an alias to value in the public header */
 
+static void* rxvml_memory_alloc(rxvml_context* ctx, size_t size) {
+    return rxvm_memory_alloc_bytes(ctx ? ctx->vm.memory_worker : NULL, size);
+}
+
+static void* rxvml_memory_calloc(rxvml_context* ctx,
+                                 size_t count,
+                                 size_t size) {
+    return rxvm_memory_calloc_bytes(ctx ? ctx->vm.memory_worker : NULL,
+                                    count, size);
+}
+
+static void* rxvml_memory_resize(rxvml_context* ctx,
+                                 void* pointer,
+                                 size_t copy_size,
+                                 size_t new_size) {
+    rxvm_memory_worker* worker = ctx ? ctx->vm.memory_worker : NULL;
+    rxvm_memory_worker* previous = rxvm_memory_enter(worker);
+    void* resized = rxvm_memory_resize_bytes(worker, pointer,
+                                             copy_size, new_size);
+    rxvm_memory_leave(previous);
+    return resized;
+}
+
+static void rxvml_memory_free(rxvml_context* ctx, void* pointer) {
+    rxvm_memory_worker* previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker : NULL);
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
+
 static string_constant* rxvml_get_string_constant(module* mod, size_t offset) {
     string_constant* value;
 
@@ -141,13 +172,14 @@ static string_constant* rxvml_get_string_constant(module* mod, size_t offset) {
     return value;
 }
 
-static char* rxvml_ascii_lower_copy(const char* value) {
+static char* rxvml_ascii_lower_copy(rxvml_context* ctx, const char* value) {
     char* copy;
     size_t i;
 
     if (!value) return NULL;
-    copy = strdup(value);
+    copy = rxvml_memory_alloc(ctx, strlen(value) + 1u);
     if (!copy) return NULL;
+    memcpy(copy, value, strlen(value) + 1u);
     for (i = 0; copy[i]; i++) {
         copy[i] = (char)tolower((unsigned char)copy[i]);
     }
@@ -171,13 +203,14 @@ static proc_runtime* find_procedure(rxvm_context* ctx, const char* name) {
         return p;
     }
     {
-        char* lowered = rxvml_ascii_lower_copy(name);
+        rxvml_context* library_context = (rxvml_context*)ctx;
+        char* lowered = rxvml_ascii_lower_copy(library_context, name);
         if (lowered) {
             if (src_node(ctx->exposed_proc_tree, lowered, (size_t*)&p)) {
-                free(lowered);
+                rxvml_memory_free(library_context, lowered);
                 return p;
             }
-            free(lowered);
+            rxvml_memory_free(library_context, lowered);
         }
     }
     return NULL;
@@ -285,7 +318,8 @@ static proc_runtime* rxvml_find_procedure_by_metadata(rxvml_context* ctx,
     return NULL;
 }
 
-static char* rxvml_metadata_type_to_contract_name(const char* type_name) {
+static char* rxvml_metadata_type_to_contract_name(rxvml_context* ctx,
+                                                  const char* type_name) {
     size_t in_index;
     size_t out_index;
     size_t length;
@@ -294,7 +328,7 @@ static char* rxvml_metadata_type_to_contract_name(const char* type_name) {
     if (!type_name || !*type_name || type_name[0] != '.') return NULL;
 
     length = strlen(type_name);
-    normalized = malloc(length + 1);
+    normalized = rxvml_memory_alloc(ctx, length + 1u);
     if (!normalized) return NULL;
 
     out_index = 0;
@@ -355,11 +389,11 @@ static int rxvml_signature_type_assignable(void* userdata,
     int result;
 
     if (!ctx) return 0;
-    actual_contract = rxvml_metadata_type_to_contract_name(actual_type);
-    expected_contract = rxvml_metadata_type_to_contract_name(expected_type);
+    actual_contract = rxvml_metadata_type_to_contract_name(ctx, actual_type);
+    expected_contract = rxvml_metadata_type_to_contract_name(ctx, expected_type);
     if (!actual_contract || !expected_contract) {
-        if (actual_contract) free(actual_contract);
-        if (expected_contract) free(expected_contract);
+        rxvml_memory_free(ctx, actual_contract);
+        rxvml_memory_free(ctx, expected_contract);
         return 0;
     }
 
@@ -368,8 +402,8 @@ static int rxvml_signature_type_assignable(void* userdata,
     } else {
         result = rxvml_class_implements_interface(&ctx->vm, actual_contract, expected_contract);
     }
-    free(actual_contract);
-    free(expected_contract);
+    rxvml_memory_free(ctx, actual_contract);
+    rxvml_memory_free(ctx, expected_contract);
     return result;
 }
 
@@ -529,14 +563,14 @@ static int rxvml_invoke_external_proc(
 
     if (argc > 0) {
         size_t i;
-        call_args = malloc(sizeof(value*) * argc);
+        call_args = rxvml_memory_alloc(ctx, sizeof(value*) * argc);
         if (!call_args) {
             ctx->last_error = "Failed to allocate rxvml call arguments";
             return -1;
         }
         for (i = 0; i < argc; i++) {
             if (!args[i]) {
-                free(call_args);
+                rxvml_memory_free(ctx, call_args);
                 ctx->last_error = "Null rxvml call argument";
                 return -1;
             }
@@ -544,9 +578,9 @@ static int rxvml_invoke_external_proc(
         }
     }
 
-    call_ret = value_f();
+    call_ret = value_f_in(ctx->vm.memory_worker);
     if (!call_ret) {
-        if (call_args) free(call_args);
+        rxvml_memory_free(ctx, call_args);
         ctx->last_error = "Failed to allocate rxvml return value";
         return -1;
     }
@@ -576,7 +610,7 @@ static int rxvml_invoke_external_proc(
         rxvml_value_free((rxvml_value*)call_ret);
     }
 
-    if (call_args) free(call_args);
+    rxvml_memory_free(ctx, call_args);
     rxvml_restore_external_call_state(&ctx->vm, &saved_state);
     return 0;
 }
@@ -1228,8 +1262,11 @@ static int rxvml_alloc_address_callback_handle(
     {
         size_t old_size = ctx->address_callback_size;
         size_t new_size = old_size == 0 ? 8 : old_size * 2;
-        rxvml_address_callback_entry* new_callbacks =
-            realloc(ctx->address_callbacks, sizeof(rxvml_address_callback_entry) * new_size);
+        rxvml_address_callback_entry* new_callbacks = rxvml_memory_resize(
+            ctx,
+            ctx->address_callbacks,
+            sizeof(rxvml_address_callback_entry) * old_size,
+            sizeof(rxvml_address_callback_entry) * new_size);
         if (!new_callbacks) return 0;
 
         ctx->address_callbacks = new_callbacks;
@@ -1326,7 +1363,8 @@ static void rxvml_native_address_execute(
     }
 
     if (binding_count > 0) {
-        bindings = calloc(binding_count, sizeof(rxvml_address_binding));
+        bindings = rxvml_memory_calloc(ctx, binding_count,
+                                      sizeof(rxvml_address_binding));
         if (!bindings) {
             rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to allocate native ADDRESS binding view");
             return;
@@ -1367,12 +1405,12 @@ static void rxvml_native_address_execute(
 
     if (rxvml_copy_address_response_updates(response_value, &response) != 0) {
         rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to copy native ADDRESS response updates");
-        if (bindings) free(bindings);
+        rxvml_memory_free(ctx, bindings);
         return;
     }
 
     if (ret) set_int((value*)ret, (rxinteger)response.rc);
-    if (bindings) free(bindings);
+    rxvml_memory_free(ctx, bindings);
 }
 
 static int rxvml_copy_address_function_response(
@@ -1459,7 +1497,8 @@ static void rxvml_native_address_invoke(
     arguments_value = request_value->attributes[RXVML_ADDRESS_FUNCTION_REQUEST_ARGUMENTS];
     if (arguments_value) argument_count = arguments_value->num_attributes;
     if (argument_count > 0) {
-        argument_texts = calloc(argument_count, sizeof(char*));
+        argument_texts = rxvml_memory_calloc(ctx, argument_count,
+                                            sizeof(char*));
         if (!argument_texts) {
             rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to allocate native ADDRESS function argument view");
             return;
@@ -1486,12 +1525,12 @@ static void rxvml_native_address_invoke(
 
     if (rxvml_copy_address_function_response(response_value, &response) != 0) {
         rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to copy native ADDRESS function response");
-        if (argument_texts) free(argument_texts);
+        rxvml_memory_free(ctx, argument_texts);
         return;
     }
 
     if (ret) set_int((value*)ret, (rxinteger)response.rc);
-    if (argument_texts) free(argument_texts);
+    rxvml_memory_free(ctx, argument_texts);
 }
 
 static void rxvml_native_address_match(
@@ -1594,13 +1633,12 @@ void rxvml_destroy(rxvml_context* ctx) {
     if (ctx->registry) {
         for (i = 0; i < ctx->registry_size; i++) {
             if (ctx->registry[i].obj) {
-                clear_value(ctx->registry[i].obj);
-                free(ctx->registry[i].obj);
+                rxvml_value_free((rxvml_value *)ctx->registry[i].obj);
             }
         }
-        free(ctx->registry);
+        rxvml_memory_free(ctx, ctx->registry);
     }
-    if (ctx->address_callbacks) free(ctx->address_callbacks);
+    rxvml_memory_free(ctx, ctx->address_callbacks);
     rxfremod(&ctx->vm);
     free(ctx);
 }
@@ -1614,7 +1652,12 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len) {
 }
 
 rxvml_value* rxvml_value_new(rxvml_context* ctx) {
-    return (rxvml_value*)value_f();
+    value *result = value_f_in(ctx ? ctx->vm.memory_worker : 0);
+#ifdef CREXX_VM_PROFILING
+    rxvm_profile_mark_value_origin(
+            result, RXVM_PROFILE_VALUE_ORIGIN_API_NATIVE);
+#endif
+    return (rxvml_value*)result;
 }
 
 void rxvml_set_int(rxvml_value* v, rxinteger i) {
@@ -1622,13 +1665,24 @@ void rxvml_set_int(rxvml_value* v, rxinteger i) {
 }
 
 int rxvml_set_str(rxvml_value* v, const char* s, size_t len) {
+    rxvm_memory_worker *previous;
+    int result;
     if (!v) return -1;
-    return set_string_validated((value*)v, s ? s : "", s ? len : 0);
+    previous = rxvm_memory_enter(rxvm_memory_owner(v));
+    result = set_string_validated((value*)v, s ? s : "", s ? len : 0);
+    rxvm_memory_leave(previous);
+    return result;
 }
 
 int rxvml_set_native_payload(rxvml_value* v, const void* payload, size_t len,
                              const rxvm_native_payload_ops* ops, unsigned int flags) {
-    return set_native_payload((value*)v, payload, len, ops, flags);
+    rxvm_memory_worker *previous;
+    int result;
+    if (!v) return -1;
+    previous = rxvm_memory_enter(rxvm_memory_owner(v));
+    result = set_native_payload((value*)v, payload, len, ops, flags);
+    rxvm_memory_leave(previous);
+    return result;
 }
 
 void* rxvml_get_native_payload(rxvml_value* v, size_t* out_len,
@@ -1638,24 +1692,36 @@ void* rxvml_get_native_payload(rxvml_value* v, size_t* out_len,
 }
 
 rxvml_value* rxvml_object_new(rxvml_context* ctx, size_t num_attrs) {
+    rxvm_memory_worker *previous =
+            rxvm_memory_enter(ctx ? ctx->vm.memory_worker : 0);
     value* v = value_f();
     set_num_attributes(v, num_attrs);
+    rxvm_memory_leave(previous);
     return (rxvml_value*)v;
 }
 
 int rxvml_set_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1, rxvml_value* val) {
     value* v_obj = (value*)obj;
     value* v_val = (value*)val;
+    rxvm_memory_worker *previous;
     if (index1 == 0 || index1 > v_obj->num_attributes) return -1;
+    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker :
+                                 rxvm_memory_owner(obj));
     copy_value(v_obj->attributes[index1 - 1], v_val);
+    rxvm_memory_leave(previous);
     return 0;
 }
 
 rxvml_value* rxvml_get_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1) {
     value* v_obj = (value*)obj;
+    rxvm_memory_worker *previous;
+    value* v_ret;
     if (index1 == 0 || index1 > v_obj->num_attributes) return NULL;
-    value* v_ret = value_f();
+    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker :
+                                 rxvm_memory_owner(obj));
+    v_ret = value_f();
     copy_value(v_ret, v_obj->attributes[index1 - 1]);
+    rxvm_memory_leave(previous);
     return (rxvml_value*)v_ret;
 }
 
@@ -1666,19 +1732,25 @@ rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length) {
 int rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_value* elem) {
     value* v_arr = (value*)arr;
     value* v_elem = (value*)elem;
+    rxvm_memory_worker *previous;
     if (index1 == 0 || index1 > v_arr->num_attributes) return -1;
     /* In cREXX, attributes are 0-indexed in C, 1-indexed in Rexx */
     /* link_attribute might be better, but for now we just copy the value pointer or copy the value */
     /* Actually, attributes[i] is a pointer to a value */
     /* Copy into the pre-allocated attribute slot to avoid pointer aliasing */
+    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker :
+                                 rxvm_memory_owner(arr));
     copy_value(v_arr->attributes[index1 - 1], v_elem);
+    rxvm_memory_leave(previous);
     return 0;
 }
 
 void rxvml_value_free(rxvml_value* v) {
     if (v) {
-        clear_value((value*)v);
-        free(v);
+        rxvm_memory_worker *previous =
+                rxvm_memory_enter(rxvm_memory_owner(v));
+        value_free((value*)v);
+        rxvm_memory_leave(previous);
     }
 }
 
@@ -1698,7 +1770,11 @@ int rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name) 
     {
         size_t new_size = ctx->registry_size == 0 ? 8 : ctx->registry_size * 2;
         int idx;
-        rxvml_registry_entry* new_registry = realloc(ctx->registry, sizeof(rxvml_registry_entry) * new_size);
+        rxvml_registry_entry* new_registry = rxvml_memory_resize(
+            ctx,
+            ctx->registry,
+            sizeof(rxvml_registry_entry) * ctx->registry_size,
+            sizeof(rxvml_registry_entry) * new_size);
         if (!new_registry) return -1;
         ctx->registry = new_registry;
         for (i = ctx->registry_size; i < new_size; i++) {
@@ -1718,8 +1794,7 @@ int rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name) 
 void rxvml_reg_free(rxvml_context* ctx, int reg_idx) {
     if (reg_idx >= 0 && reg_idx < (int)ctx->registry_size) {
         if (ctx->registry[reg_idx].obj) {
-            clear_value(ctx->registry[reg_idx].obj);
-            free(ctx->registry[reg_idx].obj);
+            rxvml_value_free((rxvml_value *)ctx->registry[reg_idx].obj);
             ctx->registry[reg_idx].obj = NULL;
             ctx->registry[reg_idx].class_name[0] = 0;
         }
@@ -1941,7 +2016,8 @@ int rxvml_call_method_descriptor(
     }
 
     {
-        rxvml_value** method_args = malloc(sizeof(rxvml_value*) * (argc + 1));
+        rxvml_value** method_args = rxvml_memory_alloc(
+            ctx, sizeof(rxvml_value*) * (argc + 1u));
         size_t i;
 
         if (!method_args) {
@@ -1962,7 +2038,7 @@ int rxvml_call_method_descriptor(
             response_out,
             NULL);
 
-        free(method_args);
+        rxvml_memory_free(ctx, method_args);
         rx_sig_free(&expected);
         return rc;
     }

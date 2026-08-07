@@ -1,0 +1,52 @@
+utc=2026-08-05T20:56:26Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+10
+{ 1.21 1.24 1.47 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+75127 /bin/zsh -lc awk -F'|' -v OFS='|' '/^#/ || /^crexx-cross-runtime-matrix/ {print; next} {$2=$2 "-" $4; print}' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-seven-workload-matrix-v1.txt > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pairs-matrix-v2.txt
+awk -F'|' '$1 !~ /^#/ && $1 != "crexx-cross-runtime-matrix" {print $2}' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pairs-matrix-v2.txt | uniq -c
+(date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; uname -a; sysctl -n hw.logicalcpu; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/builds/{harness-control,flatten-compiler}/bin/{rxvm,rxbvm} /tmp/crexx-rxvm-inline.yvLywZ/builds/baseline/bin/library.rxbin /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pairs-matrix-v2.txt) > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pre-state.txt 2>&1
+sed -n '1,36p' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pre-state.txt
+75137 /bin/zsh -lc awk -F'|' -v OFS='|' '/^#/ || /^crexx-cross-runtime-matrix/ {print; next} {$2=$2 "-" $4; print}' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-seven-workload-matrix-v1.txt > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pairs-matrix-v2.txt
+awk -F'|' '$1 !~ /^#/ && $1 != "crexx-cross-runtime-matrix" {print $2}' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pairs-matrix-v2.txt | uniq -c
+(date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; uname -a; sysctl -n hw.logicalcpu; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/builds/{harness-control,flatten-compiler}/bin/{rxvm,rxbvm} /tmp/crexx-rxvm-inline.yvLywZ/builds/baseline/bin/library.rxbin /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pairs-matrix-v2.txt) > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pre-state.txt 2>&1
+sed -n '1,36p' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pre-state.txt
+2fed4ee458525d9f1571ce3b572b67076e5c22016d8cbb050a311f56948cde2d  /tmp/crexx-rxvm-inline.yvLywZ/builds/harness-control/bin/rxvm
+a1bcb962df3d0f9e3b648e20eb2f93e373d01aca4e406ffddd6bcbfc6bd6dd51  /tmp/crexx-rxvm-inline.yvLywZ/builds/harness-control/bin/rxbvm
+a7be414fbfa27ea3a80a4cc752f1658c5fee21c8c269a60b3f314b1b01b59b40  /tmp/crexx-rxvm-inline.yvLywZ/builds/flatten-compiler/bin/rxvm
+11c01524e6f1a3c00e650cfe0de50ed2967fd4c0e3beccbe8ccdf9c6fd4508be  /tmp/crexx-rxvm-inline.yvLywZ/builds/flatten-compiler/bin/rxbvm
+be7524c876d3982fcf45e1d91a6137f46b10fd618e8a195b2395a4a3019fa245  /tmp/crexx-rxvm-inline.yvLywZ/builds/baseline/bin/library.rxbin
+eb89b4af84c51359730c5dadcacc69110d4405865fa40e195c69bfb4595f8e54  /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-pairs-matrix-v2.txt

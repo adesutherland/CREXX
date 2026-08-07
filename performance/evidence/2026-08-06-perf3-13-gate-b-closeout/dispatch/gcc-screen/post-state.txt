@@ -1,0 +1,10 @@
+utc=2026-08-05T21:57:55Z
+{ 1.09 1.62 1.79 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+ea7af539741503d5445f22af5fda5132b86393baf0fc977526c9a82a5e8b2eb0  /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-timing/samples.csv
+593a665c1c1762017220e172618d3eb81d3c151850de84fd284705cf814b3372  /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-timing/summary.csv
+50ee9413867da2c44fe02bacabafac5429add2c686a5e25fb2ecc1cc788b3b2e  /tmp/crexx-rxvm-inline.yvLywZ/results/gcc16-dispatch-timing/capture-manifest.json

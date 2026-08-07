@@ -156,7 +156,9 @@ Supported directives are:
 When changing `rxlink`, keep three layers of coverage in mind:
 
 1. format tests: shared-pool/shared-module record layout
-2. behavioural tests: linked images run correctly in both `rxvm` and `rxbvm`
+2. behavioural tests: linked images run correctly through product `rxvm`; add
+   the concrete `rxbvm`/`rxtvm` dispatch contract only for execution-image or
+   dispatch-sensitive changes
 3. toolchain tests: `rxdas` can still disassemble linked images, including stripped ones
 
 For broader confidence, the runtime `_opt` path is now wired through linked

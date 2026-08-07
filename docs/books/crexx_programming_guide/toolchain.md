@@ -9,7 +9,9 @@ The common flow is:
 
 1. `rxc` compiles cRexx source to `.rxas` assembly.
 2. `rxas` assembles `.rxas` assembly to `.rxbin` bytecode.
-3. `rxvm`, `rxvme`, `rxbvm`, or `rxbvme` executes one or more `.rxbin` files.
+3. `rxvm` or `rxvme` executes one or more `.rxbin` files using the
+   compiler-selected product dispatch engine. `rxbvm` selects switch dispatch
+   explicitly; `rxtvm` selects direct threading where supported.
 4. `rxlink` optionally combines modules into a linked image with a shared
    constant pool.
 5. `rxcpack` can package a linked image as C data for native executable builds.

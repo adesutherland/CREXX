@@ -1,0 +1,33 @@
+Test project /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-v0-census
+    Start  880: rxvml_utf_boundaries
+1/9 Test  #880: rxvml_utf_boundaries .............   Passed    0.00 sec
+    Start 1040: rxvmprofileaccounting
+2/9 Test #1040: rxvmprofileaccounting ............   Passed    0.00 sec
+    Start 1044: rxvmmemory_allocator
+3/9 Test #1044: rxvmmemory_allocator .............   Passed    0.00 sec
+    Start 1047: rxpa_utf_validation
+4/9 Test #1047: rxpa_utf_validation ..............   Passed    0.00 sec
+    Start 1048: ts_regvalue_tester
+5/9 Test #1048: ts_regvalue_tester ...............   Passed    0.00 sec
+    Start 1100: rxvmprofiletable
+6/9 Test #1100: rxvmprofiletable .................   Passed    0.31 sec
+    Start 1101: rxbvmprofiletable
+7/9 Test #1101: rxbvmprofiletable ................   Passed    0.00 sec
+    Start 1102: rxvmprofilecsv
+8/9 Test #1102: rxvmprofilecsv ...................   Passed    0.03 sec
+    Start 1103: rxbvmprofilecsv
+9/9 Test #1103: rxbvmprofilecsv ..................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+compiler       =   0.00 sec*proc (1 test)
+interpreter    =   0.37 sec*proc (7 tests)
+memory         =   0.00 sec*proc (1 test)
+profiling      =   0.36 sec*proc (5 tests)
+rxpa           =   0.00 sec*proc (1 test)
+rxvml          =   0.00 sec*proc (1 test)
+smoke          =   0.00 sec*proc (2 tests)
+utf            =   0.00 sec*proc (2 tests)
+
+Total Test time (real) =   0.40 sec

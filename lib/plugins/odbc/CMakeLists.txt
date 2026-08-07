@@ -80,6 +80,6 @@ enable_testing()
 
 # Basic test to run odbc_test.rxbin with the odbc plugin
 add_test(NAME odbc_test
-        COMMAND $<TARGET_FILE:rxvm> odbc_test rx_odbc ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} odbc_test rx_odbc ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

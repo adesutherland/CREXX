@@ -90,6 +90,7 @@ typedef struct shelldata {
 
 // Private structure for output to string thread
 struct redirect {
+    rxvm_memory_worker *memory_worker;
 #ifdef _WIN32
     HANDLE hRead;
     HANDLE hWrite;
@@ -202,9 +203,42 @@ static const rxvm_native_payload_ops redirect_endpoint_payload_ops = {
     redirect_endpoint_payload_finalize
 };
 
+static void *rxspawn_memory_alloc(size_t size) {
+    return rxvm_memory_alloc_bytes(rxvm_memory_current_worker(), size);
+}
+
+static void rxspawn_memory_free(void *pointer) {
+    rxvm_memory_worker *previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(rxvm_memory_owner(pointer));
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
+
+static void *rxspawn_memory_resize(void *pointer,
+                                   size_t copy_size,
+                                   size_t new_size) {
+    rxvm_memory_worker *worker = pointer
+        ? rxvm_memory_owner(pointer)
+        : rxvm_memory_current_worker();
+    rxvm_memory_worker *previous = rxvm_memory_enter(worker);
+    void *resized = rxvm_memory_resize_bytes(worker, pointer,
+                                             copy_size, new_size);
+    rxvm_memory_leave(previous);
+    return resized;
+}
+
+/* Text returned through the historical spawn/RXCREXXCMD callbacks is libc-owned. */
+static char *copy_string_external(const char *text) {
+    size_t length = strlen(text);
+    char *copy = malloc(length + 1u);
+    if (copy) memcpy(copy, text, length + 1u);
+    return copy;
+}
+
 static char *copy_string(const char *text) {
     size_t length = strlen(text);
-    char *copy = malloc(length + 1);
+    char *copy = rxspawn_memory_alloc(length + 1u);
     if (copy) {
         memcpy(copy, text, length + 1);
     }
@@ -213,7 +247,7 @@ static char *copy_string(const char *text) {
 
 #ifdef _WIN32
 static char *copy_string_length(const char *text, size_t length) {
-    char *copy = malloc(length + 1);
+    char *copy = rxspawn_memory_alloc(length + 1u);
     if (copy) {
         memcpy(copy, text, length);
         copy[length] = '\0';
@@ -228,10 +262,10 @@ static wchar_t *wide_from_utf8(const char *text) {
     if (!text) return NULL;
     length = MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
     if (length <= 0) return NULL;
-    wide = malloc((size_t)length * sizeof(wchar_t));
+    wide = rxspawn_memory_alloc((size_t)length * sizeof(wchar_t));
     if (!wide) return NULL;
     if (!MultiByteToWideChar(CP_UTF8, 0, text, -1, wide, length)) {
-        free(wide);
+        rxspawn_memory_free(wide);
         return NULL;
     }
     return wide;
@@ -244,10 +278,10 @@ static char *utf8_from_wide(const wchar_t *wide) {
     if (!wide) return NULL;
     length = WideCharToMultiByte(CP_UTF8, 0, wide, -1, NULL, 0, NULL, NULL);
     if (length <= 0) return NULL;
-    text = malloc((size_t)length);
+    text = rxspawn_memory_alloc((size_t)length);
     if (!text) return NULL;
     if (!WideCharToMultiByte(CP_UTF8, 0, wide, -1, text, length, NULL, NULL)) {
-        free(text);
+        rxspawn_memory_free(text);
         return NULL;
     }
     return text;
@@ -304,23 +338,24 @@ static char *windows_search_executable(const char *name) {
             continue;
         }
 
-        wide_path = malloc(((size_t)needed + 1) * sizeof(wchar_t));
+        wide_path = rxspawn_memory_alloc(
+            ((size_t)needed + 1u) * sizeof(wchar_t));
         if (!wide_path) break;
         copied = SearchPathW(NULL, wide_name, extensions[i], needed + 1, wide_path, NULL);
         if (copied > 0 && copied <= needed) {
             DWORD attributes = GetFileAttributesW(wide_path);
             if (attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
                 result = utf8_from_wide(wide_path);
-                free(wide_path);
+                rxspawn_memory_free(wide_path);
                 break;
             }
         }
-        free(wide_path);
+        rxspawn_memory_free(wide_path);
 
         if (!extensions[i]) continue;
     }
 
-    free(wide_name);
+    rxspawn_memory_free(wide_name);
     return result;
 }
 
@@ -331,7 +366,7 @@ static char *windows_resolve_application_path(const char *command) {
     token = windows_command_token(command);
     if (!token) return NULL;
     path = windows_search_executable(token);
-    free(token);
+    rxspawn_memory_free(token);
     return path;
 }
 
@@ -344,7 +379,8 @@ static int append_to_buffer(char **buffer, size_t *length, size_t *capacity, con
     if (needed > *capacity) {
         new_capacity = *capacity ? *capacity : 64;
         while (new_capacity < needed) new_capacity *= 2;
-        new_buffer = realloc(*buffer, new_capacity);
+        new_buffer = rxspawn_memory_resize(*buffer, *length,
+                                           new_capacity);
         if (!new_buffer) return -1;
         *buffer = new_buffer;
         *capacity = new_capacity;
@@ -411,11 +447,11 @@ static char *windows_build_command_line(const char *const *argv, int argc) {
 
     for (i = 0; i < argc; i++) {
         if (i > 0 && append_char_to_buffer(&buffer, &length, &capacity, ' ') != 0) {
-            free(buffer);
+            rxspawn_memory_free(buffer);
             return NULL;
         }
         if (windows_append_quoted_arg(&buffer, &length, &capacity, argv[i]) != 0) {
-            free(buffer);
+            rxspawn_memory_free(buffer);
             return NULL;
         }
     }
@@ -447,7 +483,7 @@ static char *find_executable_in_path_list(const char *path_list, const char *exe
         const char *next_colon = strchr(cursor, ':');
         size_t dir_length = next_colon ? (size_t)(next_colon - cursor) : strlen(cursor);
         size_t candidate_length = (dir_length ? dir_length : 1) + strlen(exe) + 2;
-        char *candidate = malloc(candidate_length);
+        char *candidate = rxspawn_memory_alloc(candidate_length);
         if (!candidate) return NULL;
 
         if (dir_length) {
@@ -461,7 +497,7 @@ static char *find_executable_in_path_list(const char *path_list, const char *exe
         strcat(candidate, exe);
 
         if (ExeFound(candidate)) return candidate;
-        free(candidate);
+        rxspawn_memory_free(candidate);
 
         cursor = next_colon ? next_colon + 1 : NULL;
     }
@@ -475,11 +511,11 @@ static char *find_standard_shell(void) {
 #ifdef _CS_PATH
     size_t standard_path_length = confstr(_CS_PATH, NULL, 0);
     if (standard_path_length > 0) {
-        char *standard_path = malloc(standard_path_length);
+        char *standard_path = rxspawn_memory_alloc(standard_path_length);
         if (standard_path) {
             confstr(_CS_PATH, standard_path, standard_path_length);
             shell = find_executable_in_path_list(standard_path, "sh");
-            free(standard_path);
+            rxspawn_memory_free(standard_path);
             if (shell) return shell;
         }
     }
@@ -568,7 +604,7 @@ static char **build_shell_argv(const char *shell_path, const char *args_text, ch
     char **argv;
 
     arg_count = split_shell_args(buffer, NULL);
-    argv = malloc(sizeof(char *) * (size_t)(arg_count + 3));
+    argv = rxspawn_memory_alloc(sizeof(char *) * (size_t)(arg_count + 3));
     if (!argv) return NULL;
 
     argv[0] = shell_argv_name(shell_path);
@@ -583,7 +619,9 @@ static char **build_shell_argv(const char *shell_path, const char *args_text, ch
 static char *copy_value_string(value *string_value) {
     char *copy;
 
-    if (!string_value || !string_value->string_value) return copy_string("");
+    if (!string_value || !string_value->string_value) {
+        return copy_string_external("");
+    }
     copy = malloc(string_value->string_length + 1);
     if (!copy) return NULL;
     if (string_value->string_length) {
@@ -729,7 +767,8 @@ static int prepare_redirect_thread_context(REDIRECT *redirect) {
     if (!redirect) return -1;
     /* REDIRECT values live inside Rexx .binary objects that can be copied while
      * ADDRESS requests are assembled. Worker threads need a stable context. */
-    thread_redirect = malloc(sizeof(REDIRECT));
+    thread_redirect = rxvm_memory_alloc_bytes(redirect->memory_worker,
+                                              sizeof(REDIRECT));
     if (!thread_redirect) {
         redirect->errorCode = 1;
         return -1;
@@ -750,7 +789,12 @@ static void collect_redirect_thread_context(REDIRECT *redirect) {
         redirect->lastError = thread_redirect->lastError;
         redirect->errorSource = thread_redirect->errorSource;
     }
-    free(thread_redirect);
+    {
+        rxvm_memory_worker *previous =
+            rxvm_memory_enter(thread_redirect->memory_worker);
+        (void)rxvm_memory_release(thread_redirect);
+        rxvm_memory_leave(previous);
+    }
     redirect->thread_redirect = NULL;
 }
 
@@ -999,6 +1043,7 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
 
 static void redirect_endpoint_init(REDIRECT *redirect, char endpoint_kind) {
     memset(redirect, 0, sizeof(*redirect));
+    redirect->memory_worker = rxvm_memory_current_worker();
 #ifdef _WIN32
     redirect->hRead = INVALID_HANDLE_VALUE;
     redirect->hWrite = INVALID_HANDLE_VALUE;
@@ -1024,7 +1069,7 @@ static void redirect_endpoint_cell_release(REDIRECT_ENDPOINT_CELL *cell) {
     } else {
         crexxcmd_close_output_redirect(redirect);
     }
-    free(cell);
+    rxspawn_memory_free(cell);
 }
 
 static REDIRECT_ENDPOINT_PAYLOAD *redirect_endpoint_payload_from_value(value *payload_value) {
@@ -1041,7 +1086,9 @@ static REDIRECT_ENDPOINT_PAYLOAD *redirect_endpoint_payload_from_value(value *pa
 REDIRECT *rxspawn_redirect_from_value(value *redirect_reg) {
     REDIRECT_ENDPOINT_PAYLOAD *payload;
 
-    if (!redirect_reg || redirect_reg->native_payload_ops != &redirect_endpoint_payload_ops) return NULL;
+    if (!redirect_reg ||
+        rxvm_value_native_ops(redirect_reg) != &redirect_endpoint_payload_ops)
+        return NULL;
     payload = redirect_endpoint_payload_from_value(redirect_reg);
     return payload && payload->cell ? &payload->cell->redirect : NULL;
 }
@@ -1053,7 +1100,7 @@ static REDIRECT *redirect_endpoint_create(value *redirect_reg, char endpoint_kin
     if (!redirect_reg) return NULL;
 
     value_zero(redirect_reg);
-    cell = malloc(sizeof(*cell));
+    cell = rxspawn_memory_alloc(sizeof(*cell));
     if (!cell) return NULL;
     cell->refcount = 1;
     redirect_endpoint_init(&cell->redirect, endpoint_kind);
@@ -1061,7 +1108,7 @@ static REDIRECT *redirect_endpoint_create(value *redirect_reg, char endpoint_kin
     payload.cell = cell;
     if (set_native_payload(redirect_reg, &payload, sizeof(payload),
                            &redirect_endpoint_payload_ops, 0) != 0) {
-        free(cell);
+        rxspawn_memory_free(cell);
         return NULL;
     }
     return &cell->redirect;
@@ -1160,7 +1207,7 @@ static int crexxcmd_run_path(void *userdata,
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
-    if (error_text && spawn_error) *error_text = copy_string(spawn_error);
+    if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
     clear_value(&input_redirect);
     clear_value(&output_redirect);
@@ -1224,7 +1271,7 @@ static int crexxcmd_run_argv(void *userdata,
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
-    if (error_text && spawn_error) *error_text = copy_string(spawn_error);
+    if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
     clear_value(&input_redirect);
     clear_value(&output_redirect);
@@ -1371,7 +1418,8 @@ int shellspawn (const char *command,
         if (!shell || !*shell) shell = "cmd.exe";
         if (!shell_args || !*shell_args) shell_args = "/D /S /C";
 
-        data.file_path = malloc(strlen(shell) + strlen(shell_args) + strlen(command) + 8);
+        data.file_path = rxspawn_memory_alloc(
+            strlen(shell) + strlen(shell_args) + strlen(command) + 8u);
         if (!data.file_path) {
             Error("Failure spawn W01", errorText);
             CleanUp(&data);
@@ -1411,7 +1459,8 @@ int shellspawn (const char *command,
 
         args_length = strlen(shell_args);
         command_length = strlen(command);
-        data.buffer = malloc(args_length + 1 + command_length + 1);
+        data.buffer = rxspawn_memory_alloc(
+            args_length + 1u + command_length + 1u);
         if (!data.buffer) {
             Error("Failure spawn U19", errorText);
             CleanUp(&data);
@@ -1437,7 +1486,7 @@ int shellspawn (const char *command,
 
         int commandFound = 0;
         if (ExeFound(base_name)) {
-            data.file_path = malloc(sizeof(char) * strlen(base_name) + 1);
+            data.file_path = rxspawn_memory_alloc(strlen(base_name) + 1u);
             strcpy(data.file_path, base_name);
             commandFound = 1;
         } else if (base_name[0] != '/') {
@@ -1531,7 +1580,7 @@ static int spawn_argv_capture(const char *const *argv,
             return SHELLSPAWN_FAILURE;
         }
         data.application_path = windows_search_executable(normalized_exe);
-        free(normalized_exe);
+        rxspawn_memory_free(normalized_exe);
         if (!data.application_path) {
             Error("Command not found", errorText);
             CleanUp(&data);
@@ -1542,7 +1591,8 @@ static int spawn_argv_capture(const char *const *argv,
     {
         int i;
 
-        data.argv = malloc(sizeof(char *) * (size_t)(argc + 1));
+        data.argv = rxspawn_memory_alloc(
+            sizeof(char *) * (size_t)(argc + 1));
         if (!data.argv) {
             Error("Failure spawn U21", errorText);
             CleanUp(&data);
@@ -1725,7 +1775,7 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
         redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 5;
         redirect->lastError = (int)last_error;
-        free(redirect->thread_redirect);
+        rxspawn_memory_free(redirect->thread_redirect);
         redirect->thread_redirect = NULL;
         return;
     }
@@ -1736,7 +1786,7 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
     if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect->thread_redirect)) {
         // Error
         redirect->errorCode = 1;
-        free(redirect->thread_redirect);
+        rxspawn_memory_free(redirect->thread_redirect);
         redirect->thread_redirect = NULL;
     }
 
@@ -1750,6 +1800,8 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
 THREAD_RETURN Output2StringThread(void* lpvThreadParam)
 {
     REDIRECT* context = (REDIRECT*)lpvThreadParam;
+    rxvm_memory_worker *previous_worker =
+        rxvm_memory_enter(context->memory_worker);
     context->errorCode= 0;
     char lpBuffer[256 + 1]; // Add one for a trailing null if needed
 
@@ -1768,6 +1820,7 @@ THREAD_RETURN Output2StringThread(void* lpvThreadParam)
             context->errorCode = 1;
             context->lastError = (int)read_error;
             context->errorSource = 3;
+            rxvm_memory_leave(previous_worker);
             return 0;
         }
         else if (dwBytesRead == 0) {
@@ -1784,6 +1837,7 @@ THREAD_RETURN Output2StringThread(void* lpvThreadParam)
         if (nBytesRead == 0) reading = 0;
         else if (nBytesRead == -1) {
             context->errorCode = 1;
+            rxvm_memory_leave(previous_worker);
             return 0;
         }
         string_append_chars(context->reg, lpBuffer, nBytesRead);
@@ -1791,6 +1845,7 @@ THREAD_RETURN Output2StringThread(void* lpvThreadParam)
 
 #endif
 
+    rxvm_memory_leave(previous_worker);
     return 0;
 }
 
@@ -1798,6 +1853,8 @@ THREAD_RETURN Output2StringThread(void* lpvThreadParam)
 THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
 
     REDIRECT* context = (REDIRECT*)lpvThreadParam;
+    rxvm_memory_worker *previous_worker =
+        rxvm_memory_enter(context->memory_worker);
 
     char lpBuffer[256 + 1]; // Add one for a trailing null if needed
     size_t nBytesRead;
@@ -1819,6 +1876,7 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
             context->errorCode = 1;
             context->lastError = (int)read_error;
             context->errorSource = 4;
+            rxvm_memory_leave(previous_worker);
             return 0;
         }
         else if (dwBytesRead == 0) {
@@ -1834,6 +1892,7 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
         }
         else if (nBytesRead == -1) {
             context->errorCode = 1;
+            rxvm_memory_leave(previous_worker);
             return 0;
         }
 #endif
@@ -1844,6 +1903,7 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
                 if (!buffer) buffer = add_new_element(context->reg);
                 if (!buffer) {
                     context->errorCode = 1;
+                    rxvm_memory_leave(previous_worker);
                     return 0;
                 }
 #ifdef _WIN32
@@ -1868,12 +1928,14 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
             if (!buffer) buffer = add_new_element(context->reg);
             if (!buffer) {
                 context->errorCode = 1;
+                rxvm_memory_leave(previous_worker);
                 return 0;
             }
             string_append_chars(buffer, lpBuffer + start, nBytesRead - start);
         }
     }
 
+    rxvm_memory_leave(previous_worker);
     return 0;
 }
 
@@ -1887,7 +1949,7 @@ value* add_new_element(value* array) {
     index = array->num_attributes;
     num = index + 1;
 
-    if (num > array->max_num_attributes) {
+    if (num > rxvm_value_max_attributes(array)) {
         if (num > ((size_t)-1) / 2) return 0;
         /* We need to increase the size of the buffer */
         /* Make the buffer double sized by setting the number of attributes */
@@ -1985,7 +2047,7 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
         redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 4;
         redirect->lastError = (int)last_error;
-        free(redirect->thread_redirect);
+        rxspawn_memory_free(redirect->thread_redirect);
         redirect->thread_redirect = NULL;
         return;
     }
@@ -2010,7 +2072,7 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect->thread_redirect)) {
         // Error
         redirect->errorCode = 2;
-        free(redirect->thread_redirect);
+        rxspawn_memory_free(redirect->thread_redirect);
         redirect->thread_redirect = NULL;
         return;
     }
@@ -2022,6 +2084,8 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
 THREAD_RETURN InputFromStringThread(void* lpvThreadParam)
 {
     REDIRECT* context = (REDIRECT*)lpvThreadParam;
+    rxvm_memory_worker *previous_worker =
+        rxvm_memory_enter(context->memory_worker);
     context->errorCode= 0;
 
 #ifndef _WIN32
@@ -2033,6 +2097,7 @@ THREAD_RETURN InputFromStringThread(void* lpvThreadParam)
     sigaddset(&signal_mask, SIGPIPE);
     if (pthread_sigmask(SIG_BLOCK, &signal_mask, NULL)) {
         context->errorCode = 1;
+        rxvm_memory_leave(previous_worker);
         return NULL;
     }
 
@@ -2049,6 +2114,7 @@ THREAD_RETURN InputFromStringThread(void* lpvThreadParam)
     context->hWrite = -1;
 #endif
 
+    rxvm_memory_leave(previous_worker);
     return 0;
 }
 
@@ -2056,6 +2122,8 @@ THREAD_RETURN InputFromStringThread(void* lpvThreadParam)
 THREAD_RETURN InputFromArrayThread(void* lpvThreadParam)
 {
     REDIRECT* context = (REDIRECT*)lpvThreadParam;
+    rxvm_memory_worker *previous_worker =
+        rxvm_memory_enter(context->memory_worker);
     size_t i;
     context->errorCode= 0;
 
@@ -2068,6 +2136,7 @@ THREAD_RETURN InputFromArrayThread(void* lpvThreadParam)
     sigaddset(&signal_mask, SIGPIPE);
     if (pthread_sigmask(SIG_BLOCK, &signal_mask, NULL)) {
         context->errorCode = 1;
+        rxvm_memory_leave(previous_worker);
         return NULL;
     }
 
@@ -2086,6 +2155,7 @@ THREAD_RETURN InputFromArrayThread(void* lpvThreadParam)
     context->hWrite = -1;
 #endif
 
+    rxvm_memory_leave(previous_worker);
     return 0;
 }
 
@@ -2193,19 +2263,19 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
 void CleanUp(SHELLDATA* data)
 {
     if (data->buffer) {
-        free(data->buffer);
+        rxspawn_memory_free(data->buffer);
         data->buffer = 0;
     }
     if (data->argv) {
-        free(data->argv);
+        rxspawn_memory_free(data->argv);
         data->argv = 0;
     }
     if (data->file_path) {
-        free(data->file_path);
+        rxspawn_memory_free(data->file_path);
         data->file_path = 0;
     }
     if (data->application_path) {
-        free(data->application_path);
+        rxspawn_memory_free(data->application_path);
         data->application_path = 0;
     }
 
@@ -2524,7 +2594,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
     int a;
     int arg_start;
 
-    *command = malloc(sizeof(char) * (strlen(command_string) + 1));
+    *command = rxspawn_memory_alloc(strlen(command_string) + 1u);
     if (*command == NULL) {
         *command = 0;
         *file = 0;
@@ -2546,7 +2616,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
 
     // Is there any command at all
     if (!(*file)[0]) {
-        free(*command);
+        rxspawn_memory_free(*command);
         *command = 0;
         *file = 0;
         *argv = 0;
@@ -2594,9 +2664,9 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
         }
     }
 
-    *argv = malloc(sizeof(char*) * (args + 1));
+    *argv = rxspawn_memory_alloc(sizeof(char*) * (size_t)(args + 1));
     if (*argv == NULL) {
-        free(*command);
+        rxspawn_memory_free(*command);
         *command = 0;
         *file = 0;
         *argv = 0;
@@ -2697,13 +2767,13 @@ int launchChild(SHELLDATA* data) {
         }
 
         InitializeProcThreadAttributeList(NULL, 1, 0, &attributeListSize);
-        si.lpAttributeList = malloc(attributeListSize);
+        si.lpAttributeList = rxspawn_memory_alloc(attributeListSize);
         if (!si.lpAttributeList) {
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
         if (!InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &attributeListSize)) {
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
             si.lpAttributeList = NULL;
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
@@ -2712,7 +2782,7 @@ int launchChild(SHELLDATA* data) {
                                        inheritedHandles, (SIZE_T)inheritedHandleCount * sizeof(HANDLE),
                                        NULL, NULL)) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
             si.lpAttributeList = NULL;
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
@@ -2726,7 +2796,7 @@ int launchChild(SHELLDATA* data) {
         // Handle error.
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
@@ -2757,12 +2827,13 @@ int launchChild(SHELLDATA* data) {
     newEnvironmentSize++;  // For the final extra '\0'.
 
     // Allocate the new environment block.
-    LPWSTR pszNewEnvironment = (LPWSTR) calloc(newEnvironmentSize, sizeof(wchar_t));
+    LPWSTR pszNewEnvironment = (LPWSTR)rxvm_memory_calloc_bytes(
+        rxvm_memory_current_worker(), newEnvironmentSize, sizeof(wchar_t));
     if (pszNewEnvironment == NULL) {
         // Handle memory allocation failure.
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
         FreeEnvironmentStringsW(pszCurrentEnvironment);
         CleanUp(data);
@@ -2806,21 +2877,22 @@ int launchChild(SHELLDATA* data) {
         // Handle the error here. Call GetLastError() to get the error code.
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
-        free(pszNewEnvironment);
+        rxspawn_memory_free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
 
     // Allocate memory for the wide character string.
-    wchar_t* wideFilePath = malloc(filePathLength * sizeof(wchar_t));
+    wchar_t* wideFilePath = rxspawn_memory_alloc(
+        filePathLength * sizeof(wchar_t));
     if (wideFilePath == NULL) {
         if (si.lpAttributeList) {
             DeleteProcThreadAttributeList(si.lpAttributeList);
-            free(si.lpAttributeList);
+            rxspawn_memory_free(si.lpAttributeList);
         }
-        free(pszNewEnvironment);
+        rxspawn_memory_free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
@@ -2834,22 +2906,23 @@ int launchChild(SHELLDATA* data) {
         if (applicationPathLength == 0) {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
 
-        wideApplicationPath = malloc(applicationPathLength * sizeof(wchar_t));
+        wideApplicationPath = rxspawn_memory_alloc(
+            applicationPathLength * sizeof(wchar_t));
         if (wideApplicationPath == NULL) {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
@@ -2864,11 +2937,11 @@ int launchChild(SHELLDATA* data) {
         {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideApplicationPath);
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_NOFOUND;
         }
@@ -2876,11 +2949,11 @@ int launchChild(SHELLDATA* data) {
         {
             if (si.lpAttributeList) {
                 DeleteProcThreadAttributeList(si.lpAttributeList);
-                free(si.lpAttributeList);
+                rxspawn_memory_free(si.lpAttributeList);
             }
-            free(wideApplicationPath);
-            free(wideFilePath);
-            free(pszNewEnvironment);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
@@ -2889,11 +2962,11 @@ int launchChild(SHELLDATA* data) {
     /* Cleanup */
     if (si.lpAttributeList) {
         DeleteProcThreadAttributeList(si.lpAttributeList);
-        free(si.lpAttributeList);
+        rxspawn_memory_free(si.lpAttributeList);
     }
-    free(wideApplicationPath);
-    free(wideFilePath);
-    free(pszNewEnvironment);
+    rxspawn_memory_free(wideApplicationPath);
+    rxspawn_memory_free(wideFilePath);
+    rxspawn_memory_free(pszNewEnvironment);
 
     return 0;
 
@@ -2914,7 +2987,8 @@ int launchChild(SHELLDATA* data) {
     char *value;
     for (i = 0; data->variables && i + 1 < data->variables->num_attributes; i += 2) {
         /* Variable Name */
-        name = malloc(data->variables->attributes[i]->string_length + 1);
+        name = rxspawn_memory_alloc(
+            data->variables->attributes[i]->string_length + 1u);
         memcpy(name, data->variables->attributes[i]->string_value, data->variables->attributes[i]->string_length);
         name[data->variables->attributes[i]->string_length] = 0;
 
@@ -2926,15 +3000,16 @@ int launchChild(SHELLDATA* data) {
         }
 
         /* Variable Value */
-        value = malloc(data->variables->attributes[i + 1]->string_length + 1);
+        value = rxspawn_memory_alloc(
+            data->variables->attributes[i + 1]->string_length + 1u);
         memcpy(value, data->variables->attributes[i + 1]->string_value, data->variables->attributes[i + 1]->string_length);
         value[data->variables->attributes[i + 1]->string_length] = 0;
 
         /* Set/export variable */
         setenv(name, value,1);
 
-        free(value);
-        free(name);
+        rxspawn_memory_free(value);
+        rxspawn_memory_free(name);
     }
 
     // Close parent end of the pipes

@@ -1,0 +1,40 @@
+
+[s0]
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+CREXX_RXVM_MEMORY_GEOMETRY:STRING=S0
+CREXX_VM_PROFILING:BOOL=OFF
+CMAKE_GENERATOR:INTERNAL=Ninja
+rxvm_target=rxbvm
+e4c00ccbf7ea183e2529a3808337786cf4b27fc7a031419e5c97612e994835ed  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s0/bin/rxbvm
+rxbvm_bytes=1000936
+
+[s1]
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+CREXX_RXVM_MEMORY_GEOMETRY:STRING=S1
+CREXX_VM_PROFILING:BOOL=OFF
+CMAKE_GENERATOR:INTERNAL=Ninja
+rxvm_target=rxbvm
+06af874e57906de0dd4c2806fe6403ff6e39d83bc47194beae6cc6a491dc2d2f  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s1/bin/rxbvm
+rxbvm_bytes=1000936
+
+[s1b]
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+CREXX_RXVM_MEMORY_GEOMETRY:STRING=S1B
+CREXX_VM_PROFILING:BOOL=OFF
+CMAKE_GENERATOR:INTERNAL=Ninja
+rxvm_target=rxbvm
+adaa5370a7d062f288bfd743843530ada9866988a73c2a23d60681aa6979fd1b  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s1b/bin/rxbvm
+rxbvm_bytes=1000936
+
+[s2]
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+CREXX_RXVM_MEMORY_GEOMETRY:STRING=S2
+CREXX_VM_PROFILING:BOOL=OFF
+CMAKE_GENERATOR:INTERNAL=Ninja
+rxvm_target=rxbvm
+455385f3fadec767fe9ddf3ee3e3a13c27ab17995f2973a1ed9ea8b9f6ba3db1  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s2/bin/rxbvm
+rxbvm_bytes=1000952

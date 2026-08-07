@@ -27,8 +27,10 @@ import rxjson
 
 /*
  * Compact formal cross-runtime capture. The manifest must group cells for the
- * same workload contiguously. Runtime order rotates for every warmup/recorded
- * round, while samples and every output line are consolidated into two files.
+ * same workload contiguously. Consecutive warmup/recorded rounds use an order
+ * and its reverse, with the base order rotated between pairs. This balances
+ * every pair's relative A/B order even when a workload has more than two
+ * cells. Samples and every output line are consolidated into two files.
  */
 main: procedure = .int
   arg args = .string[]
@@ -93,6 +95,8 @@ main: procedure = .int
   if measurement <> "timing" & measurement <> "rss" then
     return argument_error("--measurement must be timing or rss")
   if runs < 1 then return argument_error("--runs must be positive")
+  if runs <mod> 2 <> 0 then
+    return argument_error("--runs must be even for exact pairwise balance")
   if summary_only & sample_paths[0] = 0 then
     return argument_error("--summary-only requires at least one --samples PATH")
   if measurement = "rss" & warmups <> 0 then
@@ -166,7 +170,7 @@ usage: procedure = .void
   say "  --output-dir PATH"
   say "  --measurement timing|rss"
   say "  --warmups N"
-  say "  --runs N"
+  say "  --runs N (positive and even)"
   say "  --summary-only --samples PATH [--samples PATH ...]"
   say "  --self-test"
   return
@@ -258,9 +262,8 @@ run_group: procedure = .int
       rounds = runs
     end
     do round_number = 1 to rounds
-      offset = (round_number - 1) <mod> group_count
       do position = 1 to group_count
-        relative = (position + offset - 1) <mod> group_count
+        relative = scheduled_relative(position, round_number, group_count)
         row_index = group_start + relative
         fields = split_delimited(rows[row_index], "|")
         result = capture_entry(fields, measurement, rss_time_command, ,
@@ -270,6 +273,20 @@ run_group: procedure = .int
     end
   end
   return 0
+
+/*
+ * Return a zero-based row within one workload group. Every odd round's order
+ * is exactly reversed by the following even round, so every unordered cell
+ * pair appears once in each relative order. Advancing the base by two between
+ * pairs spreads cells across absolute positions without weakening that proof.
+ */
+scheduled_relative: procedure = .int
+  arg position = .int, round_number = .int, group_count = .int
+  pair_index = (round_number - 1) <idiv> 2
+  offset = (pair_index * 2) <mod> group_count
+  if round_number <mod> 2 = 1 then
+    return (position + offset - 1) <mod> group_count
+  return (offset + group_count - position) <mod> group_count
 
 capture_entry: procedure = .int
   arg fields = .string[], measurement = .string, rss_time_command = .string, ,
@@ -654,7 +671,7 @@ write_capture_manifest: procedure = .int
   output[6] = '  "measurement": ' || jsonquote(measurement) || ","
   output[7] = '  "warmups": ' || warmups || ","
   output[8] = '  "recorded_runs": ' || runs || ","
-  output[9] = '  "sampling": "serial-rotated-by-workload",'
+  output[9] = '  "sampling": "serial-pairwise-balanced-by-workload",'
   output[10] = '  "started_utc": ' || jsonquote(started)
   if completed <> "" then do
     output[10] = output[10] || ","
@@ -846,5 +863,65 @@ self_test: procedure = .int
   gnu_rss[1] = "Maximum resident set size (kbytes): 12345"
   if extract_rss(gnu_rss) <> "12641280" then
     return execution_error("GNU RSS parser self-test failed")
+  if pairwise_schedule_self_test() <> 0 then return 1
   say "PASS: compact cross-runtime matrix tool self-test"
+  return 0
+
+pairwise_schedule_self_test: procedure = .int
+  constant TEST_ROUNDS = 12
+
+  do group_count = 2 to 8
+    directions = .int[]
+    position_counts = .int[]
+    do index = 1 to group_count * group_count
+      directions[index] = 0
+      position_counts[index] = 0
+    end
+
+    do round_number = 1 to TEST_ROUNDS
+      order = .int[]
+      seen = .int[]
+      do index = 1 to group_count
+        seen[index] = 0
+      end
+      do position = 1 to group_count
+        relative = scheduled_relative(position, round_number, group_count)
+        if relative < 0 | relative >= group_count then
+          return execution_error("pairwise schedule produced an out-of-range cell")
+        if seen[relative + 1] then
+          return execution_error("pairwise schedule repeated a cell within one round")
+        seen[relative + 1] = 1
+        order[position] = relative
+        slot = relative * group_count + position
+        position_counts[slot] = position_counts[slot] + 1
+      end
+
+      do left_position = 1 to group_count - 1
+        left_cell = order[left_position]
+        do right_position = left_position + 1 to group_count
+          right_cell = order[right_position]
+          slot = left_cell * group_count + right_cell + 1
+          directions[slot] = directions[slot] + 1
+        end
+      end
+    end
+
+    do left_cell = 0 to group_count - 2
+      do right_cell = left_cell + 1 to group_count - 1
+        left_slot = left_cell * group_count + right_cell + 1
+        right_slot = right_cell * group_count + left_cell + 1
+        if directions[left_slot] <> directions[right_slot] then
+          return execution_error("pairwise schedule did not balance relative order")
+      end
+    end
+
+    /* The standard 12-round formal group sizes also balance every position. */
+    if group_count = 2 | group_count = 3 | group_count = 4 | group_count = 6 then do
+      expected_positions = TEST_ROUNDS <idiv> group_count
+      do index = 1 to group_count * group_count
+        if position_counts[index] <> expected_positions then
+          return execution_error("pairwise schedule did not balance absolute position")
+      end
+    end
+  end
   return 0

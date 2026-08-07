@@ -47,6 +47,42 @@
 static rxvmplugin_factory_entry *rxvmplugin_factories = 0;
 static void* current_loading_handle = 0;
 
+static void *rxvmplugin_memory_alloc(size_t size) {
+    return rxvm_memory_alloc_bytes(rxvm_memory_current_worker(), size);
+}
+
+static char *rxvmplugin_memory_strdup(const char *text) {
+    size_t length;
+    char *copy;
+    if (!text) text = "";
+    length = strlen(text);
+    copy = rxvmplugin_memory_alloc(length + 1u);
+    if (copy) memcpy(copy, text, length + 1u);
+    return copy;
+}
+
+static void rxvmplugin_memory_free(void *pointer) {
+    rxvm_memory_worker *previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(rxvm_memory_owner(pointer));
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
+
+static void *rxvmplugin_reserve_string(value *string, size_t size) {
+    if (!string) return 0;
+    prep_string_buffer(string, size);
+    if (!string->string_value) return 0;
+    rxvm_value_set_string_length_known(string, 0u);
+    string->string_value[0] = 0;
+    string_cache_reset(string);
+    return string->string_value;
+}
+
+static void rxvmplugin_release_value_storage(value *value_storage) {
+    clear_value(value_storage);
+}
+
 /* Function to load a dynamic plugin */
 int load_rxvmplugin(char* dir, char *name) {
     int rc = 0;
@@ -59,7 +95,8 @@ int load_rxvmplugin(char* dir, char *name) {
     char *combined_dir = NULL;
 
     /* Create the filename by appending ".rxvmplugin" to the file name */
-    file_name = malloc(strlen(name) + strlen(".rxvmplugin") + 1);
+    file_name = rxvmplugin_memory_alloc(
+        strlen(name) + strlen(".rxvmplugin") + 1u);
     if (!file_name) {
         RX_REPORT_OOM("malloc rxvmplugin file name",
                       strlen(name) + strlen(".rxvmplugin") + 1, name);
@@ -69,32 +106,33 @@ int load_rxvmplugin(char* dir, char *name) {
 
     exe_dir = exepath();
     if (dir) {
-        combined_dir = malloc(strlen(dir) + strlen(exe_dir) + 2);
+        combined_dir = rxvmplugin_memory_alloc(
+            strlen(dir) + strlen(exe_dir) + 2u);
         if (!combined_dir) {
             RX_REPORT_OOM("malloc rxvmplugin search path",
                           strlen(dir) + strlen(exe_dir) + 2, name);
             free(exe_dir);
-            free(file_name);
+            rxvmplugin_memory_free(file_name);
             return -1;
         }
         sprintf(combined_dir, "%s;%s", dir, exe_dir);
     } else {
-        combined_dir = strdup(exe_dir);
+        combined_dir = rxvmplugin_memory_strdup(exe_dir);
         if (!combined_dir) {
             RX_REPORT_OOM("strdup rxvmplugin search path", strlen(exe_dir) + 1, name);
             free(exe_dir);
-            free(file_name);
+            rxvmplugin_memory_free(file_name);
             return -1;
         }
     }
     free(exe_dir);
 
-    dir_copy = strdup(combined_dir);
+    dir_copy = rxvmplugin_memory_strdup(combined_dir);
     if (!dir_copy) {
         RX_REPORT_OOM("strdup rxvmplugin directory iterator",
                       strlen(combined_dir) + 1, name);
-        free(combined_dir);
-        free(file_name);
+        rxvmplugin_memory_free(combined_dir);
+        rxvmplugin_memory_free(file_name);
         return -1;
     }
     token = dir_copy;
@@ -102,14 +140,15 @@ int load_rxvmplugin(char* dir, char *name) {
         next_token = strchr(token, ';');
         if (next_token) *next_token = 0;
 
-        if (full_file_name) free(full_file_name);
-        full_file_name = malloc(strlen(token) + strlen(file_name) + 2);
+        rxvmplugin_memory_free(full_file_name);
+        full_file_name = rxvmplugin_memory_alloc(
+            strlen(token) + strlen(file_name) + 2u);
         if (!full_file_name) {
             RX_REPORT_OOM("malloc rxvmplugin full path",
                           strlen(token) + strlen(file_name) + 2, name);
-            free(dir_copy);
-            free(combined_dir);
-            free(file_name);
+            rxvmplugin_memory_free(dir_copy);
+            rxvmplugin_memory_free(combined_dir);
+            rxvmplugin_memory_free(file_name);
             return -1;
         }
         if (full_file_name) {
@@ -131,20 +170,20 @@ int load_rxvmplugin(char* dir, char *name) {
 
         token = next_token ? next_token + 1 : 0;
     }
-    free(dir_copy);
-    free(combined_dir);
+    rxvmplugin_memory_free(dir_copy);
+    rxvmplugin_memory_free(combined_dir);
 
     if (!token) {
         /* Not found in any directory, try one last time with bare filename */
-        if (full_file_name) free(full_file_name);
-        full_file_name = strdup(file_name);
+        rxvmplugin_memory_free(full_file_name);
+        full_file_name = rxvmplugin_memory_strdup(file_name);
         if (!full_file_name) {
             RX_REPORT_OOM("strdup rxvmplugin fallback path", strlen(file_name) + 1, name);
         }
     }
 
     if (!full_file_name) {
-        free(file_name);
+        rxvmplugin_memory_free(file_name);
         return -1;
     }
 
@@ -196,14 +235,15 @@ int load_rxvmplugin(char* dir, char *name) {
     }
 #endif
 
-    free(full_file_name);
-    free(file_name);
+    rxvmplugin_memory_free(full_file_name);
+    rxvmplugin_memory_free(file_name);
     return rc;
 }
 
 /* Function to register a plugin factory */
 void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
-    rxvmplugin_factory_entry *entry = (rxvmplugin_factory_entry *)malloc(sizeof(rxvmplugin_factory_entry));
+    rxvmplugin_factory_entry *entry = (rxvmplugin_factory_entry *)
+        rxvm_memory_alloc_unowned_bytes(sizeof(rxvmplugin_factory_entry));
     if(entry){
         strncpy(entry->name, factory_name, 15); // Copy the name
         entry->name[15] = '\0'; // Ensure null termination
@@ -219,6 +259,9 @@ void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
             decplugin *plugin = (decplugin *)entry->plugin_info;
             plugin->number_to_simple_format = number_to_simple_format;
             plugin->format_number_components = RexxDecimalFormat;
+            plugin->reserve_decimal = rxvm_value_reserve_decimal;
+            plugin->reserve_string = rxvmplugin_reserve_string;
+            plugin->release_value_storage = rxvmplugin_release_value_storage;
             plugin->num_context = NULL; // The client will set this
         }
     }
@@ -248,7 +291,7 @@ void clear_rxvmplugin_factories(){
             dlclose(entry->handle);
 #endif
         }
-        free(entry); // Free the entry
+        rxvmplugin_memory_free(entry); // Free the detached registry entry
         entry = next; // Move to the next entry
     }
     rxvmplugin_factories = 0;
@@ -337,7 +380,7 @@ void number_to_simple_format(const char *input, char *output) {
     // Extract mantissa (digits and decimal point)
     size_t mantLen = (size_t)(ePos - p);
     if (mantLen >= MANTISSA_BUFFER_LEN) {
-        mantissa = (char *)malloc(mantLen + 1);
+        mantissa = (char *)rxvmplugin_memory_alloc(mantLen + 1u);
         if (!mantissa) {
             RX_PANIC_OOM("malloc rxvmplugin deExponify mantissa", mantLen + 1, p);
         }
@@ -418,7 +461,7 @@ void number_to_simple_format(const char *input, char *output) {
         // Just "0"
         *o++ = '0';
         *o = '\0';
-        if (mantissa != mantissa_buffer) free(mantissa);
+        if (mantissa != mantissa_buffer) rxvmplugin_memory_free(mantissa);
     }
 
     // If newDotPos <= 0, output "0." followed by (-newDotPos-1) zeros, then digits
@@ -460,7 +503,7 @@ void number_to_simple_format(const char *input, char *output) {
     }
 
     *o = '\0';
-    if (mantissa != mantissa_buffer) free(mantissa);
+    if (mantissa != mantissa_buffer) rxvmplugin_memory_free(mantissa);
 
     // Remove trailing zeros after the decimal point (and the decimal point if it's the last character)
     // Find decimal point

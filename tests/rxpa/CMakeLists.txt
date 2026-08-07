@@ -97,7 +97,10 @@ add_static_plugin_target(_rxpalink rxpa_staticlink.c)
 # Basic Build
 add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmmain.c
-        $<TARGET_OBJECTS:rxvm_core_objects>)
+        $<TARGET_OBJECTS:${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}>)
+if(CREXX_DEFAULT_VM_USES_SWITCH)
+    target_compile_definitions(testvm PRIVATE NTHREADED=1)
+endif()
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -149,7 +152,7 @@ add_test(
         COMMAND ${CMAKE_COMMAND}
                 -DRXC=$<TARGET_FILE:rxc>
                 -DRXAS=$<TARGET_FILE:rxas>
-                -DRXVM=$<TARGET_FILE:rxvm>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
                 -DRXBVM=$<TARGET_FILE:rxbvm>
                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin
                 -DPLUGIN_DIR=$<TARGET_FILE_DIR:_rxpa_bad_signatures>
@@ -211,7 +214,10 @@ add_static_plugin_target(_testfuncs rxpa_functests.c)
 # Basic Build
 add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmmain.c
-        $<TARGET_OBJECTS:rxvm_core_objects>)
+        $<TARGET_OBJECTS:${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}>)
+if(CREXX_DEFAULT_VM_USES_SWITCH)
+    target_compile_definitions(funcvm PRIVATE NTHREADED=1)
+endif()
 # Set the performance properties
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -317,11 +323,16 @@ crexx_label_smoke_tests(
 )
 
 if(CREXX_VM_PROFILING)
-    foreach(_vm_target rxvm rxbvm)
+    foreach(_vm_target rxvm)
+        if(_vm_target STREQUAL "rxvm")
+            set(_vm_executable "${CREXX_RXVM_EXECUTABLE}")
+        else()
+            set(_vm_executable "$<TARGET_FILE:${_vm_target}>")
+        endif()
         add_test(
                 NAME ${_vm_target}callcensusnativeunwind
                 COMMAND ${CMAKE_COMMAND}
-                        "-DVM=$<TARGET_FILE:${_vm_target}>"
+                        "-DVM=${_vm_executable}"
                         "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/rxpa_native_unwind_funcs_dynamic_noopt.rxbin"
                         "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/${_vm_target}-call-census-native-unwind.csv"
                         "-DCASE=native_unwind"

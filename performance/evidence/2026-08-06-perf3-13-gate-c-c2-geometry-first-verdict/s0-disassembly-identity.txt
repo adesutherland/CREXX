@@ -1,0 +1,30 @@
+method=Apple otool -tvV exact emitted-text-symbol comparison
+control=/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-ordinary-proof/bin/rxbvm
+candidate=/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s0/bin/rxbvm
+2fa08a5c8debbbd98f6b6ac992270491e710bdbf949e4a2694f892025e391251  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-ordinary-proof/bin/rxbvm
+e4c00ccbf7ea183e2529a3808337786cf4b27fc7a031419e5c97612e994835ed  /private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s0/bin/rxbvm
+matched_text_symbols=22
+different_text_symbols=0
+non_text_symbols_excluded=3 (_rxvm_memory_byte_sizes and two TLS data symbols)
+_rxvm_memory_context_create
+_rxvm_memory_worker_create
+_rxvm_memory_enter
+_rxvm_memory_leave
+_rxvm_memory_current_worker
+_rxvm_memory_alloc_bytes
+_rxvm_memory_alloc_oversized
+_rxvm_memory_alloc_standard
+_rxvm_memory_alloc_unowned_bytes
+_rxvm_memory_calloc_bytes
+_rxvm_memory_alloc_values
+_rxvm_memory_alloc_reference_cell
+_rxvm_memory_resize_bytes
+_rxvm_memory_release
+_rxvm_memory_owner
+_rxvm_memory_capacity
+_rxvm_memory_is_owned
+_rxvm_memory_trim
+_rxvm_memory_get_stats
+_rxvm_memory_worker_destroy
+_rxvm_memory_depot_return
+_rxvm_memory_context_destroy

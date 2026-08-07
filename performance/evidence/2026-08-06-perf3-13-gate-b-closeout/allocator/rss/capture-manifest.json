@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g4813e98d1dca 20260805",
+  "source_manifest": "/private/tmp/crexx-rxvm-inline.yvLywZ/source/performance/evidence/2026-08-06-perf3-13-gate-b-closeout/allocator/pairwise-manifest-v2.txt",
+  "measurement": "rss",
+  "warmups": 0,
+  "recorded_runs": 4,
+  "sampling": "serial-pairwise-balanced-by-workload",
+  "started_utc": "2026-08-06T09:12:53+0000",
+  "completed_utc": "2026-08-06T09:16:16+0000",
+  "result": "pass"
+}

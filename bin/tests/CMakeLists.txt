@@ -207,7 +207,7 @@ string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxc -c\" \"$<TARGET_F
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxas -c\" \"$<TARGET_FILE:rxas>\" -c)\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxcpack -c\" \"$<TARGET_FILE:rxcpack>\" -c)\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxdas -c\" \"$<TARGET_FILE:rxdas>\" -c)\n")
-string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxvm -c\" \"$<TARGET_FILE:rxvm>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxvm -c\" \"${CREXX_RXVM_EXECUTABLE}\" -c)\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxbvm -c\" \"$<TARGET_FILE:rxbvm>\" -c)\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxvme -c\" \"$<TARGET_FILE:rxvme>\" -c)\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxbvme -c\" \"$<TARGET_FILE:rxbvme>\" -c)\n")

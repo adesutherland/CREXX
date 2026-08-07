@@ -41,6 +41,9 @@ add_executable(mc_decimal_test_harness mc_decimal_sanity_harness_test.c)
 set_target_properties(mc_decimal_test_harness PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(mc_decimal_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+target_include_directories(mc_decimal_test_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include)
 # Ensure the linker includes the plugin
 configure_linker_for_static_rxvmplugin(mc_decimal_test_harness mc_decimal)
 target_link_libraries(mc_decimal_test_harness rxvmplugin mc_decimal ${CREXX_MATH_LIBRARY})
@@ -52,6 +55,9 @@ set_target_properties(mc_decimal_dyn_test_harness PROPERTIES RUNTIME_OUTPUT_DIRE
 target_compile_definitions(mc_decimal_dyn_test_harness PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_dyn_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_dyn_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+target_include_directories(mc_decimal_dyn_test_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include)
 target_link_libraries(mc_decimal_dyn_test_harness rxvmplugin ${CREXX_MATH_LIBRARY})
 add_dependencies(mc_decimal_dyn_test_harness mc_decimal_dynamic)
 
@@ -66,6 +72,9 @@ add_executable(mc_decimal_manual_test_harness mc_decimal_sanity_harness_test.c)
 set_target_properties(mc_decimal_manual_test_harness PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(mc_decimal_manual_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_manual_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+target_include_directories(mc_decimal_manual_test_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include)
 target_link_libraries(mc_decimal_manual_test_harness rxvmplugin mc_decimal_manual ${CREXX_MATH_LIBRARY})
 target_compile_definitions(mc_decimal_manual_test_harness PRIVATE MANUAL_PLUGIN_LINK)
 add_dependencies(mc_decimal_manual_test_harness mc_decimal_manual)
@@ -77,6 +86,9 @@ set_target_properties(mc_decimal_full_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY 
 target_compile_definitions(mc_decimal_full_tests PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_full_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_full_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+target_include_directories(mc_decimal_full_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include)
 target_link_libraries(mc_decimal_full_tests rxvmplugin ${CREXX_MATH_LIBRARY})
 add_dependencies(mc_decimal_full_tests mc_decimal_dynamic)
 

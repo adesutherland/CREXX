@@ -582,7 +582,7 @@ static void rxvm_parse_plan_set_span(value *target,
     byte_end = rxvm_parse_byte_offset(source, start - 1u + character_length);
     set_string(target, source->string_value + byte_start, byte_end - byte_start);
 #ifndef NUTF8
-    target->string_chars = character_length;
+    rxvm_value_set_string_chars_known(target, character_length);
     mark_utf8_valid_count(target);
 #endif
 }
@@ -1588,7 +1588,7 @@ static int rxvm_reference_storage_in_value_tree(value *root, value *storage) {
     if (root == storage) return 1;
 
     if (root->unlinked_attributes) {
-        for (i = 0; i < root->max_num_attributes; i++) {
+        for (i = 0; i < rxvm_value_max_attributes(root); i++) {
             if (rxvm_reference_storage_in_value_tree(root->unlinked_attributes[i], storage)) return 1;
         }
     }
@@ -1707,6 +1707,14 @@ static void rxvm_release_frame_reference_lifetimes(stack_frame *frame) {
 /* Misc. Utilities here */
 static string_constant *get_runtime_string_constant(module *mod, size_t offset);
 
+static void *rxvm_internal_alloc(size_t size) {
+    return rxvm_memory_alloc_bytes(0, size);
+}
+
+static void rxvm_internal_free(void *pointer) {
+    (void)rxvm_memory_release(pointer);
+}
+
 static value *decimal_literal_value(decplugin *decimal, const char *literal) {
     value *literal_value = value_f();
     decimal->decimalFromString(decimal, literal_value, literal);
@@ -1714,15 +1722,15 @@ static value *decimal_literal_value(decplugin *decimal, const char *literal) {
 }
 
 static void free_decimal_literal_value(value *literal_value) {
-    clear_value(literal_value);
-    free(literal_value);
+    value_free(literal_value);
 }
 
 static char *build_runtime_member_name(const char *class_name, size_t class_name_length,
                                        const char *member_name, size_t member_name_length) {
     char *proc_name;
 
-    proc_name = malloc(class_name_length + member_name_length + 2);
+    proc_name = rxvm_internal_alloc(
+            class_name_length + member_name_length + 2);
     if (!proc_name) return 0;
 
     memcpy(proc_name, class_name, class_name_length);
@@ -1793,7 +1801,7 @@ static int compare_runtime_name(const char *left, size_t left_length,
 static char *dup_runtime_name(const char *name, size_t name_length) {
     char *copy;
 
-    copy = malloc(name_length + 1);
+    copy = rxvm_internal_alloc(name_length + 1);
     if (!copy) return 0;
 
     memcpy(copy, name, name_length);
@@ -1808,7 +1816,7 @@ static char *build_interface_factory_error(const char *prefix,
     char *buffer;
 
     prefix_length = strlen(prefix);
-    buffer = malloc(prefix_length + interface_name_length + 1);
+    buffer = rxvm_internal_alloc(prefix_length + interface_name_length + 1);
     if (!buffer) return 0;
 
     memcpy(buffer, prefix, prefix_length);
@@ -1856,14 +1864,14 @@ static char *runtime_normalize_type_name(const char *type_name, size_t type_name
 
     if (!type_name) return 0;
     if (runtime_type_name_is_object_contract(type_name, type_name_length)) {
-        return strdup(".object");
+        return dup_runtime_name(".object", sizeof(".object") - 1u);
     }
     if (runtime_type_name_is_builtin(type_name, type_name_length)) {
         return dup_runtime_name(type_name, type_name_length);
     }
 
     start = (type_name_length > 0 && type_name[0] == '.') ? 1 : 0;
-    normalized = malloc(type_name_length + 1);
+    normalized = rxvm_internal_alloc(type_name_length + 1);
     if (!normalized) return 0;
 
     out_index = 0;
@@ -1898,7 +1906,7 @@ static char *runtime_internal_type_to_source_name(const char *type_name, size_t 
         if (type_name[i] == '.') dots++;
     }
 
-    source_name = malloc(type_name_length + dots + 2);
+    source_name = rxvm_internal_alloc(type_name_length + dots + 2);
     if (!source_name) return 0;
 
     out_index = 0;
@@ -2027,12 +2035,12 @@ static int runtime_value_matches_object_type(rxvm_context *context,
     if (!normalized_type_name) return 0;
 
     if (runtime_type_name_is_object_contract(normalized_type_name, strlen(normalized_type_name))) {
-        free(normalized_type_name);
+        rxvm_internal_free(normalized_type_name);
         return object_value->object_type != 0;
     }
 
     if (runtime_type_name_is_builtin(normalized_type_name, strlen(normalized_type_name))) {
-        free(normalized_type_name);
+        rxvm_internal_free(normalized_type_name);
         return 0;
     }
 
@@ -2054,7 +2062,7 @@ static int runtime_value_matches_object_type(rxvm_context *context,
         }
     }
 
-    free(normalized_type_name);
+    rxvm_internal_free(normalized_type_name);
     return matches;
 }
 
@@ -2077,21 +2085,22 @@ static char *build_runtime_cast_error(value *object_value,
         source_type_name = runtime_internal_type_to_source_name(object_type_name,
                                                                 object_type_name_length);
     } else {
-        source_type_name = strdup(".object");
+        source_type_name = dup_runtime_name(
+                ".object", sizeof(".object") - 1u);
     }
 
     if (!source_type_name) {
-        free(target_source_name);
+        rxvm_internal_free(target_source_name);
         return 0;
     }
 
     buffer_length = strlen("Cannot cast ") + strlen(source_type_name) + strlen(" to ") + strlen(target_source_name) + 1;
-    buffer = malloc(buffer_length);
+    buffer = rxvm_internal_alloc(buffer_length);
     if (buffer) {
         snprintf(buffer, buffer_length, "Cannot cast %s to %s", source_type_name, target_source_name);
     }
-    free(source_type_name);
-    free(target_source_name);
+    rxvm_internal_free(source_type_name);
+    rxvm_internal_free(target_source_name);
     return buffer;
 }
 
@@ -2108,16 +2117,17 @@ static char *build_runtime_uninitialized_object_error(value *object_value) {
         source_type_name = runtime_internal_type_to_source_name(object_type_name,
                                                                 object_type_name_length);
     } else {
-        source_type_name = strdup(".object");
+        source_type_name = dup_runtime_name(
+                ".object", sizeof(".object") - 1u);
     }
     if (!source_type_name) return 0;
 
     buffer_length = strlen("Object ") + strlen(source_type_name) + strlen(" is not initialized") + 1;
-    buffer = malloc(buffer_length);
+    buffer = rxvm_internal_alloc(buffer_length);
     if (buffer) {
         snprintf(buffer, buffer_length, "Object %s is not initialized", source_type_name);
     }
-    free(source_type_name);
+    rxvm_internal_free(source_type_name);
     return buffer;
 }
 
@@ -2133,14 +2143,14 @@ static void clear_runtime_interface_factories(rxvm_context *context) {
     }
 
     for (i = 0; i < context->num_interface_factories; i++) {
-        free(context->interface_factories[i].interface_name);
-        free(context->interface_factories[i].factory_name);
-        free(context->interface_factories[i].descriptor);
+        rxvm_internal_free(context->interface_factories[i].interface_name);
+        rxvm_internal_free(context->interface_factories[i].factory_name);
+        rxvm_internal_free(context->interface_factories[i].descriptor);
         rx_sig_free(&context->interface_factories[i].signature);
-        free(context->interface_factories[i].class_name);
+        rxvm_internal_free(context->interface_factories[i].class_name);
     }
 
-    free(context->interface_factories);
+    (void)rxvm_memory_release(context->interface_factories);
     context->interface_factories = 0;
     context->num_interface_factories = 0;
     context->interface_factory_capacity = 0;
@@ -2158,11 +2168,11 @@ static void clear_runtime_interface_methods(rxvm_context *context) {
     }
 
     for (i = 0; i < context->num_interface_methods; i++) {
-        free(context->interface_methods[i].class_name);
-        free(context->interface_methods[i].descriptor);
+        rxvm_internal_free(context->interface_methods[i].class_name);
+        rxvm_internal_free(context->interface_methods[i].descriptor);
     }
 
-    free(context->interface_methods);
+    (void)rxvm_memory_release(context->interface_methods);
     context->interface_methods = 0;
     context->num_interface_methods = 0;
     context->interface_method_capacity = 0;
@@ -2267,7 +2277,7 @@ static char *runtime_metadata_type_to_contract_name(const char *type_name) {
     if (!type_name || !*type_name || type_name[0] != '.') return 0;
 
     length = strlen(type_name);
-    normalized = malloc(length + 1);
+    normalized = rxvm_internal_alloc(length + 1);
     if (!normalized) return 0;
 
     out_index = 0;
@@ -2301,8 +2311,8 @@ static int runtime_signature_type_assignable(void *userdata,
     actual_contract = runtime_metadata_type_to_contract_name(actual_type);
     expected_contract = runtime_metadata_type_to_contract_name(expected_type);
     if (!actual_contract || !expected_contract) {
-        if (actual_contract) free(actual_contract);
-        if (expected_contract) free(expected_contract);
+        if (actual_contract) rxvm_internal_free(actual_contract);
+        if (expected_contract) rxvm_internal_free(expected_contract);
         return 0;
     }
 
@@ -2315,8 +2325,8 @@ static int runtime_signature_type_assignable(void *userdata,
                                                     expected_contract,
                                                     strlen(expected_contract));
     }
-    free(actual_contract);
-    free(expected_contract);
+    rxvm_internal_free(actual_contract);
+    rxvm_internal_free(expected_contract);
     return result;
 }
 
@@ -2353,7 +2363,7 @@ static int runtime_type_matches_contract_name(const char *type_name,
         }
     }
 
-    free(normalized);
+    rxvm_internal_free(normalized);
     return matches;
 }
 
@@ -2431,7 +2441,9 @@ static char *build_runtime_factory_selector_name(const string_constant *interfac
     }
     {
         char *selector;
-        selector = malloc(interface_symbol->string_len + 2 + factory_symbol->string_len + 1);
+        selector = rxvm_internal_alloc(
+                interface_symbol->string_len + 2 +
+                factory_symbol->string_len + 1);
         if (!selector) return 0;
         memcpy(selector, interface_symbol->string, interface_symbol->string_len);
         selector[interface_symbol->string_len] = '.';
@@ -2456,7 +2468,7 @@ static char *build_runtime_factory_descriptor(const string_constant *interface_s
     selector = build_runtime_factory_selector_name(interface_symbol, factory_symbol);
     if (!selector) return 0;
     descriptor = rx_sig_build_descriptor(selector, type_symbol->string, args_symbol->string);
-    free(selector);
+    rxvm_internal_free(selector);
     return descriptor;
 }
 
@@ -2632,7 +2644,8 @@ static char *build_runtime_factory_proc_name(const char *class_name,
     }
 
     prefix_length = sizeof(factory_prefix) - 1;
-    proc_name = malloc(class_name_length + 1 + prefix_length + factory_name_length + 1);
+    proc_name = rxvm_internal_alloc(
+            class_name_length + 1 + prefix_length + factory_name_length + 1);
     if (!proc_name) return 0;
 
     memcpy(proc_name, class_name, class_name_length);
@@ -2661,7 +2674,8 @@ static char *build_runtime_match_proc_name(const char *class_name,
     }
 
     prefix_length = sizeof(match_prefix) - 1;
-    proc_name = malloc(class_name_length + 1 + prefix_length + factory_name_length + 1);
+    proc_name = rxvm_internal_alloc(
+            class_name_length + 1 + prefix_length + factory_name_length + 1);
     if (!proc_name) return 0;
 
     memcpy(proc_name, class_name, class_name_length);
@@ -2696,7 +2710,7 @@ static int invoke_runtime_factory_match(rxvm_context *context,
     context->ext_proc = match_proc;
     context->ext_argc = (int) argc;
     context->ext_args = args;
-    context->ext_ret = value_f();
+    context->ext_ret = value_f_in(context->memory_worker);
     match_ret = context->ext_ret;
     if (!match_ret) {
         context->ext_proc = saved_ext_proc;
@@ -2709,8 +2723,7 @@ static int invoke_runtime_factory_match(rxvm_context *context,
     run(context, 0, dummy_argv);
     if (score_out) *score_out = match_ret->int_value;
 
-    clear_value(match_ret);
-    free(match_ret);
+    value_free(match_ret);
 
     context->ext_proc = saved_ext_proc;
     context->ext_argc = saved_ext_argc;
@@ -2740,8 +2753,11 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
         rxvm_interface_factory_entry *new_entries;
 
         new_capacity = context->interface_factory_capacity ? context->interface_factory_capacity * 2 : 16;
-        new_entries = realloc(context->interface_factories,
-                              sizeof(rxvm_interface_factory_entry) * new_capacity);
+        new_entries = rxvm_memory_resize_bytes(
+                context->memory_worker, context->interface_factories,
+                sizeof(rxvm_interface_factory_entry) *
+                    context->num_interface_factories,
+                sizeof(rxvm_interface_factory_entry) * new_capacity);
         if (!new_entries) return 0;
 
         context->interface_factories = new_entries;
@@ -2757,11 +2773,11 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
     entry->class_name = dup_runtime_name(class_name, class_name_length);
     if (!entry->interface_name || !entry->factory_name || !entry->descriptor || !entry->class_name ||
         !rx_sig_parse_descriptor(entry->descriptor, &entry->signature)) {
-        free(entry->interface_name);
-        free(entry->factory_name);
-        free(entry->descriptor);
+        rxvm_internal_free(entry->interface_name);
+        rxvm_internal_free(entry->factory_name);
+        rxvm_internal_free(entry->descriptor);
         rx_sig_free(&entry->signature);
-        free(entry->class_name);
+        rxvm_internal_free(entry->class_name);
         memset(entry, 0, sizeof(*entry));
         return 0;
     }
@@ -2803,8 +2819,11 @@ static int add_runtime_interface_method_entry(rxvm_context *context,
         rxvm_interface_method_entry *new_entries;
 
         new_capacity = context->interface_method_capacity ? context->interface_method_capacity * 2 : 32;
-        new_entries = realloc(context->interface_methods,
-                              sizeof(rxvm_interface_method_entry) * new_capacity);
+        new_entries = rxvm_memory_resize_bytes(
+                context->memory_worker, context->interface_methods,
+                sizeof(rxvm_interface_method_entry) *
+                    context->num_interface_methods,
+                sizeof(rxvm_interface_method_entry) * new_capacity);
         if (!new_entries) return 0;
 
         context->interface_methods = new_entries;
@@ -2817,8 +2836,8 @@ static int add_runtime_interface_method_entry(rxvm_context *context,
     entry->class_name = dup_runtime_name(class_name, class_name_length);
     entry->descriptor = dup_runtime_name(descriptor, descriptor_length);
     if (!entry->class_name || !entry->descriptor) {
-        free(entry->class_name);
-        free(entry->descriptor);
+        rxvm_internal_free(entry->class_name);
+        rxvm_internal_free(entry->descriptor);
         memset(entry, 0, sizeof(*entry));
         return 0;
     }
@@ -2911,8 +2930,10 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
                                                                                 member_symbol->string,
                                                                                 member_symbol->string_len);
                                 if (!class_proc_name || !interface_proc_name) {
-                                    if (class_proc_name) free(class_proc_name);
-                                    if (interface_proc_name) free(interface_proc_name);
+                                    if (class_proc_name)
+                                        rxvm_internal_free(class_proc_name);
+                                    if (interface_proc_name)
+                                        rxvm_internal_free(interface_proc_name);
                                     iface_meta_ix = iface_meta->next;
                                     continue;
                                 }
@@ -2923,8 +2944,10 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
                                                             member_symbol->string,
                                                             type_symbol->string,
                                                             args_symbol->string)) {
-                                    if (class_proc_name) free(class_proc_name);
-                                    if (interface_proc_name) free(interface_proc_name);
+                                    if (class_proc_name)
+                                        rxvm_internal_free(class_proc_name);
+                                    if (interface_proc_name)
+                                        rxvm_internal_free(interface_proc_name);
                                     if (descriptor) free(descriptor);
                                     iface_meta_ix = iface_meta->next;
                                     continue;
@@ -2932,8 +2955,8 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
 
                                 class_proc = resolve_runtime_procedure(context, class_proc_name, strlen(class_proc_name));
                                 interface_proc = resolve_runtime_procedure(context, interface_proc_name, strlen(interface_proc_name));
-                                free(class_proc_name);
-                                free(interface_proc_name);
+                                rxvm_internal_free(class_proc_name);
+                                rxvm_internal_free(interface_proc_name);
 
                                 effective_proc = class_proc;
                                 if (!effective_proc && runtime_member_kind_is_final(kind_symbol)) {
@@ -3007,7 +3030,7 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
     descriptor_text = dup_runtime_name(descriptor, descriptor_length);
     if (!descriptor_text) return 0;
     if (!rx_sig_parse_descriptor(descriptor_text, &expected_signature)) {
-        free(descriptor_text);
+        rxvm_internal_free(descriptor_text);
         return 0;
     }
 
@@ -3017,17 +3040,17 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
                                           strlen(expected_signature.name));
     if (!proc_name) {
         rx_sig_free(&expected_signature);
-        free(descriptor_text);
+        rxvm_internal_free(descriptor_text);
         return 0;
     }
     called_function = resolve_runtime_procedure(context, proc_name, strlen(proc_name));
-    free(proc_name);
+    rxvm_internal_free(proc_name);
     if (called_function &&
         !runtime_proc_matches_signature(context, called_function, &expected_signature)) {
         called_function = 0;
     }
     rx_sig_free(&expected_signature);
-    free(descriptor_text);
+    rxvm_internal_free(descriptor_text);
     return called_function;
 }
 
@@ -3115,7 +3138,8 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                                                                member_symbol->string,
                                                                                member_symbol->string_len);
                                 if (!factory_proc_name) {
-                                    if (match_proc_name) free(match_proc_name);
+                                    if (match_proc_name)
+                                        rxvm_internal_free(match_proc_name);
                                     iface_meta_ix = iface_meta->next;
                                     continue;
                                 }
@@ -3142,9 +3166,11 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                     rx_sig_free(&expected_factory);
                                     rx_sig_free(&expected_match);
                                     if (descriptor) free(descriptor);
-                                    if (selector_name) free(selector_name);
-                                    free(factory_proc_name);
-                                    if (match_proc_name) free(match_proc_name);
+                                    if (selector_name)
+                                        rxvm_internal_free(selector_name);
+                                    rxvm_internal_free(factory_proc_name);
+                                    if (match_proc_name)
+                                        rxvm_internal_free(match_proc_name);
                                     iface_meta_ix = iface_meta->next;
                                     continue;
                                 }
@@ -3153,8 +3179,9 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                 match_proc = match_proc_name ?
                                              resolve_runtime_procedure(context, match_proc_name, strlen(match_proc_name)) :
                                              0;
-                                free(factory_proc_name);
-                                if (match_proc_name) free(match_proc_name);
+                                rxvm_internal_free(factory_proc_name);
+                                if (match_proc_name)
+                                    rxvm_internal_free(match_proc_name);
 
                                 if (factory_proc &&
                                     runtime_proc_matches_signature(context, factory_proc, &expected_factory) &&
@@ -3173,7 +3200,7 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                 }
                                 rx_sig_free(&expected_factory);
                                 rx_sig_free(&expected_match);
-                                free(selector_name);
+                                rxvm_internal_free(selector_name);
                                 free(descriptor);
                             }
                         }
@@ -3303,7 +3330,7 @@ static int resolve_runtime_factory(rxvm_context *context,
     if (!descriptor_text) return 0;
     if (!rx_sig_parse_descriptor(descriptor_text, &expected_signature)) {
         if (error_out) *error_out = build_interface_factory_error("Invalid interface factory descriptor ", descriptor, descriptor_length);
-        free(descriptor_text);
+        rxvm_internal_free(descriptor_text);
         return 0;
     }
 
@@ -3315,7 +3342,7 @@ static int resolve_runtime_factory(rxvm_context *context,
     if (!interface_name_length || !factory_name_length) {
         if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
         rx_sig_free(&expected_signature);
-        free(descriptor_text);
+        rxvm_internal_free(descriptor_text);
         return 0;
     }
 
@@ -3363,9 +3390,9 @@ static int resolve_runtime_factory(rxvm_context *context,
         if (entry->match_proc &&
             !invoke_runtime_factory_match(context, entry->match_proc, argc, args, &score)) {
             if (error_out) *error_out = build_interface_factory_error("Failed to evaluate interface factory match for ", selector, selector_length);
-            if (best_class_name) free(best_class_name);
+            if (best_class_name) rxvm_internal_free(best_class_name);
             rx_sig_free(&expected_signature);
-            free(descriptor_text);
+            rxvm_internal_free(descriptor_text);
             return 0;
         }
         if (score > 0) {
@@ -3380,13 +3407,13 @@ static int resolve_runtime_factory(rxvm_context *context,
                 new_best_name = dup_runtime_name(entry->class_name, entry->class_name_length);
                 if (!new_best_name) {
                     if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", selector, selector_length);
-                    if (best_class_name) free(best_class_name);
+                    if (best_class_name) rxvm_internal_free(best_class_name);
                     rx_sig_free(&expected_signature);
-                    free(descriptor_text);
+                    rxvm_internal_free(descriptor_text);
                     return 0;
                 }
 
-                if (best_class_name) free(best_class_name);
+                if (best_class_name) rxvm_internal_free(best_class_name);
                 best_class_name = new_best_name;
                 best_class_name_length = entry->class_name_length;
                 best_score = score;
@@ -3395,25 +3422,25 @@ static int resolve_runtime_factory(rxvm_context *context,
         }
     }
 
-    if (best_class_name) free(best_class_name);
+    if (best_class_name) rxvm_internal_free(best_class_name);
 
     if (!saw_candidate) {
         if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
         rx_sig_free(&expected_signature);
-        free(descriptor_text);
+        rxvm_internal_free(descriptor_text);
         return 0;
     }
 
     if (!saw_positive_score || !best_factory) {
         if (error_out) *error_out = build_interface_factory_error("No matching interface factory provider for ", selector, selector_length);
         rx_sig_free(&expected_signature);
-        free(descriptor_text);
+        rxvm_internal_free(descriptor_text);
         return 0;
     }
 
     *factory_out = best_factory;
     rx_sig_free(&expected_signature);
-    free(descriptor_text);
+    rxvm_internal_free(descriptor_text);
     return 1;
 }
 
@@ -3570,12 +3597,12 @@ void rxvm_free_graph_bindings(rxvm_context *context) {
         rxvm_graph_binding *binding;
         binding = context->graph_bindings[binding_index];
         if (!binding) continue;
-        free(binding->callable_targets);
-        free(binding->factory_bindings);
-        free(binding->provider_bindings);
-        free(binding);
+        (void)rxvm_memory_release(binding->callable_targets);
+        (void)rxvm_memory_release(binding->factory_bindings);
+        (void)rxvm_memory_release(binding->provider_bindings);
+        (void)rxvm_memory_release(binding);
     }
-    free(context->graph_bindings);
+    (void)rxvm_memory_release(context->graph_bindings);
     context->graph_bindings = 0;
     context->graph_binding_count = 0u;
     context->graph_binding_capacity = 0u;
@@ -3616,8 +3643,9 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                     new_capacity > SIZE_MAX / sizeof(*new_bindings)) {
                     RX_PANIC_OOM("size rxvm graph bindings", (size_t)-1, mod->name);
                 }
-                new_bindings = (rxvm_graph_binding **)realloc(
-                    context->graph_bindings,
+                new_bindings = (rxvm_graph_binding **)rxvm_memory_resize_bytes(
+                    context->memory_worker, context->graph_bindings,
+                    context->graph_binding_count * sizeof(*new_bindings),
                     new_capacity * sizeof(*new_bindings));
                 if (!new_bindings) {
                     RX_PANIC_OOM("realloc rxvm graph bindings",
@@ -3627,7 +3655,8 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                 context->graph_bindings = new_bindings;
                 context->graph_binding_capacity = new_capacity;
             }
-            binding = (rxvm_graph_binding *)calloc(1u, sizeof(*binding));
+            binding = (rxvm_graph_binding *)rxvm_memory_calloc_bytes(
+                    context->memory_worker, 1u, sizeof(*binding));
             if (!binding) {
                 RX_PANIC_OOM("calloc rxvm graph binding", sizeof(*binding), mod->name);
             }
@@ -3640,8 +3669,10 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                 if (callable_count > SIZE_MAX / sizeof(*binding->callable_targets)) {
                     RX_PANIC_OOM("size rxvm callable bindings", (size_t)-1, mod->name);
                 }
-                binding->callable_targets = (proc_runtime **)calloc(
-                    callable_count, sizeof(*binding->callable_targets));
+                binding->callable_targets = (proc_runtime **)
+                    rxvm_memory_calloc_bytes(
+                        context->memory_worker, callable_count,
+                        sizeof(*binding->callable_targets));
                 if (!binding->callable_targets) {
                     RX_PANIC_OOM("calloc rxvm callable bindings",
                                  callable_count * sizeof(*binding->callable_targets),
@@ -3652,8 +3683,10 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                 if (factory_count > SIZE_MAX / sizeof(*binding->factory_bindings)) {
                     RX_PANIC_OOM("size rxvm factory bindings", (size_t)-1, mod->name);
                 }
-                binding->factory_bindings = (rxvm_graph_factory_binding *)calloc(
-                    factory_count, sizeof(*binding->factory_bindings));
+                binding->factory_bindings = (rxvm_graph_factory_binding *)
+                    rxvm_memory_calloc_bytes(
+                        context->memory_worker, factory_count,
+                        sizeof(*binding->factory_bindings));
                 if (!binding->factory_bindings) {
                     RX_PANIC_OOM("calloc rxvm factory bindings",
                                  factory_count * sizeof(*binding->factory_bindings),
@@ -3699,8 +3732,8 @@ void rxvm_rebuild_graph_bindings(rxvm_context *context) {
                     RX_PANIC_OOM("size rxvm provider bindings", (size_t)-1, 0);
                 }
                 binding->provider_bindings =
-                    (rxvm_graph_provider_binding *)calloc(
-                        binding->provider_count,
+                    (rxvm_graph_provider_binding *)rxvm_memory_calloc_bytes(
+                        context->memory_worker, binding->provider_count,
                         sizeof(*binding->provider_bindings));
                 if (!binding->provider_bindings) {
                     RX_PANIC_OOM("calloc rxvm provider bindings",
@@ -3795,7 +3828,8 @@ static char *build_runtime_graph_factory_error(
     }
     member_length = strlen(member_name);
     if (interface_length > SIZE_MAX - member_length - 3u) return 0;
-    selector = (char *)malloc(interface_length + member_length + 3u);
+    selector = (char *)rxvm_internal_alloc(
+            interface_length + member_length + 3u);
     if (!selector) return 0;
     memcpy(selector, binding->interface_name, interface_length);
     selector[interface_length] = '.';
@@ -3804,7 +3838,7 @@ static char *build_runtime_graph_factory_error(
     message = build_interface_factory_error(prefix,
                                             selector,
                                             interface_length + member_length + 2u);
-    free(selector);
+    rxvm_internal_free(selector);
     return message;
 }
 
@@ -4053,7 +4087,8 @@ static RXVM_LABEL_OWNER_NOINLINE int rxsignal_ensure_private_interrupt_table(sta
     if (!frame || !frame->interrupt_table) return 0;
     if (frame->interrupt_table_owned) return 1;
 
-    private_table = malloc(sizeof(interrupt_entry) * RXSIGNAL_MAX);
+    private_table = rxvm_memory_alloc_bytes(
+            0, sizeof(interrupt_entry) * RXSIGNAL_MAX);
     if (!private_table) return 0;
     memcpy(private_table, frame->interrupt_table,
            sizeof(interrupt_entry) * RXSIGNAL_MAX);
@@ -4064,7 +4099,8 @@ static RXVM_LABEL_OWNER_NOINLINE int rxsignal_ensure_private_interrupt_table(sta
 
 static void rxsignal_release_private_interrupt_table(stack_frame *frame) {
     if (!frame) return;
-    if (frame->interrupt_table_owned) free(frame->interrupt_table);
+    if (frame->interrupt_table_owned)
+        (void)rxvm_memory_release(frame->interrupt_table);
     frame->interrupt_table = 0;
     frame->interrupt_table_owned = 0;
 }
@@ -4074,7 +4110,7 @@ static void rxsignal_push_handler(stack_frame *frame, unsigned char sig) {
 
     if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return;
 
-    saved = malloc(sizeof(interrupt_saved_entry));
+    saved = rxvm_memory_alloc_bytes(0, sizeof(interrupt_saved_entry));
     if (!saved) return;
     saved->signal = sig;
     saved->entry = frame->interrupt_table[sig - 1];
@@ -4103,7 +4139,7 @@ static rxsignal_pop_result rxsignal_pop_handler(stack_frame *frame, unsigned cha
             rxsignal_apply_native_interrupt_mode(sig, &frame->interrupt_table[sig - 1]);
             if (previous) previous->next = saved->next;
             else frame->interrupt_stack = saved->next;
-            free(saved);
+            (void)rxvm_memory_release(saved);
             return RXSIGNAL_POP_RESTORED;
         }
         previous = saved;
@@ -4121,7 +4157,7 @@ static void rxsignal_clear_handler_stack(stack_frame *frame) {
         saved = frame->interrupt_stack;
         frame->interrupt_stack = saved->next;
         rxsignal_apply_native_interrupt_mode(saved->signal, &saved->entry);
-        free(saved);
+        (void)rxvm_memory_release(saved);
     }
 }
 
@@ -4238,7 +4274,7 @@ RX_INLINE stack_frame *frame_f(
             return 0;
         }
 
-        this = (stack_frame *) malloc( frame_size );
+        this = (stack_frame *)rxvm_memory_alloc_bytes(0, frame_size);
         if (!this) return 0;
 #ifdef CREXX_VM_PROFILING
         rxvm_profile_record_frame_activation(0, frame_size, value_count);
@@ -4255,6 +4291,10 @@ RX_INLINE stack_frame *frame_f(
 #endif
         for (i = 0; i < procedure->locals; i++, value_buffer++) {
             value_init(value_buffer);
+#ifdef CREXX_VM_PROFILING
+            rxvm_profile_mark_value_origin(
+                    value_buffer, RXVM_PROFILE_VALUE_ORIGIN_FRAME);
+#endif
             this->locals[i] = value_buffer;
             this->baselocals[i] = value_buffer;
         }
@@ -4285,6 +4325,10 @@ RX_INLINE stack_frame *frame_f(
         profile_phase_start = rxvm_profile_frame_phase_begin();
 #endif
         value_init(value_buffer);
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_mark_value_origin(
+                value_buffer, RXVM_PROFILE_VALUE_ORIGIN_FRAME);
+#endif
         this->locals[i] = value_buffer;
         this->baselocals[i] = value_buffer;
         this->locals[i]->int_value = no_args;
@@ -4331,7 +4375,8 @@ RX_INLINE stack_frame *frame_f(
 #ifdef CREXX_VM_PROFILING
         profile_phase_start = rxvm_profile_frame_phase_begin();
 #endif
-        this->interrupt_table = malloc(sizeof(interrupt_entry) * RXSIGNAL_MAX);
+        this->interrupt_table = rxvm_memory_alloc_bytes(
+                0, sizeof(interrupt_entry) * RXSIGNAL_MAX);
         if (!this->interrupt_table) {
 #ifdef CREXX_VM_PROFILING
             rxvm_profile_record_frame_release();
@@ -4340,7 +4385,7 @@ RX_INLINE stack_frame *frame_f(
                 this->prev_free = *procedure->frame_free_list;
                 *procedure->frame_free_list = this;
             }
-            else free(this);
+            else (void)rxvm_memory_release(this);
             return 0;
         }
         this->interrupt_table_owned = 1;
@@ -4466,8 +4511,7 @@ static void free_external_entry_arguments(stack_frame *frame) {
     for (i = 0; i < frame->number_args; i++, j++) {
         value *arg = frame->baselocals[j];
         if (!arg) continue;
-        clear_value(arg);
-        free(arg);
+        value_free(arg);
         frame->baselocals[j] = 0;
         frame->locals[j] = 0;
     }
@@ -4714,7 +4758,7 @@ static void rxsignal_populate_runtime_signal(value *dest, value *raw) {
 
 void completely_free_frame(stack_frame *frame) {
     clear_frame(frame);
-    free(frame);
+    (void)rxvm_memory_release(frame);
 }
 
 // Bit field of raised VM interrupts (checked by the interpreter)
@@ -4908,6 +4952,7 @@ RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteg
 }
 #endif
 
+#line 4947 "/tmp/crexx-rxvm-inline.yvLywZ/source/interpreter/rxvmintp.c"
 /* Interpreter */
 RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_runtime *procedure;
@@ -4941,11 +4986,13 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
     value *work2;
     value *work3;
     module *current_module = 0;
+    rxvm_memory_worker *previous_memory_worker;
 #ifdef NTHREADED
     void *next_inst = 0;
 #else
     void *next_inst = &&IUNKNOWN;
 #endif
+    previous_memory_worker = rxvm_memory_enter(context->memory_worker);
     RXVM_INSTRUMENTATION_STATE();
     RXVM_INSTRUMENTATION_VM_BEGIN(context);
 
@@ -4954,12 +5001,25 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
     work1 = value_f();
     work2 = value_f();
     work3 = value_f();
+#ifdef CREXX_VM_PROFILING
+    rxvm_profile_mark_value_origin(
+            signal_value, RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+    rxvm_profile_mark_value_origin(
+            interrupt_action_value, RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+    rxvm_profile_mark_value_origin(work1, RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+    rxvm_profile_mark_value_origin(work2, RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+    rxvm_profile_mark_value_origin(work3, RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+#endif
 
     /* Set up the interrupt object array */
     {
         size_t i;
         for (i = 0; i < RXSIGNAL_MAX; i++) {
             interrupt_object[i] = value_f();
+#ifdef CREXX_VM_PROFILING
+            rxvm_profile_mark_value_origin(
+                    interrupt_object[i], RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+#endif
         }
     }
     /* Initialize the native signal handler system */
@@ -5030,7 +5090,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 RX_PANIC_OOM("size rxvm execution image", (size_t)-1,          \
                              vm_module__->name);                                \
             }                                                                   \
-            vm_module__->execution_image = malloc(vm_bytes__);                  \
+            vm_module__->execution_image = rxvm_memory_alloc_bytes(             \
+                    vm_module__->memory_worker, vm_bytes__);                    \
             if (!vm_module__->execution_image) {                                \
                 RX_PANIC_OOM("malloc rxvm execution image", vm_bytes__,        \
                              vm_module__->name);                                \
@@ -5083,6 +5144,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     /* Allocate Interrupt Arg */
     interrupt_arg = value_f();
+#ifdef CREXX_VM_PROFILING
+    rxvm_profile_mark_value_origin(
+            interrupt_arg, RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+#endif
 
     /* Thread code - we need to do it here because address_map is only valid
      * in this run() function */
@@ -5149,6 +5214,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             int a1 = procedure->binarySpace->globals + procedure->locals + 1;
             for (i = 0; i < context->ext_argc; i++) {
                 current_frame->baselocals[a1 + i] = value_f();
+#ifdef CREXX_VM_PROFILING
+                rxvm_profile_mark_value_origin(
+                        current_frame->baselocals[a1 + i],
+                        RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+#endif
                 current_locals[a1 + i] = current_frame->baselocals[a1 + i];
                 copy_value(current_frame->baselocals[a1 + i], context->ext_args[i]);
             }
@@ -5173,6 +5243,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             int i;
             int a1 = procedure->binarySpace->globals + procedure->locals + 1;
             arguments_array = value_f();
+#ifdef CREXX_VM_PROFILING
+            rxvm_profile_mark_value_origin(
+                    arguments_array, RXVM_PROFILE_VALUE_ORIGIN_SCRATCH);
+#endif
             current_frame->baselocals[a1] = arguments_array;
             current_locals[a1] = current_frame->baselocals[a1];
             set_num_attributes(current_frame->baselocals[a1], argc);
@@ -5466,8 +5540,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     for (i = 0, j = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
                          i < num_args;
                          i++, j++) {
-                        clear_value(temp_frame->baselocals[j]);
-                        free(temp_frame->baselocals[j]);
+                        value_free(temp_frame->baselocals[j]);
                          }
                     rc = 0;
                     free_frame(temp_frame);
@@ -6321,7 +6394,9 @@ START_OF_INSTRUCTIONS
                 op1R->string_length = 0;
                 while ((ch = getchar()) != EOF) {
                     if (ch == '\n') break;
-                    extend_string_buffer(op1R, pos + 1);
+                    extend_string_buffer_metric(
+                            op1R,
+                            rxvm_value_string_size_add_or_fail(pos, 1u));
                     op1R->string_value[pos] = (char) ch;
                     pos++;
                 }
@@ -7209,26 +7284,23 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     RXVM_INSTRUMENTATION_VALUE_TYPED(
             RXVM_PROFILE_VALUE_DECIMAL_COPY,
             RXVM_PROFILE_VALUE_DECIMAL,
-            op2R->decimal_value_length);
+            rxvm_value_decimal_length(op2R));
     /* A zero logical length is decimal absence even when lazy backing storage
      * remains allocated.  Typed copy propagates that absence without changing
      * any unrelated component of the destination. */
-    if (op2R->decimal_value == NULL || op2R->decimal_value_length == 0) {
-        op1R->decimal_value_length = 0;
+    if (rxvm_value_decimal_data(op2R) == NULL ||
+        rxvm_value_decimal_length(op2R) == 0) {
+        rxvm_value_set_decimal_length(op1R, 0u);
         DISPATCH;
     }
-    if (op1R->decimal_value == NULL) {
-        // Allocate storage for the decimal
-        op1R->decimal_value = malloc(op2R->decimal_value_length);
-        op1R->decimal_buffer_length = op2R->decimal_value_length;
+    {
+        size_t decimal_length = rxvm_value_decimal_length(op2R);
+        void *decimal = rxvm_value_reserve_decimal(op1R, decimal_length);
+        if (!decimal) RX_PANIC_OOM(
+                "copy decimal sidecar payload", decimal_length,
+                "DCOPY destination");
+        memcpy(decimal, rxvm_value_decimal_data(op2R), decimal_length);
     }
-    else if (op1R->decimal_buffer_length < op2R->decimal_value_length) {
-        // Reallocate storage for the decimal
-        op1R->decimal_value = realloc(op1R->decimal_value, op2R->decimal_value_length);
-        op1R->decimal_buffer_length = op2R->decimal_value_length;
-    }
-    memcpy(op1R->decimal_value, op2R->decimal_value, op2R->decimal_value_length);
-    op1R->decimal_value_length = op2R->decimal_value_length;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DSEX_REG  Decimal op1 = -op1 (sign change)              pej 17 Aug 2024
@@ -7237,7 +7309,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     START_INSTRUCTION(DSEX_REG)
     VM_ADVANCE(1);
     DEBUG("TRACE - DSEX R%lu\n", REG_IDX(1));
-    if (op1R->decimal_value == NULL) {
+    if (rxvm_value_decimal_data(op1R) == NULL) {
         // Signal error
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "No Source Decimal Value")
         DISPATCH;
@@ -7687,8 +7759,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     for (i = 0, j = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
                          i < num_args;
                          i++, j++) {
-                        clear_value(temp_frame->baselocals[j]);
-                        free(temp_frame->baselocals[j]);
+                        value_free(temp_frame->baselocals[j]);
                     }
                     rc = 0;
                     free_frame(temp_frame);
@@ -7767,8 +7838,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                                         temp_frame->procedure->locals + 1;
                             i < num_args;
                             i++, j++) {
-                        clear_value(temp_frame->baselocals[j]);
-                        free(temp_frame->baselocals[j]);
+                        value_free(temp_frame->baselocals[j]);
                     }
                     free_frame(temp_frame);
                     arguments_array = 0; /* We have freed it in the loop above */
@@ -7830,8 +7900,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                                         temp_frame->procedure->locals + 1;
                             i < num_args;
                             i++, j++) {
-                        clear_value(temp_frame->baselocals[j]);
-                        free(temp_frame->baselocals[j]);
+                        value_free(temp_frame->baselocals[j]);
                     }
                     rc = (int) op1I;
                     free_frame(temp_frame);
@@ -7895,8 +7964,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                                     temp_frame->procedure->locals + 1;
                             i < num_args;
                             i++, j++) {
-                        clear_value(temp_frame->baselocals[j]);
-                        free(temp_frame->baselocals[j]);
+                        value_free(temp_frame->baselocals[j]);
                     }
                     rc = 0;
                     free_frame(temp_frame);
@@ -7961,8 +8029,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                             temp_frame->procedure->locals + 1;
                             i < num_args;
                             i++, j++) {
-                        clear_value(temp_frame->baselocals[j]);
-                        free(temp_frame->baselocals[j]);
+                        value_free(temp_frame->baselocals[j]);
                     }
                     rc = 0;
                     free_frame(temp_frame);
@@ -8501,7 +8568,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
          *  ----------------------------------------------------------------------------------- */
         START_INSTRUCTION(GETABUFS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - GETABUFS R%lu,R%lu\n", REG_IDX(1),REG_IDX(1));
-            REG_RETURN_INT(op2R->max_num_attributes)
+            REG_RETURN_INT(rxvm_value_max_attributes(op2R))
             DISPATCH;
 
         START_INSTRUCTION(INSATTRS_REG_REG_REG) VM_ADVANCE(3);
@@ -9101,7 +9168,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 while (i > 0 && op1R->string_value[i - 1] == ' ') {
                     i--;
                 }
-                op1R->string_length = i;
+                rxvm_value_set_string_length_known(op1R, i);
                 null_terminate_string_buffer(op1R);
                 finish_string_write(op1R, op1R->string_length);
             }
@@ -9122,7 +9189,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     op1R->string_length = 0;
                     null_terminate_string_buffer(op1R);
                 } else {
-                    op1R->string_length = op1R->string_length - i;
+                    rxvm_value_set_string_length_known(
+                            op1R, op1R->string_length - i);
                     memcpy(op1R->string_value, op1R->string_value + i,
                            op1R->string_length);
                     null_terminate_string_buffer(op1R);
@@ -9989,8 +10057,7 @@ START_INSTRUCTION(FMOD_REG_REG_REG) VM_ADVANCE(3);
         current_frame->decimal->decimalMul(current_frame->decimal, work, work, op);
         current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
         // Clear the temporary value
-        clear_value(work);
-        free(work);
+        value_free(work);
         free_decimal_literal_value(op);
     }
     // Check for errors
@@ -10012,8 +10079,7 @@ START_INSTRUCTION(DMOD_REG_DECIMAL_REG) VM_ADVANCE(3);
         current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
         current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, work);
         // Clear the temporary value
-        clear_value(work);
-        free(work);
+        value_free(work);
         free_decimal_literal_value(op);
     }
     // Check for errors
@@ -10034,8 +10100,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
         current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
         // Clear the temporary value
-        clear_value(work);
-        free(work);
+        value_free(work);
     }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
@@ -10713,7 +10778,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 int ch;
 
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
+#ifndef NUTF8
+                for (i = 0; i < op2R->string_chars; i++) {
+#else
                 for (i = 0; i < op2R->string_length; i++) {
+#endif
 #ifndef NUTF8
                     string_cache_seek_char(op2R, (size_t)i);
                     utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
@@ -11143,7 +11212,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
     }
     else {
-        size_t old_length = op1R->native_payload_ops ? 0 : op1R->binary_length;
+        size_t old_length = rxvm_value_native_ops(op1R) ? 0 : op1R->binary_length;
         size_t new_length = (size_t)op2R->int_value;
         if (reserve_binary_buffer(op1R, new_length) != 0) {
             SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
@@ -11164,7 +11233,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BCLEAR_REG) VM_ADVANCE(1);
     DEBUG("TRACE - BCLEAR R%d\n", (int)REG_IDX(1));
-    if (op1R->native_payload_ops) {
+    if (rxvm_value_native_ops(op1R)) {
         clear_binary_payload(op1R);
     }
     else {
@@ -11197,7 +11266,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     START_INSTRUCTION(BCOPY_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCOPY R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
-        size_t length = op1R->native_payload_ops ? 0 : op1R->binary_length;
+        size_t length = rxvm_value_native_ops(op1R) ? 0 : op1R->binary_length;
         size_t offset;
 
         if (!rxvm_binary_range(op2R, op3R->int_value, length, &offset)) {
@@ -11219,7 +11288,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
         string_constant *source = op2S;
-        size_t length = op1R->native_payload_ops ? 0 : op1R->binary_length;
+        size_t length = rxvm_value_native_ops(op1R) ? 0 : op1R->binary_length;
         size_t offset;
 
         if (!rxvm_memory_range(source->string_len, op3R->int_value, length, &offset)) {
@@ -11709,7 +11778,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     {
         size_t offset;
         size_t width;
-        if (op3R->string_length == SIZE_MAX || !rxvm_checked_size_add(op3R->string_length, 1, &width) ||
+        if (
+            !rxvm_checked_size_add(op3R->string_length, 1, &width) ||
             !rxvm_binary_range(op1R, op2R->int_value, width, &offset)) {
             SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
         }
@@ -12056,6 +12126,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BINTOS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - BINTOS R%d\n", (int)REG_IDX(1));
+    if (!rxvm_value_string_metric_fits(op1R->binary_length)) {
+        SET_SIGNAL_MSG(RXSIGNAL_OUT_OF_RANGE,
+                       "Binary is too large for a string value");
+    }
+    else {
 #ifndef NUTF8
     {
         size_t chars = 0;
@@ -12065,7 +12140,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             set_string(op1R,
                        op1R->binary_value ? op1R->binary_value : "",
                        op1R->binary_length);
-            op1R->string_chars = chars;
+            rxvm_value_set_string_chars_known(op1R, chars);
             mark_utf8_valid_count(op1R);
         }
     }
@@ -12074,6 +12149,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                op1R->binary_value ? op1R->binary_value : "",
                op1R->binary_length);
 #endif
+    }
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -12570,7 +12646,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 value *variables = NULL;
                 value *crexx_bindings = NULL;
                 char *command;
-                command = malloc(op2R->string_length + 1);
+                command = rxvm_internal_alloc(op2R->string_length + 1);
+                if (!command) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                    DISPATCH;
+                }
                 memcpy(command,op2R->string_value, op2R->string_length);
                 command[op2R->string_length] = 0;
                 char* errorText = 0;
@@ -12585,18 +12665,18 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 spawn_rc = shellspawn(command, pIn, pOut, pErr, variables, crexx_bindings, spawn_mode, &command_rc, &errorText);
                 if (spawn_rc == SHELLSPAWN_NOFOUND) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Command Not Found");
-                    free(command);
+                    rxvm_internal_free(command);
                     if (errorText) free(errorText);
                     DISPATCH;
                 }
                 if (spawn_rc) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, errorText);
-                    free(command);
+                    rxvm_internal_free(command);
                     if (errorText) free(errorText);
                     DISPATCH;
                 }
                 if (errorText) free(errorText);
-                free(command);
+                rxvm_internal_free(command);
                 op1R->int_value = command_rc;
             }
             DISPATCH;
@@ -12761,9 +12841,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     break;
                 }
 
-                op1R->string_length++;
-                extend_string_buffer(op1R, op1R->string_length);
-                op1R->string_value[ op1R->string_length - 1] = (char)ch;
+                {
+                    rxvm_string_metric next_length =
+                            rxvm_value_string_size_add_or_fail(
+                            op1R->string_length, 1u);
+                    extend_string_buffer_metric(op1R, next_length);
+                    op1R->string_value[next_length - 1u] = (char)ch;
+                }
             }
         }
         }
@@ -12773,7 +12857,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             if (validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
                 SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in text file read");
             } else {
-                op1R->string_chars = chars;
+                rxvm_value_set_string_chars_known(op1R, chars);
                 string_cache_reset(op1R);
                 mark_utf8_valid_count(op1R);
             }
@@ -12845,7 +12929,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 } else {
                     utf8codepoint(op1R->string_value, &codepoint);
                     op1R->int_value = codepoint;
-                    op1R->string_chars = chars;
+                    rxvm_value_set_string_chars_known(op1R, chars);
                     string_cache_reset(op1R);
                     mark_utf8_valid_count(op1R);
                 }
@@ -12992,7 +13076,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     while (i > 0 && op1R->string_value[i - 1] == trim_char) {
                         i--;
                     }
-                    op1R->string_length = i;
+                    rxvm_value_set_string_length_known(op1R, i);
                 }
                 null_terminate_string_buffer(op1R);
                 finish_string_write(op1R, op1R->string_length);
@@ -13016,7 +13100,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 if (i >= op1R->string_length) {
                     op1R->string_length = 0;
                 } else {
-                    op1R->string_length = op1R->string_length - i;
+                    rxvm_value_set_string_length_known(
+                            op1R, op1R->string_length - i);
                     if (i > 0) memmove(op1R->string_value, op1R->string_value + i, op1R->string_length);
                 }
                 null_terminate_string_buffer(op1R);
@@ -13035,7 +13120,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 if (op1R != op2R) set_value_string(op1R, op2R);
                 if (len < 0) len = 0;
                 if (len < op1R->string_length) {
-                    op1R->string_length = len;
+                    rxvm_value_set_string_length_known(
+                            op1R, (size_t)len);
                     null_terminate_string_buffer(op1R);
                     finish_string_write(op1R, op1R->string_length);
                 }
@@ -13093,7 +13179,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 char *error_message = build_runtime_uninitialized_object_error(op1R);
                 if (error_message) {
                     SET_SIGNAL_MSG(RXSIGNAL_OBJECT_NOT_INITIALIZED, error_message);
-                    free(error_message);
+                    rxvm_internal_free(error_message);
                 } else {
                     SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
                 }
@@ -13132,7 +13218,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     char *error_message = build_runtime_uninitialized_object_error(op2R);
                     if (error_message) {
                         SET_SIGNAL_MSG(RXSIGNAL_OBJECT_NOT_INITIALIZED, error_message);
-                        free(error_message);
+                        rxvm_internal_free(error_message);
                     } else {
                         SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
                     }
@@ -13304,7 +13390,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 if (!graph_result) {
                     if (error_message) {
                         SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, error_message);
-                        free(error_message);
+                        rxvm_internal_free(error_message);
                     } else {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
                     }
@@ -13336,7 +13422,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     type_name = runtime_internal_type_to_source_name(
                         internal_type_name, internal_type_name_length);
                 } else {
-                    type_name = strdup(".object");
+                    type_name = dup_runtime_name(".object", sizeof(".object") - 1u);
                 }
 
                 if (!type_name) {
@@ -13346,7 +13432,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 
                 value_zero(op1R);
                 set_null_string(op1R, type_name);
-                free(type_name);
+                rxvm_internal_free(type_name);
             }
             DISPATCH;
 
@@ -13377,7 +13463,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                                                                type_name ? strlen(type_name) : 1u);
                 if (error_message) {
                     SET_SIGNAL_MSG(RXSIGNAL_CONVERSION_ERROR, error_message);
-                    free(error_message);
+                    rxvm_internal_free(error_message);
                 } else {
                     SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
                 }
@@ -13846,8 +13932,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 rxvm_parse_words3_spans(parse_source__, parse_spans__);
                 if (op1R == parse_source__ || op2R == parse_source__ ||
                     op3R == parse_source__) {
-                    parse_snapshot__ = malloc(parse_source__->string_length > 0 ?
-                                              parse_source__->string_length : 1);
+                    parse_snapshot__ = rxvm_internal_alloc(
+                        parse_source__->string_length > 0 ?
+                        parse_source__->string_length : 1);
                     if (!parse_snapshot__) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
                         DISPATCH;
@@ -13861,7 +13948,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 rxvm_parse_set_span_bytes(op1R, parse_bytes__, &parse_spans__[0]);
                 rxvm_parse_set_span_bytes(op2R, parse_bytes__, &parse_spans__[1]);
                 rxvm_parse_set_span_bytes(op3R, parse_bytes__, &parse_spans__[2]);
-                free(parse_snapshot__);
+                rxvm_internal_free(parse_snapshot__);
             }
             DISPATCH;
 
@@ -13883,8 +13970,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 const char *parse_bytes__ = parse_source__->string_value;
                 rxvm_parse_position2_spans(parse_source__, INT_OP(4), parse_spans__);
                 if (op1R == parse_source__ || op2R == parse_source__) {
-                    parse_snapshot__ = malloc(parse_source__->string_length > 0 ?
-                                              parse_source__->string_length : 1);
+                    parse_snapshot__ = rxvm_internal_alloc(
+                        parse_source__->string_length > 0 ?
+                        parse_source__->string_length : 1);
                     if (!parse_snapshot__) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
                         DISPATCH;
@@ -13897,7 +13985,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 }
                 rxvm_parse_set_span_bytes(op1R, parse_bytes__, &parse_spans__[0]);
                 rxvm_parse_set_span_bytes(op2R, parse_bytes__, &parse_spans__[1]);
-                free(parse_snapshot__);
+                rxvm_internal_free(parse_snapshot__);
             }
             DISPATCH;
 
@@ -13910,8 +13998,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 rxvm_parse_words3_drop_spans(parse_source__, parse_spans__);
                 if (op1R == parse_source__ || op2R == parse_source__ ||
                     op3R == parse_source__) {
-                    parse_snapshot__ = malloc(parse_source__->string_length > 0 ?
-                                              parse_source__->string_length : 1);
+                    parse_snapshot__ = rxvm_internal_alloc(
+                        parse_source__->string_length > 0 ?
+                        parse_source__->string_length : 1);
                     if (!parse_snapshot__) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
                         DISPATCH;
@@ -13925,7 +14014,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 rxvm_parse_set_span_bytes(op1R, parse_bytes__, &parse_spans__[0]);
                 rxvm_parse_set_span_bytes(op2R, parse_bytes__, &parse_spans__[1]);
                 rxvm_parse_set_span_bytes(op3R, parse_bytes__, &parse_spans__[2]);
-                free(parse_snapshot__);
+                rxvm_internal_free(parse_snapshot__);
             }
             DISPATCH;
         START_INSTRUCTION(PARSEPLAN_REG_REG_STRING) VM_ADVANCE(3);
@@ -14054,45 +14143,37 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     temp_frame = *(runtime_proc->frame_free_list);
                     *(runtime_proc->frame_free_list) = temp_frame->prev_free;
                     clear_frame(temp_frame);
-                    free(temp_frame);
+                    (void)rxvm_memory_release(temp_frame);
                 }
             }
         }
     }
 
     /* Free signal value */
-    clear_value(signal_value);
-    free(signal_value);
+    value_free(signal_value);
 
     /* Free interrupt action value */
-    clear_value(interrupt_action_value);
-    free(interrupt_action_value);
+    value_free(interrupt_action_value);
 
     /* Free work registers */
-    clear_value(work1);
-    free(work1);
-    clear_value(work2);
-    free(work2);
-    clear_value(work3);
-    free(work3);
+    value_free(work1);
+    value_free(work2);
+    value_free(work3);
 
     /* Free interrupt argument */
-    clear_value(interrupt_arg);
-    free(interrupt_arg);
+    value_free(interrupt_arg);
 
     /* Free array of interrupt objects - interrupt_object[] */
     {
         size_t i;
         for (i = 0; i < RXSIGNAL_MAX; i++) {
-            clear_value(interrupt_object[i]);
-            free(interrupt_object[i]);
+            value_free(interrupt_object[i]);
         }
     }
 
     /* Free arguments array */
     if (arguments_array) {
-        clear_value(arguments_array);
-        free(arguments_array);
+        value_free(arguments_array);
     }
 
 #ifndef NDEBUG
@@ -14100,6 +14181,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 #endif
 
     RXVM_INSTRUMENTATION_VM_END(context, rc);
+
+    rxvm_memory_leave(previous_memory_worker);
 
     return rc;
 }

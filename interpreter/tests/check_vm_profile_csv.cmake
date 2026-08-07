@@ -2,7 +2,7 @@ if(NOT DEFINED VM OR NOT DEFINED INPUT OR NOT DEFINED OUTPUT)
     message(FATAL_ERROR "VM, INPUT, and OUTPUT are required")
 endif()
 
-file(REMOVE "${OUTPUT}")
+file(REMOVE "${OUTPUT}" "${OUTPUT}.value-census.csv")
 execute_process(
         COMMAND "${VM}" --profile-output "${OUTPUT}" "${INPUT}"
         RESULT_VARIABLE profile_result
@@ -85,9 +85,32 @@ if(profile_error MATCHES "VM PROFILE")
     message(FATAL_ERROR "profile table leaked to stderr despite file output")
 endif()
 
+set(value_census_output "${OUTPUT}.value-census.csv")
+if(NOT EXISTS "${value_census_output}")
+    message(FATAL_ERROR
+            "profile value-census sidecar was not created: ${value_census_output}")
+endif()
+file(READ "${value_census_output}" value_census_csv)
+if(NOT value_census_csv MATCHES "summary,schema_version,,,0,1,1,1")
+    message(FATAL_ERROR "value census does not identify schema version 1")
+endif()
+if(NOT value_census_csv MATCHES
+        "summary,unique_value_addresses.*sizeof_value=[1-9][0-9]*.*tracking=complete")
+    message(FATAL_ERROR "value census does not contain complete shape identity")
+endif()
+if(NOT value_census_csv MATCHES "origin,unique_values")
+    message(FATAL_ERROR "value census does not contain value origins")
+endif()
+if(NOT value_census_csv MATCHES "reclaimable_peak,string_capacity")
+    message(FATAL_ERROR "value census does not expose reclaimable capacity")
+endif()
+
 set(counts_output "${OUTPUT}.counts.csv")
 set(counts_repeat "${OUTPUT}.counts-repeat.csv")
-file(REMOVE "${counts_output}" "${counts_repeat}")
+file(REMOVE
+        "${counts_output}" "${counts_repeat}"
+        "${counts_output}.value-census.csv"
+        "${counts_repeat}.value-census.csv")
 execute_process(
         COMMAND "${VM}" --profile=counts --profile-output "${counts_output}" "${INPUT}"
         RESULT_VARIABLE counts_result
@@ -107,6 +130,14 @@ execute_process(
         RESULT_VARIABLE counts_compare)
 if(NOT counts_compare EQUAL 0)
     message(FATAL_ERROR "counts-only profiles are not deterministic")
+endif()
+execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E compare_files
+                "${counts_output}.value-census.csv"
+                "${counts_repeat}.value-census.csv"
+        RESULT_VARIABLE counts_census_compare)
+if(NOT counts_census_compare EQUAL 0)
+    message(FATAL_ERROR "counts-only value censuses are not deterministic")
 endif()
 file(READ "${counts_output}" counts_csv)
 if(NOT counts_csv MATCHES "summary,profile_mode,counts")

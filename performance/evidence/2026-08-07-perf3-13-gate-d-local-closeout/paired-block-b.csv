@@ -1,0 +1,7 @@
+workload,pairs,paired_mean_percent,ci95_low_percent,ci95_high_percent,paired_median_percent,favorable_pairs
+Sieve,12,1.438507,1.072048,1.804966,1.407828,12
+Richards,12,-2.159895,-4.637338,0.317548,-1.537342,5
+Towers,12,2.638324,2.129406,3.147242,2.812281,12
+RexxCPS,12,1.428976,0.696831,2.161120,1.314446,10
+Pooled core four,48,0.836478,0.046558,1.626398,1.480605,39
+
