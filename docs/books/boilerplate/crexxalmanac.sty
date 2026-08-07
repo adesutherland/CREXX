@@ -1,7 +1,7 @@
 %% crexxalmanac.sty -- cRexx Almanac inspired compact API reference layout
 %% 2026/08/07 v1.0.4
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{crexxalmanac}[2026/08/07 v1.0.5 Almanac-style API reference]
+\ProvidesPackage{crexxalmanac}[2026/08/07 v1.0.6 Almanac-style API reference]
 
 \RequirePackage{xcolor}
 \RequirePackage{amssymb}
@@ -194,26 +194,36 @@
 %
 % \vtop keeps the first parameter line on the same baseline as the method.
 \newif\ifAPI@FirstParameter
+\newif\ifAPI@FirstParameter
 \NewDocumentCommand{\Params}{m}{%
   % Multiline parameters stay entirely inside the fixed argument column.
-  % The opening parenthesis occupies the method's normal argument position;
-  % every parameter is placed on its own continuation line; the closing
-  % parenthesis occupies a final line.
+  % The first parameter follows the opening parenthesis on the first line;
+  % continuation parameters are indented; the closing parenthesis follows
+  % the final parameter on its line.
   \vtop{%
     \hsize=\API@ArgumentWidth
     \parindent=0pt
     \parskip=0pt
     \baselineskip=1.08\baselineskip
-    \noindent(\par
+    \API@FirstParametertrue
     #1%
-    \noindent)\par
   }%
 }
 \NewDocumentCommand{\ParamLine}{m}{%
-  \noindent\hspace*{\APIParameterIndent}#1,\par
+  \ifAPI@FirstParameter
+    \noindent(#1,\par
+    \API@FirstParameterfalse
+  \else
+    \noindent\hspace*{\APIParameterIndent}#1,\par
+  \fi
 }
 \NewDocumentCommand{\LastParamLine}{m}{%
-  \noindent\hspace*{\APIParameterIndent}#1\par
+  \ifAPI@FirstParameter
+    \noindent(#1)\par
+    \API@FirstParameterfalse
+  \else
+    \noindent\hspace*{\APIParameterIndent}#1)\par
+  \fi
 }
 
 % Concise semantic interface. Markers are retained.
