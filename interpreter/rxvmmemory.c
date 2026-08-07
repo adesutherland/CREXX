@@ -18,10 +18,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_MSC_VER)
+#define RXVM_MEMORY_THREAD_LOCAL __declspec(thread)
+#else
+#define RXVM_MEMORY_THREAD_LOCAL __thread
+#endif
+
 #ifdef _WIN32
 #include <malloc.h>
 #include <windows.h>
-#define RXVM_MEMORY_THREAD_LOCAL __declspec(thread)
 typedef CRITICAL_SECTION rxvm_memory_mutex;
 static void rxvm_memory_mutex_init(rxvm_memory_mutex *mutex) {
     InitializeCriticalSection(mutex);
@@ -37,7 +42,6 @@ static void rxvm_memory_mutex_unlock(rxvm_memory_mutex *mutex) {
 }
 #else
 #include <pthread.h>
-#define RXVM_MEMORY_THREAD_LOCAL __thread
 typedef pthread_mutex_t rxvm_memory_mutex;
 static void rxvm_memory_mutex_init(rxvm_memory_mutex *mutex) {
     (void)pthread_mutex_init(mutex, 0);

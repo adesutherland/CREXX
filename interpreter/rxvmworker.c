@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 
-#ifdef _WIN32
+#if defined(_MSC_VER)
 #define RXVM_WORKER_THREAD_LOCAL __declspec(thread)
 #else
 #define RXVM_WORKER_THREAD_LOCAL __thread
