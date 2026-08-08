@@ -4,14 +4,16 @@
 
 CREXX provides the classic Rexx data queue through the following functions:
 
-* `PUSH`
-* `QUEUE`
-* `PULL`
-* `QUEUED`
+- `PUSH`
+- `QUEUE`
+- `PULL`
+- `QUEUED`
 
 The data queue stores character strings and is shared by the running CREXX execution and all nested procedures.
 
 The queue is independent of the procedure variable pool, allowing procedures to exchange data without using exposed variables or stems.
+
+When the data queue is empty, `PULL` automatically reads one line from the default input stream, matching classic Rexx behaviour.
 
 ---
 
@@ -95,9 +97,11 @@ value = pull()
 
 `PULL` removes and returns the first string from the data queue.
 
-If the queue is empty, an empty string is currently returned.
+If one or more entries are available in the queue, the first queued string is returned and removed from the queue.
 
-Future releases may optionally provide the classic Rexx behaviour of reading from the program's standard input when the queue is empty.
+If the queue is empty, `PULL` reads and returns one line from the default input stream (typically standard input).
+
+This behaviour is compatible with classic Rexx and allows queued data and interactive input to be used transparently.
 
 ## Example
 
@@ -114,6 +118,14 @@ Output:
 ```text
 Hello
 ```
+
+If the queue is empty:
+
+```rexx
+text = pull()
+```
+
+the user is prompted for one line of input, and the entered line is returned by `PULL`.
 
 ---
 
@@ -150,19 +162,19 @@ Output:
 
 The queue combines both stack and queue semantics.
 
-| Operation | Behaviour                     |
-| --------- | ----------------------------- |
-| `PUSH`    | Insert at the front (LIFO)    |
-| `QUEUE`   | Append at the end (FIFO)      |
-| `PULL`    | Remove from the front         |
-| `QUEUED`  | Return the current queue size |
+| Operation | Behaviour |
+|-----------|-----------|
+| `PUSH` | Insert at the front (LIFO) |
+| `QUEUE` | Append at the end (FIFO) |
+| `PULL` | Remove and return the first queued entry; if the queue is empty, read one line from the default input stream |
+| `QUEUED` | Return the current queue size |
 
 For example:
 
 ```rexx
 call queue "A"
 call queue "B"
-call push  "C"
+call push "C"
 
 do while queued() > 0
     say pull()
@@ -185,10 +197,55 @@ The data queue belongs to the current CREXX execution.
 
 It is shared by:
 
-* the main program;
-* all nested procedures;
-* all functions executing within the same CREXX execution.
+- the main program;
+- all nested procedures;
+- all functions executing within the same CREXX execution.
 
 The queue is created automatically when a CREXX execution starts and is destroyed when that execution terminates.
 
-Future CREXX releases may support externally managed named data queues shared between independent CREXX executions without changing the language interface.
+When the queue becomes empty, subsequent `PULL` operations read from the default input stream instead of the queue.
+
+Future CREXX releases may support externally managed named data queues shared between independent CREXX executions without changing the Rexx language interface.
+
+## Named Queues
+
+Each execution also provides a named queue manager. `SESSION` is created and
+selected automatically, so existing programs continue to use the four queue
+functions unchanged.
+
+Queue names are managed independently from queue entries. `PUSH`, `QUEUE`,
+`PULL`, and `QUEUED` do not take a queue-name argument; they always operate on
+the queue selected by `RXQUEUE SET`.
+
+```rexx
+rc = rxqueue("CREATE", "WORK")
+rc = rxqueue("SET", "WORK")
+call queue "A"
+call push "B"
+say "queue=" rxqueue("QUERY") "size=" queued()
+say "first=" pull()
+rc = rxqueue("SET", "SESSION")
+rc = rxqueue("DELETE", "WORK")
+```
+
+The supported operations are:
+
+| Operation | Result |
+|-----------|--------|
+| `CREATE`, name | Creates an empty named queue. |
+| `SET`, name | Selects an existing queue for the standard queue functions. |
+| `QUERY` | Returns the selected queue name. |
+| `DELETE`, name | Deletes a named queue. Deleting the selected named queue returns selection to `SESSION`. |
+
+`CREATE`, `SET`, and `DELETE` return string status `"0"` on success and
+`"4"` for an invalid, duplicate, missing, or protected queue. `SESSION` is
+always present and cannot be deleted. Queue names are case-insensitive and
+are stored in uppercase.
+
+For a complete example using `SESSION`, `WORK`, and `REPORT` as a small
+execution-local job pipeline, see
+[`examples/rxqueue_named.crexx`](../../../examples/rxqueue_named.crexx).
+
+Queue instances and their contents belong only to the current CREXX
+execution. They are not shared with another process and require no external
+queue service.

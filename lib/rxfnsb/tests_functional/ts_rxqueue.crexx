@@ -5,6 +5,40 @@ import rxfnsb
 errors = 0
 errors = errors + check_int(0, queued(), "initial depth")
 
+errors = errors + check("SESSION", rxqueue("QUERY"), "default queue name")
+call queue "session-tail"
+errors = errors + check("session-tail", pull(), "default queue compatibility")
+
+rc = rxqueue("CREATE", "WORK")
+errors = errors + check_int(0, rc, "create WORK")
+rc = rxqueue("SET", "WORK")
+errors = errors + check_int(0, rc, "set WORK")
+errors = errors + check("WORK", rxqueue("QUERY"), "current queue query")
+
+call push "work-front"
+call queue "work-back"
+errors = errors + check_int(2, queued(), "named queue depth")
+errors = errors + check("work-front", pull(), "named PUSH ordering")
+
+rc = rxqueue("SET", "SESSION")
+errors = errors + check_int(0, rc, "return to SESSION")
+errors = errors + check_int(0, queued(), "independent SESSION queue")
+call queue "session-only"
+
+rc = rxqueue("SET", "WORK")
+errors = errors + check_int(0, rc, "switch back to WORK")
+errors = errors + check_int(1, queued(), "WORK retained depth")
+errors = errors + check("work-back", pull(), "named QUEUE ordering")
+errors = errors + check_int(0, queued(), "WORK drained")
+
+rc = rxqueue("DELETE", "WORK")
+errors = errors + check_int(0, rc, "delete WORK")
+errors = errors + check("SESSION", rxqueue("QUERY"), "delete current fallback")
+errors = errors + check("session-only", pull(), "SESSION retained contents")
+
+rc = rxqueue("SET", "WORK")
+errors = errors + check_int(4, rc, "deleted queue unavailable")
+
 call queue "tail"
 call push "head"
 errors = errors + check_int(2, queued(), "mixed depth")
