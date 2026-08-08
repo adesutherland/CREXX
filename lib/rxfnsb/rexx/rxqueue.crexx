@@ -30,34 +30,241 @@
  * The queue is shared by the running CREXX execution and all
  * nested procedures through EXPOSE.
  *
- * Internally, the queue is represented as a string array.
- * A future implementation may replace this with a more
- * efficient data structure or an external queue manager
- * without changing the public interface.
+ * Each named queue is represented by one RexxQueue instance.  The manager
+ * below keeps the queue names and instances in execution-local arrays.
  *------------------------------------------------------------
 */
 
 options levelb
 import rxfnsb
 
-namespace rxfnsb expose push queue pull queued
+namespace rxfnsb expose push queue pull queued rxqueue
+
+RexxQueue: class
+  _entries = .string[]
+  _count = .int
+
+  *: factory
+    _count = 0
+    return
+
+  push: method = .void
+    arg value = .string
+    do i = _count to 1 by -1
+      _entries[i + 1] = _entries[i]
+    end
+    _entries[1] = value
+    _count = _count + 1
+    return
+
+  queue: method = .void
+    arg value = .string
+    _count = _count + 1
+    _entries[_count] = value
+    return
+
+  pull: method = .string
+    if _count = 0 then return linein()
+    value = _entries[1]
+    do i = 1 to _count - 1
+      _entries[i] = _entries[i + 1]
+    end
+    _entries[_count] = ""
+    _count = _count - 1
+    return value
+
+  queued: method = .int
+    return _count
+
+  clear: method = .void
+    _count = 0
+  /*  _entries = .string[] */
+    return
+
+  save: method = .int
+    arg fname = .string
+    if _count = 0 then do
+      rc = erasefile(fname)
+      if rc <> 0 then return 4
+      return 0
+    end
+    do i = 1 to _count
+      rc = lineout(fname, _entries[i])
+      if rc <> 0 then do
+        call lineout fname
+        return 4
+      end
+    end
+    call lineout fname
+    return 0
+
+  replace: method = .void
+    arg values = .string[]
+    _count = 0
+    do i = 1 to values[0]
+      _count = _count + 1
+      _entries[_count] = values[i]
+    end
+    return
+
+
+
+_queue_names = .string[]
+_queue_objects = .RexxQueue[]
+_queue_active = .object
+_queue_count = .int
+_queue_current = .int
+_queue_ready = .int
+
+/*------------------------------------------------------------*/
+/* Queue manager operations.                                  */
+/*------------------------------------------------------------*/
+rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _queue_count _queue_current _queue_ready
+  arg operation = .string, name = "", path = ""
+  call _ensure_queue_manager
+
+  operation = translate(operation)
+  name = translate(name)
+
+  if operation = "CREATE" then do
+    if name = "" then return "4"
+    if _queue_find(name) > 0 then return "4"
+    _queue_count = _queue_count + 1
+    _queue_names[_queue_count] = name
+    _queue_objects[_queue_count] = .RexxQueue()
+    return "0"
+  end
+
+  if operation = "SET" then do
+    slot = _queue_find(name)
+    if slot = 0 then return "4"
+    _queue_objects[_queue_current] = _queue_active
+    _queue_current = slot
+    _queue_active = _queue_objects[_queue_current]
+    return "0"
+  end
+
+  if operation = "DELETE" then do
+    slot = _queue_find(name)
+    if slot = 0 | name = "SESSION" then return "4"
+    _queue_objects[_queue_current] = _queue_active
+    if slot = _queue_current then do
+      _queue_current = 1
+      _queue_active = _queue_objects[1]
+    end
+    do i = slot to _queue_count - 1
+      _queue_names[i] = _queue_names[i + 1]
+      _queue_objects[i] = _queue_objects[i + 1]
+    end
+    _queue_names[_queue_count] = ""
+    _queue_objects[_queue_count] = .RexxQueue()
+    _queue_count = _queue_count - 1
+    if _queue_current > slot then _queue_current = _queue_current - 1
+    return "0"
+  end
+
+  if operation = "QUERY" then return _queue_names[_queue_current]
+
+  if operation = "LIST" then do
+    result = ""
+    do i = 1 to _queue_count
+       if i > 1 then result = result || " "
+      result = result || _queue_names[i]
+    end
+    return result
+  end
+
+  if operation = "INFO" then do
+    if name = "" then slot = _queue_current
+    else slot = _queue_find(name)
+    if slot = 0 then return ""
+    if slot = _queue_current then active_queue = _queue_active
+    else active_queue = _queue_objects[slot]
+    is_current = 0
+    if slot = _queue_current then is_current = 1
+    return "NAME=" || _queue_names[slot] || " QUEUED=" || active_queue.queued() || " CURRENT=" || is_current
+  end
+
+  if operation = "CLEAR" then do
+    if name = "" then slot = _queue_current
+    else slot = _queue_find(name)
+    if slot = 0 then return "4"
+    active_queue = _queue_objects[slot]
+    call active_queue.clear()
+    _queue_objects[slot] = active_queue
+    if slot = _queue_current then _queue_active = active_queue
+    return "0"
+  end
+
+  if operation = "EXPORT" then do
+    if name = "" | path = "" then return "4"
+    slot = _queue_find(name)
+    if slot = 0 then return "4"
+    if slot = _queue_current then active_queue = _queue_active
+    else active_queue = _queue_objects[slot]
+    return active_queue.save(path)
+  end
+
+  if operation = "IMPORT" then do
+    if name = "" | path = "" then return "4"
+    values = readlines(path, 1, 0, "return")
+    if values[0] = 1 & values[1] = "-8 OPEN ERROR" then return "4"
+    replacement = .RexxQueue()
+    call replacement.replace(values)
+    slot = _queue_find(name)
+    if slot = 0 then do
+      _queue_count = _queue_count + 1
+      _queue_names[_queue_count] = name
+      _queue_objects[_queue_count] = replacement
+    end
+    else do
+      _queue_objects[slot] = replacement
+      if slot = _queue_current then _queue_active = replacement
+    end
+    return "0"
+  end
+
+  return "4"
+
+_ensure_queue_manager: procedure = .void expose _queue_names _queue_objects _queue_active _queue_count _queue_current _queue_ready
+  if _queue_ready = 1 then return
+  _queue_names = .string[]
+  _queue_objects = .RexxQueue[]
+  _queue_count = 1
+  _queue_current = 1
+  _queue_names[1] = "SESSION"
+  _queue_objects[1] = .RexxQueue()
+  _queue_active = _queue_objects[1]
+  _queue_ready = 1
+  return
+
+_queue_find: procedure = .int expose _queue_names _queue_count
+  arg name = .string
+  do i = 1 to _queue_count
+    if _queue_names[i] = name then return i
+  end
+  return 0
 
 /*------------------------------------------------------------*/
 /* Insert a string at the front of the queue (LIFO).          */
 /*------------------------------------------------------------*/
-push: procedure = .void expose _queue _queue_ready
+push: procedure = .void expose _queue_ready _queue_active
   arg value = .string
-  call _ensure_queue
-  call arrayprepend _queue, value
-return
+  call _ensure_queue_manager
+  active_queue = _queue_active as .RexxQueue
+  call active_queue.push(value)
+  _queue_active = active_queue
+    return
 
 /*------------------------------------------------------------*/
 /* Append a string to the end of the queue (FIFO).            */
 /*------------------------------------------------------------*/
-queue: procedure = .void expose _queue _queue_ready
+queue: procedure = .void expose _queue_ready _queue_active
   arg value = .string
-  call _ensure_queue
-  call arrayappend _queue, value
+  call _ensure_queue_manager
+  active_queue = _queue_active as .RexxQueue
+  call active_queue.queue(value)
+  _queue_active = active_queue
 return
 
 /*------------------------------------------------------------*/
@@ -65,28 +272,17 @@ return
 /*                                                            */
 /* Returns an empty string when the queue is empty.           */
 /*------------------------------------------------------------*/
-pull: procedure = .string expose _queue _queue_ready
-  call _ensure_queue
-  if _queue[0] = 0 then return ""
-
-  value = _queue[1]
-  call arraydelete _queue, 1, 1
-return value
+pull: procedure = .string expose _queue_ready _queue_active
+  call _ensure_queue_manager
+  active_queue = _queue_active as .RexxQueue
+  value = active_queue.pull()
+  _queue_active = active_queue
+  return value
 
 /*------------------------------------------------------------*/
 /* Return the current number of queued entries.               */
 /*------------------------------------------------------------*/
-queued: procedure = .int expose _queue _queue_ready
-  call _ensure_queue
-  return _queue[0]
-
-/*------------------------------------------------------------*/
-/* Initialize private queue state without executable top-level */
-/* code in the linked library module.                          */
-/*------------------------------------------------------------*/
-_ensure_queue: procedure = .void expose _queue _queue_ready
-  if _queue_ready <> 1 then do
-    _queue = .string[]
-    _queue_ready = 1
-  end
-return
+queued: procedure = .int expose _queue_ready _queue_active
+  call _ensure_queue_manager
+  active_queue = _queue_active as .RexxQueue
+  return active_queue.queued()

@@ -601,7 +601,7 @@ parse x e5
 
 call assert_equal '105a', 'aa 6 bb', e5, ccod
 
-/* not available in CREXX PARSE
+/* not available in CREXX PARSE */
 /* -------------------------------------------------------------- */
 /* TEST 106: variable and literal patterns */
 /* -------------------------------------------------------------- */
@@ -612,7 +612,6 @@ call assert_equal '106a', 'c',         verb,  ccod
 call assert_equal '106b', '/',         delim, ccod
 call assert_equal '106c', 'my string', str,   ccod
 call assert_equal '106d', '1 10',      rest,  ccod
-*/
 
 /***** disabled legacy tests 21-24 kept commented out in original *****/
 

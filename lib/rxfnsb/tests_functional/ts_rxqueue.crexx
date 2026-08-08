@@ -5,6 +5,70 @@ import rxfnsb
 errors = 0
 errors = errors + check_int(0, queued(), "initial depth")
 
+errors = errors + check("SESSION", rxqueue("QUERY"), "default queue name")
+call queue "session-tail"
+errors = errors + check("session-tail", pull(), "default queue compatibility")
+
+rc = rxqueue("CREATE", "WORK")
+errors = errors + check_int(0, rc, "create WORK")
+rc = rxqueue("SET", "WORK")
+errors = errors + check_int(0, rc, "set WORK")
+errors = errors + check("WORK", rxqueue("QUERY"), "current queue query")
+errors = errors + check("SESSION WORK", rxqueue("LIST"), "queue list")
+errors = errors + check("NAME=WORK QUEUED=0 CURRENT=1", rxqueue("INFO"), "current queue info")
+
+call push "work-front"
+call queue "work-back"
+errors = errors + check_int(2, queued(), "named queue depth")
+errors = errors + check("NAME=WORK QUEUED=2 CURRENT=1", rxqueue("INFO", "WORK"), "named queue info")
+errors = errors + check("work-front", pull(), "named PUSH ordering")
+
+rc = rxqueue("CLEAR", "WORK")
+errors = errors + check_int(0, rc, "clear WORK")
+errors = errors + check_int(0, queued(), "cleared WORK")
+
+rc = rxqueue("SET", "SESSION")
+errors = errors + check_int(0, rc, "return to SESSION")
+errors = errors + check_int(0, queued(), "independent SESSION queue")
+call queue "session-only"
+
+rc = rxqueue("SET", "WORK")
+errors = errors + check_int(0, rc, "switch back to WORK")
+errors = errors + check_int(0, queued(), "WORK retained clear")
+call queue "work-back"
+errors = errors + check("work-back", pull(), "named QUEUE ordering")
+errors = errors + check_int(0, queued(), "WORK drained")
+
+rc = rxqueue("DELETE", "WORK")
+errors = errors + check_int(0, rc, "delete WORK")
+errors = errors + check("SESSION", rxqueue("QUERY"), "delete current fallback")
+errors = errors + check("session-only", pull(), "SESSION retained contents")
+
+rc = rxqueue("SET", "WORK")
+errors = errors + check_int(4, rc, "deleted queue unavailable")
+errors = errors + check("SESSION", rxqueue("LIST"), "queue list after delete")
+errors = errors + check("NAME=SESSION QUEUED=0 CURRENT=1", rxqueue("INFO"), "SESSION info")
+
+call rxqueue "SET", "SESSION"
+call queue "exported-entry"
+export_file = "ts_rxqueue_export.txt"
+rc = rxqueue("EXPORT", "SESSION", export_file)
+errors = errors + check_int(0, rc, "export SESSION")
+errors = errors + check("exported-entry", pull(), "export preserves source")
+rc = rxqueue("IMPORT", "REPORT", export_file)
+errors = errors + check_int(0, rc, "import REPORT")
+rc = rxqueue("SET", "REPORT")
+errors = errors + check_int(0, rc, "set imported REPORT")
+errors = errors + check("exported-entry", pull(), "imported queue content")
+call queue "stale-entry"
+rc = rxqueue("IMPORT", "REPORT", export_file)
+errors = errors + check_int(0, rc, "replace REPORT")
+errors = errors + check_int(1, queued(), "replaced REPORT depth")
+errors = errors + check("exported-entry", pull(), "replaced REPORT content")
+rc = rxqueue("DELETE", "REPORT")
+errors = errors + check_int(0, rc, "delete imported REPORT")
+call erasefile export_file
+
 call queue "tail"
 call push "head"
 errors = errors + check_int(2, queued(), "mixed depth")

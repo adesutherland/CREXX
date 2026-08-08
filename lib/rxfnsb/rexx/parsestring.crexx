@@ -29,7 +29,7 @@
  * @see lib/rxfnsb/rexx/parsestring.md
  */
 options levelb
-namespace rxfnsb expose parsestring
+namespace rxfnsb expose parsestring parsestring_values
 
 /**
  * Execute a validated token plan against a source string.
@@ -48,6 +48,12 @@ namespace rxfnsb expose parsestring
  */
 parsestring: procedure
   arg parse_string = .string, tokenhi = .int, expose token = .string[], expose token_type = .int[], expose variable = .string[], expose variable_content = .string[], template = "unknown"
+  token_value = .string[]
+  call parsestring_values parse_string,tokenhi,token,token_type,variable,variable_content,template,token_value
+  return
+
+parsestring_values: procedure
+  arg parse_string = .string, tokenhi = .int, expose token = .string[], expose token_type = .int[], expose variable = .string[], expose variable_content = .string[], template = "unknown", token_value = .string[]
   source_length = .int
   pointer = .int
   variable_count = .int
@@ -213,7 +219,10 @@ parsestring: procedure
       end
     end
     if matched_variable > 0 then delimiter = variable_content[matched_variable]
-    else delimiter = token[item]
+    else do
+      delimiter = token_value[item]
+      if delimiter = "" then delimiter = value(token[item])
+    end
 
     position = pointer
     if delimiter = "" then position = pointer
