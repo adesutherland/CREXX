@@ -14,13 +14,19 @@
 #include "rxvalue.h"
 
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(_MSC_VER)
+#define RXVM_MEMORY_THREAD_LOCAL __declspec(thread)
+#else
+#define RXVM_MEMORY_THREAD_LOCAL __thread
+#endif
 
 #ifdef _WIN32
 #include <malloc.h>
 #include <windows.h>
-#define RXVM_MEMORY_THREAD_LOCAL __declspec(thread)
 typedef CRITICAL_SECTION rxvm_memory_mutex;
 static void rxvm_memory_mutex_init(rxvm_memory_mutex *mutex) {
     InitializeCriticalSection(mutex);
@@ -36,7 +42,6 @@ static void rxvm_memory_mutex_unlock(rxvm_memory_mutex *mutex) {
 }
 #else
 #include <pthread.h>
-#define RXVM_MEMORY_THREAD_LOCAL __thread
 typedef pthread_mutex_t rxvm_memory_mutex;
 static void rxvm_memory_mutex_init(rxvm_memory_mutex *mutex) {
     (void)pthread_mutex_init(mutex, 0);
@@ -124,6 +129,7 @@ struct rxvm_memory_worker {
     rxvm_memory_stats stats;
     uint32_t id;
     uint32_t generation;
+    uintptr_t owner_thread_token;
 };
 
 struct rxvm_memory_context {
@@ -143,6 +149,11 @@ struct rxvm_memory_context {
 };
 
 static RXVM_MEMORY_THREAD_LOCAL rxvm_memory_worker *rxvm_memory_tls_worker;
+static RXVM_MEMORY_THREAD_LOCAL unsigned char rxvm_memory_thread_marker;
+
+static uintptr_t rxvm_memory_current_thread_token(void) {
+    return (uintptr_t)&rxvm_memory_thread_marker;
+}
 
 static const uint32_t rxvm_memory_byte_sizes[RXVM_MEMORY_BYTE_CLASS_COUNT] = {
     16u, 32u, 64u, 128u, 256u, 512u,
@@ -672,6 +683,7 @@ rxvm_memory_worker *rxvm_memory_worker_create(rxvm_memory_context *context) {
     worker = (rxvm_memory_worker *)calloc(1, sizeof(*worker));
     if (!worker) return 0;
     worker->context = context;
+    worker->owner_thread_token = rxvm_memory_current_thread_token();
 
     rxvm_memory_mutex_lock(&context->mutex);
     worker->id = context->next_worker_id++;
@@ -686,6 +698,11 @@ rxvm_memory_worker *rxvm_memory_worker_create(rxvm_memory_context *context) {
 
 rxvm_memory_worker *rxvm_memory_enter(rxvm_memory_worker *worker) {
     rxvm_memory_worker *previous = rxvm_memory_tls_worker;
+    if (worker && !rxvm_memory_worker_is_current_thread_owner(worker)) {
+        fprintf(stderr,
+                "RXVM memory worker entry rejected: wrong owner thread\n");
+        abort();
+    }
     rxvm_memory_tls_worker = worker;
     return previous;
 }
@@ -696,6 +713,12 @@ void rxvm_memory_leave(rxvm_memory_worker *previous_worker) {
 
 rxvm_memory_worker *rxvm_memory_current_worker(void) {
     return rxvm_memory_tls_worker;
+}
+
+int rxvm_memory_worker_is_current_thread_owner(
+        const rxvm_memory_worker *worker) {
+    return worker && worker->owner_thread_token != 0u &&
+           worker->owner_thread_token == rxvm_memory_current_thread_token();
 }
 
 void *rxvm_memory_alloc_bytes(rxvm_memory_worker *worker, size_t size) {
@@ -983,6 +1006,11 @@ size_t rxvm_memory_worker_destroy(rxvm_memory_worker *worker) {
     rxvm_memory_extent *extent;
     size_t leaks;
     if (!worker) return 0;
+    if (!rxvm_memory_worker_is_current_thread_owner(worker)) {
+        fprintf(stderr,
+                "RXVM memory worker teardown rejected: wrong owner thread\n");
+        abort();
+    }
     context = worker->context;
     leaks = (size_t)worker->stats.live_allocations;
     if (rxvm_memory_tls_worker == worker) rxvm_memory_tls_worker = 0;

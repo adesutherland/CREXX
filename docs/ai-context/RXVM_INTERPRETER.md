@@ -391,7 +391,10 @@ most two per class and 32 overall before returning excess to the system.
 helpers can use the correct arena without threading an allocator parameter
 through every opcode. Ownership is recovered from the aligned slab or extent
 header. A release under a different active worker is rejected and counted as a
-wrong-owner free; allocator families are never guessed.
+wrong-owner free; allocator families are never guessed. Each registered arena
+also records the OS thread that created it. Entering or destroying that arena
+from a different thread is rejected before its thread-local binding or local
+slab lists can be changed.
 
 A worker arena is single-thread-owned execution state, not a lockable heap
 handle. It must never be entered concurrently by two OS threads. Every thread
@@ -418,10 +421,26 @@ request paths use the same join-before-destruction contract. POSIX uses
 close-on-exec completion descriptors and Windows uses private non-inheritable
 handle duplicates; neither platform hands a parent worker to an I/O thread.
 
-The current execution product still creates one logical worker. The allocator
-is a prerequisite for, not proof of, multi-threaded VM execution. A future
-worker must receive its own stack/register set, frame recycler, arena and
-procedure-affine state. `move_value()` is currently an owner-local operation:
+The current Gate E E1 execution product still creates one logical worker, but
+its ownership shell is now explicit. `rxvm_runtime` owns the memory context and
+central whole-slab depot. The embedded `rxvm_worker` in `rxvm_context` owns the
+allocator arena, thread identity and lifecycle. The compatibility CLI and
+RXVML paths each create one runtime/worker pair, so no public execution or pool
+API has changed.
+
+The worker lifecycle is idle, running, draining and stopped. Only the owning
+thread may start/end execution or begin teardown. Nested RXVML calls on that
+same thread are depth-counted and retain the running state until the outermost
+call returns; a foreign thread is rejected without changing the lifecycle.
+Teardown is permitted only from idle, moves through draining, destroys the
+worker arena, unregisters it from the runtime and then destroys the now-empty
+runtime domain. Debug teardown continues to abort on any live allocation.
+
+This shell is a prerequisite for, not proof of, multi-threaded VM execution.
+Later Gate E slices give every worker its own stack/register set, frame
+recycler, module globals, native/plugin instances, reference/socket registries
+and procedure-affine state before creating concurrent worker threads.
+`move_value()` is currently an owner-local operation:
 moving its pointers into another worker would leave them owned by the source
 arena and later fail the ownership check. Cross-worker communication must
 therefore copy into receiver-owned storage, use an explicitly transferable

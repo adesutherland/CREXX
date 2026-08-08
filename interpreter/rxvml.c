@@ -133,13 +133,14 @@ static rxvml_context* rxvml_active_context = NULL;
 /* rxvml_value is defined as an alias to value in the public header */
 
 static void* rxvml_memory_alloc(rxvml_context* ctx, size_t size) {
-    return rxvm_memory_alloc_bytes(ctx ? ctx->vm.memory_worker : NULL, size);
+    return rxvm_memory_alloc_bytes(
+            ctx ? ctx->vm.worker.memory_worker : NULL, size);
 }
 
 static void* rxvml_memory_calloc(rxvml_context* ctx,
                                  size_t count,
                                  size_t size) {
-    return rxvm_memory_calloc_bytes(ctx ? ctx->vm.memory_worker : NULL,
+    return rxvm_memory_calloc_bytes(ctx ? ctx->vm.worker.memory_worker : NULL,
                                     count, size);
 }
 
@@ -147,7 +148,8 @@ static void* rxvml_memory_resize(rxvml_context* ctx,
                                  void* pointer,
                                  size_t copy_size,
                                  size_t new_size) {
-    rxvm_memory_worker* worker = ctx ? ctx->vm.memory_worker : NULL;
+    rxvm_memory_worker* worker =
+            ctx ? ctx->vm.worker.memory_worker : NULL;
     rxvm_memory_worker* previous = rxvm_memory_enter(worker);
     void* resized = rxvm_memory_resize_bytes(worker, pointer,
                                              copy_size, new_size);
@@ -158,7 +160,8 @@ static void* rxvml_memory_resize(rxvml_context* ctx,
 static void rxvml_memory_free(rxvml_context* ctx, void* pointer) {
     rxvm_memory_worker* previous;
     if (!pointer) return;
-    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker : NULL);
+    previous = rxvm_memory_enter(
+            ctx ? ctx->vm.worker.memory_worker : NULL);
     (void)rxvm_memory_release(pointer);
     rxvm_memory_leave(previous);
 }
@@ -578,7 +581,7 @@ static int rxvml_invoke_external_proc(
         }
     }
 
-    call_ret = value_f_in(ctx->vm.memory_worker);
+    call_ret = value_f_in(ctx->vm.worker.memory_worker);
     if (!call_ret) {
         rxvml_memory_free(ctx, call_args);
         ctx->last_error = "Failed to allocate rxvml return value";
@@ -1652,7 +1655,7 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len) {
 }
 
 rxvml_value* rxvml_value_new(rxvml_context* ctx) {
-    value *result = value_f_in(ctx ? ctx->vm.memory_worker : 0);
+    value *result = value_f_in(ctx ? ctx->vm.worker.memory_worker : 0);
 #ifdef CREXX_VM_PROFILING
     rxvm_profile_mark_value_origin(
             result, RXVM_PROFILE_VALUE_ORIGIN_API_NATIVE);
@@ -1693,7 +1696,7 @@ void* rxvml_get_native_payload(rxvml_value* v, size_t* out_len,
 
 rxvml_value* rxvml_object_new(rxvml_context* ctx, size_t num_attrs) {
     rxvm_memory_worker *previous =
-            rxvm_memory_enter(ctx ? ctx->vm.memory_worker : 0);
+            rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker : 0);
     value* v = value_f();
     set_num_attributes(v, num_attrs);
     rxvm_memory_leave(previous);
@@ -1705,7 +1708,7 @@ int rxvml_set_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1, rxv
     value* v_val = (value*)val;
     rxvm_memory_worker *previous;
     if (index1 == 0 || index1 > v_obj->num_attributes) return -1;
-    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker :
+    previous = rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker :
                                  rxvm_memory_owner(obj));
     copy_value(v_obj->attributes[index1 - 1], v_val);
     rxvm_memory_leave(previous);
@@ -1717,7 +1720,7 @@ rxvml_value* rxvml_get_attribute(rxvml_context* ctx, rxvml_value* obj, size_t in
     rxvm_memory_worker *previous;
     value* v_ret;
     if (index1 == 0 || index1 > v_obj->num_attributes) return NULL;
-    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker :
+    previous = rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker :
                                  rxvm_memory_owner(obj));
     v_ret = value_f();
     copy_value(v_ret, v_obj->attributes[index1 - 1]);
@@ -1738,7 +1741,7 @@ int rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_v
     /* link_attribute might be better, but for now we just copy the value pointer or copy the value */
     /* Actually, attributes[i] is a pointer to a value */
     /* Copy into the pre-allocated attribute slot to avoid pointer aliasing */
-    previous = rxvm_memory_enter(ctx ? ctx->vm.memory_worker :
+    previous = rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker :
                                  rxvm_memory_owner(arr));
     copy_value(v_arr->attributes[index1 - 1], v_elem);
     rxvm_memory_leave(previous);
