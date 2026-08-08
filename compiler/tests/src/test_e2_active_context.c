@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <ctype.h>
+#endif
 
 #include "rxvml.h"
 
@@ -107,6 +110,40 @@ static int count_occurrences(const char *text, const char *pattern) {
         text += length;
     }
     return count;
+}
+
+static int count_path_occurrences(const char *text, const char *path) {
+#ifdef _WIN32
+    char *normalized_text;
+    char *normalized_path;
+    size_t i;
+    int count;
+
+    if (!text || !path) return 0;
+    normalized_text = (char *)malloc(strlen(text) + 1u);
+    normalized_path = (char *)malloc(strlen(path) + 1u);
+    if (!normalized_text || !normalized_path) {
+        free(normalized_text);
+        free(normalized_path);
+        return -1;
+    }
+    strcpy(normalized_text, text);
+    strcpy(normalized_path, path);
+    for (i = 0; normalized_text[i]; i++) {
+        if (normalized_text[i] == '\\') normalized_text[i] = '/';
+        normalized_text[i] = (char)tolower((unsigned char)normalized_text[i]);
+    }
+    for (i = 0; normalized_path[i]; i++) {
+        if (normalized_path[i] == '\\') normalized_path[i] = '/';
+        normalized_path[i] = (char)tolower((unsigned char)normalized_path[i]);
+    }
+    count = count_occurrences(normalized_text, normalized_path);
+    free(normalized_text);
+    free(normalized_path);
+    return count;
+#else
+    return count_occurrences(text, path);
+#endif
 }
 
 static void e2_say_a(char *message) {
@@ -247,10 +284,17 @@ static void run_thread(e2_thread_state *state) {
             "rxsig1|e2_active_context.state|.string|directory=.string,token=.string,platform=.string",
             3, state_args, &result) != 0 || !result ||
         rxvml_to_str(ctx, result, &state_text, &state_length) != 0 ||
-        !state_text || count_occurrences(state_text, state->directory) != 2 ||
+        !state_text || count_path_occurrences(state_text, state->directory) != 2 ||
         count_occurrences(state_text, state->token) != 2) {
         shared_lock(shared);
         shared->failures++;
+        if (state_text) {
+            fprintf(stderr, "E2 worker %d state mismatch: %.*s\n",
+                    state->identity, (int)state_length, state_text);
+        } else {
+            fprintf(stderr, "E2 worker %d state mismatch: <no state>\n",
+                    state->identity);
+        }
         shared_unlock(shared);
     }
     if (result) rxvml_value_free(result);
