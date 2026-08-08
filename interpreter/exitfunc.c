@@ -27,13 +27,25 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "rxpa.h"
-#include "rxvmmemory.h"
+#include "rxvmintp.h"
 
 // Function Prototypes
 void say_exit_default(char* message); // Default say exit function
 
-// Global Variables
-say_exit_func say_exit = say_exit_default;
+#if defined(_MSC_VER)
+#define RXVM_THREAD_LOCAL __declspec(thread)
+#else
+#define RXVM_THREAD_LOCAL __thread
+#endif
+
+/* Compatibility default for callers which configure output before VM entry. */
+static RXVM_THREAD_LOCAL say_exit_func thread_say_exit = say_exit_default;
+
+static say_exit_func rxvm_current_say_exit(void) {
+    rxvm_context *context = rxvm_active_context_current();
+    if (context && context->active.say_exit) return context->active.say_exit;
+    return thread_say_exit ? thread_say_exit : say_exit_default;
+}
 
 /* Default Say Exit Function - prints to stdout */
 void say_exit_default(char* message) {
@@ -45,12 +57,17 @@ void say_exit_default(char* message) {
 
 /* Set the say exit function */
 void rxvm_setsayexit(say_exit_func sayExitFunc) {
-    say_exit = sayExitFunc;
+    rxvm_context *context = rxvm_active_context_current();
+    say_exit_func selected = sayExitFunc ? sayExitFunc : say_exit_default;
+    if (context) context->active.say_exit = selected;
+    else thread_say_exit = selected;
 }
 
 /* Reset the say exit function */
 void rxvm_resetsayexit() {
-    say_exit = say_exit_default;
+    rxvm_context *context = rxvm_active_context_current();
+    if (context) context->active.say_exit = 0;
+    else thread_say_exit = say_exit_default;
 }
 
 /* printf replacement - prints to the say exit function (or stdout) */
@@ -72,10 +89,10 @@ void rxvm_mprintf(const char* format, ...) {
         va_start(argptr, format);
         vsnprintf(buffer, needed_len, format, argptr);
         va_end(argptr);
-        say_exit(buffer);
+        rxvm_current_say_exit()(buffer);
         (void)rxvm_memory_release(buffer);
     }
     else {
-        say_exit(fixed_buffer);
+        rxvm_current_say_exit()(fixed_buffer);
     }
 }

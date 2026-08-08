@@ -4761,26 +4761,36 @@ void completely_free_frame(stack_frame *frame) {
     (void)rxvm_memory_release(frame);
 }
 
-// Bit field of raised VM interrupts (checked by the interpreter)
-static volatile sig_atomic_t interrupts = 0;
-
 // Function to set an interrupt
 void raise_signal(unsigned char signal) {
-    interrupts |= rxsignal_mask(signal);
+    rxvm_context *context = rxvm_active_context_current();
+    if (context) {
+        if (context->active.pending_interrupts)
+            *context->active.pending_interrupts |= rxsignal_mask(signal);
+        return;
+    }
+    rxvm_signal_raise_process_main(signal);
 }
 
 // Function to clear an interrupt
 void clear_signal(unsigned char signal) {
-    interrupts &= ~rxsignal_mask(signal);
+    rxvm_context *context = rxvm_active_context_current();
+    if (context) {
+        if (context->active.pending_interrupts)
+            *context->active.pending_interrupts &= ~rxsignal_mask(signal);
+        return;
+    }
+    rxvm_signal_clear_process_main(signal);
 }
 
 static RXVM_LABEL_OWNER_NOINLINE void rxsignal_raise_private_table_oom(
+        volatile sig_atomic_t *pending_interrupts,
         stack_frame *frame,
         bin_code **interrupted_pc,
         bin_code *pc,
         value **interrupt_object) {
     if (!frame->is_interrupt) *interrupted_pc = pc;
-    interrupts |= rxsignal_mask(RXSIGNAL_FAILURE);
+    *pending_interrupts |= rxsignal_mask(RXSIGNAL_FAILURE);
     value_zero(interrupt_object[RXSIGNAL_FAILURE]);
     set_null_string(interrupt_object[RXSIGNAL_FAILURE],
                     "Unable to allocate private interrupt table");
@@ -4790,7 +4800,7 @@ static RXVM_LABEL_OWNER_NOINLINE void rxsignal_raise_private_table_oom(
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
 if ((signal)->base.signal_number > RXSIGNAL_NONE && (signal)->base.signal_number < RXSIGNAL_MAX) { \
 if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= rxsignal_mask((signal)->base.signal_number); \
+pending_interrupts |= rxsignal_mask((signal)->base.signal_number); \
 value_zero(interrupt_object[(signal)->base.signal_number]); \
 set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
 }
@@ -4798,20 +4808,20 @@ set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.s
 // Macro to throw a signal
 #define SET_SIGNAL(signal) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= rxsignal_mask(signal); \
+pending_interrupts |= rxsignal_mask(signal); \
 value_zero(interrupt_object[(signal)]);}
 
 // Macro to throw a signal with a message
 #define SET_SIGNAL_MSG(signal, message) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= rxsignal_mask(signal); \
+pending_interrupts |= rxsignal_mask(signal); \
 value_zero(interrupt_object[(signal)]); \
 set_null_string(interrupt_object[(signal)], (message));}
 
 // Macro to throw a signal with a payload
 #define SET_SIGNAL_PAYLOAD(signal, payload) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= rxsignal_mask(signal); \
+pending_interrupts |= rxsignal_mask(signal); \
 copy_value(interrupt_object[(signal)], (payload));}
 
 #define SET_SIGNAL_FROM_NAME(name) \
@@ -4865,7 +4875,15 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     }
 
     // Set the interrupt
-    interrupts |= rxsignal_mask((int) int_num);
+    {
+        rxvm_context *context = rxvm_active_context_current();
+        if (context) {
+            if (context->active.pending_interrupts)
+                *context->active.pending_interrupts |= rxsignal_mask((int)int_num);
+        } else {
+            rxvm_signal_raise_process_main((unsigned char)int_num);
+        }
+    }
 }
 
 #define HANDLE_INTERRUPT_ACTION_RETURN() \
@@ -4988,11 +5006,18 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     value *work3;
     module *current_module = 0;
     rxvm_memory_worker *previous_memory_worker;
+    volatile sig_atomic_t pending_interrupts = 0;
+    volatile sig_atomic_t *previous_pending_interrupts = 0;
 #ifdef NTHREADED
     void *next_inst = 0;
 #else
     void *next_inst = &&IUNKNOWN;
 #endif
+    if (rxvm_signal_enter_execution(
+            context, &pending_interrupts,
+            &previous_pending_interrupts) != 0) {
+        abort();
+    }
     previous_memory_worker =
             rxvm_memory_enter(context->worker.memory_worker);
     RXVM_INSTRUMENTATION_STATE();
@@ -5326,14 +5351,14 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     last_interrupt = 0;
     for (signal_code = 0; signal_code < RXSIGNAL_MAX - 1; signal_code++) {
         sig_atomic_t signal_mask = rxsignal_mask(signal_code + 1);
-        if (interrupts & signal_mask) {
+        if (pending_interrupts & signal_mask) {
             bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
             last_interrupted_module[signal_code + 1] = (rxinteger) current_module->module_number;
             last_interrupted_address[signal_code + 1] =
                     (rxinteger) VM_CANONICAL_INDEX(signal_pc);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
-                interrupts &= ~signal_mask;
+                pending_interrupts &= ~signal_mask;
             } else {
                 last_interrupt = signal_code + 1;
                 break;
@@ -5352,7 +5377,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     // Clear the interrupt
     if (last_interrupt != RXSIGNAL_BREAKPOINT) {
         // Breakpoints are not cleared
-        interrupts &= ~rxsignal_mask(last_interrupt);
+        pending_interrupts &= ~rxsignal_mask(last_interrupt);
     }
 
     // Handle the interrupt
@@ -5575,7 +5600,7 @@ START_OF_INSTRUCTIONS
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) VM_ADVANCE(0);
             DEBUG("TRACE - BPON\n");
-            interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
+            pending_interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
             DISPATCH;
 
         /* Enable Breakpoints with op1 handler */
@@ -5587,14 +5612,14 @@ START_OF_INSTRUCTIONS
                     goto interrupt_table_oom;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
-                interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
+                pending_interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
             }
             DISPATCH;
 
         /* Disable Breakpoints */
         START_INSTRUCTION(BPOFF) VM_ADVANCE(0);
             DEBUG("TRACE - BPOFF\n");
-            interrupts &= ~rxsignal_mask(RXSIGNAL_BREAKPOINT);
+            pending_interrupts &= ~rxsignal_mask(RXSIGNAL_BREAKPOINT);
             DISPATCH;
 
         /* Set Signal op1 Handle to Ignore */
@@ -8178,7 +8203,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                         current_frame->baselocals[destination];
 
                 if (context->debug_mode ||
-                        (interrupts & rxsignal_mask(RXSIGNAL_BREAKPOINT)) != 0) {
+                        (pending_interrupts & rxsignal_mask(RXSIGNAL_BREAKPOINT)) != 0) {
                     /* Preserve both canonical observations and their metadata. */
                     VM_SELECT_INDEX(site_index + 2u,
                                     RXVM_TRANSITION_SEQUENTIAL);
@@ -8329,7 +8354,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
 
                 source = object->attributes[(int)op3I - 1];
                 if (context->debug_mode ||
-                        (interrupts & rxsignal_mask(RXSIGNAL_BREAKPOINT)) != 0 ||
+                        (pending_interrupts & rxsignal_mask(RXSIGNAL_BREAKPOINT)) != 0 ||
                         !rxvm_reference_payload_cell(source)) {
                     /* Preserve instruction-by-instruction debug/breakpoint
                      * observation and the complete generic value fallback. */
@@ -14107,7 +14132,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     END_OF_INSTRUCTIONS
 
     interrupt_table_oom:
-        rxsignal_raise_private_table_oom(current_frame, &interrupted_pc, pc,
+        rxsignal_raise_private_table_oom(&pending_interrupts, current_frame, &interrupted_pc, pc,
                                          interrupt_object);
         DISPATCH;
 
@@ -14186,12 +14211,19 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 
     rxvm_memory_leave(previous_memory_worker);
 
+    if (rxvm_signal_leave_execution(
+            context, &pending_interrupts,
+            previous_pending_interrupts) != 0) {
+        abort();
+    }
+
     return rc;
 }
 
 int run(rxvm_context *context, int argc, char *argv[]) {
     rxvm_worker_transition_result transition =
             rxvm_worker_begin_execution(&context->worker);
+    rxvm_context *previous_active_context;
     int rc;
 
     if (transition != RXVM_WORKER_TRANSITION_OK) {
@@ -14204,7 +14236,9 @@ int run(rxvm_context *context, int argc, char *argv[]) {
         return 1;
     }
 
+    previous_active_context = rxvm_active_context_enter(context);
     rc = rxvm_run_owned_core(context, argc, argv);
+    rxvm_active_context_leave(previous_active_context);
     if (rxvm_worker_end_execution(&context->worker) !=
             RXVM_WORKER_TRANSITION_OK) {
         abort();

@@ -2462,7 +2462,7 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     if (!vctx) return NULL;
 
     /* Set say exit to print to stderr */
-    rxvml_set_say_exit(rxcp_say_exit);
+    rxvml_set_context_say_exit(vctx, rxcp_say_exit);
 
     if (rxvml_load_module_file(vctx, "library") <= 0) {
         rxvml_destroy(vctx);

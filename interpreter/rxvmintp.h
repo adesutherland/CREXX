@@ -36,6 +36,7 @@
 #include "rxvminstrument.h"
 #include "crexx_version.h"
 #include <assert.h>
+#include <signal.h>
 #include <stdint.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
@@ -388,7 +389,8 @@ struct stack_frame {
                 RXVM_INSTRUMENTATION_CURRENT_TRANSITION());                     \
         pc = next_pc;                                                           \
         RXVM_INSTRUMENTATION_INTERRUPT_POLL();                                  \
-        if (interrupts && !current_frame->is_interrupt) goto INTERRUPT;          \
+        if (pending_interrupts && !current_frame->is_interrupt)                \
+            goto INTERRUPT;                                                    \
         VM_DISPATCH_TARGET();                                                   \
     } while (0)
 
@@ -489,6 +491,20 @@ struct stack_frame {
 #define REG_OP_TEST_INT(v,n)    { (v) = REG_OP(n);}
 #define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 
+/*
+ * Mutable state reached by native callbacks while this VM owns the current
+ * thread.  The TLS locator in rxvmactive.c contains no VM state: it only
+ * identifies this context after the worker-affinity check has succeeded.
+ */
+typedef struct rxvm_active_state {
+    void *rxvml_context;
+    void *rxpa_context;
+    void *rxpa_pool_head;
+    void *crexx_command_state;
+    say_exit_func say_exit;
+    volatile sig_atomic_t *pending_interrupts;
+} rxvm_active_state;
+
 /* Runtime context */
 typedef struct rxvm_context {
     rxvm_worker worker;
@@ -523,6 +539,8 @@ typedef struct rxvm_context {
     char link_dirty;
     char interface_method_registry_dirty;
     char interface_factory_registry_dirty;
+    /* Append worker-owned state so established hot-field offsets stay fixed. */
+    rxvm_active_state active;
 #ifdef CREXX_VM_PROFILING
     /* Keep optional build-local fields last so existing field offsets stay stable. */
     char profile_mode;
@@ -541,6 +559,11 @@ rxsignal rxvm_getsignalcode(char* signalText);
 int initialz();
 int finalize();
 int run(rxvm_context *context, int argc, char *argv[]);
+
+/* Checked thread-local locator for the worker-owned active VM context. */
+rxvm_context *rxvm_active_context_current(void);
+rxvm_context *rxvm_active_context_enter(rxvm_context *context);
+void rxvm_active_context_leave(rxvm_context *previous_context);
 
 /* Initialise modules context */
 void rxinimod(rxvm_context *context);
@@ -706,5 +729,29 @@ void raise_signal(unsigned char signal);
  * @param signal The signal to clear.
  */
 void clear_signal(unsigned char signal);
+
+/**
+ * Designates the standalone product's main VM as the OS interrupt target.
+ * The context must outlive all installed VM OS-signal handlers.
+ * @return 0 when bound (including an identical repeat), -1 on conflict.
+ */
+int rxvm_signal_bind_process_main(rxvm_context *context);
+
+/**
+ * Publish/restore the sole execution-local interrupt word for this VM.
+ * Nested same-worker execution transfers pending bits between direct slots.
+ */
+int rxvm_signal_enter_execution(
+        rxvm_context *context,
+        volatile sig_atomic_t *pending_interrupts,
+        volatile sig_atomic_t **previous_pending_interrupts);
+int rxvm_signal_leave_execution(
+        rxvm_context *context,
+        volatile sig_atomic_t *pending_interrupts,
+        volatile sig_atomic_t *previous_pending_interrupts);
+
+/** Raise or clear an interrupt on the designated process-main VM. */
+void rxvm_signal_raise_process_main(unsigned char signal);
+void rxvm_signal_clear_process_main(unsigned char signal);
 
 #endif //CREXX_RXVMINTP_H

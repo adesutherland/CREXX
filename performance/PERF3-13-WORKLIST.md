@@ -2,14 +2,14 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E1-P1 accepted and locally complete; publication pending; E2 closed**
+Status: **Gate E E2 accepted and locally complete; E3 design awaiting approval; Gate F closed**
 
 ## Current Gate E continuation
 
 - Worktree: `/Users/adrian/CLionProjects/CREXX`.
 - Branch: `develop`.
-- Published Gate E base: `19802842e0655b2f2ae011f911e909a2ded7233b`
-  (`Merge branch 'develop' of github.com:adesutherland/CREXX into develop`).
+- Published Gate E base: `84d406904ece6842f6cec5a47e75d12b9d28ab16`
+  (`fix: use compiler-correct RXVM thread locals`).
 - EF-0 implementation: `642e1b697bd019a800a2bddbaea8ef7a3d75e531`
   (`perf: recover spawn I/O ownership`).
 - Adrian approved the full Gate E architecture and its immediate E1
@@ -17,14 +17,20 @@ Status: **Gate E E1-P1 accepted and locally complete; publication pending; E2 cl
   remains subject to its focused correctness, frozen ordinary Release verdict
   and explicit acceptance stop.
 - Adrian accepted E1's first ordinary Release verdict on 2026-08-07. The E1
-  implementation and proportional Mac closeout are locally complete; the
-  coherent local commit remains unpublished until Adrian explicitly approves
-  the push. E2 is closed until then and requires its own slice approval.
+  implementation and proportional Mac closeout are published in `b5e1d0565`.
 - Adrian accepted E1-P1's core-four Release verdict and authorized full QA on
   2026-08-07. The wrapper removes the isolated RexxCPS layout regression and
   passes proportional Mac sanitizer, full Debug and ordinary Release closeout.
-  It is retained as a separate local commit and is not approved for push. E2
-  and Gate F remain closed.
+  It is published separately in `91282a0ac`. Windows-MinGW follow-up commits
+  `7bbf32cae` and `84d406904` fix the platform include boundary and select TLS
+  by compiler rather than operating system. GitHub Actions run `31206601838`
+  passes all 1,999 Windows tests, including `rxvmworker_lifecycle`, and the
+  complete Linux/macOS/Windows build matrix; CodeQL run `31206601827` passes.
+  MSVC, Intel Linux and Linux ARM64 proof remains open.
+- Adrian accepted E2's direct-slot ordinary-Release verdict and authorized full
+  QA. The Mac closeout is green, including the complete 1,999-test Debug and
+  AddressSanitizer suites. E3 plugin/native-instance ownership is the next
+  proposed Gate E slice and requires its own approval. Gate F remains closed.
 
 ## Exact isolated base
 
@@ -1284,10 +1290,11 @@ teardown.
 
 Late loading publishes a new sealed program generation rather than mutating a
 generation being executed. Existing requests retain their old generation until
-completion. POSIX signals and Windows console events are installed through one
-process broker; the low-level handler records an event and workers observe
-worker-local pending flags at safe points. Targeted cancellation is a
-cooperative worker request, not forced thread termination.
+completion. The product main VM is the OS interrupt target and every worker
+observes only its own pending word at safe points. A later Gate F provider may
+route or propagate an event by raising selected worker words; the low-level
+POSIX or Windows callback never walks the worker registry. Targeted
+cancellation is a cooperative worker request, not forced thread termination.
 
 The future transport value remains a logical register image: a typed scalar or
 binary payload with ordered child-register images. Gate E may use a private
@@ -1429,6 +1436,227 @@ enabled. Native Windows, Intel Linux and Linux ARM64 proof remains later Gate E
 platform work. Compact evidence:
 [`2026-08-07-perf3-13-gate-e-e1-p1-wrapper`](evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/).
 
+### E2 explicit-active-state design selection
+
+The opening audit identifies seven mutable process-global execution paths:
+`rxvml_active_context`, `current_rxpa_context`, the RXPA copy-out pool, the
+SAY exit, CREXX directory-stack and process directory/environment mutation,
+the context-free reference-ID counter, and the VM `interrupts` bitset. The
+RXVM plugin factory catalogue and its dynamic-library handle remain E3
+catalogue/lifecycle work; module generations remain E4.
+
+1. **A — worker-VM-owned active state with a checked thread-local locator.
+   Selected.** Append an internal active-state record to `rxvm_context` so
+   established context-member offsets remain stable. It owns active RXVML/RXPA
+   bindings, native copy-out scratch, SAY routing, logical CREXX command state
+   and the worker's live pending-interrupt pointer. A nested enter/leave locator
+   identifies the currently executing or loading worker VM; the mutable payload
+   remains context-owned and teardown checked. Nested same-worker calls save and
+   restore their active bindings. Preserving context offsets does not promise
+   identical compiler-generated stack/register layout inside the flattened
+   interpreter core; E2's accepted RexxCPS result is evidence of that distinction.
+2. **B — make each old global thread-local. Rejected.** TLS would prevent two
+   OS threads from overwriting one another, but would not bind state to a
+   worker lifecycle, distinguish nested workers on one thread, prove cleanup,
+   or provide a valid target when a Windows console handler runs on a system
+   thread.
+3. **C — retain process globals behind a mutex. Rejected.** It would serialize
+   unrelated workers, leave callbacks dependent on ambient state and make a
+   lock, rather than ownership, the correctness boundary.
+
+CREXX commands use a worker-owned logical current directory, directory stack
+and environment override/tombstone map. File commands resolve relative paths
+against that logical directory. Child launch receives immutable working-
+directory/environment inputs and applies them in the child/CreateProcess call;
+the parent process CWD and environment are never temporarily changed. A
+save/apply/restore process-global lease was rejected because unrelated native
+threads could observe the temporary state even if CREXX commands themselves
+were serialized.
+
+cREXX remains UTF-8 internally on every platform. Windows command line,
+working-directory and environment snapshots cross the OS boundary through
+UTF-8/UTF-16 conversion and Win32 `W` APIs; E2 does not change the process
+console code page or locale. Child standard streams remain explicit byte
+payloads, with provider-selected conversion when the child encoding is not
+UTF-8. The remaining older narrow Windows filesystem built-ins require a
+bounded `W`-API adapter audit during E2 portable closeout; this does not alter
+the first Mac Release verdict.
+
+The initial E2 implementation retained a separate process-global asynchronous
+signal mask and made every dispatch poll both that mask and the worker-local
+pending mask. Its first Release verdict was materially adverse: Sieve
+`-9.736158%`, RexxCPS `-1.771985%`, and the 48-pair pooled mean `-3.293694%`;
+all 104 processes passed, so correctness did not explain the loss. Adrian
+rejected the resulting double read on 2026-08-07 and approved the following
+bounded counterfactual before broader QA.
+
+Each VM context has exactly one pending-interrupt word and dispatch reads only
+that word. The standalone product's main VM context is the sole OS-addressable
+target; the low-level POSIX or Windows callback only maps the event and sets a
+bit in that word. Other VM contexts retain their own worker-local word and do
+not independently consume a second process queue. Internal VM signals always
+target the current active context; a context-free native raise targets the
+designated product main context. Later Gate F communication may deliberately
+propagate a Ctrl-C or another event by raising each selected worker's own word,
+but neither worker registration/fan-out nor cancellation policy belongs in E2.
+The raw OS callback must never walk a worker registry.
+
+The frozen single-word counterfactual passes 39/39 focused Debug tests and all
+52 Release timing processes. Across 12 balanced pairs, RexxCPS is neutral at
+`+0.052501%` (95% interval `-0.635793%` to `+0.740794%`), proving that the
+double-read regression was real. Sieve improves from `-9.736158%` to
+`-5.311186%` but remains clearly adverse (95% interval `-5.779917%` to
+`-4.842455%`) and still hits the 3% guard. The candidate product is 1,020,616
+bytes versus 1,002,392 bytes (`+1.818051%`), while `__text` grows by 10,188
+bytes. Apple-Clang code generation retains the context-word address in a stack
+slot: representative dispatches load that pointer and then load the flag,
+where the published global control uses `adrp` address generation followed by
+one flag load. This is one logical interrupt word but still one extra data
+load at many dispatch sites. No broader QA is authorized until Adrian selects
+the disposition or a further bounded addressing counterfactual.
+
+Adrian approved that bounded counterfactual on 2026-08-07. While a VM is
+running, its sole pending-interrupt word is an execution-local direct slot and
+the active context publishes that slot's address to native raisers. The
+designated product main publishes the same address to the OS callback only for
+the slot's live execution interval. Nested same-worker execution transfers the
+pending bits into the nested slot and restores them to the suspended slot on
+return. Dispatch reads the direct local word; there is no context word, shadow
+mask, process queue or fan-out. Handler installation/removal must bracket the
+published main-slot lifetime before it can be cleared.
+
+The frozen direct-slot verdict passes the same 39/39 focused Debug tests and
+all 52 Release timing processes. Sieve is restored to neutral at `-0.012799%`
+(95% interval `-0.332055%` to `+0.306456%`, 8/12 favorable) with no guard hit.
+RexxCPS is clearly adverse at `-1.206404%` (95% interval `-1.760487%` to
+`-0.652320%`, 1/12 favorable) but remains inside the 3% guard. The 24-pair
+two-workload mean is `-0.609602%` (95% interval `-1.000309%` to `-0.218894%`)
+with no guard hit. Apple Clang emits one direct stack-slot load at dispatch,
+and candidate `__text` is 5,556 bytes above the published control rather than
+10,188 bytes above it. The candidate product is 1,020,712 bytes versus
+1,002,392 (`+1.827628%`). Adrian accepted this first Release verdict and the
+bounded RexxCPS loss on 2026-08-08; no additional performance timing was
+required before closeout. The queued `PERF3-05-R1`/`PERF3-05-R2` work owns the
+broader flattened-`run()` hot/cold and profile-selected handler layout cleanup.
+
+Context-backed reference cells retain their existing worker-VM reference
+context. The context-free compatibility helpers no longer use mutable global
+ID state; their unindexed cell identity is local to the live compatibility
+cell. No such cell may cross a worker boundary.
+
+### E2 numbered implementation plan
+
+1. Add the appended active-state record plus checked nested enter/leave and
+   current-context accessors. Prove owner rejection, nested restoration and
+   deterministic empty teardown without changing `rxvm_worker` or earlier
+   `rxvm_context` field offsets.
+2. Move RXVML callback selection, RXPA loader selection and RXPA copy-out
+   scratch into that state. Cover nested RXVML callbacks, dynamic and static
+   plugin loading, allocation failure and cleanup.
+3. Make SAY routing context-owned for explicit RXVML users and active RXPA
+   plugins. Preserve the legacy no-context setter only as a thread-local
+   compatibility default; it is not shared VM execution state.
+4. Replace the CREXX process-global directory stack and direct parent
+   CWD/environment mutation with worker-local logical state. Resolve all
+   built-in file paths against the logical directory and pass a copied
+   directory/environment view to child launch on POSIX and Windows.
+5. Remove the mutable fallback reference counter. Give each live VM execution
+   one direct pending-interrupt word, designate the standalone product main
+   context as the sole OS-event target, and keep handler registration
+   process-scoped without adding a second event mask or per-dispatch read.
+6. Retain focused concurrent reproducers for RXVML/SAY/RXPA isolation, logical
+   CREXX directory/environment isolation, interrupt isolation, nested calls,
+   both concrete VMs and exact teardown.
+7. After the smallest focused Debug set passes, freeze production code, build
+   ordinary profiling-off Release, compare the retained core four against the
+   published E1-P1 product and report the first verdict to Adrian. Broad QA,
+   sanitizer and portable closeout wait for acceptance.
+
+### E2 accepted closeout
+
+Adrian accepted the direct-slot verdict and authorized full QA on 2026-08-08.
+The implementation remains frozen. The final ordinary profiling-off Release
+product passes 49/49 focused lifecycle, loader, RXVML, RXPA, ADDRESS, both-VM,
+external-consumer and crexx-driver checks. Its `rxbvm` is byte-identical to the
+accepted first-verdict artifact: SHA-256
+`132aa8a69a1ad9e250dfce8a4ac03905daade9f5e5300f27692c9f179255c841`,
+1,020,712 bytes, with 824,628 bytes of `__text`.
+
+Full Debug passes 1,999/1,999 with `--parallel 30` in 244.79 seconds. The
+focused supported Apple AddressSanitizer E2 set passes 35/35 with its optimized
+artifact fixture included, and the complete AddressSanitizer CTest passes
+1,999/1,999 in 727.05 seconds with no excluded or skipped tests. Apple
+LeakSanitizer is not supported, so `detect_leaks=0` is a platform capability
+limit rather than a test exclusion; Debug's exact live-allocation teardown
+assertions remain enabled.
+
+The full optimized sanitizer build exposed an independent RXAS proof-snapshot
+use-after-free when the sparse semantic edit array grew beyond 16 inline
+records. The repair retains inline snapshots and stable record IDs; array
+growth causes proof pins to be resolved again before the next proof query. It
+adds no per-record allocation. A balanced same-input Debug comparison of the
+discarded malloc control and selected record-ID form was 4.25/4.24 seconds
+versus 4.25/4.25 seconds across two ten-assembly blocks and produced
+byte-identical RXBIN. The RXAS contract, optimized reproducer, focused ASan and
+complete ASan/Debug suites all pass after the repair.
+
+Native Windows-MinGW, MSVC, Intel Linux and Linux ARM64 execution proof for E2
+remains the ordered portable follow-up after Adrian reviews the local commits.
+Compact evidence:
+[`2026-08-08-perf3-13-gate-e-e2-active-state`](evidence/2026-08-08-perf3-13-gate-e-e2-active-state/).
+
+### E3 plugin catalogue and worker-owned native instances — proposed
+
+E2 removed ambient loader selection but deliberately left the process-global
+RXVM plugin factory list, its `current_loading_handle`, the single factory-made
+`plugin_info`, static RXPA registration queues and dynamic-library lifetime for
+the next slice. The current decimal instance mutates `num_context` and private
+provider state, so it cannot be shared by concurrently executing workers even
+when only one thread enters each worker.
+
+1. **A — immutable process catalogue plus worker-VM-owned instances. Proposed
+   selection.** Synchronize only descriptor publication and library-handle
+   lifetime. Published factory descriptors are immutable; every VM context
+   constructs and owns its mutable provider/native instances, and destroys
+   them before releasing its catalogue-generation references. Execution never
+   locks the catalogue. Static RXPA registrations become replayable immutable
+   descriptors rather than a one-shot queue consumed by the first VM.
+2. **B — independently load every library in every worker. Rejected as the
+   primary model.** OS loaders may coalesce a dynamic library, static
+   constructors run process-wide and existing factories may expose singleton
+   state, so repeated `dlopen`/`LoadLibrary` alone does not prove isolation.
+   An explicitly declared private provider may still use this mode later.
+3. **C — retain shared plugin instances behind a mutex. Rejected.** Decimal
+   numeric context, error state and mutable native payload would remain
+   cross-worker state, and ordinary instruction execution would gain a hot
+   synchronization dependency.
+
+Proposed numbered plan, awaiting Adrian's approval:
+
+1. Inventory both plugin mechanisms (`rxvmplugin` providers and RXPA native
+   modules), classifying factory descriptors, code/metadata, mutable instances,
+   native static state, handles, teardown callbacks and registration order.
+2. Introduce a runtime-owned, synchronized catalogue of immutable factory and
+   RXPA registration descriptors. Make dynamic registration transactional and
+   replace ambient `current_loading_handle` with an explicit load transaction.
+3. Instantiate each selected RXVM provider once per VM context from its factory;
+   frames may borrow only that worker-owned instance. Destroy instances at idle
+   context teardown before the last referenced library handle can close.
+4. Replay static and dynamic RXPA descriptors into each VM's own native module
+   and procedure tables. Roll back partial registration/load failure without
+   publishing a half-built module or leaking a handle.
+5. Treat a native plugin with undeclared mutable process-static state as
+   single-worker-only. Define the minimum rebuild-together internal capability
+   declaration needed for immutable/reentrant code or per-context instances;
+   do not infer safety from interface metadata.
+6. Add two-worker tests for distinct decimal contexts, simultaneous static and
+   dynamic registration, duplicate/failing factories, native error isolation,
+   reverse teardown order, handle retention and exact zero-live-allocation
+   shutdown on both concrete VMs and POSIX/Windows implementations.
+7. Freeze after focused Debug correctness, run the ordinary profiling-off
+   Release single-worker neutrality verdict, report it to Adrian and stop
+   before E4 module-generation work, a public worker pool or Gate F channels.
+
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
 - [ ] Define module-global, reference-cell, native/plugin, signal and late-load
@@ -1489,12 +1717,13 @@ remains closed until the Gate E worker model has been selected.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 and E1-P1 accepted and
-   locally complete.** The runtime/worker ownership shell and its flattened-core
-   lifecycle wrapper pass their accepted first Release verdicts and proportional
-   Mac closeout. Publication remains pending Adrian approval; E2 stays closed
-   until separately approved. The full gate stops for worker-model selection
-   before any public pool/channel semantics.
+6. **Gate E — full M5 start: approved 2026-08-07; E1 through E2 accepted.**
+   E1/E1-P1 are published and Windows-MinGW proven. E2's worker-owned active
+   state and direct interrupt slot pass the accepted Release verdict, complete
+   Mac Debug/ASan/Release closeout and the separately repaired RXAS sanitizer
+   fault. E3 plugin catalogue/native-instance ownership is proposed and awaits
+   separate approval. The full gate stops for worker-model selection before any
+   public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 

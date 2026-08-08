@@ -92,6 +92,7 @@
     #define SIGCHLD -1 /* Not applicable */
     #define MAX_OS_SIGNALS 32 /* Max OS signal number we might store */
 #else
+    #include <pthread.h>
     #include <unistd.h>  /* POSIX specifics */
     /* Define MAX_OS_SIGNALS for POSIX based on common values like NSIG */
     /* NSIG itself isn't guaranteed, use a reasonable upper bound */
@@ -112,6 +113,87 @@
 /* Tracks which VM signals have our handler active (indexed by RXSIGNAL_* code) */
 /* 0=inactive, 1=active handler, -1=set to ignore by us */
 static volatile sig_atomic_t g_handler_active[RXSIGNAL_MAX];
+static rxvm_context *g_process_main_context;
+static volatile sig_atomic_t *g_process_main_interrupts;
+static size_t g_signal_users;
+
+#ifdef _WIN32
+static SRWLOCK g_signal_lifecycle_lock = SRWLOCK_INIT;
+#define SIGNAL_LIFECYCLE_LOCK() AcquireSRWLockExclusive(&g_signal_lifecycle_lock)
+#define SIGNAL_LIFECYCLE_UNLOCK() ReleaseSRWLockExclusive(&g_signal_lifecycle_lock)
+#else
+static pthread_mutex_t g_signal_lifecycle_lock = PTHREAD_MUTEX_INITIALIZER;
+#define SIGNAL_LIFECYCLE_LOCK() ((void)pthread_mutex_lock(&g_signal_lifecycle_lock))
+#define SIGNAL_LIFECYCLE_UNLOCK() ((void)pthread_mutex_unlock(&g_signal_lifecycle_lock))
+#endif
+
+int rxvm_signal_bind_process_main(rxvm_context *context) {
+    int rc = 0;
+
+    if (!context) return -1;
+    SIGNAL_LIFECYCLE_LOCK();
+    if (g_process_main_context && g_process_main_context != context) {
+        rc = -1;
+    } else {
+        g_process_main_context = context;
+    }
+    SIGNAL_LIFECYCLE_UNLOCK();
+    return rc;
+}
+
+int rxvm_signal_enter_execution(
+        rxvm_context *context,
+        volatile sig_atomic_t *pending_interrupts,
+        volatile sig_atomic_t **previous_pending_interrupts) {
+    volatile sig_atomic_t *previous;
+
+    if (!context || !pending_interrupts || !previous_pending_interrupts)
+        return -1;
+    SIGNAL_LIFECYCLE_LOCK();
+    previous = context->active.pending_interrupts;
+    *pending_interrupts = previous ? *previous : 0;
+    if (previous) *previous = 0;
+    context->active.pending_interrupts = pending_interrupts;
+    if (g_process_main_context == context)
+        g_process_main_interrupts = pending_interrupts;
+    *previous_pending_interrupts = previous;
+    SIGNAL_LIFECYCLE_UNLOCK();
+    return 0;
+}
+
+int rxvm_signal_leave_execution(
+        rxvm_context *context,
+        volatile sig_atomic_t *pending_interrupts,
+        volatile sig_atomic_t *previous_pending_interrupts) {
+    int rc = 0;
+
+    if (!context || !pending_interrupts) return -1;
+    SIGNAL_LIFECYCLE_LOCK();
+    if (context->active.pending_interrupts != pending_interrupts ||
+        (g_process_main_context == context &&
+         g_process_main_interrupts != pending_interrupts)) {
+        rc = -1;
+    } else {
+        context->active.pending_interrupts = previous_pending_interrupts;
+        if (previous_pending_interrupts)
+            *previous_pending_interrupts |= *pending_interrupts;
+        if (g_process_main_context == context)
+            g_process_main_interrupts = previous_pending_interrupts;
+        *pending_interrupts = 0;
+    }
+    SIGNAL_LIFECYCLE_UNLOCK();
+    return rc;
+}
+
+void rxvm_signal_raise_process_main(unsigned char signal) {
+    volatile sig_atomic_t *target = g_process_main_interrupts;
+    if (target) *target |= rxsignal_mask(signal);
+}
+
+void rxvm_signal_clear_process_main(unsigned char signal) {
+    volatile sig_atomic_t *target = g_process_main_interrupts;
+    if (target) *target &= ~rxsignal_mask(signal);
+}
 
 /* --- Mapping between VM Signals and OS Signals --- */
 typedef struct {
@@ -174,7 +256,8 @@ static int get_vm_signal(int os_signal) {
 /*
  * This handler is called for any OS signal we intercept.
  * It must be simple and only use async-signal-safe functions.
- * It translates the OS signal to a VM signal and sets a bit in the global flag mask.
+ * It translates the OS signal to a VM signal and sets a bit in the designated
+ * product-main VM's own pending-interrupt word.
  */
 #ifdef _WIN32
 static BOOL WINAPI vm_master_signal_handler(DWORD signum) {
@@ -188,9 +271,9 @@ static void vm_master_signal_handler(int signum /* OS Signal Number */) {
 
     /* Check if the VM signal code is valid for the bitmask */
     if (vm_signal > RXSIGNAL_NONE && vm_signal < RXSIGNAL_MAX) {
-        raise_signal(vm_signal); /* Set the interrupt signal */
+        rxvm_signal_raise_process_main((unsigned char)vm_signal);
 #ifdef _WIN32
-        return TRUE; /* Indicate we handled it */
+        return g_process_main_interrupts != NULL;
 #endif
     }
 
@@ -211,7 +294,7 @@ static void vm_master_signal_handler(int signum /* OS Signal Number */) {
  * @param vm_signal The RXSIGNAL_* code to enable.
  * @return 0 on success or if no action needed, -1 on failure to register handler.
  */
-int enable_interrupt(int vm_signal) {
+static int enable_interrupt_unlocked(int vm_signal) {
     int os_signal;
 #ifndef _WIN32
     struct sigaction sa_new; /* POSIX */
@@ -282,7 +365,7 @@ int enable_interrupt(int vm_signal) {
  * @param vm_signal The RXSIGNAL_* code to ignore.
  * return 0 on success or if no action is needed, -1 on failure to register handler.
  */
-int ignore_interrupt(int vm_signal) {
+static int ignore_interrupt_unlocked(int vm_signal) {
    int os_signal;
 #ifndef _WIN32
     struct sigaction sa_new; /* POSIX */
@@ -350,7 +433,7 @@ int ignore_interrupt(int vm_signal) {
  * @param vm_signal The RXSIGNAL_* code to disable.
  * @return 0 on success or if no action needed, -1 on failure to restore handler.
  */
-int restore_interrupt(int vm_signal) {
+static int restore_interrupt_unlocked(int vm_signal) {
     int os_signal;
 
     /* Validate VM signal code */
@@ -389,6 +472,30 @@ int restore_interrupt(int vm_signal) {
     return 0; /* Success */
 }
 
+int enable_interrupt(int vm_signal) {
+    int rc;
+    SIGNAL_LIFECYCLE_LOCK();
+    rc = enable_interrupt_unlocked(vm_signal);
+    SIGNAL_LIFECYCLE_UNLOCK();
+    return rc;
+}
+
+int ignore_interrupt(int vm_signal) {
+    int rc;
+    SIGNAL_LIFECYCLE_LOCK();
+    rc = ignore_interrupt_unlocked(vm_signal);
+    SIGNAL_LIFECYCLE_UNLOCK();
+    return rc;
+}
+
+int restore_interrupt(int vm_signal) {
+    int rc;
+    SIGNAL_LIFECYCLE_LOCK();
+    rc = restore_interrupt_unlocked(vm_signal);
+    SIGNAL_LIFECYCLE_UNLOCK();
+    return rc;
+}
+
 /**
  * @brief Initializes the VM signal handling system.
  * Clears flags, initializes storage, and prepares for enabling interrupts.
@@ -398,7 +505,13 @@ int restore_interrupt(int vm_signal) {
 int initialize_vm_signals(void) {
     int i;
 
-    /* Initialize tracking and storage */
+    SIGNAL_LIFECYCLE_LOCK();
+    if (g_signal_users++ != 0u) {
+        SIGNAL_LIFECYCLE_UNLOCK();
+        return 0;
+    }
+
+    /* Initialize process-scoped handler tracking and storage. */
     for (i = 0; i < RXSIGNAL_MAX; ++i) {
         g_handler_active[i] = 0;
     }
@@ -415,9 +528,12 @@ int initialize_vm_signals(void) {
     if (!SetConsoleCtrlHandler(vm_master_signal_handler, TRUE))
     {
         fprintf(stderr, "ERROR: Could not set console control handler. GetLastError: %lu\n", GetLastError());
+        g_signal_users = 0u;
+        SIGNAL_LIFECYCLE_UNLOCK();
         return -1; // Indicate failure to set up handler
     }
 #endif
+    SIGNAL_LIFECYCLE_UNLOCK();
     return 0;
 }
 
@@ -427,6 +543,15 @@ int initialize_vm_signals(void) {
  */
 void cleanup_vm_signals(void) {
     int i;
+    SIGNAL_LIFECYCLE_LOCK();
+    if (g_signal_users == 0u) {
+        SIGNAL_LIFECYCLE_UNLOCK();
+        return;
+    }
+    if (--g_signal_users != 0u) {
+        SIGNAL_LIFECYCLE_UNLOCK();
+        return;
+    }
 #ifdef _WIN32
     /* Install our handler */
     if (!SetConsoleCtrlHandler(vm_master_signal_handler, FALSE))
@@ -436,7 +561,8 @@ void cleanup_vm_signals(void) {
 #endif
     for (i = 0; i < RXSIGNAL_MAX; ++i) {
         if (g_handler_active[i]) {
-            restore_interrupt(i); /* Attempt to restore */
+            restore_interrupt_unlocked(i); /* Attempt to restore */
         }
     }
+    SIGNAL_LIFECYCLE_UNLOCK();
 }

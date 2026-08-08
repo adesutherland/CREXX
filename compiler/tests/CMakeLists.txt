@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.24)
 
 project(CompilerTests C)
 
+find_package(Threads REQUIRED)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -4346,6 +4348,27 @@ target_compile_definitions(test_address_callback_host PRIVATE
 add_dependencies(test_address_callback_host address_callback_host_bin library)
 
 add_custom_command(
+        OUTPUT e2_active_context.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o e2_active_context ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/e2_active_context.crexx
+        COMMAND $<TARGET_FILE:rxas> e2_active_context
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/e2_active_context.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling e2_active_context.crexx ..."
+)
+
+add_custom_target(e2_active_context_bin DEPENDS e2_active_context.rxbin)
+
+add_executable(test_e2_active_context src/test_e2_active_context.c)
+target_link_libraries(test_e2_active_context PRIVATE rxvml rxpashim Threads::Threads)
+target_include_directories(test_e2_active_context PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_e2_active_context PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_E2_ACTIVE_MODULE="${CMAKE_CURRENT_BINARY_DIR}/e2_active_context.rxbin"
+        CREXX_TEST_E2_DIRECTORY_A="${CMAKE_SOURCE_DIR}"
+        CREXX_TEST_E2_DIRECTORY_B="${CMAKE_BINARY_DIR}")
+add_dependencies(test_e2_active_context e2_active_context_bin library)
+
+add_custom_command(
         OUTPUT dynamic_load_provider.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_load_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_load_provider
@@ -4569,6 +4592,8 @@ if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
 endif()
 add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
+add_test(NAME e2_active_context_isolation COMMAND test_e2_active_context)
+set_tests_properties(e2_active_context_isolation PROPERTIES LABELS "compiler;stage3")
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 foreach(_dynamic_interface_runner IN ITEMS rxvm)
