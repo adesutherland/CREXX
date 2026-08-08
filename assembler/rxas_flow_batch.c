@@ -143,12 +143,14 @@ int rxas_flow_queue_batch_begin(
 
 instruction_queue *rxas_flow_queue_batch_edit(
         RxasFlowQueueBatch *batch, size_t record_id,
-        const instruction_queue **epoch_item) {
+        const instruction_queue **epoch_item,
+        int *snapshots_may_have_moved) {
     RxasFlowQueueBatchEntry *entry;
     size_t entry_index;
     size_t new_capacity;
     RxasFlowQueueBatchEntry *new_entries;
     if (epoch_item) *epoch_item = 0;
+    if (snapshots_may_have_moved) *snapshots_may_have_moved = 0;
     if (!batch || !batch->active || batch->finished ||
         record_id >= batch->item_count)
         return 0;
@@ -167,6 +169,8 @@ instruction_queue *rxas_flow_queue_batch_edit(
                                      ? batch->context->file_name : 0);
             batch->entries = new_entries;
             batch->entry_capacity = new_capacity;
+            if (batch->entry_count && snapshots_may_have_moved)
+                *snapshots_may_have_moved = 1;
         }
         entry = &batch->entries[batch->entry_count++];
         memset(entry, 0, sizeof(*entry));

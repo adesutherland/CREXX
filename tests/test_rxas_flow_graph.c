@@ -3457,10 +3457,15 @@ static void test_branch_thread_plans(Assembler_Context *context) {
 
 static void test_semantic_queue_batch(Assembler_Context *context) {
     FlowFixture fixture;
+    FlowFixture growth_fixture;
     RxasFlowQueueBatch batch;
     RxasFlowQueueBatchMetrics metrics;
     instruction_queue *planned;
     const instruction_queue *epoch_item;
+    const instruction_queue *first_epoch_item;
+    size_t record;
+    int snapshots_may_have_moved;
+    int observed_growth;
 
     memset(&fixture, 0, sizeof(fixture));
     fixture_op(&fixture, "ret", 0, 0);
@@ -3473,12 +3478,12 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
           "semantic queue batch construction failed");
     check(rxas_flow_queue_batch_record_matches_epoch(&batch, 0),
           "semantic queue batch did not retain its epoch snapshot");
-    planned = rxas_flow_queue_batch_edit(&batch, 0, &epoch_item);
+    planned = rxas_flow_queue_batch_edit(&batch, 0, &epoch_item, 0);
     check(planned != 0 && epoch_item != 0 &&
           epoch_item->instrType == OP_CODE,
           "semantic queue batch did not snapshot an edited record");
     if (planned) planned->instrType = EMPTY;
-    planned = rxas_flow_queue_batch_edit(&batch, 1, &epoch_item);
+    planned = rxas_flow_queue_batch_edit(&batch, 1, &epoch_item, 0);
     if (planned) planned->instrType = ASM_LABEL;
     check(!rxas_flow_queue_batch_record_matches_epoch(&batch, 0),
           "semantic queue batch missed a planned record change");
@@ -3491,7 +3496,7 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
     check(rxas_flow_queue_batch_begin(
                   &batch, context, fixture.items, fixture.item_count),
           "second semantic queue batch construction failed");
-    planned = rxas_flow_queue_batch_edit(&batch, 0, &epoch_item);
+    planned = rxas_flow_queue_batch_edit(&batch, 0, &epoch_item, 0);
     if (planned) planned->instrType = EMPTY;
     check(rxas_flow_queue_batch_commit(&batch, &metrics) &&
           metrics.records_changed == 1 &&
@@ -3505,7 +3510,7 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
     check(rxas_flow_queue_batch_begin(
                   &batch, context, fixture.items, fixture.item_count),
           "TRACE rewrite semantic queue batch construction failed");
-    planned = rxas_flow_queue_batch_edit(&batch, 2, &epoch_item);
+    planned = rxas_flow_queue_batch_edit(&batch, 2, &epoch_item, 0);
     if (planned) planned->operand5Token = fixture_integer(&fixture, 12);
     check(rxas_flow_queue_batch_commit(&batch, &metrics) &&
           metrics.records_changed == 1 &&
@@ -3518,6 +3523,46 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
     context->procedure_queue = 0;
     context->procedure_queue_items = 0;
     fixture_destroy(&fixture);
+
+    /* Proof records pin epoch snapshots.  Growing the sparse batch index
+     * beyond its initial capacity must report that record-ID-based pins need
+     * to be resolved again against the relocated inline snapshots. */
+    memset(&growth_fixture, 0, sizeof(growth_fixture));
+    for (record = 0; record < 17; record++)
+        fixture_op(&growth_fixture, "ret", 0, 0);
+    context->procedure_queue = growth_fixture.items;
+    context->procedure_queue_items = growth_fixture.item_count;
+    check(rxas_flow_queue_batch_begin(
+                  &batch, context, growth_fixture.items,
+                  growth_fixture.item_count),
+          "growing semantic queue batch construction failed");
+    planned = rxas_flow_queue_batch_edit(
+            &batch, 0, &first_epoch_item, 0);
+    check(planned != 0 && first_epoch_item != 0,
+          "growing semantic queue batch did not create first snapshot");
+    observed_growth = 0;
+    for (record = 1; record < growth_fixture.item_count; record++) {
+        snapshots_may_have_moved = 0;
+        check(rxas_flow_queue_batch_edit(
+                      &batch, record, &epoch_item,
+                      &snapshots_may_have_moved) != 0 && epoch_item != 0,
+              "growing semantic queue batch did not snapshot later record");
+        if (snapshots_may_have_moved) observed_growth = 1;
+    }
+    check(observed_growth,
+          "semantic queue batch did not report snapshot relocation risk");
+    planned = rxas_flow_queue_batch_edit(&batch, 0, &epoch_item, 0);
+    check(planned != 0 && epoch_item != 0 &&
+          epoch_item->instrType == OP_CODE &&
+          epoch_item->instrToken == growth_fixture.items[0].instrToken,
+          "semantic queue batch growth lost an epoch snapshot");
+    check(rxas_flow_queue_batch_commit(&batch, &metrics) &&
+          metrics.records_changed == 0,
+          "unchanged growing semantic queue batch did not commit cleanly");
+    rxas_flow_queue_batch_destroy(&batch);
+    context->procedure_queue = 0;
+    context->procedure_queue_items = 0;
+    fixture_destroy(&growth_fixture);
 }
 
 int main(void) {

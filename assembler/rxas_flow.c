@@ -431,14 +431,29 @@ static instruction_queue *flow_edit_record(flow_graph *graph,
                                            size_t record_id) {
     const instruction_queue *epoch_item;
     instruction_queue *item;
+    size_t entry;
+    int snapshots_may_have_moved;
     if (!graph || record_id >= graph->item_count) return 0;
     if (!graph->queue_batch) return &graph->items[record_id];
     item = rxas_flow_queue_batch_edit(
-            graph->queue_batch, record_id, &epoch_item);
-    if (!item ||
-        !rxas_flow_procedure_pin_queue_record(
-                graph->procedure, graph->epoch, record_id, epoch_item))
+            graph->queue_batch, record_id, &epoch_item,
+            &snapshots_may_have_moved);
+    if (!item) return 0;
+    if (snapshots_may_have_moved) {
+        for (entry = 0; entry < graph->queue_batch->entry_count; entry++) {
+            RxasFlowQueueBatchEntry *batch_entry =
+                    &graph->queue_batch->entries[entry];
+            if (!rxas_flow_procedure_pin_queue_record(
+                        graph->procedure, graph->epoch,
+                        batch_entry->record_id,
+                        &batch_entry->original))
+                return 0;
+        }
+    }
+    else if (!rxas_flow_procedure_pin_queue_record(
+                 graph->procedure, graph->epoch, record_id, epoch_item)) {
         return 0;
+    }
     return item;
 }
 
