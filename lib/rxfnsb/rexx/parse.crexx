@@ -50,6 +50,7 @@ parse: procedure = .int
   token_count = .int
   transformed = .string
   folded = .string
+  token_value = .string[]
 
   if strip_option <> 0 & strip_option <> 1 then
     assembler signal "INVALID_ARGUMENTS","PARSE strip option must be 0 or 1"
@@ -57,7 +58,10 @@ parse: procedure = .int
     assembler signal "INVALID_ARGUMENTS","PARSE case option must be 0, 1, or 2"
 
   token_count = parsecompile(template,token,token_type)
-  call parsestring source,token_count,token,token_type,variable,variable_content,template
+  do item = 1 to token_count
+    if token_type[item] = 6 then token_value[item] = value(token[item])
+  end
+  call parsestring_values source,token_count,token,token_type,variable,variable_content,template,token_value
 
   if strip_option = 1 | case_option > 0 then do item = 1 to variable_content[0]
     transformed = variable_content[item]
@@ -94,3 +98,5 @@ _parse_strip_value: procedure = .string
   slice_length = last - first + 1
   assembler substring result,source,first,slice_length
   return result
+
+
