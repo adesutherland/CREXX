@@ -223,7 +223,12 @@ rc = rxqueue("SET", "WORK")
 call queue "A"
 call push "B"
 say "queue=" rxqueue("QUERY") "size=" queued()
+say "queues=" rxqueue("LIST")
+say rxqueue("INFO", "WORK")
+rc = rxqueue("CLEAR", "WORK")
 say "first=" pull()
+rc = rxqueue("EXPORT", "WORK", "work.queue")
+rc = rxqueue("IMPORT", "ARCHIVE", "work.queue")
 rc = rxqueue("SET", "SESSION")
 rc = rxqueue("DELETE", "WORK")
 ```
@@ -235,12 +240,26 @@ The supported operations are:
 | `CREATE`, name | Creates an empty named queue. |
 | `SET`, name | Selects an existing queue for the standard queue functions. |
 | `QUERY` | Returns the selected queue name. |
+| `LIST` | Returns all queue names, separated by blanks. |
+| `INFO`, name | Returns `NAME=... QUEUED=... CURRENT=...` for the named queue. If the name is omitted, reports the selected queue. |
+| `CLEAR`, name | Removes all entries from the named queue without deleting it. If the name is omitted, clears the selected queue. |
 | `DELETE`, name | Deletes a named queue. Deleting the selected named queue returns selection to `SESSION`. |
+| `EXPORT`, name, path | Writes the queue to a UTF-8 text file without draining it. |
+| `IMPORT`, name, path | Replaces or creates the named queue from a UTF-8 text file. |
 
-`CREATE`, `SET`, and `DELETE` return string status `"0"` on success and
-`"4"` for an invalid, duplicate, missing, or protected queue. `SESSION` is
-always present and cannot be deleted. Queue names are case-insensitive and
-are stored in uppercase.
+`CREATE`, `SET`, `CLEAR`, `DELETE`, `EXPORT`, and `IMPORT` return string status `"0"`
+on success and `"4"` for invalid arguments, duplicate or missing queues, a
+protected queue, or a file operation failure. `SESSION` is always present and
+cannot be deleted. Queue names are case-insensitive and are stored in
+uppercase.
+
+`LIST` returns the queue names separated by blanks. `INFO` returns an empty
+string for a missing queue. The `CURRENT` field is `1` for the selected queue
+and `0` otherwise.
+
+Export files contain one queue entry per UTF-8 text line, in the order that
+`PULL` would return them. Import replaces the destination contents; it does not
+append to an existing queue. Empty queue entries are preserved as empty lines.
 
 For a complete example using `SESSION`, `WORK`, and `REPORT` as a small
 execution-local job pipeline, see

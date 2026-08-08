@@ -76,6 +76,39 @@ RexxQueue: class
   queued: method = .int
     return _count
 
+  clear: method = .void
+    _count = 0
+  /*  _entries = .string[] */
+    return
+
+  save: method = .int
+    arg fname = .string
+    if _count = 0 then do
+      rc = erasefile(fname)
+      if rc <> 0 then return 4
+      return 0
+    end
+    do i = 1 to _count
+      rc = lineout(fname, _entries[i])
+      if rc <> 0 then do
+        call lineout fname
+        return 4
+      end
+    end
+    call lineout fname
+    return 0
+
+  replace: method = .void
+    arg values = .string[]
+    _count = 0
+    do i = 1 to values[0]
+      _count = _count + 1
+      _entries[_count] = values[i]
+    end
+    return
+
+
+
 _queue_names = .string[]
 _queue_objects = .RexxQueue[]
 _queue_active = .object
@@ -87,7 +120,7 @@ _queue_ready = .int
 /* Queue manager operations.                                  */
 /*------------------------------------------------------------*/
 rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _queue_count _queue_current _queue_ready
-  arg operation = .string, name = ""
+  arg operation = .string, name = "", path = ""
   call _ensure_queue_manager
 
   operation = translate(operation)
@@ -131,6 +164,66 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
   end
 
   if operation = "QUERY" then return _queue_names[_queue_current]
+
+  if operation = "LIST" then do
+    result = ""
+    do i = 1 to _queue_count
+       if i > 1 then result = result || " "
+      result = result || _queue_names[i]
+    end
+    return result
+  end
+
+  if operation = "INFO" then do
+    if name = "" then slot = _queue_current
+    else slot = _queue_find(name)
+    if slot = 0 then return ""
+    if slot = _queue_current then active_queue = _queue_active
+    else active_queue = _queue_objects[slot]
+    is_current = 0
+    if slot = _queue_current then is_current = 1
+    return "NAME=" || _queue_names[slot] || " QUEUED=" || active_queue.queued() || " CURRENT=" || is_current
+  end
+
+  if operation = "CLEAR" then do
+    if name = "" then slot = _queue_current
+    else slot = _queue_find(name)
+    if slot = 0 then return "4"
+    active_queue = _queue_objects[slot]
+    call active_queue.clear()
+    _queue_objects[slot] = active_queue
+    if slot = _queue_current then _queue_active = active_queue
+    return "0"
+  end
+
+  if operation = "EXPORT" then do
+    if name = "" | path = "" then return "4"
+    slot = _queue_find(name)
+    if slot = 0 then return "4"
+    if slot = _queue_current then active_queue = _queue_active
+    else active_queue = _queue_objects[slot]
+    return active_queue.save(path)
+  end
+
+  if operation = "IMPORT" then do
+    if name = "" | path = "" then return "4"
+    values = readlines(path, 1, 0, "return")
+    if values[0] = 1 & values[1] = "-8 OPEN ERROR" then return "4"
+    replacement = .RexxQueue()
+    call replacement.replace(values)
+    slot = _queue_find(name)
+    if slot = 0 then do
+      _queue_count = _queue_count + 1
+      _queue_names[_queue_count] = name
+      _queue_objects[_queue_count] = replacement
+    end
+    else do
+      _queue_objects[slot] = replacement
+      if slot = _queue_current then _queue_active = replacement
+    end
+    return "0"
+  end
+
   return "4"
 
 _ensure_queue_manager: procedure = .void expose _queue_names _queue_objects _queue_active _queue_count _queue_current _queue_ready
@@ -161,7 +254,7 @@ push: procedure = .void expose _queue_ready _queue_active
   active_queue = _queue_active as .RexxQueue
   call active_queue.push(value)
   _queue_active = active_queue
-return
+    return
 
 /*------------------------------------------------------------*/
 /* Append a string to the end of the queue (FIFO).            */

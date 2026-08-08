@@ -32,9 +32,20 @@ call process_jobs "REPORT"
 
 call rxqueue "SET", "REPORT"
 say "REPORT contains " || queued() || " results"
+report_file = "rxqueue_report.txt"
+rc = rxqueue("EXPORT", "REPORT", report_file)
+say "Exported REPORT to " || report_file || " (status " || rc || ")"
+
+rc = rxqueue("IMPORT", "ARCHIVE", report_file)
+call rxqueue "SET", "ARCHIVE"
+say "ARCHIVE restored " || queued() || " results"
 do while queued() > 0
-  say "REPORT: " || pull()
+  say "restored ARCHIVE: " || pull()
 end
+
+say rxqueue("QUERY")
+say rxqueue("INFO","ARCHIVE")
+say "List of named queues: "rxqueue("LIST")
 
 call rxqueue "SET", "SESSION"
 say "SESSION remaining: " || queued()
@@ -43,6 +54,7 @@ say "WORK remaining: " || queued()
 
 call rxqueue "DELETE", "WORK"
 call rxqueue "DELETE", "REPORT"
+call rxqueue "DELETE", "ARCHIVE"
 say "Deleted named queues; current queue: " || rxqueue("QUERY")
 
 /* PULL on an empty queue reads one line from the default input stream. */
