@@ -679,10 +679,10 @@ static rxvm_socket_registry *rxvm_socket_registry_for(rxvm_context *context) {
     if (!context) return 0;
     if (context->socket_registry) return context->socket_registry;
 
-    registry = rxvm_socket_memory_calloc(context->memory_worker, 1,
+    registry = rxvm_socket_memory_calloc(context->worker.memory_worker, 1,
                                          sizeof(rxvm_socket_registry));
     if (!registry) return 0;
-    registry->memory_worker = context->memory_worker;
+    registry->memory_worker = context->worker.memory_worker;
     registry->capacity = 16;
     registry->entries = rxvm_socket_memory_calloc(
         registry->memory_worker, registry->capacity,
@@ -897,7 +897,7 @@ rxinteger rxvm_socket_new(struct rxvm_context *context) {
     if (!entry) return RXSOCK_ERR_NO_MEMORY;
 
     memset(entry, 0, sizeof(*entry));
-    entry->memory_worker = context->memory_worker;
+    entry->memory_worker = context->worker.memory_worker;
     entry->handle = context->socket_registry->next_handle++;
     if (context->socket_registry->next_handle <= 0) context->socket_registry->next_handle = 1;
     entry->fd = RXVM_SOCKET_INVALID;
@@ -2339,7 +2339,7 @@ rxinteger rxvm_socket_recv_string(struct rxvm_context *context, value *out, rxin
         return 0;
     }
 
-    buffer = rxvm_socket_memory_alloc(context->memory_worker,
+    buffer = rxvm_socket_memory_alloc(context->worker.memory_worker,
                                       (size_t)max_bytes);
     if (!buffer) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
@@ -2349,10 +2349,10 @@ rxinteger rxvm_socket_recv_string(struct rxvm_context *context, value *out, rxin
     received = rxvm_socket_recv_bytes(entry, buffer, (size_t)max_bytes);
     if (received > 0 && set_string_validated(out, buffer, (size_t)received) != 0) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_ARGUMENT, 0, "received text is not valid UTF-8");
-        rxvm_socket_memory_free(context->memory_worker, buffer);
+        rxvm_socket_memory_free(context->worker.memory_worker, buffer);
         return RXSOCK_ERR_ARGUMENT;
     }
-    rxvm_socket_memory_free(context->memory_worker, buffer);
+    rxvm_socket_memory_free(context->worker.memory_worker, buffer);
     return received < 0 ? received : received;
 }
 

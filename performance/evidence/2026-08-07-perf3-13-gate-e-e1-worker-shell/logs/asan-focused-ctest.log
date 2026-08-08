@@ -1,0 +1,20 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxvmworker_lifecycle\|rxvmmemory_allocator\|reentrancy_check\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1044: rxvmmemory_allocator
+1/3 Test #1044: rxvmmemory_allocator .............   Passed    0.40 sec
+    Start 1045: rxvmworker_lifecycle
+2/3 Test #1045: rxvmworker_lifecycle .............   Passed    0.34 sec
+    Start 1165: reentrancy_check
+3/3 Test #1165: reentrancy_check .................   Passed    0.37 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+interpreter    =   0.74 sec*proc (2 tests)
+memory         =   0.74 sec*proc (2 tests)
+smoke          =   0.37 sec*proc (1 test)
+worker         =   0.34 sec*proc (1 test)
+
+Total Test time (real) =   1.15 sec

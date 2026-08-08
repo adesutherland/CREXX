@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 project(Interpreter C)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
+find_package(Threads REQUIRED)
 
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 if(MSVC)
@@ -38,6 +39,8 @@ endif()
 set(RXVM_CORE_OBJECT_SOURCES
         rxvmintp.h
         rxvmintp.c
+        rxvmworker.h
+        rxvmworker.c
         rxvmstem.h
         rxvmload.c
         interrupt.c
@@ -522,6 +525,10 @@ add_executable(test_rxvmmemory tests/test_rxvmmemory.c)
 target_include_directories(test_rxvmmemory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_rxvmmemory PRIVATE rxvmmemory)
 
+add_executable(test_rxvmworker tests/test_rxvmworker.c rxvmworker.c)
+target_include_directories(test_rxvmworker PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(test_rxvmworker PRIVATE rxvmmemory Threads::Threads)
+
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
@@ -563,8 +570,11 @@ set_tests_properties(rxvm_product_entry_point PROPERTIES
 add_test(NAME rxvmstem_storage COMMAND test_rxvmstem)
 add_test(NAME rxvmstem_allocator_family COMMAND test_rxvmstem_allocator_family)
 add_test(NAME rxvmmemory_allocator COMMAND test_rxvmmemory)
+add_test(NAME rxvmworker_lifecycle COMMAND test_rxvmworker)
 set_tests_properties(rxvmmemory_allocator PROPERTIES
         LABELS "interpreter;memory")
+set_tests_properties(rxvmworker_lifecycle PROPERTIES
+        LABELS "interpreter;memory;worker")
 set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
 set_tests_properties(rxvmstem_allocator_family PROPERTIES

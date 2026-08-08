@@ -1,0 +1,9 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve-control,Sieve,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,5500,normalized_work_per_second,20,5111.609674,5286.472814,5302.983556,5323.762304,5366.832778,18.882060,0.356065,4.812821,no
+sieve-candidate,Sieve,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,5500,normalized_work_per_second,20,5148.959395,5268.620646,5293.447836,5311.927233,5331.653055,19.768323,0.373449,3.451317,no
+richards-control,Richards,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,20,normalized_work_per_second,20,8.751686,9.272762,9.405834,9.496305,9.579228,0.094283,1.002388,8.798177,no
+richards-candidate,Richards,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,20,normalized_work_per_second,20,8.725547,9.248676,9.348228,9.474389,9.635884,0.121766,1.302552,9.738074,no
+towers-control,Towers,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,100,normalized_work_per_second,20,46.782225,47.336374,47.606292,47.903647,48.154317,0.307088,0.645058,2.882166,no
+towers-candidate,Towers,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,100,normalized_work_per_second,20,46.870965,47.151407,47.557667,47.876884,48.320897,0.386859,0.813453,3.048788,no
+rexxcps-control,RexxCPS,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,1000-clauses,benchmark_rate,20,47220685.000000,48737410.500000,48998319.500000,49156144.500000,49715676.000000,224072.500000,0.457307,5.091993,no
+rexxcps-candidate,RexxCPS,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,1000-clauses,benchmark_rate,20,47256031.000000,48444215.000000,48837262.000000,49103544.250000,49732489.000000,305741.500000,0.626041,5.070837,no

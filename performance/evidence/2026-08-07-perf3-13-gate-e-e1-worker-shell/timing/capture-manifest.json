@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g19c1ec8709da 20260805",
+  "source_manifest": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-gatee-e1-first-verdict.T7ze514shF/core-four-manifest.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-pairwise-balanced-by-workload",
+  "started_utc": "2026-08-07T14:47:38+0000",
+  "completed_utc": "2026-08-07T14:50:27+0000",
+  "result": "pass"
+}

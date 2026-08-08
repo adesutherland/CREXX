@@ -23,6 +23,7 @@
  */
 
 #include "rxcrexxcmd.h"
+#include "rxvmmemory.h"
 
 #ifdef _WIN32
 #ifndef _WIN32_WINNT
@@ -58,7 +59,6 @@ typedef struct _stat rx_stat_t;
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <time.h>
-#include "rxvmmemory.h"
 #include <unistd.h>
 #include <utime.h>
 #define RX_GETCWD getcwd
