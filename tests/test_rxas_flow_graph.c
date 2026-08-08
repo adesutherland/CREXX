@@ -3461,6 +3461,8 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
     RxasFlowQueueBatchMetrics metrics;
     instruction_queue *planned;
     const instruction_queue *epoch_item;
+    const instruction_queue *first_epoch_item;
+    size_t record_id;
 
     memset(&fixture, 0, sizeof(fixture));
     fixture_op(&fixture, "ret", 0, 0);
@@ -3514,6 +3516,32 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
           fixture.items[2].operand5Token->token_type == INT &&
           fixture.items[2].operand5Token->token_value.integer == 12,
           "validated TRACE register rewrite did not commit atomically");
+    rxas_flow_queue_batch_destroy(&batch);
+
+    context->procedure_queue = 0;
+    context->procedure_queue_items = 0;
+    fixture_destroy(&fixture);
+    for (record_id = 0; record_id < 20; record_id++)
+        fixture_op(&fixture, "ret", 0, 0);
+    context->procedure_queue = fixture.items;
+    context->procedure_queue_items = fixture.item_count;
+    check(rxas_flow_queue_batch_begin(
+                  &batch, context, fixture.items, fixture.item_count),
+          "growing semantic queue batch construction failed");
+    first_epoch_item = 0;
+    for (record_id = 0; record_id < fixture.item_count; record_id++) {
+        planned = rxas_flow_queue_batch_edit(&batch, record_id, &epoch_item);
+        if (!record_id) first_epoch_item = epoch_item;
+        check(planned != 0 && epoch_item != 0,
+              "growing semantic queue batch did not snapshot a record");
+    }
+    check(first_epoch_item == batch.entries[0].original &&
+          first_epoch_item->instrType == OP_CODE &&
+          first_epoch_item->instrToken != 0,
+          "semantic queue batch growth invalidated an epoch snapshot");
+    check(rxas_flow_queue_batch_commit(&batch, &metrics) &&
+          metrics.records_changed == 0,
+          "unchanged growing semantic queue batch did not commit");
     rxas_flow_queue_batch_destroy(&batch);
     context->procedure_queue = 0;
     context->procedure_queue_items = 0;

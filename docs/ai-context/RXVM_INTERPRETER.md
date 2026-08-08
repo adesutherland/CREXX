@@ -1390,20 +1390,26 @@ handlers preserve source/output aliasing by snapshotting source bytes before
 the first write. `parsewords3` is also a chain primitive for eligible longer
 implicit-word templates.
 
-`parseplan` executes a version-1 compact descriptor from a string constant into
-a reusable result vector. The descriptor stores only item kinds, store/drop
-flags, literal bytes plus character lengths, fixed-width numeric movement, and
-the declared item/result counts. The handler bounds-checks the header and every
-item, rejects trailing or structurally inconsistent data, and raises
-`INVALID_ARGUMENTS`. It uses Unicode code-point positions in UTF builds and has
-no load-time cache or private prepared representation.
+`parseplan` executes a compact descriptor from a string constant into a reusable
+result vector. Version 1 stores frozen item kinds, store/drop flags, literal
+bytes plus character lengths, fixed-width numeric movement, and the declared
+item/result counts. Version 2 additionally stores indexed dynamic delimiter and
+position references. A reference selects either an earlier completed capture
+or an external operand that compiler-generated code placed temporarily after
+the public result slots. The handler consumes those values without textual
+plan decoding and shrinks the vector to its public result count on success.
 
-Compiler eligibility remains fail-closed: exact forms use the direct
-instructions, other mechanically frozen templates may use `parseplan`, and
-logging/TRACE, explicit `INTO`, or unsupported forms continue through
-`parseExec`. Ordered source-level assignments remain outside the VM primitive,
-preserving repeated and compound targets, source aliases, trimming, and TRACE
-metadata.
+The handler bounds-checks the header, reference indexes, and every item; rejects
+trailing or structurally inconsistent data with `INVALID_ARGUMENTS`; and raises
+`CONVERSION_ERROR` for an invalid dynamic numeric position. It uses Unicode
+code-point positions in UTF builds and has no load-time cache or private
+prepared representation.
+
+Compiler eligibility remains fail-closed: exact common forms use the direct
+instructions and every remaining supported exit form uses `parseplan`, including
+logging/TRACE and explicit `INTO`. Ordered source-level assignments remain
+outside the VM primitive, preserving repeated targets, source aliases, trimming,
+and TRACE source metadata. There is no runtime textual PARSE executor.
 
 ### Pooled float operands
 

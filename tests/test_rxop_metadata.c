@@ -1023,9 +1023,23 @@ int main(void) {
           &op_table[OP_FNDNBLNK_REG_REG_REG]);
     effects = rxop_effects(OP_STRPOS_REG_REG_REG);
     check(effects.reads == RXOP_OP_ALL && effects.writes == RXOP_OP_1 &&
-              effects.kills == RXOP_OP_NONE,
+              effects.kills == RXOP_OP_NONE &&
+              rxop_component_reads(OP_STRPOS_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_reads(OP_STRPOS_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_STRPOS_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_STRING,
           "STRPOS must read its operand-1 start position",
           &op_table[OP_STRPOS_REG_REG_REG]);
+    check(rxop_component_writes(OP_NULLN_REG_REG, 1) ==
+                  RXOP_COMPONENT_ALL &&
+              rxop_component_writes(OP_NULLN_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_ALL &&
+              rxop_component_writes(OP_NULLN_REG_REG_REG_REG, 3) ==
+                  RXOP_COMPONENT_ALL,
+          "packed NULL writes every component of every target",
+          &op_table[OP_NULLN_REG_REG_REG_REG]);
     effects = rxop_effects(OP_TRIML_REG_REG);
     check(effects.reads == RXOP_OP_12 && effects.writes == RXOP_OP_1 &&
               effects.kills == RXOP_OP_NONE,

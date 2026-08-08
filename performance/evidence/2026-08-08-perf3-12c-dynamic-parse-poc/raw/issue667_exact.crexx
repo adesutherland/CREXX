@@ -1,0 +1,22 @@
+options levelb
+
+start = 5
+span = 5
+data = "Flying pigs have wings"
+parse data x1 =(start) x2 +(span) x3
+
+if x1 <> "Flyi" then do
+  say "FAIL x1=" || x1
+  return 1
+end
+if x2 <> "ng pi" then do
+  say "FAIL x2=" || x2
+  return 1
+end
+if x3 <> "gs have wings" then do
+  say "FAIL x3=" || x3
+  return 1
+end
+
+say "PASS issue 667 exact variable-position template"
+return 0

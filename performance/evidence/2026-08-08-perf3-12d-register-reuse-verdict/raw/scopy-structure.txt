@@ -1,0 +1,39 @@
+914-                scopy r48,r81                                * 0x000376:000b Copy String op2 to op1
+915-                .traceevent "A" 6 "R" "S" "r" 48 199 199 0 "__rxcpx_parse_source_511" ""
+916-                .srcstep 200 200 33 "exit_fragment" 2 1 42 "__rxcpx_pattern_value_511=(p0) as .string"
+917:                load r68,"b"                                 * 0x000379:0003 Load op1 with op2
+918-                .traceevent "L" 4 "R" "S" "r" 68 200 200 0 "" ""
+919-                .traceevent "A" 6 "R" "S" "r" 68 200 200 0 "__rxcpx_pattern_value_511" ""
+920-                .srcstep 201 201 33 "exit_fragment" 2 1 29 "__rxcpx_pattern_cursor_511=1"
+--
+925-                .traceevent "V" 6 "R" "I" "r" 56 0 0 0 "__rxcpx_pattern_cursor_511" ""
+926-                .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "__rxcpx_pattern_value_511" ""
+927-                .traceevent "V" 6 "R" "S" "r" 48 0 0 0 "__rxcpx_parse_source_511" ""
+928:                strpos r56,r68,r48                           * 0x00037f:00a4 op1 is position of op2 in op3
+929-                .srcstep 203 203 33 "exit_fragment" 2 1 66 "strlen __rxcpx_pattern_source_length_511,__rxcpx_parse_source_511"
+930-                .traceevent "V" 6 "R" "I" "r" 64 0 0 0 "__rxcpx_pattern_source_length_511" ""
+931-                .traceevent "V" 6 "R" "S" "r" 48 0 0 0 "__rxcpx_parse_source_511" ""
+--
+1001-                scopy r49,r81                                * 0x0003b6:000b Copy String op2 to op1
+1002-                .traceevent "A" 6 "R" "S" "r" 49 218 218 0 "__rxcpx_parse_source_522" ""
+1003-                .srcstep 219 219 33 "exit_fragment" 2 1 42 "__rxcpx_pattern_value_522=(p0) as .string"
+1004:                scopy r69,r68                                * 0x0003b9:000b Copy String op2 to op1
+1005-                .traceevent "L" 4 "R" "S" "r" 69 219 219 0 "" ""
+1006-                .traceevent "A" 6 "R" "S" "r" 69 219 219 0 "__rxcpx_pattern_value_522" ""
+1007-                .srcstep 220 220 33 "exit_fragment" 2 1 29 "__rxcpx_pattern_cursor_522=1"
+--
+1086-                scopy r50,r81                                * 0x0003f3:000b Copy String op2 to op1
+1087-                .traceevent "A" 6 "R" "S" "r" 50 237 237 0 "__rxcpx_parse_source_533" ""
+1088-                .srcstep 238 238 33 "exit_fragment" 2 1 42 "__rxcpx_pattern_value_533=(p0) as .string"
+1089:                scopy r70,r68                                * 0x0003f6:000b Copy String op2 to op1
+1090-                .traceevent "L" 4 "R" "S" "r" 70 238 238 0 "" ""
+1091-                .traceevent "A" 6 "R" "S" "r" 70 238 238 0 "__rxcpx_pattern_value_533" ""
+1092-                .srcstep 239 239 33 "exit_fragment" 2 1 29 "__rxcpx_pattern_cursor_533=1"
+--
+1171-                scopy r51,r81                                * 0x000430:000b Copy String op2 to op1
+1172-                .traceevent "A" 6 "R" "S" "r" 51 256 256 0 "__rxcpx_parse_source_544" ""
+1173-                .srcstep 257 257 33 "exit_fragment" 2 1 42 "__rxcpx_pattern_value_544=(p0) as .string"
+1174:                scopy r71,r68                                * 0x000433:000b Copy String op2 to op1
+1175-                .traceevent "L" 4 "R" "S" "r" 71 257 257 0 "" ""
+1176-                .traceevent "A" 6 "R" "S" "r" 71 257 257 0 "__rxcpx_pattern_value_544" ""
+1177-                .srcstep 258 258 33 "exit_fragment" 2 1 29 "__rxcpx_pattern_cursor_544=1"

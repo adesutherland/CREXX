@@ -90,6 +90,7 @@ struct ASTNode {
     char inherit_parent_scope;
     char inherit_parent_reg_scope;
     char suppress_shadow_warnings;
+    char suppress_symbol_metadata;
     char skip_exit_dispatch;
     char emit_primary_reporting_anchor;
     char is_inline_pruned;

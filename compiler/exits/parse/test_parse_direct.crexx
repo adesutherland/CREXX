@@ -15,6 +15,7 @@ main: procedure
   failures = failures + test_parse_incomplete_inputs()
   failures = failures + test_parse_suffix_options()
   failures = failures + test_parse_claimed_keywords()
+  failures = failures + test_compiled_pattern_lowering()
   failures = failures + test_nr14_direct_lowering()
   failures = failures + test_parse_version()
   failures = failures + test_parse_source()
@@ -55,7 +56,7 @@ test_parse_plan: procedure = .int
   plan = parser.pre_process(tokens)
   if check_equal("parse pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
   if check_equal("parse keyword count", "3", plan.get_keyword_count()) = 0 then failures = failures + 1
-  if check_equal("parse binding count", "3", plan.get_binding_count()) = 0 then failures = failures + 1
+  if check_equal("parse binding count", "4", plan.get_binding_count()) = 0 then failures = failures + 1
 
   upper_kw = find_keyword(plan, "UPPER")
   into_kw = find_keyword(plan, "INTO")
@@ -74,6 +75,8 @@ test_parse_plan: procedure = .int
   if abc_bind > 0 then do
      binding = plan.get_binding(abc_bind)
      if check_equal("parse abc provenance", "parse_into", binding.get_provenance()) = 0 then failures = failures + 1
+     if check_equal("parse abc value type", ".string", binding.get_value_type()) = 0 then failures = failures + 1
+     if check_equal("parse abc dimensions", "1", binding.get_dimensions()) = 0 then failures = failures + 1
   end
   if first_bind > 0 then do
      binding = plan.get_binding(first_bind)
@@ -88,11 +91,12 @@ test_parse_plan: procedure = .int
   if check_equal("parse process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
 
   replacement = join_result_lines(result)
-  if check_contains("parse source rewrite", replacement, "_source=upper(") = 0 then failures = failures + 1
-  if check_contains("parse runtime call", replacement, "abc=parseExec(_source,") = 0 then failures = failures + 1
-  if check_contains("parse frozen implicit plan", replacement, "'3,1:1;1,5:first;6,10:{implicit};1,6:second;'") = 0 then failures = failures + 1
+  if check_contains("parse source rewrite", replacement, "__rxcpx_parse_source_2001=(upper(") = 0 then failures = failures + 1
+  if check_contains("parse compiled opcode", replacement, "assembler parseplan abc,__rxcpx_parse_source_2001,") = 0 then failures = failures + 1
+  if check_contains("parse compiled descriptor", replacement, '"5001080004000200') = 0 then failures = failures + 1
   if check_contains("parse first assignment", replacement, "first=abc[1]") = 0 then failures = failures + 1
   if check_contains("parse second assignment", replacement, "second=abc[2]") = 0 then failures = failures + 1
+  if check_true("parse no runtime executor", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures
 
@@ -209,11 +213,11 @@ test_parse_suffix_options: procedure = .int
   result = parser.process(tokens)
   if check_equal("parse suffix process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   replacement = join_result_lines(result)
-  if check_contains("parse suffix into call", replacement, "parsed=parseExec(_source,") = 0 then failures = failures + 1
-  if check_contains("parse suffix frozen plan", replacement, "'3,1:1;1,4:left;2,1:,;1,5:right;'") = 0 then failures = failures + 1
-  if check_contains("parse suffix template quoting", replacement, ",' left "","" right',0)") = 0 then failures = failures + 1
+  if check_contains("parse suffix compiled opcode", replacement, "assembler parseplan parsed,__rxcpx_parse_source_2002,") = 0 then failures = failures + 1
+  if check_contains("parse suffix compiled descriptor", replacement, '"5001080004000200') = 0 then failures = failures + 1
   if check_contains("parse suffix trim assign", replacement, "left=strip(parsed[1])") = 0 then failures = failures + 1
   if check_contains("parse suffix trim assign 2", replacement, "right=strip(parsed[2])") = 0 then failures = failures + 1
+  if check_true("parse suffix no runtime executor", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures
 
@@ -245,11 +249,12 @@ test_parse_claimed_keywords: procedure = .int
   result = parser.process(tokens)
   if check_equal("parse claimed process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   replacement = join_result_lines(result)
-  if check_contains("parse claimed source rewrite", replacement, "_source=upper(") = 0 then failures = failures + 1
-  if check_contains("parse claimed runtime call", replacement, "parsed=parseExec(_source,") = 0 then failures = failures + 1
-  if check_contains("parse claimed frozen plan", replacement, "'3,1:1;1,4:left;2,1:,;1,5:right;'") = 0 then failures = failures + 1
+  if check_contains("parse claimed source rewrite", replacement, "__rxcpx_parse_source_2003=(upper(") = 0 then failures = failures + 1
+  if check_contains("parse claimed compiled opcode", replacement, "assembler parseplan parsed,__rxcpx_parse_source_2003,") = 0 then failures = failures + 1
+  if check_contains("parse claimed compiled descriptor", replacement, '"5001080004000200') = 0 then failures = failures + 1
   if check_contains("parse claimed trim assign", replacement, "left=strip(parsed[1])") = 0 then failures = failures + 1
   if check_contains("parse claimed trim assign 2", replacement, "right=strip(parsed[2])") = 0 then failures = failures + 1
+  if check_true("parse claimed no runtime executor", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures
 
@@ -356,6 +361,91 @@ test_parse_source: procedure = .int
   if check_contains("parse source first target", replacement, "system=") = 0 then failures = failures + 1
   if check_contains("parse source second target", replacement, "mode=") = 0 then failures = failures + 1
   if check_contains("parse source third target", replacement, "file=") = 0 then failures = failures + 1
+
+  return failures
+
+test_compiled_pattern_lowering: procedure = .int
+  failures = .int
+  parser = .parseexit(2020)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "left", ".string", 0
+  call pushbracket tokens, "("
+  call pushidentifier tokens, "delimiter", ".string", 0
+  call pushbracket tokens, ")"
+  call pushidentifier tokens, "right", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_equal("PERF3-12D delimiter plan", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_equal("PERF3-12D delimiter result", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  cursor_bind = find_binding(plan, "__rxcpx_pattern_cursor_2020")
+  if check_true("PERF3-12D delimiter cursor binding", cursor_bind > 0, "binding missing") = 0 then failures = failures + 1
+  if cursor_bind > 0 then do
+     binding = plan.get_binding(cursor_bind)
+     if check_equal("PERF3-12D delimiter cursor internal", "internal", binding.get_kind()) = 0 then failures = failures + 1
+  end
+  if check_contains("PERF3-12D delimiter search", replacement, "assembler strpos __rxcpx_pattern_cursor_2020,__rxcpx_pattern_value_2020,__rxcpx_parse_source_2020") = 0 then failures = failures + 1
+  if check_contains("PERF3-12D delimiter first span", replacement, "assembler substring __rxcpx_parse_direct1_2020") = 0 then failures = failures + 1
+  if check_contains("PERF3-12D delimiter second span", replacement, "assembler substring __rxcpx_parse_direct2_2020") = 0 then failures = failures + 1
+  if check_true("PERF3-12D delimiter no parseExec", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+  if check_true("PERF3-12D delimiter no parseplan", pos("assembler parseplan ", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2021)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "x1", ".string", 0
+  call pushoperator tokens, "="
+  call pushbracket tokens, "("
+  call pushidentifier tokens, "start", ".int", 0
+  call pushbracket tokens, ")"
+  call pushidentifier tokens, "x2", ".string", 0
+  call pushoperator tokens, "+"
+  call pushbracket tokens, "("
+  call pushidentifier tokens, "span", ".int", 0
+  call pushbracket tokens, ")"
+  call pushidentifier tokens, "x3", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_equal("PERF3-12D positions plan", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_equal("PERF3-12D positions result", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("PERF3-12D absolute operand", replacement, "__rxcpx_pattern_operand1_2021=(start) as .int") = 0 then failures = failures + 1
+  if check_contains("PERF3-12D relative operand", replacement, "__rxcpx_pattern_operand2_2021=(span) as .int") = 0 then failures = failures + 1
+  if check_contains("PERF3-12D positions first span", replacement, "assembler substring __rxcpx_parse_direct1_2021") = 0 then failures = failures + 1
+  if check_contains("PERF3-12D positions tail", replacement, "assembler substring __rxcpx_parse_direct3_2021") = 0 then failures = failures + 1
+  if check_true("PERF3-12D positions no parseExec", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
+
+  parser = .parseexit(2022)
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VAR"
+  call pushidentifier tokens, "source", ".string", 0
+  call pushidentifier tokens, "left", ".string", 0
+  call pushbracket tokens, "("
+  call pushidentifier tokens, "delimiter", ".string", 0
+  call pushbracket tokens, ")"
+  call pushidentifier tokens, "middle", ".string", 0
+  call pushstring tokens, '";"'
+  call pushidentifier tokens, "tail", ".string", 0
+  plan = parser.pre_process(tokens)
+  result = parser.process(tokens)
+  replacement = join_result_lines(result)
+  if check_equal("PERF3-12D general dynamic plan", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_equal("PERF3-12D general dynamic result", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("PERF3-12D dynamic descriptor v2", replacement, '"50020C00') = 0 then failures = failures + 1
+  if check_contains("PERF3-12D dynamic external slot", replacement, "__rxcpx_parse_prepared_2022[4]=(delimiter) as .string") = 0 then failures = failures + 1
+  if check_contains("PERF3-12D dynamic compiled opcode", replacement, "assembler parseplan __rxcpx_parse_prepared_2022,") = 0 then failures = failures + 1
+  if check_true("PERF3-12D general dynamic no inline search", pos("assembler strpos ", replacement) = 0, replacement) = 0 then failures = failures + 1
+  if check_true("PERF3-12D general dynamic no parseExec", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures
 
@@ -534,8 +624,8 @@ test_nr14_direct_lowering: procedure = .int
   plan = parser.pre_process(tokens)
   result = parser.process(tokens)
   replacement = join_result_lines(result)
-  if check_contains("NR-14 logging generic fallback", replacement, "parseExec(_source,") = 0 then failures = failures + 1
-  if check_contains("NR-14 logging level preserved", replacement, ",1)") = 0 then failures = failures + 1
-  if check_true("NR-14 logging no runtime assist", pos("assembler parsewords3 ", replacement) = 0 & pos("assembler parseplan ", replacement) = 0, replacement) = 0 then failures = failures + 1
+  if check_contains("NR-14 logging compiled preamble", replacement, "say '>DBG ----- PARSE COMPILED -----'") = 0 then failures = failures + 1
+  if check_contains("NR-14 logging compiled opcode", replacement, "assembler parseplan __rxcpx_parse_prepared_2019,") = 0 then failures = failures + 1
+  if check_true("NR-14 logging no runtime executor", pos("parseExec(", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures

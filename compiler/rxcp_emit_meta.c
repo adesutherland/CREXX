@@ -260,6 +260,8 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
     char *type;
     SymbolNode *symbol_node;
 
+    if (symbol->suppress_metadata) return;
+
     if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         /* Logic that works out if we should emit the variable meta data here */
@@ -349,7 +351,8 @@ void add_initiator(Symbol *symbol, void *payload) {
         }
 
         /* Output Variable metadata here - as it is "locked in" and has been initiated */
-        if (symbol->register_num >= 0 && !symbol->meta_emitted) { // Should be true
+        if (!symbol->suppress_metadata &&
+            symbol->register_num >= 0 && !symbol->meta_emitted) { // Should be true
             symbol_fqn = sym_frnm(symbol);
             type = sym_2tp(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
@@ -496,6 +499,8 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
     char* buffer;
     char* symbol_fqn;
 
+    if (symbol->suppress_metadata) return;
+
     if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         if (!symbol->meta_emitted) {
@@ -540,7 +545,7 @@ static void meta_clear_scoped_symbol(Symbol *symbol, void *payload) {
     char* buffer;
     char* symbol_fqn;
 
-    if (symbol->symbol_type == FUNCTION_SYMBOL) return;
+    if (symbol->symbol_type == FUNCTION_SYMBOL || symbol->suppress_metadata) return;
     if (!symbol->meta_emitted) return;
     if (symbol->symbol_type != CONSTANT_SYMBOL && symbol->register_num < 0) return;
 

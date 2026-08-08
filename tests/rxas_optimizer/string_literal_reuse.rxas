@@ -1,0 +1,130 @@
+* PERF3-12D H02: reuse an identical loop-local string literal through one
+* dominating private local, while preserving and redirecting TRACE records.
+
+string_literal_reuse() .locals=10
+    null r1
+    null r2
+    null r3
+    load r4,1
+    load r7,0
+string_literal_loop:
+    brt string_literal_done,r7
+    load r1,"needle"
+    .traceevent "L" 4 "R" "S" "r" 1 1 1 0 "seed-load" ""
+    load r2,"needle"
+    .traceevent "L" 4 "R" "S" "r" 2 2 2 0 "candidate-a-load" ""
+    .traceevent "A" 6 "R" "S" "r" 2 2 2 0 "candidate-a-assign" ""
+    strpos r4,r2,r0
+    strlen r5,r2
+    load r3,"needle"
+    .traceevent "L" 4 "R" "S" "r" 3 3 3 0 "candidate-b-load" ""
+    strpos r4,r3,r0
+    strlen r6,r3
+    iadd r7,r7,1
+    br string_literal_loop
+string_literal_done:
+    ret r5
+
+* Register metadata is observable through VALUE(), so H02 preserves the
+* destination and replaces only the repeated literal materialisation.
+string_literal_reuse_metadata() .locals=10
+    .meta "string_literal_reuse_metadata.candidate"="b" ".string" r2
+    null r1
+    null r2
+    load r4,1
+    load r7,0
+string_literal_metadata_loop:
+    brt string_literal_metadata_done,r7
+    load r1,"metadata"
+    load r2,"metadata"
+    strpos r4,r2,r0
+    strlen r5,r2
+    iadd r7,r7,1
+    br string_literal_metadata_loop
+string_literal_metadata_done:
+    ret r5
+
+* LINK is not safe when the candidate binding is written independently after
+* the repeated literal.  Keep both loads and their distinct storage.
+string_literal_link_candidate_written() .locals=10
+    .meta "string_literal_link_candidate_written.candidate"="b" ".string" r2
+    null r1
+    null r2
+    load r7,0
+string_literal_candidate_written_loop:
+    brt string_literal_candidate_written_done,r7
+    load r1,"candidate-write"
+    load r2,"candidate-write"
+    strlen r5,r2
+    load r2,"changed"
+    strlen r6,r1
+    iadd r7,r7,1
+    br string_literal_candidate_written_loop
+string_literal_candidate_written_done:
+    ret r6
+
+* LINK is likewise unsafe when the seed is written after the candidate and the
+* candidate must retain the earlier value.
+string_literal_link_seed_written() .locals=10
+    .meta "string_literal_link_seed_written.candidate"="b" ".string" r2
+    null r1
+    null r2
+    load r7,0
+string_literal_seed_written_loop:
+    brt string_literal_seed_written_done,r7
+    load r1,"seed-write"
+    load r2,"seed-write"
+    strlen r5,r2
+    load r1,"changed"
+    strlen r6,r2
+    iadd r7,r7,1
+    br string_literal_seed_written_loop
+string_literal_seed_written_done:
+    ret r6
+
+* A matching literal is not reusable after the seed register's string
+* component has been replaced by an intervening read/write instruction.
+string_literal_source_mutated() .locals=10
+    null r3
+    null r4
+    load r0,0
+    load r2,1
+    load r6,1
+    load r7,0
+string_literal_mutated_loop:
+    brt string_literal_mutated_done,r7
+    load r3,"mutated"
+    load r1,"replacement"
+    substring r3,r1,r0,r2
+    load r4,"mutated"
+    strpos r6,r4,r1
+    strlen r5,r4
+    iadd r7,r7,1
+    br string_literal_mutated_loop
+string_literal_mutated_done:
+    ret r5
+
+* A reference payload makes the later literal load's cleanup observable.
+string_literal_cleanup_live() .locals=10
+    null r1
+    null r2
+    load r4,1
+    load r7,0
+string_literal_cleanup_loop:
+    brt string_literal_cleanup_done,r7
+    load r1,"cleanup"
+    mkref r2,r8
+    load r2,"cleanup"
+    strpos r4,r2,r0
+    iadd r7,r7,1
+    br string_literal_cleanup_loop
+string_literal_cleanup_done:
+    ret r4
+
+* Repetition outside a natural loop is deliberately not an H02 candidate.
+string_literal_no_loop() .locals=4
+    load r1,"outside"
+    strlen r0,r1
+    load r2,"outside"
+    strlen r3,r2
+    ret r3

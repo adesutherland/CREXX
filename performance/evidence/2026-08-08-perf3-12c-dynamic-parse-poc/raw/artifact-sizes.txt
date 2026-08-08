@@ -1,0 +1,7 @@
+  194655 cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas
+   68320 cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+  193865 /private/tmp/crexx-parse-poc-sources/rexxcps_hoisted_callframe.rxas
+   68104 /private/tmp/crexx-parse-poc-sources/rexxcps_hoisted_callframe.rxbin
+  196188 /private/tmp/crexx-parse-poc-sources/rexxcps_static_b.rxas
+   68049 /private/tmp/crexx-parse-poc-sources/rexxcps_static_b.rxbin
+  789181 total

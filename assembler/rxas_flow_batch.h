@@ -11,7 +11,7 @@
 
 typedef struct RxasFlowQueueBatchEntry {
     size_t record_id;
-    instruction_queue original;
+    instruction_queue *original;
 } RxasFlowQueueBatchEntry;
 
 /* A queue batch is a sparse copy-on-write transaction over one immutable

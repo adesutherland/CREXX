@@ -123,9 +123,9 @@ static void queue_batch_rollback(RxasFlowQueueBatch *batch) {
         instruction_queue *live;
         live = &batch->original_items[batch->entries[entry].record_id];
         rxas_free_queue_item(live);
-        *live = batch->entries[entry].original;
-        batch->entries[entry].original.operandTokens = 0;
-        batch->entries[entry].original.operandCount = 0;
+        *live = *batch->entries[entry].original;
+        batch->entries[entry].original->operandTokens = 0;
+        batch->entries[entry].original->operandCount = 0;
     }
 }
 
@@ -171,11 +171,17 @@ instruction_queue *rxas_flow_queue_batch_edit(
         entry = &batch->entries[batch->entry_count++];
         memset(entry, 0, sizeof(*entry));
         entry->record_id = record_id;
-        queue_clone(batch->context, &entry->original,
+        entry->original = calloc(1, sizeof(*entry->original));
+        if (!entry->original)
+            RX_PANIC_OOM("calloc RXAS semantic batch record",
+                         sizeof(*entry->original),
+                         batch->context && batch->context->file_name
+                                 ? batch->context->file_name : 0);
+        queue_clone(batch->context, entry->original,
                     &batch->original_items[record_id]);
     }
     else entry = &batch->entries[entry_index];
-    if (epoch_item) *epoch_item = &entry->original;
+    if (epoch_item) *epoch_item = entry->original;
     return &batch->original_items[record_id];
 }
 
@@ -206,7 +212,7 @@ int rxas_flow_queue_batch_commit(
         int operands_changed;
         int named_operands_changed;
         int trace_register_rewrite;
-        original = &batch->entries[entry_index].original;
+        original = batch->entries[entry_index].original;
         planned = &batch->original_items[
                 batch->entries[entry_index].record_id];
         if (queue_record_equal(original, planned)) continue;
@@ -256,8 +262,10 @@ void rxas_flow_queue_batch_destroy(RxasFlowQueueBatch *batch) {
     if (!batch) return;
     if (batch->active && !batch->finished)
         queue_batch_rollback(batch);
-    for (entry = 0; entry < batch->entry_count; entry++)
-        rxas_free_queue_item(&batch->entries[entry].original);
+    for (entry = 0; entry < batch->entry_count; entry++) {
+        rxas_free_queue_item(batch->entries[entry].original);
+        free(batch->entries[entry].original);
+    }
     free(batch->entries);
     memset(batch, 0, sizeof(*batch));
 }

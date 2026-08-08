@@ -1903,13 +1903,26 @@ static int rxcp_apply_plan_bindings(Context *ctx,
         rxcp_get_method_int(vctx, binding, "rxcp.bindingplan", "get_dimensions", &dims);
 
         if (internal_name && internal_name[0] &&
-            (!kind || !kind[0] || strcasecmp(kind, "var") == 0)) {
-            ast_hoist_var_typed(ctx,
-                                node,
-                                internal_name,
-                                0,
-                                (type_name && type_name[0]) ? type_name : ".unknown",
-                                dims > 0 ? (size_t)dims : 0);
+            (!kind || !kind[0] || strcasecmp(kind, "var") == 0 ||
+             strcasecmp(kind, "internal") == 0)) {
+            if (kind && strcasecmp(kind, "internal") == 0) {
+                ast_hoist_internal_var_typed(
+                        ctx,
+                        node,
+                        internal_name,
+                        0,
+                        (type_name && type_name[0]) ? type_name : ".unknown",
+                        dims > 0 ? (size_t)dims : 0);
+            }
+            else {
+                ast_hoist_var_typed(
+                        ctx,
+                        node,
+                        internal_name,
+                        0,
+                        (type_name && type_name[0]) ? type_name : ".unknown",
+                        dims > 0 ? (size_t)dims : 0);
+            }
         }
 
         if (type_name) free(type_name);

@@ -1,0 +1,116 @@
+--- cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas	2026-08-08 09:20:31
++++ /private/tmp/crexx-parse-poc-sources/rexxcps_hoisted_callframe.rxas	2026-08-08 09:30:28
+@@ -10,4 +10,4 @@
+-main() .locals=93
++main() .locals=98
+    .meta "rexxcps_levelb.main"="b" ".int" main() ""
+    numsci 9,1,2
+    .meta "rexxcps_levelb.main.j"="b" ".decimal" r31
+@@ -417,6 +417,15 @@
+    .traceevent "L" 4 "R" "S" "r" 47 80 80 0 "" ""
+    .traceevent "A" 6 "R" "S" "r" 47 80 80 0 "flag" ""
+    .srcstep 190 190 17 "rexxcps_levelb.crexx" 156 7 9 "      do lvar = 1 to 14"
++   /* PERF3-12C disposable H1 ceiling: keep one equivalent constant plan and
++    * its stable call-frame values outside the lvar loop. Target names in a
++    * kind-1/kind-2 parseExec plan do not participate in result selection. */
++   load r93,4
++   load r95,"3,1:1;1,1:p;2,1:b;1,1:q;"
++   load r96," p ( p0 ) q"
++   load r97,0
++   settp r95,768
++   settp r96,768
+    .srcstep 81 81 17 "rexxcps_levelb.crexx" 156 10 18 "      do lvar = 1 to 14"
+    .meta "rexxcps_levelb.main.lvar"="b" ".int" r10
+    .meta "rexxcps_levelb.main.p0"="b" ".string" "b"
+@@ -808,19 +817,10 @@
+    .traceevent "A" 6 "R" "S" "r" 77 168 168 0 "_source" ""
+    .srcstep 169 169 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p1;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p5;',' p1 ( p0 ) p5',0)"
+    .traceevent "V" 6 "R" "S" "r" 77 169 169 0 "_source" ""
+-   load r73,"3,1:1;1,2:p1;2,1:b;1,2:p5;"
+-   .traceevent "L" 4 "R" "S" "r" 73 169 169 0 "" ""
+-   load r74," p1 ( p0 ) p5"
+-   .traceevent "L" 4 "R" "S" "r" 74 169 169 0 "" ""
+-   load r75,0
+-   .traceevent "L" 4 "R" "I" "r" 75 169 169 0 "" ""
+-   load r71,4
+    settp r77,256
+-   swap r72,r77
+-   settp r73,768
+-   settp r74,768
+-   settpcall r76,rxfnsb.parseexec(),r71,r75,256
+-   swap r77,r72
++   swap r94,r77
++   settpcall r76,rxfnsb.parseexec(),r93,r97,256
++   swap r77,r94
+    .traceevent "F" 4 "R" "S" "r" 76 169 169 0 "parseexec" ""
+    .traceevent "A" 6 "R" "S" "r" 76 169 169 0 "_parseresult" ""
+    .srcstep 170 170 33 "exit_fragment" 2 1 18 "p1=_parseResult[1"
+@@ -849,19 +849,10 @@
+    .traceevent "A" 6 "R" "S" "r" 79 174 174 0 "_source" ""
+    .srcstep 175 175 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p2;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p6;',' p2 ( p0 ) p6',0)"
+    .traceevent "V" 6 "R" "S" "r" 79 175 175 0 "_source" ""
+-   load r73,"3,1:1;1,2:p2;2,1:b;1,2:p6;"
+-   .traceevent "L" 4 "R" "S" "r" 73 175 175 0 "" ""
+-   load r74," p2 ( p0 ) p6"
+-   .traceevent "L" 4 "R" "S" "r" 74 175 175 0 "" ""
+-   load r75,0
+-   .traceevent "L" 4 "R" "I" "r" 75 175 175 0 "" ""
+-   load r71,4
+    settp r79,256
+-   swap r72,r79
+-   settp r73,768
+-   settp r74,768
+-   settpcall r78,rxfnsb.parseexec(),r71,r75,256
+-   swap r79,r72
++   swap r94,r79
++   settpcall r78,rxfnsb.parseexec(),r93,r97,256
++   swap r79,r94
+    .traceevent "F" 4 "R" "S" "r" 78 175 175 0 "parseexec" ""
+    .traceevent "A" 6 "R" "S" "r" 78 175 175 0 "_parseresult" ""
+    .srcstep 176 176 33 "exit_fragment" 2 1 18 "p2=_parseResult[1"
+@@ -890,19 +881,10 @@
+    .traceevent "A" 6 "R" "S" "r" 81 180 180 0 "_source" ""
+    .srcstep 181 181 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p3;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p7;',' p3 ( p0 ) p7',0)"
+    .traceevent "V" 6 "R" "S" "r" 81 181 181 0 "_source" ""
+-   load r73,"3,1:1;1,2:p3;2,1:b;1,2:p7;"
+-   .traceevent "L" 4 "R" "S" "r" 73 181 181 0 "" ""
+-   load r74," p3 ( p0 ) p7"
+-   .traceevent "L" 4 "R" "S" "r" 74 181 181 0 "" ""
+-   load r75,0
+-   .traceevent "L" 4 "R" "I" "r" 75 181 181 0 "" ""
+-   load r71,4
+    settp r81,256
+-   swap r72,r81
+-   settp r73,768
+-   settp r74,768
+-   settpcall r80,rxfnsb.parseexec(),r71,r75,256
+-   swap r81,r72
++   swap r94,r81
++   settpcall r80,rxfnsb.parseexec(),r93,r97,256
++   swap r81,r94
+    .traceevent "F" 4 "R" "S" "r" 80 181 181 0 "parseexec" ""
+    .traceevent "A" 6 "R" "S" "r" 80 181 181 0 "_parseresult" ""
+    .srcstep 182 182 33 "exit_fragment" 2 1 18 "p3=_parseResult[1"
+@@ -931,19 +913,10 @@
+    .traceevent "A" 6 "R" "S" "r" 83 186 186 0 "_source" ""
+    .srcstep 187 187 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p4;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p8;',' p4 ( p0 ) p8',0)"
+    .traceevent "V" 6 "R" "S" "r" 83 187 187 0 "_source" ""
+-   load r73,"3,1:1;1,2:p4;2,1:b;1,2:p8;"
+-   .traceevent "L" 4 "R" "S" "r" 73 187 187 0 "" ""
+-   load r74," p4 ( p0 ) p8"
+-   .traceevent "L" 4 "R" "S" "r" 74 187 187 0 "" ""
+-   load r75,0
+-   .traceevent "L" 4 "R" "I" "r" 75 187 187 0 "" ""
+-   load r71,4
+    settp r83,256
+-   swap r72,r83
+-   settp r73,768
+-   settp r74,768
+-   settpcall r82,rxfnsb.parseexec(),r71,r75,256
+-   swap r83,r72
++   swap r94,r83
++   settpcall r82,rxfnsb.parseexec(),r93,r97,256
++   swap r83,r94
+    .traceevent "F" 4 "R" "S" "r" 82 187 187 0 "parseexec" ""
+    .traceevent "A" 6 "R" "S" "r" 82 187 187 0 "_parseresult" ""
+    .srcstep 188 188 33 "exit_fragment" 2 1 18 "p4=_parseResult[1"

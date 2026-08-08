@@ -1,0 +1,20 @@
+options levelb
+
+main: procedure = .int
+  arg arguments = .string[]
+
+  iterations = 200000
+  delimiter = "/"
+  source = "left/right"
+  if arguments[0] >= 1 then iterations = arguments[1] as .int
+  if arguments[0] >= 2 then delimiter = arguments[2]
+  if arguments[0] >= 3 then source = arguments[3]
+
+  checksum = 0
+  do i = 1 to iterations
+    parse var source left (delimiter) right
+    checksum = checksum + length(left) + length(right)
+  end
+
+  say "CHECKSUM=" || checksum
+  return 0
