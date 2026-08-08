@@ -391,6 +391,15 @@ Typical uses:
 - typed stem binding
 - exit-owned synthetic temporary
 
+`kind="var"` declares a normal source-observable variable and emits ordinary
+register metadata. `kind="internal"` declares a compiler-generated temporary:
+it is still typed, allocated and available to replacement code, but RXC omits
+public variable metadata for it. Use `internal` only when the exit owns every
+reference and the binding must not be addressable through `VALUE()`, debugger
+scope lookup or another source-level variable mechanism. This distinction lets
+RXAS coalesce or reuse internal storage without weakening normal variable
+semantics.
+
 #### 7.6 `rxcp.keywordclaim`
 
 Fields:

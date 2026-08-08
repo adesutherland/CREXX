@@ -1,0 +1,4 @@
+variant,code_segment_hex,static_instruction_lines,rxbin_bytes,main_locals,parseexec_sites,parseplan_sites
+s0,0xfda,1065,68320,93,4,0
+h1,0xfa7,1050,68104,98,4,0
+h2,0xf76,1036,68049,93,0,4

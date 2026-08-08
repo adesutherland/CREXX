@@ -136,6 +136,12 @@ typedef struct flow_stats {
     size_t joined_key_private_locals;
     size_t joined_key_trace_events_removed;
     size_t joined_key_preheader_eligible;
+    size_t string_literal_reuse_queries;
+    size_t string_literal_reuse_proved;
+    size_t string_literal_reuse_rejected;
+    size_t string_literal_reuse_unavailable;
+    size_t string_literal_loads_reused;
+    size_t string_literal_operands_redirected;
     size_t duplicate_linked_read_queries;
     size_t duplicate_linked_read_proved;
     size_t duplicate_linked_read_rejected;
@@ -2404,6 +2410,325 @@ static size_t flow_reuse_joined_keys(
     return selection_count;
 }
 
+typedef struct flow_string_literal_selection {
+    RxasFlowStringLiteralReusePlan plan;
+    size_t seed_index;
+    size_t candidate_index;
+} flow_string_literal_selection;
+
+static int flow_string_literal_tokens_equal(
+        const Assembler_Token *left, const Assembler_Token *right) {
+    size_t left_length;
+    size_t right_length;
+    if (!left || !right || left->token_type != STRING ||
+        right->token_type != STRING || left->length < 2 || right->length < 2)
+        return 0;
+    left_length = left->length - 2;
+    right_length = right->length - 2;
+    return left_length == right_length &&
+           memcmp(left->token_value.string,
+                  right->token_value.string, left_length) == 0;
+}
+
+static int flow_is_string_literal_load(const flow_graph *graph,
+                                       size_t record_id) {
+    const instruction_queue *item;
+    if (!graph || record_id >= graph->item_count ||
+        !flow_record_matches_epoch(graph, record_id) ||
+        !graph->nodes[record_id].reachable ||
+        !graph->nodes[record_id].op ||
+        graph->nodes[record_id].op->opcode != OP_LOAD_REG_STRING)
+        return 0;
+    item = &graph->items[record_id];
+    return item->instrType == OP_CODE && item->operandCount == 2 &&
+           flow_register_type(rxas_queue_operand(item, 0)) == 'r' &&
+           rxas_queue_operand(item, 1) &&
+           rxas_queue_operand(item, 1)->token_type == STRING;
+}
+
+static int flow_string_literal_rewrite_matches(
+        const flow_graph *graph, const RxasFlowProofService *proof,
+        unsigned long epoch, const RxasFlowStringLiteralReusePlan *plan,
+        size_t rewrite_index, RxasFlowOperandRewrite *rewrite) {
+    const RxasFlowRecord *record;
+    const instruction_queue *item;
+    RxasFlowTraceDeletion trace;
+    if (!rxas_flow_string_literal_reuse_plan_rewrite(
+                proof, epoch, plan, rewrite_index, rewrite) ||
+        rewrite->record_id >= graph->item_count ||
+        !flow_record_matches_epoch(graph, rewrite->record_id) ||
+        rewrite->expected_register.register_class !=
+                plan->candidate_register.register_class ||
+        rewrite->expected_register.number !=
+                plan->candidate_register.number ||
+        rewrite->replacement_register.register_class !=
+                plan->seed_register.register_class ||
+        rewrite->replacement_register.number != plan->seed_register.number)
+        return 0;
+    record = rxas_flow_procedure_record(
+            graph->procedure, epoch, rewrite->record_id);
+    item = &graph->items[rewrite->record_id];
+    if (!record) return 0;
+    if (rewrite->instruction_id == RXAS_FLOW_ID_NONE &&
+        rewrite->operand_index == RXAS_FLOW_ID_NONE) {
+        memset(&trace, 0, sizeof(trace));
+        trace.record_id = rewrite->record_id;
+        trace.value_id = plan->candidate_value_id;
+        trace.component = RXOP_COMPONENT_STRING;
+        trace.expected_register = rewrite->expected_register;
+        return record->instruction_id == RXAS_FLOW_ID_NONE &&
+               flow_trace_event_matches_deletion(item, &trace);
+    }
+    return record->instruction_id == rewrite->instruction_id &&
+           item->instrType == OP_CODE &&
+           rewrite->operand_index < item->operandCount &&
+           flow_operand_matches_proof_register(
+                   rxas_queue_operand(item, rewrite->operand_index),
+                   rewrite->expected_register);
+}
+
+/* H02 reuses only an already-executed string literal materialisation. The
+ * immutable proof owns dominance, loop membership, private storage, cleanup
+ * absence and the complete redirectable use set. No instruction is moved. */
+static size_t flow_reuse_string_literals(
+        flow_graph *graph, flow_stats *stats,
+        flow_proof_session *session) {
+    const RxasFlowProofService *proof;
+    flow_string_literal_selection *selections;
+    unsigned char *claimed;
+    size_t selection_count;
+    size_t candidate_index;
+    size_t index;
+
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_H02_STRING_LITERAL_REUSE);
+    if (!proof) {
+        stats->string_literal_reuse_unavailable++;
+        return 0;
+    }
+    selections = calloc(
+            graph->item_count ? graph->item_count : 1,
+            sizeof(*selections));
+    claimed = calloc(graph->item_count ? graph->item_count : 1, 1);
+    if (!selections || !claimed)
+        RX_PANIC_OOM(
+                "calloc RXAS string-literal reuse plan",
+                graph->item_count * (sizeof(*selections) + 1),
+                graph->context->file_name);
+    selection_count = 0;
+
+    for (candidate_index = 0; candidate_index < graph->item_count;
+         candidate_index++) {
+        const instruction_queue *candidate;
+        size_t seed_index;
+        int selected;
+        if (!flow_is_string_literal_load(graph, candidate_index) ||
+            claimed[candidate_index])
+            continue;
+        candidate = &graph->items[candidate_index];
+        seed_index = candidate_index;
+        selected = 0;
+        while (!selected && seed_index) {
+            const instruction_queue *seed;
+            const RxasFlowRecord *seed_record;
+            const RxasFlowRecord *candidate_record;
+            RxasFlowStringLiteralReusePlan plan;
+            size_t rewrite_index;
+            int valid;
+            seed_index--;
+            if (!flow_is_string_literal_load(graph, seed_index) ||
+                claimed[seed_index])
+                continue;
+            seed = &graph->items[seed_index];
+            if (!flow_string_literal_tokens_equal(
+                        rxas_queue_operand(seed, 1),
+                        rxas_queue_operand(candidate, 1)))
+                continue;
+            seed_record = rxas_flow_procedure_record(
+                    session->procedure, session->epoch, seed_index);
+            candidate_record = rxas_flow_procedure_record(
+                    session->procedure, session->epoch, candidate_index);
+            if (!seed_record || !candidate_record ||
+                seed_record->instruction_id == RXAS_FLOW_ID_NONE ||
+                candidate_record->instruction_id == RXAS_FLOW_ID_NONE)
+                continue;
+            memset(&plan, 0, sizeof(plan));
+            stats->string_literal_reuse_queries++;
+            if (!rxas_flow_prove_string_literal_reuse(
+                        proof, session->epoch,
+                        seed_record->instruction_id,
+                        candidate_record->instruction_id, &plan)) {
+                stats->string_literal_reuse_unavailable++;
+                continue;
+            }
+            if (!plan.proved) {
+                stats->string_literal_reuse_rejected++;
+                if (graph->context->debug_mode)
+                    fprintf(stderr,
+                            "PERF3 string-literal-reuse-proof procedure=%s "
+                            "seed=%llu candidate=%llu proved=0 reason=%s "
+                            "rejected-kind=%d rejected-record=%llu "
+                            "rejected-instruction=%llu rejected-operand=%llu "
+                            "rejected-value=%llu seed-value=%llu "
+                            "at-candidate=%llu kind=%d presence=%d def=%llu "
+                            "cleanup-component=0x%x cleanup-value=%llu "
+                            "cleanup-kind=%d cleanup-presence=%d\n",
+                            graph->context->current_proc_name
+                                    ? graph->context->current_proc_name
+                                    : "(directives)",
+                            (unsigned long long)seed_index,
+                            (unsigned long long)candidate_index,
+                            rxas_flow_proof_reason_name(plan.reason),
+                            (int)plan.rejected_use_kind,
+                            (unsigned long long)plan.rejected_use_record_id,
+                            (unsigned long long)
+                                    plan.rejected_use_instruction_id,
+                            (unsigned long long)
+                                    plan.rejected_use_operand_index,
+                            (unsigned long long)plan.rejected_use_value_id,
+                            (unsigned long long)plan.seed_value_id,
+                            (unsigned long long)
+                                    plan.seed_candidate_value_id,
+                            (int)plan.seed_candidate_kind,
+                            (int)plan.seed_candidate_presence,
+                            (unsigned long long)
+                                    plan.seed_candidate_defining_instruction,
+                            plan.rejected_cleanup_component,
+                            (unsigned long long)
+                                    plan.rejected_cleanup_value_id,
+                            (int)plan.rejected_cleanup_kind,
+                            (int)plan.rejected_cleanup_presence);
+                continue;
+            }
+            valid = plan.seed_record_id == seed_index &&
+                    plan.candidate_record_id == candidate_index &&
+                    plan.expected_opcode == OP_LOAD_REG_STRING &&
+                    (!plan.preserve_candidate_register ||
+                     !plan.rewrite_count) &&
+                    flow_operand_matches_proof_register(
+                            rxas_queue_operand(seed, 0),
+                            plan.seed_register) &&
+                    flow_operand_matches_proof_register(
+                            rxas_queue_operand(candidate, 0),
+                            plan.candidate_register) &&
+                    !claimed[candidate_index];
+            for (rewrite_index = 0;
+                 valid && rewrite_index < plan.rewrite_count;
+                 rewrite_index++) {
+                RxasFlowOperandRewrite rewrite;
+                valid = flow_string_literal_rewrite_matches(
+                                graph, proof, session->epoch, &plan,
+                                rewrite_index, &rewrite) &&
+                        rewrite.record_id != candidate_index &&
+                        !claimed[rewrite.record_id];
+            }
+            if (!valid) {
+                stats->string_literal_reuse_rejected++;
+                continue;
+            }
+            claimed[candidate_index] = 1;
+            for (rewrite_index = 0; rewrite_index < plan.rewrite_count;
+                 rewrite_index++) {
+                RxasFlowOperandRewrite rewrite;
+                rxas_flow_string_literal_reuse_plan_rewrite(
+                        proof, session->epoch, &plan,
+                        rewrite_index, &rewrite);
+                claimed[rewrite.record_id] = 1;
+            }
+            selections[selection_count].plan = plan;
+            selections[selection_count].seed_index = seed_index;
+            selections[selection_count].candidate_index = candidate_index;
+            selection_count++;
+            selected = 1;
+        }
+    }
+
+    for (index = 0; index < graph->item_count; index++) {
+        if (claimed[index] && !flow_edit_record(graph, index)) {
+            stats->string_literal_reuse_rejected += selection_count;
+            free(claimed);
+            free(selections);
+            return 0;
+        }
+    }
+    for (index = 0; index < selection_count; index++) {
+        flow_string_literal_selection *selection;
+        Assembler_Token *seed_token;
+        size_t rewrite_index;
+        selection = &selections[index];
+        seed_token = rxas_queue_operand(
+                &graph->items[selection->seed_index], 0);
+        for (rewrite_index = 0;
+             rewrite_index < selection->plan.rewrite_count;
+             rewrite_index++) {
+            RxasFlowOperandRewrite rewrite;
+            rxas_flow_string_literal_reuse_plan_rewrite(
+                    proof, session->epoch, &selection->plan,
+                    rewrite_index, &rewrite);
+            if (rewrite.instruction_id == RXAS_FLOW_ID_NONE &&
+                rewrite.operand_index == RXAS_FLOW_ID_NONE) {
+                Assembler_Token *trace_number;
+                trace_number = flow_new_numbered_token(
+                        graph, seed_token, INT, 0,
+                        selection->plan.seed_register.number);
+                if (!trace_number)
+                    RX_PANIC_OOM(
+                            "create RXAS string-literal TRACE token",
+                            sizeof(Assembler_Token),
+                            graph->context->file_name);
+                graph->items[rewrite.record_id].operand5Token = trace_number;
+            }
+            else
+                flow_set_operand(
+                        &graph->items[rewrite.record_id],
+                        rewrite.operand_index, seed_token);
+        }
+        if (selection->plan.preserve_candidate_register) {
+            instruction_queue *candidate;
+            Assembler_Token *replacement_operands[2];
+            candidate = &graph->items[selection->candidate_index];
+            replacement_operands[0] = rxas_queue_operand(candidate, 0);
+            replacement_operands[1] = seed_token;
+            candidate->instrToken = rxas_tid(
+                    graph->context, candidate->instrToken,
+                    (char *)op_table[OP_LINK_REG_REG].mnemonic);
+            rxas_set_queue_operands(
+                    graph->context, candidate, replacement_operands, 2);
+        }
+        else graph->items[selection->candidate_index].instrType = EMPTY;
+        stats->string_literal_reuse_proved++;
+        stats->string_literal_loads_reused++;
+        stats->string_literal_operands_redirected +=
+                selection->plan.rewrite_count;
+        stats->operands_redirected += selection->plan.rewrite_count;
+        if (graph->context->debug_mode)
+            fprintf(stderr,
+                    "PERF3 string-literal-reuse-select procedure=%s "
+                    "seed=%llu candidate=%llu loop=%llu seed=r%llu "
+                    "candidate=r%llu rewrites=%llu mode=%s\n",
+                    graph->context->current_proc_name
+                            ? graph->context->current_proc_name
+                            : "(directives)",
+                    (unsigned long long)selection->seed_index,
+                    (unsigned long long)selection->candidate_index,
+                    (unsigned long long)selection->plan.loop_id,
+                    (unsigned long long)
+                            selection->plan.seed_register.number,
+                    (unsigned long long)
+                            selection->plan.candidate_register.number,
+                    (unsigned long long)selection->plan.rewrite_count,
+                    selection->plan.preserve_candidate_register
+                            ? "link" : "redirect");
+        flow_debug_accept(
+                graph, selection->candidate_index,
+                "dominated-loop-string-literal-reuse",
+                selection->plan.rewrite_count);
+    }
+    free(claimed);
+    free(selections);
+    return selection_count;
+}
+
 static int flow_is_scalar_constant_candidate(const flow_graph *graph,
                                              size_t index) {
     unsigned int component;
@@ -3398,6 +3723,8 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "compare-branch-proof=%llu/%llu rejected=%llu "
             "joined-key-reuse-proof=%llu/%llu rejected=%llu reused=%llu "
             "trace-delete=%llu private-locals=%llu preheader=%llu "
+            "string-literal-reuse-proof=%llu/%llu rejected=%llu "
+            "unavailable=%llu reused=%llu rewrites=%llu "
             "branch-thread=%llu/%llu rejected=%llu applied=%llu batches=%llu "
             "semantic-batch=%llu rejected=%llu records=%llu deleted=%llu "
             "opcodes=%llu operand-records=%llu "
@@ -3465,6 +3792,13 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->joined_key_trace_events_removed,
             (unsigned long long)stats->joined_key_private_locals,
             (unsigned long long)stats->joined_key_preheader_eligible,
+            (unsigned long long)stats->string_literal_reuse_proved,
+            (unsigned long long)stats->string_literal_reuse_queries,
+            (unsigned long long)stats->string_literal_reuse_rejected,
+            (unsigned long long)stats->string_literal_reuse_unavailable,
+            (unsigned long long)stats->string_literal_loads_reused,
+            (unsigned long long)
+                    stats->string_literal_operands_redirected,
             (unsigned long long)stats->branch_thread_proved,
             (unsigned long long)stats->branch_thread_queries,
             (unsigned long long)stats->branch_thread_rejected,
@@ -3657,6 +3991,8 @@ static int flow_has_semantic_candidates(
            rxas_optimisation_has_candidates(
                    census, RXAS_PASS_H01_JOINED_KEY_REUSE) ||
            rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_H02_STRING_LITERAL_REUSE) ||
+           rxas_optimisation_has_candidates(
                    census, RXAS_PASS_M02_CONSTANT) ||
            rxas_optimisation_has_candidates(
                    census, RXAS_PASS_M03_ABSENT) ||
@@ -3752,6 +4088,9 @@ static size_t flow_apply_semantic_epoch(
     if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_H01_JOINED_KEY_REUSE))
         planned += flow_reuse_joined_keys(graph, stats, session);
+    if (allow_ssa && rxas_optimisation_has_candidates(
+            census, RXAS_PASS_H02_STRING_LITERAL_REUSE))
+        planned += flow_reuse_string_literals(graph, stats, session);
     if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M02_CONSTANT))
         planned += flow_remove_redundant_loads(graph, stats, session);

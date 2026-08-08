@@ -306,6 +306,7 @@ typedef struct {
 } InlineMetaImport;
 
 #define INLINE_META_NODE_SCOPE_DEF 4096u
+#define INLINE_META_NODE_SUPPRESS_SYMBOL_METADATA 8192u
 
 static void inline_meta_text_init(InlineMetaText *text) {
     text->capacity = 128;
@@ -570,6 +571,7 @@ static unsigned int inline_meta_symbol_flags(Symbol *symbol) {
     if (symbol->is_this) flags |= 64u;
     if (symbol->is_factory) flags |= 128u;
     if (symbol->needs_default_initiation) flags |= 256u;
+    if (symbol->suppress_metadata) flags |= 512u;
     return flags;
 }
 
@@ -591,6 +593,7 @@ static unsigned int inline_meta_node_flags(ASTNode *node) {
     if (node->suppress_shadow_warnings) flags |= 1024u;
     if (node->skip_exit_dispatch) flags |= 2048u;
     if (node->scope && node->scope->defining_node == node) flags |= INLINE_META_NODE_SCOPE_DEF;
+    if (node->suppress_symbol_metadata) flags |= INLINE_META_NODE_SUPPRESS_SYMBOL_METADATA;
     return flags;
 }
 
@@ -605,6 +608,7 @@ static void inline_meta_apply_symbol_flags(Symbol *symbol, unsigned int flags) {
     symbol->is_this = (flags & 64u) != 0;
     symbol->is_factory = (flags & 128u) != 0;
     symbol->needs_default_initiation = (flags & 256u) != 0;
+    symbol->suppress_metadata = (flags & 512u) != 0;
 }
 
 static void inline_meta_apply_node_flags(ASTNode *node, unsigned int flags) {
@@ -621,6 +625,8 @@ static void inline_meta_apply_node_flags(ASTNode *node, unsigned int flags) {
     node->inherit_parent_reg_scope = (flags & 512u) != 0;
     node->suppress_shadow_warnings = (flags & 1024u) != 0;
     node->skip_exit_dispatch = (flags & 2048u) != 0;
+    node->suppress_symbol_metadata =
+            (flags & INLINE_META_NODE_SUPPRESS_SYMBOL_METADATA) != 0;
 }
 
 static int inline_meta_symbol_is_exportable(Symbol *symbol) {

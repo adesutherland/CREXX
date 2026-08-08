@@ -139,7 +139,6 @@ set(BIFS
 		fmtmask
 		compilemask
 		runmask
-		parseExec
 		stem
 		rxjson
 		rxsocket

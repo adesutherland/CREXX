@@ -1,0 +1,32 @@
+options levelb
+
+failures = 0
+failures = failures + check_case("left/right", "/", "left", "right", "ascii")
+failures = failures + check_case("left|right", "|", "left", "right", "changed")
+failures = failures + check_case("left::right::tail", "::", "left", "right::tail", "repeated")
+failures = failures + check_case("left§right", "§", "left", "right", "multibyte")
+failures = failures + check_case("whole", "missing", "whole", "", "absent")
+failures = failures + check_case("whole", "", "", "whole", "empty")
+failures = failures + check_alias("left/right", "/", "left", "right")
+
+if failures <> 0 then do
+  say "FAIL dynamic delimiter semantics count=" || failures
+  return 1
+end
+say "PASS dynamic delimiter semantics"
+return 0
+
+check_case: procedure = .int
+  arg source = .string, delimiter = .string, expected_left = .string, expected_right = .string, label = .string
+  parse var source parsed_left (delimiter) parsed_right
+  if parsed_left <> expected_left | parsed_right <> expected_right then do
+    say "FAIL " || label || " left=" || parsed_left || " right=" || parsed_right
+    return 1
+  end
+  return 0
+
+check_alias: procedure = .int
+  arg source = .string, delimiter = .string, expected_source = .string, expected_right = .string
+  parse var source source (delimiter) parsed_right
+  if source <> expected_source | parsed_right <> expected_right then return 1
+  return 0

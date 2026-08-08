@@ -167,14 +167,23 @@ static int flow_proof_use_is_pure_write(const RxasFlowUse *use) {
             use->kind == RXAS_FLOW_USE_OPAQUE_WRITE);
 }
 
-static int flow_proof_same_scalar_constant(const Assembler_Token *left,
-                                           const Assembler_Token *right) {
+static int flow_proof_same_constant(const Assembler_Token *left,
+                                    const Assembler_Token *right) {
+    size_t left_length;
+    size_t right_length;
     if (!left || !right || left->token_type != right->token_type) return 0;
     if (left->token_type == INT)
         return left->token_value.integer == right->token_value.integer;
     if (left->token_type == FLOAT)
         return memcmp(&left->token_value.real, &right->token_value.real,
                       sizeof(left->token_value.real)) == 0;
+    if (left->token_type == STRING && left->length >= 2 && right->length >= 2) {
+        left_length = left->length - 2;
+        right_length = right->length - 2;
+        return left_length == right_length &&
+               memcmp(left->token_value.string,
+                      right->token_value.string, left_length) == 0;
+    }
     return 0;
 }
 
@@ -1348,7 +1357,7 @@ static FlowProofValueWalkResult flow_proof_value_leaves_match(
         }
         else if (node.kind != RXAS_FLOW_VALUE_CONSTANT ||
                  node.presence != RXAS_FLOW_COMPONENT_PRESENT ||
-                 !flow_proof_same_scalar_constant(
+                 !flow_proof_same_constant(
                         node.constant_token, constant)) {
             if (rejected_leaf) *rejected_leaf = node;
             return FLOW_PROOF_VALUE_MULTIPLE;
@@ -2313,7 +2322,7 @@ int rxas_flow_prove_redundant_constant_write(
     if (after.kind != RXAS_FLOW_VALUE_CONSTANT ||
         after.presence != RXAS_FLOW_COMPONENT_PRESENT ||
         after.defining_instruction != candidate_instruction ||
-        !flow_proof_same_scalar_constant(after.constant_token, constant)) {
+        !flow_proof_same_constant(after.constant_token, constant)) {
         result->reason = RXAS_FLOW_PROOF_CONSTANT_UNKNOWN;
         goto complete;
     }
@@ -6309,6 +6318,749 @@ int rxas_flow_joined_key_reuse_plan_trace_deletion(
     return 1;
 }
 
+static void flow_proof_string_literal_plan_init(
+        RxasFlowStringLiteralReusePlan *plan, size_t seed_instruction,
+        size_t candidate_instruction) {
+    memset(plan, 0, sizeof(*plan));
+    plan->reason = RXAS_FLOW_PROOF_STALE_EPOCH;
+    plan->seed_instruction = seed_instruction;
+    plan->candidate_instruction = candidate_instruction;
+    plan->seed_record_id = RXAS_FLOW_ID_NONE;
+    plan->candidate_record_id = RXAS_FLOW_ID_NONE;
+    plan->loop_id = RXAS_FLOW_ID_NONE;
+    plan->expected_opcode = -1;
+    plan->seed_storage_id = RXAS_FLOW_ID_NONE;
+    plan->seed_storage_root = RXAS_FLOW_ID_NONE;
+    plan->candidate_storage_id = RXAS_FLOW_ID_NONE;
+    plan->candidate_storage_root = RXAS_FLOW_ID_NONE;
+    plan->seed_value_id = RXAS_FLOW_ID_NONE;
+    plan->seed_candidate_value_id = RXAS_FLOW_ID_NONE;
+    plan->seed_candidate_defining_instruction = RXAS_FLOW_ID_NONE;
+    plan->candidate_value_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_cleanup_value_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_record_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_instruction_id = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_operand_index = RXAS_FLOW_ID_NONE;
+    plan->rejected_use_value_id = RXAS_FLOW_ID_NONE;
+    plan->rewrite_offset = RXAS_FLOW_ID_NONE;
+}
+
+/* LINK preserves a metadata-visible register number without copying a
+ * potentially large payload, but it also makes the two local bindings share
+ * one complete value.  Accept that persistent alias only when both locals were
+ * independently NULL-initialized before the seed and neither binding has any
+ * other write for the rest of the procedure.  Calls and opaque observations
+ * involving either binding remain closed because their mutation contract is
+ * not represented by an ordinary explicit write. */
+static int flow_proof_string_literal_link_lifetime_safe(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowInstruction *seed,
+        const RxasFlowInstruction *candidate,
+        RxasFlowRegister seed_result,
+        RxasFlowRegister candidate_result) {
+    size_t use_count;
+    size_t use_index;
+    int seed_initialized;
+    int candidate_initialized;
+    if (!service || !seed || !candidate) return 0;
+    service->use = rxas_flow_require_use_analysis(
+            service->procedure, expected_epoch, 0);
+    if (!service->use) return 0;
+    seed_initialized = 0;
+    candidate_initialized = 0;
+    use_count = rxas_flow_use_count(service->use, expected_epoch);
+    for (use_index = 0; use_index < use_count; use_index++) {
+        const RxasFlowUse *use;
+        const RxasFlowInstruction *instruction;
+        int is_seed;
+        int is_candidate;
+        int exact_null;
+        if (!flow_proof_consume(service, 1)) return 0;
+        use = rxas_flow_use(service->use, expected_epoch, use_index);
+        if (!use) return 0;
+        if (use->kind == RXAS_FLOW_USE_OPAQUE_WRITE) return 0;
+        is_seed = flow_proof_same_register(
+                use->register_id, seed_result);
+        is_candidate = flow_proof_same_register(
+                use->register_id, candidate_result);
+        if (!is_seed && !is_candidate) continue;
+        if (use->kind == RXAS_FLOW_USE_CALL_WINDOW_READ ||
+            use->kind == RXAS_FLOW_USE_OPAQUE_OBSERVATION ||
+            use->kind == RXAS_FLOW_USE_EXPLICIT_READ_WRITE)
+            return 0;
+        if (use->kind != RXAS_FLOW_USE_EXPLICIT_WRITE) continue;
+        if ((is_seed && use->instruction_id == seed->id) ||
+            (is_candidate && use->instruction_id == candidate->id))
+            continue;
+        instruction = use->instruction_id == RXAS_FLOW_ID_NONE
+                ? 0 : rxas_flow_procedure_instruction(
+                        service->procedure, expected_epoch,
+                        use->instruction_id);
+        exact_null = instruction && instruction->op &&
+                (instruction->op->opcode == OP_NULL_REG ||
+                 instruction->op->opcode == OP_NULLN_REG_REG ||
+                 instruction->op->opcode == OP_NULLN_REG_REG_REG ||
+                 instruction->op->opcode == OP_NULLN_REG_REG_REG_REG);
+        if (!exact_null ||
+            !flow_proof_instruction_dominates(
+                    service, instruction, seed))
+            return 0;
+        if (is_seed) seed_initialized = 1;
+        if (is_candidate) candidate_initialized = 1;
+    }
+    return seed_initialized && candidate_initialized;
+}
+
+static int flow_proof_register_component_unwritten_between(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        RxasFlowRegister reg, unsigned int component,
+        size_t first_record, size_t second_record);
+
+static int flow_proof_string_literal_available_at_use(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowUse *use, RxasFlowRegister seed,
+        const Assembler_Token *literal, size_t seed_storage_id,
+        size_t seed_storage_root, size_t seed_record_id) {
+    RxasFlowComponentFact fact;
+    RxasFlowStorageNode leaf;
+    size_t root;
+    int available;
+    if (!service || !use || !literal) return 0;
+    if (use->kind == RXAS_FLOW_USE_EXPLICIT_READ &&
+        use->instruction_id != RXAS_FLOW_ID_NONE)
+        available = rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, use->instruction_id, 0,
+                seed, RXOP_COMPONENT_STRING, &fact);
+    else if (use->kind == RXAS_FLOW_USE_TRACE_READ &&
+             use->record_id != RXAS_FLOW_ID_NONE)
+        available = rxas_flow_component_at_record(
+                service->ssa, expected_epoch, use->record_id,
+                seed, RXOP_COMPONENT_STRING, &fact);
+    else
+        return 0;
+    if (!available || !fact.storage_id ||
+        flow_proof_unique_storage_leaf(
+                service, fact.storage_id, &root, &leaf) !=
+                    FLOW_PROOF_STORAGE_UNIQUE ||
+        leaf.kind != RXAS_FLOW_STORAGE_BASE || root != seed_storage_root)
+        return 0;
+    if (flow_proof_value_leaves_match(
+                service, fact.value_id, literal, 0, 0) ==
+                    FLOW_PROOF_VALUE_UNIQUE)
+        return 1;
+    return flow_proof_component_unwritten_between(
+                    service, expected_epoch, seed_storage_id,
+                    RXOP_COMPONENT_STRING,
+                    seed_record_id, use->record_id) ||
+           flow_proof_register_component_unwritten_between(
+                    service, expected_epoch, seed,
+                    RXOP_COMPONENT_STRING,
+                    seed_record_id, use->record_id);
+}
+
+static int flow_proof_instruction_preserves_register_component(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowInstruction *instruction, RxasFlowRegister reg,
+        unsigned int component) {
+    const RxasFlowRecord *record;
+    const instruction_queue *item;
+    size_t operand_index;
+    if (!service || !instruction || !instruction->op || !component)
+        return 0;
+    record = rxas_flow_procedure_record(
+            service->procedure, expected_epoch, instruction->record_id);
+    item = record ? record->queue_record : 0;
+    if (!item || instruction->effects.state != RXOP_EFFECT_CLASSIFIED)
+        return 0;
+    switch (instruction->effects.implicit) {
+        case RXOP_IMPLICIT_NONE:
+            break;
+        case RXOP_IMPLICIT_LOCAL_R0_READ_WRITE:
+        case RXOP_IMPLICIT_LOCAL_R1_READ_WRITE:
+        case RXOP_IMPLICIT_LOCAL_R2_READ_WRITE:
+            if (reg.register_class == RXAS_FLOW_REGISTER_LOCAL &&
+                reg.number == (size_t)(
+                        instruction->effects.implicit -
+                        RXOP_IMPLICIT_LOCAL_R0_READ_WRITE))
+                return 0;
+            break;
+        case RXOP_IMPLICIT_ARGUMENT_INDEX:
+            if (reg.register_class == RXAS_FLOW_REGISTER_ARGUMENT)
+                return 0;
+            break;
+        case RXOP_IMPLICIT_LOCAL_COPY:
+        case RXOP_IMPLICIT_LOCAL_TARGET:
+            if (reg.register_class != RXAS_FLOW_REGISTER_LOCAL ||
+                !item->operand1Token ||
+                item->operand1Token->token_type != INT ||
+                item->operand1Token->token_value.integer < 0 ||
+                reg.number == (size_t)
+                        item->operand1Token->token_value.integer)
+                return 0;
+            break;
+        case RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3:
+            if (reg.register_class != RXAS_FLOW_REGISTER_LOCAL ||
+                !item->operand3Token ||
+                item->operand3Token->token_type != RREG ||
+                item->operand3Token->token_value.integer < 0 ||
+                reg.number >= (size_t)
+                        item->operand3Token->token_value.integer)
+                return 0;
+            break;
+        default:
+            return 0;
+    }
+    for (operand_index = 0; operand_index < item->operandCount;
+         operand_index++) {
+        RxasFlowRegister operand;
+        unsigned int writes;
+        unsigned int clears;
+        if (!flow_proof_register(
+                    flow_proof_operand(item, operand_index), &operand) ||
+            !flow_proof_same_register(operand, reg))
+            continue;
+        if (instruction->op->opcode == OP_NULL_REG ||
+            instruction->op->opcode == OP_NULLN_REG_REG ||
+            instruction->op->opcode == OP_NULLN_REG_REG_REG ||
+            instruction->op->opcode == OP_NULLN_REG_REG_REG_REG)
+            continue;
+        if (rxas_flow_opcode_is_plain_mapping(
+                    instruction->op->opcode))
+            return 0;
+        if (instruction->effects.semantics &
+            (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL))
+            return 0;
+        if (!rxop_effect_writes_operand(
+                    &instruction->effects, operand_index))
+            continue;
+        writes = rxop_component_writes(
+                instruction->op->opcode, operand_index);
+        clears = rxop_component_clears(
+                instruction->op->opcode, operand_index);
+        if (clears & component) continue;
+        if (!writes || (writes & component)) return 0;
+    }
+    return 1;
+}
+
+static int flow_proof_register_component_unwritten_between(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        RxasFlowRegister reg, unsigned int component,
+        size_t first_record, size_t second_record) {
+    size_t record_id;
+    if (!service || first_record >= second_record) return 0;
+    for (record_id = first_record + 1; record_id < second_record;
+         record_id++) {
+        const RxasFlowRecord *record;
+        const RxasFlowInstruction *instruction;
+        record = rxas_flow_procedure_record(
+                service->procedure, expected_epoch, record_id);
+        if (!record) return 0;
+        if (record->instruction_id == RXAS_FLOW_ID_NONE) continue;
+        instruction = rxas_flow_procedure_instruction(
+                service->procedure, expected_epoch,
+                record->instruction_id);
+        if (!flow_proof_instruction_preserves_register_component(
+                    service, expected_epoch, instruction, reg, component))
+            return 0;
+    }
+    return 1;
+}
+
+static int flow_proof_cleanup_absent_since_dominating_null(
+        RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowInstruction *candidate,
+        RxasFlowRegister candidate_result, size_t candidate_storage_root,
+        size_t loop_id, unsigned int component) {
+    const RxasFlowLoop *loop;
+    size_t instruction_id;
+    if (!service || !candidate || !candidate_storage_root || !component)
+        return 0;
+    loop = rxas_flow_structural_loop(
+            service->structural, expected_epoch, loop_id);
+    if (!loop || !(loop->flags & RXAS_FLOW_LOOP_NATURAL) ||
+        (loop->flags & RXAS_FLOW_LOOP_IRREDUCIBLE))
+        return 0;
+    instruction_id = candidate->id;
+    while (instruction_id) {
+        const RxasFlowInstruction *initialization;
+        const RxasFlowRecord *record;
+        const instruction_queue *item;
+        RxasFlowRegister target;
+        RxasFlowStorageFact storage;
+        RxasFlowStorageNode storage_leaf;
+        size_t storage_root;
+        size_t member;
+        size_t target_operand;
+        int exact_null;
+        memset(&storage, 0, sizeof(storage));
+        memset(&storage_leaf, 0, sizeof(storage_leaf));
+        storage_root = RXAS_FLOW_ID_NONE;
+        instruction_id--;
+        initialization = rxas_flow_procedure_instruction(
+                service->procedure, expected_epoch, instruction_id);
+        record = initialization ? rxas_flow_procedure_record(
+                service->procedure, expected_epoch,
+                initialization->record_id) : 0;
+        item = record ? record->queue_record : 0;
+        if (!initialization || !initialization->op || !item)
+            continue;
+        exact_null = initialization->op->opcode == OP_NULL_REG ||
+                initialization->op->opcode == OP_NULLN_REG_REG ||
+                initialization->op->opcode == OP_NULLN_REG_REG_REG ||
+                initialization->op->opcode == OP_NULLN_REG_REG_REG_REG;
+        if (!exact_null ||
+            initialization->effects.state != RXOP_EFFECT_CLASSIFIED ||
+            initialization->effects.reads != RXOP_OP_NONE ||
+            initialization->effects.implicit != RXOP_IMPLICIT_NONE ||
+            initialization->effects.semantics != RXOP_SEM_NONE ||
+            initialization->signal.state != RXOP_SIGNAL_STATE_NONE ||
+            !flow_proof_instruction_dominates(
+                    service, initialization, candidate))
+            continue;
+        target_operand = RXAS_FLOW_ID_NONE;
+        for (member = 0; member < item->operandCount; member++)
+            if (flow_proof_register(
+                        flow_proof_operand(item, member), &target) &&
+                flow_proof_same_register(target, candidate_result)) {
+                target_operand = member;
+                break;
+            }
+        if (target_operand == RXAS_FLOW_ID_NONE ||
+            !rxop_effect_writes_operand(
+                    &initialization->effects, target_operand) ||
+            rxop_component_writes(
+                    initialization->op->opcode,
+                    target_operand) != RXOP_COMPONENT_ALL)
+            continue;
+        if (!rxas_flow_storage_at_instruction(
+                    service->ssa, expected_epoch, initialization->id, 0,
+                    candidate_result, &storage) || !storage.storage_id ||
+            flow_proof_unique_storage_leaf(
+                    service, storage.storage_id,
+                    &storage_root, &storage_leaf) !=
+                        FLOW_PROOF_STORAGE_UNIQUE ||
+            storage_leaf.kind != RXAS_FLOW_STORAGE_BASE ||
+            storage_root != candidate_storage_root)
+            continue;
+        if (!flow_proof_register_component_unwritten_between(
+                    service, expected_epoch, candidate_result, component,
+                    initialization->record_id, candidate->record_id))
+            continue;
+        for (member = 0; member < loop->member_count; member++) {
+            const RxasFlowBlock *block;
+            size_t member_instruction;
+            block = rxas_flow_procedure_block(
+                    service->procedure, expected_epoch,
+                    rxas_flow_structural_loop_member(
+                            service->structural, expected_epoch,
+                            loop->id, member));
+            if (!block || block->first_instruction == RXAS_FLOW_ID_NONE ||
+                block->last_instruction == RXAS_FLOW_ID_NONE)
+                return 0;
+            member_instruction = block->first_instruction;
+            while (member_instruction <= block->last_instruction) {
+                const RxasFlowInstruction *loop_instruction;
+                loop_instruction = rxas_flow_procedure_instruction(
+                        service->procedure, expected_epoch,
+                        member_instruction);
+                if (!loop_instruction) return 0;
+                if (loop_instruction->id != candidate->id &&
+                    !flow_proof_instruction_preserves_register_component(
+                            service, expected_epoch, loop_instruction,
+                            candidate_result, component))
+                    return 0;
+                if (member_instruction == block->last_instruction) break;
+                member_instruction++;
+            }
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int rxas_flow_prove_string_literal_reuse(
+        const RxasFlowProofService *const_service,
+        unsigned long expected_epoch, size_t seed_instruction,
+        size_t candidate_instruction, RxasFlowStringLiteralReusePlan *plan) {
+    RxasFlowProofService *service;
+    const RxasFlowInstruction *seed;
+    const RxasFlowInstruction *candidate;
+    const RxasFlowRecord *seed_record;
+    const RxasFlowRecord *candidate_record;
+    const instruction_queue *seed_item;
+    const instruction_queue *candidate_item;
+    const Assembler_Token *seed_literal;
+    const Assembler_Token *candidate_literal;
+    RxasFlowRegister seed_result;
+    RxasFlowRegister candidate_result;
+    RxasFlowComponentFact seed_after;
+    RxasFlowComponentFact seed_at_candidate;
+    RxasFlowComponentFact candidate_after;
+    RxasFlowComponentFact cleanup;
+    RxasFlowStorageNode use_storage_leaf;
+    FlowProofValueWalkResult walk;
+    unsigned int cleanup_components;
+    unsigned int cleanup_bits[2];
+    size_t rewrite_start;
+    size_t cleanup_index;
+    size_t marked_count;
+    size_t marked_index;
+    size_t seed_candidate_storage_id;
+    size_t seed_candidate_storage_root;
+    size_t all_use_count;
+    size_t all_use_index;
+    size_t use_count;
+    size_t use_index;
+    int call_observed;
+    if (!plan) return 0;
+    flow_proof_string_literal_plan_init(
+            plan, seed_instruction, candidate_instruction);
+    if (!const_service || !expected_epoch ||
+        const_service->metrics.epoch != expected_epoch ||
+        !rxas_flow_procedure_epoch_matches(
+                const_service->procedure, expected_epoch))
+        return 1;
+    if (const_service->metrics.status ==
+            RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED) {
+        plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        return 1;
+    }
+    if (const_service->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE ||
+        !flow_proof_has_capabilities(
+                const_service, FLOW_PROOF_LOOP_USE_CAPABILITIES)) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        return 1;
+    }
+    service = (RxasFlowProofService *)const_service;
+    service->metrics.string_literal_reuse_queries++;
+    rewrite_start = service->rewrite_count;
+    if (!flow_proof_consume(service, 20)) {
+        plan->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        goto complete;
+    }
+    seed = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, seed_instruction);
+    candidate = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, candidate_instruction);
+    seed_record = seed ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, seed->record_id) : 0;
+    candidate_record = candidate ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, candidate->record_id) : 0;
+    seed_item = seed_record ? seed_record->queue_record : 0;
+    candidate_item = candidate_record ? candidate_record->queue_record : 0;
+    if (!seed || !candidate || !seed->op || !candidate->op ||
+        !seed_item || !candidate_item) {
+        plan->reason = RXAS_FLOW_PROOF_INVALID_INSTRUCTION;
+        goto complete;
+    }
+    plan->seed_record_id = seed->record_id;
+    plan->candidate_record_id = candidate->record_id;
+    plan->expected_opcode = candidate->op->opcode;
+    cleanup_components = rxop_component_clears(
+            candidate->op->opcode, 0);
+    if (seed->op->opcode != OP_LOAD_REG_STRING ||
+        candidate->op->opcode != OP_LOAD_REG_STRING ||
+        seed_item->operandCount != 2 || candidate_item->operandCount != 2 ||
+        seed->effects.state != RXOP_EFFECT_CLASSIFIED ||
+        candidate->effects.state != RXOP_EFFECT_CLASSIFIED ||
+        seed->effects.reads != RXOP_OP_NONE ||
+        candidate->effects.reads != RXOP_OP_NONE ||
+        seed->effects.writes != RXOP_OP_1 ||
+        candidate->effects.writes != RXOP_OP_1 ||
+        seed->effects.kills != RXOP_OP_1 ||
+        candidate->effects.kills != RXOP_OP_1 ||
+        seed->effects.branch_targets != RXOP_OP_NONE ||
+        candidate->effects.branch_targets != RXOP_OP_NONE ||
+        seed->effects.implicit != RXOP_IMPLICIT_NONE ||
+        candidate->effects.implicit != RXOP_IMPLICIT_NONE ||
+        seed->effects.semantics != RXOP_SEM_NONE ||
+        candidate->effects.semantics != RXOP_SEM_NONE ||
+        seed->effects.flow != FLOW_NEXT || candidate->effects.flow != FLOW_NEXT ||
+        seed->effects.optimizer_barrier || candidate->effects.optimizer_barrier ||
+        seed->signal.state != RXOP_SIGNAL_STATE_NONE ||
+        candidate->signal.state != RXOP_SIGNAL_STATE_NONE ||
+        rxop_context_writes(seed->op->opcode) != RXOP_CONTEXT_NONE ||
+        rxop_context_writes(candidate->op->opcode) != RXOP_CONTEXT_NONE ||
+        rxop_component_writes(seed->op->opcode, 0) != RXOP_COMPONENT_STRING ||
+        rxop_component_writes(candidate->op->opcode, 0) != RXOP_COMPONENT_STRING ||
+        rxop_component_clears(seed->op->opcode, 0) !=
+                (RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD) ||
+        cleanup_components !=
+                (RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD)) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_EXACT_STRING_LITERAL_REUSE;
+        goto complete;
+    }
+    seed_literal = flow_proof_operand(seed_item, 1);
+    candidate_literal = flow_proof_operand(candidate_item, 1);
+    if (!seed_literal || !candidate_literal ||
+        seed_literal->token_type != STRING ||
+        candidate_literal->token_type != STRING ||
+        !flow_proof_same_constant(seed_literal, candidate_literal)) {
+        plan->reason = RXAS_FLOW_PROOF_STRING_LITERAL_NOT_EQUIVALENT;
+        goto complete;
+    }
+    if (!flow_proof_register(flow_proof_operand(seed_item, 0), &seed_result) ||
+        !flow_proof_register(
+                flow_proof_operand(candidate_item, 0), &candidate_result) ||
+        seed_result.register_class != RXAS_FLOW_REGISTER_LOCAL ||
+        candidate_result.register_class != RXAS_FLOW_REGISTER_LOCAL ||
+        flow_proof_same_register(seed_result, candidate_result)) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_EXACT_STRING_LITERAL_REUSE;
+        goto complete;
+    }
+    plan->seed_register = seed_result;
+    plan->candidate_register = candidate_result;
+    if (!flow_proof_instruction_dominates(service, seed, candidate)) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_DOMINATED;
+        goto complete;
+    }
+    plan->loop_id = flow_proof_common_natural_loop(service, seed, candidate);
+    if (plan->loop_id == RXAS_FLOW_ID_NONE) {
+        plan->reason = RXAS_FLOW_PROOF_NOT_IN_LOOP;
+        goto complete;
+    }
+    if (!rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, seed_instruction, 1,
+                seed_result, RXOP_COMPONENT_STRING, &seed_after) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, candidate_instruction, 0,
+                seed_result, RXOP_COMPONENT_STRING, &seed_at_candidate) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, candidate_instruction, 1,
+                candidate_result, RXOP_COMPONENT_STRING,
+                &candidate_after) ||
+        seed_after.kind != RXAS_FLOW_VALUE_CONSTANT ||
+        seed_after.presence != RXAS_FLOW_COMPONENT_PRESENT ||
+        seed_after.defining_instruction != seed_instruction ||
+        !flow_proof_same_constant(
+                seed_after.constant_token, seed_literal) ||
+        candidate_after.kind != RXAS_FLOW_VALUE_CONSTANT ||
+        candidate_after.presence != RXAS_FLOW_COMPONENT_PRESENT ||
+        candidate_after.defining_instruction != candidate_instruction ||
+        !flow_proof_same_constant(
+                candidate_after.constant_token, candidate_literal)) {
+        plan->reason = RXAS_FLOW_PROOF_CONSTANT_UNKNOWN;
+        goto complete;
+    }
+    plan->seed_value_id = seed_after.value_id;
+    plan->seed_candidate_value_id = seed_at_candidate.value_id;
+    plan->seed_candidate_defining_instruction =
+            seed_at_candidate.defining_instruction;
+    plan->seed_candidate_kind = seed_at_candidate.kind;
+    plan->seed_candidate_presence = seed_at_candidate.presence;
+    plan->candidate_value_id = candidate_after.value_id;
+    if (!flow_proof_private_local_storage_at(
+                service, expected_epoch, seed_instruction, 1,
+                seed_result, &plan->seed_storage_id,
+                &plan->seed_storage_root) ||
+        !flow_proof_private_local_storage_at(
+                service, expected_epoch, candidate_instruction, 0,
+                seed_result, &seed_candidate_storage_id,
+                &seed_candidate_storage_root) ||
+        seed_candidate_storage_root != plan->seed_storage_root ||
+        !flow_proof_private_local_storage_at(
+                service, expected_epoch, candidate_instruction, 0,
+                candidate_result, &plan->candidate_storage_id,
+                &plan->candidate_storage_root) ||
+        plan->seed_storage_root == plan->candidate_storage_root) {
+        plan->reason = RXAS_FLOW_PROOF_DESTINATION_OBSERVABLE;
+        goto complete;
+    }
+    walk = flow_proof_value_leaves_match(
+            service, seed_at_candidate.value_id, seed_literal, 0, 0);
+    if (walk != FLOW_PROOF_VALUE_UNIQUE &&
+        (!flow_proof_component_unwritten_between(
+                    service, expected_epoch, plan->seed_storage_root,
+                    RXOP_COMPONENT_STRING,
+                    seed->record_id, candidate->record_id) ||
+         !flow_proof_register_component_unwritten_between(
+                    service, expected_epoch, seed_result,
+                    RXOP_COMPONENT_STRING,
+                    seed->record_id, candidate->record_id))) {
+        plan->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_SOURCE_CHANGED;
+        goto complete;
+    }
+    cleanup_bits[0] = RXOP_COMPONENT_REFERENCE;
+    cleanup_bits[1] = RXOP_COMPONENT_NATIVE_PAYLOAD;
+    for (cleanup_index = 0; cleanup_index < 2; cleanup_index++) {
+        if (!(cleanup_components & cleanup_bits[cleanup_index])) continue;
+        memset(&cleanup, 0, sizeof(cleanup));
+        if ((!rxas_flow_component_at_instruction(
+                        service->ssa, expected_epoch,
+                        candidate_instruction, 0, candidate_result,
+                        cleanup_bits[cleanup_index], &cleanup) ||
+             flow_proof_value_leaves_match(
+                        service, cleanup.value_id, 0, 1, 0) !=
+                            FLOW_PROOF_VALUE_UNIQUE) &&
+            !flow_proof_cleanup_absent_since_dominating_null(
+                    service, expected_epoch, candidate,
+                    candidate_result, plan->candidate_storage_root,
+                    plan->loop_id, cleanup_bits[cleanup_index])) {
+            plan->rejected_cleanup_component = cleanup_bits[cleanup_index];
+            plan->rejected_cleanup_value_id = cleanup.value_id;
+            plan->rejected_cleanup_kind = cleanup.kind;
+            plan->rejected_cleanup_presence = cleanup.presence;
+            plan->reason = service->metrics.status ==
+                        RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                    ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                    : RXAS_FLOW_PROOF_CLEANUP_REQUIRED;
+            goto complete;
+        }
+    }
+    all_use_count = rxas_flow_use_count(service->use, expected_epoch);
+    for (all_use_index = 0; all_use_index < all_use_count; all_use_index++) {
+        const RxasFlowUse *use;
+        use = rxas_flow_use(service->use, expected_epoch, all_use_index);
+        if (use && use->kind == RXAS_FLOW_USE_METADATA_READ &&
+            flow_proof_same_register(
+                    use->register_id, candidate_result)) {
+            plan->preserve_candidate_register = 1;
+            break;
+        }
+    }
+    /* Register metadata is scope placement used by VALUE() and debuggers.
+     * Preserve that exact register without copying the payload only when the
+     * complete-value alias remains safe for the rest of the frame. */
+    if (plan->preserve_candidate_register) {
+        if (!flow_proof_string_literal_link_lifetime_safe(
+                    service, expected_epoch, seed, candidate,
+                    seed_result, candidate_result)) {
+            plan->reason = service->metrics.status ==
+                        RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                    ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                    : RXAS_FLOW_PROOF_ALIAS_LIFETIME_UNSAFE;
+            goto complete;
+        }
+        plan->proved = 1;
+        plan->reason = RXAS_FLOW_PROOF_PROVED;
+        plan->rewrite_offset = rewrite_start;
+        plan->rewrite_count = 0;
+        goto complete;
+    }
+    call_observed = flow_proof_joined_value_observed_by_call(
+            service, expected_epoch, candidate_result,
+            RXOP_COMPONENT_STRING, candidate_after.value_id);
+    if (call_observed < 0) {
+        plan->reason = RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        goto complete;
+    }
+    if (call_observed) {
+        plan->reason = RXAS_FLOW_PROOF_CALL_WINDOW_OBSERVED;
+        goto complete;
+    }
+    if (!flow_proof_mark_value_dependents(
+                service, expected_epoch,
+                candidate_after.value_id, &marked_count)) {
+        plan->reason = service->metrics.status ==
+                    RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                : RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+        goto complete;
+    }
+    memcpy(service->value_aux, service->value_stack,
+           marked_count * sizeof(*service->value_aux));
+    for (marked_index = 0; marked_index < marked_count; marked_index++) {
+        size_t value_id;
+        value_id = service->value_aux[marked_index];
+        use_count = rxas_flow_value_direct_use_count(
+                service->use, expected_epoch, value_id);
+        for (use_index = 0; use_index < use_count; use_index++) {
+            const RxasFlowUse *use;
+            size_t use_storage_root;
+            int use_has_candidate_storage;
+            int seed_available;
+            use = rxas_flow_value_direct_use(
+                    service->use, expected_epoch, value_id, use_index);
+            use_has_candidate_storage = use &&
+                    flow_proof_unique_storage_leaf(
+                            service, use->storage_id,
+                            &use_storage_root, &use_storage_leaf) ==
+                                FLOW_PROOF_STORAGE_UNIQUE &&
+                    use_storage_root == plan->candidate_storage_root;
+            seed_available = use &&
+                    flow_proof_string_literal_available_at_use(
+                        service, expected_epoch, use,
+                        seed_result, seed_literal,
+                        plan->seed_storage_id, plan->seed_storage_root,
+                        seed->record_id);
+            if (!use || use->value_id != value_id ||
+                use->component != RXOP_COMPONENT_STRING ||
+                use->read_components != RXOP_COMPONENT_STRING ||
+                !use_has_candidate_storage ||
+                !flow_proof_same_register(
+                        use->register_id, candidate_result) ||
+                !((use->kind == RXAS_FLOW_USE_EXPLICIT_READ &&
+                   use->instruction_id != RXAS_FLOW_ID_NONE &&
+                   use->operand_index != RXAS_FLOW_ID_NONE) ||
+                  (use->kind == RXAS_FLOW_USE_TRACE_READ &&
+                   use->record_id != RXAS_FLOW_ID_NONE &&
+                   use->instruction_id == RXAS_FLOW_ID_NONE &&
+                   use->operand_index == RXAS_FLOW_ID_NONE)) ||
+                !seed_available) {
+                plan->reason = RXAS_FLOW_PROOF_USE_NOT_REDIRECTABLE;
+                if (use) {
+                    plan->rejected_use_kind = use->kind;
+                    plan->rejected_use_record_id = use->record_id;
+                    plan->rejected_use_instruction_id = use->instruction_id;
+                    plan->rejected_use_operand_index = use->operand_index;
+                    plan->rejected_use_value_id = use->value_id;
+                }
+                goto complete;
+            }
+            if (!flow_proof_append_rewrite(
+                        service, use, seed_result)) {
+                plan->reason = service->metrics.status ==
+                            RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
+                        ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
+                        : RXAS_FLOW_PROOF_ANALYSIS_UNAVAILABLE;
+                goto complete;
+            }
+        }
+    }
+    if (service->rewrite_count == rewrite_start) {
+        plan->reason = RXAS_FLOW_PROOF_NO_REDIRECTS;
+        goto complete;
+    }
+    plan->proved = 1;
+    plan->reason = RXAS_FLOW_PROOF_PROVED;
+    plan->rewrite_offset = rewrite_start;
+    plan->rewrite_count = service->rewrite_count - rewrite_start;
+
+complete:
+    if (plan->proved) {
+        service->metrics.string_literal_reuse_proved++;
+        service->metrics.string_literal_operand_rewrites +=
+                plan->rewrite_count;
+    }
+    else {
+        service->rewrite_count = rewrite_start;
+        service->metrics.string_literal_reuse_rejected++;
+    }
+    flow_proof_set_retained_bytes(service);
+    return 1;
+}
+
+int rxas_flow_string_literal_reuse_plan_rewrite(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        const RxasFlowStringLiteralReusePlan *plan, size_t rewrite_index,
+        RxasFlowOperandRewrite *rewrite) {
+    size_t index;
+    if (!rewrite || !plan || !plan->proved ||
+        !flow_proof_valid(service, expected_epoch) ||
+        rewrite_index >= plan->rewrite_count ||
+        plan->rewrite_offset == RXAS_FLOW_ID_NONE ||
+        plan->rewrite_offset > (size_t)-1 - rewrite_index)
+        return 0;
+    index = plan->rewrite_offset + rewrite_index;
+    if (index >= service->rewrite_count) return 0;
+    *rewrite = service->rewrites[index];
+    return 1;
+}
+
 int rxas_flow_prove_instruction_speculatable(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t instruction_id, RxasFlowProofResult *result) {
@@ -6629,6 +7381,12 @@ const char *rxas_flow_proof_reason_name(RxasFlowProofReason reason) {
             return "joined-key-not-equivalent";
         case RXAS_FLOW_PROOF_JOINED_RESULT_OBSERVED:
             return "joined-result-observed";
+        case RXAS_FLOW_PROOF_NOT_EXACT_STRING_LITERAL_REUSE:
+            return "not-exact-string-literal-reuse";
+        case RXAS_FLOW_PROOF_STRING_LITERAL_NOT_EQUIVALENT:
+            return "string-literal-not-equivalent";
+        case RXAS_FLOW_PROOF_ALIAS_LIFETIME_UNSAFE:
+            return "alias-lifetime-unsafe";
         case RXAS_FLOW_PROOF_NOT_IN_LOOP: return "not-in-loop";
         case RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP: return "irreducible-loop";
         case RXAS_FLOW_PROOF_NOT_MUST_EXECUTE: return "not-must-execute";
@@ -6734,6 +7492,7 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             "compare-branch=%llu/%llu rejected=%llu trace-deletions=%llu "
             "joined-key-reuse=%llu/%llu rejected=%llu "
             "trace-deletions=%llu preheader=%llu "
+            "string-literal-reuse=%llu/%llu rejected=%llu rewrites=%llu "
             "success-edge=%llu loop=%llu ssa-bytes=%llu ssa-values=%llu "
             "ssa-storages=%llu\n",
             service->metrics.epoch,
@@ -6793,6 +7552,14 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
                     service->metrics.joined_key_reuse_trace_deletions,
             (unsigned long long)
                     service->metrics.joined_key_preheader_eligible,
+            (unsigned long long)
+                    service->metrics.string_literal_reuse_proved,
+            (unsigned long long)
+                    service->metrics.string_literal_reuse_queries,
+            (unsigned long long)
+                    service->metrics.string_literal_reuse_rejected,
+            (unsigned long long)
+                    service->metrics.string_literal_operand_rewrites,
             (unsigned long long)service->metrics.success_edge_queries,
             (unsigned long long)service->metrics.loop_queries,
             (unsigned long long)(ssa_metrics
