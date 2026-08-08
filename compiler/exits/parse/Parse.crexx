@@ -399,7 +399,19 @@ token_end = tokens.0
 /* Reconstruct the original template text for diagnostics and parseExec() logging. */
      _template = _template || " " || text
 
-     if type = "bracket" then iterate
+     if type = "bracket" then do
+        if text = "(" & i + 2 <= token_end then do
+           dynamic_token = tokens[i + 1]
+           dynamic_close = tokens[i + 2]
+           if strip(dynamic_token.get_type()) = "identifier" & strip(dynamic_close.get_type()) = "bracket" & strip(dynamic_close.get_text()) = ")" then do
+              plan_count = append_plan_token(plan_count, pkind, 7, ptext, dynamic_token.get_text(), prevkind)
+              _template = _template || " " || dynamic_token.get_text() || " " || dynamic_close.get_text()
+              i = i + 2
+              iterate
+           end
+        end
+        iterate
+     end
 
 /* Decimal literals following an identifier are treated as part of a stem tail.
  *   Example token sequence:
@@ -488,6 +500,7 @@ token_end = tokens.0
      call compile_plan.set_error(1, substr(plan,9))
      return compile_plan
   end
+  plan_expr = compile_parse_plan_expression(pkind, ptext, plan_count)
 /* -------------------------------------------------------------------------------------------------------------------
  * Serialize the compiled template arrays into blank-delimited strings.
  *
@@ -588,7 +601,7 @@ token_end = tokens.0
    * descriptor for this class. Even target counts cannot use this transform
    * because their final target is a tail, not merely the next word.
    */
-  if _direct_kind='' & explicit_into='' & log_level=0 then do
+  if _direct_kind='' & explicit_into='' & log_level=0 & preparedParsePlanSafe(pkind,ptext,plan_count) then do
      implicit_count=implicitWordPlanTargetCount(pkind,ptext,plan_count)
      implicit_pairs=implicit_count/2
      if implicit_count >= 3 & implicit_pairs*2+1=implicit_count then do
@@ -600,7 +613,7 @@ token_end = tokens.0
   /* All other mechanically frozen, non-logging plans use one compact binary
    * descriptor. Explicit INTO retains parseExec until its observable array
    * assignment/alias contract has a dedicated proof. */
-  if _direct_kind='' & explicit_into='' & log_level=0 then do
+  if _direct_kind='' & explicit_into='' & log_level=0 & preparedParsePlanSafe(pkind,ptext,plan_count) then do
      prepared=compile_prepared_plan_hex(pkind,ptext,plan_count)
      if substr(prepared,1,8) \= '>>>ERROR' then do
         _prepared_plan_hex=prepared
@@ -610,7 +623,7 @@ token_end = tokens.0
 
   if _direct_kind='' & _prepared_plan_hex='' then do
      if _into='' then _into='_parseResult'
-     _replacement = _replacement || '; ' || _into || '=parseExec(_source,' || quote_rexx_string(plan) || ',' || quote_rexx_string(_template) || ',' || log_level || ')'
+     _replacement = _replacement || '; ' || _into || '=parseExec(_source,' || plan_expr || ',' || quote_rexx_string(_template) || ',' || log_level || ')'
   end
   else do
      direct_source='__rxcpx_parse_source_' || _node_id
@@ -854,12 +867,43 @@ compile_parse_plan: procedure = .string
   do i = 1 to plan_count
      k = pkind[i]
      t = ptext[i]
-     if k \= 1 & k \= 2 & k \= 3 & k \= 4 & k \= 5 & k \= 6 then do
+     if k \= 1 & k \= 2 & k \= 3 & k \= 4 & k \= 5 & k \= 6 & k \= 7 then do
         return ">>>ERROR PARSE COMPILE STREAM ERROR: INVALID TOKEN=" || k || " AT " || i
      end
      planStr = planStr || k || "," || length(t) || ":" || t || ";"
   end
 return planStr
+
+/* Build the runtime plan expression used by parseExec. A delimiter written as
+ * (name) refers to an earlier PARSE target when one exists; otherwise its
+ * current caller value is embedded as a runtime literal. */
+compile_parse_plan_expression: procedure = .string
+  arg pkind=.int[], ptext=.string[], plan_count=.int
+  expression=''
+  static_plan=''
+  do i=1 to plan_count
+     kind=pkind[i]
+     text=ptext[i]
+     if kind=7 & parse_plan_has_prior_target(pkind,ptext,i,text)=0 then do
+        if static_plan<>'' then expression=expression || quote_rexx_string(static_plan) || ' || '
+        expression=expression || "'2,'" || " || length(" || text || ") || ':' || " || text || " || ';'"
+        static_plan=''
+     end
+     else static_plan=static_plan || kind || ',' || length(text) || ':' || text || ';'
+  end
+  if static_plan<>'' then do
+     if expression<>'' then expression=expression || ' || '
+     expression=expression || quote_rexx_string(static_plan)
+  end
+  if expression='' then expression=quote_rexx_string('')
+return expression
+
+parse_plan_has_prior_target: procedure = .int
+  arg pkind=.int[], ptext=.string[], position=.int, name=.string
+  do i=1 to position-1
+     if pkind[i]=1 & ptext[i]=name then return 1
+  end
+return 0
 
 /* Return the target count for the canonical ABS(1), target, implicit-word...
  * shape, or zero for any other prepared template. */
@@ -933,6 +977,23 @@ compile_prepared_plan_hex: procedure = .string
      else return '>>>ERROR prepared PARSE kind'
   end
 return descriptor
+
+/* The kernel PARSEPLAN descriptor has no signed-relative anchor state. Keep
+ * every template containing a signed relative position on the Level-B
+ * parseExec path, which implements the classic REXX anchor rule. */
+preparedParsePlanSafe: procedure = .int
+  arg pkind=.int[], ptext=.string[], plan_count=.int
+  do i=1 to plan_count
+     if pkind[i]=2 then do
+        j=i+1
+        do while j <= plan_count
+           if pkind[j]=1 & ptext[j] = "." then j=j+1
+           else leave
+        end
+        if j <= plan_count & (pkind[j]=4 | pkind[j]=5) then return 0
+     end
+  end
+  return 1
 
 preparedNativeInteger: procedure = .int
   arg text=.string

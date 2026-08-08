@@ -99,7 +99,7 @@ test_malformed_streams: procedure = .int
     caught = caught + 1
   end
   do
-    ignored = parseexec("x","7,1:a;","bad kind")
+    ignored = parseexec("x","8,1:a;","bad kind")  /* 8 is the max kind enabling (variable) notation*/
   on signal invalid_arguments
     caught = caught + 1
   end

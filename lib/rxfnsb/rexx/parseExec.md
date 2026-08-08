@@ -10,6 +10,12 @@ parseexec(src = .string,
           debug = .int optional) = .string[]
 ```
 
+Signed relative positions following a literal are anchored at the literal's
+first matching character, including when a drop target occurs between the
+literal and the signed position. Templates with this combination are kept on
+this Level-B path because the compact kernel `parseplan` descriptor does not
+carry that literal-match anchor.
+
 This is deliberately separate from the legacy `parsecompile`/`parsestring`
 format. Each stream item is encoded as `kind,length:text;`, where `length` is
 the number of Unicode codepoints in `text`:
