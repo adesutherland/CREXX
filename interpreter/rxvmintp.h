@@ -382,19 +382,26 @@ struct stack_frame {
         RXVM_INSTRUMENTATION_TRANSITION(reason_);                               \
     } while (0)
 
-#define DISPATCH                                                                \
+#define RXVM_DISPATCH_PREPARE()                                                 \
     do {                                                                        \
         RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(                                \
                 current_module->module_number, VM_CANONICAL_INDEX(next_pc),     \
                 RXVM_INSTRUMENTATION_CURRENT_TRANSITION());                     \
         pc = next_pc;                                                           \
         RXVM_INSTRUMENTATION_INTERRUPT_POLL();                                  \
-        if (pending_interrupts && !current_frame->is_interrupt)                \
-            goto INTERRUPT;                                                    \
+    } while (0)
+
+#define RXVM_OWNER_DISPATCH()                                                   \
+    do {                                                                        \
+        RXVM_DISPATCH_PREPARE();                                                \
+        if (pending_interrupts && !current_frame->is_interrupt)                 \
+            goto INTERRUPT;                                                     \
         VM_DISPATCH_TARGET();                                                   \
     } while (0)
 
-#define VM_RESUME_INTERRUPTED(signal_)                                          \
+#define DISPATCH RXVM_OWNER_DISPATCH()
+
+#define RXVM_RESUME_INTERRUPTED_PREPARE(signal_)                                \
     do {                                                                        \
         unsigned char vm_signal__ = (unsigned char)(signal_);                   \
         RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(                                \
@@ -404,8 +411,21 @@ struct stack_frame {
         RXVM_INSTRUMENTATION_INTERRUPT_RESUME(                                  \
                 vm_signal__, current_module->module_number,                     \
                 VM_CANONICAL_INDEX(pc));                                        \
+    } while (0)
+
+#define RXVM_OWNER_RESUME_INTERRUPTED(signal_)                                  \
+    do {                                                                        \
+        RXVM_RESUME_INTERRUPTED_PREPARE(signal_);                               \
         VM_DISPATCH_TARGET();                                                   \
     } while (0)
+
+#define VM_RESUME_INTERRUPTED(signal_) RXVM_OWNER_RESUME_INTERRUPTED(signal_)
+
+/* Handler functions override these owner continuations with explicit result
+ * codes. Keeping the names in shared helper macros lets the same instruction
+ * text compile inline in run() or behind a normal call boundary. */
+#define RXVM_HANDLER_FINISH() goto interprt_finished
+#define RXVM_HANDLER_INTERRUPT_TABLE_OOM() goto interrupt_table_oom
 
 #define REG_OP(n)                    current_locals[(pc+(n))->index]
 #define REG_VAL(n)                   current_locals[n]

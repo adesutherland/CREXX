@@ -14,6 +14,21 @@ endif()
 option(CREXX_VM_PROFILING
         "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
         OFF)
+set(CREXX_VM_HANDLER_PANEL "all-inline" CACHE STRING
+        "VM instruction handler placement: all-inline, all-outline, or profile-30")
+set_property(CACHE CREXX_VM_HANDLER_PANEL PROPERTY STRINGS
+        all-inline all-outline profile-30)
+if(CREXX_VM_HANDLER_PANEL STREQUAL "all-inline")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 0)
+elseif(CREXX_VM_HANDLER_PANEL STREQUAL "all-outline")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 1)
+elseif(CREXX_VM_HANDLER_PANEL STREQUAL "profile-30")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 30)
+else()
+    message(FATAL_ERROR
+            "CREXX_VM_HANDLER_PANEL must be all-inline, all-outline, or profile-30")
+endif()
+message(STATUS "cREXX VM handler panel: ${CREXX_VM_HANDLER_PANEL}")
 
 if(CREXX_DEFAULT_VM_TARGET STREQUAL "rxtvm" AND NOT CREXX_THREADED_VM_SUPPORTED)
     message(FATAL_ERROR
@@ -39,6 +54,12 @@ endif()
 set(RXVM_CORE_OBJECT_SOURCES
         rxvmintp.h
         rxvmintp.c
+        rxvmhandlerpolicy.h
+        rxvmhandlers_core.inc
+        rxvmhandlers_control.inc
+        rxvmhandlers_numeric.inc
+        rxvmhandlers_string.inc
+        rxvmhandlers_system.inc
         rxvmworker.h
         rxvmworker.c
         rxvmactive.c
@@ -71,6 +92,8 @@ endif()
 
 function(crexx_add_rxvm_core_objects target_name)
     add_library(${target_name} OBJECT ${RXVM_CORE_OBJECT_SOURCES})
+    target_compile_definitions(${target_name} PRIVATE
+            CREXX_VM_HANDLER_PANEL=${CREXX_VM_HANDLER_PANEL_VALUE})
     if(CREXX_VM_PROFILING)
         target_compile_definitions(${target_name} PRIVATE
                 CREXX_VM_MEMORY_CENSUS=1)

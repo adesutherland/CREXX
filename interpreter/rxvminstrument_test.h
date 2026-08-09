@@ -3,6 +3,8 @@
 #ifndef CREXX_RXVMINSTRUMENT_TEST_H
 #define CREXX_RXVMINSTRUMENT_TEST_H
 
+#define CREXX_VM_INSTRUMENTATION_TEST 1
+
 typedef struct rxvm_test_instrumentation_state {
     size_t instruction_begins;
     size_t instruction_retires;

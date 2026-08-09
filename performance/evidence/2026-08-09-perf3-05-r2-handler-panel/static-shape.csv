@@ -1,0 +1,9 @@
+shape,engine,run_extent_bytes,text_bytes,file_bytes,outlined_handler_symbols
+untouched-baseline,rxtvm,535556,831532,1020584,0
+untouched-baseline,rxbvm,530528,827180,1020760,0
+all-inline,rxtvm,532512,828488,1020632,0
+all-inline,rxbvm,531868,828520,1020808,0
+all-outline,rxtvm,31824,913248,1135064,651
+all-outline,rxbvm,32268,902588,1135032,651
+profile-30,rxtvm,200160,888228,1109656,475
+profile-30,rxbvm,200584,881236,1093096,475

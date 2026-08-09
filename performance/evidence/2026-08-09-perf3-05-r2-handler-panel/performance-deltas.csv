@@ -1,0 +1,17 @@
+workload,engine,all_inline_value,profile30_value,profile30_performance_delta_percent,all_outline_value,all_outline_performance_delta_percent,unit
+Sieve,rxtvm,1.001662,1.165604,-14.065,2.027054,-50.585,seconds
+Sieve,rxbvm,1.032048,1.274438,-19.019,1.814190,-43.112,seconds
+Permute,rxtvm,1.778565,2.229894,-20.240,4.761848,-62.650,seconds
+Permute,rxbvm,1.796538,2.234252,-19.591,4.309478,-58.312,seconds
+Bounce,rxtvm,1.086792,1.302406,-16.555,3.034042,-64.180,seconds
+Bounce,rxbvm,1.098768,1.551892,-29.198,2.461667,-55.365,seconds
+Richards,rxtvm,2.096975,2.145031,-2.240,2.572552,-18.487,seconds
+Richards,rxbvm,2.090962,2.200758,-4.989,2.439758,-14.296,seconds
+Base64,rxtvm,1.649538,1.702644,-3.119,2.192576,-24.767,seconds
+Base64,rxbvm,1.761082,1.791070,-1.674,2.115286,-16.745,seconds
+Towers,rxtvm,2.019379,2.054840,-1.726,2.239135,-9.814,seconds
+Towers,rxbvm,2.058799,2.087631,-1.381,2.265075,-9.107,seconds
+RexxCPS,rxtvm,45.591680,43.087450,-5.493,34.821733,-23.623,million_clauses_per_second
+RexxCPS,rxbvm,44.751082,42.776276,-4.413,34.653821,-22.563,million_clauses_per_second
+geometric-mean,rxtvm,1.000000,0.906525,-9.347,0.599794,-40.021,normalized_throughput
+geometric-mean,rxbvm,1.000000,0.879176,-12.082,0.657570,-34.243,normalized_throughput

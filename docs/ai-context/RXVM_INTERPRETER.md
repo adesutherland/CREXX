@@ -1071,14 +1071,55 @@ instruction. `INULL` and `IUNKNOWN` are runtime sentinel handlers that raise
 mnemonics. Opcode slot 514 is now `ENDLIFE_REG`; the later opcode numbers are
 preserved.
 
+### Handler definitions and placement policy
+
+Every public opcode handler, both runtime sentinels and both private
+execution-image handlers have one semantic definition behind
+`RXVM_HANDLER(...)` or `RXVM_PRIVATE_HANDLER(...)`. The definitions are split
+by concern across `rxvmhandlers_core.inc`, `rxvmhandlers_control.inc`,
+`rxvmhandlers_numeric.inc`, `rxvmhandlers_string.inc`, and
+`rxvmhandlers_system.inc`; `run()` no longer owns a second copy of any handler
+body. A definition keeps the instruction-entry/debug code and its
+implementation together.
+
+The definition files are expanded twice. At file scope they produce
+force-noinline `rxvm_handler_NAME(rxvm_handler_state *)` functions. Inside the
+dispatch owner they produce each switch case or computed-goto label and then,
+according to `rxvmhandlerpolicy.h`, either expand the same implementation body
+directly or call its file-scope function. The all-inline form therefore retains
+owner-local expansion; it does not access the pointer facade. The outlined
+form uses a pointer facade over the owner's live execution locals and returns a
+small `rxvm_handler_result` for owner-only continuations: normal dispatch,
+interrupt dispatch, interrupted-instruction resume, interrupt-table OOM, or
+terminal cleanup. Label ownership and final dispatch remain in `run()`.
+
+The CMake cache setting `CREXX_VM_HANDLER_PANEL` selects the internal build
+shape:
+
+- `all-inline` (the default) expands every handler inside `run()`;
+- `all-outline` calls every handler, providing the minimum-owner/maximum-call
+  control; and
+- `profile-30` expands the frozen Apple profile panel of 176 out of 588
+  non-reserved public handlers and calls the rest.
+
+Reserved slots and the two private handlers are compiled and measured but do
+not count toward the profile percentage. `INTERRUPT` remains an internal owner
+label rather than an RXAS handler. The panel setting changes no RXAS/RXBIN
+encoding or public/plugin ABI. `profile-30` is an experimental measurement
+shape, not a selected product default.
+
 ### Instruction Flow Example
-Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.
+The assembler passes operands inline sequentially in the binary array. A
+handler definition is written once and the placement policy supplies its
+dispatch label/case:
 ```c
-        START_INSTRUCTION(IADD_REG_REG_REG) VM_ADVANCE(3)
-            DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
-                  REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI + op3RI)
-            DISPATCH
+RXVM_HANDLER(IADD_REG_REG_REG,
+    VM_ADVANCE(3)
+    DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
+          REG_IDX(2), REG_IDX(3));
+    REG_RETURN_INT(op2RI + op3RI)
+    DISPATCH
+)
 ```
 In this example:
 - `VM_ADVANCE(3)` specifies that this instruction consumes 3 operand blocks.

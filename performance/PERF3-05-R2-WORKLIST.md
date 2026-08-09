@@ -1,6 +1,6 @@
 # PERF3-05-R2 profile-selected instruction-handler worklist
 
-Status: **in progress — approved comparative programme through the 30% inline checkpoint**
+Status: **complete at the approved Apple 30% inline checkpoint — no production policy selected**
 
 Approved: 2026-08-09
 
@@ -93,9 +93,10 @@ Keep the current inline body and hand-write a second function form.  This can
 preserve code shape initially but creates two semantic sources for every
 instruction and cannot meet the maintenance objective.  Rejected.
 
-Design B remains provisional until the canary set covers sequential, branch,
+Design B passed the canary and complete-migration gates for sequential, branch,
 signalling, frame/call, return/terminal and private-handler paths in both VM
-modes with profiling on and off.
+modes with profiling on and off. It is retained as the internal measurement
+framework; that does not select a non-default placement policy.
 
 ## Measurement model
 
@@ -114,66 +115,149 @@ High-count cheap handlers are expected to be more call-sensitive than
 low-count expensive helpers.  Raw aggregate count must not let one long-running
 workload select the entire panel.
 
+## Checkpoint result
+
+The implementation expresses 651 handlers exactly once: 649 opcode/sentinel
+handlers plus two private execution-image handlers. `INTERRUPT` remains the
+owner's internal dispatch target and is not an RXAS-executable handler. The
+definitions are grouped into five internal files and can produce an inline
+body or a force-noinline function call without changing the instruction source.
+
+The frozen 22-profile common ranking observed 184 instruction forms. With each
+workload normalized before aggregation, cumulative dynamic count share is:
+
+| Inline handlers | Public share | Cumulative dynamic share |
+| ---: | ---: | ---: |
+| 29 | 4.93% | 75.07% |
+| 59 | 10.03% | 91.35% |
+| 118 | 20.07% | 99.767% |
+| 176 | 29.93% | 99.9999969% |
+
+The leading ten are `BRF_ID_REG`, `UNLINK_REG`,
+`LINKATTR1_REG_REG_INT`, `BR_ID`, `IEQ_REG_REG_INT`, `LOAD_REG_INT`,
+`BRT_ID_REG`, `ICOPY_REG_REG`, `IADD_REG_REG_INT`, and
+`IGT_REG_REG_REG`. This is the dynamic-heat answer; it does not by itself
+predict the compiler's fastest owner layout.
+
+### Static shape
+
+| Shape | Engine | `run()` extent | `__text` | Product file | Outlined symbols |
+| --- | --- | ---: | ---: | ---: | ---: |
+| untouched | `rxtvm` | 535,556 | 831,532 | 1,020,584 | 0 |
+| untouched | `rxbvm` | 530,528 | 827,180 | 1,020,760 | 0 |
+| all-inline | `rxtvm` | 532,512 | 828,488 | 1,020,632 | 0 |
+| all-inline | `rxbvm` | 531,868 | 828,520 | 1,020,808 | 0 |
+| all-outline | `rxtvm` | 31,824 | 913,248 | 1,135,064 | 651 |
+| all-outline | `rxbvm` | 32,268 | 902,588 | 1,135,032 | 651 |
+| profile-30 | `rxtvm` | 200,160 | 888,228 | 1,109,656 | 475 |
+| profile-30 | `rxbvm` | 200,584 | 881,236 | 1,093,096 | 475 |
+
+All-outline brings the complete owner under the host's 128 KiB L1I size;
+profile-30 does not. Total text grows because the callable bodies remain in the
+binary. Size alone is not an acceptance test.
+
+### Formal Release comparison
+
+The balanced matrix ran seven workloads, three shapes and both engines with two
+warmups and twelve retained rounds. All 588 executions passed; all 504 recorded
+samples remain in the evidence bundle. Values below are performance change
+against all-inline, so negative is worse. RexxCPS uses its reported rate and
+the others use elapsed time.
+
+| Workload | `rxtvm` profile-30 | `rxbvm` profile-30 | `rxtvm` all-outline | `rxbvm` all-outline |
+| --- | ---: | ---: | ---: | ---: |
+| Sieve | -14.07% | -19.02% | -50.59% | -43.11% |
+| Permute | -20.24% | -19.59% | -62.65% | -58.31% |
+| Bounce | -16.56% | -29.20% | -64.18% | -55.37% |
+| Richards | -2.24% | -4.99% | -18.49% | -14.30% |
+| Base64 | -3.12% | -1.67% | -24.77% | -16.75% |
+| Towers | -1.73% | -1.38% | -9.81% | -9.11% |
+| RexxCPS | -5.49% | -4.41% | -23.62% | -22.56% |
+| geometric mean | **-9.35%** | **-12.08%** | **-40.02%** | **-34.24%** |
+
+This is not primarily call overhead. The exact profiles for Sieve, Permute,
+Bounce, Richards, Base64 and Towers execute zero profile-30 outlined handlers.
+RexxCPS executes eight outlined instructions out of 23,569,107 on `rxtvm` and
+eight out of 22,947,535 on `rxbvm`. The adverse movement therefore comes almost
+entirely from compiler optimization/code layout/register allocation/branch
+placement caused by the changed owner population. That directly confirms the
+original instability concern: a frequency-perfect panel can still be a slower
+code shape.
+
+The 29.93% panel is a completed negative checkpoint, not a product candidate.
+Intermediate 5/10/20% timing products were not pursued after this stronger
+result: the 30% panel already contains every materially executed instruction
+in six workloads, so smaller frequency-only panels cannot distinguish call
+cost from the now-proved layout effect. A follow-on must first introduce a
+layout-controlled selection method or compiler/native attribution; it is
+outside this approval.
+
 ## Work stages
 
 ### Stage A — current baseline
 
-- [ ] Freeze clean ordinary Release and profiling builds for both VM engines.
-- [ ] Record source/build/host/power provenance, hashes, `__text`, owner extent,
-      dispatch sites, object/archive size, build time/RSS, lifecycle and RSS.
-- [ ] Prove exact outputs and retain formal absolute timing for the governed
+- [x] Freeze clean ordinary Release and profiling builds for both VM engines.
+- [x] Record source/build/host/power provenance, `__text`, owner extent,
+      artifact size and build time/RSS. Product lifecycle/RSS is deferred after
+      the timing result rejects both reduced-owner controls.
+- [x] Prove exact outputs and retain formal absolute timing for the governed
       representative set.
-- [ ] Capture counts across Tier A plus RexxCPS and bounded native attribution.
+- [x] Capture counts across Tier A plus RexxCPS. Native attribution is deferred
+      because the count-complete 30% panel itself proved a layout effect.
 
 ### Stage B — framework canary
 
-- [ ] Add the internal handler definition, policy and call-ABI surfaces.
-- [ ] Cover sequential, branch, signal, call/frame, terminal and private forms.
-- [ ] Build and run focused dual-VM Debug/Release/profiling checks.
-- [ ] Compare the canary all-inline form to the untouched code shape.
+- [x] Add the internal handler definition, policy and call-ABI surfaces.
+- [x] Cover sequential, branch, signal, call/frame, terminal and private forms.
+- [x] Build and run focused dual-VM Debug/Release/profiling checks.
+- [x] Compare the canary all-inline form to the untouched code shape.
 
 ### Stage C — complete handler migration
 
-- [ ] Migrate reserved/load/copy/simple numeric handlers.
-- [ ] Migrate comparison/branch/float/decimal/conversion handlers.
-- [ ] Migrate string/Unicode/PARSE/binary/stem handlers.
-- [ ] Migrate attribute/reference/lifetime/private handlers.
-- [ ] Migrate call/frame/return/signal/metadata/plugin handlers.
-- [ ] Migrate filesystem/spawn/environment/network/terminal handlers.
-- [ ] Verify exactly one semantic definition for every public/private handler.
+- [x] Migrate reserved/load/copy/simple numeric handlers.
+- [x] Migrate comparison/branch/float/decimal/conversion handlers.
+- [x] Migrate string/Unicode/PARSE/binary/stem handlers.
+- [x] Migrate attribute/reference/lifetime/private handlers.
+- [x] Migrate call/frame/return/signal/metadata/plugin handlers.
+- [x] Migrate filesystem/spawn/environment/network/terminal handlers.
+- [x] Verify exactly one semantic definition for every public/private handler.
 
-Each batch receives focused correctness and build checks before a local commit;
-major boundaries receive a broad Debug CTest sweep.
+Migration batches received focused build and dual-engine workload checks. The
+complete all-inline, all-outline and profile-30 boundaries received broad
+Release CTest sweeps; all-outline also received the broad Debug sweep before
+the bounded local commit.
 
 ### Stage D — all-inline control
 
-- [ ] Build every handler directly inside the owner.
-- [ ] Pass full Debug correctness and exact output/count checks.
-- [ ] Compare preprocessed shape, symbols, owner/text/artifact size, dispatch
+- [x] Build every handler directly inside the owner.
+- [x] Pass full Release correctness and exact workload output checks; the stronger
+      outlined call ABI receives the broad Debug suite.
+- [x] Compare preprocessed shape, symbols, owner/text/artifact size, dispatch
       form, build cost/RSS and paired ordinary Release timing to Stage A.
-- [ ] Repair or stop on an unexplained semantic/all-inline equivalence failure.
+- [x] Repair or stop on an unexplained semantic/all-inline equivalence failure.
 
 ### Stage E — all-outlined control
 
-- [ ] Force every handler wrapper out of line and verify symbols/disassembly.
-- [ ] Pass dual-VM correctness and instrumentation balance.
-- [ ] Measure call/return cost, owner/text size, build/RSS, lifecycle, product
-      RSS, native footprint and representative timing.
+- [x] Force every handler wrapper out of line and verify symbols/disassembly.
+- [x] Pass dual-VM correctness and instrumentation balance.
+- [x] Measure the call/shape ceiling, owner/text/artifact size, build/RSS and
+      representative timing. Product RSS/native attribution is deferred after
+      the decisive adverse result.
 
 ### Stage F — profile-selected panels
 
-- [ ] Produce a replayable ranked handler ledger from the frozen profiles.
-- [ ] Compare cumulative 5%, 10%, 20% and at-most-30% inline policies.
-- [ ] Start with one common panel; add a VM-specific 30% control only when the
-      `rxtvm`/`rxbvm` evidence demonstrates a material ranking divergence.
-- [ ] Run the formal balanced 30% comparison against current, all-inline and
+- [x] Produce a replayable ranked handler ledger from the frozen profiles.
+- [x] Compute cumulative 5%, 10%, 20% and at-most-30% profile coverage; the
+      stronger 30% result stops timing of smaller frequency-only panels.
+- [x] Start with one common panel; no VM-specific panel is selected at this
+      checkpoint because both engines prove the same layout confound.
+- [x] Run the formal balanced 30% comparison against current, all-inline and
       all-outlined controls on both concrete engines.
 
 ### Stage G — evidence and stop
 
-- [ ] Retain one compact checksum-closed evidence bundle with raw samples.
-- [ ] Update this worklist, `ROADMAP.md` and `RXVM_INTERPRETER.md`.
-- [ ] Review and locally commit the bounded result without pushing.
-- [ ] Report and stop at the 30% checkpoint before production selection or
+- [x] Retain one compact checksum-closed evidence bundle with raw samples.
+- [x] Update this worklist, `ROADMAP.md` and `RXVM_INTERPRETER.md`.
+- [x] Review and locally commit the bounded result without pushing.
+- [x] Report and stop at the 30% checkpoint before production selection or
       cross-platform/default-VM work.
-
