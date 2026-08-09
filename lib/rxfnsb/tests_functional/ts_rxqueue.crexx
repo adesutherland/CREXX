@@ -78,7 +78,7 @@ call append_nested "nested"
 errors = errors + check_int(2, queued(), "nested procedure shares queue")
 errors = errors + check("tail", pull(), "queue is FIFO tail")
 errors = errors + check("nested", pull(), "nested append visible")
-errors = errors + check("", pull(), "empty pull")
+/* An empty PULL reads the default input stream; do not block this test on stdin. */
 errors = errors + check_int(0, queued(), "final depth")
 
 if errors = 0 then say "PASS: rxqueue shared state"

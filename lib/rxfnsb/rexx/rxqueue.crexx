@@ -270,7 +270,7 @@ return
 /*------------------------------------------------------------*/
 /* Remove and return the next string from the queue.          */
 /*                                                            */
-/* Returns an empty string when the queue is empty.           */
+/* Reads the default input stream when the queue is empty.    */
 /*------------------------------------------------------------*/
 pull: procedure = .string expose _queue_ready _queue_active
   call _ensure_queue_manager
