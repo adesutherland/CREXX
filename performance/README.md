@@ -6,6 +6,9 @@ evidence together without turning test directories into a planning system.
 
 The original programme charter and 2026-07-15 evidence review remain in
 [`docs/planning/release-1/performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
+The complete handler-placement attempt history and the resulting Clang/GCC
+optimisation contract are recorded in
+[`vm-c-compiler-optimisation-report-2026-08-09.md`](../docs/planning/release-1/vm-c-compiler-optimisation-report-2026-08-09.md).
 The initial `NR-*` sweep and its evidence ledger are closed in
 [`ROADMAP-INITIAL-SWEEP-2026-07-23.md`](ROADMAP-INITIAL-SWEEP-2026-07-23.md).
 PERF2 is closed in

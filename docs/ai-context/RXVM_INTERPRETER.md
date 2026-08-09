@@ -1130,6 +1130,11 @@ out of the 590 non-reserved public-plus-private definitions (30.17%).
 panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. `profile-30`
 is an experimental measurement shape, not a selected product default.
 
+The complete sequence of accepted and rejected source shapes, the Clang/GCC
+code-generation differences, and the current rules for preserving maximum
+observed C optimisation are recorded in the
+[VM and C Compiler Optimisation Report](../planning/release-1/vm-c-compiler-optimisation-report-2026-08-09.md).
+
 ### Process-private fused execution handlers
 
 Preparation performs two structural, process-private fusions in each module's
