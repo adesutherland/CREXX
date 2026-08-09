@@ -144,7 +144,7 @@ val = .string
  * @return the centred value as a Rexx string object.
  */
   centre: method = .rexx
-    arg centlen = .int, pad = " "
+    arg expose centlen = .int, pad = " "
     return .rexx(.rxfnsb..centre(val,centlen,pad))
 
 /**

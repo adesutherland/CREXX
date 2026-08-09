@@ -1,0 +1,20 @@
+/* rexx all instructions by opcode */
+options comments_dash
+
+out = .string[]
+address system 'rxas -i' output out
+
+say '\chapter{Instructions by Opcode}'
+say '\begin{longtable}{lll}'
+say '\texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\'
+
+-- assumption here: rxas returns the opcodes in sequence
+loop i=1 to out.0
+  if left(out.i,1) = '*' then iterate
+  parse out.i opcode mnemonic signature comment
+  say '\texttt{'opcode'} & \texttt{'mnemonic'} & \texttt{'signature'} \\'   
+end
+say '\end{longtable}'  
+
+
+

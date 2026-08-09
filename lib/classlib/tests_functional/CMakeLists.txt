@@ -8,6 +8,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
+  testrexx0
   testrexx
   testStringArrayList
   testStringHashMap
@@ -19,6 +20,7 @@ set(REXXBINS
   testObjectCollections
   testStringObjectMaps
   testObjectObjectTreeMap
+  testTreeMap
   testRexxComparator
   testQfind
   testTokenise

@@ -1,0 +1,29 @@
+/* rexx all instructions by mnemonic */
+options comments_dash
+import data
+
+out = .string[]
+sorted = .StringTreeMap()
+
+address system 'rxas -i' output out
+
+say '\chapter{Instructions by Mnemonic}'
+say '\begin{longtable}{lll}'
+say '\texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\'
+
+-- assumption here: rxas returns the opcodes in sequence
+loop i=1 to out.0
+  if left(out.i,1) = '*' then iterate
+  parse out.i opcode mnemonic signature comment
+  rc = sorted.put(mnemonic||'$'||signature,opcode)
+end
+
+it = sorted.iterator()
+loop while it.hasNext()
+  key = it.next()
+  parse key mnemonic '$' signature
+  opcode = sorted.get(key)
+  say '\texttt{'opcode'} & \texttt{'mnemonic'} & \texttt{'signature'} \\'   
+end
+say '\end{longtable}'  
+

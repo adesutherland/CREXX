@@ -1,8 +1,910 @@
+\begin{CrexxClass}{.stem}{rxfnsb}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .stem}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {stem}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {hash}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.void}
+      {set}
+      {\Params{
+        \ParamLine{\Param{key}{""}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {key}
+      {(\Param{ix}{.int})}
+
+    \Method
+      {public}
+      {.string}
+      {value}
+      {(\Param{kv}{.int})}
+
+    \Method
+      {public}
+      {.string}
+      {valueAt}
+      {(\Param{ix}{.int})}
+
+    \Method
+      {public}
+      {.string[]}
+      {tails}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {values}
+      {()}
+
+    \Method
+      {public}
+      {.stemIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.stemIterator}
+      {snapshotIterator}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.stemIterator}{rxfnsb}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .stemIterator}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {stem}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {hash}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{key}{.string})}
+
+    \Method
+      {public}
+      {.void}
+      {set}
+      {\Params{
+        \ParamLine{\Param{key}{""}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {key}
+      {(\Param{ix}{.int})}
+
+    \Method
+      {public}
+      {.string}
+      {value}
+      {(\Param{kv}{.int})}
+
+    \Method
+      {public}
+      {.string}
+      {valueAt}
+      {(\Param{ix}{.int})}
+
+    \Method
+      {public}
+      {.string[]}
+      {tails}
+      {()}
+
+    \Method
+      {public}
+      {.string[]}
+      {values}
+      {()}
+
+    \Method
+      {public}
+      {.stemIterator}
+      {iterator}
+      {()}
+
+    \Method
+      {public}
+      {.stemIterator}
+      {snapshotIterator}
+      {()}
+
+    \Factory
+      {public}
+      {stemIterator}
+      {\Params{
+        \ParamLine{\Param{source}{reference .stem}}
+        \LastParamLine{\Param{snapshot\_flag}{0}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {value}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {index}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {reset}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {isLive}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.httpclient}}{rxhttp}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.httpclient}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {httpclient}
+      {\Params{
+        \ParamLine{\Param{host}{"127.0.0.1"}}
+        \ParamLine{\Param{port}{80}}
+        \ParamLine{\Param{timeout}{30000}}
+        \LastParamLine{\Param{tls}{0}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {send}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \LastParamLine{\Param{contentType}{""}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {sendWithHeaders}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \ParamLine{\Param{contentType}{""}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {post}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {postWithHeaders}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \ParamLine{\Param{contentType}{"application/octet-stream"}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {buildRequest}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \LastParamLine{\Param{contentType}{""}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {buildRequestWithHeaders}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \ParamLine{\Param{contentType}{""}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {extractBody}
+      {(\Param{response}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {header}
+      {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {status}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {httpStatus}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {error}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastHttp}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastBody}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.http}{rxhttp}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .http}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {httpclient}
+      {\Params{
+        \ParamLine{\Param{host}{"127.0.0.1"}}
+        \ParamLine{\Param{port}{80}}
+        \ParamLine{\Param{timeout}{30000}}
+        \LastParamLine{\Param{tls}{0}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {send}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \LastParamLine{\Param{contentType}{""}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {sendWithHeaders}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \ParamLine{\Param{contentType}{""}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {post}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {postWithHeaders}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \ParamLine{\Param{contentType}{"application/octet-stream"}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {buildRequest}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \LastParamLine{\Param{contentType}{""}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {buildRequestWithHeaders}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \ParamLine{\Param{contentType}{""}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {extractBody}
+      {(\Param{response}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {header}
+      {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {status}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {httpStatus}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {error}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastHttp}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastBody}
+      {()}
+
+    \Factory
+      {public}
+      {http}
+      {\Params{
+        \ParamLine{\Param{host}{"127.0.0.1"}}
+        \ParamLine{\Param{port}{80}}
+        \ParamLine{\Param{timeout}{30000}}
+        \LastParamLine{\Param{tls}{0}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {send}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \LastParamLine{\Param{contentType}{""}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {sendWithHeaders}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \ParamLine{\Param{contentType}{""}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {post}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {postWithHeaders}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \ParamLine{\Param{contentType}{"application/octet-stream"}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {buildRequest}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \LastParamLine{\Param{contentType}{""}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {buildRequestWithHeaders}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{""}}
+        \ParamLine{\Param{contentType}{""}}
+        \LastParamLine{\Param{headers}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {extractBody}
+      {(\Param{response}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {header}
+      {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {status}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {httpStatus}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {error}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastHttp}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {lastBody}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {\_send}
+      {(\Param{request}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {\_read\_response}
+      {(\Param{sock}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {\_has\_complete\_body}
+      {(\Param{response}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {\_body\_start}
+      {(\Param{response}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {\_content\_length}
+      {(\Param{header}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {\_is\_chunked}
+      {(\Param{header}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {\_header\_value}
+      {\Params{
+        \ParamLine{\Param{header}{.string}}
+        \LastParamLine{\Param{name}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {\_decode\_chunked\_body}
+      {(\Param{body}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {\_chunked\_complete}
+      {(\Param{body}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {\_byte\_length}
+      {(\Param{text}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {\_take\_bytes}
+      {\Params{
+        \ParamLine{\Param{text}{.string}}
+        \LastParamLine{\Param{count}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {\_hex\_to\_int}
+      {(\Param{text}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {\_hex\_digit\_value}
+      {(\Param{c}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {\_parse\_status}
+      {(\Param{response}{.string})}
+
+    \Method
+      {public}
+      {}
+      {\_set\_error}
+      {\Params{
+        \ParamLine{\Param{code}{.int}}
+        \LastParamLine{\Param{message}{.string}}
+      }}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.jsondocument}{rxjson}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .jsondocument}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {jsondocument}
+      {(\Param{json}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {valid}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {error\_code}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {error\_position}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {error}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {source}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {source\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {index\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {node\_count}
+      {(\Param{node}{0})}
+
+    \Method
+      {public}
+      {.string}
+      {type}
+      {(\Param{path}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {get}
+      {(\Param{path}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {count}
+      {(\Param{path}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {members}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \LastParamLine{\Param{expose names}{.string[]}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {root}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {find}
+      {(\Param{path}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {member}
+      {\Params{
+        \ParamLine{\Param{parent}{.int}}
+        \LastParamLine{\Param{name}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {element}
+      {\Params{
+        \ParamLine{\Param{parent}{.int}}
+        \LastParamLine{\Param{index}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {node\_type}
+      {(\Param{node}{.int})}
+
+    \Method
+      {public}
+      {.string}
+      {node\_get}
+      {(\Param{node}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {children}
+      {\Params{
+        \ParamLine{\Param{node}{.int}}
+        \LastParamLine{\Param{expose child\_nodes}{.int[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {node\_name}
+      {(\Param{node}{.int})}
+
+    \Method
+      {public}
+      {.int}
+      {node\_string}
+      {\Params{
+        \ParamLine{\Param{node}{.int}}
+        \LastParamLine{\Param{expose value}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {node\_int}
+      {\Params{
+        \ParamLine{\Param{node}{.int}}
+        \LastParamLine{\Param{expose value}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {node\_float}
+      {\Params{
+        \ParamLine{\Param{node}{.int}}
+        \LastParamLine{\Param{expose value}{.float}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {node\_f32\_array}
+      {\Params{
+        \ParamLine{\Param{node}{.int}}
+        \ParamLine{\Param{expected\_count}{.int}}
+        \ParamLine{\Param{expose packed}{.binary}}
+        \LastParamLine{\Param{expose error}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {node\_i64\_array}
+      {\Params{
+        \ParamLine{\Param{node}{.int}}
+        \ParamLine{\Param{expected\_count}{.int}}
+        \ParamLine{\Param{expose packed}{.binary}}
+        \LastParamLine{\Param{expose error}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {node\_boolean}
+      {\Params{
+        \ParamLine{\Param{node}{.int}}
+        \LastParamLine{\Param{expose value}{.int}}
+      }}
+
+  \end{Members}
+\end{CrexxClass}
+
 \begin{CrexxClass}{.ArrayList}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayList \hfill\textit{.Iterable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayList}
   \end{Hierarchy}
 
   \begin{Members}
@@ -46,13 +948,19 @@
       {public}
       {.int}
       {set}
-      {(\Param{index}{.int}, \Param{item}{.object})}
+      {\Params{
+        \ParamLine{\Param{index}{.int}}
+        \LastParamLine{\Param{item}{.object}}
+      }}
 
     \Method
       {public}
       {.int}
       {insert}
-      {(\Param{index}{.int}, \Param{item}{.object})}
+      {\Params{
+        \ParamLine{\Param{index}{.int}}
+        \LastParamLine{\Param{item}{.object}}
+      }}
 
     \Method
       {public}
@@ -92,11 +1000,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.ArrayListIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayListIterator \hfill\textit{.Iterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayListIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -104,7 +1013,11 @@
     \Factory
       {public}
       {ArrayListIterator}
-      {(\Param{values}{reference .object[]}, \Param{count}{reference .int}, \Param{snapshot\_flag}{.int})}
+      {\Params{
+        \ParamLine{\Param{values}{reference .object[]}}
+        \ParamLine{\Param{count}{reference .int}}
+        \LastParamLine{\Param{snapshot\_flag}{.int}}
+      }}
 
     \Method
       {public}
@@ -138,6 +1051,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{\textit{.Comparator}}{data}
 
   \begin{Hierarchy}
@@ -150,10 +1064,14 @@
       {public}
       {.int}
       {compare}
-      {(\Param{left}{.object}, \Param{right}{.object})}
+      {\Params{
+        \ParamLine{\Param{left}{.object}}
+        \LastParamLine{\Param{right}{.object}}
+      }}
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{\textit{.Iterable}}{data}
 
   \begin{Hierarchy}
@@ -170,6 +1088,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{\textit{.Iterator}}{data}
 
   \begin{Hierarchy}
@@ -186,6 +1105,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.ObjectLinkedList}{data}
 
   \begin{Hierarchy}
@@ -298,11 +1218,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.TreeMap}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .TreeMap \hfill\textit{.Printable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .TreeMap}
   \end{Hierarchy}
 
   \begin{Members}
@@ -316,7 +1237,10 @@
       {public}
       {.int}
       {put}
-      {(\Param{key}{.object}, \Param{value}{.object})}
+      {\Params{
+        \ParamLine{\Param{key}{.object}}
+        \LastParamLine{\Param{value}{.object}}
+      }}
 
     \Method
       {public}
@@ -392,6 +1316,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.TreeMapIterator}{data}
 
   \begin{Hierarchy}
@@ -404,7 +1329,10 @@
     \Factory
       {public}
       {TreeMapIterator}
-      {(\Param{keys}{.object[]}, \Param{values}{.object[]})}
+      {\Params{
+        \ParamLine{\Param{keys}{.object[]}}
+        \LastParamLine{\Param{values}{.object[]}}
+      }}
 
     \Method
       {public}
@@ -438,6 +1366,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{\textit{.Printable}}{data}
 
   \begin{Hierarchy}
@@ -454,6 +1383,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.ObjectStack}{data}
 
   \begin{Hierarchy}
@@ -506,6 +1436,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.os}{system\_os}
 
   \begin{Hierarchy}
@@ -548,7 +1479,10 @@
       {public}
       {.int}
       {appendBinaryFile}
-      {(\Param{source}{.string}, \Param{target}{.string})}
+      {\Params{
+        \ParamLine{\Param{source}{.string}}
+        \LastParamLine{\Param{target}{.string}}
+      }}
 
     \Method
       {public}
@@ -578,7 +1512,10 @@
       {public}
       {.int}
       {listDir}
-      {(\Param{file}{.string}, \Param{entries}{.string[]})}
+      {\Params{
+        \ParamLine{\Param{file}{.string}}
+        \LastParamLine{\Param{entries}{.string[]}}
+      }}
 
     \Method
       {public}
@@ -588,11 +1525,11 @@
 
   \end{Members}
 \end{CrexxClass}
-\begin{CrexxClass}{.qFind}{data\_qfind}
+
+\begin{CrexxClass}{\textit{.matchResult}}{data\_qfind}
 
   \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .qFind \hfill\textit{.matchResult}}
+    \HierarchyLine[\APIOpen]{0}{\textit{.matchResult}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -600,7 +1537,36 @@
     \Factory
       {public}
       {matchResult}
-      {(\Param{line}{.string}, \Param{delim}{.string})}
+      {\Params{
+        \ParamLine{\Param{line}{.string}}
+        \LastParamLine{\Param{delim}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {position}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.fastFind}{data\_qfind}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .fastFind}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {matchResult}
+      {\Params{
+        \ParamLine{\Param{line}{.string}}
+        \LastParamLine{\Param{delim}{.string}}
+      }}
 
     \Method
       {public}
@@ -611,7 +1577,74 @@
     \Factory
       {public}
       {fastFind}
-      {(\Param{line}{.string}, \Param{delim}{.string})}
+      {\Params{
+        \ParamLine{\Param{line}{.string}}
+        \LastParamLine{\Param{delim}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {found}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {position}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {before}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {match}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {after}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.qFind}{data\_qfind}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .qFind}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {matchResult}
+      {\Params{
+        \ParamLine{\Param{line}{.string}}
+        \LastParamLine{\Param{delim}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {position}
+      {()}
+
+    \Factory
+      {public}
+      {fastFind}
+      {\Params{
+        \ParamLine{\Param{line}{.string}}
+        \LastParamLine{\Param{delim}{.string}}
+      }}
 
     \Method
       {public}
@@ -646,7 +1679,10 @@
     \Factory
       {public}
       {qFind}
-      {(\Param{line}{.string}, \Param{delim}{.string})}
+      {\Params{
+        \ParamLine{\Param{line}{.string}}
+        \LastParamLine{\Param{delim}{.string}}
+      }}
 
     \Method
       {public}
@@ -680,11 +1716,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.rexx}{rexx}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .rexx \hfill\textit{.ObjectPrintable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .rexx}
   \end{Hierarchy}
 
   \begin{Members}
@@ -698,7 +1735,10 @@
       {public}
       {.boolean}
       {abbrev}
-      {(\Param{astr}{.string}, \Param{len}{0})}
+      {\Params{
+        \ParamLine{\Param{astr}{.string}}
+        \LastParamLine{\Param{len}{0}}
+      }}
 
     \Method
       {public}
@@ -734,25 +1774,37 @@
       {public}
       {.rexx}
       {center}
-      {(\Param{expose centlen}{.int}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{expose centlen}{.int}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {centre}
-      {(\Param{centlen}{.int}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{expose centlen}{.int}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {changestr}
-      {(\Param{needle}{.string}, \Param{nneedle}{.string})}
+      {\Params{
+        \ParamLine{\Param{needle}{.string}}
+        \LastParamLine{\Param{nneedle}{.string}}
+      }}
 
     \Method
       {public}
       {.int}
       {compare}
-      {(\Param{astr}{.string}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{astr}{.string}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
@@ -788,25 +1840,41 @@
       {public}
       {.rexx}
       {delstr}
-      {(\Param{position}{.int}, \Param{dellen}{0})}
+      {\Params{
+        \ParamLine{\Param{position}{.int}}
+        \LastParamLine{\Param{dellen}{0}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {delword}
-      {(\Param{wnum}{.int}, \Param{wcount}{0})}
+      {\Params{
+        \ParamLine{\Param{wnum}{.int}}
+        \LastParamLine{\Param{wcount}{0}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {format}
-      {(\Param{before}{0}, \Param{after}{0}, \Param{expp}{0}, \Param{expt}{-1})}
+      {\Params{
+        \ParamLine{\Param{before}{0}}
+        \ParamLine{\Param{after}{0}}
+        \ParamLine{\Param{expp}{0}}
+        \LastParamLine{\Param{expt}{-1}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {insert}
-      {(\Param{string}{.string}, \Param{position}{0}, \Param{len}{0}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{string}{.string}}
+        \ParamLine{\Param{position}{0}}
+        \ParamLine{\Param{len}{0}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
@@ -830,31 +1898,48 @@
       {public}
       {.rexx}
       {overlay}
-      {(\Param{string}{.string}, \Param{position}{1}, \Param{len}{0}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{string}{.string}}
+        \ParamLine{\Param{position}{1}}
+        \ParamLine{\Param{len}{0}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
       {.int}
       {pos}
-      {(\Param{needle}{.string}, \Param{start}{1})}
+      {\Params{
+        \ParamLine{\Param{needle}{.string}}
+        \LastParamLine{\Param{start}{1}}
+      }}
 
     \Method
       {public}
       {.int}
       {lastpos}
-      {(\Param{needle}{.string}, \Param{search\_end}{0})}
+      {\Params{
+        \ParamLine{\Param{needle}{.string}}
+        \LastParamLine{\Param{search\_end}{0}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {left}
-      {(\Param{number}{.int}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{number}{.int}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {right}
-      {(\Param{number}{.int}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{number}{.int}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
@@ -872,19 +1957,29 @@
       {public}
       {.rexx}
       {space}
-      {(\Param{spacenr}{1}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{spacenr}{1}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {strip}
-      {(\Param{option}{"B"}, \Param{schar}{" "})}
+      {\Params{
+        \ParamLine{\Param{option}{"B"}}
+        \LastParamLine{\Param{schar}{" "}}
+      }}
 
     \Method
       {public}
       {.rexx}
       {substr}
-      {(\Param{start}{.int}, \Param{len}{0}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{start}{.int}}
+        \ParamLine{\Param{len}{0}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
@@ -896,7 +1991,11 @@
       {public}
       {.rexx}
       {translate}
-      {(\Param{tochar}{""}, \Param{fromchar}{""}, \Param{pad}{" "})}
+      {\Params{
+        \ParamLine{\Param{tochar}{""}}
+        \ParamLine{\Param{fromchar}{""}}
+        \LastParamLine{\Param{pad}{" "}}
+      }}
 
     \Method
       {public}
@@ -920,7 +2019,11 @@
       {public}
       {.int}
       {verify}
-      {(\Param{intab}{.string}, \Param{match\_mode}{'N'}, \Param{spos}{1})}
+      {\Params{
+        \ParamLine{\Param{intab}{.string}}
+        \ParamLine{\Param{match\_mode}{'N'}}
+        \LastParamLine{\Param{spos}{1}}
+      }}
 
     \Method
       {public}
@@ -944,7 +2047,10 @@
       {public}
       {.rexx}
       {subword}
-      {(\Param{wordnum}{.int}, \Param{wordcount}{0})}
+      {\Params{
+        \ParamLine{\Param{wordnum}{.int}}
+        \LastParamLine{\Param{wordcount}{0}}
+      }}
 
     \Method
       {public}
@@ -956,7 +2062,10 @@
       {public}
       {.int}
       {wordpos}
-      {(\Param{string}{.string}, \Param{start}{1})}
+      {\Params{
+        \ParamLine{\Param{string}{.string}}
+        \LastParamLine{\Param{start}{1}}
+      }}
 
     \Method
       {public}
@@ -980,7 +2089,10 @@
       {public}
       {.rexx}
       {reradix}
-      {(\Param{fromRadix}{.int}, \Param{toRadix}{.int})}
+      {\Params{
+        \ParamLine{\Param{fromRadix}{.int}}
+        \LastParamLine{\Param{toRadix}{.int}}
+      }}
 
     \Method
       {public}
@@ -1014,11 +2126,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.RexxComparator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .RexxComparator \hfill\textit{.Comparator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .RexxComparator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1032,10 +2145,14 @@
       {public}
       {.int}
       {compare}
-      {(\Param{left}{.object}, \Param{right}{.object})}
+      {\Params{
+        \ParamLine{\Param{left}{.object}}
+        \LastParamLine{\Param{right}{.object}}
+      }}
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.scanlex\_token}{scanlex}
 
   \begin{Hierarchy}
@@ -1048,7 +2165,11 @@
     \Factory
       {public}
       {scanlex\_token}
-      {(\Param{type}{.string}, \Param{text}{.string}, \Param{pos}{.int})}
+      {\Params{
+        \ParamLine{\Param{type}{.string}}
+        \ParamLine{\Param{text}{.string}}
+        \LastParamLine{\Param{pos}{.int}}
+      }}
 
     \Method
       {public}
@@ -1070,11 +2191,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringArrayList}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayList \hfill\textit{.StringIterable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayList}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1118,13 +2240,19 @@
       {public}
       {.int}
       {set}
-      {(\Param{index}{.int}, \Param{item}{.string})}
+      {\Params{
+        \ParamLine{\Param{index}{.int}}
+        \LastParamLine{\Param{item}{.string}}
+      }}
 
     \Method
       {public}
       {.int}
       {insert}
-      {(\Param{index}{.int}, \Param{item}{.string})}
+      {\Params{
+        \ParamLine{\Param{index}{.int}}
+        \LastParamLine{\Param{item}{.string}}
+      }}
 
     \Method
       {public}
@@ -1136,7 +2264,10 @@
       {public}
       {.int}
       {indexOf}
-      {(\Param{item}{.string}, \Param{from}{1})}
+      {\Params{
+        \ParamLine{\Param{item}{.string}}
+        \LastParamLine{\Param{from}{1}}
+      }}
 
     \Method
       {public}
@@ -1176,11 +2307,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringArrayListIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayListIterator \hfill\textit{.StringIterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayListIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1188,7 +2320,11 @@
     \Factory
       {public}
       {StringArrayListIterator}
-      {(\Param{values}{reference .string[]}, \Param{count}{reference .int}, \Param{snapshot\_flag}{.int})}
+      {\Params{
+        \ParamLine{\Param{values}{reference .string[]}}
+        \ParamLine{\Param{count}{reference .int}}
+        \LastParamLine{\Param{snapshot\_flag}{.int}}
+      }}
 
     \Method
       {public}
@@ -1222,11 +2358,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringHashMap}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMap \hfill\textit{.StringIterable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMap}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1246,7 +2383,10 @@
       {public}
       {.int}
       {put}
-      {(\Param{key}{.string}, \Param{value}{.string})}
+      {\Params{
+        \ParamLine{\Param{key}{.string}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
 
     \Method
       {public}
@@ -1316,11 +2456,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringHashMapIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMapIterator \hfill\textit{.StringIterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMapIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1328,7 +2469,10 @@
     \Factory
       {public}
       {StringHashMapIterator}
-      {(\Param{keys}{.string[]}, \Param{values}{.string[]})}
+      {\Params{
+        \ParamLine{\Param{keys}{.string[]}}
+        \LastParamLine{\Param{values}{.string[]}}
+      }}
 
     \Method
       {public}
@@ -1362,6 +2506,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringHashSet}{data}
 
   \begin{Hierarchy}
@@ -1438,11 +2583,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringHashSetIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashSetIterator \hfill\textit{.StringIterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashSetIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1472,6 +2618,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{\textit{.StringIterable}}{data}
 
   \begin{Hierarchy}
@@ -1488,6 +2635,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{\textit{.StringIterator}}{data}
 
   \begin{Hierarchy}
@@ -1504,6 +2652,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringLinkedList}{data}
 
   \begin{Hierarchy}
@@ -1640,11 +2789,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringObjectHashMap}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMap \hfill\textit{.StringIterable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMap}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1664,7 +2814,10 @@
       {public}
       {.int}
       {put}
-      {(\Param{key}{.string}, \Param{value}{.object})}
+      {\Params{
+        \ParamLine{\Param{key}{.string}}
+        \LastParamLine{\Param{value}{.object}}
+      }}
 
     \Method
       {public}
@@ -1728,11 +2881,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringObjectHashMapIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMapIterator \hfill\textit{.StringIterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMapIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1740,7 +2894,10 @@
     \Factory
       {public}
       {StringObjectHashMapIterator}
-      {(\Param{keys}{.string[]}, \Param{values}{.object[]})}
+      {\Params{
+        \ParamLine{\Param{keys}{.string[]}}
+        \LastParamLine{\Param{values}{.object[]}}
+      }}
 
     \Method
       {public}
@@ -1780,11 +2937,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringObjectTreeMap}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMap \hfill\textit{.StringIterable}, \textit{.ObjectPrintable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMap}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1798,7 +2956,10 @@
       {public}
       {.int}
       {put}
-      {(\Param{key}{.string}, \Param{value}{.object})}
+      {\Params{
+        \ParamLine{\Param{key}{.string}}
+        \LastParamLine{\Param{value}{.object}}
+      }}
 
     \Method
       {public}
@@ -1880,11 +3041,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringObjectTreeMapIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMapIterator \hfill\textit{.StringIterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMapIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1892,7 +3054,10 @@
     \Factory
       {public}
       {StringObjectTreeMapIterator}
-      {(\Param{keys}{.string[]}, \Param{values}{.object[]})}
+      {\Params{
+        \ParamLine{\Param{keys}{.string[]}}
+        \LastParamLine{\Param{values}{.object[]}}
+      }}
 
     \Method
       {public}
@@ -1932,11 +3097,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringOldTreeMap}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringOldTreeMap \hfill\textit{.StringIterable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringOldTreeMap}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1962,7 +3128,10 @@
       {public}
       {.int}
       {put}
-      {(\Param{key}{.string}, \Param{value}{.string})}
+      {\Params{
+        \ParamLine{\Param{key}{.string}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
 
     \Method
       {public}
@@ -2044,6 +3213,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringStack}{data}
 
   \begin{Hierarchy}
@@ -2096,11 +3266,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringTreeMap}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMap \hfill\textit{.StringIterable}, \textit{.ObjectPrintable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMap}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2114,7 +3285,10 @@
       {public}
       {.int}
       {put}
-      {(\Param{key}{.string}, \Param{value}{.string})}
+      {\Params{
+        \ParamLine{\Param{key}{.string}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
 
     \Method
       {public}
@@ -2202,11 +3376,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringTreeMapIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMapIterator \hfill\textit{.StringIterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMapIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2236,11 +3411,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringTreeSet}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSet \hfill\textit{.StringIterable}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSet}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2318,11 +3494,12 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.StringTreeSetIterator}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSetIterator \hfill\textit{.StringIterator}}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSetIterator}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2352,6 +3529,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.id}{id\_id}
 
   \begin{Hierarchy}
@@ -2410,6 +3588,7 @@
 
   \end{Members}
 \end{CrexxClass}
+
 \begin{CrexxClass}{.KeyDB}{data\_KeyDB}
 
   \begin{Hierarchy}
@@ -2428,7 +3607,10 @@
       {public}
       {.int}
       {open}
-      {(\Param{filename}{.string}, \Param{mode}{.string})}
+      {\Params{
+        \ParamLine{\Param{filename}{.string}}
+        \LastParamLine{\Param{mode}{.string}}
+      }}
 
     \Method
       {public}
@@ -2464,7 +3646,10 @@
       {public}
       {.int}
       {put}
-      {(\Param{key}{.string}, \Param{value}{.string})}
+      {\Params{
+        \ParamLine{\Param{key}{.string}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
 
     \Method
       {public}
@@ -2518,7 +3703,10 @@
       {public}
       {.int}
       {putCommit}
-      {(\Param{key}{.string}, \Param{value}{.string})}
+      {\Params{
+        \ParamLine{\Param{key}{.string}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
 
     \Method
       {public}
@@ -2540,3 +3728,4 @@
 
   \end{Members}
 \end{CrexxClass}
+
