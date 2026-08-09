@@ -31,6 +31,7 @@
 #include "rxvmvars.h"
 #include "rxvmsock.h"
 #include "rxpa.h"
+#include "rxcrexxcmd.h"
 
 // RXPA (Plugin Architecture) Support declarations  for this file
 
@@ -89,8 +90,22 @@ struct static_linked_metadata {
 };
 static struct static_linked_metadata *static_linked_metadata = 0;
 
-// Local Global Context Variable
-static rxpa_context *current_rxpa_context = 0;
+#if defined(_MSC_VER)
+#define RXPA_LOADER_THREAD_LOCAL __declspec(thread)
+#else
+#define RXPA_LOADER_THREAD_LOCAL __thread
+#endif
+
+/* The compatibility slot remains NULL outside a context-owned load. */
+static RXPA_LOADER_THREAD_LOCAL rxpa_context *rxpa_loader_compat_context;
+
+static rxpa_context **rxpa_current_context_slot(void) {
+    rxvm_context *context = rxvm_active_context_current();
+    if (context) return (rxpa_context **)&context->active.rxpa_context;
+    return &rxpa_loader_compat_context;
+}
+
+#define current_rxpa_context (*rxpa_current_context_slot())
 
 // Create a new RXPA context for a module
 static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context);
@@ -280,6 +295,12 @@ void rxinimod(rxvm_context *context) {
     context->link_dirty = 0;
     context->interface_method_registry_dirty = 0;
     context->interface_factory_registry_dirty = 0;
+    context->active.rxvml_context = 0;
+    context->active.rxpa_context = 0;
+    context->active.rxpa_pool_head = 0;
+    context->active.crexx_command_state = 0;
+    context->active.say_exit = 0;
+    context->active.pending_interrupts = 0;
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
@@ -315,10 +336,19 @@ void rxfremod(rxvm_context *context) {
     previous_memory_worker =
             rxvm_memory_enter(context->worker.memory_worker);
 
+    if (context->active.rxvml_context || context->active.rxpa_context ||
+        context->active.rxpa_pool_head ||
+        context->active.pending_interrupts) {
+        fprintf(stderr, "RXVM teardown detected live active execution/callback state\n");
+        abort();
+    }
+
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
     rxvm_free_graph_bindings(context);
     rxvm_socket_free_registry(context);
+    rxcrexxcmd_context_state_free(context);
+    context->active.say_exit = 0;
 
     /* Free Symbol Search Trees */
     DEBUG("Free Symbol Search Trees\n");
@@ -984,6 +1014,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
         }
 
         if (file_exists) {
+            rxvm_context *previous_active_context;
             DEBUG("CREXX Native Plugin file\n");
             // Check if the file exists
             fp = openfile(file_name, (char*)type_plugin, found_location[0] ? found_location : 0, "rb");
@@ -1025,6 +1056,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             sprintf(full_file_name, "%s.rxplugin", file_name);
 
             // Create rxpa_context and module for the addfunc callback
+            previous_active_context = rxvm_active_context_enter(context);
             current_rxpa_context = rxpa_context_f(context);
             current_rxpa_context->plugin_being_loaded = malloc(sizeof(module_file));
             init_module(current_rxpa_context->plugin_being_loaded);
@@ -1050,12 +1082,15 @@ int rxldmod(rxvm_context *context, char *file_name) {
             } else {
                 DEBUG("Failed to load plugin %s (rc=%d)\n", file_name, rc);
                 free_rxpa_context(current_rxpa_context);
+                current_rxpa_context = 0;
+                rxvm_active_context_leave(previous_active_context);
                 return(-1);
             }
 
             // Free the rxpa_context
             free_rxpa_context(current_rxpa_context);
             current_rxpa_context = 0;
+            rxvm_active_context_leave(previous_active_context);
         }
         // Else an unrecognised file
         else {
@@ -1421,6 +1456,7 @@ void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* arg
  *         >=0 - Last Module Number loaded (1 based) (more than one (or none) might have been loaded ...)  */
 int rxldmodp(rxvm_context *context) {
     size_t n;
+    rxvm_context *previous_active_context;
 
     if (static_linked_functions == 0 && static_linked_metadata == 0) return 0;
 
@@ -1454,6 +1490,7 @@ int rxldmodp(rxvm_context *context) {
 
     // Create rxpa_context and module
     char* dummy_file_name = "statically_linked_plugins";
+    previous_active_context = rxvm_active_context_enter(context);
     current_rxpa_context = rxpa_context_f(context);
     current_rxpa_context->plugin_being_loaded = malloc(sizeof(module_file));
     init_module(current_rxpa_context->plugin_being_loaded);
@@ -1502,6 +1539,7 @@ int rxldmodp(rxvm_context *context) {
     current_rxpa_context->plugin_being_loaded = 0; // It's now owned by the module list
     free_rxpa_context(current_rxpa_context);
     current_rxpa_context = 0;
+    rxvm_active_context_leave(previous_active_context);
 
     // Delete Static Function List
     while (static_linked_functions) {

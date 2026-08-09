@@ -1,0 +1,46 @@
+options levelb
+
+failures = 0
+left = .string
+right = .string
+x1 = .string
+x2 = .string
+x3 = .string
+
+source = "left/right"
+delimiter = "/"
+parse var source left (delimiter) right
+if left <> "left" | right <> "right" then failures = failures + 1
+
+source = "whole"
+delimiter = "missing"
+parse var source left (delimiter) right
+if left <> "whole" | right <> "" then failures = failures + 1
+
+source = "whole"
+delimiter = ""
+parse var source left (delimiter) right
+if left <> "" | right <> "whole" then failures = failures + 1
+
+source = "left§right"
+delimiter = "§"
+parse var source left (delimiter) right
+if left <> "left" | right <> "right" then failures = failures + 1
+
+source = "left/right"
+delimiter = "/"
+parse var source source (delimiter) right
+if source <> "left" | right <> "right" then failures = failures + 1
+
+data = "Flying pigs have wings"
+start = 5
+span = 5
+parse var data x1 =(start) x2 +(span) x3
+if x1 <> "Flyi" | x2 <> "ng pi" | x3 <> "gs have wings" then failures = failures + 1
+
+if failures = 0 then do
+  say "PASS pattern semantics PoC"
+  return 0
+end
+say "FAIL pattern semantics PoC count=" || failures
+return 1

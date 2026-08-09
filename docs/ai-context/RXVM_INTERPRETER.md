@@ -239,12 +239,14 @@ external side effects. A legacy `__rxsignal_retry` return is unknown and
 therefore follows the fail path. Source code that needs retry uses an explicit
 loop or wrapper procedure.
 
-Pending signals are held in the global `interrupts` bitset. `DISPATCH` checks
-that bitset after each instruction when the current frame is not already inside
-an interrupt handler. The VM scans signal codes in numeric order, clears ignored
-signals during the scan, and clears the selected non-breakpoint signal before
-handling it. `BREAKPOINT` remains pending until `bpoff`, which lets the
-debugger/trace path keep stepping.
+Pending signals are held in one worker-VM-owned execution-local
+`pending_interrupts` word. The active context publishes that word's address to
+native raisers only while the execution is live. `DISPATCH` checks the direct
+local word after each instruction when the current frame is not already inside
+an interrupt handler. The VM scans signal codes in
+numeric order, clears ignored signals during the scan, and clears the selected
+non-breakpoint signal before handling it. `BREAKPOINT` remains pending until
+`bpoff`, which lets the debugger/trace path keep stepping.
 
 For `CALL` and `CALL_BRANCH` handlers the VM passes a raw object-like argument
 with five attributes:
@@ -435,6 +437,24 @@ call returns; a foreign thread is rejected without changing the lifecycle.
 Teardown is permitted only from idle, moves through draining, destroys the
 worker arena, unregisters it from the runtime and then destroys the now-empty
 runtime domain. Debug teardown continues to abort on any live allocation.
+
+Gate E2 appends a worker-owned active-state record to `rxvm_context`, preserving
+the offsets of earlier context members. This is not a guarantee that the C
+compiler will retain an identical flattened-core stack/register layout; the
+direct execution slot is deliberately local to `run()` and the accepted E2
+verdict records the resulting code-layout effect. A checked thread-local
+locator identifies the owning context during execution and native load
+callbacks, but the mutable RXVML/RXPA binding, RXPA copy-out pool, SAY route and
+CREXX command state live in the context. Its active interrupt field points to
+the sole execution-local pending word while the VM is running and is null at
+teardown. Nested same-worker execution transfers pending bits to its direct
+slot and restores them to the suspended slot on return. The standalone product
+designates its main VM context as the sole OS-addressable interrupt target.
+POSIX signal and Windows console callbacks map the event and set a bit in that
+context's own pending word; they do not create a second queue or make every
+worker poll process-global state. Other contexts retain only their local word.
+Any later propagation to multiple workers is explicit Gate F communication
+performed outside the raw OS callback.
 
 This shell is a prerequisite for, not proof of, multi-threaded VM execution.
 Later Gate E slices give every worker its own stack/register set, frame
@@ -855,6 +875,15 @@ updates, and stem updates before copying them into VM strings. Invalid bytes
 should be passed through `.binary` or native payload APIs rather than through
 text callbacks.
 
+Windows does not change that internal contract. cREXX command lines,
+environment names/values and logical paths remain UTF-8; the platform adapter
+converts them to UTF-16 for `CreateProcessW` and other Win32 `W` APIs, then
+converts returned UTF-16 text to UTF-8. It must not change a process-global
+console code page or C locale to simulate worker-local UTF-8. Child standard
+streams remain byte streams: a provider must apply an explicit encoding
+converter when a child does not speak UTF-8, and the later channel envelope may
+carry that encoding metadata without changing its binary payload.
+
 As of `RXVML_ABI_VERSION` 7, native `rxvml_address_request` also carries
 `stdin_endpoint`, `stdout_endpoint`, and `stderr_endpoint` VM values. Native
 providers should use `rxvml_address_emit_output(ctx, request, text)` and
@@ -897,7 +926,8 @@ The built-in command environments split into four spawn modes:
 - `CREXX` is the default command environment. `_address.crexx` routes it to
   `SHELLSPAWN_MODE_CREXX`, implemented by `interpreter/rxcrexxcmd.c`. This is a
   cREXX-defined command set with stable behavior across supported operating
-  systems, not a shell. It owns persistent `cd`/`pushd`/`popd`,
+  systems, not a shell. It owns worker-local persistent
+  `cd`/`pushd`/`popd` and environment overrides,
   file/text/process/time/network commands, `batch`, and `run` for direct
   executable dispatch. Without an output or error redirect, emitted text is
   flushed to the normal VM stdout or stderr stream immediately rather than
@@ -905,7 +935,9 @@ The built-in command environments split into four spawn modes:
   to one command argument and stem anchors to zero or more command arguments
   after its own command parsing; `run :argv[]` therefore launches the child
   through an argv vector rather than by flattening the array to a command
-  string.
+  string. Relative file commands use the worker's logical directory. Child
+  launch receives immutable merged working-directory/environment snapshots;
+  the parent process directory and environment are never temporarily changed.
 - `SYSTEM`, `COMMAND`, and `CMD` route the command string through the platform
   command processor so shell built-ins and command syntax work consistently.
   On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`
@@ -1014,9 +1046,18 @@ before the current handler body completes. For example:
 
 ```c
 #define VM_ADVANCE(n) do { next_pc = pc + (size_t)(n) + 1; VM_RESOLVE_SELECTED(); } while (0)
-#define DISPATCH do { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; VM_DISPATCH_TARGET(); } while (0)
+#define DISPATCH do { pc = next_pc; if (pending_interrupts && !current_frame->is_interrupt) goto INTERRUPT; VM_DISPATCH_TARGET(); } while (0)
 ```
-`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping have only the module/address for this fallback context.
+`DISPATCH` actively checks the current VM's sole direct pending-interrupt word to
+immediately branch into signal exception handling if an error occurred
+natively. Internal signal-raising macros stamp `interrupted_pc` with the
+faulting instruction before dispatch advances `pc`; breakpoint and
+asynchronous interrupts leave it unset so their handlers continue to receive
+the next instruction/resume address. The default fallback panic report uses
+the stamped address when present to print the module/address and, when
+`META_SOURCE_STEP` metadata is present, the closest preceding REXX source line.
+Linked images built with source stripping have only the module/address for this
+fallback context.
 
 VM signal codes 1 through 31 map to the non-sign `sig_atomic_t` mask bits 0
 through 30. `RXSIGNAL_MAX` is a sentinel and has no mask bit. All producers and
@@ -1390,20 +1431,26 @@ handlers preserve source/output aliasing by snapshotting source bytes before
 the first write. `parsewords3` is also a chain primitive for eligible longer
 implicit-word templates.
 
-`parseplan` executes a version-1 compact descriptor from a string constant into
-a reusable result vector. The descriptor stores only item kinds, store/drop
-flags, literal bytes plus character lengths, fixed-width numeric movement, and
-the declared item/result counts. The handler bounds-checks the header and every
-item, rejects trailing or structurally inconsistent data, and raises
-`INVALID_ARGUMENTS`. It uses Unicode code-point positions in UTF builds and has
-no load-time cache or private prepared representation.
+`parseplan` executes a compact descriptor from a string constant into a reusable
+result vector. Version 1 stores frozen item kinds, store/drop flags, literal
+bytes plus character lengths, fixed-width numeric movement, and the declared
+item/result counts. Version 2 additionally stores indexed dynamic delimiter and
+position references. A reference selects either an earlier completed capture
+or an external operand that compiler-generated code placed temporarily after
+the public result slots. The handler consumes those values without textual
+plan decoding and shrinks the vector to its public result count on success.
 
-Compiler eligibility remains fail-closed: exact forms use the direct
-instructions, other mechanically frozen templates may use `parseplan`, and
-logging/TRACE, explicit `INTO`, or unsupported forms continue through
-`parseExec`. Ordered source-level assignments remain outside the VM primitive,
-preserving repeated and compound targets, source aliases, trimming, and TRACE
-metadata.
+The handler bounds-checks the header, reference indexes, and every item; rejects
+trailing or structurally inconsistent data with `INVALID_ARGUMENTS`; and raises
+`CONVERSION_ERROR` for an invalid dynamic numeric position. It uses Unicode
+code-point positions in UTF builds and has no load-time cache or private
+prepared representation.
+
+Compiler eligibility remains fail-closed: exact common forms use the direct
+instructions and every remaining supported exit form uses `parseplan`, including
+logging/TRACE and explicit `INTO`. Ordered source-level assignments remain
+outside the VM primitive, preserving repeated targets, source aliases, trimming,
+and TRACE source metadata. There is no runtime textual PARSE executor.
 
 ### Pooled float operands
 

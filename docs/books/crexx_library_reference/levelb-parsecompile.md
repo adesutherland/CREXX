@@ -34,5 +34,7 @@ Malformed quotes, signed positions, parenthesized searches, or oversized
 positions signal `INVALID_ARGUMENTS`. Validation finishes before either exposed
 array is cleared, so both arrays remain unchanged when a signal is raised.
 
-This is a Level B runtime helper, not a Level C BIF. The compiler PARSE exit uses
-the separate length-prefixed format documented by [`parseExec`](parseExec.md).
+This is a Level B runtime helper, not a Level C BIF. The compiler `PARSE` exit
+does not use this legacy dynamic-template representation: it validates the
+source template in the exit and emits direct instructions or a packed
+`parseplan` descriptor.

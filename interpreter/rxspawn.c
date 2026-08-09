@@ -84,6 +84,8 @@ typedef struct shelldata {
     char* file_path;
     char* application_path;
     char** argv;
+    char *working_directory;
+    char **environment;
     value* variables;
     value* crexx_bindings;
 } SHELLDATA;
@@ -177,6 +179,7 @@ static void Error(char *context, char **errorText);
 static void CleanUp(SHELLDATA* data);
 static char *copy_string(const char *text);
 static int ParseCommand(const char *command_string, char **command, char **file, char ***argv);
+static int merge_child_variables(SHELLDATA *data);
 static int spawn_argv_capture(const char *const *argv,
                               int argc,
                               REDIRECT* pIn,
@@ -208,7 +211,11 @@ static void collect_redirect_thread_context(REDIRECT *redirect);
 static int join_redirect_thread(REDIRECT *redirect);
 #ifndef _WIN32
 static int ExeFound(char* exe);
-static char *find_executable_in_path_list(const char *path_list, const char *exe);
+static char *find_executable_in_path_list(const char *path_list,
+                                          const char *exe,
+                                          const char *working_directory);
+static char *resolve_executable_path(const char *working_directory,
+                                     const char *exe);
 static char *find_standard_shell(void);
 static int split_shell_args(char *text, char **argv);
 static char **build_shell_argv(const char *shell_path, const char *args_text, char *buffer, char *command_text);
@@ -358,15 +365,124 @@ static char *windows_command_token(const char *command) {
     return token;
 }
 
-static char *windows_search_executable(const char *name) {
+static int windows_path_is_absolute(const char *path) {
+    return path &&
+           ((isalpha((unsigned char)path[0]) && path[1] == ':') ||
+            (path[0] == '\\' && path[1] == '\\') || path[0] == '/');
+}
+
+static char *windows_join_path(const char *directory, const char *path) {
+    size_t directory_length;
+    size_t path_length;
+    int needs_separator;
+    char *joined;
+    if (!path) return NULL;
+    if (!directory || !*directory || windows_path_is_absolute(path)) {
+        return copy_string(path);
+    }
+    directory_length = strlen(directory);
+    path_length = strlen(path);
+    needs_separator = directory[directory_length - 1u] != '\\' &&
+                      directory[directory_length - 1u] != '/';
+    joined = rxspawn_memory_alloc(directory_length + path_length +
+                                  (size_t)needs_separator + 1u);
+    if (!joined) return NULL;
+    memcpy(joined, directory, directory_length);
+    if (needs_separator) joined[directory_length++] = '\\';
+    memcpy(joined + directory_length, path, path_length + 1u);
+    return joined;
+}
+
+static char *windows_resolve_search_path(const char *path_list,
+                                         const char *working_directory) {
+    const char *cursor;
+    size_t size;
+    char *resolved;
+    char *writer;
+
+    if (!working_directory || !*working_directory) {
+        return path_list ? copy_string(path_list) : NULL;
+    }
+    size = strlen(working_directory) + 1u;
+    for (cursor = path_list; cursor && *cursor;) {
+        const char *next = strchr(cursor, ';');
+        const char *start = cursor;
+        size_t length = next ? (size_t)(next - cursor) : strlen(cursor);
+        if (length >= 2u && start[0] == '"' && start[length - 1u] == '"') {
+            start++;
+            length -= 2u;
+        }
+        if (length) {
+            size += length + 1u;
+            if (!windows_path_is_absolute(start)) {
+                size += strlen(working_directory) + 1u;
+            }
+        }
+        cursor = next ? next + 1 : NULL;
+    }
+    resolved = rxspawn_memory_alloc(size + 1u);
+    if (!resolved) return NULL;
+    writer = resolved;
+    memcpy(writer, working_directory, strlen(working_directory));
+    writer += strlen(working_directory);
+    for (cursor = path_list; cursor && *cursor;) {
+        const char *next = strchr(cursor, ';');
+        const char *start = cursor;
+        size_t length = next ? (size_t)(next - cursor) : strlen(cursor);
+        if (length >= 2u && start[0] == '"' && start[length - 1u] == '"') {
+            start++;
+            length -= 2u;
+        }
+        if (length) {
+            *writer++ = ';';
+            if (!windows_path_is_absolute(start)) {
+                size_t cwd_length = strlen(working_directory);
+                memcpy(writer, working_directory, cwd_length);
+                writer += cwd_length;
+                if (writer[-1] != '\\' && writer[-1] != '/') *writer++ = '\\';
+            }
+            memcpy(writer, start, length);
+            writer += length;
+        }
+        cursor = next ? next + 1 : NULL;
+    }
+    *writer = '\0';
+    return resolved;
+}
+
+static char *windows_search_executable(const char *name,
+                                       const char *working_directory) {
     static const wchar_t *extensions[] = {NULL, L".exe", L".cmd", L".bat", NULL};
+    char *resolved_name;
     wchar_t *wide_name;
+    wchar_t *wide_search_path;
+    const char *search_path;
     char *result;
     int i;
 
     if (!name || !*name) return NULL;
-    wide_name = wide_from_utf8(name);
+    if ((strchr(name, '\\') || strchr(name, '/')) &&
+        !windows_path_is_absolute(name)) {
+        resolved_name = windows_join_path(working_directory, name);
+    } else {
+        resolved_name = copy_string(name);
+    }
+    if (!resolved_name) return NULL;
+    wide_name = wide_from_utf8(resolved_name);
+    rxspawn_memory_free(resolved_name);
     if (!wide_name) return NULL;
+    search_path = rxcrexxcmd_active_getenv("PATH");
+    {
+        char *resolved_search_path = windows_resolve_search_path(
+            search_path, working_directory);
+        wide_search_path = resolved_search_path
+            ? wide_from_utf8(resolved_search_path) : NULL;
+        rxspawn_memory_free(resolved_search_path);
+    }
+    if ((search_path || working_directory) && !wide_search_path) {
+        rxspawn_memory_free(wide_name);
+        return NULL;
+    }
 
     result = NULL;
     for (i = 0; extensions[i] || i == 0; i++) {
@@ -374,7 +490,8 @@ static char *windows_search_executable(const char *name) {
         wchar_t *wide_path;
         DWORD copied;
 
-        needed = SearchPathW(NULL, wide_name, extensions[i], 0, NULL, NULL);
+        needed = SearchPathW(wide_search_path, wide_name, extensions[i],
+                             0, NULL, NULL);
         if (needed == 0) {
             if (!extensions[i]) continue;
             continue;
@@ -383,7 +500,8 @@ static char *windows_search_executable(const char *name) {
         wide_path = rxspawn_memory_alloc(
             ((size_t)needed + 1u) * sizeof(wchar_t));
         if (!wide_path) break;
-        copied = SearchPathW(NULL, wide_name, extensions[i], needed + 1, wide_path, NULL);
+        copied = SearchPathW(wide_search_path, wide_name, extensions[i],
+                             needed + 1, wide_path, NULL);
         if (copied > 0 && copied <= needed) {
             DWORD attributes = GetFileAttributesW(wide_path);
             if (attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -398,16 +516,25 @@ static char *windows_search_executable(const char *name) {
     }
 
     rxspawn_memory_free(wide_name);
+    rxspawn_memory_free(wide_search_path);
     return result;
 }
 
-static char *windows_resolve_application_path(const char *command) {
+static void windows_release_startup_attributes(STARTUPINFOEXW *startup) {
+    if (!startup || !startup->lpAttributeList) return;
+    DeleteProcThreadAttributeList(startup->lpAttributeList);
+    rxspawn_memory_free(startup->lpAttributeList);
+    startup->lpAttributeList = NULL;
+}
+
+static char *windows_resolve_application_path(const char *command,
+                                              const char *working_directory) {
     char *token;
     char *path;
 
     token = windows_command_token(command);
     if (!token) return NULL;
-    path = windows_search_executable(token);
+    path = windows_search_executable(token, working_directory);
     rxspawn_memory_free(token);
     return path;
 }
@@ -516,7 +643,24 @@ static char *windows_normalize_executable_arg(const char *arg) {
 #endif
 
 #ifndef _WIN32
-static char *find_executable_in_path_list(const char *path_list, const char *exe) {
+static char *resolve_executable_path(const char *working_directory,
+                                     const char *exe) {
+    size_t size;
+    char *path;
+    if (!exe || !*exe) return NULL;
+    if (exe[0] == '/' || !working_directory || !*working_directory) {
+        return copy_string(exe);
+    }
+    size = strlen(working_directory) + strlen(exe) + 2u;
+    path = rxspawn_memory_alloc(size);
+    if (!path) return NULL;
+    snprintf(path, size, "%s/%s", working_directory, exe);
+    return path;
+}
+
+static char *find_executable_in_path_list(const char *path_list,
+                                          const char *exe,
+                                          const char *working_directory) {
     const char *cursor = path_list;
 
     if (!cursor || !*cursor || !exe || !*exe) return NULL;
@@ -524,19 +668,35 @@ static char *find_executable_in_path_list(const char *path_list, const char *exe
     while (cursor) {
         const char *next_colon = strchr(cursor, ':');
         size_t dir_length = next_colon ? (size_t)(next_colon - cursor) : strlen(cursor);
-        size_t candidate_length = (dir_length ? dir_length : 1) + strlen(exe) + 2;
-        char *candidate = rxspawn_memory_alloc(candidate_length);
-        if (!candidate) return NULL;
+        size_t directory_length;
+        char *directory;
+        char *candidate;
 
         if (dir_length) {
-            memcpy(candidate, cursor, dir_length);
-            candidate[dir_length] = '\0';
+            directory = rxspawn_memory_alloc(dir_length + 1u);
+            if (!directory) return NULL;
+            memcpy(directory, cursor, dir_length);
+            directory[dir_length] = '\0';
         } else {
-            strcpy(candidate, ".");
+            directory = copy_string(working_directory && *working_directory
+                                    ? working_directory : ".");
+            if (!directory) return NULL;
         }
-
-        strcat(candidate, "/");
-        strcat(candidate, exe);
+        if (directory[0] != '/' && working_directory && *working_directory) {
+            char *resolved = resolve_executable_path(working_directory,
+                                                     directory);
+            rxspawn_memory_free(directory);
+            directory = resolved;
+            if (!directory) return NULL;
+        }
+        directory_length = strlen(directory);
+        candidate = rxspawn_memory_alloc(directory_length + strlen(exe) + 2u);
+        if (!candidate) {
+            rxspawn_memory_free(directory);
+            return NULL;
+        }
+        sprintf(candidate, "%s/%s", directory, exe);
+        rxspawn_memory_free(directory);
 
         if (ExeFound(candidate)) return candidate;
         rxspawn_memory_free(candidate);
@@ -556,7 +716,7 @@ static char *find_standard_shell(void) {
         char *standard_path = rxspawn_memory_alloc(standard_path_length);
         if (standard_path) {
             confstr(_CS_PATH, standard_path, standard_path_length);
-            shell = find_executable_in_path_list(standard_path, "sh");
+            shell = find_executable_in_path_list(standard_path, "sh", NULL);
             rxspawn_memory_free(standard_path);
             if (shell) return shell;
         }
@@ -565,7 +725,9 @@ static char *find_standard_shell(void) {
 
     if (ExeFound("/bin/sh")) return copy_string("/bin/sh");
 
-    shell = find_executable_in_path_list(getenv("PATH"), "sh");
+    shell = find_executable_in_path_list(
+        rxcrexxcmd_active_getenv("PATH"), "sh",
+        rxcrexxcmd_active_working_directory());
     if (shell) return shell;
 
     return NULL;
@@ -1541,9 +1703,18 @@ int shellspawn (const char *command,
     data.file_path = 0;
     data.application_path = 0;
     data.argv = 0;
+    data.working_directory = 0;
+    data.environment = 0;
     data.waitThreadRC = 0;
     data.variables = variables;
     data.crexx_bindings = crexx_bindings;
+
+    if (rxcrexxcmd_active_process_snapshot(&data.working_directory,
+                                           &data.environment) != 0) {
+        Error("Failure spawn environment snapshot", errorText);
+        CleanUp(&data);
+        return SHELLSPAWN_FAILURE;
+    }
 
     if (mode == SHELLSPAWN_MODE_CREXX) {
         rxcrexxcmd_io io;
@@ -1571,9 +1742,9 @@ int shellspawn (const char *command,
 #ifdef _WIN32
 /* Windows does the actual parsing and validating as part of CreateProcess() */
     if (mode == SHELLSPAWN_MODE_SHELL || mode == SHELLSPAWN_MODE_CONFIGURED_SHELL) {
-        const char *shell = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL") : NULL;
-        const char *shell_args = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL_ARGS") : NULL;
-        if (!shell || !*shell) shell = getenv("COMSPEC");
+        const char *shell = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? rxcrexxcmd_active_getenv("CREXX_ADDRESS_SHELL") : NULL;
+        const char *shell_args = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? rxcrexxcmd_active_getenv("CREXX_ADDRESS_SHELL_ARGS") : NULL;
+        if (!shell || !*shell) shell = rxcrexxcmd_active_getenv("COMSPEC");
         if (!shell || !*shell) shell = "cmd.exe";
         if (!shell_args || !*shell_args) shell_args = "/D /S /C";
 
@@ -1592,7 +1763,8 @@ int shellspawn (const char *command,
             CleanUp(&data);
             return SHELLSPAWN_FAILURE;
         }
-        data.application_path = windows_resolve_application_path(command);
+        data.application_path = windows_resolve_application_path(
+            command, data.working_directory);
         if (!data.application_path) {
             Error("Command not found", errorText);
             CleanUp(&data);
@@ -1601,8 +1773,8 @@ int shellspawn (const char *command,
     }
 #else
     if (mode == SHELLSPAWN_MODE_SHELL || mode == SHELLSPAWN_MODE_CONFIGURED_SHELL) {
-        const char *configured_shell = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL") : NULL;
-        const char *shell_args = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL_ARGS") : NULL;
+        const char *configured_shell = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? rxcrexxcmd_active_getenv("CREXX_ADDRESS_SHELL") : NULL;
+        const char *shell_args = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? rxcrexxcmd_active_getenv("CREXX_ADDRESS_SHELL_ARGS") : NULL;
         size_t args_length;
         size_t command_length;
         char *command_buffer;
@@ -1644,12 +1816,20 @@ int shellspawn (const char *command,
         }
 
         int commandFound = 0;
-        if (ExeFound(base_name)) {
-            data.file_path = rxspawn_memory_alloc(strlen(base_name) + 1u);
-            strcpy(data.file_path, base_name);
-            commandFound = 1;
-        } else if (base_name[0] != '/') {
-            data.file_path = find_executable_in_path_list(getenv("PATH"), base_name);
+        {
+            char *resolved_base = resolve_executable_path(
+                data.working_directory, base_name);
+            if (resolved_base && ExeFound(resolved_base)) {
+                data.file_path = resolved_base;
+                resolved_base = NULL;
+                commandFound = 1;
+            }
+            rxspawn_memory_free(resolved_base);
+        }
+        if (!commandFound && base_name[0] != '/') {
+            data.file_path = find_executable_in_path_list(
+                rxcrexxcmd_active_getenv("PATH"), base_name,
+                data.working_directory);
             if (data.file_path) commandFound = 1;
         }
 
@@ -1717,9 +1897,18 @@ static int spawn_argv_capture(const char *const *argv,
     data.file_path = 0;
     data.application_path = 0;
     data.argv = 0;
+    data.working_directory = 0;
+    data.environment = 0;
     data.waitThreadRC = 0;
     data.variables = variables;
     data.crexx_bindings = NULL;
+
+    if (rxcrexxcmd_active_process_snapshot(&data.working_directory,
+                                           &data.environment) != 0) {
+        Error("Failure spawn environment snapshot", errorText);
+        CleanUp(&data);
+        return SHELLSPAWN_FAILURE;
+    }
 
 #ifdef _WIN32
     {
@@ -1738,7 +1927,8 @@ static int spawn_argv_capture(const char *const *argv,
             CleanUp(&data);
             return SHELLSPAWN_FAILURE;
         }
-        data.application_path = windows_search_executable(normalized_exe);
+        data.application_path = windows_search_executable(
+            normalized_exe, data.working_directory);
         rxspawn_memory_free(normalized_exe);
         if (!data.application_path) {
             Error("Command not found", errorText);
@@ -1761,9 +1951,14 @@ static int spawn_argv_capture(const char *const *argv,
         data.argv[argc] = NULL;
 
         if (strchr(argv[0], '/')) {
-            if (ExeFound((char *)argv[0])) data.file_path = copy_string(argv[0]);
+            char *resolved = resolve_executable_path(data.working_directory,
+                                                     argv[0]);
+            if (resolved && ExeFound(resolved)) data.file_path = resolved;
+            else rxspawn_memory_free(resolved);
         } else {
-            data.file_path = find_executable_in_path_list(getenv("PATH"), argv[0]);
+            data.file_path = find_executable_in_path_list(
+                rxcrexxcmd_active_getenv("PATH"), argv[0],
+                data.working_directory);
         }
 
         if (!data.file_path) {
@@ -2432,6 +2627,10 @@ void CleanUp(SHELLDATA* data)
         rxspawn_memory_free(data->application_path);
         data->application_path = 0;
     }
+    rxcrexxcmd_process_snapshot_free(data->working_directory,
+                                     data->environment);
+    data->working_directory = 0;
+    data->environment = 0;
 
 #ifdef _WIN32
 
@@ -2874,7 +3073,70 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
 }
 
 // Launches the child job - never returns
+static int merge_child_variables(SHELLDATA *data) {
+    size_t count = 0;
+    int i;
+
+    if (!data || !data->environment || !data->variables) return 0;
+    while (data->environment[count]) count++;
+
+    for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
+        value *name_value = data->variables->attributes[i];
+        value *text_value = data->variables->attributes[i + 1];
+        size_t name_length = name_value->string_length;
+        size_t text_length = text_value->string_length;
+        char *entry = (char *)malloc(name_length + text_length + 2u);
+        size_t j;
+        size_t replace = count;
+        char **resized;
+        if (!entry) return -1;
+        for (j = 0; j < name_length; j++) {
+            entry[j] = (char)toupper((unsigned char)name_value->string_value[j]);
+        }
+        entry[name_length] = '=';
+        memcpy(entry + name_length + 1u, text_value->string_value, text_length);
+        entry[name_length + text_length + 1u] = '\0';
+
+        for (j = 0; j < count; j++) {
+            const char *equals = strchr(data->environment[j], '=');
+            size_t existing_length = equals
+                ? (size_t)(equals - data->environment[j])
+                : strlen(data->environment[j]);
+            if (existing_length == name_length &&
+#ifdef _WIN32
+                _strnicmp(data->environment[j], entry, name_length) == 0
+#else
+                strncmp(data->environment[j], entry, name_length) == 0
+#endif
+            ) {
+                replace = j;
+                break;
+            }
+        }
+        if (replace < count) {
+            free(data->environment[replace]);
+            data->environment[replace] = entry;
+            continue;
+        }
+        resized = (char **)realloc(data->environment,
+                                   (count + 2u) * sizeof(char *));
+        if (!resized) {
+            free(entry);
+            return -1;
+        }
+        data->environment = resized;
+        data->environment[count++] = entry;
+        data->environment[count] = NULL;
+    }
+    return 0;
+}
+
 int launchChild(SHELLDATA* data) {
+
+    if (merge_child_variables(data) != 0) {
+        CleanUp(data);
+        return SHELLSPAWN_FAILURE;
+    }
 
 #ifdef _WIN32
 
@@ -2926,104 +3188,112 @@ int launchChild(SHELLDATA* data) {
         if (!UpdateProcThreadAttribute(si.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
                                        inheritedHandles, (SIZE_T)inheritedHandleCount * sizeof(HANDLE),
                                        NULL, NULL)) {
-            DeleteProcThreadAttributeList(si.lpAttributeList);
-            rxspawn_memory_free(si.lpAttributeList);
-            si.lpAttributeList = NULL;
+            windows_release_startup_attributes(&si);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
         flags |= EXTENDED_STARTUPINFO_PRESENT;
     }
 
-    /* Environment variables */
-    LPWSTR pszCurrentEnvironment = GetEnvironmentStringsW();  // Get parent process's environment block.
-    if (pszCurrentEnvironment == NULL) {
-        // Handle error.
-        if (si.lpAttributeList) {
-            DeleteProcThreadAttributeList(si.lpAttributeList);
-            rxspawn_memory_free(si.lpAttributeList);
+    /* Build the child environment. A CREXX logical-state snapshot is already
+     * merged with host bindings; ordinary spawns retain the legacy parent
+     * environment plus explicit host variables. */
+    LPWSTR pszNewEnvironment = NULL;
+    if (data->environment) {
+        size_t wide_count = 1u;
+        wchar_t *cursor;
+        for (i = 0; data->environment[i]; i++) {
+            int needed = MultiByteToWideChar(CP_UTF8, 0,
+                                             data->environment[i], -1,
+                                             NULL, 0);
+            if (needed <= 0) {
+                windows_release_startup_attributes(&si);
+                CleanUp(data);
+                return SHELLSPAWN_FAILURE;
+            }
+            wide_count += (size_t)needed;
         }
-        CleanUp(data);
-        return SHELLSPAWN_FAILURE;
-    }
-
-    // Calculate the size of the parent's environment block.
-    LPWSTR pszTemp = pszCurrentEnvironment;
-    while (*pszTemp) {
-        pszTemp += wcslen(pszTemp) + 1;
-    }
-    size_t parentEnvironmentSize = pszTemp - pszCurrentEnvironment;
-
-    // Calculate total length of the new environment block.
-    size_t newEnvironmentSize = parentEnvironmentSize + 1; // +1 For the final extra '\0'
-    if (data->variables) {
-        for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
-            newEnvironmentSize += MultiByteToWideChar(CP_UTF8, 0,
-                                                      data->variables->attributes[i]->string_value,
-                                                      (int) data->variables->attributes[i]->string_length, NULL,
-                                                      0);
-            newEnvironmentSize += MultiByteToWideChar(CP_UTF8, 0,
-                                                      data->variables->attributes[i + 1]->string_value,
-                                                      (int) data->variables->attributes[i + 1]->string_length, NULL,
-                                                      0);
-            newEnvironmentSize += 2;  // For the '=' and '\0'.
+        pszNewEnvironment = (LPWSTR)rxvm_memory_calloc_bytes(
+            rxvm_memory_current_worker(), wide_count, sizeof(wchar_t));
+        if (!pszNewEnvironment) {
+            windows_release_startup_attributes(&si);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
         }
-    }
-    newEnvironmentSize++;  // For the final extra '\0'.
-
-    // Allocate the new environment block.
-    LPWSTR pszNewEnvironment = (LPWSTR)rxvm_memory_calloc_bytes(
-        rxvm_memory_current_worker(), newEnvironmentSize, sizeof(wchar_t));
-    if (pszNewEnvironment == NULL) {
-        // Handle memory allocation failure.
-        if (si.lpAttributeList) {
-            DeleteProcThreadAttributeList(si.lpAttributeList);
-            rxspawn_memory_free(si.lpAttributeList);
+        cursor = pszNewEnvironment;
+        for (i = 0; data->environment[i]; i++) {
+            int remaining = (int)(wide_count -
+                                  (size_t)(cursor - pszNewEnvironment));
+            int copied = MultiByteToWideChar(CP_UTF8, 0,
+                                              data->environment[i], -1,
+                                              cursor, remaining);
+            if (copied <= 0) {
+                rxspawn_memory_free(pszNewEnvironment);
+                windows_release_startup_attributes(&si);
+                CleanUp(data);
+                return SHELLSPAWN_FAILURE;
+            }
+            cursor += copied;
         }
-        FreeEnvironmentStringsW(pszCurrentEnvironment);
-        CleanUp(data);
-        return SHELLSPAWN_FAILURE;
+        *cursor = L'\0';
+    } else {
+        LPWSTR current_environment = GetEnvironmentStringsW();
+        LPWSTR end;
+        LPWSTR cursor;
+        size_t parent_size;
+        size_t new_size;
+        if (!current_environment) {
+            windows_release_startup_attributes(&si);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        end = current_environment;
+        while (*end) end += wcslen(end) + 1u;
+        parent_size = (size_t)(end - current_environment);
+        new_size = parent_size + 2u;
+        for (i = 0; data->variables &&
+                    i + 1 < data->variables->num_attributes; i += 2) {
+            new_size += (size_t)MultiByteToWideChar(
+                CP_UTF8, 0, data->variables->attributes[i]->string_value,
+                (int)data->variables->attributes[i]->string_length, NULL, 0);
+            new_size += (size_t)MultiByteToWideChar(
+                CP_UTF8, 0, data->variables->attributes[i + 1]->string_value,
+                (int)data->variables->attributes[i + 1]->string_length, NULL, 0);
+            new_size += 2u;
+        }
+        pszNewEnvironment = (LPWSTR)rxvm_memory_calloc_bytes(
+            rxvm_memory_current_worker(), new_size, sizeof(wchar_t));
+        if (!pszNewEnvironment) {
+            FreeEnvironmentStringsW(current_environment);
+            windows_release_startup_attributes(&si);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        memcpy(pszNewEnvironment, current_environment,
+               parent_size * sizeof(wchar_t));
+        FreeEnvironmentStringsW(current_environment);
+        cursor = pszNewEnvironment + parent_size;
+        for (i = 0; data->variables &&
+                    i + 1 < data->variables->num_attributes; i += 2) {
+            cursor += MultiByteToWideChar(
+                CP_UTF8, 0, data->variables->attributes[i]->string_value,
+                (int)data->variables->attributes[i]->string_length,
+                cursor, (int)(new_size - (size_t)(cursor - pszNewEnvironment)));
+            *cursor++ = L'=';
+            cursor += MultiByteToWideChar(
+                CP_UTF8, 0, data->variables->attributes[i + 1]->string_value,
+                (int)data->variables->attributes[i + 1]->string_length,
+                cursor, (int)(new_size - (size_t)(cursor - pszNewEnvironment)));
+            *cursor++ = L'\0';
+        }
+        *cursor = L'\0';
     }
-
-    // Copy the parent's environment into the new environment block.
-    memcpy(pszNewEnvironment, pszCurrentEnvironment,
-           parentEnvironmentSize * sizeof(wchar_t));
-
-    FreeEnvironmentStringsW(pszCurrentEnvironment);
-
-    // Add the custom variables at the end of the new environment block.
-    LPWSTR pszCurrentVariable = pszNewEnvironment + parentEnvironmentSize;
-
-    for (i = 0; data->variables && i + 1 < data->variables->num_attributes; i += 2) {
-
-        // Assuming string_value is UTF-8 encoded
-        int numChars = MultiByteToWideChar(CP_UTF8, 0,
-                                           data->variables->attributes[i]->string_value,
-                                           (int)data->variables->attributes[i]->string_length,
-                                           pszCurrentVariable, (int)(newEnvironmentSize - (pszCurrentVariable - pszNewEnvironment)));
-
-        pszCurrentVariable += numChars;
-        *pszCurrentVariable++ = L'=';
-
-        numChars = MultiByteToWideChar(CP_UTF8, 0,
-                                       data->variables->attributes[i + 1]->string_value,
-                                       (int)data->variables->attributes[i + 1]->string_length,
-                                       pszCurrentVariable, (int)(newEnvironmentSize - (pszCurrentVariable - pszNewEnvironment)));
-
-        pszCurrentVariable += numChars;
-        *pszCurrentVariable++ = L'\0';
-    }
-
-    *pszCurrentVariable++ = L'\0';  // Add the final '\0'.
 
     /* Make filepath wide too */
     int filePathLength = MultiByteToWideChar(CP_UTF8, 0, data->file_path, -1, NULL, 0);
     if (filePathLength == 0) {
         // Handle the error here. Call GetLastError() to get the error code.
-        if (si.lpAttributeList) {
-            DeleteProcThreadAttributeList(si.lpAttributeList);
-            rxspawn_memory_free(si.lpAttributeList);
-        }
+        windows_release_startup_attributes(&si);
         rxspawn_memory_free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
@@ -3033,10 +3303,7 @@ int launchChild(SHELLDATA* data) {
     wchar_t* wideFilePath = rxspawn_memory_alloc(
         filePathLength * sizeof(wchar_t));
     if (wideFilePath == NULL) {
-        if (si.lpAttributeList) {
-            DeleteProcThreadAttributeList(si.lpAttributeList);
-            rxspawn_memory_free(si.lpAttributeList);
-        }
+        windows_release_startup_attributes(&si);
         rxspawn_memory_free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
@@ -3046,13 +3313,11 @@ int launchChild(SHELLDATA* data) {
     MultiByteToWideChar(CP_UTF8, 0, data->file_path, -1, wideFilePath, filePathLength);
 
     wchar_t* wideApplicationPath = NULL;
+    wchar_t* wideWorkingDirectory = NULL;
     if (data->application_path) {
         int applicationPathLength = MultiByteToWideChar(CP_UTF8, 0, data->application_path, -1, NULL, 0);
         if (applicationPathLength == 0) {
-            if (si.lpAttributeList) {
-                DeleteProcThreadAttributeList(si.lpAttributeList);
-                rxspawn_memory_free(si.lpAttributeList);
-            }
+            windows_release_startup_attributes(&si);
             rxspawn_memory_free(wideFilePath);
             rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
@@ -3062,10 +3327,7 @@ int launchChild(SHELLDATA* data) {
         wideApplicationPath = rxspawn_memory_alloc(
             applicationPathLength * sizeof(wchar_t));
         if (wideApplicationPath == NULL) {
-            if (si.lpAttributeList) {
-                DeleteProcThreadAttributeList(si.lpAttributeList);
-                rxspawn_memory_free(si.lpAttributeList);
-            }
+            windows_release_startup_attributes(&si);
             rxspawn_memory_free(wideFilePath);
             rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
@@ -3074,17 +3336,41 @@ int launchChild(SHELLDATA* data) {
         MultiByteToWideChar(CP_UTF8, 0, data->application_path, -1, wideApplicationPath, applicationPathLength);
     }
 
+    if (data->working_directory) {
+        int workingDirectoryLength = MultiByteToWideChar(
+            CP_UTF8, 0, data->working_directory, -1, NULL, 0);
+        if (workingDirectoryLength == 0) {
+            windows_release_startup_attributes(&si);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        wideWorkingDirectory = rxspawn_memory_alloc(
+            (size_t)workingDirectoryLength * sizeof(wchar_t));
+        if (!wideWorkingDirectory) {
+            windows_release_startup_attributes(&si);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        MultiByteToWideChar(CP_UTF8, 0, data->working_directory, -1,
+                            wideWorkingDirectory, workingDirectoryLength);
+    }
+
     /* Start the child process */
     if (!CreateProcessW(wideApplicationPath,wideFilePath,NULL,NULL,TRUE,
-                       flags,pszNewEnvironment,NULL,&si.StartupInfo,&data->ChildProcessInfo))
+                       flags,pszNewEnvironment,wideWorkingDirectory,
+                       &si.StartupInfo,&data->ChildProcessInfo))
     {
         if (GetLastError() == 2) // File not found
         {
-            if (si.lpAttributeList) {
-                DeleteProcThreadAttributeList(si.lpAttributeList);
-                rxspawn_memory_free(si.lpAttributeList);
-            }
+            windows_release_startup_attributes(&si);
             rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideWorkingDirectory);
             rxspawn_memory_free(wideFilePath);
             rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
@@ -3092,11 +3378,9 @@ int launchChild(SHELLDATA* data) {
         }
         else
         {
-            if (si.lpAttributeList) {
-                DeleteProcThreadAttributeList(si.lpAttributeList);
-                rxspawn_memory_free(si.lpAttributeList);
-            }
+            windows_release_startup_attributes(&si);
             rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideWorkingDirectory);
             rxspawn_memory_free(wideFilePath);
             rxspawn_memory_free(pszNewEnvironment);
             CleanUp(data);
@@ -3105,11 +3389,9 @@ int launchChild(SHELLDATA* data) {
     }
 
     /* Cleanup */
-    if (si.lpAttributeList) {
-        DeleteProcThreadAttributeList(si.lpAttributeList);
-        rxspawn_memory_free(si.lpAttributeList);
-    }
+    windows_release_startup_attributes(&si);
     rxspawn_memory_free(wideApplicationPath);
+    rxspawn_memory_free(wideWorkingDirectory);
     rxspawn_memory_free(wideFilePath);
     rxspawn_memory_free(pszNewEnvironment);
 
@@ -3127,11 +3409,17 @@ int launchChild(SHELLDATA* data) {
     if (data->ChildProcessPID != 0) // Parent Process
         return 0;
 
+    if (data->working_directory && chdir(data->working_directory) != 0) {
+        perror("Failure spawn working directory");
+        _exit(127);
+    }
+
     /* Set Environmental Variables */
     int i;
     char *name;
     char *value;
-    for (i = 0; data->variables && i + 1 < data->variables->num_attributes; i += 2) {
+    for (i = 0; !data->environment && data->variables &&
+                i + 1 < data->variables->num_attributes; i += 2) {
         /* Variable Name */
         name = rxspawn_memory_alloc(
             data->variables->attributes[i]->string_length + 1u);
@@ -3192,9 +3480,10 @@ int launchChild(SHELLDATA* data) {
     signal(SIGCHLD, SIG_DFL);
 
     // Execute the command
-    execv(data->file_path, data->argv);
+    if (data->environment) execve(data->file_path, data->argv, data->environment);
+    else execv(data->file_path, data->argv);
     perror("Failure spawn launchChild");
-    exit(-1);
+    _exit(127);
 #endif
 }
 

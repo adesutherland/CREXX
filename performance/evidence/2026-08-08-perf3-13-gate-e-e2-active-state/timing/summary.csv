@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve-control,Sieve,published-E1-P1-84d406904,rxbvm,worker-shell-control,A,yes,startup-included,5500,normalized_work_per_second,12,5266.403410,5306.466798,5314.307498,5323.620765,5343.432096,11.572150,0.217755,1.449459,no
+sieve-candidate,Sieve,Gate-E-E2-direct-slot,rxbvm,explicit-active-state,A,yes,startup-included,5500,normalized_work_per_second,12,5263.596108,5294.390141,5313.101032,5324.847762,5347.286835,18.377920,0.345898,1.575177,no
+rexxcps-control,RexxCPS,published-E1-P1-84d406904,rxbvm,worker-shell-control,A,no,startup-included,1000-clauses,benchmark_rate,12,49322020.000000,49512195.500000,49815941.500000,50194895.000000,50422134.000000,367893.500000,0.738506,2.208357,no
+rexxcps-candidate,RexxCPS,Gate-E-E2-direct-slot,rxbvm,explicit-active-state,A,no,startup-included,1000-clauses,benchmark_rate,12,48465298.000000,49011820.000000,49312510.000000,49503498.250000,49929599.000000,206730.000000,0.419224,2.969431,no

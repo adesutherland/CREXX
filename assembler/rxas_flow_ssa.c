@@ -1147,7 +1147,9 @@ static size_t flow_ssa_build_normal_transfer(
                 (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL))
             flags |= FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
         else if (opcode == OP_COPY_REG_REG || opcode == OP_ACOPY_REG_REG ||
-            opcode == OP_NULL_REG ||
+            opcode == OP_NULL_REG || opcode == OP_NULLN_REG_REG ||
+            opcode == OP_NULLN_REG_REG_REG ||
+            opcode == OP_NULLN_REG_REG_REG_REG ||
             (instruction->effects.semantics &
              (RXOP_SEM_LIFETIME_END | RXOP_SEM_REFERENCE_RELEASE |
               RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_OPAQUE)))
@@ -1186,7 +1188,9 @@ static size_t flow_ssa_build_normal_transfer(
                 kind = RXAS_FLOW_VALUE_WRITE;
                 presence = RXAS_FLOW_COMPONENT_PRESENT;
                 constant_token = 0;
-                if (opcode == OP_NULL_REG) {
+                if (opcode == OP_NULL_REG || opcode == OP_NULLN_REG_REG ||
+                    opcode == OP_NULLN_REG_REG_REG ||
+                    opcode == OP_NULLN_REG_REG_REG_REG) {
                     kind = RXAS_FLOW_VALUE_ABSENT;
                     presence = RXAS_FLOW_COMPONENT_ABSENT;
                     components = RXOP_COMPONENT_ALL;

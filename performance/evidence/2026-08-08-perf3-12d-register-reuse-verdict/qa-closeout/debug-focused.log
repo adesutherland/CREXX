@@ -1,0 +1,43 @@
+Test project /Users/adrian/CLionProjects/CREXX-parse-planning-poc/cmake-build-debug
+      Start  938: test_parse_direct_bin_build
+ 1/14 Test  #938: test_parse_direct_bin_build .................   Passed    0.07 sec
+      Start  935: test_parse_bin_build
+ 2/14 Test  #935: test_parse_bin_build ........................   Passed    0.07 sec
+      Start  941: test_parse_compiled_patterns_bin_build
+ 3/14 Test  #941: test_parse_compiled_patterns_bin_build ......   Passed    0.07 sec
+      Start  342: nr14_frozen_parse_contract
+      Start  936: test_parse_direct_noopt
+      Start  937: test_parse_direct_opt
+      Start  933: test_parse_noopt
+      Start  940: test_parse_compiled_patterns_opt
+      Start  934: test_parse_opt
+      Start  939: test_parse_compiled_patterns_noopt
+      Start 1686: rxas_optimizer_string_literal_reuse_noopt
+      Start 1669: rxas_flow_graph_contract
+      Start 1668: rxas_optimizer_metadata
+ 4/14 Test #1668: rxas_optimizer_metadata .....................   Passed    0.00 sec
+      Start 1685: rxas_optimizer_string_literal_reuse
+ 5/14 Test #1669: rxas_flow_graph_contract ....................   Passed    0.01 sec
+ 6/14 Test #1686: rxas_optimizer_string_literal_reuse_noopt ...   Passed    0.02 sec
+ 7/14 Test #1685: rxas_optimizer_string_literal_reuse .........   Passed    0.03 sec
+ 8/14 Test  #939: test_parse_compiled_patterns_noopt ..........   Passed    0.18 sec
+ 9/14 Test  #940: test_parse_compiled_patterns_opt ............   Passed    0.19 sec
+10/14 Test  #933: test_parse_noopt ............................   Passed    0.19 sec
+11/14 Test  #934: test_parse_opt ..............................   Passed    0.19 sec
+12/14 Test  #936: test_parse_direct_noopt .....................   Passed    0.30 sec
+13/14 Test  #937: test_parse_direct_opt .......................   Passed    0.30 sec
+14/14 Test  #342: nr14_frozen_parse_contract ..................   Passed    3.28 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+compiler       =   3.28 sec*proc (1 test)
+flow           =   0.01 sec*proc (1 test)
+metadata       =   0.01 sec*proc (2 tests)
+optimizer      =   0.06 sec*proc (4 tests)
+parse          =   3.28 sec*proc (1 test)
+performance    =   3.28 sec*proc (1 test)
+rxas           =   0.06 sec*proc (4 tests)
+rxbin          =   3.28 sec*proc (1 test)
+
+Total Test time (real) =   3.52 sec

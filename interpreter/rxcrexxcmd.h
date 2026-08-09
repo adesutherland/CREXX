@@ -27,6 +27,8 @@
 
 #include <stddef.h>
 
+struct rxvm_context;
+
 typedef int (*rxcrexxcmd_write_fn)(void *userdata, const char *text, size_t length);
 typedef int (*rxcrexxcmd_read_all_fn)(void *userdata, char **out_text, size_t *out_length);
 typedef int (*rxcrexxcmd_run_path_fn)(
@@ -77,5 +79,14 @@ int rxcrexxcmd_execute(
     char **error_text);
 
 void rxcrexxcmd_free(char *text);
+
+/* Worker-owned command state lifecycle and immutable child-launch snapshot. */
+void rxcrexxcmd_context_state_free(struct rxvm_context *context);
+const char *rxcrexxcmd_active_getenv(const char *name);
+const char *rxcrexxcmd_active_working_directory(void);
+int rxcrexxcmd_active_process_snapshot(char **working_directory,
+                                       char ***environment);
+void rxcrexxcmd_process_snapshot_free(char *working_directory,
+                                      char **environment);
 
 #endif

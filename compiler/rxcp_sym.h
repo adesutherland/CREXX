@@ -133,6 +133,7 @@ struct Symbol {
     char is_opt_arg;   /* Is an optional arg */
     char is_const_arg; /* Is a constant arg */
     char meta_emitted; /* Has the emitter output the symbol's metadata */
+    char suppress_metadata; /* Compiler-internal binding: omit public variable metadata */
     char init_emitted; /* Has the emitter output the symbol's default inititator */
     char is_main;      /* Is the main procedure */
     char is_implicit_main; /* Is the compiler-generated implicit main procedure */

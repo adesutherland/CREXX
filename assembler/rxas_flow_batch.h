@@ -16,8 +16,10 @@ typedef struct RxasFlowQueueBatchEntry {
 
 /* A queue batch is a sparse copy-on-write transaction over one immutable
  * analysis epoch.  Only edited records are snapshotted.  The owning flow
- * graph pins proof-facing records to those snapshots while later consumers
- * see the provisional live queue in established priority order. */
+ * graph pins proof-facing records to these snapshots while later consumers
+ * see the provisional live queue in established priority order.  The owning
+ * flow graph must re-pin its record-id mappings whenever the sparse entry
+ * index grows, before making another proof query. */
 typedef struct RxasFlowQueueBatch {
     Assembler_Context *context;
     instruction_queue *original_items;
@@ -45,7 +47,8 @@ int rxas_flow_queue_batch_begin(
  * proof queries. */
 instruction_queue *rxas_flow_queue_batch_edit(
         RxasFlowQueueBatch *batch, size_t record_id,
-        const instruction_queue **epoch_item);
+        const instruction_queue **epoch_item,
+        int *snapshots_may_have_moved);
 
 /* True only while the record has not been registered for provisional edit.
  * Delete-only proof consumers use this conservative claim to avoid applying

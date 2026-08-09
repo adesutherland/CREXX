@@ -1,0 +1,19 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1687: rxas_optimizer_string_literal_reuse
+    Start 1688: rxas_optimizer_string_literal_reuse_noopt
+    Start 1670: rxas_optimizer_metadata
+    Start 1671: rxas_flow_graph_contract
+1/4 Test #1670: rxas_optimizer_metadata .....................   Passed    0.00 sec
+2/4 Test #1671: rxas_flow_graph_contract ....................   Passed    0.00 sec
+3/4 Test #1688: rxas_optimizer_string_literal_reuse_noopt ...   Passed    0.01 sec
+4/4 Test #1687: rxas_optimizer_string_literal_reuse .........   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+flow         =   0.00 sec*proc (1 test)
+metadata     =   0.01 sec*proc (2 tests)
+optimizer    =   0.03 sec*proc (4 tests)
+rxas         =   0.03 sec*proc (4 tests)
+
+Total Test time (real) =   0.05 sec

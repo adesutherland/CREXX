@@ -1,0 +1,17 @@
+--- tests/benchmarks/rexxcps_levelb.crexx	2026-08-08 09:13:21
++++ /private/tmp/crexx-parse-poc-sources/rexxcps_static_b.crexx	2026-08-08 09:25:22
+@@ -189,10 +189,10 @@
+         trace value _trace_current_mode()
+         address value addressenv().environment_name()
+         call cps_subroutine(upper("with"), upper("2"), upper("args"), upper("(This is the second)" || 1 || "" || 1))
+-        text = "This is an awfully boring program"; parse var text p1 (p0) p5
+-        text = "is an awfully boring program This"; parse var text p2 (p0) p6
+-        text = "an awfully boring program This is"; parse var text p3 (p0) p7
+-        text = "awfully boring program This is an"; parse var text p4 (p0) p8
++        text = "This is an awfully boring program"; parse var text p1 "b" p5
++        text = "is an awfully boring program This"; parse var text p2 "b" p6
++        text = "an awfully boring program This is"; parse var text p3 "b" p7
++        text = "awfully boring program This is an"; parse var text p4 "b" p8
+       end
+       /* -----  This is last of the 1000 clauses ----- */
+     end

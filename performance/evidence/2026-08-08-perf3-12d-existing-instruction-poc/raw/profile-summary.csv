@@ -1,0 +1,5 @@
+vm,variant,work,dynamic_instructions,frame_activations,frame_reuses,string_buffers
+rxtvm,e0,100000,67700030,800001,799997,600034
+rxtvm,e1,100000,3400030,1,0,14
+rxbvm,e0,100000,67700030,800001,799997,600034
+rxbvm,e1,100000,3400030,1,0,14

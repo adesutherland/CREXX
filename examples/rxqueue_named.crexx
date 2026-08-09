@@ -1,0 +1,83 @@
+/*
+ * Named execution-local queue example.
+ *
+ * PUSH, QUEUE, PULL, and QUEUED never receive a queue name.  They always
+ * operate on the queue selected by RXQUEUE.
+ */
+options levelb
+import rxfnsb
+
+say "Default queue: " || rxqueue("QUERY")
+call queue "job:alpha"
+call queue "job:beta"
+call push "job:urgent"
+say "SESSION contains " || queued() || " jobs"
+
+call rxqueue "CREATE", "WORK"
+call rxqueue "CREATE", "REPORT"
+
+/* Move jobs from SESSION to WORK.  The helper procedure sees the same
+ * execution-wide selected queue as main. */
+call rxqueue "SET", "SESSION"
+call move_jobs "WORK"
+
+call rxqueue "SET", "WORK"
+say "Selected queue: " || rxqueue("QUERY")
+say "WORK contains " || queued() || " jobs"
+
+/* PUSH adds an urgent retry at the front while QUEUE appends normal work. */
+call push "job:retry"
+call queue "job:gamma"
+call process_jobs "REPORT"
+
+call rxqueue "SET", "REPORT"
+say "REPORT contains " || queued() || " results"
+report_file = "rxqueue_report.txt"
+rc = rxqueue("EXPORT", "REPORT", report_file)
+say "Exported REPORT to " || report_file || " (status " || rc || ")"
+
+rc = rxqueue("IMPORT", "ARCHIVE", report_file)
+call rxqueue "SET", "ARCHIVE"
+say "ARCHIVE restored " || queued() || " results"
+do while queued() > 0
+  say "restored ARCHIVE: " || pull()
+end
+
+say rxqueue("QUERY")
+say rxqueue("INFO","ARCHIVE")
+say "List of named queues: "rxqueue("LIST")
+
+call rxqueue "SET", "SESSION"
+say "SESSION remaining: " || queued()
+call rxqueue "SET", "WORK"
+say "WORK remaining: " || queued()
+
+call rxqueue "DELETE", "WORK"
+call rxqueue "DELETE", "REPORT"
+call rxqueue "DELETE", "ARCHIVE"
+say "Deleted named queues; current queue: " || rxqueue("QUERY")
+
+/* PULL on an empty queue reads one line from the default input stream. */
+return
+
+move_jobs: procedure = .void
+  arg destination = .string
+  source = rxqueue("QUERY")
+  do while queued() > 0
+    job = pull()
+    call rxqueue "SET", destination
+    call queue job
+    call rxqueue "SET", source
+  end
+  return
+
+process_jobs: procedure = .void
+  arg report_queue = .string
+  source = rxqueue("QUERY")
+  do while queued() > 0
+    job = pull()
+    call rxqueue "SET", report_queue
+    call queue "completed: " || job
+    call rxqueue "SET", source
+  end
+  return

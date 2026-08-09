@@ -115,11 +115,18 @@ pipes. Use multiple `ADDRESS` statements, or send newline-separated commands to
 `ADDRESS CREXX "batch"`. Blank batch lines and lines whose first non-blank
 characters are `--` are skipped; batch stops at the first non-zero return code.
 
-`cd`, `pushd`, and `popd` *change the cRexx process working directory* and
-therefore persist for later `ADDRESS CREXX`, `ADDRESS PATH`, `ADDRESS SYSTEM`,
-file IO, and relative-path operations in the same process. In contrast,
-`ADDRESS SYSTEM "cd path"` runs inside the child command processor and does not
-change cREXX's working directory after that child exits.
+`cd`, `pushd`, and `popd` change the current VM worker's logical working
+directory. It persists for later `ADDRESS CREXX` commands in that VM and is
+copied into children launched by `run`, `PATH`, `SYSTEM`, or `SHELL`; it never
+temporarily changes the host process working directory. File commands resolve
+relative paths against the same logical directory. In contrast, `ADDRESS
+SYSTEM "cd path"` changes only that child command processor and does not update
+the worker's logical directory after the child exits.
+
+`setenv` and `unsetenv` likewise update a worker-owned environment overlay.
+`env`, `which`, configured-shell lookup, and child launch see the overlay, while
+unrelated VM workers and native host threads continue to see the unchanged
+process environment. A child receives an immutable merged environment snapshot.
 
 The command set is useful but bounded. cRexx command names are
 literal. Host-variable anchors are supported only in command operands. In the
@@ -133,8 +140,8 @@ when it expands to exactly the number of operands required at that point.
 | --- | --- | --- |
 | `help` | None. | Print the command list. |
 | `echo [text...]` | `text...` may use scalar or stem anchors. | Write text followed by a newline. |
-| `pwd` | None. | Print the current cRexx process working directory. |
-| `cd [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Change the cREXX process working directory; no path means the user's home directory where known. |
+| `pwd` | None. | Print the current VM worker's logical working directory. |
+| `cd [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Change the worker's logical working directory; no path means the user's home directory where known. |
 | `pushd path` | `path` may use a scalar anchor, or a one-item stem anchor. | Push the current directory and change to `path`. |
 | `popd` | None. | Return to the most recent pushed directory. |
 | `ls [path...]`, `dir [path...]` | `path...` may use scalar or stem anchors. | List directory entries, excluding `.` and `..`. |
@@ -152,13 +159,13 @@ when it expands to exactly the number of operands required at that point.
 | `lines [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Count lines in a file, or in redirected command input when no path is supplied. |
 | `write path text...` | `path` may use a scalar anchor; `text...` may use scalar or stem anchors. | Replace a file with the supplied text. |
 | `append path text...` | `path` may use a scalar anchor; `text...` may use scalar or stem anchors. | Append the supplied text to a file. |
-| `which command` | `command` may use a scalar anchor, or a one-item stem anchor. | Resolve an executable through process `PATH`. |
+| `which command` | `command` may use a scalar anchor, or a one-item stem anchor. | Resolve an executable through the worker environment's `PATH`. |
 | `now [local\|utc]`, `date [local\|utc]` | `local`/`utc` may be literal or scalar-anchored. | Print an ISO-like timestamp. |
 | `sleep seconds` | `seconds` may use a scalar anchor. | Sleep for the requested duration. |
 | `platform`, `os` | None. | Print operating-system and architecture details. |
 | `env [name...]` | `name...` may use scalar or stem anchors. | Print all environment variables, one variable's value, or `name=value` lines for multiple names. |
-| `setenv name value...` | `name` may use a scalar anchor, or a stem anchor whose first item is the name. `value...` may use scalar or stem anchors and is joined with spaces. | Set a process environment variable. |
-| `unsetenv name...` | `name...` may use scalar or stem anchors. | Clear one or more process environment variables. |
+| `setenv name value...` | `name` may use a scalar anchor, or a stem anchor whose first item is the name. `value...` may use scalar or stem anchors and is joined with spaces. | Set a variable in the current worker's environment overlay. |
+| `unsetenv name...` | `name...` may use scalar or stem anchors. | Hide one or more variables in the current worker's environment overlay. |
 | `pid` | None. | Print the current cREXX process id. |
 | `ps [pid]` | `pid` may use a scalar anchor. | Print current process details, or check whether a process id is alive. |
 | `kill pid [signal]` | `pid` and `signal` may use scalar anchors. | Terminate or signal a process. |

@@ -1,0 +1,30 @@
+BEGIN vm=rxtvm round=7 position=2 variant=h1
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g06fe132872b1.dirty 20260808
+       System is: macOS
+REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+        Averaged: 200 x 100 iterations of 1000 clauses (over 2.0 s)
+REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=200 averaging=100 calibrated=1
+
+     Performance: 9984479 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+        3.01 real         2.99 user         0.01 sys
+            19136512  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                1345  page reclaims
+                   3  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   0  voluntary context switches
+                 624  involuntary context switches
+         55902491304  instructions retired
+         13013234937  cycles elapsed
+            14041520  peak memory footprint
+END rc=0

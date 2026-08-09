@@ -1903,13 +1903,26 @@ static int rxcp_apply_plan_bindings(Context *ctx,
         rxcp_get_method_int(vctx, binding, "rxcp.bindingplan", "get_dimensions", &dims);
 
         if (internal_name && internal_name[0] &&
-            (!kind || !kind[0] || strcasecmp(kind, "var") == 0)) {
-            ast_hoist_var_typed(ctx,
-                                node,
-                                internal_name,
-                                0,
-                                (type_name && type_name[0]) ? type_name : ".unknown",
-                                dims > 0 ? (size_t)dims : 0);
+            (!kind || !kind[0] || strcasecmp(kind, "var") == 0 ||
+             strcasecmp(kind, "internal") == 0)) {
+            if (kind && strcasecmp(kind, "internal") == 0) {
+                ast_hoist_internal_var_typed(
+                        ctx,
+                        node,
+                        internal_name,
+                        0,
+                        (type_name && type_name[0]) ? type_name : ".unknown",
+                        dims > 0 ? (size_t)dims : 0);
+            }
+            else {
+                ast_hoist_var_typed(
+                        ctx,
+                        node,
+                        internal_name,
+                        0,
+                        (type_name && type_name[0]) ? type_name : ".unknown",
+                        dims > 0 ? (size_t)dims : 0);
+            }
         }
 
         if (type_name) free(type_name);
@@ -2462,7 +2475,7 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     if (!vctx) return NULL;
 
     /* Set say exit to print to stderr */
-    rxvml_set_say_exit(rxcp_say_exit);
+    rxvml_set_context_say_exit(vctx, rxcp_say_exit);
 
     if (rxvml_load_module_file(vctx, "library") <= 0) {
         rxvml_destroy(vctx);

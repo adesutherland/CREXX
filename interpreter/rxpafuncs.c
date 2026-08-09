@@ -38,7 +38,20 @@ typedef struct rxpa_pool_node {
     struct rxpa_pool_node* next;
 } rxpa_pool_node;
 
-static rxpa_pool_node* current_pool_head = NULL;
+#if defined(_MSC_VER)
+#define RXPA_THREAD_LOCAL __declspec(thread)
+#else
+#define RXPA_THREAD_LOCAL __thread
+#endif
+
+/* Context-free test shims locate the current call's stack-owned pool slot. */
+static RXPA_THREAD_LOCAL rxpa_pool_node **rxpa_compat_pool_slot;
+
+static rxpa_pool_node **rxpa_current_pool_slot(void) {
+    rxvm_context *context = rxvm_active_context_current();
+    if (context) return (rxpa_pool_node **)&context->active.rxpa_pool_head;
+    return rxpa_compat_pool_slot;
+}
 
 typedef struct rxpa_value_visit_set {
     value** items;
@@ -177,10 +190,16 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* si
     rxpa_attribute_value return_value = (rxpa_attribute_value)ret;
     rxpa_attribute_value signal_value = (rxpa_attribute_value)signal;
 
-    /* Save Context */
-    rxpa_pool_node* saved_head = current_pool_head;
-    /* Reset Context */
-    current_pool_head = NULL;
+    rxpa_pool_node **pool_slot = rxpa_current_pool_slot();
+    rxpa_pool_node **saved_compat_slot = rxpa_compat_pool_slot;
+    rxpa_pool_node *local_head = NULL;
+    rxpa_pool_node *saved_head = pool_slot ? *pool_slot : NULL;
+
+    if (!pool_slot) {
+        pool_slot = &local_head;
+        rxpa_compat_pool_slot = pool_slot;
+    }
+    *pool_slot = NULL;
 
     /* Call */
     native_function(args, arg_values, return_value, signal_value);
@@ -188,15 +207,15 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* si
     rxpa_validate_native_outputs(args, argv, ret, signal);
 
     /* Cleanup */
-    while (current_pool_head) {
-        rxpa_pool_node* next = current_pool_head->next;
-        (void)rxvm_memory_release(current_pool_head->ptr);
-        (void)rxvm_memory_release(current_pool_head);
-        current_pool_head = next;
+    while (*pool_slot) {
+        rxpa_pool_node* next = (*pool_slot)->next;
+        (void)rxvm_memory_release((*pool_slot)->ptr);
+        (void)rxvm_memory_release(*pool_slot);
+        *pool_slot = next;
     }
 
-    /* Restore Context */
-    current_pool_head = saved_head;
+    *pool_slot = saved_head;
+    rxpa_compat_pool_slot = saved_compat_slot;
 }
 
 /* Function to get signal text from a signal code  */
@@ -291,9 +310,15 @@ char* rxvm_getstring(rxpa_attribute_value attributeValue) {
             node = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(),
                                            sizeof(rxpa_pool_node));
             if (node) {
+                rxpa_pool_node **pool_slot = rxpa_current_pool_slot();
                 node->ptr = ret;
-                node->next = current_pool_head;
-                current_pool_head = node;
+                node->next = pool_slot ? *pool_slot : NULL;
+                if (pool_slot) *pool_slot = node;
+                else {
+                    (void)rxvm_memory_release(node);
+                    (void)rxvm_memory_release(ret);
+                    ret = NULL;
+                }
             } else {
                 (void)rxvm_memory_release(ret);
                 ret = NULL;

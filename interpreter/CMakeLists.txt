@@ -41,6 +41,7 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmintp.c
         rxvmworker.h
         rxvmworker.c
+        rxvmactive.c
         rxvmstem.h
         rxvmload.c
         interrupt.c
@@ -529,6 +530,13 @@ add_executable(test_rxvmworker tests/test_rxvmworker.c rxvmworker.c)
 target_include_directories(test_rxvmworker PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_rxvmworker PRIVATE rxvmmemory Threads::Threads)
 
+add_executable(test_rxvmactive tests/test_rxvmactive.c)
+target_include_directories(test_rxvmactive PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxvmactive PRIVATE rxvml Threads::Threads)
+
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
@@ -541,7 +549,13 @@ target_include_directories(mutate_jtable_rxbin PRIVATE
         ../binutils/include
         ../platform)
 
-add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h)
+add_executable(test_rxpa_utf_validation
+        tests/test_rxpa_utf_validation.c
+        rxpafuncs.c
+        rxvmactive.c
+        rxvmworker.c
+        rxvalue.h
+        rxvmvars.h)
 target_include_directories(test_rxpa_utf_validation PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         .
@@ -571,10 +585,13 @@ add_test(NAME rxvmstem_storage COMMAND test_rxvmstem)
 add_test(NAME rxvmstem_allocator_family COMMAND test_rxvmstem_allocator_family)
 add_test(NAME rxvmmemory_allocator COMMAND test_rxvmmemory)
 add_test(NAME rxvmworker_lifecycle COMMAND test_rxvmworker)
+add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)
 set_tests_properties(rxvmmemory_allocator PROPERTIES
         LABELS "interpreter;memory")
 set_tests_properties(rxvmworker_lifecycle PROPERTIES
         LABELS "interpreter;memory;worker")
+set_tests_properties(rxvmactive_isolation PROPERTIES
+        LABELS "interpreter;worker;signals")
 set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
 set_tests_properties(rxvmstem_allocator_family PROPERTIES

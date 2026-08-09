@@ -315,6 +315,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->inherit_parent_scope = 0;
     node->inherit_parent_reg_scope = 0;
     node->suppress_shadow_warnings = 0;
+    node->suppress_symbol_metadata = 0;
     node->skip_exit_dispatch = 0;
     node->emit_primary_reporting_anchor = 0;
     node->is_inline_pruned = 0;
@@ -447,6 +448,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->inherit_parent_scope = node->inherit_parent_scope;
     new_node->inherit_parent_reg_scope = node->inherit_parent_reg_scope;
     new_node->suppress_shadow_warnings = node->suppress_shadow_warnings;
+    new_node->suppress_symbol_metadata = node->suppress_symbol_metadata;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;
     new_node->is_inline_pruned = node->is_inline_pruned;
     new_node->flow_skip_arg_copy = 0;
