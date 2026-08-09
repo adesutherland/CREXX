@@ -207,12 +207,6 @@ say 'w3 has the value "'w3'"'
 
 when parsing the sample string, results in:
 
-```rexx <!--parse11.crexx-->
-w1 has the value "This is  the text which"
-w2 has the value " I think"
-w3 has the value "  is scanned."
-```
-
 <!--splice--crexx parse10-->
 
 Here the string is parsed using a template that asks that each of the variables
@@ -231,13 +225,6 @@ say 'w4 has the value "'w4'"'
 ```
 
 which would result in:
-
-```rexx <!--parse13.crexx-->
-    w1 has the value "This is  the text which"
-    w2 has the value " I think"
-    w3 has the value "  is scanned."
-    w4 has the value ""
-```
 
 <!--splice--crexx parse12-->
 
@@ -268,13 +255,6 @@ say 'w4 has the value "'w4'"'
 
 would result in:
 
-```rexx <!--parse15.crexx-->
-    w1 has the value "This"
-    w2 has the value "is"
-    w3 has the value "the"
-    w4 has the value "text which"
-```
-
 <!--splice--crexx parse14-->
 
 Note that the final variable (***w4*** in this example) could have had both
@@ -292,13 +272,6 @@ say 'w4 has the value "'w4'"'
 ```
 
 would in fact result in:
-
-```rexx <!--parse17.crexx-->
-    w1 has the value "This"
-    w2 has the value "is"
-    w3 has the value ""
-    w4 has the value "the text which"
-```
 
 <!--splice--crexx parse16-->
 
@@ -355,12 +328,6 @@ say 's3 has the value "'s3'"'
 
 results in:
 
-```rexx <!--parse21.crexx-->
-    s1 has the value "This is  "
-    s2 has the value "the text w"
-    s3 has the value "hich, I think,  is scanned."
-```
-
 <!--splice--crexx parse20-->
 
 Here ***s1*** is assigned characters from the first through the ninth character,
@@ -398,12 +365,6 @@ say 'w3 has the value "'w3'"'
 ```
 
 result in
-
-```rexx <!--parse24.crexx-->
-    w1 has the value "345"
-    w2 has the value "6789"
-    w3 has the value "3456789"
-```
 
 <!--splice--crexx parse23-->
 
@@ -490,10 +451,10 @@ the parsing process, so for example:
 ```rexx <!--parse28.crexx-->
 input="L/look for/1 10"
 parse input  verb 2 delim +1 string (delim) rest
-say 'verb' verb
-say 'delim' delim
-say 'string' string
-say 'rest' rest
+say "verb to "'"verb"'"
+say "delim to "'"delim"'"
+say "string to "'"string"'"
+say "rest to "'"rest"'"
 ```
 
 will set:
