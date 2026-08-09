@@ -1,0 +1,3 @@
+variant,total_instructions,load_reg_string,scopy_reg_reg,link_reg_reg,note
+N,31660402,2668618,3915965,0,"420000 repeated PARSE literal loads above D; 56 timing/control-path instructions differ"
+D,31240346,2248616,3915959,0,"no repeated PARSE literal load, scopy or link"

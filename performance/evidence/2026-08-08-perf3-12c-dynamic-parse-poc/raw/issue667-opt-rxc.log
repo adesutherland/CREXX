@@ -1,0 +1,4 @@
+Error in issue667_exact.crexx @ 6:1 - #INVALID_ARGUMENTS message="Invalid PARSE operator usage in template: =", "parse data x1 =(start) x2 +(span) x3"
+Error in issue667_exact.crexx @ 8:4 - #UNKNOWN_TYPE: Type was not found., "x1"
+Error in issue667_exact.crexx @ 9:21 - #UNKNOWN_TYPE: Type was not found., "x1"
+3 error(s) in source file

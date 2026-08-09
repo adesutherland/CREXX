@@ -1,0 +1,17 @@
+vm,round,variant,cps,effective_count,calibrated,pass
+rxtvm,1,h02_scopy,43252258,500,1,1
+rxtvm,2,h02_scopy,42890401,500,1,1
+rxtvm,3,h02_scopy,42217713,500,1,1
+rxtvm,4,h02_scopy,42477599,500,1,1
+rxtvm,5,h02_scopy,42749914,500,1,1
+rxtvm,6,h02_scopy,42356657,500,1,1
+rxtvm,7,h02_scopy,42266963,500,1,1
+rxtvm,8,h02_scopy,42030016,500,1,1
+rxbvm,1,h02_scopy,44471879,500,1,1
+rxbvm,2,h02_scopy,44824115,500,1,1
+rxbvm,3,h02_scopy,44553511,500,1,1
+rxbvm,4,h02_scopy,44718279,500,1,1
+rxbvm,5,h02_scopy,45210777,500,1,1
+rxbvm,6,h02_scopy,45139268,500,1,1
+rxbvm,7,h02_scopy,45635011,500,1,1
+rxbvm,8,h02_scopy,45139513,500,1,1

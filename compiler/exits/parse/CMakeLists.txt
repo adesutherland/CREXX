@@ -27,3 +27,10 @@ crexx_add_compiler_exit_runtime_test(
         EXTRA_DEPENDS exit_test_support_bin
         RUN_SUFFIX ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${LIBRPATH}
 )
+
+crexx_add_compiler_exit_runtime_test(
+        test_parse_compiled_patterns
+        test_parse_compiled_patterns.crexx
+        PASS_REGULAR_EXPRESSION "PASS: compiled existing-instruction PARSE patterns"
+        RUN_SUFFIX ${LIBRPATH}
+)

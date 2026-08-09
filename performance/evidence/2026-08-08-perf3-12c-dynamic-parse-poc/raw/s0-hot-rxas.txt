@@ -1,0 +1,161 @@
+   settp r72,768
+   settp r73,768
+   settp r74,768
+   settp r75,768
+   call4 r69,cps_subroutine(),r72,r73,r74,r75
+   .traceevent "F" 4 "R" "V" "r" 69 165 165 0 "cps_subroutine" ""
+   .srcstep 166 166 17 "rexxcps_levelb.crexx" 192 9 51 "        text = \"This is an awfully boring program\"; parse var text p1 (p0) p5"
+   .meta "rexxcps_levelb.main.text"="b" ".string" r49
+   load r49,"This is an awfully boring program"
+   .traceevent "L" 4 "R" "S" "r" 49 166 166 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 49 166 166 0 "text" ""
+   .meta "rexxcps_levelb.main._parseresult"="b" ".string[*]" r76
+   .srcstep 167 167 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p1;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p5;',' p1 ( p0 ) p5',0)"
+   null r76
+   .srcstep 168 168 33 "exit_fragment" 2 1 13 "_source=text"
+   .meta "rexxcps_levelb.main._source"="b" ".string" r77
+   .traceevent "V" 6 "R" "S" "r" 49 168 168 0 "text" ""
+   scopy r77,r49
+   .traceevent "A" 6 "R" "S" "r" 77 168 168 0 "_source" ""
+   .srcstep 169 169 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p1;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p5;',' p1 ( p0 ) p5',0)"
+   .traceevent "V" 6 "R" "S" "r" 77 169 169 0 "_source" ""
+   load r73,"3,1:1;1,2:p1;2,1:b;1,2:p5;"
+   .traceevent "L" 4 "R" "S" "r" 73 169 169 0 "" ""
+   load r74," p1 ( p0 ) p5"
+   .traceevent "L" 4 "R" "S" "r" 74 169 169 0 "" ""
+   load r75,0
+   .traceevent "L" 4 "R" "I" "r" 75 169 169 0 "" ""
+   load r71,4
+   settp r77,256
+   swap r72,r77
+   settp r73,768
+   settp r74,768
+   settpcall r76,rxfnsb.parseexec(),r71,r75,256
+   swap r77,r72
+   .traceevent "F" 4 "R" "S" "r" 76 169 169 0 "parseexec" ""
+   .traceevent "A" 6 "R" "S" "r" 76 169 169 0 "_parseresult" ""
+   .srcstep 170 170 33 "exit_fragment" 2 1 18 "p1=_parseResult[1"
+   minlinkattr1 r75,r76,1
+   .traceevent "V" 6 "R" "S" "r" 75 170 170 0 "_parseresult" ""
+   scopy r9,r75
+   .traceevent "A" 6 "R" "S" "r" 9 170 170 0 "p1" ""
+   unlink r75
+   .srcstep 171 171 33 "exit_fragment" 2 1 18 "p5=_parseResult[2"
+   minlinkattr1 r75,r76,2
+   .traceevent "V" 6 "R" "S" "r" 75 171 171 0 "_parseresult" ""
+   scopy r3,r75
+   .traceevent "A" 6 "R" "S" "r" 3 171 171 0 "p5" ""
+   unlink r75
+   .srcstep 172 172 17 "rexxcps_levelb.crexx" 193 9 51 "        text = \"is an awfully boring program This\"; parse var text p2 (p0) p6"
+   load r49,"is an awfully boring program This"
+   .traceevent "L" 4 "R" "S" "r" 49 172 172 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 49 172 172 0 "text" ""
+   .meta "rexxcps_levelb.main._parseresult"="b" ".string[*]" r78
+   .srcstep 173 173 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p2;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p6;',' p2 ( p0 ) p6',0)"
+   null r78
+   .srcstep 174 174 33 "exit_fragment" 2 1 13 "_source=text"
+   .meta "rexxcps_levelb.main._source"="b" ".string" r79
+   .traceevent "V" 6 "R" "S" "r" 49 174 174 0 "text" ""
+   scopy r79,r49
+   .traceevent "A" 6 "R" "S" "r" 79 174 174 0 "_source" ""
+   .srcstep 175 175 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p2;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p6;',' p2 ( p0 ) p6',0)"
+   .traceevent "V" 6 "R" "S" "r" 79 175 175 0 "_source" ""
+   load r73,"3,1:1;1,2:p2;2,1:b;1,2:p6;"
+   .traceevent "L" 4 "R" "S" "r" 73 175 175 0 "" ""
+   load r74," p2 ( p0 ) p6"
+   .traceevent "L" 4 "R" "S" "r" 74 175 175 0 "" ""
+   load r75,0
+   .traceevent "L" 4 "R" "I" "r" 75 175 175 0 "" ""
+   load r71,4
+   settp r79,256
+   swap r72,r79
+   settp r73,768
+   settp r74,768
+   settpcall r78,rxfnsb.parseexec(),r71,r75,256
+   swap r79,r72
+   .traceevent "F" 4 "R" "S" "r" 78 175 175 0 "parseexec" ""
+   .traceevent "A" 6 "R" "S" "r" 78 175 175 0 "_parseresult" ""
+   .srcstep 176 176 33 "exit_fragment" 2 1 18 "p2=_parseResult[1"
+   minlinkattr1 r75,r78,1
+   .traceevent "V" 6 "R" "S" "r" 75 176 176 0 "_parseresult" ""
+   scopy r7,r75
+   .traceevent "A" 6 "R" "S" "r" 7 176 176 0 "p2" ""
+   unlink r75
+   .srcstep 177 177 33 "exit_fragment" 2 1 18 "p6=_parseResult[2"
+   minlinkattr1 r75,r78,2
+   .traceevent "V" 6 "R" "S" "r" 75 177 177 0 "_parseresult" ""
+   scopy r2,r75
+   .traceevent "A" 6 "R" "S" "r" 2 177 177 0 "p6" ""
+   unlink r75
+   .srcstep 178 178 17 "rexxcps_levelb.crexx" 194 9 51 "        text = \"an awfully boring program This is\"; parse var text p3 (p0) p7"
+   load r49,"an awfully boring program This is"
+   .traceevent "L" 4 "R" "S" "r" 49 178 178 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 49 178 178 0 "text" ""
+   .meta "rexxcps_levelb.main._parseresult"="b" ".string[*]" r80
+   .srcstep 179 179 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p3;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p7;',' p3 ( p0 ) p7',0)"
+   null r80
+   .srcstep 180 180 33 "exit_fragment" 2 1 13 "_source=text"
+   .meta "rexxcps_levelb.main._source"="b" ".string" r81
+   .traceevent "V" 6 "R" "S" "r" 49 180 180 0 "text" ""
+   scopy r81,r49
+   .traceevent "A" 6 "R" "S" "r" 81 180 180 0 "_source" ""
+   .srcstep 181 181 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p3;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p7;',' p3 ( p0 ) p7',0)"
+   .traceevent "V" 6 "R" "S" "r" 81 181 181 0 "_source" ""
+   load r73,"3,1:1;1,2:p3;2,1:b;1,2:p7;"
+   .traceevent "L" 4 "R" "S" "r" 73 181 181 0 "" ""
+   load r74," p3 ( p0 ) p7"
+   .traceevent "L" 4 "R" "S" "r" 74 181 181 0 "" ""
+   load r75,0
+   .traceevent "L" 4 "R" "I" "r" 75 181 181 0 "" ""
+   load r71,4
+   settp r81,256
+   swap r72,r81
+   settp r73,768
+   settp r74,768
+   settpcall r80,rxfnsb.parseexec(),r71,r75,256
+   swap r81,r72
+   .traceevent "F" 4 "R" "S" "r" 80 181 181 0 "parseexec" ""
+   .traceevent "A" 6 "R" "S" "r" 80 181 181 0 "_parseresult" ""
+   .srcstep 182 182 33 "exit_fragment" 2 1 18 "p3=_parseResult[1"
+   minlinkattr1 r75,r80,1
+   .traceevent "V" 6 "R" "S" "r" 75 182 182 0 "_parseresult" ""
+   scopy r6,r75
+   .traceevent "A" 6 "R" "S" "r" 6 182 182 0 "p3" ""
+   unlink r75
+   .srcstep 183 183 33 "exit_fragment" 2 1 18 "p7=_parseResult[2"
+   minlinkattr1 r75,r80,2
+   .traceevent "V" 6 "R" "S" "r" 75 183 183 0 "_parseresult" ""
+   scopy r0,r75
+   .traceevent "A" 6 "R" "S" "r" 0 183 183 0 "p7" ""
+   unlink r75
+   .srcstep 184 184 17 "rexxcps_levelb.crexx" 195 9 51 "        text = \"awfully boring program This is an\"; parse var text p4 (p0) p8"
+   load r49,"awfully boring program This is an"
+   .traceevent "L" 4 "R" "S" "r" 49 184 184 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 49 184 184 0 "text" ""
+   .meta "rexxcps_levelb.main._parseresult"="b" ".string[*]" r82
+   .srcstep 185 185 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p4;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p8;',' p4 ( p0 ) p8',0)"
+   null r82
+   .srcstep 186 186 33 "exit_fragment" 2 1 13 "_source=text"
+   .meta "rexxcps_levelb.main._source"="b" ".string" r83
+   .traceevent "V" 6 "R" "S" "r" 49 186 186 0 "text" ""
+   scopy r83,r49
+   .traceevent "A" 6 "R" "S" "r" 83 186 186 0 "_source" ""
+   .srcstep 187 187 33 "exit_fragment" 2 1 121 "_parseResult=parseExec(_source,'3,1:1;1,2:p4;' || '2,' || length(p0) || ':' || p0 || ';' || '1,2:p8;',' p4 ( p0 ) p8',0)"
+   .traceevent "V" 6 "R" "S" "r" 83 187 187 0 "_source" ""
+   load r73,"3,1:1;1,2:p4;2,1:b;1,2:p8;"
+   .traceevent "L" 4 "R" "S" "r" 73 187 187 0 "" ""
+   load r74," p4 ( p0 ) p8"
+   .traceevent "L" 4 "R" "S" "r" 74 187 187 0 "" ""
+   load r75,0
+   .traceevent "L" 4 "R" "I" "r" 75 187 187 0 "" ""
+   load r71,4
+   settp r83,256
+   swap r72,r83
+   settp r73,768
+   settp r74,768
+   settpcall r82,rxfnsb.parseexec(),r71,r75,256
+   swap r83,r72
+   .traceevent "F" 4 "R" "S" "r" 82 187 187 0 "parseexec" ""
+   .traceevent "A" 6 "R" "S" "r" 82 187 187 0 "_parseresult" ""
+   .srcstep 188 188 33 "exit_fragment" 2 1 18 "p4=_parseResult[1"
+   minlinkattr1 r75,r82,1

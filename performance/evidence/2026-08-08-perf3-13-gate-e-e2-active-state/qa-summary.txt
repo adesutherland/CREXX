@@ -1,0 +1,15 @@
+PERF3-13 Gate E E2 accepted Mac closeout
+base=84d406904ece6842f6cec5a47e75d12b9d28ab16
+focused_debug=39/39 pass
+timing_processes=52/52 pass
+focused_asan_with_fixture=35/35 pass; 40.19 seconds; no exclusions
+full_asan=1999/1999 pass; 727.05 seconds; no exclusions or skips; detect_leaks=0 because Apple LSan unsupported
+full_debug=1999/1999 pass; parallel=30; 244.79 seconds; no skips
+focused_release=49/49 pass; 7.98 seconds
+rxbvm_sha256=132aa8a69a1ad9e250dfce8a4ac03905daade9f5e5300f27692c9f179255c841
+rxbvm_bytes=1020712
+rxbvm_text_bytes=824628
+rxas_uaf=stable record IDs plus re-pin after inline sparse-array growth; no per-record allocation
+rxas_direct_timing=malloc 4.25/4.24 seconds; selected 4.25/4.25 seconds; two ten-assembly blocks
+diff_check=pass
+portable_limitations=E2 native Windows-MinGW, MSVC, Intel Linux and Linux ARM64 execution proof pending

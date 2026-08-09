@@ -45,8 +45,33 @@ static const RxasOptimisationPassDescriptor pass_descriptors[] = {
     {RXAS_PASS_K04_COMPARE_BRANCH, "K04-compare-branch", RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE},
     {RXAS_PASS_K05_BRANCH_THREAD, "K05-branch-thread", RXAS_OPT_OWNER_CFG, RXAS_FLOW_CAP_CFG},
     {RXAS_PASS_H01_JOINED_KEY_REUSE, "H01-joined-key-reuse", RXAS_OPT_OWNER_SSA,
-     CAP_SEMANTIC_USE | RXAS_FLOW_CAP_LOOPS}
+     CAP_SEMANTIC_USE | RXAS_FLOW_CAP_LOOPS},
+    {RXAS_PASS_H02_STRING_LITERAL_REUSE, "H02-string-literal-reuse",
+     RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE | RXAS_FLOW_CAP_LOOPS}
 };
+
+static int pass_is_string_literal_load(
+        int opcode, const instruction_queue *item) {
+    const Assembler_Token *constant;
+    if (opcode != OP_LOAD_REG_STRING || !item || item->operandCount != 2)
+        return 0;
+    constant = rxas_queue_operand(item, 1);
+    return constant && constant->token_type == STRING;
+}
+
+static int pass_string_literals_equal(
+        const Assembler_Token *left, const Assembler_Token *right) {
+    size_t left_length;
+    size_t right_length;
+    if (!left || !right || left->token_type != STRING ||
+        right->token_type != STRING || left->length < 2 || right->length < 2)
+        return 0;
+    left_length = left->length - 2;
+    right_length = right->length - 2;
+    return left_length == right_length &&
+           memcmp(left->token_value.string,
+                  right->token_value.string, left_length) == 0;
+}
 
 static int pass_is_copy_candidate(int opcode) {
     return opcode == OP_ICOPY_REG_REG || opcode == OP_FCOPY_REG_REG ||
@@ -147,12 +172,14 @@ int rxas_optimisation_census(Assembler_Context *context,
     size_t index;
     size_t joined_key_candidates;
     size_t joined_key_stems;
+    size_t repeated_string_loads;
     int opcode;
     if (!items || !census) return 0;
     memset(census, 0, sizeof(*census));
     census->records = item_count;
     joined_key_candidates = 0;
     joined_key_stems = 0;
+    repeated_string_loads = 0;
     for (index = 0; index < item_count; index++) {
         item = &items[index];
         if (item->instrType != OP_CODE) continue;
@@ -222,6 +249,24 @@ int rxas_optimisation_census(Assembler_Context *context,
         if (opcode == OP_STEMGET_REG_REG_REG ||
             opcode == OP_STEMSET_REG_REG_REG)
             joined_key_stems++;
+        if (pass_is_string_literal_load(opcode, item)) {
+            size_t earlier;
+            for (earlier = 0; earlier < index; earlier++) {
+                const instruction_queue *prior;
+                const OpInfo *prior_op;
+                prior = &items[earlier];
+                if (prior->instrType != OP_CODE) continue;
+                prior_op = rxas_flow_resolve_opcode(context, prior);
+                if (!prior_op ||
+                    !pass_is_string_literal_load(prior_op->opcode, prior) ||
+                    !pass_string_literals_equal(
+                            rxas_queue_operand(prior, 1),
+                            rxas_queue_operand(item, 1)))
+                    continue;
+                repeated_string_loads++;
+                break;
+            }
+        }
     }
     /* H01 needs both a repeated joined-key shape and a compound consumer.
      * This keeps its loop capability lazy for procedures which merely contain
@@ -234,6 +279,16 @@ int rxas_optimisation_census(Assembler_Context *context,
         if (joined_key_descriptor)
             census->requested_capabilities |=
                     joined_key_descriptor->capabilities;
+    }
+    if (repeated_string_loads) {
+        const RxasOptimisationPassDescriptor *literal_descriptor;
+        census->candidates[RXAS_PASS_H02_STRING_LITERAL_REUSE] =
+                repeated_string_loads;
+        literal_descriptor = rxas_optimisation_pass_descriptor(
+                RXAS_PASS_H02_STRING_LITERAL_REUSE);
+        if (literal_descriptor)
+            census->requested_capabilities |=
+                    literal_descriptor->capabilities;
     }
     return 1;
 }

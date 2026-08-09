@@ -109,6 +109,11 @@ int main(int argc, char *argv[]) {
 
     /* Init Context */
     rxinimod(&context);
+    if (rxvm_signal_bind_process_main(&context) != 0) {
+        fprintf(stderr, "ERROR: process-main VM interrupt target is already bound\n");
+        rxfremod(&context);
+        return 2;
+    }
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {

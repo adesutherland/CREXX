@@ -23,7 +23,7 @@
  */
 
 #include "rxcrexxcmd.h"
-#include "rxvmmemory.h"
+#include "rxvmintp.h"
 
 #ifdef _WIN32
 #ifndef _WIN32_WINNT
@@ -38,7 +38,6 @@
 #include <sys/stat.h>
 #include <sys/utime.h>
 #define RX_GETCWD _getcwd
-#define RX_CHDIR _chdir
 #define RX_MKDIR(path) _mkdir(path)
 #define RX_RMDIR _rmdir
 #define RX_UNLINK _unlink
@@ -62,7 +61,6 @@ typedef struct _stat rx_stat_t;
 #include <unistd.h>
 #include <utime.h>
 #define RX_GETCWD getcwd
-#define RX_CHDIR chdir
 #define RX_MKDIR(path) mkdir((path), 0777)
 #define RX_RMDIR rmdir
 #define RX_UNLINK unlink
@@ -88,8 +86,24 @@ extern char **environ;
 #define RXCREXXCMD_RC_UNKNOWN 127
 #define RXCREXXCMD_MAX_STACK 64
 
+typedef struct rxcrexxcmd_env_entry {
+    char *name;
+    char *value;
+    unsigned char removed;
+    struct rxcrexxcmd_env_entry *next;
+} rxcrexxcmd_env_entry;
+
+typedef struct rxcrexxcmd_state {
+    char *current_directory;
+    char *directory_stack[RXCREXXCMD_MAX_STACK];
+    int directory_stack_count;
+    rxcrexxcmd_env_entry *base_environment;
+    rxcrexxcmd_env_entry *environment;
+} rxcrexxcmd_state;
+
 typedef struct rxcrexxcmd_context {
     const rxcrexxcmd_io *io;
+    rxcrexxcmd_state *state;
 } rxcrexxcmd_context;
 
 typedef struct rxcrexxcmd_args {
@@ -111,9 +125,6 @@ typedef struct rxcrexxcmd_entry {
     const char *name;
     rxcrexxcmd_handler handler;
 } rxcrexxcmd_entry;
-
-static char *directory_stack[RXCREXXCMD_MAX_STACK];
-static int directory_stack_count = 0;
 
 static void *rxcmd_memory_alloc(size_t size) {
     return rxvm_memory_alloc_bytes(rxvm_memory_current_worker(), size);
@@ -774,27 +785,191 @@ static int is_shell_operator_token(const char *text) {
             strcmp(text, "|") == 0);
 }
 
-static const char *default_home(void) {
+#ifdef _WIN32
+static char *rxcmd_utf8_from_wide(const wchar_t *wide) {
+    int length;
+    char *text;
+    if (!wide) return NULL;
+    length = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS,
+                                 wide, -1, NULL, 0, NULL, NULL);
+    if (length <= 0) return NULL;
+    text = (char *)rxcmd_memory_alloc((size_t)length);
+    if (!text) return NULL;
+    if (!WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS,
+                             wide, -1, text, length, NULL, NULL)) {
+        rxcmd_memory_free(text);
+        return NULL;
+    }
+    return text;
+}
+#endif
+
+static int rx_env_name_equal(const char *left, const char *right) {
+#ifdef _WIN32
+    return rx_stricmp(left, right) == 0;
+#else
+    return strcmp(left, right) == 0;
+#endif
+}
+
+static rxcrexxcmd_env_entry *environment_find(rxcrexxcmd_env_entry *head,
+                                              const char *name) {
+    rxcrexxcmd_env_entry *entry;
+    if (!name) return NULL;
+    for (entry = head; entry; entry = entry->next) {
+        if (rx_env_name_equal(entry->name, name)) return entry;
+    }
+    return NULL;
+}
+
+static rxcrexxcmd_env_entry *state_find_environment(rxcrexxcmd_state *state,
+                                                    const char *name) {
+    return state ? environment_find(state->environment, name) : NULL;
+}
+
+static const char *state_get_environment(rxcrexxcmd_state *state,
+                                         const char *name) {
+    rxcrexxcmd_env_entry *entry = state_find_environment(state, name);
+    if (entry) return entry->removed ? NULL : entry->value;
+    if (state) {
+        entry = environment_find(state->base_environment, name);
+        return entry ? entry->value : NULL;
+    }
+    return getenv(name);
+}
+
+static int state_set_environment(rxcrexxcmd_state *state,
+                                 const char *name,
+                                 const char *value,
+                                 int removed) {
+    rxcrexxcmd_env_entry *entry;
+    char *copy;
+
+    if (!state || !name || !*name || strchr(name, '=')) return -1;
+    copy = removed ? NULL : rx_strdup(value ? value : "");
+    if (!removed && !copy) return -1;
+    entry = state_find_environment(state, name);
+    if (!entry) {
+        entry = (rxcrexxcmd_env_entry *)rxcmd_memory_alloc(sizeof(*entry));
+        if (!entry) {
+            rxcmd_memory_free(copy);
+            return -1;
+        }
+        memset(entry, 0, sizeof(*entry));
+        entry->name = rx_strdup(name);
+        if (!entry->name) {
+            rxcmd_memory_free(copy);
+            rxcmd_memory_free(entry);
+            return -1;
+        }
+        entry->next = state->environment;
+        state->environment = entry;
+    }
+    rxcmd_memory_free(entry->value);
+    entry->value = copy;
+    entry->removed = removed ? 1u : 0u;
+    return 0;
+}
+
+static int state_append_base_environment(rxcrexxcmd_state *state,
+                                         const char *text) {
+    const char *equals;
+    rxcrexxcmd_env_entry *entry;
+    rxcrexxcmd_env_entry **tail;
+    size_t name_length;
+
+    if (!state || !text) return -1;
+    equals = strchr(text + (text[0] == '=' ? 1 : 0), '=');
+    if (!equals || equals == text) return 0;
+    name_length = (size_t)(equals - text);
+    entry = (rxcrexxcmd_env_entry *)rxcmd_memory_alloc(sizeof(*entry));
+    if (!entry) return -1;
+    memset(entry, 0, sizeof(*entry));
+    entry->name = rx_strndup(text, name_length);
+    entry->value = rx_strdup(equals + 1);
+    if (!entry->name || !entry->value) {
+        rxcmd_memory_free(entry->name);
+        rxcmd_memory_free(entry->value);
+        rxcmd_memory_free(entry);
+        return -1;
+    }
+    tail = &state->base_environment;
+    while (*tail) tail = &(*tail)->next;
+    *tail = entry;
+    return 0;
+}
+
+static int state_capture_process_environment(rxcrexxcmd_state *state) {
+#ifdef _WIN32
+    LPWCH block = GetEnvironmentStringsW();
+    LPWCH cursor = block;
+    if (!block) return -1;
+    while (*cursor) {
+        char *entry = rxcmd_utf8_from_wide(cursor);
+        if (!entry || state_append_base_environment(state, entry) != 0) {
+            rxcmd_memory_free(entry);
+            FreeEnvironmentStringsW(block);
+            return -1;
+        }
+        rxcmd_memory_free(entry);
+        cursor += wcslen(cursor) + 1u;
+    }
+    FreeEnvironmentStringsW(block);
+#else
+    char **cursor;
+    for (cursor = environ; cursor && *cursor; cursor++) {
+        if (state_append_base_environment(state, *cursor) != 0) return -1;
+    }
+#endif
+    return 0;
+}
+
+static char *default_home(rxcrexxcmd_context *ctx) {
 #ifdef _WIN32
     const char *home;
-    static char combined[MAX_PATH * 2];
+    const char *drive;
+    const char *path;
+    char *combined;
 
-    home = getenv("USERPROFILE");
-    if (home && *home) return home;
+    home = state_get_environment(ctx ? ctx->state : NULL, "USERPROFILE");
+    if (home && *home) return rx_strdup(home);
 
-    if (getenv("HOMEDRIVE") && getenv("HOMEPATH")) {
-        snprintf(combined, sizeof(combined), "%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
+    drive = state_get_environment(ctx ? ctx->state : NULL, "HOMEDRIVE");
+    path = state_get_environment(ctx ? ctx->state : NULL, "HOMEPATH");
+    if (drive && *drive && path && *path) {
+        combined = (char *)rxcmd_memory_alloc(strlen(drive) + strlen(path) + 1u);
+        if (!combined) return NULL;
+        strcpy(combined, drive);
+        strcat(combined, path);
         return combined;
     }
 
-    return ".";
+    return rx_strdup(".");
 #else
-    const char *home = getenv("HOME");
-    return (home && *home) ? home : ".";
+    const char *home = state_get_environment(ctx ? ctx->state : NULL, "HOME");
+    return rx_strdup((home && *home) ? home : ".");
 #endif
 }
 
 static char *current_directory(void) {
+#ifdef _WIN32
+    DWORD wide_length;
+    wchar_t *wide_buffer;
+    char *utf8_buffer;
+
+    wide_length = GetCurrentDirectoryW(0, NULL);
+    if (!wide_length) return NULL;
+    wide_buffer = (wchar_t *)rxcmd_memory_alloc_detached(
+        (size_t)wide_length * sizeof(wchar_t));
+    if (!wide_buffer) return NULL;
+    if (!GetCurrentDirectoryW(wide_length, wide_buffer)) {
+        rxcmd_memory_free(wide_buffer);
+        return NULL;
+    }
+    utf8_buffer = rxcmd_utf8_from_wide(wide_buffer);
+    rxcmd_memory_free(wide_buffer);
+    return utf8_buffer;
+#else
     size_t size;
     char *buffer;
 
@@ -808,6 +983,102 @@ static char *current_directory(void) {
         if (size > ((size_t)-1) / 2) return NULL;
         size *= 2;
     }
+#endif
+}
+
+static int path_exists(const char *path, rx_stat_t *st);
+static int is_directory_stat(const rx_stat_t *st);
+
+static void state_clear(rxcrexxcmd_state *state) {
+    rxcrexxcmd_env_entry *entry;
+    int i;
+    if (!state) return;
+    rxcmd_memory_free(state->current_directory);
+    state->current_directory = NULL;
+    for (i = 0; i < state->directory_stack_count; i++) {
+        rxcmd_memory_free(state->directory_stack[i]);
+        state->directory_stack[i] = NULL;
+    }
+    state->directory_stack_count = 0;
+    while ((entry = state->base_environment) != NULL) {
+        state->base_environment = entry->next;
+        rxcmd_memory_free(entry->name);
+        rxcmd_memory_free(entry->value);
+        rxcmd_memory_free(entry);
+    }
+    while ((entry = state->environment) != NULL) {
+        state->environment = entry->next;
+        rxcmd_memory_free(entry->name);
+        rxcmd_memory_free(entry->value);
+        rxcmd_memory_free(entry);
+    }
+}
+
+static int state_initialize(rxcrexxcmd_state *state) {
+    if (!state) return -1;
+    memset(state, 0, sizeof(*state));
+    state->current_directory = current_directory();
+    if (!state->current_directory ||
+        state_capture_process_environment(state) != 0) {
+        state_clear(state);
+        return -1;
+    }
+    return 0;
+}
+
+static rxcrexxcmd_state *active_state(int create) {
+    rxvm_context *context = rxvm_active_context_current();
+    rxcrexxcmd_state *state;
+    if (!context) return NULL;
+    state = (rxcrexxcmd_state *)context->active.crexx_command_state;
+    if (!state && create) {
+        state = (rxcrexxcmd_state *)rxcmd_memory_alloc(sizeof(*state));
+        if (!state || state_initialize(state) != 0) {
+            rxcmd_memory_free(state);
+            return NULL;
+        }
+        context->active.crexx_command_state = state;
+    }
+    return state;
+}
+
+static int path_is_absolute(const char *path) {
+    if (!path || !*path) return 0;
+#ifdef _WIN32
+    return path[0] == '/' || path[0] == '\\' ||
+           (isalpha((unsigned char)path[0]) && path[1] == ':');
+#else
+    return path[0] == '/';
+#endif
+}
+
+static char *resolve_path(rxcrexxcmd_context *ctx, const char *path) {
+    if (!path) return NULL;
+    if (path_is_absolute(path) || !ctx || !ctx->state ||
+        !ctx->state->current_directory) return rx_strdup(path);
+    return rx_join_path(ctx->state->current_directory, path);
+}
+
+static char *canonical_directory(rxcrexxcmd_context *ctx, const char *path) {
+    char *candidate = resolve_path(ctx, path);
+    char *system_path;
+    char *result;
+    rx_stat_t st;
+    if (!candidate) return NULL;
+    if (!path_exists(candidate, &st) || !is_directory_stat(&st)) {
+        rxcmd_memory_free(candidate);
+        return NULL;
+    }
+#ifdef _WIN32
+    system_path = _fullpath(NULL, candidate, 0);
+#else
+    system_path = realpath(candidate, NULL);
+#endif
+    rxcmd_memory_free(candidate);
+    if (!system_path) return NULL;
+    result = rx_strdup(system_path);
+    free(system_path);
+    return result;
 }
 
 static int path_exists(const char *path, rx_stat_t *st) {
@@ -1036,7 +1307,7 @@ static int command_found_at(const char *path) {
 #endif
 }
 
-static char *find_executable(const char *name) {
+static char *find_executable(rxcrexxcmd_context *ctx, const char *name) {
     const char *path_list;
     const char *cursor;
     const char *next;
@@ -1050,30 +1321,45 @@ static char *find_executable(const char *name) {
 
     if (!name || !*name) return NULL;
     if (strchr(name, '/') || strchr(name, '\\')) {
-        if (command_found_at(name)) return rx_strdup(name);
+        char *resolved = resolve_path(ctx, name);
+        if (resolved && command_found_at(resolved)) return resolved;
+        rxcmd_memory_free(resolved);
 #ifdef _WIN32
         for (ext_index = 1; extensions[ext_index]; ext_index++) {
+            char *candidate_name;
             candidate = (char *)rxcmd_memory_alloc(
                 strlen(name) + strlen(extensions[ext_index]) + 1u);
             if (!candidate) return NULL;
             strcpy(candidate, name);
             strcat(candidate, extensions[ext_index]);
-            if (command_found_at(candidate)) return candidate;
+            candidate_name = resolve_path(ctx, candidate);
             rxcmd_memory_free(candidate);
+            if (candidate_name && command_found_at(candidate_name)) {
+                return candidate_name;
+            }
+            rxcmd_memory_free(candidate_name);
         }
 #endif
         return NULL;
     }
 
-    path_list = getenv("PATH");
+    path_list = state_get_environment(ctx ? ctx->state : NULL, "PATH");
     if (!path_list || !*path_list) return NULL;
 
     cursor = path_list;
     while (cursor) {
         next = strchr(cursor, RX_PATH_LIST_SEP);
         dir_len = next ? (size_t)(next - cursor) : strlen(cursor);
-        dir = dir_len ? rx_strndup(cursor, dir_len) : rx_strdup(".");
+        dir = dir_len ? rx_strndup(cursor, dir_len)
+                      : rx_strdup(ctx && ctx->state
+                                  ? ctx->state->current_directory : ".");
         if (!dir) return NULL;
+        if (!path_is_absolute(dir)) {
+            char *resolved_dir = resolve_path(ctx, dir);
+            rxcmd_memory_free(dir);
+            dir = resolved_dir;
+            if (!dir) return NULL;
+        }
 
 #ifdef _WIN32
         for (ext_index = 0; extensions[ext_index]; ext_index++) {
@@ -1174,86 +1460,83 @@ static int cmd_echo(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
 }
 
 static int cmd_pwd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
-    char *cwd;
-    int rc;
-
     (void)command;
     if (args->argc != 1) return command_usage(ctx, "pwd");
-    cwd = current_directory();
-    if (!cwd) {
+    if (!ctx || !ctx->state || !ctx->state->current_directory) {
         ctx_errorf(ctx, "pwd: %s", strerror(errno));
         return RXCREXXCMD_RC_ERROR;
     }
-    rc = ctx_putln(ctx, cwd) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
-    rxcmd_memory_free(cwd);
-    return rc;
+    return ctx_putln(ctx, ctx->state->current_directory) == 0
+        ? 0 : RXCREXXCMD_RC_ERROR;
 }
 
 static int cmd_cd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
     const char *path;
+    char *home = NULL;
+    char *new_directory;
 
     (void)command;
     if (args->argc > 2) return command_usage(ctx, "cd [path]");
-    path = args->argc == 1 ? default_home() : args->argv[1];
-    if (RX_CHDIR(path) != 0) {
+    if (args->argc == 1) {
+        home = default_home(ctx);
+        if (!home) return RXCREXXCMD_RC_ERROR;
+    }
+    path = home ? home : args->argv[1];
+    new_directory = canonical_directory(ctx, path);
+    if (!new_directory) {
         ctx_errorf(ctx, "cd: %s: %s", path, strerror(errno));
+        rxcmd_memory_free(home);
         return RXCREXXCMD_RC_NOT_FOUND;
     }
+    rxcmd_memory_free(home);
+    rxcmd_memory_free(ctx->state->current_directory);
+    ctx->state->current_directory = new_directory;
     return 0;
 }
 
 static int cmd_pushd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
-    char *cwd;
     char *new_cwd;
     int rc;
 
     (void)command;
     if (args->argc != 2) return command_usage(ctx, "pushd path");
-    if (directory_stack_count >= RXCREXXCMD_MAX_STACK) {
+    if (ctx->state->directory_stack_count >= RXCREXXCMD_MAX_STACK) {
         ctx_errln(ctx, "pushd: directory stack full");
         return RXCREXXCMD_RC_ERROR;
     }
 
-    cwd = current_directory();
-    if (!cwd) {
-        ctx_errorf(ctx, "pushd: %s", strerror(errno));
-        return RXCREXXCMD_RC_ERROR;
-    }
-
-    if (RX_CHDIR(args->argv[1]) != 0) {
+    new_cwd = canonical_directory(ctx, args->argv[1]);
+    if (!new_cwd) {
         ctx_errorf(ctx, "pushd: %s: %s", args->argv[1], strerror(errno));
-        rxcmd_memory_free(cwd);
         return RXCREXXCMD_RC_NOT_FOUND;
     }
 
-    directory_stack[directory_stack_count++] = cwd;
-    new_cwd = current_directory();
-    if (!new_cwd) return RXCREXXCMD_RC_ERROR;
+    ctx->state->directory_stack[ctx->state->directory_stack_count++] =
+        ctx->state->current_directory;
+    ctx->state->current_directory = new_cwd;
     rc = ctx_putln(ctx, new_cwd) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
-    rxcmd_memory_free(new_cwd);
     return rc;
 }
 
 static int cmd_popd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
     char *target;
-    int rc;
 
     (void)command;
     if (args->argc != 1) return command_usage(ctx, "popd");
-    if (directory_stack_count == 0) {
+    if (ctx->state->directory_stack_count == 0) {
         ctx_errln(ctx, "popd: directory stack empty");
         return RXCREXXCMD_RC_ERROR;
     }
 
-    target = directory_stack[--directory_stack_count];
-    directory_stack[directory_stack_count] = NULL;
-    rc = RX_CHDIR(target);
-    if (rc != 0) {
+    target = ctx->state->directory_stack[--ctx->state->directory_stack_count];
+    ctx->state->directory_stack[ctx->state->directory_stack_count] = NULL;
+    if (!path_exists(target, NULL)) {
         ctx_errorf(ctx, "popd: %s: %s", target, strerror(errno));
         rxcmd_memory_free(target);
         return RXCREXXCMD_RC_NOT_FOUND;
     }
-    rxcmd_memory_free(target);
+    rxcmd_memory_free(ctx->state->current_directory);
+    ctx->state->current_directory = target;
     return cmd_pwd(ctx, command, args);
 }
 
@@ -1263,7 +1546,7 @@ static int cmd_ls(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args 
 
     (void)command;
     if (args->argc == 1) {
-        if (list_directory(ctx, ".") != 0) {
+        if (list_directory(ctx, ctx->state->current_directory) != 0) {
             ctx_errorf(ctx, "ls: .: %s", strerror(errno));
             return RXCREXXCMD_RC_NOT_FOUND;
         }
@@ -1272,10 +1555,12 @@ static int cmd_ls(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args 
 
     rc = 0;
     for (i = 1; i < args->argc; i++) {
-        if (list_directory(ctx, args->argv[i]) != 0) {
+        char *path = resolve_path(ctx, args->argv[i]);
+        if (!path || list_directory(ctx, path) != 0) {
             ctx_errorf(ctx, "ls: %s: %s", args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_NOT_FOUND;
         }
+        rxcmd_memory_free(path);
     }
     return rc;
 }
@@ -1288,9 +1573,14 @@ static int cmd_exists(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_a
     if (args->argc < 2) return command_usage(ctx, "exists path...");
     all_exist = 1;
     for (i = 1; i < args->argc; i++) {
-        int exists = path_exists(args->argv[i], NULL);
+        char *path = resolve_path(ctx, args->argv[i]);
+        int exists = path && path_exists(path, NULL);
         if (!exists) all_exist = 0;
-        if (ctx_printf(ctx, "%d %s\n", exists ? 1 : 0, args->argv[i]) != 0) return RXCREXXCMD_RC_ERROR;
+        if (ctx_printf(ctx, "%d %s\n", exists ? 1 : 0, args->argv[i]) != 0) {
+            rxcmd_memory_free(path);
+            return RXCREXXCMD_RC_ERROR;
+        }
+        rxcmd_memory_free(path);
     }
     return all_exist ? 0 : RXCREXXCMD_RC_NOT_FOUND;
 }
@@ -1310,16 +1600,22 @@ static int cmd_stat(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     rc = 0;
     for (i = 1; i < args->argc; i++) {
         rx_stat_t st;
-        if (!path_exists(args->argv[i], &st)) {
+        char *path = resolve_path(ctx, args->argv[i]);
+        if (!path || !path_exists(path, &st)) {
             ctx_errorf(ctx, "stat: %s: %s", args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_NOT_FOUND;
+            rxcmd_memory_free(path);
             continue;
         }
         if (ctx_printf(ctx, "%s type=%s size=%lld mtime=%lld\n",
                        args->argv[i],
                        type_name_for_stat(&st),
                        (long long)st.st_size,
-                       (long long)st.st_mtime) != 0) return RXCREXXCMD_RC_ERROR;
+                       (long long)st.st_mtime) != 0) {
+            rxcmd_memory_free(path);
+            return RXCREXXCMD_RC_ERROR;
+        }
+        rxcmd_memory_free(path);
     }
     return rc;
 }
@@ -1338,10 +1634,12 @@ static int cmd_mkdir(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
 
     rc = 0;
     for (i = start; i < args->argc; i++) {
-        if ((recursive ? make_directory_recursive(args->argv[i]) : RX_MKDIR(args->argv[i])) != 0) {
+        char *path = resolve_path(ctx, args->argv[i]);
+        if (!path || (recursive ? make_directory_recursive(path) : RX_MKDIR(path)) != 0) {
             ctx_errorf(ctx, "mkdir: %s: %s", args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_ERROR;
         }
+        rxcmd_memory_free(path);
     }
     return rc;
 }
@@ -1354,10 +1652,12 @@ static int cmd_rmdir(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
     if (args->argc < 2) return command_usage(ctx, "rmdir path...");
     rc = 0;
     for (i = 1; i < args->argc; i++) {
-        if (RX_RMDIR(args->argv[i]) != 0) {
+        char *path = resolve_path(ctx, args->argv[i]);
+        if (!path || RX_RMDIR(path) != 0) {
             ctx_errorf(ctx, "rmdir: %s: %s", args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_ERROR;
         }
+        rxcmd_memory_free(path);
     }
     return rc;
 }
@@ -1376,18 +1676,28 @@ static int cmd_rm(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args 
 
     rc = 0;
     for (i = start; i < args->argc; i++) {
-        if ((recursive ? remove_path_recursive(args->argv[i]) : RX_UNLINK(args->argv[i])) != 0) {
+        char *path = resolve_path(ctx, args->argv[i]);
+        if (!path || (recursive ? remove_path_recursive(path) : RX_UNLINK(path)) != 0) {
             ctx_errorf(ctx, "%s: %s: %s", args->argv[0], args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_ERROR;
         }
+        rxcmd_memory_free(path);
     }
     return rc;
 }
 
 static int cmd_copy(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
+    char *source;
+    char *target;
+    int copy_rc;
     (void)command;
     if (args->argc != 3) return command_usage(ctx, "copy source target");
-    if (copy_file(args->argv[1], args->argv[2]) != 0) {
+    source = resolve_path(ctx, args->argv[1]);
+    target = resolve_path(ctx, args->argv[2]);
+    copy_rc = (!source || !target) ? -1 : copy_file(source, target);
+    rxcmd_memory_free(source);
+    rxcmd_memory_free(target);
+    if (copy_rc != 0) {
         ctx_errorf(ctx, "copy: %s -> %s: %s", args->argv[1], args->argv[2], strerror(errno));
         return RXCREXXCMD_RC_ERROR;
     }
@@ -1395,9 +1705,17 @@ static int cmd_copy(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
 }
 
 static int cmd_move(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
+    char *source;
+    char *target;
+    int move_rc;
     (void)command;
     if (args->argc != 3) return command_usage(ctx, "move source target");
-    if (rename(args->argv[1], args->argv[2]) != 0) {
+    source = resolve_path(ctx, args->argv[1]);
+    target = resolve_path(ctx, args->argv[2]);
+    move_rc = (!source || !target) ? -1 : rename(source, target);
+    rxcmd_memory_free(source);
+    rxcmd_memory_free(target);
+    if (move_rc != 0) {
         ctx_errorf(ctx, "move: %s -> %s: %s", args->argv[1], args->argv[2], strerror(errno));
         return RXCREXXCMD_RC_ERROR;
     }
@@ -1412,17 +1730,20 @@ static int cmd_touch(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
     if (args->argc < 2) return command_usage(ctx, "touch path...");
     rc = 0;
     for (i = 1; i < args->argc; i++) {
-        FILE *file = fopen(args->argv[i], "ab");
+        char *path = resolve_path(ctx, args->argv[i]);
+        FILE *file = path ? fopen(path, "ab") : NULL;
         if (!file) {
             ctx_errorf(ctx, "touch: %s: %s", args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_ERROR;
+            rxcmd_memory_free(path);
             continue;
         }
         fclose(file);
-        if (RX_UTIME(args->argv[i], NULL) != 0) {
+        if (RX_UTIME(path, NULL) != 0) {
             ctx_errorf(ctx, "touch: %s: %s", args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_ERROR;
         }
+        rxcmd_memory_free(path);
     }
     return rc;
 }
@@ -1435,14 +1756,17 @@ static int cmd_cat(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
     if (args->argc < 2) return command_usage(ctx, "cat path...");
     rc = 0;
     for (i = 1; i < args->argc; i++) {
-        FILE *file = fopen(args->argv[i], "rb");
+        char *path = resolve_path(ctx, args->argv[i]);
+        FILE *file = path ? fopen(path, "rb") : NULL;
         if (!file) {
             ctx_errorf(ctx, "cat: %s: %s", args->argv[i], strerror(errno));
             rc = RXCREXXCMD_RC_NOT_FOUND;
+            rxcmd_memory_free(path);
             continue;
         }
         if (read_stream_to_output(ctx, file) != 0) rc = RXCREXXCMD_RC_ERROR;
         fclose(file);
+        rxcmd_memory_free(path);
     }
     return rc;
 }
@@ -1466,6 +1790,7 @@ static int cmd_head(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     long count;
     long emitted;
     FILE *file;
+    char *path;
     char line[4096];
     int rc;
 
@@ -1474,9 +1799,11 @@ static int cmd_head(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     if (rc != 0) return rc;
     if (args->argc != start + 1) return command_usage(ctx, "head [-n count] path");
 
-    file = fopen(args->argv[start], "rb");
+    path = resolve_path(ctx, args->argv[start]);
+    file = path ? fopen(path, "rb") : NULL;
     if (!file) {
         ctx_errorf(ctx, "head: %s: %s", args->argv[start], strerror(errno));
+        rxcmd_memory_free(path);
         return RXCREXXCMD_RC_NOT_FOUND;
     }
 
@@ -1484,12 +1811,14 @@ static int cmd_head(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     while (emitted < count && fgets(line, sizeof(line), file)) {
         if (ctx_puts(ctx, line) != 0) {
             fclose(file);
+            rxcmd_memory_free(path);
             return RXCREXXCMD_RC_ERROR;
         }
         if (strchr(line, '\n')) emitted++;
     }
 
     fclose(file);
+    rxcmd_memory_free(path);
     return 0;
 }
 
@@ -1497,6 +1826,7 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     int start;
     long count;
     FILE *file;
+    char *path;
     char line[4096];
     char **ring;
     long index;
@@ -1510,9 +1840,11 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     if (args->argc != start + 1) return command_usage(ctx, "tail [-n count] path");
     if (count == 0) return 0;
 
-    file = fopen(args->argv[start], "rb");
+    path = resolve_path(ctx, args->argv[start]);
+    file = path ? fopen(path, "rb") : NULL;
     if (!file) {
         ctx_errorf(ctx, "tail: %s: %s", args->argv[start], strerror(errno));
+        rxcmd_memory_free(path);
         return RXCREXXCMD_RC_NOT_FOUND;
     }
 
@@ -1520,6 +1852,7 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
         rxvm_memory_current_worker(), (size_t)count, sizeof(char *));
     if (!ring) {
         fclose(file);
+        rxcmd_memory_free(path);
         return RXCREXXCMD_RC_ERROR;
     }
 
@@ -1530,6 +1863,7 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
         ring[index % count] = rx_strdup(line);
         if (!ring[index % count]) {
             fclose(file);
+            rxcmd_memory_free(path);
             for (i = 0; i < count; i++) rxcmd_memory_free(ring[i]);
             rxcmd_memory_free(ring);
             return RXCREXXCMD_RC_ERROR;
@@ -1539,6 +1873,7 @@ static int cmd_tail(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     }
 
     fclose(file);
+    rxcmd_memory_free(path);
     for (i = 0; i < stored; i++) {
         char *item = ring[(index - stored + i) % count];
         if (item && ctx_puts(ctx, item) != 0) rc = RXCREXXCMD_RC_ERROR;
@@ -1576,13 +1911,16 @@ static int cmd_lines(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
         free(input);
     } else {
         FILE *file;
+        char *path;
         int ch;
         int saw_any;
         int last;
 
-        file = fopen(args->argv[1], "rb");
+        path = resolve_path(ctx, args->argv[1]);
+        file = path ? fopen(path, "rb") : NULL;
         if (!file) {
             ctx_errorf(ctx, "lines: %s: %s", args->argv[1], strerror(errno));
+            rxcmd_memory_free(path);
             return RXCREXXCMD_RC_NOT_FOUND;
         }
         count = 0;
@@ -1595,6 +1933,7 @@ static int cmd_lines(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
         }
         if (saw_any && last != '\n') count++;
         fclose(file);
+        rxcmd_memory_free(path);
     }
 
     return ctx_printf(ctx, "%ld\n", count) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
@@ -1602,21 +1941,25 @@ static int cmd_lines(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
 
 static int write_text_file(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, const char *mode, const char *usage) {
     FILE *file;
+    char *path;
     char *text;
     int rc;
 
     if (args->argc < 3) return command_usage(ctx, usage);
     text = join_args(args, 2);
     if (!text) return RXCREXXCMD_RC_ERROR;
-    file = fopen(args->argv[1], mode);
+    path = resolve_path(ctx, args->argv[1]);
+    file = path ? fopen(path, mode) : NULL;
     if (!file) {
         ctx_errorf(ctx, "%s: %s: %s", args->argv[0], args->argv[1], strerror(errno));
         rxcmd_memory_free(text);
+        rxcmd_memory_free(path);
         return RXCREXXCMD_RC_ERROR;
     }
     rc = fputs(text, file) == EOF ? RXCREXXCMD_RC_ERROR : 0;
     if (fclose(file) != 0) rc = RXCREXXCMD_RC_ERROR;
     rxcmd_memory_free(text);
+    rxcmd_memory_free(path);
     return rc;
 }
 
@@ -1635,7 +1978,7 @@ static int cmd_which(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
 
     (void)command;
     if (args->argc != 2) return command_usage(ctx, "which command");
-    path = find_executable(args->argv[1]);
+    path = find_executable(ctx, args->argv[1]);
     if (!path) {
         ctx_errorf(ctx, "which: %s: not found", args->argv[1]);
         return RXCREXXCMD_RC_NOT_FOUND;
@@ -1724,7 +2067,7 @@ static int cmd_env(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
     (void)command;
 
     if (args->argc == 2) {
-        const char *value = getenv(args->argv[1]);
+        const char *value = state_get_environment(ctx->state, args->argv[1]);
         if (!value) return RXCREXXCMD_RC_NOT_FOUND;
         return ctx_putln(ctx, value) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
     }
@@ -1733,7 +2076,7 @@ static int cmd_env(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
         int i;
         int rc = 0;
         for (i = 1; i < args->argc; i++) {
-            const char *value = getenv(args->argv[i]);
+            const char *value = state_get_environment(ctx->state, args->argv[i]);
             if (!value) {
                 rc = RXCREXXCMD_RC_NOT_FOUND;
                 continue;
@@ -1743,26 +2086,26 @@ static int cmd_env(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
         return rc;
     }
 
-#ifdef _WIN32
     {
-        LPCH block = GetEnvironmentStringsA();
-        LPCH cursor = block;
-        if (!block) return RXCREXXCMD_RC_ERROR;
-        while (*cursor) {
-            ctx_putln(ctx, cursor);
-            cursor += strlen(cursor) + 1;
-        }
-        FreeEnvironmentStringsA(block);
-    }
-#else
-    {
-        char **cursor = environ;
-        while (cursor && *cursor) {
-            if (ctx_putln(ctx, *cursor) != 0) return RXCREXXCMD_RC_ERROR;
-            cursor++;
+        rxcrexxcmd_env_entry *entry;
+        for (entry = ctx->state->base_environment; entry;
+             entry = entry->next) {
+            if (!state_find_environment(ctx->state, entry->name) &&
+                ctx_printf(ctx, "%s=%s\n", entry->name,
+                           entry->value) != 0) {
+                return RXCREXXCMD_RC_ERROR;
+            }
         }
     }
-#endif
+    {
+        rxcrexxcmd_env_entry *entry;
+        for (entry = ctx->state->environment; entry; entry = entry->next) {
+            if (!entry->removed &&
+                ctx_printf(ctx, "%s=%s\n", entry->name, entry->value) != 0) {
+                return RXCREXXCMD_RC_ERROR;
+            }
+        }
+    }
     return 0;
 }
 
@@ -1774,11 +2117,7 @@ static int cmd_setenv(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_a
     if (args->argc < 3) return command_usage(ctx, "setenv name value...");
     value = join_args(args, 2);
     if (!value) return RXCREXXCMD_RC_ERROR;
-#ifdef _WIN32
-    rc = _putenv_s(args->argv[1], value);
-#else
-    rc = setenv(args->argv[1], value, 1);
-#endif
+    rc = state_set_environment(ctx->state, args->argv[1], value, 0);
     if (rc != 0) ctx_errorf(ctx, "setenv: %s: %s", args->argv[1], strerror(errno));
     rxcmd_memory_free(value);
     return rc == 0 ? 0 : RXCREXXCMD_RC_ERROR;
@@ -1793,11 +2132,7 @@ static int cmd_unsetenv(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd
     if (args->argc < 2) return command_usage(ctx, "unsetenv name...");
     result = 0;
     for (i = 1; i < args->argc; i++) {
-#ifdef _WIN32
-        rc = _putenv_s(args->argv[i], "");
-#else
-        rc = unsetenv(args->argv[i]);
-#endif
+        rc = state_set_environment(ctx->state, args->argv[i], NULL, 1);
         if (rc != 0) {
             ctx_errorf(ctx, "unsetenv: %s: %s", args->argv[i], strerror(errno));
             result = RXCREXXCMD_RC_ERROR;
@@ -1891,13 +2226,22 @@ static int cmd_kill(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     return 0;
 }
 
+#ifdef _WIN32
+static BOOL CALLBACK socket_startup_once(PINIT_ONCE once,
+                                         PVOID parameter,
+                                         PVOID *context) {
+    WSADATA data;
+    (void)once;
+    (void)parameter;
+    (void)context;
+    return WSAStartup(MAKEWORD(2, 2), &data) == 0;
+}
+#endif
+
 static void socket_startup(void) {
 #ifdef _WIN32
-    static int started = 0;
-    WSADATA data;
-    if (!started) {
-        if (WSAStartup(MAKEWORD(2, 2), &data) == 0) started = 1;
-    }
+    static INIT_ONCE once = INIT_ONCE_STATIC_INIT;
+    (void)InitOnceExecuteOnce(&once, socket_startup_once, NULL, NULL);
 #endif
 }
 
@@ -2138,17 +2482,144 @@ int rxcrexxcmd_execute(const char *command,
                        int *rc,
                        char **error_text) {
     rxcrexxcmd_context ctx;
+    rxcrexxcmd_state local_state;
+    int owns_local_state = 0;
+    int command_rc;
 
     if (error_text) *error_text = NULL;
     if (rc) *rc = 0;
     ctx.io = io;
+    ctx.state = active_state(1);
+    if (!ctx.state) {
+        if (rxvm_active_context_current() || state_initialize(&local_state) != 0) {
+            if (rc) *rc = RXCREXXCMD_RC_ERROR;
+            return -1;
+        }
+        ctx.state = &local_state;
+        owns_local_state = 1;
+    }
 
     if (!command) command = "";
-    if (rc) *rc = execute_line(&ctx, command);
-    else execute_line(&ctx, command);
+    command_rc = execute_line(&ctx, command);
+    if (rc) *rc = command_rc;
+    if (owns_local_state) state_clear(&local_state);
     return 0;
 }
 
 void rxcrexxcmd_free(char *text) {
     rxcmd_memory_free(text);
+}
+
+void rxcrexxcmd_context_state_free(struct rxvm_context *context) {
+    rxcrexxcmd_state *state;
+    if (!context) return;
+    state = (rxcrexxcmd_state *)context->active.crexx_command_state;
+    if (!state) return;
+    state_clear(state);
+    rxcmd_memory_free(state);
+    context->active.crexx_command_state = NULL;
+}
+
+const char *rxcrexxcmd_active_getenv(const char *name) {
+    rxcrexxcmd_state *state = active_state(1);
+    return state_get_environment(state, name);
+}
+
+const char *rxcrexxcmd_active_working_directory(void) {
+    rxcrexxcmd_state *state = active_state(0);
+    return state ? state->current_directory : NULL;
+}
+
+static char *snapshot_strdup(const char *text) {
+    size_t length;
+    char *copy;
+    if (!text) text = "";
+    length = strlen(text);
+    copy = (char *)malloc(length + 1u);
+    if (copy) memcpy(copy, text, length + 1u);
+    return copy;
+}
+
+static int snapshot_append(char ***items, size_t *count, const char *text) {
+    char **resized;
+    char *copy = snapshot_strdup(text);
+    if (!copy) return -1;
+    resized = (char **)realloc(*items, (*count + 2u) * sizeof(char *));
+    if (!resized) {
+        free(copy);
+        return -1;
+    }
+    resized[*count] = copy;
+    resized[*count + 1u] = NULL;
+    *items = resized;
+    (*count)++;
+    return 0;
+}
+
+static int snapshot_append_environment_pair(char ***items,
+                                            size_t *count,
+                                            const char *name,
+                                            const char *value) {
+    size_t size;
+    char *entry;
+    int rc;
+    if (!name || !value) return -1;
+    size = strlen(name) + strlen(value) + 2u;
+    entry = (char *)malloc(size);
+    if (!entry) return -1;
+    snprintf(entry, size, "%s=%s", name, value);
+    rc = snapshot_append(items, count, entry);
+    free(entry);
+    return rc;
+}
+
+int rxcrexxcmd_active_process_snapshot(char **working_directory,
+                                       char ***environment) {
+    rxcrexxcmd_state *state = active_state(0);
+    char **items = NULL;
+    size_t count = 0;
+    rxcrexxcmd_env_entry *base;
+    rxcrexxcmd_env_entry *override;
+
+    if (working_directory) *working_directory = NULL;
+    if (environment) *environment = NULL;
+    if (!state) return 0;
+
+    if (working_directory) {
+        *working_directory = snapshot_strdup(state->current_directory);
+        if (!*working_directory) return -1;
+    }
+
+    for (base = state->base_environment; base; base = base->next) {
+        if (state_find_environment(state, base->name)) continue;
+        if (snapshot_append_environment_pair(&items, &count,
+                                             base->name,
+                                             base->value) != 0) goto fail;
+    }
+
+    for (override = state->environment; override; override = override->next) {
+        if (override->removed) continue;
+        if (snapshot_append_environment_pair(&items, &count,
+                                             override->name,
+                                             override->value) != 0) goto fail;
+    }
+
+    if (environment) *environment = items;
+    else rxcrexxcmd_process_snapshot_free(NULL, items);
+    return 0;
+
+fail:
+    rxcrexxcmd_process_snapshot_free(
+        working_directory ? *working_directory : NULL, items);
+    if (working_directory) *working_directory = NULL;
+    return -1;
+}
+
+void rxcrexxcmd_process_snapshot_free(char *working_directory,
+                                      char **environment) {
+    size_t i;
+    free(working_directory);
+    if (!environment) return;
+    for (i = 0; environment[i]; i++) free(environment[i]);
+    free(environment);
 }

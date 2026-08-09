@@ -658,6 +658,9 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
                     sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
                 }
+                if (symbol && node->suppress_symbol_metadata) {
+                    symbol->suppress_metadata = 1;
+                }
 
                 /* Ensure creation info is set */
                 if (symbol) {
@@ -1787,12 +1790,13 @@ static ASTNode *ast_prepare_branch_hoist_block(Context *ctx, ASTNode *current_no
  * levels: -1 = Procedure/Method level, 0 = Current level (inserted just before current_node), 1 = Parent level
  * Returns 1 if hoisted/already exists, 0 on failure.
  */
-int ast_hoist_var_typed(Context* ctx,
-                        ASTNode* current_node,
-                        const char* var_name,
-                        int levels,
-                        const char* type_name,
-                        size_t dims) {
+static int ast_hoist_var_typed_mode(Context* ctx,
+                                    ASTNode* current_node,
+                                    const char* var_name,
+                                    int levels,
+                                    const char* type_name,
+                                    size_t dims,
+                                    int suppress_metadata) {
     current_node = ast_prepare_branch_hoist_block(ctx, current_node);
 
     ASTNode *target_scope_node = current_node;
@@ -1835,6 +1839,7 @@ int ast_hoist_var_typed(Context* ctx,
         ASTNode *def_node = ast_ft(ctx, DEFINE);
         ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
         var_node->free_node_string = 1;
+        var_node->suppress_symbol_metadata = suppress_metadata != 0;
         ASTNode *type_node = ast_ft(ctx, CLASS);
         const char *effective_type = (type_name && *type_name) ? type_name : ".unknown";
         type_node->node_string = strdup(effective_type);
@@ -1895,6 +1900,26 @@ int ast_hoist_var_typed(Context* ctx,
     }
 
     return 1;
+}
+
+int ast_hoist_var_typed(Context* ctx,
+                        ASTNode* current_node,
+                        const char* var_name,
+                        int levels,
+                        const char* type_name,
+                        size_t dims) {
+    return ast_hoist_var_typed_mode(
+            ctx, current_node, var_name, levels, type_name, dims, 0);
+}
+
+int ast_hoist_internal_var_typed(Context* ctx,
+                                 ASTNode* current_node,
+                                 const char* var_name,
+                                 int levels,
+                                 const char* type_name,
+                                 size_t dims) {
+    return ast_hoist_var_typed_mode(
+            ctx, current_node, var_name, levels, type_name, dims, 1);
 }
 
 int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels) {

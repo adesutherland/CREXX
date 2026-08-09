@@ -252,6 +252,9 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
 
     if (opcode == OP_STRLEN_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_STRING;
+    if (opcode == OP_STRPOS_REG_REG_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_INTEGER
+                                  : RXOP_COMPONENT_STRING;
     if (opcode == OP_SUBSTRING_REG_REG_REG_REG)
         return operand_index == 1 ? RXOP_COMPONENT_STRING
                                   : RXOP_COMPONENT_INTEGER;
@@ -466,6 +469,9 @@ int rxop_same_storage_copy_is_noop(int opcode) {
 /* NONE means the opcode-effects inventory proves a register write but the
  * component changed by that write is not yet exact. */
 unsigned int rxop_component_writes(int opcode, size_t operand_index) {
+    if (opcode == OP_NULLN_REG_REG || opcode == OP_NULLN_REG_REG_REG ||
+        opcode == OP_NULLN_REG_REG_REG_REG)
+        return RXOP_COMPONENT_ALL;
     if (operand_index != 0) return RXOP_COMPONENT_NONE;
     if (opcode == OP_COPY_REG_REG || opcode == OP_NULL_REG)
         return RXOP_COMPONENT_ALL;
@@ -550,6 +556,7 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
      * assigning the result component.  Typed copies deliberately do not.
      * Ordinary binary data is a separate component and is not cleared. */
     if (opcode == OP_LOAD_REG_INT || opcode == OP_LOAD_REG_FLOAT ||
+        opcode == OP_LOAD_REG_STRING ||
         opcode == OP_ISUB_REG_REG_REG ||
         opcode == OP_ISUB_REG_REG_INT ||
         opcode == OP_ISUB_REG_INT_REG ||

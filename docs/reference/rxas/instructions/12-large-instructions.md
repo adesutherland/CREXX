@@ -506,8 +506,8 @@ main() .locals=4
 
 ## `parseplan`
 
-Execute a compiler-prepared frozen PARSE descriptor without decoding the
-generic textual plan at runtime.
+Execute a compiler-prepared PARSE descriptor without decoding a textual plan
+at runtime.
 
 ### Forms
 
@@ -519,10 +519,16 @@ generic textual plan at runtime.
 
 `rResults` receives one attribute per stored target; dropped fields do not
 consume an attribute. The string constant is the versioned compact descriptor
-emitted by `rxc`, not PARSE source text and not the generic decimal/length plan
-accepted by `parseExec`. Version 1 stores item kinds and flags, literal byte and
-character lengths, numeric movements, item count, and result count in a
-portable little-endian payload.
+emitted by `rxc`, not PARSE source text. Version 1 stores frozen item kinds and
+flags, literal byte and character lengths, numeric movements, item count, and
+result count in a portable little-endian payload.
+
+Version 2 also supports dynamic delimiter and position items. Each such item
+contains a compact index that selects either an earlier completed result or a
+temporary external-value slot after the public result slots. Compiler-generated
+code populates external slots before `parseplan`; the instruction reads them,
+executes the plan, and shrinks `rResults` to its declared public result count.
+Dynamic numeric values must convert to a nonnegative native integer.
 
 The VM validates the header and each item boundary before using it. It reuses
 the result vector's attribute storage across executions where possible. Normal
@@ -532,7 +538,9 @@ elements to source targets in order.
 ### Signals
 
 Raises `INVALID_ARGUMENTS` for a malformed, truncated, unsupported-version, or
-internally inconsistent descriptor. Allocation failure is fatal.
+internally inconsistent descriptor. A dynamic numeric value that is not a
+nonnegative native integer raises `CONVERSION_ERROR`. Allocation failure is
+fatal.
 
 ### Example
 

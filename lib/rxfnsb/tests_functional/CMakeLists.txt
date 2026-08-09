@@ -80,7 +80,6 @@ set(REXXBINS
         ts_find.rxbin
         ts_index.rxbin
         ts_parse.rxbin
-        ts_parseexec.rxbin
 #        ts_parse2.rxbin
         ts_datatype.rxbin
         ts_numeric.rxbin
@@ -429,7 +428,5 @@ set_tests_properties(ts_arraydelete_noopt ts_arraydelete_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: array helpers")
 set_tests_properties(ts_parse_noopt ts_parse_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: legacy parse helpers")
-set_tests_properties(ts_parseexec_noopt ts_parseexec_opt
-        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: parseExec stream executor")
 set_tests_properties(ts_getenv_noopt ts_getenv_opt
         PROPERTIES ENVIRONMENT "CREXX_GETENV_SELECTOR_TEST_VALUE=alpha beta")

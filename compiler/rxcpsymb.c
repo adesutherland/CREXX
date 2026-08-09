@@ -718,6 +718,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->symbol_type = UNKNOWN_SYMBOL;
     symbol->status = SYM_STATUS_UNRESOLVED;
     symbol->meta_emitted = 0;
+    symbol->suppress_metadata = 0;
     symbol->init_emitted = 0;
     symbol->fixed_args = 0;
     symbol->has_vargs = 0;
@@ -1198,6 +1199,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
         sym_copy_reference_type(new_symbol, symbol);
         new_symbol->has_reference_target = symbol->has_reference_target;
+        new_symbol->suppress_metadata = symbol->suppress_metadata;
         (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
     } else {
         /* Merge status and type if the incoming symbol has more info */
@@ -1219,6 +1221,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
             }
         }
         if (symbol->has_reference_target) new_symbol->has_reference_target = 1;
+        if (symbol->suppress_metadata) new_symbol->suppress_metadata = 1;
         if (!new_symbol->inline_summary && symbol->inline_summary) {
             (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
         }
@@ -1302,6 +1305,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->is_ref_arg = symbol->is_ref_arg;
     new_symbol->is_opt_arg = symbol->is_opt_arg;
     new_symbol->is_const_arg = symbol->is_const_arg;
+    new_symbol->suppress_metadata = symbol->suppress_metadata;
     new_symbol->is_main = symbol->is_main;
     new_symbol->is_implicit_main = symbol->is_implicit_main;
     new_symbol->is_rc = symbol->is_rc;

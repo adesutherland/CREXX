@@ -27,18 +27,16 @@
 #include "rxvmref.h"
 #include "rxvmmemory.h"
 
-static uint64_t fallback_next_reference_id = 1;
-
-static uint64_t rxvm_next_fallback_reference_id(void) {
-    uint64_t id = fallback_next_reference_id++;
-    if (fallback_next_reference_id == 0) fallback_next_reference_id = 1;
-    return id;
-}
-
-static uint64_t rxvm_next_context_reference_id(rxvm_reference_context *context) {
+static uint64_t rxvm_next_context_reference_id(rxvm_reference_context *context,
+                                                rxvm_reference_cell *cell) {
     uint64_t id;
 
-    if (!context) return rxvm_next_fallback_reference_id();
+    /* Context-free compatibility cells are not indexed; their address is a
+     * stable, allocation-lifetime identity without shared mutable state. */
+    if (!context) {
+        id = (uint64_t)(uintptr_t)cell;
+        return id ? id : 1u;
+    }
 
     if (context->next_reference_id == 0) context->next_reference_id = 1;
     id = context->next_reference_id++;
@@ -121,7 +119,7 @@ static void rxvm_reference_cell_setup(rxvm_reference_cell *cell,
                                       void *owner,
                                       uint64_t owner_generation,
                                       const char *debug_name) {
-    cell->id = rxvm_next_context_reference_id(context);
+    cell->id = rxvm_next_context_reference_id(context, cell);
     cell->retain_count = 1;
     cell->state = target ? RXVM_REF_VALID : RXVM_REF_INVALID;
     cell->owner_kind = owner_kind;

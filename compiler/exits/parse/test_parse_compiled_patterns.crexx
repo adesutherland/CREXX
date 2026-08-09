@@ -1,0 +1,101 @@
+options levelb
+
+failures = 0
+left = .string
+right = .string
+x1 = .string
+x2 = .string
+x3 = .string
+middle = .string
+tail = .string
+marker = .string
+position = .string
+parsed = .string[]
+
+source = "left/right"
+delimiter = "/"
+parse var source left (delimiter) right
+failures = failures + check("runtime delimiter", left = "left" & right = "right")
+
+source = "whole"
+delimiter = "missing"
+parse var source left (delimiter) right
+failures = failures + check("absent delimiter", left = "whole" & right = "")
+
+source = "whole"
+delimiter = ""
+parse var source left (delimiter) right
+failures = failures + check("empty delimiter", left = "" & right = "whole")
+
+source = "left§right"
+delimiter = "§"
+parse var source left (delimiter) right
+failures = failures + check("multibyte delimiter", left = "left" & right = "right")
+
+source = "left/right"
+delimiter = "/"
+parse var source source (delimiter) right
+failures = failures + check("source alias", source = "left" & right = "right")
+
+data = "Flying pigs have wings"
+start = 5
+span = 5
+parse var data x1 =(start) x2 +(span) x3
+failures = failures + check("dynamic positions", x1 = "Flyi" & x2 = "ng pi" & x3 = "gs have wings")
+
+source = "first,SEP;leftSEPright"
+parse var source marker "," marker ";" middle (marker) tail
+failures = failures + check("latest completed target", marker = "SEP" & middle = "left" & tail = "right")
+
+marker = "outside"
+source = "SEP,betweenSEPtail"
+parse var source marker "," marker (marker) tail
+failures = failures + check("completed value before pending reuse", marker = "between" & tail = "tail")
+
+delimiter = "/"
+source = "left/right"
+parse var source delimiter (delimiter) right
+failures = failures + check("same-trigger external value", delimiter = "left" & right = "right")
+
+source = "left/right;tail"
+delimiter = "/"
+parse var source left (delimiter) middle ";" tail
+failures = failures + check("general dynamic delimiter", left = "left" & middle = "right" & tail = "tail")
+
+data = "Flying pigs have wings"
+start = 5
+span = 5
+parse var data x1 =(start) x2 +(span) x3 " " tail
+failures = failures + check("general dynamic positions", x1 = "Flyi" & x2 = "ng pi" & x3 = "gs" & tail = "have wings")
+
+back = 2
+parse var data =10 -(back) tail
+failures = failures + check("dynamic backward precontrol", tail = "pigs have wings")
+
+source = "5,abcdef"
+parse var source position "," =(position) tail
+failures = failures + check("completed numeric capture", position = "5" & tail = "cdef")
+
+source = "left/right;tail"
+delimiter = "/"
+parse into parsed var source left (delimiter) middle ";" tail
+failures = failures + check("dynamic into", parsed[0] = 3 & parsed[1] = "left" & parsed[2] = "right" & parsed[3] = "tail")
+
+source = "left,right"
+parse log var source left "," right
+failures = failures + check("compiled log", left = "left" & right = "right")
+parse trace var source left "," right
+failures = failures + check("compiled trace", left = "left" & right = "right")
+
+if failures = 0 then do
+  say "PASS: compiled existing-instruction PARSE patterns"
+  return 0
+end
+say "FAIL: compiled PARSE pattern count=" || failures
+return 1
+
+check: procedure = .int
+  arg label = .string, condition = .int
+  if condition then return 0
+  say "FAIL: " || label
+  return 1

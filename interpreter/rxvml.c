@@ -128,7 +128,10 @@ struct rxvml_context {
     size_t address_callback_size;
 };
 
-static rxvml_context* rxvml_active_context = NULL;
+static rxvml_context* rxvml_current_context(void) {
+    rxvm_context* vm = rxvm_active_context_current();
+    return vm ? (rxvml_context*)vm->active.rxvml_context : NULL;
+}
 
 /* rxvml_value is defined as an alias to value in the public header */
 
@@ -547,7 +550,7 @@ static int rxvml_invoke_external_proc(
     int* run_status_out) {
 
     rxvml_external_call_state saved_state;
-    rxvml_context* previous_active_context;
+    void* previous_active_context;
     value** call_args = NULL;
     value* call_ret;
     char* dummy_argv[1];
@@ -599,12 +602,12 @@ static int rxvml_invoke_external_proc(
     ctx->vm.ext_args = call_args;
     ctx->vm.ext_ret = call_ret;
 
-    previous_active_context = rxvml_active_context;
-    rxvml_active_context = ctx;
+    previous_active_context = ctx->vm.active.rxvml_context;
+    ctx->vm.active.rxvml_context = ctx;
     rxvm_prepare(&ctx->vm);
     dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
     run_status = run(&ctx->vm, 0, dummy_argv);
-    rxvml_active_context = previous_active_context;
+    ctx->vm.active.rxvml_context = previous_active_context;
     if (run_status_out) *run_status_out = run_status;
 
     if (response_out) {
@@ -1301,7 +1304,7 @@ static void rxvml_native_address_execute(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     rxvml_address_callback_entry* entry;
     rxvml_address_request request;
     rxvml_address_response response;
@@ -1453,7 +1456,7 @@ static void rxvml_native_address_invoke(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     rxvml_address_callback_entry* entry;
     rxvml_address_function_request request;
     rxvml_address_function_response response;
@@ -1542,7 +1545,7 @@ static void rxvml_native_address_match(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     const char* env_name;
 
     rxvml_reset_native_signal(signal);
@@ -1563,7 +1566,7 @@ static void rxvml_native_address_id(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     rxvml_address_callback_entry* entry;
     const char* env_name;
 
@@ -1584,7 +1587,7 @@ static void rxvml_native_address_handle(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     const char* env_name;
     int handle = 0;
 
@@ -2339,4 +2342,9 @@ unsigned int rxvml_get_debug_mode(rxvml_context* ctx) {
 
 void rxvml_set_say_exit(rxvml_say_exit_func say_exit) {
     rxvm_setsayexit((say_exit_func)say_exit);
+}
+
+void rxvml_set_context_say_exit(rxvml_context* ctx,
+                                rxvml_say_exit_func say_exit) {
+    if (ctx) ctx->vm.active.say_exit = (say_exit_func)say_exit;
 }

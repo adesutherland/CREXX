@@ -1,0 +1,15 @@
+WARNING: invalid unsupported control; generated code overwrites p0.
+commit=84d406904ece6842f6cec5a47e75d12b9d28ab16
+7e68828e3935e1e93e127fd25d092eb09f112f63c8c0f1abf0498f79bf8f5d35  /private/tmp/crexx-parse-control.gffoBD/source/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas
+0d5222b3a7d877720ca94155e08cf1ee7e04ab11a5a9d038c306e11f1d65682a  /private/tmp/crexx-parse-control.gffoBD/source/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+fca9f9a8ab5bca6d764dd927ae66bacea8cdfc38c8133505ddf8bd7c124e8ade  /private/tmp/crexx-parse-control.gffoBD/source/cmake-build-release/bin/library.rxbin
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g84d406904ece 20260808
+       System is: macOS
+REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+        Averaged: 600 x 100 iterations of 1000 clauses (over 1.1 s)
+REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=600 averaging=100 calibrated=1
+
+     Performance: 52770124 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
