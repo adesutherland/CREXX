@@ -687,19 +687,27 @@
 #define RXVM_HANDLER_POLICY_STEMSIZE_REG_REG OUTLINE
 #define RXVM_HANDLER_POLICY_STEMKEYAT_REG_REG_REG OUTLINE
 #define RXVM_HANDLER_POLICY_STEMVALUEAT_REG_REG_REG OUTLINE
-#define RXVM_HANDLER_POLICY_PRIVATE_R1_RELINK OUTLINE
-#define RXVM_HANDLER_POLICY_PRIVATE_R2_COPYATTR1 OUTLINE
+#define RXVM_HANDLER_POLICY_PRIVATE_R1_RELINK INLINE
+#define RXVM_HANDLER_POLICY_PRIVATE_R2_COPYATTR1 INLINE
 #define RXVM_HANDLER_POLICY(name_) RXVM_HANDLER_CAT(RXVM_HANDLER_POLICY_, name_)
 #else
 #error CREXX_VM_HANDLER_PANEL must be 0, 1, or 30
 #endif
 
 #define RXVM_HANDLER_EMIT_INLINE(name_, ...) do { __VA_ARGS__ } while (0)
+#if RXVM_HANDLER_USE_POINTER_FACADE
 #define RXVM_HANDLER_EMIT_OUTLINE(name_, ...)                              \
     do {                                                                    \
         handler_result = rxvm_handler_ ## name_(&handler_state);            \
         goto rxvm_handler_result;                                           \
     } while (0)
+#else
+#define RXVM_HANDLER_EMIT_OUTLINE(name_, ...)                              \
+    do {                                                                    \
+        handler_function = rxvm_handler_ ## name_;                          \
+        goto rxvm_handler_call;                                             \
+    } while (0)
+#endif
 #define RXVM_HANDLER_EMIT_SELECT_INNER(policy_) RXVM_HANDLER_EMIT_ ## policy_
 #define RXVM_HANDLER_EMIT_SELECT(policy_) RXVM_HANDLER_EMIT_SELECT_INNER(policy_)
 #define RXVM_EMIT_HANDLER(name_, ...)                                      \

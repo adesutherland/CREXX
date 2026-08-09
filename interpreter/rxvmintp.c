@@ -162,8 +162,27 @@ typedef char rxvm_execution_slot_must_hold_pointer[
 
 #if defined(_MSC_VER)
 #  define RXVM_HELPER_NOINLINE __declspec(noinline)
+#  define RXVM_HELPER_COLD
 #else
 #  define RXVM_HELPER_NOINLINE RXVM_LABEL_OWNER_NOINLINE
+#  if defined(__has_attribute)
+#    if __has_attribute(cold)
+#      define RXVM_HELPER_COLD __attribute__((cold))
+#    else
+#      define RXVM_HELPER_COLD
+#    endif
+#  elif defined(__GNUC__)
+#    define RXVM_HELPER_COLD __attribute__((cold))
+#  else
+#    define RXVM_HELPER_COLD
+#  endif
+#endif
+
+#if CREXX_VM_HANDLER_PANEL == 0 || \
+        (defined(__GNUC__) && !defined(__clang__) && !defined(_MSC_VER))
+#define RXVM_HANDLER_USE_POINTER_FACADE 1
+#else
+#define RXVM_HANDLER_USE_POINTER_FACADE 0
 #endif
 
 #include "rxvmhandlerpolicy.h"
@@ -5240,9 +5259,10 @@ typedef enum rxvm_handler_result {
     RXVM_HANDLER_RESULT_FINISHED
 } rxvm_handler_result;
 
-/* Pointer facade over run() ownership. Forced-inline handlers let the compiler
- * scalar-replace it; outlined handlers keep their spill/call overhead outside
- * the monolithic owner while preserving one instruction implementation. */
+#if RXVM_HANDLER_USE_POINTER_FACADE
+/* Preserve the R2 all-inline source shape exactly. Although this facade is
+ * optimized away when every handler expands in the owner, deleting it changes
+ * threaded compiler heuristics and generated layout measurably. */
 typedef struct rxvm_handler_state {
     rxvm_context *context;
     int *rc;
@@ -5282,8 +5302,146 @@ typedef struct rxvm_handler_state {
     rxvm_test_instrumentation_state *test_instrumentation;
 #endif
 } rxvm_handler_state;
+#else
+/* Snapshot used only on an outlined-handler edge. Keeping scalar values in the
+ * snapshot avoids making the hot run() locals addressable merely because one
+ * or more cold instruction handlers are outlined. */
+typedef struct rxvm_handler_state {
+    rxvm_context *context;
+    int rc;
+    unsigned int initSeed;
+    char hasSeed;
+    bin_code *pc;
+    bin_code *next_pc;
+    bin_code *interrupted_pc;
+    int mod_index;
+    value *signal_value;
+    value *interrupt_action_value;
+    value *arguments_array;
+    value **interrupt_object;
+    rxinteger *last_interrupted_address;
+    rxinteger *last_interrupted_module;
+    stack_frame *current_frame;
+    stack_frame *temp_frame;
+    bin_space *current_binary_space;
+    bin_code *current_execution_base;
+    bin_code *current_canonical_base;
+    unsigned char *current_const_pool;
+    value **current_locals;
+    value *work1;
+    module *current_module;
+    volatile sig_atomic_t *pending_interrupts;
+    const void *const *address_map;
+    void *private_r2_handler;
+    void *private_r1_handler;
+#ifndef NTHREADED
+    void *next_inst;
+#endif
+#ifdef CREXX_VM_PROFILING
+    rxvm_profile_state *profile;
+    rxvm_sequence_state *sequence;
+#endif
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+    rxvm_test_instrumentation_state *test_instrumentation;
+#endif
+} rxvm_handler_state;
+
+#ifndef NTHREADED
+#define RXVM_HANDLER_STATE_SNAPSHOT_THREADED(state_) \
+    (state_).next_inst = next_inst
+#define RXVM_HANDLER_STATE_COMMIT_THREADED(state_) \
+    next_inst = (state_).next_inst
+#else
+#define RXVM_HANDLER_STATE_SNAPSHOT_THREADED(state_) ((void)0)
+#define RXVM_HANDLER_STATE_COMMIT_THREADED(state_) ((void)0)
+#endif
+
+#ifdef CREXX_VM_PROFILING
+#define RXVM_HANDLER_STATE_SNAPSHOT_PROFILE(state_) \
+    do {                                             \
+        (state_).profile = &vm_profile;              \
+        (state_).sequence = &vm_sequence;            \
+    } while (0)
+#else
+#define RXVM_HANDLER_STATE_SNAPSHOT_PROFILE(state_) ((void)0)
+#endif
+
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+#define RXVM_HANDLER_STATE_SNAPSHOT_INSTRUMENTATION(state_) \
+    (state_).test_instrumentation = &vm_instrumentation
+#else
+#define RXVM_HANDLER_STATE_SNAPSHOT_INSTRUMENTATION(state_) ((void)0)
+#endif
+
+#define RXVM_HANDLER_STATE_SNAPSHOT(state_)                                 \
+    do {                                                                    \
+        (state_).context = context;                                         \
+        (state_).rc = rc;                                                   \
+        (state_).initSeed = initSeed;                                       \
+        (state_).hasSeed = hasSeed;                                         \
+        (state_).pc = pc;                                                   \
+        (state_).next_pc = next_pc;                                         \
+        (state_).interrupted_pc = interrupted_pc;                           \
+        (state_).mod_index = mod_index;                                     \
+        (state_).signal_value = signal_value;                               \
+        (state_).interrupt_action_value = interrupt_action_value;           \
+        (state_).arguments_array = arguments_array;                         \
+        (state_).interrupt_object = interrupt_object;                       \
+        (state_).last_interrupted_address = last_interrupted_address;       \
+        (state_).last_interrupted_module = last_interrupted_module;         \
+        (state_).current_frame = current_frame;                             \
+        (state_).temp_frame = temp_frame;                                   \
+        (state_).current_binary_space = current_binary_space;               \
+        (state_).current_execution_base = current_execution_base;           \
+        (state_).current_canonical_base = current_canonical_base;           \
+        (state_).current_const_pool = current_const_pool;                   \
+        (state_).current_locals = current_locals;                           \
+        (state_).work1 = work1;                                             \
+        (state_).current_module = current_module;                           \
+        (state_).pending_interrupts = &pending_interrupts;                  \
+        (state_).address_map = address_map;                                 \
+        (state_).private_r2_handler = private_r2_handler;                   \
+        (state_).private_r1_handler = private_r1_handler;                   \
+        RXVM_HANDLER_STATE_SNAPSHOT_THREADED(state_);                       \
+        RXVM_HANDLER_STATE_SNAPSHOT_PROFILE(state_);                        \
+        RXVM_HANDLER_STATE_SNAPSHOT_INSTRUMENTATION(state_);                \
+    } while (0)
+
+#define RXVM_HANDLER_STATE_COMMIT(state_)                                   \
+    do {                                                                    \
+        rc = (state_).rc;                                                   \
+        initSeed = (state_).initSeed;                                       \
+        hasSeed = (state_).hasSeed;                                         \
+        pc = (state_).pc;                                                   \
+        next_pc = (state_).next_pc;                                         \
+        interrupted_pc = (state_).interrupted_pc;                           \
+        mod_index = (state_).mod_index;                                     \
+        signal_value = (state_).signal_value;                               \
+        interrupt_action_value = (state_).interrupt_action_value;           \
+        arguments_array = (state_).arguments_array;                         \
+        current_frame = (state_).current_frame;                             \
+        temp_frame = (state_).temp_frame;                                   \
+        current_binary_space = (state_).current_binary_space;               \
+        current_execution_base = (state_).current_execution_base;           \
+        current_canonical_base = (state_).current_canonical_base;           \
+        current_const_pool = (state_).current_const_pool;                   \
+        current_locals = (state_).current_locals;                           \
+        work1 = (state_).work1;                                             \
+        current_module = (state_).current_module;                           \
+        RXVM_HANDLER_STATE_COMMIT_THREADED(state_);                         \
+    } while (0)
+
+typedef rxvm_handler_result (*rxvm_handler_function)(rxvm_handler_state *);
+
+static RXVM_HELPER_NOINLINE RXVM_HELPER_COLD rxvm_handler_result
+rxvm_invoke_outlined_handler(rxvm_handler_function function,
+                             rxvm_handler_state *state) {
+    return function(state);
+}
+#endif
 
 #define context (rxvm_state->context)
+#if RXVM_HANDLER_USE_POINTER_FACADE
 #define rc (*rxvm_state->rc)
 #define initSeed (*rxvm_state->initSeed)
 #define hasSeed (*rxvm_state->hasSeed)
@@ -5306,13 +5464,40 @@ typedef struct rxvm_handler_state {
 #define current_locals (*rxvm_state->current_locals)
 #define work1 (*rxvm_state->work1)
 #define current_module (*rxvm_state->current_module)
+#ifndef NTHREADED
+#define next_inst (*rxvm_state->next_inst)
+#endif
+#else
+#define rc (rxvm_state->rc)
+#define initSeed (rxvm_state->initSeed)
+#define hasSeed (rxvm_state->hasSeed)
+#define pc (rxvm_state->pc)
+#define next_pc (rxvm_state->next_pc)
+#define interrupted_pc (rxvm_state->interrupted_pc)
+#define mod_index (rxvm_state->mod_index)
+#define signal_value (rxvm_state->signal_value)
+#define interrupt_action_value (rxvm_state->interrupt_action_value)
+#define arguments_array (rxvm_state->arguments_array)
+#define interrupt_object (rxvm_state->interrupt_object)
+#define last_interrupted_address (rxvm_state->last_interrupted_address)
+#define last_interrupted_module (rxvm_state->last_interrupted_module)
+#define current_frame (rxvm_state->current_frame)
+#define temp_frame (rxvm_state->temp_frame)
+#define current_binary_space (rxvm_state->current_binary_space)
+#define current_execution_base (rxvm_state->current_execution_base)
+#define current_canonical_base (rxvm_state->current_canonical_base)
+#define current_const_pool (rxvm_state->current_const_pool)
+#define current_locals (rxvm_state->current_locals)
+#define work1 (rxvm_state->work1)
+#define current_module (rxvm_state->current_module)
+#ifndef NTHREADED
+#define next_inst (rxvm_state->next_inst)
+#endif
+#endif
 #define pending_interrupts (*rxvm_state->pending_interrupts)
 #define address_map (rxvm_state->address_map)
 #define private_r2_handler (rxvm_state->private_r2_handler)
 #define private_r1_handler (rxvm_state->private_r1_handler)
-#ifndef NTHREADED
-#define next_inst (*rxvm_state->next_inst)
-#endif
 #ifdef CREXX_VM_PROFILING
 #define vm_profile (*rxvm_state->profile)
 #define vm_sequence (*rxvm_state->sequence)
@@ -5356,6 +5541,39 @@ typedef struct rxvm_handler_state {
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
+
+#if !RXVM_HANDLER_USE_POINTER_FACADE
+#define RXVM_HANDLER_FUNCTION_INLINE(name_) 0
+#define RXVM_HANDLER_FUNCTION_OUTLINE(name_) rxvm_handler_ ## name_
+#define RXVM_HANDLER_FUNCTION_SELECT_INNER(policy_) \
+    RXVM_HANDLER_FUNCTION_ ## policy_
+#define RXVM_HANDLER_FUNCTION_SELECT(policy_) \
+    RXVM_HANDLER_FUNCTION_SELECT_INNER(policy_)
+#define RXVM_HANDLER_FUNCTION(name_) \
+    RXVM_HANDLER_FUNCTION_SELECT(RXVM_HANDLER_POLICY(name_))(name_)
+
+static rxvm_handler_function const
+rxvm_outlined_handler_functions[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
+#define RXVM_HANDLER(name_, ...) \
+    [OP_ ## name_] = RXVM_HANDLER_FUNCTION(name_),
+#define RXVM_PRIVATE_HANDLER(name_, dispatch_opcode_, profile_opcode_, ...) \
+    [dispatch_opcode_] = RXVM_HANDLER_FUNCTION(name_),
+#include "rxvmhandlers_core.inc"
+#include "rxvmhandlers_control.inc"
+#include "rxvmhandlers_numeric.inc"
+#include "rxvmhandlers_string.inc"
+#include "rxvmhandlers_system.inc"
+#undef RXVM_PRIVATE_HANDLER
+#undef RXVM_HANDLER
+};
+
+#undef RXVM_HANDLER_FUNCTION
+#undef RXVM_HANDLER_FUNCTION_SELECT
+#undef RXVM_HANDLER_FUNCTION_SELECT_INNER
+#undef RXVM_HANDLER_FUNCTION_OUTLINE
+#undef RXVM_HANDLER_FUNCTION_INLINE
+#endif
+
 #undef RXVM_HANDLER_INTERRUPT_TABLE_OOM
 #define RXVM_HANDLER_INTERRUPT_TABLE_OOM() goto interrupt_table_oom
 #undef RXVM_HANDLER_FINISH
@@ -5403,6 +5621,25 @@ typedef struct rxvm_handler_state {
 #undef rc
 #undef context
 
+/* INTERRUPT is a dispatch pseudo-op owned by run(), not an RXVM_HANDLER body. */
+#define RXVM_HANDLER_POLICY_INTERRUPT INLINE
+#define RXVM_HANDLER_LABEL_INLINE(name_) &&name_
+#define RXVM_HANDLER_LABEL_OUTLINE(name_) &&rxvm_handler_call
+#define RXVM_HANDLER_LABEL_SELECT_INNER(policy_) RXVM_HANDLER_LABEL_ ## policy_
+#define RXVM_HANDLER_LABEL_SELECT(policy_) \
+    RXVM_HANDLER_LABEL_SELECT_INNER(policy_)
+#define RXVM_HANDLER_LABEL(name_) \
+    RXVM_HANDLER_LABEL_SELECT(RXVM_HANDLER_POLICY(name_))(name_)
+#define RXVM_PRIVATE_HANDLER_LABEL_INLINE(name_) &&name_
+#define RXVM_PRIVATE_HANDLER_LABEL_OUTLINE(name_) \
+    &&rxvm_handler_ ## name_ ## _call
+#define RXVM_PRIVATE_HANDLER_LABEL_SELECT_INNER(policy_) \
+    RXVM_PRIVATE_HANDLER_LABEL_ ## policy_
+#define RXVM_PRIVATE_HANDLER_LABEL_SELECT(policy_) \
+    RXVM_PRIVATE_HANDLER_LABEL_SELECT_INNER(policy_)
+#define RXVM_PRIVATE_HANDLER_LABEL(name_) \
+    RXVM_PRIVATE_HANDLER_LABEL_SELECT(RXVM_HANDLER_POLICY(name_))(name_)
+
 /* Interpreter */
 static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
         rxvm_context *context, int argc, char *argv[]) {
@@ -5413,7 +5650,11 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     char hasSeed = 0; /* no seed set */
     bin_code *pc = 0, *next_pc = 0;
     bin_code *interrupted_pc = 0;
+#if RXVM_HANDLER_USE_POINTER_FACADE
     int mod_index;
+#else
+    int mod_index = 0;
+#endif
     value *interrupt_arg;
     value *signal_value;
     value *interrupt_action_value;
@@ -5426,7 +5667,11 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     rxinteger last_interrupted_address[RXSIGNAL_MAX] = {0};
     /* Array of modules that were last interrupted by interrupt number */
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
+#if RXVM_HANDLER_USE_POINTER_FACADE
     stack_frame *current_frame = 0, *temp_frame;
+#else
+    stack_frame *current_frame = 0, *temp_frame = 0;
+#endif
     bin_space *current_binary_space = 0;
     bin_code *current_execution_base = 0;
     bin_code *current_canonical_base = 0;
@@ -5441,6 +5686,9 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     volatile sig_atomic_t pending_interrupts = 0;
     volatile sig_atomic_t *previous_pending_interrupts = 0;
     rxvm_handler_state handler_state;
+#if !RXVM_HANDLER_USE_POINTER_FACADE
+    rxvm_handler_function handler_function = 0;
+#endif
     rxvm_handler_result handler_result = RXVM_HANDLER_RESULT_DISPATCH;
 #ifdef NTHREADED
     void *next_inst = 0;
@@ -5448,6 +5696,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     void *private_r2_handler = 0;
     void *private_r1_handler = 0;
 #else
+#if RXVM_HANDLER_USE_POINTER_FACADE
     void *next_inst = &&IUNKNOWN;
     const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) &&NAME,
@@ -5456,6 +5705,18 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     };
     void *private_r2_handler = &&PRIVATE_R2_COPYATTR1;
     void *private_r1_handler = &&PRIVATE_R1_RELINK;
+#else
+    void *next_inst = RXVM_HANDLER_LABEL(IUNKNOWN);
+    static const void *address_map[OP_MAX_INSTRUCTIONS] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) RXVM_HANDLER_LABEL(NAME),
+#include "../binutils/include/rxops.h"
+#undef X
+    };
+    void *private_r2_handler =
+            RXVM_PRIVATE_HANDLER_LABEL(PRIVATE_R2_COPYATTR1);
+    void *private_r1_handler =
+            RXVM_PRIVATE_HANDLER_LABEL(PRIVATE_R1_RELINK);
+#endif
 #endif
     if (rxvm_signal_enter_execution(
             context, &pending_interrupts,
@@ -5465,6 +5726,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     previous_memory_worker =
             rxvm_memory_enter(context->worker.memory_worker);
     RXVM_INSTRUMENTATION_STATE();
+#if RXVM_HANDLER_USE_POINTER_FACADE
     handler_state.context = context;
     handler_state.rc = &rc;
     handler_state.initSeed = &initSeed;
@@ -5501,6 +5763,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 #endif
 #ifdef CREXX_VM_INSTRUMENTATION_TEST
     handler_state.test_instrumentation = &vm_instrumentation;
+#endif
 #endif
     RXVM_INSTRUMENTATION_VM_BEGIN(context);
 
@@ -5952,6 +6215,17 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 
 START_OF_INSTRUCTIONS
 
+#ifdef NTHREADED
+#undef END_OF_INSTRUCTIONS
+#if RXVM_HANDLER_USE_POINTER_FACADE
+#define END_OF_INSTRUCTIONS \
+    default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH; }
+#else
+#define END_OF_INSTRUCTIONS default: goto rxvm_handler_call; }
+#endif
+#endif
+
+#if RXVM_HANDLER_USE_POINTER_FACADE
 #define RXVM_HANDLER(name_, ...)                                               \
         START_INSTRUCTION(name_) RXVM_EMIT_HANDLER(name_, __VA_ARGS__);
 #ifdef NTHREADED
@@ -5969,6 +6243,43 @@ START_OF_INSTRUCTIONS
                     profile_opcode_);                                          \
             RXVM_EMIT_HANDLER(name_, __VA_ARGS__);
 #endif
+#else
+#define RXVM_OWNER_HANDLER_INLINE(name_, ...)                                 \
+        START_INSTRUCTION(name_) RXVM_HANDLER_EMIT_INLINE(name_, __VA_ARGS__);
+#define RXVM_OWNER_HANDLER_OUTLINE(name_, ...)
+#define RXVM_OWNER_HANDLER_SELECT_INNER(policy_) \
+        RXVM_OWNER_HANDLER_ ## policy_
+#define RXVM_OWNER_HANDLER_SELECT(policy_) \
+        RXVM_OWNER_HANDLER_SELECT_INNER(policy_)
+#define RXVM_OWNER_HANDLER(name_, ...)                                        \
+        RXVM_OWNER_HANDLER_SELECT(RXVM_HANDLER_POLICY(name_))(name_, __VA_ARGS__)
+
+#define RXVM_HANDLER(name_, ...)                                               \
+        RXVM_OWNER_HANDLER(name_, __VA_ARGS__)
+#ifdef NTHREADED
+#define RXVM_OWNER_PRIVATE_INLINE(name_, dispatch_opcode_, profile_opcode_, ...) \
+        case dispatch_opcode_:                                                 \
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    profile_opcode_);                                          \
+            RXVM_HANDLER_EMIT_INLINE(name_, __VA_ARGS__);
+#else
+#define RXVM_OWNER_PRIVATE_INLINE(name_, dispatch_opcode_, profile_opcode_, ...) \
+        name_:                                                                 \
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    profile_opcode_);                                          \
+            RXVM_HANDLER_EMIT_INLINE(name_, __VA_ARGS__);
+#endif
+#define RXVM_OWNER_PRIVATE_OUTLINE(name_, dispatch_opcode_, profile_opcode_, ...)
+#define RXVM_OWNER_PRIVATE_SELECT_INNER(policy_) \
+        RXVM_OWNER_PRIVATE_ ## policy_
+#define RXVM_OWNER_PRIVATE_SELECT(policy_) \
+        RXVM_OWNER_PRIVATE_SELECT_INNER(policy_)
+#define RXVM_PRIVATE_HANDLER(name_, dispatch_opcode_, profile_opcode_, ...)     \
+        RXVM_OWNER_PRIVATE_SELECT(RXVM_HANDLER_POLICY(name_))(                  \
+                name_, dispatch_opcode_, profile_opcode_, __VA_ARGS__)
+#endif
 
 #include "rxvmhandlers_core.inc"
 #include "rxvmhandlers_control.inc"
@@ -5978,9 +6289,75 @@ START_OF_INSTRUCTIONS
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
+#if !RXVM_HANDLER_USE_POINTER_FACADE
+#undef RXVM_OWNER_PRIVATE_SELECT
+#undef RXVM_OWNER_PRIVATE_SELECT_INNER
+#undef RXVM_OWNER_PRIVATE_OUTLINE
+#undef RXVM_OWNER_PRIVATE_INLINE
+#undef RXVM_OWNER_HANDLER
+#undef RXVM_OWNER_HANDLER_SELECT
+#undef RXVM_OWNER_HANDLER_SELECT_INNER
+#undef RXVM_OWNER_HANDLER_OUTLINE
+#undef RXVM_OWNER_HANDLER_INLINE
+#endif
 
     END_OF_INSTRUCTIONS
 
+#if !RXVM_HANDLER_USE_POINTER_FACADE
+    rxvm_handler_call:
+        {
+#ifdef NTHREADED
+            unsigned int dispatch_opcode = pc->instruction.opcode;
+#else
+            unsigned int dispatch_opcode =
+                    VM_CANONICAL_POINTER(VM_CANONICAL_INDEX(pc))
+                            ->instruction.opcode;
+#endif
+            unsigned int profile_opcode = dispatch_opcode;
+            if (dispatch_opcode == RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT) {
+                profile_opcode = OP_LINKATTR1_REG_REG_INT;
+            } else if (dispatch_opcode == RXVM_PRIVATE_R1_RELINK_REG_REG) {
+                profile_opcode = OP_UNLINK_REG;
+            }
+            if (dispatch_opcode <
+                    sizeof(rxvm_outlined_handler_functions) /
+                    sizeof(rxvm_outlined_handler_functions[0]) &&
+                    rxvm_outlined_handler_functions[dispatch_opcode]) {
+                handler_function =
+                        rxvm_outlined_handler_functions[dispatch_opcode];
+            } else {
+                handler_function = rxvm_outlined_handler_functions[OP_IUNKNOWN];
+                profile_opcode = OP_IUNKNOWN;
+            }
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),
+                    profile_opcode);
+        }
+        goto rxvm_handler_state_call;
+
+#ifndef NTHREADED
+    rxvm_handler_PRIVATE_R2_COPYATTR1_call:
+        handler_function = rxvm_outlined_handler_functions[
+                RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT];
+        RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
+                current_module->module_number, VM_CANONICAL_INDEX(pc),
+                OP_LINKATTR1_REG_REG_INT);
+        goto rxvm_handler_state_call;
+
+    rxvm_handler_PRIVATE_R1_RELINK_call:
+        handler_function = rxvm_outlined_handler_functions[
+                RXVM_PRIVATE_R1_RELINK_REG_REG];
+        RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
+                current_module->module_number, VM_CANONICAL_INDEX(pc),
+                OP_UNLINK_REG);
+#endif
+
+    rxvm_handler_state_call:
+        RXVM_HANDLER_STATE_SNAPSHOT(handler_state);
+        handler_result =
+                rxvm_invoke_outlined_handler(handler_function, &handler_state);
+        RXVM_HANDLER_STATE_COMMIT(handler_state);
+#endif
 
     rxvm_handler_result:
         switch (handler_result) {

@@ -1084,14 +1084,34 @@ implementation together.
 
 The definition files are expanded twice. At file scope they produce
 force-noinline `rxvm_handler_NAME(rxvm_handler_state *)` functions. Inside the
-dispatch owner they produce each switch case or computed-goto label and then,
-according to `rxvmhandlerpolicy.h`, either expand the same implementation body
-directly or call its file-scope function. The all-inline form therefore retains
-owner-local expansion; it does not access the pointer facade. The outlined
-form uses a pointer facade over the owner's live execution locals and returns a
-small `rxvm_handler_result` for owner-only continuations: normal dispatch,
+dispatch owner, handlers selected inline by `rxvmhandlerpolicy.h` expand the
+same implementation body directly. The internal lowering of outlined handlers
+is compiler-specific because Clang and GCC generated materially different hot
+dispatch from the same source:
+
+- Clang emits only the selected inline switch cases or computed-goto labels.
+  All outlined public identities share one cold owner entry and function table.
+  That edge snapshots scalar values into `rxvm_handler_state`, invokes the
+  selected handler through a cold no-inline trampoline, and commits the result.
+- Real GCC retains the R2 per-identity label/case and direct outlined call with
+  the pointer facade. GCC optimizes that shape better than the shared-cold form;
+  using the Clang repair under GCC reverses the measured benefit.
+
+Both forms return the same small `rxvm_handler_result`: normal dispatch,
 interrupt dispatch, interrupted-instruction resume, interrupt-table OOM, or
-terminal cleanup. Label ownership and final dispatch remain in `run()`.
+terminal cleanup. The Clang snapshot is deliberately value-based because the
+earlier pointer-rich facade made owner locals addressable whenever any outlined
+handler was reachable, changing Clang register allocation and stack shape even
+when no outlined handler ran. The all-inline panel preserves the exact R2
+pointer-facade source shape so compiler heuristics and generated owner layout do
+not move merely because dead facade scaffolding was deleted; the optimizer
+eliminates that facade and no shared function table or trampoline is emitted.
+
+In the Clang shared-cold form, threaded dispatch obtains an outlined public
+opcode from the immutable canonical image because its execution-image
+instruction cell contains a handler address; switch dispatch reads the numeric
+execution-image opcode. Label ownership, interrupt polling and final dispatch
+remain in `run()` in every lowering.
 
 The CMake cache setting `CREXX_VM_HANDLER_PANEL` selects the internal build
 shape:
@@ -1103,10 +1123,42 @@ shape:
   non-reserved public handlers and calls the rest.
 
 Reserved slots and the two private handlers are compiled and measured but do
-not count toward the profile percentage. `INTERRUPT` remains an internal owner
-label rather than an RXAS handler. The panel setting changes no RXAS/RXBIN
-encoding or public/plugin ABI. `profile-30` is an experimental measurement
-shape, not a selected product default.
+not count toward the public profile percentage. The two private handlers are
+explicitly inline in the current profile panel, giving 178 inline definitions
+out of the 590 non-reserved public-plus-private definitions (30.17%).
+`INTERRUPT` remains an internal owner label rather than an RXAS handler. The
+panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. `profile-30`
+is an experimental measurement shape, not a selected product default.
+
+### Process-private fused execution handlers
+
+Preparation performs two structural, process-private fusions in each module's
+owned execution image. This is immutable load-time quickening, not adaptive
+runtime rewriting: canonical RXBIN and `segment.binary` remain unchanged, and
+the prepared site is not subsequently rewritten or dequickened.
+
+- `PRIVATE_R1_RELINK` recognizes `unlink destination; linkref destination,
+  source_reference` when source and destination differ. It performs the fast
+  relink when the runtime reference target is valid, otherwise resumes the
+  canonical `linkref` path. Debug mode or a pending breakpoint also uses the
+  canonical observable path.
+- `PRIVATE_R2_COPYATTR1` recognizes `linkattr1 temporary, object, immediate;
+  copy destination, temporary; unlink temporary` with the required distinct
+  registers. It uses the fused reference-descriptor path only when the runtime
+  payload permits it; range errors, generic values, debug mode and pending
+  breakpoints retain the canonical instruction-by-instruction behaviour.
+
+`rxtvm` writes the corresponding private label address into its execution
+image; `rxbvm` writes a numeric opcode above the public opcode range. Both map
+instrumentation back to the first canonical public opcode so public semantic
+profiles remain comparable. Placement/heat profiling must additionally count
+the private dispatch identity: attributing it only to `UNLINK` or `LINKATTR1`
+can incorrectly classify a frequently executed private handler as cold.
+
+The shared inventory and gap report between RXAS static fusion and these VM
+load-time fusions is a separate roadmap item, `PERF3-05-R4`. Making a private
+fusion a normal serialized instruction, or adding adaptive runtime quickening,
+requires its own RXAS/RXBIN compatibility and architecture decision.
 
 ### Instruction Flow Example
 The assembler passes operands inline sequentially in the binary array. A
