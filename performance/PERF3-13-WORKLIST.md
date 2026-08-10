@@ -2,7 +2,7 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E3a accepted and Mac closeout complete; E3b-P1 A/C compatibility slice approved; Gate F closed**
+Status: **Gate E E3a and E3b-P1 accepted; E3b-P1 Mac closeout complete; P2 and Gate F closed**
 
 ## Current Gate E continuation
 
@@ -60,6 +60,24 @@ Status: **Gate E E3a accepted and Mac closeout complete; E3b-P1 A/C compatibilit
   approved the E3b A/C compatibility model and its P1 implementation through
   the first frozen ordinary-Release verdict. Evidence:
   [`2026-08-10-perf3-13-gate-e-e3a-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3a-first-release-verdict/).
+- E3b-P1 is accepted and its shortest Mac closeout is complete. The selected
+  branch-free form stores a preselected invoker in every native runtime
+  procedure. Process-reentrant procedures remain permanently direct; one
+  legacy-capable VM also remains direct, while the second triggers a cold,
+  quiescent, sticky process-wide rebind of registered legacy procedures to the
+  recursive locked adapter. The ordinary call path has no capability branch.
+  The frozen verdict passes 312/312 processes and every formal guard. Product
+  `rxbvm` process-reentrant calls are noisy at +1.368096%; its legacy calls are
+  noisy at +0.104869%. Guard `rxtvm` measures a clear +2.175049% reentrant
+  effect, below the 3% guard, and a noisy -0.413910% legacy result. Sieve,
+  RexxCPS, lifecycle and artifacts remain guard-clean. Full Debug CTest passes
+  2,017/2,017 and focused Release passes 11/11. Broad QA identified the
+  internal RXVML ADDRESS bridge as already process-reentrant; marking its five
+  context-resolved callbacks accordingly repairs the established two-context
+  synchronization test. Rebuilt Release VMs retain the exact timed hashes.
+  P2 sessions, cross-platform proof, public workers/channels and Gate F remain
+  separately gated. Evidence:
+  [`2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/).
 
 ## Exact isolated base
 
@@ -1848,13 +1866,221 @@ per-call flags follow as P2 after P1 is accepted.
    Debug/sanitizer/cross-platform closeout, P2 sessions, E4, public workers/
    channels and Gate F remain closed until P1 is explicitly accepted.
 
+#### E3b-P1 first Release verdict — failed 2026-08-10; bounded rework approved
+
+The frozen profiling-off, profile-20 Release matrix passed 312/312 processes:
+24 warmups and 288 recorded executions across process-reentrant calls, legacy
+calls, one-call lifecycle, Sieve and canonical RexxCPS under both concrete VMs.
+Every row used the exact accepted E3a VM binary as its paired control and shared
+the same RXBIN, library and plugin images with the candidate.
+
+The hot primitive fails decisively. Against the raw E3a native-call path, the
+process-reentrant bypass is clearly adverse by 20.382448% on product `rxbvm`
+(95% interval 18.473761% to 22.291134%) and 14.387105% on `rxtvm`
+(13.315358% to 15.458851%). The legacy lane is 19.792936% adverse on `rxbvm`
+and 16.032255% adverse on `rxtvm`. Median deltas are 12.513850 ns and
+8.911175 ns per bypass call, and 12.453550 ns and 9.493175 ns per legacy call.
+Disassembly shows the cause: even the bypass enters a new out-of-line
+`rxvm_call_native_procedure()` register-save frame and policy branch before
+tail-calling the former RXPA adapter. The uncontended recursive lock is not the
+dominant cost in this candidate.
+
+The surrounding product remains bounded. One-call startup/load/teardown median
+deltas are 0.0365-0.1965 ms and all lifecycle intervals are inconclusive.
+Product `rxbvm` Sieve is inconclusive at -0.358407%; `rxtvm` Sieve is clearly
+adverse at +1.485589% but remains inside its 3% guard. Canonical RexxCPS is
+inconclusive at +0.033457% (`rxbvm`) and -0.037650% (`rxtvm`). VM file growth
+is about 1.62%, below the artifact dual threshold, while the hot owner shrinks
+by 240 bytes (`rxbvm`) and 852 bytes (`rxtvm`).
+
+This candidate is not accepted. A plausible bounded rework is to keep the
+capability test in the hot handler/helper surface so the asserted-reentrant
+path makes one direct adapter call, reserving the outlined compatibility call
+for legacy procedures. That is a new production edit and requires Adrian's
+direction after this mandatory stop. Evidence:
+[`2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/).
+
+#### E3b-P1 bounded dispatch rework — frozen 2026-08-10
+
+Adrian approved the recommended rework. The public contract, capability word,
+catalogue/DSO ownership and legacy compatibility semantics are unchanged.
+`rxvm_call_native_procedure()` is now an always-inline Release helper: each hot
+call site loads the procedure capability and branches directly either to the
+former RXPA adapter for a process-reentrant plugin or to the outlined recursive
+legacy wrapper. The discarded out-of-line policy function and its extra
+register-save frame are absent from both candidate VMs.
+
+Focused Debug and ordinary Release concurrency/ownership panels each pass 7/7.
+Mach-O disassembly shows the intended direct `bl _rxvm_callfunc_direct` on the
+reentrant arm and `bl _rxvm_callfunc` on the legacy arm, with no
+`rxvm_call_native_procedure` symbol. Both optimized call kernels also pass
+under the candidate and exact accepted E3a control. Implementation is frozen;
+the same 24-cell, one-warmup/12-pair matrix requires a fresh explicit host
+reservation before timing.
+
+#### E3b-P1 bounded dispatch rework verdict — failed 2026-08-10
+
+The fresh reserved-host matrix again passed 312/312 processes. Inlining removes
+the failed candidate's extra adapter frame and improves its native-call result,
+but it does not reach the raw E3a ceiling. The process-reentrant path is clearly
+adverse by 14.501217% on product `rxbvm` (95% interval 12.983946% to
+16.018488%) and 14.782493% on `rxtvm` (12.317548% to 17.247438%). The legacy
+path is clearly adverse by 14.750908% and 13.924160% respectively. Median
+increments are 9.319325 ns and 8.720900 ns per process-reentrant call, and
+9.271900 ns and 8.110275 ns per legacy call.
+
+The surrounding product remains bounded. One-call lifecycle median deltas are
+0.0375-0.1515 ms and do not meet the dual escalation threshold. Sieve is
+inconclusive at -0.449170% (`rxbvm`) and -0.279062% (`rxtvm`). Canonical
+RexxCPS is clearly adverse but guard-clean at -0.767747% on product `rxbvm`,
+and inconclusive at -0.117280% on `rxtvm`. VM file growth remains about 1.62%,
+below the artifact dual threshold; the hot owner is +332 bytes on `rxbvm` and
+-216 bytes on `rxtvm`.
+
+The old adapter and new direct adapter each compile to the same 556-byte body.
+The remaining hot-path difference is the capability byte load, conditional
+branch and two call targets emitted at every native call site. Moving that
+selection out of a separate frame was necessary but not sufficient. This form
+is not accepted or committed. A further candidate must eliminate the per-call
+policy branch—for example, a load-time selected invoker or a safely transitioned
+single-executor mode—and must first compare the predicted-indirect-call and
+single-thread controls before another production edit. Evidence:
+[`2026-08-10-perf3-13-gate-e-e3b-p1-rework-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-rework-first-release-verdict/).
+
+#### E3b-P1 branch-free load binding — isolated comparison approved 2026-08-10
+
+Adrian selected an isolated comparison before any further production edit. The
+target call shape is a preselected invoker stored with each loaded native
+procedure, so an ordinary call performs no capability test. The comparison
+must measure the exact direct-call control, a runtime-selected indirect call,
+the rejected per-call branch as a diagnostic control and the locked legacy
+invoker. Timing remains closed until Adrian explicitly reserves the host.
+
+The approved binding and transition invariants are:
+
+1. A procedure from a plugin declaring `PROCESS_REENTRANT` binds permanently
+   to the direct RXPA adapter. Starting another OS thread, VM or executor never
+   revisits that binding.
+2. An unmarked procedure binds to the direct adapter while the process has
+   exactly one legacy-capable executor. An executor is legacy-capable only
+   after it has loaded at least one unmarked plugin; an additional executor
+   that can reach only process-reentrant plugins does not change the mode.
+3. The second legacy-capable executor, or a late legacy load that creates that
+   condition, starts one process-wide transition before the new executor or
+   load is published for execution. The coordinator prevents new legacy entry,
+   brings existing legacy-capable executors to a VM safe point, drains any
+   active legacy call, changes every live legacy procedure binding to the
+   recursive locked adapter and only then releases the executors. Reentrant
+   bindings are not scanned or changed.
+4. The first implementation is sticky: after the process reaches concurrent
+   legacy mode, all existing and later legacy procedures bind locked until
+   process teardown. Returning to direct mode would require another global
+   quiescence protocol and is not part of P1.
+5. The coordinator is process-wide because dynamic-library statics and
+   dependencies may be shared even when procedure metadata is VM-owned. It
+   tracks registered VM/executor ownership and live legacy bindings rather than
+   inferring concurrency from copied metadata. Registration, late load,
+   transition and teardown are cold paths; the selected invoker is the only
+   policy state read by an ordinary call.
+
+The isolated proof is deliberately bounded. It first validates binding and the
+quiescent transition state machine, then compares the machine-level invocation
+ceilings without changing `proc_runtime`, handlers or the production loader.
+The preselected direct path must stay within the existing 3% hot-kernel guard
+of the raw direct adapter before it can be proposed as another production
+candidate. Transition lifecycle, both concrete VMs, late load and teardown
+remain mandatory parts of a later integrated verdict if that ceiling passes.
+
+#### E3b-P1 branch-free load-binding verdict — ceiling passed 2026-08-10
+
+The reserved-host isolated Release comparison passed all 65/65 processes: five
+warmups plus 60 recorded executions from 12 pairwise-balanced rounds. Each cell
+made 20 million calls through the same frozen proof binary. No sample was
+removed and no cell met the runner's noise-rerun criterion.
+
+Against the raw direct adapter, the load-selected indirect direct invoker has a
+paired mean elapsed change of -0.489662%, with a 95% interval from -1.228728%
+to +0.249404%, a paired median of -0.495378% and 8/12 favorable pairs. It is
+statistically inconclusive, has no adverse tendency and comfortably clears the
+3% machine-level ceiling. The direct and selected loop owners are both 72
+bytes on Apple ARM64; the exact selected shape loads the bound adapter and
+function and uses one `blr`, with no capability test.
+
+The bound locked legacy path is clearly adverse by +20.117255% paired mean
+(95% interval +19.152551% to +21.081960%), about 8.129975 ns per call by the
+median process difference. This does not reject compatibility locking when
+concurrent legacy execution makes it necessary. It demonstrates why one
+legacy-capable executor should retain the direct binding and why the cold
+sticky transition should introduce locking only when a second such executor
+is published.
+
+The isolated per-call branch control is inconclusive at -0.543659%. That
+standalone result does not overturn the two rejected integrated VM candidates,
+whose ordinary bytecode call sites were clearly adverse by 14-15%; the proof
+isolates invocation mechanics and deliberately does not reproduce their
+handler/layout context.
+
+The ceiling therefore supports a production candidate with a procedure-bound
+invoker and the approved cold coordinator. It does not itself authorize that
+edit. The integrated candidate must validate coordinator registration,
+quiescence, late load, teardown and concurrent legacy serialization, then take
+the mandatory first both-VM ordinary-Release verdict. P2 sessions and Gate F
+remain closed. Evidence:
+[`2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/).
+
+#### E3b-P1 branch-free production verdict — accepted 2026-08-10
+
+Adrian approved the production candidate after the isolated ceiling passed.
+The integrated form adds one invoker pointer to each native `proc_runtime` and
+binds imported aliases together with their canonical owner. Process-reentrant
+procedures bind permanently to the direct adapter. The first legacy-capable VM
+also binds direct; publication of a second starts one cold transition that
+blocks new direct legacy execution, drains active registered execution
+boundaries, rebinds all live legacy slots to the recursive locked adapter and
+then releases both VMs. The mode is sticky. Reentrant-only VMs never register
+with that coordinator.
+
+Focused Debug and ordinary Release tests pass the static replay, dynamic DSO
+ownership, valid/invalid manifest, permanent reentrant binding, one-VM direct
+legacy binding, two-VM serialization and transition-quiescence cases. Assembly
+contains no `rxvm_call_native_procedure` symbol and no capability test at an
+ordinary native call site; the call loads the already-selected invoker and
+function and uses `blr`.
+
+The reserved-host ordinary-Release matrix passes all 312/312 processes. Product
+`rxbvm` process-reentrant calls have a noisy +1.368096% paired mean (95%
+interval -0.042248% to +2.778441%); legacy calls are noisy at +0.104869%
+(-1.105497% to +1.315234%). Guard `rxtvm` process-reentrant calls are clearly
+adverse by +2.175049% (+1.417704% to +2.932394%) but remain below the 3%
+kernel guard; legacy calls are noisy at -0.413910%. Sieve and canonical RexxCPS
+are inconclusive on both VMs. All lifecycle and artifact guards remain clear.
+This removes the rejected integrated candidates' 14-20% native-call losses.
+
+Adrian accepted the guard-clean verdict and authorized QA and a local commit.
+The full Debug build and CTest then pass 2,017/2,017 in 455.29 seconds; focused
+ordinary Release passes 11/11. Broad QA exposed that the internal RXVML ADDRESS
+bridge, whose mutable state is already resolved through the active RXVML
+context, needed the process-reentrant declaration to preserve its established
+two-context callback synchronization. Marking those five bridge procedures
+repairs the test. Rebuilt ordinary-Release VMs are byte-identical to the timed
+candidate: `eadabe1c96aabcb9f7500d77ea19a0477256962e8f296fe54b74cdc06c5cd125`
+for `rxbvm` and
+`f17f91351c0c36ccd119120dc66b3a1a0918353b967ed740671e4c28ecb8bbb2`
+for `rxtvm`, so the accepted verdict remains authoritative.
+
+E3b-P1 is complete on Mac. P2 session factories/default sessions and per-call
+flags, cross-platform proof, E4, public workers/channels and Gate F require
+their own plans and approvals. Evidence:
+[`2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/).
+
 #### E3b approval boundary
 
-Approval selects the backward-compatible A/C model and authorizes P1 steps 1-9
-through the first frozen Release verdict. Adrian explicitly authorized the E3a
-checkpoint commit. P1 authorizes parallel calls only for plugins that make the
-process-reentrant assertion; legacy procedures remain serialized. It does not
-authorize P2 session factories, a mandatory new ABI, a push or Gate F work.
+Adrian selected the backward-compatible A/C model, accepted the branch-free P1
+verdict and authorized its local commit. P1 authorizes parallel calls only for
+plugins that make the process-reentrant assertion; concurrent legacy-capable
+VMs use the serialized compatibility lane. This acceptance does not authorize
+P2 session factories/default sessions/per-call flags, a mandatory new ABI, a
+push, E4, public workers/channels or Gate F work.
 
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
@@ -1916,15 +2142,18 @@ remains closed until the Gate E worker model has been selected.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 through E3a accepted.**
+6. **Gate E — full M5 start: approved 2026-08-07; E1 through E3b-P1 accepted.**
    E1/E1-P1 are published and Windows-MinGW proven. E2's worker-owned active
    state and direct interrupt slot pass the accepted Release verdict, complete
    Mac Debug/ASan/Release closeout and the separately repaired RXAS sanitizer
    fault. The current profile-20 absolute baseline is retained. E3a RXVM
    provider/decimal ownership has an accepted neutral, guard-clean verdict and
-   passes its 2,007/2,007 Mac Debug closeout. Adrian directed the programme to
-   E3b; its replay/lifetime and serialized legacy-native design now awaits
-   approval, while implementation remains closed. The full gate stops for
+   passes its 2,007/2,007 Mac Debug closeout. E3b-P1 preserves the legacy ABI,
+   adds audited process-reentrant opt-in, replayable static registration,
+   VM-owned DSO lifetime and branch-free load-selected invocation. Its accepted
+   guard-clean verdict passes 312/312 processes; Mac closeout passes full Debug
+   2,017/2,017 and focused Release 11/11 with byte-identical verdict VMs. P2
+   sessions and cross-platform proof remain closed. The full gate stops for
    worker-model selection before any public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.

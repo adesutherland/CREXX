@@ -56,6 +56,40 @@ add_dynamic_plugin_target(_rxpa_dynlink rxpa_dynlink.c)
 localize_test_plugin_output(_rxpa_dynlink)
 add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 
+add_dynamic_plugin_target(_rxpa_invalid_manifest rxpa_invalid_manifest.c)
+localize_test_plugin_output(_rxpa_invalid_manifest)
+add_dependencies(_rxpa_invalid_manifest rxpa rxvm)
+
+add_dynamic_plugin_target(_rxpa_bench_reentrant rxpa_call_kernel.c)
+target_compile_definitions(_rxpa_bench_reentrant PRIVATE
+        RXPA_BENCH_PROCESS_REENTRANT=1)
+localize_test_plugin_output(_rxpa_bench_reentrant)
+
+add_dynamic_plugin_target(_rxpa_bench_legacy rxpa_call_kernel.c)
+localize_test_plugin_output(_rxpa_bench_legacy)
+
+add_test(NAME rxpa_process_reentrant_manifest
+        COMMAND $<TARGET_FILE:test_rxpa_concurrency>
+                manifest
+                $<TARGET_FILE_DIR:_rxpa_dynlink>
+                $<TARGET_FILE_NAME:_rxpa_dynlink>)
+set_tests_properties(rxpa_process_reentrant_manifest PROPERTIES
+        LABELS "interpreter;worker;plugins;rxpa")
+add_test(NAME rxpa_invalid_manifest_is_legacy
+        COMMAND $<TARGET_FILE:test_rxpa_concurrency>
+                invalid-manifest
+                $<TARGET_FILE_DIR:_rxpa_invalid_manifest>
+                $<TARGET_FILE_NAME:_rxpa_invalid_manifest>)
+set_tests_properties(rxpa_invalid_manifest_is_legacy PROPERTIES
+        LABELS "interpreter;worker;plugins;rxpa")
+add_test(NAME rxpa_dynamic_context_ownership
+        COMMAND $<TARGET_FILE:test_rxpa_concurrency>
+                dynamic
+                $<TARGET_FILE_DIR:_rxpa_dynlink>
+                $<TARGET_FILE_NAME:_rxpa_dynlink>)
+set_tests_properties(rxpa_dynamic_context_ownership PROPERTIES
+        LABELS "interpreter;worker;plugins;rxpa")
+
 # Native declaration plugin used to prove RXPA class/interface metadata is
 # visible to the compiler without a Rexx-side contract shim.
 add_dynamic_plugin_target(_rxpa_classdecl rxpa_classdecl.c)

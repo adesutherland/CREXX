@@ -1,0 +1,8 @@
+# PERF3-13 E3b-P1 isolated branch-free native-invoker ceiling.
+# One warmup and 12 pairwise-balanced recorded rounds; 20 million calls/cell.
+crexx-cross-runtime-matrix|1
+raw-direct|RXPA-Invoker-Ceiling|native-poc|host|raw-direct|diagnostic|no|startup-included|20000000-calls|PASS: E3b RXPA invoker ceiling MODE=raw-direct CALLS=20000000||/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/performance/e3b_rxpa_invoker_ceiling;raw-direct;20000000
+selected-direct|RXPA-Invoker-Ceiling|native-poc|host|selected-direct|diagnostic|no|startup-included|20000000-calls|PASS: E3b RXPA invoker ceiling MODE=selected-direct CALLS=20000000||/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/performance/e3b_rxpa_invoker_ceiling;selected-direct;20000000
+branch-direct|RXPA-Invoker-Ceiling|native-poc|host|branch-direct|diagnostic|no|startup-included|20000000-calls|PASS: E3b RXPA invoker ceiling MODE=branch-direct CALLS=20000000||/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/performance/e3b_rxpa_invoker_ceiling;branch-direct;20000000
+selected-locked|RXPA-Invoker-Ceiling|native-poc|host|selected-locked|diagnostic|no|startup-included|20000000-calls|PASS: E3b RXPA invoker ceiling MODE=selected-locked CALLS=20000000||/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/performance/e3b_rxpa_invoker_ceiling;selected-locked;20000000
+branch-locked|RXPA-Invoker-Ceiling|native-poc|host|branch-locked|diagnostic|no|startup-included|20000000-calls|PASS: E3b RXPA invoker ceiling MODE=branch-locked CALLS=20000000||/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/performance/e3b_rxpa_invoker_ceiling;branch-locked;20000000

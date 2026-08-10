@@ -186,7 +186,7 @@ set(CREXX_DEFAULT_VM_USES_SWITCH "${CREXX_DEFAULT_VM_USES_SWITCH}"
         CACHE INTERNAL "Whether the compiler-selected VM uses switch dispatch" FORCE)
 crexx_add_rxvm_platform_objects(rxvm_platform_notls_objects)
 
-add_library(rxvmref STATIC rxvmref.c rxvmref.h)
+add_library(rxvmref STATIC rxvmref.c rxvmref.h rxpacompat.c rxpacompat.h)
 target_include_directories(rxvmref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(rxvmmemory STATIC rxvmmemory.c rxvmmemory.h)
@@ -199,7 +199,7 @@ if(CREXX_VM_PROFILING)
     target_compile_definitions(rxvmmemory PUBLIC
             CREXX_VM_MEMORY_CENSUS=1)
 endif()
-target_link_libraries(rxvmref PUBLIC rxvmmemory)
+target_link_libraries(rxvmref PUBLIC rxvmmemory Threads::Threads)
 
 add_subdirectory(rxvmplugin)
 
@@ -580,6 +580,13 @@ target_link_libraries(test_rxvmplugin_context PRIVATE
         rxvml rxvmplugin mc_decimal_manual Threads::Threads)
 add_dependencies(test_rxvmplugin_context mc_decimal_dynamic)
 
+add_executable(test_rxpa_concurrency tests/test_rxpa_concurrency.c)
+target_include_directories(test_rxpa_concurrency PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_concurrency PRIVATE rxvml Threads::Threads)
+
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
@@ -634,6 +641,20 @@ add_test(NAME rxvmplugin_context_ownership
                 "$<TARGET_FILE_DIR:mc_decimal_dynamic>"
                 "rxvm_mc_decimal"
                 "decnumber")
+add_test(NAME rxpa_static_catalogue_replay
+        COMMAND test_rxpa_concurrency static)
+add_test(NAME rxpa_legacy_call_serialization
+        COMMAND test_rxpa_concurrency legacy)
+add_test(NAME rxpa_process_reentrant_overlap
+        COMMAND test_rxpa_concurrency reentrant)
+add_test(NAME rxpa_legacy_recursive_reentry
+        COMMAND test_rxpa_concurrency recursive)
+add_test(NAME rxpa_branch_free_load_binding
+        COMMAND test_rxpa_concurrency binding)
+add_test(NAME rxpa_bound_legacy_serialization
+        COMMAND test_rxpa_concurrency bound-legacy)
+add_test(NAME rxpa_legacy_transition_quiescence
+        COMMAND test_rxpa_concurrency transition)
 set_tests_properties(rxvmmemory_allocator PROPERTIES
         LABELS "interpreter;memory")
 set_tests_properties(rxvmworker_lifecycle PROPERTIES
@@ -642,6 +663,15 @@ set_tests_properties(rxvmactive_isolation PROPERTIES
         LABELS "interpreter;worker;signals")
 set_tests_properties(rxvmplugin_context_ownership PROPERTIES
         LABELS "interpreter;worker;plugins;decimal")
+set_tests_properties(
+        rxpa_static_catalogue_replay
+        rxpa_legacy_call_serialization
+        rxpa_process_reentrant_overlap
+        rxpa_legacy_recursive_reentry
+        rxpa_branch_free_load_binding
+        rxpa_bound_legacy_serialization
+        rxpa_legacy_transition_quiescence
+        PROPERTIES LABELS "interpreter;worker;plugins;rxpa")
 set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
 set_tests_properties(rxvmstem_allocator_family PROPERTIES

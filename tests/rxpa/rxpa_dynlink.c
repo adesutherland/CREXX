@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
+RXPA_PLUGIN_PROCESS_REENTRANT
+
 // Proc 1
 PROCEDURE(proc1)
 {

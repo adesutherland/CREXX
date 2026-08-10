@@ -473,6 +473,41 @@ contain ordered child-register images. That `ChannelValue` is a transport
 description, never the internal `value`; the receiver materializes it into its
 own register tree. Large binary content may later select immutable chunks or a
 bounded stream capability beneath the same logical surface.
+
+Gate E3b-P1 makes the existing RXPA surface safe for multiple live VM contexts
+without changing its initializer or procedure signature. Static constructor
+registrations are retained as an owned, synchronized process catalogue and are
+replayed into a distinct native module for every VM; the first VM no longer
+consumes the list. A dynamic load returns an explicit DSO reference. Each VM
+retains its references until its procedure frame caches, module globals,
+reference values, native payloads, modules and provider instances have been
+destroyed, so no reachable function or payload-operation pointer outlives its
+code.
+
+Every native `proc_runtime` carries an internal capability word in the 64-bit
+alignment slot after `locals` and a load-selected invoker. A procedure from a
+plugin with a valid version-1 `PROCESS_REENTRANT` manifest binds permanently to
+the direct adapter. An unmarked procedure also binds direct while exactly one
+legacy-capable VM is live. Registering a second legacy-capable VM quiesces
+direct legacy execution, rebinds all live legacy invoker slots to the recursive
+locked adapter and makes that mode sticky for the process lifetime. A
+reentrant-only VM is not registered with this legacy coordinator and cannot
+cause the transition.
+
+`run()` announces and leaves the VM execution boundary to the cold coordinator;
+load and teardown register or remove owned invoker slots. Ordinary native calls
+load the already-selected invoker and contain no capability branch, catalogue
+lock or coordinator lock. Plugin initialization remains serialized because
+legacy dynamic plugins copy the helper table into the DSO-static
+`_rxpa_context`; repeated `dlopen`/`LoadLibrary` calls do not imply private DSO
+statics.
+
+Native-payload `copy` and `finalize` operations remain serialized in P1 even
+when the originating procedure plugin is process-reentrant. Session factories,
+per-context plugin userdata and per-call capability flags are a later gate.
+The public author contract and opt-in macro are documented in
+`docs/ai-context/CREXX_LIBS.md`.
+
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or

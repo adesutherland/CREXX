@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
+RXPA_PLUGIN_PROCESS_REENTRANT
+
 // Do not need to define functions for static linking to the compiler -
 // only REXX declarations are needed
 #ifndef DECL_ONLY

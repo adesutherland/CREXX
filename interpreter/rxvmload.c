@@ -26,6 +26,15 @@
 
 #include <stdlib.h>
 #include <inttypes.h>
+#ifdef _WIN32
+#include <windows.h>
+#define RXPA_CATALOGUE_LOCK() AcquireSRWLockExclusive(&rxpa_catalogue_lock)
+#define RXPA_CATALOGUE_UNLOCK() ReleaseSRWLockExclusive(&rxpa_catalogue_lock)
+#else
+#include <pthread.h>
+#define RXPA_CATALOGUE_LOCK() ((void)pthread_mutex_lock(&rxpa_catalogue_lock))
+#define RXPA_CATALOGUE_UNLOCK() ((void)pthread_mutex_unlock(&rxpa_catalogue_lock))
+#endif
 #include "rxvmintp.h"
 #include "rxastree.h"
 #include "rxvmvars.h"
@@ -60,17 +69,32 @@ void rxvm_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxint
 void rxvm_setsayexit(say_exit_func sayExitFunc);
 void rxvm_resetsayexit();
 
-typedef  struct rxpa_context {
+typedef struct rxpa_proc_policy {
+    size_t procedure_offset;
+    uint32_t capabilities;
+} rxpa_proc_policy;
+
+typedef struct rxpa_context {
     rxvm_context *rxvm_context;
     module_file *plugin_being_loaded;
     size_t const_buffer_size;
     size_t const_buffer_top;
     int meta_tail;
+    uint32_t plugin_capabilities;
+    rxpa_proc_policy *proc_policies;
+    size_t proc_policy_count;
+    size_t proc_policy_capacity;
 } rxpa_context;
+
+struct rxpa_library_reference {
+    rxpa_loaded_plugin plugin;
+    struct rxpa_library_reference *next;
+};
 
 /* Statically Linked Plugin List */
 struct static_linked_function {
     char *name;
+    char *plugin_id;
     rxpa_libfunc func;
     struct static_linked_function *next;
 };
@@ -89,6 +113,19 @@ struct static_linked_metadata {
     struct static_linked_metadata *next;
 };
 static struct static_linked_metadata *static_linked_metadata = 0;
+
+struct static_plugin_capability {
+    char *plugin_id;
+    uint32_t capabilities;
+    struct static_plugin_capability *next;
+};
+static struct static_plugin_capability *static_plugin_capabilities = 0;
+
+#ifdef _WIN32
+static SRWLOCK rxpa_catalogue_lock = SRWLOCK_INIT;
+#else
+static pthread_mutex_t rxpa_catalogue_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 #if defined(_MSC_VER)
 #define RXPA_LOADER_THREAD_LOCAL __declspec(thread)
@@ -117,6 +154,11 @@ static void free_interface_factory_registry(rxvm_context *context);
 static void free_interface_method_registry(rxvm_context *context);
 static void build_module_runtime_procedures(module *mod);
 static void build_module_dynamic_site_caches(module *mod);
+static void apply_rxpa_proc_policies(rxpa_context *context,
+                                     size_t module_number);
+static void bind_rxpa_runtime_policy(rxvm_context *context,
+                                     proc_runtime *runtime,
+                                     uint32_t capabilities);
 
 static void *rxvm_load_memory_alloc(rxvm_memory_worker *worker, size_t size) {
     return rxvm_memory_alloc_bytes(worker, size);
@@ -139,6 +181,23 @@ static void rxvm_load_memory_free(void *pointer) {
     previous = rxvm_memory_enter(rxvm_memory_owner(pointer));
     (void)rxvm_memory_release(pointer);
     rxvm_memory_leave(previous);
+}
+
+static char *rxpa_catalogue_strdup(const char *text) {
+    size_t length;
+    char *copy;
+    if (!text) return 0;
+    length = strlen(text);
+    copy = rxvm_memory_alloc_unowned_bytes(length + 1u);
+    if (!copy) RX_PANIC_OOM("copy static rxpa catalogue string",
+                            length + 1u, text);
+    memcpy(copy, text, length + 1u);
+    return copy;
+}
+
+static int rxpa_strings_equal(const char *left, const char *right) {
+    if (!left || !right) return left == right;
+    return strcmp(left, right) == 0;
 }
 
 static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
@@ -302,6 +361,9 @@ void rxinimod(rxvm_context *context) {
     context->active.say_exit = 0;
     context->active.pending_interrupts = 0;
     rxvmplugin_instance_set_init(&context->plugin_instances);
+    context->rxpa_libraries = 0;
+    rxpa_compatibility_context_init(&context->rxpa_compatibility,
+                                    context->worker.memory_worker);
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
@@ -343,6 +405,9 @@ void rxfremod(rxvm_context *context) {
         fprintf(stderr, "RXVM teardown detected live active execution/callback state\n");
         abort();
     }
+
+    /* Remove cold coordinator references before procedure storage is freed. */
+    rxpa_compatibility_context_destroy(&context->rxpa_compatibility);
 
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
@@ -408,6 +473,15 @@ void rxfremod(rxvm_context *context) {
     /* Provider instances are context-owned and must die while the worker is
      * idle and its allocator family is still available. */
     rxvmplugin_instance_set_destroy(&context->plugin_instances);
+
+    /* All values, references, modules and native payload callbacks are now
+     * unreachable; dynamic RXPA code may finally be unloaded. */
+    while (context->rxpa_libraries) {
+        struct rxpa_library_reference *next = context->rxpa_libraries->next;
+        rxpa_close_plugin(&context->rxpa_libraries->plugin);
+        rxvm_load_memory_free(context->rxpa_libraries);
+        context->rxpa_libraries = next;
+    }
 
     rxvm_memory_report_if_requested(rxvm_runtime_memory_context(runtime));
 
@@ -536,6 +610,7 @@ static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, si
 
     runtime->definition = definition;
     runtime->locals = definition->locals;
+    runtime->native_capabilities = 0u;
     runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
     runtime->frame_free_list_head = 0;
     runtime->frame_free_list = &runtime->frame_free_list_head;
@@ -544,6 +619,7 @@ static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, si
 #ifdef CREXX_VM_PROFILING
     runtime->profile_id = SIZE_MAX;
 #endif
+    runtime->native_invoker = NULL;
 }
 
 static void build_module_runtime_procedures(module *mod) {
@@ -765,6 +841,11 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                                         p_entry_linked->binarySpace;
                                 p_entry->frame_free_list =
                                         p_entry_linked->frame_free_list;
+                                if (p_entry_linked->native_invoker) {
+                                    bind_rxpa_runtime_policy(
+                                            context, p_entry,
+                                            p_entry_linked->native_capabilities);
+                                }
 
                                 /* Reduce the number of unresolved symbols */
                                 context->modules[mod_index]
@@ -1020,9 +1101,12 @@ int rxldmod(rxvm_context *context, char *file_name) {
 
         if (file_exists) {
             rxvm_context *previous_active_context;
+            rxpa_loaded_plugin loaded_plugin;
             DEBUG("CREXX Native Plugin file\n");
             // Check if the file exists
             fp = openfile(file_name, (char*)type_plugin, found_location[0] ? found_location : 0, "rb");
+            if (!fp) return -1;
+            fclose(fp);
 
             // Create the rxpa_initctxptr context
             struct rxpa_initctxptr rxpa_functions;
@@ -1075,17 +1159,39 @@ int rxldmod(rxvm_context *context, char *file_name) {
             current_rxpa_context->plugin_being_loaded->header.proc_head = -1;
             current_rxpa_context->plugin_being_loaded->header.meta_head = -1;
 
-            // Load the plugin
-            int rc = load_plugin(&rxpa_functions, found_location[0] ? found_location : 0, full_file_name);
+            // Open the plugin, validate its optional capability declaration,
+            // then run the legacy initializer under the loader transaction.
+            int rc = rxpa_open_plugin(
+                    found_location[0] ? found_location : 0,
+                    full_file_name, &loaded_plugin);
+            if (!rc) {
+                current_rxpa_context->plugin_capabilities =
+                        loaded_plugin.capabilities;
+                rc = rxpa_initialize_plugin(&loaded_plugin, &rxpa_functions);
+            }
             rxvm_load_memory_free(full_file_name);
 
             // Check Result
             if (!rc) {
                 DEBUG("CREXX Plugin %s loaded successfully\n", file_name);
                 n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
+                apply_rxpa_proc_policies(current_rxpa_context, n);
                 current_rxpa_context->plugin_being_loaded = 0; // We are done with it! It will be freed eventually
+                {
+                    struct rxpa_library_reference *reference =
+                            rxvm_load_memory_alloc(
+                                    context->worker.memory_worker,
+                                    sizeof(*reference));
+                    if (!reference) RX_PANIC_OOM(
+                            "allocate rxpa library reference",
+                            sizeof(*reference), file_name);
+                    reference->plugin = loaded_plugin;
+                    reference->next = context->rxpa_libraries;
+                    context->rxpa_libraries = reference;
+                }
             } else {
                 DEBUG("Failed to load plugin %s (rc=%d)\n", file_name, rc);
+                rxpa_close_plugin(&loaded_plugin);
                 free_rxpa_context(current_rxpa_context);
                 current_rxpa_context = 0;
                 rxvm_active_context_leave(previous_active_context);
@@ -1151,6 +1257,7 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
 static void free_rxpa_context(rxpa_context *context)
 {
     if (context->plugin_being_loaded) free_module(context->plugin_being_loaded);
+    rxvm_load_memory_free(context->proc_policies);
     rxvm_load_memory_free(context);
 }
 
@@ -1162,9 +1269,14 @@ static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context) {
         RX_PANIC_OOM("allocate rxpa context", sizeof(rxpa_context), 0);
     }
     new_rxpa_context->rxvm_context = rxvm_context;
+    new_rxpa_context->plugin_being_loaded = 0;
     new_rxpa_context->const_buffer_size = 0;
     new_rxpa_context->const_buffer_top = 0;
     new_rxpa_context->meta_tail = -1;
+    new_rxpa_context->plugin_capabilities = 0u;
+    new_rxpa_context->proc_policies = 0;
+    new_rxpa_context->proc_policy_count = 0u;
+    new_rxpa_context->proc_policy_capacity = 0u;
     return new_rxpa_context;
 }
 
@@ -1329,8 +1441,90 @@ static void add_member_meta_to_module(rxpa_context *context, char *owner, char *
     meta->args = s_args;
 }
 
+static void append_rxpa_proc_policy(rxpa_context *context,
+                                    size_t procedure_offset,
+                                    uint32_t capabilities) {
+    rxpa_proc_policy *policies;
+    size_t new_capacity;
+
+    if (context->proc_policy_count == context->proc_policy_capacity) {
+        new_capacity = context->proc_policy_capacity
+                ? context->proc_policy_capacity * 2u : 8u;
+        policies = rxvm_memory_resize_bytes(
+                context->rxvm_context->worker.memory_worker,
+                context->proc_policies,
+                context->proc_policy_count * sizeof(*policies),
+                new_capacity * sizeof(*policies));
+        if (!policies) RX_PANIC_OOM("grow rxpa procedure policy table",
+                                    new_capacity * sizeof(*policies),
+                                    context->plugin_being_loaded->name);
+        context->proc_policies = policies;
+        context->proc_policy_capacity = new_capacity;
+    }
+
+    context->proc_policies[context->proc_policy_count].procedure_offset =
+            procedure_offset;
+    context->proc_policies[context->proc_policy_count].capabilities =
+            capabilities;
+    context->proc_policy_count++;
+}
+
+static void apply_rxpa_proc_policies(rxpa_context *context,
+                                     size_t module_number) {
+    module *mod;
+    size_t index;
+    if (!context || !module_number ||
+        module_number > context->rxvm_context->num_modules) return;
+    mod = context->rxvm_context->modules[module_number - 1u];
+    for (index = 0; index < context->proc_policy_count; index++) {
+        proc_runtime *runtime = rxvm_get_module_runtime_procedure(
+                mod, context->proc_policies[index].procedure_offset);
+        if (!runtime) abort();
+        size_t module_index;
+        uint32_t capabilities = context->proc_policies[index].capabilities;
+        bind_rxpa_runtime_policy(context->rxvm_context, runtime, capabilities);
+
+        /* Imports linked before the native policy was known share the owner's
+         * frame-free-list identity. Bind each alias slot now as well. */
+        for (module_index = 0u;
+             module_index < context->rxvm_context->num_modules;
+             module_index++) {
+            module *alias_module =
+                    context->rxvm_context->modules[module_index];
+            size_t procedure_index;
+            for (procedure_index = 0u;
+                 procedure_index < alias_module->procedure_count;
+                 procedure_index++) {
+                proc_runtime *alias =
+                        &alias_module->procedures[procedure_index];
+                if (alias != runtime &&
+                    alias->frame_free_list == runtime->frame_free_list) {
+                    bind_rxpa_runtime_policy(context->rxvm_context,
+                                             alias, capabilities);
+                }
+            }
+        }
+    }
+}
+
+static void bind_rxpa_runtime_policy(rxvm_context *context,
+                                     proc_runtime *runtime,
+                                     uint32_t capabilities) {
+    runtime->native_capabilities = capabilities;
+    if ((capabilities & RXPA_PLUGIN_CAP_PROCESS_REENTRANT) != 0u) {
+        runtime->native_invoker = rxvm_callfunc_direct;
+    } else if (!rxpa_compatibility_bind_legacy(
+                       &context->rxpa_compatibility,
+                       &runtime->native_invoker,
+                       rxvm_callfunc_direct, rxvm_callfunc)) {
+        RX_PANIC_OOM("bind legacy rxpa procedure",
+                     sizeof(runtime->native_invoker), runtime->name);
+    }
+}
+
 // Add a statically linked function to the constant pool being created
-void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) {
+static void add_proc_to_module(rxpa_context* context, char* index,
+                               rxpa_libfunc func, uint32_t capabilities) {
     size_t entry_size, proc_index, exposed_proc_index;
     proc_constant *proc;
     expose_proc_constant *exposed_proc;
@@ -1345,6 +1539,7 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
     proc->next = -1;
     proc->locals = 0;
     proc->start = (size_t)func;
+    append_rxpa_proc_policy(context, proc_index, capabilities);
 
     /* Create Exposed Procedure Entry */
     entry_size = sizeof(expose_proc_constant) + strlen(index);
@@ -1365,10 +1560,70 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
     proc->exposed = exposed_proc_index;
 }
 
-// RXPA Add Function Implementation
-// This is the callback function for rxldmod() when the plugin adds functions,
-// or is called during initialising a statically linked plugin
-void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
+static uint32_t static_plugin_capabilities_locked(const char *plugin_id) {
+    struct static_plugin_capability *entry = static_plugin_capabilities;
+    if (!plugin_id) return 0u;
+    while (entry) {
+        if (strcmp(entry->plugin_id, plugin_id) == 0) {
+            return entry->capabilities;
+        }
+        entry = entry->next;
+    }
+    return 0u;
+}
+
+void rxvm_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities) {
+    struct static_plugin_capability *entry;
+    if (!plugin_id || !*plugin_id) return;
+    capabilities &= RXPA_PLUGIN_CAP_KNOWN_V1;
+    RXPA_CATALOGUE_LOCK();
+    entry = static_plugin_capabilities;
+    while (entry) {
+        if (strcmp(entry->plugin_id, plugin_id) == 0) {
+            entry->capabilities |= capabilities;
+            RXPA_CATALOGUE_UNLOCK();
+            return;
+        }
+        entry = entry->next;
+    }
+    entry = rxvm_memory_alloc_unowned_bytes(sizeof(*entry));
+    if (!entry) RX_PANIC_OOM("allocate static rxpa capability",
+                             sizeof(*entry), plugin_id);
+    entry->plugin_id = rxpa_catalogue_strdup(plugin_id);
+    entry->capabilities = capabilities;
+    entry->next = static_plugin_capabilities;
+    static_plugin_capabilities = entry;
+    RXPA_CATALOGUE_UNLOCK();
+}
+
+static void append_static_function(const char *plugin_id, rxpa_libfunc func,
+                                   char *name) {
+    struct static_linked_function *entry;
+    RXPA_CATALOGUE_LOCK();
+    entry = static_linked_functions;
+    while (entry) {
+        if (entry->func == func && strcmp(entry->name, name) == 0 &&
+            rxpa_strings_equal(entry->plugin_id, plugin_id)) {
+            RXPA_CATALOGUE_UNLOCK();
+            return;
+        }
+        entry = entry->next;
+    }
+    entry = rxvm_memory_alloc_unowned_bytes(sizeof(*entry));
+    if (!entry) RX_PANIC_OOM("allocate static rxpa function",
+                             sizeof(*entry), name);
+    entry->name = rxpa_catalogue_strdup(name);
+    entry->plugin_id = rxpa_catalogue_strdup(plugin_id);
+    entry->func = func;
+    entry->next = static_linked_functions;
+    static_linked_functions = entry;
+    RXPA_CATALOGUE_UNLOCK();
+}
+
+static void rxvm_addfunc_owned(const char *plugin_id, rxpa_libfunc func,
+                               char* name, char* option, char* type,
+                               char* args) {
     (void) option;
     (void) type;
     (void) args;
@@ -1378,46 +1633,73 @@ void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char*
         DEBUG("Loading Procedure %s from plugin %s\n", name, context->modules[context->num_modules - 1]->name);
 
         // Add the procedure to the module
-        add_proc_to_module(current_rxpa_context, name, func);
+        uint32_t capabilities = current_rxpa_context->plugin_capabilities;
+        if (plugin_id) {
+            RXPA_CATALOGUE_LOCK();
+            capabilities = static_plugin_capabilities_locked(plugin_id);
+            RXPA_CATALOGUE_UNLOCK();
+        }
+        add_proc_to_module(current_rxpa_context, name, func, capabilities);
     }
     else {
-        // Add to the list of statically linked functions
-        struct static_linked_function *new_static_func =
-                rxvm_memory_alloc_unowned_bytes(
-                        sizeof(struct static_linked_function));
-        if (!new_static_func) {
-            RX_PANIC_OOM("allocate static rxpa function",
-                         sizeof(struct static_linked_function), name);
-        }
-        new_static_func->name = name;
-        new_static_func->func = func;
-        new_static_func->next = static_linked_functions;
-        static_linked_functions = new_static_func;
+        append_static_function(plugin_id, func, name);
     }
+}
+
+// RXPA Add Function Implementation
+// This is the callback function for rxldmod() when the plugin adds functions,
+// or is called during initialising a statically linked plugin.
+void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type,
+                  char* args) {
+    rxvm_addfunc_owned(0, func, name, option, type, args);
+}
+
+void rxvm_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char* name, char* option, char* type,
+                             char* args) {
+    rxvm_addfunc_owned(plugin_id, func, name, option, type, args);
 }
 
 static void append_static_metadata(char *kind, char *symbol, char *option, char *type,
                                    char *interface_symbol, char *owner, char *member_kind,
                                    char *member, char *args) {
-    struct static_linked_metadata *new_meta =
-            rxvm_memory_alloc_unowned_bytes(
-                    sizeof(struct static_linked_metadata));
+    struct static_linked_metadata *entry;
+    struct static_linked_metadata *new_meta;
+    RXPA_CATALOGUE_LOCK();
+    entry = static_linked_metadata;
+    while (entry) {
+        if (rxpa_strings_equal(entry->kind, kind) &&
+            rxpa_strings_equal(entry->symbol, symbol) &&
+            rxpa_strings_equal(entry->option, option) &&
+            rxpa_strings_equal(entry->type, type) &&
+            rxpa_strings_equal(entry->interface_symbol, interface_symbol) &&
+            rxpa_strings_equal(entry->owner, owner) &&
+            rxpa_strings_equal(entry->member_kind, member_kind) &&
+            rxpa_strings_equal(entry->member, member) &&
+            rxpa_strings_equal(entry->args, args)) {
+            RXPA_CATALOGUE_UNLOCK();
+            return;
+        }
+        entry = entry->next;
+    }
+    new_meta = rxvm_memory_alloc_unowned_bytes(sizeof(*new_meta));
     if (!new_meta) {
         RX_PANIC_OOM("allocate static rxpa metadata",
                      sizeof(struct static_linked_metadata), symbol);
     }
 
-    new_meta->kind = kind;
-    new_meta->symbol = symbol;
-    new_meta->option = option;
-    new_meta->type = type;
-    new_meta->interface_symbol = interface_symbol;
-    new_meta->owner = owner;
-    new_meta->member_kind = member_kind;
-    new_meta->member = member;
-    new_meta->args = args;
+    new_meta->kind = rxpa_catalogue_strdup(kind);
+    new_meta->symbol = rxpa_catalogue_strdup(symbol);
+    new_meta->option = rxpa_catalogue_strdup(option);
+    new_meta->type = rxpa_catalogue_strdup(type);
+    new_meta->interface_symbol = rxpa_catalogue_strdup(interface_symbol);
+    new_meta->owner = rxpa_catalogue_strdup(owner);
+    new_meta->member_kind = rxpa_catalogue_strdup(member_kind);
+    new_meta->member = rxpa_catalogue_strdup(member);
+    new_meta->args = rxpa_catalogue_strdup(args);
     new_meta->next = static_linked_metadata;
     static_linked_metadata = new_meta;
+    RXPA_CATALOGUE_UNLOCK();
 }
 
 void rxvm_addclass(char* name, char* option, char* type) {
@@ -1463,7 +1745,11 @@ int rxldmodp(rxvm_context *context) {
     size_t n;
     rxvm_context *previous_active_context;
 
-    if (static_linked_functions == 0 && static_linked_metadata == 0) return 0;
+    RXPA_CATALOGUE_LOCK();
+    if (static_linked_functions == 0 && static_linked_metadata == 0) {
+        RXPA_CATALOGUE_UNLOCK();
+        return 0;
+    }
 
     DEBUG("Loading Statically linked Plugins\n");
 
@@ -1512,8 +1798,11 @@ int rxldmodp(rxvm_context *context) {
     // Process static plugin functions
     struct static_linked_function *static_func = static_linked_functions;
     while (static_func) {
+        uint32_t capabilities = static_plugin_capabilities_locked(
+                static_func->plugin_id);
         DEBUG("CREXX Statically Linked Native Plugin %s\n", static_func->name);
-        rxvm_addfunc(static_func->func, static_func->name, 0, 0, 0) ;
+        add_proc_to_module(current_rxpa_context, static_func->name,
+                           static_func->func, capabilities);
 
         // Loop to next static function
         static_func = static_func->next;
@@ -1536,27 +1825,17 @@ int rxldmodp(rxvm_context *context) {
         }
         static_meta = static_meta->next;
     }
+    RXPA_CATALOGUE_UNLOCK();
 
     // Link as a plugin
     n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
+    apply_rxpa_proc_policies(current_rxpa_context, n);
 
     // Free the rxpa_context
     current_rxpa_context->plugin_being_loaded = 0; // It's now owned by the module list
     free_rxpa_context(current_rxpa_context);
     current_rxpa_context = 0;
     rxvm_active_context_leave(previous_active_context);
-
-    // Delete Static Function List
-    while (static_linked_functions) {
-        struct static_linked_function *next = static_linked_functions->next;
-        rxvm_load_memory_free(static_linked_functions);
-        static_linked_functions = next;
-    }
-    while (static_linked_metadata) {
-        struct static_linked_metadata *next = static_linked_metadata->next;
-        rxvm_load_memory_free(static_linked_metadata);
-        static_linked_metadata = next;
-    }
 
     return (int)(n); /* Module Number */
 }

@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "crexxpa.h"
+#include "rxpacompat.h"
 #include "rxvmintp.h"
 #include "rxvmvars.h"
 
@@ -183,8 +184,8 @@ static void rxpa_validate_native_outputs(
     }
 }
 
-/* Function to call a native RXPA (CREXX Plugin Architecture) function */
-void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal) {
+void rxvm_callfunc_direct(void* function, int args, value** argv,
+                          value* ret, value* signal) {
     rxpa_libfunc native_function = (rxpa_libfunc)function;
     rxpa_attribute_value* arg_values = (rxpa_attribute_value*)argv;
     rxpa_attribute_value return_value = (rxpa_attribute_value)ret;
@@ -217,6 +218,26 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* si
     *pool_slot = saved_head;
     rxpa_compat_pool_slot = saved_compat_slot;
 }
+
+void rxvm_callfunc(void* function, int args, value** argv, value* ret,
+                   value* signal) {
+    rxpa_compatibility_enter();
+    rxvm_callfunc_direct(function, args, argv, ret, signal);
+    rxpa_compatibility_leave();
+}
+
+/* Direct capability entry retained for focused policy tests. Ordinary VM
+ * handlers use the invoker selected when the native procedure is loaded. */
+void rxvm_callfunc_capabilities(void* function, uint32_t capabilities,
+                                int args, value** argv, value* ret,
+                                value* signal) {
+    if ((capabilities & RXPA_PLUGIN_CAP_PROCESS_REENTRANT) != 0u) {
+        rxvm_callfunc_direct(function, args, argv, ret, signal);
+    } else {
+        rxvm_callfunc(function, args, argv, ret, signal);
+    }
+}
+
 
 /* Function to get signal text from a signal code  */
 char* rxvm_getsignaltext(rxsignal signal) {

@@ -2211,7 +2211,8 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
                             current_module->module_number, VM_CANONICAL_INDEX(pc),
                             0, 0);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-                    rxvm_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
+                    rxvm_call_native_procedure(called_function, 0, NULL,
+                                               op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -2274,7 +2275,7 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
                         current_module->module_number, VM_CANONICAL_INDEX(pc),  \
                         mapped_arg_base__, 1);                                  \
                 RXVM_INSTRUMENTATION_NATIVE_BEGIN(mapped_called__);             \
-                rxvm_callfunc((void *)mapped_called__->start,                   \
+                rxvm_call_native_procedure(mapped_called__,                    \
                               mapped_arg_count__, mapped_args__,                \
                               mapped_result__, signal_value);                   \
                 RXVM_INSTRUMENTATION_NATIVE_END();                              \
@@ -2345,8 +2346,9 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
                             current_module->module_number, VM_CANONICAL_INDEX(pc),
                             REG_IDX(3) + 1, 1);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
-                                  signal_value);
+                    rxvm_call_native_procedure(called_function,
+                                               op3R->int_value, (&(op3R)) + 1,
+                                               op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -2431,8 +2433,9 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
                             current_module->module_number, VM_CANONICAL_INDEX(pc),
                             REG_IDX(3) + 1, 1);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
-                                  signal_value);
+                    rxvm_call_native_procedure(called_function,
+                                               op3R->int_value, (&(op3R)) + 1,
+                                               op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {

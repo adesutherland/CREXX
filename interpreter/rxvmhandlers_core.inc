@@ -71,8 +71,8 @@ RXVM_HANDLER(CALL_FUNC,
                     current_module->module_number, VM_CANONICAL_INDEX(pc),
                     0, 0);
             RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-            rxvm_callfunc((void *) (called_function->start), 0, NULL, NULL,
-                          signal_value);
+            rxvm_call_native_procedure(called_function, 0, NULL, NULL,
+                                       signal_value);
             RXVM_INSTRUMENTATION_NATIVE_END();
             INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
         } else {

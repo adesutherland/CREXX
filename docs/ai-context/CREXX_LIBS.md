@@ -480,6 +480,69 @@ Plugins can be compiled in two ways:
 
 2. **Static Plugins**: Built directly into the `crexx` binaries. These are typically reserved for core Standard Libraries to guarantee they are always available.
 
+### RXPA concurrency contract
+
+An unmodified RXPA plugin remains valid in a multi-VM process. The host treats
+it as a **legacy process-shared plugin**. While the process has only one VM that
+has loaded a legacy plugin, its procedures use the same direct adapter as the
+single-threaded product. Loading a legacy plugin into a second VM starts one
+cold, sticky transition: the host waits for existing direct legacy execution
+to leave its VM execution boundary, rebinds every live legacy procedure to one
+process-wide recursive compatibility lock, and publishes the new load only
+after rebinding. A VM that loads only process-reentrant plugins does not trigger
+the transition. Once concurrent legacy mode has been entered, later legacy
+loads remain locked for the rest of the process lifetime.
+
+This is conservative because the existing initializer ABI has no way to prove
+that the plugin's C statics, its dependencies, or its error paths tolerate
+concurrent entry. Recursive locking allows a legacy plugin to make a nested
+call that reaches another legacy RXPA procedure without deadlocking. The cold
+transition can wait for a long-running legacy-capable VM invocation to return;
+plugin load must not assume that publication is instantaneous.
+
+An audited plugin that is safe for concurrent entry can opt in by adding one
+file-scope declaration after including `crexxpa.h`:
+
+```c
+#include "crexxpa.h"
+
+RXPA_PLUGIN_PROCESS_REENTRANT
+```
+
+The declaration is plugin-wide and must appear exactly once in a dynamic
+plugin. It exports an optional versioned manifest; it does not change
+`_initfuncs(rxpa_initctxptr)`, `rxpa_libfunc`, `ADDPROC`, the language-level
+option string, RXAS, or RXBIN. Older hosts ignore the extra symbol. New hosts
+treat an absent, malformed, unsupported, or unknown manifest as legacy mode.
+Static plugins use the same source declaration and are associated with their
+rebuild-together `PLUGIN_ID`.
+
+`PROCESS_REENTRANT` means that all procedures published by that plugin may be
+entered concurrently and still have defined behavior. It does **not** mean
+side-effect-free. Synchronized logging or I/O, atomics, and calls into
+documented thread-safe services are fine. Before adding the macro, audit:
+
+- every writable file-scope/static variable;
+- lazy initialization, caches, random-number state, locale and error buffers;
+- all libraries and OS APIs called by every published procedure;
+- cleanup and failure paths, including calls made during nested execution; and
+- any assumption that one call completes before the next starts.
+
+A function that uses only stack locals, immutable tables and RXPA helpers is a
+typical candidate. A plugin that increments an ordinary static counter, reuses
+one static work buffer, changes process locale, or relies on an undocumented
+non-thread-safe library is not; leave it unmarked or add its own synchronization
+first. Plugin maintainers should make the assertion wherever this audit passes:
+the binding then remains permanently direct, regardless of how many other VMs
+or OS threads the process starts.
+
+The P1 capability applies to procedure calls. Native-payload `copy` and
+`finalize` callbacks remain on the recursive compatibility lane because they
+can run outside the originating procedure and need a separate lifetime claim.
+Per-VM session factories, default-session compatibility thunks and per-call
+capabilities are reserved for the later session-aware RXPA slice; no such API
+is exposed by P1.
+
 ## 3. Writing a Native Function
 
 A native C function meant to be exposed to REXX is defined using the `PROCEDURE` macro. 

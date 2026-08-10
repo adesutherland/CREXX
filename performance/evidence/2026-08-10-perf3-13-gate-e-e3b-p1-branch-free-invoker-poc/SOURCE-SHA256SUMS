@@ -1,0 +1,4 @@
+a16bc140b937a71aea5cc381f82642366327b4bc938457036ce5a153e7d64b59  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/poc/e3b_rxpa_invoker_ceiling.c
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx
+0914a608f54c4720b0c4dc3ba3d6144fdb81f7a222f12f240972b096fab351b8  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/manifest.txt
+1a3de4307ba1b9027fc194c672c0ceb1306e1e8862086043ae88aa3e1d023bd6  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/summarize_paired.crexx
