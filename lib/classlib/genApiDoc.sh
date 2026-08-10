@@ -1,37 +1,42 @@
- rexxApiDoc ArrayList.crexx                      >> classlib-api.tex
- rexxApiDoc ArrayListIterator.crexx              >> classlib-api.tex
- rexxApiDoc Comparator.crexx                     >> classlib-api.tex
- rexxApiDoc Iterable.crexx                       >> classlib-api.tex
- rexxApiDoc Iterator.crexx                       >> classlib-api.tex
- rexxApiDoc ObjectLinkedList.crexx               >> classlib-api.tex
- rexxApiDoc TreeMap.crexx                        >> classlib-api.tex
- rexxApiDoc TreeMapIterator.crexx                >> classlib-api.tex
- rexxApiDoc Printable.crexx                      >> classlib-api.tex
- rexxApiDoc ObjectStack.crexx                    >> classlib-api.tex
- rexxApiDoc Os.crexx                             >> classlib-api.tex
- rexxApiDoc Qfind.crexx                          >> classlib-api.tex
- rexxApiDoc Rexx.crexx                           >> classlib-api.tex
- rexxApiDoc RexxComparator.crexx                 >> classlib-api.tex
- rexxApiDoc Scanlex.crexx                        >> classlib-api.tex
- rexxApiDoc StringArrayList.crexx                >> classlib-api.tex
- rexxApiDoc StringArrayListIterator.crexx        >> classlib-api.tex
- rexxApiDoc StringHashMap.crexx                  >> classlib-api.tex
- rexxApiDoc StringHashMapIterator.crexx          >> classlib-api.tex
- rexxApiDoc StringHashSet.crexx                  >> classlib-api.tex
- rexxApiDoc StringHashSetIterator.crexx          >> classlib-api.tex
- rexxApiDoc StringIterable.crexx                 >> classlib-api.tex
- rexxApiDoc StringIterator.crexx                 >> classlib-api.tex
- rexxApiDoc StringLinkedList.crexx               >> classlib-api.tex
- rexxApiDoc StringObjectHashMap.crexx            >> classlib-api.tex
- rexxApiDoc StringObjectHashMapIterator.crexx    >> classlib-api.tex
- rexxApiDoc StringObjectTreeMap.crexx            >> classlib-api.tex
- rexxApiDoc StringObjectTreeMapIterator.crexx    >> classlib-api.tex
- rexxApiDoc StringOldTreeMap.crexx               >> classlib-api.tex
- rexxApiDoc StringStack.crexx                    >> classlib-api.tex
- rexxApiDoc StringTreeMap.crexx                  >> classlib-api.tex
- rexxApiDoc StringTreeMapIterator.crexx          >> classlib-api.tex
- rexxApiDoc StringTreeSet.crexx                  >> classlib-api.tex
- rexxApiDoc StringTreeSetIterator.crexx          >> classlib-api.tex
- rexxApiDoc Id.crexx                             >> classlib-api.tex
- rexxApiDoc KeyDB.crexx                          >> classlib-api.tex
- 
+# some classes that are to be found elsewhere
+rexxApiDoc ../rxfnsb/rexx/stem.crexx            >> classlib-api.tex
+rexxApiDoc ../rxfnsb/rexx/rxhttp.crexx          >> classlib-api.tex
+rexxApiDoc ../rxfnsb/rexx/rxjson.crexx          >> classlib-api.tex
+# the classes from classlib
+rexxApiDoc ArrayList.crexx                      >> classlib-api.tex
+rexxApiDoc ArrayListIterator.crexx              >> classlib-api.tex
+rexxApiDoc Comparator.crexx                     >> classlib-api.tex
+rexxApiDoc Iterable.crexx                       >> classlib-api.tex
+rexxApiDoc Iterator.crexx                       >> classlib-api.tex
+rexxApiDoc ObjectLinkedList.crexx               >> classlib-api.tex
+rexxApiDoc TreeMap.crexx                        >> classlib-api.tex
+rexxApiDoc TreeMapIterator.crexx                >> classlib-api.tex
+rexxApiDoc Printable.crexx                      >> classlib-api.tex
+rexxApiDoc ObjectStack.crexx                    >> classlib-api.tex
+rexxApiDoc Os.crexx                             >> classlib-api.tex
+rexxApiDoc Qfind.crexx                          >> classlib-api.tex
+rexxApiDoc Rexx.crexx                           >> classlib-api.tex
+rexxApiDoc RexxComparator.crexx                 >> classlib-api.tex
+rexxApiDoc Scanlex.crexx                        >> classlib-api.tex
+rexxApiDoc StringArrayList.crexx                >> classlib-api.tex
+rexxApiDoc StringArrayListIterator.crexx        >> classlib-api.tex
+rexxApiDoc StringHashMap.crexx                  >> classlib-api.tex
+rexxApiDoc StringHashMapIterator.crexx          >> classlib-api.tex
+rexxApiDoc StringHashSet.crexx                  >> classlib-api.tex
+rexxApiDoc StringHashSetIterator.crexx          >> classlib-api.tex
+rexxApiDoc StringIterable.crexx                 >> classlib-api.tex
+rexxApiDoc StringIterator.crexx                 >> classlib-api.tex
+rexxApiDoc StringLinkedList.crexx               >> classlib-api.tex
+rexxApiDoc StringObjectHashMap.crexx            >> classlib-api.tex
+rexxApiDoc StringObjectHashMapIterator.crexx    >> classlib-api.tex
+rexxApiDoc StringObjectTreeMap.crexx            >> classlib-api.tex
+rexxApiDoc StringObjectTreeMapIterator.crexx    >> classlib-api.tex
+rexxApiDoc StringOldTreeMap.crexx               >> classlib-api.tex
+rexxApiDoc StringStack.crexx                    >> classlib-api.tex
+rexxApiDoc StringTreeMap.crexx                  >> classlib-api.tex
+rexxApiDoc StringTreeMapIterator.crexx          >> classlib-api.tex
+rexxApiDoc StringTreeSet.crexx                  >> classlib-api.tex
+rexxApiDoc StringTreeSetIterator.crexx          >> classlib-api.tex
+rexxApiDoc Id.crexx                             >> classlib-api.tex
+rexxApiDoc KeyDB.crexx                          >> classlib-api.tex
+

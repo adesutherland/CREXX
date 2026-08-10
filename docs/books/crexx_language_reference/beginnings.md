@@ -24,7 +24,7 @@ With the roots of the Rexx language (when it still went with one less 'x' at the
 options levelb
 /* rexx: welcoming the world */
 say 'hello world!'
-'date'
+address system 'date'
 ```
 
 <!--splice--crexx helloaddress.rexx-->

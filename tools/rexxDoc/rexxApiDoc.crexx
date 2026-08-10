@@ -6,13 +6,13 @@ import rxfnsb
 main: procedure
    /*
     * Usage:
-    *   rxvm rexxDoc source.crexx [extra-interface]
+    *   crexx rexxApiDoc --args source.crexx [extra-interface]
     *
     * The generated LaTeX is written to stdout, so a complete directory can
     * be processed repeatably from a shell script and redirected to one file.
     *
     * Example:
-    *   rxvm rexxDoc lib/classlib/StringTreeMap.crexx Map > StringTreeMap.tex
+    *   crexx rexxApiDoc --args lib/classlib/StringTreeMap.crexx Map > StringTreeMap.tex
     */
    arg sourcea=.string[]
 
@@ -29,8 +29,8 @@ main: procedure
 
 /* ------------------------------------------------------------------
  *  Function:  EMITALMANACCLASS
- *  Purpose:   Extract one cRexx class declaration and its public factories
- *             and methods, and emit crexxalmanac.sty markup.
+ *  Purpose:   Extract all cRexx class/interface declarations and their
+ *             public factories and methods, and emit crexxalmanac.sty markup.
  *
  *  Scope:
  *      - namespace_ ... expose ...
@@ -51,7 +51,11 @@ emitAlmanacClass: procedure
    content = loadText(file)
    lines = splitLines(content)
 
+   /* namespace is a cRexx reserved word, so keep namespace_ as the scanner
+    * variable and copy it into classNamespace when a declaration starts.
+    */
    namespace_ = ''
+   classNamespace = ''
    className = ''
    classKind = 'class'
    baseClass = '.object'
@@ -61,6 +65,9 @@ emitAlmanacClass: procedure
    memberName = .string[]
    memberType = .string[]
    memberArgs = .string[]
+
+   extraUsed = 0
+   classCount = 0
 
    do i = 1 to lines[0]
       line = strip(lines[i])
@@ -74,9 +81,29 @@ emitAlmanacClass: procedure
 
       pclass = pos(': class', low)
       if pclass > 0 then do
+         /* A source file may contain more than one class/interface.
+          * Flush the previous declaration before starting the next one.
+          */
+         if className \= '' then do
+            if strip(extraInterface) \= '' & \extraUsed then do
+               call appendUnique interfaces, extraInterface
+               extraUsed = 1
+            end
+            call emitOneClass classNamespace, className, classKind, baseClass, ,
+                              interfaces, memberKind, memberName, memberType, memberArgs
+            classCount = classCount + 1
+         end
+
          classKind = 'class'
          className = strip(left(line,pclass-1))
+         classNamespace = namespace_
          baseClass = '.object'
+         interfaces = .string[]
+         memberKind = .string[]
+         memberName = .string[]
+         memberType = .string[]
+         memberArgs = .string[]
+
          tail = strip(substr(line,pclass+7))
          call parseClassTail tail, baseClass, interfaces
          iterate
@@ -84,13 +111,33 @@ emitAlmanacClass: procedure
 
       pinterface = pos(': interface', low)
       if pinterface > 0 then do
+         if className \= '' then do
+            if strip(extraInterface) \= '' & \extraUsed then do
+               call appendUnique interfaces, extraInterface
+               extraUsed = 1
+            end
+            call emitOneClass classNamespace, className, classKind, baseClass, ,
+                              interfaces, memberKind, memberName, memberType, memberArgs
+            classCount = classCount + 1
+         end
+
          classKind = 'interface'
          className = strip(left(line,pinterface-1))
+         classNamespace = namespace_
          baseClass = ''
+         interfaces = .string[]
+         memberKind = .string[]
+         memberName = .string[]
+         memberType = .string[]
+         memberArgs = .string[]
+
          tail = strip(substr(line,pinterface+11))
          call parseInterfaceTail tail, interfaces
          iterate
       end
+
+      /* Ignore callable-looking text until a class or interface is active. */
+      if className = '' then iterate
 
       pfactory = pos(': factory', low)
       if pfactory > 0 then do
@@ -118,23 +165,38 @@ emitAlmanacClass: procedure
          memberName[n] = name
          memberType[n] = rtype
          memberArgs[n] = findArguments(lines,i+1)
+         iterate
       end
    end
 
-   if className = '' then do
-      say '% rexxDoc: no class declaration found in 'latexEscape(file)
-      return
+   /* Flush the final declaration in the file. */
+   if className \= '' then do
+      if strip(extraInterface) \= '' & \extraUsed then do
+         call appendUnique interfaces, extraInterface
+         extraUsed = 1
+      end
+      call emitOneClass classNamespace, className, classKind, baseClass, ,
+                        interfaces, memberKind, memberName, memberType, memberArgs
+      classCount = classCount + 1
    end
 
-   if strip(extraInterface) \= '' then
-      call appendUnique interfaces, extraInterface
+   if classCount = 0 then
+      say '% rexxApiDoc: no class or interface declaration found in 'latexEscape(file)
+return
+
+
+/* Emit one fully collected class or interface. */
+emitOneClass: procedure
+   arg classNamespace=.string, className=.string, classKind=.string, ,
+       baseClass=.string, interfaces=.string[], memberKind=.string[], ,
+       memberName=.string[], memberType=.string[], memberArgs=.string[]
 
    if classKind = 'interface' then
       displayedClassName = formatInterfaceName(className)
    else
       displayedClassName = formatClassName(className)
 
-   say '\begin{CrexxClass}{'displayedClassName'}{'latexEscape(namespace_)'}'
+   say '\begin{CrexxClass}{'displayedClassName'}{'latexEscape(classNamespace)'}'
    say
    say '  \begin{Hierarchy}'
 
@@ -148,9 +210,6 @@ emitAlmanacClass: procedure
    end
 
    if classKind = 'interface' then do
-      /* Interfaces have no implicit .object base.  Any inherited interfaces
-       * are shown at the right, individually typeset in italics.
-       */
       say '    \HierarchyLine[\APIOpen]{0}{'formatInterfaceName(className)hierarchyTail'}'
    end
    else do
@@ -182,6 +241,7 @@ emitAlmanacClass: procedure
 
    say '  \end{Members}'
    say '\end{CrexxClass}'
+   say
 return
 
 
@@ -374,19 +434,19 @@ renderArgumentList: procedure=.string
    pname = .string
    ptype = .string
    rendered = .string
-   out = .string
    rest = .string
    p = .int
    peq = .int
-   first = .int
+   count = .int
+   index = .int
+   params = .string[]
+   nl = '0a'x
 
    args = strip(args)
    if args = '' then return '()'
 
-   out = '('
+   /* First render each argument independently. */
    rest = args
-   first = 1
-
    do while rest \= ''
       p = pos(',',rest)
       if p = 0 then do
@@ -406,12 +466,23 @@ renderArgumentList: procedure=.string
       end
       else rendered = latexEscape(item)
 
-      if \first then out = out || ', '
-      out = out || rendered
-      first = 0
+      params[params[0]+1] = rendered
    end
 
-   out = out || ')'
+   /* Keep the compact form for a single parameter.  Two or more parameters
+    * use the multiline form supplied by crexxalmanac.sty: '(' is on the
+    * first line, each parameter gets its own line, and ')' closes the block.
+    */
+   if params[0] = 1 then return '(' || params[1] || ')'
+
+   out = '\Params{' || nl
+   do index = 1 to params[0]
+      if index = params[0] then
+         out = out || '        \LastParamLine{'params[index]'}' || nl
+      else
+         out = out || '        \ParamLine{'params[index]'}' || nl
+   end
+   out = out || '      }'
 return out
 
 

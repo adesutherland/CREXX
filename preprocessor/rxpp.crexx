@@ -1046,33 +1046,27 @@ CMD_include: procedure
   end
 return
 /* ------------------------------------------------------------------
- * CMD_emit: emits section buffer.
+ * CMD_emit: emit the contents of a named section queue.
  * ------------------------------------------------------------------
  */
 CMD_emit: procedure
-  arg line_no=.int,incl=.string
-  rc=.int
-  insertat=line_no
-  include=.string[]
-  section_name=word(incl,2)
+    arg line_no=.int, incl=.string
+/* ##EMIT section_name is the call to emit the contents of the named section queue.*/
+    section_name = word(incl, 2) /* section_name is 2. word, it is actually a queue name */
 
-  nhi=.string
-   smax=.int
-   nhi=scriptMacro.sections.section_name.0
-   if nhi='' then return
-   smax=nhi
-   do i=1 to smax
-      nhi=i
-      include[i]=scriptMacro.sections.section_name.nhi
-   end
+    if rxqueue("SET", section_name) > 0 then return   /* if section does not exist return. */
 
-  new=include[0]
-  rc= insert_source(line_no+1,new)
-  do j=1 to new
-     insertat=insertat+1
-     source.insertat=include.j
-     call rxpp_set_source_origin insertat,file,j,include.j
-  end
+    new = queued()          /* get the number of lines in the queue */
+    if new = 0 then return  /* nothing to emit */
+
+    call insert_source line_no + 1, new /* insert empty lines into the source buffer */
+
+    do i = 1 to new
+       insertat = line_no + i
+       source.insertat = pull()
+       call rxpp_set_source_origin insertat, file, i, source.insertat
+    end
+
 return
 /* ------------------------------------------------------------------
  * CMD_copyBlock
@@ -1551,14 +1545,8 @@ add_section: procedure
    section=translate(section,,'@')
    section_name=word(section,1)
    section_line=subword(section,2)
-   nhi=.string
-   smax=.int
-   nhi=scriptMacro.sections.section_name.0
-   if nhi='' then smax=1
-   else smax=nhi+1
-   nhi=smax
-   scriptMacro.sections.section_name.nhi=section_line' /* ---- emitted code */'
-   scriptMacro.sections.section_name.0=nhi
+   call rxqueue 'SETX',section_name
+   QUEUE section_line
 return
 
 
