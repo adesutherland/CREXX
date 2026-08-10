@@ -1,0 +1,14 @@
+captured_date=2026-08-10
+host=Adrians-MacBook-Air.local
+os=macOS 26.5.2 build 25F84
+kernel=Darwin 25.5.0 arm64
+cpu=Apple M5
+clang=Apple clang 21.0.0
+gcc=Homebrew GCC 16.1.0
+cmake=4.3.2
+generator=Ninja
+branch=codex/perf3-05-r3-handler-codegen-analysis
+starting_commit=fa1450221efc9f51157e686472e88e34e894a1bf
+develop_before_integration=6a65b9c685b3776da211bcd209af14fcf23be445
+worktree_scope=approved profile-20 default, closeout documentation, and evidence only
+publication=local develop integration authorized; no push

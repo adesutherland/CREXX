@@ -1116,7 +1116,10 @@ remain in `run()` in every lowering.
 The CMake cache setting `CREXX_VM_HANDLER_PANEL` selects the internal build
 shape:
 
-- `all-inline` (the default) expands every handler inside `run()`;
+- `profile-20` (the provisional product default) expands the frozen 20%
+  prefix while honoring the never-inline ledger;
+- `all-inline` expands every handler inside `run()` and remains the literal
+  source-shape/performance control;
 - `all-outline` calls every handler, providing the minimum-owner/maximum-call
   control;
 - `profile-5`, `profile-10`, `profile-15`, `profile-20` and `profile-30`
@@ -1143,11 +1146,22 @@ top-176 host operations remain callable. `max-eligible` is 531/589 (90.15%),
 or 531/587 (90.46%) after excluding the two sentinels as well. `INTERRUPT` has
 an explicit owner-only, always-inline tier.
 
-The panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. The R5
-Apple comparison found a guard-clean 20% Clang shape but a 10.072% GCC
-`rxtvm` Bounce regression, so `all-inline` remains the default pending an
-explicit cross-compiler trade-off decision. Every non-default panel remains an
-experimental measurement shape.
+The panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. Adrian
+selected common `profile-20` as the provisional product default after the R5
+Apple comparison and explicitly accepted the measured 10.072% GCC `rxtvm`
+Bounce regression. On this Apple host, Clang's absolute profile-20 throughput
+was also directionally faster than GCC's in every governed workload/engine
+cell, although the compiler runs were not a paired compiler-selection trial.
+
+The exact 20% membership is not a permanent tuning claim. Release-finalisation
+work must rebuild the panel from a wider current benchmark portfolio, include
+private/fused dispatch and newly added instructions, audit the never-inline
+ledger, and retain panel-membership diffs over time. Intel Linux is the next
+platform validation. `all-inline` remains available as the invariant control,
+and explicit `-DCREXX_VM_HANDLER_PANEL=...` selections remain supported for
+diagnosis and cross-platform comparison. Existing CMake build directories keep
+their cached panel; use a fresh build tree or set the option explicitly when
+validating the new default.
 
 The complete sequence of accepted and rejected source shapes, the Clang/GCC
 code-generation differences, and the current rules for preserving maximum

@@ -1,7 +1,7 @@
 # VM and C Compiler Optimisation Report
 
-Status: completed Apple ARM64 investigation; internal measurement framework
-retained; no product-default policy selected
+Status: completed Apple ARM64 investigation and R5b closeout; profile-20 is the
+provisional product default; Intel Linux validation remains open
 
 Date: 2026-08-09
 
@@ -21,7 +21,8 @@ The report covers both concrete interpreter engines:
 
 `rxvm` is a compiler-selected product alias, not a third engine. No result here
 changes the public RXAS/RXBIN format, plugin ABI, language semantics, canonical
-RXBIN image, default handler panel or product VM selection.
+RXBIN image or product VM selection. The later R5b decision changes only the
+internal default handler-placement panel from literal all-inline to profile-20.
 
 ## Executive conclusion
 
@@ -585,7 +586,8 @@ The remaining boundaries are deliberate:
 - Apple ARM64 is the only performance-selection host in this report.
 - GCC used the no-TLS build described above.
 - MSVC supports only `rxbvm` and has no selected non-inline policy here.
-- No product-default panel has been selected.
+- At the R3 stop, no product-default panel had been selected; R5b later
+  selects profile-20.
 - The private fused handlers remain immutable load-time quickening with guarded
   canonical fallback. A shared RXAS/RXVM fusion registry and any decision to
   expose normal serialized instructions are tracked separately as
@@ -685,9 +687,10 @@ large. Every requested GCC non-inline panel fires the same Bounce guard in the
 screen; `max-eligible` reduces it only to -4.693% and adds a -5.604% Base64
 loss.
 
-No common percentage is therefore acceptable under the standing guards. The
-default remains all-inline and Linux x86-64, Windows Intel and Linux sanitizer
-selection work has not started. The explicit choices are:
+No common percentage was therefore acceptable under the standing guards
+without an explicit trade-off. At this R5 decision stop the default remained
+all-inline and Linux x86-64, Windows Intel and Linux sanitizer selection work
+had not started. The explicit choices were:
 
 1. retain common all-inline and its build/code-size cost;
 2. accept common 20% with the measured GCC threaded Bounce regression;
@@ -780,3 +783,40 @@ default changes are made by R5a.
 
 R5a evidence is retained in
 [`2026-08-10-perf3-05-r5a-handler-placement-profiling`](../../../performance/evidence/2026-08-10-perf3-05-r5a-handler-placement-profiling/).
+
+## 2026-08-10 R5b default-selection closeout
+
+Adrian selected common profile-20 as the provisional product default and
+explicitly accepted the known GCC threaded Bounce trade-off. This is a
+deliberate product decision, not a reclassification of the 10.072% Bounce loss
+as guard-clean. Intel Linux is the next requested platform check; Windows
+remains an uncompleted later lane rather than a prerequisite for the Apple
+default change.
+
+The Apple compiler evidence supports the view that Clang is faster on this
+host. Comparing the retained profile-20 medians directionally, Clang is faster
+than GCC in all 14 workload/engine cells. The derived seven-workload geometric
+mean advantage is approximately 23.8% for `rxtvm` and 41.5% for `rxbvm`.
+Because the compiler matrices were separate sessions rather than a balanced
+paired compiler-selection experiment, these are contextual point estimates,
+not a portable compiler-ranking claim.
+
+The production edit changes the CMake cache default and the direct-compile
+fallback to profile-20. Explicit `all-inline`, `all-outline` and percentage
+controls remain available. Fresh profiling-off Release binaries built with no
+panel option are byte-identical to binaries built from the same source with an
+explicit `-DCREXX_VM_HANDLER_PANEL=profile-20`; retained profile-20 timing is
+therefore the decisive Release verdict without another timing sample. Fresh
+default Release and Debug trees each pass 2,002/2,002 tests, and a default
+profiling-enabled tree passes the six focused profile/report/documentation
+tests.
+
+Profile-20 is a coarse release choice, not a permanently correct instruction
+list. Release-finalisation work must rebuild the exact panel from a wider
+current portfolio, cover private/fused dispatch and newly added handlers,
+re-audit the never-inline class, and retain versioned membership diffs with
+their size/performance results. This makes panel drift reviewable as code and
+usage evolve while preserving literal all-inline as the invariant control.
+
+R5b evidence is retained in
+[`2026-08-10-perf3-05-r5b-profile20-default-closeout`](../../../performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/).

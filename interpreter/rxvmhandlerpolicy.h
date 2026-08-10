@@ -27,7 +27,7 @@
 #define CREXX_RXVMHANDLERPOLICY_H
 
 #ifndef CREXX_VM_HANDLER_PANEL
-#define CREXX_VM_HANDLER_PANEL 0
+#define CREXX_VM_HANDLER_PANEL 20
 #endif
 
 #define RXVM_HANDLER_CAT_INNER(left_, right_) left_ ## right_

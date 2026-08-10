@@ -1,0 +1,13 @@
+98ff1d087ac1ae9be0b15796d52f8c479e02e9b5b346f1791e4c4eed031ae63f  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/COMMANDS.md
+b04701f6abcafc80c85cf5472415cda9f0067633abd029867b1ca8db008b6a65  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/README.md
+fa93881b65883888754d7af0cb5a4ff6f6c86d2f64d30772809de1d326407710  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/compiler-profile20-context.csv
+04e6151820476525a7fee8c426c347457922576bf3aeb5d6c6d9d3894a989bdc  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/configure-profile-default.log
+b89d3d6b4bfe95d8c245b0e39b305c97b4adba9bf4c32c6664950c2dd328e0ba  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/configure-release-default.log
+71e44a808069e5c05d53c6a0c82d8fc2d2f1852b2a43a019324c5d66a700b0f4  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/configure-release-explicit-profile20.log
+9c8991cd0ad698b12267da7111272fd9a995ee4b647bc3c02fb567b2d2c58c8d  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/ctest-debug-full.log
+1755dad9099142eec485ec35849e35d2201dfb365494d3b92574e903ba0337d6  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/ctest-profile-focused.log
+c25a14b28a85932777dd944cb061ab211b584d5670551087d6e49283835486c2  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/ctest-release-full.log
+ed0241d4fc0f9b121baa01f9edd4c0fe954837ef6913edbe44585ef72addc91b  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/default-equivalence.txt
+66f8fc7749b398ef5b6834223a183bef50071161b79eb12902a9619992145e3b  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/host-and-source-state.txt
+4985feed77a5418eb488f265c4a53deda2bf269a5aa54bb297aab2f687d03bf2  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/profile-target-setup-error.txt
+65e5cb8cad64679fa397b80d691e184d2fdc7a019c5eab3b890a151a437d2573  performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/qa-summary.txt

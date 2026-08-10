@@ -14,7 +14,7 @@ endif()
 option(CREXX_VM_PROFILING
         "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
         OFF)
-set(CREXX_VM_HANDLER_PANEL "all-inline" CACHE STRING
+set(CREXX_VM_HANDLER_PANEL "profile-20" CACHE STRING
         "VM instruction handler placement panel")
 set_property(CACHE CREXX_VM_HANDLER_PANEL PROPERTY STRINGS
         all-inline all-outline profile-5 profile-10 profile-15 profile-20

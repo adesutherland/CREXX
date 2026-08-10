@@ -1,14 +1,15 @@
 # PERF3-05-R5 handler-placement percentage and platform panel
 
-Status: **R5a placement diagnosis complete — code-shape cause, no default selected**
+Status: **R5b Apple closeout complete — profile-20 default; Intel Linux next**
 
 Approved: 2026-08-10
 
 Purpose: replace the single experimental 30% handler-placement choice with an
 auditable percentage panel, keep intrinsically host-bound/cold instructions
 callable even in the largest practical owner, select the best supported
-size/speed compromise on Apple, then validate that provisional selection on
-Linux x86-64 and Windows Intel before it becomes the product default.
+size/speed compromise on Apple, make the explicitly accepted choice the
+provisional product default, then validate and retune it across the wider
+portfolio and requested Intel platforms.
 
 ## Authority and boundary
 
@@ -23,10 +24,27 @@ currently identified.
 
 This remains an internal C implementation choice. It does not authorize a
 public RXAS/RXBIN opcode, ABI, plugin ABI, language, fusion/quickening or
-canonical-image change. Do not install, push, merge or publish. Preserve the
-literal all-inline equivalence control and the all-outline diagnostic control.
-If the evidence-selected candidate hits a governed performance guard, stop for
+canonical-image change. Do not install, push or publish. Preserve the literal
+all-inline equivalence control and the all-outline diagnostic control. If the
+evidence-selected candidate hits a governed performance guard, stop for
 Adrian's explicit trade-off decision before making it the default.
+
+### 2026-08-10 authority update — R5b selection
+
+After reviewing the R5/R5a evidence, Adrian explicitly selected common
+`profile-20` as the provisional product default and accepted the known GCC
+threaded Bounce trade-off. He also authorized complete QA and local `develop`
+integration without a push. This supersedes the original sequencing that made
+Linux and Windows prerequisites for changing the default. Intel Linux is the
+next requested validation platform; Windows remains an uncompleted platform
+lane rather than a blocker for this Apple-selected default.
+
+The selection is deliberately coarse. Release-finalisation work must regenerate
+the exact hot panel from a wider current portfolio and continue tracking
+membership as instruction implementations and workloads evolve. That later
+work may adjust individual tiers, but must retain the literal all-inline
+control and record panel-membership changes rather than silently replacing
+this evidence.
 
 ## Source and evidence identities
 
@@ -159,16 +177,16 @@ are disclosed above.
       limitation and compiler-specific handler-call lowering.
 - [x] Compare speed, variability, owner/text/file size, build cost and code
       shape. Report `rxtvm` and `rxbvm` separately and keep noisy Base64 visible.
-- [ ] Select the smallest panel that is performance-equivalent across the
-      supported Apple compiler/engine cells; do not select from inline
-      percentage or cache size alone.
+- [x] Select the smallest panel that supplies the accepted Apple size/speed
+      compromise. Adrian selected common profile-20 and explicitly accepted
+      the GCC threaded Bounce guard.
 
 Gate 3 stopped at the required trade-off. Clang 20% is guard-clean and improves
 all-seven throughput by 3.857%/3.152% for `rxtvm`/`rxbvm`. GCC 20% improves by
 3.175%/9.646%, but GCC `rxtvm` Bounce regresses 10.072%. Every requested GCC
-non-inline panel fires a Bounce guard. No common percentage can therefore be
-selected without Adrian explicitly accepting that regression or approving a
-compiler/engine-specific default design. Gates 4-6 remain unopened.
+non-inline panel fires a Bounce guard. Adrian subsequently selected common
+profile-20 and accepted that regression. This is an explicit product trade-off,
+not a claim that the GCC guard disappeared.
 
 ### Gate 4 — Linux x86-64 validation
 
@@ -193,22 +211,28 @@ compiler/engine-specific default design. Gates 4-6 remain unopened.
 
 ### Gate 6 — selection, default and closeout
 
-- [ ] Confirm that the selected panel passes correctness and performance guards
-      on every reachable required platform/compiler/engine cell.
-- [ ] Change `CREXX_VM_HANDLER_PANEL` default only after that confirmation.
-- [ ] Run proportionate broad regression, size/build-repeatability checks and
-      final source-expansion audit.
-- [ ] Update the VM/C compiler optimisation report, live roadmap and retained
-      evidence with rejected panels and residual pre-release profiling work.
-- [ ] Commit the exact reviewed scope locally; do not push.
+- [x] Record the explicit trade-off selection despite the known Apple GCC
+      threaded Bounce guard and defer Intel platform validation.
+- [x] Change `CREXX_VM_HANDLER_PANEL` default to profile-20 while retaining
+      explicit all-inline/all-outline controls.
+- [x] Run proportionate broad regression and prove the no-option/explicit
+      profile-20 Release products byte-identical. Fresh Release and Debug each
+      pass 2,002/2,002 tests; focused profile/report/documentation QA passes
+      6/6.
+- [x] Update the VM/C compiler optimisation report, live roadmap and retained
+      evidence with rejected panels and release-finalisation profiling work.
+- [x] Commit the exact reviewed scope locally and integrate it onto local
+      `develop`; do not push.
 
-## Pre-release residual work
+## Release-finalisation and evolution work
 
 The frozen R2 mix is sufficient to select a coarse code-size/throughput panel,
-not to lock the release policy indefinitely. Before Release 1, recapture the
-instruction mix from the then-current representative portfolio, include
-private/fused dispatch explicitly, audit newly added handlers and re-evaluate
-the never-inline ledger. That later profiling refresh must not invalidate the
+not to lock the release policy indefinitely. During Release 1 finalisation,
+recapture the instruction mix from the then-current wider representative
+portfolio, include private/fused dispatch explicitly, audit newly added
+handlers and re-evaluate the never-inline ledger. Retain a versioned diff of
+panel membership and the resulting size/performance evidence so later code and
+workload evolution is visible. That profiling refresh must not invalidate the
 literal all-inline control or silently change this R5 evidence.
 
 ## R5a — effective handler-placement profiling
@@ -263,3 +287,16 @@ proportional to the outlined dynamic mix. No tier or default changes are made.
 
 Evidence:
 `performance/evidence/2026-08-10-perf3-05-r5a-handler-placement-profiling/`.
+
+## R5b — selected default closeout
+
+Adrian selected common profile-20 and accepted the known GCC threaded Bounce
+guard. The no-option profiling-off Release products are byte-identical to
+explicit profile-20 products for both concrete engines, so the retained R5
+timing is the first Release verdict. Default Release and Debug each pass the
+complete 2,002-test suite, and the default profiling-enabled build passes the
+six focused placement/report/documentation tests. No RXAS/RXBIN, public ABI,
+plugin ABI, VM-selection or handler-tier change is included.
+
+Evidence:
+`performance/evidence/2026-08-10-perf3-05-r5b-profile20-default-closeout/`.
