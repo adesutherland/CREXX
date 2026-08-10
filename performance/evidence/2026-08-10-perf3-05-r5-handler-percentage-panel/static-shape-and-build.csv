@@ -1,0 +1,33 @@
+compiler,panel,engine,owner_bytes,text_section_bytes,file_bytes,rxvm_handler_prefixed_symbols,build_real_seconds,build_time_source
+clang,all-inline,rxtvm,532512,828488,1020632,0,40.02,r5 clean first target build
+clang,all-inline,rxbvm,531868,828520,1020808,0,40.02,r5 clean first target build
+clang,profile-5,rxtvm,33576,897068,1117000,621,5.57,r5 clean first target build after audit repair
+clang,profile-5,rxbvm,34808,893424,1116936,621,5.57,r5 clean first target build after audit repair
+clang,profile-10,rxtvm,73772,895072,1115608,591,5.96,r5 clean first target build
+clang,profile-10,rxbvm,74776,891224,1115432,591,5.96,r5 clean first target build
+clang,profile-15,rxtvm,104428,889368,1114136,562,6.45,r5 clean first target build
+clang,profile-15,rxbvm,106844,887212,1113976,562,6.45,r5 clean first target build
+clang,profile-20,rxtvm,146824,899048,1112440,532,7.42,r5 clean first target build
+clang,profile-20,rxbvm,145608,893596,1112312,532,7.42,r5 clean first target build
+clang,profile-30,rxtvm,205032,896260,1109720,477,9.36,r5 clean first target build
+clang,profile-30,rxbvm,205028,892724,1109656,477,9.36,r5 clean first target build
+clang,max-eligible,rxtvm,515108,857600,1059464,120,35.73,r5 clean first target build
+clang,max-eligible,rxbvm,510704,853132,1043016,120,35.73,r5 clean first target build
+clang,all-outline,rxtvm,24576,902152,1135096,652,5.50,r5 clean first target build
+clang,all-outline,rxbvm,24368,896740,1118536,652,5.50,r5 clean first target build
+gcc,all-inline,rxtvm,1493900,1864152,2138184,0,310.30,R3 diagnostic clean VM-target build
+gcc,all-inline,rxbvm,1478368,1848632,2121672,0,310.30,R3 diagnostic clean VM-target build
+gcc,profile-5,rxtvm,150144,1259160,1622488,553,27.63,r5 clean first target build
+gcc,profile-5,rxbvm,155712,1254936,1622424,553,27.63,r5 clean first target build
+gcc,profile-10,rxtvm,263456,1320120,1687032,524,35.86,r5 clean first target build
+gcc,profile-10,rxbvm,267840,1315352,1670504,524,35.86,r5 clean first target build
+gcc,profile-15,rxtvm,358848,1367640,1718552,495,34.18,r5 clean first target build
+gcc,profile-15,rxbvm,362944,1363160,1718536,495,34.18,r5 clean first target build
+gcc,profile-20,rxtvm,438816,1403096,1749752,465,39.84,r5 clean first target build
+gcc,profile-20,rxbvm,442304,1398328,1749736,465,39.84,r5 clean first target build
+gcc,profile-30,rxtvm,547136,1434584,1780088,412,49.58,r5 clean first target build
+gcc,profile-30,rxbvm,549120,1429176,1763560,412,49.58,r5 clean first target build
+gcc,max-eligible,rxtvm,1387948,1788216,2058472,57,233.04,r5 clean first target build
+gcc,max-eligible,rxbvm,1385864,1785240,2058456,57,233.04,r5 clean first target build
+gcc,all-outline,rxtvm,104512,1234072,1607560,584,25.34,r5 clean first target build
+gcc,all-outline,rxbvm,110304,1229592,1607544,584,25.34,r5 clean first target build

@@ -600,7 +600,133 @@ The remaining boundaries are deliberate:
 - [Earlier VM dispatch investigation](../beta-3/notes/vm-dispatch-performance-investigation.md)
 - [Performance governance](../../../performance/PERFORMANCE-GOVERNANCE.md)
 
-The final retained implementation is commit
+The R3 retained implementation is commit
 `adf96256d709bd6fe61cb6638a055fff2caa89d9` on
 `codex/perf3-05-r3-handler-codegen-analysis`. It is local and unpushed at the
 time of this report.
+
+## 2026-08-10 R5 percentage and never-inline addendum
+
+R5 tested whether the repaired framework has a stable size/speed compromise,
+rather than assuming 30% is correct. It also separated the literal all-inline
+equivalence control from the practical maximum requested for production use.
+
+### Policy representation and corrected denominator
+
+The repeated per-panel policy blocks are replaced by one central tier per
+handler. Tiers record the first frozen heat panel at which the handler is
+eligible, `MAXIMUM`, `NEVER`, or `RESERVED`; the run-owned `INTERRUPT` pseudo-op
+has its own always-inline `OWNER` tier. Panel mappings alone convert these tiers
+to direct owner bodies or callable handlers. This keeps semantic handler files
+unchanged and makes counts mechanically auditable.
+
+The 56-entry `NEVER` class covers sockets, console operations, clocks and
+environment access, spawn/redirection, file I/O and `METALOADMODULE`. These are
+host-bound operations whose external cost normally dominates the VM call and
+whose bodies bring large cold interfaces into `run()`. Literal `all-inline`
+still expands them for exact equivalence; every practical profile honors the
+attribute.
+
+The audit corrected an old reporting shorthand. The 588 non-reserved public
+opcode slots include `INTERRUPT`, but `INTERRUPT` is an owner target rather
+than one of the 649 public/sentinel handler definitions. The placement
+denominator is therefore 589 non-reserved public-plus-private definitions, not
+590. The profile totals are 31, 61, 90, 120 and 175, and `max-eligible` is
+531/589 (90.15%). Normalized R5 `all-inline` preprocessing is byte-identical to
+the R3 starting commit for both engines.
+
+### Percentage screen
+
+The Apple Clang and real GCC screens each ran all-inline, 5%, 10%, 15%, 20%,
+30%, max-eligible and all-outline under both concrete engines and seven
+governed workloads. Each screen passed 560/560 exact-output executions. The
+all-seven geometric-mean throughput changes versus literal all-inline were:
+
+| panel | Clang `rxtvm` | Clang `rxbvm` | GCC `rxtvm` | GCC `rxbvm` |
+|---|---:|---:|---:|---:|
+| 5% | -24.087% | -16.915% | -11.058% | +7.984% |
+| 10% | -3.275% | -3.681% | -3.117% | +9.694% |
+| 15% | +1.850% | +3.292% | +2.071% | +11.301% |
+| 20% | +3.438% | +5.682% | +2.624% | +11.189% |
+| 30% | -0.204% | +1.722% | +3.472% | +9.923% |
+| max eligible | -0.724% | +0.069% | +1.306% | +12.743% |
+| all outline | -64.195% | -60.217% | -29.211% | -6.526% |
+
+There is no monotonic relationship between inline percentage and throughput.
+Clang has a clear optimum around 20%; GCC switch dispatch benefits throughout,
+while GCC threaded dispatch retains a workload-specific Bounce sensitivity.
+
+### Formal verdict and decision stop
+
+The formal Clang contender matrix ran all-inline, 15%, 20% and 30% with two
+warmups and twelve recorded balanced rounds. All 784 executions and 672
+recorded samples passed. Twenty percent is guard-clean:
+
+| compiler | engine | all seven | common five | worst cell |
+|---|---|---:|---:|---:|
+| Clang | `rxtvm` | +3.857% | +5.475% | Towers -0.915% |
+| Clang | `rxbvm` | +3.152% | +4.697% | Richards -1.714% |
+
+Fifteen percent retains Base64 and RexxCPS guard failures. Thirty percent
+fires the Clang `rxtvm` common-five guard and is slower than 20%.
+
+The decisive formal GCC all-inline/20% matrix passed all 392 executions and
+336 recorded samples. It confirms the compiler/engine split:
+
+| compiler | engine | all seven | common five | worst cell |
+|---|---|---:|---:|---:|
+| GCC | `rxtvm` | +3.175% | +3.974% | Bounce **-10.072%** |
+| GCC | `rxbvm` | +9.646% | +12.464% | Towers -0.428% |
+
+RexxCPS is a higher-is-better benchmark rate; the retained derivation handles
+that direction separately from elapsed time. GCC `rxbvm` RexxCPS improves
+6.352% at 20%. The only formal GCC 20% guard is threaded Bounce, but it is
+large. Every requested GCC non-inline panel fires the same Bounce guard in the
+screen; `max-eligible` reduces it only to -4.693% and adds a -5.604% Base64
+loss.
+
+No common percentage is therefore acceptable under the standing guards. The
+default remains all-inline and Linux x86-64, Windows Intel and Linux sanitizer
+selection work has not started. The explicit choices are:
+
+1. retain common all-inline and its build/code-size cost;
+2. accept common 20% with the measured GCC threaded Bounce regression;
+3. approve compiler/engine-specific policy (Clang both engines and GCC switch
+   dispatch can use 20%, while GCC threaded remains all-inline); or
+4. open a focused GCC threaded repair before default/platform selection.
+
+Option 4 is the evidence-led recommendation. It preserves the strong Clang and
+GCC switch result without accepting a 10% governed regression or embedding a
+premature default split.
+
+### Size and compiler effort
+
+Clang 20% reduces `run()` by about 72.4% to 146,824/145,608 bytes and the first
+two-VM target build by 81.5%, from 40.02 s to 7.42 s. GCC reduces the owner by
+about 70% to 438,816/442,304 bytes and the diagnostic target build by 87.2%,
+from 310.30 s to 39.84 s. This is the material compiler-effort/build-cost gain
+the refactor sought.
+
+The build-cost reduction is measured; improved response to arbitrary future
+source changes is still an inference. R5 retained one clean first target build
+per shape, not a repeated perturbation series. A controlled sequence of small
+hot, cold and unrelated edits is still needed to quantify build-time variance
+and binary-layout stability. The much smaller owner reduces the compiler work
+and heuristic surface exposed to those edits, but this report does not promote
+that expectation to a measured predictability claim.
+
+The practical maximum is not a useful default ceiling. Its 56 never-inline
+handlers reduce Clang build time only 10.7% and leave a 510-515 KiB owner; GCC
+build time falls 24.9% but remains 233.04 s with a roughly 1.386-1.388 MiB
+owner. It supplies a legitimate control and proves the never-inline attribute
+has headroom, but 20% is the meaningful code-size/build-cost region.
+
+Total product text must remain separate from owner size. Clang's callable
+wrappers make total text about 8% larger at 20% even while `run()` shrinks;
+GCC total text shrinks. Both complete 20% compiler trees pass the 14/14 focused
+dispatch, signal, interrupt, breakpoint, worker, reentrancy and late-load
+suite. Full broad and cross-platform validation correctly remains after the
+default decision.
+
+R5 evidence is retained in
+[`2026-08-10-perf3-05-r5-handler-percentage-panel`](../../../performance/evidence/2026-08-10-perf3-05-r5-handler-percentage-panel/).

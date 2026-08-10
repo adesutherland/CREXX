@@ -1118,17 +1118,36 @@ shape:
 
 - `all-inline` (the default) expands every handler inside `run()`;
 - `all-outline` calls every handler, providing the minimum-owner/maximum-call
-  control; and
-- `profile-30` expands the frozen Apple profile panel of 176 out of 588
-  non-reserved public handlers and calls the rest.
+  control;
+- `profile-5`, `profile-10`, `profile-15`, `profile-20` and `profile-30`
+  expand successive prefixes of the frozen Apple public-handler heat ranking;
+  and
+- `max-eligible` expands every normal eligible handler while keeping the
+  reviewed host-bound, reserved and sentinel classes callable.
 
-Reserved slots and the two private handlers are compiled and measured but do
-not count toward the public profile percentage. The two private handlers are
-explicitly inline in the current profile panel, giving 178 inline definitions
-out of the 590 non-reserved public-plus-private definitions (30.17%).
-`INTERRUPT` remains an internal owner label rather than an RXAS handler. The
-panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. `profile-30`
-is an experimental measurement shape, not a selected product default.
+Every handler has one central tier rather than one definition per panel. Both
+private fused handlers enter at the 5% tier. The current 56-handler
+`NEVER` class covers sockets, console I/O, clocks/environment access,
+spawn/redirection, file I/O and dynamic module loading. It is a reviewed code-
+placement attribute: literal `all-inline` deliberately ignores it to remain
+the exact equivalence control, while every profile and `max-eligible` honors
+it. A later profile can justify an explicit tier change, but a percentage
+threshold cannot silently override it.
+
+The frozen R2 percentage denominator of 588 non-reserved public opcode slots
+included the owner-internal `INTERRUPT` target, which has no handler definition.
+The implementation actually controls 589 non-reserved public-plus-private
+definitions (587 public handlers plus two private). The candidate totals are
+31, 61, 90, 120 and 175 for the nominal 5%, 10%, 15%, 20% and 30% panels; three
+top-176 host operations remain callable. `max-eligible` is 531/589 (90.15%),
+or 531/587 (90.46%) after excluding the two sentinels as well. `INTERRUPT` has
+an explicit owner-only, always-inline tier.
+
+The panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. The R5
+Apple comparison found a guard-clean 20% Clang shape but a 10.072% GCC
+`rxtvm` Bounce regression, so `all-inline` remains the default pending an
+explicit cross-compiler trade-off decision. Every non-default panel remains an
+experimental measurement shape.
 
 The complete sequence of accepted and rejected source shapes, the Clang/GCC
 code-generation differences, and the current rules for preserving maximum

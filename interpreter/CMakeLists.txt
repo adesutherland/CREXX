@@ -15,18 +15,29 @@ option(CREXX_VM_PROFILING
         "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
         OFF)
 set(CREXX_VM_HANDLER_PANEL "all-inline" CACHE STRING
-        "VM instruction handler placement: all-inline, all-outline, or profile-30")
+        "VM instruction handler placement panel")
 set_property(CACHE CREXX_VM_HANDLER_PANEL PROPERTY STRINGS
-        all-inline all-outline profile-30)
+        all-inline all-outline profile-5 profile-10 profile-15 profile-20
+        profile-30 max-eligible)
 if(CREXX_VM_HANDLER_PANEL STREQUAL "all-inline")
     set(CREXX_VM_HANDLER_PANEL_VALUE 0)
 elseif(CREXX_VM_HANDLER_PANEL STREQUAL "all-outline")
     set(CREXX_VM_HANDLER_PANEL_VALUE 1)
+elseif(CREXX_VM_HANDLER_PANEL STREQUAL "profile-5")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 5)
+elseif(CREXX_VM_HANDLER_PANEL STREQUAL "profile-10")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 10)
+elseif(CREXX_VM_HANDLER_PANEL STREQUAL "profile-15")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 15)
+elseif(CREXX_VM_HANDLER_PANEL STREQUAL "profile-20")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 20)
 elseif(CREXX_VM_HANDLER_PANEL STREQUAL "profile-30")
     set(CREXX_VM_HANDLER_PANEL_VALUE 30)
+elseif(CREXX_VM_HANDLER_PANEL STREQUAL "max-eligible")
+    set(CREXX_VM_HANDLER_PANEL_VALUE 90)
 else()
     message(FATAL_ERROR
-            "CREXX_VM_HANDLER_PANEL must be all-inline, all-outline, or profile-30")
+            "CREXX_VM_HANDLER_PANEL must be all-inline, all-outline, profile-5, profile-10, profile-15, profile-20, profile-30, or max-eligible")
 endif()
 message(STATUS "cREXX VM handler panel: ${CREXX_VM_HANDLER_PANEL}")
 

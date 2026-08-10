@@ -1,0 +1,7 @@
+compiler,engine,panel,portfolio,workloads,geometric_mean_throughput_delta_percent,guard,threshold_percent
+gcc,rxtvm,profile-20,all-seven,Sieve+Permute+Bounce+Richards+Base64+Towers+RexxCPS,3.174922,no,
+gcc,rxtvm,profile-20,without-base64,Sieve+Permute+Bounce+Richards+Towers+RexxCPS,1.827059,no,
+gcc,rxtvm,profile-20,common-five,Sieve+Permute+Bounce+Richards+Base64,3.973596,no,1.0
+gcc,rxbvm,profile-20,all-seven,Sieve+Permute+Bounce+Richards+Base64+Towers+RexxCPS,9.646148,no,
+gcc,rxbvm,profile-20,without-base64,Sieve+Permute+Bounce+Richards+Towers+RexxCPS,9.243916,no,
+gcc,rxbvm,profile-20,common-five,Sieve+Permute+Bounce+Richards+Base64,12.464092,no,1.0

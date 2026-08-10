@@ -5622,7 +5622,6 @@ rxvm_outlined_handler_functions[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #undef context
 
 /* INTERRUPT is a dispatch pseudo-op owned by run(), not an RXVM_HANDLER body. */
-#define RXVM_HANDLER_POLICY_INTERRUPT INLINE
 #define RXVM_HANDLER_LABEL_INLINE(name_) &&name_
 #define RXVM_HANDLER_LABEL_OUTLINE(name_) &&rxvm_handler_call
 #define RXVM_HANDLER_LABEL_SELECT_INNER(policy_) RXVM_HANDLER_LABEL_ ## policy_
