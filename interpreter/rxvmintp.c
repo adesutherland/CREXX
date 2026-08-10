@@ -5940,7 +5940,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 
     /* Load VM Plugins */
     DEBUG("Load VM Plugins\n");
-    current_frame->decimal = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
+    current_frame->decimal = (decplugin*)rxvmplugin_instance_set_get(
+            &context->plugin_instances, RXVM_PLUGIN_DECIMAL);
     if (!current_frame->decimal) {
         printf("PANIC - No default decimal plugin\n");
         exit(255); // Documented 255 is for missing decimal plugin
@@ -6525,10 +6526,11 @@ START_OF_INSTRUCTIONS
 #undef context
 
 int run(rxvm_context *context, int argc, char *argv[]) {
-    rxvm_worker_transition_result transition =
-            rxvm_worker_begin_execution(&context->worker);
+    rxvm_worker_transition_result transition;
     rxvm_context *previous_active_context;
     int rc;
+
+    transition = rxvm_worker_begin_execution(&context->worker);
 
     if (transition != RXVM_WORKER_TRANSITION_OK) {
         fprintf(stderr,
@@ -6538,6 +6540,16 @@ int run(rxvm_context *context, int argc, char *argv[]) {
                 rxvm_worker_state_name(
                         rxvm_worker_get_state(&context->worker)));
         return 1;
+    }
+
+    if (rxvmplugin_instance_set_prepare(
+            &context->plugin_instances, RXVM_PLUGIN_DECIMAL) != 0) {
+        fprintf(stderr, "PANIC - No default decimal plugin\n");
+        if (rxvm_worker_end_execution(&context->worker) !=
+                RXVM_WORKER_TRANSITION_OK) {
+            abort();
+        }
+        return 255;
     }
 
     previous_active_context = rxvm_active_context_enter(context);

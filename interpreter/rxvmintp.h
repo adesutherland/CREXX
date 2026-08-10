@@ -31,6 +31,7 @@
 #include "rxvalue.h"
 #include "rxvmmemory.h"
 #include "rxvmworker.h"
+#include "rxvmplugin/rxvmplugin_framework.h"
 #include "rxsignal.h"
 #include "rxsignature.h"
 #include "rxvminstrument.h"
@@ -561,6 +562,7 @@ typedef struct rxvm_context {
     char interface_factory_registry_dirty;
     /* Append worker-owned state so established hot-field offsets stay fixed. */
     rxvm_active_state active;
+    rxvmplugin_instance_set plugin_instances;
 #ifdef CREXX_VM_PROFILING
     /* Keep optional build-local fields last so existing field offsets stay stable. */
     char profile_mode;

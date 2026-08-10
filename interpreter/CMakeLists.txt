@@ -571,6 +571,15 @@ target_include_directories(test_rxvmactive PRIVATE
         ../platform ../avl_tree ../utf8 ../inc)
 target_link_libraries(test_rxvmactive PRIVATE rxvml Threads::Threads)
 
+add_executable(test_rxvmplugin_context tests/test_rxvmplugin_context.c)
+target_include_directories(test_rxvmplugin_context PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxvmplugin_context PRIVATE
+        rxvml rxvmplugin mc_decimal_manual Threads::Threads)
+add_dependencies(test_rxvmplugin_context mc_decimal_dynamic)
+
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
@@ -620,12 +629,19 @@ add_test(NAME rxvmstem_allocator_family COMMAND test_rxvmstem_allocator_family)
 add_test(NAME rxvmmemory_allocator COMMAND test_rxvmmemory)
 add_test(NAME rxvmworker_lifecycle COMMAND test_rxvmworker)
 add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)
+add_test(NAME rxvmplugin_context_ownership
+        COMMAND test_rxvmplugin_context
+                "$<TARGET_FILE_DIR:mc_decimal_dynamic>"
+                "rxvm_mc_decimal"
+                "decnumber")
 set_tests_properties(rxvmmemory_allocator PROPERTIES
         LABELS "interpreter;memory")
 set_tests_properties(rxvmworker_lifecycle PROPERTIES
         LABELS "interpreter;memory;worker")
 set_tests_properties(rxvmactive_isolation PROPERTIES
         LABELS "interpreter;worker;signals")
+set_tests_properties(rxvmplugin_context_ownership PROPERTIES
+        LABELS "interpreter;worker;plugins;decimal")
 set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
 set_tests_properties(rxvmstem_allocator_family PROPERTIES

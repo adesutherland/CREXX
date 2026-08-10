@@ -1,0 +1,209 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-rxbvm-control-warmup-1,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,warmup,1,1,5500,1371348000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-warmup-1,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,warmup,1,2,5500,1292284000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-warmup-1,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,warmup,1,3,5500,1228165000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-warmup-1,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,warmup,1,4,5500,1228528000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-1,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,1,1,5500,1008611000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-1,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,1,2,5500,1007001000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-1,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,1,3,5500,948142000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-1,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,1,4,5500,940848000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-2,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,2,1,5500,946448000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-2,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,2,2,5500,935212000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-2,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,2,3,5500,1005957000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-2,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,2,4,5500,1010138000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-3,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,3,1,5500,948333000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-3,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,3,2,5500,942211000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-3,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,3,3,5500,999851000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-3,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,3,4,5500,1009262000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-4,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,4,1,5500,1017283000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-4,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,4,2,5500,994958000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-4,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,4,3,5500,943284000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-4,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,4,4,5500,944514000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-5,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,5,1,5500,1007873000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-5,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,5,2,5500,1011509000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-5,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,5,3,5500,946074000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-5,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,5,4,5500,946893000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-6,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,6,1,5500,952009000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-6,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,6,2,5500,944395000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-6,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,6,3,5500,1012141000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-6,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,6,4,5500,1014225000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-7,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,7,1,5500,948332000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-7,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,7,2,5500,934959000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-7,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,7,3,5500,1015617000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-7,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,7,4,5500,1015822000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-8,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,8,1,5500,1004225000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-8,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,8,2,5500,1015526000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-8,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,8,3,5500,950441000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-8,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,8,4,5500,933841000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-9,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,9,1,5500,1012244000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-9,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,9,2,5500,1010557000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-9,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,9,3,5500,949106000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-9,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,9,4,5500,953040000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-10,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,10,1,5500,949717000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-10,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,10,2,5500,940431000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-10,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,10,3,5500,1007005000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-10,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,10,4,5500,1012328000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-11,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,11,1,5500,939137000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-11,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,11,2,5500,962762000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-11,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,11,3,5500,1020141000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-11,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,11,4,5500,1025699000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-12,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,12,1,5500,1052582000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-12,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,12,2,5500,1013657000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-12,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,12,3,5500,940244000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-12,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,12,4,5500,941246000,,0,pass,,
+timing-Richards-richards-rxbvm-control-warmup-1,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,warmup,1,1,20,2119266000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-warmup-1,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,warmup,1,2,20,2089597000,,0,pass,,
+timing-Richards-richards-rxtvm-control-warmup-1,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,warmup,1,3,20,2079987000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-warmup-1,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,warmup,1,4,20,2069994000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-1,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,1,1,20,2137412000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-1,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,1,2,20,2085096000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-1,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,1,3,20,2122944000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-1,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,1,4,20,2065031000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-2,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,2,1,20,2071096000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-2,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,2,2,20,2067135000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-2,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,2,3,20,2080378000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-2,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,2,4,20,2060643000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-3,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,3,1,20,2073804000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-3,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,3,2,20,2087606000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-3,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,3,3,20,2117786000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-3,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,3,4,20,2102808000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-4,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,4,1,20,2156394000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-4,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,4,2,20,2083975000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-4,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,4,3,20,2072362000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-4,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,4,4,20,2167837000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-5,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,5,1,20,2117514000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-5,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,5,2,20,2100324000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-5,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,5,3,20,2116261000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-5,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,5,4,20,2358196000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-6,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,6,1,20,2340473000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-6,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,6,2,20,2173946000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-6,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,6,3,20,2102326000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-6,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,6,4,20,2226093000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-7,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,7,1,20,2176467000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-7,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,7,2,20,2258646000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-7,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,7,3,20,2113271000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-7,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,7,4,20,2173279000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-8,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,8,1,20,2099646000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-8,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,8,2,20,2139354000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-8,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,8,3,20,2103672000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-8,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,8,4,20,2172724000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-9,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,9,1,20,2092816000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-9,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,9,2,20,2096356000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-9,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,9,3,20,2176471000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-9,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,9,4,20,2098759000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-10,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,10,1,20,2090619000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-10,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,10,2,20,2131556000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-10,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,10,3,20,2197125000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-10,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,10,4,20,2120055000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-11,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,11,1,20,2128230000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-11,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,11,2,20,2172194000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-11,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,11,3,20,2113130000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-11,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,11,4,20,2161954000,,0,pass,,
+timing-Richards-richards-rxbvm-candidate-recorded-12,timing,Richards,richards-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,12,1,20,2132612000,,0,pass,,
+timing-Richards-richards-rxbvm-control-recorded-12,timing,Richards,richards-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,12,2,20,2126956000,,0,pass,,
+timing-Richards-richards-rxtvm-candidate-recorded-12,timing,Richards,richards-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,12,3,20,2139748000,,0,pass,,
+timing-Richards-richards-rxtvm-control-recorded-12,timing,Richards,richards-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,12,4,20,2106088000,,0,pass,,
+timing-Towers-towers-rxbvm-control-warmup-1,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,warmup,1,1,100,2094534000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-warmup-1,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,warmup,1,2,100,2145150000,,0,pass,,
+timing-Towers-towers-rxtvm-control-warmup-1,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,warmup,1,3,100,2011075000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-warmup-1,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,warmup,1,4,100,2080164000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-1,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,1,1,100,2101425000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-1,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,1,2,100,2116624000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-1,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,1,3,100,2061708000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-1,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,1,4,100,2041330000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-2,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,2,1,100,2088842000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-2,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,2,2,100,2067631000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-2,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,2,3,100,2073627000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-2,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,2,4,100,2084689000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-3,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,3,1,100,2044100000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-3,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,3,2,100,2083058000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-3,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,3,3,100,2164553000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-3,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,3,4,100,2129203000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-4,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,4,1,100,2105002000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-4,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,4,2,100,2093155000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-4,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,4,3,100,2058425000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-4,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,4,4,100,2079620000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-5,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,5,1,100,2112031000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-5,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,5,2,100,2120949000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-5,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,5,3,100,2058557000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-5,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,5,4,100,2062895000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-6,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,6,1,100,2123394000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-6,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,6,2,100,2079379000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-6,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,6,3,100,2142656000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-6,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,6,4,100,2090965000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-7,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,7,1,100,2062555000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-7,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,7,2,100,2085972000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-7,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,7,3,100,2161899000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-7,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,7,4,100,2105199000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-8,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,8,1,100,2101292000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-8,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,8,2,100,2103728000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-8,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,8,3,100,2076946000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-8,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,8,4,100,2083620000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-9,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,9,1,100,2102265000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-9,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,9,2,100,2161173000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-9,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,9,3,100,2080135000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-9,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,9,4,100,2095085000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-10,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,10,1,100,2076098000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-10,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,10,2,100,2086938000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-10,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,10,3,100,2102728000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-10,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,10,4,100,2153811000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-11,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,11,1,100,2078260000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-11,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,11,2,100,2081505000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-11,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,11,3,100,2136228000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-11,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,11,4,100,2181133000,,0,pass,,
+timing-Towers-towers-rxbvm-candidate-recorded-12,timing,Towers,towers-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,12,1,100,2193714000,,0,pass,,
+timing-Towers-towers-rxbvm-control-recorded-12,timing,Towers,towers-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,12,2,100,2122172000,,0,pass,,
+timing-Towers-towers-rxtvm-candidate-recorded-12,timing,Towers,towers-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,12,3,100,2147745000,,0,pass,,
+timing-Towers-towers-rxtvm-control-recorded-12,timing,Towers,towers-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,12,4,100,2117841000,,0,pass,,
+timing-RexxCPS-rexxcps-rxbvm-control-warmup-1,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,warmup,1,1,1000-clauses,1386229000,,0,pass,43949708,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-warmup-1,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,warmup,1,2,1000-clauses,1373192000,,0,pass,44318698,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-warmup-1,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,warmup,1,3,1000-clauses,1352800000,,0,pass,45030765,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-warmup-1,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,warmup,1,4,1000-clauses,1348125000,,0,pass,45193287,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-1,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,1,1,1000-clauses,1377217000,,0,pass,44274627,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-1,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,1,2,1000-clauses,1358110000,,0,pass,44870736,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-1,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,1,3,1000-clauses,1340753000,,0,pass,45507127,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-1,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,1,4,1000-clauses,1326103000,,0,pass,45972235,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-2,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,2,1,1000-clauses,1342365000,,0,pass,45483821,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-2,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,2,2,1000-clauses,1336429000,,0,pass,45592151,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-2,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,2,3,1000-clauses,1365053000,,0,pass,44577305,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-2,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,2,4,1000-clauses,1387958000,,0,pass,43846803,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-3,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,3,1,1000-clauses,1333161000,,0,pass,45720096,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-3,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,3,2,1000-clauses,1344562000,,0,pass,45279028,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-3,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,3,3,1000-clauses,1382986000,,0,pass,44136704,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-3,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,3,4,1000-clauses,1371016000,,0,pass,44527126,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-4,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,4,1,1000-clauses,1366622000,,0,pass,44515234,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-4,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,4,2,1000-clauses,1377715000,,0,pass,44226457,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-4,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,4,3,1000-clauses,1340972000,,0,pass,45442524,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-4,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,4,4,1000-clauses,1361062000,,0,pass,44664751,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-5,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,5,1,1000-clauses,1374207000,,0,pass,44380537,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-5,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,5,2,1000-clauses,1419257000,,0,pass,42564747,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-5,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,5,3,1000-clauses,1354046000,,0,pass,44985794,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-5,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,5,4,1000-clauses,1337480000,,0,pass,45597681,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-6,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,6,1,1000-clauses,1329853000,,0,pass,45836573,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-6,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,6,2,1000-clauses,1346132000,,0,pass,45264435,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-6,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,6,3,1000-clauses,1361930000,,0,pass,44715280,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-6,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,6,4,1000-clauses,1393797000,,0,pass,43678460,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-7,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,7,1,1000-clauses,1408029000,,0,pass,43203263,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-7,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,7,2,1000-clauses,1341956000,,0,pass,45384777,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-7,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,7,3,1000-clauses,1364999000,,0,pass,44629429,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-7,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,7,4,1000-clauses,1364415000,,0,pass,44739086,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-8,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,8,1,1000-clauses,1362462000,,0,pass,44759672,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-8,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,8,2,1000-clauses,1388282000,,0,pass,43956392,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-8,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,8,3,1000-clauses,1338376000,,0,pass,45541945,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-8,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,8,4,1000-clauses,1340223000,,0,pass,45478608,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-9,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,9,1,1000-clauses,1393398000,,0,pass,43713898,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-9,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,9,2,1000-clauses,1425745000,,0,pass,42429658,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-9,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,9,3,1000-clauses,1365183000,,0,pass,44558475,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-9,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,9,4,1000-clauses,1359756000,,0,pass,44804674,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-10,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,10,1,1000-clauses,1355127000,,0,pass,44963827,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-10,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,10,2,1000-clauses,1361452000,,0,pass,44774943,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-10,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,10,3,1000-clauses,1363380000,,0,pass,44717120,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-10,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,10,4,1000-clauses,1390595000,,0,pass,43892915,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-11,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,11,1,1000-clauses,1363564000,,0,pass,44763759,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-11,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,11,2,1000-clauses,1379032000,,0,pass,44092722,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-11,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,11,3,1000-clauses,1399884000,,0,pass,43480076,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-11,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,11,4,1000-clauses,1388577000,,0,pass,43932369,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-12,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,e3a-context-providers,A,no,startup-included,recorded,12,1,1000-clauses,1362358000,,0,pass,44758911,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-12,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,control-6d12cd921,A,no,startup-included,recorded,12,2,1000-clauses,1370089000,,0,pass,44498476,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-12,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,e3a-context-providers,A,no,startup-included,recorded,12,3,1000-clauses,1337078000,,0,pass,45575819,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-12,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,control-6d12cd921,A,no,startup-included,recorded,12,4,1000-clauses,1329247000,,0,pass,45881199,cREXX clauses per second

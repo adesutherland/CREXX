@@ -301,6 +301,7 @@ void rxinimod(rxvm_context *context) {
     context->active.crexx_command_state = 0;
     context->active.say_exit = 0;
     context->active.pending_interrupts = 0;
+    rxvmplugin_instance_set_init(&context->plugin_instances);
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
@@ -403,6 +404,10 @@ void rxfremod(rxvm_context *context) {
     (void)rxvm_memory_release(context->modules);
     rxvm_reference_context_free(&context->references);
     if (context->location) free(context->location);
+
+    /* Provider instances are context-owned and must die while the worker is
+     * idle and its allocator family is still available. */
+    rxvmplugin_instance_set_destroy(&context->plugin_instances);
 
     rxvm_memory_report_if_requested(rxvm_runtime_memory_context(runtime));
 

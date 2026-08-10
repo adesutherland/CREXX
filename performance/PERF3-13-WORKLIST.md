@@ -2,7 +2,7 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E2 accepted and locally complete; E3 design awaiting approval; Gate F closed**
+Status: **Gate E E3a accepted and Mac closeout complete; E3b-P1 A/C compatibility slice approved; Gate F closed**
 
 ## Current Gate E continuation
 
@@ -31,6 +31,35 @@ Status: **Gate E E2 accepted and locally complete; E3 design awaiting approval; 
   QA. The Mac closeout is green, including the complete 1,999-test Debug and
   AddressSanitizer suites. E3 plugin/native-instance ownership is the next
   proposed Gate E slice and requires its own approval. Gate F remains closed.
+- The post-handler-refactor current control is clean synchronized `develop` at
+  `6d12cd921`. Ordinary Release uses the `profile-20` panel: 118 ranked public
+  handlers plus both private fused handlers are inline (120/589), with the
+  rest callable. A fresh seven-workload, both-engine formal absolute baseline
+  passes 168/168 initial and 40/40 governed-append executions. Base64 remains
+  noise-labelled after the one permitted append. This is an absolute entry
+  observation, not a substitute for E3's later same-session paired verdict.
+  Evidence:
+  [`2026-08-10-perf3-13-e3-current-baseline`](evidence/2026-08-10-perf3-13-e3-current-baseline/).
+- Adrian approved E3a on 2026-08-10 through its first frozen ordinary-Release
+  verdict. E3b is the intended following slice, but remains separate and must
+  not be mixed into E3a's implementation or verdict.
+- Adrian accepted E3a on 2026-08-10 and directed the programme to move to E3b.
+  The accepted verdict's two-context ownership test passes, all 208/208 verdict
+  processes pass, all eight paired product/guard comparisons are statistically
+  inconclusive, and no 3% adverse guard fires. Product `rxbvm` paired medians
+  range from -0.069720% to +0.962402%; the candidate adds 800 bytes to each VM
+  file while the profile-20 hot owner is unchanged in `rxtvm` and 72 bytes
+  smaller in `rxbvm`.
+- E3a's shortest Mac closeout is complete. Removing the disposable reproducer
+  mode leaves focused Debug 15/15 and Release ownership 1/1 green. The first
+  broad build exposed one include-boundary error in auxiliary targets; changing
+  the new include to its interpreter-root-relative path repairs it. The full
+  Debug build then passes and CTest is 2,007/2,007 in 291.77 seconds. Rebuilt
+  Release `rxtvm` and `rxbvm` retain the exact accepted-verdict hashes, so the
+  verdict remains authoritative and no timing rerun is warranted. Adrian then
+  approved the E3b A/C compatibility model and its P1 implementation through
+  the first frozen ordinary-Release verdict. Evidence:
+  [`2026-08-10-perf3-13-gate-e-e3a-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3a-first-release-verdict/).
 
 ## Exact isolated base
 
@@ -1605,7 +1634,7 @@ remains the ordered portable follow-up after Adrian reviews the local commits.
 Compact evidence:
 [`2026-08-08-perf3-13-gate-e-e2-active-state`](evidence/2026-08-08-perf3-13-gate-e-e2-active-state/).
 
-### E3 plugin catalogue and worker-owned native instances — proposed
+### E3 plugin catalogue and worker-owned native instances — selected
 
 E2 removed ambient loader selection but deliberately left the process-global
 RXVM plugin factory list, its `current_loading_handle`, the single factory-made
@@ -1614,8 +1643,8 @@ the next slice. The current decimal instance mutates `num_context` and private
 provider state, so it cannot be shared by concurrently executing workers even
 when only one thread enters each worker.
 
-1. **A — immutable process catalogue plus worker-VM-owned instances. Proposed
-   selection.** Synchronize only descriptor publication and library-handle
+1. **A — immutable process catalogue plus worker-VM-owned instances. Selected.**
+   Synchronize only descriptor publication and library-handle
    lifetime. Published factory descriptors are immutable; every VM context
    constructs and owns its mutable provider/native instances, and destroys
    them before releasing its catalogue-generation references. Execution never
@@ -1631,31 +1660,201 @@ when only one thread enters each worker.
    cross-worker state, and ordinary instruction execution would gain a hot
    synchronization dependency.
 
-Proposed numbered plan, awaiting Adrian's approval:
+The live 2026-08-10 entry audit confirms two related but independently
+reviewable ownership surfaces:
 
-1. Inventory both plugin mechanisms (`rxvmplugin` providers and RXPA native
-   modules), classifying factory descriptors, code/metadata, mutable instances,
-   native static state, handles, teardown callbacks and registration order.
-2. Introduce a runtime-owned, synchronized catalogue of immutable factory and
-   RXPA registration descriptors. Make dynamic registration transactional and
-   replace ambient `current_loading_handle` with an explicit load transaction.
-3. Instantiate each selected RXVM provider once per VM context from its factory;
-   frames may borrow only that worker-owned instance. Destroy instances at idle
-   context teardown before the last referenced library handle can close.
-4. Replay static and dynamic RXPA descriptors into each VM's own native module
-   and procedure tables. Roll back partial registration/load failure without
-   publishing a half-built module or leaking a handle.
-5. Treat a native plugin with undeclared mutable process-static state as
-   single-worker-only. Define the minimum rebuild-together internal capability
-   declaration needed for immutable/reentrant code or per-context instances;
-   do not infer safety from interface metadata.
-6. Add two-worker tests for distinct decimal contexts, simultaneous static and
-   dynamic registration, duplicate/failing factories, native error isolation,
-   reverse teardown order, handle retention and exact zero-live-allocation
-   shutdown on both concrete VMs and POSIX/Windows implementations.
-7. Freeze after focused Debug correctness, run the ordinary profiling-off
-   Release single-worker neutrality verdict, report it to Adrian and stop
-   before E4 module-generation work, a public worker pool or Gate F channels.
+- `rxvmplugin_factories` and `current_loading_handle` are process globals; a
+  catalogue entry stores the one live `factory()` result, and every `run()`
+  points that shared decimal instance at the current frame's `num_context`.
+  `rxvml_create()` registers another global decimal instance for every context.
+- RXPA is a wider compatibility surface: static function/metadata lists are
+  consumed and freed by the first `rxldmodp()` replay, successful dynamic-load
+  handles are not returned to VM ownership, and dynamic plugins retain the
+  copied helper table in DSO-static `_rxpa_context` state.
+
+To keep each production decision bounded, E3 is split into separately approved
+slices. Adrian accepted E3a and therefore selected architecture A for RXVM
+providers. E3b applies the same catalogue/context ownership rule to RXPA, but
+its treatment of legacy plugin-private process state remains a separate design
+decision below.
+
+### E3a — RXVM provider catalogue and worker-VM decimal instances — accepted; Mac closeout complete
+
+1. Freeze the source inventory and add a minimal two-context reproducer that
+   demonstrates the present shared-instance/`num_context` collision without
+   changing product behaviour. Record factory order, duplicate-name priority,
+   dynamic-load failure and teardown expectations for bundled and external
+   RXVM providers.
+2. Replace the mutable global list entry with an immutable process-catalogue
+   descriptor published by an explicit load transaction. The descriptor owns
+   name/type/capability metadata, the factory and a generation-counted library
+   handle reference; publication and handle lifetime are synchronized, but VM
+   execution never takes the catalogue lock. Remove ambient
+   `current_loading_handle` from the registration path.
+3. Append a provider-instance set to `rxvm_context` so established hot context
+   offsets and the accepted profile-20 owner shape are not needlessly
+   disturbed. Instantiate the selected decimal provider once per VM context
+   after plugin selection and before its first run. Frames borrow only that
+   context-owned instance. Prefer this bounded eager point over a per-operation
+   lazy branch; retain a narrower lazy form only as a measured failure-recovery
+   alternative if eager construction proves materially costly.
+4. Destroy every provider instance while its worker is idle and its allocator
+   is still active, then release the catalogue generation/handle reference.
+   Duplicate or failing registration must roll back without publishing a
+   partial descriptor, leaking an instance or closing code still reachable by
+   another context.
+5. Define the minimum rebuild-together internal capability declaration for
+   immutable/reentrant provider code versus per-context mutable instances.
+   Preserve the existing external/public ABI through an adapter if it cannot
+   be changed compatibly; do not infer safety from plugin type or metadata.
+6. Add POSIX and Windows tests with two simultaneously live VM contexts for
+   distinct decimal instances, different DIGITS/FUZZ/FORM/STANDARD state,
+   independent signal/error state, nested calls, duplicate/failing factories,
+   reverse teardown, retained handles and exact zero-live-allocation shutdown.
+   Run the ownership tests under both concrete VMs; creating a public worker
+   pool remains out of scope.
+7. After the minimum focused Debug set passes, freeze implementation and build
+   ordinary profiling-off Release with the unchanged profile-20 policy. Run a
+   same-session, paired/interleaved 12-round comparison of the exact
+   `6d12cd921` control and candidate for Sieve, Richards, Towers and canonical
+   RexxCPS under product `rxbvm`, with `rxtvm` as the concrete dispatch guard.
+   Retain VM file/`__text`, `rxvm_run_owned_core`, handler-placement and
+   lifecycle deltas. The new absolute baseline is context only; it is not used
+   as an unmatched regression comparator.
+8. Report the first Release verdict and stop for Adrian. Full Debug,
+   sanitizer, cross-platform closeout, E3b, E4, public workers and Gate F remain
+   closed until that verdict and slice are explicitly accepted.
+
+### E3b — RXPA replay, lifetime and optional concurrency capabilities — P1 approved
+
+Adrian directed the programme to move to E3b after accepting E3a on
+2026-08-10. He approved a backward-compatible A/C model: every existing plugin
+is safe through the A compatibility lane, while an audited plugin may opt into
+C capabilities. He then selected process reentrancy as the first useful
+capability and authorized documentation, implementation and testing through
+the P1 first ordinary-Release verdict. Per-context session factories and
+per-call flags follow as P2 after P1 is accepted.
+
+#### Current RXPA ownership audit
+
+1. Runtime static constructors call `rxvm_addfunc()` and the metadata callbacks
+   without an active VM. They prepend borrowed string/function pointers to
+   unsynchronized process lists. The first `rxldmodp()` builds one native
+   module, consumes and frees every list node, so a later VM cannot replay the
+   same statically linked plugin set. `rxvml_create()` happens to append its
+   five internal ADDRESS bridge functions again for each context; that does not
+   recover other constructor registrations and races under concurrent creates.
+2. A dynamic `.rxplugin` load calls its public `_initfuncs(rxpa_initctxptr)`
+   entry directly into a context-owned module builder. Registration is not a
+   transaction: callbacks mutate the module as the initializer runs. A
+   successful `LoadLibrary`/`dlopen` handle is neither returned nor attached to
+   the VM, so callable and native-payload-operation pointers remain valid only
+   because the current loader leaks the successful handle.
+3. Existing dynamic plugins copy the helper table into DSO-static
+   `_rxpa_context`. OS loaders may coalesce repeated loads, so running the
+   initializer for every VM rewrites that one table and does not create
+   per-context plugin statics. The helper function addresses themselves are
+   process-immutable and E2 routes their mutable RXVML/RXPA/SAY/copy-out state
+   through the active `rxvm_context`; plugin-private DSO statics remain shared
+   and cannot be inferred reentrant.
+4. Native procedure pointers are encoded in the synthetic native module and
+   copied into `proc_runtime.start`; ordinary and signal calls reach them
+   without an owner/lifetime/policy descriptor. Native payload `copy` and
+   `finalize` callbacks are also raw code pointers and can run after the
+   originating native call.
+5. Teardown currently frees each module image before its module globals, then
+   drains the remaining context-owned values, references and registries. An
+   explicit DSO reference therefore cannot be released at `free_module()`; it
+   must survive until every frame/global/native payload and callback reachable
+   from that VM has been destroyed.
+6. The compiler has its own static declaration lists and also uses the existing
+   `load_plugin()` contract. The installed `CREXX::RXPA` SDK exposes the
+   current header-only `_initfuncs` ABI to external C and C++ plugins. E3b must
+   preserve those source and binary consumers rather than requiring a new
+   initializer or context userdata argument.
+
+#### E3b selected A/C contract
+
+1. **A is the mandatory compatibility floor.** An unmodified plugin retains
+   the installed `_initfuncs(rxpa_initctxptr)` ABI and existing source/binary
+   behavior. Its procedures and native-payload callbacks use one process-wide
+   recursive compatibility lane because the host cannot infer whether its
+   private statics are safe. Registration and catalogue synchronization remain
+   off the ordinary bytecode execution path.
+2. **C is optional and explicitly asserted.** A versioned, optional query
+   advertises immutable plugin-level capability flags. Old hosts ignore the
+   extra symbol; a new host treats a missing, malformed or unknown declaration
+   as legacy A. The P1 convenience declaration is the one-line
+   `RXPA_PLUGIN_PROCESS_REENTRANT` macro.
+3. **Process reentrancy means concurrent calls have defined behavior.** It does
+   not mean side-effect-free: synchronized I/O, atomics and calls into external
+   thread-safe services remain valid. The plugin author promises that every
+   procedure covered by the declaration tolerates concurrent entry, including
+   its process statics, library calls, error paths and teardown assumptions.
+   P1 does not infer safety from function names, metadata or plugin type.
+4. **P1 is deliberately plugin-granular.** Audited process-reentrant procedures
+   bypass the legacy call lock. Unmarked procedures remain serialized. Native
+   payload `copy`/`finalize` callbacks remain on the compatibility lane in P1;
+   a later capability can relax that only with an explicit lifetime contract.
+5. **P2 extends the same negotiation surface.** A session-aware plugin may
+   expose a per-VM session factory/destructor and per-call flags. Legacy entry
+   points use a documented default session so old callers remain valid. P2 is
+   closed until P1's ordinary-Release verdict is accepted; P1 must not smuggle
+   a session pointer into `ADDPROC` options or change `rxpa_libfunc`.
+6. Repeated `dlopen`/`LoadLibrary` is not isolation: OS loaders may coalesce a
+   DSO and `_rxpa_context` is DSO-static. E3b therefore makes static declarations
+   replayable and DSO handle ownership explicit even when the plugin opts into
+   process reentrancy.
+
+#### E3b-P1 numbered implementation plan
+
+1. Commit the exact accepted E3a closeout so its commit and byte-identical
+   Release executables are the E3b control. Record current declaration order,
+   duplicate priority, compiler behavior and installed C/C++ SDK behavior.
+2. Add the optional versioned capability declaration and
+   `RXPA_PLUGIN_PROCESS_REENTRANT` macro without changing `_initfuncs`,
+   `rxpa_libfunc`, `ADDPROC` language options, RXAS or RXBIN. Static plugins are
+   rebuild-together; dynamic plugins remain loadable by old hosts.
+3. Replace destructive static registration consumption with synchronized,
+   owned snapshot-and-replay. Exact repeated internal registration is
+   idempotent, and each VM publishes a distinct native module only after a
+   complete snapshot has been built.
+4. Add a runtime-private loader result that returns successful dynamic handles
+   and the validated optional capability. Keep `load_plugin()` for existing
+   compiler/internal callers. Each VM owns its DSO references until all frames,
+   globals, references, native payloads and modules that may reach plugin code
+   have been destroyed.
+5. Bind the selected capability to each native runtime procedure. Route legacy
+   ordinary and signal calls through one process-wide recursive lock; route an
+   explicitly process-reentrant procedure directly. Keep catalogue and loader
+   locks off the call path and keep native payload callbacks serialized in P1.
+6. Add two-context, two-OS-thread tests covering second-context static replay,
+   distinct native runtime objects, overlapping process-reentrant calls,
+   serialized legacy calls, context-correct RXPA helper state, dynamic handle
+   lifetime, reverse teardown and conservative handling of absent/invalid
+   capability declarations. Retain compiler and installed external C/C++ SDK
+   coverage.
+7. Document the opt-in contract with safe/unsafe examples and the migration
+   rule: add the macro only after auditing all process statics and callees.
+   Document legacy serialization, P1 payload behavior and the reserved P2
+   session-factory/default-session extension.
+8. After the minimum focused Debug set passes, freeze production code and build
+   ordinary profiling-off Release with the unchanged profile-20 panel. Compare
+   the committed E3a control and candidate in a balanced native-call kernel,
+   Sieve and canonical RexxCPS under product `rxbvm`, with `rxtvm` as the guard.
+   Report lock/bypass cost, startup/load/teardown, VM file/`__text` and the hot
+   owner separately.
+9. Report the first E3b-P1 ordinary-Release verdict and stop for Adrian. Broad
+   Debug/sanitizer/cross-platform closeout, P2 sessions, E4, public workers/
+   channels and Gate F remain closed until P1 is explicitly accepted.
+
+#### E3b approval boundary
+
+Approval selects the backward-compatible A/C model and authorizes P1 steps 1-9
+through the first frozen Release verdict. Adrian explicitly authorized the E3a
+checkpoint commit. P1 authorizes parallel calls only for plugins that make the
+process-reentrant assertion; legacy procedures remain serialized. It does not
+authorize P2 session factories, a mandatory new ABI, a push or Gate F work.
 
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
@@ -1717,13 +1916,16 @@ remains closed until the Gate E worker model has been selected.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 through E2 accepted.**
+6. **Gate E — full M5 start: approved 2026-08-07; E1 through E3a accepted.**
    E1/E1-P1 are published and Windows-MinGW proven. E2's worker-owned active
    state and direct interrupt slot pass the accepted Release verdict, complete
    Mac Debug/ASan/Release closeout and the separately repaired RXAS sanitizer
-   fault. E3 plugin catalogue/native-instance ownership is proposed and awaits
-   separate approval. The full gate stops for worker-model selection before any
-   public pool/channel semantics.
+   fault. The current profile-20 absolute baseline is retained. E3a RXVM
+   provider/decimal ownership has an accepted neutral, guard-clean verdict and
+   passes its 2,007/2,007 Mac Debug closeout. Adrian directed the programme to
+   E3b; its replay/lifetime and serialized legacy-native design now awaits
+   approval, while implementation remains closed. The full gate stops for
+   worker-model selection before any public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 
