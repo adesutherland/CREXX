@@ -5567,6 +5567,31 @@ rxvm_outlined_handler_functions[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #undef RXVM_HANDLER
 };
 
+#ifdef CREXX_VM_PROFILING
+static const unsigned char
+rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
+#define RXVM_HANDLER(name_, ...) \
+    [OP_ ## name_] = RXVM_HANDLER_IS_INLINE(name_),
+#define RXVM_PRIVATE_HANDLER(name_, dispatch_opcode_, profile_opcode_, ...) \
+    [dispatch_opcode_] = RXVM_HANDLER_IS_INLINE(name_),
+#include "rxvmhandlers_core.inc"
+#include "rxvmhandlers_control.inc"
+#include "rxvmhandlers_numeric.inc"
+#include "rxvmhandlers_string.inc"
+#include "rxvmhandlers_system.inc"
+#undef RXVM_PRIVATE_HANDLER
+#undef RXVM_HANDLER
+};
+#define RXVM_HANDLER_EFFECTIVE_INLINE(dispatch_opcode_)                       \
+    ((dispatch_opcode_) <                                                    \
+                    sizeof(rxvm_handler_inline_placements) /                  \
+                    sizeof(rxvm_handler_inline_placements[0])                 \
+            ? rxvm_handler_inline_placements[(dispatch_opcode_)]             \
+            : RXVM_HANDLER_IS_INLINE(IUNKNOWN))
+#else
+#define RXVM_HANDLER_EFFECTIVE_INLINE(dispatch_opcode_) 0
+#endif
+
 #undef RXVM_HANDLER_FUNCTION
 #undef RXVM_HANDLER_FUNCTION_SELECT
 #undef RXVM_HANDLER_FUNCTION_SELECT_INNER
@@ -6232,14 +6257,14 @@ START_OF_INSTRUCTIONS
         case dispatch_opcode_:                                                 \
             RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
                     current_module->module_number, VM_CANONICAL_INDEX(pc),      \
-                    profile_opcode_);                                          \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));            \
             RXVM_EMIT_HANDLER(name_, __VA_ARGS__);
 #else
 #define RXVM_PRIVATE_HANDLER(name_, dispatch_opcode_, profile_opcode_, ...)     \
         name_:                                                                 \
             RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
                     current_module->module_number, VM_CANONICAL_INDEX(pc),      \
-                    profile_opcode_);                                          \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));            \
             RXVM_EMIT_HANDLER(name_, __VA_ARGS__);
 #endif
 #else
@@ -6260,14 +6285,14 @@ START_OF_INSTRUCTIONS
         case dispatch_opcode_:                                                 \
             RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
                     current_module->module_number, VM_CANONICAL_INDEX(pc),      \
-                    profile_opcode_);                                          \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));            \
             RXVM_HANDLER_EMIT_INLINE(name_, __VA_ARGS__);
 #else
 #define RXVM_OWNER_PRIVATE_INLINE(name_, dispatch_opcode_, profile_opcode_, ...) \
         name_:                                                                 \
             RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
                     current_module->module_number, VM_CANONICAL_INDEX(pc),      \
-                    profile_opcode_);                                          \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));            \
             RXVM_HANDLER_EMIT_INLINE(name_, __VA_ARGS__);
 #endif
 #define RXVM_OWNER_PRIVATE_OUTLINE(name_, dispatch_opcode_, profile_opcode_, ...)
@@ -6330,7 +6355,8 @@ START_OF_INSTRUCTIONS
             }
             RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
                     current_module->module_number, VM_CANONICAL_INDEX(pc),
-                    profile_opcode);
+                    profile_opcode,
+                    RXVM_HANDLER_EFFECTIVE_INLINE(dispatch_opcode));
         }
         goto rxvm_handler_state_call;
 
@@ -6340,7 +6366,8 @@ START_OF_INSTRUCTIONS
                 RXVM_PRIVATE_R2_COPYATTR1_REG_REG_INT];
         RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
                 current_module->module_number, VM_CANONICAL_INDEX(pc),
-                OP_LINKATTR1_REG_REG_INT);
+                OP_LINKATTR1_REG_REG_INT,
+                RXVM_HANDLER_IS_INLINE(PRIVATE_R2_COPYATTR1));
         goto rxvm_handler_state_call;
 
     rxvm_handler_PRIVATE_R1_RELINK_call:
@@ -6348,7 +6375,7 @@ START_OF_INSTRUCTIONS
                 RXVM_PRIVATE_R1_RELINK_REG_REG];
         RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(
                 current_module->module_number, VM_CANONICAL_INDEX(pc),
-                OP_UNLINK_REG);
+                OP_UNLINK_REG, RXVM_HANDLER_IS_INLINE(PRIVATE_R1_RELINK));
 #endif
 
     rxvm_handler_state_call:

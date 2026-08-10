@@ -35,11 +35,12 @@ typedef struct rxvm_test_instrumentation_state {
         vm_instrumentation.transition = RXVM_TRANSITION_SEQUENTIAL;             \
     } while (0)
 
-#define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_)         \
+#define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_, handler_inline_) \
     do {                                                                        \
         size_t vm_module__ = (size_t)(module_);                                 \
         size_t vm_index__ = (size_t)(index_);                                   \
         (void)(opcode_);                                                        \
+        (void)(handler_inline_);                                                \
         if (!vm_module__ || vm_instrumentation.instruction_active)              \
             vm_instrumentation.failed = 1;                                      \
         vm_instrumentation.begin_module = vm_module__;                          \

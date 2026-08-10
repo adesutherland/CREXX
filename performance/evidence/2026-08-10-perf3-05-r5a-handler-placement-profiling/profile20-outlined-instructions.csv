@@ -1,0 +1,6 @@
+instruction,opcode,dynamic_instructions,tier,profile30_placement,max_eligible_placement
+CALL1_REG_FUNC_REG,401,424200,HOT_30,inline,inline
+SAY_REG,450,1,NEVER,outline,outline
+SAY_STRING,455,1,NEVER,outline,outline
+SCONCAT_REG_REG_STRING,138,1,HOT_30,inline,inline
+STOI_REG,237,1,HOT_30,inline,inline

@@ -1,6 +1,6 @@
 # PERF3-05-R5 handler-placement percentage and platform panel
 
-Status: **stopped at explicit Apple GCC trade-off — no default selected**
+Status: **R5a placement diagnosis complete — code-shape cause, no default selected**
 
 Approved: 2026-08-10
 
@@ -210,3 +210,56 @@ instruction mix from the then-current representative portfolio, include
 private/fused dispatch explicitly, audit newly added handlers and re-evaluate
 the never-inline ledger. That later profiling refresh must not invalidate the
 literal all-inline control or silently change this R5 evidence.
+
+## R5a — effective handler-placement profiling
+
+Adrian selected the focused GCC threaded diagnosis on 2026-08-10 and asked
+that VM instruction profiles identify whether each executed instruction used
+an inline or outlined handler. This is diagnostic work only: it does not select
+a new panel, change the product default, or authorize an RXAS/RXBIN change.
+
+### Design selection
+
+1. **Label each canonical instruction row from its static opcode policy.** This
+   is the smallest report-only change, but it is rejected because the VM can
+   execute a process-private fused handler while attributing timing/counts to
+   the canonical public opcode. The label could therefore be false.
+2. **Record the effective placement at the existing instruction-entry hook.**
+   Keep canonical opcode counts and timing unchanged, but accumulate whether
+   executions used inline, outlined, or both handler placements. Emit that
+   value in the existing CSV `value` column and add a table column. This is
+   selected: it covers private fusion, needs no schema-column change, and the
+   ordinary profiling-off backend still discards the argument without
+   evaluating it.
+3. **Add a separate 651-handler dynamic census.** This would expose exact
+   private-handler identities as well as placement, but duplicates much of the
+   canonical instruction table and enlarges the profiling schema. Defer it
+   unless effective-placement evidence proves insufficient.
+
+### R5a gates
+
+- [x] Prove ordinary profiling-off profile-20 preprocessing remains unchanged
+      for both concrete engines; the hook argument is erased before C parsing.
+- [x] Unit-test inline, outline and mixed placement accumulation/reporting.
+- [x] Pass the focused profiling, instrumentation, signal and breakpoint tests
+      under both concrete engines.
+- [x] Capture exact counts-only GCC profile-20 Bounce profiles; derive the
+      mechanically all-inline control from the identical deterministic counts
+      and literal policy rather than completing a redundant 6.6-GiB compile.
+- [x] Identify the dynamic share of outlined instructions and whether private
+      fusion causes mixed placement on a canonical opcode.
+- [x] Confirm the diagnostic inference with the retained profiling-off Release
+      Bounce comparison before proposing a panel change.
+
+R5a rejects the simple missing-hot-handler explanation. Profile-20 executes
+887,867,426 Bounce instructions; only 424,204 (0.047778%) are outlined, with
+424,200 attributable to `CALL1_REG_FUNC_REG`. That handler and the other two
+non-host outlined identities enter at profile-30, leaving only two one-off
+`SAY` executions outlined. Profile-30 and max-eligible therefore have the same
+effective dynamic placement, yet retained GCC threaded Bounce is -8.691% and
+-4.693% respectively. The material difference comes from compiler owner/code
+shape created by handlers that Bounce does not execute, not call overhead
+proportional to the outlined dynamic mix. No tier or default changes are made.
+
+Evidence:
+`performance/evidence/2026-08-10-perf3-05-r5a-handler-placement-profiling/`.

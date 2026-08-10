@@ -26,7 +26,7 @@ typedef enum rxvm_transition_reason {
 #define RXVM_INSTRUMENTATION_STATE()
 #define RXVM_INSTRUMENTATION_VM_BEGIN(context_) ((void)0)
 #define RXVM_INSTRUMENTATION_VM_END(context_, result_) ((void)0)
-#define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_) ((void)0)
+#define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_, handler_inline_) ((void)0)
 #define RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(target_module_, target_index_, reason_) ((void)0)
 #define RXVM_INSTRUMENTATION_INSTRUCTION_TERMINAL(module_, index_, reason_) ((void)0)
 #define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(frame_, module_, index_, reason_) ((void)0)

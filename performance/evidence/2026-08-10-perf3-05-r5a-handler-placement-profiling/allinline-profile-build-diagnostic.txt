@@ -1,0 +1,9 @@
+compiler=Homebrew GCC 16.1.0
+panel=all-inline
+profiling=on
+engine=rxtvm
+status=stopped as redundant diagnostic
+elapsed_before_stop=00:08:28
+approximate_peak_observed_rss_bytes=6660000000
+interpretation=diagnostic compiler-complexity observation only; not a product build-time benchmark
+reason=profile-20 effective-placement counts plus the exact policy prove all-inline placement, while retained profiling-off timing already supplies the control

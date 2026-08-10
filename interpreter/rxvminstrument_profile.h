@@ -25,13 +25,14 @@
                 (context_)->sequence_count && !(context_)->prepare_only);       \
     } while (0)
 
-#define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_)       \
+#define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_, handler_inline_) \
     do {                                                                        \
         (void)(module_); (void)(index_);                                        \
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_begin_at(                                 \
                     &vm_profile, (size_t)(module_), (size_t)(index_),           \
-                    (int)(opcode_), rxvm_profile_timestamp(&vm_profile));       \
+                    (int)(opcode_), (int)(handler_inline_),                     \
+                    rxvm_profile_timestamp(&vm_profile));                       \
         if (vm_profile.enabled)                                                 \
             rxvm_profile_trace_instruction_at(                                 \
                     &vm_profile, current_frame, pc, meta_map,                   \

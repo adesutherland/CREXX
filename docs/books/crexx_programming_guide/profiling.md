@@ -147,7 +147,7 @@ The report then contains complementary views of the run:
 
 | Section | What it reports |
 |---|---|
-| **Instructions** | Count and entry-to-retire or entry-to-terminal time for each executed opcode. Rows are ordered by total time. |
+| **Instructions** | Count, effective handler placement, and entry-to-retire or entry-to-terminal time for each executed opcode. Rows are ordered by total time. |
 | **Transitions** | Time from an instruction retiring to the next instruction entering. Kinds distinguish sequential flow, a taken branch, call entry, return exit, interrupt entry/resume, external entry, and termination. |
 | **Procedures and methods** | Runtime calls and inclusive elapsed/body/self time for bytecode callables; call count and total observed time for native callables. |
 | **Call mechanics** | The measured VM work entering and leaving each bytecode callable. |
@@ -164,6 +164,15 @@ The report then contains complementary views of the run:
 The final **Interrupt sub-phases** section separates interrupt scans from the
 mechanics of entering, resuming, or terminating an interrupt path. These
 sub-phases overlap the interrupt transition rows and must not be added to them.
+
+The instruction table's `handler` column is `inline` or `outline` for the
+handler that actually executed in this build. It is `mixed` when executions
+attributed to one canonical public opcode used both placements, which can
+happen when a process-private fused handler is selected for only some static
+sites. This is effective runtime attribution, not merely a lookup of the
+serialized opcode's policy. In CSV, the same value occupies the existing
+`value` column on `instruction` rows; schema version 5 and the column layout are
+unchanged.
 
 ### Procedure, Method, Factory, and Native Rows
 
@@ -265,7 +274,7 @@ Columns that do not apply to a row are empty or zero. Interpret rows by their
 |---|---|
 | `summary` | Schema, VM mode, result, timer calibration, poll/error state, and overflow/tracking status. |
 | `status` | Explicit completeness/degradation status for instructions, procedures, allocations, call census, frame entry, value operations and branch sites. |
-| `instruction` | One row per executed opcode. |
+| `instruction` | One row per executed opcode; `value` is its effective `inline`, `outline`, or `mixed` handler placement. |
 | `transition` | One row per observed transition kind. |
 | `interrupt` | Scan totals and per-signal selection/entry/resume/terminal data. |
 | `procedure` | One or more metric rows per called procedure, method, factory, or native routine. |

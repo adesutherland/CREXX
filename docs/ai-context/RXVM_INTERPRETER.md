@@ -1309,6 +1309,15 @@ instruction entry and distinguishes same-frame sequential/branch transitions,
 call frame entry, return frame exit, interrupt entry/resume, external entry,
 and termination.
 
+Each instruction row also reports the effective handler placement as
+`inline`, `outline`, or `mixed`. Profiling records placement at the actual
+handler-entry boundary while retaining canonical public-opcode timing/count
+attribution, so a private fused handler cannot silently inherit an incorrect
+label from its serialized opcode. `mixed` means the same canonical opcode was
+observed through both placements. CSV schema 5 writes this in the existing
+`value` column; ordinary profiling-off builds still preprocess the added hook
+argument away without evaluating it.
+
 The same report contains procedure/method and call-mechanics tables. Callable
 names, return types, and argument signatures come from `META_FUNC`; a
 module/procedure fallback is used for older binaries without that record. The

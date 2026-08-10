@@ -1,0 +1,15 @@
+engine_profiles=rxtvm,rxbvm
+result=0
+counter_overflow=0
+instruction_status=complete
+procedure_status=complete
+allocation_status=complete
+call_census_status=complete
+frame_entry_status=complete
+value_operations_status=complete
+branch_sites_status=complete
+stderr_bytes_per_engine=0
+instruction_rows_per_engine=48
+instruction_rows_identical=yes
+instruction_rows_sha256=bca34f5ff051070aa0fe1b382b3ddfd7b92a84b4aaac5553d3a162746c2323e2
+note=Complete CSV files retain engine-specific summary metadata; the canonical instruction rows are byte-identical.

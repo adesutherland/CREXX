@@ -1,0 +1,22 @@
+Test project /private/tmp/crexx-perf3-05-r5a-clang-profile20.E6A2mN
+    Start 1044: rxvmprofileaccounting
+1/6 Test #1044: rxvmprofileaccounting ............   Passed    0.00 sec
+    Start 1107: rxvmprofiletable
+2/6 Test #1107: rxvmprofiletable .................   Passed    0.00 sec
+    Start 1108: rxbvmprofiletable
+3/6 Test #1108: rxbvmprofiletable ................   Passed    0.00 sec
+    Start 1109: rxvmprofilecsv
+4/6 Test #1109: rxvmprofilecsv ...................   Passed    0.02 sec
+    Start 1110: rxbvmprofilecsv
+5/6 Test #1110: rxbvmprofilecsv ..................   Passed    0.02 sec
+    Start 1121: vmprofilingdocumentation
+6/6 Test #1121: vmprofilingdocumentation .........   Passed    0.26 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+interpreter    =   0.32 sec*proc (6 tests)
+profiling      =   0.32 sec*proc (6 tests)
+sequence       =   0.26 sec*proc (1 test)
+
+Total Test time (real) =   0.35 sec

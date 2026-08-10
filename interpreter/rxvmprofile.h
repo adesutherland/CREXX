@@ -27,6 +27,13 @@ typedef struct rxvm_profile_counter {
     uint64_t max_ns;
 } rxvm_profile_counter;
 
+typedef enum rxvm_profile_handler_placement {
+    RXVM_PROFILE_HANDLER_PLACEMENT_UNKNOWN = 0,
+    RXVM_PROFILE_HANDLER_PLACEMENT_INLINE = 1,
+    RXVM_PROFILE_HANDLER_PLACEMENT_OUTLINE = 2,
+    RXVM_PROFILE_HANDLER_PLACEMENT_MIXED = 3
+} rxvm_profile_handler_placement;
+
 typedef struct rxvm_profile_interrupt_counter {
     uint64_t selected;
     uint64_t entries;
@@ -428,6 +435,7 @@ typedef struct rxvm_profile_state {
     uint64_t signal_restoration_failures;
 
     rxvm_profile_counter instructions[OP_MAX_INSTRUCTIONS];
+    unsigned char instruction_placements[OP_MAX_INSTRUCTIONS];
     rxvm_profile_counter transitions[RXVM_TRANSITION_COUNT];
     rxvm_profile_counter interrupt_scans;
     rxvm_profile_counter interrupt_mechanics;
@@ -790,7 +798,7 @@ RXVM_PROFILE_INLINE void rxvm_profile_close_top_at(
 
 RXVM_PROFILE_INLINE void rxvm_profile_instruction_begin_at(
         rxvm_profile_state *state, size_t module_id, size_t instruction_index,
-        int opcode, uint64_t now_ns) {
+        int opcode, int handler_inline, uint64_t now_ns) {
     rxvm_profile_activation *activation;
     if (!state->enabled) return;
     rxvm_profile_finish_mechanics_at(state, now_ns);
@@ -804,6 +812,9 @@ RXVM_PROFILE_INLINE void rxvm_profile_instruction_begin_at(
     }
     state->instruction_active = 1;
     state->active_opcode = opcode;
+    state->instruction_placements[opcode] |= handler_inline
+            ? RXVM_PROFILE_HANDLER_PLACEMENT_INLINE
+            : RXVM_PROFILE_HANDLER_PLACEMENT_OUTLINE;
     state->active_module_id = module_id;
     state->active_instruction_index = instruction_index;
     state->instruction_start_ns = now_ns;

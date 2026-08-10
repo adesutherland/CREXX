@@ -1655,6 +1655,21 @@ static uint64_t rxvm_profile_total_instruction_count(const rxvm_profile_state *s
     return total;
 }
 
+static const char *rxvm_profile_handler_placement_name(
+        unsigned char placement) {
+    switch ((rxvm_profile_handler_placement)placement) {
+        case RXVM_PROFILE_HANDLER_PLACEMENT_INLINE:
+            return "inline";
+        case RXVM_PROFILE_HANDLER_PLACEMENT_OUTLINE:
+            return "outline";
+        case RXVM_PROFILE_HANDLER_PLACEMENT_MIXED:
+            return "mixed";
+        case RXVM_PROFILE_HANDLER_PLACEMENT_UNKNOWN:
+        default:
+            return "unknown";
+    }
+}
+
 static uint64_t rxvm_profile_total_transition_ns(const rxvm_profile_state *state) {
     uint64_t total = 0;
     int i;
@@ -2021,9 +2036,12 @@ static void rxvm_profile_write_csv(FILE *out,
         int opcode = indices[position];
         const rxvm_profile_counter *counter = &state->instructions[opcode];
         fprintf(out,
-                "instruction,%s,,%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64
+                "instruction,%s,%s,%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64
                 ",%" PRIu64 ",%" PRIu64 ",%.6f,,,,,,,,,,,,,,\n",
-                instruction_map[opcode].instruction, opcode, counter->count,
+                instruction_map[opcode].instruction,
+                rxvm_profile_handler_placement_name(
+                        state->instruction_placements[opcode]),
+                opcode, counter->count,
                 counter->total_ns, rxvm_profile_average(counter),
                 counter->min_ns, counter->max_ns,
                 rxvm_profile_percent(counter->total_ns, instruction_total));
@@ -2352,16 +2370,20 @@ static void rxvm_profile_write_table(FILE *out,
             rxvm_profile_census_status(state));
 
     fprintf(out, "\nInstructions (entry to retire/terminal)\n");
-    fprintf(out, "%-30s %7s %14s %14s %12s %12s %8s\n",
-            "opcode", "count", "total ns", "average ns", "min ns", "max ns", "% time");
+    fprintf(out, "%-30s %-8s %7s %14s %14s %12s %12s %8s\n",
+            "opcode", "handler", "count", "total ns", "average ns",
+            "min ns", "max ns", "% time");
     rxvm_profile_sort_instruction_indices(state, indices, &used);
     for (position = 0; position < used; position++) {
         int opcode = indices[position];
         const rxvm_profile_counter *counter = &state->instructions[opcode];
         fprintf(out,
-                "%-30s %7" PRIu64 " %14" PRIu64 " %14" PRIu64
+                "%-30s %-8s %7" PRIu64 " %14" PRIu64 " %14" PRIu64
                 " %12" PRIu64 " %12" PRIu64 " %7.2f%%\n",
-                instruction_map[opcode].instruction, counter->count,
+                instruction_map[opcode].instruction,
+                rxvm_profile_handler_placement_name(
+                        state->instruction_placements[opcode]),
+                counter->count,
                 counter->total_ns, rxvm_profile_average(counter),
                 counter->min_ns, counter->max_ns,
                 rxvm_profile_percent(counter->total_ns, instruction_total));

@@ -730,3 +730,53 @@ default decision.
 
 R5 evidence is retained in
 [`2026-08-10-perf3-05-r5-handler-percentage-panel`](../../../performance/evidence/2026-08-10-perf3-05-r5-handler-percentage-panel/).
+
+## 2026-08-10 R5a effective-placement and Bounce addendum
+
+R5a added effective handler placement to the existing VM instruction profile.
+The human instruction table now reports `inline`, `outline` or `mixed`; CSV
+schema 5 uses its existing `value` column. Placement is sampled at actual
+handler entry while counts and timings retain canonical public-opcode
+attribution. This closes the earlier private-fusion blind spot: if a canonical
+opcode is observed through handlers with different placement, its row becomes
+`mixed` rather than receiving a possibly false static label.
+
+The ordinary profiling-off contract remains exact. The added hook argument is
+discarded without evaluation by the no-backend macro, and normalized
+profile-20 `rxvmintp.c` preprocessing remains byte-identical before/after for
+both engines.
+
+Exact counts-only GCC profile-20 Bounce runs produced identical `rxtvm` and
+`rxbvm` instruction counts:
+
+| placement | instructions | dynamic share |
+|---|---:|---:|
+| inline | 887,443,222 | 99.952222146% |
+| outline | 424,204 | 0.047777854% |
+
+`CALL1_REG_FUNC_REG` accounts for 424,200 outlined executions. The four other
+executions are one each of `SCONCAT_REG_REG_STRING`, `STOI_REG`, `SAY_REG` and
+`SAY_STRING`. No row is mixed. `CALL1`, `SCONCAT` and `STOI` all enter at the
+30% tier, so replaying the frozen policy over these exact counts leaves only
+the two one-off never-inline `SAY` executions callable at both profile-30 and
+max-eligible: 0.000000225% of all instructions.
+
+This disproves outlined dynamic frequency as the main GCC threaded cause.
+Despite identical effective placement for virtually every executed Bounce
+instruction, retained profiling-off `rxtvm` results are -8.691% at profile-30
+and -4.693% at max-eligible versus all-inline. Inlining handlers that Bounce
+does not execute changes its speed materially. The residual defect is
+therefore GCC owner layout/code shape—branch reach, label placement, hot/cold
+partitioning, register allocation, or a related whole-function heuristic—not
+the direct cost of omitted hot calls.
+
+This also explains why simply promoting `CALL1` would be an incomplete and
+potentially misleading repair. The hot panel still needs a pre-release
+portfolio refresh, but frequency selection alone cannot determine the fastest
+threaded owner. The next GCC investigation should compare profile-30,
+max-eligible and all-inline assembly/layout because they execute the same
+placement mix while producing materially different Bounce timing. No tier or
+default changes are made by R5a.
+
+R5a evidence is retained in
+[`2026-08-10-perf3-05-r5a-handler-placement-profiling`](../../../performance/evidence/2026-08-10-perf3-05-r5a-handler-placement-profiling/).

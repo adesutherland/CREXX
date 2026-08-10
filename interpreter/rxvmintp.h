@@ -337,7 +337,7 @@ struct stack_frame {
 
 #define START_OF_INSTRUCTIONS CASE_START:; switch ((instructions)(pc->instruction.opcode)) {
 #define END_OF_INSTRUCTIONS default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH; }
-#define START_INSTRUCTION(inst) case OP_ ## inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst);
+#define START_INSTRUCTION(inst) case OP_ ## inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst, RXVM_HANDLER_IS_INLINE(inst));
 #define START_INTERRUPT INTERRUPT: RXVM_INSTRUMENTATION_INTERRUPT_SCAN_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc));
 #define END_INTERRUPT do { goto CASE_START; } while (0);
 #define VM_RESOLVE_SELECTED() do { } while (0)
@@ -347,7 +347,7 @@ struct stack_frame {
 
 #define START_OF_INSTRUCTIONS
 #define END_OF_INSTRUCTIONS
-#define START_INSTRUCTION(inst) inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst);
+#define START_INSTRUCTION(inst) inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst, RXVM_HANDLER_IS_INLINE(inst));
 #define START_INTERRUPT INTERRUPT: RXVM_INSTRUMENTATION_INTERRUPT_SCAN_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc));
 #define END_INTERRUPT do { goto *next_inst; } while (0);
 #define VM_RESOLVE_SELECTED()                                                   \

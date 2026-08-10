@@ -40,6 +40,10 @@ endif()
 if(NOT csv_content MATCHES "summary,schema_version,5")
     message(FATAL_ERROR "documented timing CSV is not schema version 5")
 endif()
+if(NOT csv_content MATCHES "instruction,CALL_FUNC,(inline|outline|mixed)")
+    message(FATAL_ERROR
+            "documented timing CSV is missing effective handler placement")
+endif()
 if(NOT csv_content MATCHES
         "procedure,\"profiling_demo.worker\",\"elapsed\",,2,.*procedure,\"profiling_demo.worker\",\"entry_overhead\"")
     message(FATAL_ERROR "documented timing CSV is missing worker metrics")

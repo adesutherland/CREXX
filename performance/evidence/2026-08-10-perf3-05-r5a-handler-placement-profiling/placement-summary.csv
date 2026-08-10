@@ -1,0 +1,10 @@
+engine,policy_view,placement,dynamic_instructions,percent,provenance
+rxtvm,profile-20-observed,inline,887443222,99.952222146282,counts profile
+rxtvm,profile-20-observed,outline,424204,0.047777853718,counts profile
+rxbvm,profile-20-observed,inline,887443222,99.952222146282,counts profile
+rxbvm,profile-20-observed,outline,424204,0.047777853718,counts profile
+rxtvm,profile-30-replay,inline,887867424,99.999999774741,profile-20 counts plus frozen tier ledger
+rxtvm,profile-30-replay,outline,2,0.000000225259,profile-20 counts plus frozen tier ledger
+rxtvm,max-eligible-replay,inline,887867424,99.999999774741,profile-20 counts plus frozen tier ledger
+rxtvm,max-eligible-replay,outline,2,0.000000225259,profile-20 counts plus frozen tier ledger
+rxtvm,all-inline-policy,inline,887867426,100.000000000000,exact all-inline policy plus deterministic counts

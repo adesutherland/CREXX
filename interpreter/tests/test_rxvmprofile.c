@@ -21,23 +21,23 @@ static void test_balanced_procedure_accounting(void) {
 
     rxvm_profile_frame_activate_at(&state, &root_frame, 0,
                                    RXVM_TRANSITION_EXTERNAL_ENTRY, 0);
-    rxvm_profile_instruction_begin_at(&state, 1, 10, OP_CALL_FUNC, 10);
+    rxvm_profile_instruction_begin_at(&state, 1, 10, OP_CALL_FUNC, 1, 10);
     rxvm_profile_frame_activate_at(&state, &child_frame, 1,
                                    RXVM_TRANSITION_CALL, 10);
     rxvm_profile_instruction_retire_at(&state, 1, 20, RXVM_TRANSITION_CALL, 20);
 
-    rxvm_profile_instruction_begin_at(&state, 1, 30, OP_LOAD_REG_INT, 30);
+    rxvm_profile_instruction_begin_at(&state, 1, 30, OP_LOAD_REG_INT, 1, 30);
     rxvm_profile_instruction_retire_at(&state, 1, 40, RXVM_TRANSITION_SEQUENTIAL, 40);
-    rxvm_profile_instruction_begin_at(&state, 1, 45, OP_RET, 45);
+    rxvm_profile_instruction_begin_at(&state, 1, 45, OP_RET, 0, 45);
     rxvm_profile_frame_activate_at(&state, &root_frame, 0,
                                    RXVM_TRANSITION_RETURN, 45);
     rxvm_profile_instruction_retire_at(&state, 1, 50, RXVM_TRANSITION_RETURN, 50);
 
-    rxvm_profile_instruction_begin_at(&state, 1, 60, OP_CALL_REG_FUNC, 60);
+    rxvm_profile_instruction_begin_at(&state, 1, 60, OP_CALL_REG_FUNC, 1, 60);
     rxvm_profile_native_begin_at(&state, 2, 62);
     rxvm_profile_native_end_at(&state, 72);
     rxvm_profile_instruction_retire_at(&state, 1, 82, RXVM_TRANSITION_SEQUENTIAL, 82);
-    rxvm_profile_instruction_begin_at(&state, 1, 85, OP_RET, 85);
+    rxvm_profile_instruction_begin_at(&state, 1, 85, OP_RET, 0, 85);
     rxvm_profile_instruction_terminal_at(&state, 95);
 
     assert(procedures[0].calls == 1);
@@ -84,11 +84,11 @@ static void test_unwound_procedure_accounting(void) {
 
     rxvm_profile_frame_activate_at(&state, &root_frame, 0,
                                    RXVM_TRANSITION_EXTERNAL_ENTRY, 0);
-    rxvm_profile_instruction_begin_at(&state, 1, 10, OP_CALL_FUNC, 10);
+    rxvm_profile_instruction_begin_at(&state, 1, 10, OP_CALL_FUNC, 1, 10);
     rxvm_profile_frame_activate_at(&state, &child_frame, 1,
                                    RXVM_TRANSITION_CALL, 10);
     rxvm_profile_instruction_retire_at(&state, 1, 20, RXVM_TRANSITION_CALL, 20);
-    rxvm_profile_instruction_begin_at(&state, 1, 30, OP_LOAD_REG_INT, 30);
+    rxvm_profile_instruction_begin_at(&state, 1, 30, OP_LOAD_REG_INT, 1, 30);
     rxvm_profile_frame_unwind_at(&state, &child_frame, 40);
     rxvm_profile_instruction_terminal_at(&state, 40);
 
@@ -337,11 +337,11 @@ static void test_branch_site_accounting(void) {
     memset(&state, 0, sizeof(state));
     state.enabled = 1;
     rxvm_profile_instruction_begin_at(
-            &state, 3, 100, OP_BLT_ID_REG_REG, 10);
+            &state, 3, 100, OP_BLT_ID_REG_REG, 0, 10);
     rxvm_profile_instruction_retire_at(
             &state, 3, 80, RXVM_TRANSITION_BRANCH, 20);
     rxvm_profile_instruction_begin_at(
-            &state, 3, 100, OP_BLT_ID_REG_REG, 30);
+            &state, 3, 100, OP_BLT_ID_REG_REG, 0, 30);
     rxvm_profile_instruction_retire_at(
             &state, 3, 104, RXVM_TRANSITION_SEQUENTIAL, 40);
 
@@ -375,31 +375,31 @@ int main(void) {
 
     rxvm_profile_frame_activate_at(&state, &root_frame, 0,
                                    RXVM_TRANSITION_EXTERNAL_ENTRY, 5);
-    rxvm_profile_instruction_begin_at(&state, 1, 10, OP_LOAD_REG_INT, 10);
+    rxvm_profile_instruction_begin_at(&state, 1, 10, OP_LOAD_REG_INT, 1, 10);
     rxvm_profile_instruction_retire_at(&state, 1, 30, RXVM_TRANSITION_SEQUENTIAL, 30);
     rxvm_profile_interrupt_poll(&state);
 
-    rxvm_profile_instruction_begin_at(&state, 1, 40, OP_COPY_REG_REG, 40);
+    rxvm_profile_instruction_begin_at(&state, 1, 40, OP_COPY_REG_REG, 0, 40);
     rxvm_profile_instruction_retire_at(&state, 1, 70, RXVM_TRANSITION_CALL, 70);
     rxvm_profile_interrupt_poll(&state);
 
-    rxvm_profile_instruction_begin_at(&state, 1, 90, OP_RET, 90);
+    rxvm_profile_instruction_begin_at(&state, 1, 90, OP_RET, 0, 90);
     rxvm_profile_instruction_terminal_at(&state, 100);
 
-    rxvm_profile_instruction_begin_at(&state, 1, 110, OP_LOAD_REG_INT, 110);
+    rxvm_profile_instruction_begin_at(&state, 1, 110, OP_LOAD_REG_INT, 1, 110);
     rxvm_profile_instruction_retire_at(&state, 1, 120, RXVM_TRANSITION_SEQUENTIAL, 120);
     rxvm_profile_interrupt_poll(&state);
     rxvm_profile_interrupt_scan_begin_at(&state, 121);
     rxvm_profile_interrupt_select_at(&state, RXSIGNAL_ERROR, 126);
     rxvm_profile_interrupt_entry(&state, RXSIGNAL_ERROR);
-    rxvm_profile_instruction_begin_at(&state, 1, 140, OP_COPY_REG_REG, 140);
+    rxvm_profile_instruction_begin_at(&state, 1, 140, OP_COPY_REG_REG, 1, 140);
     rxvm_profile_instruction_retire_at(&state, 1, 150, RXVM_TRANSITION_INTERRUPT_RESUME, 150);
     rxvm_profile_interrupt_poll(&state);
     rxvm_profile_interrupt_resume_at(&state, RXSIGNAL_ERROR, 152);
-    rxvm_profile_instruction_begin_at(&state, 1, 160, OP_RET, 160);
+    rxvm_profile_instruction_begin_at(&state, 1, 160, OP_RET, 0, 160);
     rxvm_profile_instruction_terminal_at(&state, 170);
 
-    rxvm_profile_instruction_begin_at(&state, 1, 180, OP_LOAD_REG_INT, 180);
+    rxvm_profile_instruction_begin_at(&state, 1, 180, OP_LOAD_REG_INT, 1, 180);
     rxvm_profile_instruction_retire_at(&state, 1, 190, RXVM_TRANSITION_SEQUENTIAL, 190);
     rxvm_profile_interrupt_poll(&state);
     rxvm_profile_interrupt_scan_begin_at(&state, 191);
@@ -416,6 +416,12 @@ int main(void) {
     assert(state.instructions[OP_COPY_REG_REG].total_ns == 40);
     assert(state.instructions[OP_RET].count == 2);
     assert(state.instructions[OP_RET].total_ns == 20);
+    assert(state.instruction_placements[OP_LOAD_REG_INT] ==
+           RXVM_PROFILE_HANDLER_PLACEMENT_INLINE);
+    assert(state.instruction_placements[OP_COPY_REG_REG] ==
+           RXVM_PROFILE_HANDLER_PLACEMENT_MIXED);
+    assert(state.instruction_placements[OP_RET] ==
+           RXVM_PROFILE_HANDLER_PLACEMENT_OUTLINE);
 
     assert(state.transitions[RXVM_TRANSITION_EXTERNAL_ENTRY].count == 1);
     assert(state.transitions[RXVM_TRANSITION_EXTERNAL_ENTRY].total_ns == 5);
