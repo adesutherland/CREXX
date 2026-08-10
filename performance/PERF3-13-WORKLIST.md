@@ -2,7 +2,7 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E3a and E3b-P1 accepted; E3b-P1 Mac closeout complete; P2 and Gate F closed**
+Status: **Gate E E3 complete on Mac; portable publication proof, E4 and Gate F remain closed**
 
 ## Current Gate E continuation
 
@@ -78,6 +78,23 @@ Status: **Gate E E3a and E3b-P1 accepted; E3b-P1 Mac closeout complete; P2 and G
   P2 sessions, cross-platform proof, public workers/channels and Gate F remain
   separately gated. Evidence:
   [`2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/).
+- Adrian approved and accepted E3b-P2 on 2026-08-10. The optional V2 query adds
+  per-procedure process-reentrant/session-affine policy and one nested-safe
+  session per VM/plugin load without changing `_initfuncs`, `rxpa_libfunc`,
+  `ADDPROC`, RXAS or RXBIN. `rxmath` is mixed policy and ODBC owns ENV/DBC/STMT,
+  transactions and diagnostics per session while old hosts retain a default
+  session. The first Release verdict passes 156/156 processes. The existing
+  direct path is guard-clean; empty session-aware calls add 2.92-4.08 ns per
+  call, and lifecycle/artifact guards are clear. Initial full Debug passes
+  2,032/2,032; the final ODBC-enabled full Debug suite passes 2,034/2,034.
+  Focused Debug, Apple ASan and Release coverage is green. After separately
+  approved installation of unixODBC 2.3.14 and sqliteodbc 0.99991, the final
+  six-test ODBC panel also passes in all three configurations. Its two real
+  SQLite `:memory:` runtime tests cover both concrete VMs; deterministic mock
+  tests retain the failure, concurrent-session, teardown and old-host proofs.
+  Linux, Windows and clean-runner real-driver qualification remains a
+  publication follow-up. Evidence:
+  [`2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict/).
 
 ## Exact isolated base
 
@@ -2081,6 +2098,133 @@ plugins that make the process-reentrant assertion; concurrent legacy-capable
 VMs use the serialized compatibility lane. This acceptance does not authorize
 P2 session factories/default sessions/per-call flags, a mandatory new ABI, a
 push, E4, public workers/channels or Gate F work.
+
+#### E3b bundled-plugin qualification and P2 — approved 2026-08-10
+
+Adrian approved completing E3 with representative production consumers rather
+than converting every legacy plugin. The first slice audits the bundled
+catalogue, repairs the simple candidates and asserts process reentrancy only
+where the complete plugin is proved safe. The second slice immediately proves
+the reserved P2 surface with `rxmath` as a mixed per-procedure-capability
+plugin and the existing ODBC plugin as a useful per-VM external-resource
+session. SQLite and JDBC remain follow-on consumers: adding a new database
+dependency or JVM lifecycle would obscure the RXPA ownership proof.
+
+The selected P1-adoption approach is targeted repair. `cipher` and `stack`
+have only immutable/plugin-local state or caller-owned VM values. `strings`
+replaces process-global `strtok` cursor use, `getpi` replaces process-global
+`rand` state, and `id` synchronizes its monotonic generators and removes the
+remaining `rand` path. A blanket assertion without those repairs is rejected.
+`rxmath` remains plugin-wide legacy during this slice because its fixed-name
+`inlineC` process/file operations must not inherit the safety of its ordinary
+math procedures.
+
+P2 keeps the installed `_initfuncs(rxpa_initctxptr)` and `rxpa_libfunc` ABI.
+An optional versioned query supplies immutable per-procedure flags and,
+optionally, a session factory/destructor plus nested-call-safe session
+enter/leave callbacks. Old hosts ignore the query and use the plugin's default
+session through its unchanged legacy entry points. New hosts create one
+session per VM/plugin load and bind each procedure once: process-reentrant
+procedures retain the P1 direct invoker, legacy procedures retain the recursive
+compatibility lane, and session-affine procedures use a prebuilt call binding.
+There is no capability branch or name lookup at an ordinary call site.
+
+Numbered implementation and verdict plan:
+
+1. Freeze commit `57a0553a225d8103327d4d3842b2f459bf8dae31` and its Release
+   plugin binaries as control. Add the bundled classification ledger.
+2. Repair and mark `cipher`, `stack`, `strings`, `getpi` and `id`; add actual
+   two-context/two-thread dynamic calls and static replay checks where a static
+   form is built. Keep `rxmath` legacy for the P1-adoption verdict.
+3. After the minimum focused Debug checks pass, freeze implementation and run
+   the smallest ordinary profiling-off Release comparison against the retained
+   control. Report the result and obey the mandatory first-verdict stop before
+   broad closeout.
+4. Add the optional P2 query and static-catalogue equivalent without extending
+   `rxpa_initctx`. Validate missing, malformed, unknown and old-host fallback
+   behavior. Allocate and destroy sessions while their DSO remains live.
+5. Mark every `rxmath` procedure except `rxmath.inlinec` process-reentrant by
+   per-procedure query; keep `inlinec` on the legacy lane. Move ODBC ENV/DBC/STMT
+   handles into a per-VM session, retain a default session for old hosts and
+   keep independent driver connections isolated.
+6. Prove nested session restoration, two simultaneous VM sessions, reverse
+   teardown, factory failure, static/dynamic replay, direct mixed-procedure
+   binding and zero live handles/allocations under both concrete VMs.
+7. Run the mandatory P2 ordinary-Release verdict and stop for acceptance.
+   After acceptance, complete the shortest appropriate Debug, sanitizer,
+   Release and available portable qualification; update the roadmap/evidence
+   and locally commit the E3 closeout. No push, E4, public worker/channel or
+   Gate F work is authorized by this approval.
+
+#### E3b bundled-plugin first Release verdict — accepted 2026-08-10
+
+The frozen P1 qualification slice passes its minimum Debug and profiling-off
+Release correctness panels at 12/12 each. Five dynamic plugins execute real
+calls in two simultaneous VM contexts; the available `cipher`, `stack` and
+`id` static builds also replay and call in both contexts.
+
+The smallest decisive paired Release guard compares the exact frozen old and
+new `getpi` plugins with identical candidate VMs, optimized RXBIN and library.
+All 52/52 processes pass. The complete load, Leibnitz, Monte Carlo, constant
+and teardown workload improves by 23.502260% on product `rxbvm` (95% interval
+22.376125% to 24.628395%) and 23.346622% on guard `rxtvm` (22.961669% to
+23.731576%), with every recorded pair favorable and no guard hit. No sample is
+removed. The accepted E3b-P1 branch-free call-kernel evidence remains
+authoritative because this slice changes no VM execution source.
+
+Adrian accepted the guard-clean result and authorized the planned P2/ODBC
+session slice. Evidence:
+[`2026-08-10-perf3-13-gate-e-e3b-bundled-plugin-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-bundled-plugin-first-release-verdict/).
+
+#### E3b-P2 session-aware verdict and E3 closeout — accepted 2026-08-10
+
+P2 exports a separate optional `_rxpa_query_v2` without extending the legacy
+initializer or call ABI. A valid manifest supplies a per-procedure query and
+either no session hooks or the complete create/destroy/enter/leave set.
+Malformed manifests, unknown/combined capabilities and incomplete session
+hooks fail closed. Each VM creates and owns its plugin session, procedures bind
+their direct, recursive-legacy or session invoker once at load, nested calls
+restore the previous thread-local session, and teardown destroys all sessions
+before closing their DSO.
+
+The bundled qualification ledger is:
+
+| Class | Plugins | Closeout disposition |
+| --- | --- | --- |
+| Plugin-wide process-reentrant | `cipher`, `stack`, `strings`, `getpi`, `id` | Complete audit/repair and two-context concurrent-call proof. |
+| Mixed per-procedure | `rxmath` | All ordinary math procedures direct; `inlinec` remains legacy because it uses fixed process/file names. |
+| Per-VM session | `odbc` | ENV/DBC/default/prepared statements, parameters, transactions and diagnostics are session-owned; `show_message` is direct; old hosts use a default session. |
+| Conservative legacy | Every unlisted bundled plugin | No assertion added. Developer documentation records the audit required before opting in. |
+
+The ODBC example includes opaque session-generation statement IDs, multiple
+active prepared statements, string/integer/float/null binds, reset/close,
+statement-aware fetch/metadata/diagnostics, transaction rollback on teardown,
+failed-connect/prepare/rebind recovery and reverse handle/DSO cleanup. Binary
+binding remains intentionally absent because the installed RXPA surface has no
+borrowed byte-span/length accessor.
+
+The accepted profiling-off Release verdict passes all 156 processes (12
+warmups and 144 recorded). P1-to-P2 direct-path means are favorable by
+3.775905% on `rxbvm` and 2.560034% on `rxtvm`; these are treated as layout
+observations, not claimed gains. The deliberately empty session call costs
+5.310167%/6.398250%, only 2.92/4.08 ns per call, and the one-call lifecycle is
+neutral. Both VM files grow 432 bytes and the `__TEXT` segment is unchanged.
+
+Mac closeout initially passed full normal-Debug CTest 2,032/2,032 and the combined
+P1/P2/ODBC focused panel 25/25 in Debug, Apple AddressSanitizer and ordinary
+Release. Post-acceptance ODBC ordinal and transactional-rebind hardening passes
+the exact mock/compatibility tests in all three configurations. After separately
+approved installation of unixODBC 2.3.14 and sqliteodbc 0.99991, the expanded
+six-test ODBC panel passes Debug, Apple AddressSanitizer and ordinary Release.
+The two real-driver runtime tests use a generated build-tree-only SQLite
+`:memory:` DSN and cover both VMs. The final ODBC-enabled full Debug build and
+CTest pass 2,034/2,034 in 225.19 seconds. Linux, Windows and clean-runner driver
+proof remains a publication follow-up. The Release VM hashes remain
+byte-identical to the accepted verdict.
+
+E3 is closed on Mac. No push, E4, public worker/channel or Gate F work is
+authorized. Evidence:
+[`2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict/).
 
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.

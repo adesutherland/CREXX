@@ -10,6 +10,48 @@
 #include <time.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+static SRWLOCK rxmath_seed_lock = SRWLOCK_INIT;
+#define RXMATH_SEED_LOCK() AcquireSRWLockExclusive(&rxmath_seed_lock)
+#define RXMATH_SEED_UNLOCK() ReleaseSRWLockExclusive(&rxmath_seed_lock)
+#else
+#include <pthread.h>
+static pthread_mutex_t rxmath_seed_lock = PTHREAD_MUTEX_INITIALIZER;
+#define RXMATH_SEED_LOCK() ((void)pthread_mutex_lock(&rxmath_seed_lock))
+#define RXMATH_SEED_UNLOCK() ((void)pthread_mutex_unlock(&rxmath_seed_lock))
+#endif
+
+static uint64_t rxmath_seed_counter;
+
+static uint32_t rxmath_procedure_capabilities(const char *procedure_name) {
+    if (procedure_name && strcmp(procedure_name, "rxmath.inlinec") == 0) {
+        return 0u;
+    }
+    return RXPA_PROCEDURE_CAP_PROCESS_REENTRANT;
+}
+
+RXPA_PLUGIN_PROCEDURE_CAPABILITIES(rxmath_procedure_capabilities)
+
+static uint64_t rxmath_next_random(uint64_t *state) {
+    uint64_t value = (*state += UINT64_C(0x9e3779b97f4a7c15));
+    value = (value ^ (value >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    value = (value ^ (value >> 27)) * UINT64_C(0x94d049bb133111eb);
+    return value ^ (value >> 31);
+}
+
+static uint64_t rxmath_new_seed(void) {
+    uint64_t sequence;
+    uint64_t state;
+    RXMATH_SEED_LOCK();
+    sequence = ++rxmath_seed_counter;
+    RXMATH_SEED_UNLOCK();
+    state = ((uint64_t)time(NULL) << 32) ^
+            (sequence * UINT64_C(0xd1342543de82ef95)) ^
+            (uint64_t)(uintptr_t)&sequence;
+    return rxmath_next_random(&state);
+}
+
 /* --------------------------------------------------------------------------------------------
  * some internal macros for the RXMATH library, can remain in coding
  * these macros take into account that most math functions have the same structure
@@ -273,13 +315,12 @@ PROCEDURE(uuid) {
     char uuid[37];
     int i;
     uint8_t uuid_bytes[16];
-    // Initialise random numbers
-    srand((unsigned int)time(NULL));
+    uint64_t random_state = rxmath_new_seed();
 
     // Generate 16-Byte (128-Bit) UUID
     for (i = 0; i < 16; i++) {
-        uuid_bytes[i] = rand() % 256;
-       // CryptGenRandom();
+        if ((i & 7) == 0) random_state = rxmath_next_random(&random_state);
+        uuid_bytes[i] = (uint8_t)(random_state >> ((i & 7) * 8));
     }
 
     uuid_bytes[6] = (uuid_bytes[6] & 0x0F) | 0x40; // Version 4 (random-based UUID)

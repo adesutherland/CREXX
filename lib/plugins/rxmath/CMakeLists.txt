@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(rxmath_plugin C)
 
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD 99)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
@@ -11,9 +11,11 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_rxmath rxmath.c)
+target_link_libraries(_rxmath PRIVATE Threads::Threads)
 
 # Create static plugin library
 add_static_plugin_target(_rxmath rxmath.c)
+target_link_libraries(_rxmath_static PRIVATE Threads::Threads)
 
 add_custom_target(math_test ALL)
 crexx_add_rexx_opt_matrix(

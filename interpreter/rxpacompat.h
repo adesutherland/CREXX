@@ -11,9 +11,31 @@
 #include "rxvmmemory.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef void (*rxvm_native_invoker)(void *function, int args, value **argv,
                                     value *ret, value *signal);
+typedef void (*rxpa_session_destroy_function)(void *session);
+typedef int (*rxpa_session_enter_function)(void *session,
+                                           uint32_t capabilities,
+                                           void **previous);
+typedef void (*rxpa_session_leave_function)(void *previous);
+
+typedef struct rxpa_session_instance {
+    const char *plugin_id;
+    void *session;
+    rxpa_session_destroy_function destroy;
+    rxpa_session_enter_function enter;
+    rxpa_session_leave_function leave;
+    struct rxpa_session_instance *next;
+} rxpa_session_instance;
+
+typedef struct rxpa_session_call_binding {
+    void *function;
+    rxpa_session_instance *instance;
+    uint32_t procedure_capabilities;
+    struct rxpa_session_call_binding *next;
+} rxpa_session_call_binding;
 
 /*
  * Cold process-wide coordination for legacy RXPA procedures.  The invoker

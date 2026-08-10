@@ -68,6 +68,11 @@ localize_test_plugin_output(_rxpa_bench_reentrant)
 add_dynamic_plugin_target(_rxpa_bench_legacy rxpa_call_kernel.c)
 localize_test_plugin_output(_rxpa_bench_legacy)
 
+add_dynamic_plugin_target(_rxpa_bench_session rxpa_call_kernel.c)
+target_compile_definitions(_rxpa_bench_session PRIVATE
+        RXPA_BENCH_SESSION_AWARE=1)
+localize_test_plugin_output(_rxpa_bench_session)
+
 add_test(NAME rxpa_process_reentrant_manifest
         COMMAND $<TARGET_FILE:test_rxpa_concurrency>
                 manifest

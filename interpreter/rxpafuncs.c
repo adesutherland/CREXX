@@ -226,6 +226,32 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret,
     rxpa_compatibility_leave();
 }
 
+void rxvm_callfunc_session(void* opaque_binding, int args, value** argv,
+                           value* ret, value* signal) {
+    rxpa_session_call_binding *binding =
+            (rxpa_session_call_binding *)opaque_binding;
+    void *previous = NULL;
+    int enter_rc;
+
+    if (!binding || !binding->function || !binding->instance ||
+        !binding->instance->enter || !binding->instance->leave) {
+        rxpa_set_signal(signal, SIGNAL_FAILURE,
+                        "Invalid RXPA session call binding");
+        return;
+    }
+    enter_rc = binding->instance->enter(
+            binding->instance->session,
+            binding->procedure_capabilities, &previous);
+    if (enter_rc != 0) {
+        rxpa_set_signal(signal, SIGNAL_FAILURE,
+                        "RXPA plugin session entry failed");
+        return;
+    }
+    rxvm_callfunc_direct(binding->function,
+                         args, argv, ret, signal);
+    binding->instance->leave(previous);
+}
+
 /* Direct capability entry retained for focused policy tests. Ordinary VM
  * handlers use the invoker selected when the native procedure is loaded. */
 void rxvm_callfunc_capabilities(void* function, uint32_t capabilities,

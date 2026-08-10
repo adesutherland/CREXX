@@ -568,6 +568,8 @@ typedef struct rxvm_context {
     rxvm_active_state active;
     rxvmplugin_instance_set plugin_instances;
     struct rxpa_library_reference *rxpa_libraries;
+    rxpa_session_instance *rxpa_sessions;
+    rxpa_session_call_binding *rxpa_session_bindings;
     rxpa_compatibility_context rxpa_compatibility;
 #ifdef CREXX_VM_PROFILING
     /* Keep optional build-local fields last so existing field offsets stay stable. */
@@ -626,6 +628,8 @@ int rxldmodp(rxvm_context *context);
 void rxvm_callfunc_direct(void* function, int args, value** argv,
                           value* ret, value* signal);
 void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
+void rxvm_callfunc_session(void* binding, int args, value** argv,
+                           value* ret, value* signal);
 void rxvm_callfunc_capabilities(void* function, uint32_t capabilities,
                                 int args, value** argv, value* ret, value* signal);
 RX_INLINE void rxvm_call_native_procedure(proc_runtime *procedure, int args,

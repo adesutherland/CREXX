@@ -67,7 +67,7 @@ static void *rxpa_os_symbol(void *handle, const char *name) {
 #endif
 }
 
-static uint32_t rxpa_query_capabilities(void *handle) {
+static uint32_t rxpa_query_capabilities_v1(void *handle) {
     rxpa_plugin_query_v1 query;
     const rxpa_plugin_manifest_v1 *manifest;
     size_t minimum_size = offsetof(rxpa_plugin_manifest_v1, capabilities) +
@@ -85,11 +85,41 @@ static uint32_t rxpa_query_capabilities(void *handle) {
     return manifest->capabilities;
 }
 
+/* Return 1 for a valid V2 query, 0 when absent and -1 when fail-closed. */
+static int rxpa_query_manifest_v2(void *handle,
+                                  rxpa_plugin_manifest_v2 *manifest_copy) {
+    rxpa_plugin_query_v2 query;
+    const rxpa_plugin_manifest_v2 *manifest;
+    size_t minimum_size = offsetof(rxpa_plugin_manifest_v2, session_leave) +
+                          sizeof(((rxpa_plugin_manifest_v2 *)0)->session_leave);
+    unsigned int session_hook_count;
+
+    query = (rxpa_plugin_query_v2)rxpa_os_symbol(
+            handle, RXPA_PLUGIN_QUERY_SYMBOL_V2);
+    if (!query) return 0;
+    manifest = query();
+    if (!manifest || manifest->struct_size < minimum_size ||
+        manifest->abi_version != RXPA_PLUGIN_MANIFEST_ABI_V2 ||
+        !manifest->plugin_id || !*manifest->plugin_id ||
+        !manifest->procedure_capabilities) {
+        return -1;
+    }
+
+    session_hook_count = (manifest->session_create != NULL) +
+                         (manifest->session_destroy != NULL) +
+                         (manifest->session_enter != NULL) +
+                         (manifest->session_leave != NULL);
+    if (session_hook_count != 0u && session_hook_count != 4u) return -1;
+    *manifest_copy = *manifest;
+    return 1;
+}
+
 int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
     char *full_file_name;
     int free_full_file_name = 0;
     void *handle = NULL;
     initfuncs_type initializer;
+    int manifest_v2_status;
 
     if (!file_name || !plugin) return -1;
     memset(plugin, 0, sizeof(*plugin));
@@ -154,12 +184,35 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
     plugin->handle = handle;
     plugin->initializer = initializer;
     RXPA_LOADER_LOCK();
-    plugin->capabilities = rxpa_query_capabilities(handle);
+    manifest_v2_status = rxpa_query_manifest_v2(
+            handle, &plugin->manifest_v2);
+    plugin->has_manifest_v2 = manifest_v2_status > 0;
+    /* A present but malformed V2 declaration fails closed rather than
+     * falling through to a possibly contradictory V1 assertion. */
+    plugin->capabilities = manifest_v2_status == 0
+            ? rxpa_query_capabilities_v1(handle) : 0u;
     rxpa_live_handles++;
     RXPA_LOADER_UNLOCK();
 
     if (free_full_file_name) free(full_file_name);
     return 0;
+}
+
+uint32_t rxpa_loaded_plugin_procedure_capabilities(
+        const rxpa_loaded_plugin *plugin, const char *procedure_name) {
+    uint32_t capabilities;
+    if (!plugin || !procedure_name) return 0u;
+    if (!plugin->has_manifest_v2) return plugin->capabilities;
+    capabilities = plugin->manifest_v2.procedure_capabilities(procedure_name);
+    if ((capabilities & ~RXPA_PROCEDURE_CAP_KNOWN_V2) != 0u ||
+        capabilities == RXPA_PROCEDURE_CAP_KNOWN_V2) {
+        return 0u;
+    }
+    if ((capabilities & RXPA_PROCEDURE_CAP_SESSION_AFFINE) != 0u &&
+        !plugin->manifest_v2.session_create) {
+        return 0u;
+    }
+    return capabilities;
 }
 
 int rxpa_initialize_plugin(rxpa_loaded_plugin *plugin, rxpa_initctxptr ctx) {
@@ -179,6 +232,8 @@ void rxpa_close_plugin(rxpa_loaded_plugin *plugin) {
     plugin->handle = NULL;
     plugin->initializer = NULL;
     plugin->capabilities = 0u;
+    plugin->has_manifest_v2 = 0;
+    memset(&plugin->manifest_v2, 0, sizeof(plugin->manifest_v2));
 
     RXPA_LOADER_LOCK();
     if (!rxpa_live_handles) abort();

@@ -9,6 +9,20 @@
 
 #include "crexxpa.h"   // CREXX / Plugin Architecture
 
+#if defined(_WIN32)
+#include <windows.h>
+static SRWLOCK id_state_lock = SRWLOCK_INIT;
+static void id_state_enter(void) { AcquireSRWLockExclusive(&id_state_lock); }
+static void id_state_leave(void) { ReleaseSRWLockExclusive(&id_state_lock); }
+#else
+#include <pthread.h>
+static pthread_mutex_t id_state_lock = PTHREAD_MUTEX_INITIALIZER;
+static void id_state_enter(void) { (void)pthread_mutex_lock(&id_state_lock); }
+static void id_state_leave(void) { (void)pthread_mutex_unlock(&id_state_lock); }
+#endif
+
+RXPA_PLUGIN_PROCESS_REENTRANT
+
 #if defined(__linux__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
 #endif
@@ -90,8 +104,10 @@ PROCEDURE(uuid) {
     UUID4_T u4;
     char buffer[UUID4_STR_BUFFER_SIZE];
 
+    id_state_enter();
     uuid4_seed(&state);
     uuid4_gen(&state, &u4);
+    id_state_leave();
 
     if (!uuid4_to_s(u4, buffer, sizeof(buffer)))
         RETURNSTR("-8");
@@ -101,13 +117,12 @@ PROCEDURE(uuid) {
     ENDPROC
 }
 
-/* Simple rand()-based demo UUIDv4 (kept for compatibility) */
+/* Compatibility UUIDv4 name, now backed by the plugin CSPRNG. */
 PROCEDURE(uuidt) {
     char out[37];
     uint8_t b[16];
 
-    srand((unsigned int)time(NULL));
-    for (int i = 0; i < 16; ++i) b[i] = rand() % 256;
+    if (!uuidv7_csprng(b, sizeof(b))) RETURNSTRX("-8");
 
     b[6] = (b[6] & 0x0F) | 0x40;  /* version 4 */
     b[8] = (b[8] & 0x3F) | 0x80;  /* variant 10 */
@@ -131,7 +146,11 @@ PROCEDURE(uuidv7) {
     uint8_t u7[16];
     char s[37];
 
-    if (uuidv7_generate(u7)) {
+    int generated;
+    id_state_enter();
+    generated = uuidv7_generate(u7);
+    id_state_leave();
+    if (generated) {
         uuidv_to_string(u7, s);
         RETURNSTR(s);
     } else {
@@ -143,7 +162,11 @@ PROCEDURE(uuidv7) {
 PROCEDURE(ulid) {
     uint8_t u[16];
     char s[27];
-    if (ulid_generate(u)) {
+    int generated;
+    id_state_enter();
+    generated = ulid_generate(u);
+    id_state_leave();
+    if (generated) {
         ulid_to_string(u, s);
         RETURNSTR(s);
     } else {

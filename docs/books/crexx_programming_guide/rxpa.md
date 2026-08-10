@@ -147,6 +147,54 @@ malformed separators, and malformed return or argument type syntax are rejected
 at the importing cREXX call site with `RXPA_IMPORT_SIGNATURE_INVALID`. The
 diagnostic identifies the plugin, routine, failing field, and declaration.
 
+## Concurrency and per-VM sessions
+
+An existing plugin needs no source change. A current host treats it as legacy:
+one VM uses the direct adapter, while concurrent legacy-capable VMs use a
+process-wide recursive compatibility lane. This is the safe default because
+the host cannot infer whether plugin statics and native dependencies are
+thread-safe.
+
+After auditing every published procedure, writable static, dependency and
+cleanup path, a plugin that permits concurrent entry can add one file-scope
+declaration:
+
+```c
+RXPA_PLUGIN_PROCESS_REENTRANT
+```
+
+This is an assertion about defined concurrent behavior, not an assertion that
+the functions have no side effects. The optional capability symbol leaves the
+existing initializer and call ABI unchanged, and older hosts ignore it.
+
+For a mixed plugin, use `RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query)` and return
+`RXPA_PROCEDURE_CAP_PROCESS_REENTRANT` only for audited procedures. Return `0`
+for procedures that must remain on the legacy lane.
+
+A plugin that owns a connection, device, interpreter or similar mutable native
+resource per VM can use:
+
+```c
+RXPA_PLUGIN_SESSION_AWARE(create_session, destroy_session,
+                          enter_session, leave_session,
+                          procedure_capabilities)
+```
+
+The query returns `RXPA_PROCEDURE_CAP_SESSION_AFFINE` for procedures that use
+the per-VM session. The host creates one session when that VM loads the plugin,
+preselects the call adapter, and destroys the session before unloading plugin
+code. `enter_session` receives the selected session and must return the
+previous thread-local session as a cookie; `leave_session` restores that cookie
+so nested plugin calls work correctly. A failed factory fails the plugin load
+and rolls back the DSO and any already-created sessions.
+
+V2-aware hosts fail closed: malformed manifests, unknown or combined flags,
+and a session-affine procedure without all four session hooks become legacy.
+Older hosts call the unchanged procedures and never invoke the V2 hooks. If
+such hosts must remain supported, the plugin procedures must fall back to a
+plugin-owned default session when no per-VM session is active. Do not retain
+RXPA register handles or VM-owned values in either kind of session.
+
 ## Macros
 
 The following macros are provided for plugin developers (defined in
@@ -169,6 +217,9 @@ The following macros are provided for plugin developers (defined in
 | RESETSIGNAL | Ensures that the signal register is set no “no signal”|
 | RETURNSIGNAL() | Sets the signal register and returns from the function. Used for error conditions.|
 | ENDLOADFUNCS | Starts and finishes the block of ADDFUNC()’s|
+| RXPA_PLUGIN_PROCESS_REENTRANT | Asserts that every published procedure permits concurrent process entry. |
+| RXPA_PLUGIN_PROCEDURE_CAPABILITIES() | Supplies a load-time per-procedure reentrant/legacy policy query. |
+| RXPA_PLUGIN_SESSION_AWARE() | Supplies the per-procedure query and per-VM session lifecycle/entry hooks. |
 
 `SETSTRING`, `RETURNSTR`, and the detail text passed to `RETURNSIGNAL` accept
 `const char *`. The VM copies the null-terminated bytes into register-owned

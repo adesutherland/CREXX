@@ -520,22 +520,20 @@ On Windows, elevated privileges might be required to achieve a working ODBC setu
 
 #### odbc_database
 ```rexx <!--odbcdb.rexx-->
-curdb = odbc_database()          /* Get current database name */
-newdb = odbc_database("mydb")    /* Switch to different database */
+rc = odbc_database("mydb")       /* Switch current catalogue */
 ```
-Gets or sets the current database. 
+Sets the connection's current catalogue through the ODBC driver.
 
 **Note:** This function is currently only supported for MySQL databases. For other database systems, use database-specific SQL commands via `odbc_execute()`.
 
 **Important:** After connecting to a database, you should explicitly set the database using `odbc_database()` before performing any operations.
 
 Parameters:
-- newdb: (optional) Name of database to switch to
+- newdb: Name of the catalogue/database to select
 
 Returns:
-- Current database name after operation
-- Empty string if no database selected
-- "Error changing database" if database switch failed
+- 0 if the driver accepted the change
+- -1 if there is no connection or the driver rejected the change
 
 ### Primary Key Retrieval
 

@@ -585,7 +585,19 @@ target_include_directories(test_rxpa_concurrency PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
         ../platform ../avl_tree ../utf8 ../inc)
-target_link_libraries(test_rxpa_concurrency PRIVATE rxvml Threads::Threads)
+target_link_libraries(test_rxpa_concurrency rxvml Threads::Threads)
+
+add_executable(test_rxpa_odbc tests/test_rxpa_odbc.c)
+target_include_directories(test_rxpa_odbc PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_odbc rxvml Threads::Threads)
+
+add_executable(test_rxpa_odbc_old_host tests/test_rxpa_odbc_old_host.c)
+target_include_directories(test_rxpa_odbc_old_host PRIVATE
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform)
+target_link_libraries(test_rxpa_odbc_old_host rxpa Threads::Threads)
 
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
@@ -643,6 +655,14 @@ add_test(NAME rxvmplugin_context_ownership
                 "decnumber")
 add_test(NAME rxpa_static_catalogue_replay
         COMMAND test_rxpa_concurrency static)
+add_test(NAME rxpa_static_session_lifecycle
+        COMMAND test_rxpa_concurrency session)
+add_test(NAME rxpa_session_factory_failure_rollback
+        COMMAND test_rxpa_concurrency session-failure)
+add_test(NAME rxpa_session_manifest_fail_closed
+        COMMAND test_rxpa_concurrency session-malformed)
+add_test(NAME rxpa_rxmath_static_mixed_policy
+        COMMAND test_rxpa_concurrency rxmath-static)
 add_test(NAME rxpa_legacy_call_serialization
         COMMAND test_rxpa_concurrency legacy)
 add_test(NAME rxpa_process_reentrant_overlap
@@ -665,6 +685,10 @@ set_tests_properties(rxvmplugin_context_ownership PROPERTIES
         LABELS "interpreter;worker;plugins;decimal")
 set_tests_properties(
         rxpa_static_catalogue_replay
+        rxpa_static_session_lifecycle
+        rxpa_session_factory_failure_rollback
+        rxpa_session_manifest_fail_closed
+        rxpa_rxmath_static_mixed_policy
         rxpa_legacy_call_serialization
         rxpa_process_reentrant_overlap
         rxpa_legacy_recursive_reentry

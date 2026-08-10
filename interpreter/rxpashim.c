@@ -31,6 +31,8 @@ void rxvm_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
                              char* name, char* option, char* type, char* args);
 void rxvm_register_static_plugin_capability(const char *plugin_id,
                                             uint32_t capabilities);
+void rxvm_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest);
 void rxvm_addclass(char* name, char* option, char* type);
 void rxvm_addinterface(char* name, char* option, char* type);
 void rxvm_addimplements(char* name, char* interface_name);
@@ -67,6 +69,11 @@ void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
 void rxpa_register_static_plugin_capability(const char *plugin_id,
                                             uint32_t capabilities) {
     rxvm_register_static_plugin_capability(plugin_id, capabilities);
+}
+
+void rxpa_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest) {
+    rxvm_register_static_plugin_manifest_v2(manifest);
 }
 
 void rxpa_addclass(char* name, char* option, char* type) {

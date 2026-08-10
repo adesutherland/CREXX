@@ -1,0 +1,261 @@
+sample_id,stream,line_number,text
+timing-GetPI-getpi-rxbvm-control-warmup-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-warmup-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-warmup-1,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-warmup-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-warmup-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-warmup-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-warmup-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-warmup-1,stdout,3,Monte Carlo 3.141716
+timing-GetPI-getpi-rxbvm-candidate-warmup-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-warmup-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-warmup-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-warmup-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-warmup-1,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-warmup-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-warmup-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-warmup-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-warmup-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-warmup-1,stdout,3,Monte Carlo 3.141136
+timing-GetPI-getpi-rxtvm-candidate-warmup-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-warmup-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-1,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-1,stdout,3,Monte Carlo 3.138856
+timing-GetPI-getpi-rxbvm-candidate-recorded-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-1,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-1,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-1,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-1,stdout,3,Monte Carlo 3.141824
+timing-GetPI-getpi-rxtvm-candidate-recorded-1,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-1,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-2,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-2,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-2,stdout,3,Monte Carlo 3.138552
+timing-GetPI-getpi-rxtvm-candidate-recorded-2,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-2,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-2,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-2,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-2,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-2,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-2,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-2,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-2,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-2,stdout,3,Monte Carlo 3.142744
+timing-GetPI-getpi-rxbvm-candidate-recorded-2,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-2,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-2,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-2,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-2,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-2,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-2,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-3,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-3,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-3,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-3,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-3,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-3,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-3,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-3,stdout,3,Monte Carlo 3.144372
+timing-GetPI-getpi-rxtvm-candidate-recorded-3,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-3,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-3,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-3,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-3,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-3,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-3,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-3,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-3,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-3,stdout,3,Monte Carlo 3.141676
+timing-GetPI-getpi-rxbvm-candidate-recorded-3,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-3,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-4,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-4,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-4,stdout,3,Monte Carlo 3.14142
+timing-GetPI-getpi-rxbvm-candidate-recorded-4,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-4,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-4,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-4,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-4,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-4,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-4,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-4,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-4,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-4,stdout,3,Monte Carlo 3.141116
+timing-GetPI-getpi-rxtvm-candidate-recorded-4,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-4,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-4,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-4,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-4,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-4,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-4,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-5,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-5,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-5,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-5,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-5,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-5,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-5,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-5,stdout,3,Monte Carlo 3.1425
+timing-GetPI-getpi-rxbvm-candidate-recorded-5,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-5,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-5,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-5,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-5,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-5,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-5,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-5,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-5,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-5,stdout,3,Monte Carlo 3.143636
+timing-GetPI-getpi-rxtvm-candidate-recorded-5,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-5,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-6,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-6,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-6,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-candidate-recorded-6,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-6,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-6,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-6,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-6,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-6,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-6,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-6,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-6,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-6,stdout,3,Monte Carlo 3.142784
+timing-GetPI-getpi-rxbvm-candidate-recorded-6,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-6,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-6,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-6,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-6,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-6,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-6,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-7,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-7,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-7,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-7,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-7,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-7,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-7,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-7,stdout,3,Monte Carlo 3.142856
+timing-GetPI-getpi-rxtvm-candidate-recorded-7,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-7,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-7,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-7,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-7,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-7,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-7,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-7,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-7,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-7,stdout,3,Monte Carlo 3.142516
+timing-GetPI-getpi-rxbvm-candidate-recorded-7,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-7,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-8,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-8,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-8,stdout,3,Monte Carlo 3.141688
+timing-GetPI-getpi-rxbvm-candidate-recorded-8,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-8,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-8,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-8,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-8,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-8,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-8,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-8,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-8,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-8,stdout,3,Monte Carlo 3.139844
+timing-GetPI-getpi-rxtvm-candidate-recorded-8,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-8,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-8,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-8,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-8,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-8,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-8,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-9,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-9,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-9,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-9,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-9,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-9,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-9,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-9,stdout,3,Monte Carlo 3.14572
+timing-GetPI-getpi-rxbvm-candidate-recorded-9,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-9,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-9,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-9,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-9,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-9,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-9,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-9,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-9,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-9,stdout,3,Monte Carlo 3.141976
+timing-GetPI-getpi-rxtvm-candidate-recorded-9,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-9,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-10,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-10,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-10,stdout,3,Monte Carlo 3.140504
+timing-GetPI-getpi-rxtvm-candidate-recorded-10,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-10,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-10,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-10,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-10,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-10,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-10,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-10,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-10,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-10,stdout,3,Monte Carlo 3.140592
+timing-GetPI-getpi-rxbvm-candidate-recorded-10,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-10,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-10,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-10,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-10,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-10,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-10,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-11,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-11,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-11,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-11,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-11,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-11,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-11,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-11,stdout,3,Monte Carlo 3.144292
+timing-GetPI-getpi-rxtvm-candidate-recorded-11,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-11,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-11,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-11,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-11,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-11,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-11,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-11,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-11,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-11,stdout,3,Monte Carlo 3.142352
+timing-GetPI-getpi-rxbvm-candidate-recorded-11,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-11,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-candidate-recorded-12,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-candidate-recorded-12,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-candidate-recorded-12,stdout,3,Monte Carlo 3.143452
+timing-GetPI-getpi-rxbvm-candidate-recorded-12,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-candidate-recorded-12,stdout,5,PI Test completed
+timing-GetPI-getpi-rxbvm-control-recorded-12,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxbvm-control-recorded-12,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxbvm-control-recorded-12,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxbvm-control-recorded-12,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxbvm-control-recorded-12,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-candidate-recorded-12,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-candidate-recorded-12,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-candidate-recorded-12,stdout,3,Monte Carlo 3.142764
+timing-GetPI-getpi-rxtvm-candidate-recorded-12,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-candidate-recorded-12,stdout,5,PI Test completed
+timing-GetPI-getpi-rxtvm-control-recorded-12,stdout,1,PI Test using several methods
+timing-GetPI-getpi-rxtvm-control-recorded-12,stdout,2,Leibnitz    3.14159255358979
+timing-GetPI-getpi-rxtvm-control-recorded-12,stdout,3,Monte Carlo 3.143352
+timing-GetPI-getpi-rxtvm-control-recorded-12,stdout,4,Constant    3.14
+timing-GetPI-getpi-rxtvm-control-recorded-12,stdout,5,PI Test completed

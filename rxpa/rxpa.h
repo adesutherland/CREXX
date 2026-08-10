@@ -35,6 +35,8 @@ typedef struct rxpa_loaded_plugin {
     void *handle;
     void (*initializer)(rxpa_initctxptr context);
     uint32_t capabilities;
+    int has_manifest_v2;
+    rxpa_plugin_manifest_v2 manifest_v2;
 } rxpa_loaded_plugin;
 
 // Function to load a plugin dynamically
@@ -48,6 +50,8 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name);
 /* Runtime-private ownership-aware loader surface. */
 int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin);
 int rxpa_initialize_plugin(rxpa_loaded_plugin *plugin, rxpa_initctxptr ctx);
+uint32_t rxpa_loaded_plugin_procedure_capabilities(
+        const rxpa_loaded_plugin *plugin, const char *procedure_name);
 void rxpa_close_plugin(rxpa_loaded_plugin *plugin);
 size_t rxpa_live_plugin_handle_count(void);
 

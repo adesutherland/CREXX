@@ -72,6 +72,7 @@ void rxvm_resetsayexit();
 typedef struct rxpa_proc_policy {
     size_t procedure_offset;
     uint32_t capabilities;
+    rxpa_session_instance *session_instance;
 } rxpa_proc_policy;
 
 typedef struct rxpa_context {
@@ -81,6 +82,8 @@ typedef struct rxpa_context {
     size_t const_buffer_top;
     int meta_tail;
     uint32_t plugin_capabilities;
+    const rxpa_loaded_plugin *dynamic_plugin;
+    rxpa_session_instance *session_instances;
     rxpa_proc_policy *proc_policies;
     size_t proc_policy_count;
     size_t proc_policy_capacity;
@@ -121,6 +124,36 @@ struct static_plugin_capability {
 };
 static struct static_plugin_capability *static_plugin_capabilities = 0;
 
+struct static_plugin_manifest_v2 {
+    char *plugin_id;
+    rxpa_plugin_manifest_v2 manifest;
+    unsigned char valid;
+    struct static_plugin_manifest_v2 *next;
+};
+static struct static_plugin_manifest_v2 *static_plugin_manifests_v2 = 0;
+
+typedef struct static_function_snapshot {
+    const char *name;
+    const char *plugin_id;
+    rxpa_libfunc func;
+    uint32_t v1_capabilities;
+    unsigned char has_manifest_v2;
+    unsigned char valid_manifest_v2;
+    rxpa_plugin_manifest_v2 manifest_v2;
+} static_function_snapshot;
+
+typedef struct static_metadata_snapshot {
+    const char *kind;
+    const char *symbol;
+    const char *option;
+    const char *type;
+    const char *interface_symbol;
+    const char *owner;
+    const char *member_kind;
+    const char *member;
+    const char *args;
+} static_metadata_snapshot;
+
 #ifdef _WIN32
 static SRWLOCK rxpa_catalogue_lock = SRWLOCK_INIT;
 #else
@@ -158,7 +191,14 @@ static void apply_rxpa_proc_policies(rxpa_context *context,
                                      size_t module_number);
 static void bind_rxpa_runtime_policy(rxvm_context *context,
                                      proc_runtime *runtime,
-                                     uint32_t capabilities);
+                                     uint32_t capabilities,
+                                     rxpa_session_instance *session_instance);
+static int rxpa_context_create_session(
+        rxpa_context *context, const rxpa_plugin_manifest_v2 *manifest);
+static rxpa_session_instance *rxpa_context_find_session(
+        const rxpa_context *context, const char *plugin_id);
+static void rxpa_context_publish_sessions(rxpa_context *context);
+static void rxpa_context_destroy_sessions(rxpa_context *context);
 
 static void *rxvm_load_memory_alloc(rxvm_memory_worker *worker, size_t size) {
     return rxvm_memory_alloc_bytes(worker, size);
@@ -362,6 +402,8 @@ void rxinimod(rxvm_context *context) {
     context->active.pending_interrupts = 0;
     rxvmplugin_instance_set_init(&context->plugin_instances);
     context->rxpa_libraries = 0;
+    context->rxpa_sessions = 0;
+    context->rxpa_session_bindings = 0;
     rxpa_compatibility_context_init(&context->rxpa_compatibility,
                                     context->worker.memory_worker);
 
@@ -473,6 +515,23 @@ void rxfremod(rxvm_context *context) {
     /* Provider instances are context-owned and must die while the worker is
      * idle and its allocator family is still available. */
     rxvmplugin_instance_set_destroy(&context->plugin_instances);
+
+    /* Session call bindings no longer have procedure owners.  Destroy the
+     * per-VM plugin sessions next, while their dynamic libraries are still
+     * resident, then release the libraries themselves. */
+    while (context->rxpa_session_bindings) {
+        rxpa_session_call_binding *next =
+                context->rxpa_session_bindings->next;
+        rxvm_load_memory_free(context->rxpa_session_bindings);
+        context->rxpa_session_bindings = next;
+    }
+    while (context->rxpa_sessions) {
+        rxpa_session_instance *next = context->rxpa_sessions->next;
+        context->rxpa_sessions->destroy(context->rxpa_sessions->session);
+        rxvm_load_memory_free((void *)context->rxpa_sessions->plugin_id);
+        rxvm_load_memory_free(context->rxpa_sessions);
+        context->rxpa_sessions = next;
+    }
 
     /* All values, references, modules and native payload callbacks are now
      * unreachable; dynamic RXPA code may finally be unloaded. */
@@ -842,9 +901,18 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                                 p_entry->frame_free_list =
                                         p_entry_linked->frame_free_list;
                                 if (p_entry_linked->native_invoker) {
-                                    bind_rxpa_runtime_policy(
-                                            context, p_entry,
-                                            p_entry_linked->native_capabilities);
+                                    if (p_entry_linked->native_invoker ==
+                                        rxvm_callfunc_session) {
+                                        p_entry->native_capabilities =
+                                                p_entry_linked->native_capabilities;
+                                        p_entry->native_invoker =
+                                                rxvm_callfunc_session;
+                                    } else {
+                                        bind_rxpa_runtime_policy(
+                                                context, p_entry,
+                                                p_entry_linked->native_capabilities,
+                                                0);
+                                    }
                                 }
 
                                 /* Reduce the number of unresolved symbols */
@@ -1165,9 +1233,19 @@ int rxldmod(rxvm_context *context, char *file_name) {
                     found_location[0] ? found_location : 0,
                     full_file_name, &loaded_plugin);
             if (!rc) {
+                current_rxpa_context->dynamic_plugin = &loaded_plugin;
                 current_rxpa_context->plugin_capabilities =
                         loaded_plugin.capabilities;
-                rc = rxpa_initialize_plugin(&loaded_plugin, &rxpa_functions);
+                if (loaded_plugin.has_manifest_v2 &&
+                    loaded_plugin.manifest_v2.session_create) {
+                    rc = rxpa_context_create_session(
+                            current_rxpa_context,
+                            &loaded_plugin.manifest_v2);
+                }
+                if (!rc) {
+                    rc = rxpa_initialize_plugin(
+                            &loaded_plugin, &rxpa_functions);
+                }
             }
             rxvm_load_memory_free(full_file_name);
 
@@ -1176,6 +1254,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
                 DEBUG("CREXX Plugin %s loaded successfully\n", file_name);
                 n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
                 apply_rxpa_proc_policies(current_rxpa_context, n);
+                rxpa_context_publish_sessions(current_rxpa_context);
                 current_rxpa_context->plugin_being_loaded = 0; // We are done with it! It will be freed eventually
                 {
                     struct rxpa_library_reference *reference =
@@ -1191,9 +1270,9 @@ int rxldmod(rxvm_context *context, char *file_name) {
                 }
             } else {
                 DEBUG("Failed to load plugin %s (rc=%d)\n", file_name, rc);
-                rxpa_close_plugin(&loaded_plugin);
                 free_rxpa_context(current_rxpa_context);
                 current_rxpa_context = 0;
+                rxpa_close_plugin(&loaded_plugin);
                 rxvm_active_context_leave(previous_active_context);
                 return(-1);
             }
@@ -1256,6 +1335,8 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
 // Free statically linked functions list
 static void free_rxpa_context(rxpa_context *context)
 {
+    if (!context) return;
+    rxpa_context_destroy_sessions(context);
     if (context->plugin_being_loaded) free_module(context->plugin_being_loaded);
     rxvm_load_memory_free(context->proc_policies);
     rxvm_load_memory_free(context);
@@ -1274,10 +1355,81 @@ static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context) {
     new_rxpa_context->const_buffer_top = 0;
     new_rxpa_context->meta_tail = -1;
     new_rxpa_context->plugin_capabilities = 0u;
+    new_rxpa_context->dynamic_plugin = 0;
+    new_rxpa_context->session_instances = 0;
     new_rxpa_context->proc_policies = 0;
     new_rxpa_context->proc_policy_count = 0u;
     new_rxpa_context->proc_policy_capacity = 0u;
     return new_rxpa_context;
+}
+
+static rxpa_session_instance *rxpa_context_find_session(
+        const rxpa_context *context, const char *plugin_id) {
+    rxpa_session_instance *instance;
+    if (!context || !plugin_id) return 0;
+    instance = context->session_instances;
+    while (instance) {
+        if (strcmp(instance->plugin_id, plugin_id) == 0) return instance;
+        instance = instance->next;
+    }
+    return 0;
+}
+
+static int rxpa_context_create_session(
+        rxpa_context *context, const rxpa_plugin_manifest_v2 *manifest) {
+    rxpa_session_instance *instance;
+    void *session;
+    char *plugin_id;
+    if (!context || !manifest || !manifest->plugin_id ||
+        !manifest->session_create || !manifest->session_destroy ||
+        !manifest->session_enter || !manifest->session_leave) {
+        return -1;
+    }
+    if (rxpa_context_find_session(context, manifest->plugin_id)) return 0;
+    session = manifest->session_create();
+    if (!session) return -1;
+    instance = rxvm_load_memory_alloc(
+            context->rxvm_context->worker.memory_worker, sizeof(*instance));
+    plugin_id = rxvm_load_memory_strdup(
+            context->rxvm_context->worker.memory_worker,
+            manifest->plugin_id);
+    if (!instance || !plugin_id) {
+        manifest->session_destroy(session);
+        if (instance) rxvm_load_memory_free(instance);
+        if (plugin_id) rxvm_load_memory_free(plugin_id);
+        RX_PANIC_OOM("allocate rxpa plugin session",
+                     sizeof(*instance) + strlen(manifest->plugin_id) + 1u,
+                     manifest->plugin_id);
+    }
+    instance->plugin_id = plugin_id;
+    instance->session = session;
+    instance->destroy = manifest->session_destroy;
+    instance->enter = manifest->session_enter;
+    instance->leave = manifest->session_leave;
+    instance->next = context->session_instances;
+    context->session_instances = instance;
+    return 0;
+}
+
+static void rxpa_context_publish_sessions(rxpa_context *context) {
+    rxpa_session_instance *tail;
+    if (!context || !context->session_instances) return;
+    tail = context->session_instances;
+    while (tail->next) tail = tail->next;
+    tail->next = context->rxvm_context->rxpa_sessions;
+    context->rxvm_context->rxpa_sessions = context->session_instances;
+    context->session_instances = 0;
+}
+
+static void rxpa_context_destroy_sessions(rxpa_context *context) {
+    while (context && context->session_instances) {
+        rxpa_session_instance *next = context->session_instances->next;
+        context->session_instances->destroy(
+                context->session_instances->session);
+        rxvm_load_memory_free((void *)context->session_instances->plugin_id);
+        rxvm_load_memory_free(context->session_instances);
+        context->session_instances = next;
+    }
 }
 
 static unsigned char *rxpa_constant_pool_at(rxpa_context *context, size_t offset) {
@@ -1443,7 +1595,8 @@ static void add_member_meta_to_module(rxpa_context *context, char *owner, char *
 
 static void append_rxpa_proc_policy(rxpa_context *context,
                                     size_t procedure_offset,
-                                    uint32_t capabilities) {
+                                    uint32_t capabilities,
+                                    rxpa_session_instance *session_instance) {
     rxpa_proc_policy *policies;
     size_t new_capacity;
 
@@ -1466,6 +1619,8 @@ static void append_rxpa_proc_policy(rxpa_context *context,
             procedure_offset;
     context->proc_policies[context->proc_policy_count].capabilities =
             capabilities;
+    context->proc_policies[context->proc_policy_count].session_instance =
+            session_instance;
     context->proc_policy_count++;
 }
 
@@ -1482,7 +1637,10 @@ static void apply_rxpa_proc_policies(rxpa_context *context,
         if (!runtime) abort();
         size_t module_index;
         uint32_t capabilities = context->proc_policies[index].capabilities;
-        bind_rxpa_runtime_policy(context->rxvm_context, runtime, capabilities);
+        rxpa_session_instance *session_instance =
+                context->proc_policies[index].session_instance;
+        bind_rxpa_runtime_policy(context->rxvm_context, runtime,
+                                 capabilities, session_instance);
 
         /* Imports linked before the native policy was known share the owner's
          * frame-free-list identity. Bind each alias slot now as well. */
@@ -1500,7 +1658,8 @@ static void apply_rxpa_proc_policies(rxpa_context *context,
                 if (alias != runtime &&
                     alias->frame_free_list == runtime->frame_free_list) {
                     bind_rxpa_runtime_policy(context->rxvm_context,
-                                             alias, capabilities);
+                                             alias, capabilities,
+                                             session_instance);
                 }
             }
         }
@@ -1509,10 +1668,26 @@ static void apply_rxpa_proc_policies(rxpa_context *context,
 
 static void bind_rxpa_runtime_policy(rxvm_context *context,
                                      proc_runtime *runtime,
-                                     uint32_t capabilities) {
+                                     uint32_t capabilities,
+                                     rxpa_session_instance *session_instance) {
     runtime->native_capabilities = capabilities;
     if ((capabilities & RXPA_PLUGIN_CAP_PROCESS_REENTRANT) != 0u) {
         runtime->native_invoker = rxvm_callfunc_direct;
+    } else if ((capabilities & RXPA_PROCEDURE_CAP_SESSION_AFFINE) != 0u &&
+               session_instance) {
+        rxpa_session_call_binding *binding;
+        if (runtime->native_invoker == rxvm_callfunc_session) return;
+        binding = rxvm_load_memory_alloc(
+                context->worker.memory_worker, sizeof(*binding));
+        if (!binding) RX_PANIC_OOM("bind session-aware rxpa procedure",
+                                   sizeof(*binding), runtime->name);
+        binding->function = (void *)runtime->start;
+        binding->instance = session_instance;
+        binding->procedure_capabilities = capabilities;
+        binding->next = context->rxpa_session_bindings;
+        context->rxpa_session_bindings = binding;
+        runtime->start = (size_t)binding;
+        runtime->native_invoker = rxvm_callfunc_session;
     } else if (!rxpa_compatibility_bind_legacy(
                        &context->rxpa_compatibility,
                        &runtime->native_invoker,
@@ -1524,7 +1699,8 @@ static void bind_rxpa_runtime_policy(rxvm_context *context,
 
 // Add a statically linked function to the constant pool being created
 static void add_proc_to_module(rxpa_context* context, char* index,
-                               rxpa_libfunc func, uint32_t capabilities) {
+                               rxpa_libfunc func, uint32_t capabilities,
+                               rxpa_session_instance *session_instance) {
     size_t entry_size, proc_index, exposed_proc_index;
     proc_constant *proc;
     expose_proc_constant *exposed_proc;
@@ -1539,7 +1715,8 @@ static void add_proc_to_module(rxpa_context* context, char* index,
     proc->next = -1;
     proc->locals = 0;
     proc->start = (size_t)func;
-    append_rxpa_proc_policy(context, proc_index, capabilities);
+    append_rxpa_proc_policy(context, proc_index, capabilities,
+                            session_instance);
 
     /* Create Exposed Procedure Entry */
     entry_size = sizeof(expose_proc_constant) + strlen(index);
@@ -1572,6 +1749,54 @@ static uint32_t static_plugin_capabilities_locked(const char *plugin_id) {
     return 0u;
 }
 
+static struct static_plugin_manifest_v2 *
+static_plugin_manifest_v2_locked(const char *plugin_id) {
+    struct static_plugin_manifest_v2 *entry = static_plugin_manifests_v2;
+    if (!plugin_id) return 0;
+    while (entry) {
+        if (strcmp(entry->plugin_id, plugin_id) == 0) return entry;
+        entry = entry->next;
+    }
+    return 0;
+}
+
+static int validate_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest) {
+    size_t minimum_size = offsetof(rxpa_plugin_manifest_v2, session_leave) +
+                          sizeof(((rxpa_plugin_manifest_v2 *)0)->session_leave);
+    unsigned int session_hook_count;
+    if (!manifest || manifest->struct_size < minimum_size ||
+        manifest->abi_version != RXPA_PLUGIN_MANIFEST_ABI_V2 ||
+        !manifest->plugin_id || !*manifest->plugin_id ||
+        !manifest->procedure_capabilities) {
+        return 0;
+    }
+    session_hook_count = (manifest->session_create != NULL) +
+                         (manifest->session_destroy != NULL) +
+                         (manifest->session_enter != NULL) +
+                         (manifest->session_leave != NULL);
+    return session_hook_count == 0u || session_hook_count == 4u;
+}
+
+static uint32_t sanitize_manifest_procedure_capabilities(
+        const rxpa_plugin_manifest_v2 *manifest,
+        const char *procedure_name) {
+    uint32_t capabilities;
+    if (!manifest || !manifest->procedure_capabilities || !procedure_name) {
+        return 0u;
+    }
+    capabilities = manifest->procedure_capabilities(procedure_name);
+    if ((capabilities & ~RXPA_PROCEDURE_CAP_KNOWN_V2) != 0u ||
+        capabilities == RXPA_PROCEDURE_CAP_KNOWN_V2) {
+        return 0u;
+    }
+    if ((capabilities & RXPA_PROCEDURE_CAP_SESSION_AFFINE) != 0u &&
+        !manifest->session_create) {
+        return 0u;
+    }
+    return capabilities;
+}
+
 void rxvm_register_static_plugin_capability(const char *plugin_id,
                                             uint32_t capabilities) {
     struct static_plugin_capability *entry;
@@ -1594,6 +1819,39 @@ void rxvm_register_static_plugin_capability(const char *plugin_id,
     entry->capabilities = capabilities;
     entry->next = static_plugin_capabilities;
     static_plugin_capabilities = entry;
+    RXPA_CATALOGUE_UNLOCK();
+}
+
+void rxvm_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest) {
+    struct static_plugin_manifest_v2 *entry;
+    const char *plugin_id;
+    int valid;
+    size_t plugin_id_minimum =
+            offsetof(rxpa_plugin_manifest_v2, plugin_id) +
+            sizeof(((rxpa_plugin_manifest_v2 *)0)->plugin_id);
+
+    if (!manifest || manifest->struct_size < plugin_id_minimum ||
+        !manifest->plugin_id || !*manifest->plugin_id) return;
+    plugin_id = manifest->plugin_id;
+    valid = validate_static_plugin_manifest_v2(manifest);
+    RXPA_CATALOGUE_LOCK();
+    entry = static_plugin_manifest_v2_locked(plugin_id);
+    if (!entry) {
+        entry = rxvm_memory_alloc_unowned_bytes(sizeof(*entry));
+        if (!entry) RX_PANIC_OOM("allocate static rxpa V2 manifest",
+                                 sizeof(*entry), plugin_id);
+        memset(entry, 0, sizeof(*entry));
+        entry->plugin_id = rxpa_catalogue_strdup(plugin_id);
+        entry->next = static_plugin_manifests_v2;
+        static_plugin_manifests_v2 = entry;
+    }
+    entry->valid = (unsigned char)valid;
+    memset(&entry->manifest, 0, sizeof(entry->manifest));
+    if (valid) {
+        entry->manifest = *manifest;
+        entry->manifest.plugin_id = entry->plugin_id;
+    }
     RXPA_CATALOGUE_UNLOCK();
 }
 
@@ -1630,16 +1888,39 @@ static void rxvm_addfunc_owned(const char *plugin_id, rxpa_libfunc func,
 
     if (current_rxpa_context) {
         rxvm_context *context = current_rxpa_context->rxvm_context;
+        rxpa_session_instance *session_instance = 0;
         DEBUG("Loading Procedure %s from plugin %s\n", name, context->modules[context->num_modules - 1]->name);
 
         // Add the procedure to the module
         uint32_t capabilities = current_rxpa_context->plugin_capabilities;
-        if (plugin_id) {
+        if (current_rxpa_context->dynamic_plugin) {
+            capabilities = rxpa_loaded_plugin_procedure_capabilities(
+                    current_rxpa_context->dynamic_plugin, name);
+            if ((capabilities & RXPA_PROCEDURE_CAP_SESSION_AFFINE) != 0u) {
+                session_instance = rxpa_context_find_session(
+                        current_rxpa_context,
+                        current_rxpa_context->dynamic_plugin
+                                ->manifest_v2.plugin_id);
+            }
+        } else if (plugin_id) {
+            struct static_plugin_manifest_v2 *manifest_entry;
             RXPA_CATALOGUE_LOCK();
-            capabilities = static_plugin_capabilities_locked(plugin_id);
+            manifest_entry = static_plugin_manifest_v2_locked(plugin_id);
+            if (manifest_entry) {
+                capabilities = manifest_entry->valid
+                        ? sanitize_manifest_procedure_capabilities(
+                                &manifest_entry->manifest, name) : 0u;
+            } else {
+                capabilities = static_plugin_capabilities_locked(plugin_id);
+            }
             RXPA_CATALOGUE_UNLOCK();
+            if ((capabilities & RXPA_PROCEDURE_CAP_SESSION_AFFINE) != 0u) {
+                session_instance = rxpa_context_find_session(
+                        current_rxpa_context, plugin_id);
+            }
         }
-        add_proc_to_module(current_rxpa_context, name, func, capabilities);
+        add_proc_to_module(current_rxpa_context, name, func, capabilities,
+                           session_instance);
     }
     else {
         append_static_function(plugin_id, func, name);
@@ -1743,6 +2024,14 @@ void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* arg
  *         >=0 - Last Module Number loaded (1 based) (more than one (or none) might have been loaded ...)  */
 int rxldmodp(rxvm_context *context) {
     size_t n;
+    size_t function_count = 0u;
+    size_t metadata_count = 0u;
+    size_t function_index = 0u;
+    size_t metadata_index = 0u;
+    static_function_snapshot *functions = 0;
+    static_metadata_snapshot *metadata = 0;
+    struct static_linked_function *static_func;
+    struct static_linked_metadata *static_meta;
     rxvm_context *previous_active_context;
 
     RXPA_CATALOGUE_LOCK();
@@ -1750,6 +2039,63 @@ int rxldmodp(rxvm_context *context) {
         RXPA_CATALOGUE_UNLOCK();
         return 0;
     }
+
+    /* Snapshot the immutable call catalogue and current capability manifests.
+     * Plugin callbacks (session factories and procedure queries) must never run
+     * under the process catalogue lock. */
+    for (static_func = static_linked_functions; static_func;
+         static_func = static_func->next) function_count++;
+    for (static_meta = static_linked_metadata; static_meta;
+         static_meta = static_meta->next) metadata_count++;
+    if (function_count) {
+        functions = rxvm_load_memory_alloc(
+                context->worker.memory_worker,
+                function_count * sizeof(*functions));
+        if (!functions) RX_PANIC_OOM("snapshot static rxpa functions",
+                                     function_count * sizeof(*functions), 0);
+    }
+    if (metadata_count) {
+        metadata = rxvm_load_memory_alloc(
+                context->worker.memory_worker,
+                metadata_count * sizeof(*metadata));
+        if (!metadata) RX_PANIC_OOM("snapshot static rxpa metadata",
+                                    metadata_count * sizeof(*metadata), 0);
+    }
+    for (static_func = static_linked_functions; static_func;
+         static_func = static_func->next) {
+        struct static_plugin_manifest_v2 *manifest_entry =
+                static_plugin_manifest_v2_locked(static_func->plugin_id);
+        functions[function_index].name = static_func->name;
+        functions[function_index].plugin_id = static_func->plugin_id;
+        functions[function_index].func = static_func->func;
+        functions[function_index].v1_capabilities =
+                static_plugin_capabilities_locked(static_func->plugin_id);
+        functions[function_index].has_manifest_v2 =
+                manifest_entry != 0;
+        functions[function_index].valid_manifest_v2 =
+                manifest_entry && manifest_entry->valid;
+        memset(&functions[function_index].manifest_v2, 0,
+               sizeof(functions[function_index].manifest_v2));
+        if (manifest_entry && manifest_entry->valid) {
+            functions[function_index].manifest_v2 = manifest_entry->manifest;
+        }
+        function_index++;
+    }
+    for (static_meta = static_linked_metadata; static_meta;
+         static_meta = static_meta->next) {
+        metadata[metadata_index].kind = static_meta->kind;
+        metadata[metadata_index].symbol = static_meta->symbol;
+        metadata[metadata_index].option = static_meta->option;
+        metadata[metadata_index].type = static_meta->type;
+        metadata[metadata_index].interface_symbol =
+                static_meta->interface_symbol;
+        metadata[metadata_index].owner = static_meta->owner;
+        metadata[metadata_index].member_kind = static_meta->member_kind;
+        metadata[metadata_index].member = static_meta->member;
+        metadata[metadata_index].args = static_meta->args;
+        metadata_index++;
+    }
+    RXPA_CATALOGUE_UNLOCK();
 
     DEBUG("Loading Statically linked Plugins\n");
 
@@ -1795,41 +2141,81 @@ int rxldmodp(rxvm_context *context) {
     current_rxpa_context->plugin_being_loaded->header.proc_head = -1;
     current_rxpa_context->plugin_being_loaded->header.meta_head = -1;
 
-    // Process static plugin functions
-    struct static_linked_function *static_func = static_linked_functions;
-    while (static_func) {
-        uint32_t capabilities = static_plugin_capabilities_locked(
-                static_func->plugin_id);
-        DEBUG("CREXX Statically Linked Native Plugin %s\n", static_func->name);
-        add_proc_to_module(current_rxpa_context, static_func->name,
-                           static_func->func, capabilities);
-
-        // Loop to next static function
-        static_func = static_func->next;
+    /* Create exactly one session per plugin represented in this VM snapshot. */
+    for (function_index = 0u; function_index < function_count;
+         function_index++) {
+        if (functions[function_index].valid_manifest_v2 &&
+            functions[function_index].manifest_v2.session_create &&
+            rxpa_context_create_session(
+                    current_rxpa_context,
+                    &functions[function_index].manifest_v2) != 0) {
+            rxvm_load_memory_free(functions);
+            rxvm_load_memory_free(metadata);
+            free_rxpa_context(current_rxpa_context);
+            current_rxpa_context = 0;
+            rxvm_active_context_leave(previous_active_context);
+            return -1;
+        }
     }
 
-    struct static_linked_metadata *static_meta = static_linked_metadata;
-    while (static_meta) {
-        if (strcmp(static_meta->kind, "class") == 0) {
-            rxvm_addclass(static_meta->symbol, static_meta->option, static_meta->type);
+    for (function_index = 0u; function_index < function_count;
+         function_index++) {
+        uint32_t capabilities;
+        rxpa_session_instance *session_instance = 0;
+        if (functions[function_index].has_manifest_v2) {
+            capabilities = functions[function_index].valid_manifest_v2
+                    ? sanitize_manifest_procedure_capabilities(
+                            &functions[function_index].manifest_v2,
+                            functions[function_index].name) : 0u;
+        } else {
+            capabilities = functions[function_index].v1_capabilities;
         }
-        else if (strcmp(static_meta->kind, "interface") == 0) {
-            rxvm_addinterface(static_meta->symbol, static_meta->option, static_meta->type);
+        if ((capabilities & RXPA_PROCEDURE_CAP_SESSION_AFFINE) != 0u) {
+            session_instance = rxpa_context_find_session(
+                    current_rxpa_context,
+                    functions[function_index].plugin_id);
+            if (!session_instance) capabilities = 0u;
         }
-        else if (strcmp(static_meta->kind, "implements") == 0) {
-            rxvm_addimplements(static_meta->symbol, static_meta->interface_symbol);
-        }
-        else if (strcmp(static_meta->kind, "member") == 0) {
-            rxvm_addmember(static_meta->owner, static_meta->member_kind, static_meta->member,
-                           static_meta->type, static_meta->args);
-        }
-        static_meta = static_meta->next;
+        DEBUG("CREXX Statically Linked Native Plugin %s\n",
+              functions[function_index].name);
+        add_proc_to_module(current_rxpa_context,
+                           (char *)functions[function_index].name,
+                           functions[function_index].func, capabilities,
+                           session_instance);
     }
-    RXPA_CATALOGUE_UNLOCK();
+
+    for (metadata_index = 0u; metadata_index < metadata_count;
+         metadata_index++) {
+        if (strcmp(metadata[metadata_index].kind, "class") == 0) {
+            rxvm_addclass((char *)metadata[metadata_index].symbol,
+                          (char *)metadata[metadata_index].option,
+                          (char *)metadata[metadata_index].type);
+        }
+        else if (strcmp(metadata[metadata_index].kind, "interface") == 0) {
+            rxvm_addinterface((char *)metadata[metadata_index].symbol,
+                              (char *)metadata[metadata_index].option,
+                              (char *)metadata[metadata_index].type);
+        }
+        else if (strcmp(metadata[metadata_index].kind, "implements") == 0) {
+            rxvm_addimplements((char *)metadata[metadata_index].symbol,
+                               (char *)metadata[metadata_index]
+                                       .interface_symbol);
+        }
+        else if (strcmp(metadata[metadata_index].kind, "member") == 0) {
+            rxvm_addmember((char *)metadata[metadata_index].owner,
+                           (char *)metadata[metadata_index].member_kind,
+                           (char *)metadata[metadata_index].member,
+                           (char *)metadata[metadata_index].type,
+                           (char *)metadata[metadata_index].args);
+        }
+    }
+    rxvm_load_memory_free(functions);
+    rxvm_load_memory_free(metadata);
 
     // Link as a plugin
     n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
     apply_rxpa_proc_policies(current_rxpa_context, n);
+    rxpa_context_publish_sessions(current_rxpa_context);
 
     // Free the rxpa_context
     current_rxpa_context->plugin_being_loaded = 0; // It's now owned by the module list

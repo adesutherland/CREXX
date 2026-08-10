@@ -539,9 +539,61 @@ or OS threads the process starts.
 The P1 capability applies to procedure calls. Native-payload `copy` and
 `finalize` callbacks remain on the recursive compatibility lane because they
 can run outside the originating procedure and need a separate lifetime claim.
-Per-VM session factories, default-session compatibility thunks and per-call
-capabilities are reserved for the later session-aware RXPA slice; no such API
-is exposed by P1.
+
+Plugins with mixed policy can instead export the V2 procedure query:
+
+```c
+static uint32_t procedure_capabilities(const char *name) {
+    if (strcmp(name, "example.stateless") == 0) {
+        return RXPA_PROCEDURE_CAP_PROCESS_REENTRANT;
+    }
+    return 0u; /* conservative legacy lane */
+}
+
+RXPA_PLUGIN_PROCEDURE_CAPABILITIES(procedure_capabilities)
+```
+
+The query runs while the plugin is loaded and returns exactly one of `0`,
+`RXPA_PROCEDURE_CAP_PROCESS_REENTRANT`, or
+`RXPA_PROCEDURE_CAP_SESSION_AFFINE`. Unknown bits, both known bits together,
+or a session-affine result without a complete session hook set fail closed to
+legacy behavior. The host stores the selected invoker in the procedure at load;
+ordinary calls do not repeat the query or branch on the capability.
+
+A plugin whose mutable native resources belong to one VM uses
+`RXPA_PLUGIN_SESSION_AWARE(create, destroy, enter, leave, query)`. The host
+creates one session per VM/plugin load, rejects the load if creation fails,
+enters that session around each session-affine procedure call, and destroys it
+after VM values/modules are released but before the plugin DSO closes. `enter`
+must store the previous thread-local session in its output cookie and `leave`
+must restore it, so nested native calls are safe. Session callbacks themselves
+must not retain VM-owned `value *` or register handles after the call.
+
+The optional V2 symbol does not change `_initfuncs`, `rxpa_libfunc`, `ADDPROC`,
+RXAS, or RXBIN. Older hosts ignore it and call the unchanged procedures as a
+legacy plugin. A session-aware plugin that promises old-host compatibility must
+therefore provide its own process-default session when no V2 `enter` callback
+has selected a per-VM session; ODBC is the reference implementation.
+
+Current bundled classification is deliberately conservative:
+
+| Classification | Bundled examples | Rule |
+| --- | --- | --- |
+| Plugin-wide process-reentrant | `cipher`, `stack`, `strings`, `getpi`, `id` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. |
+| Mixed per-procedure | `rxmath` | Ordinary math procedures are process-reentrant; `rxmath.inlinec` remains legacy because it uses fixed process/file names. |
+| Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
+| Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
+
+ODBC testing has two layers. The test-only mock driver is always built when
+`BUILD_TESTING` is enabled and deterministically covers failure injection,
+retained parameter pointers, concurrent per-VM sessions, teardown and the
+old-host default session. When `ENABLE_ODBC=ON` and a `sqlite3odbc` library is
+discoverable, CMake also generates a private SQLite `:memory:` DSN and adds
+`odbc_sqlite_prepared_rxbvm` and `odbc_sqlite_prepared_rxtvm`. Those tests load
+the real unixODBC plugin/driver and cover prepared binds, independent active
+statements, reset/re-execute, fetch, transactions, metadata and diagnostics.
+Set the `CREXX_SQLITE_ODBC_DRIVER` CMake cache path explicitly when the driver
+is installed outside the standard Unix, `/usr/local`, or Homebrew locations.
 
 ## 3. Writing a Native Function
 
