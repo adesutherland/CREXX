@@ -23,6 +23,18 @@ errors = errors + check_int(2, queued(), "named queue depth")
 errors = errors + check("NAME=WORK QUEUED=2 CURRENT=1", rxqueue("INFO", "WORK"), "named queue info")
 errors = errors + check("work-front", pull(), "named PUSH ordering")
 
+rc = rxqueue("COPY", "WORK", "SNAPSHOT")
+errors = errors + check_int(0, rc, "copy WORK to SNAPSHOT")
+rc = rxqueue("SET", "SNAPSHOT")
+errors = errors + check_int(0, rc, "set copied SNAPSHOT")
+errors = errors + check("work-back", pull(), "copied queue content")
+errors = errors + check_int(0, queued(), "copied queue drained independently")
+rc = rxqueue("SET", "WORK")
+errors = errors + check_int(0, rc, "return from SNAPSHOT")
+errors = errors + check_int(1, queued(), "source queue retained after copy")
+rc = rxqueue("DELETE", "SNAPSHOT")
+errors = errors + check_int(0, rc, "delete SNAPSHOT")
+
 rc = rxqueue("CLEAR", "WORK")
 errors = errors + check_int(0, rc, "clear WORK")
 errors = errors + check_int(0, queued(), "cleared WORK")
@@ -78,8 +90,137 @@ call append_nested "nested"
 errors = errors + check_int(2, queued(), "nested procedure shares queue")
 errors = errors + check("tail", pull(), "queue is FIFO tail")
 errors = errors + check("nested", pull(), "nested append visible")
-/* An empty PULL reads the default input stream; do not block this test on stdin. */
 errors = errors + check_int(0, queued(), "final depth")
+
+/* PEEK order, bounds, and non-consumption. */
+call queue "alpha"
+call queue "beta"
+call push "urgent"
+errors = errors + check("urgent", peek(), "peek default order")
+errors = errors + check("urgent", peek(1), "peek first order")
+errors = errors + check("alpha", peek(2), "peek second order")
+errors = errors + check("beta", peek(3), "peek third order")
+errors = errors + check_int(3, queued(), "peek order retains depth")
+errors = errors + check("", peek(-99), "peek lower bound")
+errors = errors + check("", peek(-1), "peek negative bound")
+errors = errors + check("", peek(0), "peek zero bound")
+errors = errors + check("", peek(4), "peek upper bound")
+errors = errors + check("", peek(99), "peek high bound")
+errors = errors + check_int(3, queued(), "peek bounds retain depth")
+errors = errors + check("urgent", peek(), "peek repeated value")
+errors = errors + check("urgent", pull(), "peek leaves first entry")
+errors = errors + check("alpha", pull(), "peek leaves second entry")
+errors = errors + check("beta", pull(), "peek leaves third entry")
+errors = errors + check_int(0, queued(), "peek full order retained")
+errors = errors + check("", peek(), "peek empty default")
+errors = errors + check("", peek(1), "peek empty first")
+errors = errors + check("", peek(2), "peek empty second")
+errors = errors + check("", peek(0), "peek empty zero")
+errors = errors + check("", peek(-1), "peek empty negative")
+errors = errors + check_int(0, queued(), "peek empty retains depth")
+
+/* COPY uses the current logical contents after PULL. */
+rc = rxqueue("CREATE", "SOURCE")
+errors = errors + check_int(0, rc, "create COPY SOURCE")
+rc = rxqueue("CREATE", "TARGET")
+errors = errors + check_int(0, rc, "create COPY TARGET")
+rc = rxqueue("SET", "SOURCE")
+errors = errors + check_int(0, rc, "set COPY SOURCE")
+call queue "A"
+call queue "B"
+call queue "C"
+call queue "D"
+errors = errors + check("A", pull(), "copy source pull")
+rc = rxqueue("SET", "TARGET")
+errors = errors + check_int(0, rc, "set inactive COPY TARGET")
+call queue "X"
+call queue "Y"
+rc = rxqueue("SET", "SOURCE")
+errors = errors + check_int(0, rc, "select source for inactive copy")
+rc = rxqueue("COPY", "SOURCE", "TARGET")
+errors = errors + check_int(0, rc, "copy after pull")
+rc = rxqueue("SET", "TARGET")
+errors = errors + check_int(0, rc, "inspect inactive COPY TARGET")
+errors = errors + check_int(3, queued(), "copy after pull target depth")
+errors = errors + check("B", peek(1), "copy after pull target first")
+errors = errors + check("D", peek(3), "copy after pull target last")
+rc = rxqueue("SET", "SOURCE")
+errors = errors + check_int(0, rc, "return to COPY SOURCE")
+errors = errors + check_int(3, queued(), "copy after pull source depth")
+errors = errors + check("B", peek(1), "copy after pull source first")
+errors = errors + check("D", peek(3), "copy after pull source last")
+
+/* COPY replaces an active destination and preserves selection. */
+rc = rxqueue("SET", "TARGET")
+errors = errors + check_int(0, rc, "select active COPY TARGET")
+call rxqueue "CLEAR", "TARGET"
+call queue "X"
+call queue "Y"
+rc = rxqueue("COPY", "SOURCE", "TARGET")
+errors = errors + check_int(0, rc, "replace active COPY TARGET")
+errors = errors + check("TARGET", rxqueue("QUERY"), "copy preserves target selection")
+errors = errors + check("B", pull(), "active target replacement first")
+errors = errors + check("C", pull(), "active target replacement second")
+errors = errors + check("D", pull(), "active target replacement third")
+
+/* COPY creates independent source and destination queues. */
+rc = rxqueue("COPY", "SOURCE", "TARGET")
+errors = errors + check_int(0, rc, "recopy for independence")
+rc = rxqueue("SET", "SOURCE")
+errors = errors + check_int(0, rc, "select independence source")
+call push "SOURCE-ONLY"
+rc = rxqueue("SET", "TARGET")
+errors = errors + check_int(0, rc, "select independence target")
+call queue "TARGET-ONLY"
+rc = rxqueue("SET", "SOURCE")
+errors = errors + check("SOURCE-ONLY", pull(), "source independent entry")
+errors = errors + check("B", pull(), "source independent first")
+errors = errors + check("C", pull(), "source independent second")
+errors = errors + check("D", pull(), "source independent third")
+rc = rxqueue("SET", "TARGET")
+errors = errors + check("B", pull(), "target independent first")
+errors = errors + check("C", pull(), "target independent second")
+errors = errors + check("D", pull(), "target independent third")
+errors = errors + check("TARGET-ONLY", pull(), "target independent entry")
+
+/* COPY after CLEAR replaces a non-empty destination with an empty queue. */
+rc = rxqueue("SET", "SOURCE")
+errors = errors + check_int(0, rc, "select cleared COPY SOURCE")
+rc = rxqueue("CLEAR", "SOURCE")
+errors = errors + check_int(0, rc, "clear COPY SOURCE")
+rc = rxqueue("SET", "TARGET")
+errors = errors + check_int(0, rc, "select stale COPY TARGET")
+call queue "stale"
+rc = rxqueue("COPY", "SOURCE", "TARGET")
+errors = errors + check_int(0, rc, "copy cleared source")
+errors = errors + check_int(0, queued(), "copy cleared target depth")
+errors = errors + check("", peek(), "copy cleared target empty")
+
+/* Queue names are case-insensitive and canonically uppercase. */
+rc = rxqueue("CREATE", "casework")
+errors = errors + check_int(0, rc, "create mixed-case queue")
+rc = rxqueue("CREATE", "CASEWORK")
+errors = errors + check_int(4, rc, "reject duplicate mixed-case queue")
+rc = rxqueue("SET", "CaSeWoRk")
+errors = errors + check_int(0, rc, "set mixed-case queue")
+errors = errors + check("CASEWORK", rxqueue("QUERY"), "mixed-case query")
+errors = errors + check("NAME=CASEWORK QUEUED=0 CURRENT=1", rxqueue("INFO", "casework"), "mixed-case info")
+rc = rxqueue("SET", "sOuRcE")
+errors = errors + check_int(0, rc, "set mixed-case source")
+call queue "case-source"
+rc = rxqueue("COPY", "source", "tArGeT")
+errors = errors + check_int(0, rc, "mixed-case copy")
+rc = rxqueue("SET", "TARGET")
+errors = errors + check_int(0, rc, "set mixed-case target")
+errors = errors + check("TARGET", rxqueue("QUERY"), "mixed-case target query")
+errors = errors + check("case-source", pull(), "mixed-case copied value")
+errors = errors + check("SESSION SOURCE TARGET CASEWORK", rxqueue("LIST"), "canonical queue list")
+
+call rxqueue "DELETE", "CASEWORK"
+call rxqueue "DELETE", "SOURCE"
+call rxqueue "DELETE", "TARGET"
+call rxqueue "SET", "SESSION"
+errors = errors + check_int(0, queued(), "queue cleanup")
 
 if errors = 0 then say "PASS: rxqueue shared state"
 return errors <> 0

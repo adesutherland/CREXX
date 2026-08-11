@@ -7,6 +7,8 @@
 options levelb
 import rxfnsb
 
+##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes nosrcmap nmaclog
+
 service_name = .string[]
 service_host = .string[]
 service_port = .int[]

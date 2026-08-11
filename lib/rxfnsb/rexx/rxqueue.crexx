@@ -134,8 +134,8 @@ return value
 /*------------------------------------------------------------*/
 /* Return the first queued value without removing it.          */
 /*                                                            */
-/* If the queue is empty, use the same default input stream    */
-/* behaviour as PULL.                                         */
+/* If the queue is empty, or entry is out of range, return an  */
+/* empty string.                                               */
 /*------------------------------------------------------------*/
 peek: method = .string
     arg entry=1
@@ -219,7 +219,10 @@ return
 /*------------------------------------------------------------*/
 copy: method = .RexxQueue
     result = .RexxQueue()
-    values = arraycopy(_entries)
+    if _count = 0 then
+        values = .string[]
+    else
+        values = arraycopy(_entries, 1, _count)
     call result.replace(values)
 return result
 
@@ -301,6 +304,7 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
 
     operation = translate(operation)    /* Translate to uppercase.*/
     name = translate(name)              /* Translate to uppercase.*/
+    path = translate(path)              /* Translate to uppercase.*/
 
 
     /*--------------------------------------------------------*/
@@ -660,8 +664,8 @@ return value
 /*------------------------------------------------------------*/
 /* Return the next string without removing it from the queue.  */
 /*                                                            */
-/* Reads the default input stream when the queue is empty,    */
-/* matching PULL's empty-queue behaviour.                     */
+/* Returns an empty string when the queue is empty or entry is */
+/* out of range.                                               */
 /*------------------------------------------------------------*/
 peek: procedure = .string expose _queue_ready _queue_active
     arg entry=1

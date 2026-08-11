@@ -61,8 +61,7 @@ internal_testing=0    ## activate only for rxpp internal tests
   do i=1 to command.0
      j=i+1
      command.i=upper(command.i)
-     if j>command.0 then leave         /* not existing command.j might leate to error */
-     else command.j=upper(command.j)
+     if j>command.0 then leave         /* not existing command.j might lead to error */
      if command.i     ='-I' then infile=command.j
      else if command.i='-IN' then infile=command.j
      else if command.i='-O' then outfile=command.j
@@ -70,7 +69,7 @@ internal_testing=0    ## activate only for rxpp internal tests
      else if command.i='-M' then maclib=command.j
      else if command.i='-VERBOSE' then verbose=command.j
   end
-
+  verbose=1
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
   
   if internal_testing=1 then do
