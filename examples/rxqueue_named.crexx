@@ -12,6 +12,14 @@ call queue "job:alpha"
 call queue "job:beta"
 call push "job:urgent"
 say "SESSION contains " || queued() || " jobs"
+/* Use to analyse the queue, without releasing the entries*/
+say "(-99)"  "'"peek(-99)"'"
+say "(0)"    "'"peek(0)"'"
+say "()"     "'"peek()"'"
+say "(1)"    "'"peek(1)"'"
+say "(2)"    "'"peek(2)"'"
+say "(3)"    "'"peek(3)"'"
+say "(99)"   "'"peek(99)"'"
 
 call rxqueue "CREATE", "WORK"
 call rxqueue "CREATE", "REPORT"
@@ -30,7 +38,6 @@ call push "job:retry"
 call queue "job:gamma"
 call process_jobs "REPORT"
 
-call rxqueue "SET", "REPORT"
 say "REPORT contains " || queued() || " results"
 report_file = "rxqueue_report.txt"
 rc = rxqueue("EXPORT", "REPORT", report_file)
@@ -47,10 +54,14 @@ say rxqueue("QUERY")
 say rxqueue("INFO","ARCHIVE")
 say "List of named queues: "rxqueue("LIST")
 
-call rxqueue "SET", "SESSION"
 say "SESSION remaining: " || queued()
 call rxqueue "SET", "WORK"
 say "WORK remaining: " || queued()
+
+call rxqueue "COPY", "SESSION", "SESSION-2"
+say "SESSION copied to SESSION-2"
+call rxqueue "SET", "SESSION-2"
+say "SESSION-2 contains " || queued() || " jobs"
 
 call rxqueue "DELETE", "WORK"
 call rxqueue "DELETE", "REPORT"

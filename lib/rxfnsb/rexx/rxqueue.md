@@ -7,6 +7,7 @@ CREXX provides the classic Rexx data queue through the following functions:
 - `PUSH`
 - `QUEUE`
 - `PULL`
+- `PEEK`
 - `QUEUED`
 
 The data queue stores character strings and is shared by the running CREXX execution and all nested procedures.
@@ -129,6 +130,100 @@ the user is prompted for one line of input, and the entered line is returned by 
 
 ---
 
+# PEEK
+
+## Syntax
+
+```rexx
+value = peek()
+value = peek(position)
+```
+
+## Description
+
+`PEEK` returns a queued string without removing it.
+
+Without an argument, `PEEK()` returns the first queued entry, which is the same value that the next `PULL()` would return.
+
+With a positive `position`, `PEEK(position)` returns the corresponding entry in **PULL order**:
+
+- `PEEK(1)` returns the next entry.
+- `PEEK(2)` returns the entry after that.
+- `PEEK(3)` returns the third entry, and so on.
+
+The numbering is independent of whether entries were added using `PUSH` or `QUEUE`. It always describes the order in which `PULL` would retrieve them.
+
+If `position` is less than `1` or greater than the current queue size, `PEEK` returns an empty string.
+
+Unlike `PULL`, `PEEK` does **not** read from the default input stream when the queue is empty.
+
+## Example
+
+```rexx
+call queue "job:alpha"
+call queue "job:beta"
+call push  "job:urgent"
+
+say peek()
+say peek(1)
+say peek(2)
+say peek(3)
+say peek(4)
+say queued()
+```
+
+Output:
+
+```text
+job:urgent
+job:urgent
+job:alpha
+job:beta
+
+3
+```
+
+The queue remains unchanged.
+
+A subsequent:
+
+```rexx
+say pull()
+```
+
+returns:
+
+```text
+job:urgent
+```
+
+## Boundary Behaviour
+
+For a queue containing three entries:
+
+```rexx
+say "'" || peek(-1) || "'"
+say "'" || peek(0)  || "'"
+say "'" || peek(1)  || "'"
+say "'" || peek(2)  || "'"
+say "'" || peek(3)  || "'"
+say "'" || peek(4)  || "'"
+```
+
+the result is:
+
+```text
+''
+''
+'job:urgent'
+'job:alpha'
+'job:beta'
+''
+```
+
+`PEEK()` is equivalent to `PEEK(1)`.
+---
+
 # QUEUED
 
 ## Syntax
@@ -167,6 +262,7 @@ The queue combines both stack and queue semantics.
 | `PUSH` | Insert at the front (LIFO) |
 | `QUEUE` | Append at the end (FIFO) |
 | `PULL` | Remove and return the first queued entry; if the queue is empty, read one line from the default input stream |
+| `PEEK` | Return the first queued entry without removing it; if the queue is empty, read one line from the default input stream |
 | `QUEUED` | Return the current queue size |
 
 For example:

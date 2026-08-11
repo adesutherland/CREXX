@@ -66,7 +66,7 @@ internal_testing=0    ## activate only for rxpp internal tests
      else if command.i='-O' then outfile=command.j
      else if command.i='-OUT' then outfile=command.j
      else if command.i='-M' then maclib=command.j
-     else if command.i='-VERBOSE' then verbose=4
+     else if command.i='-VERBOSE' then verbose=command.j
   end
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
   
@@ -1063,7 +1063,7 @@ CMD_emit: procedure
 
     do i = 1 to new
        insertat = line_no + i
-       source.insertat = pull()
+       source.insertat = peek(i)
        call rxpp_set_source_origin insertat, file, i, source.insertat
     end
 
