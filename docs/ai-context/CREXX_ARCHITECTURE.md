@@ -385,6 +385,12 @@ import candidate.
 
 Within a binary root, same-stem artifacts are collapsed to the freshest
 candidate. If timestamps tie, `.rxbin` is preferred over `.rxas`.
+Directory entries are sorted by name, and discovery prefers two consecutive
+scans with the same entry set. If a root stays active, discovery merges a
+bounded number of scans and drops entries that no longer exist. This prevents
+native filesystem enumeration order or concurrent generated-library
+publication from silently changing the imported contract set without letting
+continuous unrelated activity block compilation.
 
 Compiler-generated consumer `.rxas` treats imported declaration blocks as a
 runtime dependency snapshot, not as a copy of the provider's full public
