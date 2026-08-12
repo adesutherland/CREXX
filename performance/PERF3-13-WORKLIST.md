@@ -2,7 +2,7 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E3 complete on Mac; portable publication proof, E4 and Gate F remain closed**
+Status: **Gate E E4 complete on Mac; E5/E6, portable publication proof and Gate F remain closed**
 
 ## Current Gate E continuation
 
@@ -95,6 +95,19 @@ Status: **Gate E E3 complete on Mac; portable publication proof, E4 and Gate F r
   Linux, Windows and clean-runner real-driver qualification remains a
   publication follow-up. Evidence:
   [`2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict/).
+- Adrian approved E4b on 2026-08-11 and accepted its guard-clean first
+  ordinary-Release verdict. The internal bytecode-only catalogue shares sealed
+  canonical module images while retaining per-worker globals, procedure/frame
+  state, execution images, bindings and caches. The focused structural proof
+  removes the complete 2,480-byte audited duplicate floor without increasing
+  the 569-byte worker-overlay floor. The same-session single-worker matrix is
+  neutral: the only clear adverse hot result is `rxbvm` Sieve at +0.374%, well
+  inside the 3% guard. Mac closeout passes focused Debug 11/11, Apple ASan 3/3,
+  complete Debug CTest 2,037/2,037 and focused ordinary Release 11/11; rebuilt
+  VM hashes are identical to the accepted timing artifacts. E5, public
+  workers/channels, portable proof, commit and push remain separately gated.
+  Evidence:
+  [`2026-08-11-perf3-13-gate-e-e4b-first-release-verdict`](evidence/2026-08-11-perf3-13-gate-e-e4b-first-release-verdict/).
 
 ## Exact isolated base
 
@@ -2222,13 +2235,176 @@ CTest pass 2,034/2,034 in 225.19 seconds. Linux, Windows and clean-runner driver
 proof remains a publication follow-up. The Release VM hashes remain
 byte-identical to the accepted verdict.
 
-E3 is closed on Mac. No push, E4, public worker/channel or Gate F work is
-authorized. Evidence:
+E3 is closed on Mac. Its closeout authorized no push, E4, public
+worker/channel or Gate F work. Evidence:
 [`2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict/).
+
+### E4a — independent-load control and sealed-layout audit — complete 2026-08-11
+
+Adrian approved E4a as the non-sharing first half of E4. It records the exact
+current ownership boundary, adds a repeatable independent-load control and
+quantifies a conservative duplicated-immutable floor. It does not implement a
+shared generation. E4b remains a separate architecture and performance edit
+requiring approval.
+
+The control creates two distinct RXVML contexts, loads and prepares the same
+RXBIN independently, and runs through the compiler-selected `rxvml`, explicit
+switch-dispatch `rxbvml` and, where supported, a test-only direct-threaded
+RXVML executable. It proves:
+
+1. byte-equivalent but pointer-distinct canonical instruction and constant-pool
+   storage, with distinct module/file materializations and semantic graphs;
+2. separate runtime domains, allocator workers, module tables, global values,
+   procedure runtimes/frame recycler heads, execution images, graph bindings
+   and dynamic caches;
+3. execution equivalence and two-way module-global isolation;
+4. generation-safe behavior of the existing independent-load control: a late
+   load changes only the receiving context's module count and semantic
+   generation, preserves its existing globals, and is invisible to the other
+   context until that context loads the image itself; and
+5. deterministic destruction of both contexts with the existing zero-live-
+   allocation teardown assertion still active.
+
+The tiny purpose-built control reports 176 canonical instruction bytes and
+2,304 canonical constant bytes. The conservative immutable candidate floor is
+therefore 2,480 bytes per context, all 2,480 of which are repeated by the
+second independent load. The measured structural runtime-overlay floor is 569
+bytes per context. Graph storage, names/descriptions, values, exposed-symbol
+trees, graph-binding rows, frame contents and allocator bookkeeping are
+deliberately unmeasured, so these are lower bounds rather than a representative
+application memory claim. The Debug and ordinary profiling-off Release RXBIN
+fixtures are byte-identical. This is deterministic structural evidence; no
+host-sensitive timing was run and no host reservation was required.
+
+Qualification passes the product library, explicit switch library and
+test-only direct-threaded form 3/3 in Debug, ordinary profiling-off Release
+and Apple AddressSanitizer (`detect_leaks=0`, because Apple LeakSanitizer is
+unsupported). The adjacent reentrancy, both-dispatch, Level B late-load and
+optimizer-barrier panel passes 10/10 including its shared fixture. The final
+full Debug suite passes 2,037/2,037 with `--parallel 30`.
+
+#### E4a immutable/mutable audit
+
+| Current storage | Current behavior | E4b disposition |
+| --- | --- | --- |
+| `module_file` header/directory, name, description | Materialized once per independent container load; unchanged after validation | Move immutable fields behind the sealed generation; generation owns their lifetime. |
+| `module_file.instructions` / `module.segment.binary` | Expanded canonical RXBIN cells; immutable identity for serialization, reflection, profiling and debugging | Share after validation/seal. Count unique backing storage exactly, including linked-container sharing. |
+| `module_file.constant`, `rxbin_shared_constant_pool`, serialized procedure/meta records | Immutable after load; a linked container already shares a refcounted pool among its own modules, but independent contexts materialize another pool | Share generation-owned pool bytes. Keep refcount/publication metadata outside the immutable bytes. |
+| `module_file.semantic_graph` and graph-backed type descriptors | Immutable graph/index/type identity; linked-container modules may already point to one graph, while independent loads do not | Share with the sealed generation after graph validation. Object values continue to hold stable generation-pinned descriptors. |
+| `bin_space` and `module` | Mixed: immutable byte/pool pointers plus local `module` back-pointer, allocator owner, lifecycle/link counters and every mutable runtime table | Split immutable module descriptor from worker overlay; do not share either struct unchanged. |
+| `proc_constant` definition records | Serialized metadata in the canonical pool | Share as immutable offsets/descriptors. |
+| `proc_runtime`, lookup entries and frame recycler | Contains local code owner, resolved imports, prepared starts, native policy/session invokers and mutable free-list heads | Per-worker overlay. A shareable lookup may contain offsets only; no shared `proc_runtime *`. |
+| globals, exposed-register aliases and ownership map | Mutable `value *` storage and within-worker cross-module aliases | Per-worker overlay; preserve local alias/link semantics. |
+| `execution_image` | Contains local `proc_runtime *` operands plus computed-goto handler pointers or switch-private opcodes | Always per-VM-mode worker overlay. Never publish as canonical program data. |
+| graph/interface bindings, exposed trees, dynamic-site caches, semantic generation and dirty flags | Resolve graph IDs/names to local runtimes and mutate/rebuild on late load | Per-worker/per-generation overlay. Cache entries remain generation-guarded. |
+| plugin/native modules | E3 shares a synchronized process catalogue and DSO/factory lifetime policy, but procedure policy, sessions, payloads and native module state are VM-owned | Exclude from the first E4b bytecode-sharing slice; retain generation/DSO references while local native overlays are reachable. |
+
+#### E4b recommended architecture and approval stop
+
+The selected next slice is a runtime-owned, reference-counted
+`rxvm_program_generation`. It contains only validated immutable module
+descriptors, canonical instruction cells, constant/metadata pools and semantic
+graphs. A VM pins one generation and materializes a worker-owned module overlay
+containing globals, procedure runtimes, execution images, bindings and caches.
+No hot instruction acquires a generation lock or performs a capability test.
+
+Late loading must build and validate a derived generation off to the side and
+publish it only when sealed. Requests already executing retain the old
+generation and overlay until their frames complete. Existing module/procedure
+overlay addresses must remain stable across the transition so a
+`METALOADMODULE` issued during execution cannot invalidate active frames.
+Reclamation is reference-counted/quiescent at this slice; scale-policy
+selection remains E6.
+
+Rejected E4b alternatives are sharing the current mutable `module` behind a
+lock or TLS overlay, sharing prepared execution images, mutating the published
+generation in place, and treating `mmap` of raw compressed RXBIN sections as a
+complete solution. Independent full loads remain the correctness control and
+fallback, not the selected final layout.
+
+E4b must begin with a numbered production plan and a bytecode-only boundary,
+then pass focused isolation/late-load checks before the mandatory ordinary
+profiling-off Release verdict. That verdict must compare single-worker
+neutrality, exact duplicated/resident bytes and lifecycle cost against this
+retained E4a control. Timed work requires a newly cleared and reserved host.
+No E4b implementation, public workers/channels, RXAS/RXBIN change or Gate F
+surface is authorized by E4a.
+
+Evidence:
+[`2026-08-11-perf3-13-gate-e-e4a-independent-load-control`](evidence/2026-08-11-perf3-13-gate-e-e4a-independent-load-control/).
+
+### E4b — sealed bytecode generations — accepted; Mac closeout complete 2026-08-11
+
+Adrian approved E4b after the E4a audit and accepted its first ordinary-Release
+verdict on 2026-08-11. The implemented production plan was:
+
+1. keep the first slice bytecode-only and reject native/plugin modules at the
+   seal boundary;
+2. install one cold synchronized program catalogue in `rxvm_runtime`, leaving
+   the public one-runtime/one-worker compatibility path unchanged;
+3. adopt validated `module_file` images into a reference-counted sealed
+   generation only after a worker has loaded, linked and prepared them;
+4. attach another worker by materializing private `module`, global,
+   `proc_runtime`, frame, execution-image, binding and cache overlays over the
+   generation-owned canonical images;
+5. publish late loads as append-only derived generations while preserving all
+   existing overlay addresses and canonical prefix identities;
+6. reclaim a superseded generation after its worker pins are gone, and reclaim
+   an immutable image only after every containing generation is gone; and
+7. keep every lock on seal, attach, pin/release or runtime lifecycle paths, with
+   no generation check or lock in an instruction handler or dispatch iteration.
+
+The internal `rxvm_context_create_in_runtime()` factory registers two distinct
+worker VMs in one runtime domain. The public `rxvm_create()` API, plugin ABI,
+RXAS and RXBIN are unchanged. Ordinary public contexts still load independently
+unless a later internal worker factory explicitly attaches them to a sealed
+generation. Native modules remain under E3's catalogue/DSO/session ownership
+and are excluded from this initial program-sharing catalogue.
+
+The retained E4a fixture contains 176 canonical instruction bytes and 2,304
+constant bytes. Two independent contexts therefore repeat a conservative
+2,480-byte immutable floor. E4b stores those 2,480 bytes once across both
+contexts while retaining the same 569-byte per-worker overlay floor. The test
+proves shared canonical identity, private globals/procedure/frame/execution/
+cache state, compatible append-only late generation, stable existing overlay
+addresses, old-generation peer execution, source-before-peer teardown and
+zero-live-allocation runtime destruction under product, explicit switch and
+test direct-threaded VM libraries.
+
+The exact E3b-P2/E4a VM binaries are same-session controls for one warmup plus
+12 balanced pairs over lifecycle, Sieve and canonical RexxCPS on both engines.
+All 156 processes pass. A mechanically selected 12-pair append resolves the
+noisy lifecycle and `rxtvm` RexxCPS groups. No guard fires: the only clear
+adverse hot row is `rxbvm` Sieve at +0.374%; lifecycle is neutral/favourable,
+the remaining hot rows are inconclusive, RSS is neutral to 0.27% favourable
+and VM files grow about 0.12%.
+
+Post-acceptance Mac closeout passes:
+
+- focused normal Debug 11/11 across the shared fixture, worker lifecycle,
+  reentrancy, both dispatch contracts, Level B late load and the optimizer
+  barrier;
+- supported Apple AddressSanitizer 3/3 through `tools/asan-run.sh`, with
+  `detect_leaks=0` because Apple LeakSanitizer is unavailable;
+- complete Debug build and CTest 2,037/2,037 with repository parallelism in
+  247.69 seconds; and
+- complete ordinary profiling-off Release build plus focused Release 11/11.
+
+Final Release hashes remain exactly
+`cbf432480553c2956e751d9d419562c2f5ce3151a7442e8b0ab4c7252d339b88`
+for `rxbvm` and
+`3a5cd290f5e20c1db797fe15e921679a290f74a4cf6236196b7d4c63bd0b7e68`
+for `rxtvm`, so the accepted timing evidence remains authoritative. E4 is
+complete on Mac. Portable proof, E5 persistent trusted workers, E6 scale and
+reclamation policy selection, public workers/channels and Gate F require
+separate approval. No commit or push is authorized by this closeout.
+
+Evidence:
+[`2026-08-11-perf3-13-gate-e-e4b-first-release-verdict`](evidence/2026-08-11-perf3-13-gate-e-e4b-first-release-verdict/).
 
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
-- [ ] Define module-global, reference-cell, native/plugin, signal and late-load
+- [x] Define module-global, reference-cell, native/plugin, signal and late-load
   ownership explicitly.
 - [ ] Add synchronized depot block transfer and worker registration/teardown
   without putting ordinary allocations on a central lock or allocator thread.
@@ -2245,6 +2421,25 @@ EF-0 is accepted and locally complete for the private spawn
 completion/transfer subset above. The full transport-neutral M6 programme
 remains closed until the Gate E worker model has been selected.
 
+Gate F separates mechanism from policy. The VM substrate owns only bounded
+endpoint/queue mechanics, wait/wakeup, cancellation, terminal completion and
+receiver-owned `ChannelValue` materialization. Rexx worker classes, and later
+RXAS libraries where justified, own higher-level routing policy. Event buses,
+topics, publication, subscription, fan-out, retained delivery, replay and
+acknowledgement are therefore library/worker constructs built on channels, not
+VM opcodes or mandatory VM state.
+
+The cross-host form must be an open, versioned, language- and runtime-neutral
+wire protocol. A non-Rexx actor must be able to implement it without CREXX
+headers or knowledge of RXVM storage. The protocol contract must define
+framing, `ChannelValue` type/schema representation, capability/version
+negotiation, endpoint/service identity, correlation IDs, ordering and delivery
+guarantees, deadlines/cancellation, terminal errors, chunk/stream handling,
+flow control and extension points for authentication, integrity and
+confidentiality. It must also define unknown-version, unknown-type and unknown-
+capability behavior. Gate F selects neither an encoding nor a network transport
+until these semantics and the local channel contract are accepted.
+
 - [ ] Define one versioned value/message envelope with copy, move, immutable
   transfer-buffer and serialization modes.
 - [ ] Make bounded queues, backpressure, deadlines, cancellation, failure and
@@ -2252,6 +2447,11 @@ remains closed until the Gate E worker model has been selected.
 - [ ] Provide one logical channel interface over in-process workers, process
   pools and cross-host transports.
 - [ ] Prototype the channel worker as a Rexx class/interface before RXAS.
+- [ ] Implement event-bus and publish/subscribe behavior as Rexx/RXAS worker
+  libraries over the common channel interface; keep routing policy out of the
+  VM primitive.
+- [ ] Specify and independently test the open cross-host protocol with at least
+  one non-Rexx actor implementation.
 - [ ] Exercise compute, file/socket/HTTP, timer and child-process providers.
 - [ ] Only after protocol/ownership acceptance design any
   `chanstart`/`chanwait` RXAS/RXBIN surface with complete semantics.
@@ -2286,19 +2486,22 @@ remains closed until the Gate E worker model has been selected.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 through E3b-P1 accepted.**
+6. **Gate E — full M5 start: approved 2026-08-07; E1 through E4 complete on Mac.**
    E1/E1-P1 are published and Windows-MinGW proven. E2's worker-owned active
    state and direct interrupt slot pass the accepted Release verdict, complete
    Mac Debug/ASan/Release closeout and the separately repaired RXAS sanitizer
    fault. The current profile-20 absolute baseline is retained. E3a RXVM
    provider/decimal ownership has an accepted neutral, guard-clean verdict and
-   passes its 2,007/2,007 Mac Debug closeout. E3b-P1 preserves the legacy ABI,
+   passes its 2,007/2,007 Mac Debug closeout. E3b preserves the legacy ABI,
    adds audited process-reentrant opt-in, replayable static registration,
-   VM-owned DSO lifetime and branch-free load-selected invocation. Its accepted
-   guard-clean verdict passes 312/312 processes; Mac closeout passes full Debug
-   2,017/2,017 and focused Release 11/11 with byte-identical verdict VMs. P2
-   sessions and cross-platform proof remain closed. The full gate stops for
-   worker-model selection before any public pool/channel semantics.
+   VM-owned DSO lifetime, branch-free load-selected invocation and optional
+   per-VM sessions. Its final ODBC-enabled Mac Debug closeout passes
+   2,034/2,034. E4a retains and qualifies the two-independent-load control.
+   E4b implements the internal bytecode-only sealed immutable-generation/
+   worker-overlay boundary, passes a guard-clean single-worker verdict and Mac
+   Debug/ASan/Release closeout, and retains byte-identical verdict VMs. E5,
+   E6 and cross-platform proof remain closed. The full gate stops for worker-
+   model selection before any public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 

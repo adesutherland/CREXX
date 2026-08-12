@@ -1,0 +1,99 @@
+## exact file sizes
+/tmp/crexx-e4b-control-99753ba54427-20260811/rxbvm-e4a-control|1132568
+/tmp/crexx-e4b-control-99753ba54427-20260811/rxtvm-e4a-control|1132696
+cmake-build-release/bin/rxbvm|1133896
+cmake-build-release/bin/rxtvm|1134008
+## Mach-O segment and section sizes
+/tmp/crexx-e4b-control-99753ba54427-20260811/rxbvm-e4a-control:
+Segment __PAGEZERO: 4294967296 (zero fill) 
+Segment __TEXT: 983040
+	Section __text: 906948
+	Section __stubs: 2232
+	Section __const: 4012
+	Section __cstring: 51555
+	Section __unwind_info: 2624
+	total 967371
+Segment __DATA_CONST: 49152
+	Section __got: 1584
+	Section __const: 38352
+	total 39936
+Segment __DATA: 16384
+	Section __data: 396
+	Section __thread_vars: 192
+	Section __thread_data: 8
+	Section __thread_bss: 56 (zerofill)
+	Section __bss: 3072 (zerofill)
+	total 3724
+Segment __LINKEDIT: 98304
+total 4296114176
+cmake-build-release/bin/rxbvm:
+Segment __PAGEZERO: 4294967296 (zero fill) 
+Segment __TEXT: 983040
+	Section __text: 910192
+	Section __stubs: 2232
+	Section __const: 4012
+	Section __cstring: 51582
+	Section __unwind_info: 2672
+	total 970690
+Segment __DATA_CONST: 49152
+	Section __got: 1584
+	Section __const: 38352
+	total 39936
+Segment __DATA: 16384
+	Section __data: 396
+	Section __thread_vars: 192
+	Section __thread_data: 8
+	Section __thread_bss: 56 (zerofill)
+	Section __bss: 3072 (zerofill)
+	total 3724
+Segment __LINKEDIT: 98304
+total 4296114176
+/tmp/crexx-e4b-control-99753ba54427-20260811/rxtvm-e4a-control:
+Segment __PAGEZERO: 4294967296 (zero fill) 
+Segment __TEXT: 983040
+	Section __text: 911824
+	Section __stubs: 2232
+	Section __const: 2700
+	Section __cstring: 51555
+	Section __unwind_info: 2632
+	total 970943
+Segment __DATA_CONST: 49152
+	Section __got: 1584
+	Section __const: 38368
+	total 39952
+Segment __DATA: 16384
+	Section __data: 5596
+	Section __thread_vars: 192
+	Section __thread_data: 8
+	Section __thread_bss: 56 (zerofill)
+	Section __bss: 3072 (zerofill)
+	total 8924
+Segment __LINKEDIT: 98304
+total 4296114176
+cmake-build-release/bin/rxtvm:
+Segment __PAGEZERO: 4294967296 (zero fill) 
+Segment __TEXT: 983040
+	Section __text: 915068
+	Section __stubs: 2232
+	Section __const: 2700
+	Section __cstring: 51582
+	Section __unwind_info: 2680
+	total 974262
+Segment __DATA_CONST: 49152
+	Section __got: 1584
+	Section __const: 38368
+	total 39952
+Segment __DATA: 16384
+	Section __data: 5596
+	Section __thread_vars: 192
+	Section __thread_data: 8
+	Section __thread_bss: 56 (zerofill)
+	Section __bss: 3072 (zerofill)
+	total 8924
+Segment __LINKEDIT: 98304
+total 4296114176
+## sha256
+4d3dd2b1c8ccd5e7c47113d2e4868837c168e36dbcb517bbf98afe55f25fac1b  /tmp/crexx-e4b-control-99753ba54427-20260811/rxbvm-e4a-control
+ab25c6cac66714cb767d8aa0e42ae599e87dfe69e28bff2da83b17b97258dbf0  /tmp/crexx-e4b-control-99753ba54427-20260811/rxtvm-e4a-control
+cbf432480553c2956e751d9d419562c2f5ce3151a7442e8b0ab4c7252d339b88  cmake-build-release/bin/rxbvm
+3a5cd290f5e20c1db797fe15e921679a290f74a4cf6236196b7d4c63bd0b7e68  cmake-build-release/bin/rxtvm

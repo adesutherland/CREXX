@@ -73,6 +73,8 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmhandlers_system.inc
         rxvmworker.h
         rxvmworker.c
+        rxvmprogram.h
+        rxvmprogram.c
         rxvmactive.c
         rxvmstem.h
         rxvmload.c
@@ -1591,6 +1593,78 @@ target_link_libraries(test_reentrancy rxvml)
 add_dependencies(test_reentrancy test_reentrancy_bin)
 
 add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# PERF3-13 E4a/E4b: retain independent loads as the correctness control, then
+# prove runtime-owned immutable generations with worker-owned overlays.
+add_custom_command(
+        OUTPUT test_program_generation_control.rxbin
+               test_program_generation_late.rxbin
+        COMMAND $<TARGET_FILE:rxc> -o test_program_generation_control
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_program_generation_control.crexx
+        COMMAND $<TARGET_FILE:rxas> test_program_generation_control
+        COMMAND $<TARGET_FILE:rxc> -o test_program_generation_late
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_program_generation_late.crexx
+        COMMAND $<TARGET_FILE:rxas> test_program_generation_late
+        DEPENDS tests/rexx/test_program_generation_control.crexx
+                tests/rexx/test_program_generation_late.crexx
+                rxc rxas compiler_exit_bin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling PERF3-13 E4 program-generation controls ..."
+)
+add_custom_target(test_program_generation_control_bins ALL
+        DEPENDS test_program_generation_control.rxbin
+                test_program_generation_late.rxbin)
+
+function(crexx_configure_program_generation_control TARGET_NAME)
+    target_include_directories(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/inc
+            ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/platform
+            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/utf8)
+    add_dependencies(${TARGET_NAME} test_program_generation_control_bins)
+    add_test(
+            NAME ${TARGET_NAME}
+            COMMAND ${TARGET_NAME}
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_control.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_late.rxbin
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${TARGET_NAME} PROPERTIES
+            LABELS "interpreter;perf3;gate-e;e4a;e4b")
+endfunction()
+
+add_executable(program_generation_control-rxvml
+        tests/test_program_generation_control.c)
+target_link_libraries(program_generation_control-rxvml PRIVATE rxvml)
+crexx_configure_program_generation_control(program_generation_control-rxvml)
+
+add_executable(program_generation_control-rxbvml
+        tests/test_program_generation_control.c)
+target_link_libraries(program_generation_control-rxbvml PRIVATE rxbvml)
+target_compile_definitions(program_generation_control-rxbvml PRIVATE NTHREADED=1)
+crexx_configure_program_generation_control(program_generation_control-rxbvml)
+
+# The compiler-selected rxvml may itself use switch dispatch. Build a test-only
+# direct-threaded RXVML executable where supported so E4 always covers both
+# concrete execution-image forms without adding another product library.
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_executable(program_generation_control-rxtvml
+            tests/test_program_generation_control.c
+            rxvml.c
+            $<TARGET_OBJECTS:rxtvm_core_objects>)
+    target_link_libraries(program_generation_control-rxtvml
+            rxvmplugin mc_decimal_manual avl_tree rxpa rxvmref rxbin)
+    crexx_enable_vm_platform(program_generation_control-rxtvml)
+    if(CREXX_VM_PROFILING)
+        target_compile_definitions(program_generation_control-rxtvml PRIVATE
+                CREXX_VM_PROFILING=1)
+    endif()
+    crexx_configure_program_generation_control(program_generation_control-rxtvml)
+endif()
 
 # Archive-link regression test for manual db_decimal packaging.
 set(_crexx_archive_link_c_flags_text "${CMAKE_C_FLAGS}")

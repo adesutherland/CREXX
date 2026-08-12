@@ -43,6 +43,21 @@ struct rxvm_context* rxvm_create() {
     return ctx;
 }
 
+struct rxvm_context *rxvm_context_create_in_runtime(rxvm_runtime *runtime) {
+    struct rxvm_context *ctx;
+
+    if (!runtime) return NULL;
+    /* Match rxvm_create(): worker contexts see the mandatory static plugin. */
+    CALL_PLUGIN_INITIALIZER(decnumber);
+    ctx = calloc(1, sizeof(*ctx));
+    if (!ctx) return NULL;
+    if (!rxinimod_runtime(ctx, runtime)) {
+        free(ctx);
+        return NULL;
+    }
+    return ctx;
+}
+
 void rxvm_destroy(struct rxvm_context* ctx) {
     if (ctx) {
         rxfremod(ctx);

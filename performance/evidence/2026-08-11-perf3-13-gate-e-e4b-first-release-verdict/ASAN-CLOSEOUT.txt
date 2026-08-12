@@ -1,0 +1,17 @@
+Runner build log:
+cmake-build-debugasan/asan-logs/20260811-094535-build/build.log
+
+Runner CTest log:
+cmake-build-debugasan/asan-logs/20260811-094905-ctest/ctest.log
+
+ASAN_OPTIONS=detect_leaks=0
+Apple LeakSanitizer is unsupported; normal Debug teardown retains the exact
+zero-live-allocation assertion.
+
+100% tests passed, 0 tests failed out of 3
+
+- program_generation_control-rxvml
+- program_generation_control-rxbvml
+- program_generation_control-rxtvml
+
+Total Test time (real) = 1.20 sec

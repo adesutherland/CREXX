@@ -347,22 +347,20 @@ static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
 
 // End of RXPA Declarations for this file
 
-/* Initialise modules context */
-void rxinimod(rxvm_context *context) {
-    rxvm_runtime *runtime = rxvm_runtime_create();
-    if (!runtime) {
-        RX_PANIC_OOM("create rxvm runtime", 1, 0);
-    }
+static int rxinimod_common(rxvm_context *context,
+                           rxvm_runtime *runtime,
+                           unsigned char owns_runtime) {
+    if (!context || !runtime) return 0;
     context->worker.runtime = 0;
     context->worker.memory_worker = 0;
     context->worker.owner_thread_token = 0;
     context->worker.execution_depth = 0u;
     context->worker.state = RXVM_WORKER_UNINITIALIZED;
-    context->owns_runtime = 1u;
+    context->owns_runtime = owns_runtime;
+    context->program_generation = 0;
     if (!rxvm_worker_initialize(&context->worker, runtime)) {
-        (void)rxvm_runtime_destroy(runtime);
         context->owns_runtime = 0u;
-        RX_PANIC_OOM("create rxvm memory worker", 1, 0);
+        return 0;
     }
     context->num_modules = 0;
     context->exposed_proc_tree = 0;
@@ -416,6 +414,24 @@ void rxinimod(rxvm_context *context) {
         RX_PANIC_OOM("malloc rxvm module table",
                      sizeof(module*) * context->module_buffer_size, 0);
     }
+    return 1;
+}
+
+/* Initialise a compatibility context with its own one-worker runtime. */
+void rxinimod(rxvm_context *context) {
+    rxvm_runtime *runtime = rxvm_runtime_create();
+    if (!runtime) {
+        RX_PANIC_OOM("create rxvm runtime", 1, 0);
+    }
+    if (!rxinimod_common(context, runtime, 1u)) {
+        (void)rxvm_runtime_destroy(runtime);
+        RX_PANIC_OOM("create rxvm memory worker", 1, 0);
+    }
+}
+
+/* Initialise an internal worker VM inside an existing runtime domain. */
+int rxinimod_runtime(rxvm_context *context, rxvm_runtime *runtime) {
+    return rxinimod_common(context, runtime, 0u);
 }
 
 /* Free Module Context */
@@ -483,7 +499,9 @@ void rxfremod(rxvm_context *context) {
             }
         }
 
-        free_module(context->modules[j]->file);
+        if (!rxvm_program_generation_owns_module(context, (size_t)j)) {
+            free_module(context->modules[j]->file);
+        }
         if (context->modules[j]->globals) {
             value **temp_globals = context->modules[j]->globals;
             char *temp_dont_free = context->modules[j]->globals_dont_free;
@@ -541,6 +559,10 @@ void rxfremod(rxvm_context *context) {
         rxvm_load_memory_free(context->rxpa_libraries);
         context->rxpa_libraries = next;
     }
+
+    /* Release immutable program storage only after all worker-owned values,
+     * references, providers, sessions and native code are unreachable. */
+    rxvm_program_generation_release_context(context);
 
     rxvm_memory_report_if_requested(rxvm_runtime_memory_context(runtime));
 
@@ -944,7 +966,9 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
 
 /* Common Functionality to prep and link a module */
 /* Returns the new number of modules */
-static size_t prep_and_link_module(rxvm_context *context, module_file *file_module_section) {
+size_t rxvm_materialize_module_overlay(
+        rxvm_context *context,
+        module_file *file_module_section) {
     size_t n = context->num_modules;
     void *new_buffer;
 
@@ -1102,7 +1126,8 @@ int rxldmod(rxvm_context *context, char *file_name) {
             switch (loaded_rc = read_module(&file_module_section, fp)) {
                 case 0: /* Success */
                     DEBUG("Module Read\n");
-                    n = prep_and_link_module(context, file_module_section);
+                    n = rxvm_materialize_module_overlay(
+                            context, file_module_section);
                     DEBUG("Module Prep and linked\n");
                     modules_processed++;
                     break;
@@ -1252,7 +1277,8 @@ int rxldmod(rxvm_context *context, char *file_name) {
             // Check Result
             if (!rc) {
                 DEBUG("CREXX Plugin %s loaded successfully\n", file_name);
-                n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
+                n = rxvm_materialize_module_overlay(
+                        context, current_rxpa_context->plugin_being_loaded);
                 apply_rxpa_proc_policies(current_rxpa_context, n);
                 rxpa_context_publish_sessions(current_rxpa_context);
                 current_rxpa_context->plugin_being_loaded = 0; // We are done with it! It will be freed eventually
@@ -1308,7 +1334,8 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
         file_module_section = 0;
         switch (loaded_rc = read_module_mem(&file_module_section, &buffer_start, buffer_end)) {
             case 0: /* Success */
-                n = prep_and_link_module(context, file_module_section);
+                n = rxvm_materialize_module_overlay(
+                        context, file_module_section);
                 modules_processed++;
                 break;
 
@@ -2213,7 +2240,8 @@ int rxldmodp(rxvm_context *context) {
     rxvm_load_memory_free(metadata);
 
     // Link as a plugin
-    n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
+    n = rxvm_materialize_module_overlay(
+            context, current_rxpa_context->plugin_being_loaded);
     apply_rxpa_proc_policies(current_rxpa_context, n);
     rxpa_context_publish_sessions(current_rxpa_context);
 

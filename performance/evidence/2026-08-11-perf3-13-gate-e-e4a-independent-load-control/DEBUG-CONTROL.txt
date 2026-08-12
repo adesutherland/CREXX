@@ -1,0 +1,15 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1183: program_generation_control-rxvml
+E4A_CONTROL phase=initial modules=1 canonical_instruction_bytes=176 canonical_constant_bytes=2304 immutable_candidate_bytes_per_context_lower_bound=2480 duplicated_immutable_bytes_two_contexts_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569 semantic_graphs_unmeasured=1
+E4A_CONTROL isolation=PASS execution=PASS late_load=PASS teardown=PASS result=PASS
+1/3 Test #1183: program_generation_control-rxvml ....   Passed
+    Start 1184: program_generation_control-rxbvml
+E4A_CONTROL phase=initial modules=1 canonical_instruction_bytes=176 canonical_constant_bytes=2304 immutable_candidate_bytes_per_context_lower_bound=2480 duplicated_immutable_bytes_two_contexts_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569 semantic_graphs_unmeasured=1
+E4A_CONTROL isolation=PASS execution=PASS late_load=PASS teardown=PASS result=PASS
+2/3 Test #1184: program_generation_control-rxbvml ...   Passed
+    Start 1185: program_generation_control-rxtvml
+E4A_CONTROL phase=initial modules=1 canonical_instruction_bytes=176 canonical_constant_bytes=2304 immutable_candidate_bytes_per_context_lower_bound=2480 duplicated_immutable_bytes_two_contexts_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569 semantic_graphs_unmeasured=1
+E4A_CONTROL isolation=PASS execution=PASS late_load=PASS teardown=PASS result=PASS
+3/3 Test #1185: program_generation_control-rxtvml ...   Passed
+
+100% tests passed, 0 tests failed out of 3

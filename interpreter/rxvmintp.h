@@ -32,6 +32,7 @@
 #include "rxvalue.h"
 #include "rxvmmemory.h"
 #include "rxvmworker.h"
+#include "rxvmprogram.h"
 #include "rxvmplugin/rxvmplugin_framework.h"
 #include "rxsignal.h"
 #include "rxsignature.h"
@@ -534,6 +535,7 @@ typedef struct rxvm_active_state {
 typedef struct rxvm_context {
     rxvm_worker worker;
     unsigned char owns_runtime;
+    rxvm_program_generation *program_generation;
     char *location;
     size_t num_modules;
     size_t module_buffer_size;
@@ -597,6 +599,8 @@ void rxvm_active_context_leave(rxvm_context *previous_context);
 
 /* Initialise modules context */
 void rxinimod(rxvm_context *context);
+int rxinimod_runtime(rxvm_context *context, rxvm_runtime *runtime);
+rxvm_context *rxvm_context_create_in_runtime(rxvm_runtime *runtime);
 
 /* Free Module Context */
 void rxfremod(rxvm_context *context);

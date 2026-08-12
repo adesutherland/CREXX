@@ -1,0 +1,961 @@
+sample_id,stream,line_number,text
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,15,                   6  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,16,           131916838  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,17,            59648059  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-1,stderr,18,            13418928  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,16,           131586960  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,17,            58296031  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-1,stderr,18,            13418928  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,16,           132143133  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,17,            57945845  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-1,stderr,18,            13418928  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,16,           132293311  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,17,            57959737  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-1,stderr,18,            13468080  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,16,           132025018  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,17,            57886361  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-2,stderr,18,            13451696  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,2,            18169856  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,6,                1284  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,15,                   6  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,16,           132072464  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,17,            57897473  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-2,stderr,18,            13484464  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,2,            18022400  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,6,                1275  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,16,           131408508  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,17,            57657040  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-2,stderr,18,            13320624  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,16,           131513879  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,17,            57127954  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-2,stderr,18,            13418928  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,2,            18153472  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,6,                1283  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,16,           132052231  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,17,            57225082  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-3,stderr,18,            13468080  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,16,           132223904  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,17,            57683075  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-3,stderr,18,            13451696  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,2,            18087936  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,6,                1279  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,16,           131494581  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,17,            57228360  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-3,stderr,18,            13402544  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,2,            18055168  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,6,                1277  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,16,           131624979  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,17,            57222514  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-3,stderr,18,            13353392  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,2,            18022400  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,6,                1275  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,16,           131535603  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,17,            57381266  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-4,stderr,18,            13320624  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,16,           131561753  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,17,            57361481  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-4,stderr,18,            13435312  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,16,           132062216  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,17,            57712128  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-4,stderr,18,            13451696  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,2,            18169856  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,6,                1284  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,16,           132082115  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,17,            57719188  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-4,stderr,18,            13484464  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,2,            18087936  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,6,                1279  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,16,           131474612  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,17,            57868202  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-5,stderr,18,            13402544  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,16,           131474206  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,17,            57775637  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-5,stderr,18,            13418928  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,2,            18137088  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,6,                1282  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,16,           132054008  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,17,            57816353  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-5,stderr,18,            13451696  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,16,           132073327  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,17,            57601443  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-5,stderr,18,            13468080  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,2,            18153472  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,6,                1283  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,16,           132083240  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,17,            57965358  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-6,stderr,18,            13500848  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,2,            18169856  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,6,                1284  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,16,           131992107  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,17,            58091840  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-6,stderr,18,            13484464  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,16,           131549373  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,17,            57925810  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-6,stderr,18,            13402544  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,2,            18071552  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,6,                1278  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,15,                   3  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,16,           131519362  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,17,            57034934  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-6,stderr,18,            13386160  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,2,            18169856  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,6,                1284  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,16,           132003942  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,17,            58451016  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-7,stderr,18,            13484464  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,2,            18087936  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,6,                1279  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,15,                   3  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,16,           132065915  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,17,            57909410  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-7,stderr,18,            13435312  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,2,            18071552  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,6,                1278  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,16,           131465167  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,17,            58353921  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-7,stderr,18,            13386160  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,16,           131508180  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,17,            58082327  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-7,stderr,18,            13402544  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,2,            18087936  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,6,                1279  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,16,           131471804  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,17,            57288726  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-8,stderr,18,            13386160  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,2,            18153472  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,6,                1283  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,15,                   8  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,16,           131663978  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,17,            59273559  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-8,stderr,18,            13468080  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,16,           131963706  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,17,            58838140  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-8,stderr,18,            13468080  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,2,            18137088  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,6,                1282  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,16,           132172655  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,17,            58481720  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-8,stderr,18,            13451696  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,2,            18137088  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,6,                1282  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,16,           131613729  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,17,            57725793  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-9,stderr,18,            13451696  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,2,            18055168  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,6,                1277  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,16,           131576089  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,17,            57721929  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-9,stderr,18,            13353392  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,16,           131957539  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,17,            58117532  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-9,stderr,18,            13435312  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,2,            18137088  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,6,                1282  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,16,           132160679  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,17,            58022123  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-9,stderr,18,            13484464  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,2,            18087936  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,6,                1279  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,16,           132003979  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,17,            58063506  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-10,stderr,18,            13435312  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,2,            18153472  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,6,                1283  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,16,           132024110  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,17,            58272557  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-10,stderr,18,            13468080  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,2,            18104320  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,6,                1280  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,16,           131536387  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,17,            57868910  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-10,stderr,18,            13402544  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,2,            18137088  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,6,                1282  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,16,           131653118  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,17,            57429629  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-10,stderr,18,            13451696  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,2,            18153472  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,6,                1283  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,16,           131998130  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,17,            57904774  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-11,stderr,18,            13468080  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,2,            18087936  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,6,                1279  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,16,           131994242  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,17,            58243821  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-11,stderr,18,            13435312  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,2,            18087936  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,6,                1279  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,16,           131554915  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,17,            58142222  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-11,stderr,18,            13402544  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,2,            18038784  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,6,                1276  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,16,           131595449  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,17,            57540494  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-11,stderr,18,            13337008  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,2,            18120704  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,6,                1281  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,16,           131523492  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,17,            58113582  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-candidate-recorded-12,stderr,18,            13418928  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,2,            18071552  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,6,                1278  page reclaims
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,15,                   3  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,16,           131451808  instructions retired
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,17,            56986337  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxbvm-control-recorded-12,stderr,18,            13386160  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,2,            18038784  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,6,                1276  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,15,                   5  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,16,           131959528  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,17,            57874509  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-candidate-recorded-12,stderr,18,            13386160  peak memory footprint
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stdout,1,result=6765
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stdout,2,PASS: Lifecycle Probe cREXX
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,2,            18169856  maximum resident set size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,3,                   0  average shared memory size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,4,                   0  average unshared data size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,5,                   0  average unshared stack size
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,6,                1284  page reclaims
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,7,                   3  page faults
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,8,                   0  swaps
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,9,                   0  block input operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,10,                   0  block output operations
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,11,                   0  messages sent
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,12,                   0  messages received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,13,                   0  signals received
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,14,                   0  voluntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,15,                   4  involuntary context switches
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,16,           132050288  instructions retired
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,17,            57091194  cycles elapsed
+rss-VM-Lifecycle-lifecycle-rxtvm-control-recorded-12,stderr,18,            13484464  peak memory footprint

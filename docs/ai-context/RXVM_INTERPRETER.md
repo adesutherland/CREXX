@@ -474,6 +474,23 @@ description, never the internal `value`; the receiver materializes it into its
 own register tree. Large binary content may later select immutable chunks or a
 bounded stream capability beneath the same logical surface.
 
+Gate F keeps channel mechanism below messaging policy. The VM may provide
+bounded submission/completion queues, wait/wakeup, cancellation, terminal
+status and receiver-owned `ChannelValue` materialization. Event buses,
+publish/subscribe topics, routing, fan-out, replay, retained delivery and
+acknowledgement belong to Rexx worker classes or RXAS libraries built on that
+substrate; they are not VM instructions or VM-owned global state.
+
+Cross-host channels must use an open, versioned wire protocol that a non-Rexx
+actor can implement without CREXX headers or RXVM knowledge. Its eventual
+specification must cover framing and types, capability negotiation, endpoint
+and correlation identity, ordering/delivery guarantees, deadlines and
+cancellation, terminal errors, streaming/chunking, flow control, extensibility
+and security hooks. No raw `value`, `proc_runtime *`, native pointer or
+process-local opcode/handler identity may cross that boundary. The encoding and
+network transport remain Gate F decisions after the local ownership and channel
+contract is accepted.
+
 Gate E3b-P1 makes the existing RXPA surface safe for multiple live VM contexts
 without changing its initializer or procedure signature. Static constructor
 registrations are retained as an owned, synchronized process catalogue and are
@@ -502,11 +519,77 @@ legacy dynamic plugins copy the helper table into the DSO-static
 `_rxpa_context`; repeated `dlopen`/`LoadLibrary` calls do not imply private DSO
 statics.
 
-Native-payload `copy` and `finalize` operations remain serialized in P1 even
-when the originating procedure plugin is process-reentrant. Session factories,
-per-context plugin userdata and per-call capability flags are a later gate.
-The public author contract and opt-in macro are documented in
+Native-payload `copy` and `finalize` operations remain serialized even when the
+originating procedure plugin is process-reentrant. Gate E3b-P2 adds a separate
+optional versioned query for per-procedure policy and per-VM sessions while
+leaving the installed initializer and call ABI unchanged. Procedure invokers
+remain load-bound; session-affine calls enter the VM-owned session selected at
+load, and old hosts continue through the plugin's default session. The public
+author contract and opt-in macros are documented in
 `docs/ai-context/CREXX_LIBS.md`.
+
+### Gate E4 sealed program generations
+
+Gate E4a retains two fully independent loads of the same RXBIN as the
+correctness control before any program storage is shared. The focused internal
+control runs against the compiler-selected `rxvml`, explicit switch-dispatch
+`rxbvml` and, where supported, a test-only direct-threaded RXVML executable. It
+proves byte-equivalent but pointer-distinct canonical instruction cells and
+constant pools, independent
+allocator workers, modules, globals, procedure runtimes, execution images,
+bindings and caches. Mutating a module global in one VM is invisible in the
+other. Late-loading another RXBIN advances only the receiving context's module
+table and semantic generation; the second context changes only when it loads
+the same image itself. Both contexts then execute equivalent procedures and
+tear down without live allocation diagnostics.
+
+The audit classifies the current storage as follows:
+
+- expanded canonical RXBIN instruction cells, constant/metadata pools,
+  semantic graphs, module directory data, names and descriptions are immutable
+  candidates once a complete generation has been validated and sealed;
+- `module` and `bin_space` cannot be shared unchanged because they mix those
+  pointers with a worker allocator, a local module back-pointer, lifecycle and
+  link state;
+- globals and their ownership maps, `proc_runtime` records and frame recyclers,
+  execution images, exposed-symbol registries, graph callable/factory bindings,
+  interface registries, dynamic-site caches, semantic-generation counters and
+  dirty flags remain worker-owned overlays;
+- prepared execution images remain local because they contain direct
+  `proc_runtime *` operands and either process-local handler addresses or
+  VM-private opcodes;
+- native modules remain outside the first sharing slice. E3's process catalogue
+  and DSO/factory metadata can be retained by a runtime, but per-VM procedure
+  policy, sessions, payload lifetime and plugin/module overlays stay local.
+
+Gate E4b implements that selected direction behind an internal bytecode-only
+API. An `rxvm_runtime` may own one synchronized program catalogue containing
+reference-counted, append-only `rxvm_program_generation` records. Sealing
+adopts the complete validated bytecode prefix from one worker VM. Attaching
+another worker VM materializes new local `module` overlays over the same
+generation-owned `module_file` images. The generation therefore owns canonical
+instructions, constant/metadata pools, semantic graphs, names and descriptions;
+the worker still owns globals, `proc_runtime` and frame recyclers, execution
+images, graph/interface bindings and dynamic caches.
+
+Late loading appends a derived sealed generation. Its prefix retains the same
+immutable image objects, and advancing a worker appends only new overlays, so
+existing module, procedure and global addresses remain stable for active
+frames. A worker pins its current generation until it advances or tears down.
+Superseded generations are reclaimed when they are no longer current and no
+worker pins them; shared image storage remains until every generation that
+contains it is gone. Catalogue and reference-count synchronization is confined
+to cold lifecycle operations. No instruction handler or dispatch iteration
+acquires a generation lock.
+
+Native/plugin modules are rejected by this first seal operation and continue
+to use the E3 catalogue, DSO, procedure-policy and per-VM session lifetimes.
+Ordinary public `rxvm_create()` contexts still create their own one-worker
+runtime. The shared-runtime context factory and generation operations are
+internal foundations for E5; E4 adds no public worker/thread/channel API and no
+RXAS, RXBIN, plugin ABI or canonical-image change. Sharing the current `module`
+or prepared image behind locks, mutating a published generation in place, and
+treating a raw file mapping as the complete solution remain rejected.
 
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
