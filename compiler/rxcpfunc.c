@@ -3840,12 +3840,185 @@ static void free_importable_file(importable_file *file) {
     free(file);
 }
 
+#define RXCP_DIRECTORY_SNAPSHOT_MAX_SCANS 4
+
+static int directory_name_compare(const void *left, const void *right) {
+    const char *const *left_name = (const char *const *)left;
+    const char *const *right_name = (const char *const *)right;
+    return strcmp(*left_name, *right_name);
+}
+
+static void free_directory_names(char **names, size_t count) {
+    size_t i;
+
+    if (!names) return;
+    for (i = 0; i < count; i++) free(names[i]);
+    free(names);
+}
+
+static char **scan_directory_names(const char *directory, char *prefix, char *type, size_t *count) {
+    void *dir_ptr;
+    char *name;
+    char **names;
+    char **resized;
+    char *copy;
+    size_t copy_size;
+
+    *count = 0;
+    names = 0;
+    dir_ptr = 0;
+    name = dirfstfl(directory, prefix, type, &dir_ptr);
+    while (name) {
+        copy_size = strlen(name) + 1;
+        copy = strdup(name);
+        if (!copy) {
+            dirclose(&dir_ptr);
+            free_directory_names(names, *count);
+            RX_PANIC_OOM("strdup import directory entry", copy_size, directory);
+        }
+        resized = (char **)realloc(names, (*count + 1) * sizeof(char *));
+        if (!resized) {
+            free(copy);
+            dirclose(&dir_ptr);
+            free_directory_names(names, *count);
+            RX_PANIC_OOM("realloc import directory snapshot",
+                         (*count + 1) * sizeof(char *), directory);
+        }
+        names = resized;
+        names[*count] = copy;
+        (*count)++;
+        name = dirnxtfl(&dir_ptr);
+    }
+    dirclose(&dir_ptr);
+
+    if (*count > 1) qsort(names, *count, sizeof(char *), directory_name_compare);
+    return names;
+}
+
+static int directory_names_equal(char **left, size_t left_count,
+                                 char **right, size_t right_count) {
+    size_t i;
+
+    if (left_count != right_count) return 0;
+    for (i = 0; i < left_count; i++) {
+        if (strcmp(left[i], right[i]) != 0) return 0;
+    }
+    return 1;
+}
+
+static char **merge_directory_names(char **left, size_t left_count,
+                                    char **right, size_t right_count, size_t *merged_count) {
+    char **merged;
+    size_t left_index;
+    size_t right_index;
+    size_t out_index;
+    int comparison;
+
+    merged = (char **)malloc((left_count + right_count) * sizeof(char *));
+    if (!merged && left_count + right_count) {
+        free_directory_names(left, left_count);
+        free_directory_names(right, right_count);
+        RX_PANIC_OOM("malloc merged import directory snapshot",
+                     (left_count + right_count) * sizeof(char *), 0);
+    }
+
+    left_index = 0;
+    right_index = 0;
+    out_index = 0;
+    while (left_index < left_count && right_index < right_count) {
+        comparison = strcmp(left[left_index], right[right_index]);
+        if (comparison < 0) merged[out_index++] = left[left_index++];
+        else if (comparison > 0) merged[out_index++] = right[right_index++];
+        else {
+            merged[out_index++] = left[left_index++];
+            free(right[right_index++]);
+        }
+    }
+    while (left_index < left_count) merged[out_index++] = left[left_index++];
+    while (right_index < right_count) merged[out_index++] = right[right_index++];
+    free(left);
+    free(right);
+    *merged_count = out_index;
+    return merged;
+}
+
+static void discard_missing_directory_names(const char *directory, char **names, size_t *count) {
+    char *path;
+    struct stat st;
+    size_t read_index;
+    size_t write_index;
+
+    write_index = 0;
+    for (read_index = 0; read_index < *count; read_index++) {
+        path = join_importable_path(directory, names[read_index]);
+        if (path && stat(path, &st) == 0) {
+            names[write_index++] = names[read_index];
+        } else {
+            free(names[read_index]);
+        }
+        free(path);
+    }
+    *count = write_index;
+}
+
+/* readdir() does not define a coherent result while another process mutates
+ * the directory. Prefer two matching scans. Under continuous activity, merge
+ * a bounded number of observations and discard entries that no longer exist. */
+static char **snapshot_directory_names(const char *directory, char *prefix, char *type,
+                                       size_t *count, int debug_mode) {
+    char **previous;
+    char **current;
+    char **observed;
+    size_t previous_count;
+    size_t current_count;
+    size_t observed_count;
+    int attempt;
+
+    previous = scan_directory_names(directory, prefix, type, &previous_count);
+    observed = 0;
+    observed_count = 0;
+    for (attempt = 1; attempt < RXCP_DIRECTORY_SNAPSHOT_MAX_SCANS; attempt++) {
+        current = scan_directory_names(directory, prefix, type, &current_count);
+        if (directory_names_equal(previous, previous_count, current, current_count)) {
+            free_directory_names(observed, observed_count);
+            free_directory_names(previous, previous_count);
+            *count = current_count;
+            if (debug_mode >= 2 && attempt > 1) {
+                fprintf(stderr, "Import directory %s stabilized after %d scans.\n",
+                        directory ? directory : ".", attempt + 1);
+            }
+            return current;
+        }
+        if (observed) {
+            observed = merge_directory_names(observed, observed_count,
+                                             previous, previous_count, &observed_count);
+        } else {
+            observed = previous;
+            observed_count = previous_count;
+        }
+        previous = current;
+        previous_count = current_count;
+    }
+
+    observed = merge_directory_names(observed, observed_count,
+                                     previous, previous_count, &observed_count);
+    discard_missing_directory_names(directory, observed, &observed_count);
+    *count = observed_count;
+    if (debug_mode >= 1) {
+        fprintf(stderr, "Import directory %s remained active across %d scans; using %zu observed entries.\n",
+                directory ? directory : ".", RXCP_DIRECTORY_SNAPSHOT_MAX_SCANS, observed_count);
+    }
+    return observed;
+}
+
 /* Get a list of files of a type in a directory (can be null), skipping skip_name (can be null) */
 static void list_files_in_dir(char *directory, file_type type, char* skip_name, char *skip_module,
                               importable_file ***list, size_t *number, int debug_mode, char source_root) {
 
-    void *dir_ptr;
-    char* name;
+    char **names;
+    size_t name_count;
+    size_t i;
+    char *name;
     importable_file *file;
     char* type_name;
     char *file_prefix = 0;
@@ -3868,8 +4041,9 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
             return;
     }
 
-    name = dirfstfl(directory, file_prefix, type_name, &dir_ptr);
-    while (name) {
+    names = snapshot_directory_names(directory, file_prefix, type_name, &name_count, debug_mode);
+    for (i = 0; i < name_count; i++) {
+        name = names[i];
         if ((!skip_name || strcmp(name, skip_name) != 0) &&
             (!skip_module || !module_name_equals(name, skip_module))) {
             if (debug_mode >= 2) fprintf(stderr, "Found importable %s file: %s in %s\n", type_name, name, directory);
@@ -3879,9 +4053,8 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
                 add_file_to_list(file, number, list);
             }
         }
-        name = dirnxtfl(&dir_ptr);
     }
-    dirclose(&dir_ptr);
+    free_directory_names(names, name_count);
 }
 
 static void list_source_files_in_dir(char *directory, const char *extension, RexxLevel default_level,

@@ -44,7 +44,7 @@
 options levelb
 import rxfnsb
 
-namespace rxfnsb expose push queue pull queued rxqueue
+namespace rxfnsb expose push queue pull peek queued rxqueue
 
 
 /*------------------------------------------------------------*/
@@ -132,6 +132,18 @@ return value
 
 
 /*------------------------------------------------------------*/
+/* Return the first queued value without removing it.          */
+/*                                                            */
+/* If the queue is empty, or entry is out of range, return an  */
+/* empty string.                                               */
+/*------------------------------------------------------------*/
+peek: method = .string
+    arg entry=1
+    if entry <= 0 | entry > _count then return ""
+return _entries[entry]
+
+
+/*------------------------------------------------------------*/
 /* Return the number of currently queued entries.             */
 /*------------------------------------------------------------*/
 queued: method = .int
@@ -199,6 +211,22 @@ replace: method = .void
 return
 
 
+/*------------------------------------------------------------*/
+/* Return an independent copy of this queue.                  */
+/*                                                            */
+/* The source queue is not consumed and no input or file I/O  */
+/* is performed.                                              */
+/*------------------------------------------------------------*/
+copy: method = .RexxQueue
+    result = .RexxQueue()
+    if _count = 0 then
+        values = .string[]
+    else
+        values = arraycopy(_entries, 1, _count)
+    call result.replace(values)
+return result
+
+
 
 /*------------------------------------------------------------*/
 /* Local Queue Manager State                                  */
@@ -236,6 +264,9 @@ return
 /*   CREATE name                                              */
 /*       Create an empty named queue.                         */
 /*                                                            */
+/*   COPY source target                                        */
+/*       Copy queue contents without consuming the source.    */
+/*                                                            */
 /*   SET name                                                 */
 /*       Select an existing queue as the current queue.       */
 /*                                                            */
@@ -271,8 +302,9 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
 
     call _ensure_queue_manager
 
-    operation = translate(operation)
-    name = translate(name)
+    operation = translate(operation)    /* Translate to uppercase.*/
+    name = translate(name)              /* Translate to uppercase.*/
+    path = translate(path)              /* Translate to uppercase.*/
 
 
     /*--------------------------------------------------------*/
@@ -286,6 +318,42 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
         _queue_count = _queue_count + 1
         _queue_names[_queue_count] = name
         _queue_objects[_queue_count] = .RexxQueue()
+
+        return "0"
+    end
+
+
+    /*--------------------------------------------------------*/
+    /* COPY                                                   */
+    /* Duplicate SOURCE into TARGET.                         */
+    /*                                                        */
+    /* The source remains unchanged. The target is created or */
+    /* replaced, and the current queue selection is retained.*/
+    /*--------------------------------------------------------*/
+    if operation = "COPY" then do
+        if name = "" | path = "" then return "4"
+        if name = path then return "0"
+
+        source_slot = _queue_find(name)
+        if source_slot = 0 then return "4"
+
+        if source_slot = _queue_current then
+            source_queue = _queue_active
+        else
+            source_queue = _queue_objects[source_slot]
+
+        replacement = source_queue.copy()
+        target_slot = _queue_find(path)
+
+        if target_slot = 0 then do
+            _queue_count = _queue_count + 1
+            target_slot = _queue_count
+            _queue_names[target_slot] = path
+        end
+
+        _queue_objects[target_slot] = replacement
+        if target_slot = _queue_current then
+            _queue_active = replacement
 
         return "0"
     end
@@ -589,6 +657,21 @@ pull: procedure = .string expose _queue_ready _queue_active
     value = active_queue.pull()
 
     _queue_active = active_queue
+
+return value
+
+
+/*------------------------------------------------------------*/
+/* Return the next string without removing it from the queue.  */
+/*                                                            */
+/* Returns an empty string when the queue is empty or entry is */
+/* out of range.                                               */
+/*------------------------------------------------------------*/
+peek: procedure = .string expose _queue_ready _queue_active
+    arg entry=1
+    call _ensure_queue_manager
+    active_queue = _queue_active as .RexxQueue
+    value = active_queue.peek(entry)
 
 return value
 

@@ -16,6 +16,14 @@ add_executable(crexx_test_driver src/test_driver.c)
 
 add_executable(mutate_rxbin_feature mutate_rxbin_feature.c)
 
+if(UNIX)
+    add_executable(test_import_discovery_snapshot test_import_discovery_snapshot.c)
+    target_link_libraries(test_import_discovery_snapshot PRIVATE rxclib Threads::Threads)
+    target_include_directories(test_import_discovery_snapshot PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
+    add_test(NAME import_discovery_snapshot COMMAND test_import_discovery_snapshot)
+    set_tests_properties(import_discovery_snapshot PROPERTIES LABELS "compiler;imports;concurrency")
+endif()
+
 # Ensure the driver is built when tests are built
 add_dependencies(crexx_test_driver rxc)
 
