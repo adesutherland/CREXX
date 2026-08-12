@@ -1,0 +1,78 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ */
+
+options levelb comments_dash
+import data
+
+namespace data expose BagIterator
+
+/**
+ * Iterator over a Bag.
+ *
+ * The iterator can operate either on the live Bag or on a snapshot captured
+ * when the iterator is created.
+ */
+BagIterator: class
+  bag_ref_ = reference .Bag
+  bag_copy_ = .Bag
+  position_ = .int
+  snapshot_ = .int
+
+  /**
+   * Creates a Bag iterator.
+   *
+   * @param source Reference to the source Bag.
+   * @param make_snapshot 0 for live iteration, non-zero for snapshot iteration.
+   * @return .BagIterator Newly created iterator.
+   */
+  *: factory
+    arg source = reference .Bag, make_snapshot = .int
+
+    snapshot_ = make_snapshot
+    position_ = 1
+
+    if snapshot_ then
+      bag_copy_ = snapshot source
+    else
+      bag_ref_ = source
+
+    return
+
+  /**
+   * Tests whether another value is available.
+   *
+   * @return .int 1 if another value is available, otherwise 0.
+   */
+  hasNext: method = .int
+    if snapshot_ then
+      return position_ <= bag_copy_.size()
+
+    if <refvalid>(bag_ref_) then return 0
+
+    bag = dereference bag_ref_
+    return position_ <= bag.size()
+
+  /**
+   * Returns the next value.
+   *
+   * @return .string Next value, or an empty string when iteration is exhausted.
+   */
+  next: method = .string
+    if snapshot_ then do
+      if position_ > bag_copy_.size() then return ""
+      value = bag_copy_.at(position_)
+      position_ = position_ + 1
+      return value
+    end
+
+    if <refvalid>(bag_ref_) then return ""
+
+    bag = dereference bag_ref_
+    if position_ > bag.size() then return ""
+
+    value = bag.at(position_)
+    position_ = position_ + 1
+    return value

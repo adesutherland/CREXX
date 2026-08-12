@@ -1,0 +1,111 @@
+/*
+ * Functional regression tests for data.Bag.
+ */
+
+options levelb comments_dash
+
+namespace ts_Bag expose failures checks
+import data
+
+main: procedure = .int expose failures checks
+  failures = 0
+  checks = 0
+
+  call test_empty
+  call test_duplicates_and_printable
+#  call test_live_iterator
+  call test_snapshot_iterator
+
+  if failures = 0 then do
+    say "PASS ts_Bag:" checks "checks"
+    return 0
+  end
+
+  say "FAIL ts_Bag:" failures "of" checks "checks failed"
+  return failures
+
+
+assertInt: procedure expose failures checks
+  arg label = .string, expected = .int, actual = .int
+  checks = checks + 1
+  if expected = actual then return
+  failures = failures + 1
+  say "FAIL" label "expected" expected "actual" actual
+  return
+
+
+assertString: procedure expose failures checks
+  arg label = .string, expected = .string, actual = .string
+  checks = checks + 1
+  if expected == actual then return
+  failures = failures + 1
+  say "FAIL" label "expected <" || expected || "> actual <" || actual || ">"
+  return
+
+
+test_empty: procedure
+  bag = .Bag()
+
+  call assertInt "empty size", 0, bag.size()
+  call assertString "empty string", "[]", bag.toString()
+
+  live = bag.liveIterator()
+  snap = bag.snapshotIterator()
+
+  call assertInt "empty live hasNext", 0, live.hasNext()
+  call assertString "empty live next", "", live.next()
+  call assertInt "empty snapshot hasNext", 0, snap.hasNext()
+  call assertString "empty snapshot next", "", snap.next()
+  return
+
+
+test_duplicates_and_printable: procedure
+  bag = .Bag()
+
+  call bag.add("alpha")
+  call bag.add("beta")
+  call bag.add("beta")
+
+  call assertInt "size after add", 3, bag.size()
+  call assertString "at 1", "alpha", bag.at(1)
+  call assertString "at 2", "beta", bag.at(2)
+  call assertString "at 3", "beta", bag.at(3)
+  call assertString "print duplicates", "[alpha, beta, beta]", bag.toString()
+  return
+
+
+test_live_iterator: procedure
+  bag = .Bag()
+  call bag.add("a")
+  call bag.add("b")
+
+  it = bag.liveIterator()
+
+  call assertInt "live initial hasNext", 1, it.hasNext()
+  call assertString "live first", "a", it.next()
+
+  call bag.add("c")
+
+  call assertString "live second", "b", it.next()
+  call assertString "live sees added value", "c", it.next()
+  call assertInt "live exhausted", 0, it.hasNext()
+  call assertString "live next exhausted", "", it.next()
+  return
+
+
+test_snapshot_iterator: procedure
+  bag = .Bag()
+  call bag.add("a")
+  call bag.add("b")
+
+  it = bag.snapshotIterator()
+
+  call assertInt "snapshot initial hasNext", 1, it.hasNext()
+  call assertString "snapshot first", "a", it.next()
+
+  call bag.add("c")
+
+  call assertString "snapshot second", "b", it.next()
+  call assertInt "snapshot ignores added value", 0, it.hasNext()
+  call assertString "snapshot next exhausted", "", it.next()
+  return

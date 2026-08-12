@@ -1,53 +1,99 @@
-options levelb
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ */
+
+options levelb comments_dash
+
 import rxfnsb
-namespace tutorial_references
+import data
 
+namespace data expose Bag
 
-Bag: class
-  values = .string[]
-  item_count = .int
+/**
+ * A simple bag (multiset) of strings.
+ *
+ * Duplicate values are allowed and values are retained in insertion order.
+ */
+Bag: class implements .Printable
+  values_ = .string[]
+  size_ = .int
 
+  /**
+   * Creates an empty bag.
+   *
+   * @return .Bag Newly created empty bag.
+   */
   *: factory
-    initial = .string[]
-    values = initial
-    item_count = 0
     return
 
+  /**
+   * Adds a value to this bag.
+   *
+   * Duplicate values are allowed.
+   *
+   * @param value Value to add.
+   * @return .void
+   */
   add: method = .void
     arg value = .string
-    call arrayappend values, value
-    item_count = item_count + 1
+    call arrayappend values_, value
+    size_ = size_ + 1
     return
 
+  /**
+   * Returns the number of values in this bag.
+   *
+   * @return .int Number of values in the bag.
+   */
   size: method = .int
-    return item_count
+    return size_
 
-  liveCounter: method = .LiveCounter
-    return .LiveCounter(reference self)
+  /**
+   * Returns the value at the specified one-based position.
+   *
+   * @param position One-based element position.
+   * @return .string Value at the specified position.
+   */
+  at: method = .string
+    arg position = .int
+    return values_[position]
 
-  snapshotCounter: method = .SnapshotCounter
-    return .SnapshotCounter(reference self)
+  /**
+   * Creates an iterator over the live bag.
+   *
+   * Values added after iterator creation may be observed by the iterator.
+   *
+   * @return .BagIterator Live iterator.
+   */
+  liveIterator: method = .BagIterator
+    return .BagIterator(reference self, 0)
 
-LiveCounter: class
-  bag_ref = reference .Bag
+  /**
+   * Creates an iterator over a snapshot of this bag.
+   *
+   * Changes made after iterator creation are not visible to the iterator.
+   *
+   * @return .BagIterator Snapshot iterator.
+   */
+  snapshotIterator: method = .BagIterator
+    return .BagIterator(reference self, 1)
 
-  *: factory
-    arg source = reference .Bag
-    bag_ref = source
-    return
+  /**
+   * Returns the content of this bag as a string.
+   *
+   * Duplicate values are included and values appear in insertion order.
+   *
+   * @return .string String representation in [value, ...] form.
+   */
+  toString: method = .string
+    if size_ = 0 then return "[]"
 
-  count: method = .int
-    if <refvalid>(bag_ref) then return -1
-    bag = dereference bag_ref
-    return bag.size()
+    result = "["
+    do i = 1 to size_
+      if i > 1 then result = result || ", "
+      result = result || values_[i]
+    end
+    return result || "]"
 
-SnapshotCounter: class
-  bag_copy = .Bag
-
-  *: factory
-    arg source = reference .Bag
-    bag_copy = snapshot source
-    return
-
-  count: method = .int
-    return bag_copy.size()
