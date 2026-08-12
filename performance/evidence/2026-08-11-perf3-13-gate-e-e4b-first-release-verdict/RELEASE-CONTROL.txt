@@ -1,0 +1,61 @@
+UpdateCTestConfiguration  from :/Users/adrian/CLionProjects/CREXX/cmake-build-release/DartConfiguration.tcl
+Parse Config file:/Users/adrian/CLionProjects/CREXX/cmake-build-release/DartConfiguration.tcl
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1183
+    Start 1183: program_generation_control-rxvml
+
+1183: Test command: /Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/program_generation_control-rxvml "/Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/test_program_generation_control.rxbin" "/Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/test_program_generation_late.rxbin"
+1183: Working Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter
+1183: Test timeout computed to be: 1500
+1183: E4A_CONTROL phase=initial modules=1 canonical_instruction_bytes=176 canonical_constant_bytes=2304 immutable_candidate_bytes_per_context_lower_bound=2480 duplicated_immutable_bytes_two_contexts_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569 semantic_graphs_unmeasured=1
+1183: E4A_CONTROL isolation=PASS execution=PASS late_load=PASS teardown=PASS result=PASS
+1183: E4B_CONTROL phase=initial modules=1 generation=1 canonical_instruction_bytes_unique=176 canonical_constant_bytes_unique=2304 canonical_bytes_unique_two_contexts_lower_bound=2480 independent_duplicate_bytes_removed_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569
+1183: E4B_CONTROL immutable_sharing=PASS overlay_isolation=PASS late_generation=PASS teardown=PASS result=PASS
+1183: E4_PROGRAM_CONTROL result=PASS
+1/3 Test #1183: program_generation_control-rxvml ....   Passed    0.00 sec
+test 1184
+    Start 1184: program_generation_control-rxbvml
+
+1184: Test command: /Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/program_generation_control-rxbvml "/Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/test_program_generation_control.rxbin" "/Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/test_program_generation_late.rxbin"
+1184: Working Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter
+1184: Test timeout computed to be: 1500
+1184: E4A_CONTROL phase=initial modules=1 canonical_instruction_bytes=176 canonical_constant_bytes=2304 immutable_candidate_bytes_per_context_lower_bound=2480 duplicated_immutable_bytes_two_contexts_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569 semantic_graphs_unmeasured=1
+1184: E4A_CONTROL isolation=PASS execution=PASS late_load=PASS teardown=PASS result=PASS
+1184: E4B_CONTROL phase=initial modules=1 generation=1 canonical_instruction_bytes_unique=176 canonical_constant_bytes_unique=2304 canonical_bytes_unique_two_contexts_lower_bound=2480 independent_duplicate_bytes_removed_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569
+1184: E4B_CONTROL immutable_sharing=PASS overlay_isolation=PASS late_generation=PASS teardown=PASS result=PASS
+1184: E4_PROGRAM_CONTROL result=PASS
+2/3 Test #1184: program_generation_control-rxbvml ...   Passed    0.00 sec
+test 1185
+    Start 1185: program_generation_control-rxtvml
+
+1185: Test command: /Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/program_generation_control-rxtvml "/Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/test_program_generation_control.rxbin" "/Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter/test_program_generation_late.rxbin"
+1185: Working Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-release/interpreter
+1185: Test timeout computed to be: 1500
+1185: E4A_CONTROL phase=initial modules=1 canonical_instruction_bytes=176 canonical_constant_bytes=2304 immutable_candidate_bytes_per_context_lower_bound=2480 duplicated_immutable_bytes_two_contexts_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569 semantic_graphs_unmeasured=1
+1185: E4A_CONTROL isolation=PASS execution=PASS late_load=PASS teardown=PASS result=PASS
+1185: E4B_CONTROL phase=initial modules=1 generation=1 canonical_instruction_bytes_unique=176 canonical_constant_bytes_unique=2304 canonical_bytes_unique_two_contexts_lower_bound=2480 independent_duplicate_bytes_removed_lower_bound=2480 runtime_overlay_bytes_per_context_lower_bound=569
+1185: E4B_CONTROL immutable_sharing=PASS overlay_isolation=PASS late_generation=PASS teardown=PASS result=PASS
+1185: E4_PROGRAM_CONTROL result=PASS
+3/3 Test #1185: program_generation_control-rxtvml ...   Passed    0.00 sec
+
+The following tests passed:
+	program_generation_control-rxvml
+	program_generation_control-rxbvml
+	program_generation_control-rxtvml
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+e4a            =   0.01 sec*proc (3 tests)
+e4b            =   0.01 sec*proc (3 tests)
+gate-e         =   0.01 sec*proc (3 tests)
+interpreter    =   0.01 sec*proc (3 tests)
+perf3          =   0.01 sec*proc (3 tests)
+
+Total Test time (real) =   0.03 sec

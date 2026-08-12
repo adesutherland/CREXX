@@ -1,0 +1,30 @@
+/* Test-only ODBC prepared-statement smoke run against the mock driver. */
+options levelb
+import odbc
+
+rc = odbc_connect("mock-runtime", "user", "password")
+if rc <> 0 then exit 1
+
+first = odbc_prepare("select ?, ?, ?, ?")
+if first <= 0 then exit 2
+if odbc_bind_string(first, 1, "alpha") <> 0 then exit 3
+if odbc_bind_integer(first, 2, 42) <> 0 then exit 4
+if odbc_bind_float(first, 3, 3.5) <> 0 then exit 5
+if odbc_bind_null(first, 4) <> 0 then exit 6
+if odbc_execute_prepared(first) <> 0 then exit 7
+
+second = odbc_prepare("select 2")
+if second <= 0 then exit 8
+if second = first then exit 9
+if odbc_execute_prepared(second) <> 0 then exit 10
+if odbc_fetch_statement(first) <> 0 then exit 11
+if odbc_columns_statement(first) <> 2 then exit 12
+if odbc_getcolumn_statement(first, 1) <> "row-value" then exit 13
+if odbc_row_count_statement(second) <> 1 then exit 14
+if odbc_reset_prepared(first) <> 0 then exit 15
+if odbc_close_prepared(first) <> 0 then exit 16
+if odbc_close_prepared(second) <> 0 then exit 17
+if odbc_disconnect() <> 0 then exit 18
+
+say "ODBC_MOCK_RUNTIME_OK"
+exit 0

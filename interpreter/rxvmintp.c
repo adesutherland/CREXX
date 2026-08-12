@@ -5940,7 +5940,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 
     /* Load VM Plugins */
     DEBUG("Load VM Plugins\n");
-    current_frame->decimal = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
+    current_frame->decimal = (decplugin*)rxvmplugin_instance_set_get(
+            &context->plugin_instances, RXVM_PLUGIN_DECIMAL);
     if (!current_frame->decimal) {
         printf("PANIC - No default decimal plugin\n");
         exit(255); // Documented 255 is for missing decimal plugin
@@ -6111,7 +6112,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                         current_module->module_number, VM_CANONICAL_INDEX(pc),
                         0, 0);
                 RXVM_INSTRUMENTATION_NATIVE_BEGIN(intr_function);
-                rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
+                rxvm_call_native_procedure(intr_function, 1, &interrupt_arg,
+                                           0, signal_value);
                 RXVM_INSTRUMENTATION_NATIVE_END();
                 if (signal_value->int_value > RXSIGNAL_NONE && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
@@ -6525,10 +6527,11 @@ START_OF_INSTRUCTIONS
 #undef context
 
 int run(rxvm_context *context, int argc, char *argv[]) {
-    rxvm_worker_transition_result transition =
-            rxvm_worker_begin_execution(&context->worker);
+    rxvm_worker_transition_result transition;
     rxvm_context *previous_active_context;
     int rc;
+
+    transition = rxvm_worker_begin_execution(&context->worker);
 
     if (transition != RXVM_WORKER_TRANSITION_OK) {
         fprintf(stderr,
@@ -6539,10 +6542,23 @@ int run(rxvm_context *context, int argc, char *argv[]) {
                         rxvm_worker_get_state(&context->worker)));
         return 1;
     }
+    rxpa_compatibility_execution_enter(&context->rxpa_compatibility);
+
+    if (rxvmplugin_instance_set_prepare(
+            &context->plugin_instances, RXVM_PLUGIN_DECIMAL) != 0) {
+        fprintf(stderr, "PANIC - No default decimal plugin\n");
+        rxpa_compatibility_execution_leave(&context->rxpa_compatibility);
+        if (rxvm_worker_end_execution(&context->worker) !=
+                RXVM_WORKER_TRANSITION_OK) {
+            abort();
+        }
+        return 255;
+    }
 
     previous_active_context = rxvm_active_context_enter(context);
     rc = rxvm_run_owned_core(context, argc, argv);
     rxvm_active_context_leave(previous_active_context);
+    rxpa_compatibility_execution_leave(&context->rxpa_compatibility);
     if (rxvm_worker_end_execution(&context->worker) !=
             RXVM_WORKER_TRANSITION_OK) {
         abort();

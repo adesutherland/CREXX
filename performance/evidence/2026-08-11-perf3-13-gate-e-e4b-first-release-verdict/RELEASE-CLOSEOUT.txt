@@ -1,0 +1,11 @@
+Build: complete ordinary profiling-off Release product
+Handler panel: profile-20
+Focused command: 11-test E4b, lifecycle, dispatch, reentrancy and late-load panel
+
+100% tests passed, 0 tests failed out of 11
+Total Test time (real) = 1.84 sec
+
+cbf432480553c2956e751d9d419562c2f5ce3151a7442e8b0ab4c7252d339b88  cmake-build-release/bin/rxbvm
+3a5cd290f5e20c1db797fe15e921679a290f74a4cf6236196b7d4c63bd0b7e68  cmake-build-release/bin/rxtvm
+
+Both VM hashes are byte-identical to the accepted timing candidates.

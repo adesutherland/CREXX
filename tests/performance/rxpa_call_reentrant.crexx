@@ -1,0 +1,17 @@
+/* PERF3-13 E3b-P1 process-reentrant native-call kernel. */
+
+options levelb
+import rxpabenchreentrant
+
+arg argv = .string[]
+
+iterations = 2000000
+if argv[0] >= 1 then iterations = argv[1] as .int
+if iterations < 1 then return 1
+
+do index = 1 to iterations
+  call tick
+end
+
+say "RXPA_CALLS=" || iterations
+return 0

@@ -11,6 +11,66 @@ C1abc production ladder on 2026-08-01. The disposable option mask and broad
 correctness-negative branch are removed from the ordinary compiler while the
 checksum-closed replay source preserves every investigated option.
 
+On 2026-08-10 Adrian approved the PERF3-13 E3b-P1 isolated branch-free
+load-binding comparison. Process-reentrant RXPA procedures remain permanently
+direct. Legacy procedures may remain direct with one legacy-capable executor;
+the second such executor causes one sticky, quiescent process-wide rebind of
+legacy procedures to the recursive locked adapter. An executor containing only
+process-reentrant plugins does not trigger that transition. This authorizes the
+isolated ceiling/state-machine proof only; another production edit, P2 sessions
+and Gate F remain closed.
+
+The reserved-host E3b-P1 isolated comparison subsequently passed its
+machine-level ceiling: the selected indirect direct invoker is inconclusive at
+-0.489662% paired mean versus raw direct, with a 95% interval from -1.228728%
+to +0.249404% and no 3% guard hit. The locked legacy invoker is clearly adverse
+by +20.117255%, confirming that it should be introduced only by the cold sticky
+second-legacy-executor transition. A production candidate is recommended but
+still requires explicit approval and its own mandatory both-VM Release verdict.
+
+Adrian approved that candidate and accepted its guard-clean ordinary-Release
+verdict on 2026-08-10. The integrated branch-free form removes the rejected
+14-20% call losses: product `rxbvm` process-reentrant calls are inconclusive at
++1.368096%, legacy calls are inconclusive at +0.104869%, and guard `rxtvm`
+measures +2.175049% reentrant overhead, below the 3% guard, with legacy calls
+inconclusive at -0.413910%. All 312/312 formal processes pass; Sieve, canonical
+RexxCPS, lifecycle and artifact guards remain clear. Full Debug closeout passes
+2,017/2,017 and focused Release passes 11/11. Rebuilt VMs are byte-identical to
+the verdict artifacts. E3b-P1 is accepted for local commit.
+
+Adrian subsequently approved and accepted E3b-P2. The separate optional V2
+query adds load-bound per-procedure policy and nested-safe per-VM sessions while
+preserving the installed initializer/call ABI and old-host legacy behavior.
+`rxmath` proves mixed policy; ODBC proves isolated external-resource sessions,
+opaque prepared statements and a default session for old hosts. The 156-process
+Release verdict is guard-clean: the permanent direct path has no regression,
+empty session calls add 2.92-4.08 ns, lifecycle is neutral and both VM files add
+432 bytes. Mac closeout initially passes full Debug 2,032/2,032 and focused
+Debug, Apple ASan and Release panels. After separately approved installation,
+unixODBC and SQLite real-driver tests pass through both VMs in Debug, Apple ASan
+and Release; the final ODBC-enabled full Debug suite passes 2,034/2,034 and the
+deterministic mock retains concurrency/failure/teardown authority. E3 is
+complete on Mac. Linux, Windows and clean-runner ODBC proof remains a
+publication follow-up. Public workers/channels and Gate F remain closed pending
+a separate approval.
+
+On 2026-08-11 Adrian approved and completed E4a, the non-sharing control and
+sealed-layout audit, then approved E4b and accepted its guard-clean first
+ordinary-Release verdict. The internal bytecode-only implementation installs a
+runtime-owned synchronized catalogue of reference-counted append-only sealed
+generations. Canonical module files, instructions, constant pools, semantic
+graphs and descriptors are shared; globals, procedures/frames, execution
+images, bindings and caches remain worker-owned. Native/plugin modules remain
+under the E3 lifecycle and outside this first sharing slice. The fixture removes
+the complete 2,480-byte audited duplicate floor across two contexts while
+retaining the 569-byte per-worker overlay floor. The same-session single-worker
+matrix is neutral: only `rxbvm` Sieve is clearly adverse at +0.374%, inside the
+3% guard; lifecycle, RSS and artifact guards remain clear. Mac closeout passes
+focused Debug 11/11, Apple ASan 3/3, full Debug 2,037/2,037 and focused Release
+11/11. Rebuilt Release VMs are byte-identical to the accepted timing artifacts.
+E4 is complete on Mac. Portable proof, E5/E6, public workers/channels and Gate F
+remain separately gated.
+
 C1abc emits the exact measured C1a+C1b Richards program and C1c Towers
 program. The accepted R1 paired medians are 53.55%/52.57% lower Richards
 elapsed and 18.92%/18.97% lower Towers elapsed on `rxvm`/`rxbvm`, with every
@@ -409,7 +469,8 @@ their recorded trigger fires:
 | PERF3-12C | P1 | Dynamic PARSE planning, invariant hoisting and transactional result placement | comparative PoC complete — RXC late constant re-plan recommended; production approval pending | Peter's commits correctly add the unprefixed `(variable)` delimiter used by canonical RexxCPS, but they do not implement issue 667's exact `=(start)` / `+(length)` syntax, which still fails RXC validation. In the optimized benchmark, RXC already folds the complete dynamic plan and `p0 = "b"` to a string literal, so a strengthened hand-hoist gains only +1.33%/+2.17% median CPS on `rxtvm`/`rxbvm`. Letting the existing planner see that constant and emit `parseplan` gains +314.46%/+298.03%, while equal-work counts fall 775,479,029 -> 53,199,057 (-93.14%) and eliminate 1.12M `parseExec` plus 6.72M stream-decoder calls. Prefer a late RXC constant specialization; keep a prepared-topology/runtime-operands design for truly changing delimiters behind a separate architecture gate. Canonical source and production code remain unchanged. Control: [`PERF3-12C-WORKLIST.md`](PERF3-12C-WORKLIST.md); evidence: [`2026-08-08-perf3-12c-dynamic-parse-poc`](evidence/2026-08-08-perf3-12c-dynamic-parse-poc/). |
 | PERF3-12D | P1 | Exit-owned compiled pattern processing for PARSE, regex and PEG foundations | complete — integrated on develop | The certified exit lowers bounded runtime-delimiter and issue-667 dynamic-position forms to existing `strpos`/`substring`/integer/branch operations with no new opcode and retires generated `parseExec` use. The opening PoC improved one million parses by 16.18x/16.44x and fresh canonical RexxCPS by 4.33x/4.23x versus retained E0. The reported 2.20%/2.62% H02 regression is retracted because it crossed rebuilt runtime products. A corrected frozen-product 40-round matrix now crosses optimized RXC before/after internal-binding metadata suppression with old/new RXAS and a matched `scopy` control. Metadata suppression alone is neutral. Direct reuse versus the matching metadata-free old RXAS improves median CPS by 0.571%/0.595% on `rxtvm`/`rxbvm`; the complete change versus the original metadata-retaining old RXAS is +0.436%/+0.147%, a small positive tendency. Direct reuse removes 420,000 executed instructions (-1.326581%) and shrinks the retained canonical RXBIN 76,033 -> 73,161 bytes (-3.777307%). An enlarged 80-pair fallback panel and 120-pair combined sensitivity check do not prove `link` faster than `scopy`. Adrian selected direct reuse for internal bindings and a fail-closed, alias-lifetime-proved `link` fallback for metadata-visible exact registers on 2026-08-08, because avoiding payload copies should scale better for large strings and later binary/object values. The isolated implementation is `ef6e3fd77`; develop integration retains the existing inline RXAS queue snapshots and growth-time re-pinning with no per-record allocation. Final merged qualification passes full Debug and Release builds, 20/20 focused Release PARSE/RXAS/RXQUEUE tests, and full Debug CTest at 2,002/2,002. All 720 new recorded performance processes pass. Current instructions remain sufficient; no new instruction is justified. A packed `.binary` E2, generic string/binary/object internal-binding reuse and any E3 instruction remain separate gates. Control: [`PERF3-12D-WORKLIST.md`](PERF3-12D-WORKLIST.md); opening evidence: [`2026-08-08-perf3-12d-existing-instruction-poc`](evidence/2026-08-08-perf3-12d-existing-instruction-poc/); register verdict: [`2026-08-08-perf3-12d-register-reuse-verdict`](evidence/2026-08-08-perf3-12d-register-reuse-verdict/). |
 | DECIMAL-01 | P1 independent | Decimal-provider correctness and performance engineering | active — repair accepted; Gate 1 harness qualified; awaiting host reservation | Individual and combined numeric-context state/parity remains green. Adrian accepted repairs applying `DIGITS - FUZZ` comparison precision in both providers, routing `db_decimal` through the shared REXX form/case formatter, and selecting explicit Common half-even versus Classic half-up rounding. Debug and ordinary profiling-off Release pass 9/9 focused tests plus 6/6 observable provider/VM cells. The Gate 1 L1-L3 harness, exact provider/context checksum matrix and draft publishable CDB-1 arithmetic core are prepared; 81/81 selected Release qualification tests pass, including final-RXBIN integrity checks for compiler-on/RXAS-on, identical compiler-on/RXAS-off and full no-opt images, with elapsed values discarded. No performance timing ran and none may start without an Adrian-confirmed exclusive host reservation. Control: [`performance/decimal`](decimal/); worklist: [`DECIMAL-01-WORKLIST.md`](decimal/DECIMAL-01-WORKLIST.md); Gate 1 cells: [`GATE1-CELL-MATRIX.md`](decimal/GATE1-CELL-MATRIX.md); benchmark specification: [`CREXX-DECIMAL-BENCHMARK.md`](decimal/CREXX-DECIMAL-BENCHMARK.md); opening evidence: [`2026-08-05-decimal-01-rxas-numctx-opening`](evidence/2026-08-05-decimal-01-rxas-numctx-opening/); repair verdict: [`2026-08-05-decimal-01-numctx-repair-verdict`](evidence/2026-08-05-decimal-01-numctx-repair-verdict/). |
-| PERF3-13 / CAP-06 | P0 | RXVM allocator, value-shape and worker-communication foundation | Gate E E2 accepted and locally complete; E3 awaiting approval; Gate F closed | Gate C selected the 176-byte L32SDH value and Gate D industrialised the worker slab architecture. EF-0 is published in `642e1b697`; E1/E1-P1 and their Windows-MinGW corrections are published through `84d406904`, with all 1,999 Windows tests green. E2 removes ambient RXVML/RXPA/SAY/CREXX/reference/interrupt state, gives each VM a logical directory/environment and one direct execution-local interrupt word, and leaves Gate F propagation closed. Adrian accepted its first verdict: Sieve is neutral at -0.012799%; RexxCPS is clearly adverse at -1.206404% but inside the 3% guard. The accepted `rxbvm` is 1,020,712 bytes with 824,628 bytes of `__text`. Mac closeout passes Debug 1,999/1,999, full AddressSanitizer 1,999/1,999 and focused Release 49/49. The sanitizer sweep also exposed and repaired an independent RXAS sparse-batch snapshot UAF using stable record IDs and re-pinning after inline-array growth, with no per-record malloc and neutral direct assembly timing. Apple LSan is unsupported; native E2 Windows/MSVC/Linux proof remains ordered follow-up. E3 proposes an immutable synchronized plugin descriptor catalogue plus worker-VM-owned provider/native instances; it awaits Adrian's approval. Public channels and RXAS/RXBIN changes remain closed. The later Gate F value remains a logical scalar/binary register image with ordered child-register images, never an internal `value *`. Control: [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); E2: [`2026-08-08-perf3-13-gate-e-e2-active-state`](evidence/2026-08-08-perf3-13-gate-e-e2-active-state/); E1-P1: [`2026-08-07-perf3-13-gate-e-e1-p1-wrapper`](evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/); E1: [`2026-08-07-perf3-13-gate-e-e1-worker-shell`](evidence/2026-08-07-perf3-13-gate-e-e1-worker-shell/); EF-0: [`2026-08-07-perf3-13-ef0-spawn-recovery`](evidence/2026-08-07-perf3-13-ef0-spawn-recovery/); Gate D: [`2026-08-07-perf3-13-gate-d-local-closeout`](evidence/2026-08-07-perf3-13-gate-d-local-closeout/); Gate C: [`2026-08-06-perf3-13-gate-c-m3-sidecar-decision`](evidence/2026-08-06-perf3-13-gate-c-m3-sidecar-decision/); Gate B: [`2026-08-06-perf3-13-gate-b-closeout`](evidence/2026-08-06-perf3-13-gate-b-closeout/). |
+| PERF3-13 / CAP-06 | P0 | RXVM allocator, value-shape and worker-communication foundation | Gate E E4 complete on Mac; E5/E6, portable proof and Gate F closed | Gate C selected the 176-byte L32SDH value; Gate D industrialised worker slabs; EF-0 and E1/E2 established explicit worker memory, lifecycle and active-state ownership. E3 preserves the legacy RXPA ABI while adding process-reentrant opt-in, branch-free load-selected invocation, optional per-VM sessions and ODBC as the industrial external-resource example; its final ODBC-enabled Debug suite passes 2,034/2,034. E4a retains the repeatable independent-load control. E4b implements a runtime-owned bytecode-only catalogue of reference-counted append-only sealed generations with worker-owned globals/procedure/frame/execution/binding/cache overlays. It removes the complete 2,480-byte audited duplicate floor across two contexts while retaining the 569-byte worker-overlay floor. The accepted single-worker verdict is guard-clean; Mac closeout passes focused Debug 11/11, Apple ASan 3/3, full Debug 2,037/2,037 and focused Release 11/11 with byte-identical verdict VMs. Linux, Windows and clean-runner ODBC proof remains a publication follow-up; E5/E6, public workers/channels and Gate F require separate approval. The later Gate F value remains a logical scalar/binary register image with ordered child-register images, never an internal `value *`. Control: [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); E4b evidence: [`sealed-generation verdict and closeout`](evidence/2026-08-11-perf3-13-gate-e-e4b-first-release-verdict/); E4a evidence: [`independent-load control`](evidence/2026-08-11-perf3-13-gate-e-e4a-independent-load-control/); P2 verdict: [`session-aware verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict/); accepted E3b-P1 verdict: [`branch-free production verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/); E3a verdict: [`provider ownership verdict`](evidence/2026-08-10-perf3-13-gate-e-e3a-first-release-verdict/); baseline: [`current Gate E baseline`](evidence/2026-08-10-perf3-13-e3-current-baseline/). |
+| PERF3-13-E3B-I1 | P0 diagnostic | RXPA branch-free load binding and sticky legacy transition | complete — ceiling selected and production form accepted | The 65/65-process isolated proof puts the load-selected direct invoker at -0.489662% paired mean versus raw direct, with a 95% interval of -1.228728% to +0.249404% and no 3% guard hit. The locked invoker is clearly adverse by +20.117255%, supporting direct binding for one legacy-capable executor and one sticky quiescent rebind only when a second is published. The integrated candidate subsequently passed its 312-process guard set and Mac closeout. P2 sessions and Gate F remain outside this completed diagnostic. Control: [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); isolated evidence: [`branch-free invoker PoC`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/); production evidence: [`accepted branch-free verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/). |
 | PERF3-13-F1 | P2 | Single-character `SCOPY` fast-path PoC | queued after M3; evidence gate only | First quantify one-character `SCOPY` incidence and static-site/value shapes across the representative portfolio. Only then compare the exact C ceiling and narrow implementation forms for an already-owned, already-capacious destination, preserving first-use allocation, empty/long strings, aliasing, UTF/cache/status/private flags, foreign/reference payloads and instrumentation. Measure branch cost on all copies, `run()` text/layout, ordinary Release timing, RSS and artifact size; do not optimize Base64 alone. V1-L01 did not select a fast path, and this entry authorizes no current VM change. |
 
 ## Approved execution order
@@ -780,10 +841,14 @@ separate qualified deficit at `0.390842x/0.389933x`. Evidence:
   accepted that verdict and the bounded loss. Mac closeout passes Debug
   1,999/1,999, full AddressSanitizer 1,999/1,999 and focused Release 49/49.
   The sanitizer sweep also exposed and repaired an independent RXAS sparse-batch
-  snapshot UAF without per-record allocation. E3 plugin catalogue and
-  worker-owned native-instance design now awaits Adrian's approval. Gate F
-  propagation remains deferred. Transport-neutral channel semantics stay closed
-  until the worker model is selected. Control:
+  snapshot UAF without per-record allocation. E3 subsequently completed the
+  process-reentrant, mixed-policy and per-VM-session plugin model on Mac, with
+  ODBC as the industrial session example. E4a retains the independent-load
+  correctness control, and E4b now implements the internal bytecode-only sealed
+  immutable-generation/worker-overlay boundary with a guard-clean verdict and
+  Mac Debug/ASan/Release closeout. E5/E6 and Gate F remain deferred. Transport-
+  neutral channel semantics stay closed until the worker model is selected.
+  Control:
   [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); E1 evidence:
   [`2026-08-07-perf3-13-gate-e-e1-worker-shell`](evidence/2026-08-07-perf3-13-gate-e-e1-worker-shell/);
   E1-P1 evidence:

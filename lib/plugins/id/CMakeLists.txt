@@ -16,8 +16,10 @@ set(use_precomp TRUE)            # TRUE pre compile needed, FALSE if not
 include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
 
 plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
+target_link_libraries(_id PRIVATE Threads::Threads)
 
 enable_testing()
 
 # Create the static link module
 add_static_plugin_target(_id id.c)
+target_link_libraries(_id_static PRIVATE Threads::Threads)

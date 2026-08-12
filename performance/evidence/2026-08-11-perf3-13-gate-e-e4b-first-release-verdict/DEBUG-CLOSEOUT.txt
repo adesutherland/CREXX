@@ -1,0 +1,13 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+Command: focused 11-test E4b, lifecycle, dispatch, reentrancy and late-load panel
+
+100% tests passed, 0 tests failed out of 11
+
+Covered:
+- linked_opt_runtime_artifacts_build
+- rxvmworker_lifecycle
+- rxasdispatchcontract-rxbvm and rxasdispatchcontract-rxtvm
+- reentrancy_check
+- program_generation_control-rxvml, -rxbvml and -rxtvml
+- ts_loadmodule_noopt and ts_loadmodule_opt
+- rxas_optimizer_barrier_metaloadmodule

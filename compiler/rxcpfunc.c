@@ -2627,7 +2627,10 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
         import_rxpa_metadata_list(context, file_name, plugin_being_loaded_metadata);
     }
     else {
-        fprintf(stderr, "Importing Procedures - Failed to load plugin %s\n", file_name);
+        fprintf(stderr,
+                "Importing Procedures - Failed to load plugin %s "
+                "(loader rc=%d)\n",
+                file_name, rc);
     }
 
     free_rxpa_metadata_list(&plugin_being_loaded_metadata);

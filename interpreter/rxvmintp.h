@@ -28,9 +28,12 @@
 #include "rxas.h"
 #include "rxbin.h"
 #include "rxpa.h"
+#include "rxpacompat.h"
 #include "rxvalue.h"
 #include "rxvmmemory.h"
 #include "rxvmworker.h"
+#include "rxvmprogram.h"
+#include "rxvmplugin/rxvmplugin_framework.h"
 #include "rxsignal.h"
 #include "rxsignature.h"
 #include "rxvminstrument.h"
@@ -45,6 +48,7 @@ typedef struct module module;
 typedef struct proc_runtime {
     proc_constant *definition;
     int locals;
+    uint32_t native_capabilities; /* Uses the 64-bit pointer-alignment slot. */
     bin_space *binarySpace;
     stack_frame **frame_free_list;
     stack_frame *frame_free_list_head;
@@ -53,6 +57,8 @@ typedef struct proc_runtime {
 #ifdef CREXX_VM_PROFILING
     size_t profile_id;
 #endif
+    /* Load-selected call policy; ordinary native calls do not test flags. */
+    rxvm_native_invoker native_invoker;
 } proc_runtime;
 
 typedef struct rxvm_graph_provider_binding {
@@ -529,6 +535,7 @@ typedef struct rxvm_active_state {
 typedef struct rxvm_context {
     rxvm_worker worker;
     unsigned char owns_runtime;
+    rxvm_program_generation *program_generation;
     char *location;
     size_t num_modules;
     size_t module_buffer_size;
@@ -561,6 +568,11 @@ typedef struct rxvm_context {
     char interface_factory_registry_dirty;
     /* Append worker-owned state so established hot-field offsets stay fixed. */
     rxvm_active_state active;
+    rxvmplugin_instance_set plugin_instances;
+    struct rxpa_library_reference *rxpa_libraries;
+    rxpa_session_instance *rxpa_sessions;
+    rxpa_session_call_binding *rxpa_session_bindings;
+    rxpa_compatibility_context rxpa_compatibility;
 #ifdef CREXX_VM_PROFILING
     /* Keep optional build-local fields last so existing field offsets stay stable. */
     char profile_mode;
@@ -587,6 +599,8 @@ void rxvm_active_context_leave(rxvm_context *previous_context);
 
 /* Initialise modules context */
 void rxinimod(rxvm_context *context);
+int rxinimod_runtime(rxvm_context *context, rxvm_runtime *runtime);
+rxvm_context *rxvm_context_create_in_runtime(rxvm_runtime *runtime);
 
 /* Free Module Context */
 void rxfremod(rxvm_context *context);
@@ -615,7 +629,20 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
 int rxldmodp(rxvm_context *context);
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
+void rxvm_callfunc_direct(void* function, int args, value** argv,
+                          value* ret, value* signal);
 void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
+void rxvm_callfunc_session(void* binding, int args, value** argv,
+                           value* ret, value* signal);
+void rxvm_callfunc_capabilities(void* function, uint32_t capabilities,
+                                int args, value** argv, value* ret, value* signal);
+RX_INLINE void rxvm_call_native_procedure(proc_runtime *procedure, int args,
+                                          value **argv, value *ret,
+                                          value *signal) {
+    assert(procedure && procedure->native_invoker);
+    procedure->native_invoker((void *)procedure->start,
+                              args, argv, ret, signal);
+}
 
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;

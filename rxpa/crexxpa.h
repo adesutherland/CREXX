@@ -30,6 +30,7 @@
 
 #include "crexx_version.h"
 #include <stddef.h>
+#include <stdint.h>
 #include "../platform/rxinteger.h"
 
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
@@ -60,6 +61,62 @@ typedef rxvm_native_payload_ops rxpa_native_payload_ops;
 // e.g.
 //void myfunc(rxinteger _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
 typedef void (*rxpa_libfunc)(rxinteger, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
+
+/*
+ * Optional plugin capability query.  The initializer ABI remains unchanged;
+ * old hosts simply ignore the additional exported query symbol.
+ */
+#define RXPA_PLUGIN_MANIFEST_ABI_V1 1u
+#define RXPA_PLUGIN_CAP_PROCESS_REENTRANT 0x00000001u
+#define RXPA_PLUGIN_CAP_KNOWN_V1 RXPA_PLUGIN_CAP_PROCESS_REENTRANT
+#define RXPA_PLUGIN_QUERY_SYMBOL_V1 "_rxpa_query_v1"
+
+typedef struct rxpa_plugin_manifest_v1 {
+    size_t struct_size;
+    uint32_t abi_version;
+    uint32_t capabilities;
+    const char *plugin_id;
+} rxpa_plugin_manifest_v1;
+
+typedef const rxpa_plugin_manifest_v1 *(*rxpa_plugin_query_v1)(void);
+
+/*
+ * Optional procedure/session query.  V2 is a separate symbol rather than an
+ * extension of rxpa_initctx, so existing hosts continue to load a new dynamic
+ * plugin through _initfuncs and conservatively treat every procedure as
+ * legacy.  A V2-aware host binds the returned procedure flags once at load.
+ */
+#define RXPA_PLUGIN_MANIFEST_ABI_V2 2u
+#define RXPA_PROCEDURE_CAP_PROCESS_REENTRANT \
+    RXPA_PLUGIN_CAP_PROCESS_REENTRANT
+#define RXPA_PROCEDURE_CAP_SESSION_AFFINE 0x00000002u
+#define RXPA_PROCEDURE_CAP_KNOWN_V2 \
+    (RXPA_PROCEDURE_CAP_PROCESS_REENTRANT | \
+     RXPA_PROCEDURE_CAP_SESSION_AFFINE)
+#define RXPA_PLUGIN_QUERY_SYMBOL_V2 "_rxpa_query_v2"
+
+typedef uint32_t (*rxpa_procedure_capability_query_v2)(
+        const char *procedure_name);
+typedef void *(*rxpa_session_create_v2)(void);
+typedef void (*rxpa_session_destroy_v2)(void *session);
+/* Return zero on success and place the nested-restoration cookie in previous. */
+typedef int (*rxpa_session_enter_v2)(void *session,
+                                     uint32_t procedure_capabilities,
+                                     void **previous);
+typedef void (*rxpa_session_leave_v2)(void *previous);
+
+typedef struct rxpa_plugin_manifest_v2 {
+    size_t struct_size;
+    uint32_t abi_version;
+    const char *plugin_id;
+    rxpa_procedure_capability_query_v2 procedure_capabilities;
+    rxpa_session_create_v2 session_create;
+    rxpa_session_destroy_v2 session_destroy;
+    rxpa_session_enter_v2 session_enter;
+    rxpa_session_leave_v2 session_leave;
+} rxpa_plugin_manifest_v2;
+
+typedef const rxpa_plugin_manifest_v2 *(*rxpa_plugin_query_v2)(void);
 
 // Enumeration of Signal Codes
 // These are used to indicate the status of the REXX program
@@ -164,6 +221,19 @@ struct RXPA_INITCTX_TAG {
 };
 #undef RXPA_INITCTX_TAG
 
+// Give PLUGIN_ID a default value
+#ifndef PLUGIN_ID
+#define PLUGIN_ID rxplugin
+#endif
+
+// Force macro expansion before concatenation or stringification.
+#define CONCATENATE(a, b) a##b
+#define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
+#define RXPA_STRINGIFY_INNER(value) #value
+#define RXPA_STRINGIFY(value) RXPA_STRINGIFY_INNER(value)
+#define RXPA_PLUGIN_MANIFEST_V2_NAME(plugin_id) \
+    EXPAND_AND_CONCATENATE(plugin_id, _manifest_v2)
+
 // Are we building a statically linked library?
 #ifdef BUILD_DLL
 
@@ -231,9 +301,6 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #else
 #define RXPA_EXTERN_C
 #endif
-#define INITIALIZER(f) \
-    RXPA_EXTERN_C void f(rxpa_initctxptr context); \
-    RXPA_EXTERN_C void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
 // Define EXPORT appropriately for windows
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
@@ -244,7 +311,40 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #else
 #define EXPORT
 #endif
-#define LOADFUNCS EXPORT INITIALIZER(_initfuncs)
+#define INITIALIZER(f) \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context); \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
+#define RXPA_PLUGIN_MANIFEST_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _manifest_v1)
+#define RXPA_PLUGIN_PROCESS_REENTRANT \
+    static const rxpa_plugin_manifest_v1 RXPA_PLUGIN_MANIFEST_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v1), RXPA_PLUGIN_MANIFEST_ABI_V1, \
+        RXPA_PLUGIN_CAP_PROCESS_REENTRANT, RXPA_STRINGIFY(PLUGIN_ID) \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v1 *_rxpa_query_v1(void) { \
+        return &RXPA_PLUGIN_MANIFEST_NAME(PLUGIN_ID); \
+    }
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0 \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
+        return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
+    }
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
+        (destroy_function), (enter_function), (leave_function) \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
+        return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
+    }
+#define LOADFUNCS INITIALIZER(_initfuncs)
 #define FINALIZER(f) \
     static void f(void) __attribute__((destructor)); \
     static void f(void) {
@@ -282,21 +382,15 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
         static void f(void) {
 #endif
 
-// Give PLUGIN_ID a default value
-#ifndef PLUGIN_ID
-#define PLUGIN_ID rxplugin
-#endif
-
 // The LOADFUNCS macro is used to define the initialization function for the library.
 // Create a function name based on the PLUGIN_ID
 // These are designed to force the expansion of macros before concatenation
 // and be compatible with both GCC and MSVC
-#define CONCATENATE(a, b) a##b
-#define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
 // Now create the function name
 #define UNIQUE_INIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _init)
 // Create a unique anchor symbol name for static libraries
 #define UNIQUE_ANCHOR_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _anchor)
+#define UNIQUE_CAPABILITY_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _capability_init)
 // Define the LOADFUNCS macro (function prologue)
 #define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
 
@@ -305,6 +399,14 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 extern "C" {
 #endif
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+#ifndef DECL_ONLY
+void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char* name, char* option, char* type, char* args);
+void rxpa_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities);
+void rxpa_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest);
+#endif
 void rxpa_addclass(char* name, char* option, char* type); /* Add class metadata */
 void rxpa_addinterface(char* name, char* option, char* type); /* Add interface metadata */
 void rxpa_addimplements(char* name, char* interface_name); /* Add class/interface implementation metadata */
@@ -335,9 +437,47 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 }
 #endif
 
+#ifndef DECL_ONLY
+#define RXPA_PLUGIN_PROCESS_REENTRANT \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_capability( \
+            RXPA_STRINGIFY(PLUGIN_ID), RXPA_PLUGIN_CAP_PROCESS_REENTRANT); \
+    }
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0 \
+    }; \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_manifest_v2( \
+            &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID)); \
+    }
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
+        (destroy_function), (enter_function), (leave_function) \
+    }; \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_manifest_v2( \
+            &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID)); \
+    }
+#else
+#define RXPA_PLUGIN_PROCESS_REENTRANT
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function)
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function)
+#endif
+
 // Macro is used to register a procedure - static linkage
 #ifndef DECL_ONLY
-#define ADDPROC(func, name, option, type, args) rxpa_addfunc((func),(name),(option),(type),(args))
+#define ADDPROC(func, name, option, type, args) \
+    rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
 #else
 #define ADDPROC(func, name, option, type, args) rxpa_addfunc(0,(name),(option),(type),(args))
 #endif

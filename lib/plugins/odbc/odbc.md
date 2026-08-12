@@ -35,6 +35,14 @@
 ## Overview
 The ODBC plugin provides a bridge between CREXX and database systems through ODBC (Open Database Connectivity). It supports both SQL databases and CSV files.
 
+Each current VM receives an independent ODBC session containing its environment,
+connection, default statement, prepared statements, transaction state and last
+diagnostic. Calls from different VM threads can therefore use different
+connections concurrently. Statement IDs are opaque, belong to the creating
+session and become invalid at close, disconnect, reconnect or VM teardown.
+Older hosts that do not understand RXPA sessions use the plugin's process-default
+compatibility session and should continue to serialize their calls.
+
 ## Quick Start
 ```rexx
 /* Basic database query */
@@ -42,8 +50,8 @@ rc = odbc_connect("myDB", "user", "pass")
 if rc < 0 then exit
 
 /* Explicitly set the database */
-newdb = odbc_database("CompanyDB")
-if newdb = "Error changing database" then exit
+rc = odbc_database("CompanyDB")
+if rc <> 0 then exit
 
 rc = odbc_execute("SELECT * FROM mytable")
 if rc < 0 then do
@@ -51,7 +59,7 @@ if rc < 0 then do
     exit
 end
 
-do while odbc_fetch() >= 0
+do while odbc_fetch() = 0
     value = odbc_getcolumn(1)
     say value
 end
@@ -75,8 +83,9 @@ Establishes a connection to a database or CSV file.
 - **Returns:**
   - 0: Success
   - -1: Environment handle allocation failed
-  - -2: Connection handle allocation failed
-  - -3: Connection failed
+  - -2: Environment configuration failed
+  - -3: Connection handle allocation failed
+  - -4: Connection failed
 
 #### odbc_disconnect
 ```rexx
@@ -98,6 +107,54 @@ Executes an SQL statement.
   - -1: Statement handle allocation failed
   - -2: Query execution failed
 
+#### Prepared statements
+
+`odbc_prepare(sql)` returns a positive opaque statement ID. Negative results
+are errors: `-1` means no connection, `-2` a host allocation failure, `-3` a
+driver prepare failure and `-4` statement-ID exhaustion.
+
+Bind parameters by one-based position before execution:
+
+```rexx
+statement = odbc_prepare("select name from employee where id = ? and active = ?")
+if statement <= 0 then exit
+
+if odbc_bind_integer(statement, 1, 42) <> 0 then exit
+if odbc_bind_string(statement, 2, "Y") <> 0 then exit
+if odbc_execute_prepared(statement) <> 0 then exit
+
+do while odbc_fetch_statement(statement) = 0
+    say odbc_getcolumn_statement(statement, 1)
+end
+
+if odbc_close_prepared(statement) <> 0 then exit
+```
+
+The bind functions are `odbc_bind_string`, `odbc_bind_integer`,
+`odbc_bind_float` and `odbc_bind_null`. They return `0` on success and `-1`
+for an invalid statement/position or driver bind failure. A failed rebind
+leaves the previous successful binding valid. The current RXPA string accessor
+does not expose a byte length, so binary parameter binding is intentionally not
+offered; use a driver-supported textual encoding where appropriate.
+
+`odbc_execute_prepared(statement)` returns `0`, `-1` for an invalid ID, or
+`-2` for a driver execution failure. `odbc_reset_prepared(statement)` closes
+the current result and removes all bindings while preserving the prepared SQL.
+`odbc_close_prepared(statement)` releases the statement permanently.
+
+Multiple prepared statements may be active in one session. Use these
+statement-aware result functions instead of the default-statement spellings:
+
+- `odbc_fetch_statement(statement)`
+- `odbc_columns_statement(statement)`
+- `odbc_getcolumn_statement(statement, column)`
+- `odbc_colname_statement(statement, column)`
+- `odbc_coltype_statement(statement, column)`
+- `odbc_column_info_statement(statement, column)`
+- `odbc_row_count_statement(statement)`
+- `odbc_move_to_statement(statement, row)`
+- `odbc_error_message_statement(statement)`
+
 ### Result Set Navigation
 
 #### odbc_fetch
@@ -105,6 +162,10 @@ Executes an SQL statement.
 rc = odbc_fetch()
 ```
 Fetches the next row from the result set. This function should be called in a loop to process each row of the result set.
+
+- `0`: a row is available
+- `1`: no more rows
+- `-1`: driver error
 
 #### odbc_getcolumn
 ```rexx
@@ -207,19 +268,15 @@ info = odbc_column_info(column)
 Gets comprehensive information about a column.
 - **Parameters:**
   - column: Column number (1-based)
-- **Returns:** Semicolon-delimited string containing:
-  - Name: Column name
-  - Type: SQL data type
-  - Size: Column size
-  - Decimals: Number of decimal places
-  - Nullable: Whether column can contain NULL
+- **Returns:** Comma-delimited `name,type,size,decimals,nullable`, or an empty
+  string on error.
 
 ### Example Usage
 ```rexx
 /* Get column information */
 do col = 1 to odbc_columns()
     info = odbc_column_info(col)
-    parse var info 'Name='name';Type='type';Size='size';Decimals='dec';Nullable='null
+    parse var info name','type','size','dec','null
     say "Column" col":" name
     say "  Type:" type
     say "  Size:" size
@@ -285,8 +342,8 @@ if rc < 0 then do
 end
 
 /* Explicitly set the database */
-newdb = odbc_database("CompanyDB")
-if newdb = "Error changing database" then do
+rc = odbc_database("CompanyDB")
+if rc <> 0 then do
     say "Failed to set database:" odbc_error_message()
     exit
 end
@@ -308,7 +365,7 @@ do col = 1 to cols
 end
 
 /* Fetch and display results */
-do while odbc_fetch() >= 0
+do while odbc_fetch() = 0
     do col = 1 to cols
         value = odbc_getcolumn(col)
         say "Column" col":" value
@@ -658,8 +715,12 @@ Note: Some functions may not be available with all ODBC drivers or database syst
 1. **Using Homebrew**
    ```bash
    brew install unixodbc
+   brew install sqliteodbc             # SQLite driver and local regression DB
    brew install mysql-connector-odbc  # For MySQL
    ```
+
+   `sqliteodbc` already depends on unixODBC, so `brew install sqliteodbc` is
+   sufficient when SQLite is the only required driver.
 
 2. **Configuration Locations**
    - `/usr/local/etc/odbc.ini`
@@ -726,6 +787,19 @@ Note: Some functions may not be available with all ODBC drivers or database syst
    iodbcadm-gtk    # GUI tool
    odbcinst -q -d  # Command line
    ```
+
+3. **CREXX real-driver regression**
+   ```bash
+   cmake -S . -B cmake-build-debug -DENABLE_ODBC=ON
+   cmake --build cmake-build-debug --parallel 10
+   ctest --test-dir cmake-build-debug -R odbc --output-on-failure
+   ```
+
+   With `BUILD_TESTING` enabled, CREXX always runs the deterministic mock ODBC
+   tests. If CMake finds `sqlite3odbc`, it also creates a build-tree-only
+   `CREXXSQLiteTest` DSN using SQLite `:memory:` and runs the real driver through
+   both `rxbvm` and `rxtvm`. Override detection with
+   `-DCREXX_SQLITE_ODBC_DRIVER=/absolute/path/to/the/driver` when necessary.
 
 ### Common Issues on Unix-like Systems
 
@@ -909,9 +983,11 @@ Note: Some functions may not be available with all ODBC drivers or database syst
    ```rexx
    /* Handle schema */
    rc = odbc_execute("SET search_path TO myschema")
-   
-   /* Use prepared statements */
-   rc = odbc_execute("PREPARE myplan (int) AS SELECT * FROM mytable WHERE id = $1")
+
+   /* Use portable ODBC parameter markers */
+   statement = odbc_prepare("SELECT * FROM mytable WHERE id = ?")
+   rc = odbc_bind_integer(statement, 1, 42)
+   rc = odbc_execute_prepared(statement)
    ```
 
 3. **MSSQL Specific**
@@ -983,22 +1059,20 @@ Note: Some functions may not be available with all ODBC drivers or database syst
 
 #### odbc_database
 ```rexx
-curdb = odbc_database()          /* Get current database name */
-newdb = odbc_database("mydb")    /* Switch to different database */
+rc = odbc_database("mydb")
 ```
-Gets or sets the current database. 
-
-**Note:** This function is currently only supported for MySQL databases. For other database systems, use database-specific SQL commands via `odbc_execute()`.
+Sets the ODBC current-catalogue connection attribute.
 
 **Important:** After connecting to a database, you should explicitly set the database using `odbc_database()` before performing any operations.
 
 Parameters:
-- newdb: (optional) Name of database to switch to
+
+- newdb: Name of database/catalogue to switch to
 
 Returns:
-- Current database name after operation
-- Empty string if no database selected
-- "Error changing database" if database switch failed
+
+- `0`: success
+- `-1`: no connection or the driver rejected the catalogue change
 
 ### Primary Key Retrieval
 

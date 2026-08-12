@@ -622,7 +622,10 @@ static int rxvml_invoke_external_proc(
 }
 
 int rxvm_link(rxvm_context* ctx);
-void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+void rxvm_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char *name, char *option, char *type, char *args);
+void rxvm_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities);
 
 static const char* rxvml_value_cstr(value* v) {
     if (!v) return "";
@@ -1604,6 +1607,7 @@ static void rxvml_native_address_handle(
 
 rxvml_context* rxvml_create(const char* location, unsigned flags) {
     rxvml_context* ctx;
+    static const char rxvml_address_plugin_id[] = "rxvml-address-bridge";
 
     /* Initialize mandatory plugins */
     CALL_PLUGIN_INITIALIZER(decnumber);
@@ -1619,11 +1623,27 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx->address_callbacks = NULL;
     ctx->address_callback_size = 0;
 
-    rxvm_addfunc(rxvml_native_address_execute, "_rxsysb._native_address_execute", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_invoke, "_rxsysb._native_address_invoke", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_match, "_rxsysb._native_address_match", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_handle, "_rxsysb._native_address_handle", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_id, "_rxsysb._native_address_id", 0, 0, 0);
+    /* These bridges resolve all mutable state through the active RXVML
+     * context. Distinct context-owner threads may therefore enter them at the
+     * same time, including user callbacks that intentionally synchronize. */
+    rxvm_register_static_plugin_capability(
+            rxvml_address_plugin_id,
+            RXPA_PLUGIN_CAP_PROCESS_REENTRANT);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_execute,
+                            "_rxsysb._native_address_execute", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_invoke,
+                            "_rxsysb._native_address_invoke", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_match,
+                            "_rxsysb._native_address_match", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_handle,
+                            "_rxsysb._native_address_handle", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_id,
+                            "_rxsysb._native_address_id", 0, 0, 0);
     if (rxldmodp(&ctx->vm) == -1) {
         rxfremod(&ctx->vm);
         free(ctx);

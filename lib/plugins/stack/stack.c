@@ -8,6 +8,8 @@
 #include <math.h>
 #include <string.h>
 
+RXPA_PLUGIN_PROCESS_REENTRANT
+
 /*
  * STACK primitive Linked List
  */

@@ -17,6 +17,7 @@ extern "C" {
 #endif
 
 typedef struct rxvm_runtime rxvm_runtime;
+typedef void (*rxvm_runtime_program_state_destroyer)(void *state);
 
 typedef enum rxvm_worker_state {
     RXVM_WORKER_UNINITIALIZED = 0,
@@ -41,6 +42,18 @@ rxvm_runtime *rxvm_runtime_create(void);
 size_t rxvm_runtime_destroy(rxvm_runtime *runtime);
 rxvm_memory_context *rxvm_runtime_memory_context(rxvm_runtime *runtime);
 size_t rxvm_runtime_worker_count(const rxvm_runtime *runtime);
+
+/*
+ * Cold extension point for the sealed-program catalogue.  The runtime owns
+ * the installed state and destroys it only after its final worker has left.
+ * Installation is synchronized so the E5 worker factory can retain the same
+ * runtime object without introducing a process-global catalogue.
+ */
+void *rxvm_runtime_program_state(rxvm_runtime *runtime);
+int rxvm_runtime_install_program_state(
+        rxvm_runtime *runtime,
+        void *state,
+        rxvm_runtime_program_state_destroyer destroyer);
 
 /* One worker is permanently affine to the thread that initializes it. */
 typedef struct rxvm_worker {

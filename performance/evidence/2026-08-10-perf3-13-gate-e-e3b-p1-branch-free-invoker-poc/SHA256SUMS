@@ -1,0 +1,16 @@
+b8fb4cf328bccabc5c23e91f794f310f5b2bab570f546ad832f69ae4aaa3290f  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/ARTIFACTS.md
+d2a92dd50373923db75f694abf272be281f1923c83e5e983a67be62b0c5feb46  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/COMMANDS.md
+4ed93df163e654def68799e12d3af0c450fe74850bde3ca2859d35a26fa27b51  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/HOST.md
+d2d102724afc21b3d44c4fa960de66bcb8dda508ebfde89439364258aca73f21  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/README.md
+655d5a9b2183e3138e357eacd3053b2f80c3a71b2e98f35f1119b6b90f3f4b86  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/SOURCE-SHA256SUMS
+8080f8b6f733cf7588b531789b27c1320c0e2eba589337615e297c49744001bb  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/VALIDATION.md
+0914a608f54c4720b0c4dc3ba3d6144fdb81f7a222f12f240972b096fab351b8  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/manifest.txt
+101123252734fdd8db75f326ae739a2f3f445ab8cbc9da7f9e879b8735550f60  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/paired-summary.csv
+a16bc140b937a71aea5cc381f82642366327b4bc938457036ce5a153e7d64b59  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/poc/e3b_rxpa_invoker_ceiling.c
+1a3de4307ba1b9027fc194c672c0ceb1306e1e8862086043ae88aa3e1d023bd6  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/summarize_paired.crexx
+253632fef34ae69f39dcc6cd49453aaee62be9c1a9086ff995fb77d494199b1d  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/timing/capture-manifest.json
+8389bd126cd563a4dc3117e325130711569e64fec5b1c25b4b8ba0e343d5ecc0  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/timing/geomeans.csv
+a67cc86f0d27598e623cb6e2b3338c8010461565a4b210123ac03d3bdddf9582  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/timing/outputs.csv
+b0bfe8ddba61a3fd67de160f3a01267031070e11e0e90bcd24ac9cc19c3d3f60  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/timing/ratios.csv
+ab41bb29abf441616d4e8439c8c857e77f50713180a572eccbdbf3ea469d4e28  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/timing/samples.csv
+66b3d270505d619a2a5ad8828a1aee49ead5f9c170a2271dfa31d06942758377  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/timing/summary.csv

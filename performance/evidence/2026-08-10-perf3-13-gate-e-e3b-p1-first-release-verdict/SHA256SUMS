@@ -1,0 +1,15 @@
+1fa77b4731bc026cc20b4884ce9cba5c3e5f4516dc71aa96d1058442595544e7  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/ARTIFACTS.md
+9fc77d758c9436b77ed7a2acce717da0d42f5aa5947dd0504c20518afbfb8346  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/COMMANDS.md
+1c50bacf23c493f8b043e892132eb441a7d3a38f1cd3b80a4412ab7cc0c5a3e3  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/HOST.md
+99e706093704775245bca483fd8d704f77aec548a2c9edc43e1f99d643792f24  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/README.md
+fb4f4d5c01bd986be344d9a42ea728b2733f385558a65507ba7acec232a0ca3e  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/SOURCE-SHA256SUMS
+ef67587a22c44a5214ddb989f0438fb16afecdd5bfe1e1c5113a73cdc140f877  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/VALIDATION.md
+8359fbebad95b14d75fd4eef838cd008db7d7c7c1fcaac0173be62620a140d52  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/manifest.txt
+60baae11294b1fd75b3f93e582be5fce25ba0252a8b9d955852f76a484c687f2  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/paired-summary.csv
+ea60484339be3402cb90cc85c7755f483560c96b6a6d4a8903240ccd3dd65a0a  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/summarize_paired.crexx
+113b7dff39a23854b89b36a970c407176ba29749080da05063a86c36bb2bcc54  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/timing/capture-manifest.json
+8389bd126cd563a4dc3117e325130711569e64fec5b1c25b4b8ba0e343d5ecc0  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/timing/geomeans.csv
+292c5a263a560ab6e198ced88ff0b6ef2d4248b3c509f25f404a4fab263c245e  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/timing/outputs.csv
+b0bfe8ddba61a3fd67de160f3a01267031070e11e0e90bcd24ac9cc19c3d3f60  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/timing/ratios.csv
+1182445ee1c3f247cb0382253c02b06496460bbf9da7911a32fe04f896feb698  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/timing/samples.csv
+1459d48bec69e0bf5d4ab33b882204d5478ac134d26aa40b892c9dbdd72a6e07  performance/evidence/2026-08-10-perf3-13-gate-e-e3b-p1-first-release-verdict/timing/summary.csv

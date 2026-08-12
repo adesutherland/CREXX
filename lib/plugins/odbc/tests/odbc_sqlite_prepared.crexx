@@ -1,0 +1,71 @@
+/* Real-driver ODBC regression using an in-memory SQLite database. */
+options levelb
+import odbc
+import rxfnsb
+
+rc = odbc_connect("CREXXSQLiteTest", "", "")
+if rc <> 0 then do
+  say odbc_get_diagnostics()
+  exit 1
+end
+
+if odbc_get_info() = "" then exit 2
+if odbc_execute("create table sample (id integer primary key, name text not null, score real, note text)") <> 0 then exit 3
+
+insert_one = odbc_prepare("insert into sample (id, name, score, note) values (?, ?, ?, ?)")
+if insert_one <= 0 then exit 4
+if odbc_bind_integer(insert_one, 1, 1) <> 0 then exit 5
+if odbc_bind_string(insert_one, 2, "alpha") <> 0 then exit 6
+if odbc_bind_float(insert_one, 3, 3.5) <> 0 then exit 7
+if odbc_bind_null(insert_one, 4) <> 0 then exit 8
+if odbc_execute_prepared(insert_one) <> 0 then exit 9
+if odbc_close_prepared(insert_one) <> 0 then exit 10
+
+select_one = odbc_prepare("select name, id, case when note is null then 1 else 0 end from sample where id = ?")
+select_two = odbc_prepare("select count(*) from sample")
+if select_one <= 0 | select_two <= 0 | select_one = select_two then exit 11
+if odbc_bind_integer(select_one, 1, 1) <> 0 then exit 12
+if odbc_execute_prepared(select_one) <> 0 then exit 13
+if odbc_execute_prepared(select_two) <> 0 then exit 14
+if odbc_columns_statement(select_one) <> 3 then exit 15
+if odbc_fetch_statement(select_one) <> 0 then exit 16
+if odbc_getcolumn_statement(select_one, 1) <> "alpha" then exit 17
+if odbc_getcolumn_statement(select_one, 2) <> "1" then exit 18
+if odbc_getcolumn_statement(select_one, 3) <> "1" then exit 19
+if odbc_fetch_statement(select_two) <> 0 then exit 20
+if odbc_getcolumn_statement(select_two, 1) <> "1" then exit 21
+
+if odbc_reset_prepared(select_one) <> 0 then exit 22
+if odbc_bind_integer(select_one, 1, 1) <> 0 then exit 23
+if odbc_execute_prepared(select_one) <> 0 then exit 24
+if odbc_fetch_statement(select_one) <> 0 then exit 25
+if odbc_getcolumn_statement(select_one, 1) <> "alpha" then exit 26
+if odbc_close_prepared(select_one) <> 0 then exit 27
+if odbc_close_prepared(select_two) <> 0 then exit 28
+
+if odbc_begin_transaction() <> 0 then exit 29
+if odbc_execute("insert into sample values (2, 'rollback', 2.0, 'discard')") <> 0 then exit 30
+if odbc_rollback() <> 0 then exit 31
+if odbc_execute("select count(*) from sample") <> 0 then exit 32
+if odbc_fetch() <> 0 then exit 33
+if odbc_getcolumn(1) <> "1" then exit 34
+
+if odbc_begin_transaction() <> 0 then exit 35
+if odbc_execute("insert into sample values (2, 'commit', 4.0, 'keep')") <> 0 then exit 36
+if odbc_commit() <> 0 then exit 37
+if odbc_execute("select count(*) from sample") <> 0 then exit 38
+if odbc_fetch() <> 0 then exit 39
+if odbc_getcolumn(1) <> "2" then exit 40
+
+tables = odbc_tables()
+if left(tables, 1) <> "0" then exit 41
+keys = odbc_primary_keys("sample")
+if left(keys, 1) <> "0" then exit 42
+
+if odbc_execute("select * from table_that_does_not_exist") >= 0 then exit 43
+if odbc_error_message() = "" then exit 44
+if odbc_get_diagnostics() = "" then exit 45
+
+if odbc_disconnect() <> 0 then exit 46
+say "ODBC_SQLITE_RUNTIME_OK"
+exit 0

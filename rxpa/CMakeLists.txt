@@ -4,8 +4,11 @@ cmake_minimum_required(VERSION 3.24)
 # Project name declaration (optional for subdirectories)
 project(CREXX_PLUGIN_ARCHITECTURE)
 
+find_package(Threads REQUIRED)
+
 # Build library for the RX Plugin Architecture
 add_library(rxpa STATIC rxpa.c rxpa.h crexxpa.h)
+target_link_libraries(rxpa PUBLIC Threads::Threads)
 
 # Public header-only development surface for external dynamic RXPA plugins.
 # Dynamic plugins receive their callbacks from the VM at load time and do not

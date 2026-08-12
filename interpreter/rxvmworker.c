@@ -8,6 +8,38 @@
 
 #include <stdlib.h>
 
+#if defined(_WIN32)
+#include <windows.h>
+typedef CRITICAL_SECTION rxvm_runtime_mutex;
+static void rxvm_runtime_mutex_init(rxvm_runtime_mutex *mutex) {
+    InitializeCriticalSection(mutex);
+}
+static void rxvm_runtime_mutex_destroy(rxvm_runtime_mutex *mutex) {
+    DeleteCriticalSection(mutex);
+}
+static void rxvm_runtime_mutex_lock(rxvm_runtime_mutex *mutex) {
+    EnterCriticalSection(mutex);
+}
+static void rxvm_runtime_mutex_unlock(rxvm_runtime_mutex *mutex) {
+    LeaveCriticalSection(mutex);
+}
+#else
+#include <pthread.h>
+typedef pthread_mutex_t rxvm_runtime_mutex;
+static void rxvm_runtime_mutex_init(rxvm_runtime_mutex *mutex) {
+    if (pthread_mutex_init(mutex, 0) != 0) abort();
+}
+static void rxvm_runtime_mutex_destroy(rxvm_runtime_mutex *mutex) {
+    if (pthread_mutex_destroy(mutex) != 0) abort();
+}
+static void rxvm_runtime_mutex_lock(rxvm_runtime_mutex *mutex) {
+    if (pthread_mutex_lock(mutex) != 0) abort();
+}
+static void rxvm_runtime_mutex_unlock(rxvm_runtime_mutex *mutex) {
+    if (pthread_mutex_unlock(mutex) != 0) abort();
+}
+#endif
+
 #if defined(_MSC_VER)
 #define RXVM_WORKER_THREAD_LOCAL __declspec(thread)
 #else
@@ -17,6 +49,9 @@
 struct rxvm_runtime {
     rxvm_memory_context *memory_context;
     size_t worker_count;
+    void *program_state;
+    rxvm_runtime_program_state_destroyer program_state_destroyer;
+    rxvm_runtime_mutex mutex;
 };
 
 static RXVM_WORKER_THREAD_LOCAL unsigned char rxvm_worker_thread_marker;
@@ -28,8 +63,10 @@ static uintptr_t rxvm_worker_current_thread_token(void) {
 rxvm_runtime *rxvm_runtime_create(void) {
     rxvm_runtime *runtime = (rxvm_runtime *)calloc(1, sizeof(*runtime));
     if (!runtime) return 0;
+    rxvm_runtime_mutex_init(&runtime->mutex);
     runtime->memory_context = rxvm_memory_context_create();
     if (!runtime->memory_context) {
+        rxvm_runtime_mutex_destroy(&runtime->mutex);
         free(runtime);
         return 0;
     }
@@ -38,13 +75,23 @@ rxvm_runtime *rxvm_runtime_create(void) {
 
 size_t rxvm_runtime_destroy(rxvm_runtime *runtime) {
     size_t leaks;
+    void *program_state;
+    rxvm_runtime_program_state_destroyer program_state_destroyer;
     if (!runtime) return 0;
+    rxvm_runtime_mutex_lock(&runtime->mutex);
     if (runtime->worker_count != 0u) {
         /* Destroying a live worker domain would invalidate worker arenas. */
         abort();
     }
+    program_state = runtime->program_state;
+    program_state_destroyer = runtime->program_state_destroyer;
+    runtime->program_state = 0;
+    runtime->program_state_destroyer = 0;
+    rxvm_runtime_mutex_unlock(&runtime->mutex);
+    if (program_state_destroyer) program_state_destroyer(program_state);
     leaks = rxvm_memory_context_destroy(runtime->memory_context);
     runtime->memory_context = 0;
+    rxvm_runtime_mutex_destroy(&runtime->mutex);
     free(runtime);
     return leaks;
 }
@@ -54,7 +101,37 @@ rxvm_memory_context *rxvm_runtime_memory_context(rxvm_runtime *runtime) {
 }
 
 size_t rxvm_runtime_worker_count(const rxvm_runtime *runtime) {
-    return runtime ? runtime->worker_count : 0u;
+    size_t worker_count;
+    if (!runtime) return 0u;
+    rxvm_runtime_mutex_lock((rxvm_runtime_mutex *)&runtime->mutex);
+    worker_count = runtime->worker_count;
+    rxvm_runtime_mutex_unlock((rxvm_runtime_mutex *)&runtime->mutex);
+    return worker_count;
+}
+
+void *rxvm_runtime_program_state(rxvm_runtime *runtime) {
+    void *state;
+    if (!runtime) return 0;
+    rxvm_runtime_mutex_lock(&runtime->mutex);
+    state = runtime->program_state;
+    rxvm_runtime_mutex_unlock(&runtime->mutex);
+    return state;
+}
+
+int rxvm_runtime_install_program_state(
+        rxvm_runtime *runtime,
+        void *state,
+        rxvm_runtime_program_state_destroyer destroyer) {
+    int installed = 0;
+    if (!runtime || !state || !destroyer) return 0;
+    rxvm_runtime_mutex_lock(&runtime->mutex);
+    if (!runtime->program_state) {
+        runtime->program_state = state;
+        runtime->program_state_destroyer = destroyer;
+        installed = 1;
+    }
+    rxvm_runtime_mutex_unlock(&runtime->mutex);
+    return installed;
 }
 
 int rxvm_worker_initialize(rxvm_worker *worker, rxvm_runtime *runtime) {
@@ -72,7 +149,9 @@ int rxvm_worker_initialize(rxvm_worker *worker, rxvm_runtime *runtime) {
     worker->owner_thread_token = rxvm_worker_current_thread_token();
     worker->execution_depth = 0u;
     worker->state = RXVM_WORKER_IDLE;
+    rxvm_runtime_mutex_lock(&runtime->mutex);
     runtime->worker_count++;
+    rxvm_runtime_mutex_unlock(&runtime->mutex);
     return 1;
 }
 
@@ -93,8 +172,11 @@ size_t rxvm_worker_destroy(rxvm_worker *worker) {
     worker->owner_thread_token = 0;
     worker->execution_depth = 0u;
     worker->state = RXVM_WORKER_STOPPED;
-    if (!runtime || runtime->worker_count == 0u) abort();
+    if (!runtime) abort();
+    rxvm_runtime_mutex_lock(&runtime->mutex);
+    if (runtime->worker_count == 0u) abort();
     runtime->worker_count--;
+    rxvm_runtime_mutex_unlock(&runtime->mutex);
     return leaks;
 }
 

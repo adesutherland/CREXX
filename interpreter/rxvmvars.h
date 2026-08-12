@@ -36,6 +36,7 @@
 #include "../binutils/include/rxnumparse.h"
 #include "rxvmmemory.h"
 #include "rxvmref.h"
+#include "rxpacompat.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -382,7 +383,7 @@ RX_INLINE void clear_binary_payload(value *v) {
     if (!v) return;
     ops = rxvm_value_native_ops(v);
     if (ops && ops->finalize) {
-        ops->finalize(v);
+        rxvm_native_payload_finalize_call(ops, v);
     }
     if (v->binary_value) RXVM_VALUE_FREE(v->binary_value);
     v->binary_value = 0;
@@ -1440,7 +1441,7 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     /* Copy Binary */
     if (rxvm_value_native_ops(source) &&
         rxvm_value_native_ops(source)->copy) {
-        rxvm_value_native_ops(source)->copy(dest, source);
+        rxvm_native_payload_copy_call(rxvm_value_native_ops(source), dest, source);
     }
     else if (source->binary_length) {
         if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
@@ -1710,7 +1711,7 @@ RX_INLINE void copy_binary_value(value *dest, value *source) {
 
     if (rxvm_value_native_ops(source) &&
         rxvm_value_native_ops(source)->copy) {
-        rxvm_value_native_ops(source)->copy(dest, source);
+        rxvm_native_payload_copy_call(rxvm_value_native_ops(source), dest, source);
     }
     else if (source->binary_length) {
         if (prep_binary_buffer(dest, source->binary_length) != 0) abort();

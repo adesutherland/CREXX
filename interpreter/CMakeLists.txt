@@ -73,6 +73,8 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmhandlers_system.inc
         rxvmworker.h
         rxvmworker.c
+        rxvmprogram.h
+        rxvmprogram.c
         rxvmactive.c
         rxvmstem.h
         rxvmload.c
@@ -186,7 +188,7 @@ set(CREXX_DEFAULT_VM_USES_SWITCH "${CREXX_DEFAULT_VM_USES_SWITCH}"
         CACHE INTERNAL "Whether the compiler-selected VM uses switch dispatch" FORCE)
 crexx_add_rxvm_platform_objects(rxvm_platform_notls_objects)
 
-add_library(rxvmref STATIC rxvmref.c rxvmref.h)
+add_library(rxvmref STATIC rxvmref.c rxvmref.h rxpacompat.c rxpacompat.h)
 target_include_directories(rxvmref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(rxvmmemory STATIC rxvmmemory.c rxvmmemory.h)
@@ -199,7 +201,7 @@ if(CREXX_VM_PROFILING)
     target_compile_definitions(rxvmmemory PUBLIC
             CREXX_VM_MEMORY_CENSUS=1)
 endif()
-target_link_libraries(rxvmref PUBLIC rxvmmemory)
+target_link_libraries(rxvmref PUBLIC rxvmmemory Threads::Threads)
 
 add_subdirectory(rxvmplugin)
 
@@ -571,6 +573,34 @@ target_include_directories(test_rxvmactive PRIVATE
         ../platform ../avl_tree ../utf8 ../inc)
 target_link_libraries(test_rxvmactive PRIVATE rxvml Threads::Threads)
 
+add_executable(test_rxvmplugin_context tests/test_rxvmplugin_context.c)
+target_include_directories(test_rxvmplugin_context PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxvmplugin_context PRIVATE
+        rxvml rxvmplugin mc_decimal_manual Threads::Threads)
+add_dependencies(test_rxvmplugin_context mc_decimal_dynamic)
+
+add_executable(test_rxpa_concurrency tests/test_rxpa_concurrency.c)
+target_include_directories(test_rxpa_concurrency PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_concurrency rxvml Threads::Threads)
+
+add_executable(test_rxpa_odbc tests/test_rxpa_odbc.c)
+target_include_directories(test_rxpa_odbc PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_odbc rxvml Threads::Threads)
+
+add_executable(test_rxpa_odbc_old_host tests/test_rxpa_odbc_old_host.c)
+target_include_directories(test_rxpa_odbc_old_host PRIVATE
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform)
+target_link_libraries(test_rxpa_odbc_old_host rxpa Threads::Threads)
+
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
@@ -620,12 +650,54 @@ add_test(NAME rxvmstem_allocator_family COMMAND test_rxvmstem_allocator_family)
 add_test(NAME rxvmmemory_allocator COMMAND test_rxvmmemory)
 add_test(NAME rxvmworker_lifecycle COMMAND test_rxvmworker)
 add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)
+add_test(NAME rxvmplugin_context_ownership
+        COMMAND test_rxvmplugin_context
+                "$<TARGET_FILE_DIR:mc_decimal_dynamic>"
+                "rxvm_mc_decimal"
+                "decnumber")
+add_test(NAME rxpa_static_catalogue_replay
+        COMMAND test_rxpa_concurrency static)
+add_test(NAME rxpa_static_session_lifecycle
+        COMMAND test_rxpa_concurrency session)
+add_test(NAME rxpa_session_factory_failure_rollback
+        COMMAND test_rxpa_concurrency session-failure)
+add_test(NAME rxpa_session_manifest_fail_closed
+        COMMAND test_rxpa_concurrency session-malformed)
+add_test(NAME rxpa_rxmath_static_mixed_policy
+        COMMAND test_rxpa_concurrency rxmath-static)
+add_test(NAME rxpa_legacy_call_serialization
+        COMMAND test_rxpa_concurrency legacy)
+add_test(NAME rxpa_process_reentrant_overlap
+        COMMAND test_rxpa_concurrency reentrant)
+add_test(NAME rxpa_legacy_recursive_reentry
+        COMMAND test_rxpa_concurrency recursive)
+add_test(NAME rxpa_branch_free_load_binding
+        COMMAND test_rxpa_concurrency binding)
+add_test(NAME rxpa_bound_legacy_serialization
+        COMMAND test_rxpa_concurrency bound-legacy)
+add_test(NAME rxpa_legacy_transition_quiescence
+        COMMAND test_rxpa_concurrency transition)
 set_tests_properties(rxvmmemory_allocator PROPERTIES
         LABELS "interpreter;memory")
 set_tests_properties(rxvmworker_lifecycle PROPERTIES
         LABELS "interpreter;memory;worker")
 set_tests_properties(rxvmactive_isolation PROPERTIES
         LABELS "interpreter;worker;signals")
+set_tests_properties(rxvmplugin_context_ownership PROPERTIES
+        LABELS "interpreter;worker;plugins;decimal")
+set_tests_properties(
+        rxpa_static_catalogue_replay
+        rxpa_static_session_lifecycle
+        rxpa_session_factory_failure_rollback
+        rxpa_session_manifest_fail_closed
+        rxpa_rxmath_static_mixed_policy
+        rxpa_legacy_call_serialization
+        rxpa_process_reentrant_overlap
+        rxpa_legacy_recursive_reentry
+        rxpa_branch_free_load_binding
+        rxpa_bound_legacy_serialization
+        rxpa_legacy_transition_quiescence
+        PROPERTIES LABELS "interpreter;worker;plugins;rxpa")
 set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
 set_tests_properties(rxvmstem_allocator_family PROPERTIES
@@ -1521,6 +1593,78 @@ target_link_libraries(test_reentrancy rxvml)
 add_dependencies(test_reentrancy test_reentrancy_bin)
 
 add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# PERF3-13 E4a/E4b: retain independent loads as the correctness control, then
+# prove runtime-owned immutable generations with worker-owned overlays.
+add_custom_command(
+        OUTPUT test_program_generation_control.rxbin
+               test_program_generation_late.rxbin
+        COMMAND $<TARGET_FILE:rxc> -o test_program_generation_control
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_program_generation_control.crexx
+        COMMAND $<TARGET_FILE:rxas> test_program_generation_control
+        COMMAND $<TARGET_FILE:rxc> -o test_program_generation_late
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_program_generation_late.crexx
+        COMMAND $<TARGET_FILE:rxas> test_program_generation_late
+        DEPENDS tests/rexx/test_program_generation_control.crexx
+                tests/rexx/test_program_generation_late.crexx
+                rxc rxas compiler_exit_bin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling PERF3-13 E4 program-generation controls ..."
+)
+add_custom_target(test_program_generation_control_bins ALL
+        DEPENDS test_program_generation_control.rxbin
+                test_program_generation_late.rxbin)
+
+function(crexx_configure_program_generation_control TARGET_NAME)
+    target_include_directories(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/inc
+            ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/platform
+            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/utf8)
+    add_dependencies(${TARGET_NAME} test_program_generation_control_bins)
+    add_test(
+            NAME ${TARGET_NAME}
+            COMMAND ${TARGET_NAME}
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_control.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_late.rxbin
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${TARGET_NAME} PROPERTIES
+            LABELS "interpreter;perf3;gate-e;e4a;e4b")
+endfunction()
+
+add_executable(program_generation_control-rxvml
+        tests/test_program_generation_control.c)
+target_link_libraries(program_generation_control-rxvml PRIVATE rxvml)
+crexx_configure_program_generation_control(program_generation_control-rxvml)
+
+add_executable(program_generation_control-rxbvml
+        tests/test_program_generation_control.c)
+target_link_libraries(program_generation_control-rxbvml PRIVATE rxbvml)
+target_compile_definitions(program_generation_control-rxbvml PRIVATE NTHREADED=1)
+crexx_configure_program_generation_control(program_generation_control-rxbvml)
+
+# The compiler-selected rxvml may itself use switch dispatch. Build a test-only
+# direct-threaded RXVML executable where supported so E4 always covers both
+# concrete execution-image forms without adding another product library.
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_executable(program_generation_control-rxtvml
+            tests/test_program_generation_control.c
+            rxvml.c
+            $<TARGET_OBJECTS:rxtvm_core_objects>)
+    target_link_libraries(program_generation_control-rxtvml
+            rxvmplugin mc_decimal_manual avl_tree rxpa rxvmref rxbin)
+    crexx_enable_vm_platform(program_generation_control-rxtvml)
+    if(CREXX_VM_PROFILING)
+        target_compile_definitions(program_generation_control-rxtvml PRIVATE
+                CREXX_VM_PROFILING=1)
+    endif()
+    crexx_configure_program_generation_control(program_generation_control-rxtvml)
+endif()
 
 # Archive-link regression test for manual db_decimal packaging.
 set(_crexx_archive_link_c_flags_text "${CMAKE_C_FLAGS}")

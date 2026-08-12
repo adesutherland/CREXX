@@ -1,0 +1,4 @@
+[CREXXSQLiteTest]
+Driver=@CREXX_SQLITE_ODBC_DRIVER@
+Database=:memory:
+Timeout=2000

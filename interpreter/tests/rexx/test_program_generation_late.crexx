@@ -1,0 +1,7 @@
+options levelb
+
+namespace e4late expose identity
+
+identity: procedure = .int
+  arg input = .string
+  return input + 1

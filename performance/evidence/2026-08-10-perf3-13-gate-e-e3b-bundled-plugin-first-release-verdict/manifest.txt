@@ -1,0 +1,9 @@
+# PERF3-13 E3b bundled-plugin qualification ordinary-Release verdict.
+# The same candidate VMs and optimized RXBIN compare the frozen pre-change
+# getpi plugin with the repaired process-reentrant plugin. One warmup and 12
+# pairwise-balanced recorded rounds run under each concrete VM.
+crexx-cross-runtime-matrix|1
+getpi-rxbvm-control|GetPI|crexx|rxbvm|e3b-p1-plugin-control|A|no|startup-included|Leibnitz+Monte-Carlo|PI Test completed||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/lib/plugins/getpi/getpi_test_opt.rxbin;/tmp/crexx-e3-plugin-control.PJRsR1/rx_getpi;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+getpi-rxbvm-candidate|GetPI|crexx|rxbvm|e3b-bundled-qualified|A|no|startup-included|Leibnitz+Monte-Carlo|PI Test completed||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/lib/plugins/getpi/getpi_test_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rx_getpi;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+getpi-rxtvm-control|GetPI|crexx|rxtvm|e3b-p1-plugin-control|A|no|startup-included|Leibnitz+Monte-Carlo|PI Test completed||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxtvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/lib/plugins/getpi/getpi_test_opt.rxbin;/tmp/crexx-e3-plugin-control.PJRsR1/rx_getpi;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+getpi-rxtvm-candidate|GetPI|crexx|rxtvm|e3b-bundled-qualified|A|no|startup-included|Leibnitz+Monte-Carlo|PI Test completed||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxtvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/lib/plugins/getpi/getpi_test_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rx_getpi;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin

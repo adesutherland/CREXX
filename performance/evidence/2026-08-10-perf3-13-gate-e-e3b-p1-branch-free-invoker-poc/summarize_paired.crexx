@@ -1,0 +1,191 @@
+/* PERF3-13 E3b-P1 isolated invoker paired Release reducer. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 2 then do
+  say "Usage: summarize_paired OUTPUT_SUMMARY SAMPLES"
+  return 2
+end
+
+output_path = argv[1]
+input_path = argv[2]
+variant_names = .string[]
+variant_names[1] = "raw-direct"
+variant_names[2] = "selected-direct"
+variant_names[3] = "branch-direct"
+variant_names[4] = "selected-locked"
+variant_names[5] = "branch-locked"
+values = .float[]
+counts = .int[]
+line_number = 0
+
+do while lines(input_path)
+  line = linein(input_path)
+  line_number = line_number + 1
+  if line_number = 1 then iterate
+  fields = split_delimited(line, ",")
+  if fields[0] <> 20 then return fail("unexpected sample row width")
+  if fields[11] <> "recorded" then iterate
+  if fields[18] <> "pass" then return fail("non-passing recorded sample")
+  variant = find_variant(variant_names, fields[7])
+  if variant = 0 then return fail("unexpected variant")
+  round = fields[12] as .int
+  if round < 1 | round > 12 then return fail("unexpected recorded round")
+  if values[variant * 100 + round] <> 0.0 then
+    return fail("duplicate variant/round sample")
+  values[variant * 100 + round] = fields[15] as .float
+  counts[variant] = counts[variant] + 1
+end
+call linein input_path
+
+do variant = 1 to variant_names[0]
+  if counts[variant] <> 12 then return fail("incomplete 12-pair set")
+end
+
+call remove_output output_path
+header = "candidate,pairs,control_median_ns,candidate_median_ns," || ,
+    "median_increment_ns_per_call,min_percent,q1_percent,median_percent," || ,
+    "q3_percent,max_percent,mean_percent,mean_95_ci_low_percent," || ,
+    "mean_95_ci_high_percent,interval_result,favorable,total,guard_hit"
+if lineout(output_path, header) <> 0 then return fail("could not create summary")
+
+do candidate = 2 to variant_names[0]
+  control_values = .float[]
+  candidate_values = .float[]
+  do pair = 1 to 12
+    control_values[pair] = values[100 + pair]
+    candidate_values[pair] = values[candidate * 100 + pair]
+  end
+  if write_summary(output_path, variant_names[candidate], ,
+      control_values, candidate_values) <> 0 then return 1
+end
+call lineout output_path
+say "PASS: PERF3-13 E3b-P1 invoker paired summary retained at" output_path
+return 0
+
+write_summary: procedure = .int
+  arg output_path = .string, candidate_name = .string, ,
+      control_values = .float[], candidate_values = .float[]
+  count = control_values[0]
+  deltas = .float[]
+  control_sorted = .float[]
+  candidate_sorted = .float[]
+  favorable = 0
+  sum = 0.0
+  do pair = 1 to count
+    delta = ((candidate_values[pair] - control_values[pair]) * 100.0) / ,
+        control_values[pair]
+    deltas[pair] = delta
+    control_sorted[pair] = control_values[pair]
+    candidate_sorted[pair] = candidate_values[pair]
+    sum = sum + delta
+    if delta < 0.0 then favorable = favorable + 1
+  end
+
+  call sort_floats control_sorted
+  call sort_floats candidate_sorted
+  call sort_floats deltas
+  mean = sum / (count as .float)
+  sum_squares = 0.0
+  do i = 1 to count
+    difference = deltas[i] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  sample_deviation = square_root(sum_squares / ((count - 1) as .float))
+  margin = 2.200985 * sample_deviation / square_root(count as .float)
+  interval_low = mean - margin
+  interval_high = mean + margin
+  interval_result = "noisy_inconclusive"
+  if interval_high < 0.0 then interval_result = "clear_favorable"
+  else if interval_low > 0.0 then interval_result = "clear_adverse"
+  guard_hit = "no"
+  if mean > 3.0 then guard_hit = "yes"
+  control_median = sample_quantile(control_sorted, 1, 2)
+  candidate_median = sample_quantile(candidate_sorted, 1, 2)
+  increment_per_call = (candidate_median - control_median) / 20000000.0
+  row = candidate_name || "," || count || "," || ,
+      float_text(control_median) || "," || float_text(candidate_median) || ,
+      "," || float_text(increment_per_call) || "," || ,
+      float_text(deltas[1]) || "," || ,
+      float_text(sample_quantile(deltas, 1, 4)) || "," || ,
+      float_text(sample_quantile(deltas, 1, 2)) || "," || ,
+      float_text(sample_quantile(deltas, 3, 4)) || "," || ,
+      float_text(deltas[count]) || "," || float_text(mean) || "," || ,
+      float_text(interval_low) || "," || float_text(interval_high) || "," || ,
+      interval_result || "," || favorable || "," || count || "," || guard_hit
+  if lineout(output_path, row) <> 0 then return fail("could not append row")
+  return 0
+
+find_variant: procedure = .int
+  arg variants = .string[], name = .string
+  do index = 1 to variants[0]
+    if variants[index] = name then return index
+  end
+  return 0
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose numbers = .float[]
+  do index = 2 to numbers[0]
+    item = numbers[index]
+    prior = index - 1
+    do while prior >= 1 & numbers[prior] > item
+      numbers[prior + 1] = numbers[prior]
+      prior = prior - 1
+    end
+    numbers[prior + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg numbers = .float[], numerator = .int, denominator = .int
+  scaled = (numbers[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = numbers[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (numbers[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

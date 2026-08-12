@@ -1,0 +1,5 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+Command: ctest --test-dir cmake-build-debug --parallel 30 --output-on-failure
+
+100% tests passed, 0 tests failed out of 2037
+Total Test time (real) = 247.69 sec

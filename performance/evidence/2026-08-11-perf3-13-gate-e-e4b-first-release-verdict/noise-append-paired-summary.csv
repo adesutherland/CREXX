@@ -1,0 +1,4 @@
+workload,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+VM-Lifecycle,rxbvm,elapsed_ns,12,13908000.000000,13905500.000000,-2.173913,-0.419533,-0.050421,0.279183,1.561469,-0.180464,-0.867812,0.506885,noisy_inconclusive,6,12,no
+VM-Lifecycle,rxtvm,elapsed_ns,12,13981500.000000,13895000.000000,-1.547016,-1.107078,-0.683037,-0.157117,0.789112,-0.576583,-1.024594,-0.128571,clear_favorable,9,12,no
+RexxCPS,rxtvm,benchmark_rate,12,45909551.000000,45891760.000000,-1.371166,-0.722418,0.096941,0.531566,7.077472,0.453905,-0.956423,1.864233,noisy_inconclusive,7,12,no

@@ -1,5 +1,7 @@
 #include <rxpa/crexxpa.h>
 
+RXPA_PLUGIN_PROCESS_REENTRANT
+
 PROCEDURE(cppconst)
 {
     const char *result = "cpp-immutable";

@@ -30,15 +30,36 @@
 #define CREXX_RXVMPLUGIN_FRAMEWORK_H
 #include "rxvmplugin.h"
 
-// Structure to hold the rxvm plugins
+/*
+ * Immutable catalogue descriptor.  The first five fields retain the legacy
+ * framework layout; plugin_info is the compatibility-adapter instance used by
+ * existing compiler and standalone plugin consumers.  VM execution creates a
+ * private instance from factory instead of borrowing plugin_info.
+ */
 typedef struct rxvmplugin_factory_entry rxvmplugin_factory_entry;
+typedef struct rxvmplugin_library rxvmplugin_library;
 struct rxvmplugin_factory_entry {
     char name[16]; // Plugin Name
-    rxvm_plugin *plugin_info; // Plugin Information
+    rxvm_plugin *plugin_info; // Legacy compatibility-adapter instance
     rxvm_plugin_factory factory; // Plugin Factory
-    void *handle; // Handle to the dynamic library
+    void *handle; // Legacy raw view of the dynamic-library handle
     rxvmplugin_factory_entry *next; // Next plugin
+    rxvm_plugin_type type;
+    unsigned long generation;
+    size_t instance_references;
+    unsigned char retired;
+    rxvmplugin_library *library;
+    rxvmplugin_factory_entry *retired_next;
 };
+
+typedef struct rxvmplugin_instance {
+    rxvm_plugin *plugin;
+    rxvmplugin_factory_entry *descriptor;
+} rxvmplugin_instance;
+
+typedef struct rxvmplugin_instance_set {
+    rxvmplugin_instance entries[RXVM_PLUGIN_MAX];
+} rxvmplugin_instance_set;
 
 // Function to load a dynamic rxvm plugin
 int load_rxvmplugin(char* dir, char *name);
@@ -54,6 +75,18 @@ rxvm_plugin* get_rxvmplugin(rxvm_plugin_type type);
 
 // Function to get the next plugin of a specific type from an entry in the list
 rxvm_plugin* get_next_rxvmplugin(rxvmplugin_factory_entry **entry, rxvm_plugin_type type);
+
+/* Worker-VM-owned provider instances. */
+void rxvmplugin_instance_set_init(rxvmplugin_instance_set *set);
+int rxvmplugin_instance_set_prepare(rxvmplugin_instance_set *set,
+                                    rxvm_plugin_type type);
+rxvm_plugin *rxvmplugin_instance_set_get(rxvmplugin_instance_set *set,
+                                         rxvm_plugin_type type);
+void rxvmplugin_instance_set_destroy(rxvmplugin_instance_set *set);
+
+/* Focused lifecycle diagnostics used by the ownership regression test. */
+size_t rxvmplugin_catalogue_count(void);
+size_t rxvmplugin_live_instance_count(void);
 
 // typedef for dynamic plugin register function
 typedef void (*rxvmplugin_register_function)(register_rxvmplugin_factory register_func);

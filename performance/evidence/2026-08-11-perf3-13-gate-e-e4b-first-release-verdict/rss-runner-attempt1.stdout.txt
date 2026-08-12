@@ -1,0 +1,2 @@
+ERROR: RSS capture uses --warmups 0
+Use --help for usage.

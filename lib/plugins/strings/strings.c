@@ -7,10 +7,33 @@
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"  // crexx/pa - Plugin Architecture header file
 
+RXPA_PLUGIN_PROCESS_REENTRANT
+
 // Function prototypes
 long long evaluate(const char **expr);
 long long parse_expression(const char **expr);
 int parse_binary_number(const char **expr);
+
+/* Portable strtok semantics with caller-owned cursor state. */
+static char *next_token(char *string, const char *delimiters, char **cursor) {
+    char *start = string ? string : *cursor;
+    char *end;
+
+    if (!start || !delimiters) return NULL;
+    start += strspn(start, delimiters);
+    if (!*start) {
+        *cursor = NULL;
+        return NULL;
+    }
+    end = start + strcspn(start, delimiters);
+    if (*end) {
+        *end = '\0';
+        *cursor = end + 1;
+    } else {
+        *cursor = NULL;
+    }
+    return start;
+}
 // remove white spaces on both sides
 char *trim(char *str) {
     while (isspace((unsigned char)*str)) str++; // Skip leading spaces
@@ -29,6 +52,7 @@ PROCEDURE(words) {
     char *wordstring = GETSTRING(ARG0); // Get the input string
     char *delim = GETSTRING(ARG1);       // Get the delimiter
     int word_count = 0;                  // Counter for the number of words
+    char *token_cursor = NULL;
 
     // Check for NULL input
     if (wordstring == NULL) {
@@ -41,10 +65,10 @@ PROCEDURE(words) {
     }
 
     // Tokenize the string and count words
-    char *token = strtok(wordstring, delim); // Tokenize the string
+    char *token = next_token(wordstring, delim, &token_cursor);
     while (token != NULL) {
         word_count++; // Increment the word count
-        token = strtok(NULL, delim); // Get the next token
+        token = next_token(NULL, delim, &token_cursor);
     }
 
     RETURNINT(word_count); // Return the total word count
@@ -57,6 +81,7 @@ PROCEDURE(word) {
     int indx = GETINT(ARG1);             // Get the index of the desired subword
     char *delim = GETSTRING(ARG2);       // Get the delimiter
     int curword = 1;                     // Counter for the current word
+    char *token_cursor = NULL;
 
     // Check for NULL input or invalid index
     if (wordstring == NULL || indx < 1) {
@@ -68,12 +93,12 @@ PROCEDURE(word) {
     }
 
     // Create a temporary buffer for tokenization
-    char *token = strtok(wordstring, delim); // Tokenize the string
+    char *token = next_token(wordstring, delim, &token_cursor);
     while (token != NULL) {
         if (curword == indx) {
             RETURNSTRX(token); // Return the found subword
         }
-        token = strtok(NULL, delim); // Get the next token
+        token = next_token(NULL, delim, &token_cursor);
         curword++;
     }
 
@@ -86,6 +111,7 @@ PROCEDURE(lastword) {
     char *wordstring = GETSTRING(ARG0); // Get the input string
     char *delim = GETSTRING(ARG1);       // Get the delimiter
     char *last_token = NULL;              // Variable to hold the last token
+    char *token_cursor = NULL;
 
     // Check for NULL input
     if (wordstring == NULL) {
@@ -98,10 +124,10 @@ PROCEDURE(lastword) {
     }
 
     // Tokenize the string and find the last word
-    char *token = strtok(wordstring, delim); // Tokenize the string
+    char *token = next_token(wordstring, delim, &token_cursor);
     while (token != NULL) {
         last_token = token; // Update last_token with the current token
-        token = strtok(NULL, delim); // Get the next token
+        token = next_token(NULL, delim, &token_cursor);
     }
 
     RETURNSTRX(last_token ? last_token : ""); // Return the last token or empty string if none found
@@ -115,6 +141,7 @@ PROCEDURE(wordindex) {
     char *delim = GETSTRING(ARG2);       // Get the delimiter
     int curword = 1;                     // Counter for the current word
     int position = 1;                    // Position of the current word
+    char *token_cursor = NULL;
 
     // Check for NULL input or invalid index
     if (wordstring == NULL || indx < 1) {
@@ -127,13 +154,13 @@ PROCEDURE(wordindex) {
     }
 
     // Tokenize the string and find the requested word's position
-    char *token = strtok(wordstring, delim); // Tokenize the string
+    char *token = next_token(wordstring, delim, &token_cursor);
     while (token != NULL) {
         if (curword == indx) {
             RETURNINTX(position); // Return the position of the requested word
         }
         position += strlen(token) + strlen(delim); // Update position
-        token = strtok(NULL, delim); // Get the next token
+        token = next_token(NULL, delim, &token_cursor);
         curword++;
     }
 
@@ -316,6 +343,7 @@ PROCEDURE(WORDPOS) {
     char *delim = GETSTRING(ARG2);       // Get the delimiter
 
     int position = 1;                    // Position counter (1-based index)
+    char *token_cursor = NULL;
 
     // Check for NULL input
     if (searchWord == NULL || phrase == NULL) {
@@ -326,12 +354,12 @@ PROCEDURE(WORDPOS) {
     }
 
     // Tokenize the phrase and search for the word
-    char *token = strtok(phrase, delim); // Tokenize using space as delimiter
+    char *token = next_token(phrase, delim, &token_cursor);
     while (token != NULL) {
         if (strcmp(token, searchWord) == 0) {
             RETURNINT(position); // Return the position if found
         }
-        token = strtok(NULL, delim); // Get the next token
+        token = next_token(NULL, delim, &token_cursor);
         position++; // Increment position counter
     }
 
@@ -348,6 +376,7 @@ PROCEDURE(SUBWORD) {
     size_t plen;
     char *result;
     size_t resultLength = 0;         // Length of the result
+    char *token_cursor = NULL;
 
  // Check for NULL input
     if (phrase == NULL || position < 1) {
@@ -370,7 +399,7 @@ PROCEDURE(SUBWORD) {
     }
 
     // Tokenize the phrase and extract the specified words
-    char *token = strtok(phrase, delim); // Tokenize using space as delimiter
+    char *token = next_token(phrase, delim, &token_cursor);
     while (token != NULL) {
         if (curword >= position && resultLength < plen) { // Check if within range and buffer limit
             size_t tokenLength = strlen(token);
@@ -389,7 +418,7 @@ PROCEDURE(SUBWORD) {
                 break; // Stop if the required number of words is extracted
             }
         }
-        token = strtok(NULL, delim); // Get the next token
+        token = next_token(NULL, delim, &token_cursor);
         curword++; // Increment word counter
     }
 
@@ -404,6 +433,7 @@ PROCEDURE(WORDLEN) {
     char *delim = GETSTRING(ARG2);   // Get the delimiter
 
     int curword = 1;                 // Counter for the current word
+    char *token_cursor = NULL;
 
     // Check for NULL input
     if (string == NULL || wordNumber < 1) {
@@ -414,12 +444,12 @@ PROCEDURE(WORDLEN) {
     }
 
     // Tokenize the string and find the specified word
-    char *token = strtok(string, delim); // Tokenize using space as delimiter
+    char *token = next_token(string, delim, &token_cursor);
     while (token != NULL) {
         if (curword == wordNumber) {
            RETURNINTX(strlen(token)); // Return the length of the specified word
         }
-        token = strtok(NULL, delim); // Get the next token
+        token = next_token(NULL, delim, &token_cursor);
         curword++; // Increment word counter
     }
 
@@ -835,6 +865,7 @@ void trim_brackets(char *str) {
 // Funktion zum Hinzufügen von Elementen zu einem Zielarray
 PROCEDURE(add_items) {
     char *items_string = GETSTRING(ARG1); // String mit den Elementen
+    char *token_cursor = NULL;
     SETARRAYHI(ARG0, 0); // Initialize target array
 
     // Check length of input string
@@ -846,14 +877,14 @@ PROCEDURE(add_items) {
     trim_brackets(items_string);
 
     // Tokenize the string and add items to the target array
-    char *token = strtok(items_string, ","); // Tokenize using comma as delimiter
+    char *token = next_token(items_string, ",", &token_cursor);
     int j = 0;
     while (token != NULL) {
         j++;
         // Append the token to the target array
         SETARRAYHI(ARG0, j); // Initialize target array
         SETSARRAY(ARG0, j-1,trim(token));
-        token = strtok(NULL, ","); // Get the next token
+        token = next_token(NULL, ",", &token_cursor);
     }
     RETURNINTX(j); // Return the count of items added
 ENDPROC
@@ -865,6 +896,7 @@ PROCEDURE(PARSE) {
     char *parse_template = GETSTRING(ARG1);  // Get the parse template
     int count = 0;                          // Counter for the number of variables
     char *current_pos = input_string;        // Current position in input string
+    char *token_cursor = NULL;
 
     // Initialize output arrays
     SETARRAYHI(ARG2, 0);
@@ -879,7 +911,7 @@ PROCEDURE(PARSE) {
 
     // Handle delimiter-based parsing
     char *template_copy = strdup(parse_template);
-    char *token = strtok(template_copy, "'");
+    char *token = next_token(template_copy, "'", &token_cursor);
     int is_delimiter = 0;  // Toggle between variable names and delimiters
 
     while (token != NULL && count < 512) {
@@ -892,7 +924,7 @@ PROCEDURE(PARSE) {
                 SETSARRAY(ARG2, count, token);
 
                 // Get next token (delimiter)
-                token = strtok(NULL, "'");
+                token = next_token(NULL, "'", &token_cursor);
                 if (token != NULL) {
                     token = trim(token);
                     // Find this delimiter in input string
@@ -924,7 +956,7 @@ PROCEDURE(PARSE) {
             }
             is_delimiter = !is_delimiter;
         }
-        token = strtok(NULL, "'");
+        token = next_token(NULL, "'", &token_cursor);
     }
 
     free(template_copy);
