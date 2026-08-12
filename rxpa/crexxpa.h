@@ -301,9 +301,6 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #else
 #define RXPA_EXTERN_C
 #endif
-#define INITIALIZER(f) \
-    RXPA_EXTERN_C void f(rxpa_initctxptr context); \
-    RXPA_EXTERN_C void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
 // Define EXPORT appropriately for windows
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
@@ -314,6 +311,9 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #else
 #define EXPORT
 #endif
+#define INITIALIZER(f) \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context); \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
 #define RXPA_PLUGIN_MANIFEST_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _manifest_v1)
 #define RXPA_PLUGIN_PROCESS_REENTRANT \
     static const rxpa_plugin_manifest_v1 RXPA_PLUGIN_MANIFEST_NAME(PLUGIN_ID) = { \
@@ -344,7 +344,7 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
     RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
         return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
     }
-#define LOADFUNCS EXPORT INITIALIZER(_initfuncs)
+#define LOADFUNCS INITIALIZER(_initfuncs)
 #define FINALIZER(f) \
     static void f(void) __attribute__((destructor)); \
     static void f(void) {
