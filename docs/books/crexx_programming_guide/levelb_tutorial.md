@@ -713,7 +713,7 @@ LiveCounter: class
     return
 
   count: method = .int
-    if <refvalid>(bag_ref) then return -1
+    if <refvalid>(bag_ref) = 0 then return -1
     bag = dereference bag_ref
     return bag.size()
 
