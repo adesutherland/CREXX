@@ -1,0 +1,53 @@
+options levelb
+import rxfnsb
+namespace tutorial_references
+
+
+Bag: class
+  values = .string[]
+  item_count = .int
+
+  *: factory
+    initial = .string[]
+    values = initial
+    item_count = 0
+    return
+
+  add: method = .void
+    arg value = .string
+    call arrayappend values, value
+    item_count = item_count + 1
+    return
+
+  size: method = .int
+    return item_count
+
+  liveCounter: method = .LiveCounter
+    return .LiveCounter(reference self)
+
+  snapshotCounter: method = .SnapshotCounter
+    return .SnapshotCounter(reference self)
+
+LiveCounter: class
+  bag_ref = reference .Bag
+
+  *: factory
+    arg source = reference .Bag
+    bag_ref = source
+    return
+
+  count: method = .int
+    if <refvalid>(bag_ref) then return -1
+    bag = dereference bag_ref
+    return bag.size()
+
+SnapshotCounter: class
+  bag_copy = .Bag
+
+  *: factory
+    arg source = reference .Bag
+    bag_copy = snapshot source
+    return
+
+  count: method = .int
+    return bag_copy.size()

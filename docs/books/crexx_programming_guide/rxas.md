@@ -28,7 +28,7 @@ errors only) and can produce a trace file in Debug/verbose mode
 
 ## Character sets
 
-The input file is assumed to be valid UTF8.
+The input file is assumed to be valid utf-8 and will fail invalid input.
 The assembler, like the compiler, operates using two character
 sets. The first is for symbols in the assembler language
 statements. These are all composed of the ASCII subset of Unicode. The
@@ -179,9 +179,10 @@ for `ipow` is always executed, the example in `crexx` on
 page \pageref{fpowexample} shows that the cRexx optimizer of the
 compiler can eliminate this code entirely.
 
-The use of Assembler directives is not allowed in inline assembly, so
-(as an example) is it not possible to define procedures in an inline
-assembler block.
+The use of assembler directives[^directives] is not allowed in inline assembly, so
+it is (for example) not possible to define procedures in an inline assembler block.
+
+[^directives]: as opposed to assembler (rxvm) instructions 
 
 ## Troubleshooting
 
@@ -212,7 +213,8 @@ The `trace asm` statement in cRexx is designed to trace `.rxas` code as it is ex
 
 As an example, when we want to know which VM instructions are executed:
 
-```rexx <!--hellotrace-->
+```rexx <!--hellotrace.crexx-->
+options levelb
 # trace the world
 trace asm
 say 'hello trace'
@@ -221,7 +223,7 @@ say 5**2
 
 <!--splice--crexx hellotrace-->
 
-and we see that the optimiser did its work by deciding the answer will never be something else than 25. If we want to see how it is calculated, we need to compile without optimisation:
+and we see that the optimiser did its work by deciding the answer will never be anything other than 25. If we want to see how it is calculated, we need to compile without optimisation:
 
 ```bash
 crexx hellotrace --nooptimise

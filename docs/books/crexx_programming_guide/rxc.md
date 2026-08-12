@@ -87,7 +87,7 @@ module stem, the compiler keeps only the freshest candidate. If
 timestamps tie, `.rxbin` wins over `.rxas`.
 
  \section{Inline Assembler}
- On page \pageref{inlineAssembly} the inline assembler function of
+ On page \pageref{in-line-assembly} the inline assembler function of
  the cRexx compiler is discussed. This enables the incorporation
  of \code{rxas} assembler instructions into a \textsc{Rexx} source
  file.

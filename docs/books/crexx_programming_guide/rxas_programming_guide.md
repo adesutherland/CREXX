@@ -42,9 +42,7 @@ main() .locals=7
 date() .expose=rxfnsb.date
 ```
 
-<!--splice--rxas hellox2 >null -->
-
-<!--splice--rxvme hellox2 -->
+<!--splice--"rxas hellox2 && rxvme hellox2" -->
 
 We can see that the first component of the lines are the procedure names or the instruction mnemonics ; this program has no labels. 
 After the instructions, their parameters are placed.
