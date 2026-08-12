@@ -58,6 +58,7 @@ static void executor_condition_broadcast(rxvm_executor_condition *condition) {
     WakeAllConditionVariable(condition);
 }
 #else
+#include <signal.h>
 #include <pthread.h>
 typedef pthread_mutex_t rxvm_executor_mutex;
 typedef pthread_cond_t rxvm_executor_condition;
@@ -690,7 +691,7 @@ rxvm_executor_result rxvm_executor_cancel(
             executor_mutex_unlock(&request->mutex);
             return RXVM_EXECUTOR_INVALID;
         }
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
         if (pthread_kill(worker->thread, SIGURG) != 0) {
             request->cancel_requested = 0u;
             executor_mutex_unlock(&request->mutex);

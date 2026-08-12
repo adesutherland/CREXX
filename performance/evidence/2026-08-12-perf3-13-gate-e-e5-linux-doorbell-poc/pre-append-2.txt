@@ -1,0 +1,43 @@
+2026-08-12T13:04:20Z
+ 14:04:20 up 5 days, 22:15,  1 user,  load average: 2.28, 2.96, 3.08
+2.28 2.96 3.08 4/906 416020
+               total        used        free      shared  buff/cache   available
+Mem:            18Gi       5.9Gi       1.1Gi       2.9Gi        15Gi        12Gi
+Swap:          8.0Gi       5.3Mi       8.0Gi
+balanced
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=powersave
+/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference=balance_performance
+/sys/devices/system/cpu/intel_pstate/no_turbo=0
+/sys/class/thermal/thermal_zone0/temp=27800
+/sys/class/thermal/thermal_zone1/temp=90000
+    PID STAT COMMAND         %CPU %MEM COMMAND
+ 416036 R    ps               300  0.0 ps -eo pid,stat,comm,%cpu,%mem,args --sort=-%cpu
+ 382114 Rl   ChatGPT         58.9  3.7 /usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --ozone-platform=x11 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1786072401814317 --launch-time-ticks=460228249852 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,14037198916665697924,4612804999373228686,2097152 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708990997080739
+ 381836 Sl   ChatGPT         44.8  1.2 /usr/lib/chatgpt/ChatGPT --type=gpu-process --ozone-platform=x11 --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAASAAAAAAAAAABAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAEAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --metrics-shmem-handle=4,i,6381874521900289617,15003976515349749371,262144 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708988185955192
+ 395718 Sl   resources-proce  8.2  0.0 /usr/libexec/resources/resources-processes
+ 381786 Sl   ChatGPT          6.7  3.1 /usr/lib/chatgpt/ChatGPT
+ 382131 Sl   codex            6.2  1.2 /usr/lib/chatgpt/resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled
+ 416017 Ss   bash             6.1  0.0 /bin/bash -c { date -u +'%Y-%m-%dT%H:%M:%SZ'; uptime; cat /proc/loadavg; free -h; powerprofilesctl get; for p in /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference /sys/devices/system/cpu/intel_pstate/no_turbo /sys/class/thermal/thermal_zone0/temp /sys/class/thermal/thermal_zone1/temp; do if [ -r "$p" ]; then printf '%s=%s\n' "$p" "$(tr -d '\n' < "$p")"; fi; done; ps -eo pid,stat,comm,%cpu,%mem,args --sort=-%cpu | head -20; git rev-parse HEAD; git status --short; sha256sum /tmp/crexx-e4-linux-control-release/bin/rxbvm /tmp/crexx-e4-linux-control-release/bin/rxtvm /tmp/crexx-mthread-linux-release/bin/rxbvm /tmp/crexx-mthread-linux-release/bin/rxtvm performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/manifest-append-2.txt; } > performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-append-2.txt 2>&1; sed -n '1,25p' performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-append-2.txt
+ 395689 Sl   resources        3.9  0.9 /usr/bin/resources
+ 414536 I    kworker/2:2-i91  1.9  0.0 [kworker/2:2-i915-unordered]
+ 382113 Sl   ChatGPT          1.5  1.5 /usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --ozone-platform=x11 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=6 --time-ticks-at-unix-epoch=-1786072401814317 --launch-time-ticks=460228246335 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,2418936657378598294,9080825047425391578,2097152 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708991934122588
+ 379780 I    kworker/2:0-mm_  1.2  0.0 [kworker/2:0-mm_percpu_wq]
+   6115 Ssl  gnome-shell      0.9  1.6 /usr/bin/gnome-shell --mode=ubuntu
+ 389857 Sl   codex-code-mode  0.9  0.1 /usr/lib/chatgpt/resources/codex-code-mode-host
+ 414540 Sl   gjs              0.7  0.3 gjs /usr/share/gnome-shell/extensions/ding@rastersoft.com/app/ding.js -E -P /usr/share/gnome-shell/extensions/ding@rastersoft.com/app
+ 413408 I    kworker/u32:2-e  0.3  0.0 [kworker/u32:2-events_unbound]
+ 406384 I    kworker/u32:0-e  0.2  0.0 [kworker/u32:0-events_unbound]
+ 408052 I    kworker/u32:1-i  0.2  0.0 [kworker/u32:1-i915]
+ 410596 I    kworker/u32:3-e  0.2  0.0 [kworker/u32:3-events_unbound]
+ 381838 Sl   ChatGPT          0.1  0.6 /usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-GB --service-sandbox-type=none --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,6813355138652312527,996030927328187771,524288 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708989122997041
+b6edf2556f2411fe5033049e32ee77ddd9a2e15f
+ M interpreter/CMakeLists.txt
+ M interpreter/interrupt.c
+ M interpreter/rxvmexecutor.c
+?? performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/
+bf790bb99ac3990ebb56402bb6c3d1a54ab1658983700428e52be08e8ab5b9d4  /tmp/crexx-e4-linux-control-release/bin/rxbvm
+e6fc9c87185d56a83881727c9d49b4510d6d2d2832cc8a6af21fc5156d26da72  /tmp/crexx-e4-linux-control-release/bin/rxtvm
+9e972567d7faf1f5515530b06624bc6a800f54f350261947e02190f264f6d9ac  /tmp/crexx-mthread-linux-release/bin/rxbvm
+41257052d27b06662b3816ece95d84868e67d8ec7346952ebe22ad6dd9c8d29f  /tmp/crexx-mthread-linux-release/bin/rxtvm
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx
+d86f468e6d13150dc4a3f7a7860fa926176d3855a4d856119e0589f6aedd7afb  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/manifest-append-2.txt

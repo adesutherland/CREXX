@@ -1,0 +1,205 @@
+/* PERF3-13 E5 native-doorbell Linux Clang 24-pair/E4 paired Release reducer. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 2 then do
+  say "Usage: summarize_paired OUTPUT_SUMMARY SAMPLES"
+  return 2
+end
+
+output_path = argv[1]
+input_path = argv[2]
+group_keys = .string[]
+group_workloads = .string[]
+group_vms = .string[]
+group_metrics = .string[]
+before_values = .float[]
+after_values = .float[]
+before_counts = .int[]
+after_counts = .int[]
+group_count = 0
+line_number = 0
+
+do while lines(input_path)
+  line = linein(input_path)
+  line_number = line_number + 1
+  if line_number = 1 then iterate
+  fields = split_delimited(line, ",")
+  if fields[0] <> 20 then return fail("unexpected sample row width")
+  if fields[11] <> "recorded" then iterate
+  if fields[18] <> "pass" then return fail("non-passing recorded sample")
+
+  key = fields[3] || "/" || fields[6]
+  group = find_group(group_keys, group_count, key)
+  if group = 0 then do
+    group_count = group_count + 1
+    group = group_count
+    group_keys[group] = key
+    group_workloads[group] = fields[3]
+    group_vms[group] = fields[6]
+    group_metrics[group] = "elapsed_ns"
+    if fields[3] = "RexxCPS" then group_metrics[group] = "benchmark_rate"
+  end
+
+  sample_value = fields[15]
+  if group_metrics[group] = "benchmark_rate" then sample_value = fields[19]
+  if fields[7] = "e4-control" then do
+    before_counts[group] = before_counts[group] + 1
+    before_values[group * 100 + before_counts[group]] = sample_value
+  end
+  else if fields[7] = "linux-clang-doorbell-poc" then do
+    after_counts[group] = after_counts[group] + 1
+    after_values[group * 100 + after_counts[group]] = sample_value
+  end
+  else return fail("unexpected variant")
+end
+call linein input_path
+
+call remove_output output_path
+header = "workload,vm,metric,pairs,control_median,candidate_median," || ,
+    "min_percent,q1_percent,median_percent,q3_percent,max_percent," || ,
+    "mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent," || ,
+    "interval_result,favorable,total,guard_hit"
+if lineout(output_path, header) <> 0 then return fail("could not create summary")
+
+do group = 1 to group_count
+  if before_counts[group] <> 24 | after_counts[group] <> 24 then
+    return fail("incomplete 24-pair set")
+  before = .float[]
+  after = .float[]
+  do pair = 1 to 24
+    before[pair] = before_values[group * 100 + pair]
+    after[pair] = after_values[group * 100 + pair]
+  end
+  if write_summary(output_path, group_workloads[group], group_vms[group], ,
+      group_metrics[group], before, after) <> 0 then return 1
+end
+call lineout output_path
+say "PASS: PERF3-13 E5 native-doorbell paired summary retained at" output_path
+return 0
+
+write_summary: procedure = .int
+  arg output_path = .string, workload = .string, vm = .string, ,
+      metric = .string, before = .float[], after = .float[]
+  count = before[0]
+  deltas = .float[]
+  favorable = 0
+  sum = 0.0
+  do pair = 1 to count
+    delta = ((after[pair] - before[pair]) * 100.0) / before[pair]
+    deltas[pair] = delta
+    sum = sum + delta
+    if metric = "elapsed_ns" & delta < 0.0 then favorable = favorable + 1
+    if metric = "benchmark_rate" & delta > 0.0 then favorable = favorable + 1
+  end
+
+  call sort_floats before
+  call sort_floats after
+  call sort_floats deltas
+  mean = sum / (count as .float)
+  sum_squares = 0.0
+  do i = 1 to count
+    difference = deltas[i] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  sample_deviation = square_root(sum_squares / ((count - 1) as .float))
+  margin = 2.068658 * sample_deviation / square_root(count as .float)
+  interval_low = mean - margin
+  interval_high = mean + margin
+  interval_result = "noisy_inconclusive"
+  if metric = "elapsed_ns" then do
+    if interval_high < 0.0 then interval_result = "clear_favorable"
+    else if interval_low > 0.0 then interval_result = "clear_adverse"
+  end
+  else do
+    if interval_low > 0.0 then interval_result = "clear_favorable"
+    else if interval_high < 0.0 then interval_result = "clear_adverse"
+  end
+  guard_hit = "no"
+  if metric = "elapsed_ns" & mean > 3.0 then guard_hit = "yes"
+  if metric = "benchmark_rate" & mean < -3.0 then guard_hit = "yes"
+  row = workload || "," || vm || "," || metric || "," || count || "," || ,
+      float_text(sample_quantile(before, 1, 2)) || "," || ,
+      float_text(sample_quantile(after, 1, 2)) || "," || float_text(deltas[1]) || ,
+      "," || float_text(sample_quantile(deltas, 1, 4)) || "," || ,
+      float_text(sample_quantile(deltas, 1, 2)) || "," || ,
+      float_text(sample_quantile(deltas, 3, 4)) || "," || ,
+      float_text(deltas[count]) || "," || float_text(mean) || "," || ,
+      float_text(interval_low) || "," || float_text(interval_high) || "," || ,
+      interval_result || "," || favorable || "," || count || "," || guard_hit
+  if lineout(output_path, row) <> 0 then return fail("could not append row")
+  return 0
+
+find_group: procedure = .int
+  arg keys = .string[], group_count = .int, key = .string
+  do group = 1 to group_count
+    if keys[group] = key then return group
+  end
+  return 0
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

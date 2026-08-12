@@ -1666,11 +1666,16 @@ if(CREXX_THREADED_VM_SUPPORTED)
     crexx_configure_program_generation_control(program_generation_control-rxtvml)
 endif()
 
-# PERF3-13 E5 macOS native-doorbell PoC. This private executor proves that a
+# PERF3-13 E5 POSIX native-doorbell PoC. This private executor proves that a
 # platform thread-directed notification can set the existing run()-local
 # pending word without adding a poll, branch or second interpreter loop. It is
 # test-only and introduces no public worker, channel or RXVML ABI.
-if(APPLE AND BUILD_TESTING)
+if(BUILD_TESTING AND (APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux"))
+    if(APPLE)
+        set(_crexx_e5_doorbell_platform_label macos)
+    else()
+        set(_crexx_e5_doorbell_platform_label linux)
+    endif()
     add_custom_command(
             OUTPUT test_persistent_worker_executor.rxbin
             COMMAND $<TARGET_FILE:rxc> -o test_persistent_worker_executor
@@ -1679,7 +1684,7 @@ if(APPLE AND BUILD_TESTING)
             DEPENDS tests/rexx/test_persistent_worker_executor.crexx
                     rxc rxas compiler_exit_bin
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Compiling PERF3-13 E5 macOS doorbell control ..."
+            COMMENT "Compiling PERF3-13 E5 POSIX doorbell control ..."
     )
     add_custom_target(test_persistent_worker_executor_bin ALL
             DEPENDS test_persistent_worker_executor.rxbin)
@@ -1705,7 +1710,7 @@ if(APPLE AND BUILD_TESTING)
                         ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         set_tests_properties(${TARGET_NAME} PROPERTIES
-                LABELS "interpreter;perf3;gate-e;e5;poc;macos"
+                LABELS "interpreter;perf3;gate-e;e5;poc;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
     endfunction()
 

@@ -74,6 +74,9 @@
 */
 
 
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE /* pthread_getattr_np() */
+#endif
 #define _POSIX_C_SOURCE 200809L /* Request POSIX features */
 #include <signal.h>
 #include <stddef.h>  /* For NULL */
@@ -96,6 +99,9 @@
 #else
     #include <pthread.h>
     #include <unistd.h>  /* POSIX specifics */
+#if defined(__APPLE__) || defined(__linux__)
+    #define CREXX_POSIX_THREAD_DOORBELL_POC 1
+#endif
 #if defined(__APPLE__)
     /* _POSIX_C_SOURCE intentionally hides these Darwin worker-stack queries. */
     size_t pthread_get_stacksize_np(pthread_t);
@@ -124,16 +130,17 @@ static rxvm_context *g_process_main_context;
 static volatile sig_atomic_t *g_process_main_interrupts;
 static size_t g_signal_users;
 
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
 /*
- * PERF3-13 E5 macOS native-doorbell PoC. SIGURG is not mapped to a public VM
+ * PERF3-13 E5 POSIX native-doorbell PoC. SIGURG is not mapped to a public VM
  * signal. Each worker registers its immutable stack range while SIGURG is
  * blocked. During run(), the slot points at the existing execution-local
  * pending word and SIGURG is unblocked. The handler identifies its target by
  * the current stack address and performs only the existing sig_atomic_t OR.
  *
- * Apple Clang's Mach-O TLS access can call the TLV resolver, so TLS is
- * deliberately excluded from this signal-handler path.
+ * TLS is deliberately excluded from this signal-handler path: Apple Clang's
+ * Mach-O form called the TLV resolver, and the Linux proof must likewise keep
+ * all libc/runtime traversal outside the handler.
  */
 #define RXVM_THREAD_DOORBELL_POC_SIGNAL SIGURG
 #define RXVM_THREAD_DOORBELL_POC_MAX_WORKERS 64u
@@ -151,10 +158,24 @@ static rxvm_thread_doorbell_poc_slot
 static struct sigaction g_thread_doorbell_previous_action;
 static size_t g_thread_doorbell_users;
 
+#if defined(__linux__) && defined(__GCC_ATOMIC_INT_LOCK_FREE)
+typedef char crexx_thread_doorbell_active_must_be_lock_free[
+        (sizeof(uint32_t) == sizeof(unsigned int) &&
+         __GCC_ATOMIC_INT_LOCK_FREE == 2) ? 1 : -1];
+#else
 typedef char crexx_thread_doorbell_active_must_be_lock_free[
         __atomic_always_lock_free(sizeof(uint32_t), 0) ? 1 : -1];
+#endif
 
-static void rxvm_thread_doorbell_poc_handler(int os_signal) {
+#if defined(__GNUC__) || defined(__clang__)
+#define RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES \
+        __attribute__((no_stack_protector))
+#else
+#define RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES
+#endif
+
+static void RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES
+rxvm_thread_doorbell_poc_handler(int os_signal) {
     volatile unsigned char stack_marker = 0u;
     const uintptr_t stack_address = (uintptr_t)&stack_marker;
     size_t index;
@@ -178,6 +199,8 @@ static void rxvm_thread_doorbell_poc_handler(int os_signal) {
     }
 }
 
+#undef RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES
+
 static rxvm_thread_doorbell_poc_slot *
 rxvm_thread_doorbell_poc_find_current(void) {
     const pthread_t self = pthread_self();
@@ -200,6 +223,41 @@ static void rxvm_thread_doorbell_poc_mask(int how) {
     sigemptyset(&doorbell);
     sigaddset(&doorbell, RXVM_THREAD_DOORBELL_POC_SIGNAL);
     if (pthread_sigmask(how, &doorbell, 0) != 0) abort();
+}
+
+static int rxvm_thread_doorbell_poc_stack_range(
+        pthread_t self,
+        uintptr_t *stack_low,
+        uintptr_t *stack_high) {
+#if defined(__APPLE__)
+    const uintptr_t high = (uintptr_t)pthread_get_stackaddr_np(self);
+    const size_t size = pthread_get_stacksize_np(self);
+
+    if (!high || !size || size > high) return -1;
+    *stack_low = high - size;
+    *stack_high = high;
+    return 0;
+#elif defined(__linux__)
+    pthread_attr_t attributes;
+    void *base = 0;
+    size_t size = 0u;
+    uintptr_t low;
+    int rc;
+
+    if (pthread_getattr_np(self, &attributes) != 0) return -1;
+    rc = pthread_attr_getstack(&attributes, &base, &size);
+    if (pthread_attr_destroy(&attributes) != 0) rc = -1;
+    low = (uintptr_t)base;
+    if (rc != 0 || !low || !size || size > UINTPTR_MAX - low) return -1;
+    *stack_low = low;
+    *stack_high = low + size;
+    return 0;
+#else
+    (void)self;
+    (void)stack_low;
+    (void)stack_high;
+    return -1;
+#endif
 }
 #endif
 
@@ -232,13 +290,13 @@ int rxvm_signal_enter_execution(
         volatile sig_atomic_t *pending_interrupts,
         volatile sig_atomic_t **previous_pending_interrupts) {
     volatile sig_atomic_t *previous;
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     rxvm_thread_doorbell_poc_slot *doorbell_slot;
 #endif
 
     if (!context || !pending_interrupts || !previous_pending_interrupts)
         return -1;
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     doorbell_slot = rxvm_thread_doorbell_poc_find_current();
     if (doorbell_slot) rxvm_thread_doorbell_poc_mask(SIG_BLOCK);
 #endif
@@ -250,11 +308,11 @@ int rxvm_signal_enter_execution(
     if (g_process_main_context == context)
         g_process_main_interrupts = pending_interrupts;
     *previous_pending_interrupts = previous;
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     if (doorbell_slot) doorbell_slot->pending = pending_interrupts;
 #endif
     SIGNAL_LIFECYCLE_UNLOCK();
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     if (doorbell_slot) rxvm_thread_doorbell_poc_mask(SIG_UNBLOCK);
 #endif
     return 0;
@@ -265,13 +323,13 @@ int rxvm_signal_leave_execution(
         volatile sig_atomic_t *pending_interrupts,
         volatile sig_atomic_t *previous_pending_interrupts) {
     int rc = 0;
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     rxvm_thread_doorbell_poc_slot *doorbell_slot =
             rxvm_thread_doorbell_poc_find_current();
 #endif
 
     if (!context || !pending_interrupts) return -1;
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     if (doorbell_slot) rxvm_thread_doorbell_poc_mask(SIG_BLOCK);
 #endif
     SIGNAL_LIFECYCLE_LOCK();
@@ -285,13 +343,13 @@ int rxvm_signal_leave_execution(
             *previous_pending_interrupts |= *pending_interrupts;
         if (g_process_main_context == context)
             g_process_main_interrupts = previous_pending_interrupts;
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
         if (doorbell_slot) doorbell_slot->pending = previous_pending_interrupts;
 #endif
         *pending_interrupts = 0;
     }
     SIGNAL_LIFECYCLE_UNLOCK();
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     if (!rc && doorbell_slot && previous_pending_interrupts)
         rxvm_thread_doorbell_poc_mask(SIG_UNBLOCK);
 #endif
@@ -299,7 +357,7 @@ int rxvm_signal_leave_execution(
 }
 
 int rxvm_signal_thread_doorbell_poc_install(void) {
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     struct sigaction action;
     int rc = 0;
 
@@ -326,7 +384,7 @@ int rxvm_signal_thread_doorbell_poc_install(void) {
 }
 
 void rxvm_signal_thread_doorbell_poc_uninstall(void) {
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     SIGNAL_LIFECYCLE_LOCK();
     if (g_thread_doorbell_users) {
         g_thread_doorbell_users--;
@@ -341,16 +399,16 @@ void rxvm_signal_thread_doorbell_poc_uninstall(void) {
 }
 
 int rxvm_signal_thread_doorbell_poc_prepare_current(void) {
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     const pthread_t self = pthread_self();
-    const uintptr_t stack_high =
-            (uintptr_t)pthread_get_stackaddr_np(self);
-    const size_t stack_size = pthread_get_stacksize_np(self);
     rxvm_thread_doorbell_poc_slot *slot = 0;
+    uintptr_t stack_low = 0u;
+    uintptr_t stack_high = 0u;
     size_t index;
 
     rxvm_thread_doorbell_poc_mask(SIG_BLOCK);
-    if (!stack_high || !stack_size || stack_size > stack_high) return -1;
+    if (rxvm_thread_doorbell_poc_stack_range(
+                self, &stack_low, &stack_high) != 0) return -1;
 
     SIGNAL_LIFECYCLE_LOCK();
     if (g_thread_doorbell_users) {
@@ -360,7 +418,7 @@ int rxvm_signal_thread_doorbell_poc_prepare_current(void) {
                                  __ATOMIC_ACQUIRE)) {
                 slot = &g_thread_doorbell_slots[index];
                 slot->thread = self;
-                slot->stack_low = stack_high - stack_size;
+                slot->stack_low = stack_low;
                 slot->stack_high = stack_high;
                 slot->pending = 0;
                 __atomic_store_n(&slot->active, 1u, __ATOMIC_RELEASE);
@@ -376,7 +434,7 @@ int rxvm_signal_thread_doorbell_poc_prepare_current(void) {
 }
 
 void rxvm_signal_thread_doorbell_poc_discard_current(void) {
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     sigset_t pending;
     sigset_t doorbell;
     int received;
@@ -394,7 +452,7 @@ void rxvm_signal_thread_doorbell_poc_discard_current(void) {
 }
 
 void rxvm_signal_thread_doorbell_poc_release_current(void) {
-#if defined(__APPLE__)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
     rxvm_thread_doorbell_poc_slot *slot;
 
     rxvm_signal_thread_doorbell_poc_discard_current();

@@ -2,12 +2,14 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E4 complete on Mac; E5 macOS native-doorbell PoC passes; industrial E5/E6, portable publication proof and Gate F remain closed**
+Status: **Gate E E4 complete on Mac; E5 POSIX native-doorbell PoC passes on
+macOS and Intel Linux; Windows carrier proof, industrial E5/E6, portable
+publication proof and Gate F remain closed**
 
 ## Current Gate E continuation
 
 - Publication branches: `develop` contains accepted E4; `mthread` carries E4
-  plus the isolated macOS native-doorbell PoC and its evidence.
+  plus the isolated macOS/Intel-Linux native-doorbell PoC and its evidence.
 - Published Gate E base: `84d406904ece6842f6cec5a47e75d12b9d28ab16`
   (`fix: use compiler-correct RXVM thread locals`).
 - EF-0 implementation: `642e1b697bd019a800a2bddbaea8ef7a3d75e531`
@@ -2452,15 +2454,75 @@ This selects a physical delivery mechanism only. Industrial E5 still requires
 the copied logical register-image request/completion envelope, correlated
 generation mailbox, level-triggered drain, typed terminal completion,
 `CANCEL`/`KILL`/shutdown priority, deadlines, quarantine and deterministic
-join. Linux must repeat the POSIX signal/generated-code proof and Windows must
-prove special user-mode APC delivery plus runtime fallback before a portable
-backend is selected. Gate F remains closed, but may reuse the same host-local
-doorbell beneath its transport-neutral channels.
+join. Intel Linux has now repeated the POSIX signal/generated-code proof under
+GCC and Clang; Windows must still prove special user-mode APC delivery plus
+runtime fallback before a portable backend is selected. Gate F remains closed,
+but may reuse the same host-local doorbell beneath its transport-neutral
+channels.
 
 Design:
 [`PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md`](PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md).
 Evidence:
 [`2026-08-12-perf3-13-gate-e-e5-macos-doorbell-poc`](evidence/2026-08-12-perf3-13-gate-e-e5-macos-doorbell-poc/).
+
+### E5 native thread doorbell — Intel Linux PoC accepted 2026-08-12
+
+The same private physical carrier now passes on Intel Linux under both GCC
+15.2.0 and Clang 21.1.8. Linux discovers each persistent worker's immutable
+stack range outside the signal handler with `pthread_getattr_np()` and
+`pthread_attr_getstack()`, publishes it while `SIGURG` is blocked, and retains
+the existing bounded stack-range handler. Apple continues to use its pthread
+stack extensions. Both Linux compilers emit a handler with no call,
+allocation, lock, log, TLS resolution, stack-canary failure edge or unexpected
+runtime access. The ordinary E4 dispatch source and normalized generated
+`run` stream remain identical to the frozen E4 control.
+
+Focused Debug stress passes 60/60 per compiler across `rxvml`, `rxbvml` and
+`rxtvml`; focused profiling-off Release passes 3/3 per compiler. Each concrete
+engine completes 1,000 consecutive infinite-loop cancellations under each
+compiler, covering 4,000 retained Linux latency samples in total. The private
+fixture also covers simultaneous workers, recursive cancellation, repeated
+delivery, failure isolation, no spill, drain/join and teardown.
+
+After acceptance, the affected GCC Debug products and all three private
+fixtures rebuilt successfully. A broad 2,039-test Debug closeout did not yield
+a valid verdict on the same stressed host: its 619-artifact setup fixture
+timed out after 1,500 seconds at artifact 279, dependent tests were Not Run,
+and a parser contract separately hit its 120-second timeout. The run was
+stopped at 37/2,039 without an E5 assertion or executor failure. This is an
+incomplete host-capacity observation, not a broad pass or product regression;
+repeat broad Linux closeout after the reboot/stabilization procedure below.
+
+The same-host E4 comparisons are accepted as an **overall noisy/inconclusive
+performance result and a physical-PoC pass**. GCC has one clear favourable
+Permute/`rxbvm` row and one inconclusive Sieve/`rxtvm` 3% guard hit. Clang has
+two clear favourable RexxCPS rows and inconclusive Sieve/`rxtvm` and
+Permute/`rxtvm` guard hits. Those row classifications remain exactly as
+measured; they are not promoted into a performance-benefit claim. Every guard
+interval crosses zero, the host was hot and materially loaded, and no
+ordinary-dispatch operation was added. Adrian accepts the combined evidence
+as showing no demonstrated performance harm at PoC precision and as a useful
+functional stress test, not as a guard-clean production qualification.
+
+The controlled fresh E4 compiler build comparison is more decisive for local
+development: Clang built `rxbvm` plus `rxtvm` 3.240x faster than GCC, used
+62.16% less peak RSS and produced files about 33.5% smaller. Runtime compiler
+results are mixed and remain inconclusive; prefer Clang for development builds
+on this host and retain GCC as a validation compiler until a rebooted, quiet,
+reserved-host comparison selects otherwise.
+
+Before the next compiler/performance qualification, reboot the host, allow
+thermal and load state to settle, keep it on AC with low-power mode off, close
+or move heavy GUI/rendering and update activity, reserve the machine against
+other work, and run a short drift/noise pilot before starting the governed
+campaign. Capture the same pre/post power, thermal, load and process state.
+The stressed-host run remains useful robustness evidence but must not be used
+as a clean compiler-speed or production-regression claim.
+
+Evidence:
+[`GCC Linux proof`](evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/)
+and
+[`Clang Linux proof and compiler comparison`](evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/).
 
 - [ ] Give each worker its own execution state, stack/register sets, frame
   caches, arena and procedure-affine free lists.
@@ -2546,7 +2608,7 @@ until these semantics and the local channel contract are accepted.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 through E4 complete on Mac; E5 native-doorbell carrier PoC passes on macOS.**
+6. **Gate E — full M5 start: approved 2026-08-07; E1 through E4 complete on Mac; E5 native-doorbell carrier PoC passes on macOS and Intel Linux.**
    E1/E1-P1 are published and Windows-MinGW proven. E2's worker-owned active
    state and direct interrupt slot pass the accepted Release verdict, complete
    Mac Debug/ASan/Release closeout and the separately repaired RXAS sanitizer
@@ -2560,11 +2622,13 @@ until these semantics and the local channel contract are accepted.
    E4b implements the internal bytecode-only sealed immutable-generation/
    worker-overlay boundary, passes a guard-clean single-worker verdict and Mac
    Debug/ASan/Release closeout, and retains byte-identical verdict VMs. The
-   private E5 macOS PoC proves prompt `pthread_kill` delivery through the
-   existing E4 local interrupt word with no added hot-loop poll; industrial E5,
-   Linux/Windows backend proof, E6 and portable publication proof remain open
-   approval boundaries. The full gate stops for worker-model selection before
-   any public pool/channel semantics.
+   private E5 macOS and Intel-Linux PoCs prove prompt `pthread_kill` delivery
+   through the existing E4 local interrupt word with no added hot-loop poll.
+   Linux GCC/Clang correctness and generated-code proofs pass; its stressed-host
+   performance result is accepted as noisy/inconclusive at PoC precision.
+   Industrial E5, Windows backend proof, E6 and portable publication proof
+   remain open approval boundaries. The full gate stops for worker-model
+   selection before any public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 

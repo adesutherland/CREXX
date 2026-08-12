@@ -1,0 +1,184 @@
+[rxbvm object handler]
+
+/tmp/crexx-mthread-linux-clang-release/interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000450 <rxvm_thread_doorbell_poc_handler>:
+     450:	c6 44 24 ff 00       	movb   $0x0,-0x1(%rsp)
+     455:	83 ff 17             	cmp    $0x17,%edi
+     458:	75 67                	jne    4c1 <rxvm_thread_doorbell_poc_handler+0x71>
+     45a:	48 8d 0d 00 00 00 00 	lea    0x0(%rip),%rcx        # 461 <rxvm_thread_doorbell_poc_handler+0x11>	45d: R_X86_64_PC32	.bss+0x11c
+     461:	31 c0                	xor    %eax,%eax
+     463:	48 8d 54 24 ff       	lea    -0x1(%rsp),%rdx
+     468:	eb 14                	jmp    47e <rxvm_thread_doorbell_poc_handler+0x2e>
+     46a:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+     470:	48 83 c0 02          	add    $0x2,%rax
+     474:	48 83 c1 50          	add    $0x50,%rcx
+     478:	48 83 f8 40          	cmp    $0x40,%rax
+     47c:	74 43                	je     4c1 <rxvm_thread_doorbell_poc_handler+0x71>
+     47e:	8b 71 c0             	mov    -0x40(%rcx),%esi
+     481:	85 f6                	test   %esi,%esi
+     483:	74 0c                	je     491 <rxvm_thread_doorbell_poc_handler+0x41>
+     485:	48 39 51 d0          	cmp    %rdx,-0x30(%rcx)
+     489:	77 06                	ja     491 <rxvm_thread_doorbell_poc_handler+0x41>
+     48b:	48 39 51 d8          	cmp    %rdx,-0x28(%rcx)
+     48f:	77 15                	ja     4a6 <rxvm_thread_doorbell_poc_handler+0x56>
+     491:	8b 71 e8             	mov    -0x18(%rcx),%esi
+     494:	85 f6                	test   %esi,%esi
+     496:	74 d8                	je     470 <rxvm_thread_doorbell_poc_handler+0x20>
+     498:	48 39 51 f8          	cmp    %rdx,-0x8(%rcx)
+     49c:	77 d2                	ja     470 <rxvm_thread_doorbell_poc_handler+0x20>
+     49e:	48 39 11             	cmp    %rdx,(%rcx)
+     4a1:	76 cd                	jbe    470 <rxvm_thread_doorbell_poc_handler+0x20>
+     4a3:	48 ff c0             	inc    %rax
+     4a6:	48 8d 04 80          	lea    (%rax,%rax,4),%rax
+     4aa:	48 8d 0d 00 00 00 00 	lea    0x0(%rip),%rcx        # 4b1 <rxvm_thread_doorbell_poc_handler+0x61>	4ad: R_X86_64_PC32	.bss+0xdc
+     4b1:	48 8b 44 c1 20       	mov    0x20(%rcx,%rax,8),%rax
+     4b6:	48 85 c0             	test   %rax,%rax
+     4b9:	74 06                	je     4c1 <rxvm_thread_doorbell_poc_handler+0x71>
+     4bb:	81 08 00 00 02 00    	orl    $0x20000,(%rax)
+     4c1:	c3                   	ret
+[rxtvm object handler]
+
+/tmp/crexx-mthread-linux-clang-release/interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000450 <rxvm_thread_doorbell_poc_handler>:
+     450:	c6 44 24 ff 00       	movb   $0x0,-0x1(%rsp)
+     455:	83 ff 17             	cmp    $0x17,%edi
+     458:	75 67                	jne    4c1 <rxvm_thread_doorbell_poc_handler+0x71>
+     45a:	48 8d 0d 00 00 00 00 	lea    0x0(%rip),%rcx        # 461 <rxvm_thread_doorbell_poc_handler+0x11>	45d: R_X86_64_PC32	.bss+0x11c
+     461:	31 c0                	xor    %eax,%eax
+     463:	48 8d 54 24 ff       	lea    -0x1(%rsp),%rdx
+     468:	eb 14                	jmp    47e <rxvm_thread_doorbell_poc_handler+0x2e>
+     46a:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+     470:	48 83 c0 02          	add    $0x2,%rax
+     474:	48 83 c1 50          	add    $0x50,%rcx
+     478:	48 83 f8 40          	cmp    $0x40,%rax
+     47c:	74 43                	je     4c1 <rxvm_thread_doorbell_poc_handler+0x71>
+     47e:	8b 71 c0             	mov    -0x40(%rcx),%esi
+     481:	85 f6                	test   %esi,%esi
+     483:	74 0c                	je     491 <rxvm_thread_doorbell_poc_handler+0x41>
+     485:	48 39 51 d0          	cmp    %rdx,-0x30(%rcx)
+     489:	77 06                	ja     491 <rxvm_thread_doorbell_poc_handler+0x41>
+     48b:	48 39 51 d8          	cmp    %rdx,-0x28(%rcx)
+     48f:	77 15                	ja     4a6 <rxvm_thread_doorbell_poc_handler+0x56>
+     491:	8b 71 e8             	mov    -0x18(%rcx),%esi
+     494:	85 f6                	test   %esi,%esi
+     496:	74 d8                	je     470 <rxvm_thread_doorbell_poc_handler+0x20>
+     498:	48 39 51 f8          	cmp    %rdx,-0x8(%rcx)
+     49c:	77 d2                	ja     470 <rxvm_thread_doorbell_poc_handler+0x20>
+     49e:	48 39 11             	cmp    %rdx,(%rcx)
+     4a1:	76 cd                	jbe    470 <rxvm_thread_doorbell_poc_handler+0x20>
+     4a3:	48 ff c0             	inc    %rax
+     4a6:	48 8d 04 80          	lea    (%rax,%rax,4),%rax
+     4aa:	48 8d 0d 00 00 00 00 	lea    0x0(%rip),%rcx        # 4b1 <rxvm_thread_doorbell_poc_handler+0x61>	4ad: R_X86_64_PC32	.bss+0xdc
+     4b1:	48 8b 44 c1 20       	mov    0x20(%rcx,%rax,8),%rax
+     4b6:	48 85 c0             	test   %rax,%rax
+     4b9:	74 06                	je     4c1 <rxvm_thread_doorbell_poc_handler+0x71>
+     4bb:	81 08 00 00 02 00    	orl    $0x20000,(%rax)
+     4c1:	c3                   	ret
+[rxbvm linked handler]
+
+/tmp/crexx-mthread-linux-clang-release/bin/rxbvm:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.got:
+
+Disassembly of section .text:
+
+00000000000ce200 <rxvm_thread_doorbell_poc_handler>:
+   ce200:	c6 44 24 ff 00       	movb   $0x0,-0x1(%rsp)
+   ce205:	83 ff 17             	cmp    $0x17,%edi
+   ce208:	75 67                	jne    ce271 <rxvm_thread_doorbell_poc_handler+0x71>
+   ce20a:	48 8d 0d 3f a5 06 00 	lea    0x6a53f(%rip),%rcx        # 138750 <g_thread_doorbell_slots+0x40>
+   ce211:	31 c0                	xor    %eax,%eax
+   ce213:	48 8d 54 24 ff       	lea    -0x1(%rsp),%rdx
+   ce218:	eb 14                	jmp    ce22e <rxvm_thread_doorbell_poc_handler+0x2e>
+   ce21a:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+   ce220:	48 83 c0 02          	add    $0x2,%rax
+   ce224:	48 83 c1 50          	add    $0x50,%rcx
+   ce228:	48 83 f8 40          	cmp    $0x40,%rax
+   ce22c:	74 43                	je     ce271 <rxvm_thread_doorbell_poc_handler+0x71>
+   ce22e:	8b 71 c0             	mov    -0x40(%rcx),%esi
+   ce231:	85 f6                	test   %esi,%esi
+   ce233:	74 0c                	je     ce241 <rxvm_thread_doorbell_poc_handler+0x41>
+   ce235:	48 39 51 d0          	cmp    %rdx,-0x30(%rcx)
+   ce239:	77 06                	ja     ce241 <rxvm_thread_doorbell_poc_handler+0x41>
+   ce23b:	48 39 51 d8          	cmp    %rdx,-0x28(%rcx)
+   ce23f:	77 15                	ja     ce256 <rxvm_thread_doorbell_poc_handler+0x56>
+   ce241:	8b 71 e8             	mov    -0x18(%rcx),%esi
+   ce244:	85 f6                	test   %esi,%esi
+   ce246:	74 d8                	je     ce220 <rxvm_thread_doorbell_poc_handler+0x20>
+   ce248:	48 39 51 f8          	cmp    %rdx,-0x8(%rcx)
+   ce24c:	77 d2                	ja     ce220 <rxvm_thread_doorbell_poc_handler+0x20>
+   ce24e:	48 39 11             	cmp    %rdx,(%rcx)
+   ce251:	76 cd                	jbe    ce220 <rxvm_thread_doorbell_poc_handler+0x20>
+   ce253:	48 ff c0             	inc    %rax
+   ce256:	48 8d 04 80          	lea    (%rax,%rax,4),%rax
+   ce25a:	48 8d 0d af a4 06 00 	lea    0x6a4af(%rip),%rcx        # 138710 <g_thread_doorbell_slots>
+   ce261:	48 8b 44 c1 20       	mov    0x20(%rcx,%rax,8),%rax
+   ce266:	48 85 c0             	test   %rax,%rax
+   ce269:	74 06                	je     ce271 <rxvm_thread_doorbell_poc_handler+0x71>
+   ce26b:	81 08 00 00 02 00    	orl    $0x20000,(%rax)
+   ce271:	c3                   	ret
+
+Disassembly of section .fini:
+[rxtvm linked handler]
+
+/tmp/crexx-mthread-linux-clang-release/bin/rxtvm:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.got:
+
+Disassembly of section .text:
+
+00000000000d3b80 <rxvm_thread_doorbell_poc_handler>:
+   d3b80:	c6 44 24 ff 00       	movb   $0x0,-0x1(%rsp)
+   d3b85:	83 ff 17             	cmp    $0x17,%edi
+   d3b88:	75 67                	jne    d3bf1 <rxvm_thread_doorbell_poc_handler+0x71>
+   d3b8a:	48 8d 0d 0f a0 06 00 	lea    0x6a00f(%rip),%rcx        # 13dba0 <g_thread_doorbell_slots+0x40>
+   d3b91:	31 c0                	xor    %eax,%eax
+   d3b93:	48 8d 54 24 ff       	lea    -0x1(%rsp),%rdx
+   d3b98:	eb 14                	jmp    d3bae <rxvm_thread_doorbell_poc_handler+0x2e>
+   d3b9a:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+   d3ba0:	48 83 c0 02          	add    $0x2,%rax
+   d3ba4:	48 83 c1 50          	add    $0x50,%rcx
+   d3ba8:	48 83 f8 40          	cmp    $0x40,%rax
+   d3bac:	74 43                	je     d3bf1 <rxvm_thread_doorbell_poc_handler+0x71>
+   d3bae:	8b 71 c0             	mov    -0x40(%rcx),%esi
+   d3bb1:	85 f6                	test   %esi,%esi
+   d3bb3:	74 0c                	je     d3bc1 <rxvm_thread_doorbell_poc_handler+0x41>
+   d3bb5:	48 39 51 d0          	cmp    %rdx,-0x30(%rcx)
+   d3bb9:	77 06                	ja     d3bc1 <rxvm_thread_doorbell_poc_handler+0x41>
+   d3bbb:	48 39 51 d8          	cmp    %rdx,-0x28(%rcx)
+   d3bbf:	77 15                	ja     d3bd6 <rxvm_thread_doorbell_poc_handler+0x56>
+   d3bc1:	8b 71 e8             	mov    -0x18(%rcx),%esi
+   d3bc4:	85 f6                	test   %esi,%esi
+   d3bc6:	74 d8                	je     d3ba0 <rxvm_thread_doorbell_poc_handler+0x20>
+   d3bc8:	48 39 51 f8          	cmp    %rdx,-0x8(%rcx)
+   d3bcc:	77 d2                	ja     d3ba0 <rxvm_thread_doorbell_poc_handler+0x20>
+   d3bce:	48 39 11             	cmp    %rdx,(%rcx)
+   d3bd1:	76 cd                	jbe    d3ba0 <rxvm_thread_doorbell_poc_handler+0x20>
+   d3bd3:	48 ff c0             	inc    %rax
+   d3bd6:	48 8d 04 80          	lea    (%rax,%rax,4),%rax
+   d3bda:	48 8d 0d 7f 9f 06 00 	lea    0x69f7f(%rip),%rcx        # 13db60 <g_thread_doorbell_slots>
+   d3be1:	48 8b 44 c1 20       	mov    0x20(%rcx,%rax,8),%rax
+   d3be6:	48 85 c0             	test   %rax,%rax
+   d3be9:	74 06                	je     d3bf1 <rxvm_thread_doorbell_poc_handler+0x71>
+   d3beb:	81 08 00 00 02 00    	orl    $0x20000,(%rax)
+   d3bf1:	c3                   	ret
+
+Disassembly of section .fini:

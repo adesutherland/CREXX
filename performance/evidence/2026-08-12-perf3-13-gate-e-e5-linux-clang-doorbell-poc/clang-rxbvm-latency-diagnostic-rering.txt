@@ -1,0 +1,5 @@
+tgkill_rc=0 errno=0
+    PID     TID     ELAPSED STAT %CPU WCHAN                    COMMAND
+ 470212  470212       05:22 Sl    0.0 futex_do_wait            /tmp/crexx-mthread-linux-clang-release/interpreter/persistent_worker_executor-rxbvml --doorbell-latency /tmp/crexx-mthread-linux-clang-release/interpreter/test_persistent_worker_executor.rxbin 1000
+ 470212  470214       05:22 Rl   99.9 -                        /tmp/crexx-mthread-linux-clang-release/interpreter/persistent_worker_executor-rxbvml --doorbell-latency /tmp/crexx-mthread-linux-clang-release/interpreter/test_persistent_worker_executor.rxbin 1000
+-rw-rw-r-- 1 adrian adrian 0 Aug 12 15:22 performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/rxbvm-latency.log

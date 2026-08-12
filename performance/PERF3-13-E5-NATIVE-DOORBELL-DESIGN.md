@@ -2,8 +2,9 @@
 
 Date: 2026-08-11
 
-Status: **macOS physical hypothesis passes in the private E5 PoC; industrial
-mailbox integration and portable backend selection remain open**
+Status: **POSIX physical hypothesis passes on macOS and Intel Linux in the
+private E5 PoC; Windows proof, industrial mailbox integration and portable
+backend selection remain open**
 
 ## Decision question
 
@@ -128,7 +129,7 @@ continues to use a framed pipe/socket for envelopes and an OS signal/event only
 as the prompt notification. Cross-host Gate F likewise retains an open framed
 transport; native doorbells are host-local optimisations.
 
-## macOS proof result and remaining selection gates
+## macOS and Intel Linux proof result
 
 The clean `mthread` PoC establishes:
 
@@ -150,8 +151,30 @@ The complete Debug suite and focused Apple AddressSanitizer results are part of
 the branch closeout record, not prerequisites for interpreting the physical
 delivery result.
 
-Linux must repeat the POSIX proof on its signal ABI and generated handler code.
+Intel Linux repeats the proof with GCC 15.2.0 and Clang 21.1.8. Linux resolves
+stack bounds outside the handler with `pthread_getattr_np()` and
+`pthread_attr_getstack()`. Both compilers pass focused Debug stress, focused
+profiling-off Release, 1,000 cancellations per concrete engine and the
+generated-code/async-signal-safety audit. Their handler objects call nothing,
+have no TLS/runtime traversal, and ring the same E4 word without changing
+ordinary dispatch.
+
+The Linux E4-versus-PoC timings are accepted as an overall
+**noisy/inconclusive performance result and physical-PoC pass**. Individual
+clear favourable rows remain recorded but do not support a general benefit
+claim; the observed guard hits remain inconclusive because their intervals
+cross zero on a visibly hot and loaded host. Adrian accepts this as no
+demonstrated harm at PoC precision and as useful stressed-host functional
+evidence. A future compiler or production-performance selection must start
+after a reboot on a thermally settled, quiet, reserved host and pass a short
+drift/noise pilot.
+
 Windows must separately prove `QueueUserAPC2`, nested callback safety, runtime
-API fallback and both concrete VM forms. Passing macOS does not authorize a
-portable production backend, public executor API, worker/channel syntax or
-Gate F transport.
+API fallback and both concrete VM forms. Passing both POSIX hosts does not
+authorize a portable production backend, public executor API, worker/channel
+syntax or Gate F transport.
+
+Evidence:
+[`macOS`](evidence/2026-08-12-perf3-13-gate-e-e5-macos-doorbell-poc/),
+[`Linux GCC`](evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/) and
+[`Clang plus compiler comparison`](evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/).

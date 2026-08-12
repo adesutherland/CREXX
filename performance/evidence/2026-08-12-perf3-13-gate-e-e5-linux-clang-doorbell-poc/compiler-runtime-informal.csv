@@ -1,0 +1,7 @@
+workload,vm,metric,gcc_e4_initial_12_median,clang_e4_initial_12_median,clang_vs_gcc_e4_percent,gcc_poc_initial_12_median,clang_poc_initial_12_median,clang_vs_gcc_poc_percent
+Sieve,rxbvm,elapsed_ns,5876153000,10465357000,+78.10,5871886000,10336145000,+76.03
+Sieve,rxtvm,elapsed_ns,5616980000,8624903000,+53.55,5829335000,9982206500,+71.24
+Permute,rxbvm,elapsed_ns,15009279000,11591010500,-22.77,12832054000,11054040000,-13.86
+Permute,rxtvm,elapsed_ns,11877775000,11328291000,-4.63,12384796000,11238690500,-9.25
+RexxCPS,rxbvm,benchmark_rate,5378484.5,6292303.5,+16.99,5350221.5,7218047.5,+34.91
+RexxCPS,rxtvm,benchmark_rate,5380619.0,6277593.5,+16.67,5483722.0,6179938.0,+12.70
