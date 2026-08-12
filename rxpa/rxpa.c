@@ -148,6 +148,12 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
             }
         }
         handle = (void *)LoadLibraryA(load_file_name);
+        if (!handle) {
+            DWORD error_code = GetLastError();
+            fprintf(stderr,
+                    "Failed to load plugin %s: Windows error %lu\n",
+                    load_file_name, (unsigned long)error_code);
+        }
         free(absolute_file_name);
     }
 #else
@@ -176,6 +182,12 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
 
     initializer = (initfuncs_type)rxpa_os_symbol(handle, "_initfuncs");
     if (!initializer) {
+#ifdef _WIN32
+        fprintf(stderr,
+                "Failed to load plugin %s: required symbol _initfuncs "
+                "is missing (Windows error %lu)\n",
+                full_file_name, (unsigned long)GetLastError());
+#endif
         rxpa_os_close(handle);
         if (free_full_file_name) free(full_file_name);
         return -2;
