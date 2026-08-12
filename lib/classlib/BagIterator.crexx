@@ -5,8 +5,8 @@
  */
 
 options levelb comments_dash
-import data
 
+import data
 namespace data expose BagIterator
 
 /**
@@ -50,7 +50,7 @@ BagIterator: class
     if snapshot_ then
       return position_ <= bag_copy_.size()
 
-    if <refvalid>(bag_ref_) then return 0
+    if <refvalid>(bag_ref_) = 0 then return 0
 
     bag = dereference bag_ref_
     return position_ <= bag.size()
@@ -68,7 +68,7 @@ BagIterator: class
       return value
     end
 
-    if <refvalid>(bag_ref_) then return ""
+    if <refvalid>(bag_ref_) = 0 then return ""
 
     bag = dereference bag_ref_
     if position_ > bag.size() then return ""

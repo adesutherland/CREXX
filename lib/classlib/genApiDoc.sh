@@ -6,6 +6,7 @@ rexxApiDoc ../rxfnsb/rexx/rxjson.crexx          >> classlib-api.tex
 rexxApiDoc ArrayList.crexx                      >> classlib-api.tex
 rexxApiDoc ArrayListIterator.crexx              >> classlib-api.tex
 rexxApiDoc Bag.crexx                            >> classlib-api.tex
+rexxApiDoc BagIterator.crexx                    >> classlib-api.tex
 rexxApiDoc Comparator.crexx                     >> classlib-api.tex
 rexxApiDoc Iterable.crexx                       >> classlib-api.tex
 rexxApiDoc Iterator.crexx                       >> classlib-api.tex

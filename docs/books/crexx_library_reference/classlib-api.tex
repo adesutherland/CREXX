@@ -1052,6 +1052,91 @@
   \end{Members}
 \end{CrexxClass}
 
+\begin{CrexxClass}{.Bag}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .Bag}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {Bag}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {add}
+      {(\Param{value}{.string})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {at}
+      {(\Param{position}{.int})}
+
+    \Method
+      {public}
+      {.BagIterator}
+      {liveIterator}
+      {()}
+
+    \Method
+      {public}
+      {.BagIterator}
+      {snapshotIterator}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {toString}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.BagIterator}{data}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .BagIterator}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {BagIterator}
+      {\Params{
+        \ParamLine{\Param{source}{reference .Bag}}
+        \LastParamLine{\Param{make\_snapshot}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {hasNext}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {next}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
 \begin{CrexxClass}{\textit{.Comparator}}{data}
 
   \begin{Hierarchy}
