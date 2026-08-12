@@ -656,7 +656,7 @@ Use the four source forms deliberately:
 - `reference target`: create a weak reference to aliasable storage.
 - `local = dereference ref`: link a current-scope local to the target.
 - `snapshot ref`: make a deep copy of the current target.
-- `refvalid(ref)`: test whether the target is still valid.
+- `<refvalid>(ref)`: test whether the target is invalid.
 
 This example contrasts a live reference with a snapshot:
 
@@ -713,7 +713,7 @@ LiveCounter: class
     return
 
   count: method = .int
-    if \refvalid(bag_ref) then return -1
+    if <refvalid>(bag_ref) then return -1
     bag = dereference bag_ref
     return bag.size()
 

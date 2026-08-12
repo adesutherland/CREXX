@@ -30,10 +30,10 @@ namespace data expose TreeMap
  *
  * Nodes are stored in parallel arrays and linked by integer child indexes. The
  * deleted-node free list reuses node slots without compacting the arrays, so
- * lookup, insertion, removal, and ordered traversal avoid the old array-backed
- * map's linear scan and snapshot sort hot paths.
+ * lookup, insertion, removal, and ordered traversal avoid linear scan and snapshot
+ * sort hot paths.
  */
-TreeMap: class implements .Printable
+TreeMap: class implements .Map .Printable
 val	    = .int
 root_	    = .int
 count_	    = .int

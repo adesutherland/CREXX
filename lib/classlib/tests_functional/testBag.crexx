@@ -1,0 +1,13 @@
+main: procedure
+list = .Bag()
+call list.add("red")
+call list.add("blue")
+
+live = list.liveCounter()
+snap = list.snapshotCounter()
+
+call list.add("green")
+
+say "live=" || live.count()
+say "snapshot=" || snap.count()
+return
