@@ -14,6 +14,7 @@
 #include <windows.h>
 #else
 #include <pthread.h>
+#endif
 
 typedef struct plugin_shared {
 #ifdef _WIN32
@@ -289,5 +290,3 @@ int main(int argc, char **argv) {
     printf("RXVM provider instances are isolated across two live contexts\n");
     return 0;
 }
-
-#endif
