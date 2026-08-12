@@ -1666,6 +1666,79 @@ if(CREXX_THREADED_VM_SUPPORTED)
     crexx_configure_program_generation_control(program_generation_control-rxtvml)
 endif()
 
+# PERF3-13 E5 macOS native-doorbell PoC. This private executor proves that a
+# platform thread-directed notification can set the existing run()-local
+# pending word without adding a poll, branch or second interpreter loop. It is
+# test-only and introduces no public worker, channel or RXVML ABI.
+if(APPLE AND BUILD_TESTING)
+    add_custom_command(
+            OUTPUT test_persistent_worker_executor.rxbin
+            COMMAND $<TARGET_FILE:rxc> -o test_persistent_worker_executor
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_persistent_worker_executor.crexx
+            COMMAND $<TARGET_FILE:rxas> test_persistent_worker_executor
+            DEPENDS tests/rexx/test_persistent_worker_executor.crexx
+                    rxc rxas compiler_exit_bin
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Compiling PERF3-13 E5 macOS doorbell control ..."
+    )
+    add_custom_target(test_persistent_worker_executor_bin ALL
+            DEPENDS test_persistent_worker_executor.rxbin)
+
+    function(crexx_configure_persistent_worker_executor TARGET_NAME)
+        target_include_directories(${TARGET_NAME} PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}
+                ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+                ${CMAKE_SOURCE_DIR}/inc
+                ${CMAKE_SOURCE_DIR}/assembler
+                ${CMAKE_SOURCE_DIR}/binutils/include
+                ${CMAKE_SOURCE_DIR}/rxpa
+                ${CMAKE_SOURCE_DIR}/platform
+                ${CMAKE_SOURCE_DIR}/avl_tree
+                ${CMAKE_SOURCE_DIR}/utf8)
+        target_link_libraries(${TARGET_NAME} Threads::Threads)
+        add_dependencies(${TARGET_NAME} test_persistent_worker_executor_bin)
+        add_test(
+                NAME ${TARGET_NAME}
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_POC_DOORBELL=posix
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(${TARGET_NAME} PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;poc;macos"
+                TIMEOUT 120)
+    endfunction()
+
+    add_executable(persistent_worker_executor-rxvml
+            tests/test_persistent_worker_executor.c
+            rxvmexecutor.c)
+    target_link_libraries(persistent_worker_executor-rxvml rxvml)
+    crexx_configure_persistent_worker_executor(persistent_worker_executor-rxvml)
+
+    add_executable(persistent_worker_executor-rxbvml
+            tests/test_persistent_worker_executor.c
+            rxvmexecutor.c)
+    target_link_libraries(persistent_worker_executor-rxbvml rxbvml)
+    target_compile_definitions(persistent_worker_executor-rxbvml PRIVATE NTHREADED=1)
+    crexx_configure_persistent_worker_executor(persistent_worker_executor-rxbvml)
+
+    if(CREXX_THREADED_VM_SUPPORTED)
+        add_executable(persistent_worker_executor-rxtvml
+                tests/test_persistent_worker_executor.c
+                rxvmexecutor.c
+                rxvml.c
+                $<TARGET_OBJECTS:rxtvm_core_objects>)
+        target_link_libraries(persistent_worker_executor-rxtvml
+                rxvmplugin mc_decimal_manual avl_tree rxpa rxvmref rxbin)
+        crexx_enable_vm_platform(persistent_worker_executor-rxtvml)
+        if(CREXX_VM_PROFILING)
+            target_compile_definitions(persistent_worker_executor-rxtvml PRIVATE
+                    CREXX_VM_PROFILING=1)
+        endif()
+        crexx_configure_persistent_worker_executor(persistent_worker_executor-rxtvml)
+    endif()
+endif()
+
 # Archive-link regression test for manual db_decimal packaging.
 set(_crexx_archive_link_c_flags_text "${CMAKE_C_FLAGS}")
 set(_crexx_archive_link_exe_flags_text "${CMAKE_EXE_LINKER_FLAGS}")

@@ -1,0 +1,589 @@
+[  0%] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[  0%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmworker.c.o
+[  0%] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[  0%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[  0%] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[ 33%] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[ 33%] Building C object interpreter/CMakeFiles/rxvmmemory.dir/rxvmmemory.c.o
+[ 33%] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[ 33%] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[ 33%] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[ 33%] Linking C static library ../bin/librxpashim.a
+[ 33%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[ 33%] Linking C static library ../bin/librxpa.a
+[ 66%] Linking C static library ../bin/libavl_tree.a
+[ 66%] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[ 66%] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[ 66%] Built target rxpashim
+[ 66%] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[ 66%] Built target rxpa
+[100%] Linking C static library ../bin/librxvmmemory.a
+[100%] Built target avl_tree
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[100%] Linking C static library ../bin/libplatform.a
+[100%] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[100%] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[100%] Built target rxvmmemory
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[100%] Built target platform
+[100%] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[100%] Building C object interpreter/CMakeFiles/rxvmref.dir/rxpacompat.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[100%] Linking C static library ../bin/librxvmref.a
+[100%] Built target rxvm_platform_objects
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[100%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[100%] Built target rxvmref
+[100%] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[100%] Linking C static library ../../bin/librxvmplugin.a
+[100%] Linking C static library ../../../../bin/libdecnumber.a
+[100%] Built target rxvmplugin
+[100%] Built target decnumber
+[100%] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[100%] Linking C static library ../bin/librxbin.a
+[100%] Linking C static library ../../../../bin/rxvm_mc_decimal_manual.a
+[100%] Built target rxbin
+[100%] Built target mc_decimal_manual
+[100%] Built target rxbvm_core_objects
+[100%] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[100%] Linking C executable ../bin/rxbvm
+[100%] Built target rxbvm
+[  0%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmworker.c.o
+[ 25%] Built target decnumber
+[ 25%] Built target rxbin
+[ 25%] Built target rxpashim
+[ 75%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmintp.c.o
+[ 75%] Built target rxvmmemory
+[100%] Built target platform
+[100%] Built target avl_tree
+[100%] Built target rxpa
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmactive.c.o
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprogram.c.o
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmload.c.o
+[100%] Built target rxvm_platform_objects
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxcrexxcmd.c.o
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxspawn.c.o
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/exitfunc.c.o
+[100%] Built target rxvmref
+[100%] Built target rxvmplugin
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpafuncs.c.o
+[100%] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvml/rxvm_run.c.o
+[100%] Built target mc_decimal_manual
+[100%] Built target rxtvm_core_objects
+[100%] Building C object interpreter/CMakeFiles/rxtvm.dir/rxvmmain.c.o
+[100%] Linking C executable ../bin/rxtvm
+[100%] Built target rxtvm
+[  0%] Copying bootstrap src/msg/ver_to_vernum.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[  4%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/code_buffer.c.o
+[  4%] Built target avl_tree
+[  4%] Built target rxbin
+[  8%] Built target rxvmmemory
+[  8%] Built target decnumber
+[ 12%] Built target platform
+[ 12%] Built target rxpa
+[ 12%] Built target rxvm_platform_objects
+[ 12%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/comms.c.o
+[ 12%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_common.c.o
+[ 12%] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 12%] Generating doc/re2c.1
+[ 12%] Built target rxbvm_core_objects
+[ 12%] Building CXX object re2c/CMakeFiles/re2c_objects_autogen_ver_to_vernum.dir/src/msg/ver_to_vernum.cc.o
+[ 12%] Building C object linker/CMakeFiles/rxlink.dir/rxlinkmain.c.o
+[ 12%] Building C object lemon/CMakeFiles/lemon.dir/lemon.c.o
+[ 12%] Built target rxvmref
+[ 12%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_log.c.o
+[ 12%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 12%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 12%] Built target rxvmplugin
+[ 12%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 12%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 12%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/serialization.c.o
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Built target mc_decimal_manual
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Copying bootstrap src/parse/conf_lexer.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[ 16%] Copying bootstrap src/options/parse_opts.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[ 16%] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[ 16%] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+[ 16%] Copying bootstrap src/parse/lexer.cc and src/parse/lexer.h, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[ 16%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/diff.c.o
+[ 16%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/emergency_parse.c.o
+[ 16%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/thread_utils.c.o
+[ 16%] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/options/parse_opts.cc.o
+[ 16%] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+[ 16%] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_parser.c.o
+[ 16%] Built target re2c_objects_autogen_ver_to_vernum
+[ 16%] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/lexer.cc.o
+[ 16%] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[ 16%] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/parser.cc.o
+[ 16%] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_lexer.cc.o
+[ 16%] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_parser.cc.o
+[ 16%] Linking C executable ../bin/rxlink
+[ 16%] Built target rxlink
+[ 20%] Linking C static library libdslsyntax_parser.a
+[ 20%] Built target dslsyntax_parser
+[ 20%] Linking C static library ../bin/librxvml.a
+[ 20%] Built target rxvml
+[ 25%] Linking C static library ../bin/librxbvml.a
+[ 25%] Built target rxbvml
+[ 25%] Linking C executable lemon
+[ 25%] Built target lemon
+[ 25%] Built target re2c_objects_autogen
+[ 25%] Generating src/msg/help_re2c.cc
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/helpers.cc.o
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/symtab.cc.o
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass4_render.cc.o
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass3_fixup.cc.o
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/nfa/re_to_nfa.cc.o
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass2_generate.cc.o
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/output.cc.o
+[ 25%] Building CXX object re2c/CMakeFiles/re2c.dir/src/adfa/adfa.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass1_analyze.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/opt.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_adfa.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_cfg.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa_tree.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_interf.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_nfa.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/cfg.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/compact.cc.o
+[ 29%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/dce.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/freeze.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/interfere.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/liveanal.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/normalize.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/optimize.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/rename.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/varalloc.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/closure.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/dead_rules.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/determinization.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fallback_tags.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fillpoints.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/find_state.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/minimization.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tagver_table.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tcmd.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/ebcdic.cc.o
+[ 33%] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/enc.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/range_suffix.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/unicode_casemap.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf8.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf16.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/msg.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/warn.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/ast_to_re.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/default_tags.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/nullable.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/fixed_tags.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/split_charset.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/regexp.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/control_flow.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_code.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_data.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/maxpath.cc.o
+[ 37%] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/skeleton.cc.o
+[ 41%] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/ast.cc.o
+[ 41%] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/input.cc.o
+[ 41%] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/file_utils.cc.o
+[ 41%] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/string_utils.cc.o
+[ 41%] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/range.cc.o
+[ 41%] Building CXX object re2c/CMakeFiles/re2c.dir/src/main.cc.o
+[ 41%] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/help_re2c.cc.o
+[ 41%] Linking CXX executable re2c
+[ 41%] Built target re2c
+[ 41%] Create REXX ASSEMBLER Parser...
+[ 41%] Create REXX ASSEMBLER Lexer...
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[ 41%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[ 45%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[ 45%] Linking C static library ../bin/librxaslib.a
+[ 45%] Built target rxaslib
+[ 45%] Create Options Parser...
+[ 45%] Create REXX B Parser...
+[ 45%] Create REXX C Parser...
+[ 45%] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+[ 45%] Create Options Lexer...
+[ 45%] Linking C executable ../bin/rxas
+[ 45%] Built target rxas
+[ 45%] cREXX assemble _elapsed ...
+[ 45%] Create REXX B Lexer...
+[ 45%] Create REXX C Lexer...
+[ 45%] cREXX RXAS Library Archive ...
+[ 45%] Built target library-rxas
+[ 45%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_core.c.o
+[ 45%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag.c.o
+[ 45%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag_fallback.c.o
+[ 45%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_highlight_controller.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_util.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_walk.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_print.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpmain.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_tree.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dsl.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_srcmap.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_ext.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcposcn.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopgr.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rexbscan.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopar.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbgmr.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbpar.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rexcscan.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcgmr.c.o
+[ 50%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcpar.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcdiag.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcsym.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcval.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_type.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_sym.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_rewrite.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_trans.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_check.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_plugin.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpsymb.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_orch.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_fixup.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_val.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap_build.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_levelc_lower.c.o
+[ 54%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline_rules.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_core.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_super.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_reg.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_expr.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_flow.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_proc.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_meta.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_opt.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_flow.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_partial_call.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/__/platform/platform.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dispatch.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpfunc.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/__/platform/rxinteger.c.o
+[ 58%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_exit.c.o
+[ 62%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_instr.c.o
+[ 62%] Linking C static library ../bin/librxclib.a
+[ 62%] Built target rxclib
+[ 62%] Building C object compiler/CMakeFiles/rxc.dir/rxc_main.c.o
+[ 62%] Linking C executable ../bin/rxc
+[ 62%] Built target rxc
+[ 62%] Building token.rxbin
+[ 62%] cREXX compile and assemble _address ...
+[ 62%] Built target token_bin
+[ 62%] Building Dummy.rxbin
+[ 62%] Built target exit_dummy_bin
+[ 62%] cREXX compile and assemble _rxsystem ...
+[ 62%] cREXX compile and assemble _jdn ...
+[ 62%] cREXX compile and assemble _datei ...
+[ 62%] cREXX compile and assemble _dateo ...
+[ 62%] cREXX compile and assemble _ftrunc ...
+[ 62%] cREXX compile and assemble _itrunc ...
+[ 62%] cREXX compile and assemble _typedformat ...
+[ 62%] cREXX compile and assemble abbrev ...
+[ 62%] cREXX compile and assemble abs ...
+[ 62%] cREXX compile and assemble intabs ...
+[ 62%] cREXX compile and assemble floatabs ...
+[ 62%] cREXX compile and assemble b2x ...
+[ 62%] cREXX compile and assemble b2d ...
+[ 66%] cREXX compile and assemble binary ...
+[ 66%] cREXX compile and assemble c2x ...
+[ 66%] cREXX compile and assemble c2d ...
+[ 66%] cREXX compile and assemble center ...
+[ 66%] cREXX compile and assemble centre ...
+[ 66%] cREXX compile and assemble changestr ...
+[ 66%] cREXX compile and assemble compare ...
+[ 66%] cREXX compile and assemble copies ...
+[ 66%] cREXX compile and assemble countstr ...
+[ 66%] cREXX compile and assemble d2b ...
+[ 66%] cREXX compile and assemble d2c ...
+[ 66%] cREXX compile and assemble d2x ...
+[ 66%] cREXX compile and assemble date ...
+[ 66%] cREXX compile and assemble delstr ...
+[ 66%] cREXX compile and assemble delword ...
+[ 70%] cREXX compile and assemble fileio ...
+[ 70%] cREXX compile and assemble filter ...
+[ 70%] cREXX compile and assemble format ...
+[ 75%] cREXX compile and assemble intformat ...
+[ 75%] cREXX compile and assemble floatformat ...
+[ 75%] cREXX compile and assemble fnv ...
+[ 75%] cREXX compile and assemble getenv ...
+[ 75%] cREXX compile and assemble insert ...
+[ 75%] cREXX compile and assemble length ...
+[ 75%] cREXX compile and assemble linesize ...
+[ 75%] cREXX compile and assemble loadmodule ...
+[ 75%] cREXX compile and assemble lower ...
+[ 75%] cREXX compile and assemble max ...
+[ 75%] cREXX compile and assemble intmax ...
+[ 75%] cREXX compile and assemble floatmax ...
+[ 75%] cREXX compile and assemble min ...
+[ 75%] cREXX compile and assemble intmin ...
+[ 75%] cREXX compile and assemble floatmin ...
+[ 75%] cREXX compile and assemble numeric ...
+[ 75%] cREXX compile and assemble overlay ...
+[ 75%] cREXX compile and assemble pos ...
+[ 75%] cREXX compile and assemble qscan ...
+[ 75%] cREXX compile and assemble qpos ...
+[ 75%] cREXX compile and assemble qsplit ...
+[ 75%] cREXX compile and assemble qsplitsafe ...
+[ 75%] cREXX compile and assemble qextractall ...
+[ 75%] cREXX compile and assemble qextractpair ...
+[ 75%] cREXX compile and assemble qstripcomment ...
+[ 75%] cREXX compile and assemble qremoveall ...
+[ 75%] cREXX compile and assemble fsayfmt ...
+[ 75%] cREXX compile and assemble lastpos ...
+[ 75%] cREXX compile and assemble left ...
+[ 75%] cREXX compile and assemble right ...
+[ 75%] cREXX compile and assemble raise ...
+[ 75%] cREXX compile and assemble reverse ...
+[ 75%] cREXX compile and assemble signal ...
+[ 75%] cREXX compile and assemble trace ...
+[ 75%] cREXX compile and assemble sign ...
+[ 75%] cREXX compile and assemble intsign ...
+[ 75%] cREXX compile and assemble floatsign ...
+[ 75%] cREXX compile and assemble space ...
+[ 75%] cREXX compile and assemble strip ...
+[ 75%] cREXX compile and assemble substr ...
+[ 75%] cREXX compile and assemble substro ...
+[ 75%] cREXX compile and assemble symbol ...
+[ 75%] cREXX compile and assemble time ...
+[ 75%] cREXX compile and assemble translate ...
+[ 75%] cREXX compile and assemble trunc ...
+[ 75%] cREXX compile and assemble floattrunc ...
+[ 75%] cREXX compile and assemble upper ...
+[ 75%] cREXX compile and assemble value ...
+[ 75%] cREXX compile and assemble verify ...
+[ 75%] cREXX compile and assemble version ...
+[ 79%] cREXX compile and assemble sourceinfo ...
+[ 83%] cREXX compile and assemble word ...
+[ 83%] cREXX compile and assemble words ...
+[ 83%] cREXX compile and assemble wordindex ...
+[ 83%] cREXX compile and assemble subword ...
+[ 83%] cREXX compile and assemble wordlength ...
+[ 83%] cREXX compile and assemble wordpos ...
+[ 83%] cREXX compile and assemble qword ...
+[ 87%] cREXX compile and assemble qwordlength ...
+[ 87%] cREXX compile and assemble qwords ...
+[ 87%] cREXX compile and assemble qwordindex ...
+[ 87%] cREXX compile and assemble qwordpos ...
+[ 87%] cREXX compile and assemble qsubword ...
+[ 87%] cREXX compile and assemble regex ...
+[ 87%] cREXX compile and assemble x2b ...
+[ 87%] cREXX compile and assemble x2c ...
+[ 87%] cREXX compile and assemble x2d ...
+[ 87%] cREXX compile and assemble random ...
+[ 87%] cREXX compile and assemble reradix ...
+[ 87%] cREXX compile and assemble sequence ...
+[ 87%] cREXX compile and assemble find ...
+[ 87%] cREXX compile and assemble index ...
+[ 87%] cREXX compile and assemble xrange ...
+[ 87%] cREXX compile and assemble parsecompile ...
+[ 87%] cREXX compile and assemble parsestring ...
+[ 87%] cREXX compile and assemble parse ...
+[ 87%] cREXX compile and assemble datatype ...
+[ 87%] cREXX compile and assemble arrayfind ...
+[ 87%] cREXX compile and assemble splice ...
+[ 87%] cREXX compile and assemble arrayinsert ...
+[ 91%] cREXX compile and assemble arraydelete ...
+[ 91%] cREXX compile and assemble arrayappend ...
+[ 91%] cREXX compile and assemble arrayprepend ...
+[ 91%] cREXX compile and assemble objectarrayinsert ...
+[ 91%] cREXX compile and assemble objectarraydelete ...
+[ 91%] cREXX compile and assemble objectarrayappend ...
+[ 95%] cREXX compile and assemble objectarrayprepend ...
+[ 95%] cREXX compile and assemble objectarraydrop ...
+[ 95%] cREXX compile and assemble objectarraymove ...
+[ 95%] cREXX compile and assemble arraypop ...
+[ 95%] cREXX compile and assemble arrayshift ...
+[ 95%] cREXX compile and assemble arrayget ...
+[ 95%] cREXX compile and assemble arrayset ...
+[ 95%] cREXX compile and assemble arraycontains ...
+[ 95%] cREXX compile and assemble arrayindexof ...
+[ 95%] cREXX compile and assemble arrayreverse ...
+[ 95%] cREXX compile and assemble arrayjoin ...
+[ 95%] cREXX compile and assemble arraysort ...
+[ 95%] cREXX compile and assemble arraycopy ...
+[ 95%] cREXX compile and assemble arraydrop ...
+[ 95%] cREXX compile and assemble arrayhi ...
+[ 95%] cREXX compile and assemble arraymove ...
+[ 95%] cREXX compile and assemble fmtmask ...
+[ 95%] cREXX compile and assemble compilemask ...
+[ 95%] cREXX compile and assemble runmask ...
+[ 95%] cREXX compile and assemble stem ...
+[ 95%] cREXX compile and assemble rxjson ...
+[ 95%] cREXX compile and assemble rxsocket ...
+[ 95%] cREXX compile and assemble rxhttp ...
+[ 95%] cREXX compile and assemble wordrep ...
+[ 95%] cREXX compile and assemble rxqueue ...
+[ 95%] cREXX REXX Library Archive ...
+[ 95%] Built target library-rexx
+[ 95%] cREXX Linked Library Image ...
+[ 95%] Built target library
+[ 95%] Building Sortx.rxbin
+[ 95%] Building Address.rxbin
+[100%] Building Queue compiler exit
+[100%] Building Dump.rxbin
+[100%] Building Add.rxbin
+[100%] Building Fsay.rxbin
+[100%] Building Sort.rxbin
+[100%] Building Msay.rxbin
+[100%] Building Query.rxbin
+[100%] Building Execio.rxbin
+[100%] Built target exit_query_bin
+[100%] Built target exit_fsay_bin
+[100%] Built target exit_add_bin
+[100%] Built target exit_dump_bin
+[100%] Built target exit_rxqueue_bin
+[100%] Building Parse.rxbin
+[100%] Built target exit_msay_bin
+[100%] Building Signal.rxbin
+[100%] Building RexxScript.rxbin
+[100%] Building Substr.rxbin
+[100%] Building Trace.rxbin
+[100%] Built target exit_execio_bin
+[100%] Built target exit_sort_bin
+[100%] Built target exit_sortx_bin
+[100%] Built target exit_rexxscript_bin
+[100%] Built target exit_substr_bin
+[100%] Built target exit_signal_bin
+[100%] Built target exit_trace_bin
+[100%] Built target exit_address_bin
+[100%] Built target exit_parse_bin
+[100%] Building rxcexits.rxbin (bundled via concatenation)
+[100%] Built target compiler_exit_bin
+[100%] Compiling PERF3-13 E5 macOS doorbell control ...
+[100%] Built target test_persistent_worker_executor_bin
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxvml.dir/tests/test_persistent_worker_executor.c.o
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxvml.dir/rxvmexecutor.c.o
+[100%] Linking C executable persistent_worker_executor-rxvml
+[100%] Built target persistent_worker_executor-rxvml
+[  4%] Built target platform
+[  4%] Built target avl_tree
+[  8%] Built target rxbin
+[ 12%] Built target rxvmmemory
+[ 12%] Built target decnumber
+[ 12%] Built target rxpa
+[ 12%] Built target rxvm_platform_objects
+[ 12%] Built target rxbvm_core_objects
+[ 16%] Built target dslsyntax_parser
+[ 16%] Built target re2c_objects_autogen_ver_to_vernum
+[ 16%] Built target rxvmref
+[ 16%] Built target rxlink
+[ 16%] Built target lemon
+[ 16%] Built target rxvmplugin
+[ 20%] Built target re2c_objects_autogen
+[ 20%] Built target mc_decimal_manual
+[ 25%] Built target rxbvml
+[ 41%] Built target re2c
+[ 45%] Built target rxaslib
+[ 45%] Built target rxas
+[ 45%] Built target library-rxas
+[ 62%] Built target rxclib
+[ 62%] Built target rxc
+[ 62%] Built target token_bin
+[ 95%] Built target library-rexx
+[ 95%] Built target exit_dummy_bin
+[ 95%] Built target library
+[ 95%] Built target exit_rxqueue_bin
+[100%] Built target exit_dump_bin
+[100%] Built target exit_address_bin
+[100%] Built target exit_msay_bin
+[100%] Built target exit_add_bin
+[100%] Built target exit_fsay_bin
+[100%] Built target exit_sortx_bin
+[100%] Built target exit_execio_bin
+[100%] Built target exit_query_bin
+[100%] Built target exit_sort_bin
+[100%] Built target exit_parse_bin
+[100%] Built target exit_signal_bin
+[100%] Built target exit_rexxscript_bin
+[100%] Built target exit_trace_bin
+[100%] Built target exit_substr_bin
+[100%] Built target compiler_exit_bin
+[100%] Built target test_persistent_worker_executor_bin
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxbvml.dir/tests/test_persistent_worker_executor.c.o
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxbvml.dir/rxvmexecutor.c.o
+[100%] Linking C executable persistent_worker_executor-rxbvml
+[100%] Built target persistent_worker_executor-rxbvml
+[  4%] Built target rxvmmemory
+[  8%] Built target platform
+[ 12%] Built target rxvm_platform_objects
+[ 16%] Built target dslsyntax_parser
+[ 16%] Built target rxbin
+[ 16%] Built target avl_tree
+[ 16%] Built target lemon
+[ 16%] Built target re2c_objects_autogen_ver_to_vernum
+[ 20%] Built target rxtvm_core_objects
+[ 24%] Built target re2c_objects_autogen
+[ 24%] Built target rxlink
+[ 24%] Built target decnumber
+[ 24%] Built target rxpa
+[ 24%] Built target rxvmref
+[ 24%] Built target rxbvm_core_objects
+[ 24%] Built target rxvmplugin
+[ 24%] Built target mc_decimal_manual
+[ 28%] Built target rxbvml
+[ 44%] Built target re2c
+[ 48%] Built target rxaslib
+[ 48%] Built target rxas
+[ 64%] Built target rxclib
+[ 64%] Built target library-rxas
+[ 64%] Built target rxc
+[ 64%] Built target token_bin
+[ 96%] Built target library-rexx
+[ 96%] Built target exit_dummy_bin
+[ 96%] Built target library
+[ 96%] Built target exit_sortx_bin
+[ 96%] Built target exit_query_bin
+[ 96%] Built target exit_fsay_bin
+[ 96%] Built target exit_msay_bin
+[ 96%] Built target exit_rxqueue_bin
+[ 96%] Built target exit_sort_bin
+[ 96%] Built target exit_execio_bin
+[ 96%] Built target exit_address_bin
+[100%] Built target exit_dump_bin
+[100%] Built target exit_add_bin
+[100%] Built target exit_parse_bin
+[100%] Built target exit_signal_bin
+[100%] Built target exit_substr_bin
+[100%] Built target exit_trace_bin
+[100%] Built target exit_rexxscript_bin
+[100%] Built target compiler_exit_bin
+[100%] Built target test_persistent_worker_executor_bin
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/tests/test_persistent_worker_executor.c.o
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/rxvmexecutor.c.o
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/rxvml.c.o
+[100%] Linking C executable persistent_worker_executor-rxtvml
+[100%] Built target persistent_worker_executor-rxtvml

@@ -1,0 +1,35 @@
+options levelb
+
+namespace e5worker expose add get identity spin loop_forever recurse_forever
+
+add: procedure = .int expose state
+  arg amount = .string
+  state = state + amount
+  return state
+
+get: procedure = .int expose state
+  return state
+
+identity: procedure = .int
+  arg number = .string
+  return number + 0
+
+spin: procedure = .int
+  arg iterations = .string
+  total = .int
+  total = 0
+  do index = 1 to iterations
+    total = total + 1
+  end
+  return total
+
+loop_forever: procedure = .int
+  counter = .int
+  counter = 0
+  do forever
+    counter = counter + 1
+  end
+  return counter
+
+recurse_forever: procedure = .int
+  return recurse_forever()

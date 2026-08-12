@@ -1,0 +1,85 @@
+ASan run directory: /private/tmp/crexx-mthread-asan/asan-logs/20260812-073655-build
+==> build
+    log: /private/tmp/crexx-mthread-asan/asan-logs/20260812-073655-build/build.log
+==> build passed
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: me'sprintf' has been explicitly marked deprecated here
+nded that you use snprintf(  2783) | _ i_dnseptereadca."te)
+d_      | ms^
+g(/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+"This function is p  227ro |         vi#ddeefd infoe r __codemppratecibatiledit_my sgre(_asmsong)s  _on_alytt. ri Dbuuete t__o ((se__cuderiprtyec catonedce__rn(_s msing)he))re
+      nt|                                                       ^ i
+n the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecatedIn file included from /private/tmp/crexx-e4-publish.Qz3MeV/source/interpreter/rxpafuncs.c:34:
+/private/tmp/crexx-e4-publish.Qz3MeV/source/interpreter/rxvmvars.h_m:2980sg:5(_: mswarning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]g)
+ 2980 |     sprin _tf_a(fttorrimabuttteed___o((ut__put, engineering_format, eng_exp);
+      |     ^
+de/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:pr278:ec1:at note: ed'sprintf' has been explicitly marked deprecated here
+__(_msg  278)) | _)
+_d      | ep                                                      ^
+recated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[ 44%] Built target re2c
+2 warnings generated.
+2 warnings generated.
+4 warnings generated.
+[ 48%] Built target rxaslib
+[ 48%] Built target rxas
+[ 64%] Built target rxclib
+[ 64%] Built target library-rxas
+[ 64%] Built target rxc
+[ 64%] Built target token_bin
+[ 96%] Built target library-rexx
+[ 96%] Built target exit_dummy_bin
+[ 96%] Built target library
+[ 96%] Built target exit_sortx_bin
+[ 96%] Built target exit_address_bin
+[ 96%] Built target exit_query_bin
+[100%] Built target exit_dump_bin
+[100%] Built target exit_rxqueue_bin
+[100%] Built target exit_sort_bin
+[100%] Built target exit_add_bin
+[100%] Built target exit_fsay_bin
+[100%] Built target exit_execio_bin
+[100%] Built target exit_msay_bin
+[100%] Built target exit_parse_bin
+[100%] Built target exit_trace_bin
+[100%] Built target exit_signal_bin
+[100%] Built target exit_substr_bin
+[100%] Built target exit_rexxscript_bin
+[100%] Built target compiler_exit_bin
+[100%] Built target test_persistent_worker_executor_bin
+2 warnings generated.
+[100%] Built target rxtvm_core_objects
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/rxvmexecutor.c.o
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/rxvml.c.o
+[100%] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/tests/test_persistent_worker_executor.c.o
+In file included from /private/tmp/crexx-e4-publish.Qz3MeV/source/interpreter/rxvml.c:32:
+/private/tmp/crexx-e4-publish.Qz3MeV/source/interpreter/rxvmvars.h:2845:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2845 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /private/tmp/crexx-e4-publish.Qz3MeV/source/interpreter/rxvml.c:32:
+/private/tmp/crexx-e4-publish.Qz3MeV/source/interpreter/rxvmvars.h:2980:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2980 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[100%] Linking C executable persistent_worker_executor-rxtvml
+[100%] Built target persistent_worker_executor-rxtvml
+ASan run complete: /private/tmp/crexx-mthread-asan/asan-logs/20260812-073655-build

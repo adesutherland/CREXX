@@ -591,6 +591,38 @@ RXAS, RXBIN, plugin ABI or canonical-image change. Sharing the current `module`
 or prepared image behind locks, mutating a published generation in place, and
 treating a raw file mapping as the complete solution remain rejected.
 
+### Gate E5 macOS native-doorbell PoC
+
+The private macOS PoC proves prompt foreign-thread cancellation without adding
+a poll, worker-count test, targetability branch, atomic read or loop selector to
+the accepted E4 dispatch edge. A test-only persistent executor gives each
+worker its own context and E4 sealed-generation overlay. A producer publishes
+the request state under the request mutex and uses `pthread_kill()` with private
+`SIGURG` to ring the selected worker. The signal handler performs only a
+bounded lookup of a pre-registered worker stack range and ORs `RXSIGNAL_CANCEL`
+into that worker's existing execution-local `sig_atomic_t` interrupt word. The
+next ordinary E4 dispatch check enters the existing cold interrupt route.
+
+The executor blocks the private signal while a worker is idle, while
+`rxvm_signal_enter_execution()` publishes its current stack-local interrupt
+word, while `rxvm_signal_leave_execution()` restores a nested predecessor and
+during teardown. A late pending doorbell is drained while the request mutex is
+still the arm/disarm authority, preventing it from cancelling the next request
+on the persistent VM. Apple Clang TLS is deliberately absent from the handler:
+the rejected TLS form emitted a Mach-O TLV resolver call. The retained fixed
+64-slot stack-range scan has no handler call, allocation, log, lock or runtime
+graph traversal.
+
+This is a physical-delivery proof, not an installed executor, public worker
+API, portable signal backend or completed cancellation protocol. Direct
+`CANCEL` is a stand-in for the industrial design: production must first publish
+a correlated mailbox event and generation, then use one internal doorbell bit
+to enter the cold route, validate the active request, drain all published work
+and preserve `KILL`/shutdown priority. Linux must repeat the POSIX ABI and
+generated-code proof; Windows must separately prove special user-mode APC
+delivery and fallback. The earlier atomic-mask, hot-flag, sparse-safepoint and
+dual-loop experiments are not part of this retained branch.
+
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or
