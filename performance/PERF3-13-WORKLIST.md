@@ -4,7 +4,8 @@ Date opened: 2026-08-05
 
 Status: **Gate E E5 industrial implementation and Mac QA complete; merged for
 publication after accepted macOS, Intel Linux and Windows evidence; GitHub
-validation pending; E6 and Gate F remain closed**
+validation pending; Gate F public design recorded; E6 and Gate F
+implementation remain closed**
 
 ## Current Gate E continuation
 
@@ -2639,42 +2640,43 @@ and
 
 EF-0 is accepted and locally complete for the private spawn
 completion/transfer subset above. The full transport-neutral M6 programme
-remains closed until the Gate E worker model has been selected.
+remains closed until the Gate E worker model and E6 scale/reclamation policy
+have been selected. The approved design direction is normative in
+[`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md); recording it does not
+open Gate F implementation.
 
-Gate F separates mechanism from policy. The VM substrate owns only bounded
-endpoint/queue mechanics, wait/wakeup, cancellation, terminal completion and
-receiver-owned `ChannelValue` materialization. Rexx worker classes, and later
-RXAS libraries where justified, own higher-level routing policy. Event buses,
-topics, publication, subscription, fan-out, retained delivery, replay and
-acknowledgement are therefore library/worker constructs built on channels, not
-VM opcodes or mandatory VM state.
+The public model is structured task scopes, stateless task targets, stateful
+service/actor references, bounded channels, receiver-materialized
+`ChannelValue`, typed terminal completion and immutable large-binary transfer.
+Module globals remain execution/isolate-local. No public abstraction exposes
+OS threads, numeric worker affinity, raw procedure pointers, user-authored
+procedure-name strings or live VM object/reference storage.
 
-The cross-host form must be an open, versioned, language- and runtime-neutral
-wire protocol. A non-Rexx actor must be able to implement it without CREXX
-headers or knowledge of RXVM storage. The protocol contract must define
-framing, `ChannelValue` type/schema representation, capability/version
-negotiation, endpoint/service identity, correlation IDs, ordering and delivery
-guarantees, deadlines/cancellation, terminal errors, chunk/stream handling,
-flow control and extension points for authentication, integrity and
-confidentiality. It must also define unknown-version, unknown-type and unknown-
-capability behavior. Gate F selects neither an encoding nor a network transport
-until these semantics and the local channel contract are accepted.
+The VM/provider substrate owns bounded queue mechanics, wait/wakeup,
+cancellation/deadline delivery, terminal completion and receiver-owned value
+materialization. Level B/G libraries own task/service policy, typed proxies,
+events, topics, fan-out, retention, replay, persistence and projections.
+Logical global mutable state uses a single-owner service identity; event hubs
+produce explicitly eventually consistent projections rather than transparent
+shared objects.
 
-- [ ] Define one versioned value/message envelope with copy, move, immutable
-  transfer-buffer and serialization modes.
-- [ ] Make bounded queues, backpressure, deadlines, cancellation, failure and
-  exactly one terminal completion part of the common contract.
-- [ ] Provide one logical channel interface over in-process workers, process
-  pools and cross-host transports.
-- [ ] Prototype the channel worker as a Rexx class/interface before RXAS.
-- [ ] Implement event-bus and publish/subscribe behavior as Rexx/RXAS worker
-  libraries over the common channel interface; keep routing policy out of the
-  VM primitive.
-- [ ] Specify and independently test the open cross-host protocol with at least
-  one non-Rexx actor implementation.
-- [ ] Exercise compute, file/socket/HTTP, timer and child-process providers.
-- [ ] Only after protocol/ownership acceptance design any
-  `chanstart`/`chanwait` RXAS/RXBIN surface with complete semantics.
+Gate F is surface-first and staged:
+
+- [ ] **F0:** compile-check Level B interfaces/examples; lock task-target,
+  `ChannelValue`, envelope, completion, scope/service lifecycle and provider
+  conformance contracts; stop for approval before implementation.
+- [ ] **F1:** prove the same Level B/RXPA contract over in-process and isolated
+  process providers; publish only as experimental after portable conformance
+  and the mandatory Release verdict.
+- [ ] **F2:** prove the open cross-host protocol with a non-Rexx actor, exercise
+  compute/I/O/process providers and add Level G typed service/event libraries.
+- [ ] **F3:** profile the accepted source surface and add only an
+  evidence-selected transport-neutral RXAS subset, if any, with full RXBIN,
+  effect, signal, optimizer, tracing and both-VM semantics.
+
+The candidate RXAS roles remain `chanstart`, `chanwait`, `chancancel` and
+`chanclose`, with only start/wait presumed potentially essential. No opcode or
+encoding is approved. Provider-specific opcode families remain rejected.
 
 ## Approval gates
 
@@ -2731,7 +2733,12 @@ until these semantics and the local channel contract are accepted.
    closure `9f5bb579a` and develop merge `795e58edb`; E6 remains closed until
    that published develop build is green. The full gate still stops before any
    public pool/channel semantics.
-7. **Gate F — full M6 start: closed.** After Gate E selection, implement
-   transport-neutral channels and only later consider public RXAS exposure.
+7. **Gate F — public design direction recorded 2026-08-13; full M6 start
+   closed.** The approved surface and sequencing are recorded in
+   [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
+   selection, F0 first compile-checks and freezes the Level B semantic contract;
+   implementation begins only after its separate approval. Level B/RXPA and
+   local/process conformance precede Level G and cross-host work. RXAS remains
+   a final evidence gate, not an entry requirement.
 
 Approval of one gate does not approve the next.
