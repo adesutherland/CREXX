@@ -149,7 +149,7 @@ void print_error(ASTNode* node, FILE* stream, char* prefix) {
 
 walker_result prnt_walker_handler(walker_direction direction,
                                         ASTNode* node,
-                                  __attribute__((unused)) void *payload) {
+                                  RXCP_UNUSED void *payload) {
     if (direction == in) {
         if (node->child) { /* Non-terminal node */
             printf(" ^(");
@@ -175,7 +175,7 @@ walker_result prnt_walker_handler(walker_direction direction,
 
 static walker_result print_error_walker(walker_direction direction,
                                   ASTNode* node,
-                                  __attribute__((unused)) void *payload) {
+                                  RXCP_UNUSED void *payload) {
 
     int *errors = (int*)payload;
 
@@ -190,7 +190,7 @@ static walker_result print_error_walker(walker_direction direction,
 
 static walker_result print_warning_walker(walker_direction direction,
                                         ASTNode* node,
-                                        __attribute__((unused)) void *payload) {
+                                        RXCP_UNUSED void *payload) {
 
     int *errors = (int*)payload;
 

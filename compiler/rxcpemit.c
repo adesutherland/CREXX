@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
 #include <limits.h>
 #include "rxcpmain.h"

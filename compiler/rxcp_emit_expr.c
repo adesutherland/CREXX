@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <strings.h>
 #include <time.h>
 #include <ctype.h>
 #include "rxcpmain.h"

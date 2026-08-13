@@ -217,9 +217,9 @@ typedef void (*initializer_function)();
         __pragma(comment(linker,"/include:" p #f "_")) \
         static void f(void) {register_rxvmplugin(plugin_name,factory);}
 #ifdef _WIN64
-#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"",plugin_name) {
+#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"",plugin_name)
 #else
-#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"_",plugin_name) {
+#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"_",plugin_name)
 #endif
 
 #else // Not _MSC_VER -> GCC/Clang

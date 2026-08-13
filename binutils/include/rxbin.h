@@ -358,7 +358,7 @@ typedef struct module_file {
     char* name; /* Null Terminated */
     char* description; /* Null Terminated */
     void* instructions; /* Expanded instruction stream in memory */
-    void* constant; /* Expanded constant pool in memory */
+    unsigned char* constant; /* Expanded constant pool byte stream in memory */
     RxGraph *semantic_graph; /* Shared immutable semantic graph for this image. */
     uint32_t semantic_module_index; /* Module ordinal used by graph procedure references. */
     rxbin_shared_constant_pool *shared_constant_pool; /* Shared pool backing, if any */

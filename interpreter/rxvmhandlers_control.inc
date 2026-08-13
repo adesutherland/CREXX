@@ -962,11 +962,12 @@ RXVM_HANDLER(READLINE_REG, VM_ADVANCE(1);
                     pos++;
                 }
                 string_cache_reset(op1R);
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 refresh_utf8_flags(op1R);
-#else
+                )
+                RXVM_BYTE_ONLY(
                 clear_vm_private_flags(op1R);
-#endif
+                )
             }
             DISPATCH;
 

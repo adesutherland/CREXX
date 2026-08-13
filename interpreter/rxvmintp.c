@@ -5506,6 +5506,44 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define vm_instrumentation (*rxvm_state->test_instrumentation)
 #endif
 
+/* Handler bodies are passed through RXVM_HANDLER as macro arguments. Keep all
+ * build selection outside those arguments: preprocessing directives inside a
+ * function-like macro invocation are undefined and MSVC leaves them in the
+ * expanded C source. */
+#ifdef NUTF8
+#define RXVM_UTF8_ONLY(...)
+#define RXVM_BYTE_ONLY(...) __VA_ARGS__
+#else
+#define RXVM_UTF8_ONLY(...) __VA_ARGS__
+#define RXVM_BYTE_ONLY(...)
+#endif
+
+#if ASCII_FAST_PATH
+#define RXVM_ASCII_FAST_ONLY(...) __VA_ARGS__
+#else
+#define RXVM_ASCII_FAST_ONLY(...)
+#endif
+
+#ifdef _WIN32
+#define RXVM_WINDOWS_ONLY(...) __VA_ARGS__
+#define RXVM_NONWINDOWS_ONLY(...)
+#else
+#define RXVM_WINDOWS_ONLY(...)
+#define RXVM_NONWINDOWS_ONLY(...) __VA_ARGS__
+#endif
+
+#if defined(__linux__)
+#define RXVM_PLATFORM_NAME "linux"
+#elif defined(_WIN32)
+#define RXVM_PLATFORM_NAME "windows"
+#elif defined(__APPLE__)
+#define RXVM_PLATFORM_NAME "macOS"
+#elif defined(__CMS__)
+#define RXVM_PLATFORM_NAME "cms"
+#else
+#define RXVM_PLATFORM_NAME "unknown"
+#endif
+
 #undef DISPATCH
 #define DISPATCH                                                               \
     do {                                                                       \
@@ -6387,7 +6425,7 @@ START_OF_INSTRUCTIONS
         RXVM_HANDLER_STATE_COMMIT(handler_state);
 #endif
 
-    rxvm_handler_result:
+    rxvm_normal_handler_result:
         switch (handler_result) {
             case RXVM_HANDLER_RESULT_DISPATCH:
                 VM_DISPATCH_TARGET();

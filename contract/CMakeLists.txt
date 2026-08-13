@@ -15,7 +15,8 @@ target_include_directories(crexx-contract PRIVATE
         ${CMAKE_SOURCE_DIR}/binutils/include
         ${CMAKE_SOURCE_DIR}/platform)
 target_link_libraries(crexx-contract PRIVATE rxbin platform)
-if(MSVC)
+if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+    target_compile_definitions(crexx-contract PRIVATE _CRT_SECURE_NO_WARNINGS)
     target_compile_options(crexx-contract PRIVATE /W4 /WX)
 else()
     target_compile_options(crexx-contract PRIVATE -Wall -Wextra -Werror)

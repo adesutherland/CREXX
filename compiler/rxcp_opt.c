@@ -505,6 +505,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                     /* Check if it is an int in float format */
                     if (string2float(&f,node->node_string,node->node_string_length)) {
                         mknd_err(node, "BAD_CONVERSION");
+                        return;
                     }
                     floor_val = floor(f);
                     /* Less than an "EPSILON" above the floor? */

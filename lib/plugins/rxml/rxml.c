@@ -7,6 +7,10 @@
 #include "crexxpa.h"
 #include "rxml.h"
 
+#ifdef _MSC_VER
+#define strtok_r strtok_s
+#endif
+
 #define XML_ERROR_MALFORMED    "Malformed XML tag"
 #define XML_ERROR_OVERFLOW     "Too many elements"
 #define XML_ERROR_DEPTH        "XML nesting too deep"

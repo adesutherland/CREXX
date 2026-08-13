@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include "avl_tree.h"
@@ -1790,8 +1789,8 @@ static char* get_const_string(void* constpool, size_t ix) {
 
     if (ix == -1) return 0;
 
-    c = ((string_constant *)(constpool + ix))->string;
-    sz = ((string_constant *)(constpool + ix))->string_len;
+    c = ((string_constant *)((unsigned char *)constpool + ix))->string;
+    sz = ((string_constant *)((unsigned char *)constpool + ix))->string_len;
 
     result = malloc(sz + 1);
     if (result) {
@@ -2088,7 +2087,7 @@ static meta_reg_constant* get_variable_type(char* name, void* constant, int meta
 
     i = meta_head;
     while (i != -1) {
-        entry = (meta_entry *) (constant + i);
+        entry = (meta_entry *)((unsigned char *)constant + i);
 
         if (entry->base.type == META_REG) {
             mentry = (meta_reg_constant *) entry;
@@ -2119,7 +2118,7 @@ static char *get_inline_payload_for_symbol(void *constant, int meta_head, const 
 
     i = meta_head;
     while (i != -1) {
-        entry = (meta_entry *) (constant + (size_t)i);
+        entry = (meta_entry *)((unsigned char *)constant + (size_t)i);
 
         if (entry->base.type == META_INLINE) {
             mentry = (meta_inline_constant *) entry;
@@ -2160,16 +2159,18 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     /* Walk only the module metadata chain so shared constant pools stay module-local in effect. */
     i = meta_head;
     while (i != -1) {
-        entry = (chameleon_constant *) (constant + (size_t)i);
+        entry = (chameleon_constant *)((unsigned char *)constant + (size_t)i);
 
         /* A function/method definition */
         if (entry->type == META_FUNC) {
             meta_func_constant *mentry = (meta_func_constant *) entry;
 
             /* Check it is exposed */
-            exposed_ix = ((proc_constant *) (constant + mentry->func))->exposed;
+            exposed_ix = ((proc_constant *)((unsigned char *)constant +
+                                             mentry->func))->exposed;
             if ((int) exposed_ix != -1) {
-                exposed = (expose_proc_constant *) (constant + exposed_ix);
+                exposed = (expose_proc_constant *)((unsigned char *)constant +
+                                                    exposed_ix);
 
                 /* Exported */
                 if (!exposed->imported) {

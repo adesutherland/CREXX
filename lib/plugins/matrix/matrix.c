@@ -3,11 +3,14 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
+#ifdef _MSC_VER
+    #define strtok_r strtok_s
+#endif
 #ifdef _WIN32
     #include <windows.h>
+    #define pclose _pclose
     #define MATRIX_ALLOC_HEAP(size) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)
     #define MATRIX_FREE_HEAP(ptr) HeapFree(GetProcessHeap(), 0, ptr)
     HANDLE hHeap = NULL;
@@ -77,6 +80,8 @@ struct FactorOptions {
     char option1[16];
     char option2[16];
 };
+
+int freeMatrix(int matnum);
 
 #define mat(mptr,row,col) mptr.vector[row * mptr.cols + col]
 #define matp(mptr,row,col) mptr->vector[row * mptr->cols + col]
@@ -478,6 +483,8 @@ PROCEDURE(mmultiply) {
 // int invertMatrix(int n, double matrix[n][n], double inverse[n][n])
 PROCEDURE(minvert) {
     int i,j,k,n,matnum, status;
+    size_t augmented_stride;
+    double *augmented;
     
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
@@ -489,57 +496,70 @@ PROCEDURE(minvert) {
         RETURNINT(MATRIX_INVALID_PARAM);
     }
     n = matrix.cols;
+
+    augmented_stride = (size_t)n * 2u;
+    if (augmented_stride > SIZE_MAX / (size_t)n / sizeof(*augmented)) {
+        RETURNINT(MATRIX_ALLOC_DATA);
+    }
+    augmented = (double *)MATRIX_ALLOC((size_t)n * augmented_stride * sizeof(*augmented));
+    if (!augmented) {
+        RETURNINT(MATRIX_ALLOC_DATA);
+    }
     
     matnum = matcreate(matrix.rows, matrix.cols, 1, GETSTRING(ARG1));
     if (matnum < 0) {
+        MATRIX_FREE(augmented);
         RETURNINT(-2);  // Failed to create result matrix
     }
     struct Matrix minv = *(struct Matrix *) allVectors[matnum];
-
-    double augmented[n][2 * n];   // Create an augmented matrix [matrix | I]
     
     // Initialize augmented matrix
     for (i = 0; i < n; i++) {
         for (j = 0; j < n; j++) {
-            augmented[i][j] = mat(matrix,i,j);
+            augmented[(size_t)i * augmented_stride + (size_t)j] = mat(matrix,i,j);
         }
         for (j = n; j < 2 * n; j++) {
-            augmented[i][j] = (i == j - n) ? 1.0 : 0.0;
+            augmented[(size_t)i * augmented_stride + (size_t)j] =
+                    (i == j - n) ? 1.0 : 0.0;
         }
     }
     
     // Gaussian elimination with improved pivot handling
     for (i = 0; i < n; i++) {
-        if (fabs(augmented[i][i]) < 1e-10) {  // Better numerical stability check
+        if (fabs(augmented[(size_t)i * augmented_stride + (size_t)i]) < 1e-10) {
             // Search for a row to swap
             int swapRow = -1;
             for (k = i + 1; k < n; k++) {
-                if (fabs(augmented[k][i]) > 1e-10) {
+                if (fabs(augmented[(size_t)k * augmented_stride + (size_t)i]) > 1e-10) {
                     swapRow = k;
                     break;
                 }
             }
             if (swapRow == -1) {
+                MATRIX_FREE(augmented);
+                freeMatrix(matnum);
                 RETURNINT(-3);  // Matrix is singular
             }
             // Swap rows
             for (j = 0; j < 2 * n; j++) {
-                double temp = augmented[i][j];
-                augmented[i][j] = augmented[swapRow][j];
-                augmented[swapRow][j] = temp;
+                double temp = augmented[(size_t)i * augmented_stride + (size_t)j];
+                augmented[(size_t)i * augmented_stride + (size_t)j] =
+                        augmented[(size_t)swapRow * augmented_stride + (size_t)j];
+                augmented[(size_t)swapRow * augmented_stride + (size_t)j] = temp;
             }
         }
         
         // Rest of the inversion process remains the same
-        double pivot = augmented[i][i];
+        double pivot = augmented[(size_t)i * augmented_stride + (size_t)i];
         for (j = 0; j < 2 * n; j++) {
-            augmented[i][j] /= pivot;
+            augmented[(size_t)i * augmented_stride + (size_t)j] /= pivot;
         }
         for (k = 0; k < n; k++) {
             if (k != i) {
-                double factor = augmented[k][i];
+                double factor = augmented[(size_t)k * augmented_stride + (size_t)i];
                 for (j = 0; j < 2 * n; j++) {
-                    augmented[k][j] -= factor * augmented[i][j];
+                    augmented[(size_t)k * augmented_stride + (size_t)j] -=
+                            factor * augmented[(size_t)i * augmented_stride + (size_t)j];
                 }
             }
         }
@@ -548,10 +568,11 @@ PROCEDURE(minvert) {
     // Extract the inverse matrix
     for (i = 0; i < n; i++) {
         for (j = 0; j < n; j++) {
-            mat(minv,i,j) = augmented[i][j + n];
+            mat(minv,i,j) = augmented[(size_t)i * augmented_stride + (size_t)(j + n)];
         }
     }
 
+    MATRIX_FREE(augmented);
     RETURNINT(matnum);
 }
 
@@ -1281,7 +1302,7 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
                     s = 1.0 / sqrt(1.0 + t * t);
                     c = s * t;
                 } else {
-                    c = s = M_SQRT1_2;  // 1/√2
+                    c = s = 1.0 / sqrt(2.0);
                 }
 
                 // Apply rotation
@@ -1632,13 +1653,21 @@ int find_elbow_point(double eigenvalues[], int n) {
 // Create visualization data for screenplot
 int create_screen_data(struct Matrix* diag) {
     int i;
-    double eigenvalues[diag->cols];
+    double *eigenvalues;
+
+    if (!diag || diag->cols <= 0 ||
+        (size_t)diag->cols > SIZE_MAX / sizeof(*eigenvalues)) {
+        return MATRIX_INVALID_PARAM;
+    }
+    eigenvalues = (double *)MATRIX_ALLOC((size_t)diag->cols * sizeof(*eigenvalues));
+    if (!eigenvalues) return MATRIX_ALLOC_DATA;
     // Row 0: Factor number (1-based)
     // Row 1: Eigenvalues
      for (i = 0; i < diag->cols; i++) {
          eigenvalues[i] = matp(diag,1,i);
      }
     int elbow_point = find_elbow_point(eigenvalues, diag->cols);
+    MATRIX_FREE(eigenvalues);
     // Output the elbow point
     printf(">>> the elbow point is at Factor %d.\n", elbow_point);
     return 0;
