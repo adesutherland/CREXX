@@ -550,6 +550,11 @@ typedef struct rxvm_active_state {
      * NULL keeps the accepted ordinary/native owner; non-NULL selects the
      * private sparse compatibility owner for this context. */
     volatile sig_atomic_t *compatibility_interrupts;
+    /* Private E5 mailbox bridge. The native handler/APC writes only the
+     * execution-local wake bit; the cold route and sparse owner claim the
+     * correlated worker mailbox through this worker-owned callback. */
+    void *external_mailbox_owner;
+    sig_atomic_t (*external_mailbox_claim)(void *owner);
 } rxvm_active_state;
 
 /* Runtime context */

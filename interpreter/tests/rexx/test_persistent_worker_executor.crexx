@@ -1,6 +1,7 @@
 options levelb
 
-namespace e5worker expose add get identity spin loop_forever recurse_forever
+namespace e5worker expose add get identity spin loop_forever recurse_forever native_then_complete
+import e5native
 
 add: procedure = .int expose state
   arg amount = .string
@@ -33,3 +34,6 @@ loop_forever: procedure = .int
 
 recurse_forever: procedure = .int
   return recurse_forever()
+
+native_then_complete: procedure = .int
+  return pause()

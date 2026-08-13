@@ -2,10 +2,9 @@
 
 Date: 2026-08-11
 
-Status: **POSIX physical hypothesis passes on macOS and Intel Linux in the
-private E5 PoC; Windows native delivery passes its private PoC; the corrected
-sparse targetable-worker fallback, compiler matrix, industrial mailbox
-integration and portable backend selection remain open**
+Status: **industrial E5 selected and accepted for QA closeout; native POSIX
+and Windows carriers plus the sparse targetable-worker fallback are integrated;
+E6, public workers/channels and Gate F remain closed**
 
 ## Decision question
 
@@ -99,14 +98,14 @@ validated in the cold route.
   pending for the next execution entry; it must not be redirected to another
   VM.
 
-The retained macOS PoC uses private `SIGURG` and the direct `CANCEL` bit as a
+The retained macOS PoC used private `SIGURG` and the direct `CANCEL` bit as a
 physical stand-in. It installs the handler only while a private test executor
 is live, registers at most 64 worker stack ranges, blocks `SIGURG` while a
 worker is idle or changes its active execution pointer, and drains a late
 pending doorbell before request retirement. Apple Clang's TLS access was
 rejected because it emitted a Mach-O TLV resolver call in the handler; the
 retained bounded stack-range scan emits no call, allocation, lock or TLS
-resolver. Production qualification still requires the correlated mailbox
+resolver. The later industrial implementation supplies the correlated mailbox
 bridge, generation check and cold-path mask exclusion described above.
 
 ## Windows backend
@@ -136,6 +135,43 @@ quarantine and eventual join rules remain authoritative. A process worker
 continues to use a framed pipe/socket for envelopes and an OS signal/event only
 as the prompt notification. Cross-host Gate F likewise retains an open framed
 transport; native doorbells are host-local optimisations.
+
+## Industrial selection and closure
+
+The integrated `mthread` implementation turns the carrier proofs into a private
+persistent trusted-worker executor. Stable worker-owned mailbox storage
+publishes a request generation, level-triggered event word and typed terminal
+completion. Supported logical integer/string request registers are copied into
+a worker; successful completion currently returns the procedure's typed integer
+result. Live VM storage and `value *` identities never cross workers.
+Cancellation, deadline, strong kill and shutdown are claimed in the fixed
+priority `CANCEL < DEADLINE < KILL < SHUTDOWN`, with generation validation,
+quarantine accounting and deterministic join.
+
+POSIX and capable Windows targets ring the existing E4 local interrupt word
+through their native callback. Only a targetable worker without prompt native
+delivery selects the duplicate sparse owner before preparation. That owner
+checks request entry, taken static and indirect backedges, bytecode call/return
+boundaries and native/plugin return; it does not restore the rejected
+every-instruction poll. Non-targetable and native-capable execution remain on
+E4. Static native plugin registrations are replayed into each worker so native
+state remains worker-local.
+
+The cleared-host ordinary-Release verdict is favourable or neutral under
+`rxbvml`; `rxtvml` records accepted guard hits of +4.218% direct, +3.549% with
+one worker and +3.013% with two workers. Adrian accepts that loss as the
+inherent computed-goto/multithreading cost after the carrier alternatives were
+exhausted. The sparse solution is slower and structurally less desirable, so
+the result does not reopen selection.
+
+Mac QA found and repaired one cold-route initializer omission for the two new
+private mailbox callbacks. The final closeout passes focused normal and Apple
+AddressSanitizer checks, complete Debug and Release builds, 2,055/2,056 tests
+in the broad parallel Debug sweep plus a clean serial rerun of the sole parser-
+thread timeout, and 22/22 focused Release checks. Existing Linux and Windows
+verdicts are accepted without repetition; Linux/Windows ARM testing is not
+required for E5 closure. Evidence:
+[`2026-08-13-perf3-13-gate-e-e5-industrial-closeout`](evidence/2026-08-13-perf3-13-gate-e-e5-industrial-closeout/).
 
 ## macOS and Intel Linux proof result
 

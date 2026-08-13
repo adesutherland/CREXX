@@ -1,0 +1,22 @@
+PERF3-13 Gate E E5 industrial artifacts
+
+Source HEAD before the uncommitted E5 candidate:
+  a431aaa491fd70170777c64f13b190ac64997646
+
+Accepted timing baseline executables:
+  f670efeeb96b658e7eb49ef2fb1c6fe214456b2cb0b5f4382107788d93b028c7  persistent_worker_executor-rxbvml  1285056 bytes
+  21189c095c6f06900407233cba61631fd4e053d937e13884471be5fa5c75f328  persistent_worker_executor-rxtvml  1322272 bytes
+
+Post-QA-repair rebuilt candidate executables:
+  eabe6a66b568970b767ebc9900efccbc254dd01630390a6eb959d92f915cb3d1  persistent_worker_executor-rxbvml  1287264 bytes
+  4e584f94a67767b09fedf2ffe54915eab7899ad09f41f28f00a08282be65a134  persistent_worker_executor-rxtvml  1340976 bytes
+  d64720db55cc4de9790c6d636effcd1b3145b5253dec18ea24c01cc14a2aa578  persistent_worker_executor-rxvml
+
+Accepted timing CSV SHA-256:
+  79b960498b749f4c15dc03cf6fca886cb9a875e2f2057b85ecd22d6d8b626356  timing/samples.csv
+  3955c2fa10a69a07f38eb29f4db8f40a81383800501ba0d924a7686db712df47  timing/ratios.csv
+  dfeefe8898d8ee299e4bc2f9df30a166cb16fe885cc4f7ba0708da26ead16c7b  timing/summary.csv
+
+The accepted timing candidate was rebuilt in place for the two-field QA
+initialization repair before these post-repair hashes were recorded. The raw
+accepted measurements are retained unchanged in the timing CSV files.

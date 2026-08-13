@@ -16,9 +16,11 @@
 #include <time.h>
 #endif
 
-void rxvm_signal_thread_doorbell_poc_statistics(
+void rxvm_signal_thread_doorbell_e5_statistics(
         unsigned long *callback_count,
         unsigned long *maximum_depth);
+void e5_native_return_reset(void);
+int e5_native_return_entered(void);
 
 #include "rxvm.h"
 #include "rxvmexecutor.h"
@@ -285,6 +287,129 @@ static void run_backpressure_copy_and_drain(const char *rxbin) {
                    "shutdown drains an accepted request before returning");
     destroy_terminal(&drained);
 
+}
+
+static void run_industrial_envelope_and_lifecycle(const char *rxbin) {
+    rxvm_executor *executor;
+    rxvm_executor_result create_result;
+    rxvm_executor_request *typed = 0;
+    rxvm_executor_request *expired = 0;
+    rxvm_executor_request *killed = 0;
+    rxvm_executor_request *shutdown_running = 0;
+    rxvm_executor_request *shutdown_queued = 0;
+    rxvm_executor_request *rejected = 0;
+    rxvm_executor_register_image argument;
+    rxvm_executor_completion completion;
+    rxvm_executor_statistics statistics;
+    rxvm_executor_request_state state;
+    char typed_string[3] = "44";
+    size_t leaks;
+
+    executor = rxvm_executor_create(rxbin, 1u, 4u, &create_result);
+    CHECK(executor && create_result == RXVM_EXECUTOR_OK,
+          "create industrial E5 lifecycle executor");
+    if (!executor) return;
+
+    memset(&argument, 0, sizeof(argument));
+    argument.type = RXVM_EXECUTOR_REGISTER_INTEGER;
+    argument.integer = 43;
+    CHECK(rxvm_executor_submit_registers(
+                  executor, 0u, "e5worker.identity", 1u, &argument,
+                  &typed) == RXVM_EXECUTOR_OK,
+          "submit a copied typed logical-register image");
+    memset(&completion, 0, sizeof(completion));
+    state = rxvm_executor_request_wait_completion(typed, &completion);
+    CHECK(state == RXVM_EXECUTOR_REQUEST_COMPLETED &&
+              completion.state == RXVM_EXECUTOR_REQUEST_COMPLETED &&
+              completion.result.type == RXVM_EXECUTOR_REGISTER_INTEGER &&
+              completion.result.integer == 43,
+          "publish an integer logical-register terminal completion");
+    destroy_terminal(&typed);
+
+    memset(&argument, 0, sizeof(argument));
+    argument.type = RXVM_EXECUTOR_REGISTER_STRING;
+    argument.bytes = typed_string;
+    argument.length = strlen(typed_string);
+    CHECK(rxvm_executor_submit_registers(
+                  executor, 0u, "e5worker.identity", 1u, &argument,
+                  &typed) == RXVM_EXECUTOR_OK,
+          "submit a copied string logical-register image");
+    strcpy(typed_string, "99");
+    memset(&completion, 0, sizeof(completion));
+    state = rxvm_executor_request_wait_completion(typed, &completion);
+    CHECK(state == RXVM_EXECUTOR_REQUEST_COMPLETED &&
+              completion.state == RXVM_EXECUTOR_REQUEST_COMPLETED &&
+              completion.result.type == RXVM_EXECUTOR_REGISTER_INTEGER &&
+              completion.result.integer == 44,
+          "typed string input is copied before worker execution");
+    destroy_terminal(&typed);
+
+    expired = submit_zero(executor, 0u, "e5worker.loop_forever");
+    if (expired) {
+        CHECK(rxvm_executor_request_wait_started(expired) ==
+                      RXVM_EXECUTOR_REQUEST_RUNNING,
+              "deadline control starts on its fixed worker");
+        CHECK(rxvm_executor_expire(expired) == RXVM_EXECUTOR_OK,
+              "external deadline authority publishes expiry");
+        CHECK(rxvm_executor_request_wait(expired, 0) ==
+                      RXVM_EXECUTOR_REQUEST_DEADLINE_EXCEEDED,
+              "deadline expiry has a typed terminal outcome");
+    }
+    destroy_terminal(&expired);
+
+    killed = submit_zero(executor, 0u, "e5worker.loop_forever");
+    if (killed) {
+        CHECK(rxvm_executor_request_wait_started(killed) ==
+                      RXVM_EXECUTOR_REQUEST_RUNNING,
+              "kill control starts on its fixed worker");
+        CHECK(rxvm_executor_kill(killed) == RXVM_EXECUTOR_OK,
+              "strong cooperative kill is accepted");
+        CHECK(rxvm_executor_request_wait(killed, 0) ==
+                      RXVM_EXECUTOR_REQUEST_KILLED,
+              "kill has a typed terminal outcome");
+    }
+    destroy_terminal(&killed);
+
+    shutdown_running = submit_zero(
+            executor, 0u, "e5worker.loop_forever");
+    if (shutdown_running) {
+        CHECK(rxvm_executor_request_wait_started(shutdown_running) ==
+                      RXVM_EXECUTOR_REQUEST_RUNNING,
+              "shutdown control occupies the worker");
+    }
+    shutdown_queued = submit_one(
+            executor, 0u, "e5worker.identity", "47");
+    CHECK(rxvm_executor_shutdown(executor) == RXVM_EXECUTOR_OK,
+          "immediate shutdown closes submission and wakes active bytecode");
+    if (shutdown_running) {
+        CHECK(rxvm_executor_request_wait(shutdown_running, 0) ==
+                      RXVM_EXECUTOR_REQUEST_SHUTDOWN,
+              "running request reports shutdown terminal state");
+    }
+    if (shutdown_queued) {
+        CHECK(rxvm_executor_request_wait(shutdown_queued, 0) ==
+                      RXVM_EXECUTOR_REQUEST_SHUTDOWN,
+              "queued request reports shutdown terminal state");
+    }
+    CHECK(rxvm_executor_submit(executor, 0u, "e5worker.identity", 0, 0,
+                               &rejected) == RXVM_EXECUTOR_STOPPING &&
+              rejected == 0,
+          "shutdown rejects later submission explicitly");
+
+    rxvm_executor_statistics_get(executor, &statistics);
+    CHECK(statistics.deadline_requests == 1u &&
+              statistics.killed_requests == 1u &&
+              statistics.shutdown_requests == 2u,
+          "typed terminal statistics preserve deadline kill shutdown priority");
+    CHECK(statistics.quarantined_workers == 0u &&
+              statistics.maximum_quarantined_workers == 1u,
+          "strong events quarantine and recover exactly one worker");
+
+    leaks = rxvm_executor_destroy(executor);
+    CHECK(leaks == 0u,
+          "industrial shutdown deterministically joins without leaks");
+    destroy_terminal(&shutdown_running);
+    destroy_terminal(&shutdown_queued);
 }
 
 static uint64_t monotonic_nanoseconds(void) {
@@ -671,6 +796,105 @@ static int run_sparse_progress(int argc, char **argv) {
     return failures ? 1 : 0;
 }
 
+static int run_native_return(int argc, char **argv) {
+    rxvm_executor_result create_result = RXVM_EXECUTOR_OK;
+    rxvm_executor *executor;
+    rxvm_executor_request *request = 0;
+    rxvm_executor_request *coalesced = 0;
+    rxvm_executor_request *reuse = 0;
+    rxvm_executor_request_state state;
+    uint64_t deadline;
+    int result = 0;
+    int ok = 1;
+
+    if (argc != 3) {
+        fprintf(stderr, "usage: %s --native-return E5_RXBIN\n", argv[0]);
+        return 2;
+    }
+    executor = rxvm_executor_create(argv[2], 1u, 1u, &create_result);
+    if (!executor || create_result != RXVM_EXECUTOR_OK ||
+        strcmp(rxvm_executor_doorbell_backend_name(executor),
+               "sparse-owner") != 0) {
+        if (executor && rxvm_executor_destroy(executor) != 0u) abort();
+        fprintf(stderr, "E5_NATIVE_RETURN result=FAIL create_result=%s\n",
+                rxvm_executor_result_name(create_result));
+        return 1;
+    }
+
+    e5_native_return_reset();
+    request = submit_zero(executor, 0u, "e5worker.native_then_complete");
+    if (!request || rxvm_executor_request_wait_started(request) !=
+                            RXVM_EXECUTOR_REQUEST_RUNNING) {
+        ok = 0;
+    }
+    deadline = monotonic_nanoseconds() + 2000000000ULL;
+    while (ok && !e5_native_return_entered() &&
+           monotonic_nanoseconds() < deadline) {
+#if defined(_WIN32)
+        Sleep(1);
+#else
+        struct timespec delay = {0, 1000000L};
+        (void)nanosleep(&delay, 0);
+#endif
+    }
+    if (!e5_native_return_entered() ||
+        rxvm_executor_cancel(request) != RXVM_EXECUTOR_OK) {
+        ok = 0;
+    }
+    if (request) {
+        state = rxvm_executor_request_wait(request, &result);
+        if (state != RXVM_EXECUTOR_REQUEST_CANCELLED ||
+            rxvm_executor_request_destroy(request) != RXVM_EXECUTOR_OK) {
+            ok = 0;
+        }
+    }
+
+    e5_native_return_reset();
+    coalesced = submit_zero(
+            executor, 0u, "e5worker.native_then_complete");
+    if (!coalesced ||
+        rxvm_executor_request_wait_started(coalesced) !=
+                RXVM_EXECUTOR_REQUEST_RUNNING) {
+        ok = 0;
+    }
+    deadline = monotonic_nanoseconds() + 2000000000ULL;
+    while (ok && !e5_native_return_entered() &&
+           monotonic_nanoseconds() < deadline) {
+#if defined(_WIN32)
+        Sleep(1);
+#else
+        struct timespec delay = {0, 1000000L};
+        (void)nanosleep(&delay, 0);
+#endif
+    }
+    if (!e5_native_return_entered() ||
+        rxvm_executor_cancel(coalesced) != RXVM_EXECUTOR_OK ||
+        rxvm_executor_kill(coalesced) != RXVM_EXECUTOR_OK) {
+        ok = 0;
+    }
+    if (coalesced) {
+        state = rxvm_executor_request_wait(coalesced, &result);
+        if (state != RXVM_EXECUTOR_REQUEST_KILLED ||
+            rxvm_executor_request_destroy(coalesced) != RXVM_EXECUTOR_OK) {
+            ok = 0;
+        }
+    }
+
+    reuse = submit_one(executor, 0u, "e5worker.identity", "59");
+    if (!reuse || rxvm_executor_request_wait(reuse, &result) !=
+                          RXVM_EXECUTOR_REQUEST_COMPLETED ||
+        result != 59 ||
+        rxvm_executor_request_destroy(reuse) != RXVM_EXECUTOR_OK) {
+        ok = 0;
+    }
+    if (rxvm_executor_destroy(executor) != 0u) ok = 0;
+    printf("E5_NATIVE_RETURN mailbox_after_native=%s coalesced_priority=%s "
+           "reuse=%s result=%s\n",
+           ok ? "PASS" : "FAIL", ok ? "PASS" : "FAIL",
+           ok ? "PASS" : "FAIL", ok ? "PASS" : "FAIL");
+    return ok ? 0 : 1;
+}
+
 static int run_doorbell_stress(int argc, char **argv) {
     rxvm_executor_result create_result;
     rxvm_executor *executor;
@@ -687,7 +911,7 @@ static int run_doorbell_stress(int argc, char **argv) {
                 argv[0]);
         return 2;
     }
-    rxvm_signal_thread_doorbell_poc_statistics(&callbacks_before, NULL);
+    rxvm_signal_thread_doorbell_e5_statistics(&callbacks_before, NULL);
     executor = rxvm_executor_create(argv[2], 2u, 2u, &create_result);
     if (!executor || create_result != RXVM_EXECUTOR_OK) return 1;
     backend = rxvm_executor_doorbell_backend_name(executor);
@@ -718,7 +942,7 @@ static int run_doorbell_stress(int argc, char **argv) {
         }
     }
     if (rxvm_executor_destroy(executor) != 0u) ok = 0;
-    rxvm_signal_thread_doorbell_poc_statistics(
+    rxvm_signal_thread_doorbell_e5_statistics(
             &callbacks_after, &maximum_depth);
 #if defined(_WIN32)
     if (strcmp(backend, "native") == 0 &&
@@ -751,6 +975,9 @@ int main(int argc, char **argv) {
     if (argc > 1 && strcmp(argv[1], "--sparse-progress") == 0) {
         return run_sparse_progress(argc, argv);
     }
+    if (argc > 1 && strcmp(argv[1], "--native-return") == 0) {
+        return run_native_return(argc, argv);
+    }
     if (argc != 2) {
         fprintf(stderr, "usage: %s E5_RXBIN\n", argv[0]);
         return 2;
@@ -758,13 +985,15 @@ int main(int argc, char **argv) {
 
     run_affinity_and_isolation(argv[1]);
     run_backpressure_copy_and_drain(argv[1]);
+    run_industrial_envelope_and_lifecycle(argv[1]);
     if (failures) {
         fprintf(stderr, "E5_PERSISTENT_WORKERS result=FAIL failures=%d\n",
                 failures);
         return 1;
     }
     printf("E5_PERSISTENT_WORKERS concurrency=PASS affinity=PASS "
-           "copy=PASS backpressure=PASS cancellation=PASS "
+           "register_envelope=PASS backpressure=PASS cancellation=PASS "
+           "deadline=PASS kill=PASS shutdown=PASS quarantine=PASS "
            "failure_isolation=PASS drain_join=PASS teardown=PASS result=PASS\n");
     return 0;
 }

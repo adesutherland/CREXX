@@ -13,16 +13,19 @@
 #include "rxastree.h"
 
 #include <stdint.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* Isolated PERF3-13 E5 PoC hooks; deliberately not in the RXVML header. */
-int rxvm_signal_thread_doorbell_poc_install(void);
-void rxvm_signal_thread_doorbell_poc_uninstall(void);
-int rxvm_signal_thread_doorbell_poc_prepare_current(void);
-void rxvm_signal_thread_doorbell_poc_discard_current(void);
-void rxvm_signal_thread_doorbell_poc_release_current(void);
-int rxvm_signal_thread_doorbell_poc_ring(void *thread_handle);
+/* Private PERF3-13 E5 carrier hooks; deliberately not in the RXVML header. */
+int rxvm_signal_thread_doorbell_e5_install(void);
+void rxvm_signal_thread_doorbell_e5_uninstall(void);
+int rxvm_signal_thread_doorbell_e5_prepare_current(void);
+void rxvm_signal_thread_doorbell_e5_discard_current(void);
+void rxvm_signal_thread_doorbell_e5_release_current(void);
+int rxvm_signal_thread_doorbell_e5_ring(void *thread_handle);
 
 #if defined(_WIN32)
 #include <process.h>
@@ -94,6 +97,20 @@ static void executor_condition_broadcast(rxvm_executor_condition *condition) {
 
 typedef struct rxvm_executor_worker rxvm_executor_worker;
 
+typedef enum rxvm_executor_event {
+    RXVM_EXECUTOR_EVENT_NONE = 0,
+    RXVM_EXECUTOR_EVENT_CANCEL = 1,
+    RXVM_EXECUTOR_EVENT_DEADLINE = 2,
+    RXVM_EXECUTOR_EVENT_KILL = 4,
+    RXVM_EXECUTOR_EVENT_SHUTDOWN = 8
+} rxvm_executor_event;
+
+typedef struct rxvm_executor_mailbox {
+    volatile sig_atomic_t events;
+    volatile sig_atomic_t published_generation;
+    volatile sig_atomic_t active_generation;
+} rxvm_executor_mailbox;
+
 struct rxvm_executor_request {
     rxvm_executor_worker *worker;
     char *procedure;
@@ -101,7 +118,8 @@ struct rxvm_executor_request {
     int argc;
     int procedure_result;
     size_t affinity;
-    unsigned char cancel_requested;
+    sig_atomic_t generation;
+    rxvm_executor_event terminal_event;
     rxvm_executor_request_state state;
     rxvm_executor_mutex mutex;
     rxvm_executor_condition changed;
@@ -116,7 +134,8 @@ struct rxvm_executor_worker {
     size_t queue_count;
     size_t affinity;
     rxvm_executor_thread thread;
-    volatile sig_atomic_t compatibility_interrupts;
+    rxvm_executor_mailbox mailbox;
+    sig_atomic_t next_generation;
     rxvm_executor_mutex mutex;
     rxvm_executor_condition changed;
     rxvm_executor_result startup_result;
@@ -125,7 +144,120 @@ struct rxvm_executor_worker {
     unsigned char startup_complete;
     unsigned char stopping;
     unsigned char stopped;
+    unsigned char quarantined;
 };
+
+static sig_atomic_t executor_atomic_load(
+        volatile sig_atomic_t *value) {
+#if defined(_WIN32)
+    return (sig_atomic_t)InterlockedCompareExchange(
+            (volatile LONG *)value, 0, 0);
+#elif defined(__GNUC__) || defined(__clang__)
+    return __atomic_load_n(value, __ATOMIC_ACQUIRE);
+#else
+    return *value;
+#endif
+}
+
+static void executor_atomic_store(
+        volatile sig_atomic_t *value,
+        sig_atomic_t replacement) {
+#if defined(_WIN32)
+    InterlockedExchange((volatile LONG *)value, (LONG)replacement);
+#elif defined(__GNUC__) || defined(__clang__)
+    __atomic_store_n(value, replacement, __ATOMIC_RELEASE);
+#else
+    *value = replacement;
+#endif
+}
+
+static sig_atomic_t executor_atomic_exchange(
+        volatile sig_atomic_t *value,
+        sig_atomic_t replacement) {
+#if defined(_WIN32)
+    return (sig_atomic_t)InterlockedExchange(
+            (volatile LONG *)value, (LONG)replacement);
+#elif defined(__GNUC__) || defined(__clang__)
+    return __atomic_exchange_n(value, replacement, __ATOMIC_ACQ_REL);
+#else
+    sig_atomic_t previous = *value;
+    *value = replacement;
+    return previous;
+#endif
+}
+
+static void executor_atomic_or(
+        volatile sig_atomic_t *value,
+        sig_atomic_t mask) {
+#if defined(_WIN32)
+    InterlockedOr((volatile LONG *)value, (LONG)mask);
+#elif defined(__GNUC__) || defined(__clang__)
+    (void)__atomic_fetch_or(value, mask, __ATOMIC_RELEASE);
+#else
+    *value |= mask;
+#endif
+}
+
+static sig_atomic_t executor_mailbox_claim(void *owner) {
+    rxvm_executor_mailbox *mailbox = (rxvm_executor_mailbox *)owner;
+    sig_atomic_t active_generation;
+    sig_atomic_t published_generation;
+    sig_atomic_t events;
+
+    if (!mailbox) return 0;
+    active_generation = executor_atomic_load(&mailbox->active_generation);
+    published_generation = executor_atomic_load(
+            &mailbox->published_generation);
+    if (!active_generation || published_generation != active_generation) {
+        return 0;
+    }
+    events = executor_atomic_exchange(&mailbox->events, 0);
+    if (events & (RXVM_EXECUTOR_EVENT_SHUTDOWN |
+                  RXVM_EXECUTOR_EVENT_KILL)) {
+        return rxsignal_mask(RXSIGNAL_KILL);
+    }
+    if (events & (RXVM_EXECUTOR_EVENT_DEADLINE |
+                  RXVM_EXECUTOR_EVENT_CANCEL)) {
+        return rxsignal_mask(RXSIGNAL_CANCEL);
+    }
+    return 0;
+}
+
+static sig_atomic_t executor_worker_next_generation(
+        rxvm_executor_worker *worker) {
+    if (worker->next_generation >= (sig_atomic_t)INT_MAX) {
+        worker->next_generation = 1;
+    } else {
+        worker->next_generation++;
+    }
+    return worker->next_generation;
+}
+
+static void executor_mailbox_arm(
+        rxvm_executor_worker *worker,
+        rxvm_executor_request *request) {
+    request->generation = executor_worker_next_generation(worker);
+    executor_atomic_store(&worker->mailbox.events, 0);
+    executor_atomic_store(&worker->mailbox.published_generation,
+                          request->generation);
+    executor_atomic_store(&worker->mailbox.active_generation,
+                          request->generation);
+}
+
+static void executor_mailbox_disarm(rxvm_executor_worker *worker) {
+    executor_atomic_store(&worker->mailbox.active_generation, 0);
+    executor_atomic_store(&worker->mailbox.published_generation, 0);
+    (void)executor_atomic_exchange(&worker->mailbox.events, 0);
+}
+
+static void executor_mailbox_publish(
+        rxvm_executor_worker *worker,
+        rxvm_executor_request *request,
+        rxvm_executor_event event) {
+    executor_atomic_store(&worker->mailbox.published_generation,
+                          request->generation);
+    executor_atomic_or(&worker->mailbox.events, (sig_atomic_t)event);
+}
 
 struct rxvm_executor {
     rxvm_runtime *runtime;
@@ -138,13 +270,53 @@ struct rxvm_executor {
     unsigned char statistics_mutex_initialized;
     unsigned char native_doorbell;
     unsigned char compatibility_doorbell;
+    volatile sig_atomic_t shutdown_requested;
 };
+
+static int executor_worker_ring(rxvm_executor_worker *worker) {
+    if (worker->executor->compatibility_doorbell) return 1;
+    if (!worker->executor->native_doorbell) return 0;
+#if defined(__APPLE__) || defined(__linux__)
+    return pthread_kill(worker->thread, SIGURG) == 0;
+#elif defined(_WIN32)
+    return rxvm_signal_thread_doorbell_e5_ring(worker->thread) == 0;
+#else
+    return 0;
+#endif
+}
 
 static int request_state_is_terminal(rxvm_executor_request_state state) {
     return state == RXVM_EXECUTOR_REQUEST_COMPLETED ||
            state == RXVM_EXECUTOR_REQUEST_CANCELLED ||
            state == RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND ||
-           state == RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+           state == RXVM_EXECUTOR_REQUEST_SETUP_FAILED ||
+           state == RXVM_EXECUTOR_REQUEST_DEADLINE_EXCEEDED ||
+           state == RXVM_EXECUTOR_REQUEST_KILLED ||
+           state == RXVM_EXECUTOR_REQUEST_SHUTDOWN;
+}
+
+static void executor_request_promote_event(
+        rxvm_executor_request *request,
+        rxvm_executor_event event) {
+    if (event > request->terminal_event) request->terminal_event = event;
+}
+
+static rxvm_executor_request_state executor_request_event_state(
+        rxvm_executor_event event,
+        rxvm_executor_request_state fallback) {
+    if (event == RXVM_EXECUTOR_EVENT_SHUTDOWN) {
+        return RXVM_EXECUTOR_REQUEST_SHUTDOWN;
+    }
+    if (event == RXVM_EXECUTOR_EVENT_KILL) {
+        return RXVM_EXECUTOR_REQUEST_KILLED;
+    }
+    if (event == RXVM_EXECUTOR_EVENT_DEADLINE) {
+        return RXVM_EXECUTOR_REQUEST_DEADLINE_EXCEEDED;
+    }
+    if (event == RXVM_EXECUTOR_EVENT_CANCEL) {
+        return RXVM_EXECUTOR_REQUEST_CANCELLED;
+    }
+    return fallback;
 }
 
 static char *executor_copy_string(const char *source) {
@@ -245,10 +417,62 @@ static void executor_statistics_finish(
         executor->statistics.completed_requests++;
     } else if (state == RXVM_EXECUTOR_REQUEST_CANCELLED) {
         executor->statistics.cancelled_requests++;
+    } else if (state == RXVM_EXECUTOR_REQUEST_DEADLINE_EXCEEDED) {
+        executor->statistics.deadline_requests++;
+    } else if (state == RXVM_EXECUTOR_REQUEST_KILLED) {
+        executor->statistics.killed_requests++;
+    } else if (state == RXVM_EXECUTOR_REQUEST_SHUTDOWN) {
+        executor->statistics.shutdown_requests++;
     } else {
         executor->statistics.failed_requests++;
     }
     executor_mutex_unlock(&executor->statistics_mutex);
+}
+
+static void executor_statistics_terminal_queued(
+        rxvm_executor *executor,
+        rxvm_executor_request_state state) {
+    executor_mutex_lock(&executor->statistics_mutex);
+    if (state == RXVM_EXECUTOR_REQUEST_CANCELLED) {
+        executor->statistics.cancelled_requests++;
+    } else if (state == RXVM_EXECUTOR_REQUEST_DEADLINE_EXCEEDED) {
+        executor->statistics.deadline_requests++;
+    } else if (state == RXVM_EXECUTOR_REQUEST_KILLED) {
+        executor->statistics.killed_requests++;
+    } else if (state == RXVM_EXECUTOR_REQUEST_SHUTDOWN) {
+        executor->statistics.shutdown_requests++;
+    } else {
+        executor->statistics.failed_requests++;
+    }
+    executor_mutex_unlock(&executor->statistics_mutex);
+}
+
+static void executor_worker_quarantine(rxvm_executor_worker *worker) {
+    executor_mutex_lock(&worker->mutex);
+    if (!worker->quarantined) {
+        worker->quarantined = 1u;
+        executor_mutex_lock(&worker->executor->statistics_mutex);
+        worker->executor->statistics.quarantined_workers++;
+        if (worker->executor->statistics.maximum_quarantined_workers <
+            worker->executor->statistics.quarantined_workers) {
+            worker->executor->statistics.maximum_quarantined_workers =
+                    worker->executor->statistics.quarantined_workers;
+        }
+        executor_mutex_unlock(&worker->executor->statistics_mutex);
+    }
+    executor_mutex_unlock(&worker->mutex);
+}
+
+static void executor_worker_unquarantine(rxvm_executor_worker *worker) {
+    executor_mutex_lock(&worker->mutex);
+    if (worker->quarantined) {
+        worker->quarantined = 0u;
+        executor_mutex_lock(&worker->executor->statistics_mutex);
+        if (!worker->executor->statistics.quarantined_workers) abort();
+        worker->executor->statistics.quarantined_workers--;
+        executor_mutex_unlock(&worker->executor->statistics_mutex);
+    }
+    executor_mutex_unlock(&worker->mutex);
 }
 
 static void executor_request_complete(
@@ -262,11 +486,15 @@ static void executor_request_complete(
      * A late post after rxvm_call() returned must never reach the next request
      * assigned to this persistent VM. */
     if (executor->native_doorbell) {
-        rxvm_signal_thread_doorbell_poc_discard_current();
-    } else if (executor->compatibility_doorbell) {
-        rxvm_signal_pending_and(&request->worker->compatibility_interrupts, 0);
+        rxvm_signal_thread_doorbell_e5_discard_current();
     }
-    if (request->cancel_requested) state = RXVM_EXECUTOR_REQUEST_CANCELLED;
+    executor_mailbox_disarm(request->worker);
+    if (executor_atomic_load(&executor->shutdown_requested)) {
+        executor_request_promote_event(
+                request, RXVM_EXECUTOR_EVENT_SHUTDOWN);
+    }
+    state = executor_request_event_state(request->terminal_event, state);
+    executor_worker_unquarantine(request->worker);
     executor_statistics_finish(executor, state);
     request->procedure_result = procedure_result;
     request->state = state;
@@ -308,19 +536,25 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
     int procedure_result;
 
     if (worker->executor->native_doorbell &&
-        rxvm_signal_thread_doorbell_poc_prepare_current() != 0) {
+        rxvm_signal_thread_doorbell_e5_prepare_current() != 0) {
         worker->startup_result = RXVM_EXECUTOR_WORKER_START_FAILED;
     }
     worker->context = worker->startup_result == RXVM_EXECUTOR_OK
             ? rxvm_context_create_in_runtime(worker->executor->runtime) : 0;
-    if (worker->context && worker->executor->compatibility_doorbell) {
-        worker->context->active.compatibility_interrupts =
-                &worker->compatibility_interrupts;
+    if (worker->context) {
+        worker->context->active.external_mailbox_owner = &worker->mailbox;
+        worker->context->active.external_mailbox_claim =
+                executor_mailbox_claim;
+        if (worker->executor->compatibility_doorbell) {
+            worker->context->active.compatibility_interrupts =
+                    &worker->mailbox.events;
+        }
     }
     if (!worker->context ||
         rxvm_program_generation_attach(worker->context,
                                        worker->executor->generation) !=
                 RXVM_PROGRAM_OK ||
+        rxldmodp(worker->context) < 0 ||
         rxvm_link(worker->context) != 0 ||
         rxvm_prepare(worker->context) != 0) {
         worker->startup_result = RXVM_EXECUTOR_WORKER_START_FAILED;
@@ -347,21 +581,42 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
             executor_mutex_unlock(&worker->mutex);
 
             executor_mutex_lock(&request->mutex);
-            if (request->cancel_requested) {
-                executor_mutex_lock(&worker->executor->statistics_mutex);
-                worker->executor->statistics.cancelled_requests++;
-                executor_mutex_unlock(&worker->executor->statistics_mutex);
-                request->state = RXVM_EXECUTOR_REQUEST_CANCELLED;
+            if (executor_atomic_load(
+                        &worker->executor->shutdown_requested)) {
+                executor_request_promote_event(
+                        request, RXVM_EXECUTOR_EVENT_SHUTDOWN);
+            }
+            if (request->terminal_event != RXVM_EXECUTOR_EVENT_NONE) {
+                state = executor_request_event_state(
+                        request->terminal_event,
+                        RXVM_EXECUTOR_REQUEST_CANCELLED);
+                executor_statistics_terminal_queued(
+                        worker->executor, state);
+                request->state = state;
                 request->worker = 0;
                 executor_condition_broadcast(&request->changed);
                 executor_mutex_unlock(&request->mutex);
                 continue;
+            }
+            executor_mailbox_arm(worker, request);
+            if (executor_atomic_load(
+                        &worker->executor->shutdown_requested)) {
+                executor_request_promote_event(
+                        request, RXVM_EXECUTOR_EVENT_SHUTDOWN);
+                executor_mailbox_publish(
+                        worker, request, RXVM_EXECUTOR_EVENT_SHUTDOWN);
             }
             request->state = RXVM_EXECUTOR_REQUEST_RUNNING;
             executor_condition_broadcast(&request->changed);
             executor_mutex_unlock(&request->mutex);
 
             executor_statistics_start(worker->executor);
+            if (executor_atomic_load(
+                        &worker->executor->shutdown_requested)) {
+                executor_request_complete(
+                        request, RXVM_EXECUTOR_REQUEST_SHUTDOWN, 0);
+                continue;
+            }
             procedure_result = 0;
             state = executor_worker_call(worker, request, &procedure_result);
             executor_request_complete(request, state, procedure_result);
@@ -373,7 +628,7 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
         worker->context = 0;
     }
     if (worker->executor->native_doorbell) {
-        rxvm_signal_thread_doorbell_poc_release_current();
+        rxvm_signal_thread_doorbell_e5_release_current();
     }
     executor_mutex_lock(&worker->mutex);
     worker->stopped = 1u;
@@ -508,17 +763,24 @@ rxvm_executor *rxvm_executor_create(
     }
     executor->statistics_mutex_initialized = 1u;
     {
-        const char *doorbell = getenv("CREXX_VM_POC_DOORBELL");
+        const char *doorbell = getenv("CREXX_VM_E5_DOORBELL");
+        const char *force_sparse = getenv(
+                "CREXX_VM_E5_FORCE_SPARSE_OWNER");
+        if (force_sparse && strcmp(force_sparse, "1") == 0) {
+            executor->compatibility_doorbell = 1u;
+        }
 #if defined(_WIN32)
-        executor->native_doorbell = doorbell &&
+        executor->native_doorbell = !executor->compatibility_doorbell &&
+                doorbell &&
                 strcmp(doorbell, "windows-special-apc") == 0;
 #else
-        executor->native_doorbell = doorbell &&
+        executor->native_doorbell = !executor->compatibility_doorbell &&
+                doorbell &&
                 strcmp(doorbell, "posix") == 0;
 #endif
     }
     if (executor->native_doorbell &&
-        rxvm_signal_thread_doorbell_poc_install() != 0) {
+        rxvm_signal_thread_doorbell_e5_install() != 0) {
 #if defined(_WIN32)
         executor->native_doorbell = 0u;
         executor->compatibility_doorbell = 1u;
@@ -548,9 +810,10 @@ rxvm_executor *rxvm_executor_create(
         goto fail;
     }
     if (!rxvm_load_file(source, (char *)rxbin_path) ||
-        rxvm_link(source) != 0 || rxvm_prepare(source) != 0 ||
         rxvm_program_generation_seal(source, &executor->generation) !=
-                RXVM_PROGRAM_OK) {
+                RXVM_PROGRAM_OK ||
+        rxldmodp(source) < 0 ||
+        rxvm_link(source) != 0 || rxvm_prepare(source) != 0) {
         result = RXVM_EXECUTOR_PROGRAM_LOAD_FAILED;
         goto fail;
     }
@@ -589,7 +852,7 @@ fail:
         if (runtime_leaks) abort();
     }
     if (executor && executor->native_doorbell) {
-        rxvm_signal_thread_doorbell_poc_uninstall();
+        rxvm_signal_thread_doorbell_e5_uninstall();
         executor->native_doorbell = 0u;
     }
     executor_storage_destroy(executor);
@@ -603,7 +866,7 @@ size_t rxvm_executor_destroy(rxvm_executor *executor) {
     if (!executor) return 0u;
     executor_stop_and_join_workers(executor);
     if (executor->native_doorbell) {
-        rxvm_signal_thread_doorbell_poc_uninstall();
+        rxvm_signal_thread_doorbell_e5_uninstall();
         executor->native_doorbell = 0u;
     }
     leaks = rxvm_runtime_destroy(executor->runtime);
@@ -633,7 +896,8 @@ rxvm_executor_result rxvm_executor_submit(
     if (!request) return RXVM_EXECUTOR_OUT_OF_MEMORY;
 
     executor_mutex_lock(&worker->mutex);
-    if (worker->stopping) {
+    if (worker->stopping ||
+        executor_atomic_load(&executor->shutdown_requested)) {
         executor_mutex_unlock(&worker->mutex);
         executor_request_storage_destroy(request);
         return RXVM_EXECUTOR_STOPPING;
@@ -658,9 +922,78 @@ rxvm_executor_result rxvm_executor_submit(
     return RXVM_EXECUTOR_OK;
 }
 
-rxvm_executor_result rxvm_executor_cancel(
-        rxvm_executor_request *request) {
+rxvm_executor_result rxvm_executor_submit_registers(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        const char *procedure,
+        size_t argument_count,
+        const rxvm_executor_register_image *arguments,
+        rxvm_executor_request **request_out) {
+    rxvm_executor_result result = RXVM_EXECUTOR_INVALID;
+    char **copied_arguments = 0;
+    size_t i;
+
+    if (request_out) *request_out = 0;
+    if (argument_count > (size_t)INT_MAX ||
+        (argument_count && !arguments) ||
+        (argument_count > SIZE_MAX / sizeof(*copied_arguments))) {
+        return RXVM_EXECUTOR_INVALID;
+    }
+    if (argument_count) {
+        copied_arguments = (char **)calloc(
+                argument_count, sizeof(*copied_arguments));
+        if (!copied_arguments) return RXVM_EXECUTOR_OUT_OF_MEMORY;
+    }
+    for (i = 0u; i < argument_count; i++) {
+        const rxvm_executor_register_image *image = &arguments[i];
+        if (image->type == RXVM_EXECUTOR_REGISTER_INTEGER) {
+            char buffer[64];
+            int length = snprintf(buffer, sizeof(buffer), "%" PRId64,
+                                  image->integer);
+            if (length < 0 || (size_t)length >= sizeof(buffer)) {
+                result = RXVM_EXECUTOR_INVALID;
+                goto done;
+            }
+            copied_arguments[i] = executor_copy_string(buffer);
+        } else if (image->type == RXVM_EXECUTOR_REGISTER_STRING) {
+            if ((!image->bytes && image->length) ||
+                image->length == SIZE_MAX ||
+                (image->length &&
+                 memchr(image->bytes, 0, image->length))) {
+                result = RXVM_EXECUTOR_INVALID;
+                goto done;
+            }
+            copied_arguments[i] = (char *)malloc(image->length + 1u);
+            if (copied_arguments[i]) {
+                if (image->length) {
+                    memcpy(copied_arguments[i], image->bytes, image->length);
+                }
+                copied_arguments[i][image->length] = 0;
+            }
+        } else {
+            result = RXVM_EXECUTOR_INVALID;
+            goto done;
+        }
+        if (!copied_arguments[i]) {
+            result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+            goto done;
+        }
+    }
+    result = rxvm_executor_submit(
+            executor, worker_affinity, procedure, (int)argument_count,
+            (const char *const *)copied_arguments, request_out);
+
+done:
+    for (i = 0u; i < argument_count; i++) free(copied_arguments[i]);
+    free(copied_arguments);
+    return result;
+}
+
+static rxvm_executor_result executor_request_event(
+        rxvm_executor_request *request,
+        rxvm_executor_event event) {
     rxvm_executor_worker *worker;
+    rxvm_executor_event previous_event;
     size_t i;
 
     if (!request) return RXVM_EXECUTOR_INVALID;
@@ -674,7 +1007,8 @@ rxvm_executor_result rxvm_executor_cancel(
         executor_mutex_unlock(&request->mutex);
         return RXVM_EXECUTOR_INVALID;
     }
-    request->cancel_requested = 1u;
+    previous_event = request->terminal_event;
+    executor_request_promote_event(request, event);
     executor_mutex_lock(&worker->mutex);
     for (i = 0u; i < worker->queue_count; i++) {
         size_t index = (worker->queue_head + i) % worker->queue_capacity;
@@ -690,10 +1024,11 @@ rxvm_executor_result rxvm_executor_cancel(
             worker->queue[(worker->queue_head + worker->queue_count - 1u) %
                           worker->queue_capacity] = 0;
             worker->queue_count--;
-            executor_mutex_lock(&worker->executor->statistics_mutex);
-            worker->executor->statistics.cancelled_requests++;
-            executor_mutex_unlock(&worker->executor->statistics_mutex);
-            request->state = RXVM_EXECUTOR_REQUEST_CANCELLED;
+            request->state = executor_request_event_state(
+                    request->terminal_event,
+                    RXVM_EXECUTOR_REQUEST_CANCELLED);
+            executor_statistics_terminal_queued(
+                    worker->executor, request->state);
             request->worker = 0;
             executor_condition_broadcast(&request->changed);
             executor_mutex_unlock(&worker->mutex);
@@ -705,36 +1040,87 @@ rxvm_executor_result rxvm_executor_cancel(
     if (request->state == RXVM_EXECUTOR_REQUEST_RUNNING) {
         /* The request mutex is the arm/disarm authority. While it is held,
          * completion cannot retire this request and reuse the VM. */
-        if (worker->executor->compatibility_doorbell) {
-            rxvm_signal_pending_or(
-                    &worker->compatibility_interrupts,
-                    rxsignal_mask(RXSIGNAL_CANCEL));
-        } else if (!worker->executor->native_doorbell) {
-            request->cancel_requested = 0u;
+        executor_mailbox_publish(worker, request, event);
+        if (event == RXVM_EXECUTOR_EVENT_DEADLINE ||
+            event == RXVM_EXECUTOR_EVENT_KILL ||
+            event == RXVM_EXECUTOR_EVENT_SHUTDOWN) {
+            executor_worker_quarantine(worker);
+        }
+        if (!executor_worker_ring(worker)) {
+            request->terminal_event = previous_event;
+            (void)executor_atomic_exchange(&worker->mailbox.events, 0);
+            if (event == RXVM_EXECUTOR_EVENT_DEADLINE ||
+                event == RXVM_EXECUTOR_EVENT_KILL ||
+                event == RXVM_EXECUTOR_EVENT_SHUTDOWN) {
+                int previous_quarantine =
+                        previous_event == RXVM_EXECUTOR_EVENT_DEADLINE ||
+                        previous_event == RXVM_EXECUTOR_EVENT_KILL ||
+                        previous_event == RXVM_EXECUTOR_EVENT_SHUTDOWN;
+                if (!previous_quarantine) {
+                    executor_worker_unquarantine(worker);
+                }
+            }
+            if (previous_event != RXVM_EXECUTOR_EVENT_NONE) {
+                executor_mailbox_publish(
+                        worker, request, previous_event);
+            }
             executor_mutex_unlock(&request->mutex);
             return RXVM_EXECUTOR_INVALID;
-        } else {
-#if defined(__APPLE__) || defined(__linux__)
-            if (pthread_kill(worker->thread, SIGURG) != 0) {
-                request->cancel_requested = 0u;
-                executor_mutex_unlock(&request->mutex);
-                return RXVM_EXECUTOR_INVALID;
-            }
-#elif defined(_WIN32)
-            if (rxvm_signal_thread_doorbell_poc_ring(worker->thread) != 0) {
-                request->cancel_requested = 0u;
-                executor_mutex_unlock(&request->mutex);
-                return RXVM_EXECUTOR_INVALID;
-            }
-#else
-            request->cancel_requested = 0u;
-            executor_mutex_unlock(&request->mutex);
-            return RXVM_EXECUTOR_INVALID;
-#endif
         }
     }
     executor_mutex_unlock(&request->mutex);
     return RXVM_EXECUTOR_OK;
+}
+
+rxvm_executor_result rxvm_executor_cancel(
+        rxvm_executor_request *request) {
+    return executor_request_event(request, RXVM_EXECUTOR_EVENT_CANCEL);
+}
+
+rxvm_executor_result rxvm_executor_kill(
+        rxvm_executor_request *request) {
+    return executor_request_event(request, RXVM_EXECUTOR_EVENT_KILL);
+}
+
+rxvm_executor_result rxvm_executor_expire(
+        rxvm_executor_request *request) {
+    return executor_request_event(request, RXVM_EXECUTOR_EVENT_DEADLINE);
+}
+
+rxvm_executor_result rxvm_executor_shutdown(rxvm_executor *executor) {
+    rxvm_executor_result result = RXVM_EXECUTOR_OK;
+    size_t i;
+
+    if (!executor) return RXVM_EXECUTOR_INVALID;
+    if (executor_atomic_exchange(&executor->shutdown_requested, 1)) {
+        return RXVM_EXECUTOR_OK;
+    }
+    for (i = 0u; i < executor->worker_count; i++) {
+        rxvm_executor_worker *worker = &executor->workers[i];
+        sig_atomic_t generation;
+
+        if (!worker->thread_started) continue;
+        executor_mutex_lock(&worker->mutex);
+        worker->stopping = 1u;
+        executor_condition_broadcast(&worker->changed);
+        executor_mutex_unlock(&worker->mutex);
+
+        generation = executor_atomic_load(
+                &worker->mailbox.active_generation);
+        if (!generation) continue;
+        executor_atomic_store(&worker->mailbox.published_generation,
+                              generation);
+        executor_atomic_or(&worker->mailbox.events,
+                           RXVM_EXECUTOR_EVENT_SHUTDOWN);
+        executor_worker_quarantine(worker);
+        if (executor_atomic_load(&worker->mailbox.active_generation) !=
+                generation) {
+            executor_worker_unquarantine(worker);
+            continue;
+        }
+        if (!executor_worker_ring(worker)) result = RXVM_EXECUTOR_INVALID;
+    }
+    return result;
 }
 
 rxvm_executor_request_state rxvm_executor_request_wait(
@@ -750,6 +1136,24 @@ rxvm_executor_request_state rxvm_executor_request_wait(
     state = request->state;
     if (procedure_result_out) *procedure_result_out = request->procedure_result;
     executor_mutex_unlock(&request->mutex);
+    return state;
+}
+
+rxvm_executor_request_state rxvm_executor_request_wait_completion(
+        rxvm_executor_request *request,
+        rxvm_executor_completion *completion_out) {
+    int procedure_result = 0;
+    rxvm_executor_request_state state = rxvm_executor_request_wait(
+            request, &procedure_result);
+
+    if (completion_out) {
+        memset(completion_out, 0, sizeof(*completion_out));
+        completion_out->state = state;
+        if (state == RXVM_EXECUTOR_REQUEST_COMPLETED) {
+            completion_out->result.type = RXVM_EXECUTOR_REGISTER_INTEGER;
+            completion_out->result.integer = procedure_result;
+        }
+    }
     return state;
 }
 
@@ -838,6 +1242,10 @@ const char *rxvm_executor_request_state_name(
         case RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND:
             return "procedure-not-found";
         case RXVM_EXECUTOR_REQUEST_SETUP_FAILED: return "setup-failed";
+        case RXVM_EXECUTOR_REQUEST_DEADLINE_EXCEEDED:
+            return "deadline-exceeded";
+        case RXVM_EXECUTOR_REQUEST_KILLED: return "killed";
+        case RXVM_EXECUTOR_REQUEST_SHUTDOWN: return "shutdown";
         default: return "unknown";
     }
 }

@@ -1,0 +1,44 @@
+PERF3-13 Gate E E5 industrial QA closeout
+Date: 2026-08-13
+Host: Darwin arm64, 10 logical CPUs
+
+Accepted timing:
+  profiling-off Release, profile-20
+  1 warmup + 12 balanced recorded pairs per cell
+  6 cells, 156/156 process oracles passed
+  rxbvml direct mean:    -1.538743078% (guard clear)
+  rxbvml executor1 mean: -2.269469904% (guard clear)
+  rxbvml executor2 mean: -1.546416457% (guard clear)
+  rxtvml direct mean:    +4.218013685% (accepted guard hit)
+  rxtvml executor1 mean: +3.548974122% (accepted guard hit)
+  rxtvml executor2 mean: +3.013191396% (accepted guard hit)
+
+QA discovery:
+  Initial full Debug CTest: invalid verdict, 298/2056 failures.
+  Cause: uninitialized external_mailbox_owner/external_mailbox_claim callback
+  fields in non-zero-filled VM contexts.
+  Pre-repair cold-route reproducer: 0/1.
+  Repair: initialize both private callbacks to null in rxinimod_common(); extend
+  poison-storage active-state regression.
+
+Final correctness:
+  Focused normal Debug after repair: 4/4 passed.
+  Apple AddressSanitizer after repair: 20/20 passed; detect_leaks=0.
+  Complete Debug rebuild after repair: passed.
+  Full Debug CTest after repair: 2055/2056 passed in 339.90 seconds.
+  Isolated syntaxhighlight_trace_keywords recovery: 1/1 passed in 1.01 s.
+  Complete profiling-off Release rebuild after repair: passed.
+  Focused Release after repair: 22/22 passed in 1.38 seconds.
+  Final reviewed-source incremental Release repeat: 22/22 in 0.95 seconds.
+  Merged rxc include/import panel: 18/18 passed.
+
+Classification:
+  The isolated syntax-highlighter miss was a parser-thread startup timeout: it
+  returned only the emergency tree and was force-terminated. Immediate serial
+  success classifies it as a recovered infrastructure/timing flake, not an E5
+  or product failure.
+
+Closure:
+  E5 accepted and complete for approved QA scope.
+  Linux/Windows existing evidence accepted; ARM retesting not required.
+  E6, Gate F, commit and publication are not authorized by this closeout.

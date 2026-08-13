@@ -186,6 +186,14 @@ int main(void) {
         rxfremod(&main_context);
         return 1;
     }
+    if (main_context.active.external_mailbox_owner != NULL ||
+        main_context.active.external_mailbox_claim != NULL) {
+        fprintf(stderr, "external mailbox was selected by uninitialized state\n");
+        main_context.active.external_mailbox_owner = NULL;
+        main_context.active.external_mailbox_claim = NULL;
+        rxfremod(&main_context);
+        return 1;
+    }
     if (rxvm_signal_bind_process_main(&main_context) != 0) {
         fprintf(stderr, "could not bind process-main interrupt target\n");
         rxfremod(&main_context);

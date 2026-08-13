@@ -1672,7 +1672,7 @@ if(CREXX_THREADED_VM_SUPPORTED)
     crexx_configure_program_generation_control(program_generation_control-rxtvml)
 endif()
 
-# PERF3-13 E5 combined doorbell PoC. This private executor uses the native
+# PERF3-13 E5 private industrial executor. It uses the native
 # POSIX carrier on Apple/Linux. Windows resolves QueueUserAPC2 dynamically and
 # uses a special user APC when the runtime probe succeeds; when it cannot, the
 # worker immutably selects the duplicate sparse compatibility owner before
@@ -1681,6 +1681,11 @@ endif()
 # ABI.
 if(BUILD_TESTING AND
    (APPLE OR WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux"))
+    include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
+    add_dynamic_plugin_target(_e5native
+            tests/e5_native_return_plugin.c)
+    add_static_plugin_target(_e5native
+            tests/e5_native_return_plugin.c)
     if(APPLE)
         set(_crexx_e5_doorbell_platform_label macos)
         set(_crexx_e5_doorbell_backend posix)
@@ -1704,11 +1709,12 @@ if(BUILD_TESTING AND
     else()
         add_custom_command(
                 OUTPUT test_persistent_worker_executor.rxbin
-                COMMAND $<TARGET_FILE:rxc> -o test_persistent_worker_executor
+                COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin
+                        -o test_persistent_worker_executor
                         ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_persistent_worker_executor.crexx
                 COMMAND $<TARGET_FILE:rxas> test_persistent_worker_executor
                 DEPENDS tests/rexx/test_persistent_worker_executor.crexx
-                        rxc rxas compiler_exit_bin
+                        rxc rxas compiler_exit_bin _e5native
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 COMMENT "Compiling PERF3-13 E5 native-doorbell control ...")
     endif()
@@ -1751,77 +1757,125 @@ if(BUILD_TESTING AND
                 ${CMAKE_SOURCE_DIR}/avl_tree
                 ${CMAKE_SOURCE_DIR}/utf8)
         target_link_libraries(${TARGET_NAME} Threads::Threads)
+        configure_linker_for_static_lib(${TARGET_NAME} _e5native)
+        target_link_libraries(${TARGET_NAME} rxpashim)
+        add_dependencies(${TARGET_NAME} _e5native_static)
         add_dependencies(${TARGET_NAME}
                 test_persistent_worker_executor_bin
                 test_persistent_worker_sparse_bin)
         add_test(
                 NAME ${TARGET_NAME}
                 COMMAND ${CMAKE_COMMAND} -E env
-                        CREXX_VM_POC_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
                         $<TARGET_FILE:${TARGET_NAME}>
                         ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         set_tests_properties(${TARGET_NAME} PROPERTIES
-                LABELS "interpreter;perf3;gate-e;e5;poc;${_crexx_e5_doorbell_platform_label}"
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
         add_test(
                 NAME ${TARGET_NAME}-doorbell-stress
                 COMMAND ${CMAKE_COMMAND} -E env
-                        CREXX_VM_POC_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
                         $<TARGET_FILE:${TARGET_NAME}>
                         --doorbell-stress
                         ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
                         100)
         set_tests_properties(${TARGET_NAME}-doorbell-stress PROPERTIES
-                LABELS "interpreter;perf3;gate-e;e5;poc;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        add_test(
+                NAME ${TARGET_NAME}-sparse-owner
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(${TARGET_NAME}-sparse-owner PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 120)
+        add_test(
+                NAME ${TARGET_NAME}-sparse-owner-stress
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --doorbell-stress
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                        100)
+        set_tests_properties(${TARGET_NAME}-sparse-owner-stress PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 120)
+        add_test(
+                NAME ${TARGET_NAME}-sparse-progress
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --sparse-progress
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_sparse.rxbin)
+        set_tests_properties(${TARGET_NAME}-sparse-progress PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 30)
+        add_test(
+                NAME ${TARGET_NAME}-native-return
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --native-return
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin)
+        set_tests_properties(${TARGET_NAME}-native-return PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;native;lifecycle;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 30)
         if(WIN32)
             add_test(
                     NAME ${TARGET_NAME}-doorbell-fallback
                     COMMAND ${CMAKE_COMMAND} -E env
-                            CREXX_VM_POC_DOORBELL=${_crexx_e5_doorbell_backend}
-                            CREXX_VM_POC_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
                             $<TARGET_FILE:${TARGET_NAME}>
                             --doorbell-fallback
                             ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin)
             set_tests_properties(
                     ${TARGET_NAME}-doorbell-fallback PROPERTIES
-                    LABELS "interpreter;perf3;gate-e;e5;poc;fallback;windows"
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
                     TIMEOUT 30)
             add_test(
                     NAME ${TARGET_NAME}-fallback
                     COMMAND ${CMAKE_COMMAND} -E env
-                            CREXX_VM_POC_DOORBELL=${_crexx_e5_doorbell_backend}
-                            CREXX_VM_POC_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
                             $<TARGET_FILE:${TARGET_NAME}>
                             ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
             set_tests_properties(${TARGET_NAME}-fallback PROPERTIES
-                    LABELS "interpreter;perf3;gate-e;e5;poc;fallback;windows"
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
                     TIMEOUT 120)
             add_test(
                     NAME ${TARGET_NAME}-fallback-stress
                     COMMAND ${CMAKE_COMMAND} -E env
-                            CREXX_VM_POC_DOORBELL=${_crexx_e5_doorbell_backend}
-                            CREXX_VM_POC_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
                             $<TARGET_FILE:${TARGET_NAME}>
                             --doorbell-stress
                             ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
                             100)
             set_tests_properties(${TARGET_NAME}-fallback-stress PROPERTIES
-                    LABELS "interpreter;perf3;gate-e;e5;poc;fallback;race;lifecycle;windows"
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;race;lifecycle;windows"
                     TIMEOUT 120)
             add_test(
                     NAME ${TARGET_NAME}-sparse-progress-fallback
                     COMMAND ${CMAKE_COMMAND} -E env
-                            CREXX_VM_POC_DOORBELL=${_crexx_e5_doorbell_backend}
-                            CREXX_VM_POC_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
                             $<TARGET_FILE:${TARGET_NAME}>
                             --sparse-progress
                             ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_sparse.rxbin)
             set_tests_properties(
                     ${TARGET_NAME}-sparse-progress-fallback PROPERTIES
-                    LABELS "interpreter;perf3;gate-e;e5;poc;fallback;sparse;windows"
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;windows"
                     TIMEOUT 30)
         endif()
     endfunction()

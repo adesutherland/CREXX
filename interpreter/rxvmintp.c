@@ -5802,8 +5802,12 @@ rxvm_sparse_safepoint_kinds[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #define RXVM_SPARSE_OBSERVE()                                                  \
     do {                                                                       \
         sig_atomic_t rxvm_sparse_pending__ =                                  \
-                rxvm_compatibility_pending_load(compatibility_interrupts) &   \
-                rxsignal_mask(RXSIGNAL_CANCEL);                               \
+                context->active.external_mailbox_claim                        \
+                ? context->active.external_mailbox_claim(                     \
+                        context->active.external_mailbox_owner)                \
+                : (rxvm_compatibility_pending_load(                           \
+                        compatibility_interrupts) &                            \
+                   rxsignal_mask(RXSIGNAL_CANCEL));                            \
         pending_interrupts |= rxvm_sparse_pending__;                          \
     } while (0)
 
@@ -6198,6 +6202,10 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 
     /* Signal Interrupt Support - this is only used/called when interrupts are pending */
     START_INTERRUPT;
+    if (context->active.external_mailbox_claim) {
+        pending_interrupts |= context->active.external_mailbox_claim(
+                context->active.external_mailbox_owner);
+    }
     DEBUG("TRACE - SIGNAL FIRED - CHECK HANDLER\n");
 
     /* Also clear any pending signals that are ignored and also find the first signal which */

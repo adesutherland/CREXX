@@ -87,7 +87,7 @@
 /* Include VM signal definitions */
 #include "rxvmintp.h" /* For RXSIGNAL_* codes, and set / clear interrupt functions */
 
-#define RXVM_THREAD_DOORBELL_POC_MAX_WORKERS 64u
+#define RXVM_THREAD_DOORBELL_E5_MAX_WORKERS 64u
 
 #ifdef _WIN32
     #include <windows.h> /* For platform specifics if needed later */
@@ -102,7 +102,7 @@
     #include <pthread.h>
     #include <unistd.h>  /* POSIX specifics */
 #if defined(__APPLE__) || defined(__linux__)
-    #define CREXX_POSIX_THREAD_DOORBELL_POC 1
+    #define CREXX_POSIX_THREAD_DOORBELL_E5 1
 #endif
 
 #if defined(__APPLE__)
@@ -133,9 +133,9 @@ static rxvm_context *g_process_main_context;
 static volatile sig_atomic_t *g_process_main_interrupts;
 static size_t g_signal_users;
 
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
 /*
- * PERF3-13 E5 POSIX native-doorbell PoC. SIGURG is not mapped to a public VM
+ * PERF3-13 E5 POSIX native doorbell. SIGURG is not mapped to a public VM
  * signal. Each worker registers its immutable stack range while SIGURG is
  * blocked. During run(), the slot points at the existing execution-local
  * pending word and SIGURG is unblocked. The handler identifies its target by
@@ -145,17 +145,17 @@ static size_t g_signal_users;
  * Mach-O form called the TLV resolver, and the Linux proof must likewise keep
  * all libc/runtime traversal outside the handler.
  */
-#define RXVM_THREAD_DOORBELL_POC_SIGNAL SIGURG
-typedef struct rxvm_thread_doorbell_poc_slot {
+#define RXVM_THREAD_DOORBELL_E5_SIGNAL SIGURG
+typedef struct rxvm_thread_doorbell_e5_slot {
     volatile uint32_t active;
     pthread_t thread;
     uintptr_t stack_low;
     uintptr_t stack_high;
     volatile sig_atomic_t *pending;
-} rxvm_thread_doorbell_poc_slot;
+} rxvm_thread_doorbell_e5_slot;
 
-static rxvm_thread_doorbell_poc_slot
-        g_thread_doorbell_slots[RXVM_THREAD_DOORBELL_POC_MAX_WORKERS];
+static rxvm_thread_doorbell_e5_slot
+        g_thread_doorbell_slots[RXVM_THREAD_DOORBELL_E5_MAX_WORKERS];
 static struct sigaction g_thread_doorbell_previous_action;
 static size_t g_thread_doorbell_users;
 
@@ -169,21 +169,21 @@ typedef char crexx_thread_doorbell_active_must_be_lock_free[
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#define RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES \
+#define RXVM_THREAD_DOORBELL_E5_HANDLER_ATTRIBUTES \
         __attribute__((no_stack_protector))
 #else
-#define RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES
+#define RXVM_THREAD_DOORBELL_E5_HANDLER_ATTRIBUTES
 #endif
 
-static void RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES
-rxvm_thread_doorbell_poc_handler(int os_signal) {
+static void RXVM_THREAD_DOORBELL_E5_HANDLER_ATTRIBUTES
+rxvm_thread_doorbell_e5_handler(int os_signal) {
     volatile unsigned char stack_marker = 0u;
     const uintptr_t stack_address = (uintptr_t)&stack_marker;
     size_t index;
 
-    if (os_signal != RXVM_THREAD_DOORBELL_POC_SIGNAL) return;
-    for (index = 0u; index < RXVM_THREAD_DOORBELL_POC_MAX_WORKERS; index++) {
-        rxvm_thread_doorbell_poc_slot *slot =
+    if (os_signal != RXVM_THREAD_DOORBELL_E5_SIGNAL) return;
+    for (index = 0u; index < RXVM_THREAD_DOORBELL_E5_MAX_WORKERS; index++) {
+        rxvm_thread_doorbell_e5_slot *slot =
                 &g_thread_doorbell_slots[index];
         volatile sig_atomic_t *pending;
 
@@ -200,15 +200,15 @@ rxvm_thread_doorbell_poc_handler(int os_signal) {
     }
 }
 
-#undef RXVM_THREAD_DOORBELL_POC_HANDLER_ATTRIBUTES
+#undef RXVM_THREAD_DOORBELL_E5_HANDLER_ATTRIBUTES
 
-static rxvm_thread_doorbell_poc_slot *
-rxvm_thread_doorbell_poc_find_current(void) {
+static rxvm_thread_doorbell_e5_slot *
+rxvm_thread_doorbell_e5_find_current(void) {
     const pthread_t self = pthread_self();
     size_t index;
 
-    for (index = 0u; index < RXVM_THREAD_DOORBELL_POC_MAX_WORKERS; index++) {
-        rxvm_thread_doorbell_poc_slot *slot =
+    for (index = 0u; index < RXVM_THREAD_DOORBELL_E5_MAX_WORKERS; index++) {
+        rxvm_thread_doorbell_e5_slot *slot =
                 &g_thread_doorbell_slots[index];
         if (__atomic_load_n(&slot->active, __ATOMIC_ACQUIRE) &&
             pthread_equal(slot->thread, self)) {
@@ -218,15 +218,15 @@ rxvm_thread_doorbell_poc_find_current(void) {
     return 0;
 }
 
-static void rxvm_thread_doorbell_poc_mask(int how) {
+static void rxvm_thread_doorbell_e5_mask(int how) {
     sigset_t doorbell;
 
     sigemptyset(&doorbell);
-    sigaddset(&doorbell, RXVM_THREAD_DOORBELL_POC_SIGNAL);
+    sigaddset(&doorbell, RXVM_THREAD_DOORBELL_E5_SIGNAL);
     if (pthread_sigmask(how, &doorbell, 0) != 0) abort();
 }
 
-static int rxvm_thread_doorbell_poc_stack_range(
+static int rxvm_thread_doorbell_e5_stack_range(
         pthread_t self,
         uintptr_t *stack_low,
         uintptr_t *stack_high) {
@@ -265,7 +265,7 @@ static int rxvm_thread_doorbell_poc_stack_range(
 #if defined(_WIN32)
 /*
  * Windows 11 special-user-APC counterpart to the POSIX E5 doorbell.  The API
- * is resolved at runtime so this private PoC neither adds a QueueUserAPC2
+ * is resolved at runtime so this private carrier neither adds a QueueUserAPC2
  * import nor prevents the rest of cREXX from starting on older Windows.
  *
  * APC data points only at this process-static slot array.  A worker publishes
@@ -282,16 +282,16 @@ typedef BOOL (WINAPI *rxvm_queue_user_apc2_fn)(
         ULONG_PTR data,
         ULONG flags);
 
-typedef struct rxvm_thread_doorbell_poc_slot {
+typedef struct rxvm_thread_doorbell_e5_slot {
     volatile LONG active;
     DWORD thread_id;
     PVOID volatile pending;
     volatile LONG deferred;
     volatile LONG queued;
-} rxvm_thread_doorbell_poc_slot;
+} rxvm_thread_doorbell_e5_slot;
 
-static rxvm_thread_doorbell_poc_slot
-        g_thread_doorbell_slots[RXVM_THREAD_DOORBELL_POC_MAX_WORKERS];
+static rxvm_thread_doorbell_e5_slot
+        g_thread_doorbell_slots[RXVM_THREAD_DOORBELL_E5_MAX_WORKERS];
 static rxvm_queue_user_apc2_fn g_queue_user_apc2;
 static size_t g_thread_doorbell_users;
 static volatile LONG g_thread_doorbell_callback_count;
@@ -301,9 +301,9 @@ static volatile LONG g_thread_doorbell_callback_max_depth;
 typedef char crexx_thread_doorbell_pending_must_match_long[
         sizeof(sig_atomic_t) == sizeof(LONG) ? 1 : -1];
 
-static VOID CALLBACK rxvm_thread_doorbell_poc_callback(ULONG_PTR data) {
-    rxvm_thread_doorbell_poc_slot *slot =
-            (rxvm_thread_doorbell_poc_slot *)data;
+static VOID CALLBACK rxvm_thread_doorbell_e5_callback(ULONG_PTR data) {
+    rxvm_thread_doorbell_e5_slot *slot =
+            (rxvm_thread_doorbell_e5_slot *)data;
     volatile LONG *pending;
     LONG depth;
     LONG observed;
@@ -338,13 +338,13 @@ static VOID CALLBACK rxvm_thread_doorbell_poc_callback(ULONG_PTR data) {
     InterlockedDecrement(&g_thread_doorbell_callback_depth);
 }
 
-static rxvm_thread_doorbell_poc_slot *
-rxvm_thread_doorbell_poc_find_current(void) {
+static rxvm_thread_doorbell_e5_slot *
+rxvm_thread_doorbell_e5_find_current(void) {
     const DWORD self = GetCurrentThreadId();
     size_t index;
 
-    for (index = 0u; index < RXVM_THREAD_DOORBELL_POC_MAX_WORKERS; index++) {
-        rxvm_thread_doorbell_poc_slot *slot =
+    for (index = 0u; index < RXVM_THREAD_DOORBELL_E5_MAX_WORKERS; index++) {
+        rxvm_thread_doorbell_e5_slot *slot =
                 &g_thread_doorbell_slots[index];
         if (InterlockedCompareExchange(&slot->active, 0, 0) &&
             slot->thread_id == self) {
@@ -354,8 +354,8 @@ rxvm_thread_doorbell_poc_find_current(void) {
     return NULL;
 }
 
-static void rxvm_thread_doorbell_poc_wait_idle(
-        rxvm_thread_doorbell_poc_slot *slot) {
+static void rxvm_thread_doorbell_e5_wait_idle(
+        rxvm_thread_doorbell_e5_slot *slot) {
     while (InterlockedCompareExchange(&slot->queued, 0, 0)) {
         SwitchToThread();
     }
@@ -391,19 +391,19 @@ int rxvm_signal_enter_execution(
         volatile sig_atomic_t *pending_interrupts,
         volatile sig_atomic_t **previous_pending_interrupts) {
     volatile sig_atomic_t *previous;
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
-    rxvm_thread_doorbell_poc_slot *doorbell_slot;
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
+    rxvm_thread_doorbell_e5_slot *doorbell_slot;
 #elif defined(_WIN32)
-    rxvm_thread_doorbell_poc_slot *doorbell_slot;
+    rxvm_thread_doorbell_e5_slot *doorbell_slot;
 #endif
 
     if (!context || !pending_interrupts || !previous_pending_interrupts)
         return -1;
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
-    doorbell_slot = rxvm_thread_doorbell_poc_find_current();
-    if (doorbell_slot) rxvm_thread_doorbell_poc_mask(SIG_BLOCK);
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
+    doorbell_slot = rxvm_thread_doorbell_e5_find_current();
+    if (doorbell_slot) rxvm_thread_doorbell_e5_mask(SIG_BLOCK);
 #elif defined(_WIN32)
-    doorbell_slot = rxvm_thread_doorbell_poc_find_current();
+    doorbell_slot = rxvm_thread_doorbell_e5_find_current();
 #endif
     SIGNAL_LIFECYCLE_LOCK();
     previous = context->active.pending_interrupts;
@@ -413,7 +413,7 @@ int rxvm_signal_enter_execution(
     if (g_process_main_context == context)
         g_process_main_interrupts = pending_interrupts;
     *previous_pending_interrupts = previous;
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
     if (doorbell_slot) doorbell_slot->pending = pending_interrupts;
 #elif defined(_WIN32)
     if (doorbell_slot) {
@@ -426,8 +426,8 @@ int rxvm_signal_enter_execution(
     }
 #endif
     SIGNAL_LIFECYCLE_UNLOCK();
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
-    if (doorbell_slot) rxvm_thread_doorbell_poc_mask(SIG_UNBLOCK);
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
+    if (doorbell_slot) rxvm_thread_doorbell_e5_mask(SIG_UNBLOCK);
 #endif
     return 0;
 }
@@ -437,17 +437,17 @@ int rxvm_signal_leave_execution(
         volatile sig_atomic_t *pending_interrupts,
         volatile sig_atomic_t *previous_pending_interrupts) {
     int rc = 0;
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
-    rxvm_thread_doorbell_poc_slot *doorbell_slot =
-            rxvm_thread_doorbell_poc_find_current();
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
+    rxvm_thread_doorbell_e5_slot *doorbell_slot =
+            rxvm_thread_doorbell_e5_find_current();
 #elif defined(_WIN32)
-    rxvm_thread_doorbell_poc_slot *doorbell_slot =
-            rxvm_thread_doorbell_poc_find_current();
+    rxvm_thread_doorbell_e5_slot *doorbell_slot =
+            rxvm_thread_doorbell_e5_find_current();
 #endif
 
     if (!context || !pending_interrupts) return -1;
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
-    if (doorbell_slot) rxvm_thread_doorbell_poc_mask(SIG_BLOCK);
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
+    if (doorbell_slot) rxvm_thread_doorbell_e5_mask(SIG_BLOCK);
 #elif defined(_WIN32)
     if (doorbell_slot) {
         InterlockedExchangePointer(&doorbell_slot->pending, NULL);
@@ -465,32 +465,32 @@ int rxvm_signal_leave_execution(
                                    *pending_interrupts);
         if (g_process_main_context == context)
             g_process_main_interrupts = previous_pending_interrupts;
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
         if (doorbell_slot) doorbell_slot->pending = previous_pending_interrupts;
 #endif
         *pending_interrupts = 0;
     }
     SIGNAL_LIFECYCLE_UNLOCK();
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
     if (!rc && doorbell_slot && previous_pending_interrupts)
-        rxvm_thread_doorbell_poc_mask(SIG_UNBLOCK);
+        rxvm_thread_doorbell_e5_mask(SIG_UNBLOCK);
 #endif
     return rc;
 }
 
-int rxvm_signal_thread_doorbell_poc_install(void) {
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+int rxvm_signal_thread_doorbell_e5_install(void) {
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
     struct sigaction action;
     int rc = 0;
 
     memset(&action, 0, sizeof(action));
-    action.sa_handler = rxvm_thread_doorbell_poc_handler;
+    action.sa_handler = rxvm_thread_doorbell_e5_handler;
     sigemptyset(&action.sa_mask);
-    sigaddset(&action.sa_mask, RXVM_THREAD_DOORBELL_POC_SIGNAL);
+    sigaddset(&action.sa_mask, RXVM_THREAD_DOORBELL_E5_SIGNAL);
 
     SIGNAL_LIFECYCLE_LOCK();
     if (!g_thread_doorbell_users &&
-        sigaction(RXVM_THREAD_DOORBELL_POC_SIGNAL, &action,
+        sigaction(RXVM_THREAD_DOORBELL_E5_SIGNAL, &action,
                   &g_thread_doorbell_previous_action) != 0) {
         rc = -1;
     } else if (g_thread_doorbell_users == SIZE_MAX) {
@@ -509,7 +509,7 @@ int rxvm_signal_thread_doorbell_poc_install(void) {
         rc = -1;
     } else if (!g_thread_doorbell_users) {
         const char *forced_unavailable = getenv(
-                "CREXX_VM_POC_WINDOWS_APC_FORCE_UNAVAILABLE");
+                "CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE");
         kernel32 = GetModuleHandleW(L"kernel32.dll");
         if ((forced_unavailable && strcmp(forced_unavailable, "1") == 0) ||
             !kernel32) {
@@ -528,13 +528,13 @@ int rxvm_signal_thread_doorbell_poc_install(void) {
 #endif
 }
 
-void rxvm_signal_thread_doorbell_poc_uninstall(void) {
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+void rxvm_signal_thread_doorbell_e5_uninstall(void) {
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
     SIGNAL_LIFECYCLE_LOCK();
     if (g_thread_doorbell_users) {
         g_thread_doorbell_users--;
         if (!g_thread_doorbell_users &&
-            sigaction(RXVM_THREAD_DOORBELL_POC_SIGNAL,
+            sigaction(RXVM_THREAD_DOORBELL_E5_SIGNAL,
                       &g_thread_doorbell_previous_action, 0) != 0) {
             abort();
         }
@@ -550,21 +550,21 @@ void rxvm_signal_thread_doorbell_poc_uninstall(void) {
 #endif
 }
 
-int rxvm_signal_thread_doorbell_poc_prepare_current(void) {
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+int rxvm_signal_thread_doorbell_e5_prepare_current(void) {
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
     const pthread_t self = pthread_self();
-    rxvm_thread_doorbell_poc_slot *slot = 0;
+    rxvm_thread_doorbell_e5_slot *slot = 0;
     uintptr_t stack_low = 0u;
     uintptr_t stack_high = 0u;
     size_t index;
 
-    rxvm_thread_doorbell_poc_mask(SIG_BLOCK);
-    if (rxvm_thread_doorbell_poc_stack_range(
+    rxvm_thread_doorbell_e5_mask(SIG_BLOCK);
+    if (rxvm_thread_doorbell_e5_stack_range(
                 self, &stack_low, &stack_high) != 0) return -1;
 
     SIGNAL_LIFECYCLE_LOCK();
     if (g_thread_doorbell_users) {
-        for (index = 0u; index < RXVM_THREAD_DOORBELL_POC_MAX_WORKERS;
+        for (index = 0u; index < RXVM_THREAD_DOORBELL_E5_MAX_WORKERS;
              index++) {
             if (!__atomic_load_n(&g_thread_doorbell_slots[index].active,
                                  __ATOMIC_ACQUIRE)) {
@@ -582,12 +582,12 @@ int rxvm_signal_thread_doorbell_poc_prepare_current(void) {
     return slot ? 0 : -1;
 #elif defined(_WIN32)
     const DWORD self = GetCurrentThreadId();
-    rxvm_thread_doorbell_poc_slot *slot = NULL;
+    rxvm_thread_doorbell_e5_slot *slot = NULL;
     size_t index;
 
     SIGNAL_LIFECYCLE_LOCK();
     if (g_thread_doorbell_users && g_queue_user_apc2) {
-        for (index = 0u; index < RXVM_THREAD_DOORBELL_POC_MAX_WORKERS;
+        for (index = 0u; index < RXVM_THREAD_DOORBELL_E5_MAX_WORKERS;
              index++) {
             if (!InterlockedCompareExchange(
                         &g_thread_doorbell_slots[index].active, 0, 0)) {
@@ -608,39 +608,39 @@ int rxvm_signal_thread_doorbell_poc_prepare_current(void) {
 #endif
 }
 
-void rxvm_signal_thread_doorbell_poc_discard_current(void) {
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
+void rxvm_signal_thread_doorbell_e5_discard_current(void) {
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
     sigset_t pending;
     sigset_t doorbell;
     int received;
 
     sigemptyset(&doorbell);
-    sigaddset(&doorbell, RXVM_THREAD_DOORBELL_POC_SIGNAL);
+    sigaddset(&doorbell, RXVM_THREAD_DOORBELL_E5_SIGNAL);
     for (;;) {
         if (sigpending(&pending) != 0 ||
-            !sigismember(&pending, RXVM_THREAD_DOORBELL_POC_SIGNAL)) {
+            !sigismember(&pending, RXVM_THREAD_DOORBELL_E5_SIGNAL)) {
             break;
         }
         if (sigwait(&doorbell, &received) != 0) abort();
     }
 #elif defined(_WIN32)
-    rxvm_thread_doorbell_poc_slot *slot =
-            rxvm_thread_doorbell_poc_find_current();
+    rxvm_thread_doorbell_e5_slot *slot =
+            rxvm_thread_doorbell_e5_find_current();
     if (slot) {
         InterlockedExchangePointer(&slot->pending, NULL);
-        rxvm_thread_doorbell_poc_wait_idle(slot);
+        rxvm_thread_doorbell_e5_wait_idle(slot);
         InterlockedExchange(&slot->deferred, 0);
     }
 #endif
 }
 
-void rxvm_signal_thread_doorbell_poc_release_current(void) {
-#if defined(CREXX_POSIX_THREAD_DOORBELL_POC)
-    rxvm_thread_doorbell_poc_slot *slot;
+void rxvm_signal_thread_doorbell_e5_release_current(void) {
+#if defined(CREXX_POSIX_THREAD_DOORBELL_E5)
+    rxvm_thread_doorbell_e5_slot *slot;
 
-    rxvm_signal_thread_doorbell_poc_discard_current();
+    rxvm_signal_thread_doorbell_e5_discard_current();
     SIGNAL_LIFECYCLE_LOCK();
-    slot = rxvm_thread_doorbell_poc_find_current();
+    slot = rxvm_thread_doorbell_e5_find_current();
     if (slot) {
         slot->pending = 0;
         slot->stack_low = 0u;
@@ -650,11 +650,11 @@ void rxvm_signal_thread_doorbell_poc_release_current(void) {
     }
     SIGNAL_LIFECYCLE_UNLOCK();
 #elif defined(_WIN32)
-    rxvm_thread_doorbell_poc_slot *slot;
+    rxvm_thread_doorbell_e5_slot *slot;
 
-    rxvm_signal_thread_doorbell_poc_discard_current();
+    rxvm_signal_thread_doorbell_e5_discard_current();
     SIGNAL_LIFECYCLE_LOCK();
-    slot = rxvm_thread_doorbell_poc_find_current();
+    slot = rxvm_thread_doorbell_e5_find_current();
     if (slot) {
         slot->thread_id = 0u;
         InterlockedExchange(&slot->active, 0);
@@ -663,16 +663,16 @@ void rxvm_signal_thread_doorbell_poc_release_current(void) {
 #endif
 }
 
-int rxvm_signal_thread_doorbell_poc_ring(void *thread_handle) {
+int rxvm_signal_thread_doorbell_e5_ring(void *thread_handle) {
 #if defined(_WIN32)
     const DWORD thread_id = thread_handle
             ? GetThreadId((HANDLE)thread_handle) : 0u;
-    rxvm_thread_doorbell_poc_slot *slot = NULL;
+    rxvm_thread_doorbell_e5_slot *slot = NULL;
     size_t index;
 
     if (!thread_id || !g_queue_user_apc2) return -1;
-    for (index = 0u; index < RXVM_THREAD_DOORBELL_POC_MAX_WORKERS; index++) {
-        rxvm_thread_doorbell_poc_slot *candidate =
+    for (index = 0u; index < RXVM_THREAD_DOORBELL_E5_MAX_WORKERS; index++) {
+        rxvm_thread_doorbell_e5_slot *candidate =
                 &g_thread_doorbell_slots[index];
         if (InterlockedCompareExchange(&candidate->active, 0, 0) &&
             candidate->thread_id == thread_id) {
@@ -682,7 +682,7 @@ int rxvm_signal_thread_doorbell_poc_ring(void *thread_handle) {
     }
     if (!slot) return -1;
     if (InterlockedCompareExchange(&slot->queued, 1, 0) != 0) return 0;
-    if (!g_queue_user_apc2(rxvm_thread_doorbell_poc_callback,
+    if (!g_queue_user_apc2(rxvm_thread_doorbell_e5_callback,
                            (HANDLE)thread_handle,
                            (ULONG_PTR)slot,
                            RXVM_QUEUE_USER_APC_FLAGS_SPECIAL_USER_APC)) {
@@ -696,7 +696,7 @@ int rxvm_signal_thread_doorbell_poc_ring(void *thread_handle) {
 #endif
 }
 
-void rxvm_signal_thread_doorbell_poc_statistics(
+void rxvm_signal_thread_doorbell_e5_statistics(
         unsigned long *callback_count,
         unsigned long *maximum_depth) {
 #if defined(_WIN32)

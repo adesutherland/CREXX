@@ -2,14 +2,16 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E4 complete on Mac; E5 POSIX native-doorbell PoC passes on
-macOS and Intel Linux; Windows carrier proof, industrial E5/E6, portable
-publication proof and Gate F remain closed**
+Status: **Gate E E5 industrial implementation and Mac QA complete; accepted
+macOS, Intel Linux and Windows carrier/fallback evidence retained; E6,
+publication and Gate F remain closed**
 
 ## Current Gate E continuation
 
-- Publication branches: `develop` contains accepted E4; `mthread` carries E4
-  plus the isolated macOS/Intel-Linux native-doorbell PoC and its evidence.
+- Publication branches: `develop` contains accepted E4; `mthread` carries the
+  merged cross-platform E5 carrier work, industrial private executor, tests and
+  accepted closeout evidence. No E5 commit or publication is authorized by QA
+  acceptance alone.
 - Published Gate E base: `84d406904ece6842f6cec5a47e75d12b9d28ab16`
   (`fix: use compiler-correct RXVM thread locals`).
 - EF-0 implementation: `642e1b697bd019a800a2bddbaea8ef7a3d75e531`
@@ -2452,9 +2454,9 @@ Apple AddressSanitizer 3/3 with leak detection disabled because Apple LSan is
 unavailable, the complete profiling-off Release build and combined E4/E5
 focused Release 6/6.
 
-This selects a physical delivery mechanism only. Industrial E5 still requires
-the copied logical register-image request/completion envelope, correlated
-generation mailbox, level-triggered drain, typed terminal completion,
+This PoC selected a physical delivery mechanism only. At that point industrial
+E5 still required the copied logical register-image request/completion envelope,
+correlated generation mailbox, level-triggered drain, typed terminal completion,
 `CANCEL`/`KILL`/shutdown priority, deadlines, quarantine and deterministic
 join. Intel Linux has now repeated the POSIX signal/generated-code proof under
 GCC and Clang; Windows must still prove special user-mode APC delivery plus
@@ -2516,6 +2518,48 @@ initializer and handler portability fixes are mthread-coupled. Separate
 compiler portability fixes found during MSVC qualification are also present on
 `origin/develop` and are a candidate for an isolated reviewed develop commit;
 no push is authorized by this PoC closeout.
+
+### E5 industrial implementation and QA closure — accepted 2026-08-13
+
+Adrian approved industrial E5 on the merged cross-platform `mthread` base and
+accepted the existing Linux and Windows verdicts without repetition. Linux
+ARM64 and Windows ARM testing is not required for this closure. The selected
+private executor keeps contexts, globals, frames, registers and replayed static
+native registrations worker-owned. Its copied request image supports logical
+integer and string registers, while successful completion publishes a typed
+integer result; no live VM storage crosses workers.
+
+The stable mailbox publishes correlated generations and a level-triggered
+event word. It rejects stale notifications and claims `CANCEL`, deadline,
+strong `KILL` and shutdown in deterministic priority, with typed terminal
+completion, quarantine accounting and deterministic join. POSIX and capable
+Windows use native doorbells. Only a targetable worker without prompt native
+delivery selects the sparse progress-point owner before preparation; local and
+native-capable contexts retain E4.
+
+The cleared-host ordinary-Release comparison ran one warmup and 12 balanced
+pairs per cell with 10,000 jobs and 25,000 iterations. All 156 processes
+passed. `rxbvml` paired means are -1.539% direct, -2.269% with one worker and
+-1.546% with two workers. `rxtvml` records +4.218%, +3.549% and +3.013%
+respectively. Adrian accepts the `rxtvml` guard hits as the expected
+computed-goto/multithreading cost after all carrier options were examined. The
+sparse alternative is slower and structurally less desirable; selection is
+closed rather than reopened.
+
+Broad Mac QA exposed one initializer omission for the two new private mailbox
+callbacks in non-zero-filled contexts. The common VM initializer now clears
+both fields and the poison-storage active-state test guards that contract.
+Post-repair normal Debug passes 4/4 focused checks; Apple AddressSanitizer
+passes 20/20 with leak detection disabled because Apple LSan is unavailable;
+the complete Debug and profiling-off Release builds pass; the broad Debug
+sweep passes 2,055/2,056 plus an immediate 1/1 serial recovery of the sole
+syntax-highlighter parser-thread timeout; and focused Release passes 22/22.
+The merged `rxc` include/import panel passes 18/18.
+
+E5 is complete for its approved implementation and QA scope. E6, public
+workers/channels, Gate F, commit and publication remain separately gated.
+Evidence:
+[`2026-08-13-perf3-13-gate-e-e5-industrial-closeout`](evidence/2026-08-13-perf3-13-gate-e-e5-industrial-closeout/).
 
 ### E5 native thread doorbell — Intel Linux PoC accepted 2026-08-12
 
@@ -2660,7 +2704,7 @@ until these semantics and the local channel contract are accepted.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 through E4 complete on Mac; E5 native-doorbell carrier PoC passes on macOS and Intel Linux.**
+6. **Gate E — full M5 start: approved 2026-08-07; E1 through E5 complete for the approved Mac/portable evidence scope.**
    E1/E1-P1 are published and Windows-MinGW proven. E2's worker-owned active
    state and direct interrupt slot pass the accepted Release verdict, complete
    Mac Debug/ASan/Release closeout and the separately repaired RXAS sanitizer
@@ -2674,13 +2718,16 @@ until these semantics and the local channel contract are accepted.
    E4b implements the internal bytecode-only sealed immutable-generation/
    worker-overlay boundary, passes a guard-clean single-worker verdict and Mac
    Debug/ASan/Release closeout, and retains byte-identical verdict VMs. The
-   private E5 macOS and Intel-Linux PoCs prove prompt `pthread_kill` delivery
-   through the existing E4 local interrupt word with no added hot-loop poll.
-   Linux GCC/Clang correctness and generated-code proofs pass; its stressed-host
-   performance result is accepted as noisy/inconclusive at PoC precision.
-   Industrial E5, Windows backend proof, E6 and portable publication proof
-   remain open approval boundaries. The full gate stops for worker-model
-   selection before any public pool/channel semantics.
+   E5 integrates the proven POSIX and Windows native doorbells with the
+   targetable-only sparse fallback, correlated mailbox, copied logical request
+   image, typed integer completion, cancellation/deadline/kill/shutdown priority,
+   quarantine and deterministic join. Adrian accepts the cleared-host
+   `rxtvml` slowdown as the expected computed-goto/multithreading tradeoff and
+   the cross-platform correctness evidence without ARM retesting. Mac
+   Debug/ASan/Release QA is complete after repairing and guarding the private
+   callback initializer. E6 and portable publication remain open approval
+   boundaries. The full gate still stops before any public pool/channel
+   semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 
