@@ -45,7 +45,7 @@ target_include_directories(mc_decimal_test_harness PRIVATE
         ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/binutils/include)
 # Ensure the linker includes the plugin
-configure_linker_for_static_rxvmplugin(mc_decimal_test_harness mc_decimal)
+configure_linker_for_static_rxvmplugin(mc_decimal_test_harness mc_decimal decnumber)
 target_link_libraries(mc_decimal_test_harness rxvmplugin mc_decimal ${CREXX_MATH_LIBRARY})
 
 # Add the dynamic test harness executable

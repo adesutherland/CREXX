@@ -23,7 +23,7 @@ You need one of those and:
 |---|---|---|---|---|
 |git   | Source code versioning  |   |   |   |
 |CMake   |Build Tool   |   |   |   |
-|gcc[^clang]   |C compiler, install g++   |   |   |   |
+|gcc, clang or MSVC[^clang]   |C compiler   |   |   |   |
 |Make   |conventional build tool, or   |   |   |   |
 |Ninja   |fast build tool   |   |   |   |
 
@@ -39,11 +39,24 @@ and the compiler. Brew will give easy access to Cmake and Ninja-build[^regina].
 
 [^regina]: For Linux, you will need to install git (which will be there on most distributions), cmake and gcc or clang.}
 
-On Windows, you will need a compatibility layer like
-\href{https://www.msys2.org}{msys} - installing this has the additional
-advantage of easy access to git, gcc, cmake and the rest of the
-necessary tools. On more modern Windows, the WSL\footnote{WSL: Windows
-  subsystem for Linux.} and Ubuntu is not a bad choice.
+On Windows, MSYS2 or WSL remain useful when a GNU-compatible environment is
+preferred. A native x64 build is also supported with the Visual Studio 2022 C
+toolchain. Run CMake from an x64 Visual Studio Developer Command Prompt (or
+after calling `VsDevCmd.bat`) so `cl.exe`, the Windows SDK and the linker are
+available:
+
+```bat
+cmake -S CREXX -B crexx-build-msvc -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Release -DENABLE_PARSER_MODE=OFF
+cmake --build crexx-build-msvc --parallel 8
+```
+
+MSVC builds the portable switch-dispatch VM and copies `rxbvm.exe` to the
+stable `rxvm.exe` product path. The optional parser-mode/syntax-highlighting
+integration currently depends on POSIX DSLSH sources and is therefore disabled
+in the native MSVC command above. This does not disable normal `rxc` compiler
+operation. Run `crexx -native` from the same Developer Command Prompt; the
+driver uses the compiler family and runtime-library mode recorded by CMake.
 
 ## Process
 

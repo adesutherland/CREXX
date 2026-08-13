@@ -345,9 +345,23 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
         return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
     }
 #define LOADFUNCS INITIALIZER(_initfuncs)
+#if defined(_MSC_VER)
+#pragma section(".CRT$XTU",read)
+#define RXPA_C_FINALIZER2_(f,p) \
+    static void f(void); \
+    __declspec(allocate(".CRT$XTU")) void (*f##_finalizer_)(void) = f; \
+    __pragma(comment(linker,"/include:" p #f "_finalizer_")) \
+    static void f(void)
+#ifdef _WIN64
+#define FINALIZER(f) RXPA_C_FINALIZER2_(f,"") {
+#else
+#define FINALIZER(f) RXPA_C_FINALIZER2_(f,"_") {
+#endif
+#else
 #define FINALIZER(f) \
     static void f(void) __attribute__((destructor)); \
     static void f(void) {
+#endif
 
 #else
 
@@ -363,15 +377,23 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define INITIALIZER(f) RXPA_CPP_INITIALIZER(f)
 #elif defined(_MSC_VER)
 #pragma section(".CRT$XCU",read)
+#pragma section(".CRT$XTU",read)
 #define INITIALIZER2_(f,p) \
         static void f(void); \
         __declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
         __pragma(comment(linker,"/include:" p #f "_")) \
         static void f(void)
+#define FINALIZER2_(f,p) \
+        static void f(void); \
+        __declspec(allocate(".CRT$XTU")) void (*f##_finalizer_)(void) = f; \
+        __pragma(comment(linker,"/include:" p #f "_finalizer_")) \
+        static void f(void)
 #ifdef _WIN64
 #define INITIALIZER(f) INITIALIZER2_(f,"") {
+#define FINALIZER(f) FINALIZER2_(f,"") {
 #else
 #define INITIALIZER(f) INITIALIZER2_(f,"_") {
+#define FINALIZER(f) FINALIZER2_(f,"_") {
 #endif
 #else
 #define INITIALIZER(f) \

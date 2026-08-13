@@ -260,7 +260,11 @@ elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "SCHANNEL")
     endif()
     list(APPEND CREXX_SOCKET_TARGET_LIBS secur32 crypt32)
     list(APPEND CREXX_SOCKET_MANUAL_LINK_LIBS -lsecur32 -lcrypt32)
-    list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS -lsecur32 -lcrypt32)
+    if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+        list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS secur32.lib crypt32.lib)
+    else()
+        list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS -lsecur32 -lcrypt32)
+    endif()
 elseif(NOT CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OFF")
     message(FATAL_ERROR "Unsupported CREXX_ENABLE_TLS value '${CREXX_ENABLE_TLS}'. Use OFF, OPENSSL, NETWORK, or SCHANNEL.")
 endif()
@@ -496,6 +500,7 @@ foreach(_crexxsaa_static_dep rxvml rxvmref rxvmplugin mc_decimal_manual avl_tree
 endforeach()
 
 add_library(crexxsaa SHARED crexxsaa.c crexxsaa.h)
+target_compile_definitions(crexxsaa PRIVATE CREXXSAA_BUILDING_LIBRARY)
 target_link_libraries(crexxsaa PUBLIC rxvml rxvmplugin mc_decimal_manual avl_tree rxpa)
 target_include_directories(crexxsaa PUBLIC
         .
@@ -520,7 +525,8 @@ add_executable(crexxsaa_tool crexxsaa_tool.c)
 target_link_libraries(crexxsaa_tool PRIVATE crexxsaa)
 target_include_directories(crexxsaa_tool PRIVATE .)
 set_target_properties(crexxsaa_tool PROPERTIES
-        OUTPUT_NAME crexxsaa)
+        OUTPUT_NAME crexxsaa
+        ARCHIVE_OUTPUT_NAME crexxsaa_tool)
 if(APPLE)
     set_target_properties(crexxsaa_tool PROPERTIES
             BUILD_RPATH "${CMAKE_BINARY_DIR}/bin"
@@ -1851,58 +1857,85 @@ if(BUILD_TESTING AND
 endif()
 
 # Archive-link regression test for manual db_decimal packaging.
-set(_crexx_archive_link_c_flags_text "${CMAKE_C_FLAGS}")
-set(_crexx_archive_link_exe_flags_text "${CMAKE_EXE_LINKER_FLAGS}")
-if(CMAKE_BUILD_TYPE)
-    string(TOUPPER "${CMAKE_BUILD_TYPE}" _crexx_archive_link_build_type)
-    string(APPEND _crexx_archive_link_c_flags_text " ${CMAKE_C_FLAGS_${_crexx_archive_link_build_type}}")
-    string(APPEND _crexx_archive_link_exe_flags_text " ${CMAKE_EXE_LINKER_FLAGS_${_crexx_archive_link_build_type}}")
+if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+    add_executable(test_db_decimal_archive_link
+            tests/test_db_decimal_archive_link.c)
+    target_include_directories(test_db_decimal_archive_link PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/inc)
+    target_link_libraries(test_db_decimal_archive_link
+            rxvml
+            rxpashim
+            rxvmplugin
+            rxvmref
+            rxvmmemory
+            rxbin
+            platform
+            decnumber
+            avl_tree
+            rxpa
+            db_decimal_manual
+            ${CREXX_SOCKET_TARGET_LIBS})
+    add_custom_target(test_db_decimal_archive_link_bin ALL
+            DEPENDS test_db_decimal_archive_link)
+    add_test(NAME db_decimal_archive_link
+            COMMAND $<TARGET_FILE:test_db_decimal_archive_link>
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+else()
+    set(_crexx_archive_link_c_flags_text "${CMAKE_C_FLAGS}")
+    set(_crexx_archive_link_exe_flags_text "${CMAKE_EXE_LINKER_FLAGS}")
+    if(CMAKE_BUILD_TYPE)
+        string(TOUPPER "${CMAKE_BUILD_TYPE}" _crexx_archive_link_build_type)
+        string(APPEND _crexx_archive_link_c_flags_text " ${CMAKE_C_FLAGS_${_crexx_archive_link_build_type}}")
+        string(APPEND _crexx_archive_link_exe_flags_text " ${CMAKE_EXE_LINKER_FLAGS_${_crexx_archive_link_build_type}}")
+    endif()
+    separate_arguments(_crexx_archive_link_c_flags NATIVE_COMMAND "${_crexx_archive_link_c_flags_text}")
+    separate_arguments(_crexx_archive_link_exe_flags NATIVE_COMMAND "${_crexx_archive_link_exe_flags_text}")
+    add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
+            COMMAND ${CMAKE_C_COMPILER}
+                    ${_crexx_archive_link_c_flags}
+                    -O0
+                    -I${CMAKE_CURRENT_SOURCE_DIR}
+                    -I${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+                    -I${CMAKE_SOURCE_DIR}/inc
+                    -o ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_db_decimal_archive_link.c
+                    $<TARGET_FILE:rxvml>
+                    $<TARGET_FILE:rxpashim>
+                    $<TARGET_FILE:rxvmplugin>
+                    $<TARGET_FILE:rxvmref>
+                    $<TARGET_FILE:rxvmmemory>
+                    $<TARGET_FILE:rxbin>
+                    $<TARGET_FILE:platform>
+                    $<TARGET_FILE:decnumber>
+                    $<TARGET_FILE:avl_tree>
+                    $<TARGET_FILE:rxpa>
+                    ${_crexx_archive_link_exe_flags}
+                    -lm
+                    $<TARGET_FILE:db_decimal_manual>
+                    ${CREXX_SOCKET_MANUAL_LINK_LIBS}
+            DEPENDS
+                    tests/test_db_decimal_archive_link.c
+                    rxvml
+                    rxpashim
+                    rxvmplugin
+                    rxvmref
+                    rxvmmemory
+                    rxbin
+                    platform
+                    decnumber
+                    avl_tree
+                    rxpa
+                    db_decimal_manual
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Linking archive-level db_decimal regression harness ..."
+            VERBATIM
+    )
+    add_custom_target(test_db_decimal_archive_link_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link)
+    add_test(NAME db_decimal_archive_link COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endif()
-separate_arguments(_crexx_archive_link_c_flags NATIVE_COMMAND "${_crexx_archive_link_c_flags_text}")
-separate_arguments(_crexx_archive_link_exe_flags NATIVE_COMMAND "${_crexx_archive_link_exe_flags_text}")
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
-        COMMAND ${CMAKE_C_COMPILER}
-                ${_crexx_archive_link_c_flags}
-                -O0
-                -I${CMAKE_CURRENT_SOURCE_DIR}
-                -I${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
-                -I${CMAKE_SOURCE_DIR}/inc
-                -o ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
-                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_db_decimal_archive_link.c
-                $<TARGET_FILE:rxvml>
-                $<TARGET_FILE:rxpashim>
-                $<TARGET_FILE:rxvmplugin>
-                $<TARGET_FILE:rxvmref>
-                $<TARGET_FILE:rxvmmemory>
-                $<TARGET_FILE:rxbin>
-                $<TARGET_FILE:platform>
-                $<TARGET_FILE:decnumber>
-                $<TARGET_FILE:avl_tree>
-                $<TARGET_FILE:rxpa>
-                ${_crexx_archive_link_exe_flags}
-                -lm
-                $<TARGET_FILE:db_decimal_manual>
-                ${CREXX_SOCKET_MANUAL_LINK_LIBS}
-        DEPENDS
-                tests/test_db_decimal_archive_link.c
-                rxvml
-                rxpashim
-                rxvmplugin
-                rxvmref
-                rxvmmemory
-                rxbin
-                platform
-                decnumber
-                avl_tree
-                rxpa
-                db_decimal_manual
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Linking archive-level db_decimal regression harness ..."
-        VERBATIM
-)
-add_custom_target(test_db_decimal_archive_link_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link)
-add_test(NAME db_decimal_archive_link COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 crexx_label_smoke_tests(
         crexxsaa_cache_tool_location

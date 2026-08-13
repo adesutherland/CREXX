@@ -82,9 +82,15 @@ endfunction()
 
 # Function to configure the linker for a static declaration library ensuring the library is linked into the executable
 function(configure_linker_for_decl_lib target pluginId)
-    if(MSVC)
+    if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
         # For Visual Studio Compiler
-        set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(_crexx_plugin_init_symbol "rx${pluginId}_init_")
+        else()
+            set(_crexx_plugin_init_symbol "_rx${pluginId}_init_")
+        endif()
+        target_link_libraries(${target} ${pluginId}_decl)
+        target_link_options(${target} PRIVATE "/INCLUDE:${_crexx_plugin_init_symbol}")
     elseif(APPLE)
         # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_decl>\"")
@@ -96,9 +102,15 @@ endfunction()
 
 # Function to configure the linker for a static definition library ensuring the library is linked into the executable
 function(configure_linker_for_static_lib target pluginId)
-    if(MSVC)
+    if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
         # For Visual Studio Compiler
-        set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(_crexx_plugin_init_symbol "rx${pluginId}_init_")
+        else()
+            set(_crexx_plugin_init_symbol "_rx${pluginId}_init_")
+        endif()
+        target_link_libraries(${target} ${pluginId}_static)
+        target_link_options(${target} PRIVATE "/INCLUDE:${_crexx_plugin_init_symbol}")
     elseif(APPLE)
         # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_static>\"")
@@ -111,9 +123,15 @@ endfunction()
 
 # Function to configure the linker for a static definition library ensuring the library is linked into the executable
 function(configure_linker_for_static_lib_rel target dirId pluginId)
-    if(MSVC)
+    if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
         # For Visual Studio Compiler
-        set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(_crexx_plugin_init_symbol "rx${pluginId}_init_")
+        else()
+            set(_crexx_plugin_init_symbol "_rx${pluginId}_init_")
+        endif()
+        target_link_libraries(${target} ${pluginId}_static)
+        target_link_options(${target} PRIVATE "/INCLUDE:${_crexx_plugin_init_symbol}")
     elseif(APPLE)
         # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_static>\"")

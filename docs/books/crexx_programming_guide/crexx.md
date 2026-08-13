@@ -144,6 +144,12 @@ say 'hello crexx!'
 say 'today''s date is:' date()
 ```
 
+We will run that with:
+
+```bash
+crexx hello
+```
+
 <!--splice--crexx crexx-1.crexx-->
 
 ### Make an executable module
@@ -160,7 +166,28 @@ then we will have a `hello` program (`hello.exe` on windows) which can be execut
 
 ### Compile and run a program with commandline arguments
 
-When using the cRexx compiler driver, commandline arguments as input to the program can be specified with the `--args` option; *this option needs to be the last option on the cRexx command*, because everything that follows will be sent to the program as a string array (`.string[]`).
+When using the cRexx compiler driver, commandline arguments as input to the program can be specified with the `--args` option; *this option needs to be the last option on the cRexx command*, because everything that follows will be sent to the program as a string array (`.string[]`) in the execution phase.
+
+Let's say we have called this program *hello2.crexx*:
+
+```rexx <!--hello2.crexx-->
+main: procedure
+   arg sources=.string[]
+   loop i=1 to sources.0
+     say sources.i
+   end
+```
+
+If we execute the above program with the commandline:
+
+```bash <!--callargs.sh-->
+crexx hello2 --args one two three
+```
+
+We will see the following output:
+
+<!--splice--crexx hello2.crexx -args one two three-->
+
 
 ## Verbosity
 
@@ -178,11 +205,11 @@ say 'today it''s' date('w')
 
 ## `--verbose1`
 
-With `--verbose1`, the driver tells in a very condensed way what it did and how it went. When the return codes from the `rxc` and `rxas` are 0, these are displayed with an 'OK' between square brackets.
+With `--verbose1`, the driver tells in a condensed way what it did and how it went. When the return codes from the `rxc` and `rxas` are 0, these are displayed with an 'OK' between square brackets.
 
 <!--splice--crexx hello --verbose1 --nocolor -->
 
-It issues some reassuring messages about the compiler and the assembler running successfully and skips the starting of the runtime engine, because the output of the program follows these messages. 
+When everything works out well, it issues some reassuring messages about the compiler and the assembler running successfully and skips the starting of the runtime engine, because the output of the program follows these messages. When errors occur, these are signalled as in the `-verbose0` setting, with some extra indication in which phase of compilation, link and/or executing the problem took place.
 
 ## `--verbose2`
 

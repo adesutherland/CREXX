@@ -507,7 +507,7 @@ int crexx_contract_model_from_rxbin(const CrexxContractOptions *options,
     const char *dot;
     RxGraphId owner;
     RxMemberId operation_member = RX_GRAPH_NONE;
-    RxGraphMemberView member;
+    RxGraphMemberView member = {0};
     rx_callable_signature signature;
     ContractAdapter adapter;
     size_t i;

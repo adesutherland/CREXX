@@ -3,7 +3,6 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
 #include <stdint.h>
@@ -162,12 +161,12 @@ PROCEDURE(xhypot) {  //  ADDMATH uses functionX to distinguish plugin function n
     ENDPROC}
 
 PROCEDURE(pi) {
-    RETURNFLOAT(M_PI);
+    RETURNFLOAT(acos(-1.0));
     PROCRETURN
 ENDPROC}
 
 PROCEDURE(euler) {
-    RETURNFLOAT(M_E);
+    RETURNFLOAT(exp(1.0));
     PROCRETURN
 ENDPROC
 }

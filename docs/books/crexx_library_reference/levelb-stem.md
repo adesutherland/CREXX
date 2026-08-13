@@ -2,14 +2,14 @@
 
 This document defines the stable Level B `.stem` and `.stemIterator` contract.
 
-## Overview
+### Overview
 A `stem` is a string-to-string dictionary supporting cREXX property and bracket
 notation for Classic-style compound-variable tails. A missing key returns the
 assigned stem default, or the empty string before a default is assigned. Use
 `size()` or the key arrays when absence must be distinguished from an assigned
 empty value.
 
-## API
+### API
 
 - `get(key = .string) = .string` returns the tail value, the stem default, or
   the empty string.
@@ -28,7 +28,7 @@ empty value.
 The iterator factory accepts only snapshot flags `0` and `1`; another flag
 signals `INVALID_ARGUMENTS`.
 
-## Implementation (hash map with separate chaining)
+### Implementation (hash map with separate chaining)
 
 The implementation uses parallel arrays to manage a 256-bucket hash map:
 
@@ -49,7 +49,7 @@ The hash loop reads Unicode codepoints directly with VM string instructions and
 uses a multiplier of 31. Each step is reduced modulo 256, which is equivalent
 for the final bucket and prevents native integer overflow for long keys.
 
-## Usage
+### Usage
 Stems can be accessed using standard `get` and `set` methods, but the preferred approach is using cREXX object property syntax (`obj.key` or `obj["key"]`) which is automatically rewritten to method calls by the compiler.
 
 ```rexx
@@ -75,7 +75,7 @@ call s.set("other_key", "value3")
 val = s.get("other_key")
 ```
 
-## Iteration
+### Iteration
 
 Stems are keyed containers, so iteration is over tails/keys rather than list
 positions. Iteration order is unspecified. The current Rexx implementation
@@ -110,13 +110,13 @@ The iterator API is:
 * `reset() = .void`
 * `isLive() = .int`
 
-## Performance
+### Performance
 
 Hashing uses direct `strlen` and `strchar` VM operations and makes no Level B
 selector calls. Lookup and update use separate bucket chains with early exit.
 The implementation remains Level B so it can evolve with the standard typed
 array surface; no native-C replacement is required by this contract.
 
-## Notes on Character Encoding
+### Notes on Character Encoding
 VM string parsing exposes Unicode codepoints rather than UTF-8 bytes, so equal
 Unicode keys hash consistently regardless of their encoded byte width.

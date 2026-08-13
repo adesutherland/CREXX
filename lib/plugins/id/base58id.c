@@ -74,7 +74,7 @@ static size_t b58_encode(const uint8_t *bytes, size_t len, char *out, size_t out
     for (size_t i = zeros; i < len; ++i) {
         unsigned int carry = bytes[i];
         size_t j = 0;
-        for (ssize_t k = (ssize_t)size - 1; k >= 0; --k) {
+        for (size_t k = size; k-- > 0;) {
             carry += 256U * tmp[k];
             tmp[k] = (unsigned char)(carry % 58U);
             carry /= 58U;

@@ -27,7 +27,7 @@
  * crexx is an executable which controls the phases of the crexx
  * processor, compiles, assembles and executes rexx programs.
  * It optionally compiles the program to a native executable,
- * for which it needs an operable gcc or clang compiler.
+ * using the C compiler family recorded by the CMake build.
  * For this, the rxcpacker phase generates a c source file.
  *
  * The options processor can receive files and options in any
@@ -324,8 +324,10 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    if \decimal then declib = '-p rxvm_db_decimal'
    if verbose>1 then call logo nocolor  
    
-   decstat = rxpath'bin/rxvm_mc_decimal_manual.a'
-   if \decimal then decstat =  rxpath'bin/rxvm_db_decimal_manual.a'
+    decstat = rxpath'bin/rxvm_mc_decimal_manual.a'
+    decstatMsvc = rxpath'bin/rxvm_mc_decimal_manual.lib'
+    if \decimal then decstat =  rxpath'bin/rxvm_db_decimal_manual.a'
+    if \decimal then decstatMsvc = rxpath'bin/rxvm_db_decimal_manual.lib'
    
    if verbose>2 then do
      call banner nocolor
@@ -533,6 +535,10 @@ do i=1 to filenames[0]
   if native then do
     linkedOutput = binfile'_linked'
     outputStem = binfile
+    nativeCompiler = readNativeConfigLine(rxpath, dirsep, 'crexx_native_compiler')
+    if nativeCompiler = '' then nativeCompiler = 'gcc'
+    nativeCompilerStyle = translate(readNativeConfigLine(rxpath, dirsep, 'crexx_native_compiler_style'))
+    if nativeCompilerStyle = '' then nativeCompilerStyle = 'GNU'
     staticLinkArgs = .string[]
     linkInputs = .string[]
     libsRest = .string
@@ -555,7 +561,9 @@ do i=1 to filenames[0]
       if modulePath = '' then iterate
       staticModule = findStaticModule(modulePath)
       if staticModule <> '' then do
-        if isMacPlatform(platformUpper) then
+        if nativeCompilerStyle = 'MSVC' then
+          call appendArrayValue staticLinkArgs, '/WHOLEARCHIVE:' || staticModule
+        else if isMacPlatform(platformUpper) then
           call appendArrayValue staticLinkArgs, '-Wl,-force_load,' || staticModule
         else do
           call appendArrayValue staticLinkArgs, '-Wl,--whole-archive'
@@ -609,54 +617,79 @@ do i=1 to filenames[0]
     if RC\=0 then return RC
 
     ccArgs = .string[]
-    call appendArrayValue ccArgs, 'gcc'
-    call appendArrayValue ccArgs, '-O3'
-    call appendArrayValue ccArgs, '-DNDEBUG'
-    call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_cflags_argv', 'crexx_native_cflags'
-    if isMacPlatform(platformUpper) then do
-      call appendArrayValue ccArgs, '-Wl,-search_paths_first'
-      call appendArrayValue ccArgs, '-Wl,-headerpad_max_install_names'
-    end
-    call appendArrayValue ccArgs, '-o'
-    call appendArrayValue ccArgs, outputStem
-    call appendArrayValue ccArgs, outputStem'.c'
-    call appendArrayValue ccArgs, '-L' || rxpath || 'bin'
-    if isMacPlatform(platformUpper) then do
-      call appendArrayValue ccArgs, '-lrxvml'
-      call appendArrayValue ccArgs, '-lrxpashim'
-      call appendArrayValue ccArgs, '-lrxvmplugin'
-      call appendArrayValue ccArgs, '-lrxvmref'
-      call appendArrayValue ccArgs, '-lrxvmmemory'
-      call appendArrayValue ccArgs, '-lrxbin'
-      call appendArrayValue ccArgs, '-lplatform'
-      call appendArrayValue ccArgs, decstat
-      call appendArrayValue ccArgs, '-ldecnumber'
-      call appendArrayValue ccArgs, '-lavl_tree'
-      call appendArrayValue ccArgs, '-lrxpa'
-      call appendArrayValue ccArgs, '-lm'
+    call appendArrayValue ccArgs, nativeCompiler
+    if nativeCompilerStyle = 'MSVC' then do
+      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_cflags_argv', 'crexx_native_cflags'
+      call appendArrayValue ccArgs, outputStem'.c'
+      call appendArrayValue ccArgs, '/Fe:' || outputStem || '.exe'
+      call appendArrayValue ccArgs, '/link'
+      call appendArrayValue ccArgs, '/INCLUDE:main'
+      call appendArrayValue ccArgs, '/LIBPATH:' || rxpath || 'bin'
+      call appendArrayValues ccArgs, staticLinkArgs
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'rxvml'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'rxpashim'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'rxvmplugin'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'rxvmref'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'rxvmmemory'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'rxbin'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'platform'
+      call appendArrayValue ccArgs, decstatMsvc
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'decnumber'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'avl_tree'
+      call appendMsvcLibrary ccArgs, rxpath, dirsep, 'rxpa'
+      call appendArrayValue ccArgs, 'ws2_32.lib'
       call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_libs_argv', 'crexx_native_libs'
       call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_ldflags_argv', 'crexx_native_ldflags'
-      call appendArrayValues ccArgs, staticLinkArgs
     end
     else do
-      call appendArrayValue ccArgs, '-Wl,--start-group'
-      call appendArrayValues ccArgs, staticLinkArgs
-      call appendArrayValue ccArgs, '-lrxvml'
-      call appendArrayValue ccArgs, '-lrxpashim'
-      call appendArrayValue ccArgs, '-lrxvmplugin'
-      call appendArrayValue ccArgs, '-lrxvmref'
-      call appendArrayValue ccArgs, '-lrxvmmemory'
-      call appendArrayValue ccArgs, '-lrxbin'
-      call appendArrayValue ccArgs, '-lplatform'
-      call appendArrayValue ccArgs, decstat
-      call appendArrayValue ccArgs, '-ldecnumber'
-      call appendArrayValue ccArgs, '-lavl_tree'
-      call appendArrayValue ccArgs, '-lrxpa'
-      call appendArrayValue ccArgs, '-lm'
-      if isWindowsPlatform(platformUpper) then call appendArrayValue ccArgs, '-lws2_32'
-      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_libs_argv', 'crexx_native_libs'
-      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_ldflags_argv', 'crexx_native_ldflags'
-      call appendArrayValue ccArgs, '-Wl,--end-group'
+      call appendArrayValue ccArgs, '-O3'
+      call appendArrayValue ccArgs, '-DNDEBUG'
+      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_cflags_argv', 'crexx_native_cflags'
+      if isMacPlatform(platformUpper) then do
+        call appendArrayValue ccArgs, '-Wl,-search_paths_first'
+        call appendArrayValue ccArgs, '-Wl,-headerpad_max_install_names'
+      end
+      call appendArrayValue ccArgs, '-o'
+      call appendArrayValue ccArgs, outputStem
+      call appendArrayValue ccArgs, outputStem'.c'
+      call appendArrayValue ccArgs, '-L' || rxpath || 'bin'
+      if isMacPlatform(platformUpper) then do
+        call appendArrayValue ccArgs, '-lrxvml'
+        call appendArrayValue ccArgs, '-lrxpashim'
+        call appendArrayValue ccArgs, '-lrxvmplugin'
+        call appendArrayValue ccArgs, '-lrxvmref'
+        call appendArrayValue ccArgs, '-lrxvmmemory'
+        call appendArrayValue ccArgs, '-lrxbin'
+        call appendArrayValue ccArgs, '-lplatform'
+        call appendArrayValue ccArgs, decstat
+        call appendArrayValue ccArgs, '-ldecnumber'
+        call appendArrayValue ccArgs, '-lavl_tree'
+        call appendArrayValue ccArgs, '-lrxpa'
+        call appendArrayValue ccArgs, '-lm'
+        call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_libs_argv', 'crexx_native_libs'
+        call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_ldflags_argv', 'crexx_native_ldflags'
+        call appendArrayValues ccArgs, staticLinkArgs
+      end
+      else do
+        call appendArrayValue ccArgs, '-Wl,--start-group'
+        call appendArrayValues ccArgs, staticLinkArgs
+        call appendArrayValue ccArgs, '-lrxvml'
+        call appendArrayValue ccArgs, '-lrxpashim'
+        call appendArrayValue ccArgs, '-lrxvmplugin'
+        call appendArrayValue ccArgs, '-lrxvmref'
+        call appendArrayValue ccArgs, '-lrxvmmemory'
+        call appendArrayValue ccArgs, '-lrxbin'
+        call appendArrayValue ccArgs, '-lplatform'
+        call appendArrayValue ccArgs, decstat
+        call appendArrayValue ccArgs, '-ldecnumber'
+        call appendArrayValue ccArgs, '-lavl_tree'
+        call appendArrayValue ccArgs, '-lrxpa'
+        call appendArrayValue ccArgs, '-lm'
+        if isWindowsPlatform(platformUpper) then call appendArrayValue ccArgs, '-lws2_32'
+        call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_libs_argv', 'crexx_native_libs'
+        call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_ldflags_argv', 'crexx_native_ldflags'
+        call appendArrayValue ccArgs, '-Wl,--end-group'
+      end
     end
     cc_command = renderCommand(ccArgs, platformUpper)
 
@@ -671,7 +704,7 @@ do i=1 to filenames[0]
       do
 	if RC = 0 then res='OK'esc||ANSI_RESET
 	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-	say '[ 'res' ] gcc       - C-Compiled' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
+	say '[ 'res' ] cc        - C-Compiled' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
 	end
     if RC\=0 then return RC  
     if \keep then do
@@ -997,6 +1030,11 @@ if fileExists(staticModule) then return staticModule
 staticModule = modulePath || '_static.lib'
 if fileExists(staticModule) then return staticModule
 return ''
+
+appendMsvcLibrary: procedure
+arg expose current = .string[], rxpath = .string, dirsep = .string, libraryName = .string
+call appendArrayValue current, rxpath || 'bin' || dirsep || libraryName || '.lib'
+return
 
 isMacPlatform: procedure = .int
 arg platformName = .string

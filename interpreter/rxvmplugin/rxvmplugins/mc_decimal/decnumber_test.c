@@ -17,6 +17,9 @@
 
 #include "decNumber.h"
 
+#define TEST_NUMBER_DIGITS 30
+#define TEST_NUMBER_BUFFER_SIZE (TEST_NUMBER_DIGITS + 14)
+
 /* Return a decNumber big enough to hold the number */
 static decNumber *getNumber(size_t digits) {
     /* Calculate the size of the decNumber */
@@ -37,9 +40,9 @@ static decNumber *getNumber(size_t digits) {
 }
 
 static int do_decNumberFromInt64_test(char* test, int64_t value) {
-    int digits = 30;
-    char expected[digits + 14];
-    char buffer[digits + 14];
+    int digits = TEST_NUMBER_DIGITS;
+    char expected[TEST_NUMBER_BUFFER_SIZE];
+    char buffer[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
     sprintf(expected, "%lld", (long long)value);
@@ -136,9 +139,9 @@ int test_decNumberFromInt64() {
 }
 
 static int do_decNumberFromUInt64_test(char* test, uint64_t value) {
-    int digits = 30;
-    char expected[digits + 14];
-    char buffer[digits + 14];
+    int digits = TEST_NUMBER_DIGITS;
+    char expected[TEST_NUMBER_BUFFER_SIZE];
+    char buffer[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
     sprintf(expected, "%llu", (unsigned long long)value);
@@ -202,8 +205,8 @@ int test_decNumberFromUInt64() {
 }
 
 static int do_decNumberToInt64_test(char* test, int64_t value) {
-    int digits = 30;
-    char expected[digits + 14];
+    int digits = TEST_NUMBER_DIGITS;
+    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
     sprintf(expected, "%lld", (long long)value);
@@ -352,7 +355,7 @@ int test_decNumberToInt64() {
 
 static int do_decNumberToUInt64_test(char* test, uint64_t value) {
     int digits = 30;
-    char expected[digits + 14];
+    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
     sprintf(expected, "%llu", (unsigned long long)value);
@@ -477,7 +480,7 @@ int test_decNumberToUInt64() {
 
 static int do_decNumberToInt32_test(char* test, int32_t value) {
     int digits = 30;
-    char expected[digits + 14];
+    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
     sprintf(expected, "%d", value);
@@ -626,7 +629,7 @@ int test_decNumberToInt32() {
 
 static int do_decNumberToUInt32_test(char* test, uint32_t value) {
     int digits = 30;
-    char expected[digits + 14];
+    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
     sprintf(expected, "%u", value);

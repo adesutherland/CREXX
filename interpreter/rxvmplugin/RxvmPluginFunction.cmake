@@ -49,10 +49,20 @@ endfunction()
 
 # Function to configure the linker for a static definition library ensuring the library is linked into the executable
 function(configure_linker_for_static_rxvmplugin target pluginId)
-    if(MSVC)
+    if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
         # For Visual Studio Compiler
-        target_link_libraries(${target} "$<TARGET_FILE:${pluginId}>")
-        set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_register_rxvm_plugin")
+        if(ARGC GREATER 2)
+            set(_crexx_rxvm_factory_id "${ARGV2}")
+        else()
+            set(_crexx_rxvm_factory_id "${pluginId}")
+        endif()
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(_crexx_rxvm_plugin_anchor "${_crexx_rxvm_factory_id}_register_rxvm_plugin_")
+        else()
+            set(_crexx_rxvm_plugin_anchor "_${_crexx_rxvm_factory_id}_register_rxvm_plugin_")
+        endif()
+        target_link_libraries(${target} ${pluginId})
+        target_link_options(${target} PRIVATE "/INCLUDE:${_crexx_rxvm_plugin_anchor}")
     elseif(APPLE)
         # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}>\"")

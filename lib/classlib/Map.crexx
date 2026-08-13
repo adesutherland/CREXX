@@ -1,0 +1,94 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data expose Map
+
+
+/**
+* The Map interface specifies an object that maps keys to values.
+* A map cannot contain duplicate keys; each key can map to at most one value.
+*/
+
+
+/**
+* Associates the specified value with the specified key in this map.
+*
+* @param key Key object to store.
+* @param value Object value to associate with the key.
+* @return .int 0 on success.
+*/
+Map: interface
+  put: method = .int
+    arg key = .object, value = .object
+    
+    /**
+    * Returns the value to which the specified key is mapped.
+    *
+    * @param key Key object to look up.
+    * @return .object Mapped object, or an uninitialized object if the key is absent.
+    */
+  get: method = .object
+    arg key = .object
+    
+    /**
+    * Returns the number of key-value mappings in this map.
+    *
+    * @return .int Number of mappings.
+    */
+  size: method = .int
+    
+    /**
+    * Removes a mapping from this map.
+    *
+    * @param key Key object to remove.
+    * @return .int 0 if removed, 4 if the key was not present.
+    */
+  remove: method = .int
+    arg key = .object
+
+    /**
+    * Tests whether this map contains a mapping for the specified key object.
+    *
+    * @param key Key object to test.
+    * @return .int 1 if present, 0 otherwise.
+    */
+  containsKey: method = .int
+    arg key = .object
+    
+    /**
+    * Returns the keys in comparator order.
+    *
+    * @return .object[] Ordered array of keys.
+    */
+  keyArray: method = .object[]
+    
+    /**
+    * Returns the object values 
+    *
+    * @return .object[] Array of object values in key order.
+    */
+  valueArray: method = .object[]
+    
+    
