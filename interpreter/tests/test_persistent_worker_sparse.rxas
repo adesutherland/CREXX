@@ -1,0 +1,63 @@
+/*
+ * PERF3-13 E5 sparse-owner semantic progress fixture.
+ *
+ * These procedures deliberately make the selected progress instruction the
+ * only repeating edge. Keep the opcode shapes explicit: this is an RXVM
+ * safepoint contract test, not a compiler-lowering test.
+ */
+
+.globals=0
+
+    .meta "e5sparse.conditional_forever"="b" ".int" conditional_forever() ""
+    .meta "e5sparse.counted_forever"="b" ".int" counted_forever() ""
+    .meta "e5sparse.indirect_forever"="b" ".int" indirect_forever() ""
+    .meta "e5sparse.return_chain"="b" ".int" return_chain() ""
+
+/* Taken conditional self-edge: BRT_ID_REG. */
+conditional_forever() .locals=1 .expose=e5sparse.conditional_forever
+    load r0,1
+conditional_loop:
+    brt conditional_loop,r0
+    ret 0
+
+/* Counted/incrementing self-edge: BCTP_ID_REG. */
+counted_forever() .locals=1 .expose=e5sparse.counted_forever
+    load r0,0
+counted_loop:
+    bctp counted_loop,r0
+    ret 0
+
+/* Resolved indirect backward/self-edge: JUMPI_REG_BINARY. */
+indirect_forever() .locals=1 .expose=e5sparse.indirect_forever
+    .jtable indirect_cases auto
+    br indirect_start
+indirect_loop: .jcase indirect_cases 1
+    jumpi r0,indirect_cases
+indirect_start:
+    load r0,1
+    jumpi r0,indirect_cases
+    ret 0
+
+/* Exercise all five bytecode return handlers in the sparse owner. */
+return_chain() .locals=1 .expose=e5sparse.return_chain
+    call return_void()
+    call return_float()
+    call return_string()
+    call r0,return_register()
+    ret r0
+
+return_void() .locals=0
+    ret
+
+return_float() .locals=0
+    ret 1.0
+
+return_string() .locals=0
+    ret "sparse"
+
+return_register() .locals=1
+    call r0,return_integer()
+    ret r0
+
+return_integer() .locals=0
+    ret 37

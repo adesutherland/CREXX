@@ -175,8 +175,17 @@ int main(void) {
     volatile sig_atomic_t main_pending_interrupts = 0;
     volatile sig_atomic_t *main_previous_pending_interrupts = NULL;
 
-    memset(&main_context, 0, sizeof(main_context));
+    /* Stack and embedded RXVML contexts are not required to be zero-filled by
+     * their callers. Poison the storage so every active-state field added to
+     * rxinimod_common() must be initialized explicitly. */
+    memset(&main_context, 0xa5, sizeof(main_context));
     rxinimod(&main_context);
+    if (main_context.active.compatibility_interrupts != NULL) {
+        fprintf(stderr, "compatibility owner was selected by uninitialized state\n");
+        main_context.active.compatibility_interrupts = NULL;
+        rxfremod(&main_context);
+        return 1;
+    }
     if (rxvm_signal_bind_process_main(&main_context) != 0) {
         fprintf(stderr, "could not bind process-main interrupt target\n");
         rxfremod(&main_context);

@@ -537,13 +537,14 @@ RXVM_HANDLER(STRLOWER_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - STRLOWER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
-#ifdef NUTF8
+                RXVM_BYTE_ONLY(
                 size_t i;
                 for (i = 0; i < op1R->string_length; ++i) {
                     op1R->string_value[i] =
                             (char)tolower((unsigned char)op1R->string_value[i]);
                 }
-#else
+                )
+                RXVM_UTF8_ONLY(
                 char *current;
                 char *next;
                 char *end;
@@ -562,7 +563,7 @@ RXVM_HANDLER(STRLOWER_REG_REG, VM_ADVANCE(2);
                     }
                     current = next;
                 }
-#endif
+                )
             }
             DISPATCH;
 
@@ -578,13 +579,14 @@ RXVM_HANDLER(STRUPPER_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - STRUPPER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
-#ifdef NUTF8
+                RXVM_BYTE_ONLY(
                 size_t i;
                 for (i = 0; i < op1R->string_length; ++i) {
                     op1R->string_value[i] =
                             (char)toupper((unsigned char)op1R->string_value[i]);
                 }
-#else
+                )
+                RXVM_UTF8_ONLY(
                 char *current;
                 char *next;
                 char *end;
@@ -602,7 +604,7 @@ RXVM_HANDLER(STRUPPER_REG_REG, VM_ADVANCE(2);
                     }
                     current = next;
                 }
-#endif
+                )
             }
             DISPATCH;
 
@@ -616,7 +618,7 @@ RXVM_HANDLER(STRUPPER_REG_REG, VM_ADVANCE(2);
 RXVM_HANDLER(STRCHAR_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - STRCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 int result;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 if (op3R->int_value < 0 ||
@@ -628,7 +630,8 @@ RXVM_HANDLER(STRCHAR_REG_REG_REG, VM_ADVANCE(3);
                     utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &result);
                     REG_RETURN_INT(result)
                 }
-#else
+                )
+                RXVM_BYTE_ONLY(
                 if (op3R->int_value < 0 ||
                     (size_t)op3R->int_value >= op2R->string_length) {
                     SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -636,7 +639,7 @@ RXVM_HANDLER(STRCHAR_REG_REG_REG, VM_ADVANCE(3);
                 else {
                     REG_RETURN_INT(op2R->string_value[op3R->int_value])
                 }
-#endif
+                )
             }
             DISPATCH;
 // Lazy Peter approach
@@ -669,27 +672,29 @@ RXVM_HANDLER(HEXCHAR_REG_REG_REG, VM_ADVANCE(3);
                 if (strstr(op1R->string_value, "UTFV2") > 0) goto hexm3;
 
                 char *start, *end;
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
-#else
+                )
+                RXVM_BYTE_ONLY(
                 ch=op2R->string_value[op3R->int_value];
-#endif
+                )
                 prep_string_buffer(op1R, 3);
                 split2hex(ch, 0)                    // split the character into their 2 byte hex presentation
                 finish_ascii_string_write(op1R, 2); // hex length is 2
                 goto hexdispatch;
    /* ----- create full UTF8 code -------------- */
                 hexm2:
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
                 for (i = 0; i < bytelen && i < 4; ++i) {
                     bytebuf[i] = (unsigned char) start[i];
                 }
-#else
+                )
+                RXVM_BYTE_ONLY(
                 ch=op2R->string_value[op3R->int_value];
-#endif
+                )
                 prep_string_buffer(op1R, 9);
                 for (i = 0; i < 4; ++i) {
                     unsigned char b = bytebuf[i];
@@ -699,12 +704,13 @@ RXVM_HANDLER(HEXCHAR_REG_REG_REG, VM_ADVANCE(3);
                 goto hexdispatch;
     /* ----- add UTF8 code depending on length -------------- */
             hexm3:
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro
-#else
+                )
+                RXVM_BYTE_ONLY(
                 ch=op2R->string_value[op3R->int_value];
-#endif
+                )
                 prep_string_buffer(op1R, bytelen * 2 + 1);
                 for (i = 0; i < bytelen; ++i) {
                     unsigned char b = start[i];
@@ -729,17 +735,19 @@ RXVM_HANDLER(POSCHAR_REG_REG_REG, VM_ADVANCE(3);
                 int ch;
 
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 for (i = 0; i < op2R->string_chars; i++) {
-#else
+                )
+                RXVM_BYTE_ONLY(
                 for (i = 0; i < op2R->string_length; i++) {
-#endif
-#ifndef NUTF8
+                )
+                RXVM_UTF8_ONLY(
                     string_cache_seek_char(op2R, (size_t)i);
                     utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
-#else
+                )
+                RXVM_BYTE_ONLY(
                     ch=op2R->string_value[i];
-#endif
+                )
                     if (ch == op3R->int_value) {
                         result = i;
                         break;
@@ -1083,9 +1091,9 @@ RXVM_HANDLER(FNDBLNK_REG_REG_REG, VM_ADVANCE(3);
                 rxinteger result;
                 int ch;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 len = (rxinteger) op2R->string_chars;
-#if ASCII_FAST_PATH
+                RXVM_ASCII_FAST_ONLY(
                 if (len==op2R->string_length) {  /* it is plain ASCII */
                     if (op3R->int_value>=0) {
                         result = ascii_fwd_blank((const unsigned char *)op2R->string_value, op3R->int_value, len);
@@ -1097,18 +1105,19 @@ RXVM_HANDLER(FNDBLNK_REG_REG_REG, VM_ADVANCE(3);
                         goto blankfound;
                     }
                 }
-#endif
-
-#else
+                )
+                )
+                RXVM_BYTE_ONLY(
                 len = (rxinteger) op2R->string_length;
-#endif
+                )
                 for (result = op3R->int_value; result < len; result++) {
-#ifndef NUTF8
+                    RXVM_UTF8_ONLY(
                     string_cache_seek_char(op2R, (size_t)result);
                     utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
-#else
+                    )
+                    RXVM_BYTE_ONLY(
                     ch = op2R->string_value[result];
-#endif
+                    )
                     if (IS_UNICODE_WHITESPACE(ch)) goto blankfound;
                 }
                 result = -len;
@@ -1136,9 +1145,9 @@ RXVM_HANDLER(FNDNBLNK_REG_REG_REG,  VM_ADVANCE(3);
                 int ch;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
 
-#ifndef NUTF8
+             RXVM_UTF8_ONLY(
              len = (rxinteger)op2R->string_chars;
-#if ASCII_FAST_PATH
+             RXVM_ASCII_FAST_ONLY(
              if (len==op2R->string_length) {  /* it is plain ASCII */
                    if (op3R->int_value>=0) {
                         result = ascii_fwd_nonblank((const unsigned char *)op2R->string_value, op3R->int_value, len);
@@ -1150,20 +1159,22 @@ RXVM_HANDLER(FNDNBLNK_REG_REG_REG,  VM_ADVANCE(3);
                         goto nonblankfound;
                     }
              }
-#endif
-#else
+             )
+             )
+             RXVM_BYTE_ONLY(
                 len = (rxinteger)op2R->string_length;
-#endif
+             )
                 result = op3R->int_value;
 
                 if (result >= 0) {  // FORWARD SEARCH
                     for (; result < len; result++) {
-#ifndef NUTF8
+                        RXVM_UTF8_ONLY(
                         string_cache_seek_char(op2R, (size_t)result);
                         utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
-#else
+                        )
+                        RXVM_BYTE_ONLY(
                         ch = op2R->string_value[result];
-#endif
+                        )
                         if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
                     }
                     result = -len;  // Not found in forward scan
@@ -1171,12 +1182,13 @@ RXVM_HANDLER(FNDNBLNK_REG_REG_REG,  VM_ADVANCE(3);
                     result = -result;  // Convert to positive index
                     if (result >= len) result = len - 1;  // Clamp to valid range
                     for (; result >= 0; result--) {
-#ifndef NUTF8
+                        RXVM_UTF8_ONLY(
                         string_cache_seek_char(op2R, (size_t)result);
                         utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
-#else
+                        )
+                        RXVM_BYTE_ONLY(
                         ch = op2R->string_value[result];
-#endif
+                        )
                         if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
                     }
                     result = -1;  // Not found in reverse scan
@@ -1954,16 +1966,17 @@ RXVM_HANDLER(SGET_REG_STRING_REG, VM_ADVANCE(3);
         size_t offset;
         size_t byte_length;
         int slice_rc;
-#ifndef NUTF8
+        RXVM_UTF8_ONLY(
         if (!has_utf8_valid_count_or_empty(op1R)) refresh_utf8_flags(op1R);
         if (!has_utf8_valid_count_or_empty(op1R)) {
             SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
             DISPATCH;
         }
         requested = op1R->string_chars;
-#else
+        )
+        RXVM_BYTE_ONLY(
         requested = op1R->string_length;
-#endif
+        )
         slice_rc = rxvm_string_const_slice(op2S, op3R->int_value, requested, &offset, &byte_length);
         if (slice_rc == 0) {
             SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -2319,7 +2332,7 @@ RXVM_HANDLER(BINTOS_REG, VM_ADVANCE(1);
                        "Binary is too large for a string value");
     }
     else {
-#ifndef NUTF8
+    RXVM_UTF8_ONLY(
     {
         size_t chars = 0;
         if (validate_utf8_bytes(op1R->binary_value, op1R->binary_length, &chars) != 0) {
@@ -2332,11 +2345,12 @@ RXVM_HANDLER(BINTOS_REG, VM_ADVANCE(1);
             mark_utf8_valid_count(op1R);
         }
     }
-#else
+    )
+    RXVM_BYTE_ONLY(
     set_string(op1R,
                op1R->binary_value ? op1R->binary_value : "",
                op1R->binary_length);
-#endif
+    )
     }
     DISPATCH;
 
@@ -2351,15 +2365,16 @@ RXVM_HANDLER(CONCCHAR_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - CONCCHAR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger temp = op3R->int_value;   // save offset, we misuse v3 later
-#ifndef NUTF8
+                RXVM_UTF8_ONLY(
                 int ch;
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 string_cache_seek_char(op2R, (size_t)op3R->int_value);
                 utf8codepoint(op2R->string_value + op2R->string_cache_byte_pos, &ch);
                 op3R->int_value = ch;
-#else
+                )
+                RXVM_BYTE_ONLY(
                 op3R->int_value=op2R->string_value[op3R->int_value - 1];
-#endif
+                )
                 string_concat_char(op1R, op3R);
                 op3R->int_value = temp;   // restore original v3
             }
@@ -2525,7 +2540,7 @@ RXVM_HANDLER(STRPOS_REG_REG_REG, VM_ADVANCE(3);
                 if (start_pos <= 0) {
                     REG_RETURN_INT(0);
                 } else {
-#ifndef NUTF8
+                    RXVM_UTF8_ONLY(
                     start_offset = (size_t)(start_pos - 1);
                     if (start_offset >= op3R->string_chars) {
                         start_offset = op3R->string_length;
@@ -2533,9 +2548,10 @@ RXVM_HANDLER(STRPOS_REG_REG_REG, VM_ADVANCE(3);
                         string_cache_seek_char(op3R, start_offset);
                         start_offset = op3R->string_cache_byte_pos;
                     }
-#else
+                    )
+                    RXVM_BYTE_ONLY(
                     start_offset = (size_t)(start_pos - 1);
-#endif
+                    )
                     if (start_offset >= op3R->string_length) {
                         REG_RETURN_INT(0);
                     } else {
@@ -2564,16 +2580,17 @@ RXVM_HANDLER(STRPOS_REG_REG_REG, VM_ADVANCE(3);
                         if (!charpos) {
                             REG_RETURN_INT(0);
                         } else {
-#ifndef NUTF8
+                            RXVM_UTF8_ONLY(
                             size_t character_offset = 0;
                             (void)utf8nvalid_count(
                                     op3R->string_value,
                                     (size_t)(charpos - op3R->string_value),
                                     &character_offset);
                             REG_RETURN_INT((rxinteger)(character_offset + 1));
-#else
+                            )
+                            RXVM_BYTE_ONLY(
                             REG_RETURN_INT((rxinteger)(charpos - op3R->string_value) + 1);
-#endif
+                            )
                         }
                     }
                 }
@@ -2626,11 +2643,12 @@ RXVM_HANDLER(STRLEN_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - STRLEN R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             REQUIRE_VALID_UTF8_REGISTER(op2R);
-#ifndef NUTF8
+            RXVM_UTF8_ONLY(
             op1R->int_value = (rxinteger)op2R->string_chars;
-#else
+            )
+            RXVM_BYTE_ONLY(
             op1R->int_value = (rxinteger)op2R->string_length;
-#endif
+            )
             DISPATCH;
 
 /*
@@ -2832,17 +2850,7 @@ RXVM_HANDLER(RXVERS_REG, VM_ADVANCE(1);
         const char *platform;
         const char *bits;
 
-#if defined(__linux__)
-        platform = "linux";
-#elif defined(_WIN32)
-        platform = "windows";
-#elif defined(__APPLE__)
-        platform = "macOS";
-#elif defined(__CMS__)
-        platform = "cms";
-#else
-        platform = "unknown";
-#endif
+        platform = RXVM_PLATFORM_NAME;
 
         bits = sizeof(void *) == 4 ? "32" : "64";
         rxvm_format_compile_date(compile_date);
@@ -3039,7 +3047,7 @@ RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
 
                 /* If the open succeeds, add the FD_CLOEXEC so that the file is not available to an ADDRESSed command! */
                 if (op1R->int_value) {
-#ifdef _WIN32
+                    RXVM_WINDOWS_ONLY(
                     // On Windows, get the underlying OS HANDLE from the C-runtime file descriptor.
                     intptr_t handle = _get_osfhandle(_fileno((FILE*)op1R->int_value));
                     if (handle != -1) {
@@ -3047,10 +3055,11 @@ RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
                         // of POSIX's FD_CLOEXEC flag.
                         SetHandleInformation((HANDLE)handle, HANDLE_FLAG_INHERIT, 0);
                     }
-#else
+                    )
+                    RXVM_NONWINDOWS_ONLY(
                     fd = fileno((FILE*)op1R->int_value);
                     fcntl(fd, F_SETFD, FD_CLOEXEC);
-#endif
+                    )
                 }
             }
             free(filename);
@@ -3150,7 +3159,7 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
             }
         }
         }
-#ifndef NUTF8
+        RXVM_UTF8_ONLY(
         {
             size_t chars = 0;
             if (validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
@@ -3161,9 +3170,10 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
                 mark_utf8_valid_count(op1R);
             }
         }
-#else
+        )
+        RXVM_BYTE_ONLY(
         clear_vm_private_flags(op1R);
-#endif
+        )
         DISPATCH;
 
     /* freadbyte - op1 (int) = read byte op2 file*(int) */

@@ -26,7 +26,7 @@
 RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FREADCDPT R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         {
-#ifndef NUTF8
+            RXVM_UTF8_ONLY(
             int codepoint;
             int first_byte;
             int next_byte;
@@ -83,7 +83,8 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
                     mark_utf8_valid_count(op1R);
                 }
             }
-#else
+            )
+            RXVM_BYTE_ONLY(
             {
                 int byte = fgetc( (FILE*)op2R->int_value );
                 if (byte == EOF) {
@@ -98,7 +99,7 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
             }
             string_cache_reset(op1R);
             clear_vm_private_flags(op1R);
-#endif
+            )
         }
         DISPATCH;
 
@@ -138,15 +139,16 @@ RXVM_HANDLER(FWRITECDPT_REG_REG, VM_ADVANCE(2);
         {
             char codepoint[4];
             size_t length_of_codepoint;
-#ifndef NUTF8
+            RXVM_UTF8_ONLY(
             char* end_of_codepoint;
 
             end_of_codepoint = utf8catcodepoint(codepoint, op2R->int_value, 4);
             length_of_codepoint = end_of_codepoint - codepoint;
-#else
+            )
+            RXVM_BYTE_ONLY(
             length_of_codepoint = 1;
             codepoint[0] = op2R->int_value;
-#endif
+            )
             fwrite(codepoint, length_of_codepoint, 1, (FILE*)op1R->int_value);
         }
         DISPATCH;

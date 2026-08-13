@@ -22,6 +22,7 @@ void rxvm_signal_thread_doorbell_poc_uninstall(void);
 int rxvm_signal_thread_doorbell_poc_prepare_current(void);
 void rxvm_signal_thread_doorbell_poc_discard_current(void);
 void rxvm_signal_thread_doorbell_poc_release_current(void);
+int rxvm_signal_thread_doorbell_poc_ring(void *thread_handle);
 
 #if defined(_WIN32)
 #include <process.h>
@@ -115,6 +116,7 @@ struct rxvm_executor_worker {
     size_t queue_count;
     size_t affinity;
     rxvm_executor_thread thread;
+    volatile sig_atomic_t compatibility_interrupts;
     rxvm_executor_mutex mutex;
     rxvm_executor_condition changed;
     rxvm_executor_result startup_result;
@@ -135,6 +137,7 @@ struct rxvm_executor {
     rxvm_executor_mutex statistics_mutex;
     unsigned char statistics_mutex_initialized;
     unsigned char native_doorbell;
+    unsigned char compatibility_doorbell;
 };
 
 static int request_state_is_terminal(rxvm_executor_request_state state) {
@@ -260,6 +263,8 @@ static void executor_request_complete(
      * assigned to this persistent VM. */
     if (executor->native_doorbell) {
         rxvm_signal_thread_doorbell_poc_discard_current();
+    } else if (executor->compatibility_doorbell) {
+        rxvm_signal_pending_and(&request->worker->compatibility_interrupts, 0);
     }
     if (request->cancel_requested) state = RXVM_EXECUTOR_REQUEST_CANCELLED;
     executor_statistics_finish(executor, state);
@@ -308,6 +313,10 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
     }
     worker->context = worker->startup_result == RXVM_EXECUTOR_OK
             ? rxvm_context_create_in_runtime(worker->executor->runtime) : 0;
+    if (worker->context && worker->executor->compatibility_doorbell) {
+        worker->context->active.compatibility_interrupts =
+                &worker->compatibility_interrupts;
+    }
     if (!worker->context ||
         rxvm_program_generation_attach(worker->context,
                                        worker->executor->generation) !=
@@ -500,13 +509,23 @@ rxvm_executor *rxvm_executor_create(
     executor->statistics_mutex_initialized = 1u;
     {
         const char *doorbell = getenv("CREXX_VM_POC_DOORBELL");
+#if defined(_WIN32)
+        executor->native_doorbell = doorbell &&
+                strcmp(doorbell, "windows-special-apc") == 0;
+#else
         executor->native_doorbell = doorbell &&
                 strcmp(doorbell, "posix") == 0;
+#endif
     }
     if (executor->native_doorbell &&
         rxvm_signal_thread_doorbell_poc_install() != 0) {
-        result = RXVM_EXECUTOR_WORKER_START_FAILED;
+#if defined(_WIN32)
+        executor->native_doorbell = 0u;
+        executor->compatibility_doorbell = 1u;
+#else
+        result = RXVM_EXECUTOR_DOORBELL_UNAVAILABLE;
         goto fail;
+#endif
     }
     executor->worker_count = worker_count;
     executor->queue_capacity = queue_capacity;
@@ -686,22 +705,33 @@ rxvm_executor_result rxvm_executor_cancel(
     if (request->state == RXVM_EXECUTOR_REQUEST_RUNNING) {
         /* The request mutex is the arm/disarm authority. While it is held,
          * completion cannot retire this request and reuse the VM. */
-        if (!worker->executor->native_doorbell) {
+        if (worker->executor->compatibility_doorbell) {
+            rxvm_signal_pending_or(
+                    &worker->compatibility_interrupts,
+                    rxsignal_mask(RXSIGNAL_CANCEL));
+        } else if (!worker->executor->native_doorbell) {
             request->cancel_requested = 0u;
             executor_mutex_unlock(&request->mutex);
             return RXVM_EXECUTOR_INVALID;
-        }
+        } else {
 #if defined(__APPLE__) || defined(__linux__)
-        if (pthread_kill(worker->thread, SIGURG) != 0) {
+            if (pthread_kill(worker->thread, SIGURG) != 0) {
+                request->cancel_requested = 0u;
+                executor_mutex_unlock(&request->mutex);
+                return RXVM_EXECUTOR_INVALID;
+            }
+#elif defined(_WIN32)
+            if (rxvm_signal_thread_doorbell_poc_ring(worker->thread) != 0) {
+                request->cancel_requested = 0u;
+                executor_mutex_unlock(&request->mutex);
+                return RXVM_EXECUTOR_INVALID;
+            }
+#else
             request->cancel_requested = 0u;
             executor_mutex_unlock(&request->mutex);
             return RXVM_EXECUTOR_INVALID;
-        }
-#else
-        request->cancel_requested = 0u;
-        executor_mutex_unlock(&request->mutex);
-        return RXVM_EXECUTOR_INVALID;
 #endif
+        }
     }
     executor_mutex_unlock(&request->mutex);
     return RXVM_EXECUTOR_OK;
@@ -775,6 +805,14 @@ void rxvm_executor_statistics_get(
     executor_mutex_unlock(&executor->statistics_mutex);
 }
 
+const char *rxvm_executor_doorbell_backend_name(
+        const rxvm_executor *executor) {
+    if (!executor) return "none";
+    if (executor->native_doorbell) return "native";
+    if (executor->compatibility_doorbell) return "sparse-owner";
+    return "none";
+}
+
 const char *rxvm_executor_result_name(rxvm_executor_result result) {
     switch (result) {
         case RXVM_EXECUTOR_OK: return "ok";
@@ -785,6 +823,7 @@ const char *rxvm_executor_result_name(rxvm_executor_result result) {
         case RXVM_EXECUTOR_QUEUE_FULL: return "queue-full";
         case RXVM_EXECUTOR_STOPPING: return "stopping";
         case RXVM_EXECUTOR_ALREADY_TERMINAL: return "already-terminal";
+        case RXVM_EXECUTOR_DOORBELL_UNAVAILABLE: return "doorbell-unavailable";
         default: return "unknown";
     }
 }

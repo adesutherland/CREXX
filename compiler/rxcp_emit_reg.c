@@ -28,7 +28,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
 #include "rxcp_val.h"

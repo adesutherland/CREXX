@@ -16,6 +16,10 @@
 #include <time.h>
 #endif
 
+void rxvm_signal_thread_doorbell_poc_statistics(
+        unsigned long *callback_count,
+        unsigned long *maximum_depth);
+
 #include "rxvm.h"
 #include "rxvmexecutor.h"
 
@@ -287,10 +291,19 @@ static uint64_t monotonic_nanoseconds(void) {
 #if defined(_WIN32)
     LARGE_INTEGER counter;
     LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    QueryPerformanceCounter(&counter);
-    return (uint64_t)((counter.QuadPart * 1000000000ULL) /
-                      frequency.QuadPart);
+    uint64_t whole_seconds;
+    uint64_t remainder;
+
+    if (!QueryPerformanceFrequency(&frequency) || frequency.QuadPart <= 0 ||
+        !QueryPerformanceCounter(&counter) || counter.QuadPart < 0) {
+        abort();
+    }
+    whole_seconds = (uint64_t)counter.QuadPart /
+                    (uint64_t)frequency.QuadPart;
+    remainder = (uint64_t)counter.QuadPart %
+                (uint64_t)frequency.QuadPart;
+    return whole_seconds * 1000000000ULL +
+           (remainder * 1000000000ULL) / (uint64_t)frequency.QuadPart;
 #else
     struct timespec now;
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) abort();
@@ -522,12 +535,221 @@ static int run_doorbell_latency(int argc, char **argv) {
     return 0;
 }
 
+static int run_doorbell_fallback(int argc, char **argv) {
+    rxvm_executor_result create_result = RXVM_EXECUTOR_OK;
+    rxvm_executor *executor;
+    rxvm_executor_request *cancelled = NULL;
+    rxvm_executor_request *reuse = NULL;
+    int result = 0;
+    int ok = 1;
+
+    if (argc != 3) {
+        fprintf(stderr, "usage: %s --doorbell-fallback E5_RXBIN\n",
+                argv[0]);
+        return 2;
+    }
+    executor = rxvm_executor_create(argv[2], 1u, 1u, &create_result);
+    if (!executor || create_result != RXVM_EXECUTOR_OK ||
+        strcmp(rxvm_executor_doorbell_backend_name(executor),
+               "sparse-owner") != 0) {
+        if (executor && rxvm_executor_destroy(executor) != 0u) abort();
+        fprintf(stderr, "E5_DOORBELL_FALLBACK result=FAIL create_result=%s\n",
+                rxvm_executor_result_name(create_result));
+        return 1;
+    }
+
+    cancelled = submit_zero(executor, 0u, "e5worker.loop_forever");
+    if (!cancelled ||
+        rxvm_executor_request_wait_started(cancelled) !=
+                RXVM_EXECUTOR_REQUEST_RUNNING ||
+        rxvm_executor_cancel(cancelled) != RXVM_EXECUTOR_OK ||
+        rxvm_executor_request_wait(cancelled, &result) !=
+                RXVM_EXECUTOR_REQUEST_CANCELLED ||
+        rxvm_executor_request_destroy(cancelled) != RXVM_EXECUTOR_OK) {
+        ok = 0;
+    }
+    reuse = submit_one(executor, 0u, "e5worker.identity", "31");
+    if (!reuse ||
+        rxvm_executor_request_wait(reuse, &result) !=
+                RXVM_EXECUTOR_REQUEST_COMPLETED ||
+        result != 31 ||
+        rxvm_executor_request_destroy(reuse) != RXVM_EXECUTOR_OK) {
+        ok = 0;
+    }
+    if (rxvm_executor_destroy(executor) != 0u) ok = 0;
+    printf("E5_DOORBELL_FALLBACK backend=sparse-owner cancellation=%s "
+           "no_spill=%s result=%s\n",
+           ok ? "PASS" : "FAIL", ok ? "PASS" : "FAIL",
+           ok ? "PASS" : "FAIL");
+    return ok ? 0 : 1;
+}
+
+static int run_sparse_progress(int argc, char **argv) {
+    static const char *const procedures[] = {
+        "e5sparse.conditional_forever",
+        "e5sparse.counted_forever",
+        "e5sparse.indirect_forever"
+    };
+    rxvm_executor_result create_result = RXVM_EXECUTOR_OK;
+    rxvm_executor *executor;
+    size_t procedure_index;
+
+    if (argc != 3) {
+        fprintf(stderr, "usage: %s --sparse-progress E5_SPARSE_RXBIN\n",
+                argv[0]);
+        return 2;
+    }
+    executor = rxvm_executor_create(argv[2], 1u, 1u, &create_result);
+    if (!executor || create_result != RXVM_EXECUTOR_OK ||
+        strcmp(rxvm_executor_doorbell_backend_name(executor),
+               "sparse-owner") != 0) {
+        if (executor && rxvm_executor_destroy(executor) != 0u) abort();
+        fprintf(stderr, "E5_SPARSE_PROGRESS result=FAIL create_result=%s\n",
+                rxvm_executor_result_name(create_result));
+        return 1;
+    }
+
+    for (procedure_index = 0u;
+         procedure_index < sizeof(procedures) / sizeof(procedures[0]);
+         procedure_index++) {
+        rxvm_executor_request *request = submit_zero(
+                executor, 0u, procedures[procedure_index]);
+        rxvm_executor_request_state started;
+        rxvm_executor_request_state state;
+        rxvm_executor_result cancel_result = RXVM_EXECUTOR_INVALID;
+        int result = 0;
+
+        started = request
+                ? rxvm_executor_request_wait_started(request)
+                : RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+        if (request && started == RXVM_EXECUTOR_REQUEST_RUNNING) {
+            cancel_result = rxvm_executor_cancel(request);
+        }
+        if (!request || started != RXVM_EXECUTOR_REQUEST_RUNNING ||
+            cancel_result != RXVM_EXECUTOR_OK) {
+            fprintf(stderr,
+                    "FAIL: sparse request at %s: started=%s cancel=%s\n",
+                    procedures[procedure_index],
+                    rxvm_executor_request_state_name(started),
+                    rxvm_executor_result_name(cancel_result));
+            if (request) {
+                state = rxvm_executor_request_wait(request, &result);
+                if (rxvm_executor_request_destroy(request) != RXVM_EXECUTOR_OK) {
+                    fprintf(stderr,
+                            "FAIL: sparse request cleanup at %s: state=%s\n",
+                            procedures[procedure_index],
+                            rxvm_executor_request_state_name(state));
+                }
+            }
+            failures++;
+            break;
+        }
+        state = rxvm_executor_request_wait(request, &result);
+        if (state != RXVM_EXECUTOR_REQUEST_CANCELLED ||
+            rxvm_executor_request_destroy(request) != RXVM_EXECUTOR_OK) {
+            fprintf(stderr, "FAIL: sparse cancellation at %s: state=%s\n",
+                    procedures[procedure_index],
+                    rxvm_executor_request_state_name(state));
+            failures++;
+            break;
+        }
+    }
+
+    if (!failures) {
+        rxvm_executor_request *returns = submit_zero(
+                executor, 0u, "e5sparse.return_chain");
+        wait_completed(returns, 37,
+                       "all sparse-owner bytecode return forms complete");
+        destroy_terminal(&returns);
+    }
+    if (rxvm_executor_destroy(executor) != 0u) failures++;
+    printf("E5_SPARSE_PROGRESS conditional=%s counted=%s indirect=%s "
+           "returns=%s result=%s\n",
+           failures ? "FAIL" : "PASS", failures ? "FAIL" : "PASS",
+           failures ? "FAIL" : "PASS", failures ? "FAIL" : "PASS",
+           failures ? "FAIL" : "PASS");
+    return failures ? 1 : 0;
+}
+
+static int run_doorbell_stress(int argc, char **argv) {
+    rxvm_executor_result create_result;
+    rxvm_executor *executor;
+    size_t rounds;
+    size_t round;
+    unsigned long callbacks_before = 0u;
+    unsigned long callbacks_after = 0u;
+    unsigned long maximum_depth = 0u;
+    const char *backend;
+    int ok = 1;
+
+    if (argc != 4 || !parse_positive_size(argv[3], &rounds)) {
+        fprintf(stderr, "usage: %s --doorbell-stress E5_RXBIN ROUNDS\n",
+                argv[0]);
+        return 2;
+    }
+    rxvm_signal_thread_doorbell_poc_statistics(&callbacks_before, NULL);
+    executor = rxvm_executor_create(argv[2], 2u, 2u, &create_result);
+    if (!executor || create_result != RXVM_EXECUTOR_OK) return 1;
+    backend = rxvm_executor_doorbell_backend_name(executor);
+
+    for (round = 0u; round < rounds; round++) {
+        const size_t affinity = round % 2u;
+        rxvm_executor_request *request = submit_zero(
+                executor, affinity, "e5worker.loop_forever");
+        rxvm_executor_request *reuse = NULL;
+        int result = 0;
+
+        if (!request || rxvm_executor_request_wait_started(request) !=
+                            RXVM_EXECUTOR_REQUEST_RUNNING ||
+            rxvm_executor_cancel(request) != RXVM_EXECUTOR_OK ||
+            rxvm_executor_request_wait(request, &result) !=
+                            RXVM_EXECUTOR_REQUEST_CANCELLED ||
+            rxvm_executor_request_destroy(request) != RXVM_EXECUTOR_OK) {
+            ok = 0;
+            break;
+        }
+        reuse = submit_one(executor, affinity, "e5worker.identity", "29");
+        if (!reuse || rxvm_executor_request_wait(reuse, &result) !=
+                            RXVM_EXECUTOR_REQUEST_COMPLETED ||
+            result != 29 ||
+            rxvm_executor_request_destroy(reuse) != RXVM_EXECUTOR_OK) {
+            ok = 0;
+            break;
+        }
+    }
+    if (rxvm_executor_destroy(executor) != 0u) ok = 0;
+    rxvm_signal_thread_doorbell_poc_statistics(
+            &callbacks_after, &maximum_depth);
+#if defined(_WIN32)
+    if (strcmp(backend, "native") == 0 &&
+        (callbacks_after - callbacks_before < (unsigned long)rounds ||
+         maximum_depth < 1u)) {
+        ok = 0;
+    }
+#endif
+    printf("E5_DOORBELL_STRESS result=%s backend=%s rounds=%zu callbacks=%lu "
+           "maximum_depth=%lu\n",
+           ok ? "PASS" : "FAIL", backend, round,
+           callbacks_after - callbacks_before,
+           maximum_depth);
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv) {
     if (argc > 1 && strcmp(argv[1], "--benchmark") == 0) {
         return run_benchmark(argc, argv);
     }
     if (argc > 1 && strcmp(argv[1], "--doorbell-latency") == 0) {
         return run_doorbell_latency(argc, argv);
+    }
+    if (argc > 1 && strcmp(argv[1], "--doorbell-fallback") == 0) {
+        return run_doorbell_fallback(argc, argv);
+    }
+    if (argc > 1 && strcmp(argv[1], "--doorbell-stress") == 0) {
+        return run_doorbell_stress(argc, argv);
+    }
+    if (argc > 1 && strcmp(argv[1], "--sparse-progress") == 0) {
+        return run_sparse_progress(argc, argv);
     }
     if (argc != 2) {
         fprintf(stderr, "usage: %s E5_RXBIN\n", argv[0]);

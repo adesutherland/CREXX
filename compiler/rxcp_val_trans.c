@@ -37,7 +37,7 @@
  * Converts EXIT Instruction to _exit System Function
  */
 walker_result rewrite_exit_walker(walker_direction direction,
-                                            ASTNode* node, __attribute__((unused)) void *payload) {
+                                            ASTNode* node, RXCP_UNUSED void *payload) {
 
     Context *context = (Context*)payload;
 
@@ -79,7 +79,7 @@ walker_result rewrite_exit_walker(walker_direction direction,
  * Adds rxsysb if needed
  */
 walker_result add_rxsysb_walker(walker_direction direction,
-                                       ASTNode* node, __attribute__((unused)) void *payload) {
+                                       ASTNode* node, RXCP_UNUSED void *payload) {
 
     Context *context = (Context*)payload;
 
@@ -126,7 +126,7 @@ static const char *rxcp_get_node_text(ASTNode *node, size_t *len);
 static const char *rxcp_disabled_certified_exit_keyword(ASTNode *node);
 
 walker_result needs_rxsysb_walker(walker_direction direction,
-                                       ASTNode* node, __attribute__((unused)) void *payload) {
+                                       ASTNode* node, RXCP_UNUSED void *payload) {
 
     Context *context = (Context*)payload;
 

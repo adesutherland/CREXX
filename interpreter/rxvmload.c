@@ -398,6 +398,7 @@ static int rxinimod_common(rxvm_context *context,
     context->active.crexx_command_state = 0;
     context->active.say_exit = 0;
     context->active.pending_interrupts = 0;
+    context->active.compatibility_interrupts = 0;
     rxvmplugin_instance_set_init(&context->plugin_instances);
     context->rxpa_libraries = 0;
     context->rxpa_sessions = 0;

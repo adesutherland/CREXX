@@ -520,7 +520,7 @@ static ASTNode *find_enclosing_block_expr(ASTNode *node) {
     return 0;
 }
 
-static void copy_value_type(__attribute__((unused)) Context *context, ASTNode *dest, ASTNode *src) {
+static void copy_value_type(RXCP_UNUSED Context *context, ASTNode *dest, ASTNode *src) {
     ast_set_value_type(0, dest, src->value_type, src->value_dims,
                        src->value_dim_base, src->value_dim_elements, src->value_class);
     ast_set_target_type(0, dest, src->value_type, src->value_dims,
@@ -1268,7 +1268,7 @@ static int resolve_factory_call_as_qualified_function(Context *context, ASTNode 
 /* Reset node types at the start of each validation pass so they can be re-evaluated on a clean slate */
 walker_result clear_node_types_walker(walker_direction direction,
                                              ASTNode* node,
-                                             __attribute__((unused)) void *payload) {
+                                             RXCP_UNUSED void *payload) {
     if (direction == in) {
         if (node->node_type != INTEGER && node->node_type != FLOAT &&
             node->node_type != STRING && node->node_type != DECIMAL &&

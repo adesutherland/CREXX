@@ -27,7 +27,6 @@
  */
 
 #include <string.h>
-#include <strings.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "rxcp_val.h"
@@ -348,7 +347,7 @@ static void update_interface_member_body_flag(ASTNode *node) {
 }
 
 walker_result ast_structure_fixup_walker(walker_direction direction,
-                                         ASTNode* node, __attribute__((unused)) void *payload) {
+                                         ASTNode* node, RXCP_UNUSED void *payload) {
     ASTNode *child, *new_child, *next, *last, *n;
     Context *context = (Context*)payload;
 
@@ -1205,7 +1204,7 @@ walker_result ast_work_structure_walker(walker_direction direction,
  * - Sets the token and source start / finish position for each node
  */
 walker_result source_location_walker(walker_direction direction,
-                                     ASTNode* node, __attribute__((unused)) void *payload) {
+                                     ASTNode* node, RXCP_UNUSED void *payload) {
     ASTNode *child, *n;
     Token *left, *right;
     

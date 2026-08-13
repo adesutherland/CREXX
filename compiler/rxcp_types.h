@@ -30,9 +30,21 @@
 #define CREXX_RXCP_TYPES_H
 
 #include <stdio.h>
+#if defined(_MSC_VER)
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#else
+#include <strings.h>
+#endif
 #include "crexx_version.h"
 #include "platform.h"
 #include "rxvalue.h"
+
+#if defined(__GNUC__) || defined(__clang__)
+#define RXCP_UNUSED __attribute__((unused))
+#else
+#define RXCP_UNUSED
+#endif
 
 /* Forward declarations */
 typedef struct ASTNode ASTNode;

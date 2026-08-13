@@ -2417,9 +2417,11 @@ Evidence:
 
 Adrian approved two bounded alternatives to determine whether foreign-thread
 notification must add work to the E4 dispatch loop. The retained macOS result
-selects the native thread-doorbell hypothesis for further portable proof and
-rejects carrying the experimental atomic-mask, hot-flag, sparse-safepoint and
-dual-loop carriers on the `mthread` branch.
+selects the native thread-doorbell hypothesis wherever the host can deliver it
+promptly. It rejects the experimental atomic-mask, hot-flag, sparse-safepoint
+and dual-loop carriers as the primary path on macOS, Linux and capable Windows
+11; it does not reject sparse safepoints as the fallback for a targetable
+worker on a host without native delivery.
 
 The private test executor starts fixed-affinity persistent workers over one E4
 sealed generation. Each worker owns its context, registers, frames, module
@@ -2464,6 +2466,56 @@ Design:
 [`PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md`](PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md).
 Evidence:
 [`2026-08-12-perf3-13-gate-e-e5-macos-doorbell-poc`](evidence/2026-08-12-perf3-13-gate-e-e5-macos-doorbell-poc/).
+
+#### E5 Windows fallback correction — 2026-08-13
+
+The Windows review separates two axes that the first compatibility PoC
+conflated. A non-targetable/local context always retains E4. A targetable
+worker retains E4 when the runtime special-APC capability probe succeeds. Only
+a targetable worker without native delivery selects a second owner, once and
+before preparation, and never rethreads or changes loops while executing.
+
+The first reconstructed owner polled the external word at every instruction
+and invoked every handler through a generic outlined switch. It passed focused
+cancellation, reuse and no-spill tests, but is rejected: forced-fallback Release
+throughput was about 64% slower in `rxbvm` and 102% slower in `rxtvm`, while
+product executables grew about 11%. These results do not characterize the
+intended sparse fallback.
+
+Adrian confirmed that the earlier macOS sparse experiment was functionally
+effective and checked key instructions including returns and backward
+branches. Its source and exact opcode ledger are not retained. The current ISA
+review reconstructs the complete semantic set as request entry, taken static
+or indirect backedges, bytecode call boundaries (required for unbounded
+recursion), all bytecode return forms, and return from a native/plugin call.
+Forward-only branches remain unpolled because they make finite progress to one
+of those points or terminal completion. The authoritative classification,
+opcode-family audit requirements and corrected verdict are in
+[`PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md`](PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md).
+
+The corrected sparse owner is now implemented and qualified on Windows 11.
+GCC Release and Clang/MSVC-ABI Debug pass 19/19 focused tests across switch and
+computed-goto forms; MSVC Debug passes 13/13 across its two switch forms. The
+explicit RXAS progress fixture covers conditional, counted and indirect
+backedges plus all five bytecode return forms, while the normal fixture covers
+the unconditional loop, recursive calls, simultaneous workers, no spill,
+stress and teardown. GCC Release cancellation latency remains 2.9-3.0 us
+median over 1,000 forced-fallback samples per engine. The retained targetable
+fallback throughput deltas are +16.09% mean/+14.89% median for `rxbvml` and
++5.69%/+5.07% for `rxtvml`; non-targetable and native-capable execution remain
+on E4. The expected duplicate-owner growth is about 19.4-20.0%.
+
+The Windows `rxc.exe` access violation is fixed: it was an uninitialized new
+compatibility-owner pointer, not a Windows security feature. A poison-storage
+initializer test now guards it. `rxc`, `rxas`, `rxlink` and the configured
+`rxvm` build under GCC, MSVC and Clang/MSVC-ABI; each `rxc` also compiles the
+reproducer optimized and no-opt. MSVC and Clang use `ENABLE_PARSER_MODE=OFF`
+because the optional sibling syntax-highlighter dependency includes POSIX
+`unistd.h`; MinGW GCC qualifies the default parser-enabled configuration. The
+initializer and handler portability fixes are mthread-coupled. Separate
+compiler portability fixes found during MSVC qualification are also present on
+`origin/develop` and are a candidate for an isolated reviewed develop commit;
+no push is authorized by this PoC closeout.
 
 ### E5 native thread doorbell — Intel Linux PoC accepted 2026-08-12
 

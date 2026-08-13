@@ -796,7 +796,7 @@
 #define RXVM_HANDLER_EMIT_OUTLINE(name_, ...)                              \
     do {                                                                    \
         handler_result = rxvm_handler_ ## name_(&handler_state);            \
-        goto rxvm_handler_result;                                           \
+        goto rxvm_normal_handler_result;                                    \
     } while (0)
 #else
 #define RXVM_HANDLER_EMIT_OUTLINE(name_, ...)                              \

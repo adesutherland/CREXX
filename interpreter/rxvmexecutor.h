@@ -28,7 +28,8 @@ typedef enum rxvm_executor_result {
     RXVM_EXECUTOR_WORKER_START_FAILED = 4,
     RXVM_EXECUTOR_QUEUE_FULL = 5,
     RXVM_EXECUTOR_STOPPING = 6,
-    RXVM_EXECUTOR_ALREADY_TERMINAL = 7
+    RXVM_EXECUTOR_ALREADY_TERMINAL = 7,
+    RXVM_EXECUTOR_DOORBELL_UNAVAILABLE = 8
 } rxvm_executor_result;
 
 typedef enum rxvm_executor_request_state {
@@ -106,6 +107,10 @@ rxvm_executor_result rxvm_executor_request_destroy(
 void rxvm_executor_statistics_get(
         rxvm_executor *executor,
         rxvm_executor_statistics *statistics_out);
+
+/* Private PoC observation surface: "native", "sparse-owner" or "none". */
+const char *rxvm_executor_doorbell_backend_name(
+        const rxvm_executor *executor);
 
 const char *rxvm_executor_result_name(rxvm_executor_result result);
 const char *rxvm_executor_request_state_name(
