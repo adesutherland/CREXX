@@ -688,3 +688,271 @@ The `StringTreeMap` class is based on an AVL Tree for optimal performance. This 
 
 [^avl]: <!--cite-->[knuth1998art]
 [^build]: See the chapter on building application software in the Programming Guide.
+
+
+## Bag collections
+
+A `Bag` is a collection that can contain more than one occurrence of the same
+object. In computer science this type of collection is also commonly called a
+*multiset*. The term `Bag` emphasizes an important property of the collection:
+objects are placed in the collection without assigning them a particular
+position, and the same object may be placed in it more than once.
+
+Consider a bag containing the following objects:
+
+```text
+apple
+apple
+orange
+apple
+pear
+```
+
+The bag contains five objects, of which three are distinct. The object
+`apple` occurs three times, while `orange` and `pear` each occur once. The
+number of occurrences is part of the state of the bag. A bag containing three
+apples is therefore different from a bag containing two apples, even when all
+other objects are the same.
+
+This distinguishes a bag from both a `List` and a `Set`. A list also permits
+duplicate objects, but associates each occurrence with a position. A set does
+not associate objects with positions, but permits each object to occur only
+once. A bag occupies the useful middle ground: duplicate objects are retained,
+but their positions are not significant.
+
+## Relationship to the collection interfaces
+
+`Bag` is a sibling of `Set`, rather
+than a specialization of it. A simplified view of the collection hierarchy is:
+
+<!-- Todo: picture -->
+
+At first sight it might appear reasonable for `Bag` to implement `Set`,
+because both abstractions are concerned primarily with membership rather than
+position. Their contracts are nevertheless incompatible. The defining
+property of a set is that an object can occur at most once. Adding an object
+which is already a member of a set does not create another occurrence.
+
+A bag has the opposite behaviour. For example:
+
+```text
+bag.add("apple")
+bag.add("apple")
+bag.add("pear")
+```
+
+creates a collection containing three objects. The count of `apple` is two
+and the count of `pear` is one. Performing the equivalent operations on a set
+would produce a collection of only two objects.
+
+Making `Bag` implement `Set` would consequently violate the meaning of the
+`Set` interface. Code receiving a `Set` is entitled to assume that every
+member occurs at most once. A bag cannot satisfy that assumption while still
+providing its defining behaviour.
+
+Both abstractions therefore implement `Collection` independently. This also
+allows algorithms that require only general collection operations to work
+with sets, bags and lists without depending on their different rules for
+duplicate objects.
+
+## Size and occurrence counts
+
+For a bag, `size()` denotes the total number of occurrences in the collection,
+not merely the number of distinct objects. If a bag contains three apples,
+two oranges and one pear, its size is six.
+
+The number of occurrences of a particular object is obtained with `count()`:
+
+```text
+bag.count("apple")     -- 3
+bag.count("orange")    -- 2
+bag.count("pear")      -- 1
+bag.count("banana")    -- 0
+```
+
+A count of zero means that the object is not present. Consequently,
+`contains(object)` can be understood as testing whether:
+
+```text
+bag.count(object) > 0
+```
+
+This relationship illustrates one of the differences between bags and sets.
+For a set, the count of an object could only ever be zero or one, so a separate
+count operation would add little information. For a bag, the count is an
+essential property of every member.
+
+It is useful to distinguish the *size* of a bag from its number of distinct
+objects. A bag containing one thousand occurrences of the same object has a
+size of one thousand, although it contains only one distinct object. This
+distinction also has consequences for the way a bag can be implemented
+efficiently.
+
+## Adding and removing objects
+
+Adding an object to a bag adds one occurrence. If the object is not already
+present, its count becomes one. If it is present, its count is increased by
+one. Repeated calls to `add()` therefore accumulate occurrences:
+
+```text
+bag.add("apple")
+bag.add("apple")
+bag.add("apple")
+```
+
+After these operations the bag contains three occurrences of `apple`.
+
+Removing an object performs the corresponding operation in the other
+direction. `remove()` removes one occurrence rather than necessarily removing
+the object completely. If an object has a count greater than one, its count is
+decreased. When its last occurrence is removed, the object is no longer a
+member of the bag.
+
+Suppose a bag contains:
+
+```text
+apple     3
+orange    1
+```
+
+After:
+
+```text
+bag.remove("apple")
+```
+
+the bag still contains `apple`, but its count is now two. Removing `orange`,
+on the other hand, causes `orange` to disappear from the bag because its count
+becomes zero.
+
+This behaviour is important when using the methods inherited from
+`Collection`. Although a bag supports the familiar collection operations,
+their effects must be interpreted in terms of occurrences.
+
+## Iteration
+
+Iteration over a bag visits the occurrences represented by the collection.
+A bag containing three apples, two oranges and one pear therefore supplies six
+objects through its iterator:
+
+```text
+apple
+apple
+apple
+orange
+orange
+pear
+```
+
+The order shown here is only illustrative. A bag does not inherently define
+an ordering. A hash-based implementation may return the objects in an
+implementation-dependent order, while an ordered implementation may return
+them according to a key or comparator.
+
+The important property is that iteration reflects multiplicity. If an object
+has a count of three, an ordinary collection iterator returns that object
+three times. This keeps iteration consistent with `size()`: the number of
+objects produced by a complete iteration is the size of the bag.
+
+Sometimes an application is interested only in the distinct objects. Those
+objects naturally form a set. For example, the bag:
+
+```text
+apple
+apple
+orange
+apple
+pear
+orange
+```
+
+has the distinct members:
+
+```text
+apple
+orange
+pear
+```
+
+A bag implementation can therefore provide an operation that exposes its
+distinct members as a `Set`. This does not make the bag itself a set; it is a
+set-valued view of one aspect of the bag.
+
+## Equality
+
+The occurrence counts are part of the value of a bag and must consequently
+be taken into account when bags are compared. The order in which objects were
+added is not significant.
+
+For example, these two bags are equal:
+
+```text
+Bag 1                 Bag 2
+
+apple                  orange
+apple                  apple
+orange                 apple
+```
+
+Both contain two occurrences of `apple` and one occurrence of `orange`.
+
+By contrast, a bag containing two apples and one orange is not equal to a bag
+containing one apple and two oranges. The two bags have the same size and the
+same set of distinct objects, but their occurrence counts differ.
+
+This is another reason why a bag should not be regarded as a set. Comparing
+only the distinct members would discard information that is an essential part
+of the bag.
+
+## Implementation
+
+A bag does not need to store every occurrence as a separate entry. A
+hash-based implementation can instead maintain a mapping from each distinct
+object to its occurrence count. Conceptually, a bag containing three apples,
+two oranges and one pear can be represented as:
+
+```text
+apple  -> 3
+orange -> 2
+pear   -> 1
+```
+
+Adding an existing object increments its stored count, while removing an
+occurrence decrements it. When the count reaches zero, the map entry itself is
+removed.
+
+This representation has an important advantage when duplicate objects are
+common. Its storage requirement is determined primarily by the number of
+distinct objects rather than by the total size of the bag. A bag containing
+one million occurrences of the same object needs only one map entry together
+with its count.
+
+When the underlying map is a hash map, `add()`, `remove()`, `contains()` and
+`count()` normally have constant average-time complexity. An ordered bag can
+instead be based on a tree map when predictable ordering of the distinct
+objects is required.
+
+The map used for the implementation remains an internal detail. From the
+outside, the bag behaves as a collection of objects and occurrences rather
+than as a map from objects to integers. This distinction should also be
+preserved by facilities such as `Printable`: the external representation
+describes the contents of the bag, not the data structure used to maintain
+its counts.
+
+## Choosing between a Bag, Set and List
+
+The choice between these collection types follows directly from the
+information that an application needs to preserve. A `Set` is appropriate
+when only membership matters and duplicate objects must be eliminated. A
+`List` is appropriate when occurrences may be duplicated and their positions
+or sequence are significant.
+
+A `Bag` is appropriate when duplicate occurrences are significant but their
+positions are not. It answers not only the question *is this object present?*
+but also *how many times is this object present?*
+
+This makes bags particularly useful for frequency tables, inventories,
+histograms, word counts and similar applications. In all of these cases the
+number of occurrences carries information, while storing an explicit
+position for every occurrence would add semantics that the application does
+not require.
