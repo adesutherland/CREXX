@@ -2,16 +2,16 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E5 industrial implementation and Mac QA complete; accepted
-macOS, Intel Linux and Windows carrier/fallback evidence retained; E6,
-publication and Gate F remain closed**
+Status: **Gate E E5 industrial implementation and Mac QA complete; merged for
+publication after accepted macOS, Intel Linux and Windows evidence; GitHub
+validation pending; E6 and Gate F remain closed**
 
 ## Current Gate E continuation
 
-- Publication branches: `develop` contains accepted E4; `mthread` carries the
-  merged cross-platform E5 carrier work, industrial private executor, tests and
-  accepted closeout evidence. No E5 commit or publication is authorized by QA
-  acceptance alone.
+- Publication commits: `mthread` carries the accepted E5 closure as
+  `9f5bb579a`; `develop` integrates it through merge `795e58edb`. Adrian
+  authorized commit, merge and publication on 2026-08-13. E6 remains closed
+  until the published `develop` GitHub build is green.
 - Published Gate E base: `84d406904ece6842f6cec5a47e75d12b9d28ab16`
   (`fix: use compiler-correct RXVM thread locals`).
 - EF-0 implementation: `642e1b697bd019a800a2bddbaea8ef7a3d75e531`
@@ -2556,8 +2556,10 @@ sweep passes 2,055/2,056 plus an immediate 1/1 serial recovery of the sole
 syntax-highlighter parser-thread timeout; and focused Release passes 22/22.
 The merged `rxc` include/import panel passes 18/18.
 
-E5 is complete for its approved implementation and QA scope. E6, public
-workers/channels, Gate F, commit and publication remain separately gated.
+E5 is complete for its approved implementation and QA scope. Adrian authorized
+commit, merge and publication on 2026-08-13: closure commit `9f5bb579a` is
+integrated into `develop` by `795e58edb`. E6, public workers/channels and Gate F
+remain closed until the published `develop` GitHub build is green.
 Evidence:
 [`2026-08-13-perf3-13-gate-e-e5-industrial-closeout`](evidence/2026-08-13-perf3-13-gate-e-e5-industrial-closeout/).
 
@@ -2725,9 +2727,10 @@ until these semantics and the local channel contract are accepted.
    `rxtvml` slowdown as the expected computed-goto/multithreading tradeoff and
    the cross-platform correctness evidence without ARM retesting. Mac
    Debug/ASan/Release QA is complete after repairing and guarding the private
-   callback initializer. E6 and portable publication remain open approval
-   boundaries. The full gate still stops before any public pool/channel
-   semantics.
+   callback initializer. Publication was authorized on 2026-08-13 through E5
+   closure `9f5bb579a` and develop merge `795e58edb`; E6 remains closed until
+   that published develop build is green. The full gate still stops before any
+   public pool/channel semantics.
 7. **Gate F — full M6 start: closed.** After Gate E selection, implement
    transport-neutral channels and only later consider public RXAS exposure.
 
