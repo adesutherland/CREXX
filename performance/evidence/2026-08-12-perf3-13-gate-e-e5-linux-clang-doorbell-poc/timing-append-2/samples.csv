@@ -1,0 +1,121 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-rxbvm-e4-recorded-1,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,1,1,5500,11676874000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-1,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,1,2,5500,6756679000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-1,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,1,3,5500,5787332000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-1,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,1,4,5500,6449272000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-2,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,2,1,5500,6441601000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-2,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,2,2,5500,6578736000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-2,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,2,3,5500,6390371000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-2,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,2,4,5500,6551325000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-3,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,3,1,5500,6584971000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-3,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,3,2,5500,5640088000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-3,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,3,3,5500,6838947000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-3,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,3,4,5500,8732960000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-4,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,4,1,5500,10074358000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-4,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,4,2,5500,7059474000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-4,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,4,3,5500,5696797000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-4,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,4,4,5500,6220571000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-5,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,5,1,5500,7211823000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-5,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,5,2,5500,6180070000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-5,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,5,3,5500,5846859000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-5,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,5,4,5500,6371187000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-6,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,6,1,5500,6350179000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-6,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,6,2,5500,6691181000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-6,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,6,3,5500,5699041000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-6,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,6,4,5500,9557834000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-7,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,7,1,5500,6387263000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-7,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,7,2,5500,6533684000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-7,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,7,3,5500,6248297000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-7,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,7,4,5500,7014955000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-8,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,8,1,5500,6950396000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-8,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,8,2,5500,7028042000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-8,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,8,3,5500,6144356000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-8,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,8,4,5500,6416253000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-9,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,9,1,5500,8857725000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-9,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,9,2,5500,6031505000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-9,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,9,3,5500,6287065000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-9,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,9,4,5500,6757388000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-10,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,10,1,5500,5977398000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-10,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,10,2,5500,8519804000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-10,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,10,3,5500,6502003000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-10,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,10,4,5500,7195648000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-11,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,11,1,5500,6109033000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-11,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,11,2,5500,7569335000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-11,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,11,3,5500,16335867000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-11,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,11,4,5500,10296634000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-12,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,12,1,5500,9339505000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-12,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,12,2,5500,12215813000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-12,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,12,3,5500,9018133000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-12,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,12,4,5500,8995306000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-1,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,1,1,5000,24563921000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-1,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,1,2,5000,18691171000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-1,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,1,3,5000,18840147000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-1,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,1,4,5000,20193841000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-2,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,2,1,5000,16169319000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-2,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,2,2,5000,16667439000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-2,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,2,3,5000,19615788000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-2,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,2,4,5000,20417615000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-3,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,3,1,5000,23897023000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-3,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,3,2,5000,17619408000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-3,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,3,3,5000,17472817000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-3,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,3,4,5000,22597369000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-4,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,4,1,5000,20418213000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-4,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,4,2,5000,18998420000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-4,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,4,3,5000,15870009000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-4,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,4,4,5000,13416432000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-5,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,5,1,5000,13951998000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-5,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,5,2,5000,14976191000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-5,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,5,3,5000,13304238000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-5,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,5,4,5000,15358045000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-6,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,6,1,5000,12898818000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-6,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,6,2,5000,12843573000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-6,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,6,3,5000,19653381000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-6,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,6,4,5000,14767328000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-7,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,7,1,5000,14557074000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-7,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,7,2,5000,14317139000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-7,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,7,3,5000,16868399000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-7,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,7,4,5000,13721894000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-8,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,8,1,5000,14783896000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-8,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,8,2,5000,17520559000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-8,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,8,3,5000,14247975000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-8,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,8,4,5000,13202342000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-9,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,9,1,5000,14137630000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-9,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,9,2,5000,16449077000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-9,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,9,3,5000,14571829000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-9,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,9,4,5000,13650845000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-10,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,10,1,5000,12449673000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-10,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,10,2,5000,16861644000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-10,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,10,3,5000,14116963000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-10,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,10,4,5000,13037620000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-11,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,11,1,5000,13444032000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-11,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,11,2,5000,13156532000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-11,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,11,3,5000,15951011000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-11,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,11,4,5000,15336978000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-12,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,12,1,5000,17508210000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-12,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,12,2,5000,16107761000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-12,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,12,3,5000,13405265000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-12,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,12,4,5000,14142889000,,0,pass,,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,1,1,1000-clauses,2383439000,,0,pass,4371545,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,1,2,1000-clauses,3588595000,,0,pass,2934531,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,2,1,1000-clauses,3273758000,,0,pass,3241532,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,2,2,1000-clauses,4951800000,,0,pass,2105217,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,3,1,1000-clauses,3505633000,,0,pass,3041248,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,3,2,1000-clauses,2168372000,,0,pass,4802541,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,4,1,1000-clauses,1980149000,,0,pass,5380078,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,4,2,1000-clauses,3297303000,,0,pass,3160679,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,5,1,1000-clauses,2167698000,,0,pass,4873062,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,5,2,1000-clauses,1899587000,,0,pass,5687334,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,6,1,1000-clauses,2460380000,,0,pass,4258378,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,6,2,1000-clauses,2054631000,,0,pass,5184896,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,7,1,1000-clauses,3084761000,,0,pass,3364174,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,7,2,1000-clauses,1901524000,,0,pass,5545866,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,8,1,1000-clauses,1895551000,,0,pass,5562329,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,8,2,1000-clauses,1916697000,,0,pass,5545940,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,9,1,1000-clauses,2696814000,,0,pass,3864064,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,9,2,1000-clauses,2346426000,,0,pass,4524629,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,10,1,1000-clauses,1888430000,,0,pass,5596876,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,10,2,1000-clauses,2523381000,,0,pass,4198807,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,11,1,1000-clauses,2466572000,,0,pass,4246948,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,11,2,1000-clauses,2166559000,,0,pass,4955617,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,linux-clang-doorbell-poc,A,no,startup-included,recorded,12,1,1000-clauses,3316947000,,0,pass,3112341,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,12,2,1000-clauses,2066790000,,0,pass,5371992,cREXX clauses per second

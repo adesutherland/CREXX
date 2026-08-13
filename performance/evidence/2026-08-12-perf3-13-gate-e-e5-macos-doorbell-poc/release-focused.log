@@ -1,0 +1,19 @@
+Test project /private/tmp/crexx-mthread-release
+    Start 1187: persistent_worker_executor-rxvml
+1/3 Test #1187: persistent_worker_executor-rxvml ....   Passed    0.03 sec
+    Start 1188: persistent_worker_executor-rxbvml
+2/3 Test #1188: persistent_worker_executor-rxbvml ...   Passed    0.03 sec
+    Start 1189: persistent_worker_executor-rxtvml
+3/3 Test #1189: persistent_worker_executor-rxtvml ...   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+e5             =   0.09 sec*proc (3 tests)
+gate-e         =   0.09 sec*proc (3 tests)
+interpreter    =   0.09 sec*proc (3 tests)
+macos          =   0.09 sec*proc (3 tests)
+perf3          =   0.09 sec*proc (3 tests)
+poc            =   0.09 sec*proc (3 tests)
+
+Total Test time (real) =   0.12 sec

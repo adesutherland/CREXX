@@ -372,12 +372,28 @@ struct stack_frame {
         RXVM_INSTRUMENTATION_TRANSITION(RXVM_TRANSITION_SEQUENTIAL);            \
     } while (0)
 
+/* Owner-specific semantic progress hook. The accepted E4 owner and the
+ * ordinary outlined-handler facade leave it empty. A separately emitted
+ * targetable compatibility owner redefines it while expanding its handlers. */
+#ifndef RXVM_CONTROL_FLOW_SAFEPOINT
+#define RXVM_CONTROL_FLOW_SAFEPOINT(target_, reason_)                           \
+    do {                                                                        \
+        (void)(target_);                                                        \
+        (void)(reason_);                                                        \
+    } while (0)
+#endif
+
+#ifndef RXVM_EXTERNAL_SAFEPOINT
+#define RXVM_EXTERNAL_SAFEPOINT() do { } while (0)
+#endif
+
 #define VM_SELECT_INDEX(index_, reason_)                                        \
     do {                                                                        \
         size_t vm_index__ = (size_t)(index_);                                   \
         next_pc = VM_EXECUTION_POINTER(vm_index__);                             \
         VM_RESOLVE_SELECTED();                                                  \
         RXVM_INSTRUMENTATION_TRANSITION(reason_);                               \
+        RXVM_CONTROL_FLOW_SAFEPOINT(next_pc, (reason_));                        \
     } while (0)
 
 #define VM_SELECT_POINTER(pointer_, reason_)                                    \
@@ -386,6 +402,7 @@ struct stack_frame {
         next_pc = vm_pointer__;                                                 \
         VM_RESOLVE_SELECTED();                                                  \
         RXVM_INSTRUMENTATION_TRANSITION(reason_);                               \
+        RXVM_CONTROL_FLOW_SAFEPOINT(next_pc, (reason_));                        \
     } while (0)
 
 #define RXVM_DISPATCH_PREPARE()                                                 \
@@ -529,6 +546,15 @@ typedef struct rxvm_active_state {
     void *crexx_command_state;
     say_exit_func say_exit;
     volatile sig_atomic_t *pending_interrupts;
+    /* Immutable, worker-owned compatibility carrier selected before prepare.
+     * NULL keeps the accepted ordinary/native owner; non-NULL selects the
+     * private sparse compatibility owner for this context. */
+    volatile sig_atomic_t *compatibility_interrupts;
+    /* Private E5 mailbox bridge. The native handler/APC writes only the
+     * execution-local wake bit; the cold route and sparse owner claim the
+     * correlated worker mailbox through this worker-owned callback. */
+    void *external_mailbox_owner;
+    sig_atomic_t (*external_mailbox_claim)(void *owner);
 } rxvm_active_state;
 
 /* Runtime context */
@@ -796,6 +822,14 @@ int rxvm_signal_leave_execution(
         rxvm_context *context,
         volatile sig_atomic_t *pending_interrupts,
         volatile sig_atomic_t *previous_pending_interrupts);
+
+/* Cold-path pending-word updates that remain atomic against a Windows APC. */
+void rxvm_signal_pending_or(
+        volatile sig_atomic_t *pending_interrupts,
+        sig_atomic_t mask);
+void rxvm_signal_pending_and(
+        volatile sig_atomic_t *pending_interrupts,
+        sig_atomic_t mask);
 
 /** Raise or clear an interrupt on the designated process-main VM. */
 void rxvm_signal_raise_process_main(unsigned char signal);

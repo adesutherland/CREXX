@@ -4151,6 +4151,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "OBJECT_NOT_INITIALIZED";
         case RXSIGNAL_RXBIN_CORRUPTION:
             return "RXBIN_CORRUPTION";
+        case RXSIGNAL_CANCEL:
+            return "CANCEL";
         case RXSIGNAL_OUT_OF_RANGE:
             return "OUT_OF_RANGE";
         case RXSIGNAL_FAILURE:
@@ -4199,6 +4201,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
     if (strcmp(interrupt, "OBJECT_NOT_INITIALIZED") == 0) return RXSIGNAL_OBJECT_NOT_INITIALIZED;
     if (strcmp(interrupt, "RXBIN_CORRUPTION") == 0) return RXSIGNAL_RXBIN_CORRUPTION;
+    if (strcmp(interrupt, "CANCEL") == 0) return RXSIGNAL_CANCEL;
     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
@@ -4580,6 +4583,7 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OBJECT_NOT_INITIALIZED-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_RXBIN_CORRUPTION-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_CANCEL-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -4938,7 +4942,8 @@ void raise_signal(unsigned char signal) {
     rxvm_context *context = rxvm_active_context_current();
     if (context) {
         if (context->active.pending_interrupts)
-            *context->active.pending_interrupts |= rxsignal_mask(signal);
+            rxvm_signal_pending_or(context->active.pending_interrupts,
+                                   rxsignal_mask(signal));
         return;
     }
     rxvm_signal_raise_process_main(signal);
@@ -4949,7 +4954,8 @@ void clear_signal(unsigned char signal) {
     rxvm_context *context = rxvm_active_context_current();
     if (context) {
         if (context->active.pending_interrupts)
-            *context->active.pending_interrupts &= ~rxsignal_mask(signal);
+            rxvm_signal_pending_and(context->active.pending_interrupts,
+                                    ~rxsignal_mask(signal));
         return;
     }
     rxvm_signal_clear_process_main(signal);
@@ -4962,7 +4968,8 @@ static RXVM_LABEL_OWNER_NOINLINE void rxsignal_raise_private_table_oom(
         bin_code *pc,
         value **interrupt_object) {
     if (!frame->is_interrupt) *interrupted_pc = pc;
-    *pending_interrupts |= rxsignal_mask(RXSIGNAL_FAILURE);
+    rxvm_signal_pending_or(pending_interrupts,
+                           rxsignal_mask(RXSIGNAL_FAILURE));
     value_zero(interrupt_object[RXSIGNAL_FAILURE]);
     set_null_string(interrupt_object[RXSIGNAL_FAILURE],
                     "Unable to allocate private interrupt table");
@@ -4972,7 +4979,8 @@ static RXVM_LABEL_OWNER_NOINLINE void rxsignal_raise_private_table_oom(
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
 if ((signal)->base.signal_number > RXSIGNAL_NONE && (signal)->base.signal_number < RXSIGNAL_MAX) { \
 if (!current_frame->is_interrupt) interrupted_pc = pc; \
-pending_interrupts |= rxsignal_mask((signal)->base.signal_number); \
+rxvm_signal_pending_or(&pending_interrupts, \
+        rxsignal_mask((signal)->base.signal_number)); \
 value_zero(interrupt_object[(signal)->base.signal_number]); \
 set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
 }
@@ -4980,20 +4988,20 @@ set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.s
 // Macro to throw a signal
 #define SET_SIGNAL(signal) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-pending_interrupts |= rxsignal_mask(signal); \
+rxvm_signal_pending_or(&pending_interrupts, rxsignal_mask(signal)); \
 value_zero(interrupt_object[(signal)]);}
 
 // Macro to throw a signal with a message
 #define SET_SIGNAL_MSG(signal, message) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-pending_interrupts |= rxsignal_mask(signal); \
+rxvm_signal_pending_or(&pending_interrupts, rxsignal_mask(signal)); \
 value_zero(interrupt_object[(signal)]); \
 set_null_string(interrupt_object[(signal)], (message));}
 
 // Macro to throw a signal with a payload
 #define SET_SIGNAL_PAYLOAD(signal, payload) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-pending_interrupts |= rxsignal_mask(signal); \
+rxvm_signal_pending_or(&pending_interrupts, rxsignal_mask(signal)); \
 copy_value(interrupt_object[(signal)], (payload));}
 
 #define SET_SIGNAL_FROM_NAME(name) \
@@ -5051,7 +5059,8 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
         rxvm_context *context = rxvm_active_context_current();
         if (context) {
             if (context->active.pending_interrupts)
-                *context->active.pending_interrupts |= rxsignal_mask((int)int_num);
+                rxvm_signal_pending_or(context->active.pending_interrupts,
+                                       rxsignal_mask((int)int_num));
         } else {
             rxvm_signal_raise_process_main((unsigned char)int_num);
         }
@@ -5684,6 +5693,92 @@ rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #undef rc
 #undef context
 
+RX_INLINE sig_atomic_t rxvm_compatibility_pending_load(
+        volatile sig_atomic_t *pending) {
+#if defined(_WIN32) && defined(_MSC_VER)
+    typedef char rxvm_compatibility_pending_must_match_long[
+            sizeof(sig_atomic_t) == sizeof(LONG) ? 1 : -1];
+    (void)sizeof(rxvm_compatibility_pending_must_match_long);
+    return (sig_atomic_t)ReadAcquire((LONG const volatile *)pending);
+#elif defined(__GNUC__) || defined(__clang__)
+    return __atomic_load_n(pending, __ATOMIC_ACQUIRE);
+#else
+    return *pending;
+#endif
+}
+
+typedef enum rxvm_sparse_safepoint_kind {
+    RXVM_SPARSE_SAFEPOINT_NONE = 0,
+    RXVM_SPARSE_SAFEPOINT_BACKEDGE,
+    RXVM_SPARSE_SAFEPOINT_BOUNDARY
+} rxvm_sparse_safepoint_kind;
+
+/* This table is consulted only after an outlined sparse-owner handler. Inline
+ * handlers use the compile-time VM_SELECT_* hook below. Keep the cases aligned
+ * with the semantic audit in PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md. */
+static const unsigned char
+rxvm_sparse_safepoint_kinds[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
+#define RXVM_SPARSE_BACKEDGE(op_) [OP_ ## op_] = RXVM_SPARSE_SAFEPOINT_BACKEDGE
+#define RXVM_SPARSE_BOUNDARY(op_) [OP_ ## op_] = RXVM_SPARSE_SAFEPOINT_BOUNDARY
+    RXVM_SPARSE_BACKEDGE(BR_ID),
+    RXVM_SPARSE_BACKEDGE(BRT_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BRF_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BRTF_ID_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BEQ_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BEQ_ID_REG_INT),
+    RXVM_SPARSE_BACKEDGE(BNE_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BNE_ID_REG_INT),
+    RXVM_SPARSE_BACKEDGE(UNLINKBR_REG_ID),
+    RXVM_SPARSE_BACKEDGE(FGTBR_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(FLTBR_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(IGTBR_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(ILTBR_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BCT_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BCT_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BCTNM_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BCTNM_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BCTP_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BCF_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BCF_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BGT_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BGT_ID_REG_INT),
+    RXVM_SPARSE_BACKEDGE(BGE_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BGE_ID_REG_INT),
+    RXVM_SPARSE_BACKEDGE(BLT_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BLT_ID_REG_INT),
+    RXVM_SPARSE_BACKEDGE(BLE_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BLE_ID_REG_INT),
+    RXVM_SPARSE_BACKEDGE(DGTBR_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(DLTBR_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(DEQBR_ID_REG_REG),
+    RXVM_SPARSE_BACKEDGE(BRTPT_ID_REG),
+    RXVM_SPARSE_BACKEDGE(BRTPANDT_ID_REG_INT),
+    RXVM_SPARSE_BACKEDGE(JUMPS_REG_BINARY),
+    RXVM_SPARSE_BACKEDGE(JUMPB_REG_BINARY),
+    RXVM_SPARSE_BACKEDGE(JUMPBS_REG_REG_BINARY),
+    RXVM_SPARSE_BACKEDGE(JUMPI_REG_BINARY),
+    RXVM_SPARSE_BACKEDGE(JUMPR_REG_BINARY),
+    RXVM_SPARSE_BACKEDGE(JUMPN_REG_BINARY),
+    RXVM_SPARSE_BOUNDARY(CALL_FUNC),
+    RXVM_SPARSE_BOUNDARY(CALL_REG_FUNC),
+    RXVM_SPARSE_BOUNDARY(CALL_REG_FUNC_REG),
+    RXVM_SPARSE_BOUNDARY(DCALL_REG_REG_REG),
+    RXVM_SPARSE_BOUNDARY(SWAPCALL_REG_FUNC_REG_REG_REG),
+    RXVM_SPARSE_BOUNDARY(SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG),
+    RXVM_SPARSE_BOUNDARY(SETTPCALL_REG_FUNC_REG_REG_INT),
+    RXVM_SPARSE_BOUNDARY(CALL1_REG_FUNC_REG),
+    RXVM_SPARSE_BOUNDARY(CALL2_REG_FUNC_REG_REG),
+    RXVM_SPARSE_BOUNDARY(CALL3_REG_FUNC_REG_REG_REG),
+    RXVM_SPARSE_BOUNDARY(CALL4_REG_FUNC_REG_REG_REG_REG),
+    RXVM_SPARSE_BOUNDARY(RET),
+    RXVM_SPARSE_BOUNDARY(RET_REG),
+    RXVM_SPARSE_BOUNDARY(RET_INT),
+    RXVM_SPARSE_BOUNDARY(RET_FLOAT),
+    RXVM_SPARSE_BOUNDARY(RET_STRING)
+#undef RXVM_SPARSE_BOUNDARY
+#undef RXVM_SPARSE_BACKEDGE
+};
+
 /* INTERRUPT is a dispatch pseudo-op owned by run(), not an RXVM_HANDLER body. */
 #define RXVM_HANDLER_LABEL_INLINE(name_) &&name_
 #define RXVM_HANDLER_LABEL_OUTLINE(name_) &&rxvm_handler_call
@@ -5701,6 +5796,59 @@ rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
     RXVM_PRIVATE_HANDLER_LABEL_SELECT_INNER(policy_)
 #define RXVM_PRIVATE_HANDLER_LABEL(name_) \
     RXVM_PRIVATE_HANDLER_LABEL_SELECT(RXVM_HANDLER_POLICY(name_))(name_)
+
+/* Sparse compatibility observation is emitted only in the separately selected
+ * targetable owner. The accepted E4 owner never expands this macro. */
+#define RXVM_SPARSE_OBSERVE()                                                  \
+    do {                                                                       \
+        sig_atomic_t rxvm_sparse_pending__ =                                  \
+                context->active.external_mailbox_claim                        \
+                ? context->active.external_mailbox_claim(                     \
+                        context->active.external_mailbox_owner)                \
+                : (rxvm_compatibility_pending_load(                           \
+                        compatibility_interrupts) &                            \
+                   rxsignal_mask(RXSIGNAL_CANCEL));                            \
+        pending_interrupts |= rxvm_sparse_pending__;                          \
+    } while (0)
+
+#ifdef NTHREADED
+#define RXVM_SPARSE_DISPATCH_TARGET() goto rxvm_sparse_CASE_START
+#else
+#define RXVM_SPARSE_DISPATCH_TARGET() VM_DISPATCH_TARGET()
+#endif
+
+#define RXVM_SPARSE_OWNER_DISPATCH()                                           \
+    do {                                                                       \
+        RXVM_DISPATCH_PREPARE();                                               \
+        if (pending_interrupts && !current_frame->is_interrupt)                \
+            goto INTERRUPT;                                                    \
+        RXVM_SPARSE_DISPATCH_TARGET();                                         \
+    } while (0)
+
+/* This selector is used only at execution entry and after taking the existing
+ * cold interrupt route. Ordinary/native handler dispatch still expands
+ * RXVM_OWNER_DISPATCH() directly and has no owner-mode branch. */
+#define RXVM_SELECTED_DISPATCH()                                               \
+    do {                                                                       \
+        RXVM_DISPATCH_PREPARE();                                               \
+        if (compatibility_interrupts) {                                        \
+            RXVM_SPARSE_OBSERVE();                                             \
+            if (pending_interrupts && !current_frame->is_interrupt)            \
+                goto INTERRUPT;                                                \
+            RXVM_SPARSE_DISPATCH_TARGET();                                     \
+        }                                                                      \
+        VM_DISPATCH_TARGET();                                                  \
+    } while (0)
+#define RXVM_SELECTED_TARGET()                                                 \
+    do {                                                                       \
+        if (compatibility_interrupts) {                                        \
+            RXVM_SPARSE_OBSERVE();                                             \
+            if (pending_interrupts && !current_frame->is_interrupt)            \
+                goto INTERRUPT;                                                \
+            RXVM_SPARSE_DISPATCH_TARGET();                                     \
+        }                                                                      \
+        VM_DISPATCH_TARGET();                                                  \
+    } while (0)
 
 /* Interpreter */
 static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
@@ -5747,7 +5895,12 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     rxvm_memory_worker *previous_memory_worker;
     volatile sig_atomic_t pending_interrupts = 0;
     volatile sig_atomic_t *previous_pending_interrupts = 0;
+    volatile sig_atomic_t *compatibility_interrupts =
+            context->active.compatibility_interrupts;
     rxvm_handler_state handler_state;
+    unsigned int sparse_dispatch_opcode = OP_IUNKNOWN;
+    size_t sparse_source_index = 0;
+    int sparse_source_module = 0;
 #if !RXVM_HANDLER_USE_POINTER_FACADE
     rxvm_handler_function handler_function = 0;
 #endif
@@ -5759,25 +5912,47 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     void *private_r1_handler = 0;
 #else
 #if RXVM_HANDLER_USE_POINTER_FACADE
-    void *next_inst = &&IUNKNOWN;
-    const void *address_map[OP_MAX_INSTRUCTIONS] = {
+    void *next_inst = compatibility_interrupts
+            ? &&rxvm_sparse_IUNKNOWN : &&IUNKNOWN;
+    const void *regular_address_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) &&NAME,
 #include "../binutils/include/rxops.h"
 #undef X
     };
-    void *private_r2_handler = &&PRIVATE_R2_COPYATTR1;
-    void *private_r1_handler = &&PRIVATE_R1_RELINK;
+    const void *sparse_address_map[OP_MAX_INSTRUCTIONS] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) &&rxvm_sparse_ ## NAME,
+#include "../binutils/include/rxops.h"
+#undef X
+    };
 #else
-    void *next_inst = RXVM_HANDLER_LABEL(IUNKNOWN);
-    static const void *address_map[OP_MAX_INSTRUCTIONS] = {
+    void *next_inst = compatibility_interrupts
+            ? &&rxvm_sparse_IUNKNOWN
+            : RXVM_HANDLER_LABEL(IUNKNOWN);
+    static const void *regular_address_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) RXVM_HANDLER_LABEL(NAME),
 #include "../binutils/include/rxops.h"
 #undef X
     };
-    void *private_r2_handler =
-            RXVM_PRIVATE_HANDLER_LABEL(PRIVATE_R2_COPYATTR1);
-    void *private_r1_handler =
-            RXVM_PRIVATE_HANDLER_LABEL(PRIVATE_R1_RELINK);
+    static const void *sparse_address_map[OP_MAX_INSTRUCTIONS] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) &&rxvm_sparse_ ## NAME,
+#include "../binutils/include/rxops.h"
+#undef X
+    };
+#endif
+    const void *const *address_map = compatibility_interrupts
+            ? sparse_address_map : regular_address_map;
+#if RXVM_HANDLER_USE_POINTER_FACADE
+    void *private_r2_handler = compatibility_interrupts
+            ? &&rxvm_sparse_PRIVATE_R2_COPYATTR1 : &&PRIVATE_R2_COPYATTR1;
+    void *private_r1_handler = compatibility_interrupts
+            ? &&rxvm_sparse_PRIVATE_R1_RELINK : &&PRIVATE_R1_RELINK;
+#else
+    void *private_r2_handler = compatibility_interrupts
+            ? &&rxvm_sparse_PRIVATE_R2_COPYATTR1
+            : RXVM_PRIVATE_HANDLER_LABEL(PRIVATE_R2_COPYATTR1);
+    void *private_r1_handler = compatibility_interrupts
+            ? &&rxvm_sparse_PRIVATE_R1_RELINK
+            : RXVM_PRIVATE_HANDLER_LABEL(PRIVATE_R1_RELINK);
 #endif
 #endif
     if (rxvm_signal_enter_execution(
@@ -5993,7 +6168,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
     VM_SELECT_INDEX(procedure->start, RXVM_TRANSITION_EXTERNAL_ENTRY);
-    DISPATCH;
+    RXVM_SELECTED_DISPATCH();
 
     /* Instruction implementations */
     /* ----------------------------------------------------------------------------
@@ -6027,6 +6202,10 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 
     /* Signal Interrupt Support - this is only used/called when interrupts are pending */
     START_INTERRUPT;
+    if (context->active.external_mailbox_claim) {
+        pending_interrupts |= context->active.external_mailbox_claim(
+                context->active.external_mailbox_owner);
+    }
     DEBUG("TRACE - SIGNAL FIRED - CHECK HANDLER\n");
 
     /* Also clear any pending signals that are ignored and also find the first signal which */
@@ -6041,7 +6220,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                     (rxinteger) VM_CANONICAL_INDEX(signal_pc);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
-                pending_interrupts &= ~signal_mask;
+                rxvm_signal_pending_and(&pending_interrupts, ~signal_mask);
             } else {
                 last_interrupt = signal_code + 1;
                 break;
@@ -6054,13 +6233,14 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
         /* No un-ignored interrupts pending */
         RXVM_INSTRUMENTATION_INTERRUPT_RESUME(0, current_module->module_number,
                                               VM_CANONICAL_INDEX(pc));
-        END_INTERRUPT
+        RXVM_SELECTED_TARGET();
     }
 
     // Clear the interrupt
     if (last_interrupt != RXSIGNAL_BREAKPOINT) {
         // Breakpoints are not cleared
-        pending_interrupts &= ~rxsignal_mask(last_interrupt);
+        rxvm_signal_pending_and(&pending_interrupts,
+                                ~rxsignal_mask(last_interrupt));
     }
 
     // Handle the interrupt
@@ -6131,7 +6311,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                         current_module->module_number, VM_CANONICAL_INDEX(pc),
                         0, 0);
                 SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, "Exception handler not exposed/linked")
-                DISPATCH;
+                RXVM_SELECTED_DISPATCH();
             }
 
             /* Populate the interrupt argument object */
@@ -6160,7 +6340,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                         SET_SIGNAL(signal_value->int_value)
                     }
                 }
-                DISPATCH;
+                RXVM_SELECTED_DISPATCH();
             } else {
                 /* A CREXX Procedure */
                 if (action_aware) value_zero(interrupt_action_value);
@@ -6173,7 +6353,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                             current_module->module_number,
                             VM_CANONICAL_INDEX(pc), 0, 0);
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
-                    DISPATCH;
+                    RXVM_SELECTED_DISPATCH();
                 }
                 RXVM_INSTRUMENTATION_CALL(
                         RXVM_PROFILE_CALL_SIGNAL_BYTECODE, intr_function,
@@ -6196,7 +6376,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                 current_frame->baselocals[arg_index] = current_locals[arg_index] = interrupt_arg;
 
                 /* DISPATCH goes the interrupt handler */
-                DISPATCH;
+                RXVM_SELECTED_DISPATCH();
             }
         }
 
@@ -6211,7 +6391,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
-            DISPATCH;
+            RXVM_SELECTED_DISPATCH();
 
         case RXSIGNAL_RESPONSE_BRANCH_VALUE:
             DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
@@ -6230,7 +6410,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                                             interrupt_object[last_interrupt]);
             rxsignal_populate_runtime_signal(current_locals[signal_handler.value_register], interrupt_arg);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
-            DISPATCH;
+            RXVM_SELECTED_DISPATCH();
 
         case RXSIGNAL_RESPONSE_RETURN:
             DEBUG("TRACE - INTR HANDLER -> RET %s\n", interrupt_to_string(last_interrupt));
@@ -6265,17 +6445,17 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                 }
                 free_frame(temp_frame);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
-                DISPATCH;
+                RXVM_SELECTED_DISPATCH();
             }
 
         case RXSIGNAL_RESPONSE_IGNORE:
             /* Ignore - Should never get here */
             DEBUG("*ERROR* TRACE INTR HANDLER -> IGNORE (SHOULD NOT GET HERE) %s\n", interrupt_to_string(last_interrupt));
-            END_INTERRUPT
+            RXVM_SELECTED_TARGET();
     }
 
     /* Should never get here */
-    END_INTERRUPT
+    RXVM_SELECTED_TARGET();
 
 START_OF_INSTRUCTIONS
 
@@ -6367,6 +6547,177 @@ START_OF_INSTRUCTIONS
 
     END_OF_INSTRUCTIONS
 
+    /* The compatibility owner is selected once before rxvm_prepare(). It has
+     * the same inline/outline placement as the accepted E4 owner, but owns a
+     * distinct direct-threaded label map (or switch). Its normal DISPATCH does
+     * not read the external flag. Observation is injected only at semantic
+     * progress points: calls, returns, native/plugin returns, and taken
+     * backward/self branches. No executing worker can jump between owners. */
+#undef RXVM_CONTROL_FLOW_SAFEPOINT
+#define RXVM_CONTROL_FLOW_SAFEPOINT(target_, reason_)                           \
+    do {                                                                        \
+        int rxvm_sparse_reason__ = (int)(reason_);                              \
+        if (rxvm_sparse_reason__ == RXVM_TRANSITION_CALL ||                     \
+                rxvm_sparse_reason__ == RXVM_TRANSITION_RETURN) {               \
+            RXVM_SPARSE_OBSERVE();                                              \
+        } else if (rxvm_sparse_reason__ == RXVM_TRANSITION_BRANCH) {            \
+            bin_code *rxvm_sparse_target__ = (target_);                         \
+            if (VM_CANONICAL_INDEX(rxvm_sparse_target__) <=                     \
+                    VM_CANONICAL_INDEX(pc)) {                                   \
+                RXVM_SPARSE_OBSERVE();                                          \
+            }                                                                   \
+        }                                                                       \
+    } while (0)
+#undef RXVM_EXTERNAL_SAFEPOINT
+#define RXVM_EXTERNAL_SAFEPOINT() RXVM_SPARSE_OBSERVE()
+#undef DISPATCH
+#define DISPATCH RXVM_SPARSE_OWNER_DISPATCH()
+
+#define RXVM_SPARSE_CAPTURE_SOURCE(dispatch_opcode_)                            \
+    do {                                                                        \
+        sparse_dispatch_opcode = (unsigned int)(dispatch_opcode_);              \
+        sparse_source_index = VM_CANONICAL_INDEX(pc);                           \
+        sparse_source_module = current_module->module_number;                   \
+    } while (0)
+
+#define RXVM_SPARSE_EMIT_INLINE(name_, dispatch_opcode_, ...)                   \
+    RXVM_HANDLER_EMIT_INLINE(name_, __VA_ARGS__)
+#if RXVM_HANDLER_USE_POINTER_FACADE
+#define RXVM_SPARSE_EMIT_OUTLINE(name_, dispatch_opcode_, ...)                  \
+    do {                                                                        \
+        RXVM_SPARSE_CAPTURE_SOURCE(dispatch_opcode_);                           \
+        handler_result = rxvm_handler_ ## name_(&handler_state);                \
+        goto rxvm_sparse_handler_result;                                        \
+    } while (0)
+#else
+#define RXVM_SPARSE_EMIT_OUTLINE(name_, dispatch_opcode_, ...)                  \
+    do {                                                                        \
+        RXVM_SPARSE_CAPTURE_SOURCE(dispatch_opcode_);                           \
+        handler_function = rxvm_handler_ ## name_;                             \
+        goto rxvm_sparse_handler_state_call;                                    \
+    } while (0)
+#endif
+#define RXVM_SPARSE_EMIT_SELECT_INNER(policy_) RXVM_SPARSE_EMIT_ ## policy_
+#define RXVM_SPARSE_EMIT_SELECT(policy_) RXVM_SPARSE_EMIT_SELECT_INNER(policy_)
+#define RXVM_SPARSE_EMIT(name_, dispatch_opcode_, ...)                          \
+    RXVM_SPARSE_EMIT_SELECT(RXVM_HANDLER_POLICY(name_))(                        \
+            name_, dispatch_opcode_, __VA_ARGS__)
+
+#ifdef NTHREADED
+    rxvm_sparse_CASE_START:
+    switch ((instructions)(pc->instruction.opcode)) {
+#define RXVM_SPARSE_START_PUBLIC(name_, profile_opcode_)                        \
+        case OP_ ## name_:                                                      \
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));
+#define RXVM_SPARSE_START_PRIVATE(name_, dispatch_opcode_, profile_opcode_)     \
+        case dispatch_opcode_:                                                  \
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));
+#else
+#define RXVM_SPARSE_START_PUBLIC(name_, profile_opcode_)                        \
+        rxvm_sparse_ ## name_:                                                  \
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));
+#define RXVM_SPARSE_START_PRIVATE(name_, dispatch_opcode_, profile_opcode_)     \
+        rxvm_sparse_ ## name_:                                                  \
+            RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(                            \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    profile_opcode_, RXVM_HANDLER_IS_INLINE(name_));
+#endif
+
+#define RXVM_HANDLER(name_, ...)                                                \
+        RXVM_SPARSE_START_PUBLIC(name_, OP_ ## name_)                           \
+        RXVM_SPARSE_EMIT(name_, OP_ ## name_, __VA_ARGS__);
+#define RXVM_PRIVATE_HANDLER(name_, dispatch_opcode_, profile_opcode_, ...)     \
+        RXVM_SPARSE_START_PRIVATE(name_, dispatch_opcode_, profile_opcode_)     \
+        RXVM_SPARSE_EMIT(name_, dispatch_opcode_, __VA_ARGS__);
+
+#ifndef NTHREADED
+    rxvm_sparse_INTERRUPT:
+        goto INTERRUPT;
+#endif
+
+#include "rxvmhandlers_core.inc"
+#include "rxvmhandlers_control.inc"
+#include "rxvmhandlers_numeric.inc"
+#include "rxvmhandlers_string.inc"
+#include "rxvmhandlers_system.inc"
+
+#undef RXVM_PRIVATE_HANDLER
+#undef RXVM_HANDLER
+#undef RXVM_SPARSE_START_PRIVATE
+#undef RXVM_SPARSE_START_PUBLIC
+#ifdef NTHREADED
+        default:
+            SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION);
+            DISPATCH;
+    }
+#endif
+#undef RXVM_SPARSE_EMIT
+#undef RXVM_SPARSE_EMIT_SELECT
+#undef RXVM_SPARSE_EMIT_SELECT_INNER
+#undef RXVM_SPARSE_EMIT_OUTLINE
+#undef RXVM_SPARSE_EMIT_INLINE
+#undef RXVM_SPARSE_CAPTURE_SOURCE
+
+#if !RXVM_HANDLER_USE_POINTER_FACADE
+    rxvm_sparse_handler_state_call:
+        RXVM_HANDLER_STATE_SNAPSHOT(handler_state);
+        handler_result =
+                rxvm_invoke_outlined_handler(handler_function, &handler_state);
+        RXVM_HANDLER_STATE_COMMIT(handler_state);
+#endif
+
+    rxvm_sparse_handler_result:
+        switch (handler_result) {
+            case RXVM_HANDLER_RESULT_DISPATCH:
+            case RXVM_HANDLER_RESULT_RESUME:
+                {
+                    rxvm_sparse_safepoint_kind safepoint =
+                            sparse_dispatch_opcode <
+                                    sizeof(rxvm_sparse_safepoint_kinds) /
+                                    sizeof(rxvm_sparse_safepoint_kinds[0])
+                            ? (rxvm_sparse_safepoint_kind)
+                                    rxvm_sparse_safepoint_kinds[
+                                            sparse_dispatch_opcode]
+                            : RXVM_SPARSE_SAFEPOINT_NONE;
+                    if (safepoint == RXVM_SPARSE_SAFEPOINT_BOUNDARY) {
+                        RXVM_SPARSE_OBSERVE();
+                    } else if (safepoint == RXVM_SPARSE_SAFEPOINT_BACKEDGE &&
+                            current_module &&
+                            current_module->module_number ==
+                                    sparse_source_module &&
+                            VM_CANONICAL_INDEX(pc) <= sparse_source_index) {
+                        RXVM_SPARSE_OBSERVE();
+                    }
+                }
+                if (pending_interrupts && !current_frame->is_interrupt)
+                    goto INTERRUPT;
+                RXVM_SPARSE_DISPATCH_TARGET();
+            case RXVM_HANDLER_RESULT_INTERRUPT:
+                goto INTERRUPT;
+            case RXVM_HANDLER_RESULT_INTERRUPT_TABLE_OOM:
+                goto interrupt_table_oom;
+            case RXVM_HANDLER_RESULT_FINISHED:
+                goto interprt_finished;
+        }
+        abort();
+
+#undef DISPATCH
+#define DISPATCH RXVM_OWNER_DISPATCH()
+#undef RXVM_EXTERNAL_SAFEPOINT
+#define RXVM_EXTERNAL_SAFEPOINT() do { } while (0)
+#undef RXVM_CONTROL_FLOW_SAFEPOINT
+#define RXVM_CONTROL_FLOW_SAFEPOINT(target_, reason_)                           \
+    do {                                                                        \
+        (void)(target_);                                                        \
+        (void)(reason_);                                                        \
+    } while (0)
+
 #if !RXVM_HANDLER_USE_POINTER_FACADE
     rxvm_handler_call:
         {
@@ -6443,7 +6794,7 @@ START_OF_INSTRUCTIONS
     interrupt_table_oom:
         rxsignal_raise_private_table_oom(&pending_interrupts, current_frame, &interrupted_pc, pc,
                                          interrupt_object);
-        DISPATCH;
+        RXVM_SELECTED_DISPATCH();
 
     interprt_finished:
 
@@ -6528,6 +6879,9 @@ START_OF_INSTRUCTIONS
 
     return rc;
 }
+
+#undef RXVM_SELECTED_TARGET
+#undef RXVM_SELECTED_DISPATCH
 
 #ifdef CREXX_VM_INSTRUMENTATION_TEST
 #undef vm_instrumentation

@@ -1672,6 +1672,244 @@ if(CREXX_THREADED_VM_SUPPORTED)
     crexx_configure_program_generation_control(program_generation_control-rxtvml)
 endif()
 
+# PERF3-13 E5 private industrial executor. It uses the native
+# POSIX carrier on Apple/Linux. Windows resolves QueueUserAPC2 dynamically and
+# uses a special user APC when the runtime probe succeeds; when it cannot, the
+# worker immutably selects the duplicate sparse compatibility owner before
+# preparation. Native-capable and non-targetable execution retain the ordinary
+# E4 owner. This is test-only and introduces no public worker, channel or RXVML
+# ABI.
+if(BUILD_TESTING AND
+   (APPLE OR WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux"))
+    include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
+    add_dynamic_plugin_target(_e5native
+            tests/e5_native_return_plugin.c)
+    add_static_plugin_target(_e5native
+            tests/e5_native_return_plugin.c)
+    if(APPLE)
+        set(_crexx_e5_doorbell_platform_label macos)
+        set(_crexx_e5_doorbell_backend posix)
+    elseif(WIN32)
+        set(_crexx_e5_doorbell_platform_label windows)
+        set(_crexx_e5_doorbell_backend windows-special-apc)
+    else()
+        set(_crexx_e5_doorbell_platform_label linux)
+        set(_crexx_e5_doorbell_backend posix)
+    endif()
+    set(CREXX_E5_TEST_RXBIN "" CACHE FILEPATH
+            "Qualified E5 worker RXBIN to reuse across Windows compiler lanes")
+    if(CREXX_E5_TEST_RXBIN)
+        add_custom_command(
+                OUTPUT test_persistent_worker_executor.rxbin
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${CREXX_E5_TEST_RXBIN}
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                DEPENDS ${CREXX_E5_TEST_RXBIN}
+                COMMENT "Copying qualified PERF3-13 E5 RXBIN fixture ...")
+    else()
+        add_custom_command(
+                OUTPUT test_persistent_worker_executor.rxbin
+                COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin
+                        -o test_persistent_worker_executor
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_persistent_worker_executor.crexx
+                COMMAND $<TARGET_FILE:rxas> test_persistent_worker_executor
+                DEPENDS tests/rexx/test_persistent_worker_executor.crexx
+                        rxc rxas compiler_exit_bin _e5native
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                COMMENT "Compiling PERF3-13 E5 native-doorbell control ...")
+    endif()
+    add_custom_target(test_persistent_worker_executor_bin ALL
+            DEPENDS test_persistent_worker_executor.rxbin)
+
+    set(CREXX_E5_SPARSE_TEST_RXBIN "" CACHE FILEPATH
+            "Qualified E5 sparse-progress RXBIN to reuse across Windows compiler lanes")
+    if(CREXX_E5_SPARSE_TEST_RXBIN)
+        add_custom_command(
+                OUTPUT test_persistent_worker_sparse.rxbin
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${CREXX_E5_SPARSE_TEST_RXBIN}
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_sparse.rxbin
+                DEPENDS ${CREXX_E5_SPARSE_TEST_RXBIN}
+                COMMENT "Copying qualified PERF3-13 E5 sparse-progress RXBIN ...")
+    else()
+        add_custom_command(
+                OUTPUT test_persistent_worker_sparse.rxbin
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_persistent_worker_sparse.rxas
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_sparse.rxas
+                COMMAND $<TARGET_FILE:rxas> test_persistent_worker_sparse
+                DEPENDS tests/test_persistent_worker_sparse.rxas rxas
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                COMMENT "Assembling PERF3-13 E5 sparse progress fixture ...")
+    endif()
+    add_custom_target(test_persistent_worker_sparse_bin ALL
+            DEPENDS test_persistent_worker_sparse.rxbin)
+
+    function(crexx_configure_persistent_worker_executor TARGET_NAME)
+        target_include_directories(${TARGET_NAME} PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}
+                ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+                ${CMAKE_SOURCE_DIR}/inc
+                ${CMAKE_SOURCE_DIR}/assembler
+                ${CMAKE_SOURCE_DIR}/binutils/include
+                ${CMAKE_SOURCE_DIR}/rxpa
+                ${CMAKE_SOURCE_DIR}/platform
+                ${CMAKE_SOURCE_DIR}/avl_tree
+                ${CMAKE_SOURCE_DIR}/utf8)
+        target_link_libraries(${TARGET_NAME} Threads::Threads)
+        configure_linker_for_static_lib(${TARGET_NAME} _e5native)
+        target_link_libraries(${TARGET_NAME} rxpashim)
+        add_dependencies(${TARGET_NAME} _e5native_static)
+        add_dependencies(${TARGET_NAME}
+                test_persistent_worker_executor_bin
+                test_persistent_worker_sparse_bin)
+        add_test(
+                NAME ${TARGET_NAME}
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(${TARGET_NAME} PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 120)
+        add_test(
+                NAME ${TARGET_NAME}-doorbell-stress
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --doorbell-stress
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                        100)
+        set_tests_properties(${TARGET_NAME}-doorbell-stress PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 120)
+        add_test(
+                NAME ${TARGET_NAME}-sparse-owner
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(${TARGET_NAME}-sparse-owner PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 120)
+        add_test(
+                NAME ${TARGET_NAME}-sparse-owner-stress
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --doorbell-stress
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                        100)
+        set_tests_properties(${TARGET_NAME}-sparse-owner-stress PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 120)
+        add_test(
+                NAME ${TARGET_NAME}-sparse-progress
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --sparse-progress
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_sparse.rxbin)
+        set_tests_properties(${TARGET_NAME}-sparse-progress PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 30)
+        add_test(
+                NAME ${TARGET_NAME}-native-return
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        CREXX_VM_E5_FORCE_SPARSE_OWNER=1
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --native-return
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin)
+        set_tests_properties(${TARGET_NAME}-native-return PROPERTIES
+                LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;native;lifecycle;${_crexx_e5_doorbell_platform_label}"
+                TIMEOUT 30)
+        if(WIN32)
+            add_test(
+                    NAME ${TARGET_NAME}-doorbell-fallback
+                    COMMAND ${CMAKE_COMMAND} -E env
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            $<TARGET_FILE:${TARGET_NAME}>
+                            --doorbell-fallback
+                            ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin)
+            set_tests_properties(
+                    ${TARGET_NAME}-doorbell-fallback PROPERTIES
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
+                    TIMEOUT 30)
+            add_test(
+                    NAME ${TARGET_NAME}-fallback
+                    COMMAND ${CMAKE_COMMAND} -E env
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            $<TARGET_FILE:${TARGET_NAME}>
+                            ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+            set_tests_properties(${TARGET_NAME}-fallback PROPERTIES
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
+                    TIMEOUT 120)
+            add_test(
+                    NAME ${TARGET_NAME}-fallback-stress
+                    COMMAND ${CMAKE_COMMAND} -E env
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            $<TARGET_FILE:${TARGET_NAME}>
+                            --doorbell-stress
+                            ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                            100)
+            set_tests_properties(${TARGET_NAME}-fallback-stress PROPERTIES
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;race;lifecycle;windows"
+                    TIMEOUT 120)
+            add_test(
+                    NAME ${TARGET_NAME}-sparse-progress-fallback
+                    COMMAND ${CMAKE_COMMAND} -E env
+                            CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                            CREXX_VM_E5_WINDOWS_APC_FORCE_UNAVAILABLE=1
+                            $<TARGET_FILE:${TARGET_NAME}>
+                            --sparse-progress
+                            ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_sparse.rxbin)
+            set_tests_properties(
+                    ${TARGET_NAME}-sparse-progress-fallback PROPERTIES
+                    LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;windows"
+                    TIMEOUT 30)
+        endif()
+    endfunction()
+
+    add_executable(persistent_worker_executor-rxvml
+            tests/test_persistent_worker_executor.c
+            rxvmexecutor.c)
+    target_link_libraries(persistent_worker_executor-rxvml rxvml)
+    crexx_configure_persistent_worker_executor(persistent_worker_executor-rxvml)
+
+    add_executable(persistent_worker_executor-rxbvml
+            tests/test_persistent_worker_executor.c
+            rxvmexecutor.c)
+    target_link_libraries(persistent_worker_executor-rxbvml rxbvml)
+    target_compile_definitions(persistent_worker_executor-rxbvml PRIVATE NTHREADED=1)
+    crexx_configure_persistent_worker_executor(persistent_worker_executor-rxbvml)
+
+    if(CREXX_THREADED_VM_SUPPORTED)
+        add_executable(persistent_worker_executor-rxtvml
+                tests/test_persistent_worker_executor.c
+                rxvmexecutor.c
+                rxvml.c
+                $<TARGET_OBJECTS:rxtvm_core_objects>)
+        target_link_libraries(persistent_worker_executor-rxtvml
+                rxvmplugin mc_decimal_manual avl_tree rxpa rxvmref rxbin)
+        crexx_enable_vm_platform(persistent_worker_executor-rxtvml)
+        if(CREXX_VM_PROFILING)
+            target_compile_definitions(persistent_worker_executor-rxtvml PRIVATE
+                    CREXX_VM_PROFILING=1)
+        endif()
+        crexx_configure_persistent_worker_executor(persistent_worker_executor-rxtvml)
+    endif()
+endif()
+
 # Archive-link regression test for manual db_decimal packaging.
 if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
     add_executable(test_db_decimal_archive_link

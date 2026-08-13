@@ -1,0 +1,53 @@
+2026-08-12T14:39:38Z
+ 15:39:38 up 5 days, 23:50,  1 user,  load average: 2.87, 4.53, 5.21
+2.87 4.53 5.21 1/864 479787
+               total        used        free      shared  buff/cache   available
+Mem:            18Gi       6.0Gi       1.3Gi       3.0Gi        14Gi        12Gi
+Swap:          8.0Gi        85Mi       7.9Gi
+balanced
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver=intel_pstate
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=powersave
+/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference=balance_performance
+/sys/devices/system/cpu/intel_pstate/status=active
+/sys/devices/system/cpu/intel_pstate/no_turbo=0
+/sys/class/thermal/thermal_zone0/temp=27800
+/sys/class/thermal/thermal_zone1/temp=91000
+    PID STAT COMMAND         %CPU %MEM COMMAND
+ 382114 Sl   ChatGPT         61.3  4.0 /usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --ozone-platform=x11 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1786072401814317 --launch-time-ticks=460228249852 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,14037198916665697924,4612804999373228686,2097152 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708990997080739
+ 381836 Sl   ChatGPT         51.2  1.2 /usr/lib/chatgpt/ChatGPT --type=gpu-process --ozone-platform=x11 --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAASAAAAAAAAAABAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAEAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --metrics-shmem-handle=4,i,6381874521900289617,15003976515349749371,262144 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708988185955192
+ 381786 Sl   ChatGPT         10.9  2.8 /usr/lib/chatgpt/ChatGPT
+ 382131 Sl   codex            6.3  1.1 /usr/lib/chatgpt/resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled
+ 444162 I    kworker/2:1-i91  1.8  0.0 [kworker/2:1-i915-unordered]
+ 382113 Sl   ChatGPT          1.3  1.7 /usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --ozone-platform=x11 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=6 --time-ticks-at-unix-epoch=-1786072401814317 --launch-time-ticks=460228246335 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,2418936657378598294,9080825047425391578,2097152 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708991934122588
+   6115 Ssl  gnome-shell      1.1  1.6 /usr/bin/gnome-shell --mode=ubuntu
+ 389857 Sl   codex-code-mode  0.7  0.0 /usr/lib/chatgpt/resources/codex-code-mode-host
+ 444676 I    kworker/u32:1-e  0.4  0.0 [kworker/u32:1-events_unbound]
+ 466582 I    kworker/u32:0-f  0.4  0.0 [kworker/u32:0-flush-259:0]
+ 467780 I    kworker/u32:3-e  0.3  0.0 [kworker/u32:3-events_power_efficient]
+ 470550 I    kworker/u32:2-m  0.1  0.0 [kworker/u32:2-mt76]
+ 381838 Sl   ChatGPT          0.1  0.6 /usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-GB --service-sandbox-type=none --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,6813355138652312527,996030927328187771,524288 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708989122997041
+   9302 Sl   Xwayland         0.1  0.6 /usr/bin/Xwayland :0 -rootless -noreset -accessx -core -auth /run/user/1000/.mutter-Xwaylandauth.VRU0T3 -listenfd 4 -listenfd 5 -displayfd 6 -initfd 7 -byteswappedclients -enable-ei-portal
+ 477011 I    kworker/1:1-eve  0.1  0.0 [kworker/1:1-events]
+ 381848 Sl   ChatGPT          0.1  0.3 /usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-GB --service-sandbox-type=utility --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,15545906505020179543,11473741071859138083,524288 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708990060038890
+ 433240 I    kworker/0:2-eve  0.1  0.0 [kworker/0:2-events]
+ 424086 I    kworker/5:2-i91  0.0  0.0 [kworker/5:2-i915-unordered]
+ 394283 I    kworker/3:0-i91  0.0  0.0 [kworker/3:0-i915-unordered]
+b6edf2556f2411fe5033049e32ee77ddd9a2e15f
+b6edf2556f2411fe5033049e32ee77ddd9a2e15f
+295a6d886b33b161e57d71bc641970e394f58f66
+ M interpreter/CMakeLists.txt
+ M interpreter/interrupt.c
+ M interpreter/rxvmexecutor.c
+?? performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/
+?? performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/
+9e6ee34a19675377f9a6f3bbbaa7dfbf0871ebd182cbfe0f2b422ac5b2f23050  /tmp/crexx-e4-linux-clang-control-release/bin/rxbvm
+2bdf42881b27ee14a65682ba76e87b30aebfe2194ec763de0dd999d95264c8c5  /tmp/crexx-e4-linux-clang-control-release/bin/rxtvm
+1311cacd7ac32586317b3209738d53f601945f35251f1b8adc0104e7dffadfea  /tmp/crexx-mthread-linux-clang-release/bin/rxbvm
+7a1b45d0e59a6aac2bff1e31a9c5a5f9c25c6106cbdda9de9c57f03f0e3d7154  /tmp/crexx-mthread-linux-clang-release/bin/rxtvm
+625bfc2c210ec40558b2cfef4bbb05c64c51aab4a1d46a8510b94c0a7fed0815  /tmp/crexx-mthread-linux-clang-release/bin/crexx
+987e6bd3b9828d32c90f624a2768b66612bc0b79ce123d9030e4bf34a9f2d922  /tmp/crexx-mthread-linux-clang-release/bin/library.rxbin
+a9db0e5dc96ab05fd3b78471fedc4bb641555d8b5c209ae33b1a2f80e8dc9d06  /tmp/crexx-mthread-linux-clang-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+714cd35e4c4353d3d5d6beba170c9437b71d398c21c5f78381092b657d1e5ed0  /tmp/crexx-mthread-linux-clang-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin
+e7e24bdbd42f41d957bc0213d375423491748bee60e6898e2b4c32d1890b7a8f  /tmp/crexx-mthread-linux-clang-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx
+a8cc10945c905242a33cf9adf305e1bc1040226548e6fa835b65db541198ec0f  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/manifest.txt

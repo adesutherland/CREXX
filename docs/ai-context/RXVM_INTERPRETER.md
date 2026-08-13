@@ -591,6 +591,70 @@ RXAS, RXBIN, plugin ABI or canonical-image change. Sharing the current `module`
 or prepared image behind locks, mutating a published generation in place, and
 treating a raw file mapping as the complete solution remain rejected.
 
+### Gate E5 native doorbell and sparse fallback
+
+The private macOS PoC proves prompt foreign-thread cancellation without adding
+a poll, worker-count test, targetability branch, atomic read or loop selector to
+the accepted E4 dispatch edge. A test-only persistent executor gives each
+worker its own context and E4 sealed-generation overlay. A producer publishes
+the request state under the request mutex and uses `pthread_kill()` with private
+`SIGURG` to ring the selected worker. The signal handler performs only a
+bounded lookup of a pre-registered worker stack range and ORs `RXSIGNAL_CANCEL`
+into that worker's existing execution-local `sig_atomic_t` interrupt word. The
+next ordinary E4 dispatch check enters the existing cold interrupt route.
+
+The executor blocks the private signal while a worker is idle, while
+`rxvm_signal_enter_execution()` publishes its current stack-local interrupt
+word, while `rxvm_signal_leave_execution()` restores a nested predecessor and
+during teardown. A late pending doorbell is drained while the request mutex is
+still the arm/disarm authority, preventing it from cancelling the next request
+on the persistent VM. Apple Clang TLS is deliberately absent from the handler:
+the rejected TLS form emitted a Mach-O TLV resolver call. The retained fixed
+64-slot stack-range scan has no handler call, allocation, log, lock or runtime
+graph traversal.
+
+This is a physical-delivery proof, not an installed executor, public worker
+API, portable signal backend or completed cancellation protocol. Direct
+`CANCEL` is a stand-in for the industrial design: production must first publish
+a correlated mailbox event and generation, then use one internal doorbell bit
+to enter the cold route, validate the active request, drain all published work
+and preserve `KILL`/shutdown priority.
+
+The portable owner model distinguishes targetability from native-delivery
+capability. Non-targetable/local contexts always use the unchanged E4 owner.
+Targetable workers use that same E4 owner when POSIX thread signals or Windows
+special APCs provide prompt native delivery. Only a targetable worker without
+native delivery selects a second owner, immutably and before its execution
+image is prepared; an executing worker never changes owners.
+
+That compatibility owner is sparse, not an every-instruction polling switch.
+It acquire-loads the stable external event word at request entry, taken
+backedges (including resolved indirect/table backedges), bytecode call and
+return boundaries, and after a native/plugin call returns to bytecode. These
+points cover loops and recursion while leaving forward finite instruction runs
+unpolled. An uncooperative native/plugin call remains uninterruptible while it
+is executing. The original sparse experiment was functionally effective, but
+its source and exact opcode ledger were not retained. The current semantic
+classification and provenance are recorded in
+`performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md` and must be kept aligned
+with `rxops.h` and private execution-image rewrites.
+
+The Windows 11 PoC now qualifies this owner under MinGW GCC, MSVC and Clang
+with the MSVC ABI. The exact sparse fixture covers conditional, counted and
+indirect backedges plus every bytecode return form; the persistent-worker
+fixture covers unconditional-loop and recursive-call cancellation, worker
+reuse, stress and teardown. The forced-fallback latency floor is 2.9-3.0 us
+median over 1,000 samples per concrete engine on the qualification host.
+The four core products build in each compiler configuration. The MSVC and
+Clang/MSVC-ABI builds disable the optional parser-mode dependency because its
+sibling project remains POSIX-only; that does not change VM qualification.
+
+`rxinimod_common()` must initialize `active.compatibility_interrupts` to NULL.
+Callers are not required to zero stack or malloc-backed `rxvm_context` storage,
+and an indeterminate value selects the sparse owner and is dereferenced on
+request entry. `test_rxvmactive` deliberately poisons the context before
+initialization to enforce this invariant.
+
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or

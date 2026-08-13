@@ -75,6 +75,7 @@ RXVM_HANDLER(CALL_FUNC,
                                        signal_value);
             RXVM_INSTRUMENTATION_NATIVE_END();
             INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
+            RXVM_EXTERNAL_SAFEPOINT();
         } else {
             temp_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
             if (!temp_frame) {

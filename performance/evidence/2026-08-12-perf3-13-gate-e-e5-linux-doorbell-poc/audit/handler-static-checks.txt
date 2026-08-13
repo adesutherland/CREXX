@@ -1,0 +1,83 @@
+PERF3-13 E5 Linux handler closure checks
+Handler symbol size: 0x5f (95 bytes); executed offsets are 0x0..0x5e.
+The reachable-function closure is the handler itself because it contains no call instruction.
+
+=== /tmp/crexx-mthread-linux-release/interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o ===
+0000000000000000 <rxvm_thread_doorbell_poc_handler>:
+       0:	f3 0f 1e fa          	endbr64
+       4:	c6 44 24 ff 00       	movb   $0x0,-0x1(%rsp)
+       9:	83 ff 17             	cmp    $0x17,%edi
+       c:	75 3b                	jne    49 <rxvm_thread_doorbell_poc_handler+0x49>
+       e:	48 8d 3d 00 00 00 00 	lea    0x0(%rip),%rdi        # 15 <rxvm_thread_doorbell_poc_handler+0x15>	11: R_X86_64_PC32	.bss+0xdc
+      15:	48 8d 74 24 ff       	lea    -0x1(%rsp),%rsi
+      1a:	31 d2                	xor    %edx,%edx
+      1c:	48 89 f8             	mov    %rdi,%rax
+      1f:	8b 08                	mov    (%rax),%ecx
+      21:	85 c9                	test   %ecx,%ecx
+      23:	74 2b                	je     50 <rxvm_thread_doorbell_poc_handler+0x50>
+      25:	48 3b 70 10          	cmp    0x10(%rax),%rsi
+      29:	72 25                	jb     50 <rxvm_thread_doorbell_poc_handler+0x50>
+      2b:	48 3b 70 18          	cmp    0x18(%rax),%rsi
+      2f:	73 1f                	jae    50 <rxvm_thread_doorbell_poc_handler+0x50>
+      31:	48 8d 04 92          	lea    (%rdx,%rdx,4),%rax
+      35:	48 8b 44 c7 20       	mov    0x20(%rdi,%rax,8),%rax
+      3a:	48 85 c0             	test   %rax,%rax
+      3d:	74 0a                	je     49 <rxvm_thread_doorbell_poc_handler+0x49>
+      3f:	8b 10                	mov    (%rax),%edx
+      41:	81 ca 00 00 02 00    	or     $0x20000,%edx
+      47:	89 10                	mov    %edx,(%rax)
+      49:	c3                   	ret
+      4a:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+      50:	48 83 c2 01          	add    $0x1,%rdx
+      54:	48 83 c0 28          	add    $0x28,%rax
+      58:	48 83 fa 40          	cmp    $0x40,%rdx
+      5c:	75 c1                	jne    1f <rxvm_thread_doorbell_poc_handler+0x1f>
+      5e:	c3                   	ret
+      5f:	90                   	nop
+RESULT=PASS calls=0 segment_tls_accesses=0 plt_refs=0 stack_chk_refs=0 allocation_lock_log_refs=0
+First two .rela.text entries (the second is already beyond the handler):
+Relocation section '.rela.text' at offset 0x21e0 contains 164 entries:
+    Offset             Info             Type               Symbol's Value  Symbol's Name + Addend
+0000000000000011  0000000300000002 R_X86_64_PC32          0000000000000000 .bss + dc
+0000000000000084  0000000300000002 R_X86_64_PC32          0000000000000000 .bss + afc
+
+=== /tmp/crexx-mthread-linux-release/interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o ===
+0000000000000000 <rxvm_thread_doorbell_poc_handler>:
+       0:	f3 0f 1e fa          	endbr64
+       4:	c6 44 24 ff 00       	movb   $0x0,-0x1(%rsp)
+       9:	83 ff 17             	cmp    $0x17,%edi
+       c:	75 3b                	jne    49 <rxvm_thread_doorbell_poc_handler+0x49>
+       e:	48 8d 3d 00 00 00 00 	lea    0x0(%rip),%rdi        # 15 <rxvm_thread_doorbell_poc_handler+0x15>	11: R_X86_64_PC32	.bss+0xdc
+      15:	48 8d 74 24 ff       	lea    -0x1(%rsp),%rsi
+      1a:	31 d2                	xor    %edx,%edx
+      1c:	48 89 f8             	mov    %rdi,%rax
+      1f:	8b 08                	mov    (%rax),%ecx
+      21:	85 c9                	test   %ecx,%ecx
+      23:	74 2b                	je     50 <rxvm_thread_doorbell_poc_handler+0x50>
+      25:	48 3b 70 10          	cmp    0x10(%rax),%rsi
+      29:	72 25                	jb     50 <rxvm_thread_doorbell_poc_handler+0x50>
+      2b:	48 3b 70 18          	cmp    0x18(%rax),%rsi
+      2f:	73 1f                	jae    50 <rxvm_thread_doorbell_poc_handler+0x50>
+      31:	48 8d 04 92          	lea    (%rdx,%rdx,4),%rax
+      35:	48 8b 44 c7 20       	mov    0x20(%rdi,%rax,8),%rax
+      3a:	48 85 c0             	test   %rax,%rax
+      3d:	74 0a                	je     49 <rxvm_thread_doorbell_poc_handler+0x49>
+      3f:	8b 10                	mov    (%rax),%edx
+      41:	81 ca 00 00 02 00    	or     $0x20000,%edx
+      47:	89 10                	mov    %edx,(%rax)
+      49:	c3                   	ret
+      4a:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+      50:	48 83 c2 01          	add    $0x1,%rdx
+      54:	48 83 c0 28          	add    $0x28,%rax
+      58:	48 83 fa 40          	cmp    $0x40,%rdx
+      5c:	75 c1                	jne    1f <rxvm_thread_doorbell_poc_handler+0x1f>
+      5e:	c3                   	ret
+      5f:	90                   	nop
+RESULT=PASS calls=0 segment_tls_accesses=0 plt_refs=0 stack_chk_refs=0 allocation_lock_log_refs=0
+First two .rela.text entries (the second is already beyond the handler):
+Relocation section '.rela.text' at offset 0x21e0 contains 164 entries:
+    Offset             Info             Type               Symbol's Value  Symbol's Name + Addend
+0000000000000011  0000000300000002 R_X86_64_PC32          0000000000000000 .bss + dc
+0000000000000084  0000000300000002 R_X86_64_PC32          0000000000000000 .bss + afc
+
+Interpretation: each handler range has exactly one relocation: a PC-relative .bss reference to the fixed slot array. There is no function relocation. Active loads and the pending-word OR/store are inline x86-64 instructions.

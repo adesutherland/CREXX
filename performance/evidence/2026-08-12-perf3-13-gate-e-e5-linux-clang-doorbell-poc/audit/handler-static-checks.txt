@@ -1,0 +1,33 @@
+PERF3-13 E5 Linux Clang signal-handler generated-code audit
+
+Compiler: Ubuntu Clang 21.1.8 (6ubuntu1), x86_64-pc-linux-gnu
+Candidate objects:
+  /tmp/crexx-mthread-linux-clang-release/interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+  /tmp/crexx-mthread-linux-clang-release/interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+
+Both objects have SHA-256 b00798a8529f89366e34f61ca3966ffab59534346fb43cb156bea852f483958c.
+The local handler symbol is 0x72 (114) bytes at object offset 0x450.
+
+PASS findings:
+- The complete object and linked-handler disassemblies contain no call/callq,
+  PLT transfer, indirect transfer, allocation, free, lock, logging, libc call,
+  TLS resolver, stack-canary access, or unexpected runtime access.
+- The handler has only two relocations, both R_X86_64_PC32 references to the
+  fixed .bss slot array. There is no function, PLT, GOT-TLS, TLSGD, TPOFF or
+  __tls_get_addr relocation in the handler.
+- Clang emits the lock-free active load inline. It unrolls the 64-slot scan two
+  slots at a time, identifies the current worker using the address of its own
+  one-byte stack marker, loads the already-published pending pointer, and rings
+  E4 with the direct instruction `orl $0x20000,(%rax)` before returning.
+- rxbvm and rxtvm linked handlers have the same 114-byte instruction stream
+  apart from ordinary link addresses.
+- The interrupt object as a whole imports pthread, signal, mutex, memory and
+  logging routines for non-handler setup/teardown paths. None is reachable
+  from the handler: the handler has no transfer to any function and its only
+  relocations are the two fixed-array data references described above.
+- Linux stack discovery uses pthread_getattr_np(), pthread_attr_getstack() and
+  pthread_attr_destroy() before handler exposure, outside the signal handler.
+  Those calls are not present in or reachable from the handler.
+
+Raw evidence: interrupt-disassembly.txt and interrupt-symbols-relocations.txt.
+

@@ -1,0 +1,22 @@
+2026-08-12T13:27:38Z
+HEAD=b6edf2556f2411fe5033049e32ee77ddd9a2e15f
+origin_mthread=b6edf2556f2411fe5033049e32ee77ddd9a2e15f
+branch=mthread
+e4_control=295a6d886b33b161e57d71bc641970e394f58f66
+--- git status --short ---
+ M interpreter/CMakeLists.txt
+ M interpreter/interrupt.c
+ M interpreter/rxvmexecutor.c
+?? performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/
+--- git diff --stat ---
+ interpreter/CMakeLists.txt |  13 ++++--
+ interpreter/interrupt.c    | 104 +++++++++++++++++++++++++++++++++++----------
+ interpreter/rxvmexecutor.c |   3 +-
+ 3 files changed, 92 insertions(+), 28 deletions(-)
+--- git diff --check ---
+acceptance=Adrian accepted GCC as a physical-PoC pass on 2026-08-12
+performance_disposition=overall noisy/inconclusive; not guard-clean; no demonstrated harm at PoC precision
+recommendation=retain private Linux backend and proceed to Windows proof
+next_timing_requirement=reboot, thermally settle and reserve a quiet host
+post_acceptance_affected_debug_build=PASS
+post_acceptance_broad_debug=INCOMPLETE_HOST_TIMEOUT; stopped at 37/2039 after 1500s artifact-fixture and 120s parser-contract timeouts; no E5 failure observed

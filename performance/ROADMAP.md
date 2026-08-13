@@ -68,8 +68,72 @@ matrix is neutral: only `rxbvm` Sieve is clearly adverse at +0.374%, inside the
 3% guard; lifecycle, RSS and artifact guards remain clear. Mac closeout passes
 focused Debug 11/11, Apple ASan 3/3, full Debug 2,037/2,037 and focused Release
 11/11. Rebuilt Release VMs are byte-identical to the accepted timing artifacts.
-E4 is complete on Mac. Portable proof, E5/E6, public workers/channels and Gate F
-remain separately gated.
+E4 was complete on Mac at this point; portable proof, E5/E6, public
+workers/channels and Gate F were then separately gated.
+
+Adrian then approved a bounded E5 carrier investigation and selected the clean
+macOS native-doorbell PoC for a separate `mthread` branch. A producer targets a
+persistent worker with `pthread_kill(SIGURG)`; a bounded Apple handler ORs
+`CANCEL` into that worker's existing E4 execution-local interrupt word. No
+poll, targetability branch or loop selector is added to ordinary dispatch. The
+clean first verdict passes all 156 processes with no 3% guard hit, focused
+Debug/Release pass 3/3 and both engines complete 1,000 cancellations at 6 us
+median latency. Full Debug passes 2,039/2,039, fresh supported Apple
+AddressSanitizer passes 3/3 and the complete profiling-off Release build plus
+combined E4/E5 focused panel passes 6/6. This proves physical delivery only.
+The POSIX proof now also passes on Intel Linux with GCC and Clang: focused
+stress, 4,000 total cancellation samples, handler/reachable-code audit and the
+unchanged generated E4 `run` edge pass. The hot and loaded host makes both
+E4-versus-PoC campaigns overall noisy/inconclusive; Adrian accepts them as a
+physical-PoC pass with no demonstrated harm at PoC precision, not as a
+guard-clean production claim. The affected GCC Debug targets rebuilt after
+acceptance, but a broad 2,039-test closeout was stopped at 37 tests after
+generated-artifact and parser-contract timeouts on the same stressed host; it
+is incomplete host-capacity evidence, not an E5 failure or broad pass. Future
+compiler/performance selection and broad Linux closeout begin after reboot on
+a settled, quiet, reserved host. The later industrial E5 closure accepts this
+Linux evidence without repetition; Linux ARM64 testing is not required for E5.
+
+The Windows 11 investigation has now proved the special-APC physical carrier
+and completed the corrected fallback-owner PoC. Non-targetable/local execution and
+native-deliverable targetable workers retain E4. Only a targetable worker on a
+host without prompt native delivery selects the sparse owner before
+preparation. The first every-instruction outlined-switch reconstruction passed
+focused cancellation correctness but is rejected at roughly 64%/102%
+`rxbvm`/`rxtvm` forced-fallback slowdown and about 11% product growth. The
+functionally effective macOS sparse learning is therefore restored as the
+fallback direction: request entry, taken static/indirect backedges, call and
+return boundaries, and native/plugin return. Its exact old source/opcode ledger
+was not retained, so the current implementation carries an explicit semantic
+instruction audit and RXAS progress fixture. GCC Release and Clang/MSVC-ABI
+Debug pass 19/19 focused tests; MSVC Debug passes 13/13. GCC forced-fallback
+latency is 2.9-3.0 us median over 1,000 samples per concrete engine. The
+targetable fallback costs +16.09%/+14.89% paired mean/median in `rxbvml` and
++5.69%/+5.07% in `rxtvml`; the E4 owner for non-targetable and native-capable
+  execution is unchanged. The duplicate owner adds the accepted 19.4-20.0%
+  product size. All four core products build under GCC, MSVC and Clang/MSVC-ABI,
+  and each `rxc` compiles the former access-violation reproducer optimized and
+  no-opt. The two MSVC-ABI builds disable the optional parser-mode dependency,
+  whose sibling source still includes POSIX `unistd.h`; MinGW GCC validates the
+  default parser-enabled configuration.
+
+Adrian accepted the industrial E5 implementation and its cleared-host Release
+verdict on 2026-08-13. The private executor integrates correlated generation
+mailboxes, copied logical integer/string requests, typed integer completion,
+deterministic cancellation/deadline/kill/shutdown priority, quarantine and
+join with the selected native and sparse carriers. `rxbvml` is favourable or
+neutral; `rxtvml` records accepted +4.218% direct, +3.549% one-worker and
++3.013% two-worker paired-mean elapsed costs. The programme has exhausted the
+carrier alternatives, and the sparse solution is slower and structurally less
+desirable, so the computed-goto/multithreading loss is accepted rather than
+reopened. Mac QA passes focused normal and Apple ASan checks, complete Debug
+and Release builds, 2,055/2,056 broad Debug tests plus a clean serial recovery
+of the sole parser-thread timeout, and 22/22 focused Release checks after an
+initializer repair found by the broad sweep. Existing Linux and Windows
+evidence is accepted; Linux/Windows ARM testing is not required. E6, public
+workers/channels, Gate F, commit and publication remain separately gated.
+Evidence:
+[`E5 industrial closeout`](evidence/2026-08-13-perf3-13-gate-e-e5-industrial-closeout/).
 
 C1abc emits the exact measured C1a+C1b Richards program and C1c Towers
 program. The accepted R1 paired medians are 53.55%/52.57% lower Richards
@@ -469,7 +533,7 @@ their recorded trigger fires:
 | PERF3-12C | P1 | Dynamic PARSE planning, invariant hoisting and transactional result placement | comparative PoC complete — RXC late constant re-plan recommended; production approval pending | Peter's commits correctly add the unprefixed `(variable)` delimiter used by canonical RexxCPS, but they do not implement issue 667's exact `=(start)` / `+(length)` syntax, which still fails RXC validation. In the optimized benchmark, RXC already folds the complete dynamic plan and `p0 = "b"` to a string literal, so a strengthened hand-hoist gains only +1.33%/+2.17% median CPS on `rxtvm`/`rxbvm`. Letting the existing planner see that constant and emit `parseplan` gains +314.46%/+298.03%, while equal-work counts fall 775,479,029 -> 53,199,057 (-93.14%) and eliminate 1.12M `parseExec` plus 6.72M stream-decoder calls. Prefer a late RXC constant specialization; keep a prepared-topology/runtime-operands design for truly changing delimiters behind a separate architecture gate. Canonical source and production code remain unchanged. Control: [`PERF3-12C-WORKLIST.md`](PERF3-12C-WORKLIST.md); evidence: [`2026-08-08-perf3-12c-dynamic-parse-poc`](evidence/2026-08-08-perf3-12c-dynamic-parse-poc/). |
 | PERF3-12D | P1 | Exit-owned compiled pattern processing for PARSE, regex and PEG foundations | complete — integrated on develop | The certified exit lowers bounded runtime-delimiter and issue-667 dynamic-position forms to existing `strpos`/`substring`/integer/branch operations with no new opcode and retires generated `parseExec` use. The opening PoC improved one million parses by 16.18x/16.44x and fresh canonical RexxCPS by 4.33x/4.23x versus retained E0. The reported 2.20%/2.62% H02 regression is retracted because it crossed rebuilt runtime products. A corrected frozen-product 40-round matrix now crosses optimized RXC before/after internal-binding metadata suppression with old/new RXAS and a matched `scopy` control. Metadata suppression alone is neutral. Direct reuse versus the matching metadata-free old RXAS improves median CPS by 0.571%/0.595% on `rxtvm`/`rxbvm`; the complete change versus the original metadata-retaining old RXAS is +0.436%/+0.147%, a small positive tendency. Direct reuse removes 420,000 executed instructions (-1.326581%) and shrinks the retained canonical RXBIN 76,033 -> 73,161 bytes (-3.777307%). An enlarged 80-pair fallback panel and 120-pair combined sensitivity check do not prove `link` faster than `scopy`. Adrian selected direct reuse for internal bindings and a fail-closed, alias-lifetime-proved `link` fallback for metadata-visible exact registers on 2026-08-08, because avoiding payload copies should scale better for large strings and later binary/object values. The isolated implementation is `ef6e3fd77`; develop integration retains the existing inline RXAS queue snapshots and growth-time re-pinning with no per-record allocation. Final merged qualification passes full Debug and Release builds, 20/20 focused Release PARSE/RXAS/RXQUEUE tests, and full Debug CTest at 2,002/2,002. All 720 new recorded performance processes pass. Current instructions remain sufficient; no new instruction is justified. A packed `.binary` E2, generic string/binary/object internal-binding reuse and any E3 instruction remain separate gates. Control: [`PERF3-12D-WORKLIST.md`](PERF3-12D-WORKLIST.md); opening evidence: [`2026-08-08-perf3-12d-existing-instruction-poc`](evidence/2026-08-08-perf3-12d-existing-instruction-poc/); register verdict: [`2026-08-08-perf3-12d-register-reuse-verdict`](evidence/2026-08-08-perf3-12d-register-reuse-verdict/). |
 | DECIMAL-01 | P1 independent | Decimal-provider correctness and performance engineering | active — repair accepted; Gate 1 harness qualified; awaiting host reservation | Individual and combined numeric-context state/parity remains green. Adrian accepted repairs applying `DIGITS - FUZZ` comparison precision in both providers, routing `db_decimal` through the shared REXX form/case formatter, and selecting explicit Common half-even versus Classic half-up rounding. Debug and ordinary profiling-off Release pass 9/9 focused tests plus 6/6 observable provider/VM cells. The Gate 1 L1-L3 harness, exact provider/context checksum matrix and draft publishable CDB-1 arithmetic core are prepared; 81/81 selected Release qualification tests pass, including final-RXBIN integrity checks for compiler-on/RXAS-on, identical compiler-on/RXAS-off and full no-opt images, with elapsed values discarded. No performance timing ran and none may start without an Adrian-confirmed exclusive host reservation. Control: [`performance/decimal`](decimal/); worklist: [`DECIMAL-01-WORKLIST.md`](decimal/DECIMAL-01-WORKLIST.md); Gate 1 cells: [`GATE1-CELL-MATRIX.md`](decimal/GATE1-CELL-MATRIX.md); benchmark specification: [`CREXX-DECIMAL-BENCHMARK.md`](decimal/CREXX-DECIMAL-BENCHMARK.md); opening evidence: [`2026-08-05-decimal-01-rxas-numctx-opening`](evidence/2026-08-05-decimal-01-rxas-numctx-opening/); repair verdict: [`2026-08-05-decimal-01-numctx-repair-verdict`](evidence/2026-08-05-decimal-01-numctx-repair-verdict/). |
-| PERF3-13 / CAP-06 | P0 | RXVM allocator, value-shape and worker-communication foundation | Gate E E4 complete on Mac; E5/E6, portable proof and Gate F closed | Gate C selected the 176-byte L32SDH value; Gate D industrialised worker slabs; EF-0 and E1/E2 established explicit worker memory, lifecycle and active-state ownership. E3 preserves the legacy RXPA ABI while adding process-reentrant opt-in, branch-free load-selected invocation, optional per-VM sessions and ODBC as the industrial external-resource example; its final ODBC-enabled Debug suite passes 2,034/2,034. E4a retains the repeatable independent-load control. E4b implements a runtime-owned bytecode-only catalogue of reference-counted append-only sealed generations with worker-owned globals/procedure/frame/execution/binding/cache overlays. It removes the complete 2,480-byte audited duplicate floor across two contexts while retaining the 569-byte worker-overlay floor. The accepted single-worker verdict is guard-clean; Mac closeout passes focused Debug 11/11, Apple ASan 3/3, full Debug 2,037/2,037 and focused Release 11/11 with byte-identical verdict VMs. Linux, Windows and clean-runner ODBC proof remains a publication follow-up; E5/E6, public workers/channels and Gate F require separate approval. The later Gate F value remains a logical scalar/binary register image with ordered child-register images, never an internal `value *`. Control: [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); E4b evidence: [`sealed-generation verdict and closeout`](evidence/2026-08-11-perf3-13-gate-e-e4b-first-release-verdict/); E4a evidence: [`independent-load control`](evidence/2026-08-11-perf3-13-gate-e-e4a-independent-load-control/); P2 verdict: [`session-aware verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict/); accepted E3b-P1 verdict: [`branch-free production verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/); E3a verdict: [`provider ownership verdict`](evidence/2026-08-10-perf3-13-gate-e-e3a-first-release-verdict/); baseline: [`current Gate E baseline`](evidence/2026-08-10-perf3-13-e3-current-baseline/). |
+| PERF3-13 / CAP-06 | P0 | RXVM allocator, value-shape and worker-communication foundation | Gate E E5 industrial implementation and Mac QA complete; publication gated | Gate C selected the 176-byte L32SDH value; Gate D industrialised worker slabs; EF-0 and E1/E2 established explicit worker memory, lifecycle and active-state ownership. E3 preserves the legacy RXPA ABI while adding process-reentrant opt-in, branch-free load-selected invocation, optional per-VM sessions and ODBC as the industrial external-resource example; its final ODBC-enabled Debug suite passes 2,034/2,034. E4a retains the repeatable independent-load control. E4b implements a runtime-owned bytecode-only catalogue of reference-counted append-only sealed generations with worker-owned globals/procedure/frame/execution/binding/cache overlays. It removes the complete 2,480-byte audited duplicate floor across two contexts while retaining the 569-byte worker-overlay floor. The accepted single-worker verdict is guard-clean; Mac closeout passes focused Debug 11/11, Apple ASan 3/3, full Debug 2,037/2,037 and focused Release 11/11 with byte-identical verdict VMs. E5 integrates the POSIX and Windows native carriers plus the targetable-only sparse fallback with a correlated mailbox, copied logical register image, typed completion and deterministic cancellation/deadline/kill/shutdown lifecycle. The every-instruction fallback is rejected. Adrian accepts the cleared-host `rxtvml` computed-goto slowdown and existing Linux/Windows evidence; Mac QA is complete after a guarded initializer repair. E6, public workers/channels, Gate F and publication require separate approval. The later Gate F value remains a logical scalar/binary register image with ordered child-register images, never an internal `value *`. Control: [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); E5 evidence: [`industrial closeout`](evidence/2026-08-13-perf3-13-gate-e-e5-industrial-closeout/), [`macOS`](evidence/2026-08-12-perf3-13-gate-e-e5-macos-doorbell-poc/), [`Linux GCC`](evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/) and [`Linux Clang/compiler comparison`](evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/); E4b evidence: [`sealed-generation verdict and closeout`](evidence/2026-08-11-perf3-13-gate-e-e4b-first-release-verdict/); E4a evidence: [`independent-load control`](evidence/2026-08-11-perf3-13-gate-e-e4a-independent-load-control/); P2 verdict: [`session-aware verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p2-first-release-verdict/); accepted E3b-P1 verdict: [`branch-free production verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/); E3a verdict: [`provider ownership verdict`](evidence/2026-08-10-perf3-13-gate-e-e3a-first-release-verdict/); baseline: [`current Gate E baseline`](evidence/2026-08-10-perf3-13-e3-current-baseline/). |
 | PERF3-13-E3B-I1 | P0 diagnostic | RXPA branch-free load binding and sticky legacy transition | complete — ceiling selected and production form accepted | The 65/65-process isolated proof puts the load-selected direct invoker at -0.489662% paired mean versus raw direct, with a 95% interval of -1.228728% to +0.249404% and no 3% guard hit. The locked invoker is clearly adverse by +20.117255%, supporting direct binding for one legacy-capable executor and one sticky quiescent rebind only when a second is published. The integrated candidate subsequently passed its 312-process guard set and Mac closeout. P2 sessions and Gate F remain outside this completed diagnostic. Control: [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); isolated evidence: [`branch-free invoker PoC`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-invoker-poc/); production evidence: [`accepted branch-free verdict`](evidence/2026-08-10-perf3-13-gate-e-e3b-p1-branch-free-first-release-verdict/). |
 | PERF3-13-F1 | P2 | Single-character `SCOPY` fast-path PoC | queued after M3; evidence gate only | First quantify one-character `SCOPY` incidence and static-site/value shapes across the representative portfolio. Only then compare the exact C ceiling and narrow implementation forms for an already-owned, already-capacious destination, preserving first-use allocation, empty/long strings, aliasing, UTF/cache/status/private flags, foreign/reference payloads and instrumentation. Measure branch cost on all copies, `run()` text/layout, ordinary Release timing, RSS and artifact size; do not optimize Base64 alone. V1-L01 did not select a fast path, and this entry authorizes no current VM change. |
 
@@ -846,8 +910,13 @@ separate qualified deficit at `0.390842x/0.389933x`. Evidence:
   ODBC as the industrial session example. E4a retains the independent-load
   correctness control, and E4b now implements the internal bytecode-only sealed
   immutable-generation/worker-overlay boundary with a guard-clean verdict and
-  Mac Debug/ASan/Release closeout. E5/E6 and Gate F remain deferred. Transport-
-  neutral channel semantics stay closed until the worker model is selected.
+  Mac Debug/ASan/Release closeout. E5 integrates the native POSIX and Windows
+  carriers plus the targetable-only sparse fallback with the private
+  correlated mailbox, copied logical register image and deterministic terminal
+  lifecycle. Adrian accepts the cleared-host computed-goto slowdown and the
+  existing Linux/Windows evidence; Mac QA is complete after its guarded
+  initializer repair. E6, Gate F and transport-neutral public channel semantics
+  remain deferred.
   Control:
   [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md); E1 evidence:
   [`2026-08-07-perf3-13-gate-e-e1-worker-shell`](evidence/2026-08-07-perf3-13-gate-e-e1-worker-shell/);
@@ -855,6 +924,8 @@ separate qualified deficit at `0.390842x/0.389933x`. Evidence:
   [`2026-08-07-perf3-13-gate-e-e1-p1-wrapper`](evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/);
   EF-0 evidence:
   [`2026-08-07-perf3-13-ef0-spawn-recovery`](evidence/2026-08-07-perf3-13-ef0-spawn-recovery/).
+  E5 closure evidence:
+  [`2026-08-13-perf3-13-gate-e-e5-industrial-closeout`](evidence/2026-08-13-perf3-13-gate-e-e5-industrial-closeout/).
 
 These lanes can proceed under their own authority but do not borrow PERF3
 performance approval or alter benchmark equivalence silently.

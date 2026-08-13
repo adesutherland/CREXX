@@ -1,0 +1,24 @@
+PERF3-13 E5 Linux evidence validation
+debug_rxvml_passes=20
+debug_rxbvml_passes=20
+debug_rxtvml_passes=20
+release_focused_passes=3
+rxbvm_latency_samples=1000
+rxtvm_latency_samples=1000
+performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/rxtvm-latency.log:E5_DOORBELL_LATENCY result=PASS samples=1000 min_ns=16123 median_ns=29583 p95_ns=69270 max_ns=227732
+performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/rxbvm-latency.log:E5_DOORBELL_LATENCY result=PASS samples=1000 min_ns=22365 median_ns=38817 p95_ns=80924 max_ns=160883
+timing total=156 warmup=12 recorded=144 nonpass=0
+timing-append-1 total=120 warmup=0 recorded=120 nonpass=0
+timing-append-2 total=120 warmup=0 recorded=120 nonpass=0
+final_summary_rows=6
+final_guard_hits=1
+final_clear_favorable=1
+final_noisy_inconclusive=5
+handler_checks:
+RESULT=PASS calls=0 segment_tls_accesses=0 plt_refs=0 stack_chk_refs=0 allocation_lock_log_refs=0
+RESULT=PASS calls=0 segment_tls_accesses=0 plt_refs=0 stack_chk_refs=0 allocation_lock_log_refs=0
+run_generated_checks:
+RESULT=PASS identical normalized run stream
+RESULT=PASS identical normalized run stream
+git_diff_check:
+RESULT=PASS evidence counts and retained outcome files are internally consistent

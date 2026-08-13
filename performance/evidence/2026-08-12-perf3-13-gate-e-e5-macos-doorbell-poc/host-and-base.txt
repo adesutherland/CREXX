@@ -1,0 +1,22 @@
+utc=2026-08-12T06:43:33Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Apple M5
+10
+295a6d886b33b161e57d71bc641970e394f58f66
+mthread
+ M docs/ai-context/RXVM_INTERPRETER.md
+ M interpreter/CMakeLists.txt
+ M interpreter/interrupt.c
+ M interpreter/rxsignal.h
+ M interpreter/rxvmintp.c
+ M performance/PERF3-13-WORKLIST.md
+ M performance/ROADMAP.md
+?? interpreter/rxvmexecutor.c
+?? interpreter/rxvmexecutor.h
+?? interpreter/tests/rexx/test_persistent_worker_executor.crexx
+?? interpreter/tests/test_persistent_worker_executor.c
+?? performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md
+?? performance/evidence/2026-08-12-perf3-13-gate-e-e5-macos-doorbell-poc/

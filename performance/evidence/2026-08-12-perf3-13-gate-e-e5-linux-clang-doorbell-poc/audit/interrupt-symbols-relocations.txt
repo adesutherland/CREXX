@@ -1,0 +1,29 @@
+[object hashes]
+b00798a8529f89366e34f61ca3966ffab59534346fb43cb156bea852f483958c  /tmp/crexx-mthread-linux-clang-release/interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+b00798a8529f89366e34f61ca3966ffab59534346fb43cb156bea852f483958c  /tmp/crexx-mthread-linux-clang-release/interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+[handler symbols]
+0000000000000450 0000000000000072 t rxvm_thread_doorbell_poc_handler
+00000000000000e0 0000000000000a00 b g_thread_doorbell_slots
+[handler-range relocations: 0x450..0x4c1]
+000000000000045d  0000001100000002 R_X86_64_PC32          0000000000000000 .bss + 11c
+00000000000004ad  0000001100000002 R_X86_64_PC32          0000000000000000 .bss + dc
+[undefined symbols in whole interrupt object; none reachable because handler has no call]
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+    20: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND pthread_mutex_lock
+    21: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND pthread_mutex_unlock
+    23: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND pthread_self
+    24: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND sigemptyset
+    25: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND sigaddset
+    26: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND pthread_sigmask
+    27: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND abort
+    30: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND sigaction
+    33: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND pthread_getattr_np
+    34: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND pthread_attr_getstack
+    35: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND pthread_attr_destroy
+    37: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND sigpending
+    38: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND sigismember
+    39: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND sigwait
+    44: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND memcpy
+    45: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND perror
+    49: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND memset
+[TLS symbols/relocations in object]

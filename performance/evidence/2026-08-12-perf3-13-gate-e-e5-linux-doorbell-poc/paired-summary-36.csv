@@ -1,0 +1,6 @@
+workload,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+Sieve,rxbvm,elapsed_ns,36,8367289000.000000,7712738500.000000,-47.220110,-7.451299,0.070784,11.138530,51.761124,-0.610879,-7.295202,6.073444,noisy_inconclusive,18,36,no
+Sieve,rxtvm,elapsed_ns,36,7230624500.000000,7664759500.000000,-26.034355,-2.824523,1.194171,8.720028,127.785771,8.097073,-1.532315,17.726461,noisy_inconclusive,15,36,yes
+Permute,rxtvm,elapsed_ns,36,15365749000.000000,15179177500.000000,-41.534855,-7.844979,-2.731573,5.746473,137.441946,1.151642,-8.487004,10.790289,noisy_inconclusive,20,36,no
+RexxCPS,rxbvm,benchmark_rate,36,4108966.500000,4098353.500000,-33.061729,-8.288593,-1.409184,3.354322,60.164727,0.384760,-5.085653,5.855172,noisy_inconclusive,15,36,no
+RexxCPS,rxtvm,benchmark_rate,36,3938542.500000,4053559.500000,-36.923465,-5.815318,0.272753,8.539929,21.178360,-0.223597,-4.692424,4.245229,noisy_inconclusive,18,36,no

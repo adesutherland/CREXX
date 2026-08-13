@@ -1,0 +1,177 @@
+2026-08-12T12:20:54Z
+ Static hostname: adrian-linux
+       Icon name: computer-laptop
+         Chassis: laptop 💻
+      Machine ID: 66ad3907d94744e5a5f289f72d27ebfb
+         Boot ID: f51eb074eabc402b9d88a353bb64bcda
+Operating System: Ubuntu 26.04 LTS
+          Kernel: Linux 7.0.0-29-generic
+    Architecture: x86-64
+ Hardware Vendor: Acer
+  Hardware Model: Aspire A515-56G
+    Hardware SKU: 0000000000000000
+Hardware Version: V1.26
+Firmware Version: V1.26
+   Firmware Date: Mon 2022-03-14
+    Firmware Age: 4y 4month 4w 1d
+Linux adrian-linux 7.0.0-29-generic #29-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 17 20:52:35 UTC 2026 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 26.04 LTS"
+NAME="Ubuntu"
+VERSION_ID="26.04"
+VERSION="26.04 LTS (Resolute Raccoon)"
+VERSION_CODENAME=resolute
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=resolute
+LOGO=ubuntu-logo
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           39 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  8
+On-line CPU(s) list:                     0-7
+Vendor ID:                               GenuineIntel
+Model name:                              11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+CPU family:                              6
+Model:                                   140
+Thread(s) per core:                      2
+Core(s) per socket:                      4
+Socket(s):                               1
+Stepping:                                1
+CPU(s) scaling MHz:                      14%
+CPU max MHz:                             4200.0000
+CPU min MHz:                             400.0000
+BogoMIPS:                                4838.40
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l2 cdp_l2 ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid movdiri movdir64b fsrm avx512_vp2intersect md_clear ibt flush_l1d arch_capabilities
+Virtualization:                          VT-x
+L1d cache:                               192 KiB (4 instances)
+L1i cache:                               128 KiB (4 instances)
+L2 cache:                                5 MiB (4 instances)
+L3 cache:                                8 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-7
+Vulnerability Gather data sampling:      Vulnerable
+Vulnerability Ghostwrite:                Not affected
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Not affected
+Vulnerability Old microcode:             Not affected
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+glibc 2.43
+cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+Copyright (C) 2025 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+cmake version 4.2.3
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+1.13.2
+  native-path:          ACAD
+  power supply:         yes
+  updated:              Tue Aug 11 09:46:44 2026 (99250 seconds ago)
+  has history:          no
+  has statistics:       no
+  line-power
+    warning-level:       none
+    online:              yes
+    icon-name:          'ac-adapter-symbolic'
+
+  native-path:          BAT1
+  vendor:               COSMX
+  model:                AP20CBL
+  serial:               9236
+  power supply:         yes
+  updated:              Wed Aug 12 13:20:40 2026 (14 seconds ago)
+  has history:          yes
+  has statistics:       yes
+  battery
+    present:             yes
+    rechargeable:        yes
+    state:               fully-charged
+    warning-level:       none
+    energy:              43.6013 Wh
+    energy-empty:        0 Wh
+    energy-full:         43.6013 Wh
+    energy-full-design:  53.0145 Wh
+    voltage-min-design:  11.55 V
+    capacity-level:      Full
+    energy-rate:         0 W
+    voltage:             12.637 V
+    charge-cycles:       22
+    percentage:          100%
+    capacity:            82.244%
+    technology:          lithium-ion
+    icon-name:          'battery-full-charged-symbolic'
+  History (voltage):
+    1786537240	12.637	fully-charged
+    1786537210	12.638	fully-charged
+
+balanced
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver=intel_pstate
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=powersave
+/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference=balance_performance
+/sys/devices/system/cpu/intel_pstate/status=active
+/sys/devices/system/cpu/intel_pstate/no_turbo=0
+/sys/class/thermal/thermal_zone0/temp=27800
+/sys/class/thermal/thermal_zone1/temp=85000
+ 13:20:55 up 5 days, 21:31,  1 user,  load average: 2.66, 3.11, 3.65
+2.66 3.11 3.65 2/896 409654
+               total        used        free      shared  buff/cache   available
+Mem:            18Gi       5.8Gi       1.2Gi       2.9Gi        15Gi        13Gi
+Swap:          8.0Gi       5.3Mi       8.0Gi
+    PID STAT COMMAND         %CPU %MEM COMMAND
+ 382114 Sl   ChatGPT         48.9  3.4 /usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --ozone-platform=x11 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1786072401814317 --launch-time-ticks=460228249852 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,14037198916665697924,4612804999373228686,2097152 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708990997080739
+ 381836 Sl   ChatGPT         43.8  1.2 /usr/lib/chatgpt/ChatGPT --type=gpu-process --ozone-platform=x11 --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAASAAAAAAAAAABAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAEAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --metrics-shmem-handle=4,i,6381874521900289617,15003976515349749371,262144 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708988185955192
+ 409615 Ss   systemd-hostnam 26.6  0.0 /usr/lib/systemd/systemd-hostnamed
+ 395718 Sl   resources-proce  8.5  0.0 /usr/libexec/resources/resources-processes
+ 382131 Sl   codex            7.6  1.3 /usr/lib/chatgpt/resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled
+ 381786 Sl   ChatGPT          6.5  2.8 /usr/lib/chatgpt/ChatGPT
+ 382113 Sl   ChatGPT          1.8  1.5 /usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --ozone-platform=x11 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=6 --time-ticks-at-unix-epoch=-1786072401814317 --launch-time-ticks=460228246335 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,2418936657378598294,9080825047425391578,2097152 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708991934122588
+ 395689 Sl   resources        1.6  0.8 /usr/bin/resources
+ 389857 Sl   codex-code-mode  1.2  0.0 /usr/lib/chatgpt/resources/codex-code-mode-host
+ 379780 I    kworker/2:0-i91  1.0  0.0 [kworker/2:0-i915-unordered]
+   6115 Ssl  gnome-shell      0.8  1.6 /usr/bin/gnome-shell --mode=ubuntu
+ 409610 I    kworker/u32:2-m  0.4  0.0 [kworker/u32:2-mt76]
+ 406384 I    kworker/u32:0-m  0.3  0.0 [kworker/u32:0-mt76]
+ 404011 I    kworker/u32:3-f  0.2  0.0 [kworker/u32:3-flush-259:0]
+ 381838 Sl   ChatGPT          0.1  0.6 /usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-GB --service-sandbox-type=none --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,6813355138652312527,996030927328187771,524288 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708989122997041
+ 408052 I    kworker/u32:1-f  0.1  0.0 [kworker/u32:1-flush-259:0]
+ 409534 Ss   bash             0.0  0.0 /bin/bash -c mkdir -p performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/timing; sleep 30; { date -u +'%Y-%m-%dT%H:%M:%SZ'; hostnamectl; uname -a; sed -n '1,20p' /etc/os-release; lscpu; getconf GNU_LIBC_VERSION; cc --version; cmake --version; ninja --version; upower -i /org/freedesktop/UPower/devices/line_power_ACAD; upower -i /org/freedesktop/UPower/devices/battery_BAT1; powerprofilesctl get; for p in /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference /sys/devices/system/cpu/intel_pstate/status /sys/devices/system/cpu/intel_pstate/no_turbo /sys/class/thermal/thermal_zone0/temp /sys/class/thermal/thermal_zone1/temp; do if [ -r "$p" ]; then printf '%s=%s\n' "$p" "$(tr -d '\n' < "$p")"; fi; done; uptime; cat /proc/loadavg; free -h; ps -eo pid,stat,comm,%cpu,%mem,args --sort=-%cpu | head -20; pgrep -af 'cmake|ctest|ninja|rxvm|rxbvm|rxtvm|crexx|rxc|rxas|rxlink|cc1' || true; git rev-parse HEAD; git rev-parse 295a6d886b33b161e57d71bc641970e394f58f66; git branch --show-current; git status --short; sha256sum /tmp/crexx-e4-linux-control-release/bin/rxbvm /tmp/crexx-e4-linux-control-release/bin/rxtvm /tmp/crexx-mthread-linux-release/bin/rxbvm /tmp/crexx-mthread-linux-release/bin/rxtvm /tmp/crexx-mthread-linux-release/bin/crexx /tmp/crexx-mthread-linux-release/bin/library.rxbin /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/manifest.txt; } > performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-run.txt 2>&1; rc=$?; printf 'rc=%d\n' "$rc"; sed -n '1,35p' performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-run.txt; tail -45 performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-run.txt; exit "$rc"
+ 381848 Sl   ChatGPT          0.0  0.3 /usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-GB --service-sandbox-type=utility --crashpad-handler-pid=381791 --enable-crash-reporter=, --user-data-dir=/home/adrian/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,15545906505020179543,11473741071859138083,524288 --field-trial-handle=3,i,824337506971388836,1151661388837437290,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding --variations-seed-version --pseudonymization-salt-handle=7,i,4612683194429525819,14616526183728694603,4 --trace-process-track-uuid=3190708990060038890
+   6551 Ssl  xdg-desktop-por  0.0  0.1 /usr/libexec/xdg-desktop-portal
+409534 /bin/bash -c mkdir -p performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/timing; sleep 30; { date -u +'%Y-%m-%dT%H:%M:%SZ'; hostnamectl; uname -a; sed -n '1,20p' /etc/os-release; lscpu; getconf GNU_LIBC_VERSION; cc --version; cmake --version; ninja --version; upower -i /org/freedesktop/UPower/devices/line_power_ACAD; upower -i /org/freedesktop/UPower/devices/battery_BAT1; powerprofilesctl get; for p in /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference /sys/devices/system/cpu/intel_pstate/status /sys/devices/system/cpu/intel_pstate/no_turbo /sys/class/thermal/thermal_zone0/temp /sys/class/thermal/thermal_zone1/temp; do if [ -r "$p" ]; then printf '%s=%s\n' "$p" "$(tr -d '\n' < "$p")"; fi; done; uptime; cat /proc/loadavg; free -h; ps -eo pid,stat,comm,%cpu,%mem,args --sort=-%cpu | head -20; pgrep -af 'cmake|ctest|ninja|rxvm|rxbvm|rxtvm|crexx|rxc|rxas|rxlink|cc1' || true; git rev-parse HEAD; git rev-parse 295a6d886b33b161e57d71bc641970e394f58f66; git branch --show-current; git status --short; sha256sum /tmp/crexx-e4-linux-control-release/bin/rxbvm /tmp/crexx-e4-linux-control-release/bin/rxtvm /tmp/crexx-mthread-linux-release/bin/rxbvm /tmp/crexx-mthread-linux-release/bin/rxtvm /tmp/crexx-mthread-linux-release/bin/crexx /tmp/crexx-mthread-linux-release/bin/library.rxbin /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/manifest.txt; } > performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-run.txt 2>&1; rc=$?; printf 'rc=%d\n' "$rc"; sed -n '1,35p' performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-run.txt; tail -45 performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/pre-run.txt; exit "$rc"
+b6edf2556f2411fe5033049e32ee77ddd9a2e15f
+295a6d886b33b161e57d71bc641970e394f58f66
+mthread
+ M interpreter/CMakeLists.txt
+ M interpreter/interrupt.c
+ M interpreter/rxvmexecutor.c
+?? performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/
+bf790bb99ac3990ebb56402bb6c3d1a54ab1658983700428e52be08e8ab5b9d4  /tmp/crexx-e4-linux-control-release/bin/rxbvm
+e6fc9c87185d56a83881727c9d49b4510d6d2d2832cc8a6af21fc5156d26da72  /tmp/crexx-e4-linux-control-release/bin/rxtvm
+9e972567d7faf1f5515530b06624bc6a800f54f350261947e02190f264f6d9ac  /tmp/crexx-mthread-linux-release/bin/rxbvm
+41257052d27b06662b3816ece95d84868e67d8ec7346952ebe22ad6dd9c8d29f  /tmp/crexx-mthread-linux-release/bin/rxtvm
+e02c86131cedf573aa28df4df1b3822bc825bb79e34a695bf3a666c4962f4c0b  /tmp/crexx-mthread-linux-release/bin/crexx
+987e6bd3b9828d32c90f624a2768b66612bc0b79ce123d9030e4bf34a9f2d922  /tmp/crexx-mthread-linux-release/bin/library.rxbin
+a9db0e5dc96ab05fd3b78471fedc4bb641555d8b5c209ae33b1a2f80e8dc9d06  /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+714cd35e4c4353d3d5d6beba170c9437b71d398c21c5f78381092b657d1e5ed0  /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin
+e7e24bdbd42f41d957bc0213d375423491748bee60e6898e2b4c32d1890b7a8f  /tmp/crexx-mthread-linux-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx
+7290911a459a1ac3faf956cd99765865f59bff26cf6a481cf4101dcc62d9749d  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/manifest.txt

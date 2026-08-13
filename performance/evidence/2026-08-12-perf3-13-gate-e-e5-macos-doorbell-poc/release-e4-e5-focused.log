@@ -1,0 +1,27 @@
+Test project /private/tmp/crexx-mthread-release
+    Start 1184: program_generation_control-rxvml
+1/6 Test #1184: program_generation_control-rxvml ....   Passed    0.27 sec
+    Start 1185: program_generation_control-rxbvml
+2/6 Test #1185: program_generation_control-rxbvml ...   Passed    0.20 sec
+    Start 1186: program_generation_control-rxtvml
+3/6 Test #1186: program_generation_control-rxtvml ...   Passed    0.20 sec
+    Start 1187: persistent_worker_executor-rxvml
+4/6 Test #1187: persistent_worker_executor-rxvml ....   Passed    0.03 sec
+    Start 1188: persistent_worker_executor-rxbvml
+5/6 Test #1188: persistent_worker_executor-rxbvml ...   Passed    0.03 sec
+    Start 1189: persistent_worker_executor-rxtvml
+6/6 Test #1189: persistent_worker_executor-rxtvml ...   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+e4a            =   0.67 sec*proc (3 tests)
+e4b            =   0.67 sec*proc (3 tests)
+e5             =   0.09 sec*proc (3 tests)
+gate-e         =   0.77 sec*proc (6 tests)
+interpreter    =   0.77 sec*proc (6 tests)
+macos          =   0.09 sec*proc (3 tests)
+perf3          =   0.77 sec*proc (6 tests)
+poc            =   0.09 sec*proc (3 tests)
+
+Total Test time (real) =   0.80 sec

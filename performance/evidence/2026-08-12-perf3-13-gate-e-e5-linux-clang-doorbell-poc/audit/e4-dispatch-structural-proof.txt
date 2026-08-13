@@ -1,0 +1,94 @@
+PERF3-13 E5 Linux Clang ordinary E4 dispatch structural proof
+[E4 control -> tested commit: rxvmintp.h diff; expected empty]
+[E4 control and tested rxvmintp.h blob IDs]
+343bb9712721306dedc03f21ba4a02fa82e0aacc
+343bb9712721306dedc03f21ba4a02fa82e0aacc
+[E4 control -> tested commit: rxvmintp.c diff; cold CANCEL mapping only]
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index a1d9af4e8..0d8c62fff 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -4151,6 +4151,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
+             return "OBJECT_NOT_INITIALIZED";
+         case RXSIGNAL_RXBIN_CORRUPTION:
+             return "RXBIN_CORRUPTION";
++        case RXSIGNAL_CANCEL:
++            return "CANCEL";
+         case RXSIGNAL_OUT_OF_RANGE:
+             return "OUT_OF_RANGE";
+         case RXSIGNAL_FAILURE:
+@@ -4199,6 +4201,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
+     if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
+     if (strcmp(interrupt, "OBJECT_NOT_INITIALIZED") == 0) return RXSIGNAL_OBJECT_NOT_INITIALIZED;
+     if (strcmp(interrupt, "RXBIN_CORRUPTION") == 0) return RXSIGNAL_RXBIN_CORRUPTION;
++    if (strcmp(interrupt, "CANCEL") == 0) return RXSIGNAL_CANCEL;
+     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
+     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
+     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
+@@ -4580,6 +4583,7 @@ RX_INLINE stack_frame *frame_f(
+         this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_OBJECT_NOT_INITIALIZED-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_RXBIN_CORRUPTION-1].response = RXSIGNAL_RESPONSE_HALT;
++        this->interrupt_table[RXSIGNAL_CANCEL-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
+         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
+[uncommitted Linux edit to interpreter sources; expected empty]
+[candidate dispatch macro source]
+        RXVM_INSTRUMENTATION_TRANSITION(reason_);                               \
+    } while (0)
+
+#define VM_SELECT_POINTER(pointer_, reason_)                                    \
+    do {                                                                        \
+        bin_code *vm_pointer__ = (pointer_);                                    \
+        next_pc = vm_pointer__;                                                 \
+        VM_RESOLVE_SELECTED();                                                  \
+        RXVM_INSTRUMENTATION_TRANSITION(reason_);                               \
+    } while (0)
+
+#define RXVM_DISPATCH_PREPARE()                                                 \
+    do {                                                                        \
+        RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(                                \
+                current_module->module_number, VM_CANONICAL_INDEX(next_pc),     \
+                RXVM_INSTRUMENTATION_CURRENT_TRANSITION());                     \
+        pc = next_pc;                                                           \
+        RXVM_INSTRUMENTATION_INTERRUPT_POLL();                                  \
+    } while (0)
+
+#define RXVM_OWNER_DISPATCH()                                                   \
+    do {                                                                        \
+        RXVM_DISPATCH_PREPARE();                                                \
+        if (pending_interrupts && !current_frame->is_interrupt)                 \
+            goto INTERRUPT;                                                     \
+        VM_DISPATCH_TARGET();                                                   \
+    } while (0)
+
+#define DISPATCH RXVM_OWNER_DISPATCH()
+
+#define RXVM_RESUME_INTERRUPTED_PREPARE(signal_)                                \
+    do {                                                                        \
+        unsigned char vm_signal__ = (unsigned char)(signal_);                   \
+        RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(                                \
+                current_module->module_number, VM_CANONICAL_INDEX(next_pc),     \
+                RXVM_TRANSITION_INTERRUPT_RESUME);                              \
+[Release symbol sizes]
+/tmp/crexx-e4-linux-clang-control-release/bin/rxbvm
+0000000000017cf0 0000000000000114 T run
+0000000000017e10 000000000002d10a t rxvm_run_owned_core
+/tmp/crexx-mthread-linux-clang-release/bin/rxbvm
+0000000000017d80 0000000000000114 T run
+0000000000017ea0 000000000002d15a t rxvm_run_owned_core
+/tmp/crexx-e4-linux-clang-control-release/bin/rxtvm
+000000000001bcf0 0000000000000114 T run
+000000000001be10 000000000002d424 t rxvm_run_owned_core
+/tmp/crexx-mthread-linux-clang-release/bin/rxtvm
+000000000001bd80 0000000000000114 T run
+000000000001bea0 000000000002d484 t rxvm_run_owned_core
+[normalized run hashes]
+b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/audit/run-rxbvm-candidate.normalized.txt
+b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/audit/run-rxbvm-control.normalized.txt
+b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/audit/run-rxtvm-candidate.normalized.txt
+b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/audit/run-rxtvm-control.normalized.txt
+[normalized byte comparisons]
+rxbvm PASS
+rxtvm PASS

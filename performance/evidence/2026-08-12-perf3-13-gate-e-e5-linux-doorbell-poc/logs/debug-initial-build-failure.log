@@ -1,0 +1,78 @@
+[0/2] Re-checking globbed directories...
+[1/421] Copying bootstrap src/parse/conf_lexer.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[2/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[3/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[4/421] Copying bootstrap src/options/parse_opts.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[5/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[6/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[7/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[8/421] Copying bootstrap src/parse/lexer.cc and src/parse/lexer.h, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[9/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[10/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[11/421] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[12/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[13/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[14/421] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[15/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[16/421] Generating doc/re2c.1
+[17/421] Copying bootstrap src/msg/ver_to_vernum.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[18/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[19/421] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[20/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/dslsyntax_log.c.o
+[21/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/diff.c.o
+[22/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/serialization.c.o
+[23/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/code_buffer.c.o
+[24/421] Building CXX object re2c/CMakeFiles/re2c_objects_autogen_ver_to_vernum.dir/src/msg/ver_to_vernum.cc.o
+[25/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/comms.c.o
+[26/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/dslsyntax_common.c.o
+[27/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/thread_utils.c.o
+[28/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/dslsyntax_parser.c.o
+[29/421] Building C object dslsyntax-codebuffer/CMakeFiles/dslsyntax_parser.dir/emergency_parse.c.o
+[30/421] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[31/421] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[32/421] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[33/421] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[34/421] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[35/421] Building C object lemon/CMakeFiles/lemon.dir/lemon.c.o
+[36/421] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_parser.cc.o
+[37/421] Building C object interpreter/CMakeFiles/rxvmmemory.dir/rxvmmemory.c.o
+[38/421] Linking C executable lemon/lemon
+[39/421] Linking C static library dslsyntax-codebuffer/libdslsyntax_parser.a
+[40/421] Linking C static library bin/libplatform.a
+[41/421] Linking C static library bin/libavl_tree.a
+[42/421] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/parser.cc.o
+[43/421] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[44/421] Linking C static library bin/librxvmmemory.a
+[45/421] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[46/421] Building C object interpreter/CMakeFiles/rxvmref.dir/rxpacompat.c.o
+[47/421] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[48/421] Linking C static library bin/librxvmref.a
+[49/421] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[50/421] Linking C static library bin/librxbin.a
+[51/421] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[52/421] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[53/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmworker.c.o
+[54/421] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/options/parse_opts.cc.o
+[55/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[56/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[57/421] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[58/421] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[59/421] Linking C static library bin/libdecnumber.a
+[60/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+FAILED: [code=1] interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o 
+/usr/bin/cc -DCREXX_VM_HANDLER_PANEL=20 -DNTHREADED=1 -I/tmp/crexx-mthread-linux-debug/generated -I/home/adrian/CLionProjects/CREXX/interpreter/. -I/home/adrian/CLionProjects/CREXX/interpreter/./rxvmplugin -I/home/adrian/CLionProjects/CREXX/interpreter/../assembler -I/home/adrian/CLionProjects/CREXX/interpreter/../binutils/include -I/home/adrian/CLionProjects/CREXX/rxpa -I/home/adrian/CLionProjects/CREXX/interpreter/../platform -I/home/adrian/CLionProjects/CREXX/interpreter/../avl_tree -I/home/adrian/CLionProjects/CREXX/interpreter/../utf8 -I/home/adrian/CLionProjects/CREXX/interpreter/../inc -I/home/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber -g -std=gnu99 -fPIC -MD -MT interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o -MF interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o.d -o interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o -c /home/adrian/CLionProjects/CREXX/interpreter/interrupt.c
+/home/adrian/CLionProjects/CREXX/interpreter/interrupt.c:161:14: error: variably modified ‘crexx_thread_doorbell_active_must_be_lock_free’ at file scope
+  161 | typedef char crexx_thread_doorbell_active_must_be_lock_free[
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[61/421] Linking C static library bin/librxvmplugin.a
+[62/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[63/421] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/lexer.cc.o
+[64/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[65/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+/home/adrian/CLionProjects/CREXX/interpreter/rxspawn.c: In function ‘shell_argv_name’:
+/home/adrian/CLionProjects/CREXX/interpreter/rxspawn.c:802:11: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+  802 |     slash = strrchr(shell_path, '/');
+      |           ^
+[66/421] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_lexer.cc.o
+[67/421] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+ninja: build stopped: subcommand failed.

@@ -25,7 +25,8 @@
 /* Control-flow RXAS handler definitions; body text is compiled by RXVM_HANDLER. */
 RXVM_HANDLER(BPON, VM_ADVANCE(0);
             DEBUG("TRACE - BPON\n");
-            pending_interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
+            rxvm_signal_pending_or(&pending_interrupts,
+                                   rxsignal_mask(RXSIGNAL_BREAKPOINT));
             DISPATCH;
 
         /* Enable Breakpoints with op1 handler */
@@ -40,7 +41,8 @@ RXVM_HANDLER(BPON_FUNC, VM_ADVANCE(1);
                     RXVM_HANDLER_INTERRUPT_TABLE_OOM();
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
-                pending_interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
+                rxvm_signal_pending_or(&pending_interrupts,
+                                       rxsignal_mask(RXSIGNAL_BREAKPOINT));
             }
             DISPATCH;
 
@@ -50,7 +52,8 @@ RXVM_HANDLER(BPON_FUNC, VM_ADVANCE(1);
 
 RXVM_HANDLER(BPOFF, VM_ADVANCE(0);
             DEBUG("TRACE - BPOFF\n");
-            pending_interrupts &= ~rxsignal_mask(RXSIGNAL_BREAKPOINT);
+            rxvm_signal_pending_and(&pending_interrupts,
+                                    ~rxsignal_mask(RXSIGNAL_BREAKPOINT));
             DISPATCH;
 
         /* Set Signal op1 Handle to Ignore */
@@ -2216,6 +2219,7 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
                                                op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
+                    RXVM_EXTERNAL_SAFEPOINT();
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
@@ -2281,6 +2285,7 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
                               mapped_result__, signal_value);                   \
                 RXVM_INSTRUMENTATION_NATIVE_END();                              \
                 INTERRUPT_FROM_RXPA_SIGNAL(signal_value);                       \
+                RXVM_EXTERNAL_SAFEPOINT();                                      \
             } else {                                                            \
                 size_t mapped_j__;                                              \
                 size_t mapped_i__;                                              \
@@ -2352,6 +2357,7 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
                                                op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
+                    RXVM_EXTERNAL_SAFEPOINT();
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
@@ -2439,6 +2445,7 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
                                                op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
+                    RXVM_EXTERNAL_SAFEPOINT();
                 } else {
                     /* This is a CREXX Procedure */
                     size_t caller_arg_base = REG_IDX(3) + 1;

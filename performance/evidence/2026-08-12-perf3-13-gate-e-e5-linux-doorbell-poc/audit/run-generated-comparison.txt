@@ -1,0 +1,12 @@
+Normalized objdump --disassemble=run comparison.
+Normalization removes only load addresses, branch/call target addresses and RIP-relative layout addresses/comments; mnemonics, operands and symbolic call targets remain.
+
+=== rxbvm ===
+86899db7c893f8860866750c6dc4b5c678b6c2ada0120da203e456ac9c4889d1  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/audit/run-rxbvm-control.normalized.txt
+86899db7c893f8860866750c6dc4b5c678b6c2ada0120da203e456ac9c4889d1  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/audit/run-rxbvm-candidate.normalized.txt
+RESULT=PASS identical normalized run stream
+
+=== rxtvm ===
+86899db7c893f8860866750c6dc4b5c678b6c2ada0120da203e456ac9c4889d1  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/audit/run-rxtvm-control.normalized.txt
+86899db7c893f8860866750c6dc4b5c678b6c2ada0120da203e456ac9c4889d1  performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/audit/run-rxtvm-candidate.normalized.txt
+RESULT=PASS identical normalized run stream
