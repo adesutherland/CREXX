@@ -87,6 +87,7 @@
 #include "../binutils/include/rxjtable.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
+#include "rxvmchannel.h"
 /* #include <complex.h> */
 #include <signal.h>
 
@@ -5585,6 +5586,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
@@ -5610,6 +5612,7 @@ rxvm_outlined_handler_functions[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
 };
@@ -5626,6 +5629,7 @@ rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
 };
@@ -6530,6 +6534,7 @@ START_OF_INSTRUCTIONS
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
@@ -6646,6 +6651,7 @@ START_OF_INSTRUCTIONS
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER

@@ -1,0 +1,46 @@
+PERF3-13 Gate F F1a/F1b mandatory first Release verdict
+
+Capture date: 2026-08-14
+Host: Darwin 25.5.0 arm64, Apple M5, 10 logical CPUs
+Host status: AC power, no thermal warning, timing session kept clear
+Candidate: frozen profiling-off Release, profile-20
+Control: accepted Gate E E6 cleaned C0 executors
+Sampling: one warmup and 12 pairwise-balanced recorded rounds per cell
+Correctness: all 156 warmup/recorded benchmark processes passed
+
+Result: ACCEPTED BY ADRIAN — CONTINUE TO CLOSEOUT
+
+The switch-dispatch rxbvml product is neutral in both retained executor cells:
+
+  spin-w1: -0.668260%, 95% interval -1.706979% to +0.370460%
+  spin-w4: -0.686408%, 95% interval -2.172450% to +0.799634%
+
+The computed-goto rxtvml guard reports a clear instruction-layout regression:
+
+  spin-w1: -5.935713%, 95% interval -7.698579% to -4.172846%
+  spin-w4: -4.202217%, 95% interval -6.325862% to -2.078573%
+
+Adrian accepted this hit after the bounded investigation isolated it to the
+new rxvmintp.c object/code shape. The five channel handlers are already
+profile-20 NEVER/cold handlers. The pre-release instruction surface is still
+changing, so final hot-loop layout tuning is deferred to F3/release hardening.
+
+The first public-channel cost baseline, compared with the private executor
+adapter in the same candidate, is:
+
+  rxbvml identity: -83.331103%, interval -83.597311% to -83.064894%
+  rxbvml spin-w4:  -40.816296%, interval -41.621510% to -40.011083%
+  rxtvml identity: -83.116724%, interval -83.595773% to -82.637676%
+  rxtvml spin-w4:  -41.903086%, interval -42.362040% to -41.444133%
+
+This is an opening engineering baseline, not a rejected-slice guard. It covers
+the complete RXAS instruction, capability, RXCV validation and provider path;
+later profiling may optimize that mandatory boundary without changing its
+semantics.
+
+Supersession note
+  Completion-materialization hardening subsequently changed rxvmintp.c.o.
+  This accepted first verdict therefore remains historical evidence and is not
+  the final proof for the proposed F1a/F1b commit. See POST-AUDIT-VERDICT.txt,
+  whose confirmed result Adrian accepted for deferred F3/release-hardening
+  tuning.

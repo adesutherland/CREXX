@@ -2,7 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S contract complete; F1a/F1b next**
+Status: **implementation approved by Adrian; F0-S and F1a/minimum F1b
+complete; F1c next**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -114,11 +115,13 @@ The specification assigns stable bits `0..9` for:
 - process isolation; and
 - open-host operation.
 
-F1 local task pools require bounded admission, cancellation, deadlines and
-completion observation. F1 process pools additionally require process
-isolation. Unknown required bits fail `chanopen`; they are never ignored.
-Provider capabilities may exceed the required mask and are queryable through
-Level B diagnostics.
+The complete F1 local task-pool contract requires bounded admission,
+cancellation, deadlines and completion observation. The minimum F1b provider
+advertises bounded admission, cancellation and completion observation; F1c
+adds the provider-owned deadline contract. F1 process pools additionally
+require process isolation. Unknown required bits fail `chanopen`; they are
+never ignored. Provider capabilities may exceed the required mask and are
+queryable through Level B diagnostics.
 
 ### Configuration and failure
 
@@ -248,6 +251,8 @@ specification.
 
 ### F1a — RXAS/RXBIN contract
 
+Status: **complete 2026-08-14**.
+
 Add the five opcode entries at the tail of the dense public opcode inventory,
 without reusing retired slots. Add:
 
@@ -264,10 +269,13 @@ optimizer facts require later proof and are not part of the opening slice.
 
 ### F1b — local provider vertical slice
 
-Create a private RXVM channel subsystem, expected to be isolated in
+Status: **minimum type `1` vertical slice complete and first Release verdict
+accepted 2026-08-14**.
+
+Create a private RXVM channel subsystem, isolated in
 `interpreter/rxvmchannel.[ch]`, containing:
 
-- a runtime-owned provider registry;
+- a runtime-owned provider-registry seed for the core local descriptor;
 - generation-checked channel and ticket capability tables;
 - provider descriptor lifetime pinning;
 - common status/completion translation; and
@@ -307,6 +315,11 @@ Replace the Gate E fixture subset at the public boundary with the versioned
 
 Complete task deadlines, nonblocking observation, one-terminal-completion,
 scope cancellation, drain/cancel close modes, backpressure and cleanup.
+
+Complete the F1 private provider-registry seam: validate and register complete
+operation tables, pin descriptors/modules for channel lifetime and add the
+fake extension-provider `GF-B09` conformance vector. This remains private in
+F1; publication of an installed provider-plugin ABI is still F2 work.
 
 Implement compile-checked Level B interfaces and classes:
 
@@ -466,6 +479,37 @@ local-provider path. Expected files are:
 It does not yet refactor redirects/process execution, implement Level G
 syntax, process/host transport, a public provider-plugin ABI or HTTP. Those
 remain separately measurable slices.
+
+## F1a/F1b completion record
+
+The opening production slice is complete. RXAS/RXDAS and RXBIN feature
+validation now carry opcodes `650..654`; both concrete VMs execute the same
+cold handlers; generation-checked execution-local channel/ticket capabilities
+drive the runtime-owned type `1` local provider over an attached Gate E
+executor. The minimum RXCV boundary accepts the exact integer/string fixture,
+uses semantic callable IDs rather than procedure-name strings, provides
+bounded submission, cancellation, completion-order waiting and deterministic
+teardown, and exposes no RXPA task path.
+
+Completion observation is failure-atomic: the terminal ticket is consumed only
+after canonical RXCV has been copied into controller-worker-owned storage. The
+runtime fixture also executes the specified input/output register aliasing path
+on both concrete VMs.
+
+Adrian accepted the mandatory first Release verdict after a bounded
+investigation isolated a clear `rxtvml` regression to the changed
+`rxvmintp.c.o` code shape. The five handlers are already `NEVER`/cold under
+profile-20. Final hot-loop layout tuning is therefore deferred until the
+instruction surface is stable in F3/release hardening. `rxbvml` remained
+neutral in the retained one- and four-worker cells. The evidence and Mac
+closeout are retained in
+[`2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
+
+The runtime registry at this checkpoint is deliberately core-only: it is
+seeded with the lifetime-pinned local descriptor. General private registration
+and fake-provider vector `GF-B09` remain F1c work before any F2 public plugin
+ABI review. Full `ChannelValue`, deadlines/scopes, Level B classes and Level G
+lowering likewise remain F1c; redirects/processes and HTTP remain F1d/F1e.
 
 ## Evidence and stop rules
 

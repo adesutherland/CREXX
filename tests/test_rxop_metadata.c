@@ -1068,6 +1068,35 @@ int main(void) {
               effects.optimizer_barrier,
           "opaque process effect must remain conservative",
           &op_table[OP_SPAWN_REG_REG_REG]);
+    effects = rxop_effects(OP_CHANOPEN_REG_REG_REG_REG_REG);
+    signal = rxop_signal_contract(OP_CHANOPEN_REG_REG_REG_REG_REG);
+    check(OP_MAX_INSTRUCTIONS == 655 && rxop_effect_count() == 655 &&
+              rxop_signal_contract_count() == 655 &&
+              effects.state == RXOP_EFFECT_CLASSIFIED &&
+              rxop_effect_reads_operand(&effects, 2) &&
+              rxop_effect_reads_operand(&effects, 4) &&
+              !rxop_effect_reads_operand(&effects, 0) &&
+              rxop_effect_writes_operand(&effects, 0) &&
+              rxop_effect_writes_operand(&effects, 1) &&
+              !rxop_effect_writes_operand(&effects, 2) &&
+              rxop_effect_kills_operand(&effects, 0) &&
+              rxop_effect_kills_operand(&effects, 1) &&
+              effects.semantics == RXOP_SEM_OPAQUE &&
+              effects.optimizer_barrier &&
+              signal.state == RXOP_SIGNAL_STATE_NONE &&
+              rxop_component_reads(OP_CHANOPEN_REG_REG_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_reads(OP_CHANOPEN_REG_REG_REG_REG_REG, 4) ==
+                  RXOP_COMPONENT_BINARY &&
+              rxop_component_writes(OP_CHANWAIT_REG_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_CHANWAIT_REG_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_BINARY &&
+              rxop_component_clears(OP_CHANWAIT_REG_REG_REG_REG, 1) ==
+                  (RXOP_COMPONENT_REFERENCE |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD),
+          "Gate F channel metadata contract regression",
+          &op_table[OP_CHANOPEN_REG_REG_REG_REG_REG]);
     effects = rxop_effects(OP_CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG);
     check(rxop_format_operand_count(
               op_table[OP_CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG].format) == 9 &&

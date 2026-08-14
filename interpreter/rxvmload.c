@@ -36,6 +36,7 @@
 #define RXPA_CATALOGUE_UNLOCK() ((void)pthread_mutex_unlock(&rxpa_catalogue_lock))
 #endif
 #include "rxvmintp.h"
+#include "rxvmchannel.h"
 #include "rxastree.h"
 #include "rxvmvars.h"
 #include "rxvmsock.h"
@@ -407,6 +408,7 @@ static int rxinimod_common(rxvm_context *context,
     context->rxpa_session_bindings = 0;
     rxpa_compatibility_context_init(&context->rxpa_compatibility,
                                     context->worker.memory_worker);
+    context->channel_context = 0;
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
@@ -466,6 +468,8 @@ void rxfremod(rxvm_context *context) {
         fprintf(stderr, "RXVM teardown detected live active execution/callback state\n");
         abort();
     }
+
+    rxvm_channel_context_destroy(context);
 
     /* Remove cold coordinator references before procedure storage is freed. */
     rxpa_compatibility_context_destroy(&context->rxpa_compatibility);

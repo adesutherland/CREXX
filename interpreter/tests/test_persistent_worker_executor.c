@@ -553,7 +553,7 @@ static int run_benchmark(int argc, char **argv) {
         fprintf(stderr,
                 "usage: %s --benchmark "
                 "direct|executor1|executor2|executor4|executor8 "
-                "E5_RXBIN JOBS ITERATIONS [spin|churn]\n", argv[0]);
+                "E5_RXBIN JOBS ITERATIONS [spin|churn|identity]\n", argv[0]);
         return 2;
     }
     mode = argv[2];
@@ -561,6 +561,8 @@ static int run_benchmark(int argc, char **argv) {
     if (argc == 7) workload = argv[6];
     if (strcmp(workload, "churn") == 0) {
         procedure = "e5worker.churn";
+    } else if (strcmp(workload, "identity") == 0) {
+        procedure = "e5worker.identity";
     } else if (strcmp(workload, "spin") != 0) {
         fprintf(stderr, "ERROR: unknown E6 benchmark workload: %s\n",
                 workload);

@@ -1,0 +1,19 @@
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1135: gate_f_channel_local_rxbvm
+1/2 Test #1135: gate_f_channel_local_rxbvm .......   Passed    0.02 sec
+    Start 1136: gate_f_channel_local_rxtvm
+2/2 Test #1136: gate_f_channel_local_rxtvm .......   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+channels       =   0.03 sec*proc (2 tests)
+f1b            =   0.03 sec*proc (2 tests)
+gate-f         =   0.03 sec*proc (2 tests)
+interpreter    =   0.03 sec*proc (2 tests)
+lifecycle      =   0.03 sec*proc (2 tests)
+perf3          =   0.03 sec*proc (2 tests)
+
+Total Test time (real) =   0.06 sec

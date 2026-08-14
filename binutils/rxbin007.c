@@ -747,6 +747,12 @@ static uint32_t rxbin007_opcode_features(int opcode) {
         case OP_STEMKEYAT_REG_REG_REG:
         case OP_STEMVALUEAT_REG_REG_REG:
             return RXBIN007_FEATURE_NATIVE_STEM;
+        case OP_CHANOPEN_REG_REG_REG_REG_REG:
+        case OP_CHANSTART_REG_REG_REG_REG_REG:
+        case OP_CHANWAIT_REG_REG_REG_REG:
+        case OP_CHANCANCEL_REG_REG_REG_REG:
+        case OP_CHANCLOSE_REG_REG_REG:
+            return RXBIN007_FEATURE_CHANNELS;
         default:
             return 0u;
     }

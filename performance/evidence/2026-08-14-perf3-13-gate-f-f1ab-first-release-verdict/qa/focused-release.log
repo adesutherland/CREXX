@@ -1,0 +1,42 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start  345: gate_f_channel_contract
+    Start 1135: gate_f_channel_local_rxbvm
+    Start 1136: gate_f_channel_local_rxtvm
+    Start 1219: persistent_worker_executor-rxtvml
+    Start 1205: persistent_worker_executor-rxbvml
+1/5 Test  #345: gate_f_channel_contract .............   Passed    0.03 sec
+2/5 Test #1136: gate_f_channel_local_rxtvm ..........   Passed    0.28 sec
+3/5 Test #1135: gate_f_channel_local_rxbvm ..........   Passed    0.51 sec
+4/5 Test #1219: persistent_worker_executor-rxtvml ...   Passed    0.78 sec
+5/5 Test #1205: persistent_worker_executor-rxbvml ...   Passed    0.98 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+channels       =   0.82 sec*proc (3 tests)
+compiler       =   0.03 sec*proc (1 test)
+e5             =   1.75 sec*proc (2 tests)
+f1b            =   0.79 sec*proc (2 tests)
+gate-e         =   1.75 sec*proc (2 tests)
+gate-f         =   0.82 sec*proc (3 tests)
+industrial     =   1.75 sec*proc (2 tests)
+interpreter    =   2.54 sec*proc (4 tests)
+lifecycle      =   0.79 sec*proc (2 tests)
+macos          =   1.75 sec*proc (2 tests)
+perf3          =   2.54 sec*proc (4 tests)
+performance    =   0.03 sec*proc (1 test)
+private        =   1.75 sec*proc (2 tests)
+rxas           =   0.03 sec*proc (1 test)
+rxbin          =   0.03 sec*proc (1 test)
+
+Total Test time (real) =   1.02 sec
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 10702
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 79669
+PASS: Gate F F1b channel benchmark
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 8969
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 94039
+PASS: Gate F F1b channel benchmark

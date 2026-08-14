@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 /* Private PERF3-13 E5 carrier hooks; deliberately not in the RXVML header. */
 int rxvm_signal_thread_doorbell_e5_install(void);
@@ -58,12 +59,33 @@ static void executor_condition_wait(rxvm_executor_condition *condition,
                                     rxvm_executor_mutex *mutex) {
     if (!SleepConditionVariableCS(condition, mutex, INFINITE)) abort();
 }
+static int executor_condition_wait_for(rxvm_executor_condition *condition,
+                                       rxvm_executor_mutex *mutex,
+                                       int64_t microseconds) {
+    DWORD milliseconds;
+    BOOL result;
+
+    if (microseconds < 0) {
+        executor_condition_wait(condition, mutex);
+        return 1;
+    }
+    if (microseconds == 0) return 0;
+    milliseconds = microseconds > (int64_t)(INFINITE - 1u) * 1000
+            ? INFINITE - 1u
+            : (DWORD)((microseconds + 999) / 1000);
+    result = SleepConditionVariableCS(condition, mutex, milliseconds);
+    if (result) return 1;
+    if (GetLastError() == ERROR_TIMEOUT) return 0;
+    abort();
+    return 0;
+}
 static void executor_condition_broadcast(rxvm_executor_condition *condition) {
     WakeAllConditionVariable(condition);
 }
 #else
-#include <signal.h>
 #include <pthread.h>
+#include <signal.h>
+#include <time.h>
 typedef pthread_mutex_t rxvm_executor_mutex;
 typedef pthread_cond_t rxvm_executor_condition;
 typedef pthread_t rxvm_executor_thread;
@@ -81,7 +103,21 @@ static void executor_mutex_unlock(rxvm_executor_mutex *mutex) {
     if (pthread_mutex_unlock(mutex) != 0) abort();
 }
 static int executor_condition_init(rxvm_executor_condition *condition) {
+#if defined(__linux__) && defined(CLOCK_MONOTONIC)
+    pthread_condattr_t attributes;
+    int result;
+
+    if (pthread_condattr_init(&attributes) != 0) return 0;
+    if (pthread_condattr_setclock(&attributes, CLOCK_MONOTONIC) != 0) {
+        pthread_condattr_destroy(&attributes);
+        return 0;
+    }
+    result = pthread_cond_init(condition, &attributes) == 0;
+    pthread_condattr_destroy(&attributes);
+    return result;
+#else
     return pthread_cond_init(condition, 0) == 0;
+#endif
 }
 static void executor_condition_destroy(rxvm_executor_condition *condition) {
     if (pthread_cond_destroy(condition) != 0) abort();
@@ -90,10 +126,61 @@ static void executor_condition_wait(rxvm_executor_condition *condition,
                                     rxvm_executor_mutex *mutex) {
     if (pthread_cond_wait(condition, mutex) != 0) abort();
 }
+static int executor_condition_wait_for(rxvm_executor_condition *condition,
+                                       rxvm_executor_mutex *mutex,
+                                       int64_t microseconds) {
+    int result;
+
+    if (microseconds < 0) {
+        executor_condition_wait(condition, mutex);
+        return 1;
+    }
+    if (microseconds == 0) return 0;
+#if defined(__APPLE__)
+    {
+        struct timespec relative;
+        relative.tv_sec = (time_t)(microseconds / 1000000);
+        relative.tv_nsec = (long)((microseconds % 1000000) * 1000);
+        result = pthread_cond_timedwait_relative_np(
+                condition, mutex, &relative);
+    }
+#else
+    {
+        struct timespec deadline;
+#if defined(__linux__) && defined(CLOCK_MONOTONIC)
+        if (clock_gettime(CLOCK_MONOTONIC, &deadline) != 0) abort();
+#else
+        if (clock_gettime(CLOCK_REALTIME, &deadline) != 0) abort();
+#endif
+        deadline.tv_sec += (time_t)(microseconds / 1000000);
+        deadline.tv_nsec += (long)((microseconds % 1000000) * 1000);
+        if (deadline.tv_nsec >= 1000000000L) {
+            deadline.tv_sec++;
+            deadline.tv_nsec -= 1000000000L;
+        }
+        result = pthread_cond_timedwait(condition, mutex, &deadline);
+    }
+#endif
+    if (result == 0) return 1;
+    if (result == ETIMEDOUT) return 0;
+    abort();
+    return 0;
+}
 static void executor_condition_broadcast(rxvm_executor_condition *condition) {
     if (pthread_cond_broadcast(condition) != 0) abort();
 }
 #endif
+
+static uint64_t executor_monotonic_microseconds(void) {
+#if defined(_WIN32)
+    return (uint64_t)GetTickCount64() * UINT64_C(1000);
+#else
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) abort();
+    return (uint64_t)now.tv_sec * UINT64_C(1000000) +
+           (uint64_t)now.tv_nsec / UINT64_C(1000);
+#endif
+}
 
 typedef struct rxvm_executor_worker rxvm_executor_worker;
 
@@ -119,10 +206,13 @@ struct rxvm_executor_request {
     int procedure_result;
     size_t affinity;
     sig_atomic_t generation;
+    uint64_t callable_id;
+    uint64_t completion_sequence;
     rxvm_executor_event terminal_event;
     rxvm_executor_request_state state;
     rxvm_executor_mutex mutex;
     rxvm_executor_condition changed;
+    unsigned char uses_callable_id;
 };
 
 struct rxvm_executor_worker {
@@ -267,11 +357,27 @@ struct rxvm_executor {
     size_t queue_capacity;
     rxvm_executor_statistics statistics;
     rxvm_executor_mutex statistics_mutex;
+    rxvm_executor_mutex completion_mutex;
+    rxvm_executor_condition completion_changed;
+    uint64_t completion_generation;
     unsigned char statistics_mutex_initialized;
+    unsigned char completion_sync_initialized;
+    unsigned char owns_runtime;
     unsigned char native_doorbell;
     unsigned char compatibility_doorbell;
     volatile sig_atomic_t shutdown_requested;
 };
+
+static void executor_publish_terminal(
+        rxvm_executor *executor,
+        rxvm_executor_request *request) {
+    executor_mutex_lock(&executor->completion_mutex);
+    if (executor->completion_generation == UINT64_MAX) abort();
+    executor->completion_generation++;
+    request->completion_sequence = executor->completion_generation;
+    executor_condition_broadcast(&executor->completion_changed);
+    executor_mutex_unlock(&executor->completion_mutex);
+}
 
 static int executor_worker_ring(rxvm_executor_worker *worker) {
     if (worker->executor->compatibility_doorbell) return 1;
@@ -499,6 +605,7 @@ static void executor_request_complete(
     request->procedure_result = procedure_result;
     request->state = state;
     request->worker = 0;
+    executor_publish_terminal(executor, request);
     executor_condition_broadcast(&request->changed);
     executor_mutex_unlock(&request->mutex);
 }
@@ -519,13 +626,46 @@ static rxvm_executor_request_state executor_worker_call(
         rxvm_executor_request *request,
         int *procedure_result) {
     proc_runtime *procedure = 0;
+    const char *procedure_name = request->procedure;
 
-    if (strcmp(request->procedure, "main") != 0 &&
-        !src_node(worker->context->exposed_proc_tree, request->procedure,
+    if (request->uses_callable_id) {
+        size_t binding_index;
+        procedure_name = 0;
+        for (binding_index = 0u;
+             binding_index < worker->context->graph_binding_count;
+             binding_index++) {
+            rxvm_graph_binding *binding =
+                    worker->context->graph_bindings[binding_index];
+            RxGraphCallableView view;
+            proc_runtime *target;
+
+            if (!binding || request->callable_id >= binding->callable_count) {
+                continue;
+            }
+            target = rxvm_bound_graph_callable(
+                    binding, (RxCallableId)request->callable_id);
+            if (!target || !rx_graph_callable(
+                    binding->graph, (RxCallableId)request->callable_id,
+                    &view)) {
+                continue;
+            }
+            if (procedure_name && strcmp(procedure_name, view.symbol) != 0) {
+                return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+            }
+            procedure_name = view.symbol;
+            procedure = target;
+        }
+        if (!procedure_name) {
+            return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+        }
+    }
+
+    if (strcmp(procedure_name, "main") != 0 &&
+        !src_node(worker->context->exposed_proc_tree, (char *)procedure_name,
                   (size_t *)&procedure)) {
         return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
     }
-    *procedure_result = rxvm_call(worker->context, request->procedure,
+    *procedure_result = rxvm_call(worker->context, (char *)procedure_name,
                                   request->argc, request->argv);
     return RXVM_EXECUTOR_REQUEST_COMPLETED;
 }
@@ -594,6 +734,7 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
                         worker->executor, state);
                 request->state = state;
                 request->worker = 0;
+                executor_publish_terminal(worker->executor, request);
                 executor_condition_broadcast(&request->changed);
                 executor_mutex_unlock(&request->mutex);
                 continue;
@@ -732,6 +873,10 @@ static void executor_storage_destroy(rxvm_executor *executor) {
     if (executor->statistics_mutex_initialized) {
         executor_mutex_destroy(&executor->statistics_mutex);
     }
+    if (executor->completion_sync_initialized) {
+        executor_condition_destroy(&executor->completion_changed);
+        executor_mutex_destroy(&executor->completion_mutex);
+    }
     free(executor);
 }
 
@@ -762,6 +907,16 @@ rxvm_executor *rxvm_executor_create(
         goto fail;
     }
     executor->statistics_mutex_initialized = 1u;
+    if (!executor_mutex_init(&executor->completion_mutex)) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    if (!executor_condition_init(&executor->completion_changed)) {
+        executor_mutex_destroy(&executor->completion_mutex);
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    executor->completion_sync_initialized = 1u;
     {
         const char *doorbell = getenv("CREXX_VM_E5_DOORBELL");
         const char *force_sparse = getenv(
@@ -804,6 +959,7 @@ rxvm_executor *rxvm_executor_create(
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
         goto fail;
     }
+    executor->owns_runtime = 1u;
     source = rxvm_context_create_in_runtime(executor->runtime);
     if (!source) {
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
@@ -846,7 +1002,7 @@ rxvm_executor *rxvm_executor_create(
 fail:
     if (executor) executor_stop_and_join_workers(executor);
     if (source) rxvm_destroy(source);
-    if (executor && executor->runtime) {
+    if (executor && executor->runtime && executor->owns_runtime) {
         runtime_leaks = rxvm_runtime_destroy(executor->runtime);
         executor->runtime = 0;
         if (runtime_leaks) abort();
@@ -860,8 +1016,125 @@ fail:
     return 0;
 }
 
+rxvm_executor *rxvm_executor_create_attached(
+        rxvm_runtime *runtime,
+        const rxvm_program_generation *generation,
+        size_t worker_count,
+        size_t queue_capacity,
+        rxvm_executor_result *result_out) {
+    rxvm_executor *executor = 0;
+    rxvm_executor_result result = RXVM_EXECUTOR_INVALID;
+    size_t i;
+
+    if (result_out) *result_out = RXVM_EXECUTOR_INVALID;
+    if (!runtime || !generation || !worker_count || !queue_capacity ||
+        worker_count > SIZE_MAX / sizeof(*executor->workers) ||
+        queue_capacity > SIZE_MAX / sizeof(*executor->workers[0].queue)) {
+        return 0;
+    }
+    executor = (rxvm_executor *)calloc(1u, sizeof(*executor));
+    if (!executor) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    if (!executor_mutex_init(&executor->statistics_mutex)) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    executor->statistics_mutex_initialized = 1u;
+    if (!executor_mutex_init(&executor->completion_mutex)) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    if (!executor_condition_init(&executor->completion_changed)) {
+        executor_mutex_destroy(&executor->completion_mutex);
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    executor->completion_sync_initialized = 1u;
+    {
+        const char *doorbell = getenv("CREXX_VM_E5_DOORBELL");
+        const char *force_sparse = getenv(
+                "CREXX_VM_E5_FORCE_SPARSE_OWNER");
+        if (force_sparse && strcmp(force_sparse, "1") == 0) {
+            executor->compatibility_doorbell = 1u;
+        }
+#if defined(_WIN32)
+        executor->native_doorbell = !executor->compatibility_doorbell &&
+                doorbell &&
+                strcmp(doorbell, "windows-special-apc") == 0;
+#else
+        executor->native_doorbell = !executor->compatibility_doorbell &&
+                doorbell &&
+                strcmp(doorbell, "posix") == 0;
+#endif
+        if (!executor->native_doorbell &&
+            !executor->compatibility_doorbell) {
+            /* Local channels require cooperative cancellation on every
+             * supported host, including those without a native doorbell. */
+            executor->compatibility_doorbell = 1u;
+        }
+    }
+    if (executor->native_doorbell &&
+        rxvm_signal_thread_doorbell_e5_install() != 0) {
+#if defined(_WIN32)
+        executor->native_doorbell = 0u;
+        executor->compatibility_doorbell = 1u;
+#else
+        result = RXVM_EXECUTOR_DOORBELL_UNAVAILABLE;
+        goto fail;
+#endif
+    }
+    executor->runtime = runtime;
+    executor->generation = generation;
+    executor->worker_count = worker_count;
+    executor->queue_capacity = queue_capacity;
+    executor->statistics.worker_count = worker_count;
+    executor->statistics.queue_capacity_per_worker = queue_capacity;
+    executor->workers = (rxvm_executor_worker *)calloc(
+            worker_count, sizeof(*executor->workers));
+    if (!executor->workers) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+
+    for (i = 0u; i < worker_count; i++) {
+        rxvm_executor_worker *worker = &executor->workers[i];
+        if (!executor_worker_initialize(worker, executor, i, queue_capacity)) {
+            result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+            goto fail;
+        }
+        if (!executor_thread_start(worker)) {
+            result = RXVM_EXECUTOR_WORKER_START_FAILED;
+            goto fail;
+        }
+        worker->thread_started = 1u;
+        executor_mutex_lock(&worker->mutex);
+        while (!worker->startup_complete) {
+            executor_condition_wait(&worker->changed, &worker->mutex);
+        }
+        result = worker->startup_result;
+        executor_mutex_unlock(&worker->mutex);
+        if (result != RXVM_EXECUTOR_OK) goto fail;
+    }
+
+    if (result_out) *result_out = RXVM_EXECUTOR_OK;
+    return executor;
+
+fail:
+    if (executor) executor_stop_and_join_workers(executor);
+    if (executor && executor->native_doorbell) {
+        rxvm_signal_thread_doorbell_e5_uninstall();
+        executor->native_doorbell = 0u;
+    }
+    if (executor) executor->runtime = 0;
+    executor_storage_destroy(executor);
+    if (result_out) *result_out = result;
+    return 0;
+}
+
 size_t rxvm_executor_destroy(rxvm_executor *executor) {
-    size_t leaks;
+    size_t leaks = 0u;
 
     if (!executor) return 0u;
     executor_stop_and_join_workers(executor);
@@ -869,18 +1142,22 @@ size_t rxvm_executor_destroy(rxvm_executor *executor) {
         rxvm_signal_thread_doorbell_e5_uninstall();
         executor->native_doorbell = 0u;
     }
-    leaks = rxvm_runtime_destroy(executor->runtime);
+    if (executor->owns_runtime) {
+        leaks = rxvm_runtime_destroy(executor->runtime);
+    }
     executor->runtime = 0;
     executor_storage_destroy(executor);
     return leaks;
 }
 
-rxvm_executor_result rxvm_executor_submit(
+static rxvm_executor_result executor_submit_internal(
         rxvm_executor *executor,
         size_t worker_affinity,
         const char *procedure,
         int argc,
         const char *const *argv,
+        unsigned char uses_callable_id,
+        uint64_t callable_id,
         rxvm_executor_request **request_out) {
     rxvm_executor_worker *worker;
     rxvm_executor_request *request;
@@ -894,6 +1171,8 @@ rxvm_executor_result rxvm_executor_submit(
     worker = &executor->workers[worker_affinity];
     request = executor_request_create(worker, procedure, argc, argv);
     if (!request) return RXVM_EXECUTOR_OUT_OF_MEMORY;
+    request->uses_callable_id = uses_callable_id;
+    request->callable_id = callable_id;
 
     executor_mutex_lock(&worker->mutex);
     if (worker->stopping ||
@@ -922,10 +1201,24 @@ rxvm_executor_result rxvm_executor_submit(
     return RXVM_EXECUTOR_OK;
 }
 
-rxvm_executor_result rxvm_executor_submit_registers(
+rxvm_executor_result rxvm_executor_submit(
         rxvm_executor *executor,
         size_t worker_affinity,
         const char *procedure,
+        int argc,
+        const char *const *argv,
+        rxvm_executor_request **request_out) {
+    return executor_submit_internal(
+            executor, worker_affinity, procedure, argc, argv, 0u, 0u,
+            request_out);
+}
+
+static rxvm_executor_result executor_submit_registers_internal(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        const char *procedure,
+        unsigned char uses_callable_id,
+        uint64_t callable_id,
         size_t argument_count,
         const rxvm_executor_register_image *arguments,
         rxvm_executor_request **request_out) {
@@ -979,14 +1272,43 @@ rxvm_executor_result rxvm_executor_submit_registers(
             goto done;
         }
     }
-    result = rxvm_executor_submit(
+    result = executor_submit_internal(
             executor, worker_affinity, procedure, (int)argument_count,
-            (const char *const *)copied_arguments, request_out);
+            (const char *const *)copied_arguments, uses_callable_id,
+            callable_id, request_out);
 
 done:
     for (i = 0u; i < argument_count; i++) free(copied_arguments[i]);
     free(copied_arguments);
     return result;
+}
+
+rxvm_executor_result rxvm_executor_submit_registers(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        const char *procedure,
+        size_t argument_count,
+        const rxvm_executor_register_image *arguments,
+        rxvm_executor_request **request_out) {
+    return executor_submit_registers_internal(
+            executor, worker_affinity, procedure, 0u, 0u,
+            argument_count, arguments, request_out);
+}
+
+rxvm_executor_result rxvm_executor_submit_callable_registers(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        uint64_t callable_id,
+        size_t argument_count,
+        const rxvm_executor_register_image *arguments,
+        rxvm_executor_request **request_out) {
+    if (callable_id > UINT32_MAX) {
+        if (request_out) *request_out = 0;
+        return RXVM_EXECUTOR_INVALID;
+    }
+    return executor_submit_registers_internal(
+            executor, worker_affinity, "@semantic-callable", 1u,
+            callable_id, argument_count, arguments, request_out);
 }
 
 static rxvm_executor_result executor_request_event(
@@ -1030,6 +1352,7 @@ static rxvm_executor_result executor_request_event(
             executor_statistics_terminal_queued(
                     worker->executor, request->state);
             request->worker = 0;
+            executor_publish_terminal(worker->executor, request);
             executor_condition_broadcast(&request->changed);
             executor_mutex_unlock(&worker->mutex);
             executor_mutex_unlock(&request->mutex);
@@ -1180,6 +1503,93 @@ rxvm_executor_request_state rxvm_executor_request_state_get(
     state = request->state;
     executor_mutex_unlock(&request->mutex);
     return state;
+}
+
+int rxvm_executor_request_completion_snapshot(
+        rxvm_executor_request *request,
+        rxvm_executor_completion *completion_out,
+        uint64_t *completion_sequence_out) {
+    int terminal;
+
+    if (completion_out) memset(completion_out, 0, sizeof(*completion_out));
+    if (completion_sequence_out) *completion_sequence_out = 0u;
+    if (!request) return 0;
+    executor_mutex_lock(&request->mutex);
+    terminal = request_state_is_terminal(request->state);
+    if (terminal) {
+        if (completion_out) {
+            completion_out->state = request->state;
+            if (request->state == RXVM_EXECUTOR_REQUEST_COMPLETED) {
+                completion_out->result.type = RXVM_EXECUTOR_REGISTER_INTEGER;
+                completion_out->result.integer = request->procedure_result;
+            }
+        }
+        if (completion_sequence_out) {
+            *completion_sequence_out = request->completion_sequence;
+        }
+    }
+    executor_mutex_unlock(&request->mutex);
+    return terminal;
+}
+
+uint64_t rxvm_executor_completion_generation_get(
+        rxvm_executor *executor) {
+    uint64_t generation;
+
+    if (!executor) return 0u;
+    executor_mutex_lock(&executor->completion_mutex);
+    generation = executor->completion_generation;
+    executor_mutex_unlock(&executor->completion_mutex);
+    return generation;
+}
+
+int rxvm_executor_completion_generation_wait(
+        rxvm_executor *executor,
+        uint64_t observed_generation,
+        int64_t wait_microseconds,
+        uint64_t *generation_out) {
+    uint64_t deadline = 0u;
+    int result = 1;
+
+    if (generation_out) *generation_out = observed_generation;
+    if (!executor || wait_microseconds < -1) return -1;
+    if (wait_microseconds > 0) {
+        uint64_t now = executor_monotonic_microseconds();
+        uint64_t duration = (uint64_t)wait_microseconds;
+        deadline = duration > UINT64_MAX - now ? UINT64_MAX : now + duration;
+    }
+    executor_mutex_lock(&executor->completion_mutex);
+    while (executor->completion_generation == observed_generation) {
+        if (wait_microseconds == 0) {
+            result = 0;
+            break;
+        }
+        if (wait_microseconds < 0) {
+            executor_condition_wait(&executor->completion_changed,
+                                    &executor->completion_mutex);
+        } else {
+            uint64_t now = executor_monotonic_microseconds();
+            int64_t remaining;
+            if (now >= deadline) {
+                result = 0;
+                break;
+            }
+            remaining = deadline - now > (uint64_t)INT64_MAX
+                    ? INT64_MAX : (int64_t)(deadline - now);
+            if (!executor_condition_wait_for(
+                    &executor->completion_changed,
+                    &executor->completion_mutex, remaining) &&
+                executor->completion_generation == observed_generation) {
+                result = 0;
+                break;
+            }
+        }
+    }
+    if (generation_out) {
+        *generation_out = executor->completion_generation;
+    }
+    executor_mutex_unlock(&executor->completion_mutex);
+    return result;
 }
 
 size_t rxvm_executor_request_affinity(

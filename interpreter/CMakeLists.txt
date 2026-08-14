@@ -71,10 +71,15 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmhandlers_numeric.inc
         rxvmhandlers_string.inc
         rxvmhandlers_system.inc
+        rxvmhandlers_channel.inc
         rxvmworker.h
         rxvmworker.c
         rxvmprogram.h
         rxvmprogram.c
+        rxvmexecutor.h
+        rxvmexecutor.c
+        rxvmchannel.h
+        rxvmchannel.c
         rxvmactive.c
         rxvmstem.h
         rxvmload.c
@@ -1429,6 +1434,44 @@ set_tests_properties(rxasbinaryslicetests PROPERTIES
         RESOURCE_LOCK rxas_binary_slice_scratch)
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
+
+# Gate F F1b executes the same local-channel image on both concrete VMs.
+add_custom_command(
+        OUTPUT test_gate_f_channel_local.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_local
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_gate_f_channel_local
+        DEPENDS tests/test_gate_f_channel_local.rxas rxas rxbvm
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling Gate F F1b local channel fixture ...")
+add_custom_target(test_gate_f_channel_local_bin ALL
+        DEPENDS test_gate_f_channel_local.rxbin)
+add_test(NAME gate_f_channel_local_rxbvm
+        COMMAND $<TARGET_FILE:rxbvm> test_gate_f_channel_local
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(gate_f_channel_local_rxbvm PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1b;channels;lifecycle"
+        PASS_REGULAR_EXPRESSION "PASS: Gate F F1b local channel"
+        TIMEOUT 30)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_dependencies(test_gate_f_channel_local_bin rxtvm)
+    add_test(NAME gate_f_channel_local_rxtvm
+            COMMAND $<TARGET_FILE:rxtvm> test_gate_f_channel_local
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(gate_f_channel_local_rxtvm PROPERTIES
+            LABELS "interpreter;perf3;gate-f;f1b;channels;lifecycle"
+            PASS_REGULAR_EXPRESSION "PASS: Gate F F1b local channel"
+            TIMEOUT 30)
+endif()
+
+add_custom_command(
+        OUTPUT test_gate_f_channel_benchmark.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_benchmark
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_gate_f_channel_benchmark
+        DEPENDS tests/test_gate_f_channel_benchmark.rxas rxas rxbvm
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling Gate F F1b channel benchmark ...")
+add_custom_target(test_gate_f_channel_benchmark_bin ALL
+        DEPENDS test_gate_f_channel_benchmark.rxbin)
 crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
 crexx_add_vm_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
 crexx_add_rxas_vm_binary(tests_jump_table_linear_sources "linear jump table source matrix")
@@ -1905,14 +1948,12 @@ if(BUILD_TESTING AND
     endfunction()
 
     add_executable(persistent_worker_executor-rxvml
-            tests/test_persistent_worker_executor.c
-            rxvmexecutor.c)
+            tests/test_persistent_worker_executor.c)
     target_link_libraries(persistent_worker_executor-rxvml rxvml)
     crexx_configure_persistent_worker_executor(persistent_worker_executor-rxvml)
 
     add_executable(persistent_worker_executor-rxbvml
-            tests/test_persistent_worker_executor.c
-            rxvmexecutor.c)
+            tests/test_persistent_worker_executor.c)
     target_link_libraries(persistent_worker_executor-rxbvml rxbvml)
     target_compile_definitions(persistent_worker_executor-rxbvml PRIVATE NTHREADED=1)
     crexx_configure_persistent_worker_executor(persistent_worker_executor-rxbvml)
@@ -1920,7 +1961,6 @@ if(BUILD_TESTING AND
     if(CREXX_THREADED_VM_SUPPORTED)
         add_executable(persistent_worker_executor-rxtvml
                 tests/test_persistent_worker_executor.c
-                rxvmexecutor.c
                 rxvml.c
                 $<TARGET_OBJECTS:rxtvm_core_objects>)
         target_link_libraries(persistent_worker_executor-rxtvml

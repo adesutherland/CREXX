@@ -3,7 +3,7 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S exact specification and declaration oracle complete; F1a/F1b next**
+Gate F F0-S plus F1a/minimum F1b complete; F1c next**
 
 ## Current Gate E continuation
 
@@ -2802,6 +2802,16 @@ Gate F is contract-first and staged:
   [`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md); the declaration
   oracle is
   [`gate_f_levelb_contract.crexx`](../compiler/tests/rexx_src/gate_f_levelb_contract.crexx).
+- [x] **F1a:** add RXBIN channel feature bit `1 << 3`, public opcodes
+  `650..654`, exact effect/signal/optimizer metadata, RXAS/RXDAS round trips and
+  malformed/feature/duplicate-output validation.
+- [x] **F1b minimum local provider:** implement both-VM channel handlers,
+  execution-local generation-checked capabilities, a runtime-owned core type
+  `1` descriptor, attached Gate E workers, the integer/string RXCV fixture,
+  bounded admission, cancellation, completion ordering and deterministic
+  teardown. Adrian accepted the first Release verdict and the Mac closeout is
+  complete. Evidence:
+  [`F1a/F1b first Release verdict and closeout`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
 - [ ] **F1:** implement the mandatory instructions in both VMs, wrap them with
   the Level B classes, and prove the same contract over in-process and isolated
   process providers; implement reusable byte-endpoint and child-process
@@ -2885,7 +2895,8 @@ budget. Provider-specific opcode families remain rejected.
    Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
    before any public pool/channel semantics.
 7. **Gate F — public design recorded 2026-08-13; user model and staged
-   implementation approved 2026-08-14; F0-S complete; F1a/F1b next.** The
+   implementation approved 2026-08-14; F0-S plus F1a/minimum F1b complete;
+   F1c next.** The
    approved ownership
    surface and sequencing are recorded in
    [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
@@ -2893,8 +2904,13 @@ budget. Provider-specific opcode families remain rejected.
    [`PERF3-13-GATE-F-USER-GUIDE.md`](PERF3-13-GATE-F-USER-GUIDE.md) and the
    staged execution in
    [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
-   F0-S has produced the maintainer/AI contract, coherence matrix,
-   compile-checked Level B declarations and exact RXAS/RXBIN/provider contract.
+   F0-S produced the maintainer/AI contract, coherence matrix, compile-checked
+   Level B declarations and exact RXAS/RXBIN/provider contract. F1a/F1b now
+   implement the five opcodes and the minimum both-VM local provider; Adrian
+   accepted the measured computed-goto code-layout cost for the evolving
+   instruction surface, with final hot-loop hardening deferred until the
+   surface stabilizes. The private registration seam/fake provider, full value
+   and lifecycle contract, and Level B classes remain F1c.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding

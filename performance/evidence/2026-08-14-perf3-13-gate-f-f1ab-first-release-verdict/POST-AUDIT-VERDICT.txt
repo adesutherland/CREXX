@@ -1,0 +1,60 @@
+PERF3-13 Gate F F1a/F1b post-audit Release verdict
+
+Capture date: 2026-08-14
+Host: Darwin 25.5.0 arm64, Apple M5, 10 logical CPUs
+Host status: AC power, no thermal or performance warning, timing session clear
+Candidate: post-audit frozen profiling-off Release, profile-20
+Control: accepted Gate E E6 cleaned C0 executors
+Sampling: one warmup and 12 pairwise-balanced recorded rounds per cell
+Confirmation: the complete unchanged capture was repeated for a second 12 rounds
+Correctness: all 312 warmup/recorded benchmark processes passed
+
+Result: ACCEPTED BY ADRIAN — CONTINUE TO F1a/F1b CLOSEOUT
+
+The first post-audit capture reports:
+
+  rxbvml spin-w1: +1.480492%, 95% interval -0.627461% to +3.588445%
+  rxbvml spin-w4: +2.062144%, 95% interval -0.991429% to +5.115718%
+  rxtvml spin-w1: -7.495097%, 95% interval -10.564743% to -4.425451%
+  rxtvml spin-w4: -7.061348%, 95% interval -8.782375% to -5.340320%
+
+The unchanged confirmation capture reports:
+
+  rxbvml spin-w1: +1.491419%, 95% interval -0.878157% to +3.860995%
+  rxbvml spin-w4: +1.502301%, 95% interval -0.800365% to +3.804968%
+  rxtvml spin-w1: -7.757714%, 95% interval -10.989983% to -4.525444%
+  rxtvml spin-w4: -6.857238%, 95% interval -8.363860% to -5.350615%
+
+Across the combined 24 balanced pairs:
+
+  rxbvml spin-w1: +1.485955%, 95% interval +0.028306% to +2.943605%
+  rxbvml spin-w4: +1.782223%, 95% interval +0.020317% to +3.544129%
+  rxtvml spin-w1: -7.626405%, 95% interval -9.675948% to -5.576862%
+  rxtvml spin-w4: -6.959293%, 95% interval -8.011490% to -5.907096%
+
+The switch-dispatch product remains neutral to favorable. The computed-goto
+result is a confirmed code-layout regression. It is also worse than the
+previously accepted pre-hardening result of -5.935713% at one worker and
+-4.202217% at four workers. The late change made chanwait observation
+failure-atomic by materializing the result in receiver-owned VM storage before
+marking the ticket observed; it changed rxvmintp.c.o and therefore required
+this fresh verdict.
+
+The first post-audit public-channel baseline, compared with the private
+executor adapter in the same candidate, is:
+
+  rxbvml identity: -79.312958%, interval -80.887632% to -77.738283%
+  rxbvml spin-w4:  -47.636793%, interval -48.236315% to -47.037270%
+  rxtvml identity: -79.483244%, interval -80.160781% to -78.805706%
+  rxtvml spin-w4:  -44.630510%, interval -45.418998% to -43.842023%
+
+The confirmation channel baseline is materially consistent:
+
+  rxbvml identity: -79.127981%, interval -80.229164% to -78.026798%
+  rxbvml spin-w4:  -48.011158%, interval -48.515271% to -47.507045%
+  rxtvml identity: -79.272270%, interval -80.263609% to -78.280930%
+  rxtvml spin-w4:  -44.838671%, interval -45.324009% to -44.353333%
+
+Adrian accepted the additional computed-goto code-layout cost for deferred
+F3/release-hardening tuning. The failure-atomic completion hardening remains in
+the F1a/F1b slice, which may now be committed and closed before F1c begins.

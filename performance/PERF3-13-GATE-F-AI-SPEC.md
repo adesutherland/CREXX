@@ -2,7 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **F0-S complete normative contract; implementation not yet present**
+Status: **F0-S normative contract complete; F1a and the minimum type `1` F1b
+vertical slice implemented; F1c next**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -811,6 +812,12 @@ completion order. The Level B scope caches it by ticket. A later
 request-specific wait uses that cache, and `join()` retains a stable
 submission-ordered copy. RXAS does not promise repeated delivery.
 
+Consumption is failure-atomic at the VM boundary. The provider completion is
+not marked observed until its canonical RXCV bytes have been materialized in
+controller-worker-owned storage. If encoding or receiver allocation fails,
+`chanwait` returns `RESOURCE_EXHAUSTED` and leaves that completion available for
+a later observation; it must not silently lose the terminal result.
+
 ### 11.3 Races
 
 Terminal publication uses one compare/exchange or an equivalent locked state
@@ -1006,6 +1013,7 @@ optimized and unoptimized RXAS and both concrete VMs where applicable.
 | `GF-B08` | unknown required capability bit fails `chanopen` with no live resource |
 | `GF-B09` | fake extension provider registers, conforms, pins and unloads safely |
 | `GF-B10` | metadata/effect/signal inventories contain exactly 655 aligned entries |
+| `GF-B11` | an output register may alias an input and receives the result only after every input has been consumed |
 
 ## 16. Coherence matrix
 
@@ -1019,7 +1027,7 @@ optimized and unoptimized RXAS and both concrete VMs where applicable.
 | pool versus scope and factory model | sections 5, 10.1 | Level B declaration oracle |
 | `.taskwork` factory target | sections 3.3, 4.4, 5 | Level B declaration oracle, `GF-N02` |
 | complete Level B control | section 5 | `gate_f_levelb_contract` CTest |
-| RXAS-only core bridge | sections 2, 6 | `GF-B01`, classlib inspection test |
+| RXAS-only core bridge | sections 2, 6 | `GF-B01`, `GF-B11`, classlib inspection test |
 | `chanopen` provider type plus capability flags | sections 6.2, 7.1, 7.2 | `GF-B08` |
 | no live VM values cross | sections 1, 8, 9 | `GF-P09`, `GF-N06` |
 | structured terminal completion and `TASK_FAILURE` | sections 7.4, 11 | `GF-P07`, `GF-N07..N09` |
@@ -1033,13 +1041,25 @@ No approved user-guide rule is left solely as an implementation convention.
 
 ## 17. F1 implementation boundary
 
-F1a adds the opcode/feature/metadata contracts while retaining the old six
-operations only as a buildable transition. F1d migrates their consumers and
-then performs the reserved-slot retirement.
-F1b adds only the minimum type `1` local provider path over the current Gate E
-integer/string executor fixture. Full ChannelValue, Level B implementations,
-redirect/process migration, Level G syntax and HTTP remain separate slices in
-the implementation plan.
+F1a now implements the opcode/feature/metadata contracts while retaining the
+old six operations only as a buildable transition. F1d migrates their consumers
+and then performs the reserved-slot retirement.
+
+The completed minimum F1b slice adds only the core type `1` local provider path
+over the current Gate E integer/string executor fixture. Its runtime-owned
+registry state is seeded with the lifetime-pinned local descriptor and accepts
+required bits for bounded admission, cancellation and completion-order
+observation. It does not yet claim provider-owned deadlines. The five RXAS
+instructions execute on both concrete VMs with generation-checked local
+capabilities, canonical RXCV validation and deterministic context teardown.
+
+F1c completes full ChannelValue, deadlines/scopes, Level B implementations and
+the private provider registration seam plus fake-provider vector `GF-B09`.
+Redirect/process migration, Level G syntax and HTTP remain separate slices in
+the implementation plan. No public provider-plugin ABI is implied before F2.
+
+The accepted first Release verdict and closeout are retained in
+[`2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
 
 After the first production edit, run the minimum focused correctness checks,
 freeze code, build ordinary profiling-off Release, run the smallest decisive

@@ -672,3 +672,8 @@ X(STEMSET2_REG_REG_REG_REG, 646, "RRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Set op1[op
 X(STEMSIZE_REG_REG, 647, FMT_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Return the stored entry count op1 for native stem op2")
 X(STEMKEYAT_REG_REG_REG, 648, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Return insertion-order key op3 from native stem op2 into op1")
 X(STEMVALUEAT_REG_REG_REG, 649, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Return generation-aware insertion-order value op3 from native stem op2 into op1")
+X(CHANOPEN_REG_REG_REG_REG_REG, 650, "RRRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Open provider channel op1=status op2=channel op3=provider type op4=required capabilities op5=configuration")
+X(CHANSTART_REG_REG_REG_REG_REG, 651, "RRRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Start channel operation op1=status op2=ticket op3=channel op4=envelope op5=wait microseconds")
+X(CHANWAIT_REG_REG_REG_REG, 652, "RRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Wait for channel completion op1=status op2=completion op3=channel op4=wait microseconds")
+X(CHANCANCEL_REG_REG_REG_REG, 653, "RRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Cancel channel ticket op1=status op2=channel op3=ticket op4=reason")
+X(CHANCLOSE_REG_REG_REG, 654, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Close channel op1=status op2=channel op3=mode")

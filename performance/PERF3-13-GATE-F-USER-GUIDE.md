@@ -2,7 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **user model approved; F0-S exact specification and Level B declaration oracle complete**
+Status: **user model approved; F0-S and the F1a/minimum F1b RXAS/RXVM
+substrate complete; Rexx/Level B implementation remains F1c**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -29,8 +30,10 @@ silently reopen an approved language decision. The staged execution and
 first-verdict stops are recorded in
 [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
 
-All source examples show the approved F0 syntax. They do not
-compile in the current product.
+All source examples show the approved F0 syntax. They do not compile in the
+current product yet. The five low-level RXAS channel instructions and minimum
+core local provider now exist in both concrete VMs; the Level B classes and
+Level G lowering that make this surface available to Rexx users remain F1c.
 
 ## The idea in one page
 
@@ -925,6 +928,8 @@ The maintainer/AI reference specification now contains:
 
 F0-S has completed that specification and coherence matrix before the first
 opcode edit. Adrian has authorized the staged implementation; any contradiction
-or new language decision still returns to him. F1a/F1b next implement the
-RXAS/RXBIN contract and minimum local-provider vertical slice, then stop at the
-mandatory first ordinary-Release verdict before commit/closeout.
+or new language decision still returns to him. F1a/F1b now implement the
+RXAS/RXBIN contract and minimum local-provider vertical slice; Adrian accepted
+their first ordinary-Release verdict and closeout. F1c next implements the
+full values/lifecycle, private provider conformance seam and Rexx/Level B
+surface, with its own mandatory verdict stop.

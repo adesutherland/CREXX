@@ -2328,6 +2328,18 @@ static const OpInfo *validate_instruction(Assembler_Context* context, Assembler_
     return 0;
 }
 
+static int channel_instruction_has_two_outputs(int opcode) {
+    return opcode == OP_CHANOPEN_REG_REG_REG_REG_REG ||
+           opcode == OP_CHANSTART_REG_REG_REG_REG_REG ||
+           opcode == OP_CHANWAIT_REG_REG_REG_REG;
+}
+
+static int same_register_operand(const Assembler_Token *left,
+                                 const Assembler_Token *right) {
+    return left && right && left->token_type == right->token_type &&
+           left->token_value.integer == right->token_value.integer;
+}
+
 /** Generate code for an instruction with no operands */
 void rxasgen0(Assembler_Context *context, Assembler_Token *instrToken) {
     rxasgenv(context, instrToken, 0, 0);
@@ -2395,6 +2407,13 @@ void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,
     inst = validate_instruction(context, instrToken, operandTypes, operandCount);
 
     if (inst) {
+        if (channel_instruction_has_two_outputs(inst->opcode) &&
+            same_register_operand(operandTokens[0], operandTokens[1])) {
+            rxaseaft(context, operandTokens[1],
+                     "channel instruction output registers must be distinct");
+            free(operandTypes);
+            return;
+        }
         gen_instr(context, inst->opcode, (int)operandCount);
         for (i = 0; i < operandCount; i++) gen_operand(context, operandTokens[i]);
     }

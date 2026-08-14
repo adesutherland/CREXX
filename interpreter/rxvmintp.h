@@ -599,6 +599,7 @@ typedef struct rxvm_context {
     rxpa_session_instance *rxpa_sessions;
     rxpa_session_call_binding *rxpa_session_bindings;
     rxpa_compatibility_context rxpa_compatibility;
+    struct rxvm_channel_context *channel_context;
 #ifdef CREXX_VM_PROFILING
     /* Keep optional build-local fields last so existing field offsets stay stable. */
     char profile_mode;

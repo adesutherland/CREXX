@@ -125,12 +125,12 @@ endif()
 
 run_checked("add unsupported feature"
             "${MUTATE_FEATURE}" "${WORK_DIR}/fixed_opt.rxbin"
-            "${WORK_DIR}/unknown_feature.rxbin" 9)
+            "${WORK_DIR}/unknown_feature.rxbin" 17)
 execute_process(
         COMMAND "${RXDAS}" "${WORK_DIR}/unknown_feature.rxbin"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
         RESULT_VARIABLE result)
-if(result EQUAL 0 OR NOT err MATCHES "unsupported feature flags 0x00000008")
+if(result EQUAL 0 OR NOT err MATCHES "unsupported feature flags 0x00000010")
     message(FATAL_ERROR "unknown RXBIN feature was not rejected precisely:\n${out}${err}")
 endif()

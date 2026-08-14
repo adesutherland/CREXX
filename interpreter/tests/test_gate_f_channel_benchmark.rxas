@@ -1,0 +1,154 @@
+/* Gate F F1b first-verdict benchmark: channel latency and four-worker
+ * compute throughput.  Timings exclude image load and provider open/close. */
+
+.globals=0
+
+.meta "gatefbench.identity"="b" ".int" identity() "number=.string"
+.meta "gatefbench.spin"="b" ".int" spin() "iterations=.string"
+
+main() .locals=20
+    /* Sequential tiny-task latency: 1,024 start/wait pairs. */
+    load r4,0x5258435601000000a1000000000000000900000085000000000000001d0000000000000063726578782e6368616e6e656c2e6c6f63616c2d7461736b2d706f6f6c010000000200000000000000110000000000000061646d697373696f6e436170616369747903000000080000000000000001000000000000000b00000000000000776f726b6572436f756e740300000008000000000000000100000000000000
+    load r2,1
+    load r3,11
+    chanopen r0,r1,r2,r3,r4
+    ine r5,r0,0
+    brt fail_open_latency,r5
+    load r4,0x5258435601000000b601000000000000090000009a01000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d696e766f6b650100000002000000000000000900000000000000617267756d656e74730800000015000000000000000100000000000000060000000100000000000000310600000000000000746172676574090000002101000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d7461726765740100000005000000000000000a0000000000000063616c6c61626c65496403000000080000000000000000000000000000001000000000000000666163746f7279417267756d656e747308000000080000000000000000000000000000000b00000000000000696d616765446967657374070000002000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000006b696e6403000000080000000000000001000000000000000f000000000000007369676e61747572654469676573740700000020000000000000000000000000000000000000000000000000000000000000000000000000000000
+    load r6,0
+    load r7,1024
+    load r8,0
+    load r9,-1
+    load r15,298
+    load r17,0
+    load r18,229
+    mtime r10
+latency_loop:
+    chanstart r0,r11,r1,r4,r8
+    ine r5,r0,0
+    brt fail_start_latency,r5
+    chanwait r0,r12,r1,r9
+    ine r5,r0,0
+    brt fail_wait_latency,r5
+    bgeti64 r16,r12,r15
+    ine r5,r16,1
+    brt fail_completion_latency,r5
+    bgeti64 r16,r12,r18
+    iadd r17,r17,r16
+    inc r6
+    ilt r5,r6,r7
+    brt latency_loop,r5
+    mtime r13
+    isub r14,r13,r10
+    ine r5,r17,1024
+    brt fail_result_latency,r5
+    load r3,1
+    chanclose r0,r1,r3
+    ine r5,r0,0
+    brt fail_close_latency,r5
+    say "GF_CHANNEL_LATENCY_JOBS: 1024"
+    itos r14
+    sayx "GF_CHANNEL_LATENCY_US: "
+    say r14
+
+    /* Four-worker throughput: same 256 x 65,536 spin cell as Gate E E6. */
+    load r4,0x5258435601000000a1000000000000000900000085000000000000001d0000000000000063726578782e6368616e6e656c2e6c6f63616c2d7461736b2d706f6f6c010000000200000000000000110000000000000061646d697373696f6e436170616369747903000000080000000000000000010000000000000b00000000000000776f726b6572436f756e740300000008000000000000000400000000000000
+    load r2,1
+    load r3,11
+    chanopen r0,r1,r2,r3,r4
+    ine r5,r0,0
+    brt fail_open_throughput,r5
+    load r4,0x5258435601000000ba01000000000000090000009e01000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d696e766f6b650100000002000000000000000900000000000000617267756d656e7473080000001900000000000000010000000000000006000000050000000000000036353533360600000000000000746172676574090000002101000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d7461726765740100000005000000000000000a0000000000000063616c6c61626c65496403000000080000000000000001000000000000001000000000000000666163746f7279417267756d656e747308000000080000000000000000000000000000000b00000000000000696d616765446967657374070000002000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000006b696e6403000000080000000000000001000000000000000f000000000000007369676e61747572654469676573740700000020000000000000000000000000000000000000000000000000000000000000000000000000000000
+    load r6,0
+    load r7,256
+    load r8,0
+    load r17,0
+    mtime r10
+throughput_start_loop:
+    chanstart r0,r11,r1,r4,r8
+    ine r5,r0,0
+    brt fail_start_throughput,r5
+    inc r6
+    ilt r5,r6,r7
+    brt throughput_start_loop,r5
+    load r6,0
+throughput_wait_loop:
+    chanwait r0,r12,r1,r9
+    ine r5,r0,0
+    brt fail_wait_throughput,r5
+    bgeti64 r16,r12,r15
+    ine r5,r16,1
+    brt fail_completion_throughput,r5
+    bgeti64 r16,r12,r18
+    iadd r17,r17,r16
+    inc r6
+    ilt r5,r6,r7
+    brt throughput_wait_loop,r5
+    mtime r13
+    isub r14,r13,r10
+    ine r5,r17,16777216
+    brt fail_result_throughput,r5
+    load r3,1
+    chanclose r0,r1,r3
+    ine r5,r0,0
+    brt fail_close_throughput,r5
+    say "GF_CHANNEL_THROUGHPUT_JOBS: 256"
+    itos r14
+    sayx "GF_CHANNEL_THROUGHPUT_US: "
+    say r14
+    say "PASS: Gate F F1b channel benchmark"
+    ret 0
+
+fail_open_latency:
+    say "FAIL: channel benchmark latency open"
+    ret 1
+fail_start_latency:
+    say "FAIL: channel benchmark latency start"
+    ret 1
+fail_wait_latency:
+    say "FAIL: channel benchmark latency wait"
+    ret 1
+fail_completion_latency:
+    say "FAIL: channel benchmark latency completion"
+    ret 1
+fail_result_latency:
+    say "FAIL: channel benchmark latency result"
+    ret 1
+fail_close_latency:
+    say "FAIL: channel benchmark latency close"
+    ret 1
+fail_open_throughput:
+    say "FAIL: channel benchmark throughput open"
+    ret 1
+fail_start_throughput:
+    say "FAIL: channel benchmark throughput start"
+    ret 1
+fail_wait_throughput:
+    say "FAIL: channel benchmark throughput wait"
+    ret 1
+fail_completion_throughput:
+    say "FAIL: channel benchmark throughput completion"
+    ret 1
+fail_result_throughput:
+    say "FAIL: channel benchmark throughput result"
+    ret 1
+fail_close_throughput:
+    say "FAIL: channel benchmark throughput close"
+    ret 1
+
+identity() .locals=1 .expose=gatefbench.identity
+    stoi a1
+    ret a1
+
+spin() .locals=3 .expose=gatefbench.spin
+    stoi a1
+    load r0,0
+    load r1,1
+spin_loop:
+    igt r2,r1,a1
+    brt spin_done,r2
+    inc r0
+    inc r1
+    br spin_loop
+spin_done:
+    ret r0

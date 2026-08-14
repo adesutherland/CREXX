@@ -3,7 +3,7 @@
 Date: 2026-08-13
 
 Status: **user model and staged Gate F implementation approved by Adrian on
-2026-08-14; F0-S exact contract complete**
+2026-08-14; F0-S and F1a/minimum F1b complete; F1c next**
 
 This record is the normative design authority for the future PERF3-13 Gate F
 public concurrency surface. It records the user model, ownership and transfer
@@ -37,6 +37,9 @@ must call mandatory transport-neutral RXAS instructions, which RXVM implements
 over the Gate E executor/provider substrate. There is no RXPA task path and no
 Rexx-visible hidden native-handle contract. F0-S fixes the five instruction
 signatures, opcodes, effects, signals, feature gate and binary value contract.
+F1a/F1b now implement that instruction family and the minimum type `1` local
+provider in both concrete VMs. Full values/lifecycle and the Rexx class/syntax
+surface remain F1c.
 
 Use these current repository contracts when implementing the design:
 

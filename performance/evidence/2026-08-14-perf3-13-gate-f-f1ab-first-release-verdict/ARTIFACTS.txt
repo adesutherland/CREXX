@@ -1,0 +1,56 @@
+PERF3-13 Gate F F1a/F1b artifacts
+
+Source base HEAD:
+  388227affabdf1332a1c5fccfdbe27e5c1f398d8
+
+Build configuration:
+  CMAKE_BUILD_TYPE=Release
+  CREXX_VM_PROFILING=OFF
+  CREXX_VM_HANDLER_PANEL=profile-20
+
+Accepted E6 executor controls:
+  4cf1dc4dfe38f56332d6d1f7c77899f37b456b90c0682a957b4607355a1a936d  persistent_worker_executor-rxbvml
+  8a8099b08151fae1644fe9164869d61f1fc4e0653d8c459724a7afbf3263977b  persistent_worker_executor-rxtvml
+
+Accepted-verdict F1 executor and benchmark artifacts:
+  1921e4c69069f9ea4a27aaf5b8fcaf0ea68e079d9056c84e3c64ead496ad1049  persistent_worker_executor-rxbvml
+  ef5f077afe0dde02cbfcb57c2acdfbcd5f6f3540ec621d3a9dc6683f9fbb0f5d  persistent_worker_executor-rxtvml
+  e105d4025b4f1aec6c8b2da40def12327d2607933f4c276843b174c5a6f4c571  test_persistent_worker_executor.rxbin
+  48d466a1cc5e69d2467242470cb7f4e7f0676e47c4f95d8d0bfd23f2b4a9b372  test_gate_f_channel_benchmark.rxbin
+
+Post-audit hardened F1 executor and benchmark artifacts:
+  12f542ab22429a4593b650e5e310e92d67bf47d452f7eff708d1761f5c47e396  persistent_worker_executor-rxbvml
+  39707979baee64e0c7851a07cd56e277e0ca9b9c4f0f262bdad36174de673fce  persistent_worker_executor-rxtvml
+  e105d4025b4f1aec6c8b2da40def12327d2607933f4c276843b174c5a6f4c571  test_persistent_worker_executor.rxbin
+  48d466a1cc5e69d2467242470cb7f4e7f0676e47c4f95d8d0bfd23f2b4a9b372  test_gate_f_channel_benchmark.rxbin
+  43d4de4fd267e9e7477471569238fd0219602d68e7625afad267d33167661f5f  test_gate_f_channel_local.rxbin
+
+Final rebuilt product artifacts after completion-materialization hardening:
+  a1d8e0a327c805e50b4945968d8d64dd3606404d06abad98c8823287a1e455f0  rxbvm
+  dd0d620b70ba6126ab0f5bbe9cf46bda39761263d6d79e5c10c2a67d1a0e358c  rxtvm
+  a1d8e0a327c805e50b4945968d8d64dd3606404d06abad98c8823287a1e455f0  rxvm
+
+Post-audit timed interpreter objects:
+  46ffb3fcffdcad91c6fee28fbc677671ef993f03ed3d1740d41c00b901f5c6b3  rxbvm_core_objects/rxvmintp.c.o
+  1fc11200facf5e655cdd3cb72b6225aba01a3f56cb079b2f187d16b2f98db2a3  rxtvm_core_objects/rxvmintp.c.o
+
+Retained evidence:
+  timing/samples.csv and timing/raw.log
+  timing-post-audit/samples.csv and timing-post-audit/raw.log
+  timing-post-audit/confirmation/samples.csv and
+  timing-post-audit/confirmation/raw.log
+  investigation/samples.csv and investigation/raw.log
+  qa/debug-build.log and qa/release-build.log
+  qa/debug-ctest.log
+  qa/focused-debug.log and qa/focused-release.log
+  qa/channel-benchmark-correctness.log
+  qa/pre-audit-highlighting-recovery.log (retained original-run history)
+  qa/stress-control.log, qa/stress-repeat100.log and
+  qa/release-stress-repeat100.log
+  qa/asan-build.log and qa/asan-ctest.log
+  qa/asan-leak-detection-unsupported.log
+  capture-post-audit.zsh and POST-AUDIT-VERDICT.txt
+
+Post-audit capture integrity:
+  primary:      168 sample rows, 156/156 benchmark processes passed
+  confirmation: 168 sample rows, 156/156 benchmark processes passed

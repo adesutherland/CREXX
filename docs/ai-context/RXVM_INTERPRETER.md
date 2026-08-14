@@ -680,6 +680,50 @@ churn at one, two, four and eight workers on each available concrete VM and
 asserts that the requested maximum concurrency is reached. This adds no public
 worker/channel API, RXAS/RXBIN instruction, plugin ABI or scheduling contract.
 
+### Gate F F1a/F1b channel substrate
+
+Gate F now adds the mandatory public RXAS channel boundary without exposing a
+public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
+`chanstart`, `chanwait`, `chancancel` and `chanclose` in the shared VM core, so
+`rxbvm` and `rxtvm` execute the same logical behavior. They require RXBIN 007
+feature bit `1 << 3`, return operation statuses rather than VM signals, remain
+opaque optimizer barriers and are outlined/cold under profile-20.
+
+Each `rxvm_context` owns a generation-checked table of channel and ticket
+capabilities. Handles encode their execution owner, kind, slot and generation;
+wrong-owner, wrong-kind and stale uses are rejected. They are local authority,
+not transferable `ChannelValue`. Context teardown cancel-closes every live
+channel, joins its workers and releases all tickets/requests before the runtime
+provider state and sealed generation are destroyed.
+
+The runtime-owned provider-registry state is currently seeded with the core
+type `1` local-thread descriptor. `chanopen` validates its canonical RXCV pool
+configuration, required capabilities and the controller's sealed bytecode-only
+program generation, then creates an attached Gate E executor over that same
+generation. A program containing native/plugin modules may still execute
+normally, but local `chanopen` reports provider unavailability when the image
+cannot be sealed for attached workers. This avoids making ordinary native
+program startup depend on channel eligibility.
+
+The minimum type `1` provider advertises bounded admission, cancellation and
+completion-order observation. Task envelopes name a semantic-graph callable ID
+and carry copied Gate E integer/string register images; they never carry a
+procedure-name string, live `value`, reference, frame, native payload or worker
+pointer. Completion is encoded into receiver-owned canonical RXCV binary and is
+marked observed only after controller-worker-owned storage has been allocated
+and populated. Encoding or allocation failure therefore leaves the terminal
+completion available for a later wait. Queue-full/backpressure,
+finite/nonblocking waits, queued/running cancellation, terminal observation,
+drain/cancel close and deterministic teardown are implemented.
+
+This is the minimum F1b vertical slice, not the completed Rexx surface. Full
+`ChannelValue`, provider-owned deadlines/scopes, the private extension
+registration/fake-provider vector, Level B classes and Level G lowering remain
+F1c. Byte endpoints and child-process/redirect migration remain F1d, and the
+concurrent HTTP consumer remains F1e. A public provider-plugin ABI remains an
+F2 review. The exact current/future boundary is recorded in
+[`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).
+
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or

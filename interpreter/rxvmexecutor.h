@@ -20,6 +20,8 @@ extern "C" {
  */
 typedef struct rxvm_executor rxvm_executor;
 typedef struct rxvm_executor_request rxvm_executor_request;
+struct rxvm_runtime;
+struct rxvm_program_generation;
 
 typedef enum rxvm_executor_register_type {
     RXVM_EXECUTOR_REGISTER_NONE = 0,
@@ -92,6 +94,15 @@ rxvm_executor *rxvm_executor_create(
         size_t queue_capacity,
         rxvm_executor_result *result_out);
 
+/* Start workers in an existing runtime and attach them to its already sealed
+ * immutable program generation. The executor never destroys RUNTIME. */
+rxvm_executor *rxvm_executor_create_attached(
+        struct rxvm_runtime *runtime,
+        const struct rxvm_program_generation *generation,
+        size_t worker_count,
+        size_t queue_capacity,
+        rxvm_executor_result *result_out);
+
 /*
  * Close submission, drain every accepted non-cancelled request, join workers
  * and destroy the E4 runtime. Request handles may outlive the executor only
@@ -112,6 +123,16 @@ rxvm_executor_result rxvm_executor_submit_registers(
         rxvm_executor *executor,
         size_t worker_affinity,
         const char *procedure,
+        size_t argument_count,
+        const rxvm_executor_register_image *arguments,
+        rxvm_executor_request **request_out);
+
+/* Submit a semantic-graph callable identity. The worker resolves the callable
+ * in its private overlay; no procedure-name string crosses the channel edge. */
+rxvm_executor_result rxvm_executor_submit_callable_registers(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        uint64_t callable_id,
         size_t argument_count,
         const rxvm_executor_register_image *arguments,
         rxvm_executor_request **request_out);
@@ -155,6 +176,22 @@ rxvm_executor_request_state rxvm_executor_request_wait_started(
 
 rxvm_executor_request_state rxvm_executor_request_state_get(
         rxvm_executor_request *request);
+
+/* Nonblocking terminal snapshot used by the channel completion-order queue. */
+int rxvm_executor_request_completion_snapshot(
+        rxvm_executor_request *request,
+        rxvm_executor_completion *completion_out,
+        uint64_t *completion_sequence_out);
+
+/* Executor-wide terminal publication generation. WAIT returns 1 after a
+ * change, 0 on finite/nonblocking timeout, and -1 for invalid arguments. */
+uint64_t rxvm_executor_completion_generation_get(
+        rxvm_executor *executor);
+int rxvm_executor_completion_generation_wait(
+        rxvm_executor *executor,
+        uint64_t observed_generation,
+        int64_t wait_microseconds,
+        uint64_t *generation_out);
 size_t rxvm_executor_request_affinity(
         const rxvm_executor_request *request);
 

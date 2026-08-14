@@ -1193,6 +1193,18 @@ add_test(NAME nr15_native_stem_contract
 set_tests_properties(nr15_native_stem_contract PROPERTIES
         LABELS "compiler;performance;rxbin;stem;nr15")
 
+add_test(NAME gate_f_channel_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.rxas
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/gate_f_channel_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.cmake)
+set_tests_properties(gate_f_channel_contract PROPERTIES
+        LABELS "compiler;performance;rxas;rxbin;gate-f;channels")
+
 add_test(NAME nr09_numeric_context_contract
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
