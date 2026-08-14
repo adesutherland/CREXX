@@ -1,0 +1,688 @@
+/* -----------------------------------------------------------------------------
+ * objects_the_hidden_gems.crexx
+ *
+ * Educational example.
+ *
+ * This example is intentionally verbose.
+ *
+ * Its purpose is not to demonstrate the shortest or most efficient
+ * implementation, but to explain the concepts behind the code.
+ * -----------------------------------------------------------------------------
+ * A guided tour through cREXX classes and objects.
+ *
+ * The purpose of this example is education.
+ *
+ * It demonstrates:
+ *
+ *   - class definitions
+ *   - typed object attributes
+ *   - factories
+ *   - factory arguments
+ *   - factory-local variables
+ *   - scalar and array instance state
+ *   - methods which modify state
+ *   - methods which query state
+ *   - methods calling other methods
+ *   - multiple independent objects
+ *   - object references
+ *   - independent object copies
+ *
+ * The important mental model is:
+ *
+ *     CLASS
+ *         defines the structure of an object
+ *
+ *     FACTORY
+ *         establishes the initial state of a newly created object
+ *
+ *     OBJECT
+ *         owns its own independent state
+ *
+ *     METHOD
+ *         operates on the state of the object which received the call
+ *
+ * Read it.
+ * Run it.
+ * Change it.
+ * Break it.
+ * Run it again.
+ *
+ * -----------------------------------------------------------------------------
+ */
+
+options levelb
+##  import rxfnsb /* currently not used */
+
+
+main: procedure = .int
+
+    say
+    say "cREXX objects: the hidden gems"
+    say "==============================="
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 1. Create two independent objects                     */
+    /*--------------------------------------------------------*/
+
+    say "1. Creating independent objects"
+    say "-------------------------------"
+
+    /*
+     * Both objects are instances of the same class.
+     *
+     * The MeasurementSeries class contains only one definition of:
+     *
+     *     _name
+     *     _unit
+     *     _readings
+     *     _count
+     *
+     * but each object receives its own independent values for those
+     * attributes.
+     */
+
+    temperature = .MeasurementSeries("Office temperature", "C")
+    pressure    = .MeasurementSeries("Air pressure", "hPa")
+
+    say "Created:"
+    say "  " temperature.name()
+    say "  " pressure.name()
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 2. Modify the state of each object independently      */
+    /*--------------------------------------------------------*/
+
+    say "2. Independent object state"
+    say "---------------------------"
+
+    call temperature.add(21)
+    call temperature.add(23)
+    call temperature.add(22)
+
+    call pressure.add(1012)
+    call pressure.add(1015)
+    call pressure.add(1013)
+
+    /*
+     * The same add() method is executed for both objects.
+     *
+     * The receiving object determines which _readings and _count
+     * attributes the method sees.
+     */
+
+    say "Temperature count:" temperature.count()
+    say "Pressure count   :" pressure.count()
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 3. Query object state                                 */
+    /*--------------------------------------------------------*/
+
+    say "3. Querying object state"
+    say "------------------------"
+
+    say temperature.name()
+    say "  count  :" temperature.count()
+    say "  latest :" temperature.latest() temperature.unit()
+    say "  minimum:" temperature.minimum() temperature.unit()
+    say "  maximum:" temperature.maximum() temperature.unit()
+
+    say
+
+    say pressure.name()
+    say "  count  :" pressure.count()
+    say "  latest :" pressure.latest() pressure.unit()
+    say "  minimum:" pressure.minimum() pressure.unit()
+    say "  maximum:" pressure.maximum() pressure.unit()
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 4. A method may call other methods                    */
+    /*--------------------------------------------------------*/
+
+    say "4. Methods calling other methods"
+    say "--------------------------------"
+
+    /*
+     * describe() is itself a method.
+     *
+     * It calls:
+     *
+     *     count()
+     *     latest()
+     *     minimum()
+     *     maximum()
+     *     unit()
+     *
+     * All those methods operate on the SAME receiving object.
+     */
+
+    call temperature.describe()
+
+    say
+
+    call pressure.describe()
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 5. Access one individual array element                */
+    /*--------------------------------------------------------*/
+
+    say "5. Accessing one measurement"
+    say "----------------------------"
+
+    say "Temperature reading 1:" temperature.get(1)
+    say "Temperature reading 2:" temperature.get(2)
+    say "Temperature reading 3:" temperature.get(3)
+
+    /*
+     * Position 99 is outside the logical range.
+     *
+     * This simple example defines that as zero.
+     */
+
+    say "Temperature reading 99:" temperature.get(99)
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 6. Object reference                                   */
+    /*--------------------------------------------------------*/
+
+    say "6. Object references"
+    say "--------------------"
+
+    /*
+     * This does NOT create another MeasurementSeries object.
+     *
+     * current receives another reference to the SAME object.
+     */
+
+    current = temperature
+
+    say "Before change:"
+    say "  temperature latest:" temperature.latest()
+    say "  current latest    :" current.latest()
+
+    call current.add(24)
+
+    say
+    say "After: call current.add 24"
+    say
+    say "  temperature latest:" temperature.latest()
+    say "  current latest    :" current.latest()
+
+    say
+    say "Both references point to the same object."
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 7. Why another reference can be useful                */
+    /*--------------------------------------------------------*/
+
+    say "7. A reference can represent another role"
+    say "-----------------------------------------"
+
+    /*
+     * Merely writing:
+     *
+     *     current = temperature
+     *
+     * is not very interesting by itself.
+     *
+     * It becomes useful when CURRENT represents a role:
+     *
+     *     "the measurement series currently being processed"
+     */
+
+    requested_series = "PRESSURE"
+
+    if requested_series = "TEMPERATURE" then
+        selected = temperature
+    else
+        selected = pressure
+
+    say "Selected series:" selected.name()
+    say "Latest value   :" selected.latest() selected.unit()
+
+    /*
+     * The processing code no longer needs to care which particular
+     * MeasurementSeries object was selected.
+     */
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 8. Independent copy                                   */
+    /*--------------------------------------------------------*/
+
+    say "8. Independent object copy"
+    say "--------------------------"
+
+    /*
+     * Compare:
+     *
+     *     current = temperature
+     *
+     * with:
+     *
+     *     copy_of_temperature = temperature.copy()
+     *
+     * The first assignment copies an object REFERENCE.
+     *
+     * copy() creates a NEW object and copies the logical state into it.
+     */
+
+    copy_of_temperature = temperature.copy()
+
+    say "Before changing the copy:"
+    say "  original latest:" temperature.latest()
+    say "  copy latest    :" copy_of_temperature.latest()
+
+    call copy_of_temperature.add(99)
+
+    say
+    say "After: call copy_of_temperature.add 99"
+    say
+    say "  original latest:" temperature.latest()
+    say "  copy latest    :" copy_of_temperature.latest()
+
+    say
+    say "The two objects are independent."
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 9. Clear affects only the receiving object            */
+    /*--------------------------------------------------------*/
+
+    say "9. Clearing one object"
+    say "----------------------"
+
+    say "Before clear:"
+    say "  pressure count:" pressure.count()
+    say "  copy count    :" copy_of_temperature.count()
+
+    call pressure.clear()
+
+    say
+    say "After: call pressure.clear()"
+    say
+    say "  pressure count:" pressure.count()
+    say "  copy count    :" copy_of_temperature.count()
+
+    say
+
+
+    /*--------------------------------------------------------*/
+    /* 10. Summary                                           */
+    /*--------------------------------------------------------*/
+
+    say "10. Summary"
+    say "-----------"
+
+    say
+    say "CLASS"
+    say "  defines which attributes and methods an object has."
+
+    say
+    say "FACTORY"
+    say "  initializes a newly created object's state."
+
+    say
+    say "OBJECT"
+    say "  owns its own independent attribute values."
+
+    say
+    say "METHOD"
+    say "  operates in the context of the receiving object."
+
+    say
+    say "OBJECT REFERENCE"
+    say "  gives another variable access to the same object."
+
+    say
+    say "COPY"
+    say "  creates another independent object with copied state."
+
+    say
+    say "End of object demonstration."
+
+return 0
+
+
+/* -----------------------------------------------------------------------------
+ * The MeasurementSeries class.
+ *
+ * A class is a template or blueprint for creating objects.
+ *
+ * Every object created from a class is called an instance of that class.
+ *
+ * One class may create many independent objects.
+ *
+ * One object does not know that another object created from the same class
+ * exists.
+ *
+ * cREXX currently has no true class-static storage.
+ *
+ * Shared state can be implemented using namespace/module globals exposed to
+ * class methods and factories, but that state belongs to the module rather
+ * than to the class itself.
+ *
+ * ---------------------------------------------------------------------------*/
+
+MeasurementSeries: class
+
+
+/*
+ * Attribute declarations.
+ *
+ * Attribute declarations are mandatory in the class definition.
+ *
+ * These attributes belong to EACH OBJECT, not to the class globally.
+ *
+ * Every MeasurementSeries instance receives its own:
+ *
+ *     _name
+ *     _unit
+ *     _readings
+ *     _count
+ *
+ * If I create:
+ *
+ *     temperature = .MeasurementSeries(...)
+ *     pressure    = .MeasurementSeries(...)
+ *
+ * both objects have independent attributes.
+ *
+ * The attributes are available to every factory and every method of
+ * this class.
+ *
+ * They do not need to be passed as arguments to methods and do not need
+ * to be returned from methods merely to preserve their values.
+ *
+ * Compare procedural programming:
+ *
+ *     add_measurement(readings, count, value)
+ *
+ * with object-oriented programming:
+ *
+ *     measurement.add(value)
+ *
+ * The object already owns _readings and _count.
+ *
+ * Object attributes cannot be accessed directly from outside the object.
+ * Methods provide controlled access to the object's state.
+ *
+ * The definitions below are TYPE DECLARATIONS.
+ *
+ * They are not assignments and cannot contain semantic initial values.
+ *
+ * Semantic initialization belongs in the factory.
+ */
+
+    _name     = .string
+    _unit     = .string
+    _readings = .int[]
+    _count    = .int
+
+
+/*
+ * Factory.
+ *
+ * A factory is a special class operation used during object creation.
+ *
+ * Similarities to methods:
+ *
+ *   - it belongs to the class;
+ *   - it has direct access to the object's attributes;
+ *   - it can receive arguments;
+ *   - it can define local working variables;
+ *   - it can call methods;
+ *   - it can create other objects.
+ *
+ * Important difference:
+ *
+ *   - it is invoked when a new object is created;
+ *   - its main job is to establish the object's initial state.
+ *
+ * Variables created inside the factory which are NOT declared as class
+ * attributes are local working variables.
+ *
+ * They disappear when the factory returns.
+ */
+
+    *: factory
+        arg name = .string, unit = .string
+
+        /*
+         * _name, _unit and _count are object attributes.
+         *
+         * These assignments initialize the attributes of THIS newly
+         * created MeasurementSeries object.
+         */
+
+        _name = name
+        _unit = unit
+        _count = 0
+
+        /*
+         * Example of a factory-local working variable.
+         *
+         * It exists only while this factory invocation is running.
+         * It is not part of the object.
+         */
+
+        initial_message = .string
+        initial_message = "MeasurementSeries created"
+
+    return
+
+
+/*
+ * add()
+ *
+ * A method executes in the context of one particular object.
+ *
+ * Therefore _count and _readings refer automatically to the attributes
+ * belonging to the object which received this method call.
+ *
+ * There is no need to pass them as arguments.
+ */
+
+    add: method = .void
+        arg value = .int
+
+        _count = _count + 1
+        _readings[_count] = value
+
+    return
+
+
+/*
+ * get()
+ *
+ * Return one measurement by its one-based logical position.
+ *
+ * Invalid positions return zero in this simple educational example.
+ */
+
+    get: method = .int
+        arg position = .int
+
+        if position < 1 | position > _count then
+            return 0
+
+    return _readings[position]
+
+
+/*
+ * count()
+ *
+ * Query methods may simply return object state.
+ */
+
+    count: method = .int
+    return _count
+
+
+/*
+ * latest()
+ */
+
+    latest: method = .int
+
+        if _count = 0 then
+            return 0
+
+    return _readings[_count]
+
+
+/*
+ * minimum()
+ *
+ * Local variables such as RESULT and I belong only to this particular
+ * method invocation.
+ *
+ * They are not object attributes.
+ */
+
+    minimum: method = .int
+
+        if _count = 0 then
+            return 0
+
+        result = _readings[1]
+
+        do i = 2 to _count
+            if _readings[i] < result then
+                result = _readings[i]
+        end
+
+    return result
+
+
+/*
+ * maximum()
+ */
+
+    maximum: method = .int
+
+        if _count = 0 then
+            return 0
+
+        result = _readings[1]
+
+        do i = 2 to _count
+            if _readings[i] > result then
+                result = _readings[i]
+        end
+
+    return result
+
+
+/*
+ * clear()
+ *
+ * Clear only the logical contents of THIS MeasurementSeries object.
+ */
+
+    clear: method = .void
+
+        _count = 0
+
+    return
+
+
+/*
+ * name()
+ *
+ * Object attributes cannot be accessed directly by callers.
+ *
+ * This method provides controlled read access to _name.
+ */
+
+    name: method = .string
+    return _name
+
+
+/*
+ * unit()
+ */
+
+    unit: method = .string
+    return _unit
+
+
+/*
+ * describe()
+ *
+ * A method may call other methods.
+ *
+ * All calls below operate on the same receiving object:
+ *
+ *     count()
+ *     latest()
+ *     minimum()
+ *     maximum()
+ *     unit()
+ *
+ * This is useful for splitting larger object operations into smaller
+ * reusable methods rather than duplicating logic.
+ */
+
+    describe: method = .void
+
+        say _name
+        say "  count  :" count()
+        say "  latest :" latest() unit()
+        say "  minimum:" minimum() unit()
+        say "  maximum:" maximum() unit()
+
+    return
+
+
+/*
+ * copy()
+ *
+ * Create and return an independent MeasurementSeries object.
+ *
+ * This method demonstrates that methods may create other objects.
+ *
+ * RESULT refers to the newly created object.
+ *
+ * The current object's state remains available through:
+ *
+ *     _name
+ *     _unit
+ *     _readings
+ *     _count
+ *
+ * The new object is filled by calling its add() method.
+ */
+
+    copy: method = .MeasurementSeries
+
+        result = .MeasurementSeries(_name, _unit)
+
+        do i = 1 to _count
+            call result.add(_readings[i])
+        end
+
+    return result

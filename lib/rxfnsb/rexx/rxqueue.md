@@ -262,7 +262,7 @@ The queue combines both stack and queue semantics.
 | `PUSH` | Insert at the front (LIFO) |
 | `QUEUE` | Append at the end (FIFO) |
 | `PULL` | Remove and return the first queued entry; if the queue is empty, read one line from the default input stream |
-| `PEEK` | Return the first queued entry without removing it; if the queue is empty, read one line from the default input stream |
+| `PEEK` | Return the first queued entry without removing it; if the queue is empty, return an empty string |
 | `QUEUED` | Return the current queue size |
 
 For example:
@@ -306,12 +306,12 @@ Future CREXX releases may support externally managed named data queues shared be
 ## Named Queues
 
 Each execution also provides a named queue manager. `SESSION` is created and
-selected automatically, so existing programs continue to use the four queue
+selected automatically, so existing programs continue to use the standard queue
 functions unchanged.
 
 Queue names are managed independently from queue entries. `PUSH`, `QUEUE`,
-`PULL`, and `QUEUED` do not take a queue-name argument; they always operate on
-the queue selected by `RXQUEUE SET`.
+`PULL`, `PEEK`, and `QUEUED` do not take a queue-name argument; they always
+operate on the queue selected by `RXQUEUE SET`.
 
 ```rexx
 rc = rxqueue("CREATE", "WORK")

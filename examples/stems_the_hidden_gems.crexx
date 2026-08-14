@@ -1,0 +1,536 @@
+/*
+ * -----------------------------------------------------------------------------
+ * stems_the_hidden_gems.crexx
+ *
+ * Educational example.
+ *
+ * This example is intentionally verbose.
+ *
+ * Its purpose is not to demonstrate the shortest or most efficient
+ * implementation, but to explain the concepts behind the code.
+ * -----------------------------------------------------------------------------
+ *
+ * A guided tour through the cREXX Level B .stem class.
+ *
+ * If your mental model of a stem is still:
+ *
+ *     employee.name = "Fred"
+ *     employee.city = "Berlin"
+ *
+ * prepare to be surprised.
+ *
+ * This example demonstrates:
+ *
+ *   - property syntax
+ *   - bracket notation
+ *   - multi-tail keys
+ *   - Classic stem defaults
+ *   - get() and set()
+ *   - tails() and values()
+ *   - key() and value()
+ *   - live iterators
+ *   - snapshot iterators
+ *   - independent arrays
+ *
+ * All stem values are strings.
+ *
+ * The purpose of this example is education.
+ *
+ * Read it.
+ * Run it.
+ * Change it.
+ * Break it.
+ * Run it again.
+ *
+ * -----------------------------------------------------------------------------
+ */
+
+options levelb
+
+import rxfnsb
+
+main: procedure = .int
+
+    say
+    say "cREXX Level B .stem demonstration"
+    say "================================="
+    say
+
+    /*--------------------------------------------------------*/
+    /* 1. Create a stem                                       */
+    /*--------------------------------------------------------*/
+
+    say "1. Creating a stem"
+    say "------------------"
+
+    s = .stem()
+
+    say "New stem size:" s.size()' entriesM'
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 2. Property notation                                   */
+    /*--------------------------------------------------------*/
+
+    say "2. Property notation"
+    say "--------------------"
+
+    s.name = "Martha"
+    s.city = "Amsterdam"
+
+    say "s.name =" s.name
+    say "s.city =" s.city
+    say "size   =" s.size()
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 3. Bracket notation                                    */
+    /*--------------------------------------------------------*/
+    /*
+     * Classic Rexx stems usually look like this:
+     *
+     *     customer.name = "Fred"
+     *     customer.city = "Berlin"
+     *
+     * In cREXX, .stem is an object, not a language construct.
+     *
+     * Property notation:
+     *
+     *     s.name = "Fred"
+     *
+     * works only if the tail is a valid identifier.
+     *
+     * Bracket notation:
+     *
+     *     s["my-key"] = "value"
+     *
+     * allows arbitrary keys, including characters that are not
+     * valid in identifiers.
+     *
+     * Examples:
+     *
+     *     order-123.status
+     *     customer:4711
+     *     invoice/2026
+     *     first name
+     */
+
+    say "3. Bracket notation"
+    say "-------------------"
+
+    s["order-123.status"] = "open"
+    s["my-key"] = "my-value"
+
+    say 's["order-123.status"] =' s["order-123.status"]
+    say 's["my-key"]           =' s["my-key"]
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 4. Multi-tail property notation                        */
+    /*--------------------------------------------------------*/
+
+    say "4. Multi-tail property notation"
+    say "-------------------------------"
+
+    customer = "acme"
+    invoice = "2026.05"
+
+    s.customer.invoice = "paid"
+
+    say "customer =" customer
+    say "invoice  =" invoice
+
+    say "Resolved key:"
+    say "  acme.2026.05 =" s["acme.2026.05"]
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 5. Direct get() and set()                              */
+    /*--------------------------------------------------------*/
+
+    say "5. Direct get() and set()"
+    say "-------------------------"
+
+    call s.set("language", "Rexx")
+
+    say 's.get("language") =' s.get("language")
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 6. Missing keys                                        */
+    /*--------------------------------------------------------*/
+
+    say "6. Missing keys"
+    say "---------------"
+
+    missing_demo = .stem()
+
+    say "Missing value before default:"
+    say "  '" || missing_demo.does_not_exist || "'"
+
+    say "Stem size is still:" missing_demo.size()' entries'
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 7. Empty value versus missing key                      */
+    /*--------------------------------------------------------*/
+
+    say "7. Empty value versus missing key"
+    say "---------------------------------"
+
+    presence = .stem()
+
+    say "Initially:"
+    say "  missing = '" || presence.missing || "'"
+    say "  size    =" presence.size()
+
+    presence.empty = ""
+
+    say "After explicitly assigning an empty value:"
+    say "  empty   = '" || presence.empty || "'"
+    say "  size    =" presence.size()
+
+    say
+    say "The returned strings look identical, but the second"
+    say "tail actually exists in the stem."
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 8. Classic stem default                                */
+    /*--------------------------------------------------------*/
+
+    say "8. Classic stem default"
+    say "-----------------------"
+
+    defaults = .stem()
+
+    defaults.one = "original-one"
+    defaults.two = "original-two"
+
+    say "Before assigning the default:"
+    say "  one     =" defaults.one
+    say "  two     =" defaults.two
+    say "  missing = '" || defaults.missing || "'"
+
+    defaults. = "DEFAULT"
+
+    say
+    say 'After: defaults. = "DEFAULT"'
+    say
+    say "  one     =" defaults.one
+    say "  two     =" defaults.two
+    say "  missing =" defaults.missing
+
+    defaults.one = "explicit-again"
+
+    say
+    say "After explicitly assigning ONE again:"
+    say "  one =" defaults.one
+    say "  two =" defaults.two
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 9. Explicit empty key                                  */
+    /*--------------------------------------------------------*/
+
+    say "9. Explicit empty key"
+    say "---------------------"
+
+    empty_key = .stem()
+
+    empty_key[""] = "value stored under the empty key"
+
+    say 'empty_key[""] ='
+    say "  " empty_key[""]
+    say "size =" empty_key.size()
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 10. tails()                                             */
+    /*--------------------------------------------------------*/
+
+    say "10. tails()"
+    say "------------"
+
+    countries = .stem()
+
+    countries.Germany = "Berlin"
+    countries.France = "Paris"
+    countries.Italy = "Rome"
+
+    /*
+     * Property notation normalizes identifiers.
+     *
+     * Germany becomes germany.
+     *
+     * Use bracket notation when the exact key spelling matters.
+     */
+
+    tails = countries.tails()
+
+    say "Number of tails:" tails[0]
+
+    do i = 1 to tails[0]
+        tail = tails[i]
+        say "  " tail "=" countries.get(tail)
+    end
+
+    say
+    say "Note: stem iteration order is unspecified."
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 11. tails() and values()                               */
+    /*--------------------------------------------------------*/
+
+    say "11. tails() and values()"
+    say "------------------------"
+
+    tails = countries.tails()
+    values = countries.values()
+
+    do i = 1 to tails[0]
+        say "  " tails[i] "=" values[i]
+    end
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 12. Indexed access                                     */
+    /*--------------------------------------------------------*/
+
+    say "12. Indexed access"
+    say "------------------"
+
+    do i = 1 to countries.size()
+        say "Index" i
+        say "  key()     =" countries.key(i)
+        say "  value()   =" countries.value(i)
+        say "  valueAt() =" countries.valueAt(i)
+    end
+
+    say
+    say "Remember:"
+    say
+    say '  countries.get("Germany")'
+    say
+    say "looks up by TAIL NAME."
+    say
+    say "  countries.value(1)"
+    say
+    say "looks up by NUMERIC insertion-array index."
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 13. Live iterator                                      */
+    /*--------------------------------------------------------*/
+
+    say "13. Live iterator"
+    say "-----------------"
+
+    languages = .stem()
+
+    languages.first = "Rexx"
+    languages.second = "C"
+    languages.third = "PL/I"
+
+    it = languages.iterator()
+
+    say "Iterator is live:" it.isLive()
+
+    do while it.hasNext()
+        tail = it.next()
+        say "  index:" it.index()", tail:" tail", value:" it.value()
+    end
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 14. Iterator reset()                                   */
+    /* resets the iterator to the first entry                 */
+    /*--------------------------------------------------------*/
+
+    say "14. Iterator reset()"
+    say "--------------------"
+
+    call it.reset()
+
+    say "Iterator reset."
+
+    if it.hasNext() then do
+        tail = it.next()
+
+        say "First tail after reset:"
+        say "  " tail "=" it.value()
+    end
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 15. Live iterator and value changes                    */
+    /*--------------------------------------------------------*/
+
+    say "15. Live iterator and value changes"
+    say "-----------------------------------"
+
+    live_demo = .stem()
+
+    live_demo.first = "before"
+    live_demo.second = "unchanged"
+
+    live_it = live_demo.iterator()
+
+    if live_it.hasNext() then do
+        tail = live_it.next()
+
+        say "Current tail :" tail
+        say "Before change:" live_it.value()
+
+        call live_demo.set(tail, "after")
+
+        say "After change :" live_it.value()
+    end
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 16. Snapshot iterator                                  */
+    /*--------------------------------------------------------*/
+
+    say "16. Snapshot iterator"
+    say "---------------------"
+
+    /*
+     * A live iterator keeps a reference to the original stem.
+     *
+     * A snapshot iterator creates an internal copy of the stem's
+     * contents at the moment the iterator is created.
+     *
+     * Later modifications to the original stem do not affect the
+     * snapshot.
+     */
+
+    snapshot_demo = .stem()
+
+    snapshot_demo.name = "Peter"
+    snapshot_demo.city = "Munich"
+
+    live_it = snapshot_demo.iterator()
+    say "Live iterator reports isLive():" live_it.isLive()
+
+    snap_it = snapshot_demo.snapshotIterator()
+    say "Snapshot iterator reports isLive():" snap_it.isLive()
+
+    snapshot_demo.name = "Martha"
+    snapshot_demo.city = "Berlin"
+
+    say
+    say "Current stem values:"
+    say "  name =" snapshot_demo.name
+    say "  city =" snapshot_demo.city
+
+    say
+    say "Values retained by snapshot:"
+
+    do while snap_it.hasNext()
+        tail = snap_it.next()
+        say "  " tail "=" snap_it.value()
+    end
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 17. Independent tails()/values() arrays                */
+    /*--------------------------------------------------------*/
+
+    say "17. Independent tails()/values() arrays"
+    say "----------------------------------------"
+
+    independent = .stem()
+
+    independent.first = "A"
+    independent.second = "B"
+
+    tails = independent.tails()
+    values = independent.values()
+
+    tails[1] = "CHANGED-TAIL"
+    values[1] = "CHANGED-VALUE"
+
+    say "Modified returned arrays."
+
+    say
+    say "Original stem still contains:"
+
+    original_tails = independent.tails()
+
+    do i = 1 to original_tails[0]
+        tail = original_tails[i]
+        say "  " tail "=" independent.get(tail)
+    end
+
+    say
+
+    /*--------------------------------------------------------*/
+    /* 18. Working on empty stems                             */
+    /*--------------------------------------------------------*/
+
+    say "18. Empty stem iteration"
+    say "------------------------"
+
+    isempty = .stem()
+
+    it = isempty.iterator()
+
+    say "Stem size:" isempty.size()
+    say "Has next :" it.hasNext()
+
+    tail = it.next()
+
+    say "Next tail : '" || tail || "'"
+    /*--------------------------------------------------------*/
+    /* Summary                                                 */
+    /*--------------------------------------------------------*/
+
+    say "Summary"
+    say "======="
+
+    say
+    say ".stem is more than Classic compound-variable syntax."
+
+    say
+    say "It provides:"
+
+    say
+    say "  - dictionary-style string key/value storage"
+    say "  - Classic stem defaults"
+    say "  - property and bracket notation"
+    say "  - multi-tail keys"
+    say "  - direct get()/set() methods"
+    say "  - key/value extraction"
+    say "  - indexed insertion-array access"
+    say "  - live iteration"
+    say "  - snapshot iteration"
+    say "  - missing keys and explicit empty values are different"
+
+    say
+    say "All stem VALUES are strings."
+
+    say
+    say "Do not rely on iteration order."
+
+    say
+    say "End of stem demonstration."
+
+    return 0
