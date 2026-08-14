@@ -7,7 +7,7 @@
 options levelb comments_dash
 
 import data
-namespace data expose BagIterator
+namespace data expose ArrayBagIterator
 
 /**
  * Iterator over a Bag.
@@ -15,9 +15,9 @@ namespace data expose BagIterator
  * The iterator can operate either on the live Bag or on a snapshot captured
  * when the iterator is created.
  */
-BagIterator: class
-  bag_ref_ = reference .Bag
-  bag_copy_ = .Bag
+ArrayBagIterator: class
+  bag_ref_ = reference .ArrayBag
+  bag_copy_ = .ArrayBag
   position_ = .int
   snapshot_ = .int
 
@@ -29,7 +29,7 @@ BagIterator: class
    * @return .BagIterator Newly created iterator.
    */
   *: factory
-    arg source = reference .Bag, make_snapshot = .int
+    arg source = reference .ArrayBag, make_snapshot = .int
 
     snapshot_ = make_snapshot
     position_ = 1

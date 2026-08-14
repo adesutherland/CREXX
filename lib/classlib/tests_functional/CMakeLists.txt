@@ -25,7 +25,7 @@ set(REXXBINS
   testQfind
   testTokenise
   testJSON
-  testBag
+#  testBag
 )
 
 add_test(

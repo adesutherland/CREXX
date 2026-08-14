@@ -20,7 +20,8 @@ set(CLSS
   ObjectObjectTreeMap
   Map
   Bag
-  BagIterator
+  ArrayBag
+  ArrayBagIterator
   TreeMap
   ObjectComparator
   Comparator
@@ -118,7 +119,7 @@ set(CLASS_DEPS_StringTreeSetIterator StringIterator)
 set(CLASS_DEPS_ObjectObjectTreeMapIterator ObjectIterator)
 set(CLASS_DEPS_ObjectObjectTreeMap ObjectObjectTreeMapIterator ObjectComparator ObjectPrintable)
 set(CLASS_DEPS_TreeMap Map TreeMapIterator Comparator Printable)
-set(CLASS_DEPS_Bag Printable BagIterator)
+set(CLASS_DEPS_ArrayBag  ArrayBagIterator Bag Printable)
 
 
 if(WIN32)
