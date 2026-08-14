@@ -36,6 +36,8 @@ typedef struct rxvm_memory_stats {
     uint64_t reallocation_calls;
     uint64_t allocation_failures;
     uint64_t invalid_frees;
+    uint64_t wrong_owner_allocations;
+    uint64_t wrong_owner_resizes;
     uint64_t wrong_owner_frees;
     uint64_t cumulative_requested_bytes;
     uint64_t cumulative_capacity_bytes;

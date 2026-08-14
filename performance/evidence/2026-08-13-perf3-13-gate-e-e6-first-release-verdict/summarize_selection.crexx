@@ -1,0 +1,319 @@
+/* PERF3-13 Gate E E6 C0/C1 paired Release reducer. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 3 then do
+  say "Usage: summarize_selection OUTPUT_SUMMARY SAMPLES OUTPUTS"
+  return 2
+end
+
+output_path = argv[1]
+samples_path = argv[2]
+outputs_path = argv[3]
+group_keys = .string[]
+group_workloads = .string[]
+group_vms = .string[]
+control_counts = .int[]
+candidate_counts = .int[]
+control_rates = .float[]
+candidate_rates = .float[]
+control_resident = .float[]
+candidate_resident = .float[]
+control_retained = .float[]
+candidate_retained = .float[]
+control_owned = .float[]
+candidate_owned = .float[]
+control_reclaimed = .float[]
+candidate_reclaimed = .float[]
+control_memory_counts = .int[]
+candidate_memory_counts = .int[]
+sample_ids = .string[]
+sample_groups = .int[]
+sample_sides = .int[]
+sample_slots = .int[]
+group_count = 0
+sample_count = 0
+line_number = 0
+
+do while lines(samples_path)
+  line = linein(samples_path)
+  line_number = line_number + 1
+  if line_number = 1 then iterate
+  fields = split_delimited(line, ",")
+  if fields[0] <> 20 then return fail("unexpected sample row width")
+  if fields[11] <> "recorded" then iterate
+  if fields[18] <> "pass" then return fail("non-passing recorded sample")
+  if fields[7] <> "c0-owner-only" & fields[7] <> "c1-idle-handback" then
+    return fail("unexpected selection variant")
+
+  key = fields[3] || "/" || fields[6]
+  group = find_group(group_keys, group_count, key)
+  if group = 0 then do
+    group_count = group_count + 1
+    group = group_count
+    group_keys[group] = key
+    group_workloads[group] = fields[3]
+    group_vms[group] = fields[6]
+  end
+
+  side = 0
+  slot = 0
+  if fields[7] = "c0-owner-only" then do
+    control_counts[group] = control_counts[group] + 1
+    slot = control_counts[group]
+    control_rates[group * 100 + slot] = fields[19]
+  end
+  else do
+    side = 1
+    candidate_counts[group] = candidate_counts[group] + 1
+    slot = candidate_counts[group]
+    candidate_rates[group * 100 + slot] = fields[19]
+  end
+  sample_count = sample_count + 1
+  sample_ids[sample_count] = fields[1]
+  sample_groups[sample_count] = group
+  sample_sides[sample_count] = side
+  sample_slots[sample_count] = slot
+end
+call linein samples_path
+
+line_number = 0
+do while lines(outputs_path)
+  line = linein(outputs_path)
+  line_number = line_number + 1
+  if line_number = 1 then iterate
+  fields = split_delimited(line, ",")
+  if fields[0] <> 4 then iterate
+  if fields[2] <> "stdout" then iterate
+  if pos("E5_BENCHMARK result=PASS", fields[4]) = 0 then iterate
+  sample = find_sample(sample_ids, sample_count, fields[1])
+  if sample = 0 then iterate
+
+  resident = extract_value(fields[4], "resident_bytes")
+  retained = extract_value(fields[4], "retained_slab_bytes")
+  owned = extract_value(fields[4], "owned_slabs")
+  reclaimed = extract_value(fields[4], "reclaimed_slabs")
+  if resident = "" | retained = "" | owned = "" | reclaimed = "" then
+    return fail("incomplete E6 memory telemetry")
+  group = sample_groups[sample]
+  slot = sample_slots[sample]
+  if sample_sides[sample] = 0 then do
+    control_resident[group * 100 + slot] = resident
+    control_retained[group * 100 + slot] = retained
+    control_owned[group * 100 + slot] = owned
+    control_reclaimed[group * 100 + slot] = reclaimed
+    control_memory_counts[group] = control_memory_counts[group] + 1
+  end
+  else do
+    candidate_resident[group * 100 + slot] = resident
+    candidate_retained[group * 100 + slot] = retained
+    candidate_owned[group * 100 + slot] = owned
+    candidate_reclaimed[group * 100 + slot] = reclaimed
+    candidate_memory_counts[group] = candidate_memory_counts[group] + 1
+  end
+end
+call linein outputs_path
+
+call remove_output output_path
+header = "workload,vm,pairs,control_rate_median,candidate_rate_median," || ,
+    "rate_mean_percent,rate_95_ci_low_percent,rate_95_ci_high_percent," || ,
+    "rate_interval_result,rate_favorable,rate_guard_hit," || ,
+    "control_resident_median,candidate_resident_median,resident_mean_percent," || ,
+    "resident_95_ci_low_percent,resident_95_ci_high_percent," || ,
+    "resident_interval_result," || ,
+    "control_retained_slab_bytes_median,candidate_retained_slab_bytes_median," || ,
+    "retained_mean_percent,control_owned_slabs_median," || ,
+    "candidate_owned_slabs_median,candidate_reclaimed_slabs_median"
+if lineout(output_path, header) <> 0 then return fail("could not create summary")
+
+do group = 1 to group_count
+  if control_counts[group] <> 12 | candidate_counts[group] <> 12 then
+    return fail("incomplete 12-pair throughput set")
+  if control_memory_counts[group] <> 12 | candidate_memory_counts[group] <> 12 then
+    return fail("incomplete 12-pair memory set")
+
+  controls = .float[]
+  candidates = .float[]
+  control_rss = .float[]
+  candidate_rss = .float[]
+  control_slabs = .float[]
+  candidate_slabs = .float[]
+  control_owned_values = .float[]
+  candidate_owned_values = .float[]
+  candidate_reclaimed_values = .float[]
+  do pair = 1 to 12
+    controls[pair] = control_rates[group * 100 + pair]
+    candidates[pair] = candidate_rates[group * 100 + pair]
+    control_rss[pair] = control_resident[group * 100 + pair]
+    candidate_rss[pair] = candidate_resident[group * 100 + pair]
+    control_slabs[pair] = control_retained[group * 100 + pair]
+    candidate_slabs[pair] = candidate_retained[group * 100 + pair]
+    control_owned_values[pair] = control_owned[group * 100 + pair]
+    candidate_owned_values[pair] = candidate_owned[group * 100 + pair]
+    candidate_reclaimed_values[pair] = candidate_reclaimed[group * 100 + pair]
+  end
+
+  rate_result = paired_result(controls, candidates, 1)
+  rss_result = paired_result(control_rss, candidate_rss, 0)
+  retained_result = paired_result(control_slabs, candidate_slabs, 0)
+  guard_hit = "no"
+  if rate_result[1] < -3.0 then guard_hit = "yes"
+  row = group_workloads[group] || "," || group_vms[group] || ",12," || ,
+      float_text(median(controls)) || "," || float_text(median(candidates)) || ,
+      "," || float_text(rate_result[1]) || "," || float_text(rate_result[2]) || ,
+      "," || float_text(rate_result[3]) || "," || rate_result[4] || "," || ,
+      float_text(rate_result[5]) || "," || guard_hit || "," || ,
+      float_text(median(control_rss)) || "," || float_text(median(candidate_rss)) || ,
+      "," || float_text(rss_result[1]) || "," || float_text(rss_result[2]) || ,
+      "," || float_text(rss_result[3]) || "," || rss_result[4] || "," || ,
+      float_text(median(control_slabs)) || "," || ,
+      float_text(median(candidate_slabs)) || "," || ,
+      float_text(retained_result[1]) || "," || ,
+      float_text(median(control_owned_values)) || "," || ,
+      float_text(median(candidate_owned_values)) || "," || ,
+      float_text(median(candidate_reclaimed_values))
+  if lineout(output_path, row) <> 0 then return fail("could not append summary")
+end
+call lineout output_path
+say "PASS: PERF3-13 E6 paired selection summary retained at" output_path
+return 0
+
+/* Returns mean percent, CI low/high, interval result and favorable count. */
+paired_result: procedure = .string[]
+  arg control = .float[], candidate = .float[], higher_is_better = .int
+  deltas = .float[]
+  sum = 0.0
+  favorable = 0
+  do pair = 1 to control[0]
+    delta = ((candidate[pair] - control[pair]) * 100.0) / control[pair]
+    deltas[pair] = delta
+    sum = sum + delta
+    if higher_is_better & delta > 0.0 then favorable = favorable + 1
+    if \higher_is_better & delta < 0.0 then favorable = favorable + 1
+  end
+  mean = sum / (control[0] as .float)
+  sum_squares = 0.0
+  do pair = 1 to deltas[0]
+    difference = deltas[pair] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  deviation = square_root(sum_squares / ((deltas[0] - 1) as .float))
+  margin = 2.200985 * deviation / square_root(deltas[0] as .float)
+  low = mean - margin
+  high = mean + margin
+  interval = "noisy_inconclusive"
+  if higher_is_better then do
+    if low > 0.0 then interval = "clear_favorable"
+    else if high < 0.0 then interval = "clear_adverse"
+  end
+  else do
+    if high < 0.0 then interval = "clear_favorable"
+    else if low > 0.0 then interval = "clear_adverse"
+  end
+  result = .string[]
+  result[1] = mean
+  result[2] = low
+  result[3] = high
+  result[4] = interval
+  result[5] = favorable
+  return result
+
+extract_value: procedure = .string
+  arg text = .string, name = .string
+  marker = name || "="
+  start = pos(marker, text)
+  if start = 0 then return ""
+  start = start + length(marker)
+  finish = pos(" ", text, start)
+  if finish = 0 then return substr(text, start)
+  return substr(text, start, finish - start)
+
+find_sample: procedure = .int
+  arg ids = .string[], count = .int, wanted = .string
+  do sample = 1 to count
+    if ids[sample] = wanted then return sample
+  end
+  return 0
+
+find_group: procedure = .int
+  arg keys = .string[], count = .int, wanted = .string
+  do group = 1 to count
+    if keys[group] = wanted then return group
+  end
+  return 0
+
+median: procedure = .float
+  arg source = .float[]
+  values = .float[]
+  do i = 1 to source[0]
+    values[i] = source[i]
+  end
+  call sort_floats values
+  return sample_quantile(values, 1, 2)
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

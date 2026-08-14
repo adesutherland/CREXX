@@ -1,0 +1,27 @@
+sample_id,stream,line_number,text
+timing-remote-free-remote-free-local-warmup-1,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10470000 ns_per_free=10.470000000 maximum_queue_depth=0
+timing-remote-free-remote-free-queued-warmup-1,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=41527000 ns_per_free=41.527000000 maximum_queue_depth=256
+timing-remote-free-remote-free-local-recorded-1,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10554000 ns_per_free=10.554000000 maximum_queue_depth=0
+timing-remote-free-remote-free-queued-recorded-1,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=41445000 ns_per_free=41.445000000 maximum_queue_depth=256
+timing-remote-free-remote-free-queued-recorded-2,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=41596000 ns_per_free=41.596000000 maximum_queue_depth=256
+timing-remote-free-remote-free-local-recorded-2,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10001000 ns_per_free=10.001000000 maximum_queue_depth=0
+timing-remote-free-remote-free-local-recorded-3,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10396000 ns_per_free=10.396000000 maximum_queue_depth=0
+timing-remote-free-remote-free-queued-recorded-3,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42447000 ns_per_free=42.447000000 maximum_queue_depth=256
+timing-remote-free-remote-free-queued-recorded-4,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42861000 ns_per_free=42.861000000 maximum_queue_depth=256
+timing-remote-free-remote-free-local-recorded-4,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10753000 ns_per_free=10.753000000 maximum_queue_depth=0
+timing-remote-free-remote-free-local-recorded-5,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10504000 ns_per_free=10.504000000 maximum_queue_depth=0
+timing-remote-free-remote-free-queued-recorded-5,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42277000 ns_per_free=42.277000000 maximum_queue_depth=256
+timing-remote-free-remote-free-queued-recorded-6,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42005000 ns_per_free=42.005000000 maximum_queue_depth=256
+timing-remote-free-remote-free-local-recorded-6,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10455000 ns_per_free=10.455000000 maximum_queue_depth=0
+timing-remote-free-remote-free-local-recorded-7,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10193000 ns_per_free=10.193000000 maximum_queue_depth=0
+timing-remote-free-remote-free-queued-recorded-7,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=41936000 ns_per_free=41.936000000 maximum_queue_depth=256
+timing-remote-free-remote-free-queued-recorded-8,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42462000 ns_per_free=42.462000000 maximum_queue_depth=256
+timing-remote-free-remote-free-local-recorded-8,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10085000 ns_per_free=10.085000000 maximum_queue_depth=0
+timing-remote-free-remote-free-local-recorded-9,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10736000 ns_per_free=10.736000000 maximum_queue_depth=0
+timing-remote-free-remote-free-queued-recorded-9,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=41664000 ns_per_free=41.664000000 maximum_queue_depth=256
+timing-remote-free-remote-free-queued-recorded-10,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=41793000 ns_per_free=41.793000000 maximum_queue_depth=256
+timing-remote-free-remote-free-local-recorded-10,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10031000 ns_per_free=10.031000000 maximum_queue_depth=0
+timing-remote-free-remote-free-local-recorded-11,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10712000 ns_per_free=10.712000000 maximum_queue_depth=0
+timing-remote-free-remote-free-queued-recorded-11,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42395000 ns_per_free=42.395000000 maximum_queue_depth=256
+timing-remote-free-remote-free-queued-recorded-12,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42518000 ns_per_free=42.518000000 maximum_queue_depth=256
+timing-remote-free-remote-free-local-recorded-12,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10757000 ns_per_free=10.757000000 maximum_queue_depth=0

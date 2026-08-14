@@ -7,6 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
 #define CHECK(condition, message) do {                                      \
     if (!(condition)) {                                                     \
         fprintf(stderr, "FAIL line %d: %s\n", __LINE__, (message));        \
@@ -15,6 +21,66 @@
 } while (0)
 
 static int failures;
+
+typedef struct foreign_allocator_probe {
+    rxvm_memory_worker *worker;
+    void *owner_standard;
+    void *owner_extent;
+    void *owner_resize;
+    void *foreign_standard;
+    void *foreign_extent;
+    void *foreign_values_overflow;
+    void *foreign_resize;
+    rxvm_memory_result standard_release;
+    rxvm_memory_result extent_release;
+    int tls_was_empty;
+} foreign_allocator_probe;
+
+#ifdef _WIN32
+static DWORD WINAPI run_foreign_allocator_thread(LPVOID argument) {
+#else
+static void *run_foreign_allocator_thread(void *argument) {
+#endif
+    foreign_allocator_probe *probe = (foreign_allocator_probe *)argument;
+
+    probe->tls_was_empty = rxvm_memory_current_worker() == 0;
+    probe->foreign_standard = rxvm_memory_alloc_bytes(probe->worker, 32u);
+    probe->foreign_extent = rxvm_memory_alloc_bytes(
+            probe->worker, RXVM_MEMORY_MAX_STANDARD_SIZE + 1u);
+    probe->foreign_values_overflow = rxvm_memory_alloc_values(
+            probe->worker, (size_t)-1);
+    probe->foreign_resize = rxvm_memory_resize_bytes(
+            probe->worker, probe->owner_resize, 16u, 64u);
+    probe->standard_release = rxvm_memory_release(probe->owner_standard);
+    probe->extent_release = rxvm_memory_release(probe->owner_extent);
+#ifdef _WIN32
+    return 0;
+#else
+    return 0;
+#endif
+}
+
+static void run_foreign_allocator_probe(foreign_allocator_probe *probe) {
+#ifdef _WIN32
+    HANDLE thread = CreateThread(
+            0, 0, run_foreign_allocator_thread, probe, 0, 0);
+    CHECK(thread != 0, "foreign allocator probe thread starts");
+    if (thread) {
+        CHECK(WaitForSingleObject(thread, INFINITE) == WAIT_OBJECT_0,
+              "foreign allocator probe thread joins");
+        CloseHandle(thread);
+    }
+#else
+    pthread_t thread;
+    int create_result = pthread_create(
+            &thread, 0, run_foreign_allocator_thread, probe);
+    CHECK(create_result == 0, "foreign allocator probe thread starts");
+    if (create_result == 0) {
+        CHECK(pthread_join(thread, 0) == 0,
+              "foreign allocator probe thread joins");
+    }
+#endif
+}
 
 static void test_classes_and_alignment(rxvm_memory_worker *worker) {
     static const size_t requests[] = {
@@ -208,6 +274,67 @@ static void test_tls_and_wrong_owner(rxvm_memory_context *context,
           "empty worker tears down without leak report");
 }
 
+static void test_foreign_thread_without_tls(rxvm_memory_worker *worker) {
+    foreign_allocator_probe probe;
+
+    memset(&probe, 0, sizeof(probe));
+    probe.worker = worker;
+    probe.owner_standard = rxvm_memory_alloc_bytes(worker, 32u);
+    probe.owner_extent = rxvm_memory_alloc_bytes(
+            worker, RXVM_MEMORY_MAX_STANDARD_SIZE + 1u);
+    probe.owner_resize = rxvm_memory_alloc_bytes(worker, 32u);
+    CHECK(probe.owner_standard != 0 && probe.owner_extent != 0 &&
+                  probe.owner_resize != 0,
+          "owner allocations for foreign-thread probe succeed");
+    if (!probe.owner_standard || !probe.owner_extent || !probe.owner_resize) {
+        if (probe.owner_standard) (void)rxvm_memory_release(probe.owner_standard);
+        if (probe.owner_extent) (void)rxvm_memory_release(probe.owner_extent);
+        if (probe.owner_resize) (void)rxvm_memory_release(probe.owner_resize);
+        return;
+    }
+
+    run_foreign_allocator_probe(&probe);
+
+    CHECK(probe.tls_was_empty,
+          "foreign allocator thread begins without an entered worker");
+    CHECK(probe.foreign_standard == 0,
+          "foreign explicit standard allocation is rejected");
+    CHECK(probe.foreign_extent == 0,
+          "foreign explicit extent allocation is rejected");
+    CHECK(probe.foreign_values_overflow == 0,
+          "foreign explicit value-array overflow is rejected");
+    CHECK(probe.foreign_resize == 0,
+          "foreign explicit resize is rejected");
+    CHECK(probe.standard_release == RXVM_MEMORY_WRONG_OWNER,
+          "foreign standard release without TLS is rejected");
+    CHECK(probe.extent_release == RXVM_MEMORY_WRONG_OWNER,
+          "foreign extent release without TLS is rejected");
+
+    if (probe.foreign_standard) {
+        CHECK(rxvm_memory_release(probe.foreign_standard) == RXVM_MEMORY_OK,
+              "owner cleans a foreign-thread standard allocation reproducer");
+    }
+    if (probe.foreign_extent) {
+        CHECK(rxvm_memory_release(probe.foreign_extent) == RXVM_MEMORY_OK,
+              "owner cleans a foreign-thread extent allocation reproducer");
+    }
+    if (probe.foreign_resize) {
+        CHECK(rxvm_memory_release(probe.foreign_resize) == RXVM_MEMORY_OK,
+              "owner cleans a foreign-thread resize reproducer");
+    } else {
+        CHECK(rxvm_memory_release(probe.owner_resize) == RXVM_MEMORY_OK,
+              "owner retains and releases the rejected resize source");
+    }
+    if (probe.standard_release != RXVM_MEMORY_OK) {
+        CHECK(rxvm_memory_release(probe.owner_standard) == RXVM_MEMORY_OK,
+              "owner releases the rejected foreign standard pointer");
+    }
+    if (probe.extent_release != RXVM_MEMORY_OK) {
+        CHECK(rxvm_memory_release(probe.owner_extent) == RXVM_MEMORY_OK,
+              "owner releases the rejected foreign extent pointer");
+    }
+}
+
 static void test_calloc_overflow(rxvm_memory_worker *worker) {
     void *pointer = rxvm_memory_calloc_bytes(worker, (size_t)-1, 2u);
     CHECK(pointer == 0, "calloc multiplication overflow fails safely");
@@ -270,14 +397,19 @@ int main(void) {
     test_refill_return_and_trim(context, worker);
     test_oversized_and_resize(worker);
     test_tls_and_wrong_owner(context, worker);
+    test_foreign_thread_without_tls(worker);
     test_calloc_overflow(worker);
     test_unentered_compatibility_extent(worker);
 
     rxvm_memory_get_stats(context, &stats);
     CHECK(stats.live_allocations == 0u,
           "all allocator test allocations are released");
-    CHECK(stats.wrong_owner_frees == 2u,
-          "wrong-owner free and resize attempts appear in telemetry");
+    CHECK(stats.wrong_owner_allocations == 3u,
+          "foreign standard, extent and value-array allocations appear in telemetry");
+    CHECK(stats.wrong_owner_resizes == 2u,
+          "TLS-bound and no-TLS foreign resizes appear in telemetry");
+    CHECK(stats.wrong_owner_frees == 3u,
+          "TLS-bound and no-TLS foreign frees appear in telemetry");
     CHECK(stats.allocation_failures == 1u,
           "overflow failure appears in telemetry");
 #ifdef CREXX_VM_MEMORY_CENSUS

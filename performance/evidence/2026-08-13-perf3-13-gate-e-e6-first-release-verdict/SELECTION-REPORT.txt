@@ -1,0 +1,58 @@
+PERF3-13 Gate E E6 selection report
+
+Status: C0 ACCEPTED BY ADRIAN — E6 MAC QA CLOSED 2026-08-14
+Capture dates: 2026-08-14
+Candidate: unchanged frozen profiling-off Release, profile-20
+Recorded correctness: 568/568 processes passed across principal timing,
+confirmation, C2 timing, C0/C1 peak RSS and C2 peak RSS.
+
+C0 — strict owner-only
+
+- Uniform owner-token enforcement closes foreign allocation, resize and free
+  mutation paths before owner-local lists or statistics are touched.
+- Ordinary owner-local allocation/free remains lock-free.
+- The existing one-empty-slab-per-class worker retention and additional-empty-
+  slab depot return remain unchanged.
+- Compute and allocation churn reach 1/2/4/8 workers on both concrete VMs.
+
+C1 — automatic owner-quiescent idle handback
+
+- Exact allocator-retained standard-slab reductions scale from 3.846154% at
+  one worker to 38.620690% at eight workers for the churn fixture.
+- Fifteen of sixteen principal throughput cells are guard-clean. The one clear
+  -4.476433% rxbvml four-worker churn guard did not reproduce in the approved
+  exact confirmation, which measured +1.729879% with a crossing interval.
+- All sixteen external peak-RSS comparisons are inconclusive. Eight individual
+  cells are flagged for RSS rerun noise by the matrix tool.
+- Post-quiescent current RSS has one clear adverse result: rxtvml eight-worker
+  churn is +3.710323%, 95% interval +0.606713% to +6.813933%.
+- Returning allocator slabs therefore does not demonstrate a reliable process-
+  RSS benefit that repays the automatic idle policy and synchronized handback.
+
+C2 — bounded owner-drained remote-free queue
+
+- Timing is a clear reject: +183.669864% mean elapsed time, 95% interval
+  +179.250161% to +188.089568%, with 0/12 favourable pairs.
+- External peak RSS is neutral and inconclusive.
+- Gate F receiver materialization removes the demonstrated need for this path;
+  live VM values and worker-local storage do not cross workers.
+
+Accepted selection and closure
+
+1. Adrian selected C0 as the E6 worker reclamation policy and authorized
+   closure on 2026-08-14.
+2. The production form retains foreign-thread ownership guards, synchronized
+   cold telemetry and private 1/2/4/8-worker compute/churn coverage.
+3. C1's automatic idle hook, reclaim API/statistics and C1-only tests are
+   removed.
+4. The disposable C2 queue target and test are removed from production
+   qualification; its rejected comparison evidence remains in this bundle.
+5. Final audit also guarded the explicit value-array overflow path so a
+   foreign caller cannot mutate owner-local failure telemetry.
+6. Cleaned C0 passes focused Debug, Apple AddressSanitizer and profiling-off
+   Release 49/49; complete Debug and Release builds; and full Debug CTest
+   2,080/2,080 without a recovery run. See C0-CLOSEOUT.txt.
+
+Commit and publication remain separate actions.
+
+Gate F implementation, public workers/channels and RXAS changes remain closed.

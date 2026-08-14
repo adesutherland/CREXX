@@ -1,0 +1,44 @@
+PERF3-13 Gate E E6 accepted C0 closeout
+
+Decision
+  Adrian accepted strict C0 ownership and authorized closure on 2026-08-14.
+  C1 automatic quiescent reclaim and the C2 test-only remote-free queue are
+  removed. Gate F implementation and public workers/channels remain closed.
+
+Selected production form
+  - Uniform owner-token enforcement precedes worker-owned standard, extent and
+    value-array allocation, resize and release mutation.
+  - A foreign thread with empty allocator TLS is rejected when it passes an
+    explicit worker.
+  - Final audit also closes value-array overflow accounting before it can
+    mutate owner-local failure telemetry.
+  - Wrong-owner allocation, resize and free telemetry is synchronized in the
+    memory context; successful owner-local allocation/free remains lock-free.
+  - The existing one-empty-slab-per-class and depot-return policy is unchanged.
+  - Permanent private coverage exercises spin and allocation churn at
+    1/2/4/8 workers on rxvml, rxbvml and rxtvml and asserts exact maximum
+    parallelism.
+
+Rejected comparisons
+  - C1: exact retained allocator slabs fall by up to 38.620690%, but external
+    peak RSS is inconclusive and rxtvml 8-worker churn has a clear +3.710323%
+    post-quiescent current-RSS cost. The one -4.476433% throughput guard does
+    not reproduce in exact confirmation (+1.729879%, crossing interval).
+  - C2: +183.669864% mean elapsed, 95% interval +179.250161% to +188.089568%,
+    0/12 favourable pairs, neutral/inconclusive peak RSS and no required
+    lifetime after receiver materialization.
+  - Recorded comparative evidence: 568/568 processes passed.
+
+Final Mac QA on audited source
+  Host: Darwin 25.5.0 arm64, 10 logical CPUs
+  Debug focused: 49/49 passed
+  Apple AddressSanitizer focused, serialized: 49/49 passed
+  Profiling-off Release focused, profile-20: 49/49 passed
+  Full Debug build: passed
+  Full profiling-off Release build: passed
+  Full Debug CTest, parallel 30: 2,080/2,080 passed in 288.42 seconds
+  Recovery/rerun: none
+
+Disposition
+  E6 implementation and Mac QA are closed. Commit and publication are separate
+  actions. F0 remains the next explicit approval gate before Gate F work.

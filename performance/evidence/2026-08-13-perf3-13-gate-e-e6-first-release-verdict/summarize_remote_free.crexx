@@ -1,0 +1,169 @@
+/* PERF3-13 Gate E E6 local/remote-free paired reducer. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 3 then do
+  say "Usage: summarize_remote_free OUTPUT TIMING_SAMPLES RSS_SAMPLES"
+  return 2
+end
+
+output_path = argv[1]
+timing_path = argv[2]
+rss_path = argv[3]
+timing_local = .float[]
+timing_remote = .float[]
+rss_local = .float[]
+rss_remote = .float[]
+
+if read_pairs(timing_path, "timing", timing_local, timing_remote) <> 0 then return 1
+if read_pairs(rss_path, "rss", rss_local, rss_remote) <> 0 then return 1
+if timing_local[0] <> 12 | timing_remote[0] <> 12 then
+  return fail("incomplete 12-pair timing set")
+if rss_local[0] <> 4 | rss_remote[0] <> 4 then
+  return fail("incomplete four-pair RSS set")
+
+call remove_output output_path
+header = "measurement,pairs,local_median,remote_median,remote_mean_percent," || ,
+    "remote_95_ci_low_percent,remote_95_ci_high_percent,interval_result," || ,
+    "local_favorable"
+if lineout(output_path, header) <> 0 then return fail("could not create output")
+if write_result(output_path, "elapsed_ns", timing_local, timing_remote) <> 0 then return 1
+if write_result(output_path, "max_rss_bytes", rss_local, rss_remote) <> 0 then return 1
+call lineout output_path
+say "PASS: PERF3-13 E6 remote-free summary retained at" output_path
+return 0
+
+read_pairs: procedure = .int
+  arg path = .string, measurement = .string, ,
+      expose local_values = .float[], expose remote_values = .float[]
+  line_number = 0
+  do while lines(path)
+    line = linein(path)
+    line_number = line_number + 1
+    if line_number = 1 then iterate
+    fields = split_delimited(line, ",")
+    if fields[0] <> 20 then return fail("unexpected sample row width")
+    if fields[11] <> "recorded" then iterate
+    if fields[18] <> "pass" then return fail("non-passing recorded sample")
+    value = fields[15]
+    if measurement = "rss" then value = fields[16]
+    if fields[7] = "c0-local-free" then
+      local_values[local_values[0] + 1] = value
+    else if fields[7] = "c2-owner-drained-queue" then
+      remote_values[remote_values[0] + 1] = value
+    else return fail("unexpected remote-free variant")
+  end
+  call linein path
+  return 0
+
+write_result: procedure = .int
+  arg path = .string, measurement = .string, local_values = .float[], ,
+      remote_values = .float[]
+  deltas = .float[]
+  sum = 0.0
+  favorable = 0
+  do pair = 1 to local_values[0]
+    delta = ((remote_values[pair] - local_values[pair]) * 100.0) / ,
+        local_values[pair]
+    deltas[pair] = delta
+    sum = sum + delta
+    if delta < 0.0 then favorable = favorable + 1
+  end
+  mean = sum / (deltas[0] as .float)
+  sum_squares = 0.0
+  do pair = 1 to deltas[0]
+    difference = deltas[pair] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  deviation = square_root(sum_squares / ((deltas[0] - 1) as .float))
+  critical = 2.200985
+  if deltas[0] = 4 then critical = 3.182446
+  margin = critical * deviation / square_root(deltas[0] as .float)
+  low = mean - margin
+  high = mean + margin
+  interval = "noisy_inconclusive"
+  if high < 0.0 then interval = "clear_favorable"
+  else if low > 0.0 then interval = "clear_adverse"
+  row = measurement || "," || deltas[0] || "," || ,
+      float_text(median(local_values)) || "," || ,
+      float_text(median(remote_values)) || "," || float_text(mean) || "," || ,
+      float_text(low) || "," || float_text(high) || "," || interval || "," || ,
+      favorable
+  if lineout(path, row) <> 0 then return fail("could not append output")
+  return 0
+
+median: procedure = .float
+  arg source = .float[]
+  values = .float[]
+  do i = 1 to source[0]
+    values[i] = source[i]
+  end
+  call sort_floats values
+  return sample_quantile(values, 1, 2)
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

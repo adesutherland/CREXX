@@ -1,0 +1,4 @@
+# PERF3-13 Gate E E6 disposable C2 owner-drained remote-free comparison.
+crexx-cross-runtime-matrix|1
+remote-free-local|remote-free|crexx|allocator|c0-local-free|E6-C0|no|process|1000000|E6_MEMORY_BENCHMARK result=PASS||/private/tmp/crexx-e6-candidate-release/interpreter/test_rxvmmemory_remote_free;--benchmark;local;1000000
+remote-free-queued|remote-free|crexx|allocator|c2-owner-drained-queue|E6-C2|no|process|1000000|E6_MEMORY_BENCHMARK result=PASS||/private/tmp/crexx-e6-candidate-release/interpreter/test_rxvmmemory_remote_free;--benchmark;remote;1000000

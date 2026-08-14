@@ -1,0 +1,23 @@
+PERF3-13 Gate E E6 isolated guard-cell confirmation
+
+Capture date: 2026-08-14
+Candidate: unchanged frozen profiling-off Release, profile-20
+Cell: rxbvml, four workers, 256 jobs, 8,192 churn iterations
+Sampling: one warmup and 12 balanced recorded pairs
+Correctness: 24/24 processes passed
+
+Result: ORIGINAL ADVERSE RESULT NOT REPRODUCED
+
+  C0 median rate:    1231.072201 jobs/s
+  C1 median rate:    1253.821868 jobs/s
+  paired mean:       +1.729879%
+  95% interval:      -3.783293% to +7.243051%
+  favourable pairs:  8/12
+  guard:             clear
+
+C1 again reduced retained standard-slab bytes from 5,046,272 to 3,735,552,
+or 25.974026%, and reclaimed a median 36 owner-local slabs.
+
+The first and confirmation timing captures conflict. C1 remains provisional;
+the result supports completing the already planned C2 and peak-RSS evidence
+before a worker reclamation policy is selected.

@@ -655,6 +655,31 @@ and an indeterminate value selects the sparse owner and is dereferenced on
 request entry. `test_rxvmactive` deliberately poisons the context before
 initialization to enforce this invariant.
 
+### Gate E6 allocator ownership and private scale qualification
+
+Every allocation owned by an `rxvm_memory_worker` is confined to the thread
+that created that worker. Standard-slab, oversized-extent, value-array and
+reference-cell allocation, resize and release all consult the worker's recorded
+owner-thread token before mutating owner-local lists or statistics. Passing an
+explicit worker from a foreign thread is rejected even when that thread has no
+entered allocator TLS. Overflow handling follows the same rule and cannot use
+a foreign request to increment owner-local failure telemetry.
+
+Wrong-owner allocation, resize and free counts are cold diagnostic state in
+the shared memory context and are updated under its mutex. This synchronization
+is confined to rejected operations. Successful owner-local allocation and free
+remain lock-free, retain one empty slab per active class locally and return
+additional empty slabs through the existing synchronized depot policy.
+
+Gate E6 selected this strict C0 policy after measuring and rejecting automatic
+owner-idle slab reclaim and a test-only owner-drained remote-free queue. Live VM
+values and worker storage still never cross workers; normal transfer must
+materialize receiver-owned data or use a separately owned immutable/moved
+buffer. The private executor permanently qualifies compute and allocation
+churn at one, two, four and eight workers on each available concrete VM and
+asserts that the requested maximum concurrency is reached. This adds no public
+worker/channel API, RXAS/RXBIN instruction, plugin ABI or scheduling contract.
+
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or

@@ -1,6 +1,6 @@
 options levelb
 
-namespace e5worker expose add get identity spin loop_forever recurse_forever native_then_complete
+namespace e5worker expose add get identity spin churn loop_forever recurse_forever native_then_complete
 import e5native
 
 add: procedure = .int expose state
@@ -23,6 +23,14 @@ spin: procedure = .int
     total = total + 1
   end
   return total
+
+churn: procedure = .int
+  arg iterations = .string
+  items = .string[]
+  do index = 1 to iterations
+    items[index] = "0123456789abcdef0123456789abcdef" || index
+  end
+  return items[0]
 
 loop_forever: procedure = .int
   counter = .int

@@ -450,6 +450,7 @@ static int parse_positive_size(const char *text, size_t *value_out) {
 }
 
 static int run_benchmark_direct(const char *rxbin,
+                                const char *procedure,
                                 size_t jobs,
                                 const char *iterations,
                                 uint64_t *elapsed_out,
@@ -468,7 +469,7 @@ static int run_benchmark_direct(const char *rxbin,
     arguments[0] = (char *)iterations;
     started = monotonic_nanoseconds();
     for (job = 0u; job < jobs; job++) {
-        *checksum_out += rxvm_call(context, "e5worker.spin", 1, arguments);
+        *checksum_out += rxvm_call(context, (char *)procedure, 1, arguments);
     }
     *elapsed_out = monotonic_nanoseconds() - started;
     rxvm_destroy(context);
@@ -476,6 +477,7 @@ static int run_benchmark_direct(const char *rxbin,
 }
 
 static int run_benchmark_executor(const char *rxbin,
+                                  const char *procedure,
                                   size_t worker_count,
                                   size_t jobs,
                                   const char *iterations,
@@ -502,7 +504,7 @@ static int run_benchmark_executor(const char *rxbin,
     for (job = 0u; job < jobs; job++) {
         const char *arguments[1] = {iterations};
         if (rxvm_executor_submit(executor, job % worker_count,
-                                 "e5worker.spin", 1, arguments,
+                                 procedure, 1, arguments,
                                  &requests[job]) != RXVM_EXECUTOR_OK) {
             ok = 0;
             break;
@@ -534,6 +536,8 @@ static int run_benchmark_executor(const char *rxbin,
 static int run_benchmark(int argc, char **argv) {
     const char *mode;
     const char *rxbin;
+    const char *workload = "spin";
+    const char *procedure = "e5worker.spin";
     size_t jobs;
     size_t iterations;
     size_t worker_count = 0u;
@@ -543,43 +547,57 @@ static int run_benchmark(int argc, char **argv) {
     double jobs_per_second;
     int ok;
 
-    if (argc != 6 || !parse_positive_size(argv[4], &jobs) ||
+    if ((argc != 6 && argc != 7) ||
+        !parse_positive_size(argv[4], &jobs) ||
         !parse_positive_size(argv[5], &iterations)) {
         fprintf(stderr,
-                "usage: %s --benchmark direct|executor1|executor2 "
-                "E5_RXBIN JOBS ITERATIONS\n", argv[0]);
+                "usage: %s --benchmark "
+                "direct|executor1|executor2|executor4|executor8 "
+                "E5_RXBIN JOBS ITERATIONS [spin|churn]\n", argv[0]);
         return 2;
     }
     mode = argv[2];
     rxbin = argv[3];
+    if (argc == 7) workload = argv[6];
+    if (strcmp(workload, "churn") == 0) {
+        procedure = "e5worker.churn";
+    } else if (strcmp(workload, "spin") != 0) {
+        fprintf(stderr, "ERROR: unknown E6 benchmark workload: %s\n",
+                workload);
+        return 2;
+    }
     if (strcmp(mode, "direct") == 0) {
-        ok = run_benchmark_direct(rxbin, jobs, argv[5], &elapsed, &checksum);
+        ok = run_benchmark_direct(rxbin, procedure, jobs, argv[5],
+                                  &elapsed, &checksum);
     } else {
         if (strcmp(mode, "executor1") == 0) worker_count = 1u;
         else if (strcmp(mode, "executor2") == 0) worker_count = 2u;
+        else if (strcmp(mode, "executor4") == 0) worker_count = 4u;
+        else if (strcmp(mode, "executor8") == 0) worker_count = 8u;
         else {
             fprintf(stderr, "ERROR: unknown E5 benchmark mode: %s\n", mode);
             return 2;
         }
-        ok = run_benchmark_executor(rxbin, worker_count, jobs, argv[5],
-                                    &elapsed, &checksum, &maximum_parallel);
+        ok = run_benchmark_executor(rxbin, procedure, worker_count, jobs,
+                                    argv[5], &elapsed, &checksum,
+                                    &maximum_parallel);
     }
     if (!ok || !elapsed ||
         checksum != (long long)jobs * (long long)iterations ||
         (worker_count && maximum_parallel != worker_count)) {
         fprintf(stderr,
-                "E5_BENCHMARK result=FAIL mode=%s jobs=%zu iterations=%zu "
+                "E5_BENCHMARK result=FAIL mode=%s workload=%s jobs=%zu iterations=%zu "
                 "elapsed_ns=%llu checksum=%lld max_parallel=%zu\n",
-                mode, jobs, iterations, (unsigned long long)elapsed, checksum,
-                maximum_parallel);
+                mode, workload, jobs, iterations,
+                (unsigned long long)elapsed, checksum, maximum_parallel);
         return 1;
     }
     jobs_per_second = ((double)jobs * 1000000000.0) / (double)elapsed;
     printf("E5_RATE: %.9f jobs_per_second\n", jobs_per_second);
-    printf("E5_BENCHMARK result=PASS mode=%s workers=%zu jobs=%zu "
+    printf("E5_BENCHMARK result=PASS mode=%s workload=%s workers=%zu jobs=%zu "
            "iterations=%zu elapsed_ns=%llu checksum=%lld max_parallel=%zu\n",
-           mode, worker_count, jobs, iterations, (unsigned long long)elapsed,
-           checksum, maximum_parallel);
+           mode, workload, worker_count, jobs, iterations,
+           (unsigned long long)elapsed, checksum, maximum_parallel);
     return 0;
 }
 

@@ -146,6 +146,9 @@ struct rxvm_memory_context {
     uint64_t depot_returns;
     uint64_t depot_hits;
     uint64_t trim_calls;
+    uint64_t wrong_owner_allocations;
+    uint64_t wrong_owner_resizes;
+    uint64_t wrong_owner_frees;
 };
 
 static RXVM_MEMORY_THREAD_LOCAL rxvm_memory_worker *rxvm_memory_tls_worker;
@@ -153,6 +156,30 @@ static RXVM_MEMORY_THREAD_LOCAL unsigned char rxvm_memory_thread_marker;
 
 static uintptr_t rxvm_memory_current_thread_token(void) {
     return (uintptr_t)&rxvm_memory_thread_marker;
+}
+
+typedef enum rxvm_memory_wrong_owner_operation {
+    RXVM_MEMORY_WRONG_OWNER_ALLOCATION = 0,
+    RXVM_MEMORY_WRONG_OWNER_RESIZE = 1,
+    RXVM_MEMORY_WRONG_OWNER_FREE = 2
+} rxvm_memory_wrong_owner_operation;
+
+static void rxvm_memory_record_wrong_owner(
+        rxvm_memory_worker *worker,
+        rxvm_memory_wrong_owner_operation operation) {
+    rxvm_memory_context *context;
+
+    if (!worker || !worker->context) return;
+    context = worker->context;
+    rxvm_memory_mutex_lock(&context->mutex);
+    if (operation == RXVM_MEMORY_WRONG_OWNER_ALLOCATION) {
+        context->wrong_owner_allocations++;
+    } else if (operation == RXVM_MEMORY_WRONG_OWNER_RESIZE) {
+        context->wrong_owner_resizes++;
+    } else {
+        context->wrong_owner_frees++;
+    }
+    rxvm_memory_mutex_unlock(&context->mutex);
 }
 
 static const uint32_t rxvm_memory_byte_sizes[RXVM_MEMORY_BYTE_CLASS_COUNT] = {
@@ -486,6 +513,11 @@ static void *rxvm_memory_alloc_standard(rxvm_memory_worker *worker,
     void *result;
 
     if (!worker || class_id >= RXVM_MEMORY_CLASS_COUNT) return 0;
+    if (!rxvm_memory_worker_is_current_thread_owner(worker)) {
+        rxvm_memory_record_wrong_owner(
+                worker, RXVM_MEMORY_WRONG_OWNER_ALLOCATION);
+        return 0;
+    }
     state = &worker->classes[class_id];
     slab = state->available;
     if (!slab) {
@@ -524,6 +556,11 @@ static void *rxvm_memory_alloc_oversized(rxvm_memory_worker *worker,
     rxvm_memory_extent *extent;
     size_t wanted = size ? size : 1u;
 
+    if (worker && !rxvm_memory_worker_is_current_thread_owner(worker)) {
+        rxvm_memory_record_wrong_owner(
+                worker, RXVM_MEMORY_WRONG_OWNER_ALLOCATION);
+        return 0;
+    }
     if (rxvm_memory_size_add_overflows(sizeof(*extent),
                                        RXVM_MEMORY_ALIGNMENT - 1u, &total) ||
         rxvm_memory_size_add_overflows(total, wanted, &total)) {
@@ -600,8 +637,10 @@ static rxvm_memory_result rxvm_memory_release_standard(rxvm_memory_slab *slab,
     if (!worker || slab->owner_generation != worker->generation) {
         return RXVM_MEMORY_INVALID_POINTER;
     }
-    if (rxvm_memory_tls_worker && rxvm_memory_tls_worker != worker) {
-        worker->stats.wrong_owner_frees++;
+    if (!rxvm_memory_worker_is_current_thread_owner(worker) ||
+        (rxvm_memory_tls_worker && rxvm_memory_tls_worker != worker)) {
+        rxvm_memory_record_wrong_owner(
+                worker, RXVM_MEMORY_WRONG_OWNER_FREE);
         return RXVM_MEMORY_WRONG_OWNER;
     }
     if (!slab->live_count ||
@@ -649,8 +688,11 @@ static rxvm_memory_result rxvm_memory_release_extent(rxvm_memory_extent *extent)
     if (!extent->system_pointer) {
         return RXVM_MEMORY_INVALID_POINTER;
     }
-    if (worker && rxvm_memory_tls_worker && rxvm_memory_tls_worker != worker) {
-        worker->stats.wrong_owner_frees++;
+    if (worker &&
+        (!rxvm_memory_worker_is_current_thread_owner(worker) ||
+         (rxvm_memory_tls_worker && rxvm_memory_tls_worker != worker))) {
+        rxvm_memory_record_wrong_owner(
+                worker, RXVM_MEMORY_WRONG_OWNER_FREE);
         return RXVM_MEMORY_WRONG_OWNER;
     }
     if (worker) {
@@ -742,7 +784,12 @@ void *rxvm_memory_calloc_bytes(rxvm_memory_worker *worker,
     void *result;
     if (rxvm_memory_size_multiply_overflows(count, size, &total)) {
         if (!worker) worker = rxvm_memory_tls_worker;
-        if (worker) worker->stats.allocation_failures++;
+        if (worker && !rxvm_memory_worker_is_current_thread_owner(worker)) {
+            rxvm_memory_record_wrong_owner(
+                    worker, RXVM_MEMORY_WRONG_OWNER_ALLOCATION);
+        } else if (worker) {
+            worker->stats.allocation_failures++;
+        }
         return 0;
     }
     result = rxvm_memory_alloc_bytes(worker, total);
@@ -763,15 +810,18 @@ void *rxvm_memory_alloc_values(rxvm_memory_worker *worker, size_t count) {
         }
         return rxvm_memory_alloc_oversized(0, fallback_size);
     }
-    if (!rxvm_memory_size_multiply_overflows(count ? count : 1u,
-                                             sizeof(value), &requested) &&
-        rxvm_memory_value_class(count, &class_id)) {
-        return rxvm_memory_alloc_standard(worker, class_id, requested);
-    }
     if (rxvm_memory_size_multiply_overflows(count ? count : 1u,
                                             sizeof(value), &requested)) {
-        worker->stats.allocation_failures++;
+        if (!rxvm_memory_worker_is_current_thread_owner(worker)) {
+            rxvm_memory_record_wrong_owner(
+                    worker, RXVM_MEMORY_WRONG_OWNER_ALLOCATION);
+        } else {
+            worker->stats.allocation_failures++;
+        }
         return 0;
+    }
+    if (rxvm_memory_value_class(count, &class_id)) {
+        return rxvm_memory_alloc_standard(worker, class_id, requested);
     }
     return rxvm_memory_alloc_oversized(worker, requested);
 }
@@ -815,13 +865,12 @@ void *rxvm_memory_resize_bytes(rxvm_memory_worker *worker,
         }
         return replacement;
     }
-    if (rxvm_memory_tls_worker && rxvm_memory_tls_worker != owner) {
-        owner->stats.wrong_owner_frees++;
-        return 0;
-    }
     if (!worker) worker = owner;
-    if (worker != owner) {
-        owner->stats.wrong_owner_frees++;
+    if (!rxvm_memory_worker_is_current_thread_owner(owner) ||
+        (rxvm_memory_tls_worker && rxvm_memory_tls_worker != owner) ||
+        worker != owner) {
+        rxvm_memory_record_wrong_owner(
+                owner, RXVM_MEMORY_WRONG_OWNER_RESIZE);
         return 0;
     }
     worker->stats.reallocation_calls++;
@@ -930,6 +979,9 @@ void rxvm_memory_get_stats(const rxvm_memory_context *context_const,
     stats->depot_returns = context->depot_returns;
     stats->depot_hits = context->depot_hits;
     stats->trim_calls = context->trim_calls;
+    stats->wrong_owner_allocations = context->wrong_owner_allocations;
+    stats->wrong_owner_resizes = context->wrong_owner_resizes;
+    stats->wrong_owner_frees = context->wrong_owner_frees;
     worker = context->workers;
     while (worker) {
 #define RXVM_MEMORY_ADD_STAT(field) stats->field += worker->stats.field
@@ -938,7 +990,6 @@ void rxvm_memory_get_stats(const rxvm_memory_context *context_const,
         RXVM_MEMORY_ADD_STAT(reallocation_calls);
         RXVM_MEMORY_ADD_STAT(allocation_failures);
         RXVM_MEMORY_ADD_STAT(invalid_frees);
-        RXVM_MEMORY_ADD_STAT(wrong_owner_frees);
         RXVM_MEMORY_ADD_STAT(cumulative_requested_bytes);
         RXVM_MEMORY_ADD_STAT(cumulative_capacity_bytes);
         RXVM_MEMORY_ADD_STAT(live_allocations);

@@ -2,17 +2,24 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E5 industrial implementation and Mac QA complete; merged for
-publication after accepted macOS, Intel Linux and Windows evidence; GitHub
-validation pending; Gate F public design recorded; E6 and Gate F
-implementation remain closed**
+Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
+Gate F public design recorded; Gate F implementation remains closed**
 
 ## Current Gate E continuation
 
 - Publication commits: `mthread` carries the accepted E5 closure as
   `9f5bb579a`; `develop` integrates it through merge `795e58edb`. Adrian
-  authorized commit, merge and publication on 2026-08-13. E6 remains closed
-  until the published `develop` GitHub build is green.
+  authorized commit, merge and publication on 2026-08-13. Published develop
+  head `5ba282129` is green in Build CREXX run `31733322358` across Windows x64,
+  Linux x64, macOS arm64 and macOS x86_64, and in CodeQL run `31733322413`.
+  Adrian approved E6 reclamation/scale selection on 2026-08-13 for direct
+  execution on `develop` in one session with the mandatory first Release
+  verdict retained as an interactive acceptance stop.
+- Adrian accepted C0 and authorized E6 closure on 2026-08-14. The selected
+  production form enforces the allocator owner token uniformly and retains
+  private 1/2/4/8-worker compute/churn coverage. C1 automatic quiescent slab
+  handback and the disposable C2 remote-free queue are removed. Mac closure is
+  green; commit and publication remain separate actions.
 - Published Gate E base: `84d406904ece6842f6cec5a47e75d12b9d28ab16`
   (`fix: use compiler-correct RXVM thread locals`).
 - EF-0 implementation: `642e1b697bd019a800a2bddbaea8ef7a3d75e531`
@@ -2559,10 +2566,112 @@ The merged `rxc` include/import panel passes 18/18.
 
 E5 is complete for its approved implementation and QA scope. Adrian authorized
 commit, merge and publication on 2026-08-13: closure commit `9f5bb579a` is
-integrated into `develop` by `795e58edb`. E6, public workers/channels and Gate F
-remain closed until the published `develop` GitHub build is green.
+integrated into `develop` by `795e58edb`. Published develop head `5ba282129`
+then passed Build CREXX run `31733322358` and CodeQL run `31733322413`, opening
+E6 for the separately approved implementation below. Public workers/channels
+and Gate F remain closed.
 Evidence:
 [`2026-08-13-perf3-13-gate-e-e5-industrial-closeout`](evidence/2026-08-13-perf3-13-gate-e-e5-industrial-closeout/).
+
+### E6 reclamation and scale selection — C0 accepted and closed 2026-08-14
+
+Adrian approved one direct-on-`develop` implementation session on 2026-08-13,
+then accepted C0 and authorized closure on 2026-08-14 after the complete
+comparison. Commit, publication and Gate F implementation are not implied by
+that approval.
+
+The updated normative Gate F design narrows E6's mechanism obligation. Normal
+task/channel transfer materializes receiver-owned `ChannelValue`; live VM
+values, references, frames, native payloads and mutable worker storage never
+cross workers. Large transferable buffers use an independent moved or sealed
+immutable owner. Consequently a remote-free queue remains a required measured
+comparison but is selected only if an unavoidable provider/native lifetime
+proves that owner materialization cannot close the edge.
+
+The current allocator records an owner-thread token but its allocation,
+resize and release entry points do not uniformly consult it. In particular, a
+foreign thread with no entered allocator TLS can reach the standard or extent
+release path because the existing rejection tests only a different non-null
+TLS worker. E6 first adds a focused cross-thread/no-TLS reproducer and makes
+every worker-mutating allocator entry fail before touching owner-local lists or
+statistics.
+
+#### E6 comparative designs
+
+1. **C0 — strict owner-only status quo.** Enforce the recorded owner token for
+   allocation, resize and release. Keep ordinary local allocation/free
+   lock-free, retain one empty slab per active class locally and retain the
+   existing additional-empty-slab depot handback.
+2. **C1 — owner-quiescent whole-slab handback. Recommended hypothesis.** Add an
+   owning-worker-only quiescent reclaim operation that batches empty local
+   slabs back to the synchronized depot/system. Compare idle/request-boundary
+   policies without adding a dispatch, instruction or ordinary allocation
+   poll.
+3. **C2 — bounded remote-free PoC.** A foreign producer may enqueue an owned
+   pointer into a fixed-capacity queue, but only the owning worker drains it and
+   mutates the allocation. Overflow is explicit, teardown cannot outlive the
+   owner generation and no direct foreign slab/extent/statistics mutation is
+   permitted. This remains test-only unless a real unavoidable lifecycle and
+   retained evidence select it.
+
+#### E6 numbered implementation and verdict plan
+
+1. Freeze the clean E5 production source as the control and retain Debug and
+   profiling-off Release product identities before production edits.
+2. Add the no-TLS foreign-thread reproducer for standard slabs, oversized
+   extents, allocation, resize and release; close the owner-enforcement and
+   cold-path telemetry races.
+3. Implement C1 and the disposable C2 comparison without changing the public
+   RXVML/plugin ABI, RXAS/RXBIN, E4 generation ownership or the E5 carrier.
+4. Extend the private executor evidence only: one/two/four/eight workers,
+   compute and allocation churn, both concrete VMs, depot/queue contention,
+   peak and retained RSS, repeated reuse, cancellation, failure isolation and
+   deterministic shutdown. Physical affinity remains private test machinery,
+   not a Gate F contract.
+5. Select C0, C1 or C2 from same-input correctness and ordinary Release
+   evidence. C2 requires demonstrated necessity as well as performance; code
+   already made unnecessary by receiver materialization is removed.
+6. Integrate only the selected production form, run the minimum focused
+   correctness set, freeze implementation and run the mandatory first
+   profiling-off Release verdict. Stop for Adrian on any 3% guard, incorrect
+   ownership/cancellation, nondeterministic shutdown or adverse RSS/scale
+   trade-off.
+7. After verdict acceptance only, remove rejected PoCs, run proportional
+   sanitizer/lifecycle, full Debug CTest, Release and portable closeout, retain
+   one checksum-closed evidence bundle and update the VM ownership docs.
+
+#### E6 accepted selection and closeout
+
+C0 is the selected production policy. Every worker-owned allocation, value-
+array allocation, resize and release path now checks the recorded owner-thread
+token before touching owner-local lists or statistics. This includes an
+explicit worker passed by a foreign thread with empty allocator TLS and the
+value-array overflow path found during final audit. Wrong-owner allocation,
+resize and free telemetry is synchronized in the memory context; ordinary
+owner-local allocation and free remain lock-free. The existing one-empty-slab-
+per-class retention and additional-empty-slab depot return are unchanged.
+
+C1 reduced exact allocator-retained standard slabs by as much as 38.620690% at
+eight workers, but all external peak-RSS comparisons were inconclusive and
+`rxtvml` eight-worker churn had a clear +3.710323% post-quiescent current-RSS
+cost. Its one -4.476433% throughput guard did not reproduce in the approved
+confirmation (+1.729879%, crossing interval). C2 was a clear reject at
++183.669864% mean elapsed time, 95% interval +179.250161% to +188.089568%,
+with 0/12 favourable pairs and no demonstrated lifetime need under receiver
+materialization. C1's reclaim API/hook/telemetry and the test-only C2 queue
+were therefore removed.
+
+The comparison recorded 568/568 successful processes. The cleaned C0 form
+passes 49/49 focused Debug, 49/49 focused Apple AddressSanitizer, 49/49 focused
+profiling-off Release, complete Debug and Release builds, and 2,080/2,080 full
+Debug CTests without a recovery run. Permanent private qualification exercises
+spin and allocation churn at 1/2/4/8 workers on `rxvml`, `rxbvml` and
+`rxtvml`, asserting the exact requested maximum parallelism. Evidence:
+[`2026-08-13-perf3-13-gate-e-e6-first-release-verdict`](evidence/2026-08-13-perf3-13-gate-e-e6-first-release-verdict/).
+
+E6 does not implement `TaskScope`, `TaskTarget`, `ChannelValue`, service
+identity, public scheduling, process/host providers or an RXAS instruction.
+The Gate F F0 approval stop remains intact.
 
 ### E5 native thread doorbell — Intel Linux PoC accepted 2026-08-12
 
@@ -2708,7 +2817,7 @@ encoding is approved. Provider-specific opcode families remain rejected.
    first Release verdict, focused sanitizer, full Debug and Release closeout.
    It is published in `642e1b697` on the synchronized `19802842e` continuation
    base.
-6. **Gate E — full M5 start: approved 2026-08-07; E1 through E5 complete for the approved Mac/portable evidence scope.**
+6. **Gate E — full M5 start: approved 2026-08-07; E1 through E6 complete for the approved Mac/portable evidence scope.**
    E1/E1-P1 are published and Windows-MinGW proven. E2's worker-owned active
    state and direct interrupt slot pass the accepted Release verdict, complete
    Mac Debug/ASan/Release closeout and the separately repaired RXAS sanitizer
@@ -2730,9 +2839,13 @@ encoding is approved. Provider-specific opcode families remain rejected.
    the cross-platform correctness evidence without ARM retesting. Mac
    Debug/ASan/Release QA is complete after repairing and guarding the private
    callback initializer. Publication was authorized on 2026-08-13 through E5
-   closure `9f5bb579a` and develop merge `795e58edb`; E6 remains closed until
-   that published develop build is green. The full gate still stops before any
-   public pool/channel semantics.
+   closure `9f5bb579a` and develop merge `795e58edb`; published head
+   `5ba282129` is green across the Build CREXX matrix and CodeQL. Adrian
+   approved E6 reclamation/scale selection on 2026-08-13, selected strict C0
+   ownership and authorized closure on 2026-08-14. C0 passes focused
+   Debug/Apple-ASan/Release 49/49, complete Debug and Release builds, and full
+   Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
+   before any public pool/channel semantics.
 7. **Gate F — public design direction recorded 2026-08-13; full M6 start
    closed.** The approved surface and sequencing are recorded in
    [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6

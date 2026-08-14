@@ -1,0 +1,4 @@
+# PERF3-13 Gate E E6 isolated confirmation of the first-verdict guard cell.
+crexx-cross-runtime-matrix|1
+churn-rxbvml-w4-c0-confirm|churn-rxbvml-w4|crexx|rxbvml|c0-owner-only|E6-C0|no|persistent-worker|256x8192|E5_BENCHMARK result=PASS|E5_RATE:|/usr/bin/env;CREXX_VM_E5_DOORBELL=posix;CREXX_VM_E6_RECLAIM=off;/private/tmp/crexx-e6-candidate-release/interpreter/persistent_worker_executor-rxbvml;--benchmark;executor4;/private/tmp/crexx-e6-candidate-release/interpreter/test_persistent_worker_executor.rxbin;256;8192;churn
+churn-rxbvml-w4-c1-confirm|churn-rxbvml-w4|crexx|rxbvml|c1-idle-handback|E6-C1|no|persistent-worker|256x8192|E5_BENCHMARK result=PASS|E5_RATE:|/usr/bin/env;CREXX_VM_E5_DOORBELL=posix;CREXX_VM_E6_RECLAIM=idle;/private/tmp/crexx-e6-candidate-release/interpreter/persistent_worker_executor-rxbvml;--benchmark;executor4;/private/tmp/crexx-e6-candidate-release/interpreter/test_persistent_worker_executor.rxbin;256;8192;churn

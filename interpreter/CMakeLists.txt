@@ -566,7 +566,7 @@ target_link_libraries(test_rxvmstem_allocator_family
 
 add_executable(test_rxvmmemory tests/test_rxvmmemory.c)
 target_include_directories(test_rxvmmemory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(test_rxvmmemory PRIVATE rxvmmemory)
+target_link_libraries(test_rxvmmemory PRIVATE rxvmmemory Threads::Threads)
 
 add_executable(test_rxvmworker tests/test_rxvmworker.c rxvmworker.c)
 target_include_directories(test_rxvmworker PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -1829,6 +1829,30 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-native-return PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;native;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 30)
+        foreach(_crexx_e6_workers IN ITEMS 1 2 4 8)
+            foreach(_crexx_e6_workload IN ITEMS spin churn)
+                if("${_crexx_e6_workload}" STREQUAL "spin")
+                    set(_crexx_e6_iterations 65536)
+                else()
+                    set(_crexx_e6_iterations 8192)
+                endif()
+                add_test(
+                        NAME ${TARGET_NAME}-e6-scale-${_crexx_e6_workload}-w${_crexx_e6_workers}
+                        COMMAND ${CMAKE_COMMAND} -E env
+                                CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                                $<TARGET_FILE:${TARGET_NAME}>
+                                --benchmark executor${_crexx_e6_workers}
+                                ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                                256 ${_crexx_e6_iterations}
+                                ${_crexx_e6_workload})
+                set_tests_properties(
+                        ${TARGET_NAME}-e6-scale-${_crexx_e6_workload}-w${_crexx_e6_workers}
+                        PROPERTIES
+                        LABELS "interpreter;perf3;gate-e;e6;private;scale;${_crexx_e6_workload};${_crexx_e5_doorbell_platform_label}"
+                        PROCESSORS ${_crexx_e6_workers}
+                        TIMEOUT 120)
+            endforeach()
+        endforeach()
         if(WIN32)
             add_test(
                     NAME ${TARGET_NAME}-doorbell-fallback

@@ -1,0 +1,176 @@
+/* PERF3-13 Gate E E6 paired external peak-RSS reducer. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 2 then do
+  say "Usage: summarize_peak_rss OUTPUT RSS_SAMPLES"
+  return 2
+end
+
+output_path = argv[1]
+input_path = argv[2]
+keys = .string[]
+workloads = .string[]
+vms = .string[]
+control_counts = .int[]
+candidate_counts = .int[]
+control_values = .float[]
+candidate_values = .float[]
+group_count = 0
+line_number = 0
+
+do while lines(input_path)
+  line = linein(input_path)
+  line_number = line_number + 1
+  if line_number = 1 then iterate
+  fields = split_delimited(line, ",")
+  if fields[0] <> 20 then return fail("unexpected sample row width")
+  if fields[11] <> "recorded" then iterate
+  if fields[18] <> "pass" then return fail("non-passing recorded sample")
+  key = fields[3] || "/" || fields[6]
+  group = find_group(keys, group_count, key)
+  if group = 0 then do
+    group_count = group_count + 1
+    group = group_count
+    keys[group] = key
+    workloads[group] = fields[3]
+    vms[group] = fields[6]
+  end
+  if fields[7] = "c0-owner-only" then do
+    control_counts[group] = control_counts[group] + 1
+    control_values[group * 100 + control_counts[group]] = fields[16]
+  end
+  else if fields[7] = "c1-idle-handback" then do
+    candidate_counts[group] = candidate_counts[group] + 1
+    candidate_values[group * 100 + candidate_counts[group]] = fields[16]
+  end
+  else return fail("unexpected RSS variant")
+end
+call linein input_path
+
+call remove_output output_path
+header = "workload,vm,pairs,control_median,candidate_median," || ,
+    "candidate_mean_percent,candidate_95_ci_low_percent," || ,
+    "candidate_95_ci_high_percent,interval_result,candidate_favorable"
+if lineout(output_path, header) <> 0 then return fail("could not create output")
+do group = 1 to group_count
+  if control_counts[group] <> 4 | candidate_counts[group] <> 4 then
+    return fail("incomplete four-pair RSS set")
+  control = .float[]
+  candidate = .float[]
+  deltas = .float[]
+  sum = 0.0
+  favorable = 0
+  do pair = 1 to 4
+    control[pair] = control_values[group * 100 + pair]
+    candidate[pair] = candidate_values[group * 100 + pair]
+    delta = ((candidate[pair] - control[pair]) * 100.0) / control[pair]
+    deltas[pair] = delta
+    sum = sum + delta
+    if delta < 0.0 then favorable = favorable + 1
+  end
+  mean = sum / 4.0
+  sum_squares = 0.0
+  do pair = 1 to 4
+    difference = deltas[pair] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  deviation = square_root(sum_squares / 3.0)
+  margin = 3.182446 * deviation / 2.0
+  low = mean - margin
+  high = mean + margin
+  interval = "noisy_inconclusive"
+  if high < 0.0 then interval = "clear_favorable"
+  else if low > 0.0 then interval = "clear_adverse"
+  row = workloads[group] || "," || vms[group] || ",4," || ,
+      float_text(median(control)) || "," || float_text(median(candidate)) || ,
+      "," || float_text(mean) || "," || float_text(low) || "," || ,
+      float_text(high) || "," || interval || "," || favorable
+  if lineout(output_path, row) <> 0 then return fail("could not append output")
+end
+call lineout output_path
+say "PASS: PERF3-13 E6 peak-RSS summary retained at" output_path
+return 0
+
+find_group: procedure = .int
+  arg keys = .string[], count = .int, wanted = .string
+  do group = 1 to count
+    if keys[group] = wanted then return group
+  end
+  return 0
+
+median: procedure = .float
+  arg source = .float[]
+  values = .float[]
+  do i = 1 to source[0]
+    values[i] = source[i]
+  end
+  call sort_floats values
+  return sample_quantile(values, 1, 2)
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

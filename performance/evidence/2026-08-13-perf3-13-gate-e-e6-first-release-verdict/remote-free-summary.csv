@@ -1,0 +1,3 @@
+measurement,pairs,local_median,remote_median,remote_mean_percent,remote_95_ci_low_percent,remote_95_ci_high_percent,interval_result,local_favorable
+elapsed_ns,12,17381500.000000,49232000.000000,183.669864,179.250161,188.089568,clear_adverse,0
+max_rss_bytes,4,73809920.000000,73809920.000000,0.005551,-0.012114,0.023215,noisy_inconclusive,0
