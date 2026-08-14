@@ -44,7 +44,10 @@ those labels using the new product mapping.
 | `performance/PERF3-11-MIGRATION-WORKLIST.md` | Completed one-authority proof migration ledger and retained classification history for the migrated semantic/mechanical consumers |
 | `performance/PERF3-12B-WORKLIST.md` | Completed compound-tail route comparison, accepted production H1 proof, first Release verdict, broad closeout and fresh current-product Mac scorecard |
 | `performance/PERF3-13-WORKLIST.md` | Live Gate E worker-ownership, multithreading and Gate F approval control plane |
-| `performance/PERF3-13-GATE-F-DESIGN.md` | Normative future public concurrency surface: task scopes, services/actors, channels, transferable values, immutable binary and Level B-before-RXAS sequencing |
+| `performance/PERF3-13-GATE-F-DESIGN.md` | Normative future public concurrency surface: task scopes, services/actors, channels, transferable values, immutable binary and Level B classes over mandatory transport-neutral RXAS |
+| `performance/PERF3-13-GATE-F-USER-GUIDE.md` | Approved Rexx user model: terminology, conceptual task machine, typed task expressions, `DO PARALLEL`, Level B-over-RXAS layering, reusable redirects and concurrent HTTP requirements |
+| `performance/PERF3-13-GATE-F-AI-SPEC.md` | Exact F0-S source, Level B, RXAS/RXBIN, provider, encoding, lifecycle, diagnostic and conformance contract for Gate F implementation |
+| `performance/PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md` | Approved contract-first Gate F execution: provider type/capability codes, coherent RXAS migration, local/process/endpoint/child providers, verdict stops and HTTP closeout |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |

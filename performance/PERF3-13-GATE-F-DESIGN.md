@@ -2,13 +2,15 @@
 
 Date: 2026-08-13
 
-Status: **approved design direction; Gate F implementation remains closed**
+Status: **user model and staged Gate F implementation approved by Adrian on
+2026-08-14; F0-S exact contract complete**
 
 This record is the normative design authority for the future PERF3-13 Gate F
 public concurrency surface. It records the user model, ownership and transfer
-semantics that Gate F implementations must preserve. It does not authorize an
-implementation, a public ABI, an RXAS/RXBIN change or publication of an
-experimental library.
+semantics that Gate F implementations must preserve. Implementation follows
+the contract-first slices and first-verdict stops in
+[`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
+Public ABI publication, commit and push remain separately controlled.
 
 Gate E remains the mechanism foundation. Its private executor, physical
 doorbells, fallback progress points, worker indices and current logical
@@ -16,25 +18,44 @@ integer/string request fixture are not public contracts. Gate F starts only at
 the approval point recorded in `PERF3-13-WORKLIST.md`, after the Gate E worker
 model and its scale/reclamation policy have been selected.
 
-The exact compilable Level B declarations and method signatures are an F0
-deliverable. F0 may correct a spelling that conflicts with the existing
-language or class library, but it must not change the decisions, lifecycle or
-user model below without explicit design approval.
+The exact compilable Level B declarations, method signatures and machine
+contract are locked by
+[`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md). Its declaration
+oracle compiles under the current Level B grammar. A later implementation may
+not change the decisions, lifecycle or user model below without explicit
+design approval.
+
+The approved user-facing extension of this baseline is collected in
+[`PERF3-13-GATE-F-USER-GUIDE.md`](PERF3-13-GATE-F-USER-GUIDE.md). That F0
+record covers typed task declarations, transparently scheduled task
+expressions, `DO PARALLEL`, `.taskwork` classes, the Level B-to-runtime bridge
+and the industrial HTTP consumer. Adrian approved the user model and staged
+implementation on 2026-08-14.
+
+Adrian selected the core bridge on 2026-08-14: Level B concurrency classes
+must call mandatory transport-neutral RXAS instructions, which RXVM implements
+over the Gate E executor/provider substrate. There is no RXPA task path and no
+Rexx-visible hidden native-handle contract. F0-S fixes the five instruction
+signatures, opcodes, effects, signals, feature gate and binary value contract.
 
 Use these current repository contracts when implementing the design:
 
 - [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md) for Gate E/F status, approval
   and evidence sequencing;
+- [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md)
+  for implementation slices, provider codes and verdict stops;
+- [`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md) for the exact
+  source, Level B, RXAS/RXBIN, provider and conformance contract;
 - [`PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md`](PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md)
   for the private physical delivery boundary;
 - [`RXVM_INTERPRETER.md`](../docs/ai-context/RXVM_INTERPRETER.md) for current
   VM ownership, callable descriptors and provider behavior;
 - [`CREXX_LEVELB_AUTHORING.md`](../docs/ai-context/CREXX_LEVELB_AUTHORING.md),
   [`classes_and_interfaces.md`](../docs/books/crexx_language_reference/classes_and_interfaces.md)
-  and [`CREXX_LIBS.md`](../docs/ai-context/CREXX_LIBS.md) for the Level B/RXPA
+  and [`CREXX_LIBS.md`](../docs/ai-context/CREXX_LIBS.md) for the Level B
   source and object model; and
-- [`RXAS_ASSEMBLER.md`](../docs/ai-context/RXAS_ASSEMBLER.md) for any later
-  instruction, effect, signal, optimizer and RXBIN work.
+- [`RXAS_ASSEMBLER.md`](../docs/ai-context/RXAS_ASSEMBLER.md) for the mandatory
+  instruction, effect, signal, optimizer and RXBIN contract.
 
 ## Decision summary
 
@@ -52,12 +73,16 @@ Gate F locks these decisions:
 5. **Large binary sharing is immutable.** Gate F supports copied, moved,
    sealed shared/mapped and serialized binary transfer, but not general shared
    mutable Rexx memory.
-6. **The Rexx contract precedes the instruction set.** Level B/RXPA proves the
-   contract, Level G adds domain ergonomics, and RXAS is considered only after
-   semantic acceptance and profiling.
+6. **The class and instruction contracts form one core boundary.** Level B
+   classes wrap mandatory transport-neutral RXAS instructions, Level G lowers
+   to those classes, and provider-specific mechanisms remain private to RXVM.
 7. **Replication policy stays explicit.** Event streams build eventually
    consistent projections; versioned stores and CRDTs are opt-in libraries,
    not transparent behavior of every Rexx object.
+8. **Redirects are reusable endpoints.** Spawn, process I/O, HTTP streaming
+   and provider adapters share bounded byte endpoints. Pre-release
+   spawn/redirect RXAS spellings may be retired to keep one coherent channel
+   instruction family; their old opcode slots remain reserved.
 
 These are user-visible semantic decisions, not merely an implementation
 preference. A future provider may use threads, processes, remote hosts or a
@@ -111,10 +136,11 @@ transport details remain provider configuration and diagnostics.
 | transfer buffer | binary value with explicit copy/move/seal state | mutable bytes have one owner; shared bytes are immutable |
 | completion | terminal observation of one task/request | exactly one terminal state is published to its owner |
 
-The working Level B vocabulary is `.taskpool`, `.taskscope`, `.task`,
-`.tasktarget`, `.completion`, `.channel`, `.channelvalue`, `.serviceref` and
-`.transferbuffer`. F0 must compile-check these names against the then-current
-class library and publish the resulting interfaces before implementation.
+The F1 Level B vocabulary is `.taskpool`, `.taskscope`, `.task`, `.tasktarget`,
+`.taskwork`, `.taskcontext`, `.completion`, `.channel`, `.channelrequest`,
+`.channelvalue`, `.channelcodec`, `.byteendpoint`, `.serviceref` and
+`.transferbuffer`. The declaration oracle compile-checks these names and their
+method signatures before production implementation.
 
 ## Ownership and global state
 
@@ -145,9 +171,9 @@ A program that requires persistent mutable state uses a service identity:
 Services are non-reentrant by default. A handler runs one turn to completion.
 The first surface does not permit a task or service handler to synchronously
 join another task/channel operation; blocking join belongs to the orchestrating
-parent execution. F0 must include deadlock-negative examples and define whether
-an invalid nested wait is rejected immediately or reported as a failed
-completion. Nested task scopes or suspended actor turns require a later
+parent execution. An invalid nested wait fails immediately with
+`#TASK_NESTED_WAIT`, without occupying a bounded worker while waiting for its
+own pool. Nested task scopes or suspended actor turns require a later
 resumption/scheduler design.
 
 Stateless task targets and stateful services remain distinct. A stateless task
@@ -181,9 +207,13 @@ queued work, requests cancellation of running work, quarantines any worker
 that cannot return safely, publishes terminal outcomes and joins all
 non-quarantined runtime resources deterministically.
 
-The first surface uses explicit submission and join rather than adding
-`async`/`await`. Such syntax would require a separately designed suspended-
-frame, resumption, signal and structured-cleanup model.
+The Level B surface uses explicit submission and join rather than adding
+`async`/`await`. The approved F0 user model uses typed task calls whose
+submission and structured join are compiler-managed without exposing future
+types or suspending the controlling Rexx frame. That lowering must preserve
+the same scope ownership and mandatory cleanup. True `async`/`await` would
+still require a separately designed suspended-frame, resumption, signal and
+structured-cleanup model.
 
 ## Task targets and procedure identity
 
@@ -193,9 +223,9 @@ callable descriptor produced from a statically resolved Level B procedure,
 method or task-work provider. It carries the callable contract and compatible
 code/generation identity needed by the receiver.
 
-F0 must select a source spelling that lets ordinary code obtain this target
-without spelling a qualified procedure name as data. The compiler or library
-may lower that source to the existing portable callable descriptor machinery.
+The exact Level B spelling is `task callable-reference` or
+`task class-factory-expression`. The compiler lowers it to the sealed
+`.tasktarget` descriptor without spelling a qualified procedure name as data.
 Dynamic lookup by name, where needed for tooling, is a separate checked API and
 is not the normal task-submission path.
 
@@ -293,9 +323,13 @@ The common terminal states are:
 - `UNKNOWN_OUTCOME` when remote execution may have occurred but cannot be
   established safely.
 
-Expected scheduling and transport outcomes are completion states rather than
-new catchable Rexx signals. Allocation failure, invalid local API use and
-existing language/runtime faults retain their normal signal contracts.
+Expected scheduling and transport outcomes remain completion states in the
+explicit Level B contract rather than being replaced by catchable Rexx
+signals. The approved F0 user model requires typed must-succeed task-call
+sugar to project a non-success terminal completion as controller-side
+`TASK_FAILURE`; that rule preserves the completion as the underlying data
+and is approved. Allocation failure, invalid local API use and existing
+language/runtime faults retain their normal signal contracts.
 A terminal completion describes the caller's task handle. For uncooperative
 native or external work, it does not prove that an underlying side effect has
 stopped; the provider must use `UNKNOWN_OUTCOME` or attach an explicit
@@ -386,9 +420,11 @@ specific algebra and delivery assumptions, not merely a version field:
 ### Level B
 
 Level B owns the stable systems contract. It uses normal interfaces, classes,
-factories and methods, with a small Rexx factory/class shim around any hidden
-RXPA handle. Native metadata declaration alone does not substitute for correct
-Rexx object construction.
+factories and methods. Those classes call the core RXVM concurrency facility
+through Level B-authored RXAS instructions. A Rexx object may retain a
+validated VM channel capability, but it does not expose an RXPA payload,
+native pointer or physical worker identity. Native metadata declaration alone
+does not substitute for correct Rexx object construction.
 
 The working responsibility split is:
 
@@ -398,8 +434,12 @@ The working responsibility split is:
 | `.taskscope` | submit/ask, policy, deadline, cancel, join and close |
 | `.task` | task identity and completion access |
 | `.tasktarget` | sealed statically resolved work descriptor |
+| `.taskwork` | fixed receiver-side runnable class contract |
+| `.taskcontext` | receiver-side deadline, cancellation and tracing context |
 | `.completion` | terminal state, value/error and diagnostics |
 | `.channel` | provider-neutral bounded request/completion transport |
+| `.channelrequest` | advanced Level B wrapper around one local provider ticket |
+| `.byteendpoint` | bounded byte source/sink for redirect, streaming and child I/O |
 | `.channelvalue` | portable sum/value-tree construction and inspection |
 | `.serviceref` | transferable logical stateful endpoint identity |
 | `.transferbuffer` | explicit mutable-owner, move and immutable-seal lifecycle |
@@ -411,27 +451,31 @@ contract is therefore preferred over a family such as `FutureOfString` and
 
 The working method roles are:
 
+- `TaskPool` named factories select a provider and create bounded capacity over
+  the generic channel-open role; the resulting pool owns channel shutdown;
 - `TaskScope.submit(target, request)` starts stateless work and returns a
   `Task` handle;
 - `TaskScope.ask(serviceRef, request)` starts one serialized service call and
   returns a `Task` handle;
-- `TaskScope.next(deadline)` returns the next terminal completion in completion
+- `TaskScope.next(timeoutMilliseconds)` returns the next terminal completion in completion
   order;
 - `TaskScope.join()` waits for the scope and returns completions in stable
   submission order;
 - `TaskScope.cancel(reason)` requests cancellation of its non-terminal
   children, while `close()` performs the mandatory join/cleanup;
-- `Task.cancel(reason)` and `Task.wait(deadline)` address one child, subject to
+- `Task.cancel(reason)` and `Task.wait(timeoutMilliseconds)` address one child, subject to
   the parent-only blocking rule;
-- the advanced `Channel.start(value, deadline)`, `wait(deadline)`,
-  `cancel(ticket, reason)` and `close(mode)` roles expose the common provider
-  protocol without exposing a physical worker; and
+- the advanced `Channel.start(value, timeoutMilliseconds)` returns a
+  `.channelrequest`; its `wait(timeoutMilliseconds)`, `cancel(reason)` and the
+  channel `close(mode)` roles expose the common provider protocol without a
+  raw ticket or physical worker;
+- `.byteendpoint` composes channel open/start/wait/cancel/close into
+  bounded read, write, drain, half-close and terminal-state operations; and
 - `ChannelValue` provides typed factories/accessors, while `TransferBuffer`
   provides copy, move, seal and immutable slice/view operations.
 
-F0 may adjust capitalization, overload grouping and return-container spelling
-to compile under the current Level B object model. It must retain these roles,
-ordering and ownership. In particular, `join()` ordering is deterministic and
+These roles and their exact signatures are compile-checked by the declaration
+oracle. In particular, `join()` ordering is deterministic and
 does not depend on which worker finishes first. `next()` reports each child's
 terminal transition at most once in completion order; `join()` still returns
 the complete stable result set, including children previously observed through
@@ -440,11 +484,11 @@ the complete stable result set, including children previously observed through
 The intended source experience is conceptually:
 
 ```rexx
-pool = .taskpool(4, 64)
-scope = .taskscope(pool, "fail-fast", 5000)
+pool = .taskpool.local(4, 64)
+scope = .taskscope.failfast(pool, 5000)
 
-left = scope.submit(scannerTarget, .channelvalue.string("north"))
-right = scope.submit(scannerTarget, .channelvalue.string("south"))
+left = scope.submit(scannerTarget, .channelvalue.string_value("north"))
+right = scope.submit(scannerTarget, .channelvalue.string_value("south"))
 
 results = scope.join()
 if results[1].succeeded() then
@@ -454,16 +498,19 @@ call scope.close()
 call pool.close()
 ```
 
-This block fixes the experience and lifecycle, not the final factory overloads
-or array signature. F0 must replace it with compiling Level B examples and a
-contract test. `scannerTarget` must be obtained from a statically resolved
-task-work declaration; users must not supply a procedure-name string or worker
-number.
+This block illustrates the exact factory spelling; the declaration oracle
+fixes method return types which the current interface grammar can express.
+`scannerTarget` must be obtained from a statically resolved task-work
+declaration; users must not supply a procedure-name string or worker number.
 
 ### Level G
 
 Level G adds domain ergonomics without changing the transport contract:
 
+- typed task declarations and task methods over generated `.taskwork`
+  adapters;
+- transparently structured task expressions and `DO PARALLEL`, with no
+  user-visible future type or detached task;
 - generated or factory-selected typed service proxies;
 - normal domain methods that return `Task`/`Completion` handles;
 - service/actor lifecycle and discovery helpers;
@@ -483,22 +530,30 @@ does not require applications to use them. The compiler may later recognize
 stable Level B library calls and lower them directly while preserving the same
 source contract.
 
-No task/channel intrinsic or new language keyword is approved by this design.
-A statically resolved task-target construct, if the existing callable/type
-metadata cannot express one ergonomically, returns to Adrian as a bounded F0
-language-design decision before compiler work.
+The approved F0 user model adds `task` as a callable/target construct and
+`DO PARALLEL` as structured syntax. It places Level B classes over an RXAS-only
+core bridge, with no RXPA task path and no public angle-bracket task-intrinsic
+family. F0-S has locked the compile-checked declarations, machine contract and
+coherence matrix before the first compiler or opcode edit.
 
-## RXPA, VM and provider boundary
+## Level B, RXAS, VM and provider boundary
 
-The initial implementation path is a Level B class/factory shim over RXPA and
-the private Gate E executor. The VM/provider substrate owns only:
+The required implementation path is Level G syntax lowering to Level B
+classes, Level B-authored assembler invoking the channel instruction family,
+and RXVM implementing those instructions over the private Gate E executor and
+provider substrate. RXPA is not an alternate task-start or task-wait path.
+
+The VM may use private native structures internally, but Rexx retains only a
+validated VM channel capability. The VM/provider substrate owns only:
 
 - bounded endpoint/queue mechanics;
 - wait and wakeup;
 - terminal completion publication;
 - cancellation/deadline delivery and quarantine;
-- envelope validation; and
-- receiver-owned `ChannelValue` materialization.
+- envelope validation;
+- receiver-owned `ChannelValue` materialization;
+- bounded byte endpoints, EOF/half-close and child-stdio attachment; and
+- runtime-owned provider registration and lifetime pinning.
 
 Pool policy, actor/service behavior, event routing, topic semantics,
 persistence and projection logic belong in Level B/G libraries.
@@ -519,32 +574,49 @@ transport before that logical contract passes review.
 
 ## RXAS/RXBIN sequencing
 
-Gate F reserves no opcode in F0 or F1. The Level B/RXPA prototype must first
-prove that the same semantics work locally and across a process boundary.
+Gate F requires a minimum transport-neutral channel instruction family. F0-S
+has locked its semantic and binary contract; F1 implements it in both VMs together
+with the Level B wrappers and providers. Adrian authorized staged
+implementation on 2026-08-14.
 
-If profiling later shows a material common-path cost, the candidate logical
-instruction family is:
+The mandatory conceptual roles are:
 
 ```text
-chanstart  rStatus,rTicket,rChannel,rEnvelope,rDeadline
-chanwait   rStatus,rCompletion,rChannel,rDeadline
+chanopen   rStatus,rChannel,rProviderType,rRequiredCapabilities,rConfiguration
+chanstart  rStatus,rTicket,rChannel,rEnvelope,rWaitMicroseconds
+chanwait   rStatus,rCompletion,rChannel,rWaitMicroseconds
 chancancel rStatus,rChannel,rTicket,rReason
 chanclose  rStatus,rChannel,rMode
 ```
 
-These spellings record semantic roles, not an approved encoding. A zero
-deadline supplies the non-blocking form. Channel/provider creation, service
-identity, event buses, topics and persistence remain library operations.
+These are the exact F0-S spellings and operand order. `providerType` selects one implementation and
+`requiredCapabilities` is a separate bit mask. Core types initially cover
+local task, isolated worker process, open host, bounded byte endpoint and child
+process; a registered extension range permits future RXVM plugin providers
+without new opcodes. Unknown types, capability bits and registration conflicts
+fail deterministically. Wait `-1` means forever, `0` means nonblocking and a
+positive value is a relative microsecond budget.
 
-`chanstart` and `chanwait` are the only presumed essential candidates.
-`chancancel` and `chanclose` remain native/library operations unless evidence
-shows that instructions are justified. One-off `poolnew`, `httpstart`,
-`dbquery`, file, timer or process opcode families are rejected.
+Generic channel/provider creation is the role of `chanopen`; pool factories
+and policies remain Level B/G concerns. Service identity, event buses, topics
+and persistence also remain library operations. One-off `poolnew`,
+`httpstart`, `dbquery`, file, timer or process opcode families are rejected.
 
-Any approved instruction must have:
+Because CREXX is pre-release, the current `spawn`, `redir2str`, `redir2arr`,
+`str2redir`, `arr2redir` and `nullredir` RXAS surface may be retired in favor of
+byte-endpoint and child-process provider types. Old numeric slots remain
+reserved, stale RXBIN fails explicitly, and compiler exits, Level B ADDRESS
+code and repository images are updated together. Existing socket/TLS, file and
+clock/time operations remain synchronous, owner-local low-level primitives in
+F1; they are not alternate asynchronous provider families. `MTIME` remains a
+time-of-day primitive and is not the Gate F deadline clock.
+
+The F0-S instruction contract defines:
 
 - an enforced RXBIN feature/version gate;
 - exact operand, result, ownership and cleanup semantics;
+- the validated channel-capability representation and rejection rules;
+- the portable envelope/completion value-tree boundary;
 - complete effect and signal sidecars;
 - conservative optimizer-barrier behavior until stronger proof exists;
 - source, TRACE, profiler and debugger identity;
@@ -552,34 +624,61 @@ Any approved instruction must have:
 - compatibility and malformed-image tests; and
 - identical logical semantics in `rxbvm` and `rxtvm`.
 
-The instruction decision compares ordinary Level B/RXPA calls, compiler
-lowering to an existing primitive where possible, and new opcodes. No RXAS
-change is justified merely because the VM already contains a private queue.
+The Level B class library reaches these instructions through its existing
+Level B-only authored `assembler` facility. Ordinary Level G source cannot use
+that facility directly. Profiling may later improve lowering or instruction
+implementation, but it does not decide whether this core instruction boundary
+exists.
 
 ## Gate F execution sequence
 
-### F0 — semantic and source contract
+### F0-S — exact semantic, source and machine contract
 
-- [ ] Compile-check and publish the Level B interface declarations and examples.
-- [ ] Lock task-target construction without user-authored procedure strings.
-- [ ] Lock `ChannelValue`, codec, envelope and completion schemas.
-- [ ] Lock scope, service ordering, cancellation, deadline and shutdown state
+- [x] Approve the user-oriented terminology, conceptual machine and Rexx
+  surface in `PERF3-13-GATE-F-USER-GUIDE.md`.
+- [x] Derive the maintainer/AI specification plus a coherence
+  matrix against the user guide and this ownership design.
+- [x] Compile-check the Level B interface declarations, factory forms and
+  method signatures under the current grammar.
+- [x] Lock the exact RXAS/RXBIN instruction signatures, value/capability types,
+  effects, signals, feature/version gate, diagnostics and malformed-image
+  behavior for both VMs.
+- [x] Lock provider type codes, required-capability flags, runtime registration
+  and provider/module lifetime rules.
+- [x] Lock reusable byte-endpoint and child-process provider contracts plus the
+  migration/retirement disposition of existing spawn/redirect RXAS.
+- [x] Lock task-target construction without user-authored procedure strings.
+- [x] Lock `ChannelValue`, codec, envelope and completion schemas.
+- [x] Lock scope, service ordering, cancellation, deadline and shutdown state
   machines.
-- [ ] Define provider conformance tests and protocol golden vectors.
-- [ ] Define diagnostics, capability negotiation and version failure behavior.
-- [ ] Stop for approval before runtime implementation.
+- [x] Define provider conformance tests and protocol golden vectors.
+- [x] Define diagnostics, capability negotiation and version failure behavior.
+- [x] Complete the coherence check before the first opcode/runtime edit; stop
+  for Adrian only if it exposes a contradiction or new language decision.
 
 ### F1 — local and process providers
 
-- [ ] Implement the Level B/RXPA surface over the in-process Gate E executor.
+- [ ] Implement the mandatory channel instructions identically in `rxbvm` and
+  `rxtvm` over the in-process Gate E executor/provider substrate.
+- [ ] Implement the Level B class surface as wrappers over those instructions,
+  with no RXPA task path or native payload contract.
+- [ ] Implement runtime-owned provider registration with core local, process,
+  byte-endpoint and child-process provider descriptors.
+- [ ] Generalize redirects as reusable bounded byte endpoints, update ADDRESS
+  and compiler exits, retire the selected old RXAS mnemonics and preserve their
+  numeric slots.
 - [ ] Implement a separate-process provider with the same contract.
+- [ ] Implement the approved core Level G task declarations, task expressions
+  and `DO PARALLEL` only as lowering to that same Level B contract.
 - [ ] Prove no live VM value/reference/native pointer crosses either boundary.
 - [ ] Prove bounded backpressure, failure isolation, cancellation, quarantine,
   deterministic join and no-spill reuse.
+- [ ] Deliver the bounded concurrent HTTP/TLS consumer over tasks, channels and
+  byte endpoints without an HTTP opcode family.
 - [ ] Publish an experimental Level B surface only after portable local/process
   conformance and an accepted first Release verdict.
 
-### F2 — open host protocol and Level G
+### F2 — open host protocol and higher Level G libraries
 
 - [ ] Select an open encoding/transport from measured and interoperability
   evidence.
@@ -590,12 +689,14 @@ change is justified merely because the VM already contains a private queue.
 - [ ] Prove unknown-version/type/capability, disconnect and ambiguous-outcome
   behavior.
 
-### F3 — lowering and stabilization
+### F3 — specialized lowering and stabilization
 
-- [ ] Profile the accepted Level B/RXPA surface before proposing RXAS.
+- [ ] Profile the accepted Level B-over-RXAS surface and its instruction
+  implementation before proposing any specialized lowering.
 - [ ] Compare copies, moves and immutable sharing over the required payload
   panel.
-- [ ] Add only the smallest instruction subset selected by evidence, if any.
+- [ ] Optimize only the proved common paths while preserving the mandatory
+  transport-neutral instruction and class contracts.
 - [ ] Complete both-VM, cross-platform, sanitizer, install/package and public
   compatibility closeout.
 - [ ] Stabilize the public surface only after experimental compatibility and
@@ -615,6 +716,8 @@ Gate F measurements keep correctness and semantics primary and cover:
 - copy versus move versus sealed sharing/mapping/serialization;
 - one worker through the selected core-count/scaling range;
 - stateless CPU work, blocking I/O and stateful single-owner service work;
+- industrial concurrent HTTP/TLS covering connection reuse, bounded response
+  handling, cancellation, streaming capability, saturation and teardown;
 - in-process, process and host providers where implemented;
 - queue saturation, producer fairness and deadline-aware backpressure;
 - queued cancellation, running Rexx cancellation and uncooperative native
@@ -667,13 +770,13 @@ transparent sharing or versioning of arbitrary mutable Level B objects.
 The following remain measured or later-phase selections rather than public
 semantic gaps:
 
-- exact Level B overloads and any syntax-driven spelling correction;
 - wire encoding and network transport;
 - copy/share threshold and mapping implementation;
 - provider discovery, persistence and security policy;
 - fairness implementation within the stated ordering contract;
 - a future catchable cancellation/cleanup language construct; and
-- whether any RXAS instruction is needed.
+- later evidence-led instruction optimizations within the mandatory five
+  semantic roles.
 
 A proposal to expose worker IDs, make module globals process-shared, transfer a
 live object/reference, permit writable shared mapping, add transparent retry,

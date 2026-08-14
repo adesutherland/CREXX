@@ -1965,6 +1965,65 @@ add_crexx_isolated_run_test(interface_match_same_module rexx_src/interface_match
 add_crexx_isolated_run_fail_test(interface_match_reject_single rexx_src/interface_match_reject_single.crexx)
 add_crexx_isolated_run_fail_test(type_ops_fail rexx_src/type_ops_fail.crexx)
 
+set(GATE_F_LEVELB_CONTRACT_SCRIPT
+    "${CMAKE_CURRENT_BINARY_DIR}/gate_f_levelb_contract.cmake")
+file(GENERATE OUTPUT "${GATE_F_LEVELB_CONTRACT_SCRIPT}" CONTENT
+"execute_process(
+    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n
+            -o \"gate_f_levelb_contract\"
+            \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_levelb_contract.crexx\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE rxc_out
+    ERROR_VARIABLE rxc_err
+    RESULT_VARIABLE rxc_result)
+if(NOT rxc_result EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level B contract rxc failure: \\n\${rxc_out}\\n\${rxc_err}\")
+endif()
+execute_process(
+    COMMAND \"$<TARGET_FILE:rxas>\" -o \"gate_f_levelb_contract.rxbin\"
+            \"gate_f_levelb_contract\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE rxas_out
+    ERROR_VARIABLE rxas_err
+    RESULT_VARIABLE rxas_result)
+if(NOT rxas_result EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level B contract rxas failure: \\n\${rxas_out}\\n\${rxas_err}\")
+endif()
+execute_process(
+    COMMAND \"$<TARGET_FILE:rxdas>\" \"gate_f_levelb_contract.rxbin\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE rxdas_out
+    ERROR_VARIABLE rxdas_err
+    RESULT_VARIABLE rxdas_result)
+if(NOT rxdas_result EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level B contract rxdas failure: \\n\${rxdas_out}\\n\${rxdas_err}\")
+endif()
+foreach(required IN ITEMS
+        \"gate_f_levelb_contract.taskpool\"
+        \"gate_f_levelb_contract.taskscope\"
+        \"gate_f_levelb_contract.task\"
+        \"gate_f_levelb_contract.tasktarget\"
+        \"gate_f_levelb_contract.taskwork\"
+        \"gate_f_levelb_contract.taskcontext\"
+        \"gate_f_levelb_contract.completion\"
+        \"gate_f_levelb_contract.channel\"
+        \"gate_f_levelb_contract.channelrequest\"
+        \"gate_f_levelb_contract.channelvalue\"
+        \"gate_f_levelb_contract.channelcodec\"
+        \"gate_f_levelb_contract.byteendpoint\"
+        \"gate_f_levelb_contract.serviceref\"
+        \"gate_f_levelb_contract.transferbuffer\")
+  if(NOT rxdas_out MATCHES \"\${required}.*\\.interface\")
+    message(FATAL_ERROR \"Gate F Level B contract is missing interface metadata for \${required}\")
+  endif()
+endforeach()
+")
+add_test(NAME gate_f_levelb_contract
+         COMMAND ${CMAKE_COMMAND} -P "${GATE_F_LEVELB_CONTRACT_SCRIPT}")
+set_tests_properties(gate_f_levelb_contract PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        LABELS "compiler;levelb;concurrency;gate_f")
+
 add_crexx_isolated_run_test(interface_named_factory_same_module rexx_src/interface_named_factory_same_module.crexx)
 add_crexx_isolated_run_test(interface_named_factory_tiebreak rexx_src/interface_named_factory_tiebreak.crexx)
 add_crexx_isolated_run_fail_test(interface_named_factory_no_impl rexx_src/interface_named_factory_no_impl.crexx)

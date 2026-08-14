@@ -1,0 +1,174 @@
+options levelb
+namespace gate_f_levelb_contract expose taskpool taskscope task tasktarget taskwork taskcontext completion channel channelrequest channelvalue channelcodec byteendpoint serviceref transferbuffer
+
+/*
+ * Compile-only declaration oracle for the Gate F Level B concurrency surface.
+ * Implementations arrive in F1; this file keeps the F0-S contract grounded in
+ * syntax accepted by the current Level B compiler.
+ */
+
+taskpool: interface
+  local: factory
+    arg workers = .int, admission_capacity = .int
+  process: factory
+    arg workers = .int, admission_capacity = .int
+  provider_type: method = .int
+  capacity: method = .int
+  admission_capacity: method = .int
+  queued: method = .int
+  running: method = .int
+  close: method = .void
+
+taskscope: interface
+  failfast: factory
+    arg pool = .taskpool, timeout_milliseconds = .int
+  collectall: factory
+    arg pool = .taskpool, timeout_milliseconds = .int
+  submit: method = .task
+    arg target = .tasktarget, request = .channelvalue
+  ask: method = .task
+    arg service = .serviceref, request = .channelvalue
+  next: method = .completion
+    arg wait_milliseconds = .int
+  join: method = .completion[]
+  cancel: method = .void
+    arg reason = .channelvalue
+  close: method = .void
+
+task: interface
+  identity: method = .int
+  terminal: method = .boolean
+  cancel: method = .void
+    arg reason = .channelvalue
+  wait: method = .completion
+    arg wait_milliseconds = .int
+  completion: method = .completion
+
+tasktarget: interface
+  name: method = .string
+  signature: method = .string
+
+taskwork: interface
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+
+taskcontext: interface
+  timeout_remaining: method = .int
+  cancellation_requested: method = .boolean
+  trace_identity: method = .string
+  endpoint: method = .byteendpoint
+    arg provider_reference = .channelvalue
+
+completion: interface
+  available: method = .boolean
+  request_identity: method = .int
+  sequence: method = .int
+  state: method = .int
+  succeeded: method = .boolean
+  has_value: method = .boolean
+  value: method = .channelvalue
+  error_code: method = .int
+  message: method = .string
+  details: method = .channelvalue
+
+channel: interface
+  open: factory
+    arg provider_type = .int, required_capabilities = .int, configuration = .channelvalue
+  provider_type: method = .int
+  capabilities: method = .int
+  start: method = .channelrequest
+    arg envelope = .channelvalue, wait_milliseconds = .int
+  wait: method = .completion
+    arg wait_milliseconds = .int
+  cancel: method = .void
+    arg request = .channelrequest, reason = .channelvalue
+  close: method = .void
+    arg mode = .int
+
+channelrequest: interface
+  identity: method = .int
+  terminal: method = .boolean
+  cancel: method = .void
+    arg reason = .channelvalue
+  wait: method = .completion
+    arg wait_milliseconds = .int
+  completion: method = .completion
+
+channelvalue: interface
+  null_value: factory
+  boolean_value: factory
+    arg item = .boolean
+  integer_value: factory
+    arg item = .int
+  float_value: factory
+    arg item = .float
+  decimal_value: factory
+    arg item = .decimal
+  string_value: factory
+    arg item = .string
+  binary_value: factory
+    arg item = .binary
+  array_value: factory
+    arg items = .channelvalue[]
+  record_value: factory
+    arg schema = .string, version = .int, names = .string[], values = .channelvalue[]
+  type_code: method = .int
+  schema: method = .string
+  version: method = .int
+  count: method = .int
+  item: method = .channelvalue
+    arg index = .int
+  field: method = .channelvalue
+    arg name = .string
+  as_boolean: method = .boolean
+  as_integer: method = .int
+  as_float: method = .float
+  as_decimal: method = .decimal
+  as_string: method = .string
+  as_binary: method = .binary
+  encode: method = .binary
+
+channelcodec: interface
+  schema: method = .string
+  version: method = .int
+  encode: method = .channelvalue
+    arg item = .object
+  decode: method = .object
+    arg item = .channelvalue
+
+byteendpoint: interface
+  memory: factory
+    arg direction = .int, capacity = .int
+  null_endpoint: factory
+    arg direction = .int
+  from_reference: factory
+    arg provider_reference = .channelvalue
+  provider_reference: method = .channelvalue
+  start_read: method = .channelrequest
+    arg maximum_bytes = .int, wait_milliseconds = .int
+  start_write: method = .channelrequest
+    arg bytes = .binary, wait_milliseconds = .int
+  half_close: method = .void
+    arg direction = .int
+  cancel: method = .void
+    arg reason = .channelvalue
+  close: method = .void
+
+serviceref: interface
+  service_type: method = .string
+  provider_reference: method = .channelvalue
+
+transferbuffer: interface
+  allocate: factory
+    arg capacity = .int
+  copy_from: factory
+    arg bytes = .binary
+  size: method = .int
+  capacity: method = .int
+  mutable: method = .boolean
+  write: method = .void
+    arg offset = .int, bytes = .binary
+  read: method = .binary
+    arg offset = .int, length = .int
+  move_value: method = .channelvalue
+  seal: method = .channelvalue

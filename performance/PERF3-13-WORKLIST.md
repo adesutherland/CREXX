@@ -3,7 +3,7 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F public design recorded; Gate F implementation remains closed**
+Gate F F0-S exact specification and declaration oracle complete; F1a/F1b next**
 
 ## Current Gate E continuation
 
@@ -2749,10 +2749,26 @@ and
 
 EF-0 is accepted and locally complete for the private spawn
 completion/transfer subset above. The full transport-neutral M6 programme
-remains closed until the Gate E worker model and E6 scale/reclamation policy
-have been selected. The approved design direction is normative in
-[`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md); recording it does not
-open Gate F implementation.
+was closed until the Gate E worker model and E6 scale/reclamation policy were
+selected. Those prerequisites are complete. Adrian approved the user model and
+staged Gate F implementation on 2026-08-14. The normative design is
+[`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md); the contract-first
+slices and verdict stops are in
+[`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
+
+The approachable F0 terminology, conceptual machine, approved Rexx task
+surface, complete Level B control layer and industrial HTTP consumer are now
+recorded in
+[`PERF3-13-GATE-F-USER-GUIDE.md`](PERF3-13-GATE-F-USER-GUIDE.md). It records
+typed task declarations and methods, independent task calls within expressions,
+`DO PARALLEL`, `.taskwork`/`.taskcontext`, controller-side failure projection
+and class-configured pools/scopes. Adrian selected the low-level layering on
+2026-08-14: public Level B classes wrap mandatory transport-neutral RXAS
+channel instructions implemented by RXVM over the Gate E executor/provider
+substrate. There is no RXPA task path, hidden native-payload contract or public
+angle-bracket task-intrinsic family. F0-S has locked the exact instruction,
+class and provider contract before the first opcode/runtime edit in
+[`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md).
 
 The public model is structured task scopes, stateless task targets, stateful
 service/actor references, bounded channels, receiver-materialized
@@ -2763,29 +2779,51 @@ procedure-name strings or live VM object/reference storage.
 
 The VM/provider substrate owns bounded queue mechanics, wait/wakeup,
 cancellation/deadline delivery, terminal completion and receiver-owned value
-materialization. Level B/G libraries own task/service policy, typed proxies,
-events, topics, fan-out, retention, replay, persistence and projections.
+materialization. Reusable bounded byte endpoints replace spawn-only redirect
+plumbing and serve child I/O, process transport and HTTP streaming. Level B/G
+libraries own task/service policy, typed proxies, events, topics, fan-out,
+retention, replay, persistence and projections.
 Logical global mutable state uses a single-owner service identity; event hubs
 produce explicitly eventually consistent projections rather than transparent
 shared objects.
 
-Gate F is surface-first and staged:
+Gate F is contract-first and staged:
 
-- [ ] **F0:** compile-check Level B interfaces/examples; lock task-target,
-  `ChannelValue`, envelope, completion, scope/service lifecycle and provider
-  conformance contracts; stop for approval before implementation.
-- [ ] **F1:** prove the same Level B/RXPA contract over in-process and isolated
-  process providers; publish only as experimental after portable conformance
-  and the mandatory Release verdict.
+- [x] **F0 user model:** Adrian approved the user guide and staged
+  implementation on 2026-08-14.
+- [x] **F0-S:** derive the maintainer/AI specification and coherence matrix;
+  compile-check Level B interface/factory/method declarations; lock
+  task-target, `ChannelValue`, envelope, completion,
+  scope/service lifecycle, HTTP and provider conformance contracts; lock the
+  exact RXAS/RXBIN signatures, value/capability types, effects, signals,
+  provider type/capability codes, reusable byte-endpoint/child-process
+  migration, feature/version gate, diagnostics and both-VM behavior. The exact
+  contract and vectors are in
+  [`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md); the declaration
+  oracle is
+  [`gate_f_levelb_contract.crexx`](../compiler/tests/rexx_src/gate_f_levelb_contract.crexx).
+- [ ] **F1:** implement the mandatory instructions in both VMs, wrap them with
+  the Level B classes, and prove the same contract over in-process and isolated
+  process providers; implement reusable byte-endpoint and child-process
+  providers while retiring the selected pre-release spawn/redirect RXAS;
+  lower the approved core Level G task syntax only through that Level B
+  contract; deliver the concurrent HTTP/TLS consumer; publish only as
+  experimental after portable conformance and the mandatory Release verdicts.
 - [ ] **F2:** prove the open cross-host protocol with a non-Rexx actor, exercise
-  compute/I/O/process providers and add Level G typed service/event libraries.
-- [ ] **F3:** profile the accepted source surface and add only an
-  evidence-selected transport-neutral RXAS subset, if any, with full RXBIN,
-  effect, signal, optimizer, tracing and both-VM semantics.
+  compute/I/O/process providers and add higher Level G typed service/event
+  libraries.
+- [ ] **F3:** profile and stabilize the accepted Level B-over-RXAS surface;
+  optimize only proved common paths while preserving the mandatory
+  transport-neutral instruction roles and their complete RXBIN, effect,
+  signal, optimizer, tracing and both-VM semantics.
 
-The candidate RXAS roles remain `chanstart`, `chanwait`, `chancancel` and
-`chanclose`, with only start/wait presumed potentially essential. No opcode or
-encoding is approved. Provider-specific opcode families remain rejected.
+The mandatory conceptual RXAS roles are `chanopen`, `chanstart`, `chanwait`,
+`chancancel` and `chanclose`. `chanopen` separates one provider type code from
+required-capability flags and versioned configuration. Core types cover local
+task, isolated worker process, open host, byte endpoint and child process; a
+registered extension range is reserved for future RXVM plugins. F0-S fixes
+opcodes `650..654`; `chanstart` and `chanwait` take a relative microsecond wait
+budget. Provider-specific opcode families remain rejected.
 
 ## Approval gates
 
@@ -2846,12 +2884,20 @@ encoding is approved. Provider-specific opcode families remain rejected.
    Debug/Apple-ASan/Release 49/49, complete Debug and Release builds, and full
    Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
    before any public pool/channel semantics.
-7. **Gate F — public design direction recorded 2026-08-13; full M6 start
-   closed.** The approved surface and sequencing are recorded in
+7. **Gate F — public design recorded 2026-08-13; user model and staged
+   implementation approved 2026-08-14; F0-S complete; F1a/F1b next.** The
+   approved ownership
+   surface and sequencing are recorded in
    [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
-   selection, F0 first compile-checks and freezes the Level B semantic contract;
-   implementation begins only after its separate approval. Level B/RXPA and
-   local/process conformance precede Level G and cross-host work. RXAS remains
-   a final evidence gate, not an entry requirement.
+   selection, Adrian approved the user-facing model in
+   [`PERF3-13-GATE-F-USER-GUIDE.md`](PERF3-13-GATE-F-USER-GUIDE.md) and the
+   staged execution in
+   [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
+   F0-S has produced the maintainer/AI contract, coherence matrix,
+   compile-checked Level B declarations and exact RXAS/RXBIN/provider contract.
+   Level B-over-RXAS local/process/endpoint conformance precedes cross-host
+   work; every production slice stops at its first Release verdict. F3 profiles
+   and stabilizes the mandatory instruction boundary rather than deciding
+   whether it exists.
 
 Approval of one gate does not approve the next.
