@@ -1,0 +1,36 @@
+PERF3-13 Gate F F1c artifact inventory
+
+Base identity
+  branch: develop
+  pre-F1c HEAD: df322bd3a8e895927a164e9b15ec9aefb3bf2696
+  candidate state: dirty only for the recorded F1c source/docs/tests/evidence
+
+Final ordinary profiling-off Release products
+  rxbvm sha256 7062a3a82816394203b66531c8b14efa471f080f00c7079a2c8f5eb7f7d379d8
+  rxtvm sha256 d19917b825de463f6420d37663263337edcfd1690d62be058b7e8bf9fc0267c1
+
+Timing
+  timing/first/raw.log
+  timing/first/samples.csv
+  timing/first/paired-summary.txt
+  timing/first/executor-pair-deltas.txt
+  timing/confirmation/raw.log
+  timing/confirmation/samples.csv
+  timing/confirmation/paired-summary.txt
+  timing/combined-paired-summary.txt
+
+QA
+  qa/focused-debug.log
+  qa/inliner-shape.log
+  qa/debug-build.log
+  qa/debug-ctest.log
+  qa/debug-stress-repeat100.log
+  qa/asan-build.log
+  qa/asan-ctest.log
+  qa/asan-leak-detection-unsupported.log
+  qa/release-build.log
+  qa/focused-release.log
+  qa/release-stress-repeat100.log
+
+The raw logs are retained rather than summarized away. Build products are not
+checked into evidence; their hashes bind the final local Release executables.

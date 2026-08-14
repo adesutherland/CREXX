@@ -577,6 +577,14 @@ add_executable(test_rxvmworker tests/test_rxvmworker.c rxvmworker.c)
 target_include_directories(test_rxvmworker PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_rxvmworker PRIVATE rxvmmemory Threads::Threads)
 
+add_executable(test_rxvmchannel_registry
+        tests/test_rxvmchannel_registry.c)
+target_include_directories(test_rxvmchannel_registry PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_registry PRIVATE rxvml Threads::Threads)
+
 add_executable(test_rxvmactive tests/test_rxvmactive.c)
 target_include_directories(test_rxvmactive PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -660,6 +668,9 @@ add_test(NAME rxvmstem_storage COMMAND test_rxvmstem)
 add_test(NAME rxvmstem_allocator_family COMMAND test_rxvmstem_allocator_family)
 add_test(NAME rxvmmemory_allocator COMMAND test_rxvmmemory)
 add_test(NAME rxvmworker_lifecycle COMMAND test_rxvmworker)
+add_test(NAME rxvmchannel_provider_registry COMMAND test_rxvmchannel_registry)
+set_tests_properties(rxvmchannel_provider_registry PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1c;channels;provider-registry")
 add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)
 add_test(NAME rxvmplugin_context_ownership
         COMMAND test_rxvmplugin_context
@@ -1435,22 +1446,22 @@ set_tests_properties(rxasbinaryslicetests PROPERTIES
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
 
-# Gate F F1b executes the same local-channel image on both concrete VMs.
+# Gate F F1c executes the same local-channel image on both concrete VMs.
 add_custom_command(
         OUTPUT test_gate_f_channel_local.rxbin
         COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_local
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_gate_f_channel_local
         DEPENDS tests/test_gate_f_channel_local.rxas rxas rxbvm
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Assembling Gate F F1b local channel fixture ...")
+        COMMENT "Assembling Gate F F1c local channel fixture ...")
 add_custom_target(test_gate_f_channel_local_bin ALL
         DEPENDS test_gate_f_channel_local.rxbin)
 add_test(NAME gate_f_channel_local_rxbvm
         COMMAND $<TARGET_FILE:rxbvm> test_gate_f_channel_local
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(gate_f_channel_local_rxbvm PROPERTIES
-        LABELS "interpreter;perf3;gate-f;f1b;channels;lifecycle"
-        PASS_REGULAR_EXPRESSION "PASS: Gate F F1b local channel"
+        LABELS "interpreter;perf3;gate-f;f1c;channels;lifecycle"
+        PASS_REGULAR_EXPRESSION "PASS: Gate F F1c local channel"
         TIMEOUT 30)
 if(CREXX_THREADED_VM_SUPPORTED)
     add_dependencies(test_gate_f_channel_local_bin rxtvm)
@@ -1458,8 +1469,8 @@ if(CREXX_THREADED_VM_SUPPORTED)
             COMMAND $<TARGET_FILE:rxtvm> test_gate_f_channel_local
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(gate_f_channel_local_rxtvm PROPERTIES
-            LABELS "interpreter;perf3;gate-f;f1b;channels;lifecycle"
-            PASS_REGULAR_EXPRESSION "PASS: Gate F F1b local channel"
+            LABELS "interpreter;perf3;gate-f;f1c;channels;lifecycle"
+            PASS_REGULAR_EXPRESSION "PASS: Gate F F1c local channel"
             TIMEOUT 30)
 endif()
 

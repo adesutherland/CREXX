@@ -3,7 +3,7 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S plus F1a/minimum F1b complete; F1c next**
+Gate F F0-S through F1c complete; F1d next**
 
 ## Current Gate E continuation
 
@@ -2812,6 +2812,16 @@ Gate F is contract-first and staged:
   teardown. Adrian accepted the first Release verdict and the Mac closeout is
   complete. Evidence:
   [`F1a/F1b first Release verdict and closeout`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
+- [x] **F1c complete local values/lifecycle and Level B surface:** implement
+  canonical full RXCV, typed register images, provider-owned deadlines/scopes,
+  private provider registration and fake-provider `GF-B09`; add the explicit
+  pool/scope/task/completion/channel/value/transfer Level B classes over only
+  the five RXAS operations. Mac closeout passes full Debug 2,095/2,095,
+  focused Apple ASan 36/36, focused Release 20/20 and 100-repeat Debug/Release
+  lifecycle stress. The confirmed `rxtvml` executor guard slowdown is recorded
+  for F3 hot-loop hardening under Adrian's overnight continuation direction.
+  Evidence:
+  [`F1c first Release verdict and closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/).
 - [ ] **F1:** implement the mandatory instructions in both VMs, wrap them with
   the Level B classes, and prove the same contract over in-process and isolated
   process providers; implement reusable byte-endpoint and child-process
@@ -2895,8 +2905,8 @@ budget. Provider-specific opcode families remain rejected.
    Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
    before any public pool/channel semantics.
 7. **Gate F — public design recorded 2026-08-13; user model and staged
-   implementation approved 2026-08-14; F0-S plus F1a/minimum F1b complete;
-   F1c next.** The
+   implementation approved 2026-08-14; F0-S through F1c complete; F1d
+   next.** The
    approved ownership
    surface and sequencing are recorded in
    [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
@@ -2905,12 +2915,13 @@ budget. Provider-specific opcode families remain rejected.
    staged execution in
    [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
    F0-S produced the maintainer/AI contract, coherence matrix, compile-checked
-   Level B declarations and exact RXAS/RXBIN/provider contract. F1a/F1b now
-   implement the five opcodes and the minimum both-VM local provider; Adrian
+   Level B declarations and exact RXAS/RXBIN/provider contract. F1a-F1c now
+   implement the five opcodes, complete both-VM local provider, full RXCV,
+   lifecycle/private registry contract and executable Level B classes; Adrian
    accepted the measured computed-goto code-layout cost for the evolving
    instruction surface, with final hot-loop hardening deferred until the
-   surface stabilizes. The private registration seam/fake provider, full value
-   and lifecycle contract, and Level B classes remain F1c.
+   surface stabilizes. Reusable byte endpoints and child-process/redirect
+   integration are next in F1d.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding

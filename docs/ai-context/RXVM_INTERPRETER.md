@@ -680,7 +680,7 @@ churn at one, two, four and eight workers on each available concrete VM and
 asserts that the requested maximum concurrency is reached. This adds no public
 worker/channel API, RXAS/RXBIN instruction, plugin ABI or scheduling contract.
 
-### Gate F F1a/F1b channel substrate
+### Gate F F1a-F1c channel and Level B substrate
 
 Gate F now adds the mandatory public RXAS channel boundary without exposing a
 public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
@@ -696,8 +696,11 @@ not transferable `ChannelValue`. Context teardown cancel-closes every live
 channel, joins its workers and releases all tickets/requests before the runtime
 provider state and sealed generation are destroyed.
 
-The runtime-owned provider-registry state is currently seeded with the core
-type `1` local-thread descriptor. `chanopen` validates its canonical RXCV pool
+The runtime-owned provider registry validates complete private descriptors,
+rejects duplicate names/codes atomically, pins provider/module lifetime and is
+seeded with the core type `1` local-thread descriptor. The `GF-B09` fake
+extension fixture proves register/open/operate/close/unload sequencing without
+publishing a plugin ABI. `chanopen` validates its canonical RXCV pool
 configuration, required capabilities and the controller's sealed bytecode-only
 program generation, then creates an attached Gate E executor over that same
 generation. A program containing native/plugin modules may still execute
@@ -705,23 +708,28 @@ normally, but local `chanopen` reports provider unavailability when the image
 cannot be sealed for attached workers. This avoids making ordinary native
 program startup depend on channel eligibility.
 
-The minimum type `1` provider advertises bounded admission, cancellation and
-completion-order observation. Task envelopes name a semantic-graph callable ID
-and carry copied Gate E integer/string register images; they never carry a
-procedure-name string, live `value`, reference, frame, native payload or worker
-pointer. Completion is encoded into receiver-owned canonical RXCV binary and is
+The complete F1c type `1` provider advertises bounded admission, cancellation,
+provider-owned deadlines and completion-order observation. Task envelopes name
+a semantic-graph callable ID and carry typed copied register images; they never
+carry a procedure-name string, live `value`, reference, frame, native payload
+or worker pointer. Completion is encoded into receiver-owned canonical RXCV binary and is
 marked observed only after controller-worker-owned storage has been allocated
 and populated. Encoding or allocation failure therefore leaves the terminal
 completion available for a later wait. Queue-full/backpressure,
-finite/nonblocking waits, queued/running cancellation, terminal observation,
-drain/cancel close and deterministic teardown are implemented.
+finite/nonblocking waits, queued/running cancellation, fail-fast/collect-all
+scopes, terminal observation, drain/cancel close and deterministic teardown are
+implemented. RXCV validation and encoding cover null/boolean, integer, float,
+decimal, string, binary, ordered arrays and schema-tagged records with
+canonical limits/order/flags/NaN.
 
-This is the minimum F1b vertical slice, not the completed Rexx surface. Full
-`ChannelValue`, provider-owned deadlines/scopes, the private extension
-registration/fake-provider vector, Level B classes and Level G lowering remain
-F1c. Byte endpoints and child-process/redirect migration remain F1d, and the
-concurrent HTTP consumer remains F1e. A public provider-plugin ABI remains an
-F2 review. The exact current/future boundary is recorded in
+`lib/classlib/Concurrency.crexx` supplies the executable Level B pool, scope,
+task, target, context, completion, channel, value/codec, endpoint,
+service-reference and transfer-buffer surface. Inspection proves its runtime
+bridge is only the five channel instructions. Process pools, concrete byte
+endpoints/child processes, Level G lowering and concurrent HTTP remain later
+F1 slices; unsupported Level B operations report status `19` rather than
+simulating success. A public provider-plugin ABI remains an F2 review. The
+exact current/future boundary is recorded in
 [`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).
 
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed

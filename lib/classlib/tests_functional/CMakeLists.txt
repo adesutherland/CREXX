@@ -26,6 +26,7 @@ set(REXXBINS
   testTokenise
   testJSON
   testBag
+  testConcurrency
 )
 
 add_test(

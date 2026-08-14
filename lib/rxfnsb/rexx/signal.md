@@ -10,7 +10,9 @@ support for Level B; it is not a Level C Classic BIF.
 normalized to uppercase. `code()` maps every VM signal name to its integer
 runtime code; `SYNTAX` is an alias for `ERROR` (code 3), and an unknown name maps
 to `INVALID_SIGNAL_CODE` (code 13). Raising an unknown dynamic name causes the
-VM to deliver `INVALID_SIGNAL_CODE`.
+VM to deliver `INVALID_SIGNAL_CODE`. Gate F reserves `CHANNEL_ERROR` (code 26)
+for catchable channel/class lifecycle failures and `TASK_FAILURE` (code 27) for
+typed task-result demand failures.
 
 The `.signal` methods are:
 

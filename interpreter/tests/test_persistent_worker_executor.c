@@ -119,6 +119,7 @@ static void run_affinity_and_isolation(const char *rxbin) {
     rxvm_executor_request *get0 = 0;
     rxvm_executor_request *get1 = 0;
     rxvm_executor_request *missing = 0;
+    rxvm_executor_request *failed = 0;
     rxvm_executor_request *recovery = 0;
     rxvm_executor_statistics statistics;
     rxvm_executor_request_state state;
@@ -204,6 +205,13 @@ static void run_affinity_and_isolation(const char *rxbin) {
               "terminal completion is stable across a repeated wait");
     }
     destroy_terminal(&missing);
+    failed = submit_zero(executor, 0u, "e5worker.fail");
+    if (failed) {
+        state = rxvm_executor_request_wait(failed, &result);
+        CHECK(state == RXVM_EXECUTOR_REQUEST_EXECUTION_FAILED,
+              "an unhandled worker signal is a typed execution failure");
+    }
+    destroy_terminal(&failed);
     recovery = submit_one(executor, 0u, "e5worker.identity", "37");
     wait_completed(recovery, 37,
                    "worker remains usable after a failed request");
@@ -219,8 +227,8 @@ static void run_affinity_and_isolation(const char *rxbin) {
           "no request remains running after the isolation panel");
     CHECK(statistics.cancelled_requests == 2u,
           "loop and recursive cancellation each publish one completion");
-    CHECK(statistics.failed_requests == 1u,
-          "missing procedure contributes exactly one failed completion");
+    CHECK(statistics.failed_requests == 2u,
+          "missing target and worker signal contribute failed completions");
 
     leaks = rxvm_executor_destroy(executor);
     CHECK(leaks == 0u,

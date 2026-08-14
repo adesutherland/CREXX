@@ -351,6 +351,12 @@ Implemented behaviour:
   `§this` binding and final writeback.
 - Method and factory call actuals that read caller attributes are captured in the caller scope before the callee's `§this` or `§factory` scope is introduced. For methods, the receiver is captured first when this path is needed; factory bodies then get that `§factory` object initialized with the owning class's attribute count and concrete object type before the cloned factory body executes.
 - Cloned `BLOCK_EXPR` and compiler-generated block associations are preserved so nested inline scopes continue to resolve `§this`, `§factory`, and `LEAVE_WITH` targets correctly.
+- Whole-RHS calls assigned to aggregate or binary class attributes retain
+  their inlined body. Their result is routed through the ordinary assignment
+  emitter rather than the local-register copy shortcut, so the generated RXAS
+  includes the receiver-slot `linkattr`/copy/unlink sequence. The
+  `inline_test_binary_class_attr_assign` regression locks both the optimized
+  shape and optimized/unoptimized execution.
 
 Remaining guardrail:
 

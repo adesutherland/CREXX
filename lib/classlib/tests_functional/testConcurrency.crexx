@@ -1,0 +1,282 @@
+options levelb comments_dash
+import concurrency
+import rxfnsb
+
+failures = 0
+
+null_value = .channelvalue.null_value()
+failures = failures + check_int("null type", null_value.type_code(), 0)
+
+false_value = .channelvalue.boolean_value(0)
+true_value = .channelvalue.boolean_value(1)
+failures = failures + check_int("false type", false_value.type_code(), 1)
+failures = failures + check_int("false value", false_value.as_boolean(), 0)
+failures = failures + check_int("true type", true_value.type_code(), 2)
+failures = failures + check_int("true value", true_value.as_boolean(), 1)
+
+integer_value = .channelvalue.integer_value(-7)
+float_value = .channelvalue.float_value(12.5)
+decimal_value = .channelvalue.decimal_value(-12.3400d)
+string_value = .channelvalue.string_value("hé")
+binary_value = .channelvalue.binary_value('00ff'x as .binary)
+failures = failures + check_int("integer type", integer_value.type_code(), 3)
+failures = failures + check_int("integer value", integer_value.as_integer(), -7)
+failures = failures + check_float("float value", float_value.as_float(), 12.5)
+failures = failures + check_decimal("decimal value", decimal_value.as_decimal(), -12.34d)
+failures = failures + check_string("string value", string_value.as_string(), "hé")
+failures = failures + check_binary("binary value", binary_value.as_binary(), '00ff'x as .binary)
+
+items = .channelvalue[]
+items[1] = null_value
+items[2] = integer_value
+items[3] = string_value
+array_value = .channelvalue.array_value(items)
+failures = failures + check_int("array type", array_value.type_code(), 8)
+failures = failures + check_int("array count", array_value.count(), 3)
+failures = failures + check_int("array integer", array_value.item(2).as_integer(), -7)
+
+names = .string[]
+values = .channelvalue[]
+names[1] = "zeta"
+values[1] = string_value
+names[2] = "alpha"
+values[2] = integer_value
+record_value = .channelvalue.record_value("crexx.test.record", 3, names, values)
+failures = failures + check_int("record type", record_value.type_code(), 9)
+failures = failures + check_string("record schema", record_value.schema(), "crexx.test.record")
+failures = failures + check_int("record version", record_value.version(), 3)
+failures = failures + check_int("record count", record_value.count(), 2)
+failures = failures + check_int("record sorted field", record_value.field("alpha").as_integer(), -7)
+failures = failures + check_string("record second field", record_value.field("zeta").as_string(), "hé")
+
+caught = 0
+do
+  duplicate_names = .string[]
+  duplicate_values = .channelvalue[]
+  duplicate_names[1] = "same"
+  duplicate_values[1] = integer_value
+  duplicate_names[2] = "same"
+  duplicate_values[2] = string_value
+  invalid_record = .channelvalue.record_value("crexx.test.duplicate", 1, duplicate_names, duplicate_values)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("record duplicate rejected", caught, 1)
+
+deep_value = .channelvalue.null_value()
+do depth = 2 to 64
+  deep_items = .channelvalue[]
+  deep_items[1] = deep_value
+  deep_value = .channelvalue.array_value(deep_items)
+end
+failures = failures + check_int("maximum ChannelValue depth accepted", deep_value.type_code(), 8)
+caught = 0
+do
+  too_deep_items = .channelvalue[]
+  too_deep_items[1] = deep_value
+  too_deep = .channelvalue.array_value(too_deep_items)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("excess ChannelValue depth rejected", caught, 1)
+
+encoded = record_value.encode()
+failures = failures + check_int("RXCV major", <at..u8>(4) encoded, 1)
+failures = failures + check_int("RXCV exact length", <at..int>(8) encoded, <blen>(encoded))
+
+buffer = .transferbuffer.allocate(8)
+failures = failures + check_int("buffer initial size", buffer.size(), 0)
+failures = failures + check_int("buffer capacity", buffer.capacity(), 8)
+failures = failures + check_int("buffer mutable", buffer.mutable(), 1)
+call buffer.write(2, 'aabb'x as .binary)
+failures = failures + check_int("buffer written size", buffer.size(), 4)
+failures = failures + check_binary("buffer zero gap", buffer.read(0, 4), '0000aabb'x as .binary)
+sealed = buffer.seal()
+failures = failures + check_int("buffer sealed", buffer.mutable(), 0)
+failures = failures + check_binary("buffer sealed value", sealed.as_binary(), '0000aabb'x as .binary)
+failures = failures + check_binary("buffer repeated seal", buffer.seal().as_binary(), '0000aabb'x as .binary)
+
+moved = .transferbuffer.copy_from('010203'x as .binary)
+moved_value = moved.move_value()
+failures = failures + check_int("buffer moved", moved.mutable(), 0)
+failures = failures + check_binary("buffer moved value", moved_value.as_binary(), '010203'x as .binary)
+caught = 0
+do
+  invalid_read = moved.read(0, 1)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("moved buffer read rejected", caught, 1)
+
+caught = 0
+do
+  call buffer.write(0, 'ff'x as .binary)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("sealed buffer write rejected", caught, 1)
+
+pool_names = .string[]
+pool_values = .channelvalue[]
+pool_names[1] = "workerCount"
+pool_values[1] = .channelvalue.integer_value(1)
+pool_names[2] = "admissionCapacity"
+pool_values[2] = .channelvalue.integer_value(2)
+pool_config = .channelvalue.record_value("crexx.channel.local-task-pool", 1, pool_names, pool_values)
+work_channel = .channel.open(1, 0, pool_config)
+failures = failures + check_int("channel provider", work_channel.provider_type(), 1)
+failures = failures + check_int("channel provider capabilities", work_channel.capabilities(), 15)
+failures = failures + check_int("channel nonblocking none", work_channel.wait(0).available(), 0)
+
+target_names = .string[]
+target_values = .channelvalue[]
+target_names[1] = "kind"
+target_values[1] = .channelvalue.integer_value(1)
+target_names[2] = "imageDigest"
+target_values[2] = .channelvalue.binary_value('0000000000000000000000000000000000000000000000000000000000000000'x as .binary)
+target_names[3] = "callableId"
+target_values[3] = .channelvalue.integer_value(999)
+target_names[4] = "signatureDigest"
+target_values[4] = .channelvalue.binary_value('0000000000000000000000000000000000000000000000000000000000000000'x as .binary)
+empty_args = .channelvalue[]
+target_names[5] = "factoryArguments"
+target_values[5] = .channelvalue.array_value(empty_args)
+target_value = .channelvalue.record_value("crexx.channel.task-target", 1, target_names, target_values)
+
+invoke_names = .string[]
+invoke_values = .channelvalue[]
+invoke_names[1] = "arguments"
+invoke_values[1] = .channelvalue.array_value(empty_args)
+invoke_names[2] = "target"
+invoke_values[2] = target_value
+invoke = .channelvalue.record_value("crexx.channel.task-invoke", 1, invoke_names, invoke_values)
+request = work_channel.start(invoke, 0)
+failed = request.wait(-1)
+failures = failures + check_int("request completion available", failed.available(), 1)
+failures = failures + check_int("request completion identity", failed.request_identity(), request.identity())
+failures = failures + check_int("request failed state", failed.state(), 2)
+failures = failures + check_int("request failed target code", failed.error_code(), 4)
+failures = failures + check_int("request terminal cache", request.terminal(), 1)
+failures = failures + check_int("request repeated completion", request.completion().state(), 2)
+call request.cancel(.channelvalue.string_value("already terminal"))
+
+unrelated = work_channel.start(invoke, 0)
+selected = work_channel.start(invoke, 0)
+selected_completion = selected.wait(1000)
+failures = failures + check_int("request-specific wait survives unrelated completion", selected_completion.request_identity(), selected.identity())
+failures = failures + check_int("unrelated completion cached", unrelated.completion().request_identity(), unrelated.identity())
+caught = 0
+do
+  call work_channel.close(3)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("invalid channel close mode rejected", caught, 1)
+call work_channel.close(1)
+caught = 0
+do
+  call work_channel.close(1)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("channel double close rejected", caught, 1)
+
+pool = .taskpool.local(1, 2)
+scope = .taskscope.collectall(pool, 100)
+failures = failures + check_int("empty scope next", scope.next(0).available(), 0)
+joined = .completion[]
+joined = scope.join()
+failures = failures + check_int("empty scope join", joined[0], 0)
+call scope.close()
+failures = failures + check_int("pool capacity", pool.capacity(), 1)
+failures = failures + check_int("pool admission", pool.admission_capacity(), 2)
+caught = 0
+do
+  queued = pool.queued()
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("pool queued diagnostics deferred", caught, 1)
+caught = 0
+do
+  running = pool.running()
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("pool running diagnostics deferred", caught, 1)
+call pool.close()
+caught = 0
+do
+  call pool.close()
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("pool double close rejected", caught, 1)
+
+abandoned_pool = .taskpool.local(1, 2)
+abandoned_scope = .taskscope.failfast(abandoned_pool, -1)
+call abandoned_pool.close()
+caught = 0
+do
+  call abandoned_scope.close()
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("scope remains closeable after pool close", caught, 0)
+caught = 0
+do
+  invalid_scope = .taskscope.collectall(abandoned_pool, 100)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("closed pool rejects new scope", caught, 1)
+
+caught = 0
+do
+  unavailable_pool = .taskpool.process(1, 2)
+on signal channel_error
+  caught = 1
+end
+failures = failures + check_int("unavailable process provider rejected", caught, 1)
+
+if failures = 0 then say "PASS: Concurrency"
+else say "FAIL: Concurrency failures=" failures
+return failures
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say "FAIL:" label "actual=" actual "expected=" expected
+  return 1
+
+check_float: procedure = .int
+  arg label = .string, actual = .float, expected = .float
+  if actual = expected then return 0
+  say "FAIL:" label "actual=" actual "expected=" expected
+  return 1
+
+check_decimal: procedure = .int
+  arg label = .string, actual = .decimal, expected = .decimal
+  if actual = expected then return 0
+  say "FAIL:" label "actual=" actual "expected=" expected
+  return 1
+
+check_string: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual = expected then return 0
+  say "FAIL:" label "actual=" actual "expected=" expected
+  return 1
+
+check_binary: procedure = .int
+  arg label = .string, actual = .binary, expected = .binary
+  comparison = 0
+  actual_length = 0
+  expected_length = 0
+  assembler blen actual_length,actual
+  assembler blen expected_length,expected
+  if actual_length = expected_length then do
+    assembler bcmpb comparison,actual,expected
+    if comparison = 0 then return 0
+  end
+  say "FAIL:" label "binary mismatch"
+  return 1

@@ -3,7 +3,7 @@
 Date: 2026-08-13
 
 Status: **user model and staged Gate F implementation approved by Adrian on
-2026-08-14; F0-S and F1a/minimum F1b complete; F1c next**
+2026-08-14; F0-S through F1c complete; F1d next**
 
 This record is the normative design authority for the future PERF3-13 Gate F
 public concurrency surface. It records the user model, ownership and transfer
@@ -37,9 +37,10 @@ must call mandatory transport-neutral RXAS instructions, which RXVM implements
 over the Gate E executor/provider substrate. There is no RXPA task path and no
 Rexx-visible hidden native-handle contract. F0-S fixes the five instruction
 signatures, opcodes, effects, signals, feature gate and binary value contract.
-F1a/F1b now implement that instruction family and the minimum type `1` local
-provider in both concrete VMs. Full values/lifecycle and the Rexx class/syntax
-surface remain F1c.
+F1a-F1c now implement that instruction family, complete type `1` local
+provider, full values/lifecycle and the explicit Rexx Level B class surface in
+both concrete VMs. Reusable redirects/child processes remain F1d and the
+approved Level G syntax remains F1f.
 
 Use these current repository contracts when implementing the design:
 
@@ -661,12 +662,14 @@ exists.
 
 ### F1 — local and process providers
 
-- [ ] Implement the mandatory channel instructions identically in `rxbvm` and
+- [x] Implement the mandatory channel instructions identically in `rxbvm` and
   `rxtvm` over the in-process Gate E executor/provider substrate.
-- [ ] Implement the Level B class surface as wrappers over those instructions,
-  with no RXPA task path or native payload contract.
-- [ ] Implement runtime-owned provider registration with core local, process,
-  byte-endpoint and child-process provider descriptors.
+- [x] Implement the Level B local-provider class surface as wrappers over those
+  instructions, with no RXPA task path or native payload contract.
+- [x] Implement runtime-owned private provider registration, complete local
+  descriptor validation/lifetime pinning and fake-provider conformance.
+- [ ] Implement the process, byte-endpoint and child-process provider
+  descriptors and operations behind the same registry contract.
 - [ ] Generalize redirects as reusable bounded byte endpoints, update ADDRESS
   and compiler exits, retire the selected old RXAS mnemonics and preserve their
   numeric slots.

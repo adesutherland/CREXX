@@ -45,6 +45,7 @@ set(CLSS
   StringTreeSetIterator
   Qfind
   Scanlex
+  Concurrency
 )
 
 set(CLASSLIB_NATIVE_CLSS
@@ -332,5 +333,14 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 set_tests_properties(classlib_rexxdoc_coverage PROPERTIES LABELS "docs;classlib")
+
+add_test(
+  NAME gate_f_levelb_bridge_inspection
+  COMMAND ${CMAKE_COMMAND}
+    -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/Concurrency.crexx
+    -P ${CMAKE_SOURCE_DIR}/cmake/CheckGateFLevelBBridge.cmake
+)
+set_tests_properties(gate_f_levelb_bridge_inspection
+  PROPERTIES LABELS "gate-f;classlib;inspection")
 
 add_subdirectory(tests_functional)

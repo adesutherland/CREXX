@@ -1,0 +1,35 @@
+options levelb
+namespace inline_test_binary_class_attr_assign
+
+main: procedure = .int
+  packet = .Packet()
+  if packet.length() <> 2 then return 1
+  if packet.first() <> 170 then return 2
+  if packet.second() <> 187 then return 3
+  say "PASS: binary class attribute assignment"
+  return 0
+
+inner: procedure = .binary
+  return 'aabb'x as .binary
+
+outer: procedure = .binary
+  arg value = .binary
+  return value
+
+Packet: class
+  bytes = .binary
+
+  *: factory
+    bytes = outer(inner())
+    return
+
+  length: method = .int
+    result = 0
+    assembler blen result,bytes
+    return result
+
+  first: method = .int
+    return <at..u8>(0) bytes
+
+  second: method = .int
+    return <at..u8>(1) bytes

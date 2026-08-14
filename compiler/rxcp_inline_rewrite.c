@@ -1467,9 +1467,16 @@ static int ast_inline_statement(Context *context,
                 }
             }
 
-            if (inline_node_has_array_shape(ret_rhs) ||
-                (inline_node_needs_attr_copy(ret_rhs) &&
-                 (ret_rhs->value_type == TP_BINARY || ret_rhs->target_type == TP_BINARY))) {
+            /* Aggregate caller locals can use the direct register-copy form.
+             * A class attribute is receiver-owned storage, so keep the
+             * inlined body but route its result through the ordinary ASSIGN
+             * emitter; that emitter materialises link/copy/unlink for the
+             * receiver slot. */
+            if ((inline_node_has_array_shape(ret_rhs) ||
+                 (inline_node_needs_attr_copy(ret_rhs) &&
+                  (ret_rhs->value_type == TP_BINARY || ret_rhs->target_type == TP_BINARY))) &&
+                !(ret_lhs->symbolNode && ret_lhs->symbolNode->symbol &&
+                  inline_symbol_is_class_attribute(ret_lhs->symbolNode->symbol))) {
                 ASTNode *ret_copy;
 
                 ret_copy = rxcp_remap_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
@@ -1548,7 +1555,6 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         inline_debug_fail_closed(context, call_node, proc_sym, "assignment inline requires a plain VAR_TARGET lhs");
         return 0;
     }
-
     memset(&return_plan, 0, sizeof(return_plan));
     return_plan.return_target = lhs;
 

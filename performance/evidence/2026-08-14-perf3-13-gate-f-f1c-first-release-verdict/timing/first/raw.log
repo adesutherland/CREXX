@@ -1,0 +1,546 @@
+executor phase=warmup round=0 position=1 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1814.174656830 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=141111000 checksum=16777216 max_parallel=1
+executor phase=warmup round=0 position=2 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1782.642907379 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=143607000 checksum=16777216 max_parallel=1
+executor phase=warmup round=0 position=3 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 5083.298584222 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=50361000 checksum=16777216 max_parallel=4
+executor phase=warmup round=0 position=4 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5995.175757008 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42701000 checksum=16777216 max_parallel=4
+executor phase=warmup round=0 position=5 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 480751.173708920 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2130000 checksum=1024 max_parallel=1
+channel phase=warmup round=0 position=6 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7737
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 84322
+PASS: Gate F F1b channel benchmark
+executor phase=warmup round=0 position=7 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1392.189598821 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=183883000 checksum=16777216 max_parallel=1
+executor phase=warmup round=0 position=8 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1286.975406704 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=198916000 checksum=16777216 max_parallel=1
+executor phase=warmup round=0 position=9 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5260.454125141 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=48665000 checksum=16777216 max_parallel=4
+executor phase=warmup round=0 position=10 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4863.129499820 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=52641000 checksum=16777216 max_parallel=4
+executor phase=warmup round=0 position=11 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 558951.965065502 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1832000 checksum=1024 max_parallel=1
+channel phase=warmup round=0 position=12 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7513
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 99680
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=1 position=13 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1708.397843148 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=149848000 checksum=16777216 max_parallel=1
+executor phase=recorded round=1 position=14 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1777.136034210 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=144052000 checksum=16777216 max_parallel=1
+executor phase=recorded round=1 position=15 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 5895.357406043 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=43424000 checksum=16777216 max_parallel=4
+executor phase=recorded round=1 position=16 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 6027.500470898 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42472000 checksum=16777216 max_parallel=4
+executor phase=recorded round=1 position=17 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 490656.444657403 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2087000 checksum=1024 max_parallel=1
+channel phase=recorded round=1 position=18 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 8104
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 83150
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=1 position=19 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1367.660179185 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=187181000 checksum=16777216 max_parallel=1
+executor phase=recorded round=1 position=20 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1292.465832959 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=198071000 checksum=16777216 max_parallel=1
+executor phase=recorded round=1 position=21 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5158.170461414 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=49630000 checksum=16777216 max_parallel=4
+executor phase=recorded round=1 position=22 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4676.909585838 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=54737000 checksum=16777216 max_parallel=4
+executor phase=recorded round=1 position=23 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 522715.671260847 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1959000 checksum=1024 max_parallel=1
+channel phase=recorded round=1 position=24 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7837
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 97095
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=2 position=25 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7434
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 96427
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=2 position=26 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 559257.236482796 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1831000 checksum=1024 max_parallel=1
+executor phase=recorded round=2 position=27 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4565.314311190 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=56075000 checksum=16777216 max_parallel=4
+executor phase=recorded round=2 position=28 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5485.792654181 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=46666000 checksum=16777216 max_parallel=4
+executor phase=recorded round=2 position=29 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1289.146494378 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=198581000 checksum=16777216 max_parallel=1
+executor phase=recorded round=2 position=30 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1504.997060553 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=170100000 checksum=16777216 max_parallel=1
+channel phase=recorded round=2 position=31 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 8137
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 85034
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=2 position=32 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 522982.635342186 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1958000 checksum=1024 max_parallel=1
+executor phase=recorded round=2 position=33 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5444.144354890 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=47023000 checksum=16777216 max_parallel=4
+executor phase=recorded round=2 position=34 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 6206.662464239 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=41246000 checksum=16777216 max_parallel=4
+executor phase=recorded round=2 position=35 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1613.015014901 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=158709000 checksum=16777216 max_parallel=1
+executor phase=recorded round=2 position=36 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1683.047894547 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=152105000 checksum=16777216 max_parallel=1
+executor phase=recorded round=3 position=37 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1724.753582569 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=148427000 checksum=16777216 max_parallel=1
+executor phase=recorded round=3 position=38 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1798.017966133 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=142379000 checksum=16777216 max_parallel=1
+executor phase=recorded round=3 position=39 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 5922.361541665 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=43226000 checksum=16777216 max_parallel=4
+executor phase=recorded round=3 position=40 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 6100.757828512 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=41962000 checksum=16777216 max_parallel=4
+executor phase=recorded round=3 position=41 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 514831.573655103 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1989000 checksum=1024 max_parallel=1
+channel phase=recorded round=3 position=42 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7586
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 83538
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=3 position=43 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1359.301658773 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=188332000 checksum=16777216 max_parallel=1
+executor phase=recorded round=3 position=44 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1299.380256526 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=197017000 checksum=16777216 max_parallel=1
+executor phase=recorded round=3 position=45 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5231.643267325 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=48933000 checksum=16777216 max_parallel=4
+executor phase=recorded round=3 position=46 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4850.505892607 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=52778000 checksum=16777216 max_parallel=4
+executor phase=recorded round=3 position=47 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 538947.368421053 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1900000 checksum=1024 max_parallel=1
+channel phase=recorded round=3 position=48 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 8028
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 99531
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=4 position=49 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7472
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 96560
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=4 position=50 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 538097.740409879 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1903000 checksum=1024 max_parallel=1
+executor phase=recorded round=4 position=51 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4816.738165124 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=53148000 checksum=16777216 max_parallel=4
+executor phase=recorded round=4 position=52 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5366.763799501 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=47701000 checksum=16777216 max_parallel=4
+executor phase=recorded round=4 position=53 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1277.859585195 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=200335000 checksum=16777216 max_parallel=1
+executor phase=recorded round=4 position=54 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1497.724161333 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=170926000 checksum=16777216 max_parallel=1
+channel phase=recorded round=4 position=55 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7587
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 83182
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=4 position=56 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 522982.635342186 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1958000 checksum=1024 max_parallel=1
+executor phase=recorded round=4 position=57 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5991.247162349 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42729000 checksum=16777216 max_parallel=4
+executor phase=recorded round=4 position=58 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 6233.260287314 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=41070000 checksum=16777216 max_parallel=4
+executor phase=recorded round=4 position=59 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1608.717236525 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=159133000 checksum=16777216 max_parallel=1
+executor phase=recorded round=4 position=60 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1696.442771563 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=150904000 checksum=16777216 max_parallel=1
+executor phase=recorded round=5 position=61 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1730.466347161 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=147937000 checksum=16777216 max_parallel=1
+executor phase=recorded round=5 position=62 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1788.321422833 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=143151000 checksum=16777216 max_parallel=1
+executor phase=recorded round=5 position=63 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 5904.876135997 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=43354000 checksum=16777216 max_parallel=4
+executor phase=recorded round=5 position=64 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5843.814915424 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=43807000 checksum=16777216 max_parallel=4
+executor phase=recorded round=5 position=65 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 536125.654450262 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1910000 checksum=1024 max_parallel=1
+channel phase=recorded round=5 position=66 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7568
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 84659
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=5 position=67 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1362.245576693 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=187925000 checksum=16777216 max_parallel=1
+executor phase=recorded round=5 position=68 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1284.031860041 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=199372000 checksum=16777216 max_parallel=1
+executor phase=recorded round=5 position=69 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5246.546706562 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=48794000 checksum=16777216 max_parallel=4
+executor phase=recorded round=5 position=70 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4906.940637519 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=52171000 checksum=16777216 max_parallel=4
+executor phase=recorded round=5 position=71 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 507684.680218146 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2017000 checksum=1024 max_parallel=1
+channel phase=recorded round=5 position=72 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7279
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 99550
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=6 position=73 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7648
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 96287
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=6 position=74 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 533333.333333333 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1920000 checksum=1024 max_parallel=1
+executor phase=recorded round=6 position=75 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4807.872891860 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=53246000 checksum=16777216 max_parallel=4
+executor phase=recorded round=6 position=76 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 4969.329916919 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=51516000 checksum=16777216 max_parallel=4
+executor phase=recorded round=6 position=77 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1275.217932752 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=200750000 checksum=16777216 max_parallel=1
+executor phase=recorded round=6 position=78 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1391.531227918 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=183970000 checksum=16777216 max_parallel=1
+channel phase=recorded round=6 position=79 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7847
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 83061
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=6 position=80 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 506429.277942631 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2022000 checksum=1024 max_parallel=1
+executor phase=recorded round=6 position=81 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 6005.160684964 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42630000 checksum=16777216 max_parallel=4
+executor phase=recorded round=6 position=82 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 6177.009941125 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=41444000 checksum=16777216 max_parallel=4
+executor phase=recorded round=6 position=83 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1603.798998879 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=159621000 checksum=16777216 max_parallel=1
+executor phase=recorded round=6 position=84 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1654.313169238 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=154747000 checksum=16777216 max_parallel=1
+executor phase=recorded round=7 position=85 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1725.730233311 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=148343000 checksum=16777216 max_parallel=1
+executor phase=recorded round=7 position=86 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1789.834300496 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=143030000 checksum=16777216 max_parallel=1
+executor phase=recorded round=7 position=87 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 5295.383087870 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=48344000 checksum=16777216 max_parallel=4
+executor phase=recorded round=7 position=88 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5885.463365290 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=43497000 checksum=16777216 max_parallel=4
+executor phase=recorded round=7 position=89 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 522448.979591837 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1960000 checksum=1024 max_parallel=1
+channel phase=recorded round=7 position=90 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 8222
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 85046
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=7 position=91 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1287.421987759 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=198847000 checksum=16777216 max_parallel=1
+executor phase=recorded round=7 position=92 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1289.692035648 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=198497000 checksum=16777216 max_parallel=1
+executor phase=recorded round=7 position=93 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5215.123859192 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=49088000 checksum=16777216 max_parallel=4
+executor phase=recorded round=7 position=94 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4833.836858006 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=52960000 checksum=16777216 max_parallel=4
+executor phase=recorded round=7 position=95 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 537815.126050420 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1904000 checksum=1024 max_parallel=1
+channel phase=recorded round=7 position=96 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7635
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 96287
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=8 position=97 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7463
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 99727
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=8 position=98 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 504682.109413504 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2029000 checksum=1024 max_parallel=1
+executor phase=recorded round=8 position=99 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4701.647413176 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=54449000 checksum=16777216 max_parallel=4
+executor phase=recorded round=8 position=100 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5192.065874336 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=49306000 checksum=16777216 max_parallel=4
+executor phase=recorded round=8 position=101 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1240.195912198 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=206419000 checksum=16777216 max_parallel=1
+executor phase=recorded round=8 position=102 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1416.054518099 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=180784000 checksum=16777216 max_parallel=1
+channel phase=recorded round=8 position=103 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7712
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 83366
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=8 position=104 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 491834.774255524 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2082000 checksum=1024 max_parallel=1
+executor phase=recorded round=8 position=105 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5981.587924669 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42798000 checksum=16777216 max_parallel=4
+executor phase=recorded round=8 position=106 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 6214.648119826 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=41193000 checksum=16777216 max_parallel=4
+executor phase=recorded round=8 position=107 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1624.922244932 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=157546000 checksum=16777216 max_parallel=1
+executor phase=recorded round=8 position=108 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1676.940108346 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=152659000 checksum=16777216 max_parallel=1
+executor phase=recorded round=9 position=109 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1715.288851963 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=149246000 checksum=16777216 max_parallel=1
+executor phase=recorded round=9 position=110 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1774.438383320 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=144271000 checksum=16777216 max_parallel=1
+executor phase=recorded round=9 position=111 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 5920.033300187 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=43243000 checksum=16777216 max_parallel=4
+executor phase=recorded round=9 position=112 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 6025.230653361 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42488000 checksum=16777216 max_parallel=4
+executor phase=recorded round=9 position=113 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 506429.277942631 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2022000 checksum=1024 max_parallel=1
+channel phase=recorded round=9 position=114 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7773
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 86225
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=9 position=115 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1362.862010221 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=187840000 checksum=16777216 max_parallel=1
+executor phase=recorded round=9 position=116 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1270.225613901 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=201539000 checksum=16777216 max_parallel=1
+executor phase=recorded round=9 position=117 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5385.278835433 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=47537000 checksum=16777216 max_parallel=4
+executor phase=recorded round=9 position=118 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4853.448602738 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=52746000 checksum=16777216 max_parallel=4
+executor phase=recorded round=9 position=119 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 537532.808398950 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1905000 checksum=1024 max_parallel=1
+channel phase=recorded round=9 position=120 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7984
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 97161
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=10 position=121 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7536
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 100692
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=10 position=122 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 530020.703933747 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1932000 checksum=1024 max_parallel=1
+executor phase=recorded round=10 position=123 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4688.387084959 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=54603000 checksum=16777216 max_parallel=4
+executor phase=recorded round=10 position=124 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5142.111077634 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=49785000 checksum=16777216 max_parallel=4
+executor phase=recorded round=10 position=125 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1247.593752284 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=205195000 checksum=16777216 max_parallel=1
+executor phase=recorded round=10 position=126 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1400.989448798 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182728000 checksum=16777216 max_parallel=1
+channel phase=recorded round=10 position=127 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7881
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 83866
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=10 position=128 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 525937.339496662 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1947000 checksum=1024 max_parallel=1
+executor phase=recorded round=10 position=129 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5971.820472147 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42868000 checksum=16777216 max_parallel=4
+executor phase=recorded round=10 position=130 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 6209.673507010 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=41226000 checksum=16777216 max_parallel=4
+executor phase=recorded round=10 position=131 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1628.260496238 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=157223000 checksum=16777216 max_parallel=1
+executor phase=recorded round=10 position=132 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1699.528646352 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=150630000 checksum=16777216 max_parallel=1
+executor phase=recorded round=11 position=133 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1602.534006898 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=159747000 checksum=16777216 max_parallel=1
+executor phase=recorded round=11 position=134 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1721.297697092 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=148725000 checksum=16777216 max_parallel=1
+executor phase=recorded round=11 position=135 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 5797.495300858 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=44157000 checksum=16777216 max_parallel=4
+executor phase=recorded round=11 position=136 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 5901.881224640 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=43376000 checksum=16777216 max_parallel=4
+executor phase=recorded round=11 position=137 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 517433.046993431 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1979000 checksum=1024 max_parallel=1
+channel phase=recorded round=11 position=138 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7820
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 85660
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=11 position=139 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1374.216267285 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=186288000 checksum=16777216 max_parallel=1
+executor phase=recorded round=11 position=140 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1275.936143383 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=200637000 checksum=16777216 max_parallel=1
+executor phase=recorded round=11 position=141 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 4922.035723212 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=52011000 checksum=16777216 max_parallel=4
+executor phase=recorded round=11 position=142 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4431.902775133 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=57763000 checksum=16777216 max_parallel=4
+executor phase=recorded round=11 position=143 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 507936.507936508 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2016000 checksum=1024 max_parallel=1
+channel phase=recorded round=11 position=144 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7693
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 99680
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=12 position=145 vm=rxtvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7495
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 98694
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=12 position=146 vm=rxtvml cell=identity variant=candidate
+E5_RATE: 536125.654450262 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=1910000 checksum=1024 max_parallel=1
+executor phase=recorded round=12 position=147 vm=rxtvml cell=spin-w4 variant=candidate
+E5_RATE: 4540.295119183 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=56384000 checksum=16777216 max_parallel=4
+executor phase=recorded round=12 position=148 vm=rxtvml cell=spin-w4 variant=accepted
+E5_RATE: 5135.612261274 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=49848000 checksum=16777216 max_parallel=4
+executor phase=recorded round=12 position=149 vm=rxtvml cell=spin-w1 variant=candidate
+E5_RATE: 1223.188987477 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=209289000 checksum=16777216 max_parallel=1
+executor phase=recorded round=12 position=150 vm=rxtvml cell=spin-w1 variant=accepted
+E5_RATE: 1391.243858963 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=184008000 checksum=16777216 max_parallel=1
+channel phase=recorded round=12 position=151 vm=rxbvml
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7811
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 84110
+PASS: Gate F F1b channel benchmark
+executor phase=recorded round=12 position=152 vm=rxbvml cell=identity variant=candidate
+E5_RATE: 500488.758553275 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=identity workers=1 jobs=1024 iterations=1 elapsed_ns=2046000 checksum=1024 max_parallel=1
+executor phase=recorded round=12 position=153 vm=rxbvml cell=spin-w4 variant=candidate
+E5_RATE: 6006.006006006 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=42624000 checksum=16777216 max_parallel=4
+executor phase=recorded round=12 position=154 vm=rxbvml cell=spin-w4 variant=accepted
+E5_RATE: 6295.185166970 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=40666000 checksum=16777216 max_parallel=4
+executor phase=recorded round=12 position=155 vm=rxbvml cell=spin-w1 variant=candidate
+E5_RATE: 1584.168218863 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=161599000 checksum=16777216 max_parallel=1
+executor phase=recorded round=12 position=156 vm=rxbvml cell=spin-w1 variant=accepted
+E5_RATE: 1302.858655104 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=196491000 checksum=16777216 max_parallel=1

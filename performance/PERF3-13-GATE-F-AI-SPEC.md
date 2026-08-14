@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **F0-S normative contract complete; F1a and the minimum type `1` F1b
-vertical slice implemented; F1c next**
+Status: **F0-S normative contract and F1a-F1c local-provider/Level B surface
+complete; F1d next**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -12,11 +12,12 @@ ownership design in
 [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). It is the source of
 truth for F1 compiler, Level B, RXAS/RXBIN and RXVM implementation work.
 
-The compile-only declaration oracle is
+The original compile-only declaration oracle is
 [`gate_f_levelb_contract.crexx`](../compiler/tests/rexx_src/gate_f_levelb_contract.crexx).
-That file deliberately contains interfaces rather than placeholder runtime
-implementations. It proves that the Level B names and signatures in this
-document use the current class/interface grammar.
+It proves that the Level B names and signatures in this document use the
+current class/interface grammar. The F1c implementation is
+[`Concurrency.crexx`](../lib/classlib/Concurrency.crexx), with functional and
+bridge-inspection tests covering the executable contract.
 
 Normative words `must`, `must not`, `should` and `may` have their usual
 specification meanings. Conceptual examples in the user guide remain
@@ -1041,25 +1042,35 @@ No approved user-guide rule is left solely as an implementation convention.
 
 ## 17. F1 implementation boundary
 
-F1a now implements the opcode/feature/metadata contracts while retaining the
+F1a implements the opcode/feature/metadata contracts while retaining the
 old six operations only as a buildable transition. F1d migrates their consumers
 and then performs the reserved-slot retirement.
 
-The completed minimum F1b slice adds only the core type `1` local provider path
-over the current Gate E integer/string executor fixture. Its runtime-owned
-registry state is seeded with the lifetime-pinned local descriptor and accepts
-required bits for bounded admission, cancellation and completion-order
-observation. It does not yet claim provider-owned deadlines. The five RXAS
-instructions execute on both concrete VMs with generation-checked local
-capabilities, canonical RXCV validation and deterministic context teardown.
+The completed F1c slice extends core provider type `1` over the complete RXCV
+tree and typed register-image executor contract. Its runtime-owned registry
+validates private descriptors, pins their modules and passes fake-provider
+vector `GF-B09`. The local provider implements bounded admission,
+cancellation, provider-owned deadlines and completion-order observation. The
+five RXAS instructions execute on both concrete VMs with generation-checked
+local capabilities, exact terminal accounting and deterministic teardown.
 
-F1c completes full ChannelValue, deadlines/scopes, Level B implementations and
-the private provider registration seam plus fake-provider vector `GF-B09`.
-Redirect/process migration, Level G syntax and HTTP remain separate slices in
-the implementation plan. No public provider-plugin ABI is implied before F2.
+The Level B implementations in `Concurrency.crexx` expose the locked pool,
+scope, task, target, context, completion, channel, value/codec, endpoint,
+service-reference and transfer-buffer interfaces. The only runtime bridge is
+the five RXAS instructions. Task targets are sealed numeric/digest descriptors;
+no Rexx procedure-name string or RXPA task API occurs on the dispatch path.
 
-The accepted first Release verdict and closeout are retained in
-[`2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
+Current absence is failure-visible. Process provider type `2` is reserved but
+unavailable; `.taskscope.ask`, `.taskcontext.endpoint`, compiler-created
+`.taskwork` kind-3 adapters and pool statistics return
+`UNSUPPORTED_OPERATION`. Concrete endpoint/child-process integration is F1d,
+the process provider is F1e, Level G syntax is F1f and concurrent HTTP is F1g.
+No public provider-plugin ABI is implied before F2.
+
+Evidence is retained in the
+[`F1a/F1b closeout`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/)
+and
+[`F1c closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/).
 
 After the first production edit, run the minimum focused correctness checks,
 freeze code, build ordinary profiling-off Release, run the smallest decisive

@@ -1330,16 +1330,19 @@ mnemonics and operand order.
 
 `rProviderType` is one mutually exclusive implementation code;
 `rRequiredCapabilities` is a bit mask. Type `0` is invalid, type `1` is the
-core local-thread provider, types `2..5` are reserved core process/host/byte
-endpoint/child-process providers, and extension codes begin at `65536`. The
-minimum F1b runtime currently implements only type `1`, advertising bounded
-admission (`0x0001`), cancellation (`0x0002`) and completion-order observation
-(`0x0008`). Unknown required bits fail instead of being ignored.
+implemented core local-thread provider, types `2..5` are reserved core
+process/host/byte-endpoint/child-process providers, and extension codes begin
+at `65536`. F1c type `1` advertises bounded admission (`0x0001`), cancellation
+(`0x0002`), deadlines (`0x0004`) and completion-order observation (`0x0008`).
+Unknown required bits fail instead of being ignored. A private validated
+registration seam and fake-provider conformance fixture exist; no public
+provider-plugin ABI is implied.
 
 Configuration, envelopes, reasons and completions are canonical versioned RXCV
-documents. F1b implements the Gate E integer/string task fixture; full
-`ChannelValue`, deadlines, Level B classes and other providers remain later
-Gate F slices. Raw channel/ticket integers are execution-local capabilities,
-not transferable values. Exact status codes, RXCV layouts and lifecycle rules
-are normative in
+documents. F1c implements the complete value tree, typed task register images,
+provider-owned deadlines/scopes and Level B local-provider classes. Raw
+channel/ticket integers are execution-local capabilities, not transferable
+values. Process/endpoint/child-process providers and Level G lowering remain
+later Gate F slices. Exact status codes, RXCV layouts and lifecycle rules are
+normative in
 [`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).

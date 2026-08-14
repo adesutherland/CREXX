@@ -2922,6 +2922,17 @@ add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
 add_crexx_run_test(inline_test_complex_lhs_assign rexx_src/inline_test_complex_lhs_assign.crexx)
 add_crexx_run_test(inline_test_binary_arg_return rexx_src/inline_test_binary_arg_return.crexx)
+add_crexx_run_test(inline_test_binary_class_attr_assign rexx_src/inline_test_binary_class_attr_assign.crexx)
+add_test(NAME inline_test_binary_class_attr_assign_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_binary_class_attr_assign.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_test_binary_class_attr_assign_shape_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineBinaryClassAttribute.cmake)
+set_tests_properties(inline_test_binary_class_attr_assign_shape PROPERTIES
+        LABELS "compiler;inlining;binary;regression")
+add_crexx_run_test(gate_f_signal_names rexx_src/gate_f_signal_names.crexx)
 add_crexx_run_test(inline_test_class_methods rexx_src/inline_test_class_methods.crexx)
 
 # New Phase 2 Scoping Tests

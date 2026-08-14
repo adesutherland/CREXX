@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S and F1a/minimum F1b
-complete; F1c next**
+Status: **implementation approved by Adrian; F0-S through F1c complete; F1d
+reusable redirects and child-process integration next**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -304,6 +304,8 @@ neutrality comparison, report it to Adrian and stop.
 
 ### F1c — complete values, lifecycle and Level B surface
 
+Status: **complete 2026-08-14**.
+
 Replace the Gate E fixture subset at the public boundary with the versioned
 `ChannelValue` tree:
 
@@ -505,11 +507,56 @@ neutral in the retained one- and four-worker cells. The evidence and Mac
 closeout are retained in
 [`2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
 
-The runtime registry at this checkpoint is deliberately core-only: it is
-seeded with the lifetime-pinned local descriptor. General private registration
-and fake-provider vector `GF-B09` remain F1c work before any F2 public plugin
-ABI review. Full `ChannelValue`, deadlines/scopes, Level B classes and Level G
-lowering likewise remain F1c; redirects/processes and HTTP remain F1d/F1e.
+The runtime registry at this checkpoint was deliberately core-only: it was
+seeded with the lifetime-pinned local descriptor. F1c subsequently completed
+private registration and fake-provider vector `GF-B09`, full `ChannelValue`,
+deadlines/scopes and the Level B classes. Level G lowering remains F1f;
+redirect/process integration and HTTP remain F1d/F1g.
+
+## F1c completion record
+
+F1c completes the local provider and Rexx Level B control surface. RXCV now
+validates and emits the complete canonical tree: null/boolean, integer, float,
+decimal, string, binary, ordered arrays and schema-tagged records, including
+depth/size/count limits, canonical record order, flag rules and canonical NaN.
+The executor transports typed register images and results by semantic callable
+identity; it does not dispatch a user-authored procedure-name string or move a
+live VM value between executions.
+
+The runtime-owned registry validates complete operation tables, rejects
+duplicates atomically, pins descriptors/modules for channel lifetime and
+passes the `GF-B09` fake-extension-provider lifecycle fixture. Core local
+provider type `1` now advertises the complete required F1c mask: bounded
+admission, cancellation, deadlines and completion-order observation. Pools and
+scopes implement provider-owned deadlines, fail-fast/collect-all policy,
+nonblocking/finite waits, backpressure, queued/running cancellation, exactly
+one terminal completion, drain/cancel close and deterministic teardown.
+
+`lib/classlib/Concurrency.crexx` implements `.taskpool`, `.taskscope`, `.task`,
+`.tasktarget`, `.taskwork`, `.taskcontext`, `.completion`, `.channel`,
+`.channelrequest`, `.channelvalue`, `.channelcodec`, `.byteendpoint`,
+`.serviceref` and `.transferbuffer`. Its runtime bridge contains only
+`chanopen`, `chanstart`, `chanwait`, `chancancel` and `chanclose`; inspection
+proves that it contains no RXPA task call or procedure-name dispatch string.
+
+The boundary is explicit rather than simulated. `.taskpool.process` reaches
+reserved core provider type `2` and reports provider unavailable until F1e.
+`.taskscope.ask`, `.taskcontext.endpoint` and compiler-created `.taskwork`
+kind-3 dispatch report `UNSUPPORTED_OPERATION` until their provider/compiler
+adapters land. Pool `queued()` and `running()` likewise report unsupported
+until a provider-neutral statistics query is specified. Concrete byte-endpoint
+and service implementations remain F1d/later work, and the approved Level G
+`task`/`DO PARALLEL` sugar remains F1f.
+
+The first and unchanged confirmation Release verdicts agree. The completed
+F1c channel path improves substantially over the minimum F1b baseline, while
+the unrelated executor guard is neutral in `rxbvml` and confirms an adverse
+roughly nine-percent `rxtvml` computed-goto result. The only relevant VM-core
+shape change is the F1c signal/default-path addition in `rxvmintp.c`; the five
+channel handlers remain cold. Under Adrian's explicit overnight direction the
+confirmed result is recorded and deferred to F3/release hardening rather than
+blocking the remaining surface work. Evidence:
+[`2026-08-14-perf3-13-gate-f-f1c-first-release-verdict`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/).
 
 ## Evidence and stop rules
 
@@ -525,6 +572,12 @@ For every production slice:
 4. run the smallest decisive retained-baseline comparison;
 5. report to Adrian and stop; and
 6. continue to broad QA only after Adrian accepts that verdict.
+
+For the explicitly authorized 2026-08-14 unattended Gate F sequence, a noisy
+or adverse verdict is rerun once unchanged. A confirmed result is retained
+with its likely changed VM/binary shape and then follows Adrian's standing
+direction to continue QA and the next slice. The default interactive rule
+continues to apply when no such direction exists.
 
 No commit, push, public ABI publication or next-slice start is implied by an
 accepted first verdict unless Adrian authorizes it.

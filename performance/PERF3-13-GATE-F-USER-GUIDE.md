@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **user model approved; F0-S and the F1a/minimum F1b RXAS/RXVM
-substrate complete; Rexx/Level B implementation remains F1c**
+Status: **user model approved; F0-S through F1c complete; explicit Level B
+local concurrency is implemented and Level G syntax remains F1f**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -30,10 +30,10 @@ silently reopen an approved language decision. The staged execution and
 first-verdict stops are recorded in
 [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
 
-All source examples show the approved F0 syntax. They do not compile in the
-current product yet. The five low-level RXAS channel instructions and minimum
-core local provider now exist in both concrete VMs; the Level B classes and
-Level G lowering that make this surface available to Rexx users remain F1c.
+Examples using `task` declarations or `DO PARALLEL` show the approved Level G
+syntax and do not compile in the current product yet. The five low-level RXAS
+instructions, complete local provider and explicit Level B classes now exist in
+both concrete VMs. Level G lowering remains F1f.
 
 ## The idea in one page
 
@@ -906,7 +906,7 @@ staged implementation on 2026-08-14:
 - [x] User-model approval alone did not start implementation; Adrian separately
       authorized the staged implementation recorded in the implementation plan.
 
-## F0-S result and next work
+## Current implementation and next work
 
 The maintainer/AI reference specification now contains:
 
@@ -926,10 +926,19 @@ The maintainer/AI reference specification now contains:
 11. a coherence matrix mapping every user rule in this document to the
     specification and the existing Gate F ownership design.
 
-F0-S has completed that specification and coherence matrix before the first
-opcode edit. Adrian has authorized the staged implementation; any contradiction
-or new language decision still returns to him. F1a/F1b now implement the
-RXAS/RXBIN contract and minimum local-provider vertical slice; Adrian accepted
-their first ordinary-Release verdict and closeout. F1c next implements the
-full values/lifecycle, private provider conformance seam and Rexx/Level B
-surface, with its own mandatory verdict stop.
+F0-S completed that specification and coherence matrix before the first opcode
+edit. F1a-F1c now implement the RXAS/RXBIN contract, complete local provider,
+canonical `ChannelValue`, lifecycle, private provider conformance seam and the
+explicit Level B class surface. A Rexx programmer can use
+`.taskpool.local(...)`, `.taskscope.failfast(...)` or `.collectall(...)`, sealed
+task targets, tasks, completions and channels today; the class implementation
+reaches RXVM only through the five channel instructions.
+
+The incomplete portions fail explicitly. Process pools report provider
+unavailable. Service `ask`, byte-endpoint resolution, compiler-created
+`.taskwork` adapters and pool statistics report unsupported operation rather
+than returning plausible placeholder data. F1d next supplies reusable byte
+endpoints and child-process/redirect integration; F1e supplies process pools;
+F1f makes the simpler `task` and `DO PARALLEL` examples compile; F1g delivers
+the concurrent HTTP consumer. Any contradiction or new language decision still
+returns to Adrian.

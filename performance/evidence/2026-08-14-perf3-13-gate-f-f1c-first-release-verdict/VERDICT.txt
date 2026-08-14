@@ -1,0 +1,49 @@
+PERF3-13 Gate F F1c first ordinary-Release verdict
+
+Scope
+  Complete local-provider ChannelValue, lifecycle, private provider registry
+  and executable Level B surface over the five Gate F RXAS operations.
+
+Identity and host
+  Base develop HEAD before F1c: df322bd3a8e895927a164e9b15ec9aefb3bf2696
+  Host: Darwin 25.5.0 arm64, 10 logical CPUs
+  Power: AC, battery 100 percent
+  pmset: no thermal or performance warning recorded
+  Product: ordinary profiling-off Release rxbvml and rxtvml
+
+Method
+  One warmup plus twelve balanced recorded pairs per cell. The unchanged
+  confirmation repeated the complete panel. The combined result contains 24
+  pairs per cell. Raw transcripts and sample CSVs are retained under timing/.
+
+Combined paired result (24 pairs, mean and 95 percent interval)
+  channel rxbvml identity  -74.507485% [-75.034240%, -73.980730%]
+  channel rxbvml spin-w4  -48.771406% [-49.341134%, -48.201679%]
+  channel rxtvml identity  -74.776125% [-75.246082%, -74.306169%]
+  channel rxtvml spin-w4  -44.425171% [-44.996745%, -43.853598%]
+  executor rxbvml spin-w1  +0.802347% [ -1.746388%,  +3.351082%]
+  executor rxbvml spin-w4  -0.486923% [ -2.458378%,  +1.484533%]
+  executor rxtvml spin-w1  -8.975671% [-11.075810%,  -6.875531%]
+  executor rxtvml spin-w4  -8.909308% [-10.176969%,  -7.641646%]
+
+Interpretation
+  The public channel cells are decisively lower elapsed-time than the retained
+  minimum-F1b comparison. The unrelated persistent-executor guard is neutral
+  for rxbvml and confirms an approximately nine-percent rxtvml throughput
+  reduction in both one- and four-worker cells. The first and confirmation
+  runs agree.
+
+Likely changed shape
+  The F1c VM-core change that can affect the computed-goto product outside the
+  cold channel handlers is the CHANNEL_ERROR/TASK_FAILURE signal/default-path
+  addition in rxvmintp.c. This changes interpreter binary/code layout even
+  though the new channel handlers remain NEVER/cold under profile-20. Final
+  hot-loop placement/layout tuning is deliberately deferred until the Gate F
+  instruction surface is stable in F3/release hardening.
+
+Disposition
+  Adrian explicitly directed the overnight sequence not to stop on a noisy or
+  adverse first result: rerun the targeted verdict unchanged, retain a
+  confirmed slowdown and likely RXVM cause, then continue QA and the next
+  Gate F slice. F1c therefore proceeds to closeout without pretending the
+  confirmed rxtvml guard result is neutral.

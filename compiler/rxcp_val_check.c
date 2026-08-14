@@ -289,7 +289,8 @@ static int validation_signal_known(const char *name) {
             "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE", "UNICODE_ERROR",
             "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED", "RXBIN_CORRUPTION", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
             "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT", "TERM", "POSIX_INT",
-            "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD", "OTHER",
+            "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD",
+            "CHANNEL_ERROR", "TASK_FAILURE", "OTHER",
             "BREAKPOINT", 0
     };
     const char **candidate;

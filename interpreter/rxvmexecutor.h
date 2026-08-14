@@ -26,7 +26,8 @@ struct rxvm_program_generation;
 typedef enum rxvm_executor_register_type {
     RXVM_EXECUTOR_REGISTER_NONE = 0,
     RXVM_EXECUTOR_REGISTER_INTEGER = 1,
-    RXVM_EXECUTOR_REGISTER_STRING = 2
+    RXVM_EXECUTOR_REGISTER_STRING = 2,
+    RXVM_EXECUTOR_REGISTER_BINARY = 3
 } rxvm_executor_register_type;
 
 /* Gate E's private copy-only logical-register subset. No live RXVM value,
@@ -59,7 +60,8 @@ typedef enum rxvm_executor_request_state {
     RXVM_EXECUTOR_REQUEST_SETUP_FAILED = 5,
     RXVM_EXECUTOR_REQUEST_DEADLINE_EXCEEDED = 6,
     RXVM_EXECUTOR_REQUEST_KILLED = 7,
-    RXVM_EXECUTOR_REQUEST_SHUTDOWN = 8
+    RXVM_EXECUTOR_REQUEST_SHUTDOWN = 8,
+    RXVM_EXECUTOR_REQUEST_EXECUTION_FAILED = 9
 } rxvm_executor_request_state;
 
 typedef struct rxvm_executor_completion {
@@ -137,6 +139,18 @@ rxvm_executor_result rxvm_executor_submit_callable_registers(
         const rxvm_executor_register_image *arguments,
         rxvm_executor_request **request_out);
 
+/* F1 private typed-call variant. EXPECTED_RESULT selects the copied logical
+ * register returned by the semantic callable. Binary arguments and results
+ * are copied across the executor boundary; no worker value storage escapes. */
+rxvm_executor_result rxvm_executor_submit_callable_registers_result(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        uint64_t callable_id,
+        size_t argument_count,
+        const rxvm_executor_register_image *arguments,
+        rxvm_executor_register_type expected_result,
+        rxvm_executor_request **request_out);
+
 /*
  * Queued cancellation removes the request immediately. Running cancellation
  * becomes terminal when the current VM call returns to its request boundary.
@@ -159,13 +173,13 @@ rxvm_executor_result rxvm_executor_expire(
 rxvm_executor_result rxvm_executor_shutdown(
         rxvm_executor *executor);
 
-/* Wait for a terminal state and return its procedure result when completed. */
+/* Wait for a terminal state and return its integer result when completed. */
 rxvm_executor_request_state rxvm_executor_request_wait(
         rxvm_executor_request *request,
         int *procedure_result_out);
 
-/* Wait and publish one typed terminal completion. The current Gate E adapter
- * returns an integer logical register for successful calls. */
+/* Wait and publish one typed terminal completion. Any string/binary bytes in
+ * the snapshot remain request-owned until request destruction. */
 rxvm_executor_request_state rxvm_executor_request_wait_completion(
         rxvm_executor_request *request,
         rxvm_executor_completion *completion_out);
