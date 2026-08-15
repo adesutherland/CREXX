@@ -1,0 +1,58 @@
+PERF3-13 Gate F F1d Mac closeout
+
+Selected implementation
+  - A C-owned bounded byte-endpoint substrate provides backpressure,
+    cancellation, EOF, directional half-close, deadline-aware drain and
+    exactly one terminal publication without retaining a live VM value.
+  - Core provider type 4 exposes memory, null and validated execution-local
+    reference endpoints through the five Gate F RXAS operations.
+  - Core provider type 5 snapshots command, arguments, logical working
+    directory, environment, bindings and standard-stream configuration before
+    child launch, and attaches compatible type-4 endpoint references.
+  - ADDRESS keeps its Rexx surface while its Level B controller uses only
+    chanopen, chanstart, chanwait, chancancel and chanclose. String and array
+    output is applied on the controller only after completion.
+  - POSIX children use process groups and async-signal-safe post-fork failure
+    reporting; Windows children use jobs and monotonic tick timing.
+  - The six pre-release spawn/redirect mnemonics are retired. Numeric opcode
+    slots 466 through 471 remain reserved and stale images fail explicitly in
+    both VMs.
+
+Inlining/toolchain repair
+  - Nested cloned local-scope ownership is recorded before cloning children,
+    and clone lookup selects the newest matching owner.
+  - The regression proves the supported nested binary block-owner form stays
+    inlined, contains no residual wrapper or invalid register, assembles, and
+    has optimized/unoptimized runtime parity.
+  - The documented compiler rule is to repair a supported inline shape;
+    fail-close is reserved for cases where semantic equivalence cannot be
+    established.
+
+QA
+  Final focused Debug matrix: 60/60 passed.
+  Complete Debug CTest after final hardening: 2,112/2,112 passed.
+  Debug endpoint/provider/ADDRESS stress: nine tests passed 100 repeats each.
+  Complete Apple ASan build: passed with leak detection disabled.
+  Focused Apple ASan concurrency/ADDRESS/inliner/opcode matrix: 60/60 passed.
+  Final focused ordinary Release matrix: 63/63 passed.
+  Final complete Debug and ordinary profiling-off Release builds: passed.
+  The Level B timing reducer passed rxc, rxas, rxlink and rxvm as an additional
+  end-to-end toolchain consumer.
+
+Performance
+  Two unchanged balanced 12-pair panels have no three-percent adverse-mean
+  guard hit and no clearly adverse interval. Persistent-executor controls are
+  neutral/inconclusive relative to the exact accepted F1c binaries. Channel
+  cells are noisy, so the retained verdict makes no improvement claim.
+
+Current boundary
+  - Provider type 2 isolated task processes remains F1e.
+  - Level G task declarations, task expressions and DO PARALLEL remain F1f.
+  - Concurrent HTTP/TLS remains F1g and will reuse the F1d byte endpoints.
+  - Cross-platform F1d qualification remains part of the portable Gate F
+    conformance and release-hardening work.
+
+Disposition
+  F1d is complete on Mac and ready for its authorized local commit. No push,
+  public plugin ABI or stabilized public release claim is part of this
+  closeout. F1e is the next separately committed slice.

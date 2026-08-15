@@ -80,6 +80,9 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmexecutor.c
         rxvmchannel.h
         rxvmchannel.c
+        rxvmbyteendpoint.c
+        rxvmchannel_byte.c
+        rxvmchannel_child.c
         rxvmactive.c
         rxvmstem.h
         rxvmload.c
@@ -214,8 +217,15 @@ set(CREXX_SOCKET_TARGET_LIBS)
 set(CREXX_SOCKET_MANUAL_LINK_LIBS)
 set(CREXX_NATIVE_RUNTIME_LINK_FLAGS)
 if(WIN32)
-    set(CREXX_SOCKET_TARGET_LIBS ws2_32)
-    set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32)
+    # advapi32 supplies the OS CSPRNG used for runtime-scoped channel
+    # capability identities; every VM embedding must retain that dependency.
+    set(CREXX_SOCKET_TARGET_LIBS ws2_32 advapi32)
+    set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32 -ladvapi32)
+    if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+        list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS advapi32.lib)
+    else()
+        list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS -ladvapi32)
+    endif()
 endif()
 
 if(WIN32)
@@ -585,6 +595,20 @@ target_include_directories(test_rxvmchannel_registry PRIVATE
         ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_registry PRIVATE rxvml Threads::Threads)
 
+add_executable(test_rxvmbyteendpoint tests/test_rxvmbyteendpoint.c)
+target_include_directories(test_rxvmbyteendpoint PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmbyteendpoint PRIVATE rxvml Threads::Threads)
+
+add_executable(test_rxvmchannel_byte tests/test_rxvmchannel_byte.c)
+target_include_directories(test_rxvmchannel_byte PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_byte PRIVATE rxvml Threads::Threads)
+
 add_executable(test_rxvmactive tests/test_rxvmactive.c)
 target_include_directories(test_rxvmactive PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -632,6 +656,13 @@ target_include_directories(mutate_jtable_rxbin PRIVATE
         ../binutils/include
         ../platform)
 
+add_executable(mutate_retired_process_opcode
+        tests/mutate_retired_process_opcode.c)
+target_link_libraries(mutate_retired_process_opcode PRIVATE rxbin)
+target_include_directories(mutate_retired_process_opcode PRIVATE
+        ../binutils/include
+        ../platform)
+
 add_executable(test_rxpa_utf_validation
         tests/test_rxpa_utf_validation.c
         rxpafuncs.c
@@ -671,6 +702,12 @@ add_test(NAME rxvmworker_lifecycle COMMAND test_rxvmworker)
 add_test(NAME rxvmchannel_provider_registry COMMAND test_rxvmchannel_registry)
 set_tests_properties(rxvmchannel_provider_registry PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1c;channels;provider-registry")
+add_test(NAME rxvmbyteendpoint_substrate COMMAND test_rxvmbyteendpoint)
+set_tests_properties(rxvmbyteendpoint_substrate PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;lifecycle")
+add_test(NAME rxvmchannel_byte_provider COMMAND test_rxvmchannel_byte)
+set_tests_properties(rxvmchannel_byte_provider PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;provider-reference")
 add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)
 add_test(NAME rxvmplugin_context_ownership
         COMMAND test_rxvmplugin_context
@@ -1472,6 +1509,60 @@ if(CREXX_THREADED_VM_SUPPORTED)
             LABELS "interpreter;perf3;gate-f;f1c;channels;lifecycle"
             PASS_REGULAR_EXPRESSION "PASS: Gate F F1c local channel"
             TIMEOUT 30)
+endif()
+
+# Gate F replaces the pre-release spawn/redirect opcodes with the five channel
+# operations.  Source assembly rejects the retired mnemonics, while a stale
+# binary retaining numeric slot 466 must halt explicitly in both VM dispatches.
+add_custom_command(
+        OUTPUT tests_retired_process_opcode_base.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o tests_retired_process_opcode_base
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_retired_process_opcode
+        DEPENDS tests/tests_retired_process_opcode.rxas rxas
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling retired process-opcode base fixture ...")
+set(_retired_process_opcode_bins)
+foreach(_retired_process_opcode RANGE 466 471)
+    set(_retired_process_opcode_bin
+            "tests_retired_process_opcode_${_retired_process_opcode}.rxbin")
+    add_custom_command(
+            OUTPUT "${_retired_process_opcode_bin}"
+            COMMAND $<TARGET_FILE:mutate_retired_process_opcode>
+                    ${CMAKE_CURRENT_BINARY_DIR}/tests_retired_process_opcode_base.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/${_retired_process_opcode_bin}
+                    ${_retired_process_opcode}
+            DEPENDS tests_retired_process_opcode_base.rxbin
+                    mutate_retired_process_opcode
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Injecting retired process opcode ${_retired_process_opcode} into stale RXBIN fixture ...")
+    list(APPEND _retired_process_opcode_bins
+            "${_retired_process_opcode_bin}")
+endforeach()
+add_custom_target(test_retired_process_opcode_bin ALL
+        DEPENDS ${_retired_process_opcode_bins})
+add_dependencies(test_retired_process_opcode_bin rxbvm)
+foreach(_retired_process_opcode RANGE 466 471)
+    crexx_add_vm_expected_failure_test(
+            NAME retired_process_opcode_${_retired_process_opcode}_rxbvm
+            RUNNER $<TARGET_FILE:rxbvm>
+            RXVM_ARGS tests_retired_process_opcode_${_retired_process_opcode}
+            EXPECTED_EXIT_CODE 10
+            EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
+            REQUIRED_OUTPUT_REGEX "UNKNOWN_INSTRUCTION"
+            TEST_LABELS "interpreter;rxas;gate-f;f1d;compatibility")
+    if(CREXX_THREADED_VM_SUPPORTED)
+        crexx_add_vm_expected_failure_test(
+                NAME retired_process_opcode_${_retired_process_opcode}_rxtvm
+                RUNNER $<TARGET_FILE:rxtvm>
+                RXVM_ARGS tests_retired_process_opcode_${_retired_process_opcode}
+                EXPECTED_EXIT_CODE 10
+                EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
+                REQUIRED_OUTPUT_REGEX "UNKNOWN_INSTRUCTION"
+                TEST_LABELS "interpreter;rxas;gate-f;f1d;compatibility")
+    endif()
+endforeach()
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_dependencies(test_retired_process_opcode_bin rxtvm)
 endif()
 
 add_custom_command(

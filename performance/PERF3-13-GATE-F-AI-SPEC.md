@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **F0-S normative contract and F1a-F1c local-provider/Level B surface
-complete; F1d next**
+Status: **F0-S normative contract and F1a-F1d local-provider, Level B,
+byte-endpoint and child-process surface complete; F1e next**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -334,13 +334,12 @@ F1 appends these public source opcodes to the current dense table:
 | `653` | `CHANCANCEL_REG_REG_REG_REG` | `chancancel rStatus,rChannel,rTicket,rReason` | `RRRR` |
 | `654` | `CHANCLOSE_REG_REG_REG` | `chanclose rStatus,rChannel,rMode` | `RRR` |
 
-All have `FLOW_NEXT | FLG_OPT_BARRIER`. At F1d closure, after the compiler exits
-and Level B adapters have migrated, the six old process/redirect slots
-`466..471` become `RESERVED_466` through `RESERVED_471`. They are not reused.
-`spawn`, `redir2str`, `redir2arr`, `str2redir`, `arr2redir` and `nullredir`
-are then rejected as retired source mnemonics. The non-published F1a-F1c
-transition retains their current behavior so repository images continue to
-build until the migration is complete.
+All have `FLOW_NEXT | FLG_OPT_BARRIER`. F1d has migrated the compiler exit and
+Level B adapters and changed the six old process/redirect slots `466..471` to
+`RESERVED_466` through `RESERVED_471`; they are not reused. `spawn`,
+`redir2str`, `redir2arr`, `str2redir`, `arr2redir` and `nullredir` are rejected
+as retired source mnemonics. Repository and installed-development images using
+the old pre-release opcodes must be rebuilt.
 
 ### 6.2 Runtime register types
 

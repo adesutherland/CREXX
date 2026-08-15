@@ -168,6 +168,15 @@ static Scope *inline_prepare_cloned_node_scope(Context *context,
     if (inline_node_requires_local_scope(old_node)) {
         node_scope = rxcp_remap_create_local_scope(context, current_scope, new_node, NULL);
         if (!node_scope) return NULL;
+        /*
+         * Local-scope expression nodes are also structured-exit owners.  A
+         * nested inline expansion can already contain LEAVE_WITH nodes whose
+         * association points at its BLOCK_EXPR.  When that expanded subtree
+         * is cloned into an enclosing inline body, record the owner before
+         * cloning its children so those exits bind to the cloned block rather
+         * than the stale source block.
+         */
+        if (!inline_append_node_map_entry(state, old_node, new_node)) return NULL;
     }
 
     new_node->scope = node_scope;

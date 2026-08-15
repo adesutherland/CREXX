@@ -4,80 +4,54 @@
 
 .globals=0
 
-main() .locals=13
+main() .locals=10
    .meta "address_expose.main"="b" ".void" main() ""
-   .srcstep 14 14 17 "address_expose.crexx" 3 1 16 "main: procedure"
+   .srcstep 5 5 17 "address_expose.crexx" 3 1 16 "main: procedure"
    numsci 18,1,1
    .meta "address_expose.main.rc"="b" ".int" r8
    .srcstep 1 1 6 "address_expose.crexx" 5 3 48 "  address system \"echo EXPOSE_OK\" expose userid"
-   null r8
    .srcstep 2 2 17 "address_expose.crexx" 4 3 19 "  userid = \"ALICE\""
    .meta "address_expose.main.userid"="b" ".string" r7
    load r7,"ALICE"
    .traceevent "L" 4 "R" "S" "r" 7 2 2 0 "" ""
    .traceevent "A" 6 "R" "S" "r" 7 2 2 0 "userid" ""
-   .srcstep 12 12 33 "exit_fragment" 2 1 90 "rc=_address('system',\"echo EXPOSE_OK\",_noredir(),_noredir(),_noredir(), 'userid', userid)"
+   .srcstep 3 3 33 "exit_fragment" 2 1 90 "rc=_address('system',\"echo EXPOSE_OK\",_noredir(),_noredir(),_noredir(), 'userid', userid)"
    load r1,"system"
-   .traceevent "L" 4 "R" "S" "r" 1 12 12 0 "" ""
+   .traceevent "L" 4 "R" "S" "r" 1 3 3 0 "" ""
    load r2,"echo EXPOSE_OK"
-   .traceevent "L" 4 "R" "S" "r" 2 12 12 0 "" ""
-   .srcstep 5 5 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r9
-   .srcstep 3 3 25 "_address.crexx" 1682 5 21 "    handle = .binary"
-   null r9
-   .srcstep 4 4 25 "_address.crexx" 1683 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
-   bcopy r10,r9
-   br l84bexprend
-l84bexprend:
-   endlife r9
-   .meta "address_expose.main.handle"
-   .srcstep 8 8 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r9
-   .srcstep 6 6 25 "_address.crexx" 1682 5 21 "    handle = .binary"
-   null r9
-   .srcstep 7 7 25 "_address.crexx" 1683 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
-   bcopy r11,r9
-   br l91bexprend
-l91bexprend:
-   endlife r9
-   .meta "address_expose.main.handle"
-   .srcstep 11 11 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r9
-   .srcstep 9 9 25 "_address.crexx" 1682 5 21 "    handle = .binary"
-   null r9
-   .srcstep 10 10 25 "_address.crexx" 1683 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 9 12 12 0 "handle" ""
-   bcopy r12,r9
-   br l98bexprend
-l98bexprend:
-   endlife r9
-   .meta "address_expose.main.handle"
+   .traceevent "L" 4 "R" "S" "r" 2 3 3 0 "" ""
+   load r9,0
+   call r3,_rxsysb._noredir(),r9
+   .traceevent "F" 4 "R" "O" "r" 3 3 3 0 "_noredir" ""
+   load r9,0
+   call r4,_rxsysb._noredir(),r9
+   .traceevent "F" 4 "R" "O" "r" 4 3 3 0 "_noredir" ""
+   load r9,0
+   call r5,_rxsysb._noredir(),r9
+   .traceevent "F" 4 "R" "O" "r" 5 3 3 0 "_noredir" ""
    load r6,"userid"
-   .traceevent "L" 4 "R" "S" "r" 6 12 12 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 7 12 12 0 "userid" ""
+   .traceevent "L" 4 "R" "S" "r" 6 3 3 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 7 3 3 0 "userid" ""
    load r0,7
    settp r1,768
    settp r2,768
-   settp r10,768
-   swap r3,r10
-   settp r11,768
-   swap r4,r11
-   settp r12,768
-   swap r5,r12
+   settp r3,256
+   settp r4,256
+   settp r5,256
    call r8,_rxsysb._address(),r0
-   swap r10,r3
-   swap r11,r4
-   swap r12,r5
-   .traceevent "F" 4 "R" "I" "r" 8 12 12 0 "_address" ""
-   .traceevent "A" 6 "R" "I" "r" 8 12 12 0 "rc" ""
-   .srcstep 13 13 17 "address_expose.crexx" 6 3 9 "  return"
+   .traceevent "F" 4 "R" "I" "r" 8 3 3 0 "_address" ""
+   .traceevent "A" 6 "R" "I" "r" 8 3 3 0 "rc" ""
+   .srcstep 4 4 17 "address_expose.crexx" 6 3 9 "  return"
    ret
    .meta "address_expose.main.rc"
    .meta "address_expose.main.userid"
 
 /* Imported Declaration from file: _address@library.rxbin */
 
+_rxsysb._noredir() .expose=_rxsysb._noredir
+   .meta "_rxsysb._noredir"="b" "._rxsysb..addressredirect" _rxsysb._noredir() ""
+
+/* Imported Declaration from file: _address@library.rxbin */
+
 _rxsysb._address() .expose=_rxsysb._address
-   .meta "_rxsysb._address"="b" ".int" _rxsysb._address() "?env=.string,?command=.string,in=.binary,out=.binary,err=.binary,expose ...=.string"
+   .meta "_rxsysb._address"="b" ".int" _rxsysb._address() "?env=.string,?command=.string,in=.addressredirect,out=.addressredirect,err=.addressredirect,expose ...=.string"

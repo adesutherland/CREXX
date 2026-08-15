@@ -1062,12 +1062,10 @@ int main(void) {
               (effects.semantics & RXOP_SEM_INDIRECT_BRANCH),
           "jump-table indirect-branch effects regression",
           &op_table[OP_JUMPS_REG_BINARY]);
-    effects = rxop_effects(OP_SPAWN_REG_REG_REG);
-    check(effects.state == RXOP_EFFECT_CONSERVATIVE &&
-              effects.reads == RXOP_OP_ALL && effects.writes == RXOP_OP_ALL &&
-              effects.optimizer_barrier,
-          "opaque process effect must remain conservative",
-          &op_table[OP_SPAWN_REG_REG_REG]);
+    effects = rxop_effects(OP_RESERVED_466);
+    check(effects.state == RXOP_EFFECT_RESERVED && effects.optimizer_barrier,
+          "retired process opcode must fail closed",
+          &op_table[OP_RESERVED_466]);
     effects = rxop_effects(OP_CHANOPEN_REG_REG_REG_REG_REG);
     signal = rxop_signal_contract(OP_CHANOPEN_REG_REG_REG_REG_REG);
     check(OP_MAX_INSTRUCTIONS == 655 && rxop_effect_count() == 655 &&

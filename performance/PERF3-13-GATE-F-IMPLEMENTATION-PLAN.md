@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S through F1c complete; F1d
-reusable redirects and child-process integration next**
+Status: **implementation approved by Adrian; F0-S through F1d complete; F1e
+isolated-process provider next**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -510,8 +510,9 @@ closeout are retained in
 The runtime registry at this checkpoint was deliberately core-only: it was
 seeded with the lifetime-pinned local descriptor. F1c subsequently completed
 private registration and fake-provider vector `GF-B09`, full `ChannelValue`,
-deadlines/scopes and the Level B classes. Level G lowering remains F1f;
-redirect/process integration and HTTP remain F1d/F1g.
+deadlines/scopes and the Level B classes. F1d subsequently completed reusable
+byte endpoints, structured child processes and ADDRESS migration. Isolated
+process tasks, Level G lowering and HTTP remain F1e/F1f/F1g.
 
 ## F1c completion record
 
@@ -544,19 +545,46 @@ reserved core provider type `2` and reports provider unavailable until F1e.
 `.taskscope.ask`, `.taskcontext.endpoint` and compiler-created `.taskwork`
 kind-3 dispatch report `UNSUPPORTED_OPERATION` until their provider/compiler
 adapters land. Pool `queued()` and `running()` likewise report unsupported
-until a provider-neutral statistics query is specified. Concrete byte-endpoint
-and service implementations remain F1d/later work, and the approved Level G
-`task`/`DO PARALLEL` sugar remains F1f.
+until a provider-neutral statistics query is specified. F1d now supplies the
+concrete reusable byte-endpoint and structured child-process providers, plus
+the migrated ADDRESS adapters. Service implementation remains later work, and
+the approved Level G `task`/`DO PARALLEL` sugar remains F1f.
 
-The first and unchanged confirmation Release verdicts agree. The completed
-F1c channel path improves substantially over the minimum F1b baseline, while
-the unrelated executor guard is neutral in `rxbvml` and confirms an adverse
-roughly nine-percent `rxtvml` computed-goto result. The only relevant VM-core
-shape change is the F1c signal/default-path addition in `rxvmintp.c`; the five
-channel handlers remain cold. Under Adrian's explicit overnight direction the
-confirmed result is recorded and deferred to F3/release hardening rather than
-blocking the remaining surface work. Evidence:
-[`2026-08-14-perf3-13-gate-f-f1c-first-release-verdict`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/).
+## F1d completion record
+
+F1d implements provider type `4` with bounded C-owned byte storage,
+backpressure, cancellation, EOF, directional half-close, drain and validated
+execution-local reference export/import. Provider type `5` snapshots child
+command/argument, logical working-directory, environment, binding and standard
+stream configuration, then attaches compatible type `4` references. No I/O
+thread retains or mutates a live Rexx value.
+
+The certified ADDRESS exit keeps its Rexx surface while `_address.crexx`
+creates controller-owned redirect adapters, uses the five channel operations,
+and applies captured string/array output only after completion on the
+controller. Input arrays and strings are snapshotted before asynchronous I/O.
+PATH, shell and CREXX command modes, batch input, repeated child use,
+environment inheritance/overlay and exact output/EOF behavior have focused
+regressions.
+
+The old source mnemonics are retired and numeric slots `466..471` are reserved.
+Assembler tests reject both old and reserved names; deliberately mutated stale
+RXBIN halts with `UNKNOWN_INSTRUCTION` in `rxbvm` and `rxtvm`. The compiler
+inliner regression discovered during the library migration repairs the nested
+binary block-owner shape and retains optimized/no-opt equivalence rather than
+declining a supported inline opportunity.
+
+The first F1d Release comparison and its unchanged confirmation each use
+twelve balanced pairs per cell against the exact accepted F1c binaries. No
+cell has a three-percent adverse-mean guard hit or a clearly adverse interval.
+Persistent-executor controls are neutral/inconclusive; channel cells are noisy
+and therefore support no improvement claim. The conservative result is no
+confirmed F1d regression. The separately accepted F1c computed-goto slowdown
+remains deferred to F3/release hardening. Mac closeout passes the complete
+2,112-test Debug suite, a 60-test focused Apple-ASan matrix, a 63-test focused
+ordinary Release matrix and 100-repeat endpoint/provider/ADDRESS stress.
+Evidence:
+[`2026-08-15-perf3-13-gate-f-f1d-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/).
 
 ## Evidence and stop rules
 

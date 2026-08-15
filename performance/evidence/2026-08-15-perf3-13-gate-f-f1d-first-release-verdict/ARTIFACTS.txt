@@ -1,0 +1,39 @@
+PERF3-13 Gate F F1d artifact inventory
+
+Base identity
+  branch: develop
+  pre-F1d HEAD: 905855aacb4290aabd693b99117fcb889bc7a915
+  candidate state: dirty only for the recorded F1d source/docs/tests/evidence
+
+Exact accepted F1c control products
+  rxbvm sha256 7062a3a82816394203b66531c8b14efa471f080f00c7079a2c8f5eb7f7d379d8
+  rxtvm sha256 d19917b825de463f6420d37663263337edcfd1690d62be058b7e8bf9fc0267c1
+
+Final ordinary profiling-off F1d Release products
+  rxbvm sha256 89ceb62d300541f32a417874f233e41457be249dbed0fd9ee5aeded4547eef4e
+  rxtvm sha256 735b36a2e1bcf357ee56d52b9e1f0394b517ce62cc578abe8e74fbbd640b5828
+  persistent rxbvml sha256 aed08328a497448c683454eac69c364fe1f51163d5c6b7672c16a9eff00f8389
+  persistent rxtvml sha256 d587c6a37887fb24c9ab3a552cf801c81c7f15d5cb18b361ed504045a3524624
+
+Timing
+  capture-paired.zsh
+  summarize_paired.crexx
+  timing/initial/raw.log
+  timing/initial/samples.csv
+  timing/initial/paired-summary.csv
+  timing/confirmation/raw.log
+  timing/confirmation/samples.csv
+  timing/confirmation/paired-summary.csv
+
+QA
+  qa/debug-build.log
+  qa/focused-debug.log
+  qa/debug-ctest.log
+  qa/debug-stress-repeat100.log
+  qa/asan-build.log
+  qa/asan-ctest.log
+  qa/release-build.log
+  qa/focused-release.log
+
+Raw logs are retained rather than summarized away. Build products are not
+checked into evidence; hashes bind the exact control and candidate binaries.

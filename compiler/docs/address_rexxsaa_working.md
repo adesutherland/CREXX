@@ -8,6 +8,13 @@ model, variable helper surface, and cache behaviour are now documented in
 `docs/books/crexx_programming_guide/crexxsaa.md`. This file remains as the
 historical design and progress record for the ADDRESS programme.
 
+Gate F F1d subsequently replaced the pre-release RXAS `spawn`/redirect
+instructions described below. Current ADDRESS lowering builds controller-owned
+redirect adapters over byte-endpoint provider type `4` and executes through
+child-process provider type `5`, using only `chanopen`, `chanstart`, `chanwait`,
+`chancancel` and `chanclose`. Opcode slots `466..471` are reserved. References
+to the older path in this retired file are historical, not current guidance.
+
 ## 1. Purpose
 
 This document is the working record for the new programme around `ADDRESS`,

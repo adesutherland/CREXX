@@ -3,7 +3,7 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S through F1c complete; F1d next**
+Gate F F0-S through F1d complete; F1e next**
 
 ## Current Gate E continuation
 
@@ -2822,6 +2822,19 @@ Gate F is contract-first and staged:
   for F3 hot-loop hardening under Adrian's overnight continuation direction.
   Evidence:
   [`F1c first Release verdict and closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/).
+- [x] **F1d reusable redirects and child-process integration:** implement the
+  bounded C-owned byte-endpoint substrate and core provider types `4` and `5`;
+  snapshot child command/environment/bindings/streams; migrate ADDRESS and its
+  compiler exit to the five common channel operations; retire the six
+  pre-release spawn/redirect mnemonics while reserving slots `466..471`; and
+  repair the supported nested-inline block-owner shape exposed by compiling
+  the Level B controller. Mac closeout passes focused Debug 60/60, complete
+  Debug 2,112/2,112, focused Apple ASan 60/60, focused Release 63/63 and
+  100-repeat endpoint/provider/ADDRESS stress. Two unchanged 12-pair Release
+  panels have no adverse-mean guard hit and no clearly adverse interval;
+  channel cells remain noisy, so the verdict records no confirmed F1d
+  regression and makes no improvement claim. Evidence:
+  [`F1d first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/).
 - [ ] **F1:** implement the mandatory instructions in both VMs, wrap them with
   the Level B classes, and prove the same contract over in-process and isolated
   process providers; implement reusable byte-endpoint and child-process
@@ -2905,7 +2918,7 @@ budget. Provider-specific opcode families remain rejected.
    Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
    before any public pool/channel semantics.
 7. **Gate F — public design recorded 2026-08-13; user model and staged
-   implementation approved 2026-08-14; F0-S through F1c complete; F1d
+   implementation approved 2026-08-14; F0-S through F1d complete; F1e
    next.** The
    approved ownership
    surface and sequencing are recorded in
@@ -2915,13 +2928,14 @@ budget. Provider-specific opcode families remain rejected.
    staged execution in
    [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
    F0-S produced the maintainer/AI contract, coherence matrix, compile-checked
-   Level B declarations and exact RXAS/RXBIN/provider contract. F1a-F1c now
+   Level B declarations and exact RXAS/RXBIN/provider contract. F1a-F1d now
    implement the five opcodes, complete both-VM local provider, full RXCV,
-   lifecycle/private registry contract and executable Level B classes; Adrian
-   accepted the measured computed-goto code-layout cost for the evolving
-   instruction surface, with final hot-loop hardening deferred until the
-   surface stabilizes. Reusable byte endpoints and child-process/redirect
-   integration are next in F1d.
+   lifecycle/private registry contract, executable Level B classes, reusable
+   byte endpoints, structured child processes and ADDRESS migration; the old
+   process/redirect mnemonics are retired with their numeric slots reserved.
+   The measured computed-goto code-layout cost remains recorded for final
+   hot-loop hardening after the surface stabilizes. The isolated-process
+   provider is next in F1e.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding

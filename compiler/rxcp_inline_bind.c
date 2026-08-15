@@ -32,8 +32,15 @@ static ASTNode *inline_find_mapped_node(InlineCloneState *state, ASTNode *old_no
 
     if (!state || !old_node) return NULL;
 
-    for (i = 0; i < state->node_count; i++) {
-        if (state->node_entries[i].old_node == old_node) return state->node_entries[i].new_node;
+    /*
+     * A transformed argument can be cloned more than once while an enclosing
+     * call is expanded.  Associations inside the clone belong to the newest
+     * owner clone, not an earlier capture of the same source node.
+     */
+    for (i = state->node_count; i > 0; i--) {
+        if (state->node_entries[i - 1].old_node == old_node) {
+            return state->node_entries[i - 1].new_node;
+        }
     }
 
     return NULL;

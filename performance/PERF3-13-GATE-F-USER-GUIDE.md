@@ -2,8 +2,9 @@
 
 Date: 2026-08-14
 
-Status: **user model approved; F0-S through F1c complete; explicit Level B
-local concurrency is implemented and Level G syntax remains F1f**
+Status: **user model approved; F0-S through F1d complete; explicit Level B
+local concurrency, byte endpoints and child processes are implemented, and
+Level G syntax remains F1f**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -749,12 +750,12 @@ process-global singleton shared invisibly by unrelated cREXX executions.
 
 ## Spawn and reusable redirects
 
-The behavior currently implemented by RXAS `spawn`, `redir2str`, `redir2arr`,
-`str2redir`, `arr2redir` and `nullredir` is folded into Gate F rather than left
-as spawn-only plumbing. Because CREXX is pre-release, the approved design may
-retire those authored mnemonics in favor of the consistent five-operation
-channel family. Their old numeric opcode slots remain reserved so stale RXBIN
-fails clearly rather than changing meaning.
+The behavior previously implemented by RXAS `spawn`, `redir2str`, `redir2arr`,
+`str2redir`, `arr2redir` and `nullredir` is now folded into Gate F rather than
+left as spawn-only plumbing. F1d retires those authored mnemonics in favor of
+the consistent five-operation channel family. Their old numeric opcode slots
+remain reserved, and stale RXBIN halts with `UNKNOWN_INSTRUCTION` rather than
+changing meaning.
 
 Their common building block is a bounded byte endpoint: a byte source, sink or
 duplex pair with backpressure, deadline, cancellation, EOF, half-close and one
@@ -774,9 +775,11 @@ in endpoint-owned storage until the controlling execution reads or drains
 them. An I/O thread never retains or mutates a live Rexx string, array, object
 or register.
 
-Existing ADDRESS and process Rexx behavior remains available through updated
-compiler exits and Level B adapters. New Level B code gets `.byteendpoint`,
-which can read, write, stream, cancel and close without spawning a process.
+Existing ADDRESS and process Rexx behavior remains available through the
+updated certified compiler exit and Level B adapters. New Level B code gets
+`.byteendpoint`, which can read, write, stream, cancel and close without
+spawning a process. Provider type `4` implements those endpoints and provider
+type `5` implements structured child execution over endpoint references.
 
 The general endpoint is exposed through the same RXAS channel roles using the
 core byte-endpoint provider type. A child-process provider accepts compatible
@@ -927,18 +930,18 @@ The maintainer/AI reference specification now contains:
     specification and the existing Gate F ownership design.
 
 F0-S completed that specification and coherence matrix before the first opcode
-edit. F1a-F1c now implement the RXAS/RXBIN contract, complete local provider,
-canonical `ChannelValue`, lifecycle, private provider conformance seam and the
-explicit Level B class surface. A Rexx programmer can use
+edit. F1a-F1d now implement the RXAS/RXBIN contract, complete local provider,
+canonical `ChannelValue`, lifecycle, private provider conformance seam, the
+explicit Level B class surface, reusable byte endpoints and structured child
+processes. A Rexx programmer can use
 `.taskpool.local(...)`, `.taskscope.failfast(...)` or `.collectall(...)`, sealed
 task targets, tasks, completions and channels today; the class implementation
 reaches RXVM only through the five channel instructions.
 
 The incomplete portions fail explicitly. Process pools report provider
-unavailable. Service `ask`, byte-endpoint resolution, compiler-created
+unavailable. Service `ask`, `.taskcontext.endpoint`, compiler-created
 `.taskwork` adapters and pool statistics report unsupported operation rather
-than returning plausible placeholder data. F1d next supplies reusable byte
-endpoints and child-process/redirect integration; F1e supplies process pools;
-F1f makes the simpler `task` and `DO PARALLEL` examples compile; F1g delivers
-the concurrent HTTP consumer. Any contradiction or new language decision still
-returns to Adrian.
+than returning plausible placeholder data. F1e supplies process pools; F1f
+makes the simpler `task` and `DO PARALLEL` examples compile; F1g delivers the
+concurrent HTTP consumer over the F1d endpoints. Any contradiction or new
+language decision still returns to Adrian.

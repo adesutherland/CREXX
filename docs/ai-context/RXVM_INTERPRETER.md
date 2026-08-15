@@ -680,7 +680,7 @@ churn at one, two, four and eight workers on each available concrete VM and
 asserts that the requested maximum concurrency is reached. This adds no public
 worker/channel API, RXAS/RXBIN instruction, plugin ABI or scheduling contract.
 
-### Gate F F1a-F1c channel and Level B substrate
+### Gate F F1a-F1d channel, Level B and process-I/O substrate
 
 Gate F now adds the mandatory public RXAS channel boundary without exposing a
 public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
@@ -725,11 +725,29 @@ canonical limits/order/flags/NaN.
 `lib/classlib/Concurrency.crexx` supplies the executable Level B pool, scope,
 task, target, context, completion, channel, value/codec, endpoint,
 service-reference and transfer-buffer surface. Inspection proves its runtime
-bridge is only the five channel instructions. Process pools, concrete byte
-endpoints/child processes, Level G lowering and concurrent HTTP remain later
-F1 slices; unsupported Level B operations report status `19` rather than
-simulating success. A public provider-plugin ABI remains an F2 review. The
-exact current/future boundary is recorded in
+bridge is only the five channel instructions.
+
+F1d implements core provider type `4` as bounded C-owned byte endpoints and
+type `5` as structured child-process execution. Endpoint storage owns copied
+bytes, backpressure, cancellation, EOF and half-close state; background I/O
+never retains a live Rexx register/value. Execution-local CSPRNG references
+carry validated direction rights and resolve through the type `4` registry,
+not through native payloads or transferable OS handles. The child provider
+snapshots command/arguments, logical working directory, merged environment,
+CREXX bindings and three optional endpoint references before launch. POSIX
+children use process groups and Windows children use jobs for bounded
+termination. Controller-mode CREXX execution remains synchronous where it
+must preserve command-environment state.
+
+The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
+redirects onto these two providers and apply captured output only on the
+controlling execution. The retired source mnemonics `spawn`, `redir2str`,
+`redir2arr`, `str2redir`, `arr2redir` and `nullredir` are rejected; numeric
+slots `466..471` are reserved handlers that halt stale RXBIN with
+`UNKNOWN_INSTRUCTION`. Process pools, Level G lowering and concurrent HTTP
+remain later F1 slices; unsupported Level B operations report status `19`
+rather than simulating success. A public provider-plugin ABI remains an F2
+review. The exact current/future boundary is recorded in
 [`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).
 
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
@@ -1388,22 +1406,21 @@ shape:
   reviewed host-bound, reserved and sentinel classes callable.
 
 Every handler has one central tier rather than one definition per panel. Both
-private fused handlers enter at the 5% tier. The current 56-handler
-`NEVER` class covers sockets, console I/O, clocks/environment access,
-spawn/redirection, file I/O and dynamic module loading. It is a reviewed code-
+private fused handlers enter at the 5% tier. The current 55-handler
+`NEVER` class covers provider channels, sockets, console I/O,
+clocks/environment access, file I/O and dynamic module loading. It is a reviewed code-
 placement attribute: literal `all-inline` deliberately ignores it to remain
 the exact equivalence control, while every profile and `max-eligible` honors
 it. A later profile can justify an explicit tier change, but a percentage
 threshold cannot silently override it.
 
-The frozen R2 percentage denominator of 588 non-reserved public opcode slots
-included the owner-internal `INTERRUPT` target, which has no handler definition.
-The implementation actually controls 589 non-reserved public-plus-private
-definitions (587 public handlers plus two private). The candidate totals are
-31, 61, 90, 120 and 175 for the nominal 5%, 10%, 15%, 20% and 30% panels; three
-top-176 host operations remain callable. `max-eligible` is 531/589 (90.15%),
-or 531/587 (90.46%) after excluding the two sentinels as well. `INTERRUPT` has
-an explicit owner-only, always-inline tier.
+The current table has 584 source-visible public handlers, two private fused
+handlers, 68 reserved opcode handlers, two reserved sentinels and the
+owner-internal `INTERRUPT` target. The candidate totals remain 31, 61, 90, 120
+and 175 for the nominal 5%, 10%, 15%, 20% and 30% panels; three top-176 host
+operations remain callable. `max-eligible` is 531/586 (90.61%) across the
+normal public-plus-private handlers. `INTERRUPT` has an explicit owner-only,
+always-inline tier.
 
 The panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. Adrian
 selected common `profile-20` as the provisional product default after the R5

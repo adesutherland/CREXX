@@ -2413,6 +2413,25 @@ set_tests_properties(inline_rhs_block_expr_concat_binary_opt PROPERTIES
         LABELS "linked_opt"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
+set(INLINE_NESTED_BINARY_OWNER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_nested_binary_block_owner_shape.cmake")
+set(INLINE_NESTED_BINARY_OWNER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_nested_binary_block_owner_shape_ws\")\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -o \"inline_nested_binary_block_owner\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_nested_binary_block_owner.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on nested binary owner shape: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "file(READ \"\${work}/inline_nested_binary_block_owner.rxas\" generated_rxas)\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(generated_rxas MATCHES [=[call[0-9]* [^\\n]*(wrap_node|wrap_document)\\(\\)]=])\n  message(FATAL_ERROR \"Supported nested binary calls were not inlined:\\n\${generated_rxas}\")\nendif()\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(generated_rxas MATCHES [=[r-1]=])\n  message(FATAL_ERROR \"Nested inline emitted an unset register:\\n\${generated_rxas}\")\nendif()\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_nested_binary_block_owner.rxbin\" \"inline_nested_binary_block_owner\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas rejected nested binary owner shape: \${out}\${err}\")\nendif()\n")
+file(GENERATE OUTPUT "${INLINE_NESTED_BINARY_OWNER_SCRIPT}" CONTENT "${INLINE_NESTED_BINARY_OWNER_CONTENT}")
+
+add_test(NAME inline_nested_binary_block_owner_shape_opt
+         COMMAND ${CMAKE_COMMAND} -P "${INLINE_NESTED_BINARY_OWNER_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(inline_nested_binary_block_owner_shape_opt PROPERTIES
+        LABELS "compiler;assembler;inlining;binary")
+
 set(INLINE_CROSS_FILE_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_cross_file_source_opt.cmake")
 set(INLINE_CROSS_FILE_SOURCE_CONTENT "set(full_out \"\")\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_cross_file_source_opt_ws\")\n")
@@ -2866,6 +2885,7 @@ add_crexx_run_test(inline_test_call rexx_src/inline_test_call.crexx)
 add_crexx_run_test(inline_test_expr rexx_src/inline_test_expr.crexx)
 add_crexx_run_test(inline_test_expr_negative rexx_src/inline_test_expr_negative.crexx)
 add_crexx_run_test(inline_test_nested_call_expr rexx_src/inline_test_nested_call_expr.crexx)
+add_crexx_run_test(inline_nested_binary_block_owner rexx_src/inline_nested_binary_block_owner.crexx)
 add_crexx_run_test(inline_test_concat_expr rexx_src/inline_test_concat_expr.crexx)
 add_crexx_run_test(inline_test_say_expr rexx_src/inline_test_say_expr.crexx)
 add_crexx_run_test(inline_test_say_expr_negative rexx_src/inline_test_say_expr_negative.crexx)

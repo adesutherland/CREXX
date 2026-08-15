@@ -559,6 +559,18 @@ channelvalue_impl: class implements .channelvalue
     _encoded = _cv_document(_cv_node(11, payload))
     return
 
+  provider_reference_type: method = .int
+    call _channel_require type_code() = 10, "channelvalue.provider-reference.type"
+    return <at..int>(28) _encoded
+
+  provider_reference_rights: method = .int
+    call _channel_require type_code() = 10, "channelvalue.provider-reference.rights"
+    return <at..u32>(40) _encoded
+
+  provider_reference_scope: method = .int
+    call _channel_require type_code() = 10, "channelvalue.provider-reference.scope"
+    return <at..u8>(44) _encoded
+
   type_code: method = .int
     return <at..u8>(16) _encoded
 
@@ -1086,6 +1098,146 @@ channel_impl: class implements .channel
     call close(2)
     return
 
+_byteendpoint_configuration: procedure = .channelvalue
+  arg kind = .int, direction = .int, capacity = .int, provider_reference = .channelvalue
+  names = .string[]
+  values = .channelvalue[]
+  if kind = 1 then do
+    names[1] = "capacity"
+    values[1] = .channelvalue.integer_value(capacity)
+    names[2] = "direction"
+    values[2] = .channelvalue.integer_value(direction)
+    return .channelvalue.record_value("crexx.channel.byte-memory", 1, names, values)
+  end
+  if kind = 2 then do
+    names[1] = "direction"
+    values[1] = .channelvalue.integer_value(direction)
+    return .channelvalue.record_value("crexx.channel.byte-null", 1, names, values)
+  end
+  names[1] = "reference"
+  values[1] = provider_reference
+  return .channelvalue.record_value("crexx.channel.byte-reference", 1, names, values)
+
+_byteendpoint_integer_envelope: procedure = .channelvalue
+  arg schema = .string, field_name = .string, item = .int
+  names = .string[]
+  values = .channelvalue[]
+  names[1] = field_name
+  values[1] = .channelvalue.integer_value(item)
+  return .channelvalue.record_value(schema, 1, names, values)
+
+/** Reusable bounded endpoint implemented solely through the five channel instructions. */
+byteendpoint_impl: class implements .byteendpoint
+  _channel = .channel_impl
+  _direction = .int
+  _open = .boolean
+  _requests = .channelrequest[]
+
+  memory: factory
+    arg direction = .int, capacity = .int
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.memory.direction"
+    call _channel_require capacity >= 1 & capacity <= 16777216, "byteendpoint.memory.capacity"
+    configuration = _byteendpoint_configuration(1, direction, capacity, .channelvalue.null_value())
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = direction
+    _open = 1
+    requests = .channelrequest[]
+    _requests = requests
+    return
+
+  null_endpoint: factory
+    arg direction = .int
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.null.direction"
+    configuration = _byteendpoint_configuration(2, direction, 0, .channelvalue.null_value())
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = direction
+    _open = 1
+    requests = .channelrequest[]
+    _requests = requests
+    return
+
+  from_reference: factory
+    arg provider_reference = .channelvalue
+    reference_value = provider_reference as .channelvalue_impl
+    call _channel_require reference_value.provider_reference_type() = 4, "byteendpoint.reference.provider"
+    call _channel_require reference_value.provider_reference_scope() = 1, "byteendpoint.reference.scope"
+    direction = reference_value.provider_reference_rights()
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.reference.rights"
+    configuration = _byteendpoint_configuration(3, direction, 0, provider_reference)
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = direction
+    _open = 1
+    requests = .channelrequest[]
+    _requests = requests
+    return
+
+  provider_reference: method = .channelvalue
+    call _channel_require _open, "byteendpoint.reference.closed"
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "requestedRights"
+    values[1] = .channelvalue.integer_value(_direction)
+    names[2] = "requestedScope"
+    values[2] = .channelvalue.integer_value(1)
+    envelope = .channelvalue.record_value("crexx.channel.byte-export-reference", 1, names, values)
+    request = _channel.start(envelope, -1)
+    result = request.wait(-1)
+    if result.succeeded() = 0 then call _channel_error "byteendpoint.reference.export", result.error_code()
+    return result.value()
+
+  start_read: method = .channelrequest
+    arg maximum_bytes = .int, wait_milliseconds = .int
+    call _channel_require _open, "byteendpoint.read.closed"
+    call _channel_require _direction = 1 | _direction = 3, "byteendpoint.read.direction"
+    call _channel_require maximum_bytes >= 1 & maximum_bytes <= 16777216, "byteendpoint.read.maximum"
+    envelope = _byteendpoint_integer_envelope("crexx.channel.byte-read", "maximumBytes", maximum_bytes)
+    request = _channel.start(envelope, wait_milliseconds)
+    _requests[_requests[0] + 1] = request
+    return request
+
+  start_write: method = .channelrequest
+    arg bytes = .binary, wait_milliseconds = .int
+    call _channel_require _open, "byteendpoint.write.closed"
+    call _channel_require _direction >= 2, "byteendpoint.write.direction"
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "bytes"
+    values[1] = .channelvalue.binary_value(bytes)
+    envelope = .channelvalue.record_value("crexx.channel.byte-write", 1, names, values)
+    request = _channel.start(envelope, wait_milliseconds)
+    _requests[_requests[0] + 1] = request
+    return request
+
+  half_close: method = .void
+    arg direction = .int
+    call _channel_require _open, "byteendpoint.half-close.closed"
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.half-close.direction"
+    allowed = 0
+    if direction = 1 & (_direction = 1 | _direction = 3) then allowed = 1
+    if direction = 2 & (_direction = 2 | _direction = 3) then allowed = 1
+    if direction = 3 & _direction = 3 then allowed = 1
+    call _channel_require allowed, "byteendpoint.half-close.rights"
+    envelope = _byteendpoint_integer_envelope("crexx.channel.byte-half-close", "direction", direction)
+    request = _channel.start(envelope, -1)
+    result = request.wait(-1)
+    if result.succeeded() = 0 then call _channel_error "byteendpoint.half-close", result.error_code()
+    return
+
+  cancel: method = .void
+    arg reason = .channelvalue
+    call _channel_require _open, "byteendpoint.cancel.closed"
+    do i = 1 to _requests[0]
+      request = _requests[i]
+      if request.terminal() = 0 then call request.cancel(reason)
+    end
+    return
+
+  close: method = .void
+    call _channel_require _open, "byteendpoint.close.closed"
+    call _channel.cancel_and_account()
+    _open = 0
+    return
+
 /** Compiler-created sealed descriptor. The public interface exposes diagnostics only. */
 tasktarget_impl: class implements .tasktarget
   _name = .string
@@ -1429,6 +1581,4 @@ taskcontext_impl: class implements .taskcontext
 
   endpoint: method = .byteendpoint
     arg provider_reference = .channelvalue
-    call _channel_error "taskcontext.endpoint.unsupported", 19
-    unavailable = .byteendpoint
-    return unavailable
+    return .byteendpoint.from_reference(provider_reference)

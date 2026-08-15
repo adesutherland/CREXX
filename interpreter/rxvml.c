@@ -934,9 +934,16 @@ static int rxvml_address_emit_to_endpoint(
     int is_error) {
 
     value* endpoint_value = (value*)endpoint;
+    const char* object_type_name;
+    size_t object_type_name_length;
+    char class_name[512];
+    rxvml_value* text_arg = NULL;
+    rxvml_value* method_result = NULL;
+    rxvml_value* args[1];
+    int64_t handled = 0;
+    int call_rc;
     int write_rc;
 
-    (void)ctx;
     if (!text) text = "";
 
 #ifndef NUTF8
@@ -948,8 +955,52 @@ static int rxvml_address_emit_to_endpoint(
     }
 #endif
 
-    if (!endpoint_value || !endpoint_value->binary_value ||
-        endpoint_value->binary_length == 0) {
+    if (endpoint_value && endpoint_value->binary_value &&
+        endpoint_value->binary_length != 0) {
+        /* Transitional compatibility for an already-running host whose
+         * request was created before the Level B adapter migration. */
+        write_rc = redrwriteclose(endpoint_value, text, strlen(text));
+        if (write_rc == 0) return 0;
+        if (write_rc != 1) {
+            if (ctx) ctx->last_error = is_error
+                ? "Failed to emit native ADDRESS error text"
+                : "Failed to emit native ADDRESS output text";
+            return -1;
+        }
+    } else if (endpoint_value && ctx) {
+        object_type_name = rxvml_object_type_name(
+            endpoint_value, &object_type_name_length);
+        if (object_type_name && object_type_name_length > 0 &&
+            object_type_name_length < sizeof(class_name)) {
+            memcpy(class_name, object_type_name, object_type_name_length);
+            class_name[object_type_name_length] = 0;
+            text_arg = rxvml_value_new(ctx);
+            if (!text_arg ||
+                rxvml_set_str(text_arg, text, strlen(text)) != 0) {
+                if (text_arg) rxvml_value_free(text_arg);
+                ctx->last_error = "Failed to allocate ADDRESS redirect text";
+                return -1;
+            }
+            args[0] = text_arg;
+            call_rc = rxvml_call_method_descriptor(
+                ctx, endpoint, class_name,
+                "rxsig1|native_emit|.int|text=.string",
+                1, args, &method_result);
+            rxvml_value_free(text_arg);
+            if (call_rc != 0 || !method_result ||
+                rxvml_to_int(ctx, method_result, &handled) != 0) {
+                if (method_result) rxvml_value_free(method_result);
+                ctx->last_error = is_error
+                    ? "Failed to invoke ADDRESS error adapter"
+                    : "Failed to invoke ADDRESS output adapter";
+                return -1;
+            }
+            rxvml_value_free(method_result);
+            if (handled) return 0;
+        }
+    }
+
+    {
         if (is_error) {
             fputs(text, stderr);
             fflush(stderr);
@@ -958,25 +1009,6 @@ static int rxvml_address_emit_to_endpoint(
         }
         return 0;
     }
-
-    write_rc = redrwriteclose(endpoint_value, text, strlen(text));
-    if (write_rc == 1) {
-        if (is_error) {
-            fputs(text, stderr);
-            fflush(stderr);
-        } else {
-            rxvm_mprintf("%s", text);
-        }
-        return 0;
-    }
-    if (write_rc != 0) {
-        if (ctx) ctx->last_error = is_error
-            ? "Failed to emit native ADDRESS error text"
-            : "Failed to emit native ADDRESS output text";
-        return -1;
-    }
-
-    return 0;
 }
 
 int rxvml_address_emit_output(

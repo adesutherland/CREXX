@@ -6,6 +6,8 @@
 
 #include "rxvmchannel.h"
 
+#include "rxvmchannel_byte.h"
+#include "rxvmchannel_child.h"
 #include "rxvmexecutor.h"
 #include "rxvmintp.h"
 #include "rxvmprogram.h"
@@ -85,6 +87,7 @@ typedef struct rxvm_channel_provider_entry {
 
 typedef struct rxvm_channel_runtime {
     rxvm_runtime *runtime;
+    rxvm_channel_byte_registry *byte_registry;
     rxvm_channel_provider_entry **providers;
     size_t provider_count;
     size_t provider_capacity;
@@ -826,15 +829,19 @@ static int rxcv_buffer_field_name(rxcv_buffer *buffer, const char *name) {
 static rxvm_channel_status rxcv_buffer_provider_node(
         rxcv_buffer *buffer,
         const unsigned char *data,
-        size_t length) {
+        size_t length,
+        uint16_t *document_flags) {
     uint16_t flags = 0u;
     uint64_t members = 0u;
     size_t consumed = 0u;
     if (!data || !length ||
         !rxcv_validate_node(data, length, 0u, &flags, &members, &consumed) ||
         consumed != length) return RXVM_CHANNEL_PROVIDER_FAILURE;
-    return rxcv_buffer_append(buffer, data, length)
-        ? RXVM_CHANNEL_OK : RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+    if (!rxcv_buffer_append(buffer, data, length)) {
+        return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+    }
+    if (document_flags) *document_flags |= flags;
+    return RXVM_CHANNEL_OK;
 }
 
 static rxvm_channel_status rxcv_encode_completion(
@@ -847,6 +854,7 @@ static rxvm_channel_status rxcv_encode_completion(
     const char *message;
     size_t message_length;
     unsigned char document_header[16];
+    uint16_t document_flags = 0u;
     rxvm_channel_status node_status;
 
     memset(&payload, 0, sizeof(payload));
@@ -870,7 +878,7 @@ static rxvm_channel_status rxcv_encode_completion(
     if (completion->details_node && completion->details_node_length) {
         node_status = rxcv_buffer_provider_node(
                 &payload, completion->details_node,
-                completion->details_node_length);
+                completion->details_node_length, &document_flags);
         if (node_status != RXVM_CHANNEL_OK) {
             free(payload.data);
             return node_status;
@@ -889,7 +897,7 @@ static rxvm_channel_status rxcv_encode_completion(
     if (completion->result_node && completion->result_node_length) {
         node_status = rxcv_buffer_provider_node(
                 &payload, completion->result_node,
-                completion->result_node_length);
+                completion->result_node_length, &document_flags);
         if (node_status != RXVM_CHANNEL_OK) {
             free(payload.data);
             return node_status;
@@ -910,6 +918,7 @@ static rxvm_channel_status rxcv_encode_completion(
     memset(document_header, 0, sizeof(document_header));
     memcpy(document_header, "RXCV", 4u);
     document_header[4] = 1u;
+    rxcv_put_u16(document_header + 6u, document_flags);
     rxcv_put_u64(document_header + 8u, 16u + 12u + payload.length);
     if (!rxcv_buffer_append(&document, document_header,
                             sizeof(document_header)) ||
@@ -1147,6 +1156,7 @@ static void channel_runtime_destroy(void *state) {
         channel_provider_entry_destroy(providers[index]);
     }
     free(providers);
+    rxvm_channel_byte_registry_destroy(runtime->byte_registry);
     channel_mutex_destroy(&runtime->mutex);
     free(runtime);
 }
@@ -1155,6 +1165,8 @@ static rxvm_channel_runtime *channel_runtime_for(rxvm_runtime *runtime) {
     rxvm_channel_runtime *state;
     rxvm_channel_runtime *candidate;
     rxvm_channel_provider_descriptor local_descriptor;
+    rxvm_channel_provider_descriptor byte_descriptor;
+    rxvm_channel_provider_descriptor child_descriptor;
 
     state = (rxvm_channel_runtime *)rxvm_runtime_channel_state(runtime);
     if (state) return state;
@@ -1165,6 +1177,11 @@ static rxvm_channel_runtime *channel_runtime_for(rxvm_runtime *runtime) {
         return 0;
     }
     candidate->runtime = runtime;
+    candidate->byte_registry = rxvm_channel_byte_registry_create();
+    if (!candidate->byte_registry) {
+        channel_runtime_destroy(candidate);
+        return 0;
+    }
     memset(&local_descriptor, 0, sizeof(local_descriptor));
     local_descriptor.type = RXVM_CHANNEL_PROVIDER_LOCAL;
     local_descriptor.name = "crexx.core.local-thread";
@@ -1187,6 +1204,22 @@ static rxvm_channel_runtime *channel_runtime_for(rxvm_runtime *runtime) {
     local_descriptor.operations.channel_destroy = channel_local_destroy;
     if (channel_provider_register_in_state(
             candidate, &local_descriptor, 1) !=
+            RXVM_CHANNEL_PROVIDER_REGISTRATION_OK) {
+        channel_runtime_destroy(candidate);
+        return 0;
+    }
+    rxvm_channel_byte_provider_descriptor(
+            candidate->byte_registry, &byte_descriptor);
+    if (channel_provider_register_in_state(
+            candidate, &byte_descriptor, 1) !=
+            RXVM_CHANNEL_PROVIDER_REGISTRATION_OK) {
+        channel_runtime_destroy(candidate);
+        return 0;
+    }
+    rxvm_channel_child_provider_descriptor(
+            candidate->byte_registry, &child_descriptor);
+    if (channel_provider_register_in_state(
+            candidate, &child_descriptor, 1) !=
             RXVM_CHANNEL_PROVIDER_REGISTRATION_OK) {
         channel_runtime_destroy(candidate);
         return 0;

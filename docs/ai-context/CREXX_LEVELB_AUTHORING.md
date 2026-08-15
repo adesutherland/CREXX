@@ -141,6 +141,21 @@ References:
 - `compiler/exits/ExitTestSupport.crexx`
 - `tests/levelbfunc.crexx`
 
+## Library Changes Are Whole-Toolchain Tests
+
+Treat every Level B library change as an opportunity to exercise the complete
+consumer path: compile with `rxc`, assemble with `rxas`, link with `rxlink`, and
+execute with `rxvm` (and both concrete VM dispatches when the behavior is VM
+sensitive). A direct compiler or library-unit check is not sufficient for a
+public library surface because imported metadata, optimized RXAS shape,
+link-time symbol resolution, or runtime behavior can fail independently.
+
+For optimizer-sensitive helpers, retain no-opt and optimized executions with
+the same expected result and inspect the optimized RXAS when the intended
+shape matters. Supported inlining shapes must be repaired when they miscompile;
+falling back to a real call is reserved for shapes whose ordinary-call
+equivalence cannot yet be proved.
+
 ### Namespace/import syntax is part of the real language surface
 
 Do not treat namespace use as documentation sugar. It is part of how source is
