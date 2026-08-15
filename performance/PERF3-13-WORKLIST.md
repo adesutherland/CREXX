@@ -3,8 +3,8 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S through F1f and F1g-A through F1g-C complete; F1g-D streaming,
-compression and crexx-rag integration active**
+Gate F F0-S through F1g-D implementation and Mac QA complete; experimental
+publication remains gated by portable conformance**
 
 ## Current Gate E continuation
 
@@ -2895,8 +2895,17 @@ Gate F is contract-first and staged:
   timeout/EOF/would-block statuses from being mistaken for received bytes. The
   ordinary single-thread Release verdict is guard-clean across Sieve and
   RexxCPS on both VMs. Explicit streams, compressed decoding and the
-  `crexx-rag` fixture remain F1g-D. Evidence:
+  `crexx-rag` fixture were completed by F1g-D. Evidence:
   [`F1g-C first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-c-http-policy-first-release-verdict/).
+- [x] **F1g-D bounded streaming, compression and crexx-rag integration:** add
+  fixed/chunked request and response byte-endpoint streams, bounded pure-Level-B
+  gzip/deflate decoding and concurrent generation/embedding acceptance. Close
+  typed task arguments with receiver reconstruction while retaining the
+  primitive fast path and direct `.taskwork` request semantics. Final Mac QA
+  passes Debug 2,175/2,175, Release Gate F 62/62 and focused ASan 39/39 after a
+  complete sanitizer build. Exact-final task and Sieve/RexxCPS Release panels
+  have no 3% guard hit. Evidence:
+  [`F1g-D first Release verdict and local closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
 - [ ] **F2:** prove the open cross-host protocol with a non-Rexx actor, exercise
   compute/I/O/process providers and add higher Level G typed service/event
   libraries.
@@ -3039,8 +3048,8 @@ budget. Provider-specific opcode families remain rejected.
    Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
    before any public pool/channel semantics.
 7. **Gate F — public design recorded 2026-08-13; user model and staged
-   implementation approved 2026-08-14; F0-S through F1f complete; F1g
-   activated 2026-08-15.** The
+   implementation approved 2026-08-14; F0-S through F1g-D implementation and
+   Mac QA complete 2026-08-15; portable publication evidence pending.** The
    approved ownership
    surface and sequencing are recorded in
    [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
@@ -3065,9 +3074,10 @@ budget. Provider-specific opcode families remain rejected.
    for the approved independent `.httpresponse`; F1g-B adds the bounded
    connection-owner and reuse slice over existing tasks and type-4 endpoints;
    F1g-C adds safe headers, bounded request policy, verified TLS, explicit
-   replay/redirect rules and ambiguity/failure diagnostics. None adds an HTTP
-   opcode or provider type. F1g now continues with explicit streaming,
-   compressed decoding and crexx-rag integration.
+   replay/redirect rules and ambiguity/failure diagnostics. F1g-D completes
+   fixed/chunked streaming, bounded gzip/deflate decoding, typed task
+   arguments and concurrent crexx-rag integration. None adds an HTTP opcode or
+   provider type.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding

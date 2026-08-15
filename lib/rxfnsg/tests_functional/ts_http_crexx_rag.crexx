@@ -1,0 +1,188 @@
+/* Gate F F1g-D crexx-rag generation/embedding HTTP integration proof. */
+options levelg
+
+namespace ts_http_crexx_rag
+import rxfnsb
+import rxsocket
+import concurrency
+import rxfnsg
+
+endpoint_write: procedure = .int
+  arg endpoint = .byteendpoint, bytes = .binary
+  request = endpoint.start_write(bytes, -1)
+  completion = request.wait(-1)
+  if completion.succeeded() = 0 then return -1
+  return completion.value().as_integer()
+
+endpoint_read_exact: procedure = .binary
+  arg endpoint = .byteendpoint, expected = .int
+  result = ''x as .binary
+  do while binlength(result) < expected
+    request = endpoint.start_read(expected - binlength(result), -1)
+    completion = request.wait(-1)
+    if completion.succeeded() = 0 then return ''x as .binary
+    chunk = completion.value().as_binary()
+    if binlength(chunk) > 0 then result = binconcat(result, chunk)
+    if completion.details().field("eof").as_boolean() then leave
+  end
+  return result
+
+request_body_start: procedure = .int
+  arg request = .string
+  boundary = pos("0d0a0d0a"x, request)
+  if boundary = 0 then return 0
+  return boundary + 4
+
+header_value: procedure = .string
+  arg headers = .string, name = .string
+  marker = translate(name) || ":"
+  start = pos(marker, translate(headers))
+  if start = 0 then return ""
+  start = start + length(marker)
+  finish = pos("0d0a"x, headers, start)
+  if finish = 0 then return ""
+  return strip(substr(headers, start, finish - start))
+
+read_request: procedure = .string
+  arg socket = .int
+  request = ""
+  do forever
+    start = request_body_start(request)
+    if start > 0 then do
+      wanted = header_value(left(request, start - 1), "Content-Length")
+      if datatype(wanted, "W") = 0 then return ""
+      if binlength(substr(request, start) as .binary) >= wanted then return request
+    end
+    chunk = socketrecv(socket, 4096)
+    if chunk = "" then return ""
+    request = request || chunk
+  end
+
+rag_http_server: class implements .taskwork
+  _ready_reference = .channelvalue
+
+  *: factory
+    arg ready_reference = .channelvalue
+    _ready_reference = ready_reference
+    return
+
+  run: method = .channelvalue
+    arg ignored = .channelvalue, context = .taskcontext
+    server = socketcreate()
+    if server <= 0 then return .channelvalue.integer_value(-1)
+    if socketbind(server, "127.0.0.1", 0) <> 0 then return .channelvalue.integer_value(-2)
+    if sockettimeout(server, 10000) <> 0 then return .channelvalue.integer_value(-3)
+    if socketlisten(server, 2) <> 0 then return .channelvalue.integer_value(-4)
+    local = socketlocal(server)
+    port_text = substr(local, lastpos(":", local) + 1)
+    ready = .byteendpoint.from_reference(_ready_reference)
+    port_wire = '0000000000000000'x as .binary
+    <at..int>(0) port_wire = port_text
+    if endpoint_write(ready, port_wire) <> 8 then return .channelvalue.integer_value(-5)
+    call ready.half_close(2)
+    call ready.close()
+
+    generation_encoded = x2bin("1f8b0800000000000003ab564acec8cf4c4e2d56b28aae56ca4d2d2e4e4c4f55b2aa564acecf2b49cd2b51b2524a4fcd4b2d4a2c494d5148cc2b2e4f2d52aaad8dad05006e05027338000000")
+    embedding_encoded = x2bin("789cab564a492c4954b28aae564acd4d4a4d49c9cc4b07f20cf40c750cf48c80d838b636b61600eda80b9e")
+    seen = 0
+    crlf = "0d0a"x
+    do request_index = 1 to 2
+      client = socketaccept(server)
+      if client <= 0 then return .channelvalue.integer_value(-10 - request_index)
+      if sockettimeout(client, 10000) <> 0 then return .channelvalue.integer_value(-20 - request_index)
+      request = read_request(client)
+      common_valid = pos("Authorization: Bearer test-key", request) > 0 & ,
+                     pos("Idempotency-Key: gate-f-rag", request) > 0 & ,
+                     pos("Accept-Encoding: gzip, deflate", request) > 0 & ,
+                     pos("Content-Type: application/json", request) > 0
+      if common_valid = 0 then return .channelvalue.integer_value(-30 - request_index)
+      encoding = ""
+      response_body = ''x as .binary
+      if pos("POST /v1/chat/completions HTTP/1.1", request) > 0 then do
+        valid = pos('"model":"gpt-test"', request) > 0 & ,
+                pos('"messages":[{"role":"user","content":"hello"}]', request) > 0 & ,
+                pos('"stream":false', request) > 0
+        if valid = 0 | seen = 1 | seen = 3 then return .channelvalue.integer_value(-40 - request_index)
+        encoding = "gzip"
+        response_body = generation_encoded
+        seen = seen + 1
+      end
+      else if pos("POST /v1/embeddings HTTP/1.1", request) > 0 then do
+        valid = pos('"model":"embed-test"', request) > 0 & ,
+                pos('"input":"hello"', request) > 0 & ,
+                pos('"encoding_format":"float"', request) > 0 & ,
+                pos('"dimensions":3', request) > 0
+        if valid = 0 | seen >= 2 then return .channelvalue.integer_value(-50 - request_index)
+        encoding = "deflate"
+        response_body = embedding_encoded
+        seen = seen + 2
+      end
+      else return .channelvalue.integer_value(-60 - request_index)
+      response_head = "HTTP/1.1 200 OK" || crlf || ,
+                      "Content-Type: application/json" || crlf || ,
+                      "Content-Encoding: " || encoding || crlf || ,
+                      "Content-Length: " || binlength(response_body) || crlf || ,
+                      "Connection: close" || crlf || crlf
+      if socketsend(client, response_head) <> binlength(response_head as .binary) then return .channelvalue.integer_value(-70 - request_index)
+      if socketsendb(client, response_body) <> binlength(response_body) then return .channelvalue.integer_value(-80 - request_index)
+      drop_rc = socketclose(client)
+    end
+    drop_rc = socketclose(server)
+    return .channelvalue.integer_value(seen)
+
+check_response: procedure = .int
+  arg response = .httpresponse, expected = .string, encoding = .string
+  if response.transport_status() <> 0 then do
+    say "HTTP transport failure:" response.transport_status() response.error()
+    return 1
+  end
+  if response.status() <> 200 | response.succeeded() = 0 then return 2
+  if response.body() <> expected then return 3
+  if translate(response.header("Content-Encoding")) <> translate(encoding) then return 4
+  return 0
+
+main: procedure = .int
+  errors = 0
+  ready = .byteendpoint.memory(3, 8)
+  server_pool = .taskpool.local(1, 1)
+  server_scope = .taskscope.collectall(server_pool, 60000)
+  server_child = server_scope.submit(task .rag_http_server(ready.provider_reference()), .channelvalue.null_value())
+  port_wire = endpoint_read_exact(ready, 8)
+  if binlength(port_wire) <> 8 then return 1
+  port = <at..int>(0) port_wire
+  call ready.close()
+
+  client = .httpclient.pooled("http://127.0.0.1:" || port, 2, 4, 65536)
+  request_pool = .taskpool.local(2, 4)
+  headers = .httpheaders.json()
+  call headers.add("Authorization", "Bearer test-key")
+  call headers.add("Idempotency-Key", "gate-f-rag")
+  generation_body = '{"model":"gpt-test","messages":[{"role":"user","content":"hello"}],"stream":false}'
+  embedding_body = '{"model":"embed-test","input":"hello","encoding_format":"float","dimensions":3}'
+  request_scope = .taskscope.failfast(request_pool, 60000)
+  do parallel using request_scope
+    generation = client.post("/v1/chat/completions", generation_body, headers)
+    embedding = client.post("/v1/embeddings", embedding_body, headers)
+  end
+
+  errors = errors + check_response(generation, '{"choices":[{"message":{"content":"generated answer"}}]}', "gzip")
+  errors = errors + check_response(embedding, '{"data":[{"embedding":[0.1,0.2,0.3]}]}', "deflate")
+  call request_pool.close()
+  call client.close()
+  server_completion = server_child.wait(-1)
+  call server_scope.finish()
+  call server_pool.close()
+  if server_completion.succeeded() = 0 then errors = errors + 8
+  else if server_completion.value().as_integer() <> 3 then do
+    say "FAIL: crexx-rag loopback server" server_completion.value().as_integer()
+    errors = errors + 16
+  end
+
+  if errors <> 0 then do
+    say "FAIL: rxfnsg crexx-rag concurrent HTTP fixture" errors
+    return 1
+  end
+  say "PASS: rxfnsg concurrent crexx-rag generation embedding gzip deflate integration"
+  return 0
+
+exit main()

@@ -2,9 +2,8 @@
 
 Date: 2026-08-15
 
-Status: **user model approved; F0-S through F1f and F1g-A through F1g-C are
-complete; HTTP streaming, compressed decoding and crexx-rag integration remain
-active**
+Status: **user model approved; F0-S through F1g-D and Mac closeout QA are
+complete; experimental publication remains gated by portable conformance**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -37,8 +36,8 @@ and isolated-process providers, explicit Level B classes and Level G lowering
 exist in both concrete VMs. F1g-A adds typed object results; F1g-B exercises
 that surface through a bounded transferable HTTP proxy and reusable
 single-owner connections; F1g-C adds safe headers, policy, verified TLS and
-explicit redirect/retry/ambiguity rules. Streaming, compression and the
-`crexx-rag` integration fixture remain F1g-D.
+explicit redirect/retry/ambiguity rules; F1g-D adds bounded request/response
+streams, gzip/deflate decoding and the concurrent `crexx-rag` fixture.
 
 ## The idea in one page
 
@@ -321,10 +320,10 @@ declared tasks is therefore also rejected in this first surface.
 
 ### Task methods on transferable proxies
 
-Inside an interface or class, the same callable spelling denotes a task method:
+Inside a class, the same callable spelling denotes a task method:
 
 ```rexx
-httpclient: interface
+httpclient: class
   from_channel: factory
     arg encoded = .channelvalue
   to_channel: method = .channelvalue
@@ -340,8 +339,12 @@ resolved `from_channel` factory. Standard generated service/HTTP proxies supply
 that pair. The compiler rejects a task method call when the receiver has no
 such exact contract.
 
-The same contract makes a typed object safe as a task result. The worker calls
-`to_channel()` on the returned object and publishes only the canonical
+The same contract makes a typed object safe as a task argument or result. For
+an argument, the controller calls `to_channel()` and the worker calls the
+formal class's `from_channel` factory before entering the task body. The
+special `.channelvalue` type is already the canonical transfer value and does
+not need another wrapper. For a result, the worker calls `to_channel()` on the
+returned object and publishes only the canonical
 `.channelvalue`. The controller then calls the result class's statically
 resolved `from_channel` factory and receives a new independent object. Object
 identity, references and mutable VM storage do not cross the worker boundary.
@@ -359,6 +362,11 @@ If the declared object result class omits either exact member, compilation
 fails with `#TASK_NONTRANSFERABLE_TYPE`. This check also applies when the task
 class is imported from a separately compiled library. Importing or calling a
 task method does not weaken the `OPTIONS LEVELG` gate.
+
+The explicit `.taskscope.submit(target, request)` form likewise passes the
+given `.channelvalue` as the taskwork request itself. A `.taskwork.run` method
+therefore sees the same canonical value the controller submitted, not a
+library-added record around it.
 
 An ordinary method remains synchronous:
 
@@ -879,6 +887,13 @@ provider/channel capability and immutable configuration; it is not the current
 mutable `rxhttp` object with shared `lastBody`, status and socket state. Each
 response is materialized as an independent typed `.httpresponse`.
 
+F1g-D adds `.httpbody.fixed(contentLength, capacity, responseCapacity)` and
+`.httpbody.chunked(capacity, responseCapacity)`. Producers call `write` and
+`finish`; `client.post_stream(path, body, headers, responseCapacity)` consumes
+the request endpoint and returns response metadata whose `body_reference()`
+opens the bounded response stream. Buffered `post` accepts gzip and deflate
+responses and rejects decoded output beyond the configured response ceiling.
+
 The industrial HTTP contract must cover:
 
 - reusable keep-alive connections and bounded per-origin pooling;
@@ -967,7 +982,7 @@ staged implementation on 2026-08-14:
 - [x] User-model approval alone did not start implementation; Adrian separately
       authorized the staged implementation recorded in the implementation plan.
 
-## Current implementation and next work
+## Current implementation and publication boundary
 
 The maintainer/AI reference specification now contains:
 
@@ -1002,7 +1017,7 @@ opportunity and obligation to exercise `rxc`, `rxas`, `rxlink` and `rxvm`;
 the imported task-method and `.taskwork` conformance tests run that complete
 pipeline in optimized/unoptimized form on both concrete VMs.
 
-The incomplete portions fail explicitly. Service `ask`,
+The deliberately reserved portions fail explicitly. Service `ask`,
 `.taskcontext.endpoint` and pool statistics report unsupported operation
 rather than returning plausible placeholder data. F1f supplies kind-1 task
 procedures, kind-2 transferable task methods and kind-3 `.taskwork` factory
@@ -1015,5 +1030,8 @@ reconstructs new controller-owned objects. F1g-B supplies the bounded
 fixed-size admission descriptors and independent `.httpresponse` values.
 F1g-C adds `.httpheaders`, `.httppolicy`, verified TLS, explicit bounded
 redirect/retry rules and retained ambiguity diagnostics. F1g-D adds explicit
-streaming, compressed decoding and the `crexx-rag` integration fixture. Any
+fixed/chunked streaming, bounded gzip/deflate decoding and the concurrent
+`crexx-rag` generation/embedding integration fixture. Local implementation
+and Mac qualification are complete; experimental publication still requires
+the separately governed portable conformance evidence. Any
 contradiction or new language decision still returns to Adrian.

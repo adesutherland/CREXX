@@ -228,6 +228,9 @@ struct rxvm_executor_request {
 
 typedef struct rxvm_executor_task_plan {
     unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE];
+    const RxGraph *task_graph;
+    RxMemberId task_member;
+    const char *task_owner_type;
     proc_runtime *procedure;
     proc_runtime *receiver_factory;
     proc_runtime *result_encoder;
@@ -822,6 +825,7 @@ static rxvm_executor_request_state executor_resolve_task_plan(
     int inferred_result_seen = 0;
 
     memset(plan, 0, sizeof(*plan));
+    plan->task_member = RX_GRAPH_NONE;
     memcpy(plan->task_binding, request->task_binding,
            RX_GRAPH_TASK_BINDING_SIZE);
     plan->requested_result = request->expected_result;
@@ -886,8 +890,20 @@ static rxvm_executor_request_state executor_resolve_task_plan(
             strcmp(plan->procedure_name, view.symbol) != 0) {
             return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
         }
+        if (plan->task_descriptor &&
+            strcmp(plan->task_descriptor, view.descriptor) != 0) {
+            return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+        }
         plan->procedure_name = view.symbol;
+        plan->task_descriptor = view.descriptor;
         plan->procedure = target;
+        if (!plan->task_graph) {
+            plan->task_graph = binding->graph;
+            plan->task_member = view.member;
+            plan->task_owner_type = view.owner_type == RX_GRAPH_NONE
+                    ? 0 : rx_graph_type_name(
+                            binding->graph, view.owner_type);
+        }
         if (plan->task_kind && plan->task_kind != binding_kind) {
             return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
         }
@@ -912,12 +928,10 @@ static rxvm_executor_request_state executor_resolve_task_plan(
             adapter = rxvm_bound_graph_callable(binding, auxiliary);
             if (!adapter ||
                 (plan->taskwork_run && plan->taskwork_run != adapter) ||
-                (plan->task_descriptor &&
-                 strcmp(plan->task_descriptor, view.descriptor) != 0)) {
+                !plan->task_descriptor) {
                 return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
             }
             plan->taskwork_run = adapter;
-            plan->task_descriptor = view.descriptor;
         }
     }
     if (!plan->procedure_name) {
@@ -986,6 +1000,220 @@ static int executor_run_external(rxvm_context *context,
     return run_status;
 }
 
+static int executor_task_type_is_channel_value(const char *type) {
+    return type &&
+           (strcmp(type, ".channelvalue") == 0 ||
+            strcmp(type, ".concurrency..channelvalue") == 0 ||
+            strcmp(type, "concurrency.channelvalue") == 0);
+}
+
+static int executor_task_type_is_primitive(const char *type) {
+    return type &&
+           (strcmp(type, ".int") == 0 ||
+            strcmp(type, ".boolean") == 0 ||
+            strcmp(type, ".string") == 0 ||
+            strcmp(type, ".binary") == 0);
+}
+
+static char *executor_task_factory_symbol(const char *type,
+                                          const char *owner_type) {
+    static const char suffix[] = ".§factory.from_channel";
+    const char *owner_separator;
+    size_t length;
+    size_t owner_prefix = 0u;
+    size_t source;
+    size_t target = 0u;
+    char *symbol;
+
+    if (!type || !*type) return 0;
+    length = strlen(type);
+    if (type[0] == '.' && !strchr(type + 1u, '.') && owner_type &&
+        (owner_separator = strrchr(owner_type, '.')) != 0) {
+        owner_prefix = (size_t)(owner_separator - owner_type) + 1u;
+    }
+    if (length > SIZE_MAX - owner_prefix - sizeof(suffix)) return 0;
+    symbol = (char *)malloc(owner_prefix + length + sizeof(suffix));
+    if (!symbol) return 0;
+    if (owner_prefix) {
+        memcpy(symbol, owner_type, owner_prefix);
+        target = owner_prefix;
+    }
+    for (source = type[0] == '.' ? 1u : 0u; source < length; source++) {
+        symbol[target++] = type[source];
+        if (type[source] == '.' && source + 1u < length &&
+            type[source + 1u] == '.') {
+            source++;
+        }
+    }
+    memcpy(symbol + target, suffix, sizeof(suffix));
+    return symbol;
+}
+
+static proc_runtime *executor_find_bound_factory_for_type(
+        rxvm_context *context,
+        const char *type,
+        const char *owner_type) {
+    static const char suffix[] = ".§factory.from_channel";
+    proc_runtime *factory = 0;
+    char *symbol;
+    const char *leaf;
+    size_t leaf_length;
+    size_t suffix_length = strlen(suffix);
+    size_t binding_index;
+
+    symbol = executor_task_factory_symbol(type, owner_type);
+    if (symbol) factory = executor_find_bound_callable(context, symbol);
+    if (factory) {
+        free(symbol);
+        return factory;
+    }
+    free(symbol);
+
+    leaf = type ? strrchr(type, '.') : 0;
+    leaf = leaf ? leaf + 1u : type;
+    if (!leaf || !*leaf) return 0;
+    leaf_length = strlen(leaf);
+    for (binding_index = 0u;
+         binding_index < context->graph_binding_count;
+         binding_index++) {
+        rxvm_graph_binding *binding = context->graph_bindings[binding_index];
+        size_t callable_index;
+
+        if (!binding) continue;
+        for (callable_index = 0u;
+             callable_index < binding->callable_count;
+             callable_index++) {
+            RxGraphCallableView view;
+            proc_runtime *candidate;
+            size_t symbol_length;
+            size_t leaf_offset;
+
+            if (!rx_graph_callable(binding->graph,
+                                   (RxCallableId)callable_index, &view) ||
+                !view.symbol) continue;
+            symbol_length = strlen(view.symbol);
+            if (symbol_length < leaf_length + suffix_length ||
+                strcmp(view.symbol + symbol_length - suffix_length,
+                       suffix) != 0) continue;
+            leaf_offset = symbol_length - suffix_length - leaf_length;
+            if (memcmp(view.symbol + leaf_offset, leaf, leaf_length) != 0 ||
+                (leaf_offset && view.symbol[leaf_offset - 1u] != '.')) {
+                continue;
+            }
+            candidate = rxvm_bound_graph_callable(
+                    binding, (RxCallableId)callable_index);
+            if (!candidate) continue;
+            if (factory && factory != candidate) return 0;
+            factory = candidate;
+        }
+    }
+    return factory;
+}
+
+/* Materialize one sealed task argument against the target's exact formal
+ * type.  Channel values stay encoded until the worker has selected and
+ * validated the task plan, so object reconstruction cannot be redirected by
+ * controller-provided type data.  Returns 1 on success, 0 for setup failure,
+ * and -1 when a Rexx decoder/factory raised during execution. */
+static int executor_materialize_task_argument(
+        rxvm_context *context,
+        const rxvm_executor_register_image *source,
+        const char *expected_type,
+        const char *owner_type,
+        value *destination) {
+    rxvm_executor_register_image decoded_image;
+    proc_runtime *channel_decoder;
+    proc_runtime *object_factory = 0;
+    value *encoded = 0;
+    value *decoded_value = 0;
+    value *single_argument[1];
+    int status = 0;
+
+    if (!context || !source || !expected_type || !destination) return 0;
+    memset(&decoded_image, 0, sizeof(decoded_image));
+
+    if (source->type == RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) {
+        if (executor_task_type_is_primitive(expected_type)) {
+            if (rxvm_channel_decode_task_value(
+                        source->bytes, source->length, expected_type,
+                        &decoded_image) != RXVM_CHANNEL_OK) {
+                return 0;
+            }
+            if (decoded_image.type == RXVM_EXECUTOR_REGISTER_INTEGER) {
+                set_int(destination, (rxinteger)decoded_image.integer);
+                status = 1;
+            } else if (decoded_image.type == RXVM_EXECUTOR_REGISTER_STRING) {
+                status = set_string_validated(
+                        destination, decoded_image.bytes,
+                        decoded_image.length) == 0;
+            } else if (decoded_image.type == RXVM_EXECUTOR_REGISTER_BINARY) {
+                status = set_binary(destination, decoded_image.bytes,
+                                    decoded_image.length) == 0;
+            }
+            free((void *)decoded_image.bytes);
+            return status;
+        }
+
+        channel_decoder = executor_find_bound_callable(
+                context,
+                "concurrency.channelvalue_impl.§factory.from_encoded");
+        encoded = value_f_in(context->worker.memory_worker);
+        if (!channel_decoder || !encoded ||
+            set_binary(encoded, source->bytes, source->length) != 0) {
+            if (encoded) value_free(encoded);
+            return 0;
+        }
+        single_argument[0] = encoded;
+        if (executor_task_type_is_channel_value(expected_type)) {
+            status = executor_run_external(
+                    context, channel_decoder, 1,
+                    single_argument, destination) == 0 ? 1 : -1;
+            value_free(encoded);
+            return status;
+        }
+
+        object_factory = executor_find_bound_factory_for_type(
+                context, expected_type, owner_type);
+        decoded_value = value_f_in(context->worker.memory_worker);
+        if (!object_factory || !decoded_value) {
+            if (decoded_value) value_free(decoded_value);
+            value_free(encoded);
+            return 0;
+        }
+        if (executor_run_external(context, channel_decoder, 1,
+                                  single_argument, decoded_value) != 0) {
+            value_free(decoded_value);
+            value_free(encoded);
+            return -1;
+        }
+        single_argument[0] = decoded_value;
+        status = executor_run_external(
+                context, object_factory, 1,
+                single_argument, destination) == 0 ? 1 : -1;
+        value_free(decoded_value);
+        value_free(encoded);
+        return status;
+    }
+
+    if (source->type == RXVM_EXECUTOR_REGISTER_INTEGER &&
+        (strcmp(expected_type, ".int") == 0 ||
+         strcmp(expected_type, ".boolean") == 0)) {
+        set_int(destination, (rxinteger)source->integer);
+        return 1;
+    }
+    if (source->type == RXVM_EXECUTOR_REGISTER_STRING &&
+        strcmp(expected_type, ".string") == 0) {
+        return set_string_validated(destination, source->bytes,
+                                    source->length) == 0;
+    }
+    if (source->type == RXVM_EXECUTOR_REGISTER_BINARY &&
+        strcmp(expected_type, ".binary") == 0) {
+        return set_binary(destination, source->bytes,
+                          source->length) == 0;
+    }
+    return 0;
+}
+
 static rxvm_executor_request_state executor_worker_call(
         rxvm_executor_worker *worker,
         rxvm_executor_request *request,
@@ -996,6 +1224,9 @@ static rxvm_executor_request_state executor_worker_call(
     proc_runtime *taskwork_run = 0;
     const char *procedure_name = request->procedure;
     const char *task_descriptor = 0;
+    const RxGraph *task_graph = 0;
+    RxMemberId task_member = RX_GRAPH_NONE;
+    const char *task_owner_type = 0;
     rxvm_context *context = worker->context;
     rxvm_memory_worker *previous;
     value **arguments = 0;
@@ -1007,9 +1238,11 @@ static rxvm_executor_request_state executor_worker_call(
     value *return_value = 0;
     rxvm_executor_register_image *decoded_factory_arguments = 0;
     rx_callable_signature factory_signature;
+    rx_callable_signature task_signature;
     int run_status;
     int index;
     int factory_signature_parsed = 0;
+    int task_signature_parsed = 0;
     unsigned int task_kind = 0u;
     rxvm_executor_register_type expected_result = request->expected_result;
 
@@ -1036,6 +1269,9 @@ static rxvm_executor_request_state executor_worker_call(
         result_encoder = plan->result_encoder;
         taskwork_run = plan->taskwork_run;
         task_descriptor = plan->task_descriptor;
+        task_graph = plan->task_graph;
+        task_member = plan->task_member;
+        task_owner_type = plan->task_owner_type;
         task_kind = plan->task_kind;
         expected_result = plan->resolved_result;
     } else if (request->uses_callable_id) {
@@ -1097,6 +1333,45 @@ static rxvm_executor_request_state executor_worker_call(
                 return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
             }
         }
+    } else if (task_kind == 1u || task_kind == 2u) {
+        size_t supplied_arguments = (size_t)request->argc;
+        size_t parameter_index;
+        size_t source_index;
+        int channel_arguments = 0;
+
+        if (task_kind == 2u && supplied_arguments == 0u) {
+            return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+        }
+        source_index = task_kind == 2u ? 1u : 0u;
+        for (; source_index < (size_t)request->argc; source_index++) {
+            if (request->arguments[source_index].type ==
+                    RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) {
+                channel_arguments = 1;
+                break;
+            }
+        }
+        if (channel_arguments &&
+            (!task_graph || task_member == RX_GRAPH_NONE)) {
+            if (!task_descriptor ||
+                !rx_sig_parse_descriptor(task_descriptor, &task_signature)) {
+                return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+            }
+            task_signature_parsed = 1;
+            if (task_kind == 2u) supplied_arguments--;
+            if (supplied_arguments > task_signature.arg_count) {
+                rx_sig_free(&task_signature);
+                return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+            }
+            for (parameter_index = 0u;
+                 parameter_index < supplied_arguments;
+                 parameter_index++) {
+                if (task_signature.args[parameter_index].is_ref ||
+                    task_signature.args[parameter_index].is_vararg) {
+                    rx_sig_free(&task_signature);
+                    return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+                }
+            }
+        }
     }
     previous = rxvm_memory_enter(context->worker.memory_worker);
     if (task_kind == 3u && request->factory_argc) {
@@ -1132,6 +1407,36 @@ static rxvm_executor_request_state executor_worker_call(
                 : &request->arguments[index];
         arguments[index] = value_f_in(context->worker.memory_worker);
         if (!arguments[index]) goto setup_failed;
+        if ((task_kind == 1u || task_kind == 2u) &&
+            source->type == RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE &&
+            (task_kind != 2u || index > 0)) {
+            size_t parameter_index = task_kind == 2u
+                    ? (size_t)index - 1u : (size_t)index;
+            const char *expected_type;
+            RxGraphParamView parameter;
+            if (task_graph && task_member != RX_GRAPH_NONE) {
+                if (parameter_index > UINT32_MAX ||
+                    !rx_graph_member_parameter(
+                            task_graph, task_member,
+                            (uint32_t)parameter_index, &parameter)) {
+                    goto setup_failed;
+                }
+                expected_type = rx_graph_type_name(
+                        task_graph, parameter.type);
+            } else if (task_signature_parsed &&
+                       parameter_index < task_signature.arg_count) {
+                expected_type = task_signature.args[parameter_index].type;
+            } else {
+                goto setup_failed;
+            }
+            if (!expected_type) goto setup_failed;
+            int materialized = executor_materialize_task_argument(
+                    context, source, expected_type, task_owner_type,
+                    arguments[index]);
+            if (materialized < 0) goto execution_failed;
+            if (!materialized) goto setup_failed;
+            continue;
+        }
         if (source->type == RXVM_EXECUTOR_REGISTER_INTEGER) {
             if (request->uses_task_binding) {
                 set_int(arguments[index], (rxinteger)source->integer);
@@ -1406,6 +1711,7 @@ completed:
         free(decoded_factory_arguments);
     }
     if (factory_signature_parsed) rx_sig_free(&factory_signature);
+    if (task_signature_parsed) rx_sig_free(&task_signature);
     rxvm_memory_leave(previous);
     return RXVM_EXECUTOR_REQUEST_COMPLETED;
 
@@ -1429,6 +1735,7 @@ execution_failed:
         free(decoded_factory_arguments);
     }
     if (factory_signature_parsed) rx_sig_free(&factory_signature);
+    if (task_signature_parsed) rx_sig_free(&task_signature);
     rxvm_memory_leave(previous);
     return RXVM_EXECUTOR_REQUEST_EXECUTION_FAILED;
 
@@ -1452,6 +1759,7 @@ setup_failed:
         free(decoded_factory_arguments);
     }
     if (factory_signature_parsed) rx_sig_free(&factory_signature);
+    if (task_signature_parsed) rx_sig_free(&task_signature);
     rxvm_memory_leave(previous);
     return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
 }

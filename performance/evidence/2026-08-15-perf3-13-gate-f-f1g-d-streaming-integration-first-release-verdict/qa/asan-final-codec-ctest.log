@@ -1,0 +1,30 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^ts_http_codec_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\$ --parallel 6
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start    1: linked_opt_runtime_artifacts_build
+1/5 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    9.01 sec
+    Start 1713: ts_http_codec_rxbvm_noopt
+    Start 1715: ts_http_codec_rxtvm_noopt
+    Start 1716: ts_http_codec_rxtvm_opt
+    Start 1714: ts_http_codec_rxbvm_opt
+2/5 Test #1714: ts_http_codec_rxbvm_opt ..............   Passed    0.32 sec
+3/5 Test #1716: ts_http_codec_rxtvm_opt ..............   Passed    0.32 sec
+4/5 Test #1715: ts_http_codec_rxtvm_noopt ............   Passed    0.32 sec
+5/5 Test #1713: ts_http_codec_rxbvm_noopt ............   Passed    0.32 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+compression    =   1.28 sec*proc (4 tests)
+f1g            =   1.28 sec*proc (4 tests)
+gate_f         =   1.28 sec*proc (4 tests)
+http           =   1.28 sec*proc (4 tests)
+levelg         =   1.28 sec*proc (4 tests)
+library        =   1.28 sec*proc (4 tests)
+linked         =   0.64 sec*proc (2 tests)
+linked_opt     =   0.64 sec*proc (2 tests)
+rxbvm          =   0.64 sec*proc (2 tests)
+rxtvm          =   0.64 sec*proc (2 tests)
+
+Total Test time (real) =   9.37 sec

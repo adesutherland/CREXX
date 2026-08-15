@@ -151,9 +151,17 @@ failures = failures + check_int("blocked byte read cancellation", cancelled_read
 call cancelled_endpoint.close()
 
 null_endpoint = .byteendpoint.null_endpoint(3)
-null_write = null_endpoint.start_write('aabbcc'x as .binary, 0).wait(-1)
+null_write_request = null_endpoint.start_write('aabbcc'x as .binary, 0)
+null_write = null_write_request.wait(-1)
 failures = failures + check_int("null byte sink accepted", null_write.value().as_integer(), 3)
-null_read = null_endpoint.start_read(4, 0).wait(-1)
+do repeated_write_index = 1 to 128
+  repeated_write_request = null_endpoint.start_write('aa'x as .binary, 0)
+  repeated_write = repeated_write_request.wait(-1)
+  failures = failures + check_int("repeated null byte write", repeated_write.succeeded(), 1)
+end
+call null_endpoint.cancel(.channelvalue.string_value("completed requests remain accounted"))
+null_read_request = null_endpoint.start_read(4, 0)
+null_read = null_read_request.wait(-1)
 failures = failures + check_int("null byte source EOF", null_read.details().field("eof").as_boolean(), 1)
 call null_endpoint.close()
 

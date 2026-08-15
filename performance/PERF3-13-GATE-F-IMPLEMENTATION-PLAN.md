@@ -2,9 +2,9 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S through F1f and F1g-A
-through F1g-C complete; F1g-D streaming, compressed decoding and crexx-rag
-integration active**
+Status: **implementation approved by Adrian; F0-S through F1g-D and Mac
+closeout QA complete; experimental publication remains gated by portable
+conformance**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -435,9 +435,33 @@ post-send/status retries require an idempotency key, cross-origin/method rewrite
 is refused, and `.httpresponse` retains attempts, redirects and ambiguous
 delivery history. Live HTTPS tests prove both trusted-host success and hostname
 mismatch rejection. A socket receive-status regression ensures timeout, EOF and
-would-block never become apparent uninitialised text/binary bytes. F1g-D owns
-explicit request/response streams, compressed decoding and the `crexx-rag`
-generation/embedding fixture.
+would-block never become apparent uninitialised text/binary bytes.
+
+F1g-D is complete. `.httpbody.fixed` and `.httpbody.chunked` publish bounded
+request and response byte-endpoint references; `.httpclient.post_stream`
+transfers those references to the connection owner and returns response
+metadata with an explicit stream reference. Fixed-length and HTTP chunked
+request/response paths apply real backpressure without forcing whole-body
+buffering. Buffered responses advertise and decode gzip and zlib/deflate with
+a pure Level B bounded RFC 1950/1951/1952 codec and a hard decoded-size ceiling.
+The `crexx-rag` fixture runs generation and embedding requests concurrently,
+checks authorization/idempotency and JSON shapes, and decodes gzip and deflate
+responses.
+
+Closing this slice also made the approved object-transfer rule symmetric:
+task arguments with an exact concrete `to_channel`/`from_channel` contract are
+encoded by the controller and reconstructed against the sealed target's
+formal type in the worker. `.channelvalue` arguments pass directly as the
+canonical transfer value. Imported task-library acceptance always runs through
+`rxc`, `rxas`, `rxlink` and both concrete VMs; task bindings are linker-sealed,
+so HTTP task tests use linked images in optimized and unoptimized modes.
+
+The internal wire discriminator for a compiler-generated typed object is the
+single-field `crexx.channel.task-value` version-1 record. Primitive task
+arguments retain the direct RXCV/register fast path, and signature parsing is
+lazy for the object cases that need receiver-side materialization. Explicit
+`.taskscope.submit(target, request)` preserves its already-canonical request
+unchanged for `.taskwork.run`; it does not add the typed-object discriminator.
 
 Run local correctness and saturation tests, the crexx-rag integration fixture,
 then the mandatory Release verdict before broader closeout.
@@ -703,6 +727,34 @@ profiling-off Release verdict records +39.076017% `rxbvml` and +40.340609%
 `rxbvml` throughput, with no adverse guard hit. The candidate adds 80 bytes to
 `rxbvm` and 64 bytes to `rxtvm`. Evidence:
 [`2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/).
+
+## F1g-D and local Gate F completion record
+
+F1g-D completes the bounded request/response streaming surface, fixed and
+chunked framing, pure-Level-B bounded RFC 1950/1951/1952 decoding, and the
+concurrent `crexx-rag` generation/embedding acceptance fixture. It also closes
+typed task arguments and direct `.channelvalue` transfer across imported,
+optimized/unoptimized, linked images on both concrete VMs. No HTTP opcode,
+provider type or public native handle is introduced.
+
+The first implementation forced primitive task arguments through complete
+RXCV documents and per-request signature parsing. Two unchanged 12-pair runs
+confirmed tiny-task latency guard hits. The final shape restores direct
+primitive register transfer and parses/materializes only marked object values.
+Its exact-final 12-pair task means are `-0.696875%`/`-0.180375%` latency and
+`-1.020444%`/`+0.206412%` throughput on `rxbvml`/`rxtvml`, with no guard hit.
+The exact-final ordinary Sieve/RexxCPS panel is also guard-clean; means range
+from `-0.817226%` elapsed to `+0.093013%` rate. The earlier F3C1 seven-workload,
+36-pair full baseline remains the broad single-thread authority and has no
+individual or aggregate guard hit.
+
+Final Mac qualification passes the complete Debug suite `2,175/2,175`, the
+ordinary Release Gate F selection `62/62`, a complete Apple AddressSanitizer
+build and the final focused sanitizer matrix `39/39`. The full Debug sweep
+first exposed the explicit taskwork/direct-request distinction; all eight
+affected legacy cells pass after the boundary correction, and the complete
+sweep was rerun clean. Evidence:
+[`2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
 
 ## Evidence and stop rules
 

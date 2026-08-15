@@ -3,15 +3,15 @@
 Date: 2026-08-13
 
 Status: **user model and staged Gate F implementation approved by Adrian on
-2026-08-14; F0-S through F1f and F1g-A through F1g-C complete; F1g-D HTTP
-streaming/compression/integration active**
+2026-08-14; F0-S through F1g-D implementation and Mac closeout QA complete;
+experimental publication remains gated by portable conformance**
 
-This record is the normative design authority for the future PERF3-13 Gate F
+This record is the normative design authority for the PERF3-13 Gate F
 public concurrency surface. It records the user model, ownership and transfer
 semantics that Gate F implementations must preserve. Implementation follows
 the contract-first slices and first-verdict stops in
 [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
-Public ABI publication, commit and push remain separately controlled.
+Experimental publication and push remain separately controlled.
 
 Gate E remains the mechanism foundation. Its private executor, physical
 doorbells, fallback progress points, worker indices and current logical

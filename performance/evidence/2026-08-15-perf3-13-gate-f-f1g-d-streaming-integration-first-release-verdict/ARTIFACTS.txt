@@ -1,0 +1,44 @@
+PERF3-13 Gate F F1g-D retained artifacts
+
+Performance:
+- manifest.txt: exact F1g-C control versus F1g-D candidate Sieve/RexxCPS matrix
+- paired-summary-final.csv: exact-final ordinary single-thread guard verdict
+- timing/single-thread-final/: exact-final raw samples and capture outputs
+- timing/single-thread-pre-audit/ and paired-summary-pre-audit.csv: retained
+  pre-audit guard-clean capture before the final fail-closed runtime check
+- timing/task-launch-final/: exact-final task raw samples and summary
+- timing/task-launch-pre-audit/: retained pre-audit guard-clean task capture
+- timing/task-launch*/: original adverse, confirmation and retained rework runs
+- timing/task-launch-rework-24-summary.csv: combined rework guard verdict
+- capture-task-paired.zsh: bounded paired task capture
+- summarize_paired.crexx: Level B ordinary-path reducer
+- summarize_task_paired*.crexx: Level B 12/24-pair task reducers
+
+Correctness:
+- qa/debug-full-initial-regression.log: first full sweep and eight taskwork failures
+- qa/debug-regression-focused.log: corrected eight-cell matrix
+- qa/debug-full-ctest.log: authoritative final 2,175/2,175 Debug sweep
+- qa/release-build.log: final profiling-off Release rebuild
+- qa/release-focused-ctest.log: final 62/62 Gate F selection
+- qa/asan-build.log: complete final Apple AddressSanitizer build
+- qa/asan-focused-ctest.log: final 39/39 sanitizer matrix
+- qa/*-final-docfix-build.log: final targeted Debug, Release and Apple
+  AddressSanitizer rebuilds after the RexxDoc/diagnostic-only correction
+- qa/*-final-docfix-ctest.log: final targeted 7/7 Debug, Release and Apple
+  AddressSanitizer matrices after that correction
+- qa/*-final-codec-build.log: final targeted Debug, Release and Apple
+  AddressSanitizer rebuilds after strict trailing-DEFLATE validation
+- qa/*-final-codec-ctest.log: final four-mode codec matrices, including linked
+  no-opt execution and invalid zlib/gzip trailing-byte vectors
+- qa/final-reducer-*.log: final Level B ordinary, 12-pair task and combined
+  24-pair task reductions; regenerated summary hashes were byte-identical
+
+State and integrity:
+- pre-state.txt: opening host, tree and artifact state
+- post-state.txt: final host and exact artifact hashes
+- SHA256SUMS: hashes for all retained evidence files
+
+Apple leak detection is unavailable and was disabled through the repository
+runner; AddressSanitizer remained active. External live TLS behavior remains
+covered by the accepted F1g-C evidence; F1g-D uses deterministic loopback
+fixtures for its new streaming, compression and crexx-rag paths.

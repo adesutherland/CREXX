@@ -1,5 +1,28 @@
 options levelg
-namespace gate_f_task_method_lib expose workbox answerbox
+namespace gate_f_task_method_lib expose workbox answerbox inputbox
+
+inputbox: class
+  _value = .int
+
+  *: factory
+    arg value = .int
+    _value = value
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _value = encoded.field("value").as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    names = .string[1]
+    values = .channelvalue[1]
+    names[1] = "value"
+    values[1] = .channelvalue.integer_value(_value)
+    return .channelvalue.record_value("gate-f.input", 1, names, values)
+
+  value: method = .int
+    return _value
 
 answerbox: class
   _answer = .int
@@ -43,3 +66,11 @@ workbox: class
   result: task = .answerbox
     arg value = .int
     return .answerbox(_base + value)
+
+  add: task = .int
+    arg value = .inputbox
+    return _base + value.value()
+
+  inspect: task = .int
+    arg value = .channelvalue
+    return _base + value.field("value").as_integer()

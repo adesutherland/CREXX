@@ -1133,6 +1133,16 @@ channel_impl: class implements .channel
     end
     return
 
+  /** Cancel every still-live request owned by this channel.
+   * @param reason transferable cancellation reason
+   */
+  cancel_pending: method = .void
+    arg reason = .channelvalue
+    do i = 1 to _tickets[0]
+      if _terminals[i] = 0 then call cancel_ticket(_tickets[i], reason)
+    end
+    return
+
   cancel_and_account: method = .void
     reason = .channelvalue.string_value("owning task pool closing")
     do i = 1 to _tickets[0]
@@ -1177,7 +1187,6 @@ byteendpoint_impl: class implements .byteendpoint
   _channel = .channel_impl
   _direction = .int
   _open = .boolean
-  _requests = .channelrequest[]
 
   memory: factory
     arg direction = .int, capacity = .int
@@ -1187,11 +1196,6 @@ byteendpoint_impl: class implements .byteendpoint
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = direction
     _open = 1
-    requests = .channelrequest[1]
-    empty_request = .channelrequest
-    requests[1] = empty_request
-    assembler SETATTRS requests,0
-    _requests = requests
     return
 
   null_endpoint: factory
@@ -1201,11 +1205,6 @@ byteendpoint_impl: class implements .byteendpoint
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = direction
     _open = 1
-    requests = .channelrequest[1]
-    empty_request = .channelrequest
-    requests[1] = empty_request
-    assembler SETATTRS requests,0
-    _requests = requests
     return
 
   from_reference: factory
@@ -1219,11 +1218,6 @@ byteendpoint_impl: class implements .byteendpoint
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = direction
     _open = 1
-    requests = .channelrequest[1]
-    empty_request = .channelrequest
-    requests[1] = empty_request
-    assembler SETATTRS requests,0
-    _requests = requests
     return
 
   /** Attach an exact encoded type-4 provider reference.
@@ -1254,11 +1248,6 @@ byteendpoint_impl: class implements .byteendpoint
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = rights
     _open = 1
-    requests = .channelrequest[1]
-    empty_request = .channelrequest
-    requests[1] = empty_request
-    assembler SETATTRS requests,0
-    _requests = requests
     return
 
   provider_reference: method = .channelvalue
@@ -1281,9 +1270,7 @@ byteendpoint_impl: class implements .byteendpoint
     call _channel_require _direction = 1 | _direction = 3, "byteendpoint.read.direction"
     call _channel_require maximum_bytes >= 1 & maximum_bytes <= 16777216, "byteendpoint.read.maximum"
     envelope = _byteendpoint_integer_envelope("crexx.channel.byte-read", "maximumBytes", maximum_bytes)
-    request = _channel.start(envelope, wait_milliseconds)
-    _requests[_requests[0] + 1] = request
-    return request
+    return _channel.start(envelope, wait_milliseconds)
 
   start_write: method = .channelrequest
     arg bytes = .binary, wait_milliseconds = .int
@@ -1294,9 +1281,7 @@ byteendpoint_impl: class implements .byteendpoint
     names[1] = "bytes"
     values[1] = .channelvalue.binary_value(bytes)
     envelope = .channelvalue.record_value("crexx.channel.byte-write", 1, names, values)
-    request = _channel.start(envelope, wait_milliseconds)
-    _requests[_requests[0] + 1] = request
-    return request
+    return _channel.start(envelope, wait_milliseconds)
 
   half_close: method = .void
     arg direction = .int
@@ -1316,10 +1301,7 @@ byteendpoint_impl: class implements .byteendpoint
   cancel: method = .void
     arg reason = .channelvalue
     call _channel_require _open, "byteendpoint.cancel.closed"
-    do i = 1 to _requests[0]
-      request = _requests[i]
-      if request.terminal() = 0 then call request.cancel(reason)
-    end
+    call _channel.cancel_pending(reason)
     return
 
   close: method = .void
@@ -1416,6 +1398,20 @@ taskarguments: class
     arg value = .channelvalue
     _count = _count + 1
     _values[_count] = value
+    return self
+
+  /** Compiler-only marker for a value requiring sealed-formal materialization.
+   * @param value canonical value returned by a transferable object's to_channel
+   * @return this mutable controller-local builder
+   */
+  add_channel_value: method = .taskarguments
+    arg value = .channelvalue
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "value"
+    values[1] = value
+    _count = _count + 1
+    _values[_count] = .channelvalue.record_value("crexx.channel.task-value", 1, names, values)
     return self
 
   add_boolean: method = .taskarguments

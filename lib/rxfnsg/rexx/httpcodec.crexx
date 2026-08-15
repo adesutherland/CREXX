@@ -1,0 +1,442 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/** Bounded RFC 1950/1951/1952 decoder used by the Level G HTTP client. */
+options levelb
+
+namespace _rxhttpcodec expose http_decode_content httpdecodedcontent
+import rxfnsb
+
+_httpcodec_u16le: procedure = .int
+  arg data = .binary, offset = .int
+  return <at..u8>(offset) data + (<at..u8>(offset + 1) data) * 256
+
+_httpcodec_u32le: procedure = .int
+  arg data = .binary, offset = .int
+  return <at..u8>(offset) data + (<at..u8>(offset + 1) data) * 256 + (<at..u8>(offset + 2) data) * 65536 + (<at..u8>(offset + 3) data) * 16777216
+
+_httpcodec_u32be: procedure = .int
+  arg data = .binary, offset = .int
+  return (<at..u8>(offset) data) * 16777216 + (<at..u8>(offset + 1) data) * 65536 + (<at..u8>(offset + 2) data) * 256 + <at..u8>(offset + 3) data
+
+_httpcodec_adler32: procedure = .int
+  arg data = .binary
+  a = 1
+  b = 0
+  do offset = 0 to binlength(data) - 1
+    a = (a + <at..u8>(offset) data) <mod> 65521
+    b = (b + a) <mod> 65521
+  end
+  return b * 65536 + a
+
+_httpcodec_crc32: procedure = .int
+  arg data = .binary
+  crc = 4294967295
+  do offset = 0 to binlength(data) - 1
+    current = crc <xor> <at..u8>(offset) data
+    do bit = 1 to 8
+      if (current <and> 1) <> 0 then current = (current <shr> 1) <xor> 3988292384
+      else current = current <shr> 1
+    end
+    crc = current
+  end
+  return crc <xor> 4294967295
+
+/** Result of one bounded content-decoding operation. */
+httpdecodedcontent: class
+  _ok = .boolean
+  _data = .binary
+  _error = .string
+
+  success: factory
+    arg data = .binary
+    _ok = 1
+    _data = data
+    _error = ""
+    return
+
+  failure: factory
+    arg error = .string
+    _ok = 0
+    _data = ''x as .binary
+    _error = error
+    return
+
+  succeeded: method = .boolean
+    return _ok
+
+  data: method = .binary
+    return _data
+
+  error: method = .string
+    return _error
+
+/** Stateful, allocation-bounded DEFLATE decoder. */
+_httpinflater: class
+  _input = .binary
+  _input_pos = .int
+  _input_end = .int
+  _bits = .int
+  _bit_count = .int
+  _output = .binary
+  _output_pos = .int
+  _maximum = .int
+  _ok = .boolean
+  _error = .string
+
+  new: factory
+    arg input = .binary, start = .int, count = .int, maximum = .int
+    _input = input
+    _input_pos = start
+    _input_end = start + count
+    _bits = 0
+    _bit_count = 0
+    _output = ''x as .binary
+    _output_pos = 0
+    _maximum = maximum
+    _ok = 1
+    _error = ""
+    call binresize _output, maximum
+    return
+
+  fail: method = .void
+    arg message = .string
+    if _ok then do
+      _ok = 0
+      _error = message
+    end
+    return
+
+  read_bits: method = .int
+    arg count = .int
+    if _ok = 0 then return 0
+    do while _bit_count < count
+      if _input_pos >= _input_end then do
+        call fail("compressed body ended inside a DEFLATE bit field")
+        return 0
+      end
+      _bits = _bits <or> ((<at..u8>(_input_pos) _input) <shl> _bit_count)
+      _input_pos = _input_pos + 1
+      _bit_count = _bit_count + 8
+    end
+    mask = (1 <shl> count) - 1
+    value = _bits <and> mask
+    _bits = _bits <shr> count
+    _bit_count = _bit_count - count
+    return value
+
+  align_byte: method = .void
+    _bits = 0
+    _bit_count = 0
+    return
+
+  append_byte: method = .void
+    arg value = .int
+    if _ok = 0 then return
+    if _output_pos >= _maximum then do
+      call fail("decoded response exceeds the configured body ceiling")
+      return
+    end
+    <at..u8>(_output_pos) _output = value
+    _output_pos = _output_pos + 1
+    return
+
+  build_table: method = .int[]
+    arg lengths = .int[], count = .int
+    table = .int[304]
+    do symbol = 1 to count
+      width = lengths[symbol]
+      if width < 0 | width > 15 then do
+        call fail("DEFLATE Huffman code length is outside 0..15")
+        return table
+      end
+      if width > 0 then table[width] = table[width] + 1
+    end
+    left = 1
+    do width = 1 to 15
+      left = (left <shl> 1) - table[width]
+      if left < 0 then do
+        call fail("DEFLATE Huffman tree is oversubscribed")
+        return table
+      end
+    end
+    offsets = .int[16]
+    offsets[1] = 17
+    do width = 2 to 15
+      offsets[width] = offsets[width - 1] + table[width - 1]
+    end
+    do symbol = 1 to count
+      width = lengths[symbol]
+      if width > 0 then do
+        table[offsets[width]] = symbol - 1
+        offsets[width] = offsets[width] + 1
+      end
+    end
+    return table
+
+  decode_symbol: method = .int
+    arg table = .int[]
+    code = 0
+    first = 0
+    index = 17
+    do width = 1 to 15
+      code = code <or> read_bits(1)
+      if _ok = 0 then return -1
+      count = table[width]
+      if code < first + count then return table[index + code - first]
+      index = index + count
+      first = (first + count) <shl> 1
+      code = code <shl> 1
+    end
+    call fail("DEFLATE Huffman symbol is invalid")
+    return -1
+
+  decode_compressed: method = .void
+    arg literal_lengths = .int[], literal_count = .int, distance_lengths = .int[], distance_count = .int
+    literal_table = build_table(literal_lengths, literal_count)
+    distance_table = build_table(distance_lengths, distance_count)
+    if _ok = 0 then return
+    length_base = "3 4 5 6 7 8 9 10 11 13 15 17 19 23 27 31 35 43 51 59 67 83 99 115 131 163 195 227 258"
+    length_extra = "0 0 0 0 0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 0"
+    distance_base = "1 2 3 4 5 7 9 13 17 25 33 49 65 97 129 193 257 385 513 769 1025 1537 2049 3073 4097 6145 8193 12289 16385 24577"
+    distance_extra = "0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10 10 11 11 12 12 13 13"
+    do forever
+      symbol = decode_symbol(literal_table)
+      if _ok = 0 then return
+      if symbol < 256 then call append_byte(symbol)
+      else if symbol = 256 then return
+      else do
+        if symbol < 257 | symbol > 285 then do
+          call fail("DEFLATE length symbol is reserved")
+          return
+        end
+        slot = symbol - 256
+        copy_length = word(length_base, slot)
+        extra = word(length_extra, slot)
+        if extra > 0 then copy_length = copy_length + read_bits(extra)
+        distance_symbol = decode_symbol(distance_table)
+        if distance_symbol < 0 | distance_symbol > 29 then do
+          call fail("DEFLATE distance symbol is reserved or missing")
+          return
+        end
+        distance = word(distance_base, distance_symbol + 1)
+        extra = word(distance_extra, distance_symbol + 1)
+        if extra > 0 then distance = distance + read_bits(extra)
+        if distance < 1 | distance > _output_pos then do
+          call fail("DEFLATE back-reference exceeds decoded history")
+          return
+        end
+        do copied = 1 to copy_length
+          value = <at..u8>(_output_pos - distance) _output
+          call append_byte(value)
+          if _ok = 0 then return
+        end
+      end
+    end
+
+  decode_fixed: method = .void
+    literal_lengths = .int[288]
+    distance_lengths = .int[32]
+    do symbol = 0 to 143
+      literal_lengths[symbol + 1] = 8
+    end
+    do symbol = 144 to 255
+      literal_lengths[symbol + 1] = 9
+    end
+    do symbol = 256 to 279
+      literal_lengths[symbol + 1] = 7
+    end
+    do symbol = 280 to 287
+      literal_lengths[symbol + 1] = 8
+    end
+    do symbol = 1 to 32
+      distance_lengths[symbol] = 5
+    end
+    call decode_compressed(literal_lengths, 288, distance_lengths, 32)
+    return
+
+  decode_dynamic: method = .void
+    literal_count = read_bits(5) + 257
+    distance_count = read_bits(5) + 1
+    code_count = read_bits(4) + 4
+    if _ok = 0 | literal_count > 286 | distance_count > 32 then do
+      call fail("DEFLATE dynamic-tree counts are invalid")
+      return
+    end
+    order = "16 17 18 0 8 7 9 6 10 5 11 4 12 3 13 2 14 1 15"
+    code_lengths = .int[19]
+    do index = 1 to code_count
+      code_lengths[word(order, index) + 1] = read_bits(3)
+    end
+    code_table = build_table(code_lengths, 19)
+    if _ok = 0 then return
+    total = literal_count + distance_count
+    combined = .int[318]
+    position = 1
+    do while position <= total
+      symbol = decode_symbol(code_table)
+      if _ok = 0 then return
+      if symbol <= 15 then do
+        combined[position] = symbol
+        position = position + 1
+      end
+      else if symbol = 16 then do
+        if position = 1 then do
+          call fail("DEFLATE repeat code has no previous length")
+          return
+        end
+        repeat = read_bits(2) + 3
+        value = combined[position - 1]
+        if position + repeat - 1 > total then do
+          call fail("DEFLATE repeat code exceeds the dynamic tree")
+          return
+        end
+        do index = 1 to repeat
+          combined[position] = value
+          position = position + 1
+        end
+      end
+      else if symbol = 17 | symbol = 18 then do
+        if symbol = 17 then repeat = read_bits(3) + 3
+        else repeat = read_bits(7) + 11
+        if position + repeat - 1 > total then do
+          call fail("DEFLATE zero-repeat exceeds the dynamic tree")
+          return
+        end
+        position = position + repeat
+      end
+      else do
+        call fail("DEFLATE code-length symbol is invalid")
+        return
+      end
+    end
+    literal_lengths = .int[286]
+    distance_lengths = .int[32]
+    do index = 1 to literal_count
+      literal_lengths[index] = combined[index]
+    end
+    do index = 1 to distance_count
+      distance_lengths[index] = combined[literal_count + index]
+    end
+    if literal_lengths[257] = 0 then do
+      call fail("DEFLATE dynamic tree omits end-of-block")
+      return
+    end
+    call decode_compressed(literal_lengths, literal_count, distance_lengths, distance_count)
+    return
+
+  decode_stored: method = .void
+    call align_byte()
+    if _input_pos + 4 > _input_end then do
+      call fail("stored DEFLATE block header is truncated")
+      return
+    end
+    count = _httpcodec_u16le(_input, _input_pos)
+    inverse = _httpcodec_u16le(_input, _input_pos + 2)
+    _input_pos = _input_pos + 4
+    if (count <xor> inverse) <> 65535 then do
+      call fail("stored DEFLATE block length check failed")
+      return
+    end
+    if _input_pos + count > _input_end then do
+      call fail("stored DEFLATE block is truncated")
+      return
+    end
+    do index = 1 to count
+      call append_byte(<at..u8>(_input_pos) _input)
+      _input_pos = _input_pos + 1
+      if _ok = 0 then return
+    end
+    return
+
+  inflate: method = .httpdecodedcontent
+    final = 0
+    do while final = 0 & _ok
+      final = read_bits(1)
+      block_type = read_bits(2)
+      if block_type = 0 then call decode_stored()
+      else if block_type = 1 then call decode_fixed()
+      else if block_type = 2 then call decode_dynamic()
+      else call fail("DEFLATE block type 3 is reserved")
+    end
+    if _ok = 0 then return .httpdecodedcontent.failure(_error)
+    if _input_pos <> _input_end then return .httpdecodedcontent.failure("compressed body has bytes after the final DEFLATE block")
+    call binresize _output, _output_pos
+    return .httpdecodedcontent.success(_output)
+
+/** Decode identity, gzip or zlib-wrapped deflate with an exact output ceiling. */
+http_decode_content: procedure = .httpdecodedcontent
+  arg data = .binary, encoding = .string, maximum = .int
+  normalized = translate(strip(encoding))
+  if maximum < 0 then return .httpdecodedcontent.failure("decoded response ceiling is invalid")
+  if normalized = "" | normalized = "IDENTITY" then do
+    if binlength(data) > maximum then return .httpdecodedcontent.failure("decoded response exceeds the configured body ceiling")
+    return .httpdecodedcontent.success(data)
+  end
+  if normalized = "GZIP" | normalized = "X-GZIP" then do
+    total = binlength(data)
+    if total < 18 | <at..u8>(0) data <> 31 | <at..u8>(1) data <> 139 | <at..u8>(2) data <> 8 then return .httpdecodedcontent.failure("gzip response header is invalid or truncated")
+    flags = <at..u8>(3) data
+    if (flags <and> 224) <> 0 then return .httpdecodedcontent.failure("gzip response uses reserved flags")
+    cursor = 10
+    trailer = total - 8
+    if (flags <and> 4) <> 0 then do
+      if cursor + 2 > trailer then return .httpdecodedcontent.failure("gzip extra-field length is truncated")
+      extra = _httpcodec_u16le(data, cursor)
+      cursor = cursor + 2 + extra
+      if cursor > trailer then return .httpdecodedcontent.failure("gzip extra field is truncated")
+    end
+    if (flags <and> 8) <> 0 then do while cursor < trailer & <at..u8>(cursor) data <> 0
+      cursor = cursor + 1
+    end
+    if (flags <and> 8) <> 0 then cursor = cursor + 1
+    if (flags <and> 16) <> 0 then do while cursor < trailer & <at..u8>(cursor) data <> 0
+      cursor = cursor + 1
+    end
+    if (flags <and> 16) <> 0 then cursor = cursor + 1
+    if (flags <and> 2) <> 0 then cursor = cursor + 2
+    if cursor > trailer then return .httpdecodedcontent.failure("gzip optional header is truncated")
+    inflater = ._httpinflater.new(data, cursor, trailer - cursor, maximum)
+    decoded = inflater.inflate()
+    if decoded.succeeded() = 0 then return decoded
+    if binlength(decoded.data()) <> _httpcodec_u32le(data, total - 4) then return .httpdecodedcontent.failure("gzip decoded length check failed")
+    if _httpcodec_crc32(decoded.data()) <> _httpcodec_u32le(data, total - 8) then return .httpdecodedcontent.failure("gzip CRC32 check failed")
+    return decoded
+  end
+  if normalized = "DEFLATE" then do
+    total = binlength(data)
+    if total < 6 then return .httpdecodedcontent.failure("zlib response is truncated")
+    cmf = <at..u8>(0) data
+    flags = <at..u8>(1) data
+    if (cmf <and> 15) <> 8 | (cmf <shr> 4) > 7 | (cmf * 256 + flags) <mod> 31 <> 0 then return .httpdecodedcontent.failure("zlib response header is invalid")
+    if (flags <and> 32) <> 0 then return .httpdecodedcontent.failure("zlib preset dictionaries are unsupported")
+    inflater = ._httpinflater.new(data, 2, total - 6, maximum)
+    decoded = inflater.inflate()
+    if decoded.succeeded() = 0 then return decoded
+    actual_adler = _httpcodec_adler32(decoded.data())
+    expected_adler = _httpcodec_u32be(data, total - 4)
+    if actual_adler <> expected_adler then return .httpdecodedcontent.failure("zlib Adler-32 check failed after " || binlength(decoded.data()) || " decoded bytes")
+    return decoded
+  end
+  return .httpdecodedcontent.failure("HTTP Content-Encoding is unsupported: " || encoding)

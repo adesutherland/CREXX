@@ -1,0 +1,47 @@
+PERF3-13 Gate F F1g-D first Release verdict and local closeout
+Date: 2026-08-15
+Branch: develop
+Accepted control source: cd2453e35 (committed F1g-C)
+Candidate: frozen F1g-D working tree before its local slice commit
+Host: Darwin 25.5.0 arm64, Apple M5, 10 logical CPUs, AC power
+Build: ordinary profiling-off Release, profile-20 handler panel
+
+Implemented:
+- bounded fixed and chunked request/response streams over type-4 endpoints
+- bounded RFC 1950/1951/1952 gzip, zlib and raw-deflate decoding in Level B
+- concurrent crexx-rag generation and embedding acceptance fixture
+- typed transferable task arguments reconstructed from the sealed formal type
+- direct primitive task register path and lazy object-only signature parsing
+- direct taskscope/taskwork ChannelValue request semantics
+
+Exact committed F1g-C controls:
+- rxbvm sha256 22ea81c29d4423a496e7c6ad51bcd5bc4fef1170dc9db59266728f136cc3f418, 1,379,272 bytes
+- rxtvm sha256 3e30b39d560f302c650ad7588bcd2a99c77944c47a2dbcb91da3e69e5b774fdd, 1,379,400 bytes
+
+Exact final candidates:
+- rxbvm sha256 5f8067335dee03044ba346bb4b6fddb02c171a8e841706a7b6b7d8a015ad5409, 1,379,496 bytes, +224 bytes
+- rxtvm sha256 44f0e941485a26853cde84105e530ac109bfc45aba9ab25426272fe9cda6e80a, 1,379,608 bytes, +208 bytes
+- sealed task benchmark image sha256 d77ff2571965f498809449fbfd0a294e2389614a79206bc1f9a31074a700e72e, identical for control and candidate
+
+Performance history and final verdict:
+- the original object-everywhere path confirmed task-latency guard hits in two unchanged 12-pair runs: -8.948467% rxbvml and -9.933731% rxtvml in the confirmation
+- the primitive/lazy-materialization rework clears all four cells in the retained 24-pair combined result
+- the exact-final 12-pair task means are -0.696875%/-0.180375% latency and -1.020444%/+0.206412% throughput on rxbvml/rxtvml; no guard hit
+- the exact-final ordinary Sieve/RexxCPS means range from -0.817226% elapsed to +0.093013% rate; no guard hit
+- the separate F3C1 seven-workload 36-pair full baseline remains the broad single-thread authority and has no individual or aggregate guard hit
+
+QA:
+- complete Debug CTest 2,175/2,175
+- ordinary Release Gate F selection 62/62 including fixture setup
+- complete Apple AddressSanitizer build
+- focused final Apple AddressSanitizer matrix 39/39; leak detection off because Apple LSan is unavailable
+- final RexxDoc/diagnostic-only targeted rebuild and 7/7 matrix passed in
+  Debug, Release and Apple AddressSanitizer configurations
+- final codec hardening rejects bytes after the final DEFLATE block; all four
+  linked/no-opt and linked/opt cells pass in Debug, Release and Apple
+  AddressSanitizer configurations
+
+Verdict: accept F1g-D and the local Gate F implementation closeout. The final
+shape is correctness-clean and performance-guard-clean. Experimental
+publication still requires the separately governed portable conformance
+evidence; no push or publication is part of this local commit.

@@ -2,9 +2,9 @@
 
 Date: 2026-08-15
 
-Status: **F0-S normative contract, F1a-F1f concurrency surface and F1g-A
-through F1g-C complete; HTTP streaming, compressed decoding and crexx-rag
-integration active**
+Status: **F0-S normative contract and F1a-F1g-D implementation complete;
+Mac closeout QA complete; experimental publication remains gated by portable
+conformance**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -116,9 +116,9 @@ string.
 
 #### Transferable object contract
 
-A task-method receiver may be a class or interface; a typed object result must
-be a concrete class so its encoder and reconstruction factory are statically
-unique. In either case its exact static contract declares both members below:
+A task-method receiver and a typed object argument/result must resolve to a
+concrete class so its encoder and reconstruction factory are statically unique.
+Its exact static contract declares both members below:
 
 ```rexx
 from_channel: factory
@@ -126,15 +126,17 @@ from_channel: factory
 to_channel: method = .channelvalue
 ```
 
-For a task-method receiver, the controller invokes `to_channel()` synchronously
-before submission and the worker invokes the statically resolved
-`from_channel` factory to construct new worker-owned state. For a typed object
-result, the direction is reversed: the worker invokes `to_channel()`, publishes
-canonical RXCV, and the controller invokes the declared result class's
-statically resolved `from_channel` factory. Each side owns its reconstructed
-object; live object identity never crosses. Both callable identities and their
-signatures are statically resolved; neither is selected by a runtime
-method-name string.
+For a task-method receiver or typed object argument, the controller invokes
+`to_channel()` synchronously before submission and the worker invokes the
+statically resolved `from_channel` factory for the sealed formal type to
+construct new worker-owned state. A `.channelvalue` formal receives the
+canonical RXCV value directly. For a typed object result, the direction is
+reversed: the worker invokes `to_channel()`, publishes canonical RXCV, and the
+controller invokes the declared result class's statically resolved
+`from_channel` factory. Each side owns its reconstructed object; live object
+identity never crosses. Callable identities and signatures come from the
+sealed semantic graph/descriptor and are not selected from controller-provided
+type or method strings.
 
 The encoded value must contain only the object's immutable value state or a
 validated logical provider/service reference. It must not encode an object
@@ -277,6 +279,29 @@ Local providers validate the current sealed generation and callable metadata.
 Process providers load the same image digest before accepting work. A later
 host registry may map the logical descriptor, but it must reject an unknown or
 incompatible image/signature rather than dispatch by an unchecked string.
+
+### 4.5 Task argument transfer shape
+
+Primitive `.int`, `.boolean`, `.string` and `.binary` task arguments retain
+their direct canonical RXCV nodes and the worker's primitive register path.
+The runtime must not parse the callable signature on an ordinary primitive
+cache hit merely to rediscover that shape.
+
+A compiler-generated transferable object argument is internally marked by the
+record schema `crexx.channel.task-value`, version `1`, with the single field
+`value`. The field is the exact `ChannelValue` returned by `to_channel()`. The
+marker is not a public wrapper object: after the sealed target has supplied the
+trusted formal type, the worker extracts the field and reconstructs that exact
+class through its statically resolved `from_channel` factory. A direct
+`.channelvalue` formal receives the extracted canonical value as a
+`.channelvalue` object.
+
+The explicit Level B `.taskscope.submit(target, request)` and kind-3
+`.taskwork.run(request, context)` contract is different: `request` is already
+the canonical application value and crosses without the internal typed-object
+marker. Collapsing these two paths would turn a taskwork integer request into a
+record and is a conformance failure. Kind-2 receivers retain their separately
+sealed receiver/factory path.
 
 ## 5. Exact Level B surface
 
@@ -988,8 +1013,14 @@ operations use their phase budgets, controller observations use the configured
 completion budget, and the containing task scope owns the strict whole-task
 monotonic deadline. No live endpoint object or socket integer crosses an
 execution. Only the controller client closes admission and joins owners.
-Explicit stream-returning APIs, compressed decoding and the crexx-rag fixture
-remain F1g-D.
+F1g-D adds `.httpbody.fixed`, `.httpbody.chunked` and
+`.httpclient.post_stream`. Request and response streams use paired bounded
+type-4 byte endpoints; response metadata carries only the encoded endpoint
+reference. Buffered `post` advertises gzip/deflate and decodes RFC
+1950/1951/1952 streams in pure Level B with the configured decoded-body ceiling.
+The four-mode `crexx-rag` fixture exercises concurrent generation and embedding
+requests, authorization/idempotency headers, request shapes and gzip/deflate
+responses. No HTTP opcode or provider type is added.
 
 ## 14. Diagnostics
 
@@ -1051,6 +1082,7 @@ optimized and unoptimized RXAS and both concrete VMs where applicable.
 | `GF-N08` | scope deadline expires queued/running children exactly once |
 | `GF-N09` | controller early exit cancels/joins all children |
 | `GF-N10` | endpoint close with active I/O leaves no live Rexx destination in an I/O thread |
+| `GF-N11` | a marked typed argument beyond the sealed formal list fails setup without entering the task or reading uninitialised metadata |
 
 ### 15.3 RXAS/RXBIN and malformed data
 
@@ -1083,6 +1115,7 @@ optimized and unoptimized RXAS and both concrete VMs where applicable.
 | RXAS-only core bridge | sections 2, 6 | `GF-B01`, `GF-B11`, classlib inspection test |
 | `chanopen` provider type plus capability flags | sections 6.2, 7.1, 7.2 | `GF-B08` |
 | no live VM values cross | sections 1, 8, 9 | `GF-P09`, `GF-N06` |
+| typed object arguments and direct taskwork requests stay distinct | sections 4.5, 5 | imported task-method tests, `GF-N11` |
 | structured terminal completion and `TASK_FAILURE` | sections 7.4, 11 | `GF-P07`, `GF-N07..N09` |
 | stateless tasks and single-owner services | sections 1, 10.2, 11.5, 13 | service ordering tests |
 | reusable redirects/endpoints | sections 10.4, 12.1 | `GF-P08`, `GF-P10`, `GF-N10` |
@@ -1112,12 +1145,12 @@ service-reference and transfer-buffer interfaces. The only runtime bridge is
 the five RXAS instructions. Task targets are sealed numeric/digest descriptors;
 no Rexx procedure-name string or RXPA task API occurs on the dispatch path.
 
-Current absence is failure-visible. `.taskscope.ask`, `.taskcontext.endpoint`
-and pool statistics return `UNSUPPORTED_OPERATION`. Concrete
-endpoint/child-process integration is F1d, the process provider is complete in
-F1e, and F1f completes kind-1 task procedures, kind-2 transferable task
-methods, kind-3 `.taskwork` factories and the gated Level G lowering.
-Concurrent HTTP is F1g.
+Deliberately reserved operations remain failure-visible. `.taskscope.ask`,
+`.taskcontext.endpoint` and pool statistics return `UNSUPPORTED_OPERATION`
+rather than plausible placeholder data. F1d supplies concrete endpoint and
+child-process integration, F1e the process provider, F1f kind-1 task
+procedures, kind-2 transferable task methods, kind-3 `.taskwork` factories and
+the gated Level G lowering, and F1g the concurrent HTTP consumer.
 No public provider-plugin ABI is implied before F2.
 
 ### 17.1 F1e isolated-process provider contract
@@ -1204,6 +1237,8 @@ and
 [`F1e closeout`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/),
 and the F1f evidence is retained in
 [`F1f closeout`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
+F1g-D and the final local Gate F implementation evidence are retained in
+[`F1g-D closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
 
 After the first production edit, run the minimum focused correctness checks,
 freeze code, build ordinary profiling-off Release, run the smallest decisive

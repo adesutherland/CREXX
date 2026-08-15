@@ -837,6 +837,34 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
         }
         if ((invoke->target_kind == 1 ||
              (invoke->target_kind == 2 && index > 0u)) &&
+            item.tag == RXCV_TAG_RECORD) {
+            rxcv_record portable_record;
+            rxcv_node portable_value;
+            if (rxcv_record_open(&item, &portable_record) &&
+                rxcv_record_schema(&portable_record,
+                                   "crexx.channel.task-value", 1u, 1u) &&
+                rxcv_record_field(&portable_record, "value",
+                                  &portable_value)) {
+                unsigned char *document = 0;
+                size_t document_length = 0u;
+                status = rxcv_copy_node_document(
+                        portable_value.payload - 12u,
+                        portable_value.total_length,
+                        &document, &document_length);
+                if (status != RXVM_CHANNEL_OK) {
+                    rxvm_channel_task_invoke_free(invoke);
+                    return status;
+                }
+                invoke->arguments[index].type =
+                        RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE;
+                invoke->arguments[index].bytes = (const char *)document;
+                invoke->arguments[index].length = document_length;
+                cursor += item.total_length;
+                continue;
+            }
+        }
+        if ((invoke->target_kind == 1 ||
+             (invoke->target_kind == 2 && index > 0u)) &&
             item.tag == RXCV_TAG_INTEGER &&
             item.payload_length == 8u) {
             invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_INTEGER;
@@ -873,12 +901,11 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
                 memcpy(copy, item.payload, item.payload_length);
             }
             copy[item.payload_length] = 0;
-            invoke->arguments[index].type = invoke->target_kind == 3
-                    ? RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE
-                    : RXVM_EXECUTOR_REGISTER_BINARY;
+            invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_BINARY;
             invoke->arguments[index].bytes = (const char *)copy;
             invoke->arguments[index].length = item.payload_length;
-        } else if (invoke->target_kind != 1 &&
+        } else if ((invoke->target_kind == 1 || invoke->target_kind == 3 ||
+                    (invoke->target_kind == 2 && index > 0u)) &&
                    item.tag != RXCV_TAG_LOCAL_CAPABILITY) {
             unsigned char *document = 0;
             size_t document_length = 0u;
@@ -888,9 +915,21 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
                 rxvm_channel_task_invoke_free(invoke);
                 return status;
             }
-            invoke->arguments[index].type = invoke->target_kind == 3
-                    ? RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE
-                    : RXVM_EXECUTOR_REGISTER_BINARY;
+            invoke->arguments[index].type =
+                    RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE;
+            invoke->arguments[index].bytes = (const char *)document;
+            invoke->arguments[index].length = document_length;
+        } else if (invoke->target_kind == 2 && index == 0u &&
+                   item.tag != RXCV_TAG_LOCAL_CAPABILITY) {
+            unsigned char *document = 0;
+            size_t document_length = 0u;
+            status = rxcv_copy_node_document(
+                    cursor, item.total_length, &document, &document_length);
+            if (status != RXVM_CHANNEL_OK) {
+                rxvm_channel_task_invoke_free(invoke);
+                return status;
+            }
+            invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_BINARY;
             invoke->arguments[index].bytes = (const char *)document;
             invoke->arguments[index].length = document_length;
         } else {

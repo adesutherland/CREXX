@@ -14,8 +14,19 @@ main: procedure = .int
   object_answer = do parallel using result_scope
     leave with worker.result(2)
   end
+  input_scope = .taskscope.collectall(pool, 60000)
+  input_answer = do parallel using input_scope
+    leave with worker.add(.inputbox(2))
+  end
+  input_value = .inputbox(2).to_channel()
+  channel_scope = .taskscope.collectall(pool, 60000)
+  channel_answer = do parallel using channel_scope
+    leave with worker.inspect(input_value)
+  end
   call pool.close()
   if object_answer.answer() <> 42 then return 2
+  if input_answer <> 42 then return 3
+  if channel_answer <> 42 then return 4
 
   process_pool = .taskpool.process(1, 2)
   process_scope = .taskscope.collectall(process_pool, 60000)
@@ -26,7 +37,17 @@ main: procedure = .int
   process_object_answer = do parallel using process_result_scope
     leave with worker.result(2)
   end
+  process_input_scope = .taskscope.collectall(process_pool, 60000)
+  process_input_answer = do parallel using process_input_scope
+    leave with worker.add(.inputbox(2))
+  end
+  process_channel_scope = .taskscope.collectall(process_pool, 60000)
+  process_channel_answer = do parallel using process_channel_scope
+    leave with worker.inspect(input_value)
+  end
   call process_pool.close()
-  if process_answer <> 42 then return 3
-  if process_object_answer.answer() <> 42 then return 4
+  if process_answer <> 42 then return 5
+  if process_object_answer.answer() <> 42 then return 6
+  if process_input_answer <> 42 then return 7
+  if process_channel_answer <> 42 then return 8
   return 0

@@ -377,8 +377,16 @@ static const char *task_argument_method(ASTNode *argument) {
         case TP_INTEGER: return "add_integer";
         case TP_STRING: return "add_string";
         case TP_BINARY: return "add_binary";
+        case TP_OBJECT: return argument->value_class ? "add_channel_value" : 0;
         default: return 0;
     }
+}
+
+static const char *task_argument_class(ASTNode *argument) {
+    return argument && !argument->value_dims &&
+           argument->value_reference_type == TP_UNKNOWN &&
+           argument->value_type == TP_OBJECT
+            ? argument->value_class : 0;
 }
 
 static const char *task_result_method(ASTNode *call) {
@@ -596,6 +604,8 @@ static int task_lower_call(RxcpTaskPlan *plan,
     }
     while (argument) {
         const char *method;
+        const char *argument_class;
+        int direct_channel_value;
         ASTNode *method_argument[1];
         ASTNode *add_call;
 
@@ -606,14 +616,30 @@ static int task_lower_call(RxcpTaskPlan *plan,
             continue;
         }
         method = task_argument_method(argument);
-        if (!method) {
+        argument_class = task_argument_class(argument);
+        direct_channel_value = argument_class &&
+                symbol_name_assignable_to(
+                        plan->context, argument_class,
+                        "concurrency.channelvalue");
+        if (!method || (argument_class && !direct_channel_value &&
+                        !rxcp_task_result_contract_valid(
+                plan->context, call->scope, argument_class))) {
             if (!ast_chld(call, ERROR, 0)) mknd_err(call, "TASK_NONTRANSFERABLE_TYPE");
             free(arguments_name);
             free(handle_name);
             return 0;
         }
         ast_del(argument);
-        method_argument[0] = argument;
+        method_argument[0] = argument_class && !direct_channel_value
+                ? rxcp_remap_create_member_call(
+                        plan->context, call, argument,
+                        "to_channel", 0, 0)
+                : argument;
+        if (!method_argument[0]) {
+            free(arguments_name);
+            free(handle_name);
+            return 0;
+        }
         add_call = task_member_call(
                 plan, call, arguments_name, method, method_argument, 1);
         if (!add_call ||

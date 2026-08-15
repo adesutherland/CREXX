@@ -101,6 +101,17 @@ main: procedure = .int
   if answer <> 42 then errors = errors + 1
 
   pool = .taskpool.local(1, 8)
+  malformed_scope = .taskscope.collectall(pool, 60000)
+  malformed_arguments = .taskarguments.empty()
+  malformed_arguments = malformed_arguments.add_channel_value(.channelvalue.integer_value(1))
+  malformed_child = malformed_scope.submit_arguments(explicit_target, malformed_arguments)
+  malformed_completion = malformed_child.wait(-1)
+  call malformed_scope.close()
+  if malformed_completion.succeeded() then do
+    say "FAIL: extra typed task argument accepted"
+    errors = errors + 1
+  end
+
   scope = .taskscope.failfast(pool, 60000)
   serial_answer = do parallel using scope
     serial_left = twice(20)

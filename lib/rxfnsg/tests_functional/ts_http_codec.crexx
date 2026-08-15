@@ -1,0 +1,73 @@
+options levelg
+
+import rxfnsb
+import _rxhttpcodec
+
+plain = '{"model":"test","embedding":[0.1,0.2,0.3],"message":"hello hello hello"}' as .binary
+stored = x2bin("7801014800b7ff7b226d6f64656c223a2274657374222c22656d62656464696e67223a5b302e312c302e322c302e335d2c226d657373616765223a2268656c6c6f2068656c6c6f2068656c6c6f227d338116e4")
+fixed = x2bin("7801ab56cacd4f49cd51b2522a492d2e51d2514acd4d4a4d49c9cc4b57b28a36d033d431d0330262e3581da5dcd4e2e2c4f454a0d28cd49c9c7c052452a91600338116e4")
+gzip = x2bin("1f8b08000000000002ffab56cacd4f49cd51b2522a492d2e51d2514acd4d4a4d49c9cc4b57b28a36d033d431d0330262e3581da5dcd4e2e2c4f454a0d28cd49c9c7c052452a91600c546e3a948000000")
+
+failures = 0
+failures = failures + check_decode("stored", stored, "deflate", plain, 4096)
+failures = failures + check_decode("fixed", fixed, "deflate", plain, 4096)
+failures = failures + check_decode("gzip", gzip, "gzip", plain, 4096)
+
+expected_dynamic = x2bin("62327a646d6b75206161326a7a616b7863373561616f3768636a61636b6d6363636c646132707462393362657878366a3176657234326e726163306962707776676b6e206f686d616177397268626e397a6f33636e37716c6470376120313479306e706a613371636e6d67666f73736b61636272333030316432766161617a6362736661626f6264786b656c61686a6362356e63733161616278627776706338306e6375687165746165383465336537796964613461313871623338776e686663766a636275656d")
+dynamic = x2bin("78da0dcbd90183201005c0562c81c3042de7ed822120871a91587d32ff43eab6299e03a0c28dd8d93c80623c07704cccbc5aa8faa15993ebfd196473fba8f20e166faa577bc53c149f806bde3de5f92e9ab3d9565b0d06397e45ae017ae39c5e4b398e08a65d0b21ad6a006ea6630115b23dba153e303d321f12a04e57ab3c89cca7dfdc076e1a9d76e6fbb61821a78df47465bf70fb9fd3a51fc9ad497f")
+failures = failures + check_decode("dynamic", dynamic, "deflate", expected_dynamic, 4096)
+
+bounded = http_decode_content(dynamic, "deflate", 100)
+if bounded.succeeded() | pos("ceiling", bounded.error()) = 0 then do
+  say "FAIL: compressed expansion ceiling"
+  failures = failures + 1
+end
+
+corrupt = binsetbyte(gzip, binlength(gzip) - 7, 0)
+checked = http_decode_content(corrupt, "gzip", 4096)
+if checked.succeeded() then do
+  say "FAIL: gzip checksum rejection"
+  failures = failures + 1
+end
+
+fixed_trailing = binconcat(binsubstr(fixed, 1, binlength(fixed) - 4), '00'x as .binary)
+fixed_trailing = binconcat(fixed_trailing, binsubstr(fixed, binlength(fixed) - 3, 4))
+checked = http_decode_content(fixed_trailing, "deflate", 4096)
+if checked.succeeded() | pos("final DEFLATE block", checked.error()) = 0 then do
+  say "FAIL: zlib trailing compressed-byte rejection"
+  failures = failures + 1
+end
+
+gzip_trailing = binconcat(binsubstr(gzip, 1, binlength(gzip) - 8), '00'x as .binary)
+gzip_trailing = binconcat(gzip_trailing, binsubstr(gzip, binlength(gzip) - 7, 8))
+checked = http_decode_content(gzip_trailing, "gzip", 4096)
+if checked.succeeded() | pos("final DEFLATE block", checked.error()) = 0 then do
+  say "FAIL: gzip trailing compressed-byte rejection"
+  failures = failures + 1
+end
+
+unsupported = http_decode_content(plain, "br", 4096)
+if unsupported.succeeded() then do
+  say "FAIL: unsupported content encoding"
+  failures = failures + 1
+end
+
+if failures > 0 then do
+  say "FAIL: rxfnsg HTTP codec failures=" || failures
+  return failures
+end
+say "PASS: rxfnsg HTTP gzip deflate bounded decoder"
+return 0
+
+check_decode: procedure = .int
+  arg name = .string, encoded = .binary, encoding = .string, expected = .binary, ceiling = .int
+  decoded = http_decode_content(encoded, encoding, ceiling)
+  if decoded.succeeded() = 0 then do
+    say "FAIL: " || name || " decode: " || decoded.error()
+    return 1
+  end
+  if bincompare(decoded.data(), expected) <> 0 then do
+    say "FAIL: " || name || " bytes actual=" || binlength(decoded.data()) || " expected=" || binlength(expected)
+    return 1
+  end
+  return 0

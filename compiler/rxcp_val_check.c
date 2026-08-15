@@ -489,7 +489,9 @@ int rxcp_task_result_contract_valid(Context *context, Scope *scope,
     if (!context || !context->ast || !class_name || !*class_name) return 0;
     lookup_name = class_name;
     while (*lookup_name == '.') lookup_name++;
-    symbol = sym_rfqn(context->ast, lookup_name);
+    symbol = strchr(lookup_name, '.')
+            ? sym_rfqv(context->ast, lookup_name)
+            : sym_rvfn(context->ast, (char *)lookup_name);
     if (!symbol && !strchr(lookup_name, '.')) {
         namespace_scope = scope;
         while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
@@ -498,13 +500,16 @@ int rxcp_task_result_contract_valid(Context *context, Scope *scope,
         if (namespace_scope && namespace_scope->name && *namespace_scope->name) {
             qualified_name = mprintf("%s.%s", namespace_scope->name,
                                      lookup_name);
-            if (qualified_name) symbol = sym_rfqn(context->ast, qualified_name);
+            if (qualified_name) symbol = sym_rfqv(context->ast, qualified_name);
         }
     }
     if (!symbol) {
         ensure_class_imported(context, class_name, strlen(class_name));
-        symbol = sym_rfqn(context->ast,
-                          qualified_name ? qualified_name : lookup_name);
+        symbol = qualified_name
+                ? sym_rfqv(context->ast, qualified_name)
+                : (strchr(lookup_name, '.')
+                   ? sym_rfqv(context->ast, lookup_name)
+                   : sym_rvfn(context->ast, (char *)lookup_name));
     }
     free(qualified_name);
     if (!symbol || symbol->symbol_type != CLASS_SYMBOL ||

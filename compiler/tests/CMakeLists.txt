@@ -2209,6 +2209,10 @@ string(FIND \"\${task_method_main_rxas}\" \"gate_f_task_method_lib.answerbox.§f
 if(from_channel_pos EQUAL -1)
   message(FATAL_ERROR \"Imported object task result omitted answerbox.from_channel reconstruction\")
 endif()
+string(FIND \"\${task_method_main_rxas}\" \"gate_f_task_method_lib.inputbox.to_channel\" input_to_channel_pos)
+if(input_to_channel_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported object task argument omitted inputbox.to_channel transfer\")
+endif()
 execute_process(
   COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
           -o task_method_main.rxbin task_method_main
