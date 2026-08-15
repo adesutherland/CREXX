@@ -772,6 +772,12 @@ F1f validates an 80-byte sealed binding before local or process dispatch.
 Kind `1` identifies a task procedure, kind `2` reconstructs a transferable
 receiver through its sealed `from_channel` factory, and kind `3` constructs a
 receiver-side `.taskwork` factory target and invokes its sealed `run` method.
+F3C1 keeps that first-use check and caches only successful resolution within
+the validating executor worker. The worker graph binding lazily retains the
+immutable graph digest, and a fixed four-set, two-way cache uses the complete
+binding plus requested result mode to retain worker-local procedure/adapter
+pointers. A miss follows the unchanged validator; failures are never cached,
+collisions only evict, and worker/context teardown invalidates every entry.
 Task arguments/results and factory arguments remain receiver-materialized
 RXCV; no live VM value crosses. Level G task/parallel syntax lowers through the
 Level B classes and is accepted only under `OPTIONS LEVELG`. Concurrent HTTP

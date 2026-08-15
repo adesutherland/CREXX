@@ -314,6 +314,15 @@ int rx_graph_task_binding_validate(
         const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
         RxCallableId *callable_out,
         unsigned int *kind_out);
+/* Validate against a digest already computed from GRAPH. This is the
+ * worker-local cache seam; callers must not accept an externally supplied
+ * digest as authoritative. */
+int rx_graph_task_binding_validate_digest(
+        const RxGraph *graph,
+        const unsigned char graph_digest[32],
+        const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
+        RxCallableId *callable_out,
+        unsigned int *kind_out);
 RxFactoryId rx_graph_find_factory(const RxGraph *graph,
                                   RxGraphId interface_type,
                                   RxMemberId member);

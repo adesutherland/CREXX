@@ -1,0 +1,30 @@
+PERF3-13 Gate F F3C1 closeout
+
+Implementation:
+- each worker graph binding lazily retains its immutable graph digest after
+  the first task-binding miss
+- each executor worker owns a fixed four-set, two-way resolved-plan cache
+- the complete 80-byte sealed binding plus requested result mode is the key
+- a miss uses the unchanged validation and resolution path; only success is
+  installed, and a hit reuses worker-owned resolved procedure/adapter pointers
+- no plan crosses a worker or process; teardown is complete invalidation
+- no RXAS, RXBIN, linker or public Rexx surface changes
+
+Qualification:
+- focused Debug: 10/10
+- full Debug: 2,149/2,149
+- focused Release Gate F: 35/35
+- focused Apple ASan: 136/136; Apple LSan unavailable, leak detection disabled
+- sealed channel benchmark: PASS in both Debug VMs
+- cached-digest unit coverage includes a wrong-digest rejection
+
+Performance disposition:
+- tiny-task latency improves +39.076017% rxbvml and +40.340609% rxtvml
+- rxtvml throughput improves +1.551257%; rxbvml throughput is inconclusive
+- no cell hits the 3% adverse guard
+- the candidate adds 80 bytes to rxbvm and 64 bytes to rxtvm
+- ordinary single-thread and broader task-launch baselines are retained as a
+  separate post-commit portfolio
+
+Next product slice: F1g, the bounded concurrent HTTP/TLS consumer required by
+crexx-rag. No push or public provider ABI publication is part of this closeout.

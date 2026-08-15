@@ -1879,8 +1879,9 @@ int rx_graph_task_binding(const RxGraph *graph,
     return 1;
 }
 
-int rx_graph_task_binding_validate(
+int rx_graph_task_binding_validate_digest(
         const RxGraph *graph,
+        const unsigned char graph_digest[32],
         const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
         RxCallableId *callable_out,
         unsigned int *kind_out) {
@@ -1888,11 +1889,10 @@ int rx_graph_task_binding_validate(
     RxCallableId auxiliary;
     RxCallableId expected_auxiliary = RX_GRAPH_NONE;
     RxGraphCallableView view;
-    unsigned char digest[32];
     unsigned char signature[32];
     unsigned int kind;
 
-    if (!graph || !binding ||
+    if (!graph || !graph_digest || !binding ||
         memcmp(binding, "RXTB", 4u) != 0 || binding[4] != 1u ||
         binding[6] != 0u || binding[7] != 0u) return 0;
     kind = binding[5];
@@ -1900,8 +1900,7 @@ int rx_graph_task_binding_validate(
     auxiliary = rx_graph_task_u32(binding + 76u);
     if (kind < 1u || kind > 3u ||
         !rx_graph_callable(graph, callable, &view) ||
-        !rx_graph_digest(graph, digest) ||
-        memcmp(digest, binding + 12u, sizeof(digest)) != 0) return 0;
+        memcmp(graph_digest, binding + 12u, 32u) != 0) return 0;
     rx_sha256(view.descriptor, strlen(view.descriptor), signature);
     if (memcmp(signature, binding + 44u, sizeof(signature)) != 0) return 0;
     if (kind == 2u) {
@@ -1924,6 +1923,18 @@ int rx_graph_task_binding_validate(
     if (callable_out) *callable_out = callable;
     if (kind_out) *kind_out = kind;
     return 1;
+}
+
+int rx_graph_task_binding_validate(
+        const RxGraph *graph,
+        const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
+        RxCallableId *callable_out,
+        unsigned int *kind_out) {
+    unsigned char graph_digest[32];
+
+    return graph && rx_graph_digest(graph, graph_digest) &&
+           rx_graph_task_binding_validate_digest(
+                   graph, graph_digest, binding, callable_out, kind_out);
 }
 
 RxFactoryId rx_graph_find_factory(const RxGraph *graph,

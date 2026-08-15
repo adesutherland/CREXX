@@ -85,6 +85,10 @@ typedef struct rxvm_graph_binding {
     size_t factory_count;
     rxvm_graph_provider_binding *provider_bindings;
     size_t provider_count;
+    /* Lazily computed by the owning executor worker on its first sealed-task
+     * miss. The graph is immutable for the lifetime of this binding. */
+    unsigned char task_graph_digest[32];
+    unsigned char task_graph_digest_valid;
 } rxvm_graph_binding;
 
 #define RXVM_METHOD_CACHE_WAYS 2u

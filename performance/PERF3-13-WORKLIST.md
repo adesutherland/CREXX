@@ -2875,6 +2875,61 @@ Gate F is contract-first and staged:
   transport-neutral instruction roles and their complete RXBIN, effect,
   signal, optimizer, tracing and both-VM semantics.
 
+### F3C1 — sealed task-binding validation cache
+
+Status: **complete and accepted 2026-08-15; broader task-launch and ordinary
+single-thread portfolio follows as separate baseline evidence**.
+
+F1f's retained tiny-task result attributes a confirmed 26.3-28.3% latency loss
+primarily to validation of the same linker-sealed task binding for every
+submission. The current validator serializes and hashes the complete immutable
+semantic graph, checks the callable signature and adapter, then resolves the
+same worker-owned procedure pointers again on every invocation.
+
+The compared implementation shapes are:
+
+1. **Eager whole-program task-plan preparation — rejected for F3C1.** RXBIN
+   does not carry a complete indexed catalogue of runtime-created
+   `.tasktarget` instances. Enumerating constants would add loader work and
+   retain plans for targets a worker may never execute. It would also widen
+   the loader/task-target boundary merely to remove repeated work.
+2. **Unbounded or growing lazy map — rejected for F3C1.** First-use resolution
+   is natural, but a growing table adds allocation/failure policy, permits
+   input-driven memory growth and makes lookup/teardown cost depend on the
+   number of distinct submitted bindings.
+3. **Lazy worker-graph digest plus bounded per-worker plan cache — selected.**
+   The first task-binding miss computes and retains the immutable graph digest
+   in that worker's graph binding; ordinary non-task contexts pay no digest
+   preparation cost. Each executor worker owns a small fixed, set-associative
+   plan cache keyed by the complete 80-byte binding and the request's result
+   mode. A miss runs the unchanged validation/resolution path and only a
+   successful result is installed. A hit loads the already resolved procedure,
+   receiver/factory adapter, task kind and inferred result contract without
+   graph traversal, parsing, allocation or hashing.
+
+Ownership and invalidation are structural: graph digests live in worker-owned
+bindings over immutable `RxGraph`; resolved plans live only in the same
+executor worker and may contain only that worker context's `proc_runtime *`
+values. Worker/context teardown drops the complete cache. No plan crosses a
+worker or process, no negative result is cached, and a distinct binding always
+takes the full validator. Cache collisions replace an old successful plan and
+affect performance only.
+
+F3C1 retains the F1f RXBIN and public contracts unchanged. Its minimum gate is
+focused sealed-binding/local/process correctness followed immediately by a
+paired ordinary profiling-off Release comparison against committed F1f
+`7108a9c5f`, using the identical sealed benchmark image. The later baseline
+reports task launch separately from ordinary single-thread product behavior.
+
+The selected cache passes 10/10 focused Debug, 2,149/2,149 full Debug, 35/35
+focused Release Gate F and 136/136 focused Apple ASan tests. In the balanced
+12-pair profiling-off Release verdict, tiny-task latency improves +39.076017%
+on `rxbvml` and +40.340609% on `rxtvml`; `rxtvml` throughput improves
++1.551257%, while `rxbvml` throughput is inconclusive and no cell hits the 3%
+adverse guard. The candidate adds 80 bytes to `rxbvm` and 64 bytes to `rxtvm`.
+Evidence:
+[`F3C1 first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/).
+
 The mandatory conceptual RXAS roles are `chanopen`, `chanstart`, `chanwait`,
 `chancancel` and `chanclose`. `chanopen` separates one provider type code from
 required-capability flags and versioned configuration. Core types cover local
@@ -2962,8 +3017,10 @@ budget. Provider-specific opcode families remain rejected.
    hot-loop hardening after the surface stabilizes. The isolated-process
    provider preserves bytecode-only program identity across fresh task
    executions. F1f adds the Level G-gated task/parallel surface and sealed
-   task-procedure, receiver and `.taskwork` factory bindings. F1g concurrent
-   HTTP/TLS is next.
+   task-procedure, receiver and `.taskwork` factory bindings. F3C1 then
+   recovers the repeated sealed-binding validation cost with a bounded
+   worker-local resolved-plan cache while preserving first-miss validation and
+   the public contract. F1g concurrent HTTP/TLS is next.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding

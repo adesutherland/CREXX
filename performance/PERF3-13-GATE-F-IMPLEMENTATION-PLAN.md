@@ -654,6 +654,27 @@ shape cost and defers tuning until F3/release hardening after the instruction
 and surface work stabilizes. Evidence:
 [`2026-08-15-perf3-13-gate-f-f1f-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
 
+## F3C1 task-binding cache completion record
+
+F3C1 preserves the complete F1f public and serialized contract while avoiding
+repeat validation work. Each worker graph binding computes its immutable graph
+digest only on the first task-binding miss. Each executor worker owns a fixed
+four-set, two-way cache keyed by the complete 80-byte binding plus requested
+result mode. A miss uses the unchanged validator/resolver and installs only a
+successful worker-local plan; a hit reuses the already resolved task
+procedure, receiver/factory adapter, task kind and result contract. Cache
+collision affects performance only, and worker/context teardown is complete
+invalidation. No pointer, plan or validation result crosses a worker or
+process.
+
+Qualification passes focused Debug 10/10, full Debug 2,149/2,149, focused
+Release Gate F 35/35 and focused Apple ASan 136/136. The first balanced
+profiling-off Release verdict records +39.076017% `rxbvml` and +40.340609%
+`rxtvml` tiny-task latency, +1.551257% `rxtvml` throughput and inconclusive
+`rxbvml` throughput, with no adverse guard hit. The candidate adds 80 bytes to
+`rxbvm` and 64 bytes to `rxtvm`. Evidence:
+[`2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/).
+
 ## Evidence and stop rules
 
 Every slice records exact branch/commit identity, dirty scope, commands,

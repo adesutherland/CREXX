@@ -296,18 +296,29 @@ int main(void) {
     {
         unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE];
         unsigned char changed[RX_GRAPH_TASK_BINDING_SIZE];
+        unsigned char graph_digest[32];
+        unsigned char wrong_digest[32];
         RxCallableId bound_callable = RX_GRAPH_NONE;
         unsigned int bound_kind = 0u;
         ok &= require(rx_graph_task_binding(graph,
                                             "graph_test.box.describe",
                                             1u,
                                             binding) &&
+                      rx_graph_digest(graph, graph_digest) &&
+                      rx_graph_task_binding_validate_digest(
+                              graph, graph_digest, binding,
+                              &bound_callable, &bound_kind) &&
                       rx_graph_task_binding_validate(graph,
                                                      binding,
                                                      &bound_callable,
                                                      &bound_kind) &&
                       bound_callable == callable && bound_kind == 1u,
                       "seal and validate a callable task binding");
+        memcpy(wrong_digest, graph_digest, sizeof(wrong_digest));
+        wrong_digest[0] ^= 1u;
+        ok &= require(!rx_graph_task_binding_validate_digest(
+                              graph, wrong_digest, binding, 0, 0),
+                      "reject a task binding against a wrong cached graph digest");
         memcpy(changed, binding, sizeof(changed));
         changed[12] ^= 1u;
         ok &= require(!rx_graph_task_binding_validate(graph,

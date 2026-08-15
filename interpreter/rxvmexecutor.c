@@ -223,6 +223,22 @@ struct rxvm_executor_request {
     unsigned char uses_task_binding;
 };
 
+#define RXVM_TASK_PLAN_CACHE_SETS 4u
+#define RXVM_TASK_PLAN_CACHE_WAYS 2u
+
+typedef struct rxvm_executor_task_plan {
+    unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE];
+    proc_runtime *procedure;
+    proc_runtime *receiver_factory;
+    proc_runtime *taskwork_run;
+    const char *procedure_name;
+    const char *task_descriptor;
+    rxvm_executor_register_type requested_result;
+    rxvm_executor_register_type resolved_result;
+    unsigned int task_kind;
+    unsigned char valid;
+} rxvm_executor_task_plan;
+
 struct rxvm_executor_worker {
     struct rxvm_executor *executor;
     rxvm_context *context;
@@ -237,6 +253,9 @@ struct rxvm_executor_worker {
     rxvm_executor_mutex mutex;
     rxvm_executor_condition changed;
     rxvm_executor_result startup_result;
+    rxvm_executor_task_plan
+            task_plans[RXVM_TASK_PLAN_CACHE_SETS][RXVM_TASK_PLAN_CACHE_WAYS];
+    unsigned char task_plan_next_way[RXVM_TASK_PLAN_CACHE_SETS];
     unsigned char initialized;
     unsigned char thread_started;
     unsigned char startup_complete;
@@ -714,6 +733,155 @@ static uint32_t executor_get_u32_le(const unsigned char *bytes) {
            ((uint32_t)bytes[3] << 24u);
 }
 
+static size_t executor_task_plan_cache_set(
+        const unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE],
+        rxvm_executor_register_type requested_result) {
+    uint32_t hash = executor_get_u32_le(task_binding + 8u) ^
+                    executor_get_u32_le(task_binding + 12u) ^
+                    executor_get_u32_le(task_binding + 44u) ^
+                    executor_get_u32_le(task_binding + 76u) ^
+                    ((uint32_t)task_binding[5] << 24u) ^
+                    ((uint32_t)requested_result * UINT32_C(2654435761));
+    return (size_t)(hash & (RXVM_TASK_PLAN_CACHE_SETS - 1u));
+}
+
+static const rxvm_executor_task_plan *executor_task_plan_cache_find(
+        rxvm_executor_worker *worker,
+        const unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE],
+        rxvm_executor_register_type requested_result) {
+    size_t set;
+    size_t way;
+
+    set = executor_task_plan_cache_set(task_binding, requested_result);
+    for (way = 0u; way < RXVM_TASK_PLAN_CACHE_WAYS; way++) {
+        rxvm_executor_task_plan *plan = &worker->task_plans[set][way];
+        if (plan->valid && plan->requested_result == requested_result &&
+            memcmp(plan->task_binding, task_binding,
+                   RX_GRAPH_TASK_BINDING_SIZE) == 0) {
+            return plan;
+        }
+    }
+    return 0;
+}
+
+static const rxvm_executor_task_plan *executor_task_plan_cache_install(
+        rxvm_executor_worker *worker,
+        const rxvm_executor_task_plan *resolved) {
+    size_t set;
+    size_t way;
+    rxvm_executor_task_plan *slot;
+
+    set = executor_task_plan_cache_set(resolved->task_binding,
+                                       resolved->requested_result);
+    way = worker->task_plan_next_way[set];
+    if (way >= RXVM_TASK_PLAN_CACHE_WAYS) way = 0u;
+    slot = &worker->task_plans[set][way];
+    *slot = *resolved;
+    slot->valid = 1u;
+    worker->task_plan_next_way[set] =
+            (unsigned char)((way + 1u) % RXVM_TASK_PLAN_CACHE_WAYS);
+    return slot;
+}
+
+static rxvm_executor_request_state executor_resolve_task_plan(
+        rxvm_executor_worker *worker,
+        const rxvm_executor_request *request,
+        rxvm_executor_task_plan *plan) {
+    size_t binding_index;
+    int inferred_result_seen = 0;
+
+    memset(plan, 0, sizeof(*plan));
+    memcpy(plan->task_binding, request->task_binding,
+           RX_GRAPH_TASK_BINDING_SIZE);
+    plan->requested_result = request->expected_result;
+    plan->resolved_result = request->expected_result;
+
+    for (binding_index = 0u;
+         binding_index < worker->context->graph_binding_count;
+         binding_index++) {
+        rxvm_graph_binding *binding =
+                worker->context->graph_bindings[binding_index];
+        RxCallableId callable;
+        RxCallableId auxiliary;
+        unsigned int binding_kind;
+        RxGraphCallableView view;
+        proc_runtime *target;
+
+        if (!binding) continue;
+        if (!binding->task_graph_digest_valid) {
+            if (!rx_graph_digest(binding->graph,
+                                 binding->task_graph_digest)) {
+                continue;
+            }
+            binding->task_graph_digest_valid = 1u;
+        }
+        if (!rx_graph_task_binding_validate_digest(
+                    binding->graph, binding->task_graph_digest,
+                    request->task_binding, &callable, &binding_kind)) {
+            continue;
+        }
+        target = rxvm_bound_graph_callable(binding, callable);
+        if (!target || !rx_graph_callable(binding->graph, callable, &view)) {
+            continue;
+        }
+        if (request->expected_result == RXVM_EXECUTOR_REGISTER_NONE) {
+            rxvm_executor_register_type inferred;
+            if (!executor_task_result_type(binding->graph, &view, &inferred) ||
+                (inferred_result_seen && inferred != plan->resolved_result)) {
+                return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+            }
+            plan->resolved_result = inferred;
+            inferred_result_seen = 1;
+        }
+        if (plan->procedure_name &&
+            strcmp(plan->procedure_name, view.symbol) != 0) {
+            return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+        }
+        plan->procedure_name = view.symbol;
+        plan->procedure = target;
+        if (plan->task_kind && plan->task_kind != binding_kind) {
+            return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+        }
+        plan->task_kind = binding_kind;
+        if (binding_kind == 2u &&
+            (request->task_binding[76] || request->task_binding[77] ||
+             request->task_binding[78] || request->task_binding[79])) {
+            proc_runtime *factory;
+            auxiliary = executor_get_u32_le(
+                    request->task_binding + 76u) - 1u;
+            factory = rxvm_bound_graph_callable(binding, auxiliary);
+            if (!factory ||
+                (plan->receiver_factory &&
+                 plan->receiver_factory != factory)) {
+                return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+            }
+            plan->receiver_factory = factory;
+        } else if (binding_kind == 3u) {
+            proc_runtime *adapter;
+            auxiliary = executor_get_u32_le(
+                    request->task_binding + 76u) - 1u;
+            adapter = rxvm_bound_graph_callable(binding, auxiliary);
+            if (!adapter ||
+                (plan->taskwork_run && plan->taskwork_run != adapter) ||
+                (plan->task_descriptor &&
+                 strcmp(plan->task_descriptor, view.descriptor) != 0)) {
+                return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+            }
+            plan->taskwork_run = adapter;
+            plan->task_descriptor = view.descriptor;
+        }
+    }
+    if (!plan->procedure_name) {
+        return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+    }
+    if (request->expected_result == RXVM_EXECUTOR_REGISTER_NONE &&
+        !inferred_result_seen) {
+        return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+    }
+    plan->valid = 1u;
+    return RXVM_EXECUTOR_REQUEST_COMPLETED;
+}
+
 static proc_runtime *executor_find_bound_callable(rxvm_context *context,
                                                   const char *symbol) {
     size_t binding_index;
@@ -791,86 +959,33 @@ static rxvm_executor_request_state executor_worker_call(
     int run_status;
     int index;
     int factory_signature_parsed = 0;
-    int inferred_result_seen = 0;
     unsigned int task_kind = 0u;
     rxvm_executor_register_type expected_result = request->expected_result;
 
     memset(result_out, 0, sizeof(*result_out));
 
     if (request->uses_task_binding) {
-        size_t binding_index;
-        procedure_name = 0;
-        for (binding_index = 0u;
-             binding_index < worker->context->graph_binding_count;
-             binding_index++) {
-            rxvm_graph_binding *binding =
-                    worker->context->graph_bindings[binding_index];
-            RxCallableId callable;
-            RxCallableId auxiliary;
-            unsigned int binding_kind;
-            RxGraphCallableView view;
-            proc_runtime *target;
+        const rxvm_executor_task_plan *plan =
+                executor_task_plan_cache_find(
+                        worker, request->task_binding,
+                        request->expected_result);
+        rxvm_executor_task_plan resolved;
 
-            if (!binding ||
-                !rx_graph_task_binding_validate(binding->graph,
-                                                request->task_binding,
-                                                &callable,
-                                                &binding_kind)) {
-                continue;
+        if (!plan) {
+            rxvm_executor_request_state resolution =
+                    executor_resolve_task_plan(worker, request, &resolved);
+            if (resolution != RXVM_EXECUTOR_REQUEST_COMPLETED) {
+                return resolution;
             }
-            target = rxvm_bound_graph_callable(binding, callable);
-            if (!target || !rx_graph_callable(binding->graph, callable, &view)) {
-                continue;
-            }
-            if (request->expected_result == RXVM_EXECUTOR_REGISTER_NONE) {
-                rxvm_executor_register_type inferred;
-                if (!executor_task_result_type(binding->graph, &view,
-                                               &inferred) ||
-                    (inferred_result_seen && inferred != expected_result)) {
-                    return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
-                }
-                expected_result = inferred;
-                inferred_result_seen = 1;
-            }
-            if (procedure_name && strcmp(procedure_name, view.symbol) != 0) {
-                return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
-            }
-            procedure_name = view.symbol;
-            procedure = target;
-            if (task_kind && task_kind != binding_kind) {
-                return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
-            }
-            task_kind = binding_kind;
-            if (binding_kind == 2u &&
-                (request->task_binding[76] || request->task_binding[77] ||
-                 request->task_binding[78] || request->task_binding[79])) {
-                proc_runtime *factory;
-                auxiliary = executor_get_u32_le(
-                        request->task_binding + 76u) - 1u;
-                factory = rxvm_bound_graph_callable(binding, auxiliary);
-                if (!factory ||
-                    (receiver_factory && receiver_factory != factory)) {
-                    return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
-                }
-                receiver_factory = factory;
-            } else if (binding_kind == 3u) {
-                proc_runtime *adapter;
-
-                auxiliary = executor_get_u32_le(
-                        request->task_binding + 76u) - 1u;
-                adapter = rxvm_bound_graph_callable(binding, auxiliary);
-                if (!adapter || (taskwork_run && taskwork_run != adapter) ||
-                    (task_descriptor &&
-                     strcmp(task_descriptor, view.descriptor) != 0)) {
-                    return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
-                }
-                taskwork_run = adapter;
-                task_descriptor = view.descriptor;
-            }
+            plan = executor_task_plan_cache_install(worker, &resolved);
         }
-        if (!procedure_name) {
-            return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
-        }
+        procedure_name = plan->procedure_name;
+        procedure = plan->procedure;
+        receiver_factory = plan->receiver_factory;
+        taskwork_run = plan->taskwork_run;
+        task_descriptor = plan->task_descriptor;
+        task_kind = plan->task_kind;
+        expected_result = plan->resolved_result;
     } else if (request->uses_callable_id) {
         size_t binding_index;
         procedure_name = 0;
@@ -910,11 +1025,6 @@ static rxvm_executor_request_state executor_worker_call(
     }
 
     if (!procedure) return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
-    if (request->uses_task_binding &&
-        request->expected_result == RXVM_EXECUTOR_REGISTER_NONE &&
-        !inferred_result_seen) {
-        return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
-    }
     if (task_kind == 3u) {
         size_t factory_index;
 

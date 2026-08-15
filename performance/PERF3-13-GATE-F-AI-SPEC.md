@@ -1138,7 +1138,12 @@ RXBIN carries an 80-byte sealed task binding: image digest, callable id,
 signature digest and an adapter slot containing zero or callable id plus one.
 The assembler resolves local
 placeholders, the linker relocates them without merging semantic graphs, and
-the runtime validates the binding before dispatch. Kind `2` reconstructs its
+the runtime validates the binding before dispatch. A runtime may retain the
+immutable graph digest and a bounded resolved plan only within the worker that
+performed that validation. Its cache key must contain the complete binding and
+requested result mode; misses and all failed validations follow the full path,
+and worker/context teardown invalidates every retained pointer. Kind `2`
+reconstructs its
 receiver through the sealed `from_channel` factory; kind `3` constructs the
 factory target in the receiver and invokes the sealed `run` adapter. Factory
 arguments, requests and results cross only as `ChannelValue` data.
