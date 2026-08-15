@@ -1,0 +1,1 @@
+PASS: PERF3-13 F3C1 final combined 36-pair common-five summary retained at performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/common-five-summary-36.csv

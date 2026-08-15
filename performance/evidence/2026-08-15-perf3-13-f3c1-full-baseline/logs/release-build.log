@@ -1,0 +1,16 @@
+[0/2] Re-checking globbed directories...
+[1/16] Creating rxvm symlink to rxbvm
+[2/16] Generating decimal_gate1_common18_noopt.rxbin
+[3/16] Generating nr15_stem_access_rxvm_noopt.rxbin
+[4/16] Generating nr15_stem_semantics_rxvm_noopt.rxbin
+[5/16] Generating decimal_gate1_classic9_noopt.rxbin
+[6/16] Generating nr15_stem_access_rxvm_opt.rxbin
+[7/16] Generating decimal_gate1_rexxcps_family_noopt.rxbin
+[8/16] Generating decimal_gate1_classic9_opt.rxbin
+[9/16] Generating decimal_gate1_classic9_opt_rxas_noopt.rxbin
+[10/16] Generating decimal_gate1_common18_opt.rxbin
+[11/16] Generating decimal_gate1_common18_opt_rxas_noopt.rxbin
+[12/16] Generating nr16_17_stable_state_rxvm_noopt.rxbin
+[13/16] Generating decimal_gate1_rexxcps_family_opt.rxbin
+[14/16] Generating nr16_17_stable_state_rxvm_opt.rxbin
+[15/16] Generating nr15_stem_semantics_rxvm_opt.rxbin

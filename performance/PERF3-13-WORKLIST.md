@@ -2930,6 +2930,17 @@ adverse guard. The candidate adds 80 bytes to `rxbvm` and 64 bytes to `rxtvm`.
 Evidence:
 [`F3C1 first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/).
 
+The separate post-commit full baseline preserves task launch as the result
+above and tests ordinary product behavior against the exact retained pre-cache
+VMs. Across Sieve, Permute, Bounce, Richards, Base64, Towers and canonical
+RexxCPS, 1,036/1,036 processes pass through the governed 36-pair ceiling. The
+common-five higher-is-better geometric mean is clearly favorable at
++1.055583% on `rxtvm` and +0.939592% on product `rxbvm`. `rxtvm` Towers
+(+0.986414% elapsed) and RexxCPS (-1.012927% rate) are clear small adverse
+observations below the 3% guard; no individual or aggregate guard fires.
+Evidence:
+[`F3C1 full task-launch and single-thread baseline`](evidence/2026-08-15-perf3-13-f3c1-full-baseline/).
+
 The mandatory conceptual RXAS roles are `chanopen`, `chanstart`, `chanwait`,
 `chancancel` and `chanclose`. `chanopen` separates one provider type code from
 required-capability flags and versioned configuration. Core types cover local
