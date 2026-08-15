@@ -2,9 +2,9 @@
 
 Date: 2026-08-15
 
-Status: **F0-S normative contract, F1a-F1f concurrency surface, F1g-A typed
-results and the F1g-B bounded pooled HTTP owner complete; HTTP policy,
-streaming and crexx-rag integration active**
+Status: **F0-S normative contract, F1a-F1f concurrency surface and F1g-A
+through F1g-C complete; HTTP streaming, compressed decoding and crexx-rag
+integration active**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -968,18 +968,28 @@ Required behavior is:
 8. partial read/write, early EOF, cancellation and teardown tests; and
 9. concurrent `crexx-rag` generation/embedding-style integration evidence.
 
-F1g-B implements the ownership/reuse subset through
-`rxfnsg.httpclient.pooled(origin, connections, admission, maximum_response)`.
+F1g-B implements the ownership/reuse subset and F1g-C completes the buffered
+policy subset through `rxfnsg.httpclient.pooled(origin, connections, admission,
+maximum_response, ?policy)`.
 The transferable proxy carries immutable configuration and one type-4
 admission reference. Each 192-byte admission frame is exactly two canonical
 92-byte type-4 provider-reference documents plus one 8-byte request length;
 each request and response body uses its own bounded endpoint. One long-lived
 kind-3 `.taskwork` target owns each reusable socket and processes requests
-serially on that connection. `post(path, body, content_type)` is a task method
-returning concrete `.httpresponse`; no live endpoint object or socket integer
-crosses an execution. Only the controller client closes admission and joins
-owners. Policy/deadline/retry completion, explicit stream-returning APIs and
-the crexx-rag fixture remain later F1g slices.
+serially on that connection. `post(path, body, headers)` is a task method
+returning concrete `.httpresponse`; `.httpheaders` and `.httppolicy` use exact
+`ChannelValue` records and receiver-side revalidation. Automatic replay is off;
+connect-only retry may precede a send, while post-send/status retry and
+same-origin 307/308 require `Idempotency-Key`. Cross-origin redirects and POST
+method rewrites are refused. Attempts, followed redirects and any ambiguous
+delivery history survive in the response. The current atomic socket connect
+operation uses the sum of DNS/connect/TLS phase budgets; request/response
+operations use their phase budgets, controller observations use the configured
+completion budget, and the containing task scope owns the strict whole-task
+monotonic deadline. No live endpoint object or socket integer crosses an
+execution. Only the controller client closes admission and joins owners.
+Explicit stream-returning APIs, compressed decoding and the crexx-rag fixture
+remain F1g-D.
 
 ## 14. Diagnostics
 

@@ -1,0 +1,39 @@
+options levelg
+
+namespace ts_http_tls_live
+import rxfnsb
+import concurrency
+import rxfnsg
+
+if getenv("CREXX_HTTP_TLS_LIVE_VERIFY") <> "1" then do
+  say "PASS: rxfnsg HTTP TLS live verification skipped"
+  exit 0
+end
+
+good_host = getenv("CREXX_HTTP_TLS_LIVE_HOST")
+if good_host = "" then good_host = "example.com"
+bad_host = getenv("CREXX_HTTP_TLS_MISMATCH_HOST")
+if bad_host = "" then bad_host = "wrong.host.badssl.com"
+
+policy = .httppolicy.safe()
+call policy.set_timeouts(15000, 15000, 15000, 15000, 15000, 45000)
+headers = .httpheaders.empty()
+
+good = .httpclient.pooled("https://" || good_host, 1, 1, 1048576, policy)
+good_response = good.post("/", "", headers)
+call good.close()
+if good_response.transport_status() <> 0 | good_response.status() = 0 then do
+  say "TLS trusted-host request failed:" good_response.transport_status() good_response.status() good_response.error()
+  exit 1
+end
+
+bad = .httpclient.pooled("https://" || bad_host, 1, 1, 1048576, policy)
+bad_response = bad.post("/", "", headers)
+call bad.close()
+if bad_response.transport_status() >= 0 then do
+  say "TLS hostname-mismatch request unexpectedly passed:" bad_response.status()
+  exit 1
+end
+
+say "PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification"
+exit 0

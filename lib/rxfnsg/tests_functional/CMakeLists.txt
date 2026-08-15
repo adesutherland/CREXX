@@ -74,3 +74,51 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       TIMEOUT 90
   )
 endforeach()
+
+add_custom_target(ts_http_tls_live)
+add_dependencies(testrxfnsg ts_http_tls_live)
+
+foreach(_http_runner IN LISTS _http_pooled_runners)
+  crexx_add_rexx_opt_matrix(
+    NAME "ts_http_tls_live_${_http_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_tls_live.crexx"
+    TARGET_GROUP ts_http_tls_live
+    RUNNER "${_http_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_tls_live.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS gate_f f1g http tls levelg library "${_http_runner}"
+  )
+  set_tests_properties(
+    "ts_http_tls_live_${_http_runner}_noopt"
+    "ts_http_tls_live_${_http_runner}_opt"
+    PROPERTIES
+      PASS_REGULAR_EXPRESSION "PASS: rxfnsg HTTP TLS"
+      TIMEOUT 180
+  )
+endforeach()
+
+add_custom_target(ts_http_policy)
+add_dependencies(testrxfnsg ts_http_policy)
+
+foreach(_http_runner IN LISTS _http_pooled_runners)
+  crexx_add_rexx_opt_matrix(
+    NAME "ts_http_policy_${_http_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_policy.crexx"
+    TARGET_GROUP ts_http_policy
+    RUNNER "${_http_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_policy.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS gate_f f1g http policy levelg library "${_http_runner}"
+  )
+  set_tests_properties(
+    "ts_http_policy_${_http_runner}_noopt"
+    "ts_http_policy_${_http_runner}_opt"
+    PROPERTIES
+      PASS_REGULAR_EXPRESSION "PASS: rxfnsg HTTP policy headers redirects retries ambiguity deadlines and limits"
+      TIMEOUT 120
+  )
+endforeach()

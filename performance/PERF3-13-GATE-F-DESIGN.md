@@ -3,7 +3,8 @@
 Date: 2026-08-13
 
 Status: **user model and staged Gate F implementation approved by Adrian on
-2026-08-14; F0-S through F1e complete; F1f Level G lowering next**
+2026-08-14; F0-S through F1f and F1g-A through F1g-C complete; F1g-D HTTP
+streaming/compression/integration active**
 
 This record is the normative design authority for the future PERF3-13 Gate F
 public concurrency surface. It records the user model, ownership and transfer
@@ -37,11 +38,12 @@ must call mandatory transport-neutral RXAS instructions, which RXVM implements
 over the Gate E executor/provider substrate. There is no RXPA task path and no
 Rexx-visible hidden native-handle contract. F0-S fixes the five instruction
 signatures, opcodes, effects, signals, feature gate and binary value contract.
-F1a-F1e now implement that instruction family, complete type `1` local
+F1a-F1e implement that instruction family, complete type `1` local
 provider, full values/lifecycle, the explicit Rexx Level B class surface,
 reusable type `4` byte endpoints and type `5` child processes in both concrete
-VMs, plus type `2` isolated process tasks. The approved Level G syntax remains
-F1f.
+VMs, plus type `2` isolated process tasks. F1f implements the approved Level G
+syntax, F1g-A closes typed task results, and F1g-B/C provide bounded pooled HTTP
+ownership, safe headers/policy, verified TLS and explicit replay diagnostics.
 
 Use these current repository contracts when implementing the design:
 
@@ -675,7 +677,7 @@ exists.
   and compiler exits, retire the selected old RXAS mnemonics and preserve their
   numeric slots.
 - [x] Implement a separate-process provider with the same contract.
-- [ ] Implement the approved core Level G task declarations, task expressions
+- [x] Implement the approved core Level G task declarations, task expressions
   and `DO PARALLEL` only as lowering to that same Level B contract.
 - [x] Prove no live VM value/reference/native pointer crosses the local or
   isolated-process task boundary.

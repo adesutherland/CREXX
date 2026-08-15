@@ -2,9 +2,9 @@
 
 Date: 2026-08-15
 
-Status: **user model approved; F0-S through F1f, F1g-A typed results and the
-F1g-B bounded pooled HTTP owner are complete; HTTP policy, streaming and
-crexx-rag integration remain active**
+Status: **user model approved; F0-S through F1f and F1g-A through F1g-C are
+complete; HTTP streaming, compressed decoding and crexx-rag integration remain
+active**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -34,10 +34,11 @@ first-verdict stops are recorded in
 Examples using `task` declarations or `DO PARALLEL` compile when the source
 selects `OPTIONS LEVELG`. The five low-level RXAS instructions, complete local
 and isolated-process providers, explicit Level B classes and Level G lowering
-exist in both concrete VMs. F1g-A adds typed object results; F1g-B now exercises
+exist in both concrete VMs. F1g-A adds typed object results; F1g-B exercises
 that surface through a bounded transferable HTTP proxy and reusable
-single-owner connections. Policy, streaming and the `crexx-rag` integration
-fixture remain later F1g slices.
+single-owner connections; F1g-C adds safe headers, policy, verified TLS and
+explicit redirect/retry/ambiguity rules. Streaming, compression and the
+`crexx-rag` integration fixture remain F1g-D.
 
 ## The idea in one page
 
@@ -866,11 +867,12 @@ say generation.status()
 say embedding.status()
 ```
 
-F1g-B currently ships `post(path, body, content_type)`. In the example above,
-the `headers` argument is the approved policy-slice destination surface; custom
-request headers are not silently treated as a content-type string. The policy
-slice must either add that exact overload or update this example with Adrian's
-approval before claiming the final HTTP surface.
+F1g-C ships the approved `post(path, body, headers)` surface. `headers` is a
+transferable `.httpheaders` value; it safely carries credentials, media type
+and idempotency keys and is revalidated after transfer. The optional
+`.httppolicy` on `httpclient.pooled` configures bounded phase/observation
+budgets, headers, buffered request size and opt-in replay. The containing
+`.taskscope` supplies the strict whole-task monotonic deadline.
 
 `post` is a task method on a transferable HTTP proxy. The proxy carries a
 provider/channel capability and immutable configuration; it is not the current
@@ -1010,7 +1012,8 @@ execution for every task, so globals and live VM state cannot spill from one
 task to the next. F1g-A transfers concrete-class results as canonical RXCV and
 reconstructs new controller-owned objects. F1g-B supplies the bounded
 `.httpclient.pooled` proxy, long-lived connection-owner taskwork, canonical
-fixed-size admission descriptors and independent `.httpresponse` values. The
-remaining F1g slices add policy/deadlines/retries, explicit streaming and the
-`crexx-rag` integration fixture. Any contradiction or new language decision
-still returns to Adrian.
+fixed-size admission descriptors and independent `.httpresponse` values.
+F1g-C adds `.httpheaders`, `.httppolicy`, verified TLS, explicit bounded
+redirect/retry rules and retained ambiguity diagnostics. F1g-D adds explicit
+streaming, compressed decoding and the `crexx-rag` integration fixture. Any
+contradiction or new language decision still returns to Adrian.

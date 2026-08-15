@@ -1,0 +1,84 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260815-194157-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20260815-194157-ctest/ctest.log
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260815-194157-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(ts_rxsocket_\(noopt\|opt\)\|ts_http_\(pooled\|policy\|tls_live\)_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/15 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    8.80 sec
+      Start 1563: ts_rxsocket_noopt
+ 2/15 Test #1563: ts_rxsocket_noopt ....................   Passed    0.33 sec
+      Start 1564: ts_rxsocket_opt
+ 3/15 Test #1564: ts_rxsocket_opt ......................   Passed    0.26 sec
+      Start 1693: ts_http_pooled_rxbvm_noopt
+ 4/15 Test #1693: ts_http_pooled_rxbvm_noopt ...........   Passed    4.51 sec
+      Start 1694: ts_http_pooled_rxbvm_opt
+ 5/15 Test #1694: ts_http_pooled_rxbvm_opt .............   Passed    1.53 sec
+      Start 1695: ts_http_pooled_rxtvm_noopt
+ 6/15 Test #1695: ts_http_pooled_rxtvm_noopt ...........   Passed    4.52 sec
+      Start 1696: ts_http_pooled_rxtvm_opt
+ 7/15 Test #1696: ts_http_pooled_rxtvm_opt .............   Passed    1.52 sec
+      Start 1697: ts_http_tls_live_rxbvm_noopt
+ 8/15 Test #1697: ts_http_tls_live_rxbvm_noopt .........   Passed    1.02 sec
+      Start 1698: ts_http_tls_live_rxbvm_opt
+ 9/15 Test #1698: ts_http_tls_live_rxbvm_opt ...........   Passed    1.19 sec
+      Start 1699: ts_http_tls_live_rxtvm_noopt
+10/15 Test #1699: ts_http_tls_live_rxtvm_noopt .........   Passed    1.02 sec
+      Start 1700: ts_http_tls_live_rxtvm_opt
+11/15 Test #1700: ts_http_tls_live_rxtvm_opt ...........   Passed    1.18 sec
+      Start 1701: ts_http_policy_rxbvm_noopt
+==> ctest passed
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(ts_rxsocket_\(noopt\|opt\)\|ts_http_\(pooled\|policy\|tls_live\)_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/15 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    8.80 sec
+      Start 1563: ts_rxsocket_noopt
+ 2/15 Test #1563: ts_rxsocket_noopt ....................   Passed    0.33 sec
+      Start 1564: ts_rxsocket_opt
+ 3/15 Test #1564: ts_rxsocket_opt ......................   Passed    0.26 sec
+      Start 1693: ts_http_pooled_rxbvm_noopt
+ 4/15 Test #1693: ts_http_pooled_rxbvm_noopt ...........   Passed    4.51 sec
+      Start 1694: ts_http_pooled_rxbvm_opt
+ 5/15 Test #1694: ts_http_pooled_rxbvm_opt .............   Passed    1.53 sec
+      Start 1695: ts_http_pooled_rxtvm_noopt
+ 6/15 Test #1695: ts_http_pooled_rxtvm_noopt ...........   Passed    4.52 sec
+      Start 1696: ts_http_pooled_rxtvm_opt
+ 7/15 Test #1696: ts_http_pooled_rxtvm_opt .............   Passed    1.52 sec
+      Start 1697: ts_http_tls_live_rxbvm_noopt
+ 8/15 Test #1697: ts_http_tls_live_rxbvm_noopt .........   Passed    1.02 sec
+      Start 1698: ts_http_tls_live_rxbvm_opt
+ 9/15 Test #1698: ts_http_tls_live_rxbvm_opt ...........   Passed    1.19 sec
+      Start 1699: ts_http_tls_live_rxtvm_noopt
+10/15 Test #1699: ts_http_tls_live_rxtvm_noopt .........   Passed    1.02 sec
+      Start 1700: ts_http_tls_live_rxtvm_opt
+11/15 Test #1700: ts_http_tls_live_rxtvm_opt ...........   Passed    1.18 sec
+      Start 1701: ts_http_policy_rxbvm_noopt
+12/15 Test #1701: ts_http_policy_rxbvm_noopt ...........   Passed   13.27 sec
+      Start 1702: ts_http_policy_rxbvm_opt
+13/15 Test #1702: ts_http_policy_rxbvm_opt .............   Passed    2.42 sec
+      Start 1703: ts_http_policy_rxtvm_noopt
+14/15 Test #1703: ts_http_policy_rxtvm_noopt ...........   Passed   13.54 sec
+      Start 1704: ts_http_policy_rxtvm_opt
+15/15 Test #1704: ts_http_policy_rxtvm_opt .............   Passed    2.42 sec
+
+100% tests passed, 0 tests failed out of 15
+
+Label Time Summary:
+f1g           =  48.14 sec*proc (12 tests)
+gate_f        =  48.14 sec*proc (12 tests)
+http          =  48.14 sec*proc (12 tests)
+levelg        =  48.14 sec*proc (12 tests)
+library       =  48.14 sec*proc (12 tests)
+linked_opt    =  10.52 sec*proc (7 tests)
+policy        =  31.65 sec*proc (4 tests)
+rxbvm         =  23.95 sec*proc (6 tests)
+rxtvm         =  24.19 sec*proc (6 tests)
+smoke         =   0.33 sec*proc (1 test)
+tls           =   4.41 sec*proc (4 tests)
+
+Total Test time (real) =  57.56 sec
+ASan run complete: cmake-build-debugasan/asan-logs/20260815-194157-ctest

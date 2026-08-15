@@ -128,6 +128,23 @@ if socketstatus(client) <> 0 then do
   exit 1
 end
 
+if sockettimeout(client, 25) <> 0 then do
+  say "sockettimeout client deadline setup failed:" socketerror(client)
+  exit 1
+end
+
+timed_text = socketrecv(client, 16)
+if timed_text <> "" | socketstatus(client) <> 2 then do
+  say "socketrecv timeout expected empty text and status 2, got ["timed_text"]" socketstatus(client) socketerror(client)
+  exit 1
+end
+
+timed_binary = socketrecvb(client, 16)
+if timed_binary <> ''x | socketstatus(client) <> 2 then do
+  say "socketrecvb timeout expected empty binary and status 2, got" socketstatus(client) socketerror(client)
+  exit 1
+end
+
 if socketshutdown(client, 2) <> 0 then do
   say "socketshutdown failed:" socketerror(client)
   exit 1

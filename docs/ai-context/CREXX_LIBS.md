@@ -228,16 +228,21 @@ through a small driver registry of exact aliases and prefixes. See
 `lib/rxfnsg/rexx/http.crexx` is the Gate F Level G concurrent HTTP surface. It
 coexists with the synchronous Level B `rxhttp` module and exposes a
 transferable `.httpclient.pooled(origin, connections, admission,
-maximum_response)` plus independent typed `.httpresponse` values. Each
-long-lived `.taskwork` owner holds at most one reusable socket; callers submit
-`post(path, body, content_type)` as an ordinary Level G task method. Fixed-size
-admission descriptors and per-request type-4 byte endpoints carry canonical
-references and bytes, never socket integers or live VM values. The F1g-B slice
-covers bounded admission, per-origin connection reuse, HTTP/HTTPS routing,
-fixed-length/chunked response parsing and bounded buffered responses. Policy,
-redirect/retry and explicit body-stream APIs remain later F1g slices. See
+maximum_response, ?policy)` plus `.httpheaders`, `.httppolicy` and independent
+typed `.httpresponse` values. Each long-lived `.taskwork` owner holds at most
+one reusable socket; callers submit `post(path, body, headers)` as an ordinary
+Level G task method. Fixed-size admission descriptors and per-request type-4
+byte endpoints carry canonical references and bytes, never socket integers or
+live VM values. F1g-C adds safe transferable headers, bounded phase/observation
+budgets, verified TLS, bounded same-origin 307/308 redirect and idempotency-key
+retry rules, ambiguity history, header/request ceilings, early-EOF detection
+and bodyless-response handling. DNS/connect/TLS budgets are composed for the
+current atomic socket connection operation; the containing `.taskscope`
+deadline remains the strict whole-task monotonic deadline. Explicit request and
+response streams, compressed response decoding and the `crexx-rag` integration
+fixture remain F1g-D. See
 `lib/rxfnsg/rexx/http.md` and the both-VM loopback fixture
-`lib/rxfnsg/tests_functional/ts_http_pooled.crexx`.
+`lib/rxfnsg/tests_functional/ts_http_policy.crexx`.
 
 `lib/rxfnsl/rexx/tinyexpr.crexx` contains the first Level L
 language-engineering proving slice. It is deliberately not a lexer generator or

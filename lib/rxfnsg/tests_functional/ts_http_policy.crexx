@@ -1,0 +1,267 @@
+options levelg
+
+namespace ts_http_policy
+import rxfnsb
+import rxsocket
+import concurrency
+import rxfnsg
+
+endpoint_write: procedure = .int
+  arg endpoint = .byteendpoint, bytes = .binary
+  result = endpoint.start_write(bytes, -1).wait(-1)
+  if result.succeeded() = 0 then return -1
+  return result.value().as_integer()
+
+endpoint_read_exact: procedure = .binary
+  arg endpoint = .byteendpoint, expected = .int
+  result = ''x as .binary
+  do while binlength(result) < expected
+    completion = endpoint.start_read(expected - binlength(result), -1).wait(-1)
+    if completion.succeeded() = 0 then return result
+    chunk = completion.value().as_binary()
+    if binlength(chunk) > 0 then result = binconcat(result, chunk)
+    if completion.details().field("eof").as_boolean() then leave
+  end
+  return result
+
+request_body_start: procedure = .int
+  arg request = .string
+  boundary = pos("0d0a0d0a"x, request)
+  if boundary > 0 then return boundary + 4
+  return 0
+
+request_content_length: procedure = .int
+  arg headers = .string
+  marker = "CONTENT-LENGTH:"
+  upper = translate(headers)
+  start = pos(marker, upper)
+  if start = 0 then return 0
+  start = start + length(marker)
+  finish = pos("0d0a"x, headers, start)
+  if finish = 0 then finish = length(headers) + 1
+  value = strip(substr(headers, start, finish - start))
+  if datatype(value, "W") = 0 then return -1
+  return value
+
+read_request: procedure = .string
+  arg socket = .int
+  request = ""
+  do forever
+    chunk = socketrecv(socket, 4096)
+    if chunk <> "" then request = request || chunk
+    body_start = request_body_start(request)
+    if body_start > 0 then do
+      content_length = request_content_length(left(request, body_start - 1))
+      if content_length >= 0 & binlength(substr(request, body_start) as .binary) >= content_length then return request
+    end
+    state = socketstatus(socket)
+    if state <> 0 | chunk = "" then return request
+  end
+
+send_response: procedure = .int
+  arg socket = .int, status = .string, fields = .string, body = .string, connection = .string
+  crlf = "0d0a"x
+  response = "HTTP/1.1 " || status || crlf || fields || ,
+             "Content-Length: " || binlength(body as .binary) || crlf || ,
+             "Connection: " || connection || crlf || crlf || body
+  return socketsend(socket, response)
+
+/** Deterministic loopback server for policy, replay and deadline cases. */
+policy_http_server: class implements .taskwork
+  _ready_reference = .channelvalue
+  _scenario = .int
+
+  *: factory
+    arg ready_reference = .channelvalue, scenario = .int
+    _ready_reference = ready_reference
+    _scenario = scenario
+    return
+
+  run: method = .channelvalue
+    arg ignored = .channelvalue, context = .taskcontext
+    host = "127.0.0.1"
+    server = socketcreate()
+    if server <= 0 then return .channelvalue.integer_value(-1)
+    if socketbind(server, host, 0) <> 0 then return .channelvalue.integer_value(-2)
+    if socketlisten(server, 4) <> 0 then return .channelvalue.integer_value(-3)
+    local = socketlocal(server)
+    colon = lastpos(":", local)
+    port_text = substr(local, colon + 1)
+    if datatype(port_text, "W") = 0 then return .channelvalue.integer_value(-4)
+    ready = .byteendpoint.from_reference(_ready_reference)
+    port_wire = '0000000000000000'x as .binary
+    <at..int>(0) port_wire = port_text
+    if endpoint_write(ready, port_wire) <> 8 then return .channelvalue.integer_value(-5)
+    call ready.half_close(2)
+    call ready.close()
+    crlf = "0d0a"x
+
+    client = socketaccept(server)
+    if client <= 0 then return .channelvalue.integer_value(-10)
+    call sockettimeout client, 2000
+    request = read_request(client)
+
+    if _scenario = 1 then do
+      if pos("POST /start ", request) = 0 | pos("Authorization: Bearer secret", request) = 0 | pos("Idempotency-Key: policy-1", request) = 0 then return .channelvalue.integer_value(-11)
+      fields = "Location: /final" || crlf
+      if send_response(client, "307 Temporary Redirect", fields, "", "keep-alive") <= 0 then return .channelvalue.integer_value(-12)
+      request = read_request(client)
+      if pos("POST /final ", request) = 0 then return .channelvalue.integer_value(-13)
+      if send_response(client, "503 Service Unavailable", "", "retry", "keep-alive") <= 0 then return .channelvalue.integer_value(-14)
+      request = read_request(client)
+      if pos("POST /final ", request) = 0 then return .channelvalue.integer_value(-15)
+      if send_response(client, "200 OK", "X-Policy: replay" || crlf, "policy-ok", "close") <= 0 then return .channelvalue.integer_value(-16)
+      drop_rc = socketclose(client)
+      drop_rc = socketclose(server)
+      return .channelvalue.integer_value(103)
+    end
+
+    if _scenario = 2 then do
+      drop_rc = socketclose(client)
+      client = socketaccept(server)
+      if client <= 0 then return .channelvalue.integer_value(-21)
+      call sockettimeout client, 2000
+      request = read_request(client)
+      if pos("Idempotency-Key: policy-2", request) = 0 then return .channelvalue.integer_value(-22)
+      if send_response(client, "200 OK", "", "retry-ok", "close") <= 0 then return .channelvalue.integer_value(-23)
+      drop_rc = socketclose(client)
+      drop_rc = socketclose(server)
+      return .channelvalue.integer_value(202)
+    end
+
+    if _scenario = 3 then do
+      drop_rc = socketclose(client)
+      drop_rc = socketclose(server)
+      return .channelvalue.integer_value(301)
+    end
+
+    if _scenario = 4 then do
+      call sockettimeout client, 250
+      ignored_text = socketrecv(client, 1)
+      drop_rc = socketclose(client)
+      drop_rc = socketclose(server)
+      return .channelvalue.integer_value(401)
+    end
+
+    if _scenario = 5 then do
+      fields = "X-One: 1" || crlf || "X-Two: 2" || crlf
+      if send_response(client, "200 OK", fields, "too-many-headers", "close") <= 0 then return .channelvalue.integer_value(-51)
+      drop_rc = socketclose(client)
+      drop_rc = socketclose(server)
+      return .channelvalue.integer_value(501)
+    end
+
+    if _scenario = 6 then do
+      fields = "Location: https://example.invalid/other" || crlf
+      if send_response(client, "307 Temporary Redirect", fields, "", "close") <= 0 then return .channelvalue.integer_value(-61)
+      drop_rc = socketclose(client)
+      drop_rc = socketclose(server)
+      return .channelvalue.integer_value(601)
+    end
+
+    if _scenario = 7 then do
+      response = "HTTP/1.1 204 No Content" || crlf || "Connection: keep-alive" || crlf || crlf
+      if socketsend(client, response) <= 0 then return .channelvalue.integer_value(-71)
+      drop_rc = socketclose(client)
+      drop_rc = socketclose(server)
+      return .channelvalue.integer_value(701)
+    end
+
+    drop_rc = socketclose(client)
+    drop_rc = socketclose(server)
+    return .channelvalue.integer_value(-99)
+
+check_response: procedure = .int
+  arg scenario = .int, response = .httpresponse
+  if scenario = 1 then do
+    if response.transport_status() <> 0 | response.status() <> 200 then return 11
+    if response.body() <> "policy-ok" | response.header("X-Policy") <> "replay" then return 12
+    if response.attempts() <> 3 | response.redirects() <> 1 | response.ambiguous_outcome() then return 13
+    return 0
+  end
+  if scenario = 2 then do
+    if response.transport_status() <> 0 | response.status() <> 200 | response.body() <> "retry-ok" then return 21
+    if response.attempts() <> 2 | response.redirects() <> 0 | response.ambiguous_outcome() = 0 then return 22
+    return 0
+  end
+  if scenario = 3 then do
+    if response.transport_status() >= 0 | response.attempts() <> 1 | response.ambiguous_outcome() = 0 then return 31
+    return 0
+  end
+  if scenario = 4 then do
+    if response.transport_status() <> -6 | pos("timed out", response.error()) = 0 then return 41
+    return 0
+  end
+  if scenario = 5 then do
+    if response.transport_status() <> -23 then return 51
+    return 0
+  end
+  if scenario = 6 then do
+    if response.transport_status() <> 0 | response.status() <> 307 | response.redirects() <> 0 then return 61
+    if pos("redirect not followed", response.error()) = 0 then return 62
+    return 0
+  end
+  if scenario = 7 then do
+    if response.transport_status() <> 0 | response.status() <> 204 | response.body() <> "" then return 71
+    if response.attempts() <> 1 | response.ambiguous_outcome() then return 72
+    return 0
+  end
+  return 99
+
+run_case: procedure = .int
+  arg scenario = .int
+  ready = .byteendpoint.memory(3, 8)
+  server_pool = .taskpool.local(1, 1)
+  server_scope = .taskscope.collectall(server_pool, 10000)
+  server_target = task .policy_http_server(ready.provider_reference(), scenario)
+  server_child = server_scope.submit(server_target, .channelvalue.null_value())
+  port_wire = endpoint_read_exact(ready, 8)
+  if binlength(port_wire) <> 8 then return 100 + scenario
+  port = <at..int>(0) port_wire
+  call ready.close()
+
+  policy = .httppolicy.safe()
+  call policy.set_timeouts(1000, 1000, 1000, 1000, 1000, 5000)
+  if scenario = 1 | scenario = 2 | scenario = 3 | scenario = 6 then call policy.set_replay(2, 1)
+  if scenario = 4 then call policy.set_timeouts(1000, 1000, 1000, 1000, 50, 2000)
+  if scenario = 5 then call policy.set_limits(3, 1024, 1024)
+  client = .httpclient.pooled("http://127.0.0.1:" || port, 1, 2, 4096, policy)
+  headers = .httpheaders.json()
+  call headers.add("Authorization", "Bearer secret")
+  if scenario = 1 then call headers.add("Idempotency-Key", "policy-1")
+  if scenario = 2 | scenario = 6 then call headers.add("Idempotency-Key", "policy-2")
+  response = client.post("/start", "request", headers)
+  errors = check_response(scenario, response)
+  if errors <> 0 then say "policy scenario" scenario "response failure" errors response.transport_status() response.status() response.attempts() response.redirects() response.ambiguous_outcome() response.error()
+  call client.close()
+  server_completion = server_child.wait(-1)
+  if server_completion.succeeded() = 0 then do
+    say "policy scenario" scenario "server task failure" server_completion.error_code() server_completion.message()
+    errors = errors + 200
+  end
+  else do
+    expected = scenario * 100 + 1
+    if scenario = 1 then expected = 103
+    if scenario = 2 then expected = 202
+    if server_completion.value().as_integer() <> expected then do
+      say "policy scenario" scenario "server result" server_completion.value().as_integer() "expected" expected
+      errors = errors + 300
+    end
+  end
+  call server_scope.finish()
+  call server_pool.close()
+  return errors
+
+main: procedure = .int
+  errors = 0
+  do scenario = 1 to 7
+    errors = errors + run_case(scenario)
+  end
+  if errors <> 0 then do
+    say "FAIL: rxfnsg HTTP policy" errors
+    return 1
+  end
+  say "PASS: rxfnsg HTTP policy headers redirects retries ambiguity deadlines and limits"
+  return 0
+
+exit main()

@@ -1,0 +1,29 @@
+PERF3-13 Gate F F1g-C retained artifacts
+
+Performance:
+- manifest.txt: exact two-workload, both-VM control/candidate matrix
+- timing/: raw samples, capture manifest, absolute summaries and outputs
+- paired-summary.csv: Level B paired reducer result and guard decisions
+- summarize_paired.crexx: maintained Level B reducer
+- timing/logs/: runner and reducer logs
+
+Correctness:
+- qa/debug-focused-build.log: focused Debug product/library/image build
+- qa/debug-focused-ctest.log: 15/15 focused Debug tests
+- qa/debug-full-ctest.log: 2,163/2,163 complete Debug CTest
+- qa/release-build.log: final ordinary Release product/library/image build
+- qa/release-focused-ctest.log: 15/15 focused Release tests
+- qa/release-tls-live-ctest.log: 5/5 fixture plus four live TLS cells
+- qa/release-gate-f-ctest.log: 50/50 Gate F plus generated fixture
+- qa/release-policy-stress-repeat100.log: 500/500 repeated CTest executions
+- qa/asan-build.log: complete Apple AddressSanitizer build
+- qa/asan-focused-ctest.log: 152/152 focused sanitizer tests
+- qa/asan-final-incremental-build.log: final-source incremental sanitizer build
+- qa/asan-final-http-ctest.log: final-source 15/15 HTTP/socket sanitizer tests
+- qa/asan-tls-live-ctest.log: 5/5 fixture plus four live sanitizer TLS cells
+
+The live TLS matrix uses example.com as the trusted default and
+wrong.host.badssl.com as the hostname-mismatch default. The default CTest path
+skips external network verification unless CREXX_HTTP_TLS_LIVE_VERIFY=1.
+Apple leak detection is unavailable and was disabled through the repository
+runner; AddressSanitizer remained active.

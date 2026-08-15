@@ -1,0 +1,48 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/15 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.08 sec
+      Start 1701: ts_http_policy_rxbvm_noopt
+      Start 1703: ts_http_policy_rxtvm_noopt
+      Start 1702: ts_http_policy_rxbvm_opt
+      Start 1704: ts_http_policy_rxtvm_opt
+      Start 1698: ts_http_tls_live_rxbvm_opt
+      Start 1700: ts_http_tls_live_rxtvm_opt
+      Start 1697: ts_http_tls_live_rxbvm_noopt
+      Start 1696: ts_http_pooled_rxtvm_opt
+      Start 1694: ts_http_pooled_rxbvm_opt
+      Start 1699: ts_http_tls_live_rxtvm_noopt
+ 2/15 Test #1699: ts_http_tls_live_rxtvm_noopt .........   Passed    0.07 sec
+      Start 1695: ts_http_pooled_rxtvm_noopt
+ 3/15 Test #1697: ts_http_tls_live_rxbvm_noopt .........   Passed    0.09 sec
+      Start 1693: ts_http_pooled_rxbvm_noopt
+ 4/15 Test #1698: ts_http_tls_live_rxbvm_opt ...........   Passed    0.31 sec
+      Start 1563: ts_rxsocket_noopt
+ 5/15 Test #1700: ts_http_tls_live_rxtvm_opt ...........   Passed    0.31 sec
+      Start 1564: ts_rxsocket_opt
+ 6/15 Test #1563: ts_rxsocket_noopt ....................   Passed    0.07 sec
+ 7/15 Test #1564: ts_rxsocket_opt ......................   Passed    0.09 sec
+ 8/15 Test #1695: ts_http_pooled_rxtvm_noopt ...........   Passed    0.36 sec
+ 9/15 Test #1693: ts_http_pooled_rxbvm_noopt ...........   Passed    0.36 sec
+10/15 Test #1696: ts_http_pooled_rxtvm_opt .............   Passed    0.45 sec
+11/15 Test #1694: ts_http_pooled_rxbvm_opt .............   Passed    0.45 sec
+12/15 Test #1704: ts_http_policy_rxtvm_opt .............   Passed    0.75 sec
+13/15 Test #1702: ts_http_policy_rxbvm_opt .............   Passed    0.78 sec
+14/15 Test #1701: ts_http_policy_rxbvm_noopt ...........   Passed    0.92 sec
+15/15 Test #1703: ts_http_policy_rxtvm_noopt ...........   Passed    0.93 sec
+
+100% tests passed, 0 tests failed out of 15
+
+Label Time Summary:
+f1g           =   5.77 sec*proc (12 tests)
+gate_f        =   5.77 sec*proc (12 tests)
+http          =   5.77 sec*proc (12 tests)
+levelg        =   5.77 sec*proc (12 tests)
+library       =   5.77 sec*proc (12 tests)
+linked_opt    =   3.13 sec*proc (7 tests)
+policy        =   3.38 sec*proc (4 tests)
+rxbvm         =   2.90 sec*proc (6 tests)
+rxtvm         =   2.86 sec*proc (6 tests)
+smoke         =   0.07 sec*proc (1 test)
+tls           =   0.78 sec*proc (4 tests)
+
+Total Test time (real) =   1.06 sec

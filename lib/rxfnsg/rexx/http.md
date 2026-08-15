@@ -1,36 +1,34 @@
 # cREXX Level G Concurrent HTTP Library
 
-`http.crexx` is the Gate F Level G HTTP/1.1 client built from the common task,
-channel and byte-endpoint surface. It does not add an HTTP RXAS instruction or
-an HTTP channel-provider type. Each connection is owned by one long-lived
-`.taskwork` execution, and socket integers never cross worker boundaries.
+`http.crexx` is the Gate F HTTP/1.1 client built from the common task, channel
+and byte-endpoint surface. HTTP is a Rexx library, not an RXAS instruction or a
+special channel-provider type. Each reusable socket belongs to one long-lived
+`.taskwork` owner, and socket integers never cross worker boundaries.
 
-This document describes the F1g-B owner/reuse slice. The later F1g policy and
-streaming slices add configurable headers, redirect/retry rules, finer-grained
-deadlines and explicitly streamed request/response bodies. The synchronous
-Level B `rxhttp` client remains available and source compatible.
+F1g-C supplies bounded headers and request policy, verified HTTPS, explicit
+redirect/retry rules and ambiguity diagnostics. F1g-D still owns explicit
+request/response streaming, compressed response decoding and the retained
+`crexx-rag` generation/embedding fixture. The synchronous Level B `rxhttp`
+client remains available and source compatible.
 
-## Import and runtime images
+## Import and first request
 
 ```rexx
 options levelg
 import rxfnsg
-```
 
-Direct VM runs load `library.rxbin`, `classlib.rxbin` and `rxfnsg.rxbin`.
-`rxfnsg` exposes the new `.httpclient` and `.httpresponse`; code that also
-imports legacy `rxhttp` can write `.rxhttp..httpclient` when it needs that
-synchronous interface.
+policy = .httppolicy.safe()
+call policy.set_timeouts(10000, 10000, 10000, 30000, 30000, 60000)
 
-## Pooled client
+headers = .httpheaders.json()
+call headers.add("Authorization", "Bearer " || token)
 
-```rexx
-client = .httpclient.pooled("https://api.example", 8, 32, 1048576)
+client = .httpclient.pooled("https://api.example", 8, 32, 1048576, policy)
 scope = .taskscope.failfast(.taskpool.local(4, 64), 30000)
 
 do parallel using scope
-  generation = client.post("/generate", generation_body, "application/json")
-  embedding = client.post("/embed", embedding_body, "application/json")
+  generation = client.post("/generate", generation_body, headers)
+  embedding = client.post("/embed", embedding_body, headers)
 end
 
 say generation.status()
@@ -38,72 +36,135 @@ say embedding.status()
 call client.close()
 ```
 
-The factory arguments are:
+`post(path, body, headers)` is a Level G task method. It participates in normal
+task expressions and `DO PARALLEL`; the task pool bounds Rexx executions while
+the HTTP pool independently bounds connections and admission.
 
-- `origin`: an `http://` or `https://` origin, with an optional explicit port;
+The `pooled` factory accepts:
+
+- `origin`: an `http://` or `https://` origin, optionally with an explicit
+  port; IPv6 literals use bracketed authority syntax;
 - `connections`: `1..32` single-owner reusable connections;
-- `admission`: `1..256` queued request descriptors;
-- `maximum_response`: `1..8388608` buffered response-body bytes.
+- `admission`: `1..256` queued fixed-size request descriptors;
+- `maximum_response`: `1..8388608` buffered decoded response bytes; and
+- optional `policy`: a `.httppolicy`, defaulting to `.httppolicy.safe()`.
 
-`post(path, body, content_type)` is a Level G task method. Calls participate in
-ordinary task expressions and `DO PARALLEL`; the caller chooses task-pool
-capacity independently of HTTP connection-pool capacity. F1g-B supports POST
-with a scalar body and content type. Per-request header collections are part of
-the next policy slice.
+The request target must be an origin-relative path beginning `/`, no larger
+than 8192 UTF-8 bytes and free of CR/LF. F1g-C request bodies are buffered
+`.string` values; binary and streamed bodies belong to F1g-D.
 
-## Ownership and backpressure
+## Safe headers
+
+Use `.httpheaders.empty()`, `.httpheaders.json()` or
+`.httpheaders.media_type(value)`, then add fields fluently or with `CALL`:
+
+```rexx
+headers = .httpheaders.json()
+call headers.add("Authorization", "Bearer " || token)
+call headers.add("Idempotency-Key", request_id)
+```
+
+Names must be HTTP tokens. Values and `Content-Type` cannot contain CR or LF.
+`Host`, `Content-Length`, `Connection`, `Transfer-Encoding` and
+`Accept-Encoding` are library-owned. Every transferred header snapshot is
+validated again when reconstructed, so forged RXCV cannot bypass those rules.
+
+## Policy and deadlines
+
+`.httppolicy.safe()` defaults to:
+
+| Policy | Default |
+| --- | ---: |
+| DNS, connect, TLS | 10000 ms each |
+| request, response | 30000 ms each |
+| controller completion observation | 60000 ms |
+| custom request/response fields | 64 |
+| request/response header bytes | 65536 |
+| buffered request body | 8388608 bytes |
+| redirects, retries | 0 |
+
+Configure with:
+
+```rexx
+call policy.set_timeouts(dns, connect, tls, request, response, total)
+call policy.set_limits(header_count, header_bytes, request_bytes)
+call policy.set_replay(max_redirects, max_retries)
+```
+
+All values are validated before mutation, so a rejected update does not leave
+the policy partly changed. The current socket substrate performs hostname
+resolution, TCP connect and TLS handshake as one synchronous owner-local
+operation; F1g-C therefore applies the sum of the three configured phase
+budgets to that atomic operation while retaining the separate values in the
+transfer contract. Request and response socket operations use their own
+budgets. `total` bounds each controller-side admission/completion observation;
+the containing `.taskscope` deadline is the strict whole-task monotonic
+deadline and should reflect the caller's end-to-end service objective.
+
+## Redirects, retries and ambiguity
+
+Automatic replay is off by default. `set_replay()` only permits bounded replay;
+it does not make an unsafe POST safe.
+
+- connect failures before any send may be retried within the configured limit;
+- post-send transport retries require a non-empty `Idempotency-Key`;
+- retryable HTTP statuses are 408, 425, 429, 500, 502, 503 and 504 and require
+  the same key;
+- only same-origin 307/308 redirects retain POST and may be followed;
+- 301/302/303 POST method rewriting is deliberately disabled; and
+- cross-origin redirects are returned, never followed.
+
+`ambiguous_outcome()` is true when bytes may have reached the peer but no
+definitive response was obtained. It remains true even when an explicitly safe
+retry later succeeds, preserving the complete delivery history.
+
+## Ownership, framing and backpressure
 
 The client creates one bounded type-4 admission endpoint and one `.taskwork`
-connection owner per configured connection. Each request creates bounded
-request and response endpoints, then writes one canonical fixed-size admission
-descriptor containing only provider references and the request length. Socket
-handles and live VM objects are never encoded into that descriptor.
+connection owner per configured connection. A request uses bounded staging and
+response endpoints, then admits one canonical 192-byte descriptor containing
+two 92-byte endpoint references plus an eight-byte request length. Live VM
+objects and socket handles are never encoded.
 
-An owner reads one request at a time, reuses its connection while HTTP permits,
-and materializes an independent `.httpresponse` in the caller. A connection
-pool of one therefore serializes network ownership even when several caller
-tasks are ready. The admission endpoint applies bounded backpressure before
-unbounded work can accumulate.
+An owner consumes one request at a time and reuses its connection while HTTP
+permits. F1g-C accepts fixed `Content-Length`, chunked, close-delimited and
+bodyless 204/304 responses, detects early EOF for declared framing, and bounds
+encoded and decoded response storage. It sends `Accept-Encoding: identity`;
+a compressed response is returned explicitly as transport status `-24` until
+F1g-D supplies bounded decoding.
 
-Only the controller-owned `.httpclient.close()` closes admission, joins the
-owners and closes their pool. A per-call transferable proxy must not close that
-shared endpoint when its request completes.
+Only the controller-owned client may call `close()` to close admission, join
+all owners and release the pool. A transferred per-task proxy closes only its
+view of the endpoint.
 
 ## Response API
 
-`.httpresponse` is a concrete transferable class with:
+`.httpresponse` is a concrete transferable value with:
 
-- `transport_status()`: `0` when transport and framing succeeded, otherwise a
+- `transport_status()`: zero for a complete HTTP exchange, otherwise a
   negative client status;
-- `status()`: parsed HTTP status, or `0` when no valid response status exists;
-- `succeeded()`: true only for transport success and HTTP `2xx`;
-- `body()`: buffered response body;
-- `header(name)`: case-insensitive response-header lookup;
-- `error()`: transport/protocol diagnostic or a non-2xx status diagnostic.
+- `status()`: parsed HTTP status or zero;
+- `succeeded()`: transport success plus HTTP 2xx;
+- `body()` and `header(name)`;
+- `error()`;
+- `attempts()` and `redirects()`; and
+- `ambiguous_outcome()`.
 
-The worker transfers canonical RXCV produced by `to_channel()`; the controller
-constructs a new object through `from_channel()`. No response object identity
-or socket state crosses a worker boundary.
+The worker publishes canonical RXCV through `to_channel()` and the controller
+constructs a new object through `from_channel()`. Object identity, endpoints
+and socket state do not cross the task boundary.
 
-F1g-B handles fixed `Content-Length` and chunked response framing and asks the
-server for `Accept-Encoding: identity`. It preserves a bounded response-body
-ceiling and a bounded header allowance. Compressed bodies, redirects, retry
-classification and stream-returning APIs are deliberately not claimed by this
-slice.
+## TLS and regression proof
 
-## TLS and verification
+HTTPS uses `socketconnecttls(sock, host, port)`. The platform backend verifies
+the certificate chain and hostname using Security/Network.framework on Apple,
+OpenSSL verification on supported Unix-like systems and SChannel on Windows.
+A build without TLS support fails the request; it never downgrades to plaintext.
 
-An `https://` origin routes through `socketconnecttls(sock, host, port)`. The VM
-core TLS backend performs certificate-chain and hostname verification using the
-platform trust store: Network.framework/Security.framework on Apple platforms,
-OpenSSL verification paths on supported Unix-like platforms, and SChannel on
-Windows. A build without a TLS backend reports a transport failure; it does not
-downgrade an HTTPS origin to plaintext.
-
-## Regression proof
-
-`lib/rxfnsg/tests_functional/ts_http_pooled.crexx` is a pure-cREXX loopback
-fixture. Its server is `.taskwork`; one client owner serves two parallel pairs,
-and the server must report one accepted socket and four requests. CTest compiles
-and assembles optimized and unoptimized callers, links the optimized forms, and
-runs both `rxbvm` and `rxtvm`.
+`ts_http_pooled.crexx` proves reusable single-owner connections and bounded
+parallel admission. `ts_http_policy.crexx` covers credentials, same-origin
+307, status/transport retries, ambiguity, timeout, header limits,
+cross-origin refusal and bodyless 204. `ts_http_tls_live.crexx` is
+environment-gated and verifies both a trusted host and hostname mismatch.
+CTest compiles and assembles optimized/unoptimized images and runs `rxbvm` and
+`rxtvm`.

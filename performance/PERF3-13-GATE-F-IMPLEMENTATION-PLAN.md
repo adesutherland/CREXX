@@ -2,9 +2,9 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S through F1f, F1g-A typed
-task results and the F1g-B bounded pooled HTTP owner complete; F1g policy,
-streaming and crexx-rag integration active**
+Status: **implementation approved by Adrian; F0-S through F1f and F1g-A
+through F1g-C complete; F1g-D streaming, compressed decoding and crexx-rag
+integration active**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -427,6 +427,17 @@ fixture proves one owner serves four task requests over one accepted connection
 in optimized/unoptimized form on both VMs. This slice establishes ownership,
 reuse, backpressure, fixed/chunked framing and the TLS route; it does not claim
 the remaining policy, explicit streaming or crexx-rag acceptance items.
+
+F1g-C is complete. `.httpheaders` is a canonical, revalidated credential/header
+snapshot; `.httppolicy` configures bounded phase/observation budgets,
+header/request ceilings and disabled-by-default replay. Same-origin 307/308 and
+post-send/status retries require an idempotency key, cross-origin/method rewrite
+is refused, and `.httpresponse` retains attempts, redirects and ambiguous
+delivery history. Live HTTPS tests prove both trusted-host success and hostname
+mismatch rejection. A socket receive-status regression ensures timeout, EOF and
+would-block never become apparent uninitialised text/binary bytes. F1g-D owns
+explicit request/response streams, compressed decoding and the `crexx-rag`
+generation/embedding fixture.
 
 Run local correctness and saturation tests, the crexx-rag integration fixture,
 then the mandatory Release verdict before broader closeout.

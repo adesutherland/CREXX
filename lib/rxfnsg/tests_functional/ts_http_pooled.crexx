@@ -165,19 +165,20 @@ main: procedure = .int
 
   client = .httpclient.pooled("http://127.0.0.1:" || port, 1, 4, 1048576)
   request_pool = .taskpool.local(2, 4)
+  headers = .httpheaders.media_type("text/plain")
 
   first_scope = .taskscope.failfast(request_pool, 60000)
   do parallel using first_scope
-    first = client.post("/one", "one", "text/plain")
-    second = client.post("/two", "two", "text/plain")
+    first = client.post("/one", "one", headers)
+    second = client.post("/two", "two", headers)
   end
   errors = errors + check_response(first)
   errors = errors + check_response(second)
 
   second_scope = .taskscope.failfast(request_pool, 60000)
   do parallel using second_scope
-    third = client.post("/three", "three", "text/plain")
-    fourth = client.post("/four", "four", "text/plain")
+    third = client.post("/three", "three", headers)
+    fourth = client.post("/four", "four", headers)
   end
   errors = errors + check_response(third)
   errors = errors + check_response(fourth)
