@@ -25,11 +25,11 @@ main() .locals=32
     ieq r5,r1,0
     brf fail_failure_handle,r5
 
-    /* Reserved core providers are known-but-unavailable; an unregistered
-     * extension code is invalid rather than silently treated as a core type. */
+    /* Provider type 2 is implemented but rejects a type-1 configuration; an
+     * unregistered extension code remains invalid rather than silently core. */
     load r2,2
     chanopen r0,r1,r2,r3,r4
-    ieq r5,r0,4
+    ieq r5,r0,6
     brf fail_unavailable_provider,r5
     ieq r5,r1,0
     brf fail_failure_handle,r5

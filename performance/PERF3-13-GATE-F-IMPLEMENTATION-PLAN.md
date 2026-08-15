@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S through F1d complete; F1e
-isolated-process provider next**
+Status: **implementation approved by Adrian; F0-S through F1e complete; F1f
+Level G Rexx lowering next**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -511,8 +511,8 @@ The runtime registry at this checkpoint was deliberately core-only: it was
 seeded with the lifetime-pinned local descriptor. F1c subsequently completed
 private registration and fake-provider vector `GF-B09`, full `ChannelValue`,
 deadlines/scopes and the Level B classes. F1d subsequently completed reusable
-byte endpoints, structured child processes and ADDRESS migration. Isolated
-process tasks, Level G lowering and HTTP remain F1e/F1f/F1g.
+byte endpoints, structured child processes and ADDRESS migration. F1e now
+completes isolated process tasks; Level G lowering and HTTP remain F1f/F1g.
 
 ## F1c completion record
 
@@ -541,7 +541,8 @@ one terminal completion, drain/cancel close and deterministic teardown.
 proves that it contains no RXPA task call or procedure-name dispatch string.
 
 The boundary is explicit rather than simulated. `.taskpool.process` reaches
-reserved core provider type `2` and reports provider unavailable until F1e.
+core provider type `2`; F1e now supplies that provider with the same Level B
+pool/scope/task contract as `.taskpool.local`.
 `.taskscope.ask`, `.taskcontext.endpoint` and compiler-created `.taskwork`
 kind-3 dispatch report `UNSUPPORTED_OPERATION` until their provider/compiler
 adapters land. Pool `queued()` and `running()` likewise report unsupported
@@ -585,6 +586,42 @@ remains deferred to F3/release hardening. Mac closeout passes the complete
 ordinary Release matrix and 100-repeat endpoint/provider/ADDRESS stress.
 Evidence:
 [`2026-08-15-perf3-13-gate-f-f1d-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/).
+
+## F1e completion record
+
+F1e implements core isolated-process provider type `2` with capability mask
+`0x010f`. It accepts the existing canonical process-pool, task-scope and
+task-invoke RXCV records, uses a bounded warm worker set and admission queue,
+and publishes the same canonical completion documents as the local provider.
+The private protocol is versioned and framed as
+`READY`/`INVOKE`/`STARTED`/`RESULT`/`CANCEL`/`SHUTDOWN`; it is not a public
+provider or cross-host protocol.
+
+Pool creation seals the controller's bytecode-only program generation into a
+temporary RXBIN archive. Distinct semantic graphs remain distinct concatenated
+007 containers so their numeric callable/member IDs are not renumbered. Native
+modules are rejected for isolated execution, and no live `value`, reference,
+frame, pointer or OS handle crosses the boundary. A warm worker process is
+reusable, but each request constructs and tears down a fresh executor/VM
+context, proving that module globals and task state do not spill between work.
+
+Cancellation and deadlines first request cooperative interruption, then hard
+terminate only the isolated process after a 250 ms grace. A disconnect before
+`STARTED` maps to `TRANSPORT_LOST`; a disconnect after `STARTED` maps to
+`UNKNOWN_OUTCOME`. Exactly one terminal completion wins each race, dead workers
+are replaced, protocol payloads and byte endpoints are bounded, and close
+joins workers and removes the temporary snapshot. POSIX protocol writes block
+`SIGPIPE` only at that private worker-write boundary; they do not alter the
+host's process-wide signal disposition.
+
+Mac closeout passes the complete Debug suite 2,115/2,115, focused Release
+106/106, focused Apple ASan 106/106 with leak detection disabled because Apple
+LSan is unavailable, a 100-repeat 13-test high-risk suite, a 1,500-run
+concurrent process/SIGPIPE stress and 300 post-audit process repetitions that
+include running-sibling fail-fast cancellation. The final paired Release
+confirmation has no guard hit or confirmed regression and makes no improvement
+claim. Evidence:
+[`2026-08-15-perf3-13-gate-f-f1e-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
 
 ## Evidence and stop rules
 

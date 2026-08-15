@@ -34,6 +34,7 @@
 #include "platform.h"
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
+#include "rxvmprocessworker.h"
 #include "rxvm.h"
 
 /* Library Buffer */
@@ -102,6 +103,12 @@ int main(int argc, char *argv[]) {
     size_t num_modules;
 
     platform_install_signal_handlers();
+
+    /* Private, rebuild-together process-provider worker mode. It is kept out
+     * of public help and executes only the versioned framed task protocol. */
+    if (argc == 3 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
+        return rxvm_process_worker_main(argv[2]);
+    }
 
 #ifdef _WIN32
     /* Enable UTF-8 Processes */

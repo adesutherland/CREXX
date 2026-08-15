@@ -1,0 +1,5 @@
+cell,vm,metric,pairs,accepted_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+channel-latency,rxbvml,jobs_per_second,12,135659.438659,138294.296270,-3.021492,-0.098594,0.591756,2.317326,63.633758,6.094407,-5.526909,17.715722,noisy_inconclusive,9,12,no
+channel-throughput,rxbvml,jobs_per_second,12,3011.156623,3034.867359,-17.376077,-0.324049,1.698084,8.477325,13.394771,2.440536,-2.688973,7.570045,noisy_inconclusive,9,12,no
+channel-latency,rxtvml,jobs_per_second,12,137287.381377,137912.948220,-4.667208,-2.358189,1.174827,4.638528,14.796962,1.852441,-1.737932,5.442815,noisy_inconclusive,8,12,no
+channel-throughput,rxtvml,jobs_per_second,12,2657.614272,2659.497867,-7.265587,-0.454929,0.141510,0.571676,11.410524,0.541862,-2.278711,3.362435,noisy_inconclusive,6,12,no

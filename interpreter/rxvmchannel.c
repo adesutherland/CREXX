@@ -5,9 +5,11 @@
  */
 
 #include "rxvmchannel.h"
+#include "rxvmchannel_internal.h"
 
 #include "rxvmchannel_byte.h"
 #include "rxvmchannel_child.h"
+#include "rxvmchannel_process.h"
 #include "rxvmexecutor.h"
 #include "rxvmintp.h"
 #include "rxvmprogram.h"
@@ -188,13 +190,6 @@ typedef struct rxcv_buffer {
     size_t length;
     size_t capacity;
 } rxcv_buffer;
-
-typedef struct rxvm_channel_invoke {
-    uint64_t callable_id;
-    rxvm_executor_register_image *arguments;
-    size_t argument_count;
-    int64_t target_kind;
-} rxvm_channel_invoke;
 
 static volatile uint32_t rxvm_channel_next_owner_id;
 
@@ -565,9 +560,19 @@ static int rxcv_node_array(const rxcv_node *node,
     return 1;
 }
 
-static rxvm_channel_status rxcv_parse_pool_configuration(
+int rxvm_channel_validate_node_frame(const void *data, size_t length) {
+    uint16_t flags = 0u;
+    uint64_t members = 0u;
+    size_t consumed = 0u;
+    return data && length && rxcv_validate_node(
+            (const unsigned char *)data, length, 1u,
+            &flags, &members, &consumed) && consumed == length;
+}
+
+rxvm_channel_status rxvm_channel_parse_task_pool_configuration(
         const void *data,
         size_t length,
+        int64_t provider_type,
         size_t *worker_count_out,
         size_t *admission_capacity_out) {
     rxcv_node root;
@@ -578,9 +583,15 @@ static rxvm_channel_status rxcv_parse_pool_configuration(
     int64_t workers;
     rxvm_channel_status status = rxcv_document_root(data, length, &root);
 
+    const char *schema = provider_type == 1
+            ? "crexx.channel.local-task-pool"
+            : (provider_type == 2
+                ? "crexx.channel.process-task-pool" : 0);
+
     if (status != RXVM_CHANNEL_OK) return status;
+    if (!schema) return RXVM_CHANNEL_INVALID_CONFIGURATION;
     if (!rxcv_record_open(&root, &record) ||
-        !rxcv_record_schema(&record, "crexx.channel.local-task-pool", 1u, 2u) ||
+        !rxcv_record_schema(&record, schema, 1u, 2u) ||
         !rxcv_record_field(&record, "admissionCapacity", &admission_node) ||
         !rxcv_record_field(&record, "workerCount", &worker_node) ||
         !rxcv_node_integer(&admission_node, &admission) ||
@@ -593,9 +604,10 @@ static rxvm_channel_status rxcv_parse_pool_configuration(
     return RXVM_CHANNEL_OK;
 }
 
-static rxvm_channel_status rxcv_parse_scope_configuration(
+rxvm_channel_status rxvm_channel_parse_task_scope_configuration(
         const void *data,
         size_t length,
+        int64_t expected_provider_type,
         int64_t *pool_capability_out,
         int64_t *failure_policy_out,
         int64_t *timeout_microseconds_out) {
@@ -626,7 +638,7 @@ static rxvm_channel_status rxcv_parse_scope_configuration(
     }
     pool_capability = rxcv_i64(pool_node.payload);
     provider_type = rxcv_i64(pool_node.payload + 16u);
-    if (pool_capability <= 0 || provider_type != RXVM_CHANNEL_PROVIDER_LOCAL) {
+    if (pool_capability <= 0 || provider_type != expected_provider_type) {
         return RXVM_CHANNEL_INVALID_CONFIGURATION;
     }
     *pool_capability_out = pool_capability;
@@ -635,7 +647,7 @@ static rxvm_channel_status rxcv_parse_scope_configuration(
     return RXVM_CHANNEL_OK;
 }
 
-static void rxcv_invoke_free(rxvm_channel_invoke *invoke) {
+void rxvm_channel_task_invoke_free(rxvm_channel_task_invoke *invoke) {
     size_t index;
     if (!invoke) return;
     for (index = 0u; index < invoke->argument_count; index++) {
@@ -682,10 +694,10 @@ static rxvm_channel_status rxcv_parse_task_target(
     return RXVM_CHANNEL_OK;
 }
 
-static rxvm_channel_status rxcv_parse_task_invoke(
+rxvm_channel_status rxvm_channel_parse_task_invoke(
         const void *data,
         size_t length,
-        rxvm_channel_invoke *invoke) {
+        rxvm_channel_task_invoke *invoke) {
     rxcv_node root;
     rxcv_record record;
     rxcv_node arguments_node;
@@ -722,7 +734,7 @@ static rxvm_channel_status rxcv_parse_task_invoke(
     for (index = 0u; index < count; index++) {
         rxcv_node item;
         if (!rxcv_parse_node(cursor, remaining, &item)) {
-            rxcv_invoke_free(invoke);
+            rxvm_channel_task_invoke_free(invoke);
             return RXVM_CHANNEL_INVALID_CONFIGURATION;
         }
         if (invoke->target_kind == 1 && item.tag == RXCV_TAG_INTEGER &&
@@ -741,14 +753,14 @@ static rxvm_channel_status rxcv_parse_task_invoke(
             status = rxcv_copy_node_document(
                     cursor, item.total_length, &document, &document_length);
             if (status != RXVM_CHANNEL_OK) {
-                rxcv_invoke_free(invoke);
+                rxvm_channel_task_invoke_free(invoke);
                 return status;
             }
             invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_BINARY;
             invoke->arguments[index].bytes = (const char *)document;
             invoke->arguments[index].length = document_length;
         } else {
-            rxcv_invoke_free(invoke);
+            rxvm_channel_task_invoke_free(invoke);
             return RXVM_CHANNEL_INVALID_CONFIGURATION;
         }
         cursor += item.total_length;
@@ -824,6 +836,135 @@ static int rxcv_buffer_field_name(rxcv_buffer *buffer, const char *name) {
     size_t length = strlen(name);
     return rxcv_buffer_u64(buffer, length) &&
            rxcv_buffer_append(buffer, name, length);
+}
+
+static rxvm_channel_status rxcv_buffer_provider_node(
+        rxcv_buffer *buffer,
+        const unsigned char *data,
+        size_t length,
+        uint16_t *document_flags);
+
+static const char *channel_completion_message_from_state(int64_t state) {
+    switch (state) {
+        case 1: return "";
+        case 3: return "cancelled";
+        case 4: return "deadline exceeded";
+        case 5: return "task target not found";
+        case 6: return "task rejected during shutdown";
+        case 7: return "process transport lost before execution";
+        case 8: return "process outcome unknown after transport loss";
+        case 9: return "task killed";
+        default: return "task execution failed";
+    }
+}
+
+rxvm_channel_status rxvm_channel_encode_process_completion(
+        const rxvm_executor_completion *executor_completion,
+        unsigned char **document_out,
+        size_t *document_length_out) {
+    rxvm_channel_provider_completion completion;
+    rxcv_buffer payload;
+    rxcv_buffer document;
+    unsigned char header[16];
+    uint16_t flags = 0u;
+    rxvm_channel_status status;
+
+    if (document_out) *document_out = 0;
+    if (document_length_out) *document_length_out = 0u;
+    if (!executor_completion || !document_out || !document_length_out) {
+        return RXVM_CHANNEL_INVALID_ARGUMENT;
+    }
+    rxvm_channel_completion_from_executor(executor_completion, &completion);
+    memset(&payload, 0, sizeof(payload));
+    memset(&document, 0, sizeof(document));
+    if (!rxcv_buffer_u64(&payload,
+                         strlen("crexx.channel.process-completion")) ||
+        !rxcv_buffer_append(&payload, "crexx.channel.process-completion",
+                            strlen("crexx.channel.process-completion")) ||
+        !rxcv_buffer_u32(&payload, 1u) ||
+        !rxcv_buffer_u64(&payload, 4u) ||
+        !rxcv_buffer_field_name(&payload, "errorCode") ||
+        !rxcv_buffer_integer_node(&payload, completion.error_code) ||
+        !rxcv_buffer_field_name(&payload, "message") ||
+        !rxcv_buffer_node(&payload, RXCV_TAG_STRING,
+                          completion.message ? completion.message : "",
+                          strlen(completion.message ? completion.message : "")) ||
+        !rxcv_buffer_field_name(&payload, "result")) goto out_of_memory;
+    if (completion.result_node && completion.result_node_length) {
+        status = rxcv_buffer_provider_node(
+                &payload, completion.result_node,
+                completion.result_node_length, &flags);
+        if (status != RXVM_CHANNEL_OK) {
+            free(payload.data);
+            return status;
+        }
+    } else if (!rxcv_buffer_node(&payload, RXCV_TAG_NULL, 0, 0u)) {
+        goto out_of_memory;
+    }
+    if (!rxcv_buffer_field_name(&payload, "state") ||
+        !rxcv_buffer_integer_node(&payload, completion.state)) {
+        goto out_of_memory;
+    }
+    memset(header, 0, sizeof(header));
+    memcpy(header, "RXCV", 4u);
+    header[4] = 1u;
+    rxcv_put_u16(header + 6u, flags);
+    rxcv_put_u64(header + 8u, 16u + 12u + payload.length);
+    if (!rxcv_buffer_append(&document, header, sizeof(header)) ||
+        !rxcv_buffer_node(&document, RXCV_TAG_RECORD,
+                          payload.data, payload.length)) {
+        goto out_of_memory;
+    }
+    free(payload.data);
+    *document_out = document.data;
+    *document_length_out = document.length;
+    return RXVM_CHANNEL_OK;
+
+out_of_memory:
+    free(payload.data);
+    free(document.data);
+    return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+}
+
+rxvm_channel_status rxvm_channel_decode_process_completion(
+        const void *document,
+        size_t document_length,
+        rxvm_channel_provider_completion *completion_out) {
+    rxcv_node root;
+    rxcv_record record;
+    rxcv_node error_node;
+    rxcv_node message_node;
+    rxcv_node result_node;
+    rxcv_node state_node;
+    int64_t error_code;
+    int64_t state;
+    rxvm_channel_status status;
+
+    if (completion_out) memset(completion_out, 0, sizeof(*completion_out));
+    if (!completion_out) return RXVM_CHANNEL_INVALID_ARGUMENT;
+    status = rxcv_document_root(document, document_length, &root);
+    if (status != RXVM_CHANNEL_OK) return status;
+    if (!rxcv_record_open(&root, &record) ||
+        !rxcv_record_schema(&record,
+                            "crexx.channel.process-completion", 1u, 4u) ||
+        !rxcv_record_field(&record, "errorCode", &error_node) ||
+        !rxcv_record_field(&record, "message", &message_node) ||
+        !rxcv_record_field(&record, "result", &result_node) ||
+        !rxcv_record_field(&record, "state", &state_node) ||
+        !rxcv_node_integer(&error_node, &error_code) ||
+        !rxcv_node_integer(&state_node, &state) ||
+        message_node.tag != RXCV_TAG_STRING || error_code < 0 ||
+        state < 1 || state > 9) {
+        return RXVM_CHANNEL_INVALID_CONFIGURATION;
+    }
+    completion_out->state = state;
+    completion_out->error_code = error_code;
+    completion_out->message = channel_completion_message_from_state(state);
+    if (result_node.tag != RXCV_TAG_NULL) {
+        completion_out->result_node = result_node.payload - 12u;
+        completion_out->result_node_length = result_node.total_length;
+    }
+    return RXVM_CHANNEL_OK;
 }
 
 static rxvm_channel_status rxcv_buffer_provider_node(
@@ -1167,6 +1308,7 @@ static rxvm_channel_runtime *channel_runtime_for(rxvm_runtime *runtime) {
     rxvm_channel_provider_descriptor local_descriptor;
     rxvm_channel_provider_descriptor byte_descriptor;
     rxvm_channel_provider_descriptor child_descriptor;
+    rxvm_channel_provider_descriptor process_descriptor;
 
     state = (rxvm_channel_runtime *)rxvm_runtime_channel_state(runtime);
     if (state) return state;
@@ -1204,6 +1346,13 @@ static rxvm_channel_runtime *channel_runtime_for(rxvm_runtime *runtime) {
     local_descriptor.operations.channel_destroy = channel_local_destroy;
     if (channel_provider_register_in_state(
             candidate, &local_descriptor, 1) !=
+            RXVM_CHANNEL_PROVIDER_REGISTRATION_OK) {
+        channel_runtime_destroy(candidate);
+        return 0;
+    }
+    rxvm_channel_process_provider_descriptor(&process_descriptor);
+    if (channel_provider_register_in_state(
+            candidate, &process_descriptor, 1) !=
             RXVM_CHANNEL_PROVIDER_REGISTRATION_OK) {
         channel_runtime_destroy(candidate);
         return 0;
@@ -1387,6 +1536,31 @@ static rxvm_channel_status channel_resolve(
     }
     if (slot_out) *slot_out = slot;
     if (channel_out) *channel_out = &state->channels[slot];
+    return RXVM_CHANNEL_OK;
+}
+
+rxvm_channel_status rxvm_channel_resolve_provider_state(
+        rxvm_context *context,
+        int64_t capability,
+        int64_t provider_type,
+        void **provider_state_out) {
+    rxvm_channel_context *state;
+    rxvm_channel_slot *channel;
+    rxvm_channel_status status;
+
+    if (provider_state_out) *provider_state_out = 0;
+    if (!context || provider_type <= 0 || !provider_state_out) {
+        return RXVM_CHANNEL_INVALID_ARGUMENT;
+    }
+    state = channel_context_for(context, 0);
+    status = channel_resolve(state, capability, 0, &channel);
+    if (status != RXVM_CHANNEL_OK) return status;
+    if (channel->state != RXVM_CHANNEL_SLOT_OPEN || !channel->provider ||
+        channel->provider->descriptor.type != provider_type ||
+        !channel->provider_state) {
+        return RXVM_CHANNEL_INVALID_CONFIGURATION;
+    }
+    *provider_state_out = channel->provider_state;
     return RXVM_CHANNEL_OK;
 }
 
@@ -1596,15 +1770,17 @@ static rxvm_channel_status channel_local_open(
     (void)module_state;
     if (channel_state_out) *channel_state_out = 0;
     if (!context || !channel_state_out) return RXVM_CHANNEL_INVALID_ARGUMENT;
-    status = rxcv_parse_pool_configuration(
+    status = rxvm_channel_parse_task_pool_configuration(
             configuration, configuration_length,
+            RXVM_CHANNEL_PROVIDER_LOCAL,
             &worker_count, &admission_capacity);
     if (status != RXVM_CHANNEL_OK) {
         rxvm_channel_context *context_state;
         rxvm_channel_slot *pool_channel;
         size_t pool_slot;
-        status = rxcv_parse_scope_configuration(
-                configuration, configuration_length, &pool_capability,
+        status = rxvm_channel_parse_task_scope_configuration(
+                configuration, configuration_length,
+                RXVM_CHANNEL_PROVIDER_LOCAL, &pool_capability,
                 &failure_policy, &timeout_microseconds);
         if (status != RXVM_CHANNEL_OK) return status;
         context_state = channel_context_for(context, 0);
@@ -1682,7 +1858,7 @@ static rxvm_channel_status channel_local_start(
         void **request_state_out) {
     rxvm_channel_local_state *local =
             (rxvm_channel_local_state *)channel_state;
-    rxvm_channel_invoke invoke;
+    rxvm_channel_task_invoke invoke;
     rxvm_channel_local_request *local_request;
     rxvm_executor_request *request = 0;
     rxvm_executor_result result;
@@ -1697,12 +1873,13 @@ static rxvm_channel_status channel_local_start(
     if (local->is_scope && local->shared->pool_closed) {
         return RXVM_CHANNEL_SHUTTING_DOWN;
     }
-    status = rxcv_parse_task_invoke(envelope, envelope_length, &invoke);
+    status = rxvm_channel_parse_task_invoke(
+            envelope, envelope_length, &invoke);
     if (status != RXVM_CHANNEL_OK) return status;
     local_request = (rxvm_channel_local_request *)calloc(
             1u, sizeof(*local_request));
     if (!local_request) {
-        rxcv_invoke_free(&invoke);
+        rxvm_channel_task_invoke_free(&invoke);
         return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
     }
     if (wait_microseconds > 0) {
@@ -1741,12 +1918,12 @@ static rxvm_channel_status channel_local_start(
                 local->requests = local_request;
                 *request_state_out = local_request;
                 (void)channel_local_expire_due(local);
-                rxcv_invoke_free(&invoke);
+                rxvm_channel_task_invoke_free(&invoke);
                 return RXVM_CHANNEL_OK;
             }
             if (result != RXVM_EXECUTOR_QUEUE_FULL) {
                 free(local_request);
-                rxcv_invoke_free(&invoke);
+                rxvm_channel_task_invoke_free(&invoke);
                 return result == RXVM_EXECUTOR_OUT_OF_MEMORY
                     ? RXVM_CHANNEL_RESOURCE_EXHAUSTED
                     : (result == RXVM_EXECUTOR_STOPPING
@@ -1756,7 +1933,7 @@ static rxvm_channel_status channel_local_start(
         }
         if (wait_microseconds == 0) {
             free(local_request);
-            rxcv_invoke_free(&invoke);
+            rxvm_channel_task_invoke_free(&invoke);
             return RXVM_CHANNEL_BACKPRESSURE;
         }
         observed_generation = rxvm_executor_completion_generation_get(
@@ -1768,7 +1945,7 @@ static rxvm_channel_status channel_local_start(
                     ? channel_remaining_wait(local->deadline) : -1;
             if (local->deadline && !scope_remaining) {
                 free(local_request);
-                rxcv_invoke_free(&invoke);
+                rxvm_channel_task_invoke_free(&invoke);
                 return RXVM_CHANNEL_TIMEOUT;
             }
             (void)rxvm_executor_completion_generation_wait(
@@ -1785,7 +1962,7 @@ static rxvm_channel_status channel_local_start(
                     local->shared->executor, observed_generation,
                     remaining, 0)) {
                 free(local_request);
-                rxcv_invoke_free(&invoke);
+                rxvm_channel_task_invoke_free(&invoke);
                 return RXVM_CHANNEL_TIMEOUT;
             }
         }
@@ -1819,6 +1996,58 @@ static int64_t channel_local_completion_state(
     return 2;
 }
 
+void rxvm_channel_completion_from_executor(
+        const rxvm_executor_completion *executor_completion,
+        rxvm_channel_provider_completion *completion_out) {
+    if (!completion_out) return;
+    memset(completion_out, 0, sizeof(*completion_out));
+    if (!executor_completion) {
+        completion_out->state = 2;
+        completion_out->error_code = RXVM_CHANNEL_INTERNAL_ERROR;
+        completion_out->message = "missing task completion";
+        return;
+    }
+    completion_out->state = channel_local_completion_state(
+            executor_completion->state);
+    completion_out->error_code =
+            executor_completion->state == RXVM_EXECUTOR_REQUEST_COMPLETED
+                ? 0 : (int64_t)executor_completion->state;
+    completion_out->message = channel_local_completion_message(
+            executor_completion->state);
+    if (executor_completion->state != RXVM_EXECUTOR_REQUEST_COMPLETED) return;
+    if (executor_completion->result.type == RXVM_EXECUTOR_REGISTER_INTEGER) {
+        unsigned char *node = completion_out->inline_result_node;
+        memset(node, 0, sizeof(completion_out->inline_result_node));
+        node[0] = RXCV_TAG_INTEGER;
+        rxcv_put_u64(node + 4u, 8u);
+        rxcv_put_u64(node + 12u,
+                     (uint64_t)executor_completion->result.integer);
+        completion_out->result_node = node;
+        completion_out->result_node_length = 20u;
+    } else if (executor_completion->result.type ==
+               RXVM_EXECUTOR_REGISTER_BINARY) {
+        rxcv_node root;
+        rxvm_channel_status status = rxcv_document_root(
+                executor_completion->result.bytes,
+                executor_completion->result.length, &root);
+        if (status == RXVM_CHANNEL_OK) {
+            completion_out->result_node =
+                    (const unsigned char *)executor_completion->result.bytes +
+                    16u;
+            completion_out->result_node_length = root.total_length;
+        } else {
+            completion_out->state = 2;
+            completion_out->error_code = RXVM_CHANNEL_INVALID_CONFIGURATION;
+            completion_out->message = "task returned invalid ChannelValue";
+        }
+    } else if (executor_completion->result.type !=
+               RXVM_EXECUTOR_REGISTER_NONE) {
+        completion_out->state = 2;
+        completion_out->error_code = RXVM_CHANNEL_INVALID_VALUE_TYPE;
+        completion_out->message = "task returned unsupported value";
+    }
+}
+
 static int channel_local_terminal_snapshot(
         void *channel_state,
         void *request_state,
@@ -1840,50 +2069,8 @@ static int channel_local_terminal_snapshot(
             &completion_order);
     if (!terminal) return 0;
     if (completion_out) {
-        completion_out->state = channel_local_completion_state(
-                executor_completion.state);
-        completion_out->error_code =
-                executor_completion.state == RXVM_EXECUTOR_REQUEST_COMPLETED
-                    ? 0 : (int64_t)executor_completion.state;
-        completion_out->message = channel_local_completion_message(
-                executor_completion.state);
-        if (executor_completion.state == RXVM_EXECUTOR_REQUEST_COMPLETED) {
-            if (executor_completion.result.type ==
-                    RXVM_EXECUTOR_REGISTER_INTEGER) {
-                unsigned char *node = completion_out->inline_result_node;
-                memset(node, 0, sizeof(completion_out->inline_result_node));
-                node[0] = RXCV_TAG_INTEGER;
-                rxcv_put_u64(node + 4u, 8u);
-                rxcv_put_u64(node + 12u,
-                             (uint64_t)executor_completion.result.integer);
-                completion_out->result_node = node;
-                completion_out->result_node_length = 20u;
-            } else if (executor_completion.result.type ==
-                       RXVM_EXECUTOR_REGISTER_BINARY) {
-                rxcv_node root;
-                rxvm_channel_status status = rxcv_document_root(
-                        executor_completion.result.bytes,
-                        executor_completion.result.length, &root);
-                if (status == RXVM_CHANNEL_OK) {
-                    completion_out->result_node =
-                            (const unsigned char *)
-                            executor_completion.result.bytes + 16u;
-                    completion_out->result_node_length = root.total_length;
-                } else {
-                    completion_out->state = 2;
-                    completion_out->error_code =
-                            RXVM_CHANNEL_INVALID_CONFIGURATION;
-                    completion_out->message =
-                            "task returned invalid ChannelValue";
-                }
-            } else if (executor_completion.result.type !=
-                       RXVM_EXECUTOR_REGISTER_NONE) {
-                completion_out->state = 2;
-                completion_out->error_code =
-                        RXVM_CHANNEL_INVALID_VALUE_TYPE;
-                completion_out->message = "task returned unsupported value";
-            }
-        }
+        rxvm_channel_completion_from_executor(
+                &executor_completion, completion_out);
     }
     if ((executor_completion.state != RXVM_EXECUTOR_REQUEST_COMPLETED ||
          (completion_out && completion_out->state != 1)) &&

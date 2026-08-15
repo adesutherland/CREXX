@@ -1,0 +1,270 @@
+/* Gate F F1e isolated-process provider through the public RXAS contract. */
+
+.globals=1
+g0 .expose=gatef.process_state
+
+.meta "gatef.process_identity"="b" ".int" identity() "number=.string"
+.meta "gatef.process_loop"="b" ".int" loop_forever() ""
+.meta "gatef.process_stateful"="b" ".int" stateful() "amount=.string"
+
+main() .locals=24
+    /* One warm isolated worker and two total admitted requests. */
+    load r4,0x5258435601000000a3000000000000000900000087000000000000001f0000000000000063726578782e6368616e6e656c2e70726f636573732d7461736b2d706f6f6c010000000200000000000000110000000000000061646d697373696f6e436170616369747903000000080000000000000002000000000000000b00000000000000776f726b6572436f756e740300000008000000000000000100000000000000
+    load r2,2
+    load r3,271
+    chanopen r0,r1,r2,r3,r4
+    ieq r5,r0,0
+    brf fail_open,r5
+
+    /* Exact task-invoke RXCV document for identity("41"). */
+    load r4,0x5258435601000000b701000000000000090000009b01000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d696e766f6b650100000002000000000000000900000000000000617267756d656e7473080000001600000000000000010000000000000006000000020000000000000034310600000000000000746172676574090000002101000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d7461726765740100000005000000000000000a0000000000000063616c6c61626c65496403000000080000000000000000000000000000001000000000000000666163746f7279417267756d656e747308000000080000000000000000000000000000000b00000000000000696d616765446967657374070000002000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000006b696e6403000000080000000000000001000000000000000f000000000000007369676e61747572654469676573740700000020000000000000000000000000000000000000000000000000000000000000000000000000000000
+    load r8,0
+    chanstart r0,r6,r1,r4,r8
+    ieq r5,r0,0
+    brf fail_start_one,r5
+    load r8,-1
+    chanwait r0,r7,r1,r8
+    ieq r5,r0,0
+    brf fail_wait_one,r5
+    load r14,298
+    bgeti64 r15,r7,r14
+    ieq r5,r15,1
+    brf fail_state_one,r5
+    load r14,229
+    bgeti64 r15,r7,r14
+    ieq r5,r15,41
+    brf fail_result_one,r5
+
+    /* A second request uses the same warm process but a fresh VM execution. */
+    load r14,123
+    load r15,50
+    bseti8 r4,r14,r15
+    chanstart r0,r6,r1,r4,r8
+    ieq r5,r0,0
+    brf fail_start_two,r5
+    load r8,-1
+    chanwait r0,r7,r1,r8
+    ieq r5,r0,0
+    brf fail_wait_two,r5
+    load r14,229
+    bgeti64 r15,r7,r14
+    ieq r5,r15,42
+    brf fail_result_two,r5
+
+    /* The process is reused, but each request receives a fresh VM context. */
+    load r14,225
+    load r15,2
+    bseti64 r4,r14,r15
+    chanstart r0,r6,r1,r4,r8
+    ieq r5,r0,0
+    brf fail_spill_start_one,r5
+    load r8,-1
+    chanwait r0,r7,r1,r8
+    ieq r5,r0,0
+    brf fail_spill_wait_one,r5
+    load r14,229
+    bgeti64 r15,r7,r14
+    ieq r5,r15,42
+    brf fail_spill_result_one,r5
+    load r8,0
+    chanstart r0,r6,r1,r4,r8
+    ieq r5,r0,0
+    brf fail_spill_start_two,r5
+    load r8,-1
+    chanwait r0,r7,r1,r8
+    ieq r5,r0,0
+    brf fail_spill_wait_two,r5
+    load r14,229
+    bgeti64 r15,r7,r14
+    ieq r5,r15,42
+    brf fail_spill_result_two,r5
+
+    /* Restore the ordinary identity target for later queued work. */
+    load r14,225
+    load r15,0
+    bseti64 r4,r14,r15
+
+    /* A process scope owns one absolute deadline and one terminal outcome. */
+    load r9,0x5258435601000200d00000000000000009000000b400000000000000180000000000000063726578782e6368616e6e656c2e7461736b2d73636f70650100000003000000000000000d000000000000006661696c757265506f6c69637903000000080000000000000001000000000000000400000000000000706f6f6c0b0000001800000000000000000000000000000000000000000000000100000000000000130000000000000074696d656f75744d6963726f7365636f6e64730300000008000000000000008813000000000000
+    load r14,137
+    bseti64 r9,r14,r1
+    load r14,153
+    load r15,2
+    bseti64 r9,r14,r15
+    chanopen r0,r16,r2,r3,r9
+    ieq r5,r0,0
+    brf fail_scope_open,r5
+    load r9,0x5258435601000000a901000000000000090000008d01000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d696e766f6b650100000002000000000000000900000000000000617267756d656e747308000000080000000000000000000000000000000600000000000000746172676574090000002101000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d7461726765740100000005000000000000000a0000000000000063616c6c61626c65496403000000080000000000000001000000000000001000000000000000666163746f7279417267756d656e747308000000080000000000000000000000000000000b00000000000000696d616765446967657374070000002000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000006b696e6403000000080000000000000001000000000000000f000000000000007369676e61747572654469676573740700000020000000000000000000000000000000000000000000000000000000000000000000000000000000
+    load r8,0
+    chanstart r0,r17,r16,r9,r8
+    ieq r5,r0,0
+    brf fail_scope_start,r5
+    load r8,-1
+    chanwait r0,r18,r16,r8
+    ieq r5,r0,0
+    brf fail_scope_wait,r5
+    load r14,307
+    bgeti64 r15,r18,r14
+    ieq r5,r15,4
+    brf fail_scope_state,r5
+    load r13,0x52584356010000001c00000000000000000000000000000000000000
+    chancancel r0,r16,r17,r13
+    ieq r5,r0,16
+    brf fail_scope_terminal,r5
+    load r15,1
+    chanclose r0,r16,r15
+    ieq r5,r0,0
+    brf fail_scope_close,r5
+
+    /* Fill the bounded admission set behind a running task. */
+    load r9,0x5258435601000000a901000000000000090000008d01000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d696e766f6b650100000002000000000000000900000000000000617267756d656e747308000000080000000000000000000000000000000600000000000000746172676574090000002101000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d7461726765740100000005000000000000000a0000000000000063616c6c61626c65496403000000080000000000000001000000000000001000000000000000666163746f7279417267756d656e747308000000080000000000000000000000000000000b00000000000000696d616765446967657374070000002000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000006b696e6403000000080000000000000001000000000000000f000000000000007369676e61747572654469676573740700000020000000000000000000000000000000000000000000000000000000000000000000000000000000
+    load r8,0
+    chanstart r0,r10,r1,r9,r8
+    ieq r5,r0,0
+    brf fail_loop_start,r5
+    chanstart r0,r11,r1,r4,r8
+    ieq r5,r0,0
+    brf fail_queue_start,r5
+    chanstart r0,r12,r1,r4,r8
+    ieq r5,r0,9
+    brf fail_backpressure,r5
+
+    load r13,0x52584356010000001c00000000000000000000000000000000000000
+    chancancel r0,r1,r10,r13
+    ieq r5,r0,0
+    brf fail_cancel,r5
+    load r8,-1
+    chanwait r0,r7,r1,r8
+    ieq r5,r0,0
+    brf fail_cancel_wait,r5
+    load r14,299
+    bgeti64 r15,r7,r14
+    ieq r5,r15,3
+    brf fail_cancel_state,r5
+    chanwait r0,r7,r1,r8
+    ieq r5,r0,0
+    brf fail_replacement_wait,r5
+    load r14,298
+    bgeti64 r15,r7,r14
+    ieq r5,r15,1
+    brf fail_replacement_state,r5
+    load r14,229
+    bgeti64 r15,r7,r14
+    ieq r5,r15,42
+    brf fail_replacement_result,r5
+
+    load r3,1
+    chanclose r0,r1,r3
+    ieq r5,r0,0
+    brf fail_close,r5
+    say "PASS: Gate F F1e process channel"
+    load r0,0
+    ret r0
+
+fail_open:
+    say "FAIL: process pool open"
+    ret 1
+fail_start_one:
+    say "FAIL: first process task start"
+    ret 1
+fail_wait_one:
+    say "FAIL: first process task wait"
+    ret 1
+fail_state_one:
+    say "FAIL: first process task state"
+    ret 1
+fail_result_one:
+    say "FAIL: first process task result"
+    ret 1
+fail_start_two:
+    say "FAIL: warm process reuse start"
+    ret 1
+fail_wait_two:
+    say "FAIL: warm process reuse wait"
+    ret 1
+fail_result_two:
+    say "FAIL: warm process reuse result"
+    ret 1
+fail_spill_start_one:
+    say "FAIL: no-spill first start"
+    ret 1
+fail_spill_wait_one:
+    say "FAIL: no-spill first wait"
+    ret 1
+fail_spill_result_one:
+    say "FAIL: no-spill first result"
+    ret 1
+fail_spill_start_two:
+    say "FAIL: no-spill second start"
+    ret 1
+fail_spill_wait_two:
+    say "FAIL: no-spill second wait"
+    ret 1
+fail_spill_result_two:
+    say "FAIL: VM state spilled across process requests"
+    ret 1
+fail_scope_open:
+    say "FAIL: process scope open"
+    ret 1
+fail_scope_start:
+    say "FAIL: process scope start"
+    ret 1
+fail_scope_wait:
+    say "FAIL: process scope wait"
+    ret 1
+fail_scope_state:
+    say "FAIL: process scope deadline state"
+    ret 1
+fail_scope_terminal:
+    say "FAIL: process scope one-terminal rule"
+    ret 1
+fail_scope_close:
+    say "FAIL: process scope close"
+    ret 1
+fail_loop_start:
+    say "FAIL: process loop start"
+    ret 1
+fail_queue_start:
+    say "FAIL: process queued start"
+    ret 1
+fail_backpressure:
+    say "FAIL: process admission backpressure"
+    ret 1
+fail_cancel:
+    say "FAIL: process cancellation"
+    ret 1
+fail_cancel_wait:
+    say "FAIL: process cancellation wait"
+    ret 1
+fail_cancel_state:
+    say "FAIL: process cancellation state"
+    ret 1
+fail_replacement_wait:
+    say "FAIL: replacement worker wait"
+    ret 1
+fail_replacement_state:
+    say "FAIL: replacement worker state"
+    ret 1
+fail_replacement_result:
+    say "FAIL: replacement worker result"
+    ret 1
+fail_close:
+    say "FAIL: process pool close"
+    ret 1
+
+identity() .locals=1 .expose=gatef.process_identity
+    stoi a1
+    ret a1
+
+loop_forever() .locals=1 .expose=gatef.process_loop
+    load r0,0
+loop_again:
+    inc r0
+    br loop_again
+
+stateful() .locals=1 .expose=gatef.process_stateful
+    itof g0
+    stof a1
+    fadd g0,g0,a1
+    ftoi g0
+    ret g0

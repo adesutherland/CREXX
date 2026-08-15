@@ -3,7 +3,7 @@
 Date: 2026-08-13
 
 Status: **user model and staged Gate F implementation approved by Adrian on
-2026-08-14; F0-S through F1d complete; F1e next**
+2026-08-14; F0-S through F1e complete; F1f Level G lowering next**
 
 This record is the normative design authority for the future PERF3-13 Gate F
 public concurrency surface. It records the user model, ownership and transfer
@@ -37,10 +37,10 @@ must call mandatory transport-neutral RXAS instructions, which RXVM implements
 over the Gate E executor/provider substrate. There is no RXPA task path and no
 Rexx-visible hidden native-handle contract. F0-S fixes the five instruction
 signatures, opcodes, effects, signals, feature gate and binary value contract.
-F1a-F1d now implement that instruction family, complete type `1` local
+F1a-F1e now implement that instruction family, complete type `1` local
 provider, full values/lifecycle, the explicit Rexx Level B class surface,
 reusable type `4` byte endpoints and type `5` child processes in both concrete
-VMs. Isolated process tasks remain F1e and the approved Level G syntax remains
+VMs, plus type `2` isolated process tasks. The approved Level G syntax remains
 F1f.
 
 Use these current repository contracts when implementing the design:
@@ -674,16 +674,39 @@ exists.
 - [x] Generalize redirects as reusable bounded byte endpoints, update ADDRESS
   and compiler exits, retire the selected old RXAS mnemonics and preserve their
   numeric slots.
-- [ ] Implement a separate-process provider with the same contract.
+- [x] Implement a separate-process provider with the same contract.
 - [ ] Implement the approved core Level G task declarations, task expressions
   and `DO PARALLEL` only as lowering to that same Level B contract.
-- [ ] Prove no live VM value/reference/native pointer crosses either boundary.
-- [ ] Prove bounded backpressure, failure isolation, cancellation, quarantine,
-  deterministic join and no-spill reuse.
+- [x] Prove no live VM value/reference/native pointer crosses the local or
+  isolated-process task boundary.
+- [x] Prove bounded backpressure, failure isolation, cancellation, hard process
+  termination after cooperative grace, deterministic join and no-spill worker
+  reuse for the local and isolated-process providers.
 - [ ] Deliver the bounded concurrent HTTP/TLS consumer over tasks, channels and
   byte endpoints without an HTTP opcode family.
 - [ ] Publish an experimental Level B surface only after portable local/process
   conformance and an accepted first Release verdict.
+
+F1e implements core provider type `2` with capability mask `0x010f`: bounded
+admission, cancellation, provider-owned deadlines, completion-order
+observation and isolated task execution. A private versioned framed transport
+uses the same canonical RXCV task and completion documents as type `1`.
+Controller program generations are snapshotted only when bytecode-only; an
+archive containing several semantic graphs remains a concatenation of RXBIN
+007 containers so every graph keeps its own numeric callable/member identities.
+Native modules, live VM storage, references and handles never enter that
+snapshot.
+
+The pool keeps a bounded number of warm worker processes, but every accepted
+task creates a fresh executor and VM context inside its assigned process. Thus
+process reuse amortizes launch cost without carrying module globals, frames,
+registers or task state into the next request. Cancellation and deadlines send
+the cooperative interrupt first and may terminate only that isolated process
+after a bounded grace period. Loss before `STARTED` is `TRANSPORT_LOST`; loss
+after `STARTED` is `UNKNOWN_OUTCOME`. The terminal transition is exactly once,
+the failed process is replaced, all pipes and temporary snapshots are owned by
+the provider, and protocol-pipe closure is contained at the private write
+boundary rather than changing the host process's signal disposition.
 
 ### F2 — open host protocol and higher Level G libraries
 

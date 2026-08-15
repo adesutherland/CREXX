@@ -1,0 +1,176 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/66 Test    #1: linked_opt_runtime_artifacts_build ...........   Passed    0.07 sec
+      Start   54: address_expose_noopt
+ 2/66 Test   #54: address_expose_noopt .........................   Passed    0.15 sec
+      Start   55: address_expose_opt
+ 3/66 Test   #55: address_expose_opt ...........................   Passed    0.15 sec
+      Start  345: gate_f_channel_contract
+ 4/66 Test  #345: gate_f_channel_contract ......................   Passed    0.02 sec
+      Start  445: address_crexx_flush_visible_run_noopt
+ 5/66 Test  #445: address_crexx_flush_visible_run_noopt ........   Passed    2.20 sec
+      Start  446: address_crexx_flush_visible_run_opt
+ 6/66 Test  #446: address_crexx_flush_visible_run_opt ..........   Passed    2.26 sec
+      Start  507: gate_f_levelb_contract
+ 7/66 Test  #507: gate_f_levelb_contract .......................   Passed    0.18 sec
+      Start  554: inline_nested_binary_block_owner_shape_opt
+ 8/66 Test  #554: inline_nested_binary_block_owner_shape_opt ...   Passed    0.16 sec
+      Start  623: inline_nested_binary_block_owner_run_noopt
+ 9/66 Test  #623: inline_nested_binary_block_owner_run_noopt ...   Passed    0.17 sec
+      Start  624: inline_nested_binary_block_owner_run_opt
+10/66 Test  #624: inline_nested_binary_block_owner_run_opt .....   Passed    0.18 sec
+      Start  781: address_exit_extended_parse
+11/66 Test  #781: address_exit_extended_parse ..................   Passed    0.16 sec
+      Start  782: address_inline_then_parse
+12/66 Test  #782: address_inline_then_parse ....................   Passed    0.16 sec
+      Start  892: address_bridge
+13/66 Test  #892: address_bridge ...............................   Passed    0.46 sec
+      Start  932: test_address_direct_bin_build
+14/66 Test  #932: test_address_direct_bin_build ................   Passed    0.08 sec
+      Start  930: test_address_direct_noopt
+15/66 Test  #930: test_address_direct_noopt ....................   Passed    0.06 sec
+      Start  931: test_address_direct_opt
+16/66 Test  #931: test_address_direct_opt ......................   Passed    0.06 sec
+      Start 1060: rxvmworker_lifecycle
+17/66 Test #1060: rxvmworker_lifecycle .........................   Passed    0.00 sec
+      Start 1061: rxvmchannel_provider_registry
+18/66 Test #1061: rxvmchannel_provider_registry ................   Passed    0.27 sec
+      Start 1062: rxvmbyteendpoint_substrate
+19/66 Test #1062: rxvmbyteendpoint_substrate ...................   Passed    0.23 sec
+      Start 1063: rxvmchannel_byte_provider
+20/66 Test #1063: rxvmchannel_byte_provider ....................   Passed    0.48 sec
+      Start 1064: rxvmactive_isolation
+21/66 Test #1064: rxvmactive_isolation .........................   Passed    0.27 sec
+      Start 1146: gate_f_channel_local_rxbvm
+22/66 Test #1146: gate_f_channel_local_rxbvm ...................   Passed    0.04 sec
+      Start 1147: gate_f_channel_local_rxtvm
+23/66 Test #1147: gate_f_channel_local_rxtvm ...................   Passed    0.03 sec
+      Start 1148: rxvmchannel_process_crash_replacement
+24/66 Test #1148: rxvmchannel_process_crash_replacement ........   Passed    0.06 sec
+      Start 1149: gate_f_channel_process_rxbvm
+25/66 Test #1149: gate_f_channel_process_rxbvm .................   Passed    0.35 sec
+      Start 1150: gate_f_channel_process_rxtvm
+26/66 Test #1150: gate_f_channel_process_rxtvm .................   Passed    0.34 sec
+      Start 1151: retired_process_opcode_466_rxbvm
+27/66 Test #1151: retired_process_opcode_466_rxbvm .............   Passed    0.01 sec
+      Start 1152: retired_process_opcode_466_rxtvm
+28/66 Test #1152: retired_process_opcode_466_rxtvm .............   Passed    0.01 sec
+      Start 1153: retired_process_opcode_467_rxbvm
+29/66 Test #1153: retired_process_opcode_467_rxbvm .............   Passed    0.01 sec
+      Start 1154: retired_process_opcode_467_rxtvm
+30/66 Test #1154: retired_process_opcode_467_rxtvm .............   Passed    0.01 sec
+      Start 1155: retired_process_opcode_468_rxbvm
+31/66 Test #1155: retired_process_opcode_468_rxbvm .............   Passed    0.01 sec
+      Start 1156: retired_process_opcode_468_rxtvm
+32/66 Test #1156: retired_process_opcode_468_rxtvm .............   Passed    0.01 sec
+      Start 1157: retired_process_opcode_469_rxbvm
+33/66 Test #1157: retired_process_opcode_469_rxbvm .............   Passed    0.01 sec
+      Start 1158: retired_process_opcode_469_rxtvm
+34/66 Test #1158: retired_process_opcode_469_rxtvm .............   Passed    0.01 sec
+      Start 1159: retired_process_opcode_470_rxbvm
+35/66 Test #1159: retired_process_opcode_470_rxbvm .............   Passed    0.01 sec
+      Start 1160: retired_process_opcode_470_rxtvm
+36/66 Test #1160: retired_process_opcode_470_rxtvm .............   Passed    0.01 sec
+      Start 1161: retired_process_opcode_471_rxbvm
+37/66 Test #1161: retired_process_opcode_471_rxbvm .............   Passed    0.01 sec
+      Start 1162: retired_process_opcode_471_rxtvm
+38/66 Test #1162: retired_process_opcode_471_rxtvm .............   Passed    0.01 sec
+      Start 1217: persistent_worker_executor-rxvml
+39/66 Test #1217: persistent_worker_executor-rxvml .............   Passed    0.32 sec
+      Start 1231: persistent_worker_executor-rxbvml
+40/66 Test #1231: persistent_worker_executor-rxbvml ............   Passed    0.30 sec
+      Start 1245: persistent_worker_executor-rxtvml
+41/66 Test #1245: persistent_worker_executor-rxtvml ............   Passed    0.31 sec
+      Start 1283: ts_address_protocol_noopt
+42/66 Test #1283: ts_address_protocol_noopt ....................   Passed    0.02 sec
+      Start 1284: ts_address_protocol_opt
+43/66 Test #1284: ts_address_protocol_opt ......................   Passed    0.05 sec
+      Start 1287: ts_address_crexx_noopt
+44/66 Test #1287: ts_address_crexx_noopt .......................   Passed    0.10 sec
+      Start 1288: ts_address_crexx_opt
+45/66 Test #1288: ts_address_crexx_opt .........................   Passed    0.12 sec
+      Start 1289: ts_address_capture_noopt
+46/66 Test #1289: ts_address_capture_noopt .....................   Passed    0.02 sec
+      Start 1290: ts_address_capture_opt
+47/66 Test #1290: ts_address_capture_opt .......................   Passed    0.04 sec
+      Start 1291: ts_address_argv_noopt
+48/66 Test #1291: ts_address_argv_noopt ........................   Passed    0.03 sec
+      Start 1292: ts_address_argv_opt
+49/66 Test #1292: ts_address_argv_opt ..........................   Passed    0.06 sec
+      Start 1293: ts_address_array_lifecycle_noopt
+50/66 Test #1293: ts_address_array_lifecycle_noopt .............   Passed    0.02 sec
+      Start 1294: ts_address_array_lifecycle_opt
+51/66 Test #1294: ts_address_array_lifecycle_opt ...............   Passed    0.04 sec
+      Start 1295: ts_address_spawn_transfer_noopt
+52/66 Test #1295: ts_address_spawn_transfer_noopt ..............   Passed    0.33 sec
+      Start 1296: ts_address_spawn_transfer_opt
+53/66 Test #1296: ts_address_spawn_transfer_opt ................   Passed    0.38 sec
+      Start 1539: ts_address_capture_rxbvm_noopt
+54/66 Test #1539: ts_address_capture_rxbvm_noopt ...............   Passed    0.02 sec
+      Start 1540: ts_address_capture_rxbvm_opt
+55/66 Test #1540: ts_address_capture_rxbvm_opt .................   Passed    0.05 sec
+      Start 1541: ts_address_argv_rxbvm_noopt
+56/66 Test #1541: ts_address_argv_rxbvm_noopt ..................   Passed    0.03 sec
+      Start 1542: ts_address_argv_rxbvm_opt
+57/66 Test #1542: ts_address_argv_rxbvm_opt ....................   Passed    0.06 sec
+      Start 1543: ts_address_array_lifecycle_rxbvm_noopt
+58/66 Test #1543: ts_address_array_lifecycle_rxbvm_noopt .......   Passed    0.02 sec
+      Start 1544: ts_address_array_lifecycle_rxbvm_opt
+59/66 Test #1544: ts_address_array_lifecycle_rxbvm_opt .........   Passed    0.04 sec
+      Start 1545: ts_address_spawn_transfer_rxbvm_noopt
+60/66 Test #1545: ts_address_spawn_transfer_rxbvm_noopt ........   Passed    0.33 sec
+      Start 1546: ts_address_spawn_transfer_rxbvm_opt
+61/66 Test #1546: ts_address_spawn_transfer_rxbvm_opt ..........   Passed    0.38 sec
+      Start 1547: ts_address_spawn_transfer_rxtvm_noopt
+62/66 Test #1547: ts_address_spawn_transfer_rxtvm_noopt ........   Passed    0.35 sec
+      Start 1548: ts_address_spawn_transfer_rxtvm_opt
+63/66 Test #1548: ts_address_spawn_transfer_rxtvm_opt ..........   Passed    0.39 sec
+      Start 1611: gate_f_levelb_bridge_inspection
+64/66 Test #1611: gate_f_levelb_bridge_inspection ..............   Passed    0.01 sec
+      Start 1649: testConcurrency_noopt
+65/66 Test #1649: testConcurrency_noopt ........................   Passed    0.32 sec
+      Start 1650: testConcurrency_opt
+66/66 Test #1650: testConcurrency_opt ..........................   Passed    0.32 sec
+
+100% tests passed, 0 tests failed out of 66
+
+Label Time Summary:
+assembler             =   0.16 sec*proc (1 test)
+binary                =   0.16 sec*proc (1 test)
+byte-endpoint         =   0.71 sec*proc (2 tests)
+channels              =   1.83 sec*proc (9 tests)
+classlib              =   0.01 sec*proc (1 test)
+compatibility         =   0.11 sec*proc (12 tests)
+compiler              =   0.82 sec*proc (4 tests)
+concurrency           =   0.18 sec*proc (1 test)
+crash                 =   0.06 sec*proc (1 test)
+e5                    =   0.94 sec*proc (3 tests)
+f1c                   =   0.34 sec*proc (3 tests)
+f1d                   =   0.82 sec*proc (14 tests)
+f1e                   =   0.75 sec*proc (3 tests)
+gate-e                =   0.94 sec*proc (3 tests)
+gate-f                =   1.94 sec*proc (22 tests)
+gate_f                =   0.18 sec*proc (1 test)
+industrial            =   0.94 sec*proc (3 tests)
+inlining              =   0.16 sec*proc (1 test)
+inspection            =   0.01 sec*proc (1 test)
+interpreter           =   3.12 sec*proc (25 tests)
+levelb                =   0.18 sec*proc (1 test)
+lifecycle             =   1.06 sec*proc (6 tests)
+linked_opt            =   4.37 sec*proc (14 tests)
+macos                 =   0.94 sec*proc (3 tests)
+memory                =   0.00 sec*proc (1 test)
+perf3                 =   2.75 sec*proc (11 tests)
+performance           =   0.02 sec*proc (1 test)
+private               =   0.94 sec*proc (3 tests)
+process               =   0.75 sec*proc (3 tests)
+provider-reference    =   0.48 sec*proc (1 test)
+provider-registry     =   0.27 sec*proc (1 test)
+rxas                  =   0.13 sec*proc (13 tests)
+rxbin                 =   0.02 sec*proc (1 test)
+signals               =   0.27 sec*proc (1 test)
+smoke                 =   0.46 sec*proc (1 test)
+stage3                =   0.46 sec*proc (1 test)
+worker                =   0.27 sec*proc (2 tests)
+
+Total Test time (real) =  13.23 sec

@@ -79,7 +79,14 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmexecutor.h
         rxvmexecutor.c
         rxvmchannel.h
+        rxvmchannel_internal.h
         rxvmchannel.c
+        rxvmchannel_process.h
+        rxvmchannel_process.c
+        rxvmprocessprotocol.h
+        rxvmprocessprotocol.c
+        rxvmprocessworker.h
+        rxvmprocessworker.c
         rxvmbyteendpoint.c
         rxvmchannel_byte.c
         rxvmchannel_child.c
@@ -594,6 +601,14 @@ target_include_directories(test_rxvmchannel_registry PRIVATE
         ../inc ../assembler ../binutils/include ../platform ../avl_tree
         ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_registry PRIVATE rxvml Threads::Threads)
+
+add_executable(test_rxvmchannel_process
+        tests/test_rxvmchannel_process.c)
+target_include_directories(test_rxvmchannel_process PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_process PRIVATE rxvml Threads::Threads)
 
 add_executable(test_rxvmbyteendpoint tests/test_rxvmbyteendpoint.c)
 target_include_directories(test_rxvmbyteendpoint PRIVATE
@@ -1511,6 +1526,44 @@ if(CREXX_THREADED_VM_SUPPORTED)
             TIMEOUT 30)
 endif()
 
+# Gate F F1e executes one transport/conformance image on both concrete VMs.
+add_custom_command(
+        OUTPUT test_gate_f_channel_process.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_process
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_gate_f_channel_process
+        DEPENDS tests/test_gate_f_channel_process.rxas rxas rxbvm
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling Gate F F1e process channel fixture ...")
+add_custom_target(test_gate_f_channel_process_bin ALL
+        DEPENDS test_gate_f_channel_process.rxbin)
+add_dependencies(test_rxvmchannel_process
+        test_gate_f_channel_process_bin rxbvm)
+add_test(NAME rxvmchannel_process_crash_replacement
+        COMMAND test_rxvmchannel_process
+                ${CMAKE_CURRENT_BINARY_DIR}/test_gate_f_channel_process.rxbin)
+set_tests_properties(rxvmchannel_process_crash_replacement PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1e;channels;process;crash;lifecycle"
+        PASS_REGULAR_EXPRESSION
+                "PASS: Gate F F1e process crash and replacement"
+        TIMEOUT 45)
+add_test(NAME gate_f_channel_process_rxbvm
+        COMMAND $<TARGET_FILE:rxbvm> test_gate_f_channel_process
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(gate_f_channel_process_rxbvm PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1e;channels;process;lifecycle"
+        PASS_REGULAR_EXPRESSION "PASS: Gate F F1e process channel"
+        TIMEOUT 45)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_dependencies(test_gate_f_channel_process_bin rxtvm)
+    add_test(NAME gate_f_channel_process_rxtvm
+            COMMAND $<TARGET_FILE:rxtvm> test_gate_f_channel_process
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(gate_f_channel_process_rxtvm PROPERTIES
+            LABELS "interpreter;perf3;gate-f;f1e;channels;process;lifecycle"
+            PASS_REGULAR_EXPRESSION "PASS: Gate F F1e process channel"
+            TIMEOUT 45)
+endif()
+
 # Gate F replaces the pre-release spawn/redirect opcodes with the five channel
 # operations.  Source assembly rejects the retired mnemonics, while a stale
 # binary retaining numeric slot 466 must halt explicitly in both VM dispatches.
@@ -1783,6 +1836,7 @@ function(crexx_configure_program_generation_control TARGET_NAME)
             COMMAND ${TARGET_NAME}
                     ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_control.rxbin
                     ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_late.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}-archive.rxbin
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${TARGET_NAME} PROPERTIES
             LABELS "interpreter;perf3;gate-e;e4a;e4b")

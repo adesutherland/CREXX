@@ -153,8 +153,10 @@ link-time symbol resolution, or runtime behavior can fail independently.
 For optimizer-sensitive helpers, retain no-opt and optimized executions with
 the same expected result and inspect the optimized RXAS when the intended
 shape matters. Supported inlining shapes must be repaired when they miscompile;
-falling back to a real call is reserved for shapes whose ordinary-call
-equivalence cannot yet be proved.
+an implementation defect or awkward generated shape is not a reason to fail
+closed. Falling back to a real call is reserved for cases where ordinary-call
+equivalence is mathematically impossible or cannot be established from the
+language semantics and available facts.
 
 ### Namespace/import syntax is part of the real language surface
 

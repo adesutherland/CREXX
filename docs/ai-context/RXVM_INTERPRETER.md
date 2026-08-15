@@ -680,7 +680,7 @@ churn at one, two, four and eight workers on each available concrete VM and
 asserts that the requested maximum concurrency is reached. This adds no public
 worker/channel API, RXAS/RXBIN instruction, plugin ABI or scheduling contract.
 
-### Gate F F1a-F1d channel, Level B and process-I/O substrate
+### Gate F F1a-F1e channel, Level B and process substrate
 
 Gate F now adds the mandatory public RXAS channel boundary without exposing a
 public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
@@ -744,10 +744,34 @@ redirects onto these two providers and apply captured output only on the
 controlling execution. The retired source mnemonics `spawn`, `redir2str`,
 `redir2arr`, `str2redir`, `arr2redir` and `nullredir` are rejected; numeric
 slots `466..471` are reserved handlers that halt stale RXBIN with
-`UNKNOWN_INSTRUCTION`. Process pools, Level G lowering and concurrent HTTP
-remain later F1 slices; unsupported Level B operations report status `19`
-rather than simulating success. A public provider-plugin ABI remains an F2
-review. The exact current/future boundary is recorded in
+`UNKNOWN_INSTRUCTION`.
+
+F1e implements type `2`, `crexx.core.isolated-process`, with capability mask
+`0x010f`. Opening a process pool writes the controller's sealed bytecode-only
+generation to a provider-owned temporary RXBIN archive. Each distinct semantic
+graph remains its own concatenated 007 container, with modules from that graph
+written together, so numeric callable/member identities are preserved. Native
+modules make the generation ineligible rather than being exposed through a
+new process ABI.
+
+The provider owns a bounded set of warm child VMs and a bounded admitted
+request count. Its private version-1 protocol uses
+`READY`/`INVOKE`/`STARTED`/`RESULT`/`CANCEL`/`SHUTDOWN` frames carrying the same
+canonical RXCV task/completion documents as the local provider. A worker
+process may be reused, but every request creates a fresh executor and context;
+module globals and other live VM state therefore do not spill between tasks.
+Cancellation/deadline first interrupts cooperatively and then may terminate
+only the isolated process after a 250 ms grace. Pre-`STARTED` loss is
+`TRANSPORT_LOST`, post-`STARTED` loss is `UNKNOWN_OUTCOME`, terminal publication
+is exactly once and a dead worker is replaced. Private POSIX protocol writes
+contain `SIGPIPE` locally instead of changing the host's process-wide signal
+disposition. Pool teardown joins all provider threads/processes and removes
+the temporary snapshot.
+
+Level G lowering and concurrent HTTP remain later F1 slices; unsupported Level
+B operations report status `19` rather than simulating success. A public
+provider-plugin ABI remains an F2 review. The exact current/future boundary is
+recorded in
 [`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).
 
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed

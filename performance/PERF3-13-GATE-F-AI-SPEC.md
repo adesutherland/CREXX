@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **F0-S normative contract and F1a-F1d local-provider, Level B,
-byte-endpoint and child-process surface complete; F1e next**
+Status: **F0-S normative contract and F1a-F1e local/process-provider, Level B,
+byte-endpoint and child-process surface complete; F1f next**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -1059,17 +1059,57 @@ service-reference and transfer-buffer interfaces. The only runtime bridge is
 the five RXAS instructions. Task targets are sealed numeric/digest descriptors;
 no Rexx procedure-name string or RXPA task API occurs on the dispatch path.
 
-Current absence is failure-visible. Process provider type `2` is reserved but
-unavailable; `.taskscope.ask`, `.taskcontext.endpoint`, compiler-created
+Current absence is failure-visible. `.taskscope.ask`, `.taskcontext.endpoint`,
+compiler-created
 `.taskwork` kind-3 adapters and pool statistics return
 `UNSUPPORTED_OPERATION`. Concrete endpoint/child-process integration is F1d,
-the process provider is F1e, Level G syntax is F1f and concurrent HTTP is F1g.
+the process provider is complete in F1e, Level G syntax is F1f and concurrent
+HTTP is F1g.
 No public provider-plugin ABI is implied before F2.
+
+### 17.1 F1e isolated-process provider contract
+
+Core provider type `2` advertises `0x010f`: bounded admission, cancellation,
+provider-owned deadlines, completion-order observation and isolated task
+execution. It accepts the exact version-1 process-pool, task-scope and
+task-invoke RXCV schemas already specified here and returns the same canonical
+completion schema as type `1`. Its transport is private and versioned; F1e's
+frame kinds are `READY`, `INVOKE`, `STARTED`, `RESULT`, `CANCEL` and
+`SHUTDOWN`. Neither the framing nor the hidden worker command is an installed
+ABI or an F2 host protocol.
+
+Opening a process pool seals the controller's current bytecode-only program
+generation into a temporary RXBIN archive. If the generation contains several
+semantic graphs, the snapshot must preserve them as separate concatenated 007
+containers and group all modules sharing each graph. It must not rebuild one
+combined graph, because doing so can renumber numeric callable/member IDs and
+invalidate an already sealed `.tasktarget`. A generation containing a native
+module is not process-eligible. No live VM value, reference, frame, mutable
+overlay, native payload, address or OS handle may enter the snapshot or frame
+payload.
+
+Each pool owns a bounded warm process set and admitted request count. Process
+reuse is permitted only with a fresh executor and fresh VM context for each
+task; module globals, registers, frames, references and cancellation state must
+not spill between requests. Payloads and the provider's private byte endpoints
+remain bounded. Pool close joins all worker/monitor threads, closes the
+protocol endpoints and removes the temporary snapshot.
+
+Cancellation and deadlines request the private cooperative interrupt first.
+After 250 ms without a terminal result, the provider may terminate only the
+isolated worker process and must replace it before further work. A transport
+loss before `STARTED` is completion state `TRANSPORT_LOST`; after `STARTED` it
+is `UNKNOWN_OUTCOME`. The existing exactly-once terminal priority applies to
+all result/cancel/deadline/disconnect races. On POSIX, closure of the private
+protocol pipe must be handled at that write boundary; an implementation must
+not change the controller or host process's global `SIGPIPE` disposition.
 
 Evidence is retained in the
 [`F1a/F1b closeout`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/)
+[`F1c closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/),
+[`F1d closeout`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/)
 and
-[`F1c closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/).
+[`F1e closeout`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
 
 After the first production edit, run the minimum focused correctness checks,
 freeze code, build ordinary profiling-off Release, run the smallest decisive

@@ -9,6 +9,7 @@
 #include "rxvmintp.h"
 
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #if defined(_WIN32)
@@ -395,6 +396,71 @@ size_t rxvm_program_generation_constant_bytes(
         if (j == i) total = rxvm_program_saturating_add(total, bytes);
     }
     return total;
+}
+
+int rxvm_program_generation_write_file(
+        const rxvm_program_generation *generation,
+        const char *path) {
+    module_file **modules;
+    unsigned char *written;
+    FILE *output;
+    size_t index;
+    int result = 1;
+
+    if (!generation || !generation->image_count || !path || !path[0]) {
+        return 0;
+    }
+    if (generation->image_count > SIZE_MAX / sizeof(*modules)) return 0;
+    modules = (module_file **)calloc(
+            generation->image_count, sizeof(*modules));
+    written = (unsigned char *)calloc(generation->image_count, 1u);
+    if (!modules || !written) {
+        free(modules);
+        free(written);
+        return 0;
+    }
+    for (index = 0u; index < generation->image_count; index++) {
+        module_file *module = generation->images[index]->file;
+        if (!module || module->native) {
+            free(modules);
+            free(written);
+            return 0;
+        }
+    }
+    output = fopen(path, "wb");
+    if (!output) {
+        free(modules);
+        free(written);
+        return 0;
+    }
+    /* Preserve each input image's semantic graph and therefore every numeric
+     * callable/member ID. A controller loaded from several RXBIN arguments is
+     * serialized as the existing RXBIN archive shape: one concatenated 007
+     * container per distinct graph, with all modules from that graph kept
+     * together. Rebuilding one combined graph here could renumber a task
+     * target even though the controller generation itself is valid. */
+    for (index = 0u; index < generation->image_count && result; index++) {
+        RxGraph *graph;
+        size_t group_count = 0u;
+        size_t candidate;
+        if (written[index]) continue;
+        graph = generation->images[index]->file->semantic_graph;
+        for (candidate = index; candidate < generation->image_count;
+             candidate++) {
+            module_file *module = generation->images[candidate]->file;
+            if (!written[candidate] && module->semantic_graph == graph) {
+                modules[group_count++] = module;
+                written[candidate] = 1u;
+            }
+        }
+        result = group_count &&
+                 write_modules(modules, group_count, graph, output) == 0;
+    }
+    if (result && fflush(output) != 0) result = 0;
+    if (fclose(output) != 0) result = 0;
+    free(modules);
+    free(written);
+    return result;
 }
 
 void rxvm_program_generation_release_context(rxvm_context *context) {

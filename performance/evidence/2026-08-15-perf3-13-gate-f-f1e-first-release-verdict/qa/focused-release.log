@@ -1,0 +1,265 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+        Start    1: linked_opt_runtime_artifacts_build
+  1/106 Test    #1: linked_opt_runtime_artifacts_build ......................   Passed    0.94 sec
+        Start   54: address_expose_noopt
+  2/106 Test   #54: address_expose_noopt ....................................   Passed    0.16 sec
+        Start   55: address_expose_opt
+  3/106 Test   #55: address_expose_opt ......................................   Passed    0.16 sec
+        Start  345: gate_f_channel_contract
+  4/106 Test  #345: gate_f_channel_contract .................................   Passed    0.47 sec
+        Start  445: address_crexx_flush_visible_run_noopt
+  5/106 Test  #445: address_crexx_flush_visible_run_noopt ...................   Passed    2.54 sec
+        Start  446: address_crexx_flush_visible_run_opt
+  6/106 Test  #446: address_crexx_flush_visible_run_opt .....................   Passed    2.27 sec
+        Start  507: gate_f_levelb_contract
+  7/106 Test  #507: gate_f_levelb_contract ..................................   Passed    0.22 sec
+        Start  554: inline_nested_binary_block_owner_shape_opt
+  8/106 Test  #554: inline_nested_binary_block_owner_shape_opt ..............   Passed    0.18 sec
+        Start  623: inline_nested_binary_block_owner_run_noopt
+  9/106 Test  #623: inline_nested_binary_block_owner_run_noopt ..............   Passed    0.19 sec
+        Start  624: inline_nested_binary_block_owner_run_opt
+ 10/106 Test  #624: inline_nested_binary_block_owner_run_opt ................   Passed    0.19 sec
+        Start  740: gate_f_signal_names_run_noopt
+ 11/106 Test  #740: gate_f_signal_names_run_noopt ...........................   Passed    0.19 sec
+        Start  741: gate_f_signal_names_run_opt
+ 12/106 Test  #741: gate_f_signal_names_run_opt .............................   Passed    0.20 sec
+        Start  781: address_exit_extended_parse
+ 13/106 Test  #781: address_exit_extended_parse .............................   Passed    0.17 sec
+        Start  782: address_inline_then_parse
+ 14/106 Test  #782: address_inline_then_parse ...............................   Passed    0.17 sec
+        Start  892: address_bridge
+ 15/106 Test  #892: address_bridge ..........................................   Passed    0.37 sec
+        Start  893: address_cms_provider
+ 16/106 Test  #893: address_cms_provider ....................................   Passed    0.03 sec
+        Start  894: address_cms_demo
+ 17/106 Test  #894: address_cms_demo ........................................   Passed    0.10 sec
+        Start  895: address_llm_provider
+ 18/106 Test  #895: address_llm_provider ....................................   Passed    0.03 sec
+        Start  896: address_native_kv_demo
+ 19/106 Test  #896: address_native_kv_demo ..................................   Passed    0.30 sec
+        Start  897: address_native_sqlite_demo
+ 20/106 Test  #897: address_native_sqlite_demo ..............................   Passed    0.30 sec
+        Start  898: address_callback_host
+ 21/106 Test  #898: address_callback_host ...................................   Passed    0.31 sec
+        Start  932: test_address_direct_bin_build
+ 22/106 Test  #932: test_address_direct_bin_build ...........................   Passed    0.09 sec
+        Start  930: test_address_direct_noopt
+ 23/106 Test  #930: test_address_direct_noopt ...............................   Passed    0.06 sec
+        Start  931: test_address_direct_opt
+ 24/106 Test  #931: test_address_direct_opt .................................   Passed    0.06 sec
+        Start 1060: rxvmworker_lifecycle
+ 25/106 Test #1060: rxvmworker_lifecycle ....................................   Passed    0.30 sec
+        Start 1061: rxvmchannel_provider_registry
+ 26/106 Test #1061: rxvmchannel_provider_registry ...........................   Passed    0.32 sec
+        Start 1062: rxvmbyteendpoint_substrate
+ 27/106 Test #1062: rxvmbyteendpoint_substrate ..............................   Passed    0.24 sec
+        Start 1063: rxvmchannel_byte_provider
+ 28/106 Test #1063: rxvmchannel_byte_provider ...............................   Passed    0.49 sec
+        Start 1064: rxvmactive_isolation
+ 29/106 Test #1064: rxvmactive_isolation ....................................   Passed    0.28 sec
+        Start 1146: gate_f_channel_local_rxbvm
+ 30/106 Test #1146: gate_f_channel_local_rxbvm ..............................   Passed    0.03 sec
+        Start 1147: gate_f_channel_local_rxtvm
+ 31/106 Test #1147: gate_f_channel_local_rxtvm ..............................   Passed    0.28 sec
+        Start 1148: rxvmchannel_process_crash_replacement
+ 32/106 Test #1148: rxvmchannel_process_crash_replacement ...................   Passed    0.59 sec
+        Start 1149: gate_f_channel_process_rxbvm
+ 33/106 Test #1149: gate_f_channel_process_rxbvm ............................   Passed    0.36 sec
+        Start 1150: gate_f_channel_process_rxtvm
+ 34/106 Test #1150: gate_f_channel_process_rxtvm ............................   Passed    0.61 sec
+        Start 1214: program_generation_control-rxvml
+ 35/106 Test #1214: program_generation_control-rxvml ........................   Passed    0.27 sec
+        Start 1215: program_generation_control-rxbvml
+ 36/106 Test #1215: program_generation_control-rxbvml .......................   Passed    0.25 sec
+        Start 1216: program_generation_control-rxtvml
+ 37/106 Test #1216: program_generation_control-rxtvml .......................   Passed    0.25 sec
+        Start 1217: persistent_worker_executor-rxvml
+ 38/106 Test #1217: persistent_worker_executor-rxvml ........................   Passed    0.31 sec
+        Start 1218: persistent_worker_executor-rxvml-doorbell-stress
+ 39/106 Test #1218: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.01 sec
+        Start 1219: persistent_worker_executor-rxvml-sparse-owner
+ 40/106 Test #1219: persistent_worker_executor-rxvml-sparse-owner ...........   Passed    0.04 sec
+        Start 1220: persistent_worker_executor-rxvml-sparse-owner-stress
+ 41/106 Test #1220: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.01 sec
+        Start 1221: persistent_worker_executor-rxvml-sparse-progress
+ 42/106 Test #1221: persistent_worker_executor-rxvml-sparse-progress ........   Passed    0.01 sec
+        Start 1222: persistent_worker_executor-rxvml-native-return
+ 43/106 Test #1222: persistent_worker_executor-rxvml-native-return ..........   Passed    0.12 sec
+        Start 1223: persistent_worker_executor-rxvml-e6-scale-spin-w1
+ 44/106 Test #1223: persistent_worker_executor-rxvml-e6-scale-spin-w1 .......   Passed    0.17 sec
+        Start 1224: persistent_worker_executor-rxvml-e6-scale-churn-w1
+ 45/106 Test #1224: persistent_worker_executor-rxvml-e6-scale-churn-w1 ......   Passed    0.13 sec
+        Start 1225: persistent_worker_executor-rxvml-e6-scale-spin-w2
+ 46/106 Test #1225: persistent_worker_executor-rxvml-e6-scale-spin-w2 .......   Passed    0.08 sec
+        Start 1226: persistent_worker_executor-rxvml-e6-scale-churn-w2
+ 47/106 Test #1226: persistent_worker_executor-rxvml-e6-scale-churn-w2 ......   Passed    0.15 sec
+        Start 1227: persistent_worker_executor-rxvml-e6-scale-spin-w4
+ 48/106 Test #1227: persistent_worker_executor-rxvml-e6-scale-spin-w4 .......   Passed    0.05 sec
+        Start 1228: persistent_worker_executor-rxvml-e6-scale-churn-w4
+ 49/106 Test #1228: persistent_worker_executor-rxvml-e6-scale-churn-w4 ......   Passed    0.26 sec
+        Start 1229: persistent_worker_executor-rxvml-e6-scale-spin-w8
+ 50/106 Test #1229: persistent_worker_executor-rxvml-e6-scale-spin-w8 .......   Passed    0.04 sec
+        Start 1230: persistent_worker_executor-rxvml-e6-scale-churn-w8
+ 51/106 Test #1230: persistent_worker_executor-rxvml-e6-scale-churn-w8 ......   Passed    0.27 sec
+        Start 1231: persistent_worker_executor-rxbvml
+ 52/106 Test #1231: persistent_worker_executor-rxbvml .......................   Passed    0.39 sec
+        Start 1232: persistent_worker_executor-rxbvml-doorbell-stress
+ 53/106 Test #1232: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.01 sec
+        Start 1233: persistent_worker_executor-rxbvml-sparse-owner
+ 54/106 Test #1233: persistent_worker_executor-rxbvml-sparse-owner ..........   Passed    0.04 sec
+        Start 1234: persistent_worker_executor-rxbvml-sparse-owner-stress
+ 55/106 Test #1234: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.01 sec
+        Start 1235: persistent_worker_executor-rxbvml-sparse-progress
+ 56/106 Test #1235: persistent_worker_executor-rxbvml-sparse-progress .......   Passed    0.01 sec
+        Start 1236: persistent_worker_executor-rxbvml-native-return
+ 57/106 Test #1236: persistent_worker_executor-rxbvml-native-return .........   Passed    0.11 sec
+        Start 1237: persistent_worker_executor-rxbvml-e6-scale-spin-w1
+ 58/106 Test #1237: persistent_worker_executor-rxbvml-e6-scale-spin-w1 ......   Passed    0.16 sec
+        Start 1238: persistent_worker_executor-rxbvml-e6-scale-churn-w1
+ 59/106 Test #1238: persistent_worker_executor-rxbvml-e6-scale-churn-w1 .....   Passed    0.14 sec
+        Start 1239: persistent_worker_executor-rxbvml-e6-scale-spin-w2
+ 60/106 Test #1239: persistent_worker_executor-rxbvml-e6-scale-spin-w2 ......   Passed    0.08 sec
+        Start 1240: persistent_worker_executor-rxbvml-e6-scale-churn-w2
+ 61/106 Test #1240: persistent_worker_executor-rxbvml-e6-scale-churn-w2 .....   Passed    0.16 sec
+        Start 1241: persistent_worker_executor-rxbvml-e6-scale-spin-w4
+ 62/106 Test #1241: persistent_worker_executor-rxbvml-e6-scale-spin-w4 ......   Passed    0.05 sec
+        Start 1242: persistent_worker_executor-rxbvml-e6-scale-churn-w4
+ 63/106 Test #1242: persistent_worker_executor-rxbvml-e6-scale-churn-w4 .....   Passed    0.23 sec
+        Start 1243: persistent_worker_executor-rxbvml-e6-scale-spin-w8
+ 64/106 Test #1243: persistent_worker_executor-rxbvml-e6-scale-spin-w8 ......   Passed    0.04 sec
+        Start 1244: persistent_worker_executor-rxbvml-e6-scale-churn-w8
+ 65/106 Test #1244: persistent_worker_executor-rxbvml-e6-scale-churn-w8 .....   Passed    0.27 sec
+        Start 1245: persistent_worker_executor-rxtvml
+ 66/106 Test #1245: persistent_worker_executor-rxtvml .......................   Passed    0.35 sec
+        Start 1246: persistent_worker_executor-rxtvml-doorbell-stress
+ 67/106 Test #1246: persistent_worker_executor-rxtvml-doorbell-stress .......   Passed    0.01 sec
+        Start 1247: persistent_worker_executor-rxtvml-sparse-owner
+ 68/106 Test #1247: persistent_worker_executor-rxtvml-sparse-owner ..........   Passed    0.04 sec
+        Start 1248: persistent_worker_executor-rxtvml-sparse-owner-stress
+ 69/106 Test #1248: persistent_worker_executor-rxtvml-sparse-owner-stress ...   Passed    0.01 sec
+        Start 1249: persistent_worker_executor-rxtvml-sparse-progress
+ 70/106 Test #1249: persistent_worker_executor-rxtvml-sparse-progress .......   Passed    0.01 sec
+        Start 1250: persistent_worker_executor-rxtvml-native-return
+ 71/106 Test #1250: persistent_worker_executor-rxtvml-native-return .........   Passed    0.12 sec
+        Start 1251: persistent_worker_executor-rxtvml-e6-scale-spin-w1
+ 72/106 Test #1251: persistent_worker_executor-rxtvml-e6-scale-spin-w1 ......   Passed    0.20 sec
+        Start 1252: persistent_worker_executor-rxtvml-e6-scale-churn-w1
+ 73/106 Test #1252: persistent_worker_executor-rxtvml-e6-scale-churn-w1 .....   Passed    0.14 sec
+        Start 1253: persistent_worker_executor-rxtvml-e6-scale-spin-w2
+ 74/106 Test #1253: persistent_worker_executor-rxtvml-e6-scale-spin-w2 ......   Passed    0.10 sec
+        Start 1254: persistent_worker_executor-rxtvml-e6-scale-churn-w2
+ 75/106 Test #1254: persistent_worker_executor-rxtvml-e6-scale-churn-w2 .....   Passed    0.15 sec
+        Start 1255: persistent_worker_executor-rxtvml-e6-scale-spin-w4
+ 76/106 Test #1255: persistent_worker_executor-rxtvml-e6-scale-spin-w4 ......   Passed    0.06 sec
+        Start 1256: persistent_worker_executor-rxtvml-e6-scale-churn-w4
+ 77/106 Test #1256: persistent_worker_executor-rxtvml-e6-scale-churn-w4 .....   Passed    0.24 sec
+        Start 1257: persistent_worker_executor-rxtvml-e6-scale-spin-w8
+ 78/106 Test #1257: persistent_worker_executor-rxtvml-e6-scale-spin-w8 ......   Passed    0.05 sec
+        Start 1258: persistent_worker_executor-rxtvml-e6-scale-churn-w8
+ 79/106 Test #1258: persistent_worker_executor-rxtvml-e6-scale-churn-w8 .....   Passed    0.27 sec
+        Start 1283: ts_address_protocol_noopt
+ 80/106 Test #1283: ts_address_protocol_noopt ...............................   Passed    0.02 sec
+        Start 1284: ts_address_protocol_opt
+ 81/106 Test #1284: ts_address_protocol_opt .................................   Passed    0.05 sec
+        Start 1285: ts_address_noopt
+ 82/106 Test #1285: ts_address_noopt ........................................   Passed    0.11 sec
+        Start 1286: ts_address_opt
+ 83/106 Test #1286: ts_address_opt ..........................................   Passed    0.15 sec
+        Start 1287: ts_address_crexx_noopt
+ 84/106 Test #1287: ts_address_crexx_noopt ..................................   Passed    0.10 sec
+        Start 1288: ts_address_crexx_opt
+ 85/106 Test #1288: ts_address_crexx_opt ....................................   Passed    0.12 sec
+        Start 1289: ts_address_capture_noopt
+ 86/106 Test #1289: ts_address_capture_noopt ................................   Passed    0.02 sec
+        Start 1290: ts_address_capture_opt
+ 87/106 Test #1290: ts_address_capture_opt ..................................   Passed    0.05 sec
+        Start 1291: ts_address_argv_noopt
+ 88/106 Test #1291: ts_address_argv_noopt ...................................   Passed    0.03 sec
+        Start 1292: ts_address_argv_opt
+ 89/106 Test #1292: ts_address_argv_opt .....................................   Passed    0.06 sec
+        Start 1293: ts_address_array_lifecycle_noopt
+ 90/106 Test #1293: ts_address_array_lifecycle_noopt ........................   Passed    0.02 sec
+        Start 1294: ts_address_array_lifecycle_opt
+ 91/106 Test #1294: ts_address_array_lifecycle_opt ..........................   Passed    0.05 sec
+        Start 1295: ts_address_spawn_transfer_noopt
+ 92/106 Test #1295: ts_address_spawn_transfer_noopt .........................   Passed    0.32 sec
+        Start 1296: ts_address_spawn_transfer_opt
+ 93/106 Test #1296: ts_address_spawn_transfer_opt ...........................   Passed    0.36 sec
+        Start 1539: ts_address_capture_rxbvm_noopt
+ 94/106 Test #1539: ts_address_capture_rxbvm_noopt ..........................   Passed    0.02 sec
+        Start 1540: ts_address_capture_rxbvm_opt
+ 95/106 Test #1540: ts_address_capture_rxbvm_opt ............................   Passed    0.05 sec
+        Start 1541: ts_address_argv_rxbvm_noopt
+ 96/106 Test #1541: ts_address_argv_rxbvm_noopt .............................   Passed    0.03 sec
+        Start 1542: ts_address_argv_rxbvm_opt
+ 97/106 Test #1542: ts_address_argv_rxbvm_opt ...............................   Passed    0.06 sec
+        Start 1543: ts_address_array_lifecycle_rxbvm_noopt
+ 98/106 Test #1543: ts_address_array_lifecycle_rxbvm_noopt ..................   Passed    0.02 sec
+        Start 1544: ts_address_array_lifecycle_rxbvm_opt
+ 99/106 Test #1544: ts_address_array_lifecycle_rxbvm_opt ....................   Passed    0.05 sec
+        Start 1545: ts_address_spawn_transfer_rxbvm_noopt
+100/106 Test #1545: ts_address_spawn_transfer_rxbvm_noopt ...................   Passed    0.30 sec
+        Start 1546: ts_address_spawn_transfer_rxbvm_opt
+101/106 Test #1546: ts_address_spawn_transfer_rxbvm_opt .....................   Passed    0.35 sec
+        Start 1547: ts_address_spawn_transfer_rxtvm_noopt
+102/106 Test #1547: ts_address_spawn_transfer_rxtvm_noopt ...................   Passed    0.32 sec
+        Start 1548: ts_address_spawn_transfer_rxtvm_opt
+103/106 Test #1548: ts_address_spawn_transfer_rxtvm_opt .....................   Passed    0.36 sec
+        Start 1611: gate_f_levelb_bridge_inspection
+104/106 Test #1611: gate_f_levelb_bridge_inspection .........................   Passed    0.01 sec
+        Start 1649: testConcurrency_noopt
+105/106 Test #1649: testConcurrency_noopt ...................................   Passed    0.23 sec
+        Start 1650: testConcurrency_opt
+106/106 Test #1650: testConcurrency_opt .....................................   Passed    0.25 sec
+
+100% tests passed, 0 tests failed out of 106
+
+Label Time Summary:
+assembler             =   0.18 sec*proc (1 test)
+binary                =   0.18 sec*proc (1 test)
+byte-endpoint         =   0.74 sec*proc (2 tests)
+channels              =   3.40 sec*proc (9 tests)
+churn                 =  10.77 sec*proc (12 tests)
+classlib              =   0.01 sec*proc (1 test)
+compiler              =   2.31 sec*proc (10 tests)
+concurrency           =   0.22 sec*proc (1 test)
+crash                 =   0.59 sec*proc (1 test)
+e4a                   =   0.77 sec*proc (3 tests)
+e4b                   =   0.77 sec*proc (3 tests)
+e5                    =   1.57 sec*proc (18 tests)
+e6                    =  13.50 sec*proc (24 tests)
+f1c                   =   0.63 sec*proc (3 tests)
+f1d                   =   0.74 sec*proc (2 tests)
+f1e                   =   1.56 sec*proc (3 tests)
+fallback              =   0.50 sec*proc (12 tests)
+gate-e                =  15.85 sec*proc (45 tests)
+gate-f                =   3.40 sec*proc (10 tests)
+gate_f                =   0.22 sec*proc (1 test)
+industrial            =   1.57 sec*proc (18 tests)
+inlining              =   0.18 sec*proc (1 test)
+inspection            =   0.01 sec*proc (1 test)
+interpreter           =  19.35 sec*proc (55 tests)
+levelb                =   0.22 sec*proc (1 test)
+lifecycle             =   2.51 sec*proc (15 tests)
+linked_opt            =   4.59 sec*proc (16 tests)
+macos                 =  15.08 sec*proc (42 tests)
+memory                =   0.30 sec*proc (1 test)
+native                =   0.35 sec*proc (3 tests)
+perf3                 =  18.78 sec*proc (53 tests)
+performance           =   0.47 sec*proc (1 test)
+private               =  15.08 sec*proc (42 tests)
+process               =   1.56 sec*proc (3 tests)
+provider-reference    =   0.49 sec*proc (1 test)
+provider-registry     =   0.32 sec*proc (1 test)
+race                  =   0.05 sec*proc (6 tests)
+rxas                  =   0.47 sec*proc (1 test)
+rxbin                 =   0.47 sec*proc (1 test)
+scale                 =  13.50 sec*proc (24 tests)
+signals               =   0.28 sec*proc (1 test)
+smoke                 =   0.79 sec*proc (3 tests)
+sparse                =   0.50 sec*proc (12 tests)
+spin                  =   2.73 sec*proc (12 tests)
+stage3                =   1.44 sec*proc (7 tests)
+worker                =   0.58 sec*proc (2 tests)
+
+Total Test time (real) =  22.56 sec

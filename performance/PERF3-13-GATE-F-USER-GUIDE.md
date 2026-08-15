@@ -2,9 +2,9 @@
 
 Date: 2026-08-14
 
-Status: **user model approved; F0-S through F1d complete; explicit Level B
-local concurrency, byte endpoints and child processes are implemented, and
-Level G syntax remains F1f**
+Status: **user model approved; F0-S through F1e complete; explicit Level B
+local and isolated-process concurrency, byte endpoints and child processes are
+implemented, and Level G syntax remains F1f**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -33,8 +33,8 @@ first-verdict stops are recorded in
 
 Examples using `task` declarations or `DO PARALLEL` show the approved Level G
 syntax and do not compile in the current product yet. The five low-level RXAS
-instructions, complete local provider and explicit Level B classes now exist in
-both concrete VMs. Level G lowering remains F1f.
+instructions, complete local and isolated-process providers and explicit Level
+B classes now exist in both concrete VMs. Level G lowering remains F1f.
 
 ## The idea in one page
 
@@ -563,6 +563,16 @@ fastScope = .taskscope.failfast(localPool, 5000)
 allScope = .taskscope.collectall(localPool, 5000)
 ```
 
+`processPool` changes isolation, not the task model. The first number is the
+bounded count of warm worker processes and the second is the total admitted
+running-plus-queued work. Every submitted task still receives a fresh cREXX
+execution even when its worker process is reused. Cancellation and deadlines
+are cooperative first; if work cannot stop within the provider grace period,
+only its isolated worker process may be terminated and replaced. A crash known
+to occur before task execution is reported as transport loss; a crash after
+execution starts is reported as an unknown outcome rather than pretending the
+task did not run.
+
 The explicit lifecycle remains available:
 
 ```rexx
@@ -930,18 +940,23 @@ The maintainer/AI reference specification now contains:
     specification and the existing Gate F ownership design.
 
 F0-S completed that specification and coherence matrix before the first opcode
-edit. F1a-F1d now implement the RXAS/RXBIN contract, complete local provider,
+edit. F1a-F1e now implement the RXAS/RXBIN contract, complete local and
+isolated-process providers,
 canonical `ChannelValue`, lifecycle, private provider conformance seam, the
 explicit Level B class surface, reusable byte endpoints and structured child
 processes. A Rexx programmer can use
-`.taskpool.local(...)`, `.taskscope.failfast(...)` or `.collectall(...)`, sealed
-task targets, tasks, completions and channels today; the class implementation
-reaches RXVM only through the five channel instructions.
+`.taskpool.local(...)`, `.taskpool.process(...)`,
+`.taskscope.failfast(...)` or `.collectall(...)`, sealed task targets, tasks,
+completions and channels today; the class implementation reaches RXVM only
+through the five channel instructions.
 
-The incomplete portions fail explicitly. Process pools report provider
-unavailable. Service `ask`, `.taskcontext.endpoint`, compiler-created
+The incomplete portions fail explicitly. Service `ask`,
+`.taskcontext.endpoint`, compiler-created
 `.taskwork` adapters and pool statistics report unsupported operation rather
-than returning plausible placeholder data. F1e supplies process pools; F1f
-makes the simpler `task` and `DO PARALLEL` examples compile; F1g delivers the
-concurrent HTTP consumer over the F1d endpoints. Any contradiction or new
-language decision still returns to Adrian.
+than returning plausible placeholder data. F1e supplies process pools through
+the same classes and task/completion values as local pools. A process pool
+keeps warm isolated worker processes, but creates a fresh cREXX execution for
+every task, so globals and live VM state cannot spill from one task to the
+next. F1f makes the simpler `task` and `DO PARALLEL` examples compile; F1g
+delivers the concurrent HTTP consumer over the F1d endpoints. Any contradiction
+or new language decision still returns to Adrian.

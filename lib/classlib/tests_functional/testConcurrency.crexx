@@ -270,13 +270,10 @@ on signal channel_error
 end
 failures = failures + check_int("closed pool rejects new scope", caught, 1)
 
-caught = 0
-do
-  unavailable_pool = .taskpool.process(1, 2)
-on signal channel_error
-  caught = 1
-end
-failures = failures + check_int("unavailable process provider rejected", caught, 1)
+process_pool = .taskpool.process(1, 2)
+failures = failures + check_int("process provider type", process_pool.provider_type(), 2)
+failures = failures + check_int("process provider capacity", process_pool.capacity(), 1)
+call process_pool.close()
 
 if failures = 0 then say "PASS: Concurrency"
 else say "FAIL: Concurrency failures=" failures
