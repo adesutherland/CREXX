@@ -828,7 +828,8 @@ walker_result build_symbols_walker(walker_direction direction,
             return request_skip;
         }
 
-        else if (node->node_type == DO || node->node_type == SIGNAL_BLOCK || node->node_type == BLOCK_EXPR) {
+        else if (node->node_type == DO || node->node_type == SIGNAL_BLOCK ||
+                 node->node_type == BLOCK_EXPR) {
             /* Create/Navigate to scope - handled in the navigation block above */
         }
 
@@ -1021,7 +1022,12 @@ walker_result resolve_functions_walker(walker_direction direction,
                         }
                     } else if (local_symbol && local_symbol->status != SYM_STATUS_UNRESOLVED) {
                         /* Found something locally but it's not a function, and no global function found */
-                        if (!ast_chld(node, ERROR, 0)) mknd_function_name_err(node, "NOT_A_FUNCTION");
+                        if (!ast_chld(node, ERROR, 0)) {
+                            mknd_function_name_err(node,
+                                    node->parent && node->parent->node_type == TASK_TARGET
+                                            ? "TASK_DYNAMIC_TARGET"
+                                            : "NOT_A_FUNCTION");
+                        }
                     } else if (context->after_rewrite) {
                         /* Not found anywhere */
                         if (!ast_chld(node, ERROR, 0)) mknd_function_name_err(node, "FUNCTION_NOT_FOUND");

@@ -95,6 +95,34 @@ static void write_u64(unsigned char *bytes, uint64_t value) {
     }
 }
 
+static int seal_invoke(rxvm_context *context,
+                       const char *symbol,
+                       unsigned char *invoke,
+                       size_t invoke_length) {
+    size_t index;
+    unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE];
+
+    if (!context || !symbol || !invoke || invoke_length != 439u) return 0;
+    for (index = 0u; index < context->num_modules; index++) {
+        module *loaded = context->modules[index];
+        const RxGraph *graph = loaded && loaded->file
+            ? loaded->file->semantic_graph : 0;
+        uint32_t callable;
+        if (!graph || !rx_graph_task_binding(graph, symbol, 1u, binding)) {
+            continue;
+        }
+        callable = (uint32_t)binding[8] |
+                   ((uint32_t)binding[9] << 8u) |
+                   ((uint32_t)binding[10] << 16u) |
+                   ((uint32_t)binding[11] << 24u);
+        write_u64(invoke + 225u, callable);
+        memcpy(invoke + 308u, binding + 12u, 32u);
+        memcpy(invoke + 407u, binding + 44u, 32u);
+        return 1;
+    }
+    return 0;
+}
+
 static int64_t completion_state(
         const rxvm_channel_binary *completion) {
     static const unsigned char field[] = {
@@ -181,6 +209,8 @@ int main(int argc, char **argv) {
     if (!context) goto cleanup;
     CHECK(rxldmod(context, argv[1]) > 0,
           "load process-provider semantic image");
+    CHECK(seal_invoke(context, "gatef.process_identity", invoke, invoke_length),
+          "seal identity task descriptor from the loaded image graph");
     CHECK(rxvm_channel_open(
               context, RXVM_CHANNEL_PROVIDER_PROCESS,
               (int64_t)RXVM_CHANNEL_PROCESS_CAPABILITIES,
@@ -197,12 +227,14 @@ int main(int argc, char **argv) {
 
     /* Callable id 1 is the fixture's nonterminating body, so the child cannot
      * legitimately publish RESULT before the after-STARTED sever occurs. */
-    write_u64(invoke + 225u, 1u);
+    CHECK(seal_invoke(context, "gatef.process_loop", invoke, invoke_length),
+          "seal loop task descriptor from the loaded image graph");
     CHECK(rxvm_channel_process_test_crash_next(context, channel, 2),
           "arm after-start transport loss");
     (void)run_one(context, channel, invoke, invoke_length, 8,
                   "post-start process loss is UNKNOWN_OUTCOME");
-    write_u64(invoke + 225u, 0u);
+    CHECK(seal_invoke(context, "gatef.process_identity", invoke, invoke_length),
+          "restore sealed identity task descriptor");
     (void)run_one(context, channel, invoke, invoke_length, 1,
                   "worker replacement succeeds after unknown outcome");
 
@@ -232,7 +264,8 @@ int main(int argc, char **argv) {
         int64_t loop_ticket = 0;
         int64_t missing_ticket = 0;
         rxvm_channel_binary completion = {0};
-        write_u64(invoke + 225u, 1u);
+        CHECK(seal_invoke(context, "gatef.process_loop", invoke, invoke_length),
+              "seal fail-fast loop task descriptor");
         CHECK(rxvm_channel_start(
                   context, scope_channel, invoke, invoke_length, 0,
                   &loop_ticket) == RXVM_CHANNEL_OK && loop_ticket != 0,

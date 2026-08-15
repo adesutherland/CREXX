@@ -4,6 +4,7 @@
 
 #include "platform.h"
 #include "rxbin.h"
+#include "rxgraph.h"
 
 static uint32_t read_u32le(const unsigned char *bytes) {
     return (uint32_t)bytes[0] |
@@ -90,6 +91,65 @@ static int module_has_inline_metadata(const module_file *module) {
     return 0;
 }
 
+static int module_task_binding(const module_file *module,
+                               const char *expected_symbol,
+                               unsigned char binding_out[RX_GRAPH_TASK_BINDING_SIZE]) {
+    int meta = module->header.meta_head;
+
+    while (meta != -1) {
+        const meta_entry *entry = (const meta_entry *)(module->constant + meta);
+        if (entry->base.type == META_TASK_TARGET) {
+            const meta_task_target_constant *target =
+                (const meta_task_target_constant *)entry;
+            const string_constant *symbol =
+                (const string_constant *)(module->constant + target->symbol);
+            const string_constant *binding =
+                (const string_constant *)(module->constant + target->binding);
+            RxCallableId callable;
+            unsigned int kind;
+            RxGraphCallableView view;
+            if (symbol->base.type != STRING_CONST ||
+                binding->base.type != BINARY_CONST ||
+                binding->string_len != RX_GRAPH_TASK_BINDING_SIZE ||
+                symbol->string_len != strlen(expected_symbol) ||
+                memcmp(symbol->string, expected_symbol, symbol->string_len) != 0 ||
+                !rx_graph_task_binding_validate(module->semantic_graph,
+                                                (const unsigned char *)binding->string,
+                                                &callable,
+                                                &kind) ||
+                kind != 1u ||
+                !rx_graph_callable(module->semantic_graph, callable, &view) ||
+                strcmp(view.symbol, expected_symbol) != 0) return 0;
+            if (binding_out) {
+                memcpy(binding_out,
+                       binding->string,
+                       RX_GRAPH_TASK_BINDING_SIZE);
+            }
+            return 1;
+        }
+        meta = entry->next;
+    }
+    return 0;
+}
+
+static int read_standalone_task_binding(
+        unsigned char binding_out[RX_GRAPH_TASK_BINDING_SIZE]) {
+    FILE *fp;
+    rxbin_reader reader;
+    module_file *module = 0;
+    int ok;
+
+    fp = fopen("tests_link_provider_a.rxbin", "rb");
+    if (!fp) return 0;
+    rxbin_reader_init_file(&reader, fp);
+    ok = rxbin_reader_next_module(&reader, &module) == 0 &&
+         module_task_binding(module, "linktest.helper", binding_out);
+    rxbin_reader_close(&reader);
+    fclose(fp);
+    free_module(module);
+    return ok;
+}
+
 static int check_linked_success_format(void) {
     FILE *fp;
     rxbin_reader reader;
@@ -98,6 +158,13 @@ static int check_linked_success_format(void) {
     int rc = 1;
     expose_proc_constant *imported_expose;
     proc_constant *imported_proc;
+    unsigned char standalone_binding[RX_GRAPH_TASK_BINDING_SIZE];
+    unsigned char linked_binding[RX_GRAPH_TASK_BINDING_SIZE];
+
+    if (!read_standalone_task_binding(standalone_binding)) {
+        fprintf(stderr, "Standalone image has an invalid sealed task binding\n");
+        return 0;
+    }
 
     fp = fopen("tests_linked_success.rxbin", "rb");
     if (!fp) {
@@ -152,6 +219,17 @@ static int check_linked_success_format(void) {
     }
     if (!module_has_trace_event_metadata(module_a)) {
         fprintf(stderr, "Default linked image lost trace-event metadata\n");
+        goto done;
+    }
+    if (!(module_task_binding(module_a, "linktest.helper", linked_binding) ||
+          module_task_binding(module_b, "linktest.helper", linked_binding))) {
+        fprintf(stderr, "Linked image has an invalid sealed task binding\n");
+        goto done;
+    }
+    if (memcmp(standalone_binding + 12u,
+               linked_binding + 12u,
+               32u) == 0) {
+        fprintf(stderr, "Linker did not reseal the task binding for the linked graph\n");
         goto done;
     }
 

@@ -650,11 +650,22 @@ rxvm_channel_status rxvm_channel_parse_task_scope_configuration(
 void rxvm_channel_task_invoke_free(rxvm_channel_task_invoke *invoke) {
     size_t index;
     if (!invoke) return;
+    for (index = 0u; index < invoke->factory_argument_count; index++) {
+        if (invoke->factory_arguments[index].type ==
+                RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE ||
+            invoke->factory_arguments[index].type ==
+                RXVM_EXECUTOR_REGISTER_BINARY) {
+            free((void *)invoke->factory_arguments[index].bytes);
+        }
+    }
     for (index = 0u; index < invoke->argument_count; index++) {
-        if (invoke->arguments[index].type == RXVM_EXECUTOR_REGISTER_BINARY) {
+        if (invoke->arguments[index].type == RXVM_EXECUTOR_REGISTER_BINARY ||
+            invoke->arguments[index].type ==
+                RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) {
             free((void *)invoke->arguments[index].bytes);
         }
     }
+    free(invoke->factory_arguments);
     free(invoke->arguments);
     memset(invoke, 0, sizeof(*invoke));
 }
@@ -662,25 +673,31 @@ void rxvm_channel_task_invoke_free(rxvm_channel_task_invoke *invoke) {
 static rxvm_channel_status rxcv_parse_task_target(
         const rxcv_node *node,
         uint64_t *callable_id_out,
-        int64_t *kind_out) {
+        int64_t *kind_out,
+        rxcv_node *factory_arguments_out,
+        unsigned char binding_out[RX_GRAPH_TASK_BINDING_SIZE]) {
     rxcv_record record;
     rxcv_node callable_node;
     rxcv_node factory_node;
     rxcv_node image_node;
     rxcv_node kind_node;
+    rxcv_node adapter_callable_node;
     rxcv_node signature_node;
     int64_t callable_id;
     int64_t kind;
+    int64_t adapter_callable_id = 0;
     uint64_t factory_count;
 
     if (!rxcv_record_open(node, &record) ||
-        !rxcv_record_schema(&record, "crexx.channel.task-target", 1u, 5u) ||
+        (!rxcv_record_schema(&record, "crexx.channel.task-target", 1u, 5u) &&
+         !rxcv_record_schema(&record, "crexx.channel.task-target", 1u, 6u)) ||
         !rxcv_record_field(&record, "callableId", &callable_node) ||
         !rxcv_record_field(&record, "factoryArguments", &factory_node) ||
         !rxcv_record_field(&record, "imageDigest", &image_node) ||
         !rxcv_record_field(&record, "kind", &kind_node) ||
         !rxcv_record_field(&record, "signatureDigest", &signature_node) ||
         !rxcv_node_integer(&callable_node, &callable_id) || callable_id < 0 ||
+        (uint64_t)callable_id > UINT32_MAX ||
         !rxcv_node_integer(&kind_node, &kind) || kind < 1 || kind > 3 ||
         !rxcv_node_array(&factory_node, &factory_count, 0, 0) ||
         ((kind == 1 || kind == 2) && factory_count) ||
@@ -689,8 +706,81 @@ static rxvm_channel_status rxcv_parse_task_target(
         signature_node.payload_length != 32u) {
         return RXVM_CHANNEL_INVALID_CONFIGURATION;
     }
+    if (record.field_count == 6u &&
+        (!rxcv_record_field(&record, "adapterCallableId",
+                            &adapter_callable_node) ||
+         !rxcv_node_integer(&adapter_callable_node, &adapter_callable_id) ||
+         adapter_callable_id < 0 ||
+         (uint64_t)adapter_callable_id > UINT32_MAX)) {
+        return RXVM_CHANNEL_INVALID_CONFIGURATION;
+    }
+    if ((kind == 1 && adapter_callable_id != 0) ||
+        (kind == 3 && adapter_callable_id == 0)) {
+        return RXVM_CHANNEL_INVALID_CONFIGURATION;
+    }
     *callable_id_out = (uint64_t)callable_id;
     *kind_out = kind;
+    if (factory_arguments_out) *factory_arguments_out = factory_node;
+    memset(binding_out, 0, RX_GRAPH_TASK_BINDING_SIZE);
+    memcpy(binding_out, "RXTB", 4u);
+    binding_out[4] = 1u;
+    binding_out[5] = (unsigned char)kind;
+    binding_out[8] = (unsigned char)callable_id;
+    binding_out[9] = (unsigned char)((uint64_t)callable_id >> 8u);
+    binding_out[10] = (unsigned char)((uint64_t)callable_id >> 16u);
+    binding_out[11] = (unsigned char)((uint64_t)callable_id >> 24u);
+    memcpy(binding_out + 12u, image_node.payload, 32u);
+    memcpy(binding_out + 44u, signature_node.payload, 32u);
+    binding_out[76] = (unsigned char)adapter_callable_id;
+    binding_out[77] = (unsigned char)((uint64_t)adapter_callable_id >> 8u);
+    binding_out[78] = (unsigned char)((uint64_t)adapter_callable_id >> 16u);
+    binding_out[79] = (unsigned char)((uint64_t)adapter_callable_id >> 24u);
+    return RXVM_CHANNEL_OK;
+}
+
+static rxvm_channel_status rxcv_copy_task_factory_arguments(
+        const rxcv_node *array,
+        rxvm_channel_task_invoke *invoke) {
+    const unsigned char *cursor;
+    size_t remaining;
+    uint64_t count;
+    uint64_t index;
+
+    if (!array || !invoke ||
+        !rxcv_node_array(array, &count, &cursor, &remaining) ||
+        count > INT_MAX ||
+        count > SIZE_MAX / sizeof(*invoke->factory_arguments)) {
+        return RXVM_CHANNEL_INVALID_CONFIGURATION;
+    }
+    if (count) {
+        invoke->factory_arguments =
+                (rxvm_executor_register_image *)calloc(
+                        (size_t)count, sizeof(*invoke->factory_arguments));
+        if (!invoke->factory_arguments) {
+            return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+        }
+    }
+    invoke->factory_argument_count = (size_t)count;
+    for (index = 0u; index < count; index++) {
+        rxcv_node item;
+        unsigned char *document = 0;
+        size_t document_length = 0u;
+        rxvm_channel_status status;
+
+        if (!rxcv_parse_node(cursor, remaining, &item) ||
+            item.tag == RXCV_TAG_LOCAL_CAPABILITY) {
+            return RXVM_CHANNEL_INVALID_CONFIGURATION;
+        }
+        status = rxcv_copy_node_document(
+                cursor, item.total_length, &document, &document_length);
+        if (status != RXVM_CHANNEL_OK) return status;
+        invoke->factory_arguments[index].type =
+                RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE;
+        invoke->factory_arguments[index].bytes = (const char *)document;
+        invoke->factory_arguments[index].length = document_length;
+        cursor += item.total_length;
+        remaining -= item.total_length;
+    }
     return RXVM_CHANNEL_OK;
 }
 
@@ -701,6 +791,7 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
     rxcv_node root;
     rxcv_record record;
     rxcv_node arguments_node;
+    rxcv_node factory_arguments_node;
     rxcv_node target_node;
     const unsigned char *cursor;
     size_t remaining;
@@ -720,10 +811,17 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
         return RXVM_CHANNEL_INVALID_CONFIGURATION;
     }
     status = rxcv_parse_task_target(
-            &target_node, &invoke->callable_id, &invoke->target_kind);
+            &target_node, &invoke->callable_id, &invoke->target_kind,
+            &factory_arguments_node,
+            invoke->task_binding);
     if (status != RXVM_CHANNEL_OK) return status;
     if (invoke->target_kind == 3) {
-        return RXVM_CHANNEL_UNSUPPORTED_OPERATION;
+        status = rxcv_copy_task_factory_arguments(
+                &factory_arguments_node, invoke);
+        if (status != RXVM_CHANNEL_OK) {
+            rxvm_channel_task_invoke_free(invoke);
+            return status;
+        }
     }
     if (count) {
         invoke->arguments = (rxvm_executor_register_image *)calloc(
@@ -737,14 +835,48 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
             rxvm_channel_task_invoke_free(invoke);
             return RXVM_CHANNEL_INVALID_CONFIGURATION;
         }
-        if (invoke->target_kind == 1 && item.tag == RXCV_TAG_INTEGER &&
+        if ((invoke->target_kind == 1 ||
+             (invoke->target_kind == 2 && index > 0u)) &&
+            item.tag == RXCV_TAG_INTEGER &&
             item.payload_length == 8u) {
             invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_INTEGER;
             invoke->arguments[index].integer = rxcv_i64(item.payload);
-        } else if (invoke->target_kind == 1 && item.tag == RXCV_TAG_STRING &&
+        } else if ((invoke->target_kind == 1 ||
+                    (invoke->target_kind == 2 && index > 0u)) &&
+                   (item.tag == RXCV_TAG_FALSE ||
+                    item.tag == RXCV_TAG_TRUE) &&
+                   item.payload_length == 0u) {
+            invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_INTEGER;
+            invoke->arguments[index].integer =
+                    item.tag == RXCV_TAG_TRUE ? 1 : 0;
+        } else if ((invoke->target_kind == 1 ||
+                    (invoke->target_kind == 2 && index > 0u)) &&
+                   item.tag == RXCV_TAG_STRING &&
                    !memchr(item.payload, 0, item.payload_length)) {
             invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_STRING;
             invoke->arguments[index].bytes = (const char *)item.payload;
+            invoke->arguments[index].length = item.payload_length;
+        } else if ((invoke->target_kind == 1 ||
+                    (invoke->target_kind == 2 && index > 0u)) &&
+                   item.tag == RXCV_TAG_BINARY) {
+            unsigned char *copy;
+            if (item.payload_length == SIZE_MAX) {
+                rxvm_channel_task_invoke_free(invoke);
+                return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+            }
+            copy = (unsigned char *)malloc(item.payload_length + 1u);
+            if (!copy) {
+                rxvm_channel_task_invoke_free(invoke);
+                return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+            }
+            if (item.payload_length) {
+                memcpy(copy, item.payload, item.payload_length);
+            }
+            copy[item.payload_length] = 0;
+            invoke->arguments[index].type = invoke->target_kind == 3
+                    ? RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE
+                    : RXVM_EXECUTOR_REGISTER_BINARY;
+            invoke->arguments[index].bytes = (const char *)copy;
             invoke->arguments[index].length = item.payload_length;
         } else if (invoke->target_kind != 1 &&
                    item.tag != RXCV_TAG_LOCAL_CAPABILITY) {
@@ -756,7 +888,9 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
                 rxvm_channel_task_invoke_free(invoke);
                 return status;
             }
-            invoke->arguments[index].type = RXVM_EXECUTOR_REGISTER_BINARY;
+            invoke->arguments[index].type = invoke->target_kind == 3
+                    ? RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE
+                    : RXVM_EXECUTOR_REGISTER_BINARY;
             invoke->arguments[index].bytes = (const char *)document;
             invoke->arguments[index].length = document_length;
         } else {
@@ -767,6 +901,86 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
         remaining -= item.total_length;
     }
     return RXVM_CHANNEL_OK;
+}
+
+rxvm_channel_status rxvm_channel_decode_task_value(
+        const void *data,
+        size_t length,
+        const char *expected_type,
+        rxvm_executor_register_image *value_out) {
+    rxcv_node root;
+    rxvm_channel_status status;
+    unsigned char *copy;
+
+    if (!data || !expected_type || !value_out) {
+        return RXVM_CHANNEL_INVALID_ARGUMENT;
+    }
+    memset(value_out, 0, sizeof(*value_out));
+    status = rxcv_document_root(data, length, &root);
+    if (status != RXVM_CHANNEL_OK) return status;
+    if (strcmp(expected_type, ".int") == 0) {
+        if (root.tag != RXCV_TAG_INTEGER || root.payload_length != 8u) {
+            return RXVM_CHANNEL_INVALID_CONFIGURATION;
+        }
+        value_out->type = RXVM_EXECUTOR_REGISTER_INTEGER;
+        value_out->integer = rxcv_i64(root.payload);
+        return RXVM_CHANNEL_OK;
+    }
+    if (strcmp(expected_type, ".boolean") == 0) {
+        if ((root.tag != RXCV_TAG_FALSE && root.tag != RXCV_TAG_TRUE) ||
+            root.payload_length != 0u) {
+            return RXVM_CHANNEL_INVALID_CONFIGURATION;
+        }
+        value_out->type = RXVM_EXECUTOR_REGISTER_INTEGER;
+        value_out->integer = root.tag == RXCV_TAG_TRUE ? 1 : 0;
+        return RXVM_CHANNEL_OK;
+    }
+    if (strcmp(expected_type, ".string") == 0) {
+        if (root.tag != RXCV_TAG_STRING ||
+            memchr(root.payload, 0, root.payload_length) ||
+            root.payload_length == SIZE_MAX) {
+            return RXVM_CHANNEL_INVALID_CONFIGURATION;
+        }
+        copy = (unsigned char *)malloc(root.payload_length + 1u);
+        if (!copy) return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+        if (root.payload_length) {
+            memcpy(copy, root.payload, root.payload_length);
+        }
+        copy[root.payload_length] = 0;
+        value_out->type = RXVM_EXECUTOR_REGISTER_STRING;
+        value_out->bytes = (const char *)copy;
+        value_out->length = root.payload_length;
+        return RXVM_CHANNEL_OK;
+    }
+    if (strcmp(expected_type, ".binary") == 0) {
+        if (root.tag != RXCV_TAG_BINARY || root.payload_length == SIZE_MAX) {
+            return RXVM_CHANNEL_INVALID_CONFIGURATION;
+        }
+        copy = (unsigned char *)malloc(root.payload_length + 1u);
+        if (!copy) return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+        if (root.payload_length) {
+            memcpy(copy, root.payload, root.payload_length);
+        }
+        copy[root.payload_length] = 0;
+        value_out->type = RXVM_EXECUTOR_REGISTER_BINARY;
+        value_out->bytes = (const char *)copy;
+        value_out->length = root.payload_length;
+        return RXVM_CHANNEL_OK;
+    }
+    if (strcmp(expected_type, ".channelvalue") == 0 ||
+        strcmp(expected_type, ".concurrency..channelvalue") == 0 ||
+        strcmp(expected_type, "concurrency.channelvalue") == 0) {
+        if (length == SIZE_MAX) return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+        copy = (unsigned char *)malloc(length + 1u);
+        if (!copy) return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+        memcpy(copy, data, length);
+        copy[length] = 0;
+        value_out->type = RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE;
+        value_out->bytes = (const char *)copy;
+        value_out->length = length;
+        return RXVM_CHANNEL_OK;
+    }
+    return RXVM_CHANNEL_INVALID_CONFIGURATION;
 }
 
 static int rxcv_buffer_reserve(rxcv_buffer *buffer, size_t addition) {
@@ -1898,12 +2112,21 @@ static rxvm_channel_status channel_local_start(
                 size_t worker =
                         (local->shared->next_worker + attempts) %
                         local->shared->worker_count;
-                result = rxvm_executor_submit_callable_registers_result(
-                        local->shared->executor, worker, invoke.callable_id,
+                result = rxvm_executor_submit_task_binding_registers_result(
+                        local->shared->executor, worker, invoke.task_binding,
+                        invoke.factory_argument_count,
+                        invoke.factory_arguments,
                         invoke.argument_count, invoke.arguments,
-                        invoke.target_kind == 1
-                            ? RXVM_EXECUTOR_REGISTER_INTEGER
-                            : RXVM_EXECUTOR_REGISTER_BINARY,
+                        (invoke.target_kind == 1 ||
+                         (invoke.target_kind == 2 &&
+                          (invoke.task_binding[76] ||
+                           invoke.task_binding[77] ||
+                           invoke.task_binding[78] ||
+                           invoke.task_binding[79])))
+                            ? RXVM_EXECUTOR_REGISTER_NONE
+                            : (invoke.target_kind == 3
+                               ? RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE
+                               : RXVM_EXECUTOR_REGISTER_BINARY),
                         &request);
                 if (result != RXVM_EXECUTOR_QUEUE_FULL) {
                     local->shared->next_worker =
@@ -2024,6 +2247,20 @@ void rxvm_channel_completion_from_executor(
                      (uint64_t)executor_completion->result.integer);
         completion_out->result_node = node;
         completion_out->result_node_length = 20u;
+    } else if (executor_completion->result.type ==
+               RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) {
+        if (rxvm_channel_validate_node_frame(
+                executor_completion->result.bytes,
+                executor_completion->result.length)) {
+            completion_out->result_node =
+                    (const unsigned char *)executor_completion->result.bytes;
+            completion_out->result_node_length =
+                    executor_completion->result.length;
+        } else {
+            completion_out->state = 2;
+            completion_out->error_code = RXVM_CHANNEL_INVALID_CONFIGURATION;
+            completion_out->message = "task returned invalid ChannelValue node";
+        }
     } else if (executor_completion->result.type ==
                RXVM_EXECUTOR_REGISTER_BINARY) {
         rxcv_node root;

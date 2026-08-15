@@ -25,7 +25,7 @@
 options levelb comments_dash
 import rxfnsb
 
-namespace concurrency expose taskpool taskscope task tasktarget taskwork taskcontext completion channel channelrequest channelvalue channelcodec byteendpoint serviceref transferbuffer
+namespace concurrency expose taskpool taskscope task tasktarget taskarguments taskwork taskcontext completion channel channelrequest channelvalue channelcodec byteendpoint serviceref transferbuffer
 
 /** A bounded task execution provider and its lifecycle owner. */
 taskpool: interface
@@ -42,12 +42,15 @@ taskpool: interface
 
 /** A structured owner for submitted children, cancellation and joining. */
 taskscope: interface
+  default: factory
   failfast: factory
     arg pool = .taskpool, timeout_milliseconds = .int
   collectall: factory
     arg pool = .taskpool, timeout_milliseconds = .int
   submit: method = .task
     arg target = .tasktarget, request = .channelvalue
+  submit_arguments: method = .task
+    arg target = .tasktarget, arguments = .taskarguments
   ask: method = .task
     arg service = .serviceref, request = .channelvalue
   next: method = .completion
@@ -56,6 +59,15 @@ taskscope: interface
   cancel: method = .void
     arg reason = .channelvalue
   close: method = .void
+  finish: method = .void
+  abort: method = .void
+    arg reason = .channelvalue
+  result_integer: method = .int
+    arg child = .task
+  result_string: method = .string
+    arg child = .task
+  result_binary: method = .binary
+    arg child = .task
 
 /** One child submitted to a task scope. */
 task: interface
@@ -69,6 +81,13 @@ task: interface
 
 /** A sealed, statically resolved task work descriptor. */
 tasktarget: interface
+  /** Compiler-reserved construction from an assembler/linker-sealed binding.
+   * @param diagnostic_name source-facing task name used in diagnostics
+   * @param signature source-facing canonical task signature
+   * @param binding fixed 80-byte RXTB v1 relocation result
+   */
+  binding: factory
+    arg diagnostic_name = .string, signature = .string, binding = .binary, ?factory_arguments = .channelvalue[]
   name: method = .string
   signature: method = .string
 
@@ -218,6 +237,12 @@ _channel_error: procedure
 _channel_require: procedure
   arg condition = .boolean, operation = .string
   if condition = 0 then call _channel_error operation, 1
+  return
+
+_task_failure: procedure
+  arg item = .completion
+  message = item.message() || " status=" || item.error_code()
+  assembler signal "TASK_FAILURE",message
   return
 
 _cv_node: procedure = .binary
@@ -929,10 +954,19 @@ channel_impl: class implements .channel
     _handle = handle
     _closed = 0
     _next_identity = 0
-    tickets = .int[]
-    identities = .int[]
-    terminals = .boolean[]
-    completions = .completion_impl[]
+    tickets = .int[1]
+    identities = .int[1]
+    terminals = .boolean[1]
+    completions = .completion_impl[1]
+    tickets[1] = 0
+    identities[1] = 0
+    terminals[1] = 0
+    empty_completion = .completion_impl
+    completions[1] = empty_completion
+    assembler SETATTRS tickets,0
+    assembler SETATTRS identities,0
+    assembler SETATTRS terminals,0
+    assembler SETATTRS completions,0
     _tickets = tickets
     _identities = identities
     _terminals = terminals
@@ -974,14 +1008,13 @@ channel_impl: class implements .channel
     _next_identity = _next_identity + 1
     assembler chanstart status,ticket,_handle,encoded,wait_microseconds
     if status = 0 then do
-      request = .channelrequest_impl.new(reference self, ticket, _next_identity)
       index = _tickets[0] + 1
       _tickets[index] = ticket
       _identities[index] = _next_identity
       _terminals[index] = 0
+      return .channelrequest_impl.new(reference self, ticket, _next_identity)
     end
-    else request = .channelrequest_impl.rejected(reference self, _next_identity, _next_identity, status)
-    return request
+    return .channelrequest_impl.rejected(reference self, _next_identity, _next_identity, status)
 
   wait: method = .completion
     arg wait_milliseconds = .int
@@ -1034,6 +1067,7 @@ channel_impl: class implements .channel
   wait_for: method = .completion_impl
     arg ticket = .int, wait_milliseconds = .int
     remaining_microseconds = _channel_wait_microseconds(wait_milliseconds)
+    observed = .completion_impl
     if remaining_microseconds > 0 then started = _channel_time_microseconds()
     do i = 1 to _tickets[0]
       if _tickets[i] = ticket then do
@@ -1141,7 +1175,10 @@ byteendpoint_impl: class implements .byteendpoint
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = direction
     _open = 1
-    requests = .channelrequest[]
+    requests = .channelrequest[1]
+    empty_request = .channelrequest
+    requests[1] = empty_request
+    assembler SETATTRS requests,0
     _requests = requests
     return
 
@@ -1152,7 +1189,10 @@ byteendpoint_impl: class implements .byteendpoint
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = direction
     _open = 1
-    requests = .channelrequest[]
+    requests = .channelrequest[1]
+    empty_request = .channelrequest
+    requests[1] = empty_request
+    assembler SETATTRS requests,0
     _requests = requests
     return
 
@@ -1167,7 +1207,10 @@ byteendpoint_impl: class implements .byteendpoint
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = direction
     _open = 1
-    requests = .channelrequest[]
+    requests = .channelrequest[1]
+    empty_request = .channelrequest
+    requests[1] = empty_request
+    assembler SETATTRS requests,0
     _requests = requests
     return
 
@@ -1238,20 +1281,52 @@ byteendpoint_impl: class implements .byteendpoint
     _open = 0
     return
 
-/** Compiler-created sealed descriptor. The public interface exposes diagnostics only. */
+/** Compiler-created sealed descriptor. Instances expose diagnostics only. */
 tasktarget_impl: class implements .tasktarget
   _name = .string
   _signature = .string
   _descriptor = .channelvalue_impl
 
+  /** Construct a public task target from the assembler/linker-sealed binding.
+   * @param diagnostic_name source-facing task name used in diagnostics
+   * @param signature source-facing canonical task signature
+   * @param binding fixed 80-byte RXTB v1 relocation result
+   * @return a validated task target descriptor
+   */
+  binding: factory
+    arg diagnostic_name = .string, signature = .string, binding = .binary, ?factory_arguments = .channelvalue[]
+    binding_length = 0
+    assembler blen binding_length,binding
+    call _channel_require binding_length = 80, "tasktarget.binding-length"
+    call _channel_require <at..u8>(0) binding = 82 & <at..u8>(1) binding = 88 & <at..u8>(2) binding = 84 & <at..u8>(3) binding = 66, "tasktarget.binding-magic"
+    call _channel_require <at..u8>(4) binding = 1, "tasktarget.binding-version"
+    call _channel_require <at..u8>(6) binding = 0 & <at..u8>(7) binding = 0, "tasktarget.binding-reserved"
+    kind = <at..u8>(5) binding
+    callable_id = <at..u32>(8) binding
+    adapter_callable_id = <at..u32>(76) binding
+    if kind = 1 then call _channel_require adapter_callable_id = 0, "tasktarget.binding-reserved"
+    if kind = 3 then call _channel_require adapter_callable_id > 0, "tasktarget.binding-adapter"
+    image_digest = .binary
+    signature_digest = .binary
+    start = 12
+    byte_count = 32
+    assembler bslice image_digest,binding,start,byte_count
+    start = 44
+    assembler bslice signature_digest,binding,start,byte_count
+    if ?factory_arguments = 0 then factory_arguments = .channelvalue[]
+    return .tasktarget_impl.sealed(diagnostic_name, signature, kind, image_digest, callable_id, adapter_callable_id, signature_digest, factory_arguments)
+
   sealed: factory
-    arg diagnostic_name = .string, signature = .string, kind = .int, image_digest = .binary, callable_id = .int, signature_digest = .binary, factory_arguments = .channelvalue[]
+    arg diagnostic_name = .string, signature = .string, kind = .int, image_digest = .binary, callable_id = .int, adapter_callable_id = .int, signature_digest = .binary, factory_arguments = .channelvalue[]
     image_length = 0
     signature_length = 0
     assembler blen image_length,image_digest
     assembler blen signature_length,signature_digest
     call _channel_require kind >= 1 & kind <= 3, "tasktarget.kind"
     call _channel_require image_length = 32 & signature_length = 32, "tasktarget.digest"
+    call _channel_require adapter_callable_id >= 0, "tasktarget.adapter-callable"
+    if kind = 1 then call _channel_require adapter_callable_id = 0, "tasktarget.adapter-callable"
+    if kind = 3 then call _channel_require adapter_callable_id > 0, "tasktarget.adapter-callable"
     if kind <> 3 then call _channel_require factory_arguments[0] = 0, "tasktarget.factory-arguments"
     names = .string[]
     values = .channelvalue[]
@@ -1265,6 +1340,8 @@ tasktarget_impl: class implements .tasktarget
     values[4] = .channelvalue.binary_value(signature_digest)
     names[5] = "factoryArguments"
     values[5] = .channelvalue.array_value(factory_arguments)
+    names[6] = "adapterCallableId"
+    values[6] = .channelvalue.integer_value(adapter_callable_id)
     _name = diagnostic_name
     _signature = signature
     _descriptor = .channelvalue_impl.record_value("crexx.channel.task-target", 1, names, values)
@@ -1279,31 +1356,101 @@ tasktarget_impl: class implements .tasktarget
   descriptor: method = .channelvalue_impl
     return _descriptor
 
+/** Mutable controller-local builder used by generated task-call lowering. */
+taskarguments: class
+  _values = .channelvalue[]
+  _count = .int
+
+  empty: factory
+    _count = 0
+    return
+
+  add_value: method = .taskarguments
+    arg value = .channelvalue
+    _count = _count + 1
+    _values[_count] = value
+    return self
+
+  add_boolean: method = .taskarguments
+    arg value = .boolean
+    _count = _count + 1
+    _values[_count] = .channelvalue.boolean_value(value)
+    return self
+
+  add_integer: method = .taskarguments
+    arg value = .int
+    _count = _count + 1
+    _values[_count] = .channelvalue.integer_value(value)
+    return self
+
+  add_string: method = .taskarguments
+    arg value = .string
+    _count = _count + 1
+    _values[_count] = .channelvalue.string_value(value)
+    return self
+
+  add_binary: method = .taskarguments
+    arg value = .binary
+    _count = _count + 1
+    _values[_count] = .channelvalue.binary_value(value)
+    return self
+
+  values: method = .channelvalue[]
+    return _values
+
 /** One structured child; its raw channel request never escapes this wrapper. */
 task_impl: class implements .task
   _scope = reference .taskscope_impl
-  _request = .channelrequest_impl
+  _channel = reference .channel_impl
+  _ticket = .int
+  _identity = .int
+  _terminal = .boolean
+  _cached = .completion_impl
 
   new: factory
-    arg scope = reference .taskscope_impl, request = .channelrequest_impl
+    arg scope = reference .taskscope_impl, channel = reference .channel_impl, ticket = .int, identity = .int
     _scope = scope
-    _request = request
+    _channel = channel
+    _ticket = ticket
+    _identity = identity
+    _terminal = 0
+    _cached = .completion_impl.none()
+    return
+
+  rejected: factory
+    arg scope = reference .taskscope_impl, channel = reference .channel_impl, identity = .int, cached = .completion_impl
+    _scope = scope
+    _channel = channel
+    _ticket = 0
+    _identity = identity
+    _terminal = 1
+    _cached = cached
     return
 
   identity: method = .int
-    return _request.identity()
+    return _identity
 
   terminal: method = .boolean
-    return _request.terminal()
+    if _terminal then return 1
+    observed = completion()
+    return observed.available()
 
   cancel: method = .void
     arg reason = .channelvalue
-    call _request.cancel(reason)
+    if _terminal then return
+    channel = dereference _channel
+    call channel.cancel_ticket(_ticket, reason)
     return
 
   wait: method = .completion
     arg wait_milliseconds = .int
-    item = _request.wait(wait_milliseconds)
+    if _terminal then return _cached
+    channel = dereference _channel
+    item = channel.wait_for(_ticket, wait_milliseconds)
+    if item.available() then do
+      _cached = item as .completion_impl
+      _terminal = 1
+    end
     if item.available() then do
       scope = dereference _scope
       call scope.mark_observed(identity())
@@ -1312,9 +1459,6 @@ task_impl: class implements .task
 
   completion: method = .completion
     return wait(0)
-
-  request: method = .channelrequest_impl
-    return _request
 
 /** Task pool implementation backed by a provider channel. */
 _taskpool_configuration: procedure = .channelvalue
@@ -1403,6 +1547,17 @@ _taskscope_configuration: procedure = .channelvalue
   values[3] = .channelvalue.integer_value(timeout_microseconds)
   return .channelvalue.record_value("crexx.channel.task-scope", 1, names, values)
 
+_default_task_pool = .taskpool_impl
+_default_task_pool_ready = .boolean
+
+_task_default_pool: procedure = .taskpool expose _default_task_pool _default_task_pool_ready
+  if _default_task_pool_ready = 0 then do
+    created = .taskpool.local(4, 256)
+    _default_task_pool = created as .taskpool_impl
+    _default_task_pool_ready = 1
+  end
+  return _default_task_pool
+
 taskscope_impl: class implements .taskscope
   _pool = .taskpool_impl
   _channel = .channel_impl
@@ -1413,6 +1568,30 @@ taskscope_impl: class implements .taskscope
   _observed = .boolean[]
   _join_cache = .completion[]
 
+  default: factory
+    pool = _task_default_pool()
+    _pool = pool as .taskpool_impl
+    configuration = _taskscope_configuration(_pool, -1, 1)
+    _channel = .channel_impl.open(_pool.provider_type(), 15, configuration)
+    _policy = 1
+    _open = 1
+    _joined = 0
+    children = .task_impl[1]
+    observed = .boolean[1]
+    join_cache = .completion[1]
+    empty_child = .task_impl
+    empty_completion = .completion
+    children[1] = empty_child
+    observed[1] = 0
+    join_cache[1] = empty_completion
+    assembler SETATTRS children,0
+    assembler SETATTRS observed,0
+    assembler SETATTRS join_cache,0
+    _children = children
+    _observed = observed
+    _join_cache = join_cache
+    return
+
   failfast: factory
     arg pool = .taskpool, timeout_milliseconds = .int
     _pool = pool as .taskpool_impl
@@ -1421,9 +1600,17 @@ taskscope_impl: class implements .taskscope
     _policy = 1
     _open = 1
     _joined = 0
-    children = .task_impl[]
-    observed = .boolean[]
-    join_cache = .completion[]
+    children = .task_impl[1]
+    observed = .boolean[1]
+    join_cache = .completion[1]
+    empty_child = .task_impl
+    empty_completion = .completion
+    children[1] = empty_child
+    observed[1] = 0
+    join_cache[1] = empty_completion
+    assembler SETATTRS children,0
+    assembler SETATTRS observed,0
+    assembler SETATTRS join_cache,0
     _children = children
     _observed = observed
     _join_cache = join_cache
@@ -1437,9 +1624,17 @@ taskscope_impl: class implements .taskscope
     _policy = 2
     _open = 1
     _joined = 0
-    children = .task_impl[]
-    observed = .boolean[]
-    join_cache = .completion[]
+    children = .task_impl[1]
+    observed = .boolean[1]
+    join_cache = .completion[1]
+    empty_child = .task_impl
+    empty_completion = .completion
+    children[1] = empty_child
+    observed[1] = 0
+    join_cache[1] = empty_completion
+    assembler SETATTRS children,0
+    assembler SETATTRS observed,0
+    assembler SETATTRS join_cache,0
     _children = children
     _observed = observed
     _join_cache = join_cache
@@ -1447,19 +1642,24 @@ taskscope_impl: class implements .taskscope
 
   submit: method = .task
     arg target = .tasktarget, request = .channelvalue
+    builder = .taskarguments.empty()
+    builder = builder.add_value(request)
+    return submit_arguments(target, builder)
+
+  submit_arguments: method = .task
+    arg target = .tasktarget, arguments = .taskarguments
     call _channel_require _open, "taskscope.submit.closed"
     sealed_target = target as .tasktarget_impl
-    arguments = .channelvalue[]
-    arguments[1] = request
     names = .string[]
     values = .channelvalue[]
     names[1] = "arguments"
-    values[1] = .channelvalue.array_value(arguments)
+    values[1] = .channelvalue.array_value(arguments.values())
     names[2] = "target"
     values[2] = sealed_target.descriptor()
     envelope = .channelvalue.record_value("crexx.channel.task-invoke", 1, names, values)
     channel_request = _channel.start_structured(envelope)
-    child = .task_impl.new(reference self, channel_request)
+    if channel_request.raw_ticket() = 0 then child = .task_impl.rejected(reference self, reference _channel, channel_request.identity(), channel_request.cached())
+    else child = .task_impl.new(reference self, reference _channel, channel_request.raw_ticket(), channel_request.identity())
     _children[_children[0] + 1] = child
     _observed[_observed[0] + 1] = 0
     return child
@@ -1493,7 +1693,7 @@ taskscope_impl: class implements .taskscope
     call _channel_require _open | _joined, "taskscope.join.closed"
     if _joined then return _join_cache
     do i = 1 to _children[0]
-      item = _children[i].request().wait(-1)
+      item = _children[i].wait(-1)
       _join_cache[i] = item
       _observed[i] = 1
     end
@@ -1522,11 +1722,49 @@ taskscope_impl: class implements .taskscope
     _open = 0
     return
 
+  finish: method = .void
+    completed = join()
+    do i = 1 to completed[0]
+      if completed[i].succeeded() = 0 then do
+        failed = completed[i]
+        call close()
+        call _task_failure failed
+      end
+    end
+    call close()
+    return
+
+  abort: method = .void
+    arg reason = .channelvalue
+    if _open = 0 then return
+    call cancel(reason)
+    completed = join()
+    call close()
+    return
+
+  result_integer: method = .int
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value().as_integer()
+
+  result_string: method = .string
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value().as_string()
+
+  result_binary: method = .binary
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value().as_binary()
+
   wait_task: method = .completion_impl
     arg identity = .int, wait_milliseconds = .int
     do i = 1 to _children[0]
       if _children[i].identity() = identity then do
-        item = _children[i].request().wait(wait_milliseconds) as .completion_impl
+        item = _children[i].wait(wait_milliseconds) as .completion_impl
         if item.available() then _observed[i] = 1
         return item
       end

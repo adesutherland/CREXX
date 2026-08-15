@@ -128,7 +128,12 @@ static int process_condition_wait(process_condition *condition,
 #endif
 
 #define PROCESS_ENDPOINT_CAPACITY (256u * 1024u)
-#define PROCESS_START_TIMEOUT_US INT64_C(5000000)
+/*
+ * Process workers must be able to start while a build or test host is under
+ * sustained load.  This is a transport-health bound, not a task deadline;
+ * task scopes retain their own independently enforced deadlines.
+ */
+#define PROCESS_START_TIMEOUT_US INT64_C(30000000)
 #define PROCESS_CANCEL_GRACE_US UINT64_C(250000)
 
 typedef struct process_shared process_shared;
@@ -1032,10 +1037,6 @@ static rxvm_channel_status process_start(
     status = rxvm_channel_parse_task_invoke(
             envelope, envelope_length, &invoke);
     if (status != RXVM_CHANNEL_OK) return status;
-    if (invoke.target_kind == 3) {
-        rxvm_channel_task_invoke_free(&invoke);
-        return RXVM_CHANNEL_UNSUPPORTED_OPERATION;
-    }
     rxvm_channel_task_invoke_free(&invoke);
     request = (process_request *)calloc(1u, sizeof(*request));
     if (!request) return RXVM_CHANNEL_RESOURCE_EXHAUSTED;

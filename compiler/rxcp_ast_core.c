@@ -308,6 +308,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->dispatch_kind = DISPATCH_NONE;
     node->is_implicit_main = 0;
     node->is_interface_default_method = 0;
+    node->is_task_callable = 0;
     node->is_internal_diagnostic = 0;
     node->is_source_diagnostic_recorded = 0;
     node->mark_internal_diagnostics = 0;
@@ -442,6 +443,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->dispatch_kind = node->dispatch_kind;
     new_node->is_implicit_main = node->is_implicit_main;
     new_node->is_interface_default_method = node->is_interface_default_method;
+    new_node->is_task_callable = node->is_task_callable;
     new_node->is_internal_diagnostic = node->is_internal_diagnostic;
     new_node->mark_internal_diagnostics = node->mark_internal_diagnostics;
     new_node->force_local_scope = node->force_local_scope;
@@ -1675,6 +1677,14 @@ const char *ast_ndtp(NodeType type) {
             return "FACTORY_CALL";
         case BLOCK_EXPR:
             return "BLOCK_EXPR";
+        case TASK_DECL:
+            return "TASK_DECL";
+        case TASK_TARGET:
+            return "TASK_TARGET";
+        case PARALLEL_DO:
+            return "PARALLEL_DO";
+        case PARALLEL_BLOCK_EXPR:
+            return "PARALLEL_BLOCK_EXPR";
         case LEAVE_WITH:
             return "LEAVE_WITH";
         case EXIT_EXTENDED:

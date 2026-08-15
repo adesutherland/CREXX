@@ -8,8 +8,10 @@ add_library(rxbin STATIC
         rxbin.c
         rxbin007.c
         rxsignature.c
+        rxsha256.c
         rxgraph.c
         include/rxsignature.h
+        include/rxsha256.h
         include/rxgraph.h
         include/rxbin.h)
 target_include_directories(rxbin

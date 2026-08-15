@@ -680,7 +680,7 @@ churn at one, two, four and eight workers on each available concrete VM and
 asserts that the requested maximum concurrency is reached. This adds no public
 worker/channel API, RXAS/RXBIN instruction, plugin ABI or scheduling contract.
 
-### Gate F F1a-F1e channel, Level B and process substrate
+### Gate F F1a-F1f channel, Level B and Level G task substrate
 
 Gate F now adds the mandatory public RXAS channel boundary without exposing a
 public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
@@ -768,10 +768,16 @@ contain `SIGPIPE` locally instead of changing the host's process-wide signal
 disposition. Pool teardown joins all provider threads/processes and removes
 the temporary snapshot.
 
-Level G lowering and concurrent HTTP remain later F1 slices; unsupported Level
-B operations report status `19` rather than simulating success. A public
-provider-plugin ABI remains an F2 review. The exact current/future boundary is
-recorded in
+F1f validates an 80-byte sealed binding before local or process dispatch.
+Kind `1` identifies a task procedure, kind `2` reconstructs a transferable
+receiver through its sealed `from_channel` factory, and kind `3` constructs a
+receiver-side `.taskwork` factory target and invokes its sealed `run` method.
+Task arguments/results and factory arguments remain receiver-materialized
+RXCV; no live VM value crosses. Level G task/parallel syntax lowers through the
+Level B classes and is accepted only under `OPTIONS LEVELG`. Concurrent HTTP
+remains F1g; unsupported Level B operations report status `19` rather than
+simulating success. A public provider-plugin ABI remains an F2 review. The
+exact current/future boundary is recorded in
 [`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).
 
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed

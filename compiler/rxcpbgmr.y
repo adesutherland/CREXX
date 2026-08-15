@@ -442,12 +442,16 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 }
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_STRING_CONTINUATION TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_STRING_CONTINUATION TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR TK_TASK TK_PARALLEL TK_USING.
 %wildcard ANYTHING.
+/* Gate F contextual words fall back to ordinary symbols outside the grammar
+ * positions that name task declarations, task targets and parallel blocks. */
+%fallback TK_VAR_SYMBOL TK_TASK TK_PARALLEL TK_USING.
 
 /* Low precedence */
 %left EXIT_REDUCE.
 %right ANYTHING.
+%right TK_TASK TK_PARALLEL TK_USING.
 %left TK_EOC.
 %left TK_END.
 %left IMPLICIT_CONCAT.
@@ -678,7 +682,16 @@ def_value(D)             ::=   TK_HIGH_PRIORITY_MINUS(S) error.
 def_value(D)             ::=   TK_INTEGER ANYTHING(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
 
 var_symbol(A)          ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
+var_symbol(A)          ::= TK_TASK(S). { A = ast_f(context, VAR_SYMBOL, S); }
+var_symbol(A)          ::= TK_PARALLEL(S). { A = ast_f(context, VAR_SYMBOL, S); }
+var_symbol(A)          ::= TK_USING(S). { A = ast_f(context, VAR_SYMBOL, S); }
 var_symbol(A)          ::= TK_VAR_SYMBOL(S) array_parameters(P).
+                           { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+var_symbol(A)          ::= TK_TASK(S) array_parameters(P).
+                           { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+var_symbol(A)          ::= TK_PARALLEL(S) array_parameters(P).
+                           { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+var_symbol(A)          ::= TK_USING(S) array_parameters(P).
                            { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
 var_symbol(A)          ::= TK_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
                            { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
@@ -710,7 +723,7 @@ stempart(A)            ::= TK_STEMNOVAL(S).
                            }
 
 /* Labels */
-label(A)               ::= TK_LABEL(S).
+label(A)               ::= TK_LABEL(S). [TK_TASK]
                            { A = ast_f(context, LABEL, S); }
 label(A)               ::= TK_RESERVED_LABEL(S).
                            { A = mknd_err(ast_f(context, VAR_SYMBOL, S), "KEYWORD"); }
@@ -1050,6 +1063,7 @@ keyword_instruction(I) ::= leave(K). { I = K; }
 keyword_instruction(I) ::= nop(K). { I = K; }
 //keyword_instruction(I) ::= parse(K). { I = K; }
 keyword_instruction(I) ::= procedure(K). { I = K; }
+keyword_instruction(I) ::= task_def(K). { I = K; }
 //keyword_instruction(I) ::= pull(K). { I = K; }
 keyword_instruction(I) ::= return(K). { I = K; }
 keyword_instruction(I) ::= exit(K). { I = K; }
@@ -1080,6 +1094,8 @@ keyword_instruction(I) ::= TK_IMPORT(T) error.
 
 group(I) ::= simple_do(K) TK_EOC. { I = K; }
 group(I) ::= simple_do(K). { I = K; }
+group(I) ::= parallel_do(K) TK_EOC. { I = K; }
+group(I) ::= parallel_do(K). { I = K; }
 group(I) ::= do(K) TK_EOC. { I = K; }
 group(I) ::= do(K). { I = K; }
 group(I) ::= if(K). { I = K; }
@@ -1087,6 +1103,15 @@ group(I) ::= select(K) TK_EOC. { I = K; }
 group(I) ::= select(K). { I = K; }
 
 /* Groups */
+
+/* Gate F structured parallel group. A missing USING child denotes the
+ * execution-local default scope selected by the lowering pass. */
+parallel_using_opt(U) ::= . { U = NULL; }
+parallel_using_opt(U) ::= TK_USING expression(E). { U = E; }
+parallel_do(G) ::= TK_DO(T) TK_PARALLEL parallel_using_opt(U) TK_EOC instruction_list(I) TK_END.
+          { G = ast_f(context, PARALLEL_DO, T); if (U) add_ast(G,U); add_ast(G,I); }
+parallel_do(G) ::= TK_DO(T) TK_PARALLEL parallel_using_opt(U) TK_EOC TK_END.
+          { G = ast_f(context, PARALLEL_DO, T); if (U) add_ast(G,U); add_ast(G,ast_ft(context, INSTRUCTIONS)); }
 
 /* Simple DO Group */
 simple_do(G) ::= TK_DO(T) TK_EOC instruction_list(I) signal_handler_list(H) TK_END.
@@ -1142,7 +1167,7 @@ signal_as_opt(A) ::= TK_AS TK_VAR_SYMBOL(S).
 
 /* DO Group */
 
-tk_doloop(D)  ::= TK_DO(T).
+tk_doloop(D)  ::= TK_DO(T). [TK_PARALLEL]
                   { D = ast_f(context, DO, T); }
 tk_doloop(D)  ::= TK_LOOP(T).
                   { D = ast_f(context, DO, T); }
@@ -1287,6 +1312,9 @@ when_clause(W) ::= TK_WHEN(K) expression(E) ncl0 TK_EOS.
                    { W = ast_f(context, WHEN, K); add_ast(W,E); add_ast(W,ast_err(context, "MISSING_THEN", K)); }
 
 /* Procedure / Args */
+task_def(P)         ::= TK_LABEL(L) TK_TASK opt_method_return_type(T).
+                      { P = ast_f(context, TASK_DECL, L); P->is_task_callable = 1;
+                        if (T) add_ast(P,T); else add_ast(P,ast_ft(context, VOID)); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL type_def(C).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,C); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).
@@ -1638,6 +1666,7 @@ nop(I) ::= TK_NOP(T).
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
 %left TK_STRING TK_STRING_CONTINUATION TK_FLOAT TK_DECIMAL TK_INTEGER TK_VAR_SYMBOL TK_QUALIFIED_SYMBOL.
+%left TK_CLASS_FACTORY.
 %left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
@@ -1648,6 +1677,12 @@ continued_string(C)   ::= continued_string(S) TK_STRING_CONTINUATION(N).
                           { S->token_subtype = N->token_number; C = S; }
 
 function_name(N)       ::= TK_VAR_SYMBOL(S).
+                           { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_TASK(S).
+                           { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_PARALLEL(S).
+                           { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_USING(S).
                            { N = ast_f(context, FUNCTION, S); }
 function_name(N)       ::= TK_QUALIFIED_SYMBOL(S).
                            { N = ast_f(context, FUNCTION, S); }
@@ -1725,6 +1760,34 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA.
                          { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L, ast_ft(context, NOVAL)); }
 
 /* Expression terminal nodes */
+term(F)                ::= TK_TASK(T) TK_VAR_SYMBOL(S).
+                           { F = ast_f(context, TASK_TARGET, T); add_ast(F,ast_f(context, FUNC_SYMBOL,S)); }
+term(F)                ::= TK_TASK(T) TK_QUALIFIED_SYMBOL(S).
+                           { F = ast_f(context, TASK_TARGET, T); add_ast(F,ast_f(context, FUNC_SYMBOL,S)); }
+term(F)                ::= TK_TASK(T) TK_CLASS_FACTORY(S) function_parameters(PP).
+                           {
+                               ASTNode *factory = ast_f(context, FACTORY_CALL, S);
+                               if (PP) add_ast(factory, PP);
+                               F = ast_f(context, TASK_TARGET, T);
+                               add_ast(F, factory);
+                           }
+term(F)                ::= TK_TASK(T) TK_CLASS_TYPE(S) function_parameters(PP).
+                           {
+                               ASTNode *factory = ast_f(context, FACTORY_CALL, S);
+                               if (factory->node_string && factory->node_string[0] == '.') {
+                                   factory->node_string++;
+                                   factory->node_string_length--;
+                               }
+                               if (PP) add_ast(factory, PP);
+                               F = ast_f(context, TASK_TARGET, T);
+                               add_ast(F, factory);
+                           }
+term(F)                ::= TK_TASK(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_PARALLEL(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_USING(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
                            {
                                F = ast_f(context, token_text_equals_ci(S, "initialized") ? OP_INITIALIZED : FUNCTION, S);
@@ -1874,7 +1937,13 @@ block_expr(A)        ::= TK_DO(T) TK_EOC instruction_list(I) TK_END.
                          { A = ast_f(context, BLOCK_EXPR, T); add_ast(A, I); }
 block_expr(A)        ::= TK_DO(T) TK_EOC TK_END.
                          { A = ast_f(context, BLOCK_EXPR, T); add_ast(A, ast_ft(context, INSTRUCTIONS)); }
+parallel_block_expr(A) ::= TK_DO(T) TK_PARALLEL parallel_using_opt(U) TK_EOC instruction_list(I) TK_END.
+                         { A = ast_f(context, PARALLEL_BLOCK_EXPR, T); if (U) add_ast(A,U); add_ast(A,I); }
+parallel_block_expr(A) ::= TK_DO(T) TK_PARALLEL parallel_using_opt(U) TK_EOC TK_END.
+                         { A = ast_f(context, PARALLEL_BLOCK_EXPR, T); if (U) add_ast(A,U); add_ast(A,ast_ft(context, INSTRUCTIONS)); }
 bracket(A)           ::= block_expr(B).
+                         { A = B; }
+bracket(A)           ::= parallel_block_expr(B).
                          { A = B; }
 /* Standalone class factory call as a primary */
 bracket(F)           ::= TK_CLASS_TYPE(S) TK_CLASS_TYPE(M) function_parameters(P).

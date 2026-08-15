@@ -1,0 +1,32 @@
+PERF3-13 Gate F F1f closeout
+
+Functional result:
+- Level G task declarations, task methods, task targets, task expressions and
+  DO PARALLEL are implemented and gated to OPTIONS LEVELG.
+- Level B concurrency classes remain available outside Level G; task and
+  parallel remain contextual ordinary identifiers where not parsed as the new
+  constructs.
+- kind-1 task procedures, kind-2 transferable receivers and kind-3 .taskwork
+  factories use sealed relocatable bindings on local and process providers.
+- direct self-recursion is synchronous; different-task nested waits are
+  rejected.
+- imported-library conformance exercises rxc, rxas, rxlink, rxbvm and rxtvm in
+  optimized and unoptimized forms.
+
+Qualification:
+- full Debug: 2,149/2,149
+- focused Release Gate F: 35/35
+- focused Apple ASan: 136/136; Apple LSan unavailable, leak detection disabled
+- sealed channel benchmark: PASS in Debug and Release on rxbvm and rxtvm
+
+Performance disposition:
+- unchanged confirmation records clear tiny-task latency regressions of
+  -26.318621% rxbvml and -28.291208% rxtvml, both guard hits
+- throughput remains noisy/inconclusive
+- likely cause: per-submission sealed-binding validation and associated binary
+  shape; candidate VMs are each 17,328 bytes larger than the F1e controls
+- retained and accepted for continuation under Adrian's explicit overnight
+  direction; tuning is deferred to F3/release hardening
+
+Next slice: F1g, the bounded concurrent HTTP/TLS consumer required by
+crexx-rag. No push or public provider ABI publication is part of this closeout.

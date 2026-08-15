@@ -1,9 +1,9 @@
 # PERF3-13 Gate F maintainer and AI reference specification
 
-Date: 2026-08-14
+Date: 2026-08-15
 
-Status: **F0-S normative contract and F1a-F1e local/process-provider, Level B,
-byte-endpoint and child-process surface complete; F1f next**
+Status: **F0-S normative contract and F1a-F1f local/process-provider, Level B
+and gated Level G concurrency surface complete; F1g concurrent HTTP/TLS next**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -75,6 +75,11 @@ or affinity API.
 
 `TASK` and `PARALLEL` are contextual words, case-insensitively. They do not
 become globally reserved identifiers.
+
+All syntax in this section is Level G-only. `task` declarations, explicit
+`task target` expressions and both statement/expression forms of
+`DO PARALLEL` are rejected when the source selects another language level.
+The same words remain ordinary identifiers outside these grammar positions.
 
 - `task = 1`, `call task` and a routine named `task` remain valid when the
   token is not in one of the grammar positions below.
@@ -234,6 +239,12 @@ Dynamic nested task waits from a task body fail immediately with
 `#TASK_NESTED_WAIT`; they must not consume a bounded worker while waiting for
 the same pool.
 
+A direct self-call in a task body is ordinary synchronous recursion in the
+current worker. The task modifier controls submission at the entry boundary;
+it does not turn self-recursion into child submission. A call from one task
+body to a different task (including a mutual-recursion edge between task
+declarations) remains a nested task wait and is rejected in the first surface.
+
 ### 4.4 Target descriptor
 
 A `.tasktarget` encodes this logical descriptor:
@@ -245,6 +256,7 @@ A `.tasktarget` encodes this logical descriptor:
 | `callableId` | stable semantic-graph callable id within that image |
 | `signatureDigest` | 32-byte digest of the canonical argument/result contract |
 | `factoryArguments` | `ChannelValue` array; empty except for kind `3` |
+| `adapterCallableId` | `0` for kind `1`; otherwise the sealed callable id plus one for the receiver `from_channel` factory (kind `2`) or `.taskwork.run` method (kind `3`) |
 
 Local providers validate the current sealed generation and callable metadata.
 Process providers load the same image digest before accepting work. A later
@@ -947,6 +959,9 @@ The compiler diagnostics are stable names even if presentation text changes:
 
 | Diagnostic | Condition |
 | --- | --- |
+| `#TASK_ONLY_LEVELG` | task declaration outside Level G |
+| `#TASK_TARGET_ONLY_LEVELG` | explicit task-target expression outside Level G |
+| `#PARALLEL_ONLY_LEVELG` | statement or expression `DO PARALLEL` outside Level G |
 | `#TASK_EXPOSED_ARGUMENT` | `ARG EXPOSE` in task signature |
 | `#TASK_REFERENCE_TYPE` | reference argument/result/receiver |
 | `#TASK_NONTRANSFERABLE_TYPE` | value has no exact transfer contract |
@@ -1059,12 +1074,12 @@ service-reference and transfer-buffer interfaces. The only runtime bridge is
 the five RXAS instructions. Task targets are sealed numeric/digest descriptors;
 no Rexx procedure-name string or RXPA task API occurs on the dispatch path.
 
-Current absence is failure-visible. `.taskscope.ask`, `.taskcontext.endpoint`,
-compiler-created
-`.taskwork` kind-3 adapters and pool statistics return
-`UNSUPPORTED_OPERATION`. Concrete endpoint/child-process integration is F1d,
-the process provider is complete in F1e, Level G syntax is F1f and concurrent
-HTTP is F1g.
+Current absence is failure-visible. `.taskscope.ask`, `.taskcontext.endpoint`
+and pool statistics return `UNSUPPORTED_OPERATION`. Concrete
+endpoint/child-process integration is F1d, the process provider is complete in
+F1e, and F1f completes kind-1 task procedures, kind-2 transferable task
+methods, kind-3 `.taskwork` factories and the gated Level G lowering.
+Concurrent HTTP is F1g.
 No public provider-plugin ABI is implied before F2.
 
 ### 17.1 F1e isolated-process provider contract
@@ -1104,12 +1119,44 @@ all result/cancel/deadline/disconnect races. On POSIX, closure of the private
 protocol pipe must be handled at that write boundary; an implementation must
 not change the controller or host process's global `SIGPIPE` disposition.
 
+### 17.2 F1f compiler and sealed-binding contract
+
+F1f admits `task` declarations, explicit task-target expressions and both
+forms of `DO PARALLEL` only when the source selects Level G. The compiler emits
+`#TASK_ONLY_LEVELG`, `#TASK_TARGET_ONLY_LEVELG` or `#PARALLEL_ONLY_LEVELG`
+outside that level. The contextual words remain available as ordinary Level B
+identifiers, and the Level B concurrency classes remain directly usable.
+
+The compiler lowers task calls to one controller-owned dependency plan. It
+preserves left-to-right argument evaluation and submission, ordinary
+short-circuit suppression, pending-binding restrictions, structured cleanup
+and join, and synchronous execution of non-task clauses. Direct task
+self-recursion is emitted as an ordinary same-worker recursive call. An edge
+from one task declaration to another remains a rejected nested task wait.
+
+RXBIN carries an 80-byte sealed task binding: image digest, callable id,
+signature digest and an adapter slot containing zero or callable id plus one.
+The assembler resolves local
+placeholders, the linker relocates them without merging semantic graphs, and
+the runtime validates the binding before dispatch. Kind `2` reconstructs its
+receiver through the sealed `from_channel` factory; kind `3` constructs the
+factory target in the receiver and invokes the sealed `run` adapter. Factory
+arguments, requests and results cross only as `ChannelValue` data.
+
+Imported task-method and `.taskwork` tests compile the provider library and
+client separately, assemble both, link them with classlib/library, and execute
+optimized/unoptimized images on `rxbvm` and `rxtvm`. This is the standing
+toolchain rule for library development: exercise `rxc`, `rxas`, `rxlink` and
+`rxvm`, not only the final class-library runtime.
+
 Evidence is retained in the
 [`F1a/F1b closeout`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/)
 [`F1c closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/),
 [`F1d closeout`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/)
 and
-[`F1e closeout`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
+[`F1e closeout`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/),
+and the F1f evidence is retained in
+[`F1f closeout`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
 
 After the first production edit, run the minimum focused correctness checks,
 freeze code, build ordinary profiling-off Release, run the smallest decisive

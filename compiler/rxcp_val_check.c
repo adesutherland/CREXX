@@ -198,7 +198,8 @@ static void validate_assembler_node(Context *context, ASTNode *node) {
     char *buffer;
     char *c;
 
-    if (context->level != LEVELB && !assembler_is_from_certified_exit(node)) {
+    if (context->level != LEVELB && !node->is_compiler_added &&
+        !assembler_is_from_certified_exit(node)) {
         /* ASSEMBLER is only valid in level b */
         mknd_err_unique(node, "ASSEMBLER_ONLY_LEVELB");
         return;
@@ -347,12 +348,141 @@ static void update_interface_member_body_flag(ASTNode *node) {
     );
 }
 
+static void validate_task_callable_signature(ASTNode *node);
+
+static void validate_levelg_concurrency_surface(Context *context,
+                                                ASTNode *node) {
+    if (!context || !node || context->level == LEVELG) return;
+
+    if (node->node_type == TASK_TARGET) {
+        mknd_err_unique(node, "TASK_TARGET_ONLY_LEVELG");
+    } else if (node->node_type == PARALLEL_DO ||
+               node->node_type == PARALLEL_BLOCK_EXPR) {
+        mknd_err_unique(node, "PARALLEL_ONLY_LEVELG");
+    }
+}
+
+static void normalize_task_callable(Context *context, ASTNode *node) {
+    if (!node || node->node_type != TASK_DECL) return;
+
+    node->is_task_callable = 1;
+    validate_task_callable_signature(node);
+    if (context && context->level != LEVELG) mknd_err(node, "TASK_ONLY_LEVELG");
+    if (node->parent &&
+        (node->parent->node_type == CLASS_DEF ||
+         node->parent->node_type == INTERFACE_DEF)) {
+        node->node_type = METHOD;
+    } else {
+        node->node_type = PROCEDURE;
+    }
+}
+
+static void validate_task_callable_signature(ASTNode *node) {
+    ASTNode *args;
+    ASTNode *arg;
+
+    if (!node || !node->is_task_callable) return;
+    if (node->child && node->child->node_type == TYPE_REFERENCE &&
+        !ast_chld(node->child, ERROR, 0)) {
+        mknd_err(node->child, "TASK_REFERENCE_TYPE");
+    }
+    args = ast_chld(node, ARGS, 0);
+    if (!args) {
+        for (args = node->sibling; args; args = args->sibling) {
+            if (args->node_type == ARGS) break;
+            if (args->node_type == PROCEDURE || args->node_type == TASK_DECL ||
+                args->node_type == CLASS_DEF || args->node_type == INTERFACE_DEF ||
+                args->node_type == METHOD || args->node_type == FACTORY) {
+                args = 0;
+                break;
+            }
+        }
+    }
+    for (arg = args ? args->child : 0; arg; arg = arg->sibling) {
+        ASTNode *formal = arg->child;
+        ASTNode *type = formal ? formal->sibling : 0;
+
+        if (arg->is_ref_arg && !ast_chld(arg, ERROR, 0)) {
+            mknd_err(arg, "TASK_EXPOSED_ARGUMENT");
+        } else if (type && type->node_type == TYPE_REFERENCE &&
+                   !ast_chld(arg, ERROR, 0)) {
+            mknd_err(arg, "TASK_REFERENCE_TYPE");
+        }
+    }
+}
+
+static int task_member_label_is(ASTNode *node, const char *name) {
+    size_t length;
+
+    if (!node || !name || !node->node_string) return 0;
+    length = node->node_string_length;
+    if (length && node->node_string[length - 1u] == ':') length--;
+    return strlen(name) == length &&
+           strncasecmp(node->node_string, name, length) == 0;
+}
+
+static int task_type_is_channelvalue(ASTNode *type_node) {
+    char *type;
+    int matches;
+
+    if (!type_node) return 0;
+    if (type_node->node_string &&
+        ((type_node->node_string_length == strlen(".channelvalue") &&
+          strncasecmp(type_node->node_string, ".channelvalue",
+                      type_node->node_string_length) == 0) ||
+         (type_node->node_string_length == strlen(".concurrency..channelvalue") &&
+          strncasecmp(type_node->node_string,
+                      ".concurrency..channelvalue",
+                      type_node->node_string_length) == 0))) {
+        return 1;
+    }
+    type = ast_n2tp(type_node);
+    if (!type) return 0;
+    matches = strcasecmp(type, ".channelvalue") == 0 ||
+              strcasecmp(type, ".concurrency..channelvalue") == 0;
+    free(type);
+    return matches;
+}
+
+static int task_receiver_contract_valid(ASTNode *node) {
+    ASTNode *member;
+    ASTNode *from_channel = 0;
+    ASTNode *to_channel = 0;
+    ASTNode *args;
+    ASTNode *arg;
+
+    if (!node || node->node_type != METHOD || !node->parent ||
+        (node->parent->node_type != CLASS_DEF &&
+         node->parent->node_type != INTERFACE_DEF)) return 0;
+    for (member = node->parent->child; member; member = member->sibling) {
+        if (member->node_type == FACTORY &&
+            task_member_label_is(member, "from_channel")) {
+            from_channel = member;
+        } else if (member->node_type == METHOD &&
+                   task_member_label_is(member, "to_channel")) {
+            to_channel = member;
+        }
+    }
+    if (!from_channel || !to_channel ||
+        !task_type_is_channelvalue(ast_type_child(to_channel))) return 0;
+
+    args = ast_chld(to_channel, ARGS, 0);
+    if (args && args->child) return 0;
+    args = ast_chld(from_channel, ARGS, 0);
+    arg = args ? args->child : 0;
+    if (!arg || arg->sibling || arg->is_ref_arg || arg->is_varg) return 0;
+    return task_type_is_channelvalue(arg->child ? arg->child->sibling : 0);
+}
+
 walker_result ast_structure_fixup_walker(walker_direction direction,
                                          ASTNode* node, RXCP_UNUSED void *payload) {
     ASTNode *child, *new_child, *next, *last, *n;
     Context *context = (Context*)payload;
 
     if (direction == in) {
+
+        normalize_task_callable(context, node);
+        validate_levelg_concurrency_surface(context, node);
 
         if (node->node_type == PROGRAM_FILE) {
 
@@ -372,7 +502,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
 
             last = node->child;
             child = node->child->sibling;
-            if (child && child->node_type != PROCEDURE &&
+            if (child && child->node_type != PROCEDURE && child->node_type != TASK_DECL &&
                 child->node_type != CLASS_DEF &&
                 child->node_type != INTERFACE_DEF) {
                 /* If the first instruction is not a PROCEDURE or CLASS, then we need to
@@ -392,7 +522,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                         add_ast(new_child,ast_ft(context, VOID));
                         break;
                     }
-                    if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) {
+                    if (n->node_type == PROCEDURE || n->node_type == TASK_DECL || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) {
                         /* No return statement so must be returning null */
                         add_ast(new_child,ast_ft(context, VOID));
                         break;
@@ -480,7 +610,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 char first_instruction = 1;
                 next = node->sibling;
                 ASTNode *prev = node;
-                while (next && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
+                while (next && next->node_type != PROCEDURE && next->node_type != TASK_DECL && next->node_type != CLASS_DEF &&
                        next->node_type != INTERFACE_DEF &&
                        next->node_type != METHOD && next->node_type != FACTORY &&
                        next->node_type != MATCH) {
@@ -573,6 +703,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                     new_child = ast_ft(context,ARGS);
                     add_ast(node,new_child);
                 }
+                validate_task_callable_signature(node);
 
                 /* Make the new INSTRUCTIONS child */
                 new_child = ast_ft(context,INSTRUCTIONS);
@@ -581,7 +712,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 last = NULL;
 
                 /* For each sibling until the next block */
-                while ( ((next = node->sibling)) && next->node_type != PROCEDURE &&
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE && next->node_type != TASK_DECL &&
                         next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF &&
                         next->node_type != METHOD && next->node_type != FACTORY) {
                     last = next; /* To check that there is a return */
@@ -616,7 +747,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
 
 static int is_callable_boundary(ASTNode *node) {
     if (!node) return 0;
-    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF ||
+    return node->node_type == PROCEDURE || node->node_type == TASK_DECL || node->node_type == CLASS_DEF ||
            node->node_type == INTERFACE_DEF || node->node_type == METHOD ||
            node->node_type == FACTORY || node->node_type == MATCH;
 }
@@ -671,7 +802,7 @@ static ASTNode *infer_main_return_type(Context *context, ASTNode *first_node) {
     n = first_node;
     while (1) {
         if (!n) return ast_ft(context, VOID);
-        if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) return ast_ft(context, VOID);
+        if (n->node_type == PROCEDURE || n->node_type == TASK_DECL || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) return ast_ft(context, VOID);
         if (n->node_type == RETURN) {
             if (n->child) return ast_ftt(context, CLASS, ".int");
             return ast_ft(context, VOID);
@@ -1043,6 +1174,7 @@ static int is_program_header_node(ASTNode *node) {
 static int is_top_level_callable_boundary(ASTNode *node) {
     return node &&
            (node->node_type == PROCEDURE ||
+            node->node_type == TASK_DECL ||
             node->node_type == CLASS_DEF ||
             node->node_type == INTERFACE_DEF);
 }
@@ -1125,6 +1257,9 @@ walker_result ast_source_structure_walker(walker_direction direction,
     context = (Context *)payload;
 
     if (direction != in) return result_normal;
+
+    normalize_task_callable(context, node);
+    validate_levelg_concurrency_surface(context, node);
 
     if (node->node_type == PROGRAM_FILE) {
         promote_program_file_children(node);
@@ -1527,8 +1662,14 @@ walker_result syntax_validation_walker(walker_direction direction,
             }
         }
 
+        else if (node->node_type == METHOD && node->is_task_callable) {
+            if (!task_receiver_contract_valid(node)) {
+                mknd_err_unique(node, "TASK_NONTRANSFERABLE_RECEIVER");
+            }
+        }
+
         else if (node->node_type == SIGNAL_BLOCK) {
-            if (context->level != LEVELB) {
+            if (context->level != LEVELB && !node->is_compiler_added) {
                 mknd_err(node, "SIGNAL_BLOCK_ONLY_LEVELB");
             }
         }

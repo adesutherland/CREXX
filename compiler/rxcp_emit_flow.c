@@ -410,6 +410,48 @@ static void signal_emit_pop_names(OutputFragment *output, signal_emit_names *ins
     }
 }
 
+/* Control transfers that leave a protected block must restore every branch
+ * handler installed by that block.  Normal SIGNAL_BLOCK fall-through already
+ * emits the same pops; this path covers RETURN and LEAVE without relying on a
+ * runtime frame teardown to repair block-scoped handler policy. */
+static void signal_emit_unwind_for_control(OutputFragment *output,
+                                           ASTNode *node,
+                                           ASTNode *stop_before) {
+    ASTNode *ancestor;
+    ASTNode *handler_owner = 0;
+
+    if (!output || !node) return;
+    for (ancestor = node->parent;
+         ancestor && ancestor != stop_before;
+         ancestor = ancestor->parent) {
+        if (ancestor->node_type == SIGNAL_HANDLER) {
+            handler_owner = ancestor->parent;
+        } else if (ancestor->node_type == SIGNAL_BLOCK) {
+            ASTNode *handler;
+            signal_emit_names installed = {0};
+
+            if (ancestor == handler_owner) {
+                handler_owner = 0;
+                continue;
+            }
+            for (handler = ast_chdn(ancestor, 1);
+                 handler;
+                 handler = ast_nsib(handler)) {
+                signal_emit_names handler_names = {0};
+                size_t i;
+
+                signal_emit_collect_names(handler->child, &handler_names);
+                for (i = 0; i < handler_names.count; i++) {
+                    signal_emit_names_add(&installed, handler_names.items[i]);
+                }
+                signal_emit_names_free(&handler_names);
+            }
+            signal_emit_pop_names(output, &installed);
+            signal_emit_names_free(&installed);
+        }
+    }
+}
+
 void emit_flow(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
@@ -625,6 +667,7 @@ void emit_flow(ASTNode *node, void *pl) {
                                 child1->register_num);
                 // TODO - Test array element as we have not unlinked
             }
+            signal_emit_unwind_for_control(node->output, node, ast_proc(node));
             output_append_text(node->output, temp1);
             free(temp1);
             break;
@@ -1066,6 +1109,9 @@ void emit_flow(ASTNode *node, void *pl) {
             /* Add Variable Metadata */
             add_variable_metadata(node);
 
+            signal_emit_unwind_for_control(node->output, node,
+                                           node->association);
+
             temp1 = mprintf("   br l%ddoend\n",
                             node->association->node_number);
             output_append_text(node->output, temp1);
@@ -1118,6 +1164,8 @@ void emit_flow(ASTNode *node, void *pl) {
             }
 
             if (node->association) {
+                signal_emit_unwind_for_control(node->output, node,
+                                               node->association);
                 temp1 = mprintf("   br l%dbexprend\n",
                                 node->association->node_number);
                 output_append_text(node->output, temp1);

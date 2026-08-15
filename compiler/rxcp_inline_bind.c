@@ -87,6 +87,17 @@ static int inline_symbol_uses_imported_template(Symbol *symbol) {
     return def_node && symbol->ast_template != def_node;
 }
 
+static int inline_symbol_is_task_callable(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+        if (link && link->node && link->node->is_task_callable) return 1;
+    }
+    return 0;
+}
+
 int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
     Symbol *proc_sym;
 
@@ -99,7 +110,9 @@ int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
     }
 
     proc_sym = node->symbolNode ? node->symbolNode->symbol : NULL;
-    if (!proc_sym || !proc_sym->is_inlinable || !inline_symbol_has_callable_template(proc_sym)) return 0;
+    if (!proc_sym || !proc_sym->is_inlinable ||
+        inline_symbol_is_task_callable(proc_sym) ||
+        !inline_symbol_has_callable_template(proc_sym)) return 0;
 
     if (proc_sym_out) *proc_sym_out = proc_sym;
     return 1;

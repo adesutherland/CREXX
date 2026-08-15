@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S through F1e complete; F1f
-Level G Rexx lowering next**
+Status: **implementation approved by Adrian; F0-S through F1f complete; F1g
+concurrent HTTP/TLS industrial consumer next**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -375,7 +375,7 @@ boundary. Prove:
 Freeze and stop at the process-provider first Release verdict before cross-host
 or HTTP expansion.
 
-### F1f — Level G Rexx lowering
+### F1f — Level G Rexx lowering — complete
 
 Implement the approved `task` callable/method kind, statically resolved task
 targets, normal task calls, expression dependency plans and `DO PARALLEL`.
@@ -512,7 +512,8 @@ seeded with the lifetime-pinned local descriptor. F1c subsequently completed
 private registration and fake-provider vector `GF-B09`, full `ChannelValue`,
 deadlines/scopes and the Level B classes. F1d subsequently completed reusable
 byte endpoints, structured child processes and ADDRESS migration. F1e now
-completes isolated process tasks; Level G lowering and HTTP remain F1f/F1g.
+completes isolated process tasks; F1f now completes Level G lowering and
+sealed kind-1/2/3 task bindings. HTTP remains F1g.
 
 ## F1c completion record
 
@@ -543,13 +544,13 @@ proves that it contains no RXPA task call or procedure-name dispatch string.
 The boundary is explicit rather than simulated. `.taskpool.process` reaches
 core provider type `2`; F1e now supplies that provider with the same Level B
 pool/scope/task contract as `.taskpool.local`.
-`.taskscope.ask`, `.taskcontext.endpoint` and compiler-created `.taskwork`
-kind-3 dispatch report `UNSUPPORTED_OPERATION` until their provider/compiler
-adapters land. Pool `queued()` and `running()` likewise report unsupported
+`.taskscope.ask` and `.taskcontext.endpoint` report `UNSUPPORTED_OPERATION`.
+F1f now supplies compiler/runtime `.taskwork` kind-3 dispatch. Pool `queued()`
+and `running()` likewise report unsupported
 until a provider-neutral statistics query is specified. F1d now supplies the
 concrete reusable byte-endpoint and structured child-process providers, plus
 the migrated ADDRESS adapters. Service implementation remains later work, and
-the approved Level G `task`/`DO PARALLEL` sugar remains F1f.
+the approved Level G `task`/`DO PARALLEL` sugar is complete in F1f.
 
 ## F1d completion record
 
@@ -622,6 +623,36 @@ include running-sibling fail-fast cancellation. The final paired Release
 confirmation has no guard hit or confirmed regression and makes no improvement
 claim. Evidence:
 [`2026-08-15-perf3-13-gate-f-f1e-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
+
+## F1f completion record
+
+F1f implements the gated Level G surface: task procedures and transferable
+task methods, explicit task targets, task expressions, `CALL` tasks and
+statement/expression `DO PARALLEL` with optional `USING` scopes. `task` and
+`parallel` remain contextual words. Outside Level G the dedicated diagnostics
+`TASK_ONLY_LEVELG`, `TASK_TARGET_ONLY_LEVELG` and `PARALLEL_ONLY_LEVELG`
+reject only the new grammar positions; Level B class use remains available.
+
+Task lowering preserves source-order argument evaluation/submission,
+short-circuit suppression, typed pending bindings, early-control cleanup and
+structured joins. Direct task self-recursion is synchronous same-worker
+recursion; calls between different task bodies remain rejected nested waits.
+Task procedure, transferable receiver and `.taskwork` factory targets are
+sealed into 80-byte RXBIN bindings and relocated across assembler/linker
+boundaries without merging semantic graphs. Imported library tests exercise
+`rxc`, `rxas`, `rxlink` and both concrete VMs in optimized and unoptimized
+forms.
+
+Mac closeout passes the complete Debug suite 2,149/2,149, focused Release Gate
+F 35/35, focused Apple ASan 136/136 with leak detection disabled because Apple
+LSan is unavailable, and the sealed channel benchmark in both Debug VMs. The
+unchanged paired Release confirmation records clear tiny-task latency guard
+hits of -26.318621% on `rxbvml` and -28.291208% on `rxtvml`; throughput remains
+inconclusive. The likely cost is per-submission validation of the larger
+sealed binding. Adrian's standing overnight direction accepts recording this
+shape cost and defers tuning until F3/release hardening after the instruction
+and surface work stabilizes. Evidence:
+[`2026-08-15-perf3-13-gate-f-f1f-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
 
 ## Evidence and stop rules
 

@@ -1,0 +1,22 @@
+options levelg
+import gate_f_task_method_lib
+namespace gate_f_task_method_import
+
+main: procedure = .int
+  worker = .workbox(40)
+  pool = .taskpool.local(1, 2)
+  scope = .taskscope.collectall(pool, 60000)
+  answer = do parallel using scope
+    leave with worker.increment(2)
+  end
+  call pool.close()
+  if answer <> 42 then return 1
+
+  process_pool = .taskpool.process(1, 2)
+  process_scope = .taskscope.collectall(process_pool, 60000)
+  process_answer = do parallel using process_scope
+    leave with worker.increment(2)
+  end
+  call process_pool.close()
+  if process_answer <> 42 then return 2
+  return 0

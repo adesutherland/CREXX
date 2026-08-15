@@ -7,5 +7,6 @@
 helper() .locals=0 .expose=linktest.helper
    .meta "linktest.helper"="b" ".int" helper() ""
    .meta "linktest.helper"=".inline" "I4;a;b"
+   .meta "linktest.helper"=".task1" 0x1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
    say "PASS: Provider A"
    ret 10

@@ -1,0 +1,12 @@
+options levelg
+namespace gate_f_pending_reference
+
+work: task = .int
+  return 7
+
+main: procedure = .int
+  do parallel
+    value = work()
+    live = reference value
+  end
+  return 0

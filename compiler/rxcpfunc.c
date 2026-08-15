@@ -846,6 +846,11 @@ static int add_func(Context *context, imported_func *func) {
             return 1;
         }
 
+        if (func->is_task_callable != existing_func->is_task_callable) {
+            add_inconsistent_duplicate(existing_func, func);
+            return 1;
+        }
+
         /* Both should have the same type */
         if (!metadata_type_strings_equivalent(context, func->type, existing_func->type)) {
             add_inconsistent_duplicate(existing_func, func);
@@ -1663,7 +1668,8 @@ static void register_source_import_member_inline_payloads(Context *context, ASTN
                 type,
                 args,
                 impl && *impl ? impl : 0,
-                0);
+                0,
+                member->is_task_callable);
 
         if (type) free(type);
         if (args) free(args);
@@ -1744,7 +1750,8 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                 if ( !type_node || !args_node || error_in_node(type_node) || error_in_node(args_node) ) {
                     /* Error in the syntax of the important function */
-                    func = rximpf_f(context, node->file_name, fqname, "b", 0, 0, 0, 0);
+                    func = rximpf_f(context, node->file_name, fqname, "b", 0, 0, 0, 0,
+                                    node->is_task_callable);
                     if (func) func->error_state = "SYNTAX_ERROR_IN_IMPORT_DECL";
                 }
 
@@ -1761,7 +1768,8 @@ static walker_result procedure_signature_walker(walker_direction direction,
                                     type,
                                     args,
                                     impl && *impl ? impl : 0,
-                                    0);
+                                    0,
+                                    node->is_task_callable);
 
                     /* Check Type <> unknown */
                     if ( !type || strcmp(type, ".unknown") == 0 ) {
@@ -2139,6 +2147,26 @@ static char *get_inline_payload_for_symbol(void *constant, int meta_head, const 
     return 0;
 }
 
+static int has_task_target_for_symbol(void *constant, int meta_head, const char *symbol) {
+    meta_entry *entry;
+    int i;
+
+    if (!constant || !symbol) return 0;
+    i = meta_head;
+    while (i != -1) {
+        entry = (meta_entry *)((unsigned char *)constant + (size_t)i);
+        if (entry->base.type == META_TASK_TARGET) {
+            meta_task_target_constant *target = (meta_task_target_constant *)entry;
+            char *target_symbol = get_const_string(constant, target->symbol);
+            int matched = target_symbol && strcmp(target_symbol, symbol) == 0;
+            free(target_symbol);
+            if (matched) return 1;
+        }
+        i = entry->next;
+    }
+    return 0;
+}
+
 static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head) {
     chameleon_constant *entry;
     int i;
@@ -2182,7 +2210,10 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     inline_payload = get_inline_payload_for_symbol(constant, meta_head, meta_symbol ? meta_symbol : fqname);
 
                     /* Always register as importable function (methods too) */
-                    rximpf_f(context, full_file_name, fqname, option, type, args, inline_payload, 0);
+                    rximpf_f(context, full_file_name, fqname, option, type, args,
+                             inline_payload, 0,
+                             has_task_target_for_symbol(constant, meta_head,
+                                                        meta_symbol ? meta_symbol : fqname));
 
                     /* If this looks like a class method (fqname contains namespace.class.method) then
                      * accumulate a signature line for later class stub synthesis */
@@ -2367,7 +2398,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                 option = get_const_string(constant, mentry->option);
                 type = get_const_string(constant, mentry->type);
 
-                rximpf_f(context, full_file_name, fqname, option, type, "", "", 1);
+                rximpf_f(context, full_file_name, fqname, option, type, "", "", 1, 0);
 
                 if (option) {
                     free(option);
@@ -2538,7 +2569,7 @@ void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char*
             free_rxpa_metadata_list(&plugin_being_loaded_metadata);
         }
         if (plugin_being_loaded_context->debug_mode >= 2) printf("Importing Procedures - Loading %s\n", name);
-        rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0);
+        rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0, 0);
     }
     else {
         // Add to the list of statically linked functions
@@ -2861,7 +2892,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         if (symbols[i]->symbol_type == VARIABLE_SYMBOL && symbols[i]->exposed) {
             /* import symbol */
             char* fqname = sym_frnm(symbols[i]);
-            rximpf_f(parent_context, file_name, fqname, 0, type_nm(symbols[i]->type), 0, 0, 1);
+            rximpf_f(parent_context, file_name, fqname, 0, type_nm(symbols[i]->type), 0, 0, 1, 0);
             free(fqname);
         }
     }
@@ -3102,7 +3133,7 @@ static int load_another_file(Context *context) {
         while (static_func) {
             rximpf_f(context, "statically-linked",
                      static_func->name, static_func->option, static_func->type,
-                     static_func->args, 0, 0);
+                     static_func->args, 0, 0, 0);
             static_func = static_func->next;
         }
 
@@ -3540,8 +3571,20 @@ void sym_imva(Context *context, Symbol *symbol) {
 }
 
 /* imported_func factory - returns null if the function is not in an applicable namespace or is a duplicate */
+static void mark_imported_task_callable(ASTNode *node) {
+    ASTNode *current;
+
+    for (current = node; current; current = current->sibling) {
+        if (current->node_type == PROCEDURE) {
+            current->is_task_callable = 1;
+            return;
+        }
+        if (current->child) mark_imported_task_callable(current->child);
+    }
+}
+
 imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *options, char *type, char *args,
-                        char *implementation, char is_variable)  {
+                        char *implementation, char is_variable, char is_task_callable)  {
     imported_func *func;
     char *buffer;
     char *name;
@@ -3561,6 +3604,7 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     func = malloc(sizeof(imported_func));
     func->context = 0;
     func->is_variable = is_variable; /* Is a function or a Variable */
+    func->is_task_callable = is_task_callable;
     func->duplicate = 0;
     func->error_state = 0;
     func->error_field = 0;
@@ -3658,6 +3702,9 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
                         func->error_field = "arguments";
                     }
                     func->error_detail = "invalid Level B declaration";
+                }
+                if (!func->error_state && func->is_task_callable) {
+                    mark_imported_task_callable(func->context->ast);
                 }
             }
         }

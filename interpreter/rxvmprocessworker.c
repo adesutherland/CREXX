@@ -209,15 +209,22 @@ static int worker_execute(int input_descriptor,
 
     if (rxvm_channel_parse_task_invoke(
             invoke_frame->payload, invoke_frame->payload_length,
-            &invoke) != RXVM_CHANNEL_OK || invoke.target_kind == 3) return 0;
+            &invoke) != RXVM_CHANNEL_OK) return 0;
     executor = rxvm_executor_create(
             program_path, 1u, 1u, &executor_result);
     if (!executor) goto cleanup;
-    executor_result = rxvm_executor_submit_callable_registers_result(
-            executor, 0u, invoke.callable_id,
+    executor_result = rxvm_executor_submit_task_binding_registers_result(
+            executor, 0u, invoke.task_binding,
+            invoke.factory_argument_count, invoke.factory_arguments,
             invoke.argument_count, invoke.arguments,
-            invoke.target_kind == 1 ? RXVM_EXECUTOR_REGISTER_INTEGER
-                                    : RXVM_EXECUTOR_REGISTER_BINARY,
+            (invoke.target_kind == 1 ||
+             (invoke.target_kind == 2 &&
+              (invoke.task_binding[76] || invoke.task_binding[77] ||
+               invoke.task_binding[78] || invoke.task_binding[79])))
+                    ? RXVM_EXECUTOR_REGISTER_NONE
+                    : (invoke.target_kind == 3
+                       ? RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE
+                       : RXVM_EXECUTOR_REGISTER_BINARY),
             &request);
     if (executor_result != RXVM_EXECUTOR_OK || !request) goto cleanup;
     if (!worker_send_frame(output_descriptor, RXVM_PROCESS_FRAME_STARTED,

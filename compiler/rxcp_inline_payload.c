@@ -115,6 +115,7 @@ static int inline_prune_candidate(ASTNode *node) {
     Symbol *symbol;
 
     if (!node || node->node_type != PROCEDURE) return 0;
+    if (node->is_task_callable) return 0;
     if (!inline_proc_has_body(node)) return 0;
     if (inline_proc_has_procedure_expose(node)) return 0;
 

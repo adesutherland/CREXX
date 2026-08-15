@@ -351,17 +351,20 @@ is equally strong. Multi-tail source expressions retain canonical construction
 where conversion, evaluation order, or TRACE observation has not proved the
 two-segment form equivalent.
 
-`lib/classlib/Concurrency.crexx` is the Gate F F1c explicit Level B
-concurrency surface. It ships in `classlib.rxbin` and implements the approved
+`lib/classlib/Concurrency.crexx` is the Gate F explicit Level B concurrency
+surface. It ships in `classlib.rxbin` and implements the approved
 pool, scope, task, target/work/context, completion, channel/request,
 `ChannelValue`/codec, byte-endpoint, service-reference and transfer-buffer
-interfaces. The local provider path is usable now and reaches RXVM only through
+interfaces. Local and isolated-process pool paths reach RXVM only through
 authored `chanopen`, `chanstart`, `chanwait`, `chancancel` and `chanclose`
-instructions; it has no RXPA task-start path and does not dispatch procedure
-names as strings. Process pools, concrete endpoints/service adapters and Level
-G `task`/`DO PARALLEL` lowering are explicit later Gate F slices and report
-unavailable/unsupported rather than plausible placeholder results. Functional
-tests are in `lib/classlib/tests_functional/testConcurrency.crexx`, and
+instructions; there is no RXPA task-start path or procedure-name-string
+dispatch. F1f lowers Level G task procedures/methods, task expressions and `DO
+PARALLEL` through these classes and implements receiver-side `.taskwork`
+factories. The new syntax remains gated by `OPTIONS LEVELG`; Level B programs
+may use the explicit classes directly. Service `ask`, task-context endpoints
+and pool statistics remain explicit unsupported operations. Functional tests
+are in `lib/classlib/tests_functional/testConcurrency.crexx`; imported task
+method/`.taskwork` tests exercise `rxc`, `rxas`, `rxlink` and both VMs, and
 `gate_f_levelb_bridge_inspection` guards the systems boundary.
 
 Level B classlib collection names carry their value contract because the

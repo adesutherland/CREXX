@@ -5,6 +5,7 @@
  */
 
 #include "rxvmexecutor.h"
+#include "rxvmchannel_internal.h"
 
 #include "rxvm.h"
 #include "rxvmintp.h"
@@ -12,6 +13,7 @@
 #include "rxvmvars.h"
 #include "rxvmworker.h"
 #include "rxastree.h"
+#include "rxsignature.h"
 
 #include <stdint.h>
 #include <inttypes.h>
@@ -205,17 +207,20 @@ struct rxvm_executor_request {
     rxvm_executor_register_image *arguments;
     rxvm_executor_register_image result;
     int argc;
+    int factory_argc;
     int procedure_result;
     size_t affinity;
     sig_atomic_t generation;
     uint64_t callable_id;
     uint64_t completion_sequence;
+    unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE];
     rxvm_executor_event terminal_event;
     rxvm_executor_request_state state;
     rxvm_executor_mutex mutex;
     rxvm_executor_condition changed;
     rxvm_executor_register_type expected_result;
     unsigned char uses_callable_id;
+    unsigned char uses_task_binding;
 };
 
 struct rxvm_executor_worker {
@@ -500,7 +505,8 @@ static rxvm_executor_request *executor_request_create(
             destination->type = source->type;
             destination->integer = source->integer;
             if (source->type == RXVM_EXECUTOR_REGISTER_STRING ||
-                source->type == RXVM_EXECUTOR_REGISTER_BINARY) {
+                source->type == RXVM_EXECUTOR_REGISTER_BINARY ||
+                source->type == RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) {
                 unsigned char *copy;
                 if ((!source->bytes && source->length) ||
                     source->length == SIZE_MAX) {
@@ -665,27 +671,207 @@ static rxvm_executor_request *executor_worker_pop(
     return request;
 }
 
+static int executor_task_result_type(
+        const RxGraph *graph,
+        const RxGraphCallableView *callable,
+        rxvm_executor_register_type *type_out) {
+    rx_callable_signature signature;
+    const char *name;
+
+    (void)graph;
+    if (!callable || !type_out ||
+        !rx_sig_parse_descriptor(callable->descriptor, &signature)) {
+        return 0;
+    }
+    name = signature.return_type;
+    if (strcmp(name, ".int") == 0 || strcmp(name, ".boolean") == 0) {
+        *type_out = RXVM_EXECUTOR_REGISTER_INTEGER;
+    } else if (strcmp(name, ".string") == 0) {
+        *type_out = RXVM_EXECUTOR_REGISTER_STRING;
+    } else if (strcmp(name, ".binary") == 0) {
+        *type_out = RXVM_EXECUTOR_REGISTER_BINARY;
+    } else if (strcmp(name, ".void") == 0) {
+        *type_out = RXVM_EXECUTOR_REGISTER_NONE;
+    } else {
+        rx_sig_free(&signature);
+        return 0;
+    }
+    rx_sig_free(&signature);
+    return 1;
+}
+
+static void executor_put_u64_le(unsigned char *bytes, uint64_t value) {
+    size_t index;
+    for (index = 0u; index < 8u; index++) {
+        bytes[index] = (unsigned char)(value >> (index * 8u));
+    }
+}
+
+static uint32_t executor_get_u32_le(const unsigned char *bytes) {
+    return (uint32_t)bytes[0] |
+           ((uint32_t)bytes[1] << 8u) |
+           ((uint32_t)bytes[2] << 16u) |
+           ((uint32_t)bytes[3] << 24u);
+}
+
+static proc_runtime *executor_find_bound_callable(rxvm_context *context,
+                                                  const char *symbol) {
+    size_t binding_index;
+    proc_runtime *procedure = 0;
+
+    if (!context || !symbol) return 0;
+    for (binding_index = 0u;
+         binding_index < context->graph_binding_count;
+         binding_index++) {
+        rxvm_graph_binding *binding = context->graph_bindings[binding_index];
+        RxCallableId callable;
+        proc_runtime *candidate;
+
+        if (!binding) continue;
+        callable = rx_graph_find_callable(binding->graph, symbol);
+        if (callable == RX_GRAPH_NONE) continue;
+        candidate = rxvm_bound_graph_callable(binding, callable);
+        if (!candidate) continue;
+        if (procedure && procedure != candidate) return 0;
+        procedure = candidate;
+    }
+    return procedure;
+}
+
+static int executor_run_external(rxvm_context *context,
+                                 proc_runtime *procedure,
+                                 int argc,
+                                 value **arguments,
+                                 value *return_value) {
+    proc_runtime *saved_proc;
+    int saved_argc;
+    value **saved_args;
+    value *saved_ret;
+    char *dummy_argv[1];
+    int run_status;
+
+    if (!context || !procedure || argc < 0 || (argc && !arguments) ||
+        !return_value) return -1;
+    saved_proc = context->ext_proc;
+    saved_argc = context->ext_argc;
+    saved_args = context->ext_args;
+    saved_ret = context->ext_ret;
+    context->ext_proc = procedure;
+    context->ext_argc = argc;
+    context->ext_args = arguments;
+    context->ext_ret = return_value;
+    dummy_argv[0] = (char *)"rxvm_executor";
+    run_status = run(context, 0, dummy_argv);
+    context->ext_proc = saved_proc;
+    context->ext_argc = saved_argc;
+    context->ext_args = saved_args;
+    context->ext_ret = saved_ret;
+    return run_status;
+}
+
 static rxvm_executor_request_state executor_worker_call(
         rxvm_executor_worker *worker,
         rxvm_executor_request *request,
         rxvm_executor_register_image *result_out) {
     proc_runtime *procedure = 0;
+    proc_runtime *receiver_factory = 0;
+    proc_runtime *taskwork_run = 0;
     const char *procedure_name = request->procedure;
+    const char *task_descriptor = 0;
     rxvm_context *context = worker->context;
     rxvm_memory_worker *previous;
-    proc_runtime *saved_proc;
-    int saved_argc;
-    value **saved_args;
-    value *saved_ret;
     value **arguments = 0;
+    value *decoded_receiver = 0;
+    value *taskwork_receiver = 0;
+    value *task_context = 0;
+    value *encoded_result = 0;
     value *return_value = 0;
-    char *dummy_argv[1];
+    rxvm_executor_register_image *decoded_factory_arguments = 0;
+    rx_callable_signature factory_signature;
     int run_status;
     int index;
+    int factory_signature_parsed = 0;
+    int inferred_result_seen = 0;
+    unsigned int task_kind = 0u;
+    rxvm_executor_register_type expected_result = request->expected_result;
 
     memset(result_out, 0, sizeof(*result_out));
 
-    if (request->uses_callable_id) {
+    if (request->uses_task_binding) {
+        size_t binding_index;
+        procedure_name = 0;
+        for (binding_index = 0u;
+             binding_index < worker->context->graph_binding_count;
+             binding_index++) {
+            rxvm_graph_binding *binding =
+                    worker->context->graph_bindings[binding_index];
+            RxCallableId callable;
+            RxCallableId auxiliary;
+            unsigned int binding_kind;
+            RxGraphCallableView view;
+            proc_runtime *target;
+
+            if (!binding ||
+                !rx_graph_task_binding_validate(binding->graph,
+                                                request->task_binding,
+                                                &callable,
+                                                &binding_kind)) {
+                continue;
+            }
+            target = rxvm_bound_graph_callable(binding, callable);
+            if (!target || !rx_graph_callable(binding->graph, callable, &view)) {
+                continue;
+            }
+            if (request->expected_result == RXVM_EXECUTOR_REGISTER_NONE) {
+                rxvm_executor_register_type inferred;
+                if (!executor_task_result_type(binding->graph, &view,
+                                               &inferred) ||
+                    (inferred_result_seen && inferred != expected_result)) {
+                    return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+                }
+                expected_result = inferred;
+                inferred_result_seen = 1;
+            }
+            if (procedure_name && strcmp(procedure_name, view.symbol) != 0) {
+                return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+            }
+            procedure_name = view.symbol;
+            procedure = target;
+            if (task_kind && task_kind != binding_kind) {
+                return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+            }
+            task_kind = binding_kind;
+            if (binding_kind == 2u &&
+                (request->task_binding[76] || request->task_binding[77] ||
+                 request->task_binding[78] || request->task_binding[79])) {
+                proc_runtime *factory;
+                auxiliary = executor_get_u32_le(
+                        request->task_binding + 76u) - 1u;
+                factory = rxvm_bound_graph_callable(binding, auxiliary);
+                if (!factory ||
+                    (receiver_factory && receiver_factory != factory)) {
+                    return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+                }
+                receiver_factory = factory;
+            } else if (binding_kind == 3u) {
+                proc_runtime *adapter;
+
+                auxiliary = executor_get_u32_le(
+                        request->task_binding + 76u) - 1u;
+                adapter = rxvm_bound_graph_callable(binding, auxiliary);
+                if (!adapter || (taskwork_run && taskwork_run != adapter) ||
+                    (task_descriptor &&
+                     strcmp(task_descriptor, view.descriptor) != 0)) {
+                    return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+                }
+                taskwork_run = adapter;
+                task_descriptor = view.descriptor;
+            }
+        }
+        if (!procedure_name) {
+            return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+        }
+    } else if (request->uses_callable_id) {
         size_t binding_index;
         procedure_name = 0;
         for (binding_index = 0u;
@@ -717,14 +903,59 @@ static rxvm_executor_request_state executor_worker_call(
         }
     }
 
-    if (strcmp(procedure_name, "main") != 0 &&
+    if (!procedure && strcmp(procedure_name, "main") != 0 &&
         !src_node(context->exposed_proc_tree, (char *)procedure_name,
                   (size_t *)&procedure)) {
         return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
     }
 
     if (!procedure) return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+    if (request->uses_task_binding &&
+        request->expected_result == RXVM_EXECUTOR_REGISTER_NONE &&
+        !inferred_result_seen) {
+        return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+    }
+    if (task_kind == 3u) {
+        size_t factory_index;
+
+        if (!taskwork_run || !task_descriptor || request->factory_argc < 0 ||
+            request->factory_argc > request->argc ||
+            request->expected_result != RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE ||
+            !rx_sig_parse_descriptor(task_descriptor, &factory_signature) ||
+            factory_signature.arg_count != (size_t)request->factory_argc) {
+            return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+        }
+        factory_signature_parsed = 1;
+        for (factory_index = 0u;
+             factory_index < factory_signature.arg_count;
+             factory_index++) {
+            if (factory_signature.args[factory_index].is_ref ||
+                factory_signature.args[factory_index].is_vararg) {
+                rx_sig_free(&factory_signature);
+                return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+            }
+        }
+    }
     previous = rxvm_memory_enter(context->worker.memory_worker);
+    if (task_kind == 3u && request->factory_argc) {
+        decoded_factory_arguments =
+                (rxvm_executor_register_image *)calloc(
+                        (size_t)request->factory_argc,
+                        sizeof(*decoded_factory_arguments));
+        if (!decoded_factory_arguments) goto setup_failed;
+        for (index = 0; index < request->factory_argc; index++) {
+            const rxvm_executor_register_image *source =
+                    &request->arguments[index];
+            if (source->type != RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE ||
+                rxvm_channel_decode_task_value(
+                        source->bytes, source->length,
+                        factory_signature.args[index].type,
+                        &decoded_factory_arguments[index]) !=
+                            RXVM_CHANNEL_OK) {
+                goto setup_failed;
+            }
+        }
+    }
     if (request->argc) {
         arguments = (value **)rxvm_memory_alloc_bytes(
                 context->worker.memory_worker,
@@ -734,18 +965,24 @@ static rxvm_executor_request_state executor_worker_call(
     }
     for (index = 0; index < request->argc; index++) {
         const rxvm_executor_register_image *source =
-                &request->arguments[index];
+                task_kind == 3u && index < request->factory_argc
+                ? &decoded_factory_arguments[index]
+                : &request->arguments[index];
         arguments[index] = value_f_in(context->worker.memory_worker);
         if (!arguments[index]) goto setup_failed;
         if (source->type == RXVM_EXECUTOR_REGISTER_INTEGER) {
-            char number[64];
-            int number_length = snprintf(
-                    number, sizeof(number), "%" PRId64, source->integer);
-            if (number_length < 0 ||
-                (size_t)number_length >= sizeof(number) ||
-                set_string_validated(arguments[index], number,
-                                     (size_t)number_length) != 0) {
-                goto setup_failed;
+            if (request->uses_task_binding) {
+                set_int(arguments[index], (rxinteger)source->integer);
+            } else {
+                char number[64];
+                int number_length = snprintf(
+                        number, sizeof(number), "%" PRId64, source->integer);
+                if (number_length < 0 ||
+                    (size_t)number_length >= sizeof(number) ||
+                    set_string_validated(arguments[index], number,
+                                         (size_t)number_length) != 0) {
+                    goto setup_failed;
+                }
             }
         } else if (source->type == RXVM_EXECUTOR_REGISTER_STRING) {
             if (set_string_validated(arguments[index], source->bytes,
@@ -753,25 +990,157 @@ static rxvm_executor_request_state executor_worker_call(
         } else if (source->type == RXVM_EXECUTOR_REGISTER_BINARY) {
             if (set_binary(arguments[index], source->bytes,
                            source->length) != 0) goto setup_failed;
+        } else if (source->type == RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) {
+            proc_runtime *decoder = executor_find_bound_callable(
+                    context,
+                    "concurrency.channelvalue_impl.§factory.from_encoded");
+            value *encoded = arguments[index];
+            value *decoded = value_f_in(context->worker.memory_worker);
+            value *single_argument[1];
+
+            if (!decoder || !decoded ||
+                set_binary(encoded, source->bytes, source->length) != 0) {
+                if (decoded) value_free(decoded);
+                goto setup_failed;
+            }
+            single_argument[0] = encoded;
+            if (executor_run_external(context, decoder, 1,
+                                      single_argument, decoded) != 0) {
+                value_free(decoded);
+                goto execution_failed;
+            }
+            value_free(encoded);
+            arguments[index] = decoded;
         }
+    }
+    if (task_kind == 2u && receiver_factory) {
+        proc_runtime *decoder;
+        value *receiver;
+        value *single_argument[1];
+
+        if (request->argc < 1 || !receiver_factory ||
+            request->arguments[0].type != RXVM_EXECUTOR_REGISTER_BINARY) {
+            goto setup_failed;
+        }
+        decoder = executor_find_bound_callable(
+                context,
+                "concurrency.channelvalue_impl.§factory.from_encoded");
+        decoded_receiver = value_f_in(context->worker.memory_worker);
+        receiver = value_f_in(context->worker.memory_worker);
+        if (!decoder || !decoded_receiver || !receiver) {
+            if (receiver) value_free(receiver);
+            goto setup_failed;
+        }
+        single_argument[0] = arguments[0];
+        if (executor_run_external(context, decoder, 1, single_argument,
+                                  decoded_receiver) != 0) {
+            value_free(receiver);
+            goto execution_failed;
+        }
+        single_argument[0] = decoded_receiver;
+        if (executor_run_external(context, receiver_factory, 1,
+                                  single_argument, receiver) != 0) {
+            value_free(receiver);
+            goto execution_failed;
+        }
+        value_free(arguments[0]);
+        arguments[0] = receiver;
+    }
+    if (task_kind == 3u) {
+        proc_runtime *context_factory;
+        proc_runtime *encoder;
+        value *context_arguments[3];
+        value *run_arguments[3];
+        value *encode_arguments[1];
+        value *timeout_value;
+        value *cancelled_value;
+        value *trace_value;
+        size_t result_length;
+        unsigned char *copy;
+
+        if (request->argc - request->factory_argc != 1) goto setup_failed;
+        taskwork_receiver = value_f_in(context->worker.memory_worker);
+        task_context = value_f_in(context->worker.memory_worker);
+        return_value = value_f_in(context->worker.memory_worker);
+        encoded_result = value_f_in(context->worker.memory_worker);
+        timeout_value = value_f_in(context->worker.memory_worker);
+        cancelled_value = value_f_in(context->worker.memory_worker);
+        trace_value = value_f_in(context->worker.memory_worker);
+        context_factory = executor_find_bound_callable(
+                context, "concurrency.taskcontext_impl.§factory.new");
+        encoder = executor_find_bound_callable(
+                context, "concurrency.channelvalue_impl.encode");
+        if (!taskwork_receiver || !task_context || !return_value ||
+            !encoded_result || !timeout_value || !cancelled_value ||
+            !trace_value || !context_factory || !encoder) {
+            if (timeout_value) value_free(timeout_value);
+            if (cancelled_value) value_free(cancelled_value);
+            if (trace_value) value_free(trace_value);
+            goto setup_failed;
+        }
+        set_int(timeout_value, -1);
+        set_int(cancelled_value, 0);
+        if (set_string_validated(trace_value, "", 0u) != 0) {
+            value_free(timeout_value);
+            value_free(cancelled_value);
+            value_free(trace_value);
+            goto setup_failed;
+        }
+        if (executor_run_external(context, procedure, request->factory_argc,
+                                  arguments, taskwork_receiver) != 0) {
+            value_free(timeout_value);
+            value_free(cancelled_value);
+            value_free(trace_value);
+            goto execution_failed;
+        }
+        context_arguments[0] = timeout_value;
+        context_arguments[1] = cancelled_value;
+        context_arguments[2] = trace_value;
+        if (executor_run_external(context, context_factory, 3,
+                                  context_arguments, task_context) != 0) {
+            value_free(timeout_value);
+            value_free(cancelled_value);
+            value_free(trace_value);
+            goto execution_failed;
+        }
+        value_free(timeout_value);
+        value_free(cancelled_value);
+        value_free(trace_value);
+        run_arguments[0] = taskwork_receiver;
+        run_arguments[1] = arguments[request->factory_argc];
+        run_arguments[2] = task_context;
+        if (executor_run_external(context, taskwork_run, 3,
+                                  run_arguments, return_value) != 0) {
+            goto execution_failed;
+        }
+        encode_arguments[0] = return_value;
+        if (executor_run_external(context, encoder, 1,
+                                  encode_arguments, encoded_result) != 0) {
+            goto execution_failed;
+        }
+        result_length = encoded_result->binary_length;
+        if ((!encoded_result->binary_value && result_length) ||
+            result_length == SIZE_MAX) goto setup_failed;
+        copy = (unsigned char *)malloc(result_length + 1u);
+        if (!copy) goto setup_failed;
+        if (result_length) {
+            memcpy(copy, encoded_result->binary_value, result_length);
+        }
+        copy[result_length] = 0;
+        /* A taskwork result is encoded as a complete RXCV document.  The
+         * channel completion boundary validates that document and extracts
+         * its root node; CHANNEL_VALUE is reserved there for an already
+         * extracted node frame. */
+        result_out->type = RXVM_EXECUTOR_REGISTER_BINARY;
+        result_out->bytes = (const char *)copy;
+        result_out->length = result_length;
+        goto completed;
     }
     return_value = value_f_in(context->worker.memory_worker);
     if (!return_value) goto setup_failed;
 
-    saved_proc = context->ext_proc;
-    saved_argc = context->ext_argc;
-    saved_args = context->ext_args;
-    saved_ret = context->ext_ret;
-    context->ext_proc = procedure;
-    context->ext_argc = request->argc;
-    context->ext_args = arguments;
-    context->ext_ret = return_value;
-    dummy_argv[0] = (char *)"rxvm_executor";
-    run_status = run(context, 0, dummy_argv);
-    context->ext_proc = saved_proc;
-    context->ext_argc = saved_argc;
-    context->ext_args = saved_args;
-    context->ext_ret = saved_ret;
+    run_status = executor_run_external(context, procedure, request->argc,
+                                       arguments, return_value);
 
     /* run() historically returns an integer procedure result as its process
      * status for an external entry.  An unhandled signal also returns a
@@ -781,48 +1150,83 @@ static rxvm_executor_request_state executor_worker_call(
      * execution failure.  Non-integer external returns normally finish with
      * status zero. */
     if (run_status != 0 &&
-        (request->expected_result != RXVM_EXECUTOR_REGISTER_INTEGER ||
+        (expected_result != RXVM_EXECUTOR_REGISTER_INTEGER ||
          return_value->int_value != (rxinteger)run_status)) {
         goto execution_failed;
     }
 
-    result_out->type = request->expected_result;
-    if (request->expected_result == RXVM_EXECUTOR_REGISTER_INTEGER) {
+    result_out->type = expected_result;
+    if (expected_result == RXVM_EXECUTOR_REGISTER_INTEGER) {
         result_out->integer = (int64_t)return_value->int_value;
-    } else if (request->expected_result == RXVM_EXECUTOR_REGISTER_STRING ||
-               request->expected_result == RXVM_EXECUTOR_REGISTER_BINARY) {
-        const void *source = request->expected_result ==
+    } else if (expected_result == RXVM_EXECUTOR_REGISTER_STRING ||
+               expected_result == RXVM_EXECUTOR_REGISTER_BINARY) {
+        const void *source = expected_result ==
                 RXVM_EXECUTOR_REGISTER_STRING
                 ? (const void *)return_value->string_value
                 : (const void *)return_value->binary_value;
-        size_t length = request->expected_result ==
+        size_t length = expected_result ==
                 RXVM_EXECUTOR_REGISTER_STRING
                 ? (size_t)return_value->string_length
                 : return_value->binary_length;
-        unsigned char *copy = (unsigned char *)malloc(length + 1u);
+        int wrap_channel_value = request->uses_task_binding &&
+                request->expected_result == RXVM_EXECUTOR_REGISTER_NONE;
+        size_t prefix = wrap_channel_value ? 12u : 0u;
+        unsigned char *copy;
+        if (length > SIZE_MAX - prefix - 1u) goto setup_failed;
+        copy = (unsigned char *)malloc(prefix + length + 1u);
         if (!copy) goto setup_failed;
-        if (length) memcpy(copy, source, length);
-        copy[length] = 0;
+        if (wrap_channel_value) {
+            memset(copy, 0, prefix);
+            copy[0] = expected_result == RXVM_EXECUTOR_REGISTER_STRING
+                    ? 6u : 7u;
+            executor_put_u64_le(copy + 4u, (uint64_t)length);
+            result_out->type = RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE;
+        }
+        if (length) memcpy(copy + prefix, source, length);
+        copy[prefix + length] = 0;
         result_out->bytes = (const char *)copy;
-        result_out->length = length;
+        result_out->length = prefix + length;
     }
 
-    value_free(return_value);
+completed:
+    if (return_value) value_free(return_value);
+    if (taskwork_receiver) value_free(taskwork_receiver);
+    if (task_context) value_free(task_context);
+    if (encoded_result) value_free(encoded_result);
+    if (decoded_receiver) value_free(decoded_receiver);
     for (index = 0; index < request->argc; index++) {
         value_free(arguments[index]);
     }
     (void)rxvm_memory_release(arguments);
+    if (decoded_factory_arguments) {
+        for (index = 0; index < request->factory_argc; index++) {
+            free((void *)decoded_factory_arguments[index].bytes);
+        }
+        free(decoded_factory_arguments);
+    }
+    if (factory_signature_parsed) rx_sig_free(&factory_signature);
     rxvm_memory_leave(previous);
     return RXVM_EXECUTOR_REQUEST_COMPLETED;
 
 execution_failed:
     free((void *)result_out->bytes);
     memset(result_out, 0, sizeof(*result_out));
-    value_free(return_value);
+    if (return_value) value_free(return_value);
+    if (taskwork_receiver) value_free(taskwork_receiver);
+    if (task_context) value_free(task_context);
+    if (encoded_result) value_free(encoded_result);
+    if (decoded_receiver) value_free(decoded_receiver);
     for (index = 0; index < request->argc; index++) {
         value_free(arguments[index]);
     }
     if (arguments) (void)rxvm_memory_release(arguments);
+    if (decoded_factory_arguments) {
+        for (index = 0; index < request->factory_argc; index++) {
+            free((void *)decoded_factory_arguments[index].bytes);
+        }
+        free(decoded_factory_arguments);
+    }
+    if (factory_signature_parsed) rx_sig_free(&factory_signature);
     rxvm_memory_leave(previous);
     return RXVM_EXECUTOR_REQUEST_EXECUTION_FAILED;
 
@@ -830,10 +1234,21 @@ setup_failed:
     free((void *)result_out->bytes);
     memset(result_out, 0, sizeof(*result_out));
     if (return_value) value_free(return_value);
+    if (taskwork_receiver) value_free(taskwork_receiver);
+    if (task_context) value_free(task_context);
+    if (encoded_result) value_free(encoded_result);
+    if (decoded_receiver) value_free(decoded_receiver);
     for (index = 0; index < request->argc; index++) {
         if (arguments && arguments[index]) value_free(arguments[index]);
     }
     if (arguments) (void)rxvm_memory_release(arguments);
+    if (decoded_factory_arguments) {
+        for (index = 0; index < request->factory_argc; index++) {
+            free((void *)decoded_factory_arguments[index].bytes);
+        }
+        free(decoded_factory_arguments);
+    }
+    if (factory_signature_parsed) rx_sig_free(&factory_signature);
     rxvm_memory_leave(previous);
     return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
 }
@@ -1326,6 +1741,8 @@ static rxvm_executor_result executor_submit_internal(
         const rxvm_executor_register_image *arguments,
         unsigned char uses_callable_id,
         uint64_t callable_id,
+        const unsigned char *task_binding,
+        size_t factory_argument_count,
         rxvm_executor_register_type expected_result,
         rxvm_executor_request **request_out) {
     rxvm_executor_worker *worker;
@@ -1336,18 +1753,20 @@ static rxvm_executor_result executor_submit_internal(
     if (request_out) *request_out = 0;
     if (!executor || !request_out || !procedure || !*procedure ||
         argument_count > (size_t)INT_MAX ||
+        factory_argument_count > argument_count ||
         (argument_count && !arguments) ||
         worker_affinity >= executor->worker_count ||
         expected_result < RXVM_EXECUTOR_REGISTER_NONE ||
-        expected_result > RXVM_EXECUTOR_REGISTER_BINARY) {
+        expected_result > RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) {
         return RXVM_EXECUTOR_INVALID;
     }
     for (index = 0u; index < argument_count; index++) {
         const rxvm_executor_register_image *argument = &arguments[index];
         if (argument->type < RXVM_EXECUTOR_REGISTER_NONE ||
-            argument->type > RXVM_EXECUTOR_REGISTER_BINARY ||
+            argument->type > RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE ||
             ((argument->type == RXVM_EXECUTOR_REGISTER_STRING ||
-              argument->type == RXVM_EXECUTOR_REGISTER_BINARY) &&
+              argument->type == RXVM_EXECUTOR_REGISTER_BINARY ||
+              argument->type == RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE) &&
              ((!argument->bytes && argument->length) ||
               argument->length == SIZE_MAX)) ||
             (argument->type == RXVM_EXECUTOR_REGISTER_STRING &&
@@ -1362,6 +1781,13 @@ static rxvm_executor_result executor_submit_internal(
     if (!request) return RXVM_EXECUTOR_OUT_OF_MEMORY;
     request->uses_callable_id = uses_callable_id;
     request->callable_id = callable_id;
+    request->factory_argc = (int)factory_argument_count;
+    request->uses_task_binding = task_binding != 0;
+    if (task_binding) {
+        memcpy(request->task_binding,
+               task_binding,
+               RX_GRAPH_TASK_BINDING_SIZE);
+    }
     request->expected_result = expected_result;
 
     executor_mutex_lock(&worker->mutex);
@@ -1418,7 +1844,7 @@ rxvm_executor_result rxvm_executor_submit(
     }
     result = executor_submit_internal(
             executor, worker_affinity, procedure, (size_t)argc, arguments,
-            0u, 0u, RXVM_EXECUTOR_REGISTER_INTEGER, request_out);
+            0u, 0u, 0, 0u, RXVM_EXECUTOR_REGISTER_INTEGER, request_out);
     free(arguments);
     return result;
 }
@@ -1429,13 +1855,17 @@ static rxvm_executor_result executor_submit_registers_internal(
         const char *procedure,
         unsigned char uses_callable_id,
         uint64_t callable_id,
+        const unsigned char *task_binding,
+        size_t factory_argument_count,
         size_t argument_count,
         const rxvm_executor_register_image *arguments,
         rxvm_executor_register_type expected_result,
         rxvm_executor_request **request_out) {
     return executor_submit_internal(
             executor, worker_affinity, procedure, argument_count, arguments,
-            uses_callable_id, callable_id, expected_result, request_out);
+            uses_callable_id, callable_id, task_binding,
+            factory_argument_count,
+            expected_result, request_out);
 }
 
 rxvm_executor_result rxvm_executor_submit_registers(
@@ -1446,7 +1876,7 @@ rxvm_executor_result rxvm_executor_submit_registers(
         const rxvm_executor_register_image *arguments,
         rxvm_executor_request **request_out) {
     return executor_submit_registers_internal(
-            executor, worker_affinity, procedure, 0u, 0u,
+            executor, worker_affinity, procedure, 0u, 0u, 0, 0u,
             argument_count, arguments, RXVM_EXECUTOR_REGISTER_INTEGER,
             request_out);
 }
@@ -1464,7 +1894,7 @@ rxvm_executor_result rxvm_executor_submit_callable_registers(
     }
     return executor_submit_registers_internal(
             executor, worker_affinity, "@semantic-callable", 1u,
-            callable_id, argument_count, arguments,
+            callable_id, 0, 0u, argument_count, arguments,
             RXVM_EXECUTOR_REGISTER_INTEGER, request_out);
 }
 
@@ -1482,8 +1912,59 @@ rxvm_executor_result rxvm_executor_submit_callable_registers_result(
     }
     return executor_submit_registers_internal(
             executor, worker_affinity, "@semantic-callable", 1u,
-            callable_id, argument_count, arguments, expected_result,
+            callable_id, 0, 0u, argument_count, arguments, expected_result,
             request_out);
+}
+
+rxvm_executor_result rxvm_executor_submit_task_binding_registers_result(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        const unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE],
+        size_t factory_argument_count,
+        const rxvm_executor_register_image *factory_arguments,
+        size_t argument_count,
+        const rxvm_executor_register_image *arguments,
+        rxvm_executor_register_type expected_result,
+        rxvm_executor_request **request_out) {
+    rxvm_executor_register_image *combined = 0;
+    rxvm_executor_result result;
+    size_t total;
+
+    if (!task_binding || memcmp(task_binding, "RXTB", 4u) != 0 ||
+        (factory_argument_count && !factory_arguments) ||
+        (argument_count && !arguments) ||
+        factory_argument_count > SIZE_MAX - argument_count) {
+        if (request_out) *request_out = 0;
+        return RXVM_EXECUTOR_INVALID;
+    }
+    total = factory_argument_count + argument_count;
+    if (total) {
+        if (total > SIZE_MAX / sizeof(*combined)) {
+            if (request_out) *request_out = 0;
+            return RXVM_EXECUTOR_INVALID;
+        }
+        combined = (rxvm_executor_register_image *)malloc(
+                total * sizeof(*combined));
+        if (!combined) {
+            if (request_out) *request_out = 0;
+            return RXVM_EXECUTOR_OUT_OF_MEMORY;
+        }
+        if (factory_argument_count) {
+            memcpy(combined, factory_arguments,
+                   factory_argument_count * sizeof(*combined));
+        }
+        if (argument_count) {
+            memcpy(combined + factory_argument_count, arguments,
+                   argument_count * sizeof(*combined));
+        }
+    }
+    result = executor_submit_registers_internal(
+            executor, worker_affinity, "@sealed-task", 0u, 0u,
+            task_binding, factory_argument_count, total, combined,
+            expected_result,
+            request_out);
+    free(combined);
+    return result;
 }
 
 static rxvm_executor_result executor_request_event(

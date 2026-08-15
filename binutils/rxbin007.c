@@ -301,7 +301,7 @@ static uint64_t rxbin007_read_u64_at(const unsigned char *data) {
 }
 
 static int rxbin007_is_metadata(enum const_pool_type type) {
-    return type >= META_FUNC && type <= META_TRACE_EVENT;
+    return type >= META_FUNC && type <= META_TASK_TARGET;
 }
 
 static size_t rxbin007_bounded_strlen(const char *text, size_t available) {
@@ -362,7 +362,7 @@ static int rxbin007_scan_pool(rxbin007_pool *pool, const char *context) {
         }
         entry = (chameleon_constant *)(pool->data + offset);
         minimum = sizeof(chameleon_constant);
-        if (entry->type < STRING_CONST || entry->type > META_TRACE_EVENT ||
+        if (entry->type < STRING_CONST || entry->type > META_TASK_TARGET ||
             entry->size_in_pool < minimum || (entry->size_in_pool & 7u) ||
             entry->size_in_pool > pool->size - offset) {
             rxbin007_set_error("RXBIN 007 %s has an invalid constant entry at offset %lu",
@@ -413,6 +413,119 @@ static int rxbin007_pool_find_int_id(const rxbin007_pool *pool,
         return 1;
     }
     return offset >= 0 && rxbin007_pool_find_id(pool, (size_t)offset, id);
+}
+
+typedef struct rxbin007_task_binding_patch {
+    string_constant *constant;
+    unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE];
+} rxbin007_task_binding_patch;
+
+static int rxbin007_materialize_task_bindings(rxbin007_pool *pools,
+                                              uint32_t pool_count,
+                                              const RxGraph *graph) {
+    rxbin007_task_binding_patch *patches;
+    size_t patch_count;
+    size_t patch_capacity;
+    size_t patch;
+    uint32_t pool_index;
+
+    patches = 0;
+    patch_count = 0u;
+    patch_capacity = 0u;
+    for (pool_index = 0u; pool_index < pool_count; pool_index++) {
+        rxbin007_pool *pool;
+        uint32_t record;
+
+        pool = &pools[pool_index];
+        for (record = 0u; record < pool->entry_count; record++) {
+            meta_task_target_constant *target;
+            string_constant *symbol;
+            string_constant *binding;
+            unsigned char expected[RX_GRAPH_TASK_BINDING_SIZE];
+            uint32_t symbol_id;
+            uint32_t binding_id;
+            size_t symbol_available;
+            size_t binding_available;
+            size_t prior;
+
+            if (pool->entries[record].entry->type != META_TASK_TARGET) continue;
+            target = (meta_task_target_constant *)pool->entries[record].entry;
+            if (target->base.base.size_in_pool < sizeof(*target) ||
+                target->kind < 1u || target->kind > 3u ||
+                !rxbin007_pool_find_id(pool, target->symbol, &symbol_id) ||
+                !rxbin007_pool_find_id(pool, target->binding, &binding_id)) {
+                rxbin007_set_error("RXBIN 007 has an invalid task-target relocation in pool %u record %u",
+                                   pool_index, record);
+                free(patches);
+                return 0;
+            }
+            symbol = (string_constant *)pool->entries[symbol_id].entry;
+            binding = (string_constant *)pool->entries[binding_id].entry;
+            symbol_available = symbol->base.size_in_pool - offsetof(string_constant, string);
+            binding_available = binding->base.size_in_pool - offsetof(string_constant, string);
+            if (symbol->base.type != STRING_CONST ||
+                binding->base.type != BINARY_CONST ||
+                symbol->string_len >= symbol_available ||
+                symbol->string[symbol->string_len] != 0 ||
+                binding->string_len != RX_GRAPH_TASK_BINDING_SIZE ||
+                binding_available < RX_GRAPH_TASK_BINDING_SIZE ||
+                !rx_graph_task_binding(graph,
+                                       symbol->string,
+                                       target->kind,
+                                       expected)) {
+                rxbin007_set_error("RXBIN 007 cannot resolve task target in pool %u record %u",
+                                   pool_index, record);
+                free(patches);
+                return 0;
+            }
+            for (prior = 0u; prior < patch_count; prior++) {
+                if (patches[prior].constant == binding) break;
+            }
+            if (prior < patch_count) {
+                if (memcmp(patches[prior].binding,
+                           expected,
+                           RX_GRAPH_TASK_BINDING_SIZE) != 0) {
+                    rxbin007_set_error("RXBIN 007 task relocations alias incompatible targets");
+                    free(patches);
+                    return 0;
+                }
+                continue;
+            }
+            if (patch_count == patch_capacity) {
+                rxbin007_task_binding_patch *grown;
+                size_t capacity;
+
+                capacity = patch_capacity ? patch_capacity * 2u : 8u;
+                if (capacity < patch_count ||
+                    capacity > SIZE_MAX / sizeof(*grown)) {
+                    rxbin007_set_error("RXBIN 007 cannot record task-target relocations");
+                    free(patches);
+                    return 0;
+                }
+                grown = (rxbin007_task_binding_patch *)realloc(
+                    patches, capacity * sizeof(*grown));
+                if (!grown) {
+                    rxbin007_set_error("RXBIN 007 cannot allocate task-target relocations");
+                    free(patches);
+                    return 0;
+                }
+                patches = grown;
+                patch_capacity = capacity;
+            }
+            patches[patch_count].constant = binding;
+            memcpy(patches[patch_count].binding,
+                   expected,
+                   RX_GRAPH_TASK_BINDING_SIZE);
+            patch_count++;
+        }
+    }
+    for (patch = 0u; patch < patch_count; patch++) {
+        memcpy(patches[patch].constant->string,
+               patches[patch].binding,
+               RX_GRAPH_TASK_BINDING_SIZE);
+    }
+    free(patches);
+    return 1;
 }
 
 static int rxbin007_payload_string(rxbin_byte_buffer *payload,
@@ -598,6 +711,13 @@ static int rxbin007_encode_entry_payload(const rxbin007_pool *pool,
             const meta_inline_constant *entry = (const meta_inline_constant *)base;
             return rxbin007_payload_ref(payload, pool, entry->symbol) &&
                    rxbin007_payload_ref(payload, pool, entry->payload);
+        }
+        case META_TASK_TARGET: {
+            const meta_task_target_constant *entry =
+                (const meta_task_target_constant *)base;
+            return rxbin007_payload_ref(payload, pool, entry->symbol) &&
+                   rxbin007_payload_ref(payload, pool, entry->binding) &&
+                   rxbin007_u32(payload, entry->kind);
         }
         case META_SOURCE_STEP: {
             const meta_source_step_constant *entry = (const meta_source_step_constant *)base;
@@ -1102,6 +1222,9 @@ int write_modules(module_file *const *input_modules,
         free(graph_error);
         semantic_graph = built_graph;
     }
+    if (!rxbin007_materialize_task_bindings(pools, pool_count, semantic_graph)) {
+        goto error;
+    }
 
     memset(sections, 0, sizeof(sections));
     feature_flags = 0u;
@@ -1224,6 +1347,7 @@ static void rxbin007_free_section_views(rxbin007_section_view *sections) {
 typedef enum rxbin007_ref_kind {
     RXBIN007_REF_ANY,
     RXBIN007_REF_STRING,
+    RXBIN007_REF_BINARY,
     RXBIN007_REF_VALUE,
     RXBIN007_REF_PROCEDURE,
     RXBIN007_REF_EXPOSE,
@@ -1348,7 +1472,7 @@ static int rxbin007_parse_record_section(const rxbin007_section_view *section,
             !rxbin007_reader_u32(&reader, &flags) ||
             !rxbin007_reader_u64(&reader, &payload_size) ||
             pool_index >= pool_count || id == RXBIN007_NONE || id >= maximum_records ||
-            type > META_TRACE_EVENT || flags ||
+            type > META_TASK_TARGET || flags ||
             metadata != rxbin007_is_metadata((enum const_pool_type)type) ||
             payload_size > (uint64_t)(reader.end - reader.cursor) ||
             !rxbin007_pool_read_grow(&pools[pool_index], id + 1u)) return 0;
@@ -1433,6 +1557,7 @@ static size_t rxbin007_native_size(const rxbin007_record_view *record) {
         case META_INLINE: base_size = sizeof(meta_inline_constant); goto metadata;
         case META_SOURCE_STEP: base_size = sizeof(meta_source_step_constant); goto metadata;
         case META_TRACE_EVENT: base_size = sizeof(meta_trace_event_constant); goto metadata;
+        case META_TASK_TARGET: base_size = sizeof(meta_task_target_constant); goto metadata;
         default:
             return 0u;
 metadata:
@@ -1454,6 +1579,8 @@ static int rxbin007_record_matches_ref_kind(const rxbin007_record_view *record,
             return 1;
         case RXBIN007_REF_STRING:
             return type == STRING_CONST;
+        case RXBIN007_REF_BINARY:
+            return type == BINARY_CONST;
         case RXBIN007_REF_VALUE:
             return type == STRING_CONST || type == BINARY_CONST ||
                    type == DECIMAL_CONST || type == FLOAT_CONST;
@@ -1748,6 +1875,17 @@ static int rxbin007_fill_record(rxbin007_pool_read *pool, uint32_t id) {
                    rxbin007_reader_ref_kind(&reader, pool, RXBIN007_REF_STRING, 0,
                                             &entry->payload) &&
                    rxbin007_payload_done(&reader);
+        }
+        case META_TASK_TARGET: {
+            meta_task_target_constant *entry = (meta_task_target_constant *)base;
+            if (!rxbin007_reader_ref_kind(&reader, pool, RXBIN007_REF_STRING, 0,
+                                          &entry->symbol) ||
+                !rxbin007_reader_ref_kind(&reader, pool, RXBIN007_REF_BINARY, 0,
+                                          &entry->binding) ||
+                !rxbin007_reader_u32(&reader, &entry->kind) ||
+                entry->kind < 1u || entry->kind > 3u ||
+                !rxbin007_payload_done(&reader)) return 0;
+            return 1;
         }
         case META_SOURCE_STEP: {
             meta_source_step_constant *entry = (meta_source_step_constant *)base;

@@ -1329,20 +1329,24 @@ bit or an unsupported feature bit. RXAS/RXDAS round trips preserve the five
 mnemonics and operand order.
 
 `rProviderType` is one mutually exclusive implementation code;
-`rRequiredCapabilities` is a bit mask. Type `0` is invalid, type `1` is the
-implemented core local-thread provider, types `2..5` are reserved core
-process/host/byte-endpoint/child-process providers, and extension codes begin
-at `65536`. F1c type `1` advertises bounded admission (`0x0001`), cancellation
+`rRequiredCapabilities` is a bit mask. Type `0` is invalid; type `1` is the
+core local-thread provider, type `2` is the isolated-process provider, type
+`3` remains the reserved open-host provider, type `4` is the reusable byte
+endpoint and type `5` is the structured child-process provider. Extension
+codes begin at `65536`. Type `1` advertises bounded admission (`0x0001`), cancellation
 (`0x0002`), deadlines (`0x0004`) and completion-order observation (`0x0008`).
 Unknown required bits fail instead of being ignored. A private validated
 registration seam and fake-provider conformance fixture exist; no public
 provider-plugin ABI is implied.
 
 Configuration, envelopes, reasons and completions are canonical versioned RXCV
-documents. F1c implements the complete value tree, typed task register images,
-provider-owned deadlines/scopes and Level B local-provider classes. Raw
+documents. F1f implements the complete value tree, typed task register images,
+provider-owned deadlines/scopes, Level B classes and Level G lowering over
+sealed task procedure, transferable receiver and `.taskwork` factory targets.
+Assembler `.task1`, `.task2` and `.task3` metadata carry an 80-byte binding;
+RXAS resolves its image, callable, signature and adapter identity and RXBIN
+validation rejects malformed or stale bindings. Raw
 channel/ticket integers are execution-local capabilities, not transferable
-values. Process/endpoint/child-process providers and Level G lowering remain
-later Gate F slices. Exact status codes, RXCV layouts and lifecycle rules are
-normative in
+values. Concurrent HTTP/TLS remains F1g. Exact status codes, RXCV layouts and
+lifecycle rules are normative in
 [`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).

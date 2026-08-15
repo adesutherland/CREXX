@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "rxgraph.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +28,8 @@ typedef enum rxvm_executor_register_type {
     RXVM_EXECUTOR_REGISTER_NONE = 0,
     RXVM_EXECUTOR_REGISTER_INTEGER = 1,
     RXVM_EXECUTOR_REGISTER_STRING = 2,
-    RXVM_EXECUTOR_REGISTER_BINARY = 3
+    RXVM_EXECUTOR_REGISTER_BINARY = 3,
+    RXVM_EXECUTOR_REGISTER_CHANNEL_VALUE = 4
 } rxvm_executor_register_type;
 
 /* Gate E's private copy-only logical-register subset. No live RXVM value,
@@ -146,6 +148,20 @@ rxvm_executor_result rxvm_executor_submit_callable_registers_result(
         rxvm_executor *executor,
         size_t worker_affinity,
         uint64_t callable_id,
+        size_t argument_count,
+        const rxvm_executor_register_image *arguments,
+        rxvm_executor_register_type expected_result,
+        rxvm_executor_request **request_out);
+
+/* Submit a linker-sealed callable identity. The binding names one exact image
+ * graph and callable signature, so identical numeric IDs in another loaded
+ * graph cannot select the wrong procedure. */
+rxvm_executor_result rxvm_executor_submit_task_binding_registers_result(
+        rxvm_executor *executor,
+        size_t worker_affinity,
+        const unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE],
+        size_t factory_argument_count,
+        const rxvm_executor_register_image *factory_arguments,
         size_t argument_count,
         const rxvm_executor_register_image *arguments,
         rxvm_executor_register_type expected_result,

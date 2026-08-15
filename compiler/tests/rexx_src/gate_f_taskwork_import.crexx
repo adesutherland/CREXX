@@ -1,0 +1,36 @@
+options levelg
+import rxfnsb
+import gate_f_taskwork_lib
+
+namespace gate_f_taskwork_import
+
+run_one: procedure = .int
+  arg pool = .taskpool, delta = .int, input = .int
+  scope = .taskscope.collectall(pool, 60000)
+  target = task .gate_f_taskwork_lib..imagework(delta)
+  child = scope.submit(target, .channelvalue.integer_value(input))
+  completion = child.wait(-1)
+  call scope.finish()
+  if completion.succeeded() = 0 then do
+    say "taskwork completion failure" completion.error_code() completion.message()
+    return 1
+  end
+  if completion.value().as_integer() <> 42 then return 2
+  return 0
+
+main: procedure = .int
+  local_pool = .taskpool.local(1, 2)
+  local_error = run_one(local_pool, 2, 40)
+  call local_pool.close()
+  if local_error <> 0 then do
+    say "FAIL: imported taskwork local" local_error
+    return 10 + local_error
+  end
+  process_pool = .taskpool.process(1, 2)
+  process_error = run_one(process_pool, 3, 39)
+  call process_pool.close()
+  if process_error <> 0 then do
+    say "FAIL: imported taskwork process" process_error
+    return 20 + process_error
+  end
+  return 0

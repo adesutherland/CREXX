@@ -1,10 +1,10 @@
 # Gate F concurrency in cREXX: approved user model and Rexx surface
 
-Date: 2026-08-14
+Date: 2026-08-15
 
-Status: **user model approved; F0-S through F1e complete; explicit Level B
-local and isolated-process concurrency, byte endpoints and child processes are
-implemented, and Level G syntax remains F1f**
+Status: **user model approved; F0-S through F1f complete; the explicit Level B
+surface and gated Level G task/parallel surface are implemented; F1g
+concurrent HTTP/TLS is next**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -31,10 +31,11 @@ silently reopen an approved language decision. The staged execution and
 first-verdict stops are recorded in
 [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
 
-Examples using `task` declarations or `DO PARALLEL` show the approved Level G
-syntax and do not compile in the current product yet. The five low-level RXAS
-instructions, complete local and isolated-process providers and explicit Level
-B classes now exist in both concrete VMs. Level G lowering remains F1f.
+Examples using `task` declarations or `DO PARALLEL` compile when the source
+selects `OPTIONS LEVELG`. The five low-level RXAS instructions, complete local
+and isolated-process providers, explicit Level B classes and Level G lowering
+exist in both concrete VMs. F1g next exercises this surface through the
+bounded concurrent HTTP/TLS consumer required by `crexx-rag`.
 
 ## The idea in one page
 
@@ -284,6 +285,12 @@ implementation plan.
 
 ## Approved Level G Rexx source surface
 
+The constructs in this section are enabled only by `OPTIONS LEVELG` (or an
+equivalent Level G compiler selection): task declarations, explicit
+`task target` expressions, and statement or expression `DO PARALLEL`.
+`task` and `parallel` remain contextual words, so their ordinary classic REXX
+uses are not reserved at other language levels.
+
 ### Declaring a task procedure
 
 At module level, `task` is a procedure-like callable kind:
@@ -302,6 +309,12 @@ The declaration supplies both:
 A task body may use local variables and construct local objects normally. It
 must not accept exposed/reference arguments, capture caller locals, transfer a
 live object graph or depend on persistent worker-local module globals.
+
+Direct recursion remains ordinary Rexx recursion: a task body that calls its
+own name continues synchronously in the same worker. Calling a different task
+from a task body is not silently converted into an ordinary call; it remains a
+forbidden nested task wait for Gate F. Mutual recursion between separately
+declared tasks is therefore also rejected in this first surface.
 
 ### Task methods on transferable proxies
 
@@ -703,6 +716,9 @@ surface. The orchestrating controller owns blocking joins. The compiler should
 reject a statically visible nested task wait; dynamic misuse must fail
 immediately rather than block a bounded worker pool.
 
+The one exception is direct self-recursion, which is an ordinary same-worker
+procedure call and creates no child task or join.
+
 ## Completion, failure and cancellation
 
 The explicit Level B terminal states remain:
@@ -940,23 +956,27 @@ The maintainer/AI reference specification now contains:
     specification and the existing Gate F ownership design.
 
 F0-S completed that specification and coherence matrix before the first opcode
-edit. F1a-F1e now implement the RXAS/RXBIN contract, complete local and
+edit. F1a-F1f now implement the RXAS/RXBIN contract, complete local and
 isolated-process providers,
 canonical `ChannelValue`, lifecycle, private provider conformance seam, the
 explicit Level B class surface, reusable byte endpoints and structured child
-processes. A Rexx programmer can use
+processes, sealed task procedures/methods/factory targets, typed task
+expressions and `DO PARALLEL`. A Rexx programmer can use
 `.taskpool.local(...)`, `.taskpool.process(...)`,
 `.taskscope.failfast(...)` or `.collectall(...)`, sealed task targets, tasks,
 completions and channels today; the class implementation reaches RXVM only
-through the five channel instructions.
+through the five channel instructions. Every library-development path is an
+opportunity and obligation to exercise `rxc`, `rxas`, `rxlink` and `rxvm`;
+the imported task-method and `.taskwork` conformance tests run that complete
+pipeline in optimized/unoptimized form on both concrete VMs.
 
 The incomplete portions fail explicitly. Service `ask`,
-`.taskcontext.endpoint`, compiler-created
-`.taskwork` adapters and pool statistics report unsupported operation rather
-than returning plausible placeholder data. F1e supplies process pools through
-the same classes and task/completion values as local pools. A process pool
-keeps warm isolated worker processes, but creates a fresh cREXX execution for
-every task, so globals and live VM state cannot spill from one task to the
-next. F1f makes the simpler `task` and `DO PARALLEL` examples compile; F1g
-delivers the concurrent HTTP consumer over the F1d endpoints. Any contradiction
-or new language decision still returns to Adrian.
+`.taskcontext.endpoint` and pool statistics report unsupported operation
+rather than returning plausible placeholder data. F1f supplies kind-1 task
+procedures, kind-2 transferable task methods and kind-3 `.taskwork` factory
+targets through the same local/process classes and completion values. A
+process pool keeps warm isolated worker processes, but creates a fresh cREXX
+execution for every task, so globals and live VM state cannot spill from one
+task to the next. F1g delivers the concurrent HTTP consumer over the F1d
+endpoints and F1f task surface. Any contradiction or new language decision
+still returns to Adrian.

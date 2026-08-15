@@ -12,6 +12,9 @@
 
 typedef struct rxvm_channel_task_invoke {
     uint64_t callable_id;
+    unsigned char task_binding[RX_GRAPH_TASK_BINDING_SIZE];
+    rxvm_executor_register_image *factory_arguments;
+    size_t factory_argument_count;
     rxvm_executor_register_image *arguments;
     size_t argument_count;
     int64_t target_kind;
@@ -37,6 +40,11 @@ rxvm_channel_status rxvm_channel_parse_task_invoke(
         size_t length,
         rxvm_channel_task_invoke *invoke);
 void rxvm_channel_task_invoke_free(rxvm_channel_task_invoke *invoke);
+rxvm_channel_status rxvm_channel_decode_task_value(
+        const void *data,
+        size_t length,
+        const char *expected_type,
+        rxvm_executor_register_image *value_out);
 
 rxvm_channel_status rxvm_channel_resolve_provider_state(
         struct rxvm_context *context,

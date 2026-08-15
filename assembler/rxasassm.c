@@ -31,6 +31,7 @@
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/rxjtable.h"
 #include "../binutils/include/rxnumparse.h"
+#include "../binutils/include/rxgraph.h"
 #include "../binutils/include/opdata.c"
 #include <ctype.h>
 #include <limits.h>
@@ -2868,9 +2869,43 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     size_t s_sym;
     size_t s_payload;
     meta_inline_constant *mentry;
+    const char *option_text;
 
-    if (strcmp((char*)option->token_value.string, ".inline") != 0) {
-        rxaserat(context, option, "Expecting .inline metadata option");
+    option_text = (const char *)option->token_value.string;
+    if (strcmp(option_text, ".task1") == 0 ||
+        strcmp(option_text, ".task2") == 0 ||
+        strcmp(option_text, ".task3") == 0) {
+        meta_task_target_constant *target;
+        size_t binding;
+
+        if (payload->token_type != HEX) {
+            rxaserat(context, payload, "Task-target metadata requires an 80-byte hex binding placeholder");
+            return;
+        }
+        if (strlen((const char *)payload->token_value.string) !=
+            2u + RX_GRAPH_TASK_BINDING_SIZE * 2u) {
+            rxaserat(context, payload, "Task-target metadata requires an 80-byte hex binding placeholder");
+            return;
+        }
+        binding = add_binary_to_pool(
+                context, (char *)payload->token_value.string);
+        entry = add_meta_entry(
+                context, sizeof(meta_task_target_constant), META_TASK_TARGET);
+        s_sym = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        target = (meta_task_target_constant *)(context->binary.const_pool + entry);
+        target->symbol = s_sym;
+        target->binding = binding;
+        target->kind = (uint32_t)(option_text[5] - '0');
+        return;
+    }
+
+    if (strcmp(option_text, ".inline") != 0) {
+        rxaserat(context, option, "Expecting .inline or .task1/.task2/.task3 metadata option");
+        return;
+    }
+    if (payload->token_type != STRING) {
+        rxaserat(context, payload, "Inline metadata requires a string payload");
         return;
     }
 

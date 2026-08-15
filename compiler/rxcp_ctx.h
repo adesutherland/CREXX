@@ -168,6 +168,7 @@ struct imported_func {
     char *implementation;
     Context *context;
     char is_variable; /* 0=function, 1=global variable */
+    char is_task_callable; /* Sealed Gate F callable contract. */
     char *error_state; /* Pointer to a constant string with error code (or null). Not malloced/freed */
     const char *error_field; /* Constant metadata field name for structured import diagnostics */
     const char *error_detail; /* Constant reason for structured import diagnostics */
@@ -341,7 +342,7 @@ char* mprintf(const char* format, ...);
 
 /* imported_func factory - returns null if the function is not in an applicable namespace */
 imported_func *rximpf_f(Context*  context, char* file_name, char *fqname, char *options, char *type, char *args,
-                        char *implementation, char is_variable);
+                       char *implementation, char is_variable, char is_task_callable);
 
 /* Free Func Tree and functions */
 void fre_ftre(Context *context);

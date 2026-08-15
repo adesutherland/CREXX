@@ -1,0 +1,22 @@
+options levelg
+import concurrency
+import rxfnsb
+
+namespace gate_f_taskwork_factory_arg
+
+payload: class
+  *: factory
+    return
+
+badwork: class implements .taskwork
+  *: factory
+    arg item = .payload
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    return request
+
+main: procedure
+  target = task .badwork(.payload())
+  return

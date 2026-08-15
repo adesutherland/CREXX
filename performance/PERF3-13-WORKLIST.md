@@ -3,7 +3,7 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S through F1e complete; F1f next**
+Gate F F0-S through F1f complete; F1g concurrent HTTP/TLS next**
 
 ## Current Gate E continuation
 
@@ -2848,6 +2848,18 @@ Gate F is contract-first and staged:
   Two unchanged paired Release panels have no confirmed regression or guard
   hit; no improvement is claimed. Evidence:
   [`F1e first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
+- [x] **F1f gated Level G lowering and sealed task bindings:** implement task
+  procedures/methods, explicit targets, task expressions and both `DO
+  PARALLEL` forms only under Level G; preserve contextual Level B identifiers,
+  synchronous self-recursion, short circuit and structured cleanup; implement
+  kind-1 procedure, kind-2 receiver and kind-3 `.taskwork` factory dispatch
+  through relocatable 80-byte bindings. Imported-library QA exercises `rxc`,
+  `rxas`, `rxlink`, optimized/unoptimized images and both VMs. Mac closeout
+  passes Debug 2,149/2,149, Release Gate F 35/35 and Apple ASan 136/136. The
+  unchanged Release confirmation records accepted/deferred tiny-task latency
+  costs of -26.318621% `rxbvml` and -28.291208% `rxtvml`; throughput is
+  inconclusive and F3 owns later tuning. Evidence:
+  [`F1f first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
 - [ ] **F1:** implement the mandatory instructions in both VMs, wrap them with
   the Level B classes, and prove the same contract over in-process and isolated
   process providers; implement reusable byte-endpoint and child-process
@@ -2931,7 +2943,7 @@ budget. Provider-specific opcode families remain rejected.
    Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
    before any public pool/channel semantics.
 7. **Gate F — public design recorded 2026-08-13; user model and staged
-   implementation approved 2026-08-14; F0-S through F1e complete; F1f
+   implementation approved 2026-08-14; F0-S through F1f complete; F1g
    next.** The
    approved ownership
    surface and sequencing are recorded in
@@ -2941,7 +2953,7 @@ budget. Provider-specific opcode families remain rejected.
    staged execution in
    [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
    F0-S produced the maintainer/AI contract, coherence matrix, compile-checked
-   Level B declarations and exact RXAS/RXBIN/provider contract. F1a-F1e now
+   Level B declarations and exact RXAS/RXBIN/provider contract. F1a-F1f now
    implement the five opcodes, complete both-VM local provider, full RXCV,
    lifecycle/private registry contract, executable Level B classes, reusable
    byte endpoints, structured child processes and ADDRESS migration; the old
@@ -2949,7 +2961,9 @@ budget. Provider-specific opcode families remain rejected.
    The measured computed-goto code-layout cost remains recorded for final
    hot-loop hardening after the surface stabilizes. The isolated-process
    provider preserves bytecode-only program identity across fresh task
-   executions. Level G task syntax is next in F1f.
+   executions. F1f adds the Level G-gated task/parallel surface and sealed
+   task-procedure, receiver and `.taskwork` factory bindings. F1g concurrent
+   HTTP/TLS is next.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding
