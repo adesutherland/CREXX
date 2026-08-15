@@ -444,17 +444,16 @@ static int task_type_is_channelvalue(ASTNode *type_node) {
     return matches;
 }
 
-static int task_receiver_contract_valid(ASTNode *node) {
+static int task_transfer_contract_node_valid(ASTNode *contract) {
     ASTNode *member;
     ASTNode *from_channel = 0;
     ASTNode *to_channel = 0;
     ASTNode *args;
     ASTNode *arg;
 
-    if (!node || node->node_type != METHOD || !node->parent ||
-        (node->parent->node_type != CLASS_DEF &&
-         node->parent->node_type != INTERFACE_DEF)) return 0;
-    for (member = node->parent->child; member; member = member->sibling) {
+    if (!contract || (contract->node_type != CLASS_DEF &&
+                      contract->node_type != INTERFACE_DEF)) return 0;
+    for (member = contract->child; member; member = member->sibling) {
         if (member->node_type == FACTORY &&
             task_member_label_is(member, "from_channel")) {
             from_channel = member;
@@ -472,6 +471,47 @@ static int task_receiver_contract_valid(ASTNode *node) {
     arg = args ? args->child : 0;
     if (!arg || arg->sibling || arg->is_ref_arg || arg->is_varg) return 0;
     return task_type_is_channelvalue(arg->child ? arg->child->sibling : 0);
+}
+
+static int task_receiver_contract_valid(ASTNode *node) {
+    return node && node->node_type == METHOD &&
+           task_transfer_contract_node_valid(node->parent);
+}
+
+int rxcp_task_result_contract_valid(Context *context, Scope *scope,
+                                    const char *class_name) {
+    Symbol *symbol;
+    Scope *namespace_scope;
+    const char *lookup_name;
+    char *qualified_name = 0;
+    ASTNode *contract;
+
+    if (!context || !context->ast || !class_name || !*class_name) return 0;
+    lookup_name = class_name;
+    while (*lookup_name == '.') lookup_name++;
+    symbol = sym_rfqn(context->ast, lookup_name);
+    if (!symbol && !strchr(lookup_name, '.')) {
+        namespace_scope = scope;
+        while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
+            namespace_scope = namespace_scope->parent;
+        }
+        if (namespace_scope && namespace_scope->name && *namespace_scope->name) {
+            qualified_name = mprintf("%s.%s", namespace_scope->name,
+                                     lookup_name);
+            if (qualified_name) symbol = sym_rfqn(context->ast, qualified_name);
+        }
+    }
+    if (!symbol) {
+        ensure_class_imported(context, class_name, strlen(class_name));
+        symbol = sym_rfqn(context->ast,
+                          qualified_name ? qualified_name : lookup_name);
+    }
+    free(qualified_name);
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL ||
+        sym_is_interface_symbol(symbol) || !symbol->defines_scope) return 0;
+    contract = symbol->defines_scope->defining_node;
+    return contract && contract->node_type == CLASS_DEF &&
+           task_transfer_contract_node_valid(contract);
 }
 
 walker_result ast_structure_fixup_walker(walker_direction direction,
@@ -1662,8 +1702,9 @@ walker_result syntax_validation_walker(walker_direction direction,
             }
         }
 
-        else if (node->node_type == METHOD && node->is_task_callable) {
-            if (!task_receiver_contract_valid(node)) {
+        else if ((node->node_type == METHOD || node->node_type == PROCEDURE) &&
+                 node->is_task_callable) {
+            if (node->node_type == METHOD && !task_receiver_contract_valid(node)) {
                 mknd_err_unique(node, "TASK_NONTRANSFERABLE_RECEIVER");
             }
         }

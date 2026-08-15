@@ -779,7 +779,11 @@ binding plus requested result mode to retain worker-local procedure/adapter
 pointers. A miss follows the unchanged validator; failures are never cached,
 collisions only evict, and worker/context teardown invalidates every entry.
 Task arguments/results and factory arguments remain receiver-materialized
-RXCV; no live VM value crosses. Level G task/parallel syntax lowers through the
+RXCV; no live VM value crosses. For a typed object result, the executor invokes
+the sealed result class's `to_channel()` method, canonicalizes the returned
+`.channelvalue`, and publishes that document. The controller-side compiler
+lowering reconstructs a new object with the same class's `from_channel`
+factory. Level G task/parallel syntax lowers through the
 Level B classes and is accepted only under `OPTIONS LEVELG`. Concurrent HTTP
 remains F1g; unsupported Level B operations report status `19` rather than
 simulating success. A public provider-plugin ABI remains an F2 review. The

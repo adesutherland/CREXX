@@ -2178,12 +2178,36 @@ endif()
 execute_process(
   COMMAND \"$<TARGET_FILE:rxc>\" -i \"${WORK_DIR}\"
           -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o imported_task_levelb
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_imported_task_levelb.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+set(full_out \"\${out}\${err}\")
+if(res EQUAL 0 OR NOT full_out MATCHES \"#TASK_ONLY_LEVELG\")
+  message(FATAL_ERROR \"Imported task method escaped the Level G gate:\\n\${full_out}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${WORK_DIR}\"
+          -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
           -o task_method_main
           \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_task_method_import.crexx\"
   WORKING_DIRECTORY \"${WORK_DIR}\"
   OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
 if(NOT res EQUAL 0)
   message(FATAL_ERROR \"Imported task-method client rxc failure:\\n\${out}\\n\${err}\")
+endif()
+file(READ \"${WORK_DIR}/task_method_main.rxas\" task_method_main_rxas)
+string(FIND \"\${task_method_main_rxas}\" \"submit_arguments\" submit_arguments_pos)
+if(submit_arguments_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported task methods were not lowered through taskscope.submit_arguments\")
+endif()
+string(FIND \"\${task_method_main_rxas}\" \"result_value\" result_value_pos)
+if(result_value_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported object task result was not materialized as a ChannelValue\")
+endif()
+string(FIND \"\${task_method_main_rxas}\" \"gate_f_task_method_lib.answerbox.§factory.from_channel\" from_channel_pos)
+if(from_channel_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported object task result omitted answerbox.from_channel reconstruction\")
 endif()
 execute_process(
   COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
@@ -2371,6 +2395,10 @@ add_gate_f_levelg_failure(gate_f_taskwork_required
         gate_f_taskwork_required.crexx TASKWORK_ADAPTER_REQUIRED)
 add_gate_f_levelg_failure(gate_f_taskwork_factory_arg
         gate_f_taskwork_factory_arg.crexx TASK_NONTRANSFERABLE_TYPE)
+add_gate_f_levelg_failure(gate_f_task_object_result_required
+        gate_f_task_object_result_required.crexx TASK_NONTRANSFERABLE_TYPE)
+add_gate_f_levelg_failure(gate_f_task_interface_result
+        gate_f_task_interface_result.crexx TASK_NONTRANSFERABLE_TYPE)
 
 set(GATE_F_CONTEXTUAL_LEVELB_SCRIPT
         "${CMAKE_CURRENT_BINARY_DIR}/gate_f_contextual_levelb.cmake")

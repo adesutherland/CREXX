@@ -9,14 +9,24 @@ main: procedure = .int
   answer = do parallel using scope
     leave with worker.increment(2)
   end
-  call pool.close()
   if answer <> 42 then return 1
+  result_scope = .taskscope.collectall(pool, 60000)
+  object_answer = do parallel using result_scope
+    leave with worker.result(2)
+  end
+  call pool.close()
+  if object_answer.answer() <> 42 then return 2
 
   process_pool = .taskpool.process(1, 2)
   process_scope = .taskscope.collectall(process_pool, 60000)
   process_answer = do parallel using process_scope
     leave with worker.increment(2)
   end
+  process_result_scope = .taskscope.collectall(process_pool, 60000)
+  process_object_answer = do parallel using process_result_scope
+    leave with worker.result(2)
+  end
   call process_pool.close()
-  if process_answer <> 42 then return 2
+  if process_answer <> 42 then return 3
+  if process_object_answer.answer() <> 42 then return 4
   return 0

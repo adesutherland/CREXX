@@ -1,0 +1,42 @@
+PERF3-13 Gate F F1g-A first Release verdict
+Date: 2026-08-15
+Branch: develop
+Accepted control source: a5a99be15 (retained F3C1 full product baseline)
+Candidate: frozen F1g-A working-tree implementation before its local slice commit
+Host: Darwin 25.5.0 arm64, 10 logical CPUs, AC power, no thermal or performance warning
+Build: ordinary profiling-off Release, profile-20 handler panel
+
+Exact reconstructed controls:
+- rxbvm sha256 1aa2620f5df21000a14d8d3f1286af37a2f3d2a596878080577ad1faa63c9cca, 1,379,128 bytes
+- rxtvm sha256 0270e5dfcc6752dea6e0c6eb803af45db25249531b9b7cff039e6de35289f636, 1,379,240 bytes
+- both production sources changed by F1g-A, rxvmexecutor.c and rxbin007.c,
+  were rebuilt from a5a99be15 and linked with the otherwise unchanged Release
+  objects; both sizes exactly match the accepted F3C1 products
+
+Frozen candidates:
+- rxbvm sha256 212bae13b1ee98a79f9876860e9801ef12ea93c9e2b4b5494ed1917fb0dc69db, 1,379,224 bytes
+- rxtvm sha256 16c3e0f589b276ead32f0a2d507520c7e0e6be4904eb3317871904d7803cb302, 1,379,352 bytes
+- size delta: +96 bytes for rxbvm and +112 bytes for rxtvm
+
+RXBIN compatibility:
+- one identical sealed benchmark image was used for both products
+- image sha256 d77ff2571965f498809449fbfd0a294e2389614a79206bc1f9a31074a700e72e, 2,629 bytes
+- F1g-A adds no RXAS opcode or RXBIN format; it completes imported task-method
+  metadata and reseals deterministic imported use-site placeholders against
+  the final linked graph
+
+Balanced 12-pair means, candidate versus accepted:
+- rxbvml channel latency: +1.116896%, 95% CI [-1.360439%, +3.594230%], noisy, no guard hit
+- rxbvml channel throughput: +0.908838%, 95% CI [-2.017682%, +3.835357%], noisy, no guard hit
+- rxtvml channel latency: +0.402665%, 95% CI [-2.200142%, +3.005473%], noisy, no guard hit
+- rxtvml channel throughput: -2.123695%, 95% CI [-8.030449%, +3.783058%], noisy, no guard hit
+
+The rxtvml throughput cell retains one -31.189209% adverse pair. No sample was
+removed. It widens the interval but does not trigger the governed 3% guard.
+
+Verdict: accept F1g-A. Concrete transferable task results now cross workers as
+canonical ChannelValue payloads and are reconstructed on the controller. The
+same qualification also corrects imported task-method stubs and final-link
+binding resealing, closing a prior false-positive test path that executed an
+imported task method synchronously. The first Release verdict is guard-clean;
+the adverse threaded-throughput noise is retained for later Gate F hardening.

@@ -3,7 +3,8 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S through F1f complete; F1g concurrent HTTP/TLS next**
+Gate F F0-S through F1f and F1g-A typed results complete; F1g pooled
+concurrent HTTP/TLS active**
 
 ## Current Gate E continuation
 
@@ -2867,6 +2868,14 @@ Gate F is contract-first and staged:
   lower the approved core Level G task syntax only through that Level B
   contract; deliver the concurrent HTTP/TLS consumer; publish only as
   experimental after portable conformance and the mandatory Release verdicts.
+- [x] **F1g-A typed object task results:** carry a concrete result class through
+  immediate and pending Level G lowering, publish only its canonical RXCV from
+  the worker, and reconstruct controller-owned state through `from_channel`.
+  Preserve imported task-method kind and Level G gating, reseal imported
+  use-site placeholders against the final linked graph, and assert the actual
+  RXAS task-lowered shape across optimized/unoptimized `rxbvm`/`rxtvm` runs.
+  This foundation adds no syntax, opcode or provider type. Evidence:
+  [`F1g-A first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-a-typed-task-results-first-release-verdict/).
 - [ ] **F2:** prove the open cross-host protocol with a non-Rexx actor, exercise
   compute/I/O/process providers and add higher Level G typed service/event
   libraries.
@@ -3010,7 +3019,7 @@ budget. Provider-specific opcode families remain rejected.
    before any public pool/channel semantics.
 7. **Gate F — public design recorded 2026-08-13; user model and staged
    implementation approved 2026-08-14; F0-S through F1f complete; F1g
-   next.** The
+   activated 2026-08-15.** The
    approved ownership
    surface and sequencing are recorded in
    [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
@@ -3031,7 +3040,11 @@ budget. Provider-specific opcode families remain rejected.
    task-procedure, receiver and `.taskwork` factory bindings. F3C1 then
    recovers the repeated sealed-binding validation cost with a bounded
    worker-local resolved-plan cache while preserving first-miss validation and
-   the public contract. F1g concurrent HTTP/TLS is next.
+   the public contract. F1g-A closes codec-backed typed task results
+   for the approved independent `.httpresponse`, then builds the bounded
+   connection-owner, policy, streaming and crexx-rag integration slices over
+   existing tasks and type-4 endpoints. It adds no HTTP opcode or provider
+   type. F1g now continues with the connection-owner and policy slice.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding

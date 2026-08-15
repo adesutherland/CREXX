@@ -1,0 +1,15 @@
+options levelg
+namespace gate_f_task_interface_result
+
+work: task = .answer
+  unavailable = .answer
+  return unavailable
+
+main: procedure = .int
+  answer = work()
+  return 0
+
+answer: interface
+  from_channel: factory
+    arg encoded = .channelvalue
+  to_channel: method = .channelvalue

@@ -5,6 +5,7 @@
  */
 
 #include "rxbin.h"
+#include "rxsha256.h"
 
 #include <limits.h>
 #include <stdarg.h>
@@ -420,6 +421,66 @@ typedef struct rxbin007_task_binding_patch {
     unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE];
 } rxbin007_task_binding_patch;
 
+static void rxbin007_task_placeholder(const char *symbol,
+                                      unsigned char placeholder[RX_GRAPH_TASK_BINDING_SIZE]) {
+    unsigned char digest[32];
+    size_t i;
+
+    rx_sha256(symbol, strlen(symbol), digest);
+    for (i = 0u; i < RX_GRAPH_TASK_BINDING_SIZE; i++) {
+        placeholder[i] = (unsigned char)(
+                digest[i & 31u] ^ (unsigned char)(i * 0x5bu + 0x31u));
+    }
+}
+
+static int rxbin007_record_task_binding_patch(
+        rxbin007_task_binding_patch **patches,
+        size_t *patch_count,
+        size_t *patch_capacity,
+        string_constant *binding,
+        const unsigned char expected[RX_GRAPH_TASK_BINDING_SIZE]) {
+    size_t prior;
+
+    for (prior = 0u; prior < *patch_count; prior++) {
+        if ((*patches)[prior].constant == binding) break;
+    }
+    if (prior < *patch_count) {
+        if (memcmp((*patches)[prior].binding, expected,
+                   RX_GRAPH_TASK_BINDING_SIZE) != 0) {
+            rxbin007_set_error(
+                    "RXBIN 007 task relocations alias incompatible targets");
+            return 0;
+        }
+        return 1;
+    }
+    if (*patch_count == *patch_capacity) {
+        rxbin007_task_binding_patch *grown;
+        size_t capacity;
+
+        capacity = *patch_capacity ? *patch_capacity * 2u : 8u;
+        if (capacity < *patch_count ||
+            capacity > SIZE_MAX / sizeof(*grown)) {
+            rxbin007_set_error(
+                    "RXBIN 007 cannot record task-target relocations");
+            return 0;
+        }
+        grown = (rxbin007_task_binding_patch *)realloc(
+                *patches, capacity * sizeof(*grown));
+        if (!grown) {
+            rxbin007_set_error(
+                    "RXBIN 007 cannot allocate task-target relocations");
+            return 0;
+        }
+        *patches = grown;
+        *patch_capacity = capacity;
+    }
+    (*patches)[*patch_count].constant = binding;
+    memcpy((*patches)[*patch_count].binding, expected,
+           RX_GRAPH_TASK_BINDING_SIZE);
+    (*patch_count)++;
+    return 1;
+}
+
 static int rxbin007_materialize_task_bindings(rxbin007_pool *pools,
                                               uint32_t pool_count,
                                               const RxGraph *graph) {
@@ -446,7 +507,8 @@ static int rxbin007_materialize_task_bindings(rxbin007_pool *pools,
             uint32_t binding_id;
             size_t symbol_available;
             size_t binding_available;
-            size_t prior;
+            unsigned char placeholder[RX_GRAPH_TASK_BINDING_SIZE];
+            uint32_t candidate_pool_index;
 
             if (pool->entries[record].entry->type != META_TASK_TARGET) continue;
             target = (meta_task_target_constant *)pool->entries[record].entry;
@@ -478,45 +540,48 @@ static int rxbin007_materialize_task_bindings(rxbin007_pool *pools,
                 free(patches);
                 return 0;
             }
-            for (prior = 0u; prior < patch_count; prior++) {
-                if (patches[prior].constant == binding) break;
+            if (!rxbin007_record_task_binding_patch(
+                    &patches, &patch_count, &patch_capacity,
+                    binding, expected)) {
+                free(patches);
+                return 0;
             }
-            if (prior < patch_count) {
-                if (memcmp(patches[prior].binding,
-                           expected,
-                           RX_GRAPH_TASK_BINDING_SIZE) != 0) {
-                    rxbin007_set_error("RXBIN 007 task relocations alias incompatible targets");
-                    free(patches);
-                    return 0;
-                }
-                continue;
-            }
-            if (patch_count == patch_capacity) {
-                rxbin007_task_binding_patch *grown;
-                size_t capacity;
 
-                capacity = patch_capacity ? patch_capacity * 2u : 8u;
-                if (capacity < patch_count ||
-                    capacity > SIZE_MAX / sizeof(*grown)) {
-                    rxbin007_set_error("RXBIN 007 cannot record task-target relocations");
-                    free(patches);
-                    return 0;
+            /* Imported task calls carry the deterministic 80-byte relocation
+             * placeholder but do not own the target's META_TASK_TARGET record.
+             * Reseal every matching use-site constant across all pools against
+             * the final graph, just as the defining metadata binding is resealed. */
+            rxbin007_task_placeholder(symbol->string, placeholder);
+            for (candidate_pool_index = 0u;
+                 candidate_pool_index < pool_count;
+                 candidate_pool_index++) {
+                rxbin007_pool *candidate_pool = &pools[candidate_pool_index];
+                uint32_t candidate_record;
+
+                for (candidate_record = 0u;
+                     candidate_record < candidate_pool->entry_count;
+                     candidate_record++) {
+                    chameleon_constant *candidate_entry =
+                            candidate_pool->entries[candidate_record].entry;
+                    string_constant *candidate;
+                    size_t candidate_available;
+
+                    if (candidate_entry->type != BINARY_CONST) continue;
+                    candidate = (string_constant *)candidate_entry;
+                    candidate_available = candidate->base.size_in_pool -
+                                          offsetof(string_constant, string);
+                    if (candidate->string_len != RX_GRAPH_TASK_BINDING_SIZE ||
+                        candidate_available < RX_GRAPH_TASK_BINDING_SIZE ||
+                        memcmp(candidate->string, placeholder,
+                               RX_GRAPH_TASK_BINDING_SIZE) != 0) continue;
+                    if (!rxbin007_record_task_binding_patch(
+                            &patches, &patch_count, &patch_capacity,
+                            candidate, expected)) {
+                        free(patches);
+                        return 0;
+                    }
                 }
-                grown = (rxbin007_task_binding_patch *)realloc(
-                    patches, capacity * sizeof(*grown));
-                if (!grown) {
-                    rxbin007_set_error("RXBIN 007 cannot allocate task-target relocations");
-                    free(patches);
-                    return 0;
-                }
-                patches = grown;
-                patch_capacity = capacity;
             }
-            patches[patch_count].constant = binding;
-            memcpy(patches[patch_count].binding,
-                   expected,
-                   RX_GRAPH_TASK_BINDING_SIZE);
-            patch_count++;
         }
     }
     for (patch = 0u; patch < patch_count; patch++) {

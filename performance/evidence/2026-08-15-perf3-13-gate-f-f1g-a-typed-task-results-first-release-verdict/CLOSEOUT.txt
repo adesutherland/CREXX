@@ -1,0 +1,33 @@
+PERF3-13 Gate F F1g-A closeout
+
+Implementation:
+- a concrete task result class must provide the exact transferable-object
+  contract and is encoded to canonical ChannelValue data in the worker
+- taskscope.result_value reconstructs the declared result class on the
+  controller for immediate calls and pending DO PARALLEL completion
+- interface-typed and non-transferable object results are rejected before task
+  lowering with TASK_NONTRANSFERABLE_TYPE
+- imported source and binary class stubs preserve task-method kind and Level G
+  gating instead of silently exposing an ordinary synchronous method
+- RXBIN 007 materialization reseals deterministic imported 80-byte binding
+  placeholders against the final linked graph
+- no new RXAS instruction, provider function or public native handle is added
+
+Qualification:
+- focused Debug: 16/16
+- full Debug: 2,151/2,151
+- focused Release Gate F: 37/37
+- focused Apple ASan: 138/138; Apple LSan unavailable, leak detection disabled
+- imported scalar and object task methods run through rxc, rxas, rxlink,
+  rxbvm and rxtvm in opt/noopt modes
+- Level B imported calls and invalid object-result contracts have negative tests
+
+Performance disposition:
+- all four paired channel cells are inconclusive without a 3% guard hit
+- the rxtvml throughput interval is widened by one retained adverse outlier
+- the candidate adds 96 bytes to rxbvm and 112 bytes to rxtvm
+- the prior pre-import-fix comparison is retained as secondary diagnostic
+  evidence; timing/incremental is the authoritative two-source verdict
+
+Next product slice: F1g-B, the bounded pooled HTTP connection-owner model.
+No push or public provider ABI publication is part of this closeout.

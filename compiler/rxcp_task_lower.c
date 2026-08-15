@@ -35,6 +35,7 @@ typedef struct RxcpPendingTaskResult {
     Symbol *symbol;
     char *handle_name;
     const char *result_method;
+    char *result_class;
     ASTNode *source_node;
     int materialized;
 } RxcpPendingTaskResult;
@@ -46,6 +47,8 @@ typedef struct RxcpParallelPlan {
     size_t pending_count;
     size_t pending_capacity;
 } RxcpParallelPlan;
+
+static const char *task_result_class(ASTNode *call);
 
 static ASTNode *task_callable_definition(Symbol *symbol) {
     size_t i;
@@ -99,6 +102,45 @@ static int task_subtree_has_call(ASTNode *node) {
         if (task_subtree_has_call(child)) return 1;
     }
     return 0;
+}
+
+static int task_result_contracts_valid(Context *context, ASTNode *node) {
+    ASTNode *child;
+    const char *result_class;
+
+    if (!context || !node) return 0;
+    if (task_call_definition(node, 0)) {
+        result_class = task_result_class(node);
+        if (result_class && !rxcp_task_result_contract_valid(
+                context, node->scope, result_class)) {
+            if (!ast_chld(node, ERROR, 0)) {
+                mknd_err(node, "TASK_NONTRANSFERABLE_TYPE");
+            }
+            return 0;
+        }
+    }
+    if (node->node_type == BLOCK_EXPR ||
+        node->node_type == PARALLEL_BLOCK_EXPR) return 1;
+    for (child = node->child; child; child = child->sibling) {
+        if (!task_result_contracts_valid(context, child)) return 0;
+    }
+    return 1;
+}
+
+static int task_calls_language_valid(Context *context, ASTNode *node) {
+    ASTNode *child;
+
+    if (!context || !node) return 0;
+    if (task_call_definition(node, 0) && context->level != LEVELG) {
+        if (!ast_chld(node, ERROR, 0)) mknd_err(node, "TASK_ONLY_LEVELG");
+        return 0;
+    }
+    if (node->node_type == BLOCK_EXPR ||
+        node->node_type == PARALLEL_BLOCK_EXPR) return 1;
+    for (child = node->child; child; child = child->sibling) {
+        if (!task_calls_language_valid(context, child)) return 0;
+    }
+    return 1;
 }
 
 static int task_inside_parallel(ASTNode *node) {
@@ -348,8 +390,26 @@ static const char *task_result_method(ASTNode *call) {
         case TP_INTEGER: return "result_integer";
         case TP_STRING: return "result_string";
         case TP_BINARY: return "result_binary";
+        case TP_OBJECT: return call->value_class ? "result_value" : 0;
         default: return 0;
     }
+}
+
+static const char *task_result_class(ASTNode *call) {
+    return call && !call->value_dims && call->value_type == TP_OBJECT
+            ? call->value_class : 0;
+}
+
+static ASTNode *task_decode_object_result(RxcpTaskPlan *plan,
+                                          ASTNode *anchor,
+                                          const char *result_class,
+                                          ASTNode *encoded) {
+    ASTNode *arguments[1];
+
+    if (!plan || !anchor || !result_class || !encoded) return 0;
+    arguments[0] = encoded;
+    return task_named_factory(plan->context, anchor, result_class,
+                              "from_channel", arguments, 1);
 }
 
 static int task_formals_transferable(ASTNode *definition, ASTNode *diagnostic_site) {
@@ -468,6 +528,7 @@ static int task_lower_call(RxcpTaskPlan *plan,
     ASTNode *result_argument;
     ASTNode *result_call;
     const char *result_method;
+    const char *result_class;
 
     if (!arguments_name || !handle_name || !task_formals_transferable(definition, call)) {
         free(arguments_name);
@@ -478,6 +539,14 @@ static int task_lower_call(RxcpTaskPlan *plan,
     if (result_method_out) *result_method_out = 0;
     if (replacement_out) *replacement_out = 0;
     result_method = task_result_method(call);
+    result_class = task_result_class(call);
+    if (result_class && !rxcp_task_result_contract_valid(
+            plan->context, call->scope, result_class)) {
+        if (!ast_chld(call, ERROR, 0)) mknd_err(call, "TASK_NONTRANSFERABLE_TYPE");
+        free(arguments_name);
+        free(handle_name);
+        return 0;
+    }
     if (materialize_result && !result_method) {
         if (!ast_chld(call, ERROR, 0)) mknd_err(call, "TASK_NONTRANSFERABLE_TYPE");
         free(arguments_name);
@@ -592,6 +661,15 @@ static int task_lower_call(RxcpTaskPlan *plan,
             free(arguments_name);
             free(handle_name);
             return 0;
+        }
+        if (result_class) {
+            result_call = task_decode_object_result(
+                    plan, call, result_class, result_call);
+            if (!result_call) {
+                free(arguments_name);
+                free(handle_name);
+                return 0;
+            }
         }
         rxcp_remap_copy_node_semantics(result_call, call);
         ast_rpl(call, result_call);
@@ -858,6 +936,7 @@ static int task_pending_add(RxcpParallelPlan *plan,
                             Symbol *symbol,
                             char *handle_name,
                             const char *result_method,
+                            const char *result_class,
                             ASTNode *source_node) {
     RxcpPendingTaskResult *pending;
 
@@ -875,6 +954,13 @@ static int task_pending_add(RxcpParallelPlan *plan,
     pending->symbol = symbol;
     pending->handle_name = handle_name;
     pending->result_method = result_method;
+    if (result_class) {
+        pending->result_class = strdup(result_class);
+        if (!pending->result_class) {
+            plan->pending_count--;
+            return 0;
+        }
+    }
     pending->source_node = source_node;
     return 1;
 }
@@ -933,6 +1019,11 @@ static int task_pending_materialize(RxcpParallelPlan *plan,
     result = task_member_call(&plan->task, anchor, plan->task.scope_name,
                               pending->result_method, arguments, 1);
     if (!result) return 0;
+    if (pending->result_class) {
+        result = task_decode_object_result(&plan->task, anchor,
+                                           pending->result_class, result);
+        if (!result) return 0;
+    }
     assignment = rxcp_remap_create_assignment_to_symbol(
             plan->task.context, plan->task.scope, anchor, anchor,
             pending->symbol, result);
@@ -977,6 +1068,7 @@ static int task_direct_pending_assignment(RxcpParallelPlan *plan,
     Symbol *symbol;
     char *handle_name = 0;
     const char *result_method = 0;
+    const char *result_class;
 
     if (!plan || !statement || statement->node_type != ASSIGN) return 0;
     target = ast_chdn(statement, 0);
@@ -992,6 +1084,7 @@ static int task_direct_pending_assignment(RxcpParallelPlan *plan,
         return -1;
     }
     if (!task_result_method(call)) return 0;
+    result_class = task_result_class(call);
 
     argument = call->child;
     while (argument) {
@@ -1001,7 +1094,8 @@ static int task_direct_pending_assignment(RxcpParallelPlan *plan,
     }
     if (!task_lower_call(&plan->task, call, definition, 0,
                          &handle_name, &result_method, 0) ||
-        !task_pending_add(plan, symbol, handle_name, result_method, statement)) {
+        !task_pending_add(plan, symbol, handle_name, result_method,
+                          result_class, statement)) {
         free(handle_name);
         return -1;
     }
@@ -1486,6 +1580,7 @@ static int task_lower_parallel_block_expression(Context *context,
     add_ast(node, outer);
     for (i = 0; i < plan.pending_count; i++) {
         free(plan.pending[i].handle_name);
+        free(plan.pending[i].result_class);
     }
     free(plan.pending);
     free(scope_name);
@@ -1496,6 +1591,7 @@ static int task_lower_parallel_block_expression(Context *context,
 failed:
     for (i = 0; i < plan.pending_count; i++) {
         free(plan.pending[i].handle_name);
+        free(plan.pending[i].result_class);
     }
     free(plan.pending);
     free(scope_name);
@@ -1597,6 +1693,8 @@ walker_result rxcp_task_calls_walker(walker_direction direction,
     }
     if (!expression || expression->node_type == BLOCK_EXPR ||
         !task_subtree_has_call(expression)) return result_normal;
+    if (!task_calls_language_valid(context, expression)) return result_normal;
+    if (!task_result_contracts_valid(context, expression)) return result_normal;
 
     if (task_inside_task_callable(expression)) {
         if (!ast_chld(expression, ERROR, 0)) mknd_err(expression, "TASK_NESTED_WAIT");

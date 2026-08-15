@@ -2,9 +2,9 @@
 
 Date: 2026-08-15
 
-Status: **user model approved; F0-S through F1f complete; the explicit Level B
-surface and gated Level G task/parallel surface are implemented; F1g
-concurrent HTTP/TLS is next**
+Status: **user model approved; F0-S through F1f and the F1g typed-result
+foundation complete; the explicit Level B surface and gated Level G
+task/parallel surface are implemented; pooled concurrent HTTP/TLS is next**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -34,8 +34,9 @@ first-verdict stops are recorded in
 Examples using `task` declarations or `DO PARALLEL` compile when the source
 selects `OPTIONS LEVELG`. The five low-level RXAS instructions, complete local
 and isolated-process providers, explicit Level B classes and Level G lowering
-exist in both concrete VMs. F1g next exercises this surface through the
-bounded concurrent HTTP/TLS consumer required by `crexx-rag`.
+exist in both concrete VMs. F1g-A adds typed object results; F1g now exercises
+that surface through the bounded concurrent HTTP/TLS consumer required by
+`crexx-rag`.
 
 ## The idea in one page
 
@@ -336,6 +337,26 @@ The exact transfer contract uses a `to_channel()` method plus a statically
 resolved `from_channel` factory. Standard generated service/HTTP proxies supply
 that pair. The compiler rejects a task method call when the receiver has no
 such exact contract.
+
+The same contract makes a typed object safe as a task result. The worker calls
+`to_channel()` on the returned object and publishes only the canonical
+`.channelvalue`. The controller then calls the result class's statically
+resolved `from_channel` factory and receives a new independent object. Object
+identity, references and mutable VM storage do not cross the worker boundary.
+
+For example, the approved HTTP task method may return `.httpresponse` because
+that class supplies the transfer pair. The response seen by the caller is a
+controller-owned reconstruction, not the worker's original object:
+
+```rexx
+response = client.post("/v1/generate", body)
+say response.status()
+```
+
+If the declared object result class omits either exact member, compilation
+fails with `#TASK_NONTRANSFERABLE_TYPE`. This check also applies when the task
+class is imported from a separately compiled library. Importing or calling a
+task method does not weaken the `OPTIONS LEVELG` gate.
 
 An ordinary method remains synchronous:
 
@@ -894,6 +915,8 @@ staged implementation on 2026-08-14:
       work; Level B exposes the complete explicit class/handle lifecycle.
 - [x] The same spelling inside an interface/class declares a task method whose
       receiver must be explicitly transferable.
+- [x] A typed object task result crosses as `ChannelValue` and is reconstructed
+      as a new controller-owned object through the declared transfer pair.
 - [x] Normal task-call syntax transparently schedules work; independent task
       calls in one expression may execute concurrently.
 - [x] Caller-side argument evaluation and submission remain left-to-right;
@@ -977,6 +1000,7 @@ procedures, kind-2 transferable task methods and kind-3 `.taskwork` factory
 targets through the same local/process classes and completion values. A
 process pool keeps warm isolated worker processes, but creates a fresh cREXX
 execution for every task, so globals and live VM state cannot spill from one
-task to the next. F1g delivers the concurrent HTTP consumer over the F1d
-endpoints and F1f task surface. Any contradiction or new language decision
-still returns to Adrian.
+task to the next. F1g-A transfers concrete-class results as canonical RXCV and
+reconstructs new controller-owned objects. The remaining F1g slices deliver
+the concurrent HTTP consumer over the F1d endpoints and F1f task surface. Any
+contradiction or new language decision still returns to Adrian.

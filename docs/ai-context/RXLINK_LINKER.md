@@ -88,6 +88,13 @@ bindings from the linked graph rather than copy module-local bytes. Kind `2`
 relocates the receiver `from_channel` factory and kind `3` relocates the
 `.taskwork.run` method. Missing, malformed, stale or signature-incompatible
 bindings fail the link; they are never weakened to procedure-name dispatch.
+An imported task call contains the deterministic 80-byte relocation
+placeholder but does not duplicate the defining module's `META_TASK_TARGET`.
+The RXBIN writer therefore reseals both the metadata binding and every matching
+placeholder constant across all selected constant pools. This is required for
+separately compiled task-method clients: copying the defining module's old seal
+would retain the wrong final graph digest, while leaving the use-site
+placeholder would fail the `RXTB` magic check.
 
 ## Constant-Pool Rewriting
 

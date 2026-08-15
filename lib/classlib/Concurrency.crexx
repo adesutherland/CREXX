@@ -68,6 +68,12 @@ taskscope: interface
     arg child = .task
   result_binary: method = .binary
     arg child = .task
+  /** Compiler bridge for codec-backed typed task results.
+   * @param child task whose canonical ChannelValue result is required
+   * @return the successful canonical task result for controller reconstruction
+   */
+  result_value: method = .channelvalue
+    arg child = .task
 
 /** One child submitted to a task scope. */
 task: interface
@@ -1759,6 +1765,16 @@ taskscope_impl: class implements .taskscope
     item = child.wait(-1)
     if item.succeeded() = 0 then call _task_failure item
     return item.value().as_binary()
+
+  /** Return canonical task data for compiler-generated from_channel reconstruction.
+   * @param child task whose terminal result is required
+   * @return successful canonical ChannelValue result
+   */
+  result_value: method = .channelvalue
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value()
 
   wait_task: method = .completion_impl
     arg identity = .int, wait_milliseconds = .int

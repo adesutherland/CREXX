@@ -2,8 +2,8 @@
 
 Date: 2026-08-15
 
-Status: **F0-S normative contract and F1a-F1f local/process-provider, Level B
-and gated Level G concurrency surface complete; F1g concurrent HTTP/TLS next**
+Status: **F0-S normative contract, F1a-F1f concurrency surface and the F1g
+typed-result foundation complete; pooled concurrent HTTP/TLS next**
 
 This is the exact maintainer-facing specification derived from the approved
 user model in
@@ -115,8 +115,9 @@ string.
 
 #### Transferable object contract
 
-A user-defined class or interface is task-transferable only when its exact
-static contract declares both members below:
+A task-method receiver may be a class or interface; a typed object result must
+be a concrete class so its encoder and reconstruction factory are statically
+unique. In either case its exact static contract declares both members below:
 
 ```rexx
 from_channel: factory
@@ -124,10 +125,15 @@ from_channel: factory
 to_channel: method = .channelvalue
 ```
 
-The controller invokes `to_channel()` synchronously before submission. The
-receiver invokes the statically resolved `from_channel` factory to construct
-new receiver-owned state. Both callable identities and their signatures are
-part of task metadata; neither is selected by a runtime method-name string.
+For a task-method receiver, the controller invokes `to_channel()` synchronously
+before submission and the worker invokes the statically resolved
+`from_channel` factory to construct new worker-owned state. For a typed object
+result, the direction is reversed: the worker invokes `to_channel()`, publishes
+canonical RXCV, and the controller invokes the declared result class's
+statically resolved `from_channel` factory. Each side owns its reconstructed
+object; live object identity never crosses. Both callable identities and their
+signatures are statically resolved; neither is selected by a runtime
+method-name string.
 
 The encoded value must contain only the object's immutable value state or a
 validated logical provider/service reference. It must not encode an object
@@ -138,6 +144,14 @@ Standard generated service and HTTP proxies provide this pair automatically.
 `.channelcodec` remains the explicit Level B contract for manual domain-value
 encoding, but F1 task signature checking does not perform an ambient runtime
 codec-registry lookup: the transfer route must be statically exact.
+
+F1g-A supports codec-backed object results in immediate expressions and
+pending `DO PARALLEL` bindings. The hidden Level B bridge returns the canonical
+`.channelvalue`; source lowering immediately wraps it in
+`ResultClass.from_channel(...)`. The executor resolves
+`ResultClass.to_channel` in the sealed task graph and encodes the returned
+value before terminal completion. A missing or malformed pair is
+`#TASK_NONTRANSFERABLE_TYPE`, not a late `FACTORY_NOT_FOUND`.
 
 ### 3.3 Task-target expressions
 
@@ -959,7 +973,7 @@ The compiler diagnostics are stable names even if presentation text changes:
 
 | Diagnostic | Condition |
 | --- | --- |
-| `#TASK_ONLY_LEVELG` | task declaration outside Level G |
+| `#TASK_ONLY_LEVELG` | task declaration or imported task call outside Level G |
 | `#TASK_TARGET_ONLY_LEVELG` | explicit task-target expression outside Level G |
 | `#PARALLEL_ONLY_LEVELG` | statement or expression `DO PARALLEL` outside Level G |
 | `#TASK_EXPOSED_ARGUMENT` | `ARG EXPOSE` in task signature |
@@ -1136,9 +1150,12 @@ from one task declaration to another remains a rejected nested task wait.
 
 RXBIN carries an 80-byte sealed task binding: image digest, callable id,
 signature digest and an adapter slot containing zero or callable id plus one.
-The assembler resolves local
-placeholders, the linker relocates them without merging semantic graphs, and
-the runtime validates the binding before dispatch. A runtime may retain the
+The assembler resolves definition-local placeholders. Imported task calls keep
+the same deterministic relocation placeholder; the RXBIN writer/linker finds
+every matching use-site constant across selected pools and reseals it against
+the final linked graph. Imported class-contract stubs preserve the task-method
+kind, so a call cannot silently degrade to an ordinary synchronous method. The
+runtime validates the final binding before dispatch. A runtime may retain the
 immutable graph digest and a bounded resolved plan only within the worker that
 performed that validation. Its cache key must contain the complete binding and
 requested result mode; misses and all failed validations follow the full path,
@@ -1149,7 +1166,8 @@ factory target in the receiver and invokes the sealed `run` adapter. Factory
 arguments, requests and results cross only as `ChannelValue` data.
 
 Imported task-method and `.taskwork` tests compile the provider library and
-client separately, assemble both, link them with classlib/library, and execute
+client separately, assert the task-lowered RXAS shape, assemble both, link them
+with classlib/library, and execute
 optimized/unoptimized images on `rxbvm` and `rxtvm`. This is the standing
 toolchain rule for library development: exercise `rxc`, `rxas`, `rxlink` and
 `rxvm`, not only the final class-library runtime.

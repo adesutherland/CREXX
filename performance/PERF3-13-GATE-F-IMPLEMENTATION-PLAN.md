@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S through F1f complete; F1g
-concurrent HTTP/TLS industrial consumer next**
+Status: **implementation approved by Adrian; F0-S through F1f and F1g-A typed
+task results complete; F1g pooled concurrent HTTP/TLS consumer active**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -395,6 +395,13 @@ verdict and stop before convenience expansion.
 Build the bounded multithreaded HTTP library required by `crexx-rag` over
 tasks/channels, reusable byte endpoints and the existing socket/TLS substrate.
 Do not add `httpstart` or other HTTP opcodes.
+
+F1g-A first closes the typed result boundary needed by this API. A task may
+return a class with the exact `to_channel()`/`from_channel(.channelvalue)`
+contract; the worker encodes and the controller reconstructs an independent
+object. Imported class task methods preserve their task kind and every imported
+binding placeholder is resealed by the final RXBIN writer/linker. This slice is
+complete and introduces no syntax, RXAS opcode, HTTP opcode or provider type.
 
 Required behavior includes:
 
