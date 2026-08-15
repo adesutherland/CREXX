@@ -2,9 +2,9 @@
 
 Date: 2026-08-15
 
-Status: **user model approved; F0-S through F1f and the F1g typed-result
-foundation complete; the explicit Level B surface and gated Level G
-task/parallel surface are implemented; pooled concurrent HTTP/TLS is next**
+Status: **user model approved; F0-S through F1f, F1g-A typed results and the
+F1g-B bounded pooled HTTP owner are complete; HTTP policy, streaming and
+crexx-rag integration remain active**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -34,9 +34,10 @@ first-verdict stops are recorded in
 Examples using `task` declarations or `DO PARALLEL` compile when the source
 selects `OPTIONS LEVELG`. The five low-level RXAS instructions, complete local
 and isolated-process providers, explicit Level B classes and Level G lowering
-exist in both concrete VMs. F1g-A adds typed object results; F1g now exercises
-that surface through the bounded concurrent HTTP/TLS consumer required by
-`crexx-rag`.
+exist in both concrete VMs. F1g-A adds typed object results; F1g-B now exercises
+that surface through a bounded transferable HTTP proxy and reusable
+single-owner connections. Policy, streaming and the `crexx-rag` integration
+fixture remain later F1g slices.
 
 ## The idea in one page
 
@@ -865,6 +866,12 @@ say generation.status()
 say embedding.status()
 ```
 
+F1g-B currently ships `post(path, body, content_type)`. In the example above,
+the `headers` argument is the approved policy-slice destination surface; custom
+request headers are not silently treated as a content-type string. The policy
+slice must either add that exact overload or update this example with Adrian's
+approval before claiming the final HTTP surface.
+
 `post` is a task method on a transferable HTTP proxy. The proxy carries a
 provider/channel capability and immutable configuration; it is not the current
 mutable `rxhttp` object with shared `lastBody`, status and socket state. Each
@@ -1001,6 +1008,9 @@ targets through the same local/process classes and completion values. A
 process pool keeps warm isolated worker processes, but creates a fresh cREXX
 execution for every task, so globals and live VM state cannot spill from one
 task to the next. F1g-A transfers concrete-class results as canonical RXCV and
-reconstructs new controller-owned objects. The remaining F1g slices deliver
-the concurrent HTTP consumer over the F1d endpoints and F1f task surface. Any
-contradiction or new language decision still returns to Adrian.
+reconstructs new controller-owned objects. F1g-B supplies the bounded
+`.httpclient.pooled` proxy, long-lived connection-owner taskwork, canonical
+fixed-size admission descriptors and independent `.httpresponse` values. The
+remaining F1g slices add policy/deadlines/retries, explicit streaming and the
+`crexx-rag` integration fixture. Any contradiction or new language decision
+still returns to Adrian.

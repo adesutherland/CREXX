@@ -2,8 +2,9 @@
 
 Date: 2026-08-14
 
-Status: **implementation approved by Adrian; F0-S through F1f and F1g-A typed
-task results complete; F1g pooled concurrent HTTP/TLS consumer active**
+Status: **implementation approved by Adrian; F0-S through F1f, F1g-A typed
+task results and the F1g-B bounded pooled HTTP owner complete; F1g policy,
+streaming and crexx-rag integration active**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
@@ -416,6 +417,16 @@ Required behavior includes:
 - partial I/O, connection failure and shutdown cleanup; and
 - concurrent generation/embedding-style workload evidence matching the
   `crexx-rag` consumer.
+
+F1g-B is complete. `rxfnsg.httpclient.pooled` uses one bounded type-4
+admission endpoint, per-request bounded request/response endpoints and one
+long-lived `.taskwork` owner per reusable socket. The fixed 192-byte admission
+descriptor contains two canonical provider references plus request length;
+no live VM value or socket integer crosses a worker. A pure-cREXX loopback
+fixture proves one owner serves four task requests over one accepted connection
+in optimized/unoptimized form on both VMs. This slice establishes ownership,
+reuse, backpressure, fixed/chunked framing and the TLS route; it does not claim
+the remaining policy, explicit streaming or crexx-rag acceptance items.
 
 Run local correctness and saturation tests, the crexx-rag integration fixture,
 then the mandatory Release verdict before broader closeout.

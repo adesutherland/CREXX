@@ -68,7 +68,7 @@ ollama: class implements .llm
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .httpclient
+  _http = .rxhttp..httpclient
 
   *: match
     arg model = "gemma4:latest", host = "127.0.0.1", port = 11434, timeout = 120000
@@ -85,7 +85,7 @@ ollama: class implements .llm
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .httpclient(_host, _port, _timeout)
+    _http = .rxhttp..httpclient(_host, _port, _timeout)
     return
 
   generate: method = .string
@@ -180,7 +180,7 @@ openai: class
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .httpclient
+  _http = .rxhttp..httpclient
 
   *: factory
     arg model = "gpt-4.1", apiKey = "", timeout = 120000
@@ -192,7 +192,7 @@ openai: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .httpclient("api.openai.com", 443, _timeout, 1)
+    _http = .rxhttp..httpclient("api.openai.com", 443, _timeout, 1)
     return
 
   generate: method = .string
@@ -306,7 +306,7 @@ anthropic: class
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .httpclient
+  _http = .rxhttp..httpclient
 
   *: factory
     arg model = "claude-sonnet-4-5", apiKey = "", timeout = 120000
@@ -318,7 +318,7 @@ anthropic: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .httpclient("api.anthropic.com", 443, _timeout, 1)
+    _http = .rxhttp..httpclient("api.anthropic.com", 443, _timeout, 1)
     return
 
   generate: method = .string
@@ -440,7 +440,7 @@ gemini: class
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .httpclient
+  _http = .rxhttp..httpclient
 
   *: factory
     arg model = "gemini-2.5-flash", apiKey = "", timeout = 120000
@@ -453,7 +453,7 @@ gemini: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .httpclient("generativelanguage.googleapis.com", 443, _timeout, 1)
+    _http = .rxhttp..httpclient("generativelanguage.googleapis.com", 443, _timeout, 1)
     return
 
   generate: method = .string

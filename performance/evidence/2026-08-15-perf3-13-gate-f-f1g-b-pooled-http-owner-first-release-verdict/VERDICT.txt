@@ -1,0 +1,41 @@
+PERF3-13 Gate F F1g-B pooled HTTP owner first Release verdict
+Date: 2026-08-15
+Branch: develop
+Accepted predecessor: 8b784eccbb38 (F1g-A committed)
+Candidate: frozen F1g-B working-tree implementation before its local slice commit
+Host: Darwin 25.5.0 arm64, 10 logical CPUs, AC power
+Build: ordinary profiling-off Release, profile-20 handler panel, NETWORK TLS
+
+Product-code boundary:
+- F1g-B changes Rexx library sources, library CMake ordering, functional tests
+  and documentation.
+- It changes no VM/compiler C or C++ source, RXAS opcode, RXBIN format or hot
+  dispatch shape.
+- Current rxbvm is 1,379,224 bytes and rxtvm is 1,379,352 bytes, exactly the
+  accepted F1g-A product sizes. Whole-file hashes are not compared as code
+  identity because configured version metadata now records the committed
+  F1g-A HEAD rather than the earlier frozen candidate state.
+
+Release correctness verdict:
+- F1g-B focused matrix: 6/6 plus linked-artifact fixture; the four HTTP cells
+  cover optimized/unoptimized images on rxbvm/rxtvm.
+- Release Gate F: 41/41 plus linked-artifact fixture.
+- The pure-cREXX HTTP fixture proves one long-lived connection owner serves
+  four task-method requests over one accepted loopback socket.
+- The classlib fixture proves canonical encoded type-4 provider references can
+  be validated and attached without passing a live VM object.
+
+Performance interpretation:
+- No ordinary single-thread or VM hot-loop timing cell is invalidated because
+  no executable product path changed. The accepted F1g-A/F3C1 product timing
+  remains the applicable core baseline.
+- The new HTTP path is not compared with legacy rxhttp as if the APIs were
+  equivalent: F1g-B adds bounded scheduling and connection reuse, while legacy
+  rxhttp creates and closes a connection per call.
+- HTTP saturation and crexx-rag workload measurements remain required in the
+  later policy/integration slices; this verdict claims functional connection
+  reuse and bounded ownership, not a final HTTP throughput number.
+
+Verdict: accept F1g-B for broad QA and closeout. The new path is Release-clean,
+does not alter the VM hot loop, and establishes the bounded owner/reuse model
+needed by the remaining F1g policy and streaming slices.

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(RXFNSG_REXX_MODULES
+  http
   llm
 )
 
@@ -23,9 +24,11 @@ foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
       "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
       rxc
       rxas
       library
+      classlib
       compiler_exit_bin
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."
@@ -62,7 +65,7 @@ add_custom_target(rxfnsg ALL
   DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
 )
 
-add_dependencies(rxfnsg library)
+add_dependencies(rxfnsg library classlib)
 
 add_test(
   NAME rxfnsg_rxdas_inline_preserve_smoke

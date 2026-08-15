@@ -31,8 +31,8 @@ foreach(_binfile IN LISTS REXXBINS)
     TARGET_GROUP "${_basename}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library rxfnsg "${_rexx_file}" ${_prev_target}
-    RUNTIME_ARGS ${LIBRPATH} ${RXFNSG_RPATH}
+    DEPENDS library classlib rxfnsg "${_rexx_file}" ${_prev_target}
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
   )
   set(_prev_target "${_basename}_noopt_artifact" "${_basename}_opt_artifact")
 endforeach()
@@ -45,3 +45,32 @@ set_tests_properties(ts_llm_providers_noopt ts_llm_providers_opt
 crexx_label_smoke_tests(
         ts_llm_providers_noopt
 )
+
+add_custom_target(ts_http_pooled)
+add_dependencies(testrxfnsg ts_http_pooled)
+
+set(_http_pooled_runners rxbvm)
+if(TARGET rxtvm)
+  list(APPEND _http_pooled_runners rxtvm)
+endif()
+
+foreach(_http_runner IN LISTS _http_pooled_runners)
+  crexx_add_rexx_opt_matrix(
+    NAME "ts_http_pooled_${_http_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_pooled.crexx"
+    TARGET_GROUP ts_http_pooled
+    RUNNER "${_http_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_pooled.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS gate_f f1g http levelg library "${_http_runner}"
+  )
+  set_tests_properties(
+    "ts_http_pooled_${_http_runner}_noopt"
+    "ts_http_pooled_${_http_runner}_opt"
+    PROPERTIES
+      PASS_REGULAR_EXPRESSION "PASS: rxfnsg pooled HTTP reused one owned connection for four task requests"
+      TIMEOUT 90
+  )
+endforeach()

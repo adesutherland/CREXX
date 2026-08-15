@@ -3,8 +3,8 @@
 Date opened: 2026-08-05
 
 Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S through F1f and F1g-A typed results complete; F1g pooled
-concurrent HTTP/TLS active**
+Gate F F0-S through F1f, F1g-A typed results and F1g-B pooled HTTP ownership
+complete; F1g policy, streaming and crexx-rag integration active**
 
 ## Current Gate E continuation
 
@@ -2876,6 +2876,16 @@ Gate F is contract-first and staged:
   RXAS task-lowered shape across optimized/unoptimized `rxbvm`/`rxtvm` runs.
   This foundation adds no syntax, opcode or provider type. Evidence:
   [`F1g-A first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-a-typed-task-results-first-release-verdict/).
+- [x] **F1g-B bounded HTTP connection ownership and reuse:** add the Level G
+  `.httpclient.pooled` transferable proxy and independent `.httpresponse`, use
+  fixed canonical admission descriptors over type-4 endpoints, and keep each
+  reusable socket inside one long-lived `.taskwork` owner. The pure-cREXX
+  loopback fixture proves one accepted connection serves four task-method
+  requests across optimized/unoptimized `rxbvm`/`rxtvm`; 100-repeat Release
+  stress executes 400 clients/1,600 requests, full Debug passes 2,155/2,155 and
+  focused Apple ASan passes 146/146. No VM/compiler C source, opcode or RXBIN
+  shape changes. Evidence:
+  [`F1g-B first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-b-pooled-http-owner-first-release-verdict/).
 - [ ] **F2:** prove the open cross-host protocol with a non-Rexx actor, exercise
   compute/I/O/process providers and add higher Level G typed service/event
   libraries.
@@ -3041,10 +3051,10 @@ budget. Provider-specific opcode families remain rejected.
    recovers the repeated sealed-binding validation cost with a bounded
    worker-local resolved-plan cache while preserving first-miss validation and
    the public contract. F1g-A closes codec-backed typed task results
-   for the approved independent `.httpresponse`, then builds the bounded
-   connection-owner, policy, streaming and crexx-rag integration slices over
-   existing tasks and type-4 endpoints. It adds no HTTP opcode or provider
-   type. F1g now continues with the connection-owner and policy slice.
+   for the approved independent `.httpresponse`; F1g-B adds the bounded
+   connection-owner and reuse slice over existing tasks and type-4 endpoints.
+   Neither adds an HTTP opcode or provider type. F1g now continues with policy,
+   streaming and crexx-rag integration.
    Level B-over-RXAS local/process/endpoint conformance precedes cross-host
    work; every production slice stops at its first Release verdict. F3 profiles
    and stabilizes the mandatory instruction boundary rather than deciding

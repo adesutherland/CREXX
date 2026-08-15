@@ -200,6 +200,12 @@ byteendpoint: interface
     arg direction = .int
   from_reference: factory
     arg provider_reference = .channelvalue
+  /** Attach an exact encoded type-4 provider reference.
+   * @param encoded canonical 92-byte RXCV type-4 provider-reference document
+   * @return an adapter to the referenced runtime-scoped byte endpoint
+   */
+  from_encoded_reference: factory
+    arg encoded = .binary
   provider_reference: method = .channelvalue
   start_read: method = .channelrequest
     arg maximum_bytes = .int, wait_milliseconds = .int
@@ -1212,6 +1218,41 @@ byteendpoint_impl: class implements .byteendpoint
     configuration = _byteendpoint_configuration(3, direction, 0, provider_reference)
     _channel = .channel_impl.open(4, 127, configuration)
     _direction = direction
+    _open = 1
+    requests = .channelrequest[1]
+    empty_request = .channelrequest
+    requests[1] = empty_request
+    assembler SETATTRS requests,0
+    _requests = requests
+    return
+
+  /** Attach an exact encoded type-4 provider reference.
+   *
+   * This is the fixed-size admission-frame bridge used by redirect, process
+   * and HTTP protocols. It deliberately accepts only the canonical type-4
+   * reference shape; it is not a general unchecked ChannelValue decoder.
+   * @param encoded canonical 92-byte RXCV type-4 provider-reference document
+   * @return an adapter to the referenced runtime-scoped byte endpoint
+   */
+  from_encoded_reference: factory
+    arg encoded = .binary
+    encoded_length = binlength(encoded)
+    call _channel_require encoded_length = 92, "byteendpoint.encoded-reference.length"
+    call _channel_require bincompare(binsubstr(encoded, 1, 4), '52584356'x as .binary) = 0, "byteendpoint.encoded-reference.magic"
+    call _channel_require <at..u8>(4) encoded = 1 & <at..u8>(5) encoded = 0, "byteendpoint.encoded-reference.version"
+    call _channel_require <at..u16>(6) encoded = 1, "byteendpoint.encoded-reference.flags"
+    call _channel_require <at..int>(8) encoded = encoded_length, "byteendpoint.encoded-reference.document-length"
+    call _channel_require <at..u8>(16) encoded = 10 & <at..u8>(17) encoded = 0 & <at..u16>(18) encoded = 0, "byteendpoint.encoded-reference.node"
+    call _channel_require <at..int>(20) encoded = 64, "byteendpoint.encoded-reference.payload-length"
+    call _channel_require <at..int>(28) encoded = 4 & <at..u32>(36) encoded = 1, "byteendpoint.encoded-reference.provider"
+    rights = <at..u32>(40) encoded
+    call _channel_require rights >= 1 & rights <= 3 & <at..u8>(44) encoded = 1, "byteendpoint.encoded-reference.rights"
+    call _channel_require bincompare(binsubstr(encoded, 46, 7), '00000000000000'x as .binary) = 0, "byteendpoint.encoded-reference.reserved"
+    call _channel_require <at..int>(52) encoded = 32, "byteendpoint.encoded-reference.identity-length"
+    reference_value = .channelvalue_impl.from_encoded(encoded)
+    configuration = _byteendpoint_configuration(3, rights, 0, reference_value)
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = rights
     _open = 1
     requests = .channelrequest[1]
     empty_request = .channelrequest

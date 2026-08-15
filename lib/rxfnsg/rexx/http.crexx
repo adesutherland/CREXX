@@ -1,0 +1,684 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Gate F bounded concurrent HTTP/1.1 client.
+ *
+ * @docType runtime-module
+ * @see lib/rxfnsg/rexx/http.md
+ */
+options levelg
+
+namespace rxfnsg expose httpclient httpresponse
+import rxfnsb
+import _rxsysb
+import rxsocket
+import concurrency
+
+_http_failure: procedure
+  arg message = .string
+  call raise "HTTP_CHANNEL_ERROR", message, ""
+  return
+
+_http_endpoint_write: procedure
+  arg endpoint = .byteendpoint, bytes = .binary
+  completion = endpoint.start_write(bytes, -1).wait(-1)
+  if completion.succeeded() = 0 then call _http_failure completion.message()
+  if completion.value().as_integer() <> binlength(bytes) then call _http_failure "HTTP endpoint accepted a partial fixed frame"
+  return
+
+_http_endpoint_read_exact: procedure = .binary
+  arg endpoint = .byteendpoint, expected = .int
+  result = ''x as .binary
+  do while binlength(result) < expected
+    remaining = expected - binlength(result)
+    completion = endpoint.start_read(remaining, -1).wait(-1)
+    if completion.succeeded() = 0 then call _http_failure completion.message()
+    chunk = completion.value().as_binary()
+    if binlength(chunk) > 0 then result = binconcat(result, chunk)
+    if completion.details().field("eof").as_boolean() then leave
+  end
+  return result
+
+_http_request_wire: procedure = .binary
+  arg path = .string, body = .string, content_type = .string
+  path_bytes = path as .binary
+  body_bytes = body as .binary
+  content_type_bytes = content_type as .binary
+  wire = '000000000000000000000000000000000000000000000000'x as .binary
+  <at..int>(0) wire = binlength(path_bytes)
+  <at..int>(8) wire = binlength(body_bytes)
+  <at..int>(16) wire = binlength(content_type_bytes)
+  wire = binconcat(wire, path_bytes)
+  wire = binconcat(wire, body_bytes)
+  wire = binconcat(wire, content_type_bytes)
+  return wire
+
+_http_response_wire: procedure = .binary
+  arg transport_status = .int, http_status = .int, headers = .string, body = .string, error = .string
+  header_bytes = headers as .binary
+  body_bytes = body as .binary
+  error_bytes = error as .binary
+  wire = '00000000000000000000000000000000000000000000000000000000000000000000000000000000'x as .binary
+  <at..int>(0) wire = transport_status
+  <at..int>(8) wire = http_status
+  <at..int>(16) wire = binlength(header_bytes)
+  <at..int>(24) wire = binlength(body_bytes)
+  <at..int>(32) wire = binlength(error_bytes)
+  wire = binconcat(wire, header_bytes)
+  wire = binconcat(wire, body_bytes)
+  wire = binconcat(wire, error_bytes)
+  return wire
+
+_http_admission_frame: procedure = .binary
+  arg request_reference = .channelvalue, response_reference = .channelvalue, request_bytes = .int
+  request_encoded = request_reference.encode()
+  response_encoded = response_reference.encode()
+  if binlength(request_encoded) <> 92 | binlength(response_encoded) <> 92 then call _http_failure "HTTP endpoint reference has a noncanonical size"
+  frame = request_encoded
+  frame = binconcat(frame, response_encoded)
+  length_bytes = '0000000000000000'x as .binary
+  <at..int>(0) length_bytes = request_bytes
+  frame = binconcat(frame, length_bytes)
+  return frame
+
+_http_body_start: procedure = .int
+  arg response = .string
+  boundary = pos("0d0a0d0a"x, response)
+  if boundary > 0 then return boundary + 4
+  boundary = pos("0a0a"x, response)
+  if boundary > 0 then return boundary + 2
+  return 0
+
+_http_header_value: procedure = .string
+  arg headers = .string, name = .string
+  wanted = translate(name)
+  cursor = 1
+  do while cursor <= length(headers)
+    terminator = 2
+    line_end = pos("0d0a"x, headers, cursor)
+    if line_end = 0 then do
+      terminator = 1
+      line_end = pos("0a"x, headers, cursor)
+    end
+    if line_end = 0 then line_end = length(headers) + 1
+    line = substr(headers, cursor, line_end - cursor)
+    colon = pos(":", line)
+    if colon > 0 then do
+      key = translate(strip(left(line, colon - 1)))
+      if key = wanted then return strip(substr(line, colon + 1))
+    end
+    if line_end > length(headers) then leave
+    cursor = line_end + terminator
+  end
+  return ""
+
+_http_content_length: procedure = .int
+  arg headers = .string
+  value = _http_header_value(headers, "Content-Length")
+  if value = "" | datatype(value, "W") = 0 then return -1
+  return value
+
+_http_hex_digit: procedure = .int
+  arg digit = .string
+  position = pos(translate(digit), "0123456789ABCDEF")
+  if position = 0 then return -1
+  return position - 1
+
+_http_hex_value: procedure = .int
+  arg text = .string
+  if text = "" then return -1
+  value = 0
+  do index = 1 to length(text)
+    digit = _http_hex_digit(substr(text, index, 1))
+    if digit < 0 then return -1
+    value = value * 16 + digit
+  end
+  return value
+
+_http_chunked_complete: procedure = .boolean
+  arg body = .string
+  cursor = 1
+  do while cursor <= length(body)
+    terminator = 2
+    line_end = pos("0d0a"x, body, cursor)
+    if line_end = 0 then do
+      terminator = 1
+      line_end = pos("0a"x, body, cursor)
+    end
+    if line_end = 0 then return 0
+    size_text = strip(substr(body, cursor, line_end - cursor))
+    semicolon = pos(";", size_text)
+    if semicolon > 0 then size_text = strip(left(size_text, semicolon - 1))
+    chunk_size = _http_hex_value(size_text)
+    if chunk_size < 0 then return 0
+    cursor = line_end + terminator
+    if chunk_size = 0 then do
+      if substr(body, cursor, 2) = "0d0a"x then return 1
+      if substr(body, cursor, 1) = "0a"x then return 1
+      return pos("0d0a0d0a"x, body, cursor) > 0 | pos("0a0a"x, body, cursor) > 0
+    end
+    if length(substr(body, cursor, chunk_size)) <> chunk_size then return 0
+    cursor = cursor + chunk_size
+    if substr(body, cursor, 2) = "0d0a"x then cursor = cursor + 2
+    else if substr(body, cursor, 1) = "0a"x then cursor = cursor + 1
+    else return 0
+  end
+  return 0
+
+_http_decode_chunked: procedure = .string
+  arg body = .string
+  result = ""
+  cursor = 1
+  do while cursor <= length(body)
+    terminator = 2
+    line_end = pos("0d0a"x, body, cursor)
+    if line_end = 0 then do
+      terminator = 1
+      line_end = pos("0a"x, body, cursor)
+    end
+    if line_end = 0 then return result
+    size_text = strip(substr(body, cursor, line_end - cursor))
+    semicolon = pos(";", size_text)
+    if semicolon > 0 then size_text = strip(left(size_text, semicolon - 1))
+    chunk_size = _http_hex_value(size_text)
+    if chunk_size <= 0 then return result
+    cursor = line_end + terminator
+    result = result || substr(body, cursor, chunk_size)
+    cursor = cursor + chunk_size
+    if substr(body, cursor, 2) = "0d0a"x then cursor = cursor + 2
+    else if substr(body, cursor, 1) = "0a"x then cursor = cursor + 1
+  end
+  return result
+
+_http_response_complete: procedure = .boolean
+  arg response = .string
+  body_start = _http_body_start(response)
+  if body_start = 0 then return 0
+  headers = left(response, body_start - 1)
+  body = substr(response, body_start)
+  if pos("CHUNKED", translate(_http_header_value(headers, "Transfer-Encoding"))) > 0 then return _http_chunked_complete(body)
+  content_length = _http_content_length(headers)
+  if content_length < 0 then return 0
+  return binlength(body as .binary) >= content_length
+
+_http_status_code: procedure = .int
+  arg response = .string
+  line_end = pos("0d0a"x, response)
+  if line_end = 0 then line_end = pos("0a"x, response)
+  if line_end = 0 then return 0
+  status_text = word(left(response, line_end - 1), 2)
+  if datatype(status_text, "W") = 0 then return 0
+  return status_text
+
+_http_build_request: procedure = .string
+  arg host = .string, port = .int, path = .string, body = .string, content_type = .string
+  if path = "" then path = "/"
+  crlf = "0d0a"x
+  request = "POST " || path || " HTTP/1.1" || crlf || ,
+            "Host: " || host || ":" || port || crlf || ,
+            "User-Agent: cREXX-rxfnsg-http/1" || crlf || ,
+            "Accept: */*" || crlf || ,
+            "Accept-Encoding: identity" || crlf || ,
+            "Connection: keep-alive" || crlf
+  if content_type <> "" then request = request || "Content-Type: " || content_type || crlf
+  request = request || "Content-Length: " || binlength(body as .binary) || crlf || crlf || body
+  return request
+
+/** One independent HTTP response reconstructed in the caller's execution. */
+httpresponse: class
+  _transport_status = .int
+  _http_status = .int
+  _headers = .string
+  _body = .string
+  _error = .string
+
+  /** Construct a response value from explicit fields.
+   * @param transport_status zero for a complete HTTP exchange, negative for transport/protocol failure
+   * @param http_status parsed HTTP response status or zero
+   * @param headers raw response header block
+   * @param body decoded buffered response body
+   * @param error response diagnostic
+   */
+  new: factory
+    arg transport_status = .int, http_status = .int, headers = .string, body = .string, error = .string
+    _transport_status = transport_status
+    _http_status = http_status
+    _headers = headers
+    _body = body
+    _error = error
+    return
+
+  /** Decode the private request-owner response frame.
+   * @param wire framed response bytes
+   * @return independent response value
+   */
+  from_wire: factory
+    arg wire = .binary
+    if binlength(wire) < 40 then call _http_failure "HTTP response frame is truncated"
+    header_length = <at..int>(16) wire
+    body_length = <at..int>(24) wire
+    error_length = <at..int>(32) wire
+    total_length = 40 + header_length + body_length + error_length
+    if header_length < 0 | body_length < 0 | error_length < 0 | total_length <> binlength(wire) then call _http_failure "HTTP response frame lengths are invalid"
+    _transport_status = <at..int>(0) wire
+    _http_status = <at..int>(8) wire
+    _headers = binsubstr(wire, 41, header_length) as .string
+    _body = binsubstr(wire, 41 + header_length, body_length) as .string
+    _error = binsubstr(wire, 41 + header_length + body_length, error_length) as .string
+    return
+
+  /** Reconstruct a controller-owned response from its canonical value. */
+  from_channel: factory
+    arg encoded = .channelvalue
+    _transport_status = encoded.field("transportStatus").as_integer()
+    _http_status = encoded.field("status").as_integer()
+    _headers = encoded.field("headers").as_string()
+    _body = encoded.field("body").as_string()
+    _error = encoded.field("error").as_string()
+    return
+
+  /** Encode response value state; no socket or VM object identity crosses. */
+  to_channel: method = .channelvalue
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "body"
+    values[1] = .channelvalue.string_value(_body)
+    names[2] = "error"
+    values[2] = .channelvalue.string_value(_error)
+    names[3] = "headers"
+    values[3] = .channelvalue.string_value(_headers)
+    names[4] = "status"
+    values[4] = .channelvalue.integer_value(_http_status)
+    names[5] = "transportStatus"
+    values[5] = .channelvalue.integer_value(_transport_status)
+    return .channelvalue.record_value("crexx.http.response", 1, names, values)
+
+  /** @return parsed HTTP status or zero */
+  status: method = .int
+    return _http_status
+
+  /** @return zero for transport success, otherwise a negative diagnostic status */
+  transport_status: method = .int
+    return _transport_status
+
+  /** @return true only when transport succeeded and HTTP status is 2xx */
+  succeeded: method = .boolean
+    return _transport_status = 0 & _http_status >= 200 & _http_status < 300
+
+  /** @return buffered decoded response body */
+  body: method = .string
+    return _body
+
+  /** Case-insensitive response-header lookup.
+   * @param name header field name
+   * @return stripped header value or empty string
+   */
+  header: method = .string
+    arg name = .string
+    return _http_header_value(_headers, name)
+
+  /** @return transport, protocol or non-2xx diagnostic */
+  error: method = .string
+    return _error
+
+/** Transferable Level G proxy for a bounded HTTP connection-owner pool. */
+httpclient: interface
+  /** Create one bounded per-origin connection pool.
+   * @param origin absolute http or https origin
+   * @param connections number of single-owner reusable connections
+   * @param admission maximum queued fixed-size admission frames
+   * @param maximum_response maximum buffered response body bytes
+   */
+  pooled: factory
+    arg origin = .string, connections = .int, admission = .int, maximum_response = .int
+  /** Reconstruct a per-task proxy from its canonical client record. */
+  from_channel: factory
+    arg encoded = .channelvalue
+  /** Encode immutable configuration and the admission capability. */
+  to_channel: method = .channelvalue
+  /** Submit one buffered POST through the bounded owner pool.
+   * @param path origin-relative request target
+   * @param body buffered request body
+   * @param content_type request Content-Type
+   * @return independent typed response
+   */
+  post: task = .httpresponse
+    arg path = .string, body = .string, content_type = "application/json"
+  /** Close admission, join connection owners and release pool resources. */
+  close: method = .void
+
+httpclient_impl: class implements .httpclient
+  _origin = .string
+  _host = .string
+  _port = .int
+  _tls = .int
+  _timeout = .int
+  _maximum_response = .int
+  _admission = .int
+  _ingress_reference = .channelvalue
+  _ingress = .byteendpoint
+  _owner_pool = .taskpool
+  _owner_scope = .taskscope
+  _owns_pool = .boolean
+  _closed = .boolean
+
+  pooled: factory
+    arg origin = .string, connections = .int, admission = .int, maximum_response = .int
+    authority = .string
+    call _http_failure_if connections < 1 | connections > 32, "HTTP connection count must be 1..32"
+    call _http_failure_if admission < 1 | admission > 256, "HTTP admission capacity must be 1..256"
+    call _http_failure_if maximum_response < 1 | maximum_response > 8388608, "HTTP response ceiling must be 1..8388608"
+    _origin = origin
+    _timeout = 30000
+    _maximum_response = maximum_response
+    _admission = admission
+    prefix = translate(left(origin, 8))
+    if prefix = "HTTPS://" then do
+      _tls = 1
+      _port = 443
+      authority = substr(origin, 9)
+    end
+    else if translate(left(origin, 7)) = "HTTP://" then do
+      _tls = 0
+      _port = 80
+      authority = substr(origin, 8)
+    end
+    else call _http_failure "HTTP origin must start with http:// or https://"
+    slash = pos("/", authority)
+    if slash > 0 then authority = left(authority, slash - 1)
+    colon = lastpos(":", authority)
+    if colon > 0 then do
+      port_text = substr(authority, colon + 1)
+      call _http_failure_if datatype(port_text, "W") = 0, "HTTP origin port is invalid"
+      _port = port_text
+      _host = left(authority, colon - 1)
+    end
+    else _host = authority
+    call _http_failure_if _host = "" | _port < 1 | _port > 65535, "HTTP origin authority is invalid"
+    _ingress = .byteendpoint.memory(3, admission * 192)
+    _ingress_reference = _ingress.provider_reference()
+    _owner_pool = .taskpool.local(connections, connections)
+    _owner_scope = .taskscope.collectall(_owner_pool, -1)
+    do index = 1 to connections
+      target = task .rxfnsg..httpconnectionowner(_host, _port, _tls, _timeout, maximum_response, _ingress_reference)
+      child = _owner_scope.submit(target, .channelvalue.null_value())
+    end
+    _owns_pool = 1
+    _closed = 0
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _origin = encoded.field("origin").as_string()
+    _host = encoded.field("host").as_string()
+    _port = encoded.field("port").as_integer()
+    _tls = encoded.field("tls").as_integer()
+    _timeout = encoded.field("timeout").as_integer()
+    _maximum_response = encoded.field("maximumResponse").as_integer()
+    _admission = encoded.field("admission").as_integer()
+    _ingress_reference = encoded.field("ingress")
+    _ingress = .byteendpoint.from_reference(_ingress_reference)
+    _owns_pool = 0
+    _closed = 0
+    return
+
+  to_channel: method = .channelvalue
+    call _http_failure_if _closed, "HTTP client is closed"
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "admission"
+    values[1] = .channelvalue.integer_value(_admission)
+    names[2] = "host"
+    values[2] = .channelvalue.string_value(_host)
+    names[3] = "ingress"
+    values[3] = _ingress_reference
+    names[4] = "maximumResponse"
+    values[4] = .channelvalue.integer_value(_maximum_response)
+    names[5] = "origin"
+    values[5] = .channelvalue.string_value(_origin)
+    names[6] = "port"
+    values[6] = .channelvalue.integer_value(_port)
+    names[7] = "timeout"
+    values[7] = .channelvalue.integer_value(_timeout)
+    names[8] = "tls"
+    values[8] = .channelvalue.integer_value(_tls)
+    return .channelvalue.record_value("crexx.http.client", 1, names, values)
+
+  post: task = .httpresponse
+    arg path = .string, body = .string, content_type = "application/json"
+    request_wire = _http_request_wire(path, body, content_type)
+    call _http_failure_if binlength(request_wire) > 8388608, "HTTP buffered request exceeds the F1g-B ceiling"
+    request_endpoint = .byteendpoint.memory(3, binlength(request_wire))
+    response_capacity = _maximum_response + 131072
+    response_endpoint = .byteendpoint.memory(3, response_capacity)
+    request_reference = request_endpoint.provider_reference()
+    response_reference = response_endpoint.provider_reference()
+    call _http_endpoint_write request_endpoint, request_wire
+    call request_endpoint.half_close(2)
+    admission_frame = _http_admission_frame(request_reference, response_reference, binlength(request_wire))
+    call _http_endpoint_write _ingress, admission_frame
+    response_header = _http_endpoint_read_exact(response_endpoint, 40)
+    if binlength(response_header) <> 40 then call _http_failure "HTTP response header frame is truncated"
+    header_length = <at..int>(16) response_header
+    body_length = <at..int>(24) response_header
+    error_length = <at..int>(32) response_header
+    call _http_failure_if header_length < 0 | body_length < 0 | error_length < 0, "HTTP response frame contains a negative length"
+    call _http_failure_if body_length > _maximum_response, "HTTP response exceeds the configured ceiling"
+    payload_length = header_length + body_length + error_length
+    response_payload = _http_endpoint_read_exact(response_endpoint, payload_length)
+    call _http_failure_if binlength(response_payload) <> payload_length, "HTTP response payload frame is truncated"
+    response_header = binconcat(response_header, response_payload)
+    call request_endpoint.close()
+    call response_endpoint.close()
+    return .httpresponse.from_wire(response_header)
+
+  close: method = .void
+    if _closed then return
+    if _owns_pool then do
+      call _ingress.half_close(2)
+      call _owner_scope.finish()
+      call _owner_pool.close()
+    end
+    else call _ingress.close()
+    _closed = 1
+    return
+
+_http_failure_if: procedure
+  arg condition = .boolean, message = .string
+  if condition then call _http_failure message
+  return
+
+/** One long-lived owner; its socket integer never leaves this execution. */
+httpconnectionowner: class implements .taskwork
+  _host = .string
+  _port = .int
+  _tls = .int
+  _timeout = .int
+  _maximum_response = .int
+  _ingress_reference = .channelvalue
+  _socket = .int
+  _last_transport = .int
+  _last_error = .string
+
+  *: factory
+    arg host = .string, port = .int, tls = .int, timeout = .int, maximum_response = .int, ingress_reference = .channelvalue
+    _host = host
+    _port = port
+    _tls = tls
+    _timeout = timeout
+    _maximum_response = maximum_response
+    _ingress_reference = ingress_reference
+    _socket = 0
+    _last_transport = 0
+    _last_error = ""
+    return
+
+  run: method = .channelvalue
+    arg ignored = .channelvalue, context = .taskcontext
+    ingress = .byteendpoint.from_reference(_ingress_reference)
+    completed = 0
+    do forever
+      descriptor = _http_endpoint_read_exact(ingress, 192)
+      if binlength(descriptor) = 0 then leave
+      if binlength(descriptor) <> 192 then call _http_failure "HTTP admission frame is truncated"
+      request_reference = binsubstr(descriptor, 1, 92)
+      response_reference = binsubstr(descriptor, 93, 92)
+      request_length = <at..int>(184) descriptor
+      if request_length < 24 | request_length > 8388608 then call _http_failure "HTTP request frame length is invalid"
+      request_endpoint = .byteendpoint.from_encoded_reference(request_reference)
+      response_endpoint = .byteendpoint.from_encoded_reference(response_reference)
+      request_wire = _http_endpoint_read_exact(request_endpoint, request_length)
+      call request_endpoint.close()
+      if binlength(request_wire) <> request_length then response_wire = _http_response_wire(-40, 0, "", "", "HTTP request frame is truncated")
+      else response_wire = perform(request_wire)
+      call _http_endpoint_write response_endpoint, response_wire
+      call response_endpoint.half_close(2)
+      call response_endpoint.close()
+      completed = completed + 1
+    end
+    if _socket > 0 then drop_rc = socketclose(_socket)
+    _socket = 0
+    call ingress.close()
+    return .channelvalue.integer_value(completed)
+
+  perform: method = .binary
+    arg wire = .binary
+    path_length = <at..int>(0) wire
+    body_length = <at..int>(8) wire
+    content_type_length = <at..int>(16) wire
+    total_length = 24 + path_length + body_length + content_type_length
+    if path_length < 0 | body_length < 0 | content_type_length < 0 | total_length <> binlength(wire) then return _http_response_wire(-41, 0, "", "", "HTTP request frame fields are invalid")
+    path = binsubstr(wire, 25, path_length) as .string
+    body = binsubstr(wire, 25 + path_length, body_length) as .string
+    content_type = binsubstr(wire, 25 + path_length + body_length, content_type_length) as .string
+    if connect_socket() <> 0 then return _http_response_wire(_last_transport, 0, "", "", _last_error)
+    request = _http_build_request(_host, _port, path, body, content_type)
+    sent = socketsend(_socket, request)
+    if sent <> binlength(request as .binary) then do
+      _last_transport = -4
+      _last_error = "HTTP socket send failed: " || socketerror(_socket)
+      call discard_socket()
+      return _http_response_wire(_last_transport, 0, "", "", _last_error)
+    end
+    response = read_response()
+    if _last_transport <> 0 then return _http_response_wire(_last_transport, 0, "", "", _last_error)
+    body_start = _http_body_start(response)
+    if body_start = 0 then do
+      call discard_socket()
+      return _http_response_wire(-20, 0, "", "", "HTTP response has no header/body boundary")
+    end
+    headers = left(response, body_start - 1)
+    response_body = substr(response, body_start)
+    if pos("CHUNKED", translate(_http_header_value(headers, "Transfer-Encoding"))) > 0 then response_body = _http_decode_chunked(response_body)
+    else do
+      content_length = _http_content_length(headers)
+      if content_length >= 0 then response_body = binsubstr(response_body as .binary, 1, content_length) as .string
+    end
+    http_status = _http_status_code(response)
+    if http_status = 0 then do
+      call discard_socket()
+      return _http_response_wire(-21, 0, headers, response_body, "HTTP response status is invalid")
+    end
+    if binlength(response_body as .binary) > _maximum_response then do
+      call discard_socket()
+      return _http_response_wire(-22, http_status, headers, "", "HTTP response exceeds the configured ceiling")
+    end
+    if translate(_http_header_value(headers, "Connection")) = "CLOSE" then call discard_socket()
+    if http_status < 200 | http_status >= 300 then error = "HTTP status " || http_status
+    else error = ""
+    return _http_response_wire(0, http_status, headers, response_body, error)
+
+  connect_socket: method = .int
+    if _socket > 0 then return 0
+    _socket = socketcreate()
+    if _socket <= 0 then do
+      _last_transport = -1
+      _last_error = "HTTP socketcreate failed"
+      return _last_transport
+    end
+    if sockettimeout(_socket, _timeout) <> 0 then do
+      _last_transport = -2
+      _last_error = "HTTP sockettimeout failed: " || socketerror(_socket)
+      call discard_socket()
+      return _last_transport
+    end
+    if _tls then status = socketconnecttls(_socket, _host, _port)
+    else status = socketconnect(_socket, _host, _port)
+    if status <> 0 then do
+      _last_transport = -3
+      _last_error = "HTTP socket connect failed: " || socketerror(_socket)
+      call discard_socket()
+      return _last_transport
+    end
+    _last_transport = 0
+    _last_error = ""
+    return 0
+
+  read_response: method = .string
+    response = ""
+    _last_transport = 0
+    _last_error = ""
+    do forever
+      chunk = socketrecv(_socket, 8192)
+      state = socketstatus(_socket)
+      if length(chunk) > 0 then response = response || chunk
+      if binlength(response as .binary) > _maximum_response + 65536 then do
+        _last_transport = -22
+        _last_error = "HTTP response exceeds the configured ceiling"
+        call discard_socket()
+        return response
+      end
+      if _http_response_complete(response) then return response
+      if state = 1 then do
+        call discard_socket()
+        if _http_body_start(response) > 0 then return response
+        _last_transport = -5
+        _last_error = "HTTP response ended before its headers"
+        return response
+      end
+      if state = 2 then do
+        _last_transport = -6
+        _last_error = "HTTP response timed out"
+        call discard_socket()
+        return response
+      end
+      if state = 3 then do
+        _last_transport = -7
+        _last_error = "HTTP response would block"
+        call discard_socket()
+        return response
+      end
+      if state < 0 | length(chunk) = 0 then do
+        _last_transport = -8
+        _last_error = "HTTP socket receive failed: " || socketerror(_socket)
+        call discard_socket()
+        return response
+      end
+    end
+
+  discard_socket: method = .void
+    if _socket > 0 then drop_rc = socketclose(_socket)
+    _socket = 0
+    return
