@@ -69,9 +69,4 @@ work, or `async`/`await` suspended frames.
 - the service/actor implementation behind `.taskscope.ask`;
 - the open-host protocol and a public provider-plugin ABI;
 - event, topic and projection libraries;
-- pool saturation telemetry;
-- whether the synchronous and concurrent HTTP clients should share a common
-  Level B protocol/framing core; and
-- whether existing LLM provider classes should migrate to the concurrent HTTP
-  client.
-
+- pool saturation telemetry.

@@ -28,7 +28,7 @@ not reproduced as the current control model.
 | CONC-13 | open-host and extension providers | reserved | provider type `3` and public plugin ABI unavailable | select protocol from interoperability evidence and prove a non-Rexx actor |
 | CONC-14 | pool saturation telemetry | reserved | `queued()` and `running()` are unsupported | specify snapshot semantics and provider portability before implementation |
 | CONC-15 | stabilization and transfer tuning | active as evidence-led follow-up | binding cache complete; wider payload/copy work open | route timing through performance governance without moving product ownership there |
-| CONC-16 | HTTP implementation rationalisation | decision pending | two independent clients exist; LLM providers use the synchronous one | compare retention, common-core extraction and migration options before code changes |
+| CONC-16 | HTTP implementation rationalisation and server | selected; implementation pending | one private Level B HTTP core and one public Level G client/server surface approved | implement and qualify the client consolidation and bounded clear-text server without changing concurrency semantics |
 
 The evidence behind each status is reconciled in
 [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md). A declaration by itself
@@ -153,15 +153,33 @@ The repository currently has:
 - concurrent Level G `.rxfnsg..httpclient`, implemented independently over
   tasks, endpoints and `rxsocket`.
 
-Before changing either implementation:
+The selected architecture is:
 
-- [ ] compare retaining two stacks with extracting a shared Level B
-  request/response framing and codec core;
-- [ ] identify source-compatibility and package layering constraints;
-- [ ] decide whether the LLM providers should remain synchronous, accept an
-  injected transport, or migrate to the concurrent client; and
-- [ ] require equivalent protocol, TLS, malformed-response and portability QA
-  for the selected architecture.
+- [x] retain one private, binary-oriented Level B request/response framing,
+  parsing and codec core;
+- [x] expose HTTP only through the Level G client and server classes, removing
+  the independent public Level B convenience client after its Level G LLM
+  consumers migrate;
+- [x] let ordinary Level G client calls use the same task methods and bounded
+  connection owners as explicitly parallel calls;
+- [x] implement a controller-owned clear-text HTTP/1.1 server whose accepted
+  sockets never cross executions;
+- [x] dispatch complete `.httprequest` values to sealed factories whose user
+  classes implement `.httpservice .taskwork`; `.httpservice` supplies the
+  canonical typed dispatch adapter, users implement `handle`, and the class
+  binds `.taskwork.run` to that adapter with one explicit method because the
+  language does not provide interface inheritance;
+- [x] leave `.taskscope.ask`, `.serviceref`, compiler, RXAS/RXBIN, RXVM and the
+  socket instruction/API surface unchanged; and
+- [ ] require equivalent protocol, TLS-client, malformed-message, client/server
+  integration, both-VM, optimizer, sanitizer and governed Release evidence.
+
+The initial server is bounded, controller-owned and buffered. It supports
+clear-text HTTP/1.1 only. Server TLS, HTTP/2, WebSockets, detached/background
+serving and server response streaming require later proposals. Without a
+multi-socket readiness primitive, the first server uses bounded nonblocking
+scans plus short blocking waits; idle CPU and response latency are explicit
+acceptance evidence rather than assumed properties.
 
 ## Historical evidence
 

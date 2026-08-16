@@ -8,6 +8,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
+  ts_http_service_contract
   ts_llm_ollama
   ts_llm_providers
 )
@@ -41,6 +42,8 @@ set_tests_properties(ts_llm_ollama_noopt ts_llm_ollama_opt
   PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxfnsg llm ollama helpers")
 set_tests_properties(ts_llm_providers_noopt ts_llm_providers_opt
   PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxfnsg llm provider helpers")
+set_tests_properties(ts_http_service_contract_noopt ts_http_service_contract_opt
+  PROPERTIES PASS_REGULAR_EXPRESSION "PASS: Level G HTTP service interface supplies the canonical dispatch adapter")
 
 crexx_label_smoke_tests(
         ts_llm_providers_noopt

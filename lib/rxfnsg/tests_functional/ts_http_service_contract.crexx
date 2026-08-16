@@ -1,0 +1,96 @@
+options levelg
+
+import concurrency
+
+httprequest: class
+  _value = .int
+
+  new: factory
+    arg value = .int
+    _value = value
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _value = encoded.as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    return .channelvalue.integer_value(_value)
+
+  value: method = .int
+    return _value
+
+httpresponse: class
+  _value = .int
+
+  new: factory
+    arg value = .int
+    _value = value
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _value = encoded.as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    return .channelvalue.integer_value(_value)
+
+  value: method = .int
+    return _value
+
+httpservice: interface
+  handle: method = .httpresponse
+    arg request = .httprequest, context = .taskcontext
+
+  dispatch: method = .channelvalue
+    arg encoded = .channelvalue, context = .taskcontext
+    request = .httprequest.from_channel(encoded)
+    response = handle(request, context)
+    return response.to_channel()
+
+testservice: class implements .httpservice .taskwork
+  _base = .int
+
+  *: factory
+    arg base = .int
+    _base = base
+    return
+
+  handle: method = .httpresponse
+    arg request = .httprequest, context = .taskcontext
+    if context.cancellation_requested() then return .httpresponse.new(-1)
+    return .httpresponse.new(_base + request.value())
+
+  run: method = .channelvalue
+    arg encoded = .channelvalue, context = .taskcontext
+    service = self as .httpservice
+    return service.dispatch(encoded, context)
+
+main: procedure = .int
+  pool = .taskpool.local(1, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  target = task .testservice(40)
+  child = scope.submit(target, .httprequest.new(2).to_channel())
+  completion = child.wait(-1)
+  if completion.succeeded() = 0 then do
+    say "FAIL: HTTP service adapter task failed" completion.error_code() completion.message()
+    call scope.abort(.channelvalue.string_value("contract failed"))
+    call pool.close()
+    return 1
+  end
+
+  response = .httpresponse.from_channel(completion.value())
+  call scope.finish()
+  call pool.close()
+
+  if response.value() <> 42 then do
+    say "FAIL: HTTP service adapter returned" response.value()
+    return 1
+  end
+
+  say "PASS: Level G HTTP service interface supplies the canonical dispatch adapter"
+  return 0
+
+exit main()
