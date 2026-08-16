@@ -120,3 +120,43 @@ crexx_label_smoke_tests(
         testJSON_noopt
         testOS_noopt
 )
+
+# The concurrency book examples are executable documentation. Keep every full
+# source program on the normal compile, assemble, link and both-VM path in both
+# optimization modes.
+set(CONCURRENCY_DOC_EXAMPLES
+  concurrency_basic
+  concurrency_providers
+  concurrency_transferable_objects
+  concurrency_taskwork
+)
+set(CONCURRENCY_DOC_EXAMPLE_DIR
+  ${CMAKE_SOURCE_DIR}/docs/books/crexx_programming_guide/examples)
+
+add_custom_target(concurrency_doc_examples)
+add_dependencies(testclasses concurrency_doc_examples)
+
+set(_concurrency_doc_runners rxbvm)
+if(TARGET rxtvm)
+  list(APPEND _concurrency_doc_runners rxtvm)
+endif()
+
+foreach(_example IN LISTS CONCURRENCY_DOC_EXAMPLES)
+  set(_example_source "${CONCURRENCY_DOC_EXAMPLE_DIR}/${_example}.crexx")
+  foreach(_runner IN LISTS _concurrency_doc_runners)
+    crexx_add_rexx_opt_matrix(
+      LINKED_ALL_MODES
+      NAME "docs_${_example}_${_runner}"
+      SOURCE "${_example_source}"
+      TARGET_GROUP concurrency_doc_examples
+      RUNNER "${_runner}"
+      IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+      RXC_FLAGS -x
+      DEPENDS library classlib "${_example_source}"
+      RUNTIME_ARGS ${CLASSLIB_RUNTIMES}
+      TEST_LABELS docs concurrency levelg linked "${_runner}"
+      REQUIRED_OUTPUT_REGEX "PASS:"
+      FORBIDDEN_OUTPUT_REGEX "FAIL:"
+    )
+  endforeach()
+endforeach()

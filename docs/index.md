@@ -23,7 +23,9 @@ designs.
 ## Language
 
 - [Language reference](books/crexx_language_reference/about.md)
+- [Concurrency language reference](books/crexx_language_reference/concurrency.md)
 - [Level B tutorial](books/crexx_programming_guide/levelb_tutorial.md)
+- [Concurrent programming](books/crexx_programming_guide/concurrency.md)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)

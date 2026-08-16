@@ -80,8 +80,8 @@ the enduring reference marks it supported.
   and executable tests.
 - [x] Publish `docs/ai-context/CREXX_CONCURRENCY.md` as the holistic maintainer
   and AI authority.
-- [ ] Publish a programming-guide chapter with approachable, runnable examples.
-- [ ] Publish a formal language-reference chapter with positive and negative
+- [x] Publish a programming-guide chapter with approachable, runnable examples.
+- [x] Publish a formal language-reference chapter with positive and negative
   syntax examples.
 - [ ] Publish the Level B concurrency class guide and complete RexxDoc coverage.
 - [ ] Publish the current concurrent HTTP guide, including streaming and

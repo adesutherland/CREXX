@@ -36,6 +36,7 @@ snapshot. When either changes, update this matrix in the same change.
 | Transferable task methods | Implemented and directly tested | `gate_f_task_method_import_*` compiles separate modules, assembles, links, runs both optimization modes and reconstructs exact `to_channel`/`from_channel` arguments and results. Receiver rules are statically enforced. |
 | `.taskwork` factory targets | Implemented and directly tested | `gate_f_taskwork_import_*` proves sealed metadata across module boundaries and both VM families. Negative tests require the `.taskwork` adapter and transferable factory arguments. |
 | Structured scope safety | Implemented and directly tested | Negative compiler tests cover escaping pending results, mutation while pending, reference/exposed arguments, nested waits, reused scopes and invalid result types. Direct self-recursion is lowered as an ordinary synchronous procedure call; blocking waits across distinct task callables remain rejected. |
+| Enduring documentation examples | Implemented and directly tested | Four sources under `docs/books/crexx_programming_guide/examples/` cover simple calls, explicit local/process pools, transferable objects and `.taskwork`; CMake compiles, assembles, links and runs them on both VMs in both optimization modes. |
 
 Historical `gate_f_*` identifiers above are executable test names, not public
 feature names.
@@ -105,6 +106,4 @@ release decision.
    already signals status `19`.
 3. Complete public RexxDoc coverage and generated API inclusion for
    `Concurrency.crexx` and the public concurrent HTTP classes.
-4. Compile and run the enduring documentation examples through the toolchain,
-   rather than treating snippets as prose-only examples.
-5. Complete Linux and Windows qualification before public portability claims.
+4. Complete Linux and Windows qualification before public portability claims.

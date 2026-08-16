@@ -1,0 +1,38 @@
+options levelg comments_dash
+namespace concurrency_providers
+
+square: task = .int
+  arg value = .int
+  return value * value
+
+increment: task = .int
+  arg value = .int
+  return value + 1
+
+run_pair: procedure = .int
+  arg pool = .taskpool
+
+  scope = .taskscope.collectall(pool, 60000)
+  answer = do parallel using scope
+    squared = square(6)
+    next = increment(5)
+    leave with squared + next
+  end
+  return answer
+
+main: procedure = .int
+  -- Two local workers permit both ready tasks to execute concurrently.
+  local_pool = .taskpool.local(2, 8)
+  local_answer = run_pair(local_pool)
+  call local_pool.close()
+  if local_answer <> 42 then return 1
+
+  -- The same source surface selects isolated worker processes.
+  -- Capacity one deliberately serializes the two task bodies.
+  process_pool = .taskpool.process(1, 8)
+  process_answer = run_pair(process_pool)
+  call process_pool.close()
+  if process_answer <> 42 then return 2
+
+  say "PASS: explicit concurrency provider example"
+  return 0
