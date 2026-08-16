@@ -31,8 +31,8 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 | --- | --- | --- |
 | QA-A test readiness | complete | solution-point review complete, direct gaps closed, enduring CTest manifest and frozen platform runners ready |
 | QA-B independent Mac closeout | active | correctness, sanitizer, stress, Release, install and portable-package proof pass; quiet AC performance replay remains |
-| QA-C Linux qualification | pending | clean frozen build, conformance matrix and install/package proof retained |
-| QA-D Windows qualification | pending | clean frozen build, conformance matrix and install/package proof retained |
+| QA-C Linux qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
+| QA-D Windows qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
 | QA-E publication decision | pending | limitations/packages reconciled and Adrian explicitly selects unpublished, published initial or deferred |
 
 ## Solution-point ledger
@@ -121,6 +121,15 @@ is diagnostic evidence only. A quiet AC replay of the exact retained manifests
 remains the sole open Mac QA-B item; the earlier accepted AC baselines are not
 invalidated. The diagnostic bundle is
 [`2026-08-16-initial-concurrency-mac-closeout`](../performance/evidence/2026-08-16-initial-concurrency-mac-closeout/).
+
+## Independent continuation
+
+[`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md) is the
+paste-ready brief for a fresh agent. It requires an independent SP-01 through
+SP-09 evidence review, the outstanding quiet-AC replay, and native execution
+of the frozen Linux and Windows runners before QA-E is presented. Target hosts
+remain validation-only: evidence and minimal reproducers return to Mac, where
+any repair and full local replay occur at a new exact commit.
 
 ## Deferred feature proposals
 

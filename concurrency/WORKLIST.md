@@ -130,7 +130,8 @@ The exact clean-commit runners and expected-result rules are versioned in
 [`qa/`](qa/). They configure fresh out-of-tree builds, enable live HTTP/TLS
 verification, execute the maintained labels plus stress and broad CTest, and
 prove installed and extracted-package toolchains without editing the target
-checkout.
+checkout. The next-agent execution and independent review brief is
+[`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md).
 
 - [ ] Build the ordinary product and concurrency libraries on supported Linux,
   Windows and Mac toolchains.

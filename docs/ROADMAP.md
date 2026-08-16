@@ -130,22 +130,27 @@ bounded channels and endpoints, child-process redirection, the Level B control
 classes, Level G task/parallel syntax, and the concurrent HTTP client/server
 and LLM transports over one private protocol backend.
 
-Release 1 concurrency work is now a bounded QA and publication programme:
+Release 1 concurrency work is now a bounded QA and publication programme. The
+target-host commands and evidence rules are frozen in
+[`concurrency/qa/`](../concurrency/qa/), and the independent continuation is
+defined in
+[`INDEPENDENT-REVIEW-PROMPT.md`](../concurrency/qa/INDEPENDENT-REVIEW-PROMPT.md).
 
-| Gate | Work | Exit condition |
-| --- | --- | --- |
-| QA-A: test readiness | Independently review every solution point, close direct test gaps, maintain the labelled matrix in [`concurrency/TEST-MANIFEST.md`](../concurrency/TEST-MANIFEST.md), and prepare exact platform commands. | The frozen candidate is test-ready on Mac and every solution point has a source/test/risk disposition. |
-| QA-B: Mac closeout | Run focused Debug/Release, both applicable VM modes, optimized/unoptimized toolchain paths, sanitizer, stress and broad regression. | The complete prepared matrix passes and retained evidence names any accepted limitation. |
-| QA-C: Linux qualification | Build and run the frozen matrix plus install/package smoke tests on the supported Linux host. | Linux results are complete; defects have been repaired on Mac and replayed, not developed interactively on the slow host. |
-| QA-D: Windows qualification | Run the same frozen matrix and package checks on the supported Windows toolchain and TLS/process backend. | Windows results are complete under the same defect-return discipline. |
-| QA-E: publication decision | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian explicitly selects unpublished, published initial, or deferred status; passing QA alone does not imply stability. |
+| Gate | Status | Work | Exit condition |
+| --- | --- | --- | --- |
+| QA-A: test readiness | complete | Independently review every solution point, close direct test gaps, maintain the labelled matrix in [`concurrency/TEST-MANIFEST.md`](../concurrency/TEST-MANIFEST.md), and prepare exact platform commands. | The frozen candidate is test-ready on Mac and every solution point has a source/test/risk disposition. |
+| QA-B: Mac closeout | active | Run focused Debug/Release, both applicable VM modes, optimized/unoptimized toolchain paths, sanitizer, stress, broad regression and the governed performance comparison. | Correctness, sanitizer, stress, install and package proof pass. The retained performance run is diagnostic because the host was on battery; replaying its exact manifests on quiet AC power is the remaining item. |
+| QA-C: Linux qualification | ready, not run | Build and run the frozen matrix plus install/package smoke tests on the supported Linux host. | Linux results are complete; defects have been repaired on Mac and replayed, not developed interactively on the slow host. |
+| QA-D: Windows qualification | ready, not run | Run the same frozen matrix and package checks on the supported Windows toolchain and TLS/process backend. | Windows results are complete under the same defect-return discipline. |
+| QA-E: publication decision | pending | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian explicitly selects unpublished, published initial, or deferred status; passing QA alone does not imply stability. |
 
 Feature development remains frozen during this programme. Concrete services
 and `.taskscope.ask()`, provider type `3`, a public provider-plugin ABI, pool
 telemetry, server TLS/readiness/background lifecycle, HTTP/2 and WebSockets are
 post-Release-1 candidates requiring separate design approval. Shared writable
 VM state, detached ordinary tasks and public worker identities remain outside
-the model.
+the model. These candidates are recorded here so they are not lost; they are
+not an approved automatic sequence after QA-E.
 
 ## Library, Plugin, And Host Integration Roadmap
 
