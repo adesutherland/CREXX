@@ -14,8 +14,10 @@ Use these sources in order:
    `docs/ai-context/CREXX_CONCURRENCY.md`;
 3. the language, programming and library books under `docs/books/`;
 4. [`WORKLIST.md`](WORKLIST.md) for current status and remaining work;
-5. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
-6. [`history/`](history/) and `performance/evidence/` for dated provenance.
+5. [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) for the current
+   source-to-test truth matrix;
+6. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
+7. [`history/`](history/) and `performance/evidence/` for dated provenance.
 
 The historical records contain the former Gate E/F names. Those names identify
 the development sequence only; they are not user-facing feature names or
@@ -46,6 +48,7 @@ An implemented capability is not automatically portable, published or stable.
 | Maintainer or AI agent | `docs/ai-context/CREXX_CONCURRENCY.md` |
 | RXAS author | `docs/reference/rxas/instructions/09-io-sockets-processes-and-time.md` |
 | Current implementation and publication status | [`WORKLIST.md`](WORKLIST.md) |
+| Source-to-test capability truth | [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) |
 
 Release-specific availability belongs in `docs/releases/`. Benchmark results
 and regression guards remain under `performance/` and link back here when they
@@ -63,4 +66,3 @@ affect concurrency work.
   compiler lowering change.
 - Keep dated timings and raw logs in their evidence bundles. Summarize only the
   resulting status here.
-

@@ -30,6 +30,10 @@ not reproduced as the current control model.
 | CONC-15 | stabilization and transfer tuning | active as evidence-led follow-up | binding cache complete; wider payload/copy work open | route timing through performance governance without moving product ownership there |
 | CONC-16 | HTTP implementation rationalisation | decision pending | two independent clients exist; LLM providers use the synchronous one | compare retention, common-core extraction and migration options before code changes |
 
+The evidence behind each status is reconciled in
+[`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md). A declaration by itself
+does not count as an implemented or supported capability.
+
 ## Implemented surface
 
 - [x] `chanopen`, `chanstart`, `chanwait`, `chancancel` and `chanclose` use
@@ -72,7 +76,7 @@ the enduring reference marks it supported.
 
 ## CONC-10 documentation plan
 
-- [ ] Reconcile every public declaration and advertised behavior against source
+- [x] Reconcile every public declaration and advertised behavior against source
   and executable tests.
 - [ ] Publish `docs/ai-context/CREXX_CONCURRENCY.md` as the holistic maintainer
   and AI authority.
@@ -145,4 +149,3 @@ The former development plan and exact Mac closeout records are indexed in
 [`history/README.md`](history/README.md). Raw timing and QA artifacts remain
 under `performance/evidence/` because they were produced under performance
 governance and must retain their original paths.
-
