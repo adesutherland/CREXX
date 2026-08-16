@@ -307,12 +307,60 @@ main: procedure = .int
 
     say
 
+    /*--------------------------------------------------------*/
+    /* 9. References versus copies                            */
+    /*--------------------------------------------------------*/
+
+    say "9. References versus copies"
+    say "---------------------------"
+
+    a = .MeasurementSeries("Temperature", "C")
+
+    call a.add(20)
+    call a.add(22)
+
+    b = a.copy()
+    c = b
+
+    say "Initial values:"
+    say "  a:" a.latest()
+    say "  b:" b.latest()
+    say "  c:" c.latest()
+
+    call a.add(25)
+
+    say
+    say "After: call a.add(25)"
+    say
+    say "  a:" a.latest()
+    say "  b:" b.latest()
+    say "  c:" c.latest()
+
+    call c.add(99)
+
+    say
+    say "After: call c.add(99)"
+    say
+    say "  a:" a.latest()
+    say "  b:" b.latest()
+    say "  c:" c.latest()
+
+    say
+    say "Remember:"
+    say
+    say "  b = a.copy()"
+    say
+    say "creates a NEW independent object."
+    say
+    say "  c = b"
+    say
+    say "copies only the object reference."
 
     /*--------------------------------------------------------*/
-    /* 9. Clear affects only the receiving object            */
+    /* 10. Clear affects only the receiving object            */
     /*--------------------------------------------------------*/
 
-    say "9. Clearing one object"
+    say "10. Clearing one object"
     say "----------------------"
 
     say "Before clear:"
@@ -331,10 +379,10 @@ main: procedure = .int
 
 
     /*--------------------------------------------------------*/
-    /* 10. Summary                                           */
+    /* 11. Summary                                           */
     /*--------------------------------------------------------*/
 
-    say "10. Summary"
+    say "11. Summary"
     say "-----------"
 
     say
@@ -366,9 +414,40 @@ main: procedure = .int
 
 return 0
 
+/*
+ * ---------------------------------------------------------------------------
+ * Object lifetime
+ * ---------------------------------------------------------------------------
+ *
+ * An object's lifetime is determined by ownership, not by where the object
+ * was created.
+ *
+ * An object created inside a procedure or method usually disappears when that
+ * procedure or method returns because its local variables are destroyed.
+ *
+ * However, an object continues to exist when ownership is transferred.
+ *
+ * Examples:
+ *
+ *     - returning the object to the caller;
+ *     - assigning the object to another variable;
+ *     - storing the object in another object;
+ *     - storing the object in a namespace or module variable.
+ *
+ * CREXX does not provide a destructor method.
+ *
+ * When an object is no longer owned, the VM automatically releases its
+ * attributes, arrays, strings, binaries, and nested objects.
+ *
+ * Classes that manage external resources (for example files, sockets, or
+ * native resources) may still require an explicit close(), release(), or
+ * dispose() method.
+ *
+ * ---------------------------------------------------------------------------
+ */
 
 /* -----------------------------------------------------------------------------
- * The MeasurementSeries class.
+ * The MeasurementSeries class sample.
  *
  * A class is a template or blueprint for creating objects.
  *
@@ -388,7 +467,6 @@ return 0
  * ---------------------------------------------------------------------------*/
 
 MeasurementSeries: class
-
 
 /*
  * Attribute declarations.
@@ -481,16 +559,35 @@ MeasurementSeries: class
         _name = name
         _unit = unit
         _count = 0
-
         /*
          * Example of a factory-local working variable.
          *
          * It exists only while this factory invocation is running.
-         * It is not part of the object.
+         *
+         * It is not part of the object and cannot be accessed from other methods.
+         *
+         * If a value should remain part of the object's state, it must be assigned
+         * to an object attribute.
          */
-
+        
         initial_message = .string
         initial_message = "MeasurementSeries created"
+
+        /*
+         * Local variables can also be used as temporary working variables,
+         * counters, or loop indices.
+         *
+         * Example:
+         *
+         *     do i = 1 to 10
+         *         _readings[i] = i * 10
+         *     end
+         *
+         * The loop variable i exists only while the factory executes.
+         *
+         * The _readings array, however, is an object attribute and therefore
+         * remains part of the object after the factory returns.
+         */
 
     return
 
@@ -526,8 +623,7 @@ MeasurementSeries: class
     get: method = .int
         arg position = .int
 
-        if position < 1 | position > _count then
-            return 0
+        if position < 1 | position > _count then return 0
 
     return _readings[position]
 
@@ -548,8 +644,7 @@ MeasurementSeries: class
 
     latest: method = .int
 
-        if _count = 0 then
-            return 0
+        if _count = 0 then return 0
 
     return _readings[_count]
 
@@ -565,14 +660,12 @@ MeasurementSeries: class
 
     minimum: method = .int
 
-        if _count = 0 then
-            return 0
+        if _count = 0 then return 0
 
         result = _readings[1]
 
         do i = 2 to _count
-            if _readings[i] < result then
-                result = _readings[i]
+            if _readings[i] < result then result = _readings[i]
         end
 
     return result
@@ -584,14 +677,12 @@ MeasurementSeries: class
 
     maximum: method = .int
 
-        if _count = 0 then
-            return 0
+        if _count = 0 then return 0
 
         result = _readings[1]
 
         do i = 2 to _count
-            if _readings[i] > result then
-                result = _readings[i]
+            if _readings[i] > result then result = _readings[i]
         end
 
     return result
@@ -675,14 +766,28 @@ MeasurementSeries: class
  *     _count
  *
  * The new object is filled by calling its add() method.
+ *
+ * The lifetime of an object is determined by ownership, not by where
+ * the object was created.
+ *
+ * Here a new MeasurementSeries object is created inside copy(), its
+ * state is initialized from the current object, and the object is then
+ * returned to the caller.
+ *
+ * Returning the object allows the caller to retain it after copy()
+ * finishes. The local variable RESULT disappears when copy() returns,
+ * but the returned object itself survives because the caller now owns
+ * the returned object value.
+ *
+ * The returned object is independent of the original object.
  */
 
-    copy: method = .MeasurementSeries
+copy: method = .MeasurementSeries
 
-        result = .MeasurementSeries(_name, _unit)
+    result = .MeasurementSeries(_name, _unit)
 
-        do i = 1 to _count
-            call result.add(_readings[i])
-        end
+    do i = 1 to _count
+        call result.add(_readings[i])
+    end
 
-    return result
+return result

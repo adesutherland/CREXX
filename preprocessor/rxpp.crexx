@@ -1489,31 +1489,32 @@ newMacros:  procedure=.string
      end
   end
 
-  main_insert=0
-  do kk=1 to out[0]
-     genline=strip(out[kk])
-     genline=changestr("''",genline,"")
-     if left(genline,10)='@.section@' then do
-        call add_section genline
+  main_insert = 0
+  tail_insert = 0
+  source_len  = length(original_call)
+
+  do kk = 1 to out[0]
+     line = changestr("''", out[kk], "")
+     testline = strip(line, 'L')
+     if left(testline, 10) = '@.section@' then do
+        call add_section line
         iterate
      end
-     if left(genline,7)\='@.main@' then iterate
-     main_insert=main_insert+1
-     out[kk]=substr(genline,8)
+     if left(testline, 7) = '@.main@' then do
+        main_insert = main_insert + 1
+        p = pos('@.main@', line)
+        out[kk] = substr(line, p + 7)
+        iterate
+     end
+     if left(testline, 7) = '@.tail@' then do
+        tail_insert = tail_insert + 1
+        if tail_insert = 1 then source[source[0] + 1] = '/* Appended by 'original_call' */'
+        p = pos('@.tail@', line)
+        source[source[0] + 1] = substr(line, p + 7)
+        if rxpp_srcmap_enabled() then source[source[0]] = rxpp_srcmap_span(1, source_len, source[source[0]])
+        iterate
+     end
   end
-  source_len=length(original_call)
-  tail_insert=0
-  do kk=1 to out[0]
-     genline=strip(out[kk])
-     genline=changestr("''",genline,"")
-     if left(genline,7)\='@.tail@' then iterate
-     tail_insert=tail_insert+1
-     source[source[0]+1]="  "
-     if tail_insert=1 then source[source[0]+1]='/* Appended by 'original_call' */'
-     source[source[0]+1]=substr(genline,8)
-     if rxpp_srcmap_enabled() then source[source[0]]=rxpp_srcmap_span(1,source_len,source[source[0]])
-  end
-
   rc= insert_source(linnum+1,out[0]-tail_insert+1)
   inew=linnum+1
   source_len=length(original_call)
@@ -1541,16 +1542,22 @@ return source[linnum]
 
 add_section: procedure
    arg line=.string
-   if left(line,10) \='@.section@' then return
-   section=strip(substr(line,11))
-   if section='' then return
-   section=translate(section,,'@')
-   section_name=word(section,1)
-   section_line=subword(section,2)
+   marker='@.section@'
+   if left(line,length(marker)) \= marker then return
+   /* Everything after @.section@ is:
+    *     section-name@payload
+    * The payload is deliberately NOT stripped because leading
+    * blanks may represent indentation in generated source.
+    */
+   rest=substr(line,length(marker)+1)
+   separator=pos('@',rest)
+   if separator=0 then return
+   section_name=strip(substr(rest,1,separator-1))
+   if section_name='' then return
+   section_line=substr(rest,separator+1)
    call rxqueue 'SETX',section_name
    QUEUE section_line
 return
-
 
 
 

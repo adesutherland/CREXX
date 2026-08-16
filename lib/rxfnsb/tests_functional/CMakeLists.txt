@@ -138,6 +138,7 @@ set(REXXBINS
         ts_rxsocket.rxbin
         ts_socket_tls_live.rxbin
         ts_rxhttp.rxbin
+        ts_afterword.rxbin
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
