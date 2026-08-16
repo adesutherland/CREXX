@@ -45,6 +45,16 @@ To inspect rather than execute a solution point:
 ctest --test-dir cmake-build-debug -N -L '^concurrency-sp04$'
 ```
 
+## Frozen platform replay
+
+QA-C and QA-D use the versioned runners in [`qa/`](qa/), not ad hoc commands on
+the slow qualification hosts. Each runner requires an exact clean commit and
+fresh out-of-tree directories, invokes `concurrency-qa`, verifies every
+solution-point label is non-empty, enables the live HTTP/TLS positive and
+hostname-mismatch cases, repeats the stress label, runs broad CTest and proves
+the installed and packaged toolchain. Platform failures return to Mac for
+repair and full replay at a new exact commit.
+
 ## Solution-point labels
 
 | Solution point | CTest label | Maintained coverage |

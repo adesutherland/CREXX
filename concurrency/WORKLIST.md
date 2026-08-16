@@ -24,7 +24,7 @@ stages and performance evidence are linked rather than reproduced here.
 | CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; initial publication pending | complete portable conformance under CONC-11 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
 | CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; portable publication remains CONC-11 |
-| CONC-11 | solution-point QA, portable conformance and initial publication | active | solution-point review and Mac correctness/sanitizer/install closeout pass; the Mac AC performance replay and Linux/Windows qualification remain | complete QA-A through QA-E in `QA-CLOSEOUT.md` |
+| CONC-11 | solution-point QA, portable conformance and initial publication | active | QA-A is complete and Mac correctness/sanitizer/install closeout passes; exact frozen Linux/Windows runners are ready, while the Mac AC performance replay and platform executions remain | complete QA-B through QA-E in `QA-CLOSEOUT.md` |
 | CONC-12 | services, actors, events and projections | post-Release-1 proposal | `.taskscope.ask` is unsupported | require separate design approval after concurrency closure |
 | CONC-13 | open-host and extension providers | post-Release-1 proposal | provider type `3` and public plugin ABI unavailable | require separate design approval after concurrency closure |
 | CONC-14 | pool saturation telemetry | post-Release-1 proposal | `queued()` and `running()` are unsupported | require separate semantics and portability approval |
@@ -125,6 +125,12 @@ The frozen implementation is reviewed and qualified through QA-A to QA-E in
 [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md). Linux and Windows are validation hosts:
 failures are reduced and repaired on the primary Mac development host, then
 the corrected frozen candidate is replayed on the affected platform.
+
+The exact clean-commit runners and expected-result rules are versioned in
+[`qa/`](qa/). They configure fresh out-of-tree builds, enable live HTTP/TLS
+verification, execute the maintained labels plus stress and broad CTest, and
+prove installed and extracted-package toolchains without editing the target
+checkout.
 
 - [ ] Build the ordinary product and concurrency libraries on supported Linux,
   Windows and Mac toolchains.

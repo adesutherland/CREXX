@@ -29,7 +29,7 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 
 | Gate | Status | Exit evidence |
 | --- | --- | --- |
-| QA-A test readiness | active | solution-point review complete, direct gaps closed, enduring CTest manifest and platform commands ready |
+| QA-A test readiness | complete | solution-point review complete, direct gaps closed, enduring CTest manifest and frozen platform runners ready |
 | QA-B independent Mac closeout | active | correctness, sanitizer, stress, Release, install and portable-package proof pass; quiet AC performance replay remains |
 | QA-C Linux qualification | pending | clean frozen build, conformance matrix and install/package proof retained |
 | QA-D Windows qualification | pending | clean frozen build, conformance matrix and install/package proof retained |
@@ -74,8 +74,9 @@ The complete dispositions and repair record are in
   child-process cases use no shared scratch files, and HTTP fixtures use
   kernel-assigned loopback ports. The last fixed-range HTTP fixture was moved
   to port `0` during this audit.
-- [ ] Produce exact Linux and Windows validation commands and expected-result
-  rules before either slow host is used.
+- [x] Produce exact Linux and Windows validation commands and expected-result
+  rules before either slow host is used. The fail-closed runners, evidence
+  contract and defect-return policy are in [`qa/`](qa/).
 
 Focused Mac evidence for the first two items: build targets
 `testConcurrency` and `testTaskContextEndpoint`; then CTest selected
