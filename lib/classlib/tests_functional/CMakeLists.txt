@@ -160,3 +160,26 @@ foreach(_example IN LISTS CONCURRENCY_DOC_EXAMPLES)
     )
   endforeach()
 endforeach()
+
+# The task context endpoint adapter is reached only inside taskwork. Exercise
+# the public method through the complete compiler, assembler, linker and both
+# applicable VM paths rather than constructing its private implementation.
+add_custom_target(testTaskContextEndpoint)
+add_dependencies(testclasses testTaskContextEndpoint)
+
+foreach(_runner IN LISTS _concurrency_doc_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "testTaskContextEndpoint_${_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/testTaskContextEndpoint.crexx"
+    TARGET_GROUP testTaskContextEndpoint
+    RUNNER "${_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib "${CMAKE_CURRENT_SOURCE_DIR}/testTaskContextEndpoint.crexx"
+    RUNTIME_ARGS ${CLASSLIB_RUNTIMES}
+    TEST_LABELS classlib concurrency levelg taskcontext endpoint linked "${_runner}"
+    REQUIRED_OUTPUT_REGEX "PASS: taskcontext endpoint adapts a type-4 provider reference"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:"
+  )
+endforeach()

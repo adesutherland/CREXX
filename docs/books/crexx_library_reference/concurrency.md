@@ -156,9 +156,10 @@ The context reports:
 - `cancellation_requested()`: cooperative cancellation state; and
 - `trace_identity()`: stable invocation identity.
 
-`endpoint(reference)` adapts a type-4 provider reference, but remains
-provisional until a focused public conformance assertion covers this exact
-method. Use `.byteendpoint.from_reference()` in supported application code.
+`endpoint(reference)` adapts a transferable type-4 provider reference to a
+worker-local `.byteendpoint`. Use it inside `.taskwork.run()` when a task must
+read or write an endpoint owned by its controller; ordinary controller code
+can use `.byteendpoint.from_reference()` directly.
 
 `.taskarguments` and the `submit_arguments()` / `result_*()` methods are
 exposed compiler-lowering bridges. They are documented so generated code is

@@ -1145,9 +1145,10 @@ service-reference and transfer-buffer interfaces. The only runtime bridge is
 the five RXAS instructions. Task targets are sealed numeric/digest descriptors;
 no Rexx procedure-name string or RXPA task API occurs on the dispatch path.
 
-Deliberately reserved operations remain failure-visible. `.taskscope.ask`,
-`.taskcontext.endpoint` and pool statistics return `UNSUPPORTED_OPERATION`
-rather than plausible placeholder data. F1d supplies concrete endpoint and
+Deliberately reserved operations remain failure-visible. `.taskscope.ask` and
+pool statistics return `UNSUPPORTED_OPERATION` rather than plausible
+placeholder data. `.taskcontext.endpoint` adapts a transferable provider
+reference inside taskwork. F1d supplies concrete endpoint and
 child-process integration, F1e the process provider, F1f kind-1 task
 procedures, kind-2 transferable task methods, kind-3 `.taskwork` factories and
 the gated Level G lowering, and F1g the concurrent HTTP consumer.

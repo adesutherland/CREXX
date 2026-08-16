@@ -55,7 +55,7 @@ behavior.
 | `.tasktarget` | Implemented and directly tested through compiler lowering | Public-looking `binding()` is compiler-reserved: applications must use `task target` syntax, not author an 80-byte binding. Linker-sealed validation and its cache are tested in compiler/interpreter suites. |
 | `.taskarguments` | Implemented compiler bridge | This exposed concrete helper carries compiler-lowered argument documents into `submit_arguments()`. It is not the preferred ordinary user API; typed task calls and `.taskwork` targets are. |
 | `.taskwork` | Implemented and directly tested | Advanced users implement `run(request, context)`; task factory targets supply construction arguments separately from the request. |
-| `.taskcontext` | Timeout/cancellation/trace access implemented and used; `endpoint()` has indirect coverage only | HTTP taskwork implementations receive contexts. `endpoint(reference)` delegates to the proven `.byteendpoint.from_reference()` adapter, but this review found no test that directly calls the context method. Keep it provisional until a conformance assertion is added. |
+| `.taskcontext` | Implemented and directly tested | HTTP taskwork implementations receive contexts. `testTaskContextEndpoint.crexx` directly calls `endpoint(reference)` inside taskwork and proves the worker-local adapter can write through the controller's type-4 provider reference on both VMs and optimization modes. |
 | `.channel`, `.channelrequest` | Implemented and directly tested | Bounded start/wait/cancel/close behavior, nonblocking observation, request-specific wait, invalid targets and close rules are exercised. |
 | `.channelvalue` | Implemented and directly tested | Canonical RXCV null, boolean, integer, float, decimal, string, binary, array, record and provider-reference documents are validated, including canonical record ordering and depth limits. |
 | `.channelcodec` | Interface contract implemented; no general codec registry | The exact encode/decode interface exists. Compiler-supported transferable types use their statically resolved `to_channel`/`from_channel` contract; there is no advertised dynamic registry. |
@@ -102,10 +102,6 @@ release decision.
 
 ## Reconciliation gaps to close
 
-1. Add a direct conformance assertion for `.taskcontext.endpoint()` before
-   documenting it as supported.
-2. Add a direct unsupported-contract assertion for `.taskscope.ask()`; source
-   already signals status `19`.
-3. Complete Linux and Windows qualification before public portability claims.
-4. Qualify the HTTP server beyond Mac and decide later proposals for server
+1. Complete Linux and Windows qualification before public portability claims.
+2. Qualify the HTTP server beyond Mac and decide later proposals for server
    TLS, multi-socket readiness, detached lifecycle and streaming handlers.

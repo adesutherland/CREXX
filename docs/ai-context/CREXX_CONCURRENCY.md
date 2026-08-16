@@ -253,7 +253,7 @@ The public declarations and implementations live in
 | `.tasktarget` | Compiler-created sealed descriptor. Applications use `task target` syntax rather than calling `binding()` with hand-authored bytes. |
 | `.taskarguments` | Mutable controller-side compiler lowering helper. It is not the ordinary typed user surface. |
 | `.taskwork` | Advanced receiver contract `run(request, context)`. |
-| `.taskcontext` | Receiver view of remaining timeout, cooperative cancellation and trace identity. `endpoint(reference)` exists but remains provisional until directly covered by conformance. |
+| `.taskcontext` | Receiver view of remaining timeout, cooperative cancellation and trace identity. `endpoint(reference)` reconstructs a worker-local byte endpoint from a transferable type-4 provider reference. |
 | `.channel` | Provider-neutral lifecycle owner over the five RXAS operations. |
 | `.channelrequest` | Non-authority wrapper around one local ticket. |
 | `.channelvalue` | Canonical immutable transfer value. |
@@ -498,7 +498,7 @@ scans with a short idle wait. Server TLS, HTTP/2, WebSockets,
 detached/background lifecycle and streaming handler responses are not
 implemented.
 
-## Deliberately absent or provisional
+## Deliberately absent
 
 Do not document or implement around these as if they exist:
 
@@ -511,9 +511,10 @@ Do not document or implement around these as if they exist:
 - locks, atomics or shared writable VM values; or
 - implicit replay of work with an ambiguous outcome.
 
-`.taskcontext.endpoint()` is present and delegates to the proven endpoint
-reference adapter, but it remains provisional until a direct public-contract
-test is added.
+`.taskcontext.endpoint()` is supported and delegates to the endpoint-reference
+adapter. `testTaskContextEndpoint.crexx` directly exercises the public method
+inside `.taskwork` through `rxc`, `rxas`, `rxlink`, and optimized/unoptimized
+execution on both VM variants.
 
 ## Change discipline
 

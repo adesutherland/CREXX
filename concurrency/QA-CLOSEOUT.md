@@ -52,16 +52,25 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 Each row closes only with a `PASS`, `FIXED` or `DEFERRED` disposition naming
 source reviewed, executable tests, commands/results and residual risk.
 
-## Known QA-A gaps at freeze
+## QA-A gap closure
 
-- add a direct public-contract assertion for `.taskcontext.endpoint()`;
-- add a direct assertion that `.taskscope.ask()` signals unsupported status
-  `19`;
-- replace the grep-derived concurrency test inventory with enduring CTest
+- [x] Add a direct public-contract assertion for `.taskcontext.endpoint()`.
+  `testTaskContextEndpoint.crexx` passes through the full linked toolchain on
+  `rxbvm` and `rxtvm`, optimized and unoptimized.
+- [x] Add a direct assertion that `.taskscope.ask()` signals
+  `CHANNEL_ERROR`, code `26`, unsupported status `19`.
+- [ ] Replace the grep-derived concurrency test inventory with enduring CTest
   labels and one deterministic orchestration entry point;
-- audit platform registration, fixture isolation, timeouts and diagnostics; and
-- produce exact Linux and Windows validation commands and expected-result
+- [ ] Audit platform registration, fixture isolation, timeouts and diagnostics;
+  and
+- [ ] Produce exact Linux and Windows validation commands and expected-result
   rules before either slow host is used.
+
+Focused Mac evidence for the first two items: build targets
+`testConcurrency` and `testTaskContextEndpoint`; then CTest selected
+`testConcurrency_(noopt|opt)` and every `testTaskContextEndpoint_*` case. All
+six executable cases passed on 2026-08-16 (the endpoint matrix covers both VM
+variants and both optimization modes).
 
 ## Deferred feature proposals
 

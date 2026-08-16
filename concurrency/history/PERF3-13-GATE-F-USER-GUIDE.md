@@ -1017,9 +1017,10 @@ opportunity and obligation to exercise `rxc`, `rxas`, `rxlink` and `rxvm`;
 the imported task-method and `.taskwork` conformance tests run that complete
 pipeline in optimized/unoptimized form on both concrete VMs.
 
-The deliberately reserved portions fail explicitly. Service `ask`,
-`.taskcontext.endpoint` and pool statistics report unsupported operation
-rather than returning plausible placeholder data. F1f supplies kind-1 task
+The deliberately reserved portions fail explicitly. Service `ask` and pool
+statistics report unsupported operation rather than returning plausible
+placeholder data. `.taskcontext.endpoint` adapts a transferable endpoint
+reference inside taskwork. F1f supplies kind-1 task
 procedures, kind-2 transferable task methods and kind-3 `.taskwork` factory
 targets through the same local/process classes and completion values. A
 process pool keeps warm isolated worker processes, but creates a fresh cREXX

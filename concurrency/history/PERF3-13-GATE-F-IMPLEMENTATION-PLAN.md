@@ -597,9 +597,10 @@ proves that it contains no RXPA task call or procedure-name dispatch string.
 The boundary is explicit rather than simulated. `.taskpool.process` reaches
 core provider type `2`; F1e now supplies that provider with the same Level B
 pool/scope/task contract as `.taskpool.local`.
-`.taskscope.ask` and `.taskcontext.endpoint` report `UNSUPPORTED_OPERATION`.
-F1f now supplies compiler/runtime `.taskwork` kind-3 dispatch. Pool `queued()`
-and `running()` likewise report unsupported
+`.taskscope.ask` reports `UNSUPPORTED_OPERATION` while
+`.taskcontext.endpoint` adapts a transferable endpoint reference inside
+taskwork. F1f now supplies compiler/runtime `.taskwork` kind-3 dispatch. Pool
+`queued()` and `running()` likewise report unsupported
 until a provider-neutral statistics query is specified. F1d now supplies the
 concrete reusable byte-endpoint and structured child-process providers, plus
 the migrated ADDRESS adapters. Service implementation remains later work, and

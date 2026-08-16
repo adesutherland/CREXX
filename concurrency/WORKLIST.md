@@ -18,7 +18,7 @@ stages and performance evidence are linked rather than reproduced here.
 | CONC-02 | RXAS/RXBIN channel contract | complete | both VMs locally qualified | maintain opcode, feature, effect, signal and malformed-image conformance |
 | CONC-03 | canonical `ChannelValue` and typed transfer | complete | locally qualified and documented | retain canonical validation and receiver-ownership coverage |
 | CONC-04 | local-thread and isolated-process task providers | complete | Mac qualified | complete Linux/Windows public conformance under CONC-11 |
-| CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified with RexxDoc and generated API reference | keep unsupported operations explicit and extend direct endpoint reconstruction coverage |
+| CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified with RexxDoc, generated API reference and direct task-context endpoint coverage | retain explicit unsupported-operation and endpoint reconstruction assertions |
 | CONC-06 | Level G task and `DO PARALLEL` language surface | complete | locally qualified, Level G-gated and documented with checked examples | retain positive/negative compiler and runtime coverage |
 | CONC-07 | reusable byte endpoints, child processes and ADDRESS redirects | complete | locally qualified | retain cross-platform endpoint/process regression coverage |
 | CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; initial publication pending | complete portable conformance under CONC-11 |
@@ -76,9 +76,9 @@ does not count as an implemented or supported capability.
 - [ ] detached ordinary tasks and blocking nested task waits; and
 - [ ] public thread IDs, worker affinity or shared mutable VM values.
 
-`.taskcontext.endpoint` has an implementation that reconstructs a byte endpoint
-from a provider reference, but remains provisional pending a direct public
-contract test.
+`.taskcontext.endpoint` reconstructs a worker-local byte endpoint from a
+transferable type-4 provider reference. Its direct public contract is exercised
+inside `.taskwork` through both VMs and optimization modes.
 
 ## CONC-10 documentation plan
 

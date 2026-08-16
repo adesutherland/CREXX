@@ -379,11 +379,13 @@ dispatch. Level G task procedures/methods, task expressions and `DO PARALLEL`
 lower through these classes, including receiver-side `.taskwork` factories.
 The syntax is gated by `OPTIONS LEVELG`; Level B programs may use the explicit
 classes directly. Service `ask` and pool statistics deliberately signal
-unsupported status `19`. `.taskcontext.endpoint()` is implemented as an
-adapter but remains provisional pending a focused public conformance assertion.
+unsupported status `19`. `.taskcontext.endpoint()` reconstructs a worker-local
+byte endpoint from a transferable type-4 provider reference and has a direct
+public-contract test through the full toolchain and both VM variants.
 Functional tests are in `lib/classlib/tests_functional/testConcurrency.crexx`;
-imported task method/`.taskwork` tests exercise `rxc`, `rxas`, `rxlink` and both
-VMs. The enduring architecture and status boundary is
+`testTaskContextEndpoint.crexx` and imported task method/`.taskwork` tests
+exercise `rxc`, `rxas`, `rxlink` and both VMs. The enduring architecture and
+status boundary is
 [`CREXX_CONCURRENCY.md`](CREXX_CONCURRENCY.md).
 
 Level B classlib collection names carry their value contract because the

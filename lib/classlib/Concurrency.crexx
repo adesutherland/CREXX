@@ -201,7 +201,8 @@ taskcontext: interface
   /** @return stable trace identity for this invocation */
   trace_identity: method = .string
   /** Adapt a transferable provider reference to a worker-local byte endpoint.
-   * This bridge is provisional pending direct public conformance coverage.
+   * The returned adapter is local to the receiving worker; the transferable
+   * provider reference remains the cross-execution value.
    * @param provider_reference canonical type-4 provider reference
    * @return worker-local endpoint adapter
    */

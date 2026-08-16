@@ -236,6 +236,17 @@ failures = failures + check_int("empty scope next", scope.next(0).available(), 0
 joined = .completion[]
 joined = scope.join()
 failures = failures + check_int("empty scope join", joined[0], 0)
+caught = 0
+ask_status = 0
+do
+  unavailable_service = .serviceref
+  unavailable_task = scope.ask(unavailable_service, .channelvalue.null_value())
+on signal channel_error as ask_problem
+  caught = 1
+  if ask_problem.name() = "CHANNEL_ERROR" & ask_problem.code() = 26 & ask_problem.message() = "taskscope.ask.unsupported status=19" then ask_status = 19
+end
+failures = failures + check_int("taskscope ask is explicitly unsupported", caught, 1)
+failures = failures + check_int("taskscope ask reports status 19", ask_status, 19)
 call scope.close()
 failures = failures + check_int("pool capacity", pool.capacity(), 1)
 failures = failures + check_int("pool admission", pool.admission_capacity(), 2)

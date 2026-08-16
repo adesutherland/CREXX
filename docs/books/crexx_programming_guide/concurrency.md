@@ -391,9 +391,9 @@ The following names or concepts are reserved rather than usable today:
 - detached tasks, worker affinity and public thread IDs; and
 - shared mutable globals, locks or atomics between Rexx executions.
 
-`.taskcontext.endpoint()` exists but remains provisional until it has a direct
-public conformance test. Use `.byteendpoint.from_reference()` in established
-endpoint code meanwhile.
+Inside `.taskwork.run()`, `.taskcontext.endpoint(reference)` reconstructs a
+worker-local byte endpoint from a transferable type-4 provider reference.
+Controller-side code can use `.byteendpoint.from_reference()` directly.
 
 ## Checked example catalogue
 
