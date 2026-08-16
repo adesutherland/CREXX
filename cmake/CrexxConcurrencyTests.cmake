@@ -22,6 +22,24 @@ function(crexx_label_concurrency_tests SOLUTION_POINT)
         set_property(TEST "${_crexx_concurrency_test}" APPEND PROPERTY LABELS
                 concurrency
                 "concurrency-${_crexx_concurrency_solution_point}")
+        get_property(_crexx_concurrency_timeout_is_set
+                TEST "${_crexx_concurrency_test}" PROPERTY TIMEOUT SET)
+        if(NOT _crexx_concurrency_timeout_is_set)
+            set_property(TEST "${_crexx_concurrency_test}" PROPERTY TIMEOUT 300)
+        endif()
+        get_property(_crexx_concurrency_fail_patterns
+                TEST "${_crexx_concurrency_test}"
+                PROPERTY FAIL_REGULAR_EXPRESSION)
+        foreach(_crexx_concurrency_fail_pattern IN ITEMS "FAIL:" "BAD:")
+            list(FIND _crexx_concurrency_fail_patterns
+                    "${_crexx_concurrency_fail_pattern}"
+                    _crexx_concurrency_fail_pattern_index)
+            if(_crexx_concurrency_fail_pattern_index EQUAL -1)
+                set_property(TEST "${_crexx_concurrency_test}" APPEND PROPERTY
+                        FAIL_REGULAR_EXPRESSION
+                        "${_crexx_concurrency_fail_pattern}")
+            endif()
+        endforeach()
     endforeach()
 endfunction()
 

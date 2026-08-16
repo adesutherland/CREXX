@@ -55,7 +55,7 @@ ctest --test-dir cmake-build-debug -N -L '^concurrency-sp04$'
 | SP-04 providers, endpoints and redirects | `concurrency-sp04` | local/process providers, crash replacement, byte endpoints, task-context adaptation, ADDRESS array/spawn transfer and both applicable VMs |
 | SP-05 Level B control surface | `concurrency-sp05` | bridge inspection, interface metadata, class behavior, unsupported operations and direct task-context endpoint contract |
 | SP-06 Level G compiler surface | `concurrency-sp06` | Level G gating, lowering, positive/negative semantics, imported methods/taskwork, signal cleanup and checked examples through the full toolchain |
-| SP-07 HTTP client, server and LLM | `concurrency-sp07` | service interface, pooled/streaming/policy/TLS/codec clients, bounded server and failures, `crexx-rag` shapes, providers and ADDRESS integration |
+| SP-07 HTTP client, server and LLM | `concurrency-sp07` | service interface, pooled/streaming/policy/codec clients, the opt-in TLS-live hook, bounded server and failures, `crexx-rag` shapes, providers and ADDRESS integration |
 | SP-08 failure and lifecycle | `concurrency-sp08` | cancellation, deadlines, crash/race replacement, sparse progress, signal unwind, backpressure, malformed/failing handlers and terminal close behavior |
 | SP-09 build and documentation | `concurrency-sp09` | RexxDoc/API exposure, Level B bridge inspection and executable user examples on both VMs and optimization modes |
 
@@ -71,3 +71,9 @@ runs, full Debug CTest, installation, packaging and platform-specific package
 smokes remain separate QA-B through QA-D evidence. Stress cases that are part
 of correctness also carry `concurrency-stress` so they can be repeated without
 using a test-name expression.
+
+Every manifest test has a CTest timeout (300 seconds unless its definition
+sets a tighter case-specific limit) and treats `FAIL:` or `BAD:` output as a
+failure even if a buggy test program were to return zero. The linked-runtime
+fixture is serial, has a 30-minute build timeout and is completed in the
+artifact phase before CTest checks it.

@@ -393,8 +393,6 @@ if(BUILD_TESTING)
             test_retired_process_opcode_bin run_tests_basic
             program_generation_control-rxvml
             program_generation_control-rxbvml
-            persistent_worker_executor-rxvml
-            persistent_worker_executor-rxbvml
             _rxpa_dynlink _rxpa_invalid_manifest
             testConcurrency testTaskContextEndpoint
             concurrency_doc_examples
@@ -413,6 +411,19 @@ if(BUILD_TESTING)
         add_dependencies(concurrency_test_artifacts
                 "${_crexx_concurrency_target}")
     endforeach()
+
+    if(APPLE OR WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        foreach(_crexx_concurrency_carrier_target IN ITEMS
+                persistent_worker_executor-rxvml
+                persistent_worker_executor-rxbvml)
+            if(NOT TARGET "${_crexx_concurrency_carrier_target}")
+                message(FATAL_ERROR
+                        "Required concurrency carrier target is missing: ${_crexx_concurrency_carrier_target}")
+            endif()
+            add_dependencies(concurrency_test_artifacts
+                    "${_crexx_concurrency_carrier_target}")
+        endforeach()
+    endif()
 
     foreach(_crexx_concurrency_optional_target IN ITEMS
             rxtvm test_import_discovery_snapshot
@@ -468,7 +479,8 @@ if(TARGET linked_opt_runtime_artifacts)
     # generated artifacts cannot race with tests that use the same build tree.
     set_tests_properties(linked_opt_runtime_artifacts_build PROPERTIES
             FIXTURES_SETUP linked_opt_runtime_artifacts
-            RUN_SERIAL TRUE)
+            RUN_SERIAL TRUE
+            TIMEOUT 1800)
     if(TARGET linked_opt_sweep)
         add_dependencies(linked_opt_sweep linked_opt_runtime_artifacts)
     endif()

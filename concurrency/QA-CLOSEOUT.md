@@ -64,8 +64,14 @@ source reviewed, executable tests, commands/results and residual risk.
   [`TEST-MANIFEST.md`](TEST-MANIFEST.md) defines the matrix and the
   `concurrency-qa` build target constructs every declared artifact before
   starting CTest.
-- [ ] Audit platform registration, fixture isolation, timeouts and diagnostics;
-  and
+- [x] Audit platform registration, fixture isolation, timeouts and diagnostics.
+  Persistent-carrier build dependencies now follow their macOS/Linux/Windows
+  registration guard; every manifest test has a timeout and failure-output
+  sentinel; the shared linked-runtime fixture is serial and built before
+  CTest. Toolchain cases use unique workspaces or the existing runtime lock,
+  child-process cases use no shared scratch files, and HTTP fixtures use
+  kernel-assigned loopback ports. The last fixed-range HTTP fixture was moved
+  to port `0` during this audit.
 - [ ] Produce exact Linux and Windows validation commands and expected-result
   rules before either slow host is used.
 
@@ -80,6 +86,12 @@ nine solution-point labels were non-empty, every solution test carried the
 umbrella label, and no umbrella test lacked a solution point. The
 `concurrency-qa` entry point then built its declared artifacts and passed all
 179 cases plus the required linked-runtime fixture (180/180) on 2026-08-16.
+After the portability/isolation changes, the same entry point again passed
+180/180 (89.24 seconds of CTest time after its dependency rebuild). Generated
+CTest metadata reported zero manifest tests without a timeout and zero without
+the `FAIL:`/`BAD:` diagnostic sentinel. A generated-command audit found no
+direct shell, `/tmp`, Unix file-command or `.so` dependency in the labelled
+test commands.
 
 ## Deferred feature proposals
 

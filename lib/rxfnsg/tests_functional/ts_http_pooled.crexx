@@ -83,19 +83,11 @@ pooled_http_server: class implements .taskwork
     server = socketcreate()
     if server <= 0 then return .channelvalue.integer_value(-1)
 
-    port = 33241
-    bound = 0
-    do while port <= 33321
-      if socketbind(server, "127.0.0.1", port) = 0 then do
-        bound = 1
-        leave
-      end
-      drop_rc = socketclose(server)
-      server = socketcreate()
-      if server <= 0 then return .channelvalue.integer_value(-2)
-      port = port + 1
-    end
-    if bound = 0 then return .channelvalue.integer_value(-3)
+    if socketbind(server, "127.0.0.1", 0) <> 0 then return .channelvalue.integer_value(-2)
+    local = socketlocal(server)
+    port_text = substr(local, lastpos(":", local) + 1)
+    if datatype(port_text, "W") = 0 then return .channelvalue.integer_value(-3)
+    port = port_text
     if sockettimeout(server, 10000) <> 0 then return .channelvalue.integer_value(-4)
     if socketlisten(server, 4) <> 0 then return .channelvalue.integer_value(-5)
 
