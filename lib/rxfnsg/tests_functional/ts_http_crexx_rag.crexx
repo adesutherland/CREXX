@@ -1,4 +1,4 @@
-/* Gate F F1g-D crexx-rag generation/embedding HTTP integration proof. */
+/* cREXX-RAG generation/embedding concurrent HTTP integration proof. */
 options levelg
 
 namespace ts_http_crexx_rag

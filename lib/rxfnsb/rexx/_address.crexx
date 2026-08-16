@@ -1681,7 +1681,7 @@ _address_first_chars: procedure = .string
   return first_chars(text, count)
 
 /* Private RXCV/channel helpers for the foundational ADDRESS library. They
- * deliberately use only the five Gate F RXAS channel instructions. */
+ * deliberately use only the five core RXAS channel instructions. */
 _address_channel_error: procedure = .void
   arg operation = .string, status = .int
   message = operation || " status=" || status

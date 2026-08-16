@@ -80,7 +80,7 @@ Selectors match by:
 
 The linker preserves the metadata chain in output because the VM and tooling still consume it at runtime.
 
-Gate F task metadata is also runtime contract metadata. `.task1`, `.task2` and
+Task metadata is also runtime contract metadata. `.task1`, `.task2` and
 `.task3` entries carry an 80-byte sealed binding containing image digest,
 callable id, signature digest and the optional adapter callable slot. Because
 RXLINK rebuilds and renumbers the semantic graph, it must regenerate these

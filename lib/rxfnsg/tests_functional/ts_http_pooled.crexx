@@ -1,5 +1,5 @@
 /*
- * Gate F F1g-B pooled HTTP proof.
+ * Bounded pooled concurrent HTTP proof.
  *
  * The loopback server is itself taskwork so the controller can exercise the
  * public Level G task syntax while the server blocks in accept/recv.  One

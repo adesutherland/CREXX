@@ -1297,8 +1297,8 @@ the Windows trust store, and supports both direct TLS connect and true STARTTLS.
 
 ## 7. Core Channel Instructions
 
-Gate F exposes core concurrency and future transport providers through one
-transport-neutral RXAS family. Level B classes must use these instructions;
+Core concurrency and future transport providers use one transport-neutral RXAS
+family. Level B classes must use these instructions;
 there is no parallel RXPA task-start/task-wait ABI and providers do not add
 provider-specific opcodes.
 
@@ -1340,13 +1340,15 @@ registration seam and fake-provider conformance fixture exist; no public
 provider-plugin ABI is implied.
 
 Configuration, envelopes, reasons and completions are canonical versioned RXCV
-documents. F1f implements the complete value tree, typed task register images,
-provider-owned deadlines/scopes, Level B classes and Level G lowering over
-sealed task procedure, transferable receiver and `.taskwork` factory targets.
+documents. The current implementation includes the complete value tree, typed
+task register images, provider-owned deadlines/scopes, Level B classes and
+Level G lowering over sealed task procedure, transferable receiver and
+`.taskwork` factory targets.
 Assembler `.task1`, `.task2` and `.task3` metadata carry an 80-byte binding;
 RXAS resolves its image, callable, signature and adapter identity and RXBIN
 validation rejects malformed or stale bindings. Raw
 channel/ticket integers are execution-local capabilities, not transferable
-values. Concurrent HTTP/TLS remains F1g. Exact status codes, RXCV layouts and
-lifecycle rules are normative in
-[`PERF3-13-GATE-F-AI-SPEC.md`](../../concurrency/history/PERF3-13-GATE-F-AI-SPEC.md).
+values. Concurrent HTTP/TLS is a Level G library consumer, not an opcode or
+provider type. Exact status codes, RXCV layouts and lifecycle rules are in
+[`CREXX_CONCURRENCY.md`](CREXX_CONCURRENCY.md) and the per-instruction
+[RXAS reference](../reference/rxas/instructions/09-io-sockets-processes-and-time.md).

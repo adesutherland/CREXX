@@ -8,12 +8,18 @@ It focuses on the tools and workflows around Level B source:
 - compiling `.crexx` with `rxc` or `crexx`
 - learning practical Level B syntax, modules, classes, interfaces, and tested
   examples through the [Level B tutorial](levelb_tutorial.md)
+- using experimental Level G tasks, structured scopes and concurrent HTTP with
+  complete checked examples in
+  [Concurrent programming](concurrency.md)
 - assembling `.rxas` with `rxas`
 - running `.rxbin` with the crexx virtual machine executables `rxvm` and `rxvme`
 - linking modules with `rxlink`
 - packaging native executables with `crexx -native` and `rxcpack`
 - exporting versioned typed operation contracts with `crexx-contract`
 - using standard libraries, classes, interfaces, plugins, compiler exits, and integration APIs
+
+Level B is the supported beta baseline. The concurrency chapter clearly marks
+its Level G syntax and libraries as experimental and `OPTIONS LEVELG`-gated.
 
 The language itself is defined in the cRexx *Language Reference*. The lower
 level bytecode, assembly, and runtime model are described in the cRexx *VM

@@ -1,4 +1,4 @@
-/* Gate F F1g-D request/response streaming and backpressure proof. */
+/* Concurrent HTTP request/response streaming and backpressure proof. */
 options levelg
 
 namespace ts_http_streaming

@@ -15,12 +15,12 @@ not reproduced as the current control model.
 | --- | --- | --- | --- | --- |
 | CONC-01 | execution-owned VM state and worker lifecycle | complete | locally qualified; native-carrier evidence exists on Mac, Linux and Windows | retain as foundation; portable public surface is tracked by CONC-11 |
 | CONC-02 | RXAS/RXBIN channel contract | complete | both VMs locally qualified | maintain opcode, feature, effect, signal and malformed-image conformance |
-| CONC-03 | canonical `ChannelValue` and typed transfer | complete | locally qualified | add enduring API/reference documentation |
+| CONC-03 | canonical `ChannelValue` and typed transfer | complete | locally qualified and documented | retain canonical validation and receiver-ownership coverage |
 | CONC-04 | local-thread and isolated-process task providers | complete | Mac qualified | complete Linux/Windows public conformance under CONC-11 |
-| CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified; documentation incomplete | finish RexxDoc and generated API reference; keep unsupported operations explicit |
-| CONC-06 | Level G task and `DO PARALLEL` language surface | complete | locally qualified and Level G-gated | publish formal syntax and compile-checked examples |
+| CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified with RexxDoc and generated API reference | keep unsupported operations explicit and extend direct endpoint reconstruction coverage |
+| CONC-06 | Level G task and `DO PARALLEL` language surface | complete | locally qualified, Level G-gated and documented with checked examples | retain positive/negative compiler and runtime coverage |
 | CONC-07 | reusable byte endpoints, child processes and ADDRESS redirects | complete | locally qualified | retain cross-platform endpoint/process regression coverage |
-| CONC-08 | bounded concurrent HTTP/TLS | complete | Mac qualified; experimental publication pending | correct docs, complete portable conformance and resolve HTTP architecture under CONC-16 |
+| CONC-08 | bounded concurrent HTTP/TLS | complete | Mac qualified and documented; experimental publication pending | complete portable conformance and resolve HTTP architecture under CONC-16 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
 | CONC-10 | enduring documentation | active | not complete | execute the documentation plan below |
 | CONC-11 | portable conformance and experimental publication | pending | Mac complete; public local/process/HTTP matrix incomplete | qualify Linux and Windows, then make the release/package decision |
@@ -87,8 +87,8 @@ the enduring reference marks it supported.
 - [x] Publish the current concurrent HTTP guide, including streaming and
   compression boundaries.
 - [x] Add all chapters to `docs/index.md` and their book structures.
-- [ ] Replace internal development-stage terminology in enduring documents.
-- [ ] Reconcile the Level G catalogue, project roadmap and beta release notes
+- [x] Replace internal development-stage terminology in enduring documents.
+- [x] Reconcile the Level G catalogue, project roadmap and beta release notes
   without claiming portable publication before CONC-11.
 - [ ] Compile examples through `rxc`, `rxas`, `rxlink` and both VMs as
   applicable; build/check generated documentation and links.

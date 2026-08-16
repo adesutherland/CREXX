@@ -117,6 +117,21 @@ until they are narrowed.
 | RXAS control-flow and dispatch optimization | PERF3-11/12 performance programme | The reusable immutable CFG, signal policy, sparse component SSA/use index and transactional proof service are implemented. Current consumers include branch threading, conversion/copy placement and capability-lazy loop-scoped joined-key reuse. Continue with metadata- and proof-driven consumers such as transactional PARSE, then bounded hoisting/register-finalization work; keep exact local normalizations in the cheap peephole and do not recreate dense whole-procedure scans. |
 | String performance follow-up | #470 | Performance results are useful, but regressions or semantic fallout should be tracked through concrete bugs such as #583. |
 
+## Concurrency Roadmap
+
+The experimental concurrency implementation has its own live
+[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md). That worklist records
+what is implemented, what remains before publication, and the separate
+performance follow-ups without mixing concurrency ownership back into the
+performance programme.
+
+Current development work includes isolated local/process task execution,
+structured scopes, bounded endpoints and child-process redirection, and a
+concurrent HTTP library. Portable conformance, package proof, release
+publication, a concrete single-owner service surface, and any public provider
+plugin or open-host protocol remain open. Shared writable VM state, detached
+ordinary tasks and public worker identities are not part of the model.
+
 ## Library, Plugin, And Host Integration Roadmap
 
 | Theme | Source discussions | Direction |
@@ -125,9 +140,9 @@ until they are narrowed.
 | Regex support | #399 and closed issue #414 | RxLite now provides a pure-Rexx regex surface in `rxfnsb`. External/native regex dependencies remain a future packaging decision, not an open Release 1 blocker. |
 | System plugin portability | #398 | Keep platform coverage under normal plugin test hardening. Open a fresh issue only for a failing platform-specific test. |
 | REXX/SAA compatibility | #424 | Continue through the `crexxsaa` and RXPA host-integration path. Variable-pool emulation needs explicit design before new commitments. |
-| IO endpoints, process pipes, and native handles | [`ai-context/CREXX_IO_PIPE_WORKING.md`](ai-context/CREXX_IO_PIPE_WORKING.md), #491 | Existing ADDRESS redirect endpoints now use native-payload ownership internally. Public `rxio.*` stream classes, reusable process/pipe APIs, pipeline helpers, and any broader threading surface remain future work and should stay tied to the working note until narrowed into issues. |
+| IO endpoints, process pipes, and native handles | [`ai-context/CREXX_IO_PIPE_WORKING.md`](ai-context/CREXX_IO_PIPE_WORKING.md), #491 | Bounded provider type `4` endpoints and type `5` structured child processes now underpin ADDRESS redirection and concurrent HTTP streaming. Broader `rxio.*` stream classes, reusable pipeline helpers and any public native-handle surface remain future work. |
 | Mixed Rexx/native libraries | #432 | Combining Rexx scripts and native plugin functions into one library remains an architecture direction for plugin packaging. |
-| Threads and subtasks | #491 | Treat as a design/safety project. The existing process plugin is the safer current execution model; true shared-memory subtasks need a concurrency and ownership design first. |
+| Threads and subtasks | #491, [`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) | Local-thread and isolated-process structured tasks are implemented experimentally with receiver-owned transferred values and no shared writable VM state. Portable qualification and publication remain open; durable single-owner services and open-host/provider extension are later work. |
 
 ## Closed As Already Handled Or Stale
 

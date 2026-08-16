@@ -416,11 +416,13 @@ Completion states are:
 | `6` | `ENDPOINT_CLOSED` |
 | `7` | `TRANSPORT_LOST` |
 | `8` | `UNKNOWN_OUTCOME` |
+| `9` | `KILLED` |
 
 Cancellation is cooperative for running local work. Process providers may
-terminate an isolated worker after the cooperative grace period. A transport
-loss before execution starts is `TRANSPORT_LOST`; after it starts the safe
-answer is `UNKNOWN_OUTCOME`.
+terminate an isolated worker after the cooperative grace period and report
+`KILLED` when that terminal outcome is known. A transport loss before execution
+starts is `TRANSPORT_LOST`; after it starts the safe answer is
+`UNKNOWN_OUTCOME`.
 
 Fail-fast scopes request sibling cancellation after the first unsuccessful
 child. Collect-all scopes keep accounting for other children. Both still join

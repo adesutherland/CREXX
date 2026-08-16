@@ -225,24 +225,24 @@ as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
 through a small driver registry of exact aliases and prefixes. See
 `lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
 
-`lib/rxfnsg/rexx/http.crexx` is the Gate F Level G concurrent HTTP surface. It
-coexists with the synchronous Level B `rxhttp` module and exposes a
+`lib/rxfnsg/rexx/http.crexx` is the experimental Level G concurrent HTTP
+surface. It coexists with the independent synchronous Level B `rxhttp` module
+and exposes a
 transferable `.httpclient.pooled(origin, connections, admission,
-maximum_response, ?policy)` plus `.httpheaders`, `.httppolicy` and independent
-typed `.httpresponse` values. Each long-lived `.taskwork` owner holds at most
-one reusable socket; callers submit `post(path, body, headers)` as an ordinary
-Level G task method. Fixed-size admission descriptors and per-request type-4
-byte endpoints carry canonical references and bytes, never socket integers or
-live VM values. F1g-C adds safe transferable headers, bounded phase/observation
-budgets, verified TLS, bounded same-origin 307/308 redirect and idempotency-key
-retry rules, ambiguity history, header/request ceilings, early-EOF detection
-and bodyless-response handling. DNS/connect/TLS budgets are composed for the
-current atomic socket connection operation; the containing `.taskscope`
-deadline remains the strict whole-task monotonic deadline. Explicit request and
-response streams, compressed response decoding and the `crexx-rag` integration
-fixture remain F1g-D. See
-`lib/rxfnsg/rexx/http.md` and the both-VM loopback fixture
-`lib/rxfnsg/tests_functional/ts_http_policy.crexx`.
+maximum_response, ?policy)` plus `.httpheaders`, `.httppolicy`, `.httpbody` and
+independent typed `.httpresponse` values. Each long-lived `.taskwork` owner
+holds at most one reusable socket; callers submit buffered `post(...)` or
+endpoint-backed `post_stream(...)` as ordinary Level G task methods. Fixed-size
+admission descriptors and type-4 byte endpoints carry canonical references and
+bytes, never socket integers or live VM values. The implementation provides
+safe transferable headers, bounded budgets/ceilings, verified TLS,
+same-origin 307/308 and idempotency-key replay policy, ambiguity history,
+fixed/chunked request streams, identity-encoded response streams and bounded
+gzip/zlib/raw-DEFLATE decoding for buffered responses. DNS/connect/TLS budgets
+are composed for the current atomic socket connection operation; the
+containing `.taskscope` remains the strict whole-task deadline. See the
+[concurrent HTTP library guide](../books/crexx_library_reference/concurrent_http.md)
+and the both-VM `lib/rxfnsg/tests_functional/ts_http_*` fixtures.
 
 `lib/rxfnsl/rexx/tinyexpr.crexx` contains the first Level L
 language-engineering proving slice. It is deliberately not a lexer generator or
@@ -370,21 +370,23 @@ is equally strong. Multi-tail source expressions retain canonical construction
 where conversion, evaluation order, or TRACE observation has not proved the
 two-segment form equivalent.
 
-`lib/classlib/Concurrency.crexx` is the Gate F explicit Level B concurrency
-surface. It ships in `classlib.rxbin` and implements the approved
+`lib/classlib/Concurrency.crexx` is the explicit Level B concurrency surface.
+It ships in `classlib.rxbin` and implements the
 pool, scope, task, target/work/context, completion, channel/request,
 `ChannelValue`/codec, byte-endpoint, service-reference and transfer-buffer
 interfaces. Local and isolated-process pool paths reach RXVM only through
 authored `chanopen`, `chanstart`, `chanwait`, `chancancel` and `chanclose`
 instructions; there is no RXPA task-start path or procedure-name-string
-dispatch. F1f lowers Level G task procedures/methods, task expressions and `DO
-PARALLEL` through these classes and implements receiver-side `.taskwork`
-factories. The new syntax remains gated by `OPTIONS LEVELG`; Level B programs
-may use the explicit classes directly. Service `ask`, task-context endpoints
-and pool statistics remain explicit unsupported operations. Functional tests
-are in `lib/classlib/tests_functional/testConcurrency.crexx`; imported task
-method/`.taskwork` tests exercise `rxc`, `rxas`, `rxlink` and both VMs, and
-`gate_f_levelb_bridge_inspection` guards the systems boundary.
+dispatch. Level G task procedures/methods, task expressions and `DO PARALLEL`
+lower through these classes, including receiver-side `.taskwork` factories.
+The syntax is gated by `OPTIONS LEVELG`; Level B programs may use the explicit
+classes directly. Service `ask` and pool statistics deliberately signal
+unsupported status `19`. `.taskcontext.endpoint()` is implemented as an
+adapter but remains provisional pending a focused public conformance assertion.
+Functional tests are in `lib/classlib/tests_functional/testConcurrency.crexx`;
+imported task method/`.taskwork` tests exercise `rxc`, `rxas`, `rxlink` and both
+VMs. The enduring architecture and status boundary is
+[`CREXX_CONCURRENCY.md`](CREXX_CONCURRENCY.md).
 
 Level B classlib collection names carry their value contract because the
 language does not yet have generics. Current public classlib containers and

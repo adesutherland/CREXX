@@ -1,8 +1,8 @@
 # CREXX Release 1 Plan
 
 Status: draft plan for maintainer review and GitHub discussion, updated for the
-beta 3 foundation work completed through 2026-07-12.
-Date: 2026-07-12.
+beta 3 foundation work completed through 2026-08-16.
+Date: 2026-08-16.
 Target release: end of August 2026.
 
 This plan describes the intended path from the tagged `v1.0.0-beta.2` release
@@ -65,8 +65,8 @@ Must-ship items are part of the Release 1 contract or release process.
 
    Publish a short design note explaining what Level B owns and what Level G
    owns. The Release 1 wording should say: Level B is stable; Level G has an
-   initial library overlay and selected demos, not a full separate language
-   contract.
+   implemented experimental task/parallel surface and library overlay, not a
+   full stable language contract.
 
 5. Core UTF contract
 
@@ -144,9 +144,11 @@ Should-ship items are important but have explicit fallback paths.
 
 2. First Level G library version
 
-   Make `rxfnsg` coherent around the existing LLM work and possibly first
-   Unicode helpers. Fallback: ship LLM plus docs/tutorial and mark Unicode as
-   planned.
+   The development baseline now combines the existing LLM work with
+   experimental structured concurrency and concurrent HTTP. Complete portable
+   conformance and make the publication decision; richer Unicode remains
+   planned. Fallback: keep concurrency explicitly experimental and ship only
+   the Level G pieces with sufficient platform and package evidence.
 
 3. Initial Level C canonical-AST lowering proof
 
@@ -190,7 +192,8 @@ Should-ship items are important but have explicit fallback paths.
 These should not block Release 1.
 
 - GPU VM plugin proof of concept.
-- VM multithreading/subtask prototype.
+- Experimental structured concurrency until portable conformance, package proof
+  and publication approval are complete.
 - Level G rich Unicode beyond the approved first slice.
 - Broad Level L syntax sugar.
 - Full Level C runtime compatibility.
@@ -266,8 +269,8 @@ common `rel1` label plus the tier and area labels shown here.
 | 24 | Add build-time perfect hash optimization for static `select` | Adrian | `rel1`, `should`, `compiler`, `performance` | Implemented for the conservative eligible integer/string/binary cases; arbitrary ladder recognition remains post-Release 1. |
 | 25 | Add RXAS/VM lookup primitives needed by perfect-hash select | Adrian | `rel1`, `should`, `rxas`, `vm` | Implemented through packed jump tables with linear, open-hash, ACPH, and measured `auto` selection. |
 | 26 | Add Level L lexer/parser library demo | Peter | `rel1`, `should`, `level-l`, `demos` | Ship the generated-output proof using packed binary tables and document generator work as later. |
-| 27 | Define Level G first library baseline | Rene | `rel1`, `should`, `level-g`, `library` | Document the existing LLM surface as the first baseline and move extra APIs post-release. |
-| 28 | Add Level G tutorial and demos | Rene | `rel1`, `should`, `level-g`, `docs` | Ship one tutorial plus known limitations if the broader demo set is not ready. |
+| 27 | Define Level G first library baseline | Rene | `rel1`, `should`, `level-g`, `library` | The development baseline now documents LLM, structured concurrency and concurrent HTTP; complete portable evidence and explicitly decide which pieces are published. |
+| 28 | Add Level G tutorial and demos | Rene | `rel1`, `should`, `level-g`, `docs` | Checked task, parallel-block, typed-transfer and concurrent-HTTP examples now exist; complete the final usability and platform pass. |
 | 29 | Define initial Level C Release 1 milestone | Adrian | `rel1`, `should`, `level-c`, `planning` | Ship parser/highlighter milestone plus canonical-AST lowering plan. |
 | 30 | Implement first Level C canonical-AST lowering/execution proof if approved | Adrian | `rel1`, `should`, `level-c`, `compiler` | Keep normal Level C compilation unsupported and document the next phase. |
 | 31 | Establish `lib/rxfnsc` as the initial shared Level C/RexxScript runtime foundation | Adrian | `rel1`, `should`, `level-c`, `library` | Keep the current scalar/stem/pool runtime surface small and document later BIF/lowering work. |
@@ -284,7 +287,7 @@ common `rel1` label plus the tier and area labels shown here.
 | --- | --- | --- | --- | --- |
 | 38 | Add Level L syntax-sugar demo if syntax is approved | Adrian | `rel1`, `experimental`, `level-l` | Keep Level L demo library-only for Release 1. |
 | 39 | Add GPU VM plugin proof of concept behind experimental status | Adrian | `rel1`, `experimental`, `vm`, `plugins` | Publish design notes or keep the work out of the release branch. |
-| 40 | Define VM multithreading/subtask design and Release 1 scope | Adrian | `rel1`, `experimental`, `vm` | Ship design-only; keep shared-memory subtasks post-Release 1. |
+| 40 | Qualify and decide publication of structured concurrency | Adrian | `rel1`, `experimental`, `vm` | Local/process tasks and ownership-safe transfer are implemented; keep the surface experimental unless portable conformance, package proof and release approval complete. Shared-memory subtasks remain out of scope. |
 | 41 | Design class and interface constants for Release 2 | Adrian | `r2`, `level-b`, `classes`, `compiler` | Keep Release 1 constants procedure-scoped; investigate whether constants should have a public view as part of the R2 class/interface constant design. |
 
 ## Dependency Map
