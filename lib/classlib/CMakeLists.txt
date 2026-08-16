@@ -335,6 +335,20 @@ add_test(
 set_tests_properties(classlib_rexxdoc_coverage PROPERTIES LABELS "docs;classlib")
 
 add_test(
+  NAME rexx_api_doc_exposed_regression
+  COMMAND ${CMAKE_COMMAND}
+    -DRXC=$<TARGET_FILE:rxc>
+    -DRXAS=$<TARGET_FILE:rxas>
+    -DRXVM=${CREXX_RXVM_EXECUTABLE}
+    -DLIBRARY=${CMAKE_BINARY_DIR}/bin
+    -DSOURCE=${CMAKE_SOURCE_DIR}/tools/rexxDoc/rexxApiDoc.crexx
+    -DFIXTURE=${CMAKE_SOURCE_DIR}/tools/rexxDoc/tests/rexx_api_doc_exposed_fixture.crexx
+    -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/rexx_api_doc_test
+    -P ${CMAKE_SOURCE_DIR}/tools/rexxDoc/tests/check_rexx_api_doc.cmake
+)
+set_tests_properties(rexx_api_doc_exposed_regression PROPERTIES LABELS "docs;classlib")
+
+add_test(
   NAME gate_f_levelb_bridge_inspection
   COMMAND ${CMAKE_COMMAND}
     -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/Concurrency.crexx

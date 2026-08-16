@@ -23,7 +23,7 @@
  */
 
 /**
- * Gate F bounded concurrent HTTP/1.1 client.
+ * Bounded concurrent HTTP/1.1 client over tasks and byte endpoints.
  *
  * @docType runtime-module
  * @see lib/rxfnsg/rexx/http.md
@@ -400,14 +400,18 @@ httpheaders: class
   _lines = .string
   _count = .int
 
-  /** Construct an empty header set. */
+  /** Construct an empty header set.
+   * @return mutable validated header builder
+   */
   empty: factory
     _content_type = ""
     _lines = ""
     _count = 0
     return
 
-  /** Construct the ordinary JSON header set. */
+  /** Construct the ordinary JSON header set.
+   * @return builder with Content-Type application/json
+   */
   json: factory
     _content_type = "application/json"
     _lines = ""
@@ -416,6 +420,7 @@ httpheaders: class
 
   /** Construct a header set with an explicit media type.
    * @param value Content-Type value
+   * @return mutable validated header builder
    */
   media_type: factory
     arg value = .string
@@ -426,7 +431,10 @@ httpheaders: class
     _count = 0
     return
 
-  /** Reconstruct a worker-owned header snapshot. */
+  /** Reconstruct a worker-owned header snapshot.
+   * @param encoded canonical crexx.http.headers record
+   * @return independently validated header snapshot
+   */
   from_channel: factory
     arg encoded = .channelvalue
     _content_type = encoded.field("contentType").as_string()
@@ -465,7 +473,9 @@ httpheaders: class
     _count = _count + 1
     return self
 
-  /** Encode the immutable submission snapshot. */
+  /** Encode the immutable submission snapshot.
+   * @return canonical crexx.http.headers record
+   */
   to_channel: method = .channelvalue
     names = .string[]
     values = .channelvalue[]
@@ -493,7 +503,10 @@ httpheaders: class
   bytes: method = .int
     return binlength(_lines as .binary)
 
-  /** Case-insensitive custom-header lookup. */
+  /** Case-insensitive custom-header lookup.
+   * @param name field name
+   * @return stripped field value or empty string
+   */
   header: method = .string
     arg name = .string
     if translate(name) = "CONTENT-TYPE" then return _content_type
@@ -513,7 +526,9 @@ httppolicy: class
   _redirects = .int
   _retries = .int
 
-  /** Safe default: bounded phases with no automatic replay or redirect. */
+  /** Safe default: bounded phases with no automatic replay or redirect.
+   * @return mutable validated policy value
+   */
   safe: factory
     _dns_timeout = 10000
     _connect_timeout = 10000
@@ -528,7 +543,10 @@ httppolicy: class
     _retries = 0
     return
 
-  /** Reconstruct an exact policy value. */
+  /** Reconstruct an exact policy value.
+   * @param encoded canonical crexx.http.policy record
+   * @return independently validated policy value
+   */
   from_channel: factory
     arg encoded = .channelvalue
     _connect_timeout = encoded.field("connectTimeout").as_integer()
@@ -545,7 +563,14 @@ httppolicy: class
     call _http_policy_validate _dns_timeout, _connect_timeout, _tls_timeout, _request_timeout, _response_timeout, _total_timeout, _header_count, _header_bytes, _request_bytes, _redirects, _retries
     return
 
-  /** Set DNS, TCP-connect, TLS, request, response and total budgets. */
+  /** Set DNS, TCP-connect, TLS, request, response and total budgets.
+   * @param dns DNS budget in milliseconds
+   * @param connect TCP-connect budget in milliseconds
+   * @param tls TLS-handshake budget in milliseconds
+   * @param request request-write budget in milliseconds
+   * @param response response-read budget in milliseconds
+   * @param total controller observation budget in milliseconds
+   */
   set_timeouts: method = .void
     arg dns = .int, connect = .int, tls = .int, request = .int, response = .int, total = .int
     call _http_policy_validate dns, connect, tls, request, response, total, _header_count, _header_bytes, _request_bytes, _redirects, _retries
@@ -557,7 +582,11 @@ httppolicy: class
     _total_timeout = total
     return
 
-  /** Set request/response header and buffered-request ceilings. */
+  /** Set request/response header and buffered-request ceilings.
+   * @param header_count maximum custom request or response fields
+   * @param header_bytes maximum request or response header bytes
+   * @param request_bytes maximum buffered request body bytes
+   */
   set_limits: method = .void
     arg header_count = .int, header_bytes = .int, request_bytes = .int
     call _http_policy_validate _dns_timeout, _connect_timeout, _tls_timeout, _request_timeout, _response_timeout, _total_timeout, header_count, header_bytes, request_bytes, _redirects, _retries
@@ -569,6 +598,8 @@ httppolicy: class
   /** Opt into bounded replay policy.
    *
    * POST redirects and post-send retries still require an Idempotency-Key.
+   * @param redirects maximum same-origin 307/308 redirects
+   * @param retries maximum explicitly safe retries
    */
   set_replay: method = .void
     arg redirects = .int, retries = .int
@@ -577,7 +608,9 @@ httppolicy: class
     _retries = retries
     return
 
-  /** Encode this value for an exact transfer boundary. */
+  /** Encode this value for an exact transfer boundary.
+   * @return canonical crexx.http.policy record
+   */
   to_channel: method = .channelvalue
     call _http_policy_validate _dns_timeout, _connect_timeout, _tls_timeout, _request_timeout, _response_timeout, _total_timeout, _header_count, _header_bytes, _request_bytes, _redirects, _retries
     names = .string[]
@@ -606,30 +639,42 @@ httppolicy: class
     values[11] = .channelvalue.integer_value(_total_timeout)
     return .channelvalue.record_value("crexx.http.policy", 1, names, values)
 
+  /** Revalidate every configured policy field. */
   validate: method = .void
     call _http_policy_validate _dns_timeout, _connect_timeout, _tls_timeout, _request_timeout, _response_timeout, _total_timeout, _header_count, _header_bytes, _request_bytes, _redirects, _retries
     return
 
+  /** @return DNS timeout in milliseconds */
   dns_timeout: method = .int
     return _dns_timeout
+  /** @return TCP-connect timeout in milliseconds */
   connect_timeout: method = .int
     return _connect_timeout
+  /** @return TLS-handshake timeout in milliseconds */
   tls_timeout: method = .int
     return _tls_timeout
+  /** @return request-write timeout in milliseconds */
   request_timeout: method = .int
     return _request_timeout
+  /** @return response-read timeout in milliseconds */
   response_timeout: method = .int
     return _response_timeout
+  /** @return controller observation timeout in milliseconds */
   total_timeout: method = .int
     return _total_timeout
+  /** @return configured custom-header field ceiling */
   header_count: method = .int
     return _header_count
+  /** @return configured header-byte ceiling */
   header_bytes: method = .int
     return _header_bytes
+  /** @return configured buffered request-byte ceiling */
   request_bytes: method = .int
     return _request_bytes
+  /** @return configured same-origin redirect ceiling */
   redirects: method = .int
     return _redirects
+  /** @return configured retry ceiling */
   retries: method = .int
     return _retries
 
@@ -647,6 +692,8 @@ httpbody: class
   /** Create a fixed-length request-body stream.
    * @param content_length exact number of bytes the producer will write
    * @param capacity bounded in-memory backpressure capacity
+   * @param response_capacity bounded paired response-stream capacity
+   * @return controller-owned paired streaming body
    */
   fixed: factory
     arg content_length = .int, capacity = .int, response_capacity = 65536
@@ -665,7 +712,11 @@ httpbody: class
     _closed = 0
     return
 
-  /** Create an unknown-length request stream sent with HTTP chunked framing. */
+  /** Create an unknown-length request stream sent with HTTP chunked framing.
+   * @param capacity bounded in-memory request backpressure capacity
+   * @param response_capacity bounded paired response-stream capacity
+   * @return controller-owned paired streaming body
+   */
   chunked: factory
     arg capacity = .int, response_capacity = 65536
     call _http_failure_if capacity < 1 | capacity > 16777216, "HTTP request stream capacity must be 1..16777216"
@@ -682,7 +733,10 @@ httpbody: class
     _closed = 0
     return
 
-  /** Reconstruct a worker-side adapter to the producer endpoint. */
+  /** Reconstruct a worker-side adapter to the producer endpoint.
+   * @param encoded canonical crexx.http.body record
+   * @return independently owned worker adapter
+   */
   from_channel: factory
     arg encoded = .channelvalue
     _length = encoded.field("length").as_integer()
@@ -697,7 +751,9 @@ httpbody: class
     _closed = 0
     return
 
-  /** Transfer only immutable framing and the type-4 endpoint reference. */
+  /** Transfer only immutable framing and the type-4 endpoint reference.
+   * @return canonical crexx.http.body record
+   */
   to_channel: method = .channelvalue
     call _http_failure_if _closed, "HTTP request body is closed"
     names = .string[]
@@ -713,6 +769,8 @@ httpbody: class
     return .channelvalue.record_value("crexx.http.body", 1, names, values)
 
   /** Write one binary chunk, waiting no longer than the supplied budget.
+   * @param bytes binary request-body chunk
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
    * @return bytes accepted, or -1 on cancellation/deadline/failure
    */
   write: method = .int
@@ -730,7 +788,9 @@ httpbody: class
     _finished = 1
     return
 
-  /** Cancel pending producers/consumers with a transferable reason. */
+  /** Cancel pending producers/consumers with a transferable reason.
+   * @param reason human-readable cancellation reason
+   */
   cancel: method = .void
     arg reason = .string
     if _closed then return
@@ -751,12 +811,16 @@ httpbody: class
   length: method = .int
     return _length
 
-  /** Internal/public advanced bridge to the reusable endpoint contract. */
+  /** Internal/public advanced bridge to the reusable endpoint contract.
+   * @return exact encoded request endpoint reference
+   */
   endpoint_reference: method = .binary
     call _http_failure_if _closed, "HTTP request body is closed"
     return _reference
 
-  /** Internal/public advanced bridge for the paired response endpoint. */
+  /** Internal/public advanced bridge for the paired response endpoint.
+   * @return exact encoded response endpoint reference
+   */
   response_reference: method = .binary
     call _http_failure_if _closed, "HTTP request body is closed"
     return _response_reference
@@ -786,6 +850,7 @@ httpresponse: class
    * @param attempts number of network exchanges attempted
    * @param redirects number of redirects followed
    * @param ambiguous true when a request may have reached its peer without a definitive response
+   * @return independent buffered response value
    */
   new: factory
     arg transport_status = .int, http_status = .int, headers = .string, body = .string, error = .string, attempts = 0, redirects = 0, ambiguous = 0
@@ -823,7 +888,11 @@ httpresponse: class
     _streaming = 0
     return
 
-  /** Decode response metadata while retaining the response-body endpoint. */
+  /** Decode response metadata while retaining the response-body endpoint.
+   * @param wire framed response metadata bytes
+   * @param stream_encoded exact encoded response endpoint reference
+   * @return independent streaming response value
+   */
   from_stream_wire: factory
     arg wire = .binary, stream_encoded = .binary
     if binlength(wire) < 64 then call _http_failure "HTTP streaming response frame is truncated"
@@ -843,7 +912,9 @@ httpresponse: class
     _streaming = 1
     return
 
-  /** Mark a freshly materialized metadata response as streaming. */
+  /** Mark a freshly materialized metadata response as streaming.
+   * @param stream_encoded exact encoded response endpoint reference
+   */
   attach_stream: method = .void
     arg stream_encoded = .binary
     call _http_failure_if binlength(stream_encoded) <> 92, "HTTP response stream reference is noncanonical"
@@ -851,7 +922,10 @@ httpresponse: class
     _body = bin2x(stream_encoded)
     return
 
-  /** Reconstruct a controller-owned response from its canonical value. */
+  /** Reconstruct a controller-owned response from its canonical value.
+   * @param encoded canonical crexx.http.response record
+   * @return independent response value
+   */
   from_channel: factory
     arg encoded = .channelvalue
     _transport_status = encoded.field("transportStatus").as_integer()
@@ -865,7 +939,9 @@ httpresponse: class
     _streaming = encoded.field("streaming").as_boolean()
     return
 
-  /** Encode response value state; no socket or VM object identity crosses. */
+  /** Encode response value state; no socket or VM object identity crosses.
+   * @return canonical crexx.http.response record
+   */
   to_channel: method = .channelvalue
     names = .string[]
     values = .channelvalue[]
@@ -901,7 +977,9 @@ httpresponse: class
   succeeded: method = .boolean
     return _transport_status = 0 & _http_status >= 200 & _http_status < 300
 
-  /** @return buffered decoded response body */
+  /** Return the buffered decoded response body.
+   * @return buffered body; signals HTTP_ERROR for a streaming response
+   */
   body: method = .string
     call _http_failure_if _streaming, "HTTP response body is streaming; use body_reference()"
     return _body
@@ -910,7 +988,9 @@ httpresponse: class
   streaming: method = .boolean
     return _streaming
 
-  /** Return the exact encoded type-4 reference for a byteendpoint adapter. */
+  /** Return the exact encoded type-4 reference for a byteendpoint adapter.
+   * @return canonical 92-byte response endpoint reference
+   */
   body_reference: method = .binary
     call _http_failure_if _streaming = 0, "HTTP response body is buffered"
     encoded = x2bin(_body)
@@ -948,13 +1028,20 @@ _httpclient_contract: interface
    * @param connections number of single-owner reusable connections
    * @param admission maximum queued fixed-size admission frames
    * @param maximum_response maximum buffered response body bytes
+   * @param policy optional validated request policy
+   * @return controller-owned transferable client
    */
   pooled: factory
     arg origin = .string, connections = .int, admission = .int, maximum_response = .int, ?policy = .httppolicy
-  /** Reconstruct a per-task proxy from its canonical client record. */
+  /** Reconstruct a per-task proxy from its canonical client record.
+   * @param encoded canonical crexx.http.client record
+   * @return task-local client proxy
+   */
   from_channel: factory
     arg encoded = .channelvalue
-  /** Encode immutable configuration and the admission capability. */
+  /** Encode immutable configuration and the admission capability.
+   * @return canonical crexx.http.client record
+   */
   to_channel: method = .channelvalue
   /** Submit one buffered POST through the bounded owner pool.
    * @param path origin-relative request target
@@ -970,6 +1057,7 @@ _httpclient_contract: interface
    * @param body fixed-length or chunked request producer
    * @param headers validated transferable header snapshot
    * @param response_capacity response-stream backpressure capacity
+   * @return response metadata carrying the response endpoint reference
    */
   post_stream: task = .httpresponse
     arg path = .string, body = .httpbody, headers = .httpheaders, response_capacity = .int
@@ -1011,6 +1099,8 @@ httpclient: class implements ._httpclient_contract
    * @param connections number of single-owner reusable connections
    * @param admission maximum queued fixed-size admission frames
    * @param maximum_response maximum buffered response body bytes
+   * @param policy optional validated request policy
+   * @return controller-owned transferable client
    */
   pooled: factory
     arg origin = .string, connections = .int, admission = .int, maximum_response = .int, ?policy = .httppolicy
@@ -1089,7 +1179,10 @@ httpclient: class implements ._httpclient_contract
     _closed = 0
     return
 
-  /** Reconstruct a per-task proxy from its canonical client record. */
+  /** Reconstruct a per-task proxy from its canonical client record.
+   * @param encoded canonical crexx.http.client record
+   * @return task-local client proxy
+   */
   from_channel: factory
     arg encoded = .channelvalue
     _origin = encoded.field("origin").as_string()
@@ -1115,7 +1208,9 @@ httpclient: class implements ._httpclient_contract
     _closed = 0
     return
 
-  /** Encode immutable configuration and the admission capability. */
+  /** Encode immutable configuration and the admission capability.
+   * @return canonical crexx.http.client record
+   */
   to_channel: method = .channelvalue
     call _http_failure_if _closed, "HTTP client is closed"
     names = .string[]

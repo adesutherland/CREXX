@@ -83,10 +83,10 @@ the enduring reference marks it supported.
 - [x] Publish a programming-guide chapter with approachable, runnable examples.
 - [x] Publish a formal language-reference chapter with positive and negative
   syntax examples.
-- [ ] Publish the Level B concurrency class guide and complete RexxDoc coverage.
-- [ ] Publish the current concurrent HTTP guide, including streaming and
+- [x] Publish the Level B concurrency class guide and complete RexxDoc coverage.
+- [x] Publish the current concurrent HTTP guide, including streaming and
   compression boundaries.
-- [ ] Add all chapters to `docs/index.md` and their book structures.
+- [x] Add all chapters to `docs/index.md` and their book structures.
 - [ ] Replace internal development-stage terminology in enduring documents.
 - [ ] Reconcile the Level G catalogue, project roadmap and beta release notes
   without claiming portable publication before CONC-11.

@@ -104,6 +104,4 @@ release decision.
    documenting it as supported.
 2. Add a direct unsupported-contract assertion for `.taskscope.ask()`; source
    already signals status `19`.
-3. Complete public RexxDoc coverage and generated API inclusion for
-   `Concurrency.crexx` and the public concurrent HTTP classes.
-4. Complete Linux and Windows qualification before public portability claims.
+3. Complete Linux and Windows qualification before public portability claims.

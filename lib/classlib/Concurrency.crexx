@@ -29,43 +29,114 @@ namespace concurrency expose taskpool taskscope task tasktarget taskarguments ta
 
 /** A bounded task execution provider and its lifecycle owner. */
 taskpool: interface
+  /** Create a bounded in-process worker-thread pool.
+   * @param workers maximum concurrently executing tasks
+   * @param admission_capacity maximum accepted or queued tasks
+   * @return a controller-owned pool
+   */
   local: factory
     arg workers = .int, admission_capacity = .int
+  /** Create a bounded isolated worker-process pool.
+   * @param workers maximum concurrently executing tasks
+   * @param admission_capacity maximum accepted or queued tasks
+   * @return a controller-owned pool
+   */
   process: factory
     arg workers = .int, admission_capacity = .int
+  /** @return provider type 1 for local or 2 for process execution */
   provider_type: method = .int
+  /** @return configured worker capacity */
   capacity: method = .int
+  /** @return configured admission capacity */
   admission_capacity: method = .int
+  /** Reserved telemetry accessor; currently signals unsupported status 19. */
   queued: method = .int
+  /** Reserved telemetry accessor; currently signals unsupported status 19. */
   running: method = .int
+  /** Close the pool after every scope using it has closed. */
   close: method = .void
 
 /** A structured owner for submitted children, cancellation and joining. */
 taskscope: interface
+  /** Create a collect-all scope over the execution-local default pool.
+   * @return a fresh open task scope
+   */
   default: factory
+  /** Create a scope that requests sibling cancellation on first failure.
+   * @param pool execution provider retained for the scope lifetime
+   * @param timeout_milliseconds relative deadline, or -1 for none
+   * @return a fresh open task scope
+   */
   failfast: factory
     arg pool = .taskpool, timeout_milliseconds = .int
+  /** Create a scope that accounts for all children without fail-fast cancellation.
+   * @param pool execution provider retained for the scope lifetime
+   * @param timeout_milliseconds relative deadline, or -1 for none
+   * @return a fresh open task scope
+   */
   collectall: factory
     arg pool = .taskpool, timeout_milliseconds = .int
+  /** Submit one canonical application request to a sealed target.
+   * @param target compiler-created task target
+   * @param request immutable canonical request value
+   * @return structured child wrapper, including rejected submissions
+   */
   submit: method = .task
     arg target = .tasktarget, request = .channelvalue
+  /** Compiler bridge for typed task-call argument documents.
+   * @param target compiler-created task target
+   * @param arguments controller-local generated argument builder
+   * @return structured child wrapper, including rejected submissions
+   */
   submit_arguments: method = .task
     arg target = .tasktarget, arguments = .taskarguments
+  /** Reserved service-submission surface; currently signals unsupported status 19.
+   * @param service future logical service reference
+   * @param request immutable canonical request value
+   * @return no usable task in the current implementation
+   */
   ask: method = .task
     arg service = .serviceref, request = .channelvalue
+  /** Observe the next child in completion order.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
   next: method = .completion
     arg wait_milliseconds = .int
+  /** Account for all accepted children in submission order.
+   * @return one terminal completion per accepted or rejected child
+   */
   join: method = .completion[]
+  /** Request cooperative cancellation of all unfinished children.
+   * @param reason transferable cancellation reason
+   */
   cancel: method = .void
     arg reason = .channelvalue
+  /** Close the scope after every child has been accounted for. */
   close: method = .void
+  /** Join and close, raising TASK_FAILURE when a child failed. */
   finish: method = .void
+  /** Cancel, join and close the scope during abnormal controller exit.
+   * @param reason transferable cancellation reason
+   */
   abort: method = .void
     arg reason = .channelvalue
+  /** Compiler bridge for a successful integer task result.
+   * @param child child belonging to this scope
+   * @return reconstructed integer result
+   */
   result_integer: method = .int
     arg child = .task
+  /** Compiler bridge for a successful string task result.
+   * @param child child belonging to this scope
+   * @return reconstructed string result
+   */
   result_string: method = .string
     arg child = .task
+  /** Compiler bridge for a successful binary task result.
+   * @param child child belonging to this scope
+   * @return reconstructed binary result
+   */
   result_binary: method = .binary
     arg child = .task
   /** Compiler bridge for codec-backed typed task results.
@@ -77,12 +148,24 @@ taskscope: interface
 
 /** One child submitted to a task scope. */
 task: interface
+  /** @return scope-local positive request identity */
   identity: method = .int
+  /** @return true after this child has a terminal completion */
   terminal: method = .boolean
+  /** Request cooperative cancellation of this child.
+   * @param reason transferable cancellation reason
+   */
   cancel: method = .void
     arg reason = .channelvalue
+  /** Wait for this specific child.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
   wait: method = .completion
     arg wait_milliseconds = .int
+  /** Observe this child without waiting.
+   * @return terminal completion or an unavailable sentinel
+   */
   completion: method = .completion
 
 /** A sealed, statically resolved task work descriptor. */
@@ -94,110 +177,248 @@ tasktarget: interface
    */
   binding: factory
     arg diagnostic_name = .string, signature = .string, binding = .binary, ?factory_arguments = .channelvalue[]
+  /** @return source-facing diagnostic target name */
   name: method = .string
+  /** @return canonical source-facing callable signature */
   signature: method = .string
 
 /** Advanced receiver-side work implemented by user classes. */
 taskwork: interface
+  /** Execute one advanced canonical request in a worker-owned instance.
+   * @param request immutable application request
+   * @param context receiver-side deadline, cancellation and trace view
+   * @return canonical completion value
+   */
   run: method = .channelvalue
     arg request = .channelvalue, context = .taskcontext
 
 /** Receiver-side cancellation, deadline, trace and endpoint context. */
 taskcontext: interface
+  /** @return remaining scope budget in milliseconds, or -1 for no deadline */
   timeout_remaining: method = .int
+  /** @return true after cancellation has been requested */
   cancellation_requested: method = .boolean
+  /** @return stable trace identity for this invocation */
   trace_identity: method = .string
+  /** Adapt a transferable provider reference to a worker-local byte endpoint.
+   * This bridge is provisional pending direct public conformance coverage.
+   * @param provider_reference canonical type-4 provider reference
+   * @return worker-local endpoint adapter
+   */
   endpoint: method = .byteendpoint
     arg provider_reference = .channelvalue
 
 /** A terminal task/request outcome, or an unavailable observation sentinel. */
 completion: interface
+  /** @return true when this object describes a terminal request */
   available: method = .boolean
+  /** @return request identity, or zero for an unavailable sentinel */
   request_identity: method = .int
+  /** @return monotonic provider completion sequence, or zero when unavailable */
   sequence: method = .int
+  /** @return terminal provider state, or zero when unavailable */
   state: method = .int
+  /** @return true only for an available successful completion */
   succeeded: method = .boolean
+  /** @return true when a successful completion carries a value */
   has_value: method = .boolean
+  /** Return the canonical result.
+   * @return successful value; signals CHANNEL_ERROR when no value is present
+   */
   value: method = .channelvalue
+  /** @return zero on success or the provider/runtime status code */
   error_code: method = .int
+  /** @return human-readable failure summary */
   message: method = .string
+  /** @return structured provider-specific diagnostic details */
   details: method = .channelvalue
 
 /** Provider-neutral bounded request/completion transport. */
 channel: interface
+  /** Open one core or extension provider.
+   * @param provider_type provider number, such as 1 local tasks or 4 byte endpoints
+   * @param required_capabilities capability bit mask required by the caller
+   * @param configuration canonical provider configuration
+   * @return controller-owned channel
+   */
   open: factory
     arg provider_type = .int, required_capabilities = .int, configuration = .channelvalue
+  /** @return provider type selected at open */
   provider_type: method = .int
+  /** @return capability bits supplied by the opened provider */
   capabilities: method = .int
+  /** Start one bounded asynchronous provider request.
+   * @param envelope canonical request envelope
+   * @param wait_milliseconds admission wait: -1 indefinite, 0 nonblocking, positive bounded
+   * @return request wrapper, including immediate rejected completions
+   */
   start: method = .channelrequest
     arg envelope = .channelvalue, wait_milliseconds = .int
+  /** Observe the next request in completion order.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
   wait: method = .completion
     arg wait_milliseconds = .int
+  /** Request cancellation of one request owned by this channel.
+   * @param request request wrapper created by this channel
+   * @param reason transferable cancellation reason
+   */
   cancel: method = .void
     arg request = .channelrequest, reason = .channelvalue
+  /** Close the channel and invalidate its request capabilities.
+   * @param mode 1 drains accepted work; 2 requests cancellation
+   */
   close: method = .void
     arg mode = .int
 
 /** Public non-authority wrapper around one channel request. */
 channelrequest: interface
+  /** @return channel-local positive request identity */
   identity: method = .int
+  /** @return true after this request has a terminal completion */
   terminal: method = .boolean
+  /** Request cancellation through the owning channel.
+   * @param reason transferable cancellation reason
+   */
   cancel: method = .void
     arg reason = .channelvalue
+  /** Wait for this specific request.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
   wait: method = .completion
     arg wait_milliseconds = .int
+  /** Observe this request without waiting.
+   * @return terminal completion or an unavailable sentinel
+   */
   completion: method = .completion
 
 /** Immutable canonical portable value tree used by every channel boundary. */
 channelvalue: interface
+  /** @return the canonical null value */
   null_value: factory
+  /** Construct a boolean value.
+   * @param item boolean value
+   * @return canonical boolean value
+   */
   boolean_value: factory
     arg item = .boolean
+  /** Construct an integer value.
+   * @param item signed integer value
+   * @return canonical integer value
+   */
   integer_value: factory
     arg item = .int
+  /** Construct a floating-point value.
+   * @param item binary64 value
+   * @return canonical float value
+   */
   float_value: factory
     arg item = .float
+  /** Construct a decimal value.
+   * @param item decimal value
+   * @return canonical normalized decimal value
+   */
   decimal_value: factory
     arg item = .decimal
+  /** Construct a string value.
+   * @param item UTF-8 string value
+   * @return canonical string value
+   */
   string_value: factory
     arg item = .string
+  /** Construct a binary value.
+   * @param item binary value
+   * @return canonical binary value
+   */
   binary_value: factory
     arg item = .binary
+  /** @param items ordered canonical children @return canonical array value */
   array_value: factory
     arg items = .channelvalue[]
+  /** Construct a canonical named record.
+   * @param schema application schema name
+   * @param version positive application schema version
+   * @param names unique field names
+   * @param values values corresponding one-for-one with names
+   * @return record with fields in canonical byte-name order
+   */
   record_value: factory
     arg schema = .string, version = .int, names = .string[], values = .channelvalue[]
+  /** @return canonical RXCV type code */
   type_code: method = .int
+  /** @return record schema, or empty string for a non-record */
   schema: method = .string
+  /** @return record schema version, or zero for a non-record */
   version: method = .int
+  /** @return child count for an array or record */
   count: method = .int
+  /** Return a one-based array child.
+   * @param index one-based child index
+   * @return selected canonical child
+   */
   item: method = .channelvalue
     arg index = .int
+  /** Return a record child by exact field name.
+   * @param name field name
+   * @return selected canonical child
+   */
   field: method = .channelvalue
     arg name = .string
+  /** @return this value decoded as boolean */
   as_boolean: method = .boolean
+  /** @return this value decoded as signed integer */
   as_integer: method = .int
+  /** @return this value decoded as binary64 */
   as_float: method = .float
+  /** @return this value decoded as decimal */
   as_decimal: method = .decimal
+  /** @return this value decoded as UTF-8 string */
   as_string: method = .string
+  /** @return this value decoded as binary */
   as_binary: method = .binary
+  /** @return exact canonical RXCV document bytes */
   encode: method = .binary
 
 /** Exact application-domain value codec contract. */
 channelcodec: interface
+  /** @return application schema name */
   schema: method = .string
+  /** @return positive application schema version */
   version: method = .int
+  /** Encode one application object.
+   * @param item application value owned by the caller
+   * @return canonical transferable value
+   */
   encode: method = .channelvalue
     arg item = .object
+  /** Reconstruct one application object.
+   * @param item canonical value matching this codec's schema and version
+   * @return newly owned application value
+   */
   decode: method = .object
     arg item = .channelvalue
 
 /** Reusable bounded byte source, sink or duplex endpoint. */
 byteendpoint: interface
+  /** Create a bounded in-memory byte endpoint.
+   * @param direction 1 readable, 2 writable, or 3 duplex
+   * @param capacity maximum buffered bytes
+   * @return controller-owned endpoint adapter
+   */
   memory: factory
     arg direction = .int, capacity = .int
+  /** Create an endpoint that discards writes or reports immediate read EOF.
+   * @param direction 1 readable, 2 writable, or 3 duplex
+   * @return controller-owned null endpoint adapter
+   */
   null_endpoint: factory
     arg direction = .int
+  /** Attach to a transferable type-4 provider reference.
+   * @param provider_reference canonical provider reference
+   * @return runtime-scoped endpoint adapter
+   */
   from_reference: factory
     arg provider_reference = .channelvalue
   /** Attach an exact encoded type-4 provider reference.
@@ -206,36 +427,85 @@ byteendpoint: interface
    */
   from_encoded_reference: factory
     arg encoded = .binary
+  /** @return transferable canonical reference to this endpoint */
   provider_reference: method = .channelvalue
+  /** Start one bounded read.
+   * @param maximum_bytes maximum bytes accepted in the completion
+   * @param wait_milliseconds admission wait: -1 indefinite, 0 nonblocking, positive bounded
+   * @return asynchronous request wrapper
+   */
   start_read: method = .channelrequest
     arg maximum_bytes = .int, wait_milliseconds = .int
+  /** Start one bounded write.
+   * @param bytes bytes offered to the endpoint
+   * @param wait_milliseconds admission wait: -1 indefinite, 0 nonblocking, positive bounded
+   * @return request whose value is the accepted byte count
+   */
   start_write: method = .channelrequest
     arg bytes = .binary, wait_milliseconds = .int
+  /** Publish EOF in one direction while retaining the other.
+   * @param direction 1 read side or 2 write side
+   */
   half_close: method = .void
     arg direction = .int
+  /** Cancel outstanding endpoint requests.
+   * @param reason transferable cancellation reason
+   */
   cancel: method = .void
     arg reason = .channelvalue
+  /** Release this endpoint adapter. */
   close: method = .void
 
-/** Transferable logical identity of a single-owner service. */
+/** Transferable logical identity of a future single-owner service.
+ * This interface is reserved; no concrete public service is implemented.
+ */
 serviceref: interface
+  /** @return future application service type */
   service_type: method = .string
+  /** @return future transferable provider reference */
   provider_reference: method = .channelvalue
 
 /** Mutable-owner binary storage with explicit move and immutable seal states. */
 transferbuffer: interface
+  /** Allocate empty mutable storage.
+   * @param capacity maximum byte length
+   * @return controller-owned mutable buffer
+   */
   allocate: factory
     arg capacity = .int
+  /** Copy bytes into newly owned mutable storage.
+   * @param bytes initial contents
+   * @return controller-owned mutable buffer
+   */
   copy_from: factory
     arg bytes = .binary
+  /** @return current logical byte length */
   size: method = .int
+  /** @return maximum logical byte length */
   capacity: method = .int
+  /** @return true while writes and an ownership transfer remain permitted */
   mutable: method = .boolean
+  /** Replace bytes within the current logical extent.
+   * @param offset zero-based byte offset
+   * @param bytes replacement bytes
+   */
   write: method = .void
     arg offset = .int, bytes = .binary
+  /** Copy a byte range.
+   * @param offset zero-based byte offset
+   * @param length number of bytes to copy
+   * @return independent binary value
+   */
   read: method = .binary
     arg offset = .int, length = .int
+  /** Move the backing bytes across one channel boundary and invalidate mutation.
+   * @return canonical local-capability transfer value
+   */
   move_value: method = .channelvalue
+  /** Freeze a stable immutable byte snapshot.
+   * Sealing is not encryption, authentication or a checksum.
+   * @return canonical binary value containing the snapshot
+   */
   seal: method = .channelvalue
 
 /* RXCV helpers. All byte offsets are zero-based and integers are little-endian. */
@@ -1385,15 +1655,25 @@ tasktarget_impl: class implements .tasktarget
   descriptor: method = .channelvalue_impl
     return _descriptor
 
-/** Mutable controller-local builder used by generated task-call lowering. */
+/** Mutable controller-local builder used by generated task-call lowering.
+ * Typed task calls construct this object automatically; ordinary applications
+ * should prefer task syntax or `.taskscope.submit()` with one ChannelValue.
+ */
 taskarguments: class
   _values = .channelvalue[]
   _count = .int
 
+  /** Create an empty compiler argument builder.
+   * @return mutable controller-local builder
+   */
   empty: factory
     _count = 0
     return
 
+  /** Append one already canonical ordinary task argument.
+   * @param value canonical argument value
+   * @return this mutable controller-local builder
+   */
   add_value: method = .taskarguments
     arg value = .channelvalue
     _count = _count + 1
@@ -1414,30 +1694,47 @@ taskarguments: class
     _values[_count] = .channelvalue.record_value("crexx.channel.task-value", 1, names, values)
     return self
 
+  /** Append one boolean task argument.
+   * @param value boolean argument
+   * @return this mutable controller-local builder
+   */
   add_boolean: method = .taskarguments
     arg value = .boolean
     _count = _count + 1
     _values[_count] = .channelvalue.boolean_value(value)
     return self
 
+  /** Append one integer task argument.
+   * @param value integer argument
+   * @return this mutable controller-local builder
+   */
   add_integer: method = .taskarguments
     arg value = .int
     _count = _count + 1
     _values[_count] = .channelvalue.integer_value(value)
     return self
 
+  /** Append one string task argument.
+   * @param value string argument
+   * @return this mutable controller-local builder
+   */
   add_string: method = .taskarguments
     arg value = .string
     _count = _count + 1
     _values[_count] = .channelvalue.string_value(value)
     return self
 
+  /** Append one binary task argument.
+   * @param value binary argument
+   * @return this mutable controller-local builder
+   */
   add_binary: method = .taskarguments
     arg value = .binary
     _count = _count + 1
     _values[_count] = .channelvalue.binary_value(value)
     return self
 
+  /** @return generated canonical argument documents in source order */
   values: method = .channelvalue[]
     return _values
 

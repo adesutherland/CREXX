@@ -6,6 +6,12 @@ responses directly. By default it uses plain TCP; when the optional `tls`
 factory argument is non-zero, it uses the VM core TLS layer to connect securely
 before sending the request.
 
+This is the independent synchronous Level B client used by the current LLM
+provider classes. For bounded parallel requests, reusable connection owners,
+policy objects and endpoint-backed streaming, see the experimental
+[Level G concurrent HTTP client](concurrent_http.md). The two clients do not
+currently share an implementation core.
+
 ## Import
 
 ```rexx
